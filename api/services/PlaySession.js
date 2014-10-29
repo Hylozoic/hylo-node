@@ -6,19 +6,19 @@ var noop = function(x) { return x };
 var PlaySession = function(request, opts) {
   opts = opts || {};
   this.secret = opts.secret || process.env.PLAY_APP_SECRET;
-  if (request.headers.cookie)
-    this.sessionString = cookie.parse(request.headers.cookie, {decode: noop}).PLAY_SESSION;
+  if (request.headers && request.headers.cookie) {
+    var sessionString = cookie.parse(request.headers.cookie, {decode: noop}).PLAY_SESSION;
+    var i = sessionString.indexOf('-');
+    this.signature = sessionString.slice(0, i);
+    this.body = sessionString.slice(i + 1);
+  }
 };
 
 PlaySession.prototype.isValid = function() {
-  if (!this.sessionString) return false;
+  if (!this.signature) return false;
 
-  var i = this.sessionString.indexOf('-'),
-    signature = this.sessionString.slice(0, i),
-    body = this.sessionString.slice(i + 1),
-    hash = crypto.createHmac('sha1', this.secret).update(body).digest('hex');
-
-  return signature == hash;
+  var hash = crypto.createHmac('sha1', this.secret).update(this.body).digest('hex');
+  return this.signature == hash;
 };
 
 // this works only if you have the Play application secret in your env
