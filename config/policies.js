@@ -26,7 +26,11 @@ module.exports.policies = {
   *                                                                          *
   ***************************************************************************/
 
-  // '*': true,
+  '*': ['playSessionCheck', 'sessionAuth'],
+
+  UserController: {
+    find: true
+  }
 
   /***************************************************************************
   *                                                                          *
@@ -48,4 +52,5 @@ module.exports.policies = {
 		// before letting any users feed our rabbits
 		// feed : ['isNiceToAnimals', 'hasRabbitFood']
 	// }
+
 };

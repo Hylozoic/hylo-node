@@ -1,10 +1,12 @@
 {
   "name": "hylo-node",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "a Sails application",
   "keywords": [],
   "dependencies": {
+    "cookie": "latest",
+    "lodash": "latest",
     "sails": "~0.10.5",
     "sails-disk": "~0.10.0",
     "rc": "~0.5.0",
@@ -30,8 +32,8 @@
   "main": "app.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/lawrence/hylo-node.git"
+    "url": "git://github.com/Hylozoic/hylo-node.git"
   },
-  "author": "lawrence",
+  "author": "Lawrence Wang <l@lw.io>",
   "license": ""
 }
