@@ -9,8 +9,10 @@
 module.exports = function(req, res, next) {
 
   if (new PlaySession(req).isValid()) {
-    sails.log.info("authenticated via Play session");
+    sails.log.debug("checking Play session cookie... OK");
     req.session.authenticated = true;
+  } else {
+    sails.log.debug("checking Play session cookie... NO");
   }
 
   return next();
