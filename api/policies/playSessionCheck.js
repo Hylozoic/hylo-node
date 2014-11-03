@@ -8,12 +8,17 @@
  */
 module.exports = function(req, res, next) {
 
-  if (new PlaySession(req).isValid()) {
-    sails.log.debug("checking Play session cookie... OK");
-    req.session.authenticated = true;
-  } else {
-    sails.log.debug("checking Play session cookie... NO");
-  }
+  var playSession = new PlaySession(req);
+  if (playSession.isValid()) {
+    User.findOne({email: playSession.email()}).exec(function(err, user) {
+      sails.log.debug("Play session is valid: " + user.email);
+      req.session.authenticated = true;
+      req.session.user = user || {};
+      next();
+    });
 
-  return next();
+  } else {
+    sails.log.debug("Play session is invalid or absent");
+    next();
+  }
 };
