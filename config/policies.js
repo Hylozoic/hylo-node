@@ -26,10 +26,10 @@ module.exports.policies = {
   *                                                                          *
   ***************************************************************************/
 
-  '*': ['playSessionCheck', 'sessionAuth'],
+  '*': false,
 
   UserController: {
-    find: true
+    findOne: ['playSessionCheck', 'sessionAuth', 'isSelf']
   }
 
   /***************************************************************************
