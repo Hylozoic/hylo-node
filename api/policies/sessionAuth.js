@@ -16,6 +16,6 @@ module.exports = function(req, res, next) {
   } else {
     // User is not allowed
     // (default res.forbidden() behavior can be overridden in `config/403.js`)
-    res.forbidden('You are not permitted to perform this action.');
+    res.forbidden();
   }
 };
