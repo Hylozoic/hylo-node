@@ -10,10 +10,12 @@ var PlaySession = function(request, opts) {
   this.secret = opts.secret || process.env.PLAY_APP_SECRET;
   if (request.headers && request.headers.cookie) {
     var sessionString = cookie.parse(request.headers.cookie, {decode: noop}).PLAY_SESSION;
-    var i = sessionString.indexOf('-');
-    this.signature = sessionString.slice(0, i);
-    this.body = sessionString.slice(i + 1);
-    this.data = qs.decode(this.body);
+    if (sessionString) {
+      var i = sessionString.indexOf('-');
+      this.signature = sessionString.slice(0, i);
+      this.body = sessionString.slice(i + 1);
+      this.data = qs.decode(this.body);
+    }
   }
 };
 
