@@ -1,5 +1,7 @@
 var cookie = require('cookie');
 var crypto = require('crypto');
+var qs     = require('querystring');
+var _      = require('lodash');
 
 var noop = function(x) { return x };
 
@@ -11,21 +13,23 @@ var PlaySession = function(request, opts) {
     var i = sessionString.indexOf('-');
     this.signature = sessionString.slice(0, i);
     this.body = sessionString.slice(i + 1);
+    this.data = qs.decode(this.body);
   }
 };
 
-PlaySession.prototype.isValid = function() {
-  if (!this.signature) return false;
+_.extend(PlaySession.prototype, {
+  isValid: function() {
+    if (!this.signature) return false;
 
-  var hash = crypto.createHmac('sha1', this.secret).update(this.body).digest('hex');
-  return this.signature == hash;
-};
-
-// this works only if you have the Play application secret in your env
-PlaySession.test = function() {
-  var request = {headers: {cookie: 'ajs_anonymous_id=%222661d4fa-df2a-47f9-9818-03104073ac8b%22; PLAY_SESSION="b2324baa4061f419cb944dfd4e927a5f7da049c6-pa.u.exp=1415742115467&pa.p.id=password&pa.u.id=l%40lw.io"; ajs_group_id=null; ajs_user_id=301'}};
-  var session = new PlaySession(request);
-  return session.isValid();
-}
+    var hash = crypto.createHmac('sha1', this.secret).update(this.body).digest('hex');
+    return this.signature == hash;
+  },
+  isExpired: function() {
+    return this.data['pa.u.exp'] < new Date().getTime();
+  },
+  email: function() {
+    return this.data['pa.u.id'];
+  }
+});
 
 module.exports = PlaySession;
