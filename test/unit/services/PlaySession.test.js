@@ -38,10 +38,4 @@ describe('PlaySession', function() {
       });
     });
 
-    describe('#email', function() {
-      it('reads the session data', function() {
-        expect(validSession().email()).to.equal('l@lw.io');
-      })
-    });
-
 })

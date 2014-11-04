@@ -29,8 +29,19 @@ _.extend(PlaySession.prototype, {
   isExpired: function() {
     return this.data['pa.u.exp'] < new Date().getTime();
   },
-  email: function() {
-    return this.data['pa.u.id'];
+  findUser: function(callback) {
+    var providerKey = this.data['pa.p.id'], providerId = this.data['pa.u.id'];
+    if (providerKey == 'password') {
+      return User.findOne({email: providerId}).exec(callback);
+    } else {
+      LinkedAccount.findOne({
+        provider_key: providerKey,
+        provider_user_id: providerId
+      }).populate('user').exec(function(err, account) {
+        return callback(err, account.user);
+      });
+
+    }
   }
 });
 

@@ -14,6 +14,10 @@ module.exports = {
       collection: 'community',
       via: 'users',
       through: 'communityuser'
+    },
+    linkedAccounts: {
+      collection: 'linkedAccount',
+      via: 'user'
     }
   },
 

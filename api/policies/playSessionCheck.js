@@ -10,7 +10,7 @@ module.exports = function(req, res, next) {
 
   var playSession = new PlaySession(req);
   if (playSession.isValid()) {
-    User.findOne({email: playSession.email()}).exec(function(err, user) {
+    playSession.findUser(function(err, user) {
       sails.log.debug("Play session is valid: " + user.email);
       req.session.authenticated = true;
       req.session.user = user || {};
