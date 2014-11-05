@@ -1,3 +1,6 @@
+// this is a duplicate of CommunityUser because when CommunityUser gets set up
+// to be the through-table for the User-Community M2M, it is no longer accessible
+// by itself...
 module.exports = {
 
   tableName: 'users_community',
@@ -9,7 +12,8 @@ module.exports = {
     role: 'integer',
     user: {
       model: 'user',
-      columnName: 'users_id'
+      columnName: 'users_id',
+      primaryKey: true
     },
     community: {
       model: 'community',
@@ -17,5 +21,4 @@ module.exports = {
     }
   }
 
-};
-
+}

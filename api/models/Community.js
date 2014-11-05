@@ -11,6 +11,10 @@ module.exports = {
     name: 'string',
     slug: 'string',
     beta_access_code: 'string',
+    memberships: {
+      collection: 'membership',
+      via: 'community'
+    },
     users: {
       collection: 'user',
       via: 'communities',
