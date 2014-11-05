@@ -15,6 +15,10 @@ module.exports = {
       via: 'users',
       through: 'communityuser'
     },
+    memberships: {
+      collection: 'membership',
+      via: 'user'
+    },
     linkedAccounts: {
       collection: 'linkedAccount',
       via: 'user'
@@ -23,7 +27,20 @@ module.exports = {
 
   tableName: 'users',
   autoCreatedAt: false,
-  autoUpdatedAt: false
+  autoUpdatedAt: false,
+
+  setModeratorRole: function(user, community, enabled, cb) {
+    if (typeof user === 'object') user = user.id;
+    if (typeof community === 'object') community = community.id;
+
+    Membership.findOne({user: user, community: community}).exec(function(err, membership) {
+      if (err) return cb(err);
+
+      membership.role = enabled ? 1 : 0;
+      membership.save(); // FIXME this doesn't work -- complains about primary key
+      cb(null, membership);
+    })
+  }
 
 };
 
