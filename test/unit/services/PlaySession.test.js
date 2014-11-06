@@ -1,6 +1,5 @@
-var root = require('root-path');
-var PlaySession = require(root('api/services/PlaySession'));
-var expect = require('chai').expect;
+require(require('root-path')('test/setup'));
+var PlaySession = requireFromRoot('api/services/PlaySession');
 
 var request = {
   headers: {
