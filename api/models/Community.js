@@ -1,29 +1,12 @@
-/**
-* Community.js
-*
-* @description :: TODO: You might write a short summary of how this model works and what it represents here.
-* @docs        :: http://sailsjs.org/#!documentation/models
-*/
+module.exports = bookshelf.Model.extend({
+  tableName: 'community',
 
-module.exports = {
-
-  attributes: {
-    name: 'string',
-    slug: 'string',
-    beta_access_code: 'string',
-    memberships: {
-      collection: 'membership',
-      via: 'community'
-    },
-    users: {
-      collection: 'user',
-      via: 'communities',
-      through: 'communityuser'
-    }
+  memberships: function() {
+    return this.hasMany(Membership);
   },
 
-  autoCreatedAt: false,
-  autoUpdatedAt: false
+  users: function() {
+    return this.belongsToMany(User, 'users_community', 'community_id', 'users_id');
+  }
 
-};
-
+});
