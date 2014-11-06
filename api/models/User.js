@@ -13,6 +13,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Community, 'users_community', 'users_id', 'community_id');
   },
 
+  linkedAccounts: function() {
+    return this.hasMany(LinkedAccount);
+  },
+
   setModerator: function(community) {
     return Membership.where({
       users_id: this.id,

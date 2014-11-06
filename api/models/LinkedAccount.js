@@ -1,14 +1,7 @@
-module.exports = {
-  attributes: {
-    provider_key: 'string',
-    provider_user_id: 'string',
-    user: {
-      model: 'user',
-      columnName: 'user_id'
-    }
-  },
-
+module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
-  autoCreatedAt: false,
-  autoUpdatedAt: false
-}
+
+  user: function() {
+    return this.belongsTo(User);
+  }
+});
