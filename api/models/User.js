@@ -1,29 +1,34 @@
-/**
-* User.js
-*
-* @description :: TODO: You might write a short summary of how this model works and what it represents here.
-* @docs        :: http://sailsjs.org/#!documentation/models
-*/
+// The lack of a single-column primary key on this table turns out to be a real drag,
+// because Bookshelf requires one for many purposes, so we have to drop down closer
+// to raw SQL to work around that.
 
-module.exports = {
+module.exports = bookshelf.Model.extend({
+  tableName: 'users',
 
-  attributes: {
-    name: 'string',
-    email: 'string',
-    communities: {
-      collection: 'community',
-      via: 'users',
-      through: 'communityuser'
-    },
-    linkedAccounts: {
-      collection: 'linkedAccount',
-      via: 'user'
-    }
+  memberships: function() {
+    return this.hasMany(Membership, 'users_id');
   },
 
-  tableName: 'users',
-  autoCreatedAt: false,
-  autoUpdatedAt: false
+  communities: function() {
+    return this.belongsToMany(Community, 'users_community', 'users_id', 'community_id');
+  },
 
-};
+  linkedAccounts: function() {
+    return this.hasMany(LinkedAccount);
+  },
 
+  setModerator: function(community) {
+    return Membership.where({
+      users_id: this.id,
+      community_id: (typeof community === 'object' ? community.id : community)
+    }).save({role: 1}, {patch: true});
+  },
+
+  joinCommunity: function(community) {
+    return bookshelf.knex('users_community').insert({
+      users_id: this.id,
+      community_id: (typeof community === 'object' ? community.id : community)
+    });
+  }
+
+});
