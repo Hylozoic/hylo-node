@@ -38,6 +38,7 @@ module.exports = {
       knex.schema.createTable('users_community', function(table) {
         table.bigInteger('users_id');
         table.bigInteger('community_id');
+        table.integer('role');
       }).exec(done);
     });
   }
