@@ -18,10 +18,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   setModerator: function(community) {
-    return Membership.where({
+    return bookshelf.knex('users_community').where({
       users_id: this.id,
       community_id: (typeof community === 'object' ? community.id : community)
-    }).save({role: 1}, {patch: true});
+    }).update({role: 1});
   },
 
   joinCommunity: function(community) {
@@ -29,6 +29,16 @@ module.exports = bookshelf.Model.extend({
       users_id: this.id,
       community_id: (typeof community === 'object' ? community.id : community)
     });
+  }
+
+}, {
+
+  withId: function(id) {
+    return User.where({id: id}).fetch();
+  },
+
+  named: function(name) {
+    return User.where({name: name}).fetch();
   }
 
 });

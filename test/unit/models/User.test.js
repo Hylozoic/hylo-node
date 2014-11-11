@@ -20,7 +20,7 @@ describe('User', function() {
       community2 = new Community({name: 'Yard'}),
       user;
 
-    User.where({name: 'Cat'}).fetch()
+    User.named('Cat')
     .then(function(u) { user = u; })
     .then(function() { return community1.save(); })
     .then(function() { return community2.save(); })
@@ -37,4 +37,23 @@ describe('User', function() {
     .done(done);
 
   });
+
+  it('can become moderator', function(done) {
+    var house = new Community({name: 'House'}),
+      cat, membership;
+
+    User.named('Cat')
+    .then(function(user) { cat = user; })
+    .then(function() { return house.save(); })
+    .then(function() { return cat.joinCommunity(house); })
+    .then(function() { return cat.setModerator(house); })
+    .then(function() { return cat.memberships().query({where: {community_id: house.id}}).fetchOne(); })
+    .then(function(membership) {
+      expect(membership).to.exist;
+      expect(membership.get('role')).to.equal(1);
+    })
+    .done(done);
+
+  });
+
 })
