@@ -27,7 +27,8 @@ module.exports = bookshelf.Model.extend({
   joinCommunity: function(community) {
     return bookshelf.knex('users_community').insert({
       users_id: this.id,
-      community_id: (typeof community === 'object' ? community.id : community)
+      community_id: (typeof community === 'object' ? community.id : community),
+      role: 0
     });
   }
 
