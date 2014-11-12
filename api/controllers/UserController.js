@@ -9,8 +9,8 @@ module.exports = {
 
   findOne: function(req, res) {
     User.withId(req.param('id')).then(function(user) {
-      Respond.with(user, res);
-    })
+      res.ok(user);
+    });
   }
 
 };
