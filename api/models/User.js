@@ -21,14 +21,14 @@ module.exports = bookshelf.Model.extend({
     return bookshelf.knex('users_community').where({
       users_id: this.id,
       community_id: (typeof community === 'object' ? community.id : community)
-    }).update({role: 1});
+    }).update({role: Membership.MODERATOR_ROLE});
   },
 
   joinCommunity: function(community) {
     return bookshelf.knex('users_community').insert({
       users_id: this.id,
       community_id: (typeof community === 'object' ? community.id : community),
-      role: 0
+      role: Membership.DEFAULT_ROLE
     });
   }
 

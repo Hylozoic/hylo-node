@@ -31,6 +31,11 @@ module.exports.policies = {
   UserController: {
     findOne: ['playSessionCheck', 'sessionAuth', 'isSelf'],
     populate: ['playSessionCheck', 'sessionAuth', 'isParent']
+  },
+
+  CommunityController: {
+    findOne: ['playSessionCheck', 'sessionAuth', 'isModerator'],
+    sendInvites: ['playSessionCheck', 'sessionAuth', 'isModerator']
   }
 
   /***************************************************************************
