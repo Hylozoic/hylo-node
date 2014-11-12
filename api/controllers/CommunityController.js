@@ -9,12 +9,12 @@ module.exports = {
 
   findOne: function(req, res) {
     Community.withId(req.param('id')).then(function(community) {
-      Respond.with(community, res);
-    })
+      res.ok(community);
+    });
   },
 
   sendInvites: function(req, res) {
-    Respond.with({error: 'TODO'}, res);
+    res.ok({error: 'TODO'});
   }
 
 };
