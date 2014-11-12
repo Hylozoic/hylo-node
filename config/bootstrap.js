@@ -9,6 +9,8 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.bootstrap.html
  */
 
+require('dotenv').load();
+
 var fs = require('fs'),
   path = require('path'),
   root = require('root-path');
