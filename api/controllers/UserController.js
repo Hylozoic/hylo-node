@@ -9,7 +9,6 @@ module.exports = {
 
   findOne: function(req, res) {
     User.withId(req.param('id')).then(function(user) {
-      if (!user) user = {};
       Respond.with(user, res);
     })
   }
