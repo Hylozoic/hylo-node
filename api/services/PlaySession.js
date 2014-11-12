@@ -29,18 +29,17 @@ _.extend(PlaySession.prototype, {
   isExpired: function() {
     return this.data['pa.u.exp'] < new Date().getTime();
   },
-  findUser: function(callback) {
+  fetchUser: function(callback) {
     var providerKey = this.data['pa.p.id'], providerId = this.data['pa.u.id'];
     if (providerKey == 'password') {
-      return User.findOne({email: providerId}).exec(callback);
+      return User.where({email: providerId}).fetch();
     } else {
-      LinkedAccount.findOne({
+      return LinkedAccount.where({
         provider_key: providerKey,
         provider_user_id: providerId
-      }).populate('user').exec(function(err, account) {
-        return callback(err, account.user);
+      }).fetch().then(function(account) {
+        return account.user().fetch();
       });
-
     }
   }
 });
