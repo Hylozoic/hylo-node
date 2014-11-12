@@ -27,14 +27,14 @@ describe('PlaySession', function() {
     });
   });
 
-    describe('.data', function() {
-      it('is a hash created from the query string in the session', function() {
-        expect(validSession().data).to.eql({
-          'pa.u.exp': '1415742115467',
-          'pa.p.id': 'password',
-          'pa.u.id': 'l@lw.io'
-        });
+  describe('.data', function() {
+    it('is a hash created from the query string in the session', function() {
+      expect(validSession().data).to.eql({
+        'pa.u.exp': '1415742115467',
+        'pa.p.id': 'password',
+        'pa.u.id': 'l@lw.io'
       });
     });
+  });
 
 })
