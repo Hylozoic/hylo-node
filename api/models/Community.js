@@ -9,4 +9,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User, 'users_community', 'community_id', 'users_id');
   }
 
+}, {
+
+  withId: function(id) {
+    return Community.where({id: id}).fetch();
+  }
+
 });
