@@ -3,7 +3,7 @@ var setup = require(require('root-path')('test/setup'));
 describe('User', function() {
 
   before(function(done) {
-    setup.createDb(done);
+    setup.initDb(done);
     var user = new User({name: 'Cat'});
     user.save();
   });
