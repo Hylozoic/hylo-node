@@ -5,8 +5,7 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var util    = require('util'),
-  validator = require('validator');
+var validator = require('validator');
 
 module.exports = {
 
@@ -29,23 +28,11 @@ module.exports = {
 
       async.map(emails, function(email, done) {
 
-        Invitation.create({
+        Invitation.createAndSend({
           user: req.session.user,
           email: email,
           community: community
-        })
-        .then(function(invitation) {
-          var link = util.format(
-            "http://%s/community/invite/%s",
-            process.env.DOMAIN, invitation.get('token')
-          );
-
-          Email.sendInvitation(email, {
-            recipient: email,
-            community_name: community.get('name'),
-            invite_link: link
-          }, done);
-        });
+        }, done);
 
       }, function(err, results) {
         if (err) {
