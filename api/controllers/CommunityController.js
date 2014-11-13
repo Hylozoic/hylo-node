@@ -22,25 +22,23 @@ module.exports = {
         return email.trim();
       });
 
-      if (!_.all(emails, validator.isEmail)) {
-        return res.badRequest({error: "invalid email"});
-      }
-
-      async.map(emails, function(email, done) {
+      async.map(emails, function(email, cb) {
+        if (!validator.isEmail(email)) {
+          return cb(null, {email: email, error: "not a valid email address"});
+        }
 
         Invitation.createAndSend({
           user: req.session.user,
           email: email,
           community: community
-        }, done);
+        }, function(err) {
+          return cb(null, {email: email, error: (err ? err.message : null)});
+        });
 
       }, function(err, results) {
-        if (err) {
-          sails.log.error(err); // TODO notify rollbar
-          return res.badRequest();
-        }
-        res.ok({sent: results.length});
+        res.ok({results: results});
       });
+
     });
   }
 
