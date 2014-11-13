@@ -17,6 +17,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(LinkedAccount);
   },
 
+  sentInvitations: function() {
+    return this.hasMany(Invitation, 'invited_by_id');
+  },
+
   setModerator: function(community) {
     return bookshelf.knex('users_community').where({
       users_id: this.id,
