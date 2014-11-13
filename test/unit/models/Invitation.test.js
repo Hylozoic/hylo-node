@@ -9,7 +9,11 @@ describe('Invitation', function() {
   describe("#create", function() {
 
     it('generates a valid uuid', function(done) {
-      Invitation.create({id: 1}, 'foo@bar.org', {id: 2}).then(function(invitation) {
+      Invitation.create({
+        user: {id: 1},
+        email: 'foo@bar.org',
+        community: {id: 2}
+      }).then(function(invitation) {
         var uuidPattern = /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/;
         expect(invitation.get('token')).to.match(uuidPattern);
       }).then(done);
