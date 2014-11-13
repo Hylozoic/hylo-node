@@ -46,7 +46,8 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  'GET  /noo/user/:id':      'UserController.findOne',
-  'GET  /noo/community/:id': 'CommunityController.findOne'
+  'GET  /noo/user/:id':             'UserController.findOne',
+  'GET  /noo/community/:id':        'CommunityController.findOne',
+  'POST /noo/community/:id/invite': 'CommunityController.invite',
 
 };

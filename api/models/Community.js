@@ -7,6 +7,10 @@ module.exports = bookshelf.Model.extend({
 
   users: function() {
     return this.belongsToMany(User, 'users_community', 'community_id', 'users_id');
+  },
+
+  invitations: function() {
+    return this.hasMany(Invitation);
   }
 
 }, {
