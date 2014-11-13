@@ -9,37 +9,55 @@ global.requireFromRoot = function(path) {
   return require(root(path));
 }
 
-module.exports = {
-  createDb: function(done) {
-    var knex = require('knex')({client: 'sqlite3', connection: {filename: ':memory:'}});
-    global.bookshelf = require('bookshelf')(knex);
+var TestSetup = function() {
+  this.knex = require('knex')({client: 'sqlite3', connection: {filename: ':memory:'}});
+  global.bookshelf = require('bookshelf')(this.knex);
 
-    // FIXME this is duplicated from bootstrap.js
-    _.each(fs.readdirSync(root('api/models')), function(filename) {
-      if (path.extname(filename) == '.js') {
-        var modelName = path.basename(filename, '.js');
-        global[modelName] = require(root('api/models/' + modelName));
-      }
-    });
+  // FIXME this is duplicated from bootstrap.js
+  _.each(fs.readdirSync(root('api/models')), function(filename) {
+    if (path.extname(filename) == '.js') {
+      var modelName = path.basename(filename, '.js');
+      global[modelName] = require(root('api/models/' + modelName));
+    }
+  });
+};
 
-    knex.schema.createTable('users', function(table) {
+TestSetup.prototype.initDb = function(done) {
+  if (this.dbInited) return done();
+  var knex = this.knex;
+
+  knex.schema.createTable('users', function(table) {
+    table.increments();
+    table.string('name');
+    table.string('email');
+  })
+  .then(function() {
+    return knex.schema.createTable('community', function(table) {
       table.increments();
       table.string('name');
-      table.string('email');
-    })
-    .then(function() {
-      return knex.schema.createTable('community', function(table) {
-        table.increments();
-        table.string('name');
-        table.string('beta_access_code');
-      });
-    })
-    .then(function() {
-      knex.schema.createTable('users_community', function(table) {
-        table.bigInteger('users_id');
-        table.bigInteger('community_id');
-        table.integer('role');
-      }).exec(done);
+      table.string('beta_access_code');
     });
-  }
-};
+  })
+  .then(function() {
+    return knex.schema.createTable('users_community', function(table) {
+      table.bigInteger('users_id');
+      table.bigInteger('community_id');
+      table.integer('role');
+    });
+  })
+  .then(function() {
+    return knex.schema.createTable('community_invite', function(table) {
+      table.increments();
+      table.bigInteger('invited_by_id');
+      table.bigInteger('used_by_id');
+      table.bigInteger('community_id');
+      table.string('email');
+      table.string('token');
+    });
+  }).then(function() {
+    this.dbInited = true;
+    done();
+  }.bind(this));
+}
+
+module.exports = new TestSetup();
