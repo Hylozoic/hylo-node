@@ -1,4 +1,5 @@
-var uuid = require('node-uuid');
+var util = require('util'),
+  uuid = require('node-uuid');
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community_invite',
@@ -21,6 +22,23 @@ module.exports = bookshelf.Model.extend({
       token: uuid.v4(),
       created: new Date()
     }).save();
+  },
+
+  createAndSend: function(opts, done) {
+    Invitation.create(opts).then(function(invitation) {
+
+      var link = util.format(
+        "http://%s/community/invite/%s",
+        process.env.DOMAIN, invitation.get('token')
+      );
+
+      Email.sendInvitation(opts.email, {
+        recipient: opts.email,
+        community_name: opts.community.get('name'),
+        invite_link: link
+      }, done);
+
+    });
   }
 
 });
