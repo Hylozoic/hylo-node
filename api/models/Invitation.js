@@ -24,7 +24,7 @@ module.exports = bookshelf.Model.extend({
     }).save();
   },
 
-  createAndSend: function(opts, done) {
+  createAndSend: function(opts, cb) {
     Invitation.create(opts).then(function(invitation) {
 
       var link = util.format(
@@ -36,7 +36,7 @@ module.exports = bookshelf.Model.extend({
         recipient: opts.email,
         community_name: opts.community.get('name'),
         invite_link: link
-      }, done);
+      }, cb);
 
     });
   }
