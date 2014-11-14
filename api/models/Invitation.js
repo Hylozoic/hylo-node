@@ -33,6 +33,7 @@ module.exports = bookshelf.Model.extend({
       );
 
       Email.sendInvitation(opts.email, {
+        inviter_name: opts.user.get('name'),
         recipient: opts.email,
         community_name: opts.community.get('name'),
         invite_link: link
