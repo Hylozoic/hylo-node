@@ -15,6 +15,15 @@ module.exports = {
     });
   },
 
+  update: function(req, res) {
+    var attributes = _.pick(req.allParams(), ['banner_url', 'avatar_url']),
+      community = new Community({id: req.param('id')});
+
+    community.save(attributes, {patch: true}).then(function(community) {
+      res.ok(community);
+    })
+  },
+
   invite: function(req, res) {
     Community.withId(req.param('id')).then(function(community) {
 
