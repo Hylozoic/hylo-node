@@ -18,8 +18,8 @@ PLAY_APP_SECRET=...
 PRETTY_JSON=true
 SENDWITHUS_KEY=...
 ```
-* `PLAY_APP_SECRET`: use [the one in hylo-play](https://github.com/Hylozoic/hylo-play/blob/master/conf/application.conf))
-* `SENDWITHUS_KEY`: set up a test key in SendWithUs to only send you email
+* `PLAY_APP_SECRET`: use [the one in hylo-play](https://github.com/Hylozoic/hylo-play/blob/master/conf/application.conf)
+* `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you
 
 ### running the dev server
 
