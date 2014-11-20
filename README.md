@@ -17,9 +17,11 @@ EMAIL_SENDER=lawrence+dev@hylo.com
 PLAY_APP_SECRET=...
 PRETTY_JSON=true
 SENDWITHUS_KEY=...
+DEBUG_SQL=false
 ```
 * `PLAY_APP_SECRET`: use [the one in hylo-play](https://github.com/Hylozoic/hylo-play/blob/master/conf/application.conf)
 * `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you
+* `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 
 ### running the dev server
 
@@ -27,6 +29,6 @@ SENDWITHUS_KEY=...
 forever -w app.js # optionally with --port PORT
 ```
 
-The `.env` file you created above gets read automatically by the Node app, using [dotenv](http://www.npmjs.org/package/dotenv), and `forever` restarts the server when any files are updated. 
+The `.env` file you created above gets read automatically by the Node app, using [dotenv](http://www.npmjs.org/package/dotenv), and `forever` restarts the server when any files are updated.
 
 Now visit [localhost:1337](http://localhost:1337) (or whatever `PORT` is).
