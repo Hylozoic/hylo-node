@@ -11,6 +11,10 @@ module.exports = bookshelf.Model.extend({
 
   invitations: function() {
     return this.hasMany(Invitation);
+  },
+
+  posts: function() {
+    return this.belongsToMany(Post, 'post_community', 'community_id', 'post_id');
   }
 
 }, {
