@@ -27,44 +27,37 @@ module.exports = {
         var postIds = posts.pluck("id");
 
         // Determine which posts this user voted on already
-        Vote.userVotesWithin(req.session.user.id, postIds).pluck("post_id").then(function(myVotesWithin) {
+        Vote.forUsersInPost(req.session.user.id, postIds).pluck("post_id").then(function(myVotesWithin) {
 
-          var postsDto = [];
-
-          posts.each(function(post, index) {
+          var postsDto = posts.map(function(post) {
 
             var followers = post.related("followers").map(function(follower) {
-              var user = follower.related("user");
               return {
-                "value": Number(user.get("id")),
-                "name": user.get("name"),
-                "avatar": user.get("avatar_url")
+                "value": Number(follower.related("user").get("id")),
+                "name": follower.related("user").get("name"),
+                "avatar": follower.related("user").get("avatar_url")
               }
             })
 
-            var creator = post.related("creator");
-            var creatorDto = {
-              "id": Number(creator.get("id")),
-              "name": creator.get("name"),
-              "avatar": creator.get("avatar_url")
-            };
-
             var contributors = post.related("contributors").map(function(contributor) {
-              var user = contributor.related("user");
               return {
-                "id": Number(user.get("id")),
-                "name": user.get("name"),
-                "avatar": user.get("avatar_url")
+                "id": Number(contributor.related("user").get("id")),
+                "name": contributor.related("user").get("name"),
+                "avatar": contributor.related("user").get("avatar_url")
               };
             });
 
-            var dto = {
+            return {
               "id": Number(post.get("id")),
               "name": post.get("name"),
               "description": post.get("description"),
               "postType": post.get("type"),
               "imageUrl": post.get("image_url"),
-              "user": creatorDto,
+              "user": {
+                "id": Number(post.related("creator").get("id")),
+                "name": post.related("creator").get("name"),
+                "avatar": post.related("creator").get("avatar_url")
+              },
               "creationDate": post.get("creation_date"),
               "votes": post.get("num_votes"),
               "numComments": post.get("num_comments"),
@@ -79,7 +72,6 @@ module.exports = {
               "followersLoaded": true,
               "numFollowers": followers.length
             }
-            postsDto.push(dto)
           });
 
           res.ok(postsDto);
