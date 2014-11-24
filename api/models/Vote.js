@@ -16,7 +16,7 @@ module.exports = bookshelf.Model.extend({
    * @param postIds List of Post ID's to check against
    * @returns a list of Vote's.
    */
-  forUsersInPost: function(userId, postIds) {
+  forUserInPosts: function(userId, postIds) {
     return bookshelf.knex("vote").where({
       user_id: userId
     }).whereIn("post_id", postIds);
