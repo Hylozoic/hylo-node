@@ -37,6 +37,10 @@ module.exports.policies = {
     findOne: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     update: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     invite: ['playSessionCheck', 'sessionAuth', 'isModerator']
+  },
+
+  PostController: {
+    find: ['playSessionCheck', 'sessionAuth', 'isMember']
   }
 
   /***************************************************************************

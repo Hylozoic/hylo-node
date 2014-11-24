@@ -12,6 +12,7 @@ npm install
 Create a `.env` file in the root of the working copy, with contents like this:
 ```
 DATABASE_URL=postgres://localhost/hylo
+DEBUG_SQL=false
 DOMAIN=localhost:3001
 EMAIL_SENDER=lawrence+dev@hylo.com
 PLAY_APP_SECRET=...
@@ -20,6 +21,7 @@ SENDWITHUS_KEY=...
 ```
 * `PLAY_APP_SECRET`: use [the one in hylo-play](https://github.com/Hylozoic/hylo-play/blob/master/conf/application.conf)
 * `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you
+* `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 
 ### running the dev server
 

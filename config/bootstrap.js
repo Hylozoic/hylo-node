@@ -28,6 +28,7 @@ module.exports.bootstrap = function(cb) {
 
   var knex = require('knex')({
     client: 'pg',
+    debug: process.env.DEBUG_SQL,
     connection: {
       host: url.hostname,
       port: url.port,
