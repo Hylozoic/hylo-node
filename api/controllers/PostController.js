@@ -27,7 +27,7 @@ module.exports = {
         var postIds = posts.pluck("id");
 
         // Determine which posts this user voted on already
-        Vote.forUsersInPost(req.session.user.id, postIds).pluck("post_id").then(function(myVotesWithin) {
+        Vote.forUserInPosts(req.session.user.id, postIds).pluck("post_id").then(function(myVotesWithin) {
 
           var postsDto = posts.map(function(post) {
 
