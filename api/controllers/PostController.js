@@ -47,7 +47,7 @@ var postAttributes = function(post, hasVote) {
 
 module.exports = {
   find: function(req, res) {
-    var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType']),
+    var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q']),
       sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
 
     Community.withId(req.param('id')).then(function(community) {
@@ -59,8 +59,20 @@ module.exports = {
         qb.where({active: true});
 
         if (params.q && params.q.trim().length > 0) {
-          var query = "%" + params.q.trim() + "%";
-          qb.where("name", "ILIKE", query).orWhere("description", "ILIKE", query )
+          var query = _.chain(params.q.trim().split(/\s*\s/)) // split on whitespace
+            .map(function(term) { // Remove any invalid characters
+              return term.replace(/[,;]/, '');
+            }).reduce(function(result, term, key) { // Build the tsquery string using logical | (OR) operands
+              if (term.length > 0) {
+                result += " | " + term
+              }
+              return result;
+            }).value()
+
+          qb.where(function() {
+            this.whereRaw("(to_tsvector('english', post.name) @@ to_tsquery(?)) OR (to_tsvector('english', post.description) @@ to_tsquery(?))", [query, query])
+            //this.where("name", "ILIKE", query).orWhere("description", "ILIKE", query ) // Basic 'icontains' searching
+          })
         }
 
         qb.orderBy(sortCol, 'desc');
