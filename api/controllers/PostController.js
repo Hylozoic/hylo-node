@@ -57,6 +57,12 @@ module.exports = {
           qb.where({type: params.postType});
         }
         qb.where({active: true});
+
+        if (params.q && params.q.trim().length > 0) {
+          var query = "%" + params.q.trim() + "%";
+          qb.where("name", "ILIKE", query).orWhere("description", "ILIKE", query )
+        }
+
         qb.orderBy(sortCol, 'desc');
         qb.limit(params.limit);
         qb.offset(params.start);
