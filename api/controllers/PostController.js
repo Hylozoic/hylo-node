@@ -61,11 +61,11 @@ module.exports = {
         if (params.q && params.q.trim().length > 0) {
           var query = _.chain(params.q.trim().split(/\s*\s/)) // split on whitespace
             .map(function(term) { // Remove any invalid characters
-              return term.replace(/[,;]/, '');
-            }).reduce(function(result, term, key) { // Build the tsquery string using logical | (OR) operands
-              if (term.length > 0) {
-                result += " | " + term
-              }
+              return term.replace(/[,;'|:&()!]+/, '');
+            })
+            .reject(_.isEmpty)
+            .reduce(function(result, term, key) { // Build the tsquery string using logical | (OR) operands
+              result += " | " + term;
               return result;
             }).value()
 
