@@ -46,10 +46,15 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
+
   'GET  /noo/user/:id':             'UserController.findOne',
   'GET  /noo/community/:id':        'CommunityController.findOne',
   'POST /noo/community/:id':        'CommunityController.update',
   'POST /noo/community/:id/invite': 'CommunityController.invite',
-  'GET  /noo/community/:id/posts':  'PostController.find'
+  'GET  /noo/community/:id/posts':  'PostController.find',
+
+  'GET /admin/login':               'SessionController.create',
+  'GET /admin/login/oauth':         'SessionController.oauth',
+  'GET /admin':                     'AdminController.index',
 
 };

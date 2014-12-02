@@ -28,6 +28,15 @@ module.exports.policies = {
 
   '*': false,
 
+  SessionController: {
+    create: true,
+    oauth: true
+  },
+
+  AdminController: {
+    index: ['isAdmin']
+  },
+
   UserController: {
     findOne: ['playSessionCheck', 'sessionAuth', 'isSelf'],
     populate: ['playSessionCheck', 'sessionAuth', 'isParent']
