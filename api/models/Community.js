@@ -21,6 +21,10 @@ module.exports = bookshelf.Model.extend({
 
   withId: function(id) {
     return Community.where({id: id}).fetch();
+  },
+
+  withSlug: function(slug) {
+    return Community.where({slug: slug}).fetch();
   }
 
 });
