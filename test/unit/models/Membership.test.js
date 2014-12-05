@@ -20,16 +20,16 @@ describe('Membership', function() {
     setup.clearDb(done);
   });
 
-  describe('.withIds', function() {
+  describe('.find', function() {
 
     it('works with a community id', function(done) {
-      Membership.withIds(user.id, community.id).then(function(membership) {
+      Membership.find(user.id, community.id).then(function(membership) {
         expect(membership).to.exist;
       }).then(done);
     });
 
     it('works with a community slug', function(done) {
-      Membership.withIds(user.id, community.get('slug')).then(function(membership) {
+      Membership.find(user.id, community.get('slug')).then(function(membership) {
         expect(membership).to.exist;
       }).then(done);
     });

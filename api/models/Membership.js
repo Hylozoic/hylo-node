@@ -18,7 +18,7 @@ module.exports = bookshelf.Model.extend({
   DEFAULT_ROLE: 0,
   MODERATOR_ROLE: 1,
 
-  withIds: function(user_id, community_id_or_slug) {
+  find: function(user_id, community_id_or_slug) {
 
     var fetch = function(community_id) {
       return Membership.where({
