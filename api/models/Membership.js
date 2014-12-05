@@ -18,11 +18,23 @@ module.exports = bookshelf.Model.extend({
   DEFAULT_ROLE: 0,
   MODERATOR_ROLE: 1,
 
-  withIds: function(user_id, community_id) {
-    return Membership.where({
-      users_id: user_id,
-      community_id: community_id
-    }).fetch();
+  withIds: function(user_id, community_id_or_slug) {
+
+    var fetch = function(community_id) {
+      return Membership.where({
+        users_id: user_id,
+        community_id: community_id
+      }).fetch();
+    }
+
+    if (isNaN(Number(community_id_or_slug))) {
+      return Community.withSlug(community_id_or_slug)
+      .then(function(community) {
+        return fetch(community.id);
+      })
+    }
+
+    return fetch(community_id_or_slug);
   }
 
 });

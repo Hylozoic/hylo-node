@@ -36,6 +36,7 @@ TestSetup.prototype.initDb = function(done) {
       table.increments();
       table.string('name');
       table.string('beta_access_code');
+      table.string('slug');
     });
   })
   .then(function() {
