@@ -6,7 +6,7 @@ describe('Membership', function() {
 
   before(function(done) {
     setup.initDb(function() {
-      community = new Community({slug: 'foo'});
+      community = new Community({slug: 'foo', name: 'Foo'});
       community.save().then(function() {
         user = new User({name: 'Cat'});
         return user.save();
@@ -14,7 +14,11 @@ describe('Membership', function() {
         return user.joinCommunity(community);
       }).exec(done);
     });
-  })
+  });
+
+  after(function(done) {
+    setup.clearDb(done);
+  });
 
   describe('.withIds', function() {
 
