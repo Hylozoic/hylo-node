@@ -1,4 +1,5 @@
-var fs = require('fs'),
+var async = require('async'),
+  fs = require('fs'),
   path = require('path'),
   root = require('root-path');
 
@@ -60,6 +61,18 @@ TestSetup.prototype.initDb = function(done) {
     this.dbInited = true;
     done();
   }.bind(this));
-}
+};
+
+TestSetup.prototype.clearDb = function(done) {
+  async.each(
+    ['users', 'community', 'users_community', 'community_invite'],
+    function(table, cb) {
+      this.knex.raw('delete from ' + table).exec(cb);
+    }.bind(this),
+    function(err) {
+      done();
+    }
+  );
+};
 
 module.exports = new TestSetup();

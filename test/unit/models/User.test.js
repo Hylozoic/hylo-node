@@ -3,9 +3,14 @@ var setup = require(require('root-path')('test/setup'));
 describe('User', function() {
 
   before(function(done) {
-    setup.initDb(done);
-    var user = new User({name: 'Cat'});
-    user.save();
+    setup.initDb(function() {
+      var user = new User({name: 'Cat'});
+      user.save().exec(done);
+    });
+  });
+
+  after(function(done) {
+    setup.clearDb(done);
   });
 
   it('can be found', function(done) {
