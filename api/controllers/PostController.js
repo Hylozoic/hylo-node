@@ -79,15 +79,22 @@ module.exports = {
         qb.limit(params.limit);
         qb.offset(params.start);
       }).fetch({
-        withRelated: [{"creator": function(qb) {
-          qb.column("id", "name", "avatar_url")
-        }}, {"community": function(qb) {
-          qb.column("id", 'name', "slug")
-        }}, "followers", {"followers.user": function(qb) {
-          qb.column("id", "name", "avatar_url")
-        }}, "contributors", {"contributors.user": function(qb){
-          qb.column("id", "name", "avatar_url")
-        }}]
+        withRelated: [
+          {"creator": function(qb) {
+            qb.column("id", "name", "avatar_url");
+          }},
+          {"community": function(qb) {
+            qb.column("id", 'name', "slug");
+          }},
+          "followers",
+          {"followers.user": function(qb) {
+            qb.column("id", "name", "avatar_url");
+          }},
+          "contributors",
+          {"contributors.user": function(qb) {
+            qb.column("id", "name", "avatar_url");
+          }}
+        ]
       });
 
     }).then(function(posts) {

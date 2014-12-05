@@ -1,10 +1,8 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
 
-  idAttribute: 'id',
-
   creator: function() {
-    return this.belongsTo(User, "creator_id")
+    return this.belongsTo(User, "creator_id");
   },
 
   community: function() {
@@ -12,11 +10,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   followers: function() {
-    return this.hasMany(Follower, "post_id")
+    return this.hasMany(Follower, "post_id");
   },
 
   contributors: function() {
-    return this.hasMany(Contributor, "post_id")
+    return this.hasMany(Contributor, "post_id");
   }
 
-})
+});
