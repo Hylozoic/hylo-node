@@ -50,7 +50,7 @@ module.exports = {
     var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q']),
       sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
 
-    Community.withId(req.param('id')).then(function(community) {
+    Community.find(req.param('id')).then(function(community) {
 
       return community.posts().query(function(qb) {
         if (params.postType && params.postType != 'all') {
