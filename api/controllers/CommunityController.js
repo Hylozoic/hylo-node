@@ -10,7 +10,7 @@ var validator = require('validator');
 module.exports = {
 
   findOne: function(req, res) {
-    Community.withId(req.param('id')).then(function(community) {
+    Community.find(req.param('id')).then(function(community) {
       res.ok(community);
     });
   },
@@ -25,7 +25,7 @@ module.exports = {
   },
 
   invite: function(req, res) {
-    Community.withId(req.param('id')).then(function(community) {
+    Community.find(req.param('id')).then(function(community) {
 
       var emails = (req.param('emails') || '').split(',').map(function(email) {
         return email.trim();

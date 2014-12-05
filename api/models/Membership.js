@@ -28,7 +28,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     if (isNaN(Number(community_id_or_slug))) {
-      return Community.withSlug(community_id_or_slug)
+      return Community.find(community_id_or_slug)
       .then(function(community) {
         return fetch(community.id);
       })

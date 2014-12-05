@@ -19,12 +19,11 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  withId: function(id) {
-    return Community.where({id: id}).fetch();
+  find: function(id_or_slug) {
+    if (isNaN(Number(id_or_slug))) {
+      return Community.where({slug: id_or_slug}).fetch();
+    }
+    return Community.where({id: id_or_slug}).fetch();
   },
-
-  withSlug: function(slug) {
-    return Community.where({slug: slug}).fetch();
-  }
 
 });
