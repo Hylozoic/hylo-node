@@ -10,8 +10,13 @@ var validator = require('validator');
 module.exports = {
 
   findOne: function(req, res) {
-    Community.withId(req.param('id')).then(function(community) {
-      res.ok(community);
+    Community.find(req.param('id')).then(function(community) {
+      Membership.find(req.session.user.id, community.id).then(function(membership) {
+        res.ok(_.extend(community.toJSON(), {
+          canModerate: membership && membership.hasModeratorRole(),
+          id: Number(community.id)
+        }));
+      });
     });
   },
 
@@ -25,7 +30,7 @@ module.exports = {
   },
 
   invite: function(req, res) {
-    Community.withId(req.param('id')).then(function(community) {
+    Community.find(req.param('id')).then(function(community) {
 
       var emails = (req.param('emails') || '').split(',').map(function(email) {
         return email.trim();

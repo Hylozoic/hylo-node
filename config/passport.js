@@ -6,7 +6,7 @@ var passport = require('passport'),
 passport.use(new GoogleStrategy({
   clientID: process.env.ADMIN_GOOGLE_CLIENT_ID,
   clientSecret: process.env.ADMIN_GOOGLE_CLIENT_SECRET,
-  callbackURL: 'http://localhost:3001/admin/login/oauth'
+  callbackURL: process.env.PROTOCOL + '://' + process.env.DOMAIN + '/admin/login/oauth'
 }, function(accessToken, refreshToken, profile, done) {
   done(null, {email: profile.emails[0].value});
 }));

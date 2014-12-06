@@ -6,9 +6,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   user: function() {
-    return this.belongsTo(User, "user_id").query({where: {active: true}})
+    return this.belongsTo(User, "user_id").query({where: {active: true}});
   }
 
-}, {
-
-})
+});

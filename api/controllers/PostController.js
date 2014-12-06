@@ -50,7 +50,7 @@ module.exports = {
     var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q']),
       sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
 
-    Community.withId(req.param('id')).then(function(community) {
+    Community.find(req.param('id')).then(function(community) {
 
       return community.posts().query(function(qb) {
         if (params.postType && params.postType != 'all') {
@@ -79,15 +79,22 @@ module.exports = {
         qb.limit(params.limit);
         qb.offset(params.start);
       }).fetch({
-        withRelated: [{"creator": function(qb) {
-          qb.column("id", "name", "avatar_url")
-        }}, {"community": function(qb) {
-          qb.column("id", 'name', "slug")
-        }}, "followers", {"followers.user": function(qb) {
-          qb.column("id", "name", "avatar_url")
-        }}, "contributors", {"contributors.user": function(qb){
-          qb.column("id", "name", "avatar_url")
-        }}]
+        withRelated: [
+          {"creator": function(qb) {
+            qb.column("id", "name", "avatar_url");
+          }},
+          {"community": function(qb) {
+            qb.column("id", 'name', "slug");
+          }},
+          "followers",
+          {"followers.user": function(qb) {
+            qb.column("id", "name", "avatar_url");
+          }},
+          "contributors",
+          {"contributors.user": function(qb) {
+            qb.column("id", "name", "avatar_url");
+          }}
+        ]
       });
 
     }).then(function(posts) {
