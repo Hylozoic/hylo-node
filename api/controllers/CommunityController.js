@@ -13,7 +13,8 @@ module.exports = {
     Community.find(req.param('id')).then(function(community) {
       Membership.find(req.session.user.id, community.id).then(function(membership) {
         res.ok(_.extend(community.toJSON(), {
-          canModerate: membership && membership.hasModeratorRole()
+          canModerate: membership && membership.hasModeratorRole(),
+          id: Number(community.id)
         }));
       });
     });
