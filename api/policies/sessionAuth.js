@@ -18,6 +18,7 @@ module.exports = function(req, res, next) {
   } else {
     // User is not allowed
     // (default res.forbidden() behavior can be overridden in `config/403.js`)
+    sails.log.debug("Fail sessionAuth policy: " + req.user);
     res.forbidden();
   }
 };
