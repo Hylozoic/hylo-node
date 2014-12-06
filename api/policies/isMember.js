@@ -3,6 +3,11 @@ module.exports = function isMember(req, res, next) {
 
   Membership.find(req.session.user.id, req.param('id'))
   .then(function(membership) {
-    membership ? next() : res.forbidden();
+    if (membership) {
+      next();
+    } else {
+      sails.log.debug("Fail isMember policy", req.session.user.id, req.param('id'));
+      res.forbidden();
+    }
   });
 };
