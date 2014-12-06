@@ -8,8 +8,22 @@
 module.exports = {
 
   findOne: function(req, res) {
-    User.withId(req.param('id')).then(function(user) {
-      res.ok(user);
+    User.where({id: req.param('id')}).fetch({
+      withRelated: [
+        'memberships',
+        'memberships.community',
+        'skills',
+        'organizations'
+      ]
+    }).then(function(user) {
+      res.ok(_.extend(user.toJSON(), {
+        skills: _.map(user.relations.skills.models, function(model) {
+          return model.attributes.skill_name;
+        }),
+        organizations: _.map(user.relations.organizations.models, function(model) {
+          return model.attributes.org_name;
+        })
+      }));
     });
   }
 

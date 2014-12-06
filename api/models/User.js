@@ -21,6 +21,14 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Invitation, 'invited_by_id');
   },
 
+  skills: function() {
+    return this.hasMany(Skill, 'users_id');
+  },
+
+  organizations: function() {
+    return this.hasMany(Organization, 'users_id');
+  },
+
   setModerator: function(community) {
     return bookshelf.knex('users_community').where({
       users_id: this.id,
