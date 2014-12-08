@@ -15,10 +15,13 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   create: function(opts) {
+    var role = (opts.moderator ? Membership.MODERATOR_ROLE : Membership.DEFAULT_ROLE);
+
     return new Invitation({
       invited_by_id: opts.user.id,
       community_id: opts.community.id,
       email: opts.email,
+      role: role,
       token: uuid.v4(),
       created: new Date()
     }).save();

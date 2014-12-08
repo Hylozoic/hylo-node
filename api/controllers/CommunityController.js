@@ -44,7 +44,8 @@ module.exports = {
         Invitation.createAndSend({
           user: req.session.user,
           email: email,
-          community: community
+          community: community,
+          moderator: req.param('moderator')
         }, function(err) {
           return cb(null, {email: email, error: (err ? err.message : null)});
         });
