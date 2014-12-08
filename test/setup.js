@@ -55,6 +55,7 @@ TestSetup.prototype.initDb = function(done) {
       table.bigInteger('community_id');
       table.string('email');
       table.string('token');
+      table.integer('role');
       table.datetime('created');
     });
   }).then(function() {
