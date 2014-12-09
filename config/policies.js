@@ -47,7 +47,9 @@ module.exports.policies = {
     update: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     invite: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     findModerators: ['playSessionCheck', 'sessionAuth', 'isModerator'],
-    removeModerator: ['playSessionCheck', 'sessionAuth', 'isModerator']
+    addModerator: ['playSessionCheck', 'sessionAuth', 'isModerator'],
+    removeModerator: ['playSessionCheck', 'sessionAuth', 'isModerator'],
+    findMembers: ['playSessionCheck', 'sessionAuth', 'isMember']
   },
 
   PostController: {

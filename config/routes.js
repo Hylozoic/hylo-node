@@ -53,7 +53,9 @@ module.exports.routes = {
   'POST   /noo/community/:id/invite':             'CommunityController.invite',
   'GET    /noo/community/:id/posts':              'PostController.find',
   'GET    /noo/community/:id/moderators':         'CommunityController.findModerators',
+  'POST   /noo/community/:id/moderators':         'CommunityController.addModerator',
   'DELETE /noo/community/:id/moderator/:user_id': 'CommunityController.removeModerator',
+  'GET    /noo/community/:id/members':            'CommunityController.findMembers',
 
   'GET    /admin/login':                          'SessionController.create',
   'GET    /admin/login/oauth':                    'SessionController.oauth',
