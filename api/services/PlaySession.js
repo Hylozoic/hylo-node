@@ -35,7 +35,12 @@ _.extend(PlaySession.prototype, {
       provider_key: providerKey,
       provider_user_id: providerId
     }).fetch().then(function(account) {
-      return account.activeUser().fetch();
+      if (account) {
+        return account.activeUser().fetch();
+      } else {
+        sails.log.error("PlaySession failed to retrieve linkedAccount", providerKey, providerId)
+        return null;
+      }
     });
   }
 });
