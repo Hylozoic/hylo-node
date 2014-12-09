@@ -51,7 +51,7 @@ describe('User', function() {
     .then(function(user) { cat = user; })
     .then(function() { return house.save(); })
     .then(function() { return cat.joinCommunity(house); })
-    .then(function() { return cat.setModerator(house); })
+    .then(function() { return cat.setModeratorRole(house); })
     .then(function() { return cat.memberships().query({where: {community_id: house.id}}).fetchOne(); })
     .then(function(membership) {
       expect(membership).to.exist;
