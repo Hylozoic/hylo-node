@@ -30,17 +30,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   setModeratorRole: function(community) {
-    return bookshelf.knex('users_community').where({
-      users_id: this.id,
-      community_id: (typeof community === 'object' ? community.id : community)
-    }).update({role: Membership.MODERATOR_ROLE});
+    return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community));
   },
 
   removeModeratorRole: function(community) {
-    return bookshelf.knex('users_community').where({
-      users_id: this.id,
-      community_id: (typeof community === 'object' ? community.id : community)
-    }).update({role: Membership.DEFAULT_ROLE});
+    return Membership.removeModeratorRole(this.id, (typeof community === 'object' ? community.id : community));
   },
 
   joinCommunity: function(community) {
