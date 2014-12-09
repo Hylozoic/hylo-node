@@ -15,6 +15,12 @@ module.exports = bookshelf.Model.extend({
 
   posts: function() {
     return this.belongsToMany(Post, 'post_community', 'community_id', 'post_id');
+  },
+
+  moderators: function() {
+    return this
+      .belongsToMany(User, 'users_community', 'community_id', 'users_id')
+      .query({where: {role: Membership.MODERATOR_ROLE}});
   }
 
 }, {

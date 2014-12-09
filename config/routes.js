@@ -47,14 +47,16 @@ module.exports.routes = {
   ***************************************************************************/
 
 
-  'GET  /noo/user/:id':             'UserController.findOne',
-  'GET  /noo/community/:id':        'CommunityController.findOne',
-  'POST /noo/community/:id':        'CommunityController.update',
-  'POST /noo/community/:id/invite': 'CommunityController.invite',
-  'GET  /noo/community/:id/posts':  'PostController.find',
+  'GET    /noo/user/:id':                         'UserController.findOne',
+  'GET    /noo/community/:id':                    'CommunityController.findOne',
+  'POST   /noo/community/:id':                    'CommunityController.update',
+  'POST   /noo/community/:id/invite':             'CommunityController.invite',
+  'GET    /noo/community/:id/posts':              'PostController.find',
+  'GET    /noo/community/:id/moderators':         'CommunityController.findModerators',
+  'DELETE /noo/community/:id/moderator/:user_id': 'CommunityController.removeModerator',
 
-  'GET /admin/login':               'SessionController.create',
-  'GET /admin/login/oauth':         'SessionController.oauth',
-  'GET /admin':                     'AdminController.index',
+  'GET    /admin/login':                          'SessionController.create',
+  'GET    /admin/login/oauth':                    'SessionController.oauth',
+  'GET    /admin':                                'AdminController.index',
 
 };

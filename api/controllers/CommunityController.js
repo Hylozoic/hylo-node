@@ -55,6 +55,28 @@ module.exports = {
       });
 
     });
+  },
+
+  findModerators: function(req, res) {
+    Community.find(req.param('id')).then(function(community) {
+      return community.moderators().fetch();
+    }).then(function(moderators) {
+      res.ok(moderators.map(function(user) {
+        return {
+          id: user.id,
+          name: user.get('name'),
+          avatar_url: user.get('avatar_url')
+        };
+      }));
+    });
+  },
+
+  removeModerator: function(req, res) {
+    User.find(req.param('user_id')).then(function(user) {
+      return user.removeModeratorRole(req.param('id'));
+    }).then(function() {
+      res.ok({});
+    });
   }
 
 };

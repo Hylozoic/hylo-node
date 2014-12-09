@@ -29,11 +29,18 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Organization, 'users_id');
   },
 
-  setModerator: function(community) {
+  setModeratorRole: function(community) {
     return bookshelf.knex('users_community').where({
       users_id: this.id,
       community_id: (typeof community === 'object' ? community.id : community)
     }).update({role: Membership.MODERATOR_ROLE});
+  },
+
+  removeModeratorRole: function(community) {
+    return bookshelf.knex('users_community').where({
+      users_id: this.id,
+      community_id: (typeof community === 'object' ? community.id : community)
+    }).update({role: Membership.DEFAULT_ROLE});
   },
 
   joinCommunity: function(community) {
@@ -46,7 +53,7 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  withId: function(id) {
+  find: function(id) {
     return User.where({id: id}).fetch();
   },
 
