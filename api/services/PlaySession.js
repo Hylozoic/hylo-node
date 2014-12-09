@@ -31,17 +31,21 @@ _.extend(PlaySession.prototype, {
   },
   fetchUser: function(callback) {
     var providerKey = this.data['pa.p.id'], providerId = this.data['pa.u.id'];
-    return LinkedAccount.where({
-      provider_key: providerKey,
-      provider_user_id: providerId
-    }).fetch().then(function(account) {
-      if (account) {
-        return account.activeUser().fetch();
-      } else {
-        sails.log.error("PlaySession failed to retrieve linkedAccount", providerKey, providerId)
-        return null;
-      }
-    });
+    if (providerKey == 'password') {
+      return User.where({email: providerId}).fetch();
+    } else {
+      return LinkedAccount.where({
+        provider_key: providerKey,
+        provider_user_id: providerId
+      }).fetch().then(function (account) {
+        if (account) {
+          return account.activeUser().fetch();
+        } else {
+          sails.log.error("PlaySession failed to retrieve linkedAccount", providerKey, providerId)
+          return null;
+        }
+      });
+    }
   }
 });
 
