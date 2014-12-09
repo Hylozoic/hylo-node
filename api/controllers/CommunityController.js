@@ -71,11 +71,39 @@ module.exports = {
     });
   },
 
-  removeModerator: function(req, res) {
-    User.find(req.param('user_id')).then(function(user) {
-      return user.removeModeratorRole(req.param('id'));
-    }).then(function() {
+  addModerator: function(req, res) {
+    Membership.setModeratorRole(req.param('user_id'), req.param('id')).then(function() {
       res.ok({});
+    });
+  },
+
+  removeModerator: function(req, res) {
+    Membership.removeModeratorRole(req.param('user_id'), req.param('id')).then(function() {
+      res.ok({});
+    });
+  },
+
+  findMembers: function(req, res) {
+    Community.find(req.param('id')).then(function(community) {
+
+      return community.users().query(function(qb) {
+        var search = req.param('search');
+        if (search) {
+          qb.where("name", "ILIKE", '%' + search + '%');
+          qb.limit(10);
+        }
+      }).fetch();
+
+    }).then(function(users) {
+
+      res.ok(users.map(function(user) {
+        return {
+          id: user.id,
+          name: user.get('name'),
+          avatar_url: user.get('avatar_url')
+        };
+      }));
+
     });
   }
 
