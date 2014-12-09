@@ -31,16 +31,12 @@ _.extend(PlaySession.prototype, {
   },
   fetchUser: function(callback) {
     var providerKey = this.data['pa.p.id'], providerId = this.data['pa.u.id'];
-    if (providerKey == 'password') {
-      return User.where({email: providerId}).fetch();
-    } else {
-      return LinkedAccount.where({
-        provider_key: providerKey,
-        provider_user_id: providerId
-      }).fetch().then(function(account) {
-        return account.user().fetch();
-      });
-    }
+    return LinkedAccount.where({
+      provider_key: providerKey,
+      provider_user_id: providerId
+    }).fetch().then(function(account) {
+      return account.activeUser().fetch();
+    });
   }
 });
 

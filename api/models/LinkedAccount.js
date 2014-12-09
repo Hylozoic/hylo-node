@@ -3,5 +3,11 @@ module.exports = bookshelf.Model.extend({
 
   user: function() {
     return this.belongsTo(User);
+  },
+
+  activeUser: function() {
+    return this.belongsTo(User)
+      .query({where: {active: true}});
   }
+
 });
