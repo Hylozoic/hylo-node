@@ -35,7 +35,11 @@ module.exports = bookshelf.Model.extend({
         process.env.DOMAIN, invitation.get('token')
       );
 
-      Email.sendInvitation(opts.email, {
+      Email.sendInvitation({
+        to: opts.email,
+        version_name: (opts.community.id == 31 ? 'uplift' : 'default'),
+        sender_name: (opts.community.id == 31 ? 'Uplift Connect' : null)
+      }, {
         inviter_name: opts.user.get('name'),
         recipient: opts.email,
         community_name: opts.community.get('name'),
