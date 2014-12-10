@@ -21,7 +21,9 @@ module.exports.http = {
   *                                                                           *
   ****************************************************************************/
 
-  // middleware: {
+  middleware: {
+
+    rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
   /***************************************************************************
   *                                                                          *
@@ -30,23 +32,24 @@ module.exports.http = {
   *                                                                          *
   ***************************************************************************/
 
-    // order: [
-    //   'startRequestTimer',
-    //   'cookieParser',
-    //   'session',
-    //   'myRequestLogger',
-    //   'bodyParser',
-    //   'handleBodyParserError',
-    //   'compress',
-    //   'methodOverride',
-    //   'poweredBy',
-    //   '$custom',
-    //   'router',
-    //   'www',
-    //   'favicon',
-    //   '404',
-    //   '500'
-    // ],
+    order: [
+      'startRequestTimer',
+      'cookieParser',
+      'session',
+      'myRequestLogger',
+      'bodyParser',
+      'handleBodyParserError',
+      'compress',
+      'methodOverride',
+      'poweredBy',
+      '$custom',
+      'router',
+      'www',
+      'favicon',
+      '404',
+      'rollbar',
+      '500'
+    ],
 
   /****************************************************************************
   *                                                                           *
@@ -71,7 +74,7 @@ module.exports.http = {
 
     // bodyParser: require('skipper')
 
-  // },
+  }
 
   /***************************************************************************
   *                                                                          *
