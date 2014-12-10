@@ -38,7 +38,9 @@ module.exports.policies = {
   },
 
   UserController: {
-    findOne: ['playSessionCheck', 'sessionAuth', 'isSelf']
+    findSelf: ['playSessionCheck', 'sessionAuth'],
+    findOne: ['playSessionCheck', 'sessionAuth', 'inSameCommunity'],
+    update: ['playSessionCheck', 'sessionAuth', 'isSelf']
   },
 
   CommunityController: {

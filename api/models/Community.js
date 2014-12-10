@@ -30,6 +30,6 @@ module.exports = bookshelf.Model.extend({
       return Community.where({slug: id_or_slug}).fetch();
     }
     return Community.where({id: id_or_slug}).fetch();
-  },
+  }
 
 });
