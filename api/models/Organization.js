@@ -4,4 +4,12 @@ module.exports = bookshelf.Model.extend({
   user: function() {
     return this.belongsTo(User, 'users_id');
   }
+}, {
+
+  simpleList: function(user) {
+    return _.map(user.relations.organizations.models, function(model) {
+      return model.attributes.org_name;
+    });
+  }
+
 })

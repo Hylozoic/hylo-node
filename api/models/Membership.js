@@ -49,6 +49,23 @@ module.exports = bookshelf.Model.extend({
       users_id: user_id,
       community_id: community_id
     }).update({role: Membership.DEFAULT_ROLE});
+  },
+
+  // do all of the users have at least one community in common?
+  inSameCommunity: function(user_ids) {
+    user_ids = _.uniq(user_ids);
+    return bookshelf.knex
+      .select('community_id')
+      .count('*')
+      .from('users_community')
+      .whereIn('users_id', user_ids)
+      .groupBy('community_id')
+      .havingRaw('count(*) = ?', [user_ids.length])
+      .then(function(sharedMemberships) {
+        // the number of rows is equal to the number
+        // of communities the users have in common
+        return sharedMemberships.length > 0;
+      });
   }
 
 });

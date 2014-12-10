@@ -47,12 +47,41 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  find: function(id) {
-    return User.where({id: id}).fetch();
+  find: function(id, options) {
+    return User.where({id: id}).fetch(options);
   },
 
   named: function(name) {
     return User.where({name: name}).fetch();
+  },
+
+  fetchForSelf: function(id) {
+    return User.find(id, {
+      withRelated: [
+        'memberships',
+        'memberships.community',
+        'skills',
+        'organizations'
+      ]
+    }).then(function(user) {
+      return _.extend(user.toJSON(), {
+        skills: Skill.simpleList(user),
+        organizations: Organization.simpleList(user)
+      });
+    });
+  },
+
+  fetchForOther: function(id) {
+    return User.where({id: id}).fetch({
+      withRelated: ['skills', 'organizations']
+    }).then(function(user) {
+      return _.chain(user.attributes)
+        .pick(['id', 'name', 'avatar_url'])
+        .extend({
+          skills: Skill.simpleList(user),
+          organizations: Organization.simpleList(user)
+        }).value();
+    });
   }
 
 });
