@@ -44,6 +44,7 @@ module.exports.policies = {
   },
 
   CommunityController: {
+    findDefault: ['playSessionCheck', 'sessionAuth'],
     findOne: ['playSessionCheck', 'sessionAuth', 'isMember'],
     update: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     invite: ['playSessionCheck', 'sessionAuth', 'isModerator'],

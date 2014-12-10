@@ -7,15 +7,27 @@
 
 var validator = require('validator');
 
+var communityAttributes = function(community, membership) {
+  return _.extend(community.attributes, {
+    canModerate: membership && membership.hasModeratorRole(),
+    id: Number(community.id)
+  })
+}
+
 module.exports = {
+
+  findDefault: function(req, res) {
+    req.session.user.communities().fetchOne().then(function(community) {
+      Membership.find(req.session.user.id, community.id).then(function(membership) {
+        res.ok(communityAttributes(community, membership));
+      })
+    })
+  },
 
   findOne: function(req, res) {
     Community.find(req.param('id')).then(function(community) {
       Membership.find(req.session.user.id, community.id).then(function(membership) {
-        res.ok(_.extend(community.toJSON(), {
-          canModerate: membership && membership.hasModeratorRole(),
-          id: Number(community.id)
-        }));
+        res.ok(communityAttributes(community, membership));
       });
     });
   },
