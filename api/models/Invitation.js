@@ -37,8 +37,8 @@ module.exports = bookshelf.Model.extend({
 
       Email.sendInvitation({
         to: opts.email,
-        version_name: (opts.community.id == 31 ? 'uplift' : 'default'),
-        sender_name: (opts.community.id == 31 ? 'Uplift Connect' : null)
+        version_name: (opts.community.id == 362 ? 'uplift' : 'default'),
+        sender_name: (opts.community.id == 362 ? 'Uplift Connect' : null)
       }, {
         inviter_name: opts.user.get('name'),
         recipient: opts.email,
