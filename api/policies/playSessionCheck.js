@@ -15,6 +15,12 @@ module.exports = function(req, res, next) {
         sails.log.debug("Play session is valid: " + user.get('email'));
         req.session.authenticated = true;
         req.session.user = user;
+
+        req.rollbar_person = {
+          id: user.get("id"),
+          username: user.get("name"),
+          email: user.get("email")
+        }; // for rollbar error handling
       }
       next();
     });
