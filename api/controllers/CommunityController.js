@@ -33,11 +33,12 @@ module.exports = {
   },
 
   update: function(req, res) {
-    var attributes = _.pick(req.allParams(), ['banner_url', 'avatar_url']),
+    var whitelist = ['banner_url', 'avatar_url', 'name', 'description'],
+      attributes = _.pick(req.allParams(), whitelist),
       community = new Community({id: req.param('id')});
 
     community.save(attributes, {patch: true}).then(function(community) {
-      res.ok(community);
+      res.ok({});
     })
   },
 
