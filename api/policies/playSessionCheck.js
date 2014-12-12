@@ -16,11 +16,7 @@ module.exports = function(req, res, next) {
         req.session.authenticated = true;
         req.session.user = user;
 
-        req.rollbar_person = {
-          id: user.get("id"),
-          username: user.get("name"),
-          email: user.get("email")
-        }; // for rollbar error handling
+        req.rollbar_person = user.pick('id', 'name', 'email');
       }
       next();
     });
