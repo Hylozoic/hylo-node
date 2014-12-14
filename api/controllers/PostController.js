@@ -67,10 +67,10 @@ module.exports = {
             .reduce(function(result, term, key) { // Build the tsquery string using logical | (OR) operands
               result += " | " + term;
               return result;
-            }).value()
+            }).value();
 
           qb.where(function() {
-            this.whereRaw("(to_tsvector('english', post.name) @@ to_tsquery(?)) OR (to_tsvector('english', post.description) @@ to_tsquery(?))", [query, query])
+            this.whereRaw("(to_tsvector('english', post.name) @@ to_tsquery(?)) OR (to_tsvector('english', post.description) @@ to_tsquery(?))", [query, query]);
             //this.where("name", "ILIKE", query).orWhere("description", "ILIKE", query ) // Basic 'icontains' searching
           })
         }
@@ -113,4 +113,4 @@ module.exports = {
 
     });
   }
-}
+};
