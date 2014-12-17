@@ -16,7 +16,7 @@ describe('Invitation', function() {
       }).then(function(invitation) {
         var uuidPattern = /^[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}$/;
         expect(invitation.get('token')).to.match(uuidPattern);
-      }).then(done);
+      }).exec(done);
     });
 
   });
