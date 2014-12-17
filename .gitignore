@@ -117,5 +117,6 @@ nbproject
 .idea
 .node_history
 .env
+.env.test
 
 *.iml
