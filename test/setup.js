@@ -3,6 +3,9 @@ var async = require('async'),
   path = require('path'),
   root = require('root-path');
 
+process.env.NODE_ENV = 'test';
+require('dotenv').load(); // loads ".env.test"
+
 global.expect = require('chai').expect;
 global._      = require('lodash');
 
