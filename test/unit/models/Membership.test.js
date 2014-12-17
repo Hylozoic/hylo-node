@@ -25,13 +25,13 @@ describe('Membership', function() {
     it('works with a community id', function(done) {
       Membership.find(user.id, community.id).then(function(membership) {
         expect(membership).to.exist;
-      }).then(done);
+      }).exec(done);
     });
 
     it('works with a community slug', function(done) {
       Membership.find(user.id, community.get('slug')).then(function(membership) {
         expect(membership).to.exist;
-      }).then(done);
+      }).exec(done);
     });
 
   });

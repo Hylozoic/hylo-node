@@ -17,7 +17,7 @@ describe('User', function() {
     User.where({name: 'Cat'}).fetch().then(function(cat) {
       expect(cat).to.exist;
       expect(cat.get('name')).to.equal('Cat');
-    }).done(done);
+    }).exec(done);
   })
 
   it('can join communities', function(done) {
@@ -39,7 +39,7 @@ describe('User', function() {
       expect(communities.models[0].get('name')).to.equal('House');
       expect(communities.models[1].get('name')).to.equal('Yard');
     })
-    .done(done);
+    .exec(done);
 
   });
 
