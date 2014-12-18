@@ -29,6 +29,14 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Organization, 'users_id');
   },
 
+  contributions: function() {
+    return this.hasMany(Contributor, 'user_id');
+  },
+
+  thanks: function() {
+    return this.hasMany(Thank, 'user_id')
+  },
+
   setModeratorRole: function(community) {
     return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community));
   },

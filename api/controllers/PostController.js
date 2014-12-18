@@ -34,8 +34,8 @@ var postAttributes = function(post, hasVote) {
     "numComments": post.get("num_comments"),
     "fulfilled": post.get("fulfilled"),
     "contributors": contributors,
-    "communitySlug": post.related("community").first().get("slug"),
-    "cName": post.related("community").first().get("name"),
+    "communitySlug": post.related("communities").first().get("slug"),
+    "cName": post.related("communities").first().get("name"),
     "myVote": hasVote,
     "comments": [], // TODO Load Comments?
     "commentsLoaded": false,
@@ -72,7 +72,7 @@ module.exports = {
           qb.where(function() {
             this.whereRaw("(to_tsvector('english', post.name) @@ to_tsquery(?)) OR (to_tsvector('english', post.description) @@ to_tsquery(?))", [query, query]);
             //this.where("name", "ILIKE", query).orWhere("description", "ILIKE", query ) // Basic 'icontains' searching
-          })
+          });
         }
 
         qb.orderBy(sortCol, 'desc');
@@ -83,7 +83,7 @@ module.exports = {
           {"creator": function(qb) {
             qb.column("id", "name", "avatar_url");
           }},
-          {"community": function(qb) {
+          {"communities": function(qb) {
             qb.column("id", 'name', "slug");
           }},
           "followers",

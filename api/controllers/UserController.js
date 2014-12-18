@@ -19,6 +19,36 @@ module.exports = {
     })
   },
 
+  contributions: function(req, res) {
+    var userId = req.param('id');
+
+    User.find(userId).then(function(user) {
+      user.contributions().query(function(qb) {
+        qb.orderBy("date_contributed");
+      }).fetch({
+        withRelated: [
+          {
+            "post.creator": function(qb) {
+              qb.column("id", "name", "avatar_url");
+            },
+            "post": function (qb) {
+              qb.column("id", "name", "creator_id");
+            },
+            "post.communities": function(qb) {
+              qb.column("id", "name");
+            }
+          }
+        ]
+      }).then(function(contributions) {
+        res.ok(contributions);
+      });
+    });
+  },
+
+  thanks: function(req, res) {
+
+  },
+
   update: function(req, res) {
 
   }
