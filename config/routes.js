@@ -50,6 +50,8 @@ module.exports.routes = {
   'GET    /noo/user/me':                          'UserController.findSelf',
   'GET    /noo/user/:id':                         'UserController.findOne',
   'POST   /noo/user/:id':                         'UserController.update',
+  'GET    /noo/user/:id/contributions':           'UserController.contributions',
+  'GET    /noo/user/:id/thanks':                  'UserController.thanks',
 
   'GET    /noo/community/default':                'CommunityController.findDefault',
   'GET    /noo/community/:id':                    'CommunityController.findOne',
@@ -63,6 +65,6 @@ module.exports.routes = {
 
   'GET    /admin/login':                          'SessionController.create',
   'GET    /admin/login/oauth':                    'SessionController.oauth',
-  'GET    /admin':                                'AdminController.index',
+  'GET    /admin':                                'AdminController.index'
 
 };

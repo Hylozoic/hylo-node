@@ -1,8 +1,8 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'contributor',
+  tableName: 'thank_you',
 
-  post: function() {
-    return this.belongsTo(Post, 'post_id');
+  comment: function() {
+    return this.belongsTo(Post, 'comment_id');
   },
 
   user: function() {
