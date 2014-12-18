@@ -20,11 +20,32 @@ module.exports = {
   },
 
   contributions: function(req, res) {
-    var userId = req.param('id');
+    var params = _.pick(req.allParams(), ['id', 'limit', 'start']),
+      limit = params.limit ? params.limit : 15,
+      start = params.start ? params.start : 0;
+
+    var userId = params.id;
+
+    var isSelf = req.session.user.id === userId;
 
     User.find(userId).then(function(user) {
       user.contributions().query(function(qb) {
         qb.orderBy("date_contributed");
+        qb.limit(limit);
+        qb.offset(start);
+
+        if (!isSelf) {
+          qb.join("post", "post.id", "=", "contributor.post_id");
+          qb.join("post_community", "post_community.post_id", "=", "post.id");
+          qb.join("community", "community.id", "=", "post_community.community_id");
+
+          var curUserActiveMembershipsSubQuery = bookshelf.knex.select("community_id")
+              .from("users_community")
+              .where("users_id", "=", req.session.user.id)
+              .where("active", "=", true);
+
+          qb.whereIn("community.id", curUserActiveMembershipsSubQuery);
+        }
       }).fetch({
         withRelated: [
           {
@@ -32,7 +53,7 @@ module.exports = {
               qb.column("id", "name", "avatar_url");
             },
             "post": function (qb) {
-              qb.column("id", "name", "creator_id");
+              qb.column("id", "name", "creator_id", "type");
             },
             "post.communities": function(qb) {
               qb.column("id", "name");
