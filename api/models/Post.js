@@ -14,7 +14,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   contributors: function() {
-    return this.hasMany(Contributor, "post_id");
+    return this.hasMany(Contribution, "post_id");
   }
 
 });

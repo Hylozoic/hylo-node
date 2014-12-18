@@ -30,7 +30,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   contributions: function() {
-    return this.hasMany(Contributor, 'user_id');
+    return this.hasMany(Contribution, 'user_id');
   },
 
   thanks: function() {
