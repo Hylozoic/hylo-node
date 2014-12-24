@@ -66,6 +66,13 @@ module.exports = bookshelf.Model.extend({
         // of communities the users have in common
         return sharedMemberships.length > 0;
       });
+  },
+
+  getActiveMembershipCommunityIds: function(user_id) {
+    return bookshelf.knex.select("community_id")
+      .from("users_community")
+      .where("users_id", "=", user_id)
+      .where("active", "=", true);
   }
 
 });

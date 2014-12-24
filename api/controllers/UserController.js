@@ -39,13 +39,11 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          var curUserActiveMembershipsSubQuery = bookshelf.knex.select("community_id")
-              .from("users_community")
-              .where("users_id", "=", req.session.user.id)
-              .where("active", "=", true);
-
-          qb.whereIn("community.id", curUserActiveMembershipsSubQuery);
+          qb.whereIn("community.id", Membership.getActiveMembershipCommunityIds(req.session.user.id));
         }
+
+        qb.where({"post.active": true});
+
       }).fetch({
         withRelated: [
           {
@@ -87,13 +85,10 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          var curUserActiveMembershipsSubQuery = bookshelf.knex.select("community_id")
-            .from("users_community")
-            .where("users_id", "=", req.session.user.id)
-            .where("active", "=", true);
-
-          qb.whereIn("community.id", curUserActiveMembershipsSubQuery);
+          qb.whereIn("community.id", Membership.getActiveMembershipCommunityIds(req.session.user.id));
         }
+
+        qb.where({"comment.active": true, "post.active": true});
       }).fetch({
         withRelated: [
           {
