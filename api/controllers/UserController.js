@@ -33,9 +33,9 @@ module.exports = {
         qb.orderBy("date_contributed");
         qb.limit(limit);
         qb.offset(start);
+        qb.join("post", "post.id", "=", "contributor.post_id");
 
         if (!isSelf) {
-          qb.join("post", "post.id", "=", "contributor.post_id");
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
@@ -78,10 +78,10 @@ module.exports = {
         qb.orderBy("date_thanked");
         qb.limit(limit);
         qb.offset(start);
+        qb.join("comment", "comment.id", "=", "thank_you.comment_id");
+        qb.join("post", "post.id", "=", "comment.post_id");
 
         if (!isSelf) {
-          qb.join("comment", "comment.id", "=", "thank_you.comment_id");
-          qb.join("post", "post.id", "=", "comment.post_id");
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
