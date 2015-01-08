@@ -39,7 +39,7 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          qb.whereIn("community.id", Membership.getActiveMembershipCommunityIds(req.session.user.id));
+          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.user.id));
         }
 
         qb.where({"post.active": true});
@@ -85,7 +85,7 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          qb.whereIn("community.id", Membership.getActiveMembershipCommunityIds(req.session.user.id));
+          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.user.id));
         }
 
         qb.where({"comment.active": true, "post.active": true});
