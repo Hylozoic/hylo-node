@@ -116,7 +116,16 @@ module.exports = {
   },
 
   update: function(req, res) {
+    var attrs = _.pick(req.allParams(), ['bio']);
 
+    User.find(req.param('id')).then(function(user) {
+      user.set(attrs);
+      return user.save();
+    }).then(function() {
+      res.ok({});
+    }).catch(function() {
+      res.serverError();
+    });
   }
 
 };
