@@ -61,7 +61,14 @@ TestSetup.prototype.initDb = function(done) {
       table.integer('role');
       table.datetime('created');
     });
-  }).then(function() {
+  })
+  .then(function() {
+    return knex.schema.createTable('users_skill', function(table) {
+      table.bigInteger('users_id');
+      table.string('skill_name');
+    })
+  })
+  .then(function() {
     this.dbInited = true;
     done();
   }.bind(this));
