@@ -69,6 +69,12 @@ TestSetup.prototype.initDb = function(done) {
     })
   })
   .then(function() {
+    return knex.schema.createTable('users_org', function(table) {
+      table.bigInteger('users_id');
+      table.string('org_name');
+    })
+  })
+  .then(function() {
     this.dbInited = true;
     done();
   }.bind(this));
