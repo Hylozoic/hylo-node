@@ -73,21 +73,21 @@ module.exports = bookshelf.Model.extend({
       ]
     }).then(function(user) {
       return _.extend(user.toJSON(), {
-        skills: Skill.simpleList(user),
-        organizations: Organization.simpleList(user)
+        skills: Skill.simpleList(user.relations.skills),
+        organizations: Organization.simpleList(user.relations.organizations)
       });
     });
   },
 
   fetchForOther: function(id) {
-    return User.where({id: id}).fetch({
+    return User.find(id, {
       withRelated: ['skills', 'organizations']
     }).then(function(user) {
       return _.chain(user.attributes)
         .pick(['id', 'name', 'avatar_url'])
         .extend({
-          skills: Skill.simpleList(user),
-          organizations: Organization.simpleList(user)
+          skills: Skill.simpleList(user.relations.skills),
+          organizations: Organization.simpleList(user.relations.organizations)
         }).value();
     });
   }

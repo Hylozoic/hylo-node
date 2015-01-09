@@ -6,8 +6,8 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
 
-  simpleList: function(user) {
-    return _.map(user.relations.organizations.models, function(model) {
+  simpleList: function(collection) {
+    return _.map(collection.models, function(model) {
       return model.attributes.org_name;
     });
   }
