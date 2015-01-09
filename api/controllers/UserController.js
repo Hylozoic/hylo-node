@@ -5,6 +5,8 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
+var Promise = require('bluebird');
+
 module.exports = {
 
   findSelf: function(req, res) {
@@ -120,11 +122,23 @@ module.exports = {
 
     User.find(req.param('id')).then(function(user) {
       user.set(attrs);
-      return user.save();
+
+      var promises = [user.save()],
+        skills = req.param('skills'),
+        organizations = req.param('organizations');
+
+      if (skills)
+        promises.push(Skill.update(skills, user.id));
+
+      if (organizations)
+        promises.push(Organizations.update(organizations, user.id));
+
+      return Promise.all(promises);
+
     }).then(function() {
       res.ok({});
-    }).catch(function() {
-      res.serverError();
+    }).catch(function(err) {
+      res.serverError(err);
     });
   }
 
