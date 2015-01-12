@@ -17,4 +17,8 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Contribution, "post_id");
   }
 
+}, {
+  find: function(id) {
+    return Post.where({id: id}).fetch();
+  }
 });

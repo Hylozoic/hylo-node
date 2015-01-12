@@ -1,4 +1,5 @@
 var Promise = require('bluebird');
+var SanitizeHtml = require('sanitize-html');
 
 var postAttributes = function(post, hasVote) {
 
@@ -44,6 +45,10 @@ var postAttributes = function(post, hasVote) {
     "numFollowers": followers.length
   }
 };
+
+var commentAttributes = function(comment, user, isThanked) {
+
+}
 
 module.exports = {
   find: function(req, res) {
@@ -111,6 +116,26 @@ module.exports = {
         return postAttributes(post, _.contains(data.votes, post.get("id")));
       }));
 
+    });
+  },
+
+  comment: function(req, res) {
+    var params = _.pick(req.allParams(), ['id', 'text']);
+    clean = SanitizeHtml(params.text, {
+      allowedTags: [ 'a', 'p' ],
+      allowedAttributes: {
+        'a': [ 'href' ]
+      }
+    });
+
+    new Comment({
+      comment_text: clean,
+      date_commented: new Date(),
+      post_id: res.locals.post.id,
+      user_id: req.session.user.id,
+      active: true
+    }).save().then(function(comment) {
+        res.ok(comment);
     });
   }
 };
