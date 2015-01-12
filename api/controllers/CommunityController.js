@@ -97,17 +97,10 @@ module.exports = {
   },
 
   findMembers: function(req, res) {
-    Community.find(req.param('id')).then(function(community) {
+    var search = req.param('search');
 
-      return community.users().query(function(qb) {
-        var search = req.param('search');
-        if (search) {
-          qb.where("name", "ILIKE", '%' + search + '%');
-          qb.limit(10);
-        }
-      }).fetch();
-
-    }).then(function(users) {
+    var id = req.param('id');
+    Community.members(id, search).then(function(users) {
 
       res.ok(users.map(function(user) {
         return {

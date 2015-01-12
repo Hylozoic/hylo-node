@@ -25,7 +25,7 @@ module.exports = bookshelf.Model.extend({
         users_id: user_id,
         community_id: community_id
       }).fetch();
-    }
+    };
 
     if (isNaN(Number(community_id_or_slug))) {
       return Community.find(community_id_or_slug)
