@@ -15,6 +15,14 @@ module.exports = bookshelf.Model.extend({
 
   contributors: function() {
     return this.hasMany(Contribution, "post_id");
+  },
+
+}, {
+
+  countForUser: function(user) {
+    return bookshelf.knex('post').count().where({creator_id: user.id}).then(function(rows) {
+      return rows[0].count;
+    });
   }
 
 });

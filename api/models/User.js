@@ -1,6 +1,14 @@
-// The lack of a single-column primary key on this table turns out to be a real drag,
-// because Bookshelf requires one for many purposes, so we have to drop down closer
-// to raw SQL to work around that.
+var Promise = require('bluebird');
+
+var extraUserAttributes = function(user) {
+  return Promise.props({
+    skills: Skill.simpleList(user.relations.skills),
+    organizations: Organization.simpleList(user.relations.organizations),
+    seed_count: Post.countForUser(user),
+    contribution_count: Contribution.countForUser(user),
+    thank_count: Thank.countForUser(user)
+  });
+};
 
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
@@ -11,6 +19,10 @@ module.exports = bookshelf.Model.extend({
 
   communities: function() {
     return this.belongsToMany(Community, 'users_community', 'users_id', 'community_id');
+  },
+
+  posts: function() {
+    return this.hasMany(Post, 'creator_id');
   },
 
   linkedAccounts: function() {
@@ -69,13 +81,13 @@ module.exports = bookshelf.Model.extend({
         'memberships',
         'memberships.community',
         'skills',
-        'organizations'
+        'organizations',
+        'linkedAccounts'
       ]
     }).then(function(user) {
-      return _.extend(user.toJSON(), {
-        skills: Skill.simpleList(user.relations.skills),
-        organizations: Organization.simpleList(user.relations.organizations)
-      });
+      return Promise.join(user, extraUserAttributes(user));
+    }).then(function(values) {
+      return _.extend(values[0].toJSON(), values[1]);
     });
   },
 
@@ -83,12 +95,11 @@ module.exports = bookshelf.Model.extend({
     return User.find(id, {
       withRelated: ['skills', 'organizations']
     }).then(function(user) {
-      return _.chain(user.attributes)
+      return Promise.join(user, extraUserAttributes(user));
+    }).then(function(values) {
+      return _.chain(values[0].attributes)
         .pick(['id', 'name', 'avatar_url'])
-        .extend({
-          skills: Skill.simpleList(user.relations.skills),
-          organizations: Organization.simpleList(user.relations.organizations)
-        }).value();
+        .extend(values[1]).value();
     });
   }
 

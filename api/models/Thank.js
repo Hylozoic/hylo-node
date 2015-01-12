@@ -13,4 +13,12 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, "thanked_by_id");
   }
 
+}, {
+
+  countForUser: function(user) {
+    return bookshelf.knex('thank_you').count().where({user_id: user.id}).then(function(rows) {
+      return rows[0].count;
+    });
+  }
+
 });
