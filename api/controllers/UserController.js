@@ -118,7 +118,7 @@ module.exports = {
   },
 
   update: function(req, res) {
-    var attrs = _.pick(req.allParams(), ['bio']);
+    var attrs = _.pick(req.allParams(), ['bio', 'avatar_url', 'banner_url']);
 
     User.find(req.param('id')).then(function(user) {
       user.set(attrs);
