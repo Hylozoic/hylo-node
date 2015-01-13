@@ -118,10 +118,12 @@ module.exports = {
   },
 
   update: function(req, res) {
-    var attrs = _.pick(req.allParams(), ['bio', 'avatar_url', 'banner_url']);
+    var attrs = _.pick(req.allParams(), [
+      'bio', 'avatar_url', 'banner_url', 'twitter_name'
+    ]);
 
     User.find(req.param('id')).then(function(user) {
-      user.set(attrs);
+      user.setSanely(attrs);
 
       var promises = [user.save()],
         skills = req.param('skills'),

@@ -4,6 +4,8 @@ var extraUserAttributes = function(user) {
   return Promise.props({
     skills: Skill.simpleList(user.relations.skills),
     organizations: Organization.simpleList(user.relations.organizations),
+    facebook_url: user.facebookUrl(),
+    linkedin_url: user.linkedinUrl(),
     seed_count: Post.countForUser(user),
     contribution_count: Contribution.countForUser(user),
     thank_count: Thank.countForUser(user)
@@ -49,6 +51,14 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Thank, 'user_id')
   },
 
+  facebookUrl: function() {
+    return 'https://www.facebook.com/lawrence.wang';
+  },
+
+  linkedinUrl: function() {
+    return 'https://www.linkedin.com/in/lawrencewang';
+  },
+
   setModeratorRole: function(community) {
     return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community));
   },
@@ -63,6 +73,19 @@ module.exports = bookshelf.Model.extend({
       community_id: (typeof community === 'object' ? community.id : community),
       role: Membership.DEFAULT_ROLE
     });
+  },
+
+  // sanitize certain values before storing them
+  setSanely: function(attrs) {
+    var saneAttrs = _.clone(attrs);
+
+    if (saneAttrs.twitter_name.match(/^\s*$/)) {
+      saneAttrs.twitter_name = null;
+    } else if (saneAttrs.twitter_name.match(/^@/)) {
+      saneAttrs.twitter_name = saneAttrs.twitter_name.substring(1);
+    }
+
+    return this.set(saneAttrs);
   }
 
 }, {
