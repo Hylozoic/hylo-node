@@ -32,9 +32,11 @@ module.exports = bookshelf.Model.extend({
     return Community.where({id: id_or_slug}).fetch();
   },
 
-  members: function(communityId, term, limit, offset) {
-    if (!limit) limit = 10;
-    if (!offset) offset = 0;
+  members: function(communityId, term, options) {
+    _.defaults(options, {
+      limit: 10,
+      offset: 0
+    });
 
     return Community.find(communityId).then(function(community) {
       return community.users().query(function(qb) {
@@ -42,8 +44,8 @@ module.exports = bookshelf.Model.extend({
           qb.where("name", "ILIKE", '%' + term + '%');
         }
 
-        qb.limit(limit);
-        qb.offset(offset);
+        qb.limit(options.limit);
+        qb.offset(options.offset);
       }).fetch();
     })
   }

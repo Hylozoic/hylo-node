@@ -14,5 +14,14 @@ module.exports = bookshelf.Model.extend({
     return bookshelf.knex("follower").where({
       post_id: postId
     });
+  },
+
+  addFollower: function(postId, followerId, addedById) {
+    return new Follower({
+      post_id: postId,
+      date_added: new Date(),
+      user_id: followerId,
+      added_by_id: addedById
+    }).save();
   }
-})
+});
