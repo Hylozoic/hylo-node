@@ -63,7 +63,7 @@ module.exports.routes = {
   'DELETE /noo/community/:id/moderator/:user_id': 'CommunityController.removeModerator',
   'GET    /noo/community/:id/members':            'CommunityController.findMembers',
 
-  'POST  /noo/seed/:id/comment':                  'PostController.comment',
+  'POST   /noo/seed/:id/comment':                 'PostController.comment',
 
   'GET    /admin/login':                          'SessionController.create',
   'GET    /admin/login/oauth':                    'SessionController.oauth',

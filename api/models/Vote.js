@@ -21,4 +21,4 @@ module.exports = bookshelf.Model.extend({
       user_id: userId
     }).whereIn("post_id", postIds);
   }
-})
+});

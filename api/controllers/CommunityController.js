@@ -97,10 +97,9 @@ module.exports = {
   },
 
   findMembers: function(req, res) {
-    var search = req.param('search');
+    var params = _.pick(req.allParams(), ['search', 'id', 'limit', 'offset']);
 
-    var id = req.param('id');
-    Community.members(id, search).then(function(users) {
+    Community.members(params.id, params.search, {limit: params.limit, offset: params.offset}).then(function(users) {
 
       res.ok(users.map(function(user) {
         return {

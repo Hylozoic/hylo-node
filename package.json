@@ -39,8 +39,10 @@
     "root-path": "^0.2.0",
     "sails": "~0.10.5",
     "sanitize-html": "^1.5.0",
+    "cheerio": "0.18.0",
     "sendwithus": "^2.8.0",
-    "validator": "^3.22.1"
+    "validator": "^3.22.1",
+    "nopt": "latest"
   },
   "scripts": {
     "start": "node app.js",

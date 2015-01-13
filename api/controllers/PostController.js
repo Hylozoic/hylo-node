@@ -1,6 +1,6 @@
 var Promise = require('bluebird');
-var SanitizeHtml = require('sanitize-html');
-
+var sanitizeHtml = require('sanitize-html');
+var Cheerio = require('cheerio');
 var postAttributes = function(post, hasVote) {
 
   var followers = post.related("followers").map(function(follower) {
@@ -47,8 +47,18 @@ var postAttributes = function(post, hasVote) {
 };
 
 var commentAttributes = function(comment, user, isThanked) {
-
-}
+  return {
+    "id": Number(comment.get("id")),
+    "isThanked": isThanked,
+    "text": comment.get("comment_text"),
+    "timestamp": comment.get("date_commented"),
+    "user": {
+      "id": Number(comment.related("user").get("id")),
+      "name": comment.related("user").get("name"),
+      "avatar": comment.related("user").get("avatar_url"),
+    }
+  }
+};
 
 module.exports = {
   find: function(req, res) {
@@ -121,7 +131,15 @@ module.exports = {
 
   comment: function(req, res) {
     var params = _.pick(req.allParams(), ['id', 'text']);
-    clean = SanitizeHtml(params.text, {
+
+    var $ = Cheerio.load(params.text);
+
+    // Get any mentions in the comment.
+    var mentions = $("a[data-uid]").map(function(i, elem) {
+      return $(this).data("uid");
+    }).get();
+
+    var cleanText = sanitizeHtml(params.text, {
       allowedTags: [ 'a', 'p' ],
       allowedAttributes: {
         'a': [ 'href' ]
@@ -129,13 +147,31 @@ module.exports = {
     });
 
     new Comment({
-      comment_text: clean,
+      comment_text: cleanText,
       date_commented: new Date(),
       post_id: res.locals.post.id,
       user_id: req.session.user.id,
       active: true
     }).save().then(function(comment) {
-        res.ok(comment);
+        // add followers to post of new comment
+        _.forEach(mentions, function(userId) {
+          Follower.addFollower(res.locals.post.id, userId, req.session.user.id).then(function(follower) {
+            sails.log.debug("added follower to post");
+          }).catch(function(err) {
+            sails.log.debug("user already following post... failing silently");
+          });
+        });
+
+        return Promise.props({
+          comment: comment.fetch({withRelated: [
+            {"user": function(qb) {
+              qb.column("id", "name", "avatar_url");
+            }}
+          ]}),
+          isThanked: Thank.didUserThank(comment.id, req.session.user.id)
+        });
+    }).then(function(data) {
+      res.ok(commentAttributes(data.comment, data.isThanked))
     });
   }
 };
