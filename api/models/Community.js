@@ -43,6 +43,7 @@ module.exports = bookshelf.Model.extend({
         if (term) {
           qb.where("name", "ILIKE", '%' + term + '%');
         }
+        qb.where("users.active", "=", true);
 
         qb.limit(options.limit);
         qb.offset(options.offset);
