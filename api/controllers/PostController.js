@@ -132,17 +132,25 @@ module.exports = {
   comment: function(req, res) {
     var params = _.pick(req.allParams(), ['id', 'text']);
 
-    var $ = Cheerio.load(params.text);
+    // Remove leading &nbsp; from html. (a side-effect of contenteditable is the leading &nbsp;)
+    var text = params.text.replace(/<p>&nbsp;|<p>&NBSP;/g, "<p>");
+
+    var $ = Cheerio.load(text);
 
     // Get any mentions in the comment.
     var mentions = $("a[data-uid]").map(function(i, elem) {
       return $(this).data("uid");
     }).get();
 
-    var cleanText = sanitizeHtml(params.text, {
+    var cleanText = sanitizeHtml(text, {
       allowedTags: [ 'a', 'p' ],
       allowedAttributes: {
-        'a': [ 'href' ]
+        'a': [ 'href', 'data-uid' ]
+      },
+
+      // Removes empty paragraphs
+      exclusiveFilter: function(frame) {
+        return frame.tag === 'p' && !frame.text.trim();
       }
     });
 
@@ -154,7 +162,7 @@ module.exports = {
       active: true
     }).save().then(function(comment) {
         // add followers to post of new comment
-        _.forEach(mentions, function(userId) {
+        mentions.forEach(function(userId) {
           Follower.addFollower(res.locals.post.id, userId, req.session.user.id).then(function(follower) {
             sails.log.debug("added follower to post");
           }).catch(function(err) {
