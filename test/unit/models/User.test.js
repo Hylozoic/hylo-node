@@ -59,6 +59,10 @@ describe('User', function() {
 
   describe('#setSanely', function() {
 
+    it("doesn't assume that any particular field is set", function() {
+      new User().setSanely({});
+    });
+
     it('sanitizes twitter usernames', function() {
       var user = new User();
 
