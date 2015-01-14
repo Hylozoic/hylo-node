@@ -5,7 +5,6 @@ var extraUserAttributes = function(user) {
     skills: Skill.simpleList(user.relations.skills),
     organizations: Organization.simpleList(user.relations.organizations),
     facebook_url: user.facebookUrl(),
-    linkedin_url: user.linkedinUrl(),
     seed_count: Post.countForUser(user),
     contribution_count: Contribution.countForUser(user),
     thank_count: Thank.countForUser(user)
@@ -53,10 +52,6 @@ module.exports = bookshelf.Model.extend({
 
   facebookUrl: function() {
     return 'https://www.facebook.com/lawrence.wang';
-  },
-
-  linkedinUrl: function() {
-    return 'https://www.linkedin.com/in/lawrencewang';
   },
 
   setModeratorRole: function(community) {

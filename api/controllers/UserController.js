@@ -119,7 +119,7 @@ module.exports = {
 
   update: function(req, res) {
     var attrs = _.pick(req.allParams(), [
-      'bio', 'avatar_url', 'banner_url', 'twitter_name'
+      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url'
     ]);
 
     User.find(req.param('id')).then(function(user) {
