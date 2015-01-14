@@ -79,10 +79,12 @@ module.exports = bookshelf.Model.extend({
   setSanely: function(attrs) {
     var saneAttrs = _.clone(attrs);
 
-    if (saneAttrs.twitter_name.match(/^\s*$/)) {
-      saneAttrs.twitter_name = null;
-    } else if (saneAttrs.twitter_name.match(/^@/)) {
-      saneAttrs.twitter_name = saneAttrs.twitter_name.substring(1);
+    if (saneAttrs.twitter_name) {
+      if (saneAttrs.twitter_name.match(/^\s*$/)) {
+        saneAttrs.twitter_name = null;
+      } else if (saneAttrs.twitter_name.match(/^@/)) {
+        saneAttrs.twitter_name = saneAttrs.twitter_name.substring(1);
+      }
     }
 
     return this.set(saneAttrs);
