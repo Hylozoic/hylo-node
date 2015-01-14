@@ -138,14 +138,14 @@ module.exports = {
     var $ = Cheerio.load(text);
 
     // Get any mentions in the comment.
-    var mentions = $("a[data-uid]").map(function(i, elem) {
+    var mentions = $("a[data-user-id]").map(function(i, elem) {
       return $(this).data("uid");
     }).get();
 
     var cleanText = sanitizeHtml(text, {
       allowedTags: [ 'a', 'p' ],
       allowedAttributes: {
-        'a': [ 'href', 'data-uid' ]
+        'a': [ 'href', 'data-user-id' ]
       },
 
       // Removes empty paragraphs
