@@ -15,6 +15,10 @@ module.exports = bookshelf.Model.extend({
 
   contributors: function() {
     return this.hasMany(Contribution, "post_id");
+  },
+
+  comments: function() {
+    return this.hasMany(Comment, "post_id").query({where: {active: true}});
   }
 
 }, {

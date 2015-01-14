@@ -46,7 +46,7 @@ var postAttributes = function(post, hasVote) {
   }
 };
 
-var commentAttributes = function(comment, user, isThanked) {
+var commentAttributes = function(comment, isThanked) {
   return {
     "id": Number(comment.get("id")),
     "isThanked": isThanked,
@@ -55,7 +55,7 @@ var commentAttributes = function(comment, user, isThanked) {
     "user": {
       "id": Number(comment.related("user").get("id")),
       "name": comment.related("user").get("name"),
-      "avatar": comment.related("user").get("avatar_url"),
+      "avatar": comment.related("user").get("avatar_url")
     }
   }
 };
@@ -154,32 +154,47 @@ module.exports = {
       }
     });
 
-    new Comment({
-      comment_text: cleanText,
-      date_commented: new Date(),
-      post_id: res.locals.post.id,
-      user_id: req.session.user.id,
-      active: true
-    }).save().then(function(comment) {
-        // add followers to post of new comment
-        mentions.forEach(function(userId) {
-          Follower.addFollower(res.locals.post.id, userId, req.session.user.id).then(function(follower) {
-            sails.log.debug("added follower to post");
-          }).catch(function(err) {
-            sails.log.debug("user already following post... failing silently");
+    bookshelf.transaction(function(trx) {
+      return new Comment({
+        comment_text: cleanText,
+        date_commented: new Date(),
+        post_id: res.locals.post.id,
+        user_id: req.session.user.id,
+        active: true
+      }).save(null, {transacting: trx})
+        .tap(function (comment) {
+          // add followers to post of new comment
+          return Promise.map(mentions, function (userId) {
+            return Follower.addFollower(res.locals.post.id, userId, req.session.user.id, {transacting: trx});
+          });
+        })
+        .tap(function (comment) {
+          return Notification.createCommentNotification(res.locals.post.id, comment.id, req.session.user.id, {transacting: trx})
+        })
+        .tap(function (comment) {
+          return Aggregate.count(res.locals.post.comments()).then(function(numComments) {
+            return res.locals.post.save({
+              num_comments: numComments,
+              last_updated: new Date()
+            }, {patch: true, transacting: trx});
+          });
+        })
+        .then(function(comment) {
+          return Promise.props({
+            comment: comment.load([
+                {
+                  "user": function (qb) {
+                    qb.column("id", "name", "avatar_url");
+                  }
+                }
+              ]),
+            isThanked: false
           });
         });
-
-        return Promise.props({
-          comment: comment.fetch({withRelated: [
-            {"user": function(qb) {
-              qb.column("id", "name", "avatar_url");
-            }}
-          ]}),
-          isThanked: Thank.didUserThank(comment.id, req.session.user.id)
-        });
-    }).then(function(data) {
+    }).then(function (data) {
       res.ok(commentAttributes(data.comment, data.isThanked))
+    }).catch(function (err) {
+      res.serverError(err);
     });
   }
 };

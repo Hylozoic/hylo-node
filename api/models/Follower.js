@@ -1,3 +1,5 @@
+var Promise = require('bluebird');
+
 module.exports = bookshelf.Model.extend({
   tableName: 'follower',
 
@@ -16,12 +18,20 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
-  addFollower: function(postId, followerId, addedById) {
-    return new Follower({
-      post_id: postId,
-      date_added: new Date(),
-      user_id: followerId,
-      added_by_id: addedById
-    }).save();
+  addFollower: function(postId, followerId, addedById, options) {
+    // TODO add validation to make sure follower is a member of the community that the post belongs to.
+    return Follower.where({post_id: postId, user_id: followerId}).fetch().then(function(existingFollower) {
+      if (existingFollower) {
+        sails.log.debug("user already following post... returning follower");
+        return Promise.resolve(existingFollower);
+      } else {
+        return new Follower({
+          post_id: postId,
+          date_added: new Date(),
+          user_id: followerId,
+          added_by_id: addedById
+        }).save(null, options);
+      }
+    });
   }
 });

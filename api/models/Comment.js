@@ -12,5 +12,6 @@ module.exports = bookshelf.Model.extend({
   text: function() {
     return this.get('comment_text');
   }
+}, {
 
 });
