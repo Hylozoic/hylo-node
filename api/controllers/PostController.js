@@ -188,7 +188,12 @@ module.exports = {
           return Promise.map(mentions, function (userId) {
             return Follower.addFollower(post.id, userId, req.session.user.id, {transacting: trx});
           });
-        }).then(function (post) {
+        })
+        .tap(function (post) {
+          // Add seed creator as a follower
+          return Follower.addFollower(post.id, req.session.user.id, req.session.user.id, {transacting: trx});
+        })
+        .then(function (post) {
           return post.load([
               {"creator": function(qb) {
                 qb.column("id", "name", "avatar_url");
