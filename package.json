@@ -41,8 +41,7 @@
     "sanitize-html": "^1.5.0",
     "cheerio": "0.18.0",
     "sendwithus": "^2.8.0",
-    "validator": "^3.22.1",
-    "nopt": "latest"
+    "validator": "^3.22.1"
   },
   "scripts": {
     "start": "node app.js",
