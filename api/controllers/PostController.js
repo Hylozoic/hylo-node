@@ -60,6 +60,35 @@ var commentAttributes = function(comment, isThanked) {
   }
 };
 
+var sanitizeMentionsText = function(text) {
+  // Remove leading &nbsp; from html. (a side-effect of contenteditable is the leading &nbsp;)
+  var strippedText = text.replace(/<p>&nbsp;|<p>&NBSP;/g, "<p>");
+
+  var cleanText = sanitizeHtml(strippedText, {
+    allowedTags: [ 'a', 'p' ],
+    allowedAttributes: {
+      'a': [ 'href', 'data-user-id' ]
+    },
+
+    // Removes empty paragraphs
+    exclusiveFilter: function(frame) {
+      return frame.tag === 'p' && !frame.text.trim();
+    }
+  });
+
+  return cleanText;
+};
+
+/**
+ * @returns a set of unique ids of any @mentions found in the text
+ */
+var getMentions = function(text) {
+  var $ = Cheerio.load(text);
+  return _.uniq($("a[data-user-id]").map(function(i, elem) {
+    return $(this).data("user-id");
+  }).get());
+};
+
 module.exports = {
   find: function(req, res) {
     var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q']),
@@ -129,30 +158,71 @@ module.exports = {
     });
   },
 
+  createSeed: function(req, res) {
+    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId'])
+
+    var cleanDescription = sanitizeMentionsText(params.description);
+
+    var mentions = getMentions(cleanDescription);
+
+    bookshelf.transaction(function(trx) {
+      return new Post({
+        name: params.name,
+        description: cleanDescription,
+        type: params.postType,
+        creator_id: req.session.user.id,
+        creation_date: new Date(),
+        last_updated: new Date(),
+        active: true,
+        num_comments: 0,
+        num_votes: 0,
+        fulfilled: false,
+        edited: false
+      }).save(null, {transacting: trx})
+        .tap(function (post) {
+          // Attach post to the community
+          return new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx});
+        })
+        .tap(function (post) {
+          // Add any followers to new post
+          return Promise.map(mentions, function (userId) {
+            return Follower.addFollower(post.id, userId, req.session.user.id, {transacting: trx});
+          });
+        }).then(function (post) {
+          return Promise.props({
+            post: post.load([
+                {"creator": function(qb) {
+                  qb.column("id", "name", "avatar_url");
+                }},
+                {"communities": function(qb) {
+                  qb.column("id", 'name', "slug");
+                }},
+                "followers",
+                {"followers.user": function(qb) {
+                  qb.column("id", "name", "avatar_url");
+                }},
+                "contributors",
+                {"contributors.user": function(qb) {
+                  qb.column("id", "name", "avatar_url");
+                }}
+              ], {transacting: trx}
+            )
+          });
+
+        });
+    }).then(function (data) {
+      res.ok(postAttributes(data.post, false));
+    }).catch(function (err) {
+      res.serverError(err);
+    });
+  },
+
   comment: function(req, res) {
     var params = _.pick(req.allParams(), ['id', 'text']);
 
-    // Remove leading &nbsp; from html. (a side-effect of contenteditable is the leading &nbsp;)
-    var text = params.text.replace(/<p>&nbsp;|<p>&NBSP;/g, "<p>");
+    var cleanText = sanitizeMentionsText(params.text);
 
-    var $ = Cheerio.load(text);
-
-    // Get any mentions in the comment.
-    var mentions = $("a[data-user-id]").map(function(i, elem) {
-      return $(this).data("uid");
-    }).get();
-
-    var cleanText = sanitizeHtml(text, {
-      allowedTags: [ 'a', 'p' ],
-      allowedAttributes: {
-        'a': [ 'href', 'data-user-id' ]
-      },
-
-      // Removes empty paragraphs
-      exclusiveFilter: function(frame) {
-        return frame.tag === 'p' && !frame.text.trim();
-      }
-    });
+    var mentions = getMentions(cleanText);
 
     bookshelf.transaction(function(trx) {
       return new Comment({
@@ -187,7 +257,7 @@ module.exports = {
                     qb.column("id", "name", "avatar_url");
                   }
                 }
-              ]),
+              ], {transacting: trx}),
             isThanked: false
           });
         });
