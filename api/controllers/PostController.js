@@ -159,7 +159,7 @@ module.exports = {
   },
 
   createSeed: function(req, res) {
-    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId'])
+    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId']);
 
     var cleanDescription = sanitizeMentionsText(params.description);
 
@@ -189,29 +189,26 @@ module.exports = {
             return Follower.addFollower(post.id, userId, req.session.user.id, {transacting: trx});
           });
         }).then(function (post) {
-          return Promise.props({
-            post: post.load([
-                {"creator": function(qb) {
-                  qb.column("id", "name", "avatar_url");
-                }},
-                {"communities": function(qb) {
-                  qb.column("id", 'name', "slug");
-                }},
-                "followers",
-                {"followers.user": function(qb) {
-                  qb.column("id", "name", "avatar_url");
-                }},
-                "contributors",
-                {"contributors.user": function(qb) {
-                  qb.column("id", "name", "avatar_url");
-                }}
-              ], {transacting: trx}
-            )
-          });
-
+          return post.load([
+              {"creator": function(qb) {
+                qb.column("id", "name", "avatar_url");
+              }},
+              {"communities": function(qb) {
+                qb.column("id", 'name', "slug");
+              }},
+              "followers",
+              {"followers.user": function(qb) {
+                qb.column("id", "name", "avatar_url");
+              }},
+              "contributors",
+              {"contributors.user": function(qb) {
+                qb.column("id", "name", "avatar_url");
+              }}
+            ], {transacting: trx}
+          );
         });
-    }).then(function (data) {
-      res.ok(postAttributes(data.post, false));
+    }).then(function (post) {
+      res.ok(postAttributes(post, false));
     }).catch(function (err) {
       res.serverError(err);
     });
