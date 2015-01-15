@@ -4,7 +4,6 @@ var extraUserAttributes = function(user) {
   return Promise.props({
     skills: Skill.simpleList(user.relations.skills),
     organizations: Organization.simpleList(user.relations.organizations),
-    facebook_url: user.facebookUrl(),
     seed_count: Post.countForUser(user),
     contribution_count: Contribution.countForUser(user),
     thank_count: Thank.countForUser(user)
@@ -48,10 +47,6 @@ module.exports = bookshelf.Model.extend({
 
   thanks: function() {
     return this.hasMany(Thank, 'user_id')
-  },
-
-  facebookUrl: function() {
-    return 'https://www.facebook.com/lawrence.wang';
   },
 
   setModeratorRole: function(community) {
