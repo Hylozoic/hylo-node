@@ -19,7 +19,7 @@ module.exports = {
   },
 
   sendNewCommentNotification: function(email, data, cb) {
-    api.send(_.extend(defaultOptions, {
+    return sendEmail(_.extend(defaultOptions, {
       email_id: 'tem_tP6JzrYzvvDXhgTNmtkxuW',
       recipient: {address: email},
       email_data: data
