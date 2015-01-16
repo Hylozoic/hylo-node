@@ -116,6 +116,16 @@ module.exports = bookshelf.Model.extend({
         .pick(['id', 'name', 'avatar_url'])
         .extend(values[1]).value();
     });
+  },
+
+  isEmailUnique: function(email, notEmail) {
+    // FIXME there should be a better way to do this
+    return bookshelf.knex('users')
+      .where('email', email).andWhere('email', '!=', notEmail)
+      .count('*')
+      .then(function(result) {
+        return result[0].count == 0;
+      });
   }
 
 });

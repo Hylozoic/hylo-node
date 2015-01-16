@@ -5,7 +5,8 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var Promise = require('bluebird');
+var Promise = require('bluebird'),
+  validator = require('validator');
 
 module.exports = {
 
@@ -119,10 +120,23 @@ module.exports = {
 
   update: function(req, res) {
     var attrs = _.pick(req.allParams(), [
-      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url'
+      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'email'
     ]);
 
-    User.find(req.param('id')).then(function(user) {
+    User.find(req.param('id'))
+    .tap(function(user) {
+      var newEmail = attrs.email, oldEmail = user.get('email');
+      if (newEmail && newEmail != oldEmail) {
+        if (!validator.isEmail(newEmail)) {
+          throw new Error('invalid_email');
+        }
+        return User.isEmailUnique(newEmail, oldEmail).then(function(isUnique) {
+          if (!isUnique) throw new Error('duplicate_email');
+        });
+      }
+      attrs.email_validated = false;
+    })
+    .then(function(user) {
       user.setSanely(attrs);
 
       var promises = [user.save()],
@@ -140,7 +154,13 @@ module.exports = {
     }).then(function() {
       res.ok({});
     }).catch(function(err) {
-      res.serverError(err);
+      if (err.message == 'invalid_email') {
+        res.badRequest({message: 'That email address is not valid.'});
+      } else if (err.message == 'duplicate_email') {
+        res.badRequest({message: 'That email address is already in use.'});
+      } else {
+        res.serverError(err);
+      }
     });
   }
 
