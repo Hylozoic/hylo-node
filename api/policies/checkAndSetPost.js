@@ -6,7 +6,7 @@ module.exports = function isMember(req, res, next) {
       res.locals.post = post;
       next();
     } else {
-      sails.log.debug("Fail checkAndSetPost policy", req.session.user.id, req.param('id'));
+      sails.log.debug("Fail checkAndSetPost policy", req.session.userId, req.param('id'));
       res.forbidden();
     }
   });

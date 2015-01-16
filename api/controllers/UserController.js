@@ -11,7 +11,7 @@ var Promise = require('bluebird'),
 module.exports = {
 
   findSelf: function(req, res) {
-    User.fetchForSelf(req.session.user.id).then(function(attributes) {
+    User.fetchForSelf(req.session.userId).then(function(attributes) {
       res.ok(attributes);
     })
   },
@@ -29,7 +29,7 @@ module.exports = {
 
     var userId = params.id;
 
-    var isSelf = req.session.user.id === userId;
+    var isSelf = req.session.userId === userId;
 
     User.find(userId).then(function(user) {
       user.contributions().query(function(qb) {
@@ -42,7 +42,7 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.user.id));
+          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.userId));
         }
 
         qb.where({"post.active": true});
@@ -74,7 +74,7 @@ module.exports = {
 
     var userId = params.id;
 
-    var isSelf = req.session.user.id === userId;
+    var isSelf = req.session.userId === userId;
 
     User.find(userId).then(function(user) {
       user.thanks().query(function(qb) {
@@ -88,7 +88,7 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.user.id));
+          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.userId));
         }
 
         qb.where({"comment.active": true, "post.active": true});

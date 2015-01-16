@@ -18,8 +18,8 @@ module.exports = bookshelf.Model.extend({
     var role = (opts.moderator ? Membership.MODERATOR_ROLE : Membership.DEFAULT_ROLE);
 
     return new Invitation({
-      invited_by_id: opts.user.id,
-      community_id: opts.community.id,
+      invited_by_id: opts.userId,
+      community_id: opts.communityId,
       email: opts.email,
       role: role,
       token: uuid.v4(),

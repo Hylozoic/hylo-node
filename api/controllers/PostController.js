@@ -146,7 +146,7 @@ module.exports = {
       var postIds = posts.pluck("id");
       return Promise.props({
         posts: posts,
-        votes: Vote.forUserInPosts(req.session.user.id, postIds).pluck("post_id")
+        votes: Vote.forUserInPosts(req.session.userId, postIds).pluck("post_id")
       });
 
     }).then(function(data) {
@@ -168,7 +168,7 @@ module.exports = {
         name: params.name,
         description: cleanDescription,
         type: params.postType,
-        creator_id: req.session.user.id,
+        creator_id: req.session.userId,
         creation_date: new Date(),
         last_updated: new Date(),
         active: true,
@@ -186,7 +186,7 @@ module.exports = {
           return Promise.map(mentions, function (userId) {
             return Follower.addFollower(post.id, {
                 followerId: userId,
-                addedById: req.session.user.id,
+                addedById: req.session.userId,
                 transacting: trx
               });
           });
@@ -194,8 +194,8 @@ module.exports = {
         .tap(function (post) {
           // Add seed creator as a follower
           return Follower.addFollower(post.id, {
-              followerId: req.session.user.id,
-              addedById: req.session.user.id,
+              followerId: req.session.userId,
+              addedById: req.session.userId,
               transacting: trx
             });
         })
@@ -237,7 +237,7 @@ module.exports = {
         comment_text: cleanText,
         date_commented: new Date(),
         post_id: res.locals.post.id,
-        user_id: req.session.user.id,
+        user_id: req.session.userId,
         active: true
       }).save(null, {transacting: trx})
         .tap(function (comment) {
@@ -245,13 +245,13 @@ module.exports = {
           return Promise.map(mentions, function (userId) {
             return Follower.addFollower(res.locals.post.id, {
               followerId: userId,
-              addedById: req.session.user.id,
+              addedById: req.session.userId,
               transacting: trx
             });
           });
         })
         .tap(function (comment) {
-          return Notification.createCommentNotification(res.locals.post.id, comment.id, req.session.user.id, {transacting: trx})
+          return Notification.createCommentNotification(res.locals.post.id, comment.id, req.session.userId, {transacting: trx})
         })
         .tap(function (comment) {
           return Aggregate.count(res.locals.post.comments()).then(function(numComments) {
