@@ -134,8 +134,8 @@ module.exports = {
         return User.isEmailUnique(newEmail, oldEmail).then(function(isUnique) {
           if (!isUnique) throw new Error('duplicate-email');
         });
+        attrs.email_validated = false;
       }
-      attrs.email_validated = false;
     })
     .then(function(user) {
       user.setSanely(attrs);
@@ -158,7 +158,7 @@ module.exports = {
     }).then(function() {
       res.ok({});
     }).catch(function(err) {
-      if (_.contains(['invalid-email', 'duplicate_email'], err.message)) {
+      if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
         res.badRequest(req.__(err.message));
       } else {
         res.serverError(err);
