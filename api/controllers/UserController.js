@@ -129,10 +129,10 @@ module.exports = {
       var newEmail = attrs.email, oldEmail = user.get('email');
       if (newEmail && newEmail != oldEmail) {
         if (!validator.isEmail(newEmail)) {
-          throw new Error('invalid_email');
+          throw new Error('invalid-email');
         }
         return User.isEmailUnique(newEmail, oldEmail).then(function(isUnique) {
-          if (!isUnique) throw new Error('duplicate_email');
+          if (!isUnique) throw new Error('duplicate-email');
         });
       }
       attrs.email_validated = false;
@@ -158,10 +158,8 @@ module.exports = {
     }).then(function() {
       res.ok({});
     }).catch(function(err) {
-      if (err.message == 'invalid_email') {
-        res.badRequest('That email address is not valid.');
-      } else if (err.message == 'duplicate_email') {
-        res.badRequest('That email address is already in use.');
+      if (_.contains(['invalid-email', 'duplicate_email'], err.message)) {
+        res.badRequest(req.__(err.message));
       } else {
         res.serverError(err);
       }
