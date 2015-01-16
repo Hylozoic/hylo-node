@@ -112,6 +112,14 @@ module.exports = {
       }));
 
     });
+  },
+
+  removeMember: function(req, res) {
+    res.locals.membership.destroyMe()
+    .then(function() {
+      res.ok({});
+    })
+    .catch(res.serverError.bind(res));
   }
 
 };
