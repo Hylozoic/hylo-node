@@ -158,7 +158,7 @@ module.exports = {
     });
   },
 
-  createSeed: function(req, res) {
+  create: function(req, res) {
     var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId']);
 
     var cleanDescription = sanitizeMentionsText(params.description);
@@ -220,7 +220,7 @@ module.exports = {
   },
 
   comment: function(req, res) {
-    var params = _.pick(req.allParams(), ['id', 'text']);
+    var params = _.pick(req.allParams(), ['text']);
 
     var cleanText = sanitizeMentionsText(params.text);
 
