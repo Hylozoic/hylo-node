@@ -14,9 +14,23 @@ module.exports = function(req, res, next) {
   if (req.session.authenticated) {
     next();
   } else {
-    // User is not allowed
-    // (default res.forbidden() behavior can be overridden in `config/403.js`)
-    sails.log.debug("Fail sessionAuth policy");
-    res.forbidden();
+    var playSession = new PlaySession(req);
+    if (playSession.isValid()) {
+      playSession.fetchUser().then(function(user) {
+        if (user) {
+          sails.log.debug("policy: sessionAuth: validated as " + user.get('email'));
+          req.session.authenticated = true;
+          req.session.userId = user.id;
+
+          req.rollbar_person = user.pick('id', 'name', 'email');
+        }
+        next();
+      });
+    } else {
+      // User is not allowed
+      // (default res.forbidden() behavior can be overridden in `config/403.js`)
+      sails.log.debug("policy: sessionAuth: fail");
+      res.forbidden();
+    }
   }
 };

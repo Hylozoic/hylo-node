@@ -18,8 +18,11 @@ var communityAttributes = function(community, membership) {
 module.exports = {
 
   findDefault: function(req, res) {
-    req.session.user.communities().fetchOne().then(function(community) {
-      Membership.find(req.session.user.id, community.id).then(function(membership) {
+    User.find(req.session.userId).then(function(user) {
+      return user.communities().fetchOne();
+    })
+    .then(function(community) {
+      Membership.find(req.session.userId, community.id).then(function(membership) {
         res.ok(communityAttributes(community, membership));
       })
     })
@@ -27,7 +30,7 @@ module.exports = {
 
   findOne: function(req, res) {
     Community.find(req.param('id')).then(function(community) {
-      Membership.find(req.session.user.id, community.id).then(function(membership) {
+      Membership.find(req.session.userId, community.id).then(function(membership) {
         res.ok(communityAttributes(community, membership));
       });
     });
@@ -56,9 +59,9 @@ module.exports = {
         }
 
         return Invitation.createAndSend({
-          user: req.session.user,
+          userId: req.session.userId,
+          communityId: community.id,
           email: email,
-          community: community,
           moderator: req.param('moderator')
         }).then(function() {
           return {email: email, error: null};

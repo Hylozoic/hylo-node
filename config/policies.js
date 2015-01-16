@@ -33,36 +33,36 @@ module.exports.policies = {
     oauth: true
   },
 
-  LinkedinController: ['playSessionCheck', 'sessionAuth'],
+  LinkedinController: ['sessionAuth'],
 
   AdminController: {
     index: ['isAdmin']
   },
 
   UserController: {
-    findSelf: ['playSessionCheck', 'sessionAuth'],
-    findOne: ['playSessionCheck', 'sessionAuth', 'inSameCommunity'],
-    update: ['playSessionCheck', 'sessionAuth', 'isSelf'],
-    contributions: ['playSessionCheck', 'sessionAuth', 'inSameCommunity'],
-    thanks: ['playSessionCheck', 'sessionAuth', 'inSameCommunity']
+    findSelf: ['sessionAuth'],
+    findOne: ['sessionAuth', 'inSameCommunity'],
+    update: ['sessionAuth', 'isSelf'],
+    contributions: ['sessionAuth', 'inSameCommunity'],
+    thanks: ['sessionAuth', 'inSameCommunity']
   },
 
   CommunityController: {
-    findDefault: ['playSessionCheck', 'sessionAuth'],
-    findOne: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership'],
-    update: ['playSessionCheck', 'sessionAuth', 'isModerator'],
-    invite: ['playSessionCheck', 'sessionAuth', 'isModerator'],
-    findModerators: ['playSessionCheck', 'sessionAuth', 'isModerator'],
-    addModerator: ['playSessionCheck', 'sessionAuth', 'isModerator'],
-    removeModerator: ['playSessionCheck', 'sessionAuth', 'isModerator'],
-    findMembers: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership'],
-    removeMember: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership']
+    findDefault: ['sessionAuth'],
+    findOne: ['sessionAuth', 'checkAndSetMembership'],
+    update: ['sessionAuth', 'isModerator'],
+    invite: ['sessionAuth', 'isModerator'],
+    findModerators: ['sessionAuth', 'isModerator'],
+    addModerator: ['sessionAuth', 'isModerator'],
+    removeModerator: ['sessionAuth', 'isModerator'],
+    findMembers: ['sessionAuth', 'checkAndSetMembership'],
+    removeMember: ['sessionAuth', 'checkAndSetMembership']
   },
 
   PostController: {
-    find: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership'],
-    create: ['playSessionCheck', 'sessionAuth'],
-    comment: ['playSessionCheck', 'sessionAuth', 'checkAndSetPost']
+    find: ['sessionAuth', 'checkAndSetMembership'],
+    create: ['sessionAuth'],
+    comment: ['sessionAuth', 'checkAndSetPost']
   }
 
   /***************************************************************************
