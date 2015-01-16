@@ -120,7 +120,8 @@ module.exports = {
 
   update: function(req, res) {
     var attrs = _.pick(req.allParams(), [
-      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'email'
+      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'email',
+      'send_email_preference', 'daily_digest'
     ]);
 
     User.find(req.param('id'))
@@ -139,9 +140,12 @@ module.exports = {
     .then(function(user) {
       user.setSanely(attrs);
 
-      var promises = [user.save()],
+      var promises = [],
         skills = req.param('skills'),
         organizations = req.param('organizations');
+
+      if (!_.isEmpty(user.changed))
+        promises.push(user.save(user.changed, {patch: true}));
 
       if (skills)
         promises.push(Skill.update(skills, user.id));
@@ -155,9 +159,9 @@ module.exports = {
       res.ok({});
     }).catch(function(err) {
       if (err.message == 'invalid_email') {
-        res.badRequest({message: 'That email address is not valid.'});
+        res.badRequest('That email address is not valid.');
       } else if (err.message == 'duplicate_email') {
-        res.badRequest({message: 'That email address is already in use.'});
+        res.badRequest('That email address is already in use.');
       } else {
         res.serverError(err);
       }
