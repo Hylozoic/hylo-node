@@ -59,7 +59,9 @@ module.exports.policies = {
   },
 
   PostController: {
-    find: ['playSessionCheck', 'sessionAuth', 'isMember']
+    find: ['playSessionCheck', 'sessionAuth', 'isMember'],
+    create: ['playSessionCheck', 'sessionAuth'],
+    comment: ['playSessionCheck', 'sessionAuth', 'checkAndSetPost']
   }
 
   /***************************************************************************

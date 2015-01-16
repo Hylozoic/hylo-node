@@ -1,5 +1,6 @@
 var Promise = require('bluebird');
-
+var sanitizeHtml = require('sanitize-html');
+var Cheerio = require('cheerio');
 var postAttributes = function(post, hasVote) {
 
   var followers = post.related("followers").map(function(follower) {
@@ -43,6 +44,49 @@ var postAttributes = function(post, hasVote) {
     "followersLoaded": true,
     "numFollowers": followers.length
   }
+};
+
+var commentAttributes = function(comment, isThanked) {
+  return {
+    "id": Number(comment.get("id")),
+    "isThanked": isThanked,
+    "text": comment.get("comment_text"),
+    "timestamp": comment.get("date_commented"),
+    "user": {
+      "id": Number(comment.related("user").get("id")),
+      "name": comment.related("user").get("name"),
+      "avatar": comment.related("user").get("avatar_url")
+    }
+  }
+};
+
+var sanitizeMentionsText = function(text) {
+  // Remove leading &nbsp; from html. (a side-effect of contenteditable is the leading &nbsp;)
+  var strippedText = text.replace(/<p>&nbsp;|<p>&NBSP;/g, "<p>");
+
+  var cleanText = sanitizeHtml(strippedText, {
+    allowedTags: [ 'a', 'p' ],
+    allowedAttributes: {
+      'a': [ 'href', 'data-user-id' ]
+    },
+
+    // Removes empty paragraphs
+    exclusiveFilter: function(frame) {
+      return frame.tag === 'p' && !frame.text.trim();
+    }
+  });
+
+  return cleanText;
+};
+
+/**
+ * @returns a set of unique ids of any @mentions found in the text
+ */
+var getMentions = function(text) {
+  var $ = Cheerio.load(text);
+  return _.uniq($("a[data-user-id]").map(function(i, elem) {
+    return $(this).data("user-id");
+  }).get());
 };
 
 module.exports = {
@@ -111,6 +155,128 @@ module.exports = {
         return postAttributes(post, _.contains(data.votes, post.get("id")));
       }));
 
+    });
+  },
+
+  create: function(req, res) {
+    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId']),
+        cleanDescription = sanitizeMentionsText(params.description),
+        mentions = getMentions(cleanDescription);
+
+    bookshelf.transaction(function(trx) {
+      return new Post({
+        name: params.name,
+        description: cleanDescription,
+        type: params.postType,
+        creator_id: req.session.user.id,
+        creation_date: new Date(),
+        last_updated: new Date(),
+        active: true,
+        num_comments: 0,
+        num_votes: 0,
+        fulfilled: false,
+        edited: false
+      }).save(null, {transacting: trx})
+        .tap(function (post) {
+          // Attach post to the community
+          return new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx});
+        })
+        .tap(function (post) {
+          // Add any followers to new post
+          return Promise.map(mentions, function (userId) {
+            return Follower.addFollower(post.id, {
+                followerId: userId,
+                addedById: req.session.user.id,
+                transacting: trx
+              });
+          });
+        })
+        .tap(function (post) {
+          // Add seed creator as a follower
+          return Follower.addFollower(post.id, {
+              followerId: req.session.user.id,
+              addedById: req.session.user.id,
+              transacting: trx
+            });
+        })
+        .then(function (post) {
+          return post.load([
+              {"creator": function(qb) {
+                qb.column("id", "name", "avatar_url");
+              }},
+              {"communities": function(qb) {
+                qb.column("id", 'name', "slug");
+              }},
+              "followers",
+              {"followers.user": function(qb) {
+                qb.column("id", "name", "avatar_url");
+              }},
+              "contributors",
+              {"contributors.user": function(qb) {
+                qb.column("id", "name", "avatar_url");
+              }}
+            ], {transacting: trx}
+          );
+        });
+    }).then(function (post) {
+      res.ok(postAttributes(post, false));
+    }).catch(function (err) {
+      res.serverError(err);
+    });
+  },
+
+  comment: function(req, res) {
+    var params = _.pick(req.allParams(), ['text']);
+
+    var cleanText = sanitizeMentionsText(params.text);
+
+    var mentions = getMentions(cleanText);
+
+    bookshelf.transaction(function(trx) {
+      return new Comment({
+        comment_text: cleanText,
+        date_commented: new Date(),
+        post_id: res.locals.post.id,
+        user_id: req.session.user.id,
+        active: true
+      }).save(null, {transacting: trx})
+        .tap(function (comment) {
+          // add followers to post of new comment
+          return Promise.map(mentions, function (userId) {
+            return Follower.addFollower(res.locals.post.id, {
+              followerId: userId,
+              addedById: req.session.user.id,
+              transacting: trx
+            });
+          });
+        })
+        .tap(function (comment) {
+          return Notification.createCommentNotification(res.locals.post.id, comment.id, req.session.user.id, {transacting: trx})
+        })
+        .tap(function (comment) {
+          return Aggregate.count(res.locals.post.comments()).then(function(numComments) {
+            return res.locals.post.save({
+              num_comments: numComments,
+              last_updated: new Date()
+            }, {patch: true, transacting: trx});
+          });
+        })
+        .then(function(comment) {
+          return Promise.props({
+            comment: comment.load([
+                {
+                  "user": function (qb) {
+                    qb.column("id", "name", "avatar_url");
+                  }
+                }
+              ], {transacting: trx}),
+            isThanked: false
+          });
+        });
+    }).then(function (data) {
+      res.ok(commentAttributes(data.comment, data.isThanked))
+    }).catch(function (err) {
+      res.serverError(err);
     });
   }
 };

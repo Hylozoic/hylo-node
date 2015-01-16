@@ -14,11 +14,16 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+  didUserThank: function(commentId, userId) {
+    return bookshelf.knex("thank_you").where({
+      comment_id: commentId,
+      thanked_by_id: userId
+    })
+  },
 
   countForUser: function(user) {
     return bookshelf.knex('thank_you').count().where({user_id: user.id}).then(function(rows) {
       return rows[0].count;
     });
   }
-
 });
