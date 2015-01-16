@@ -27,21 +27,21 @@ module.exports = bookshelf.Model.extend({
     }).save();
   },
 
-  createAndSend: function(opts, cb) {
-    Invitation.create(opts).then(function(invitation) {
+  createAndSend: function(opts) {
+    return Invitation.create(opts)
+    .then(function(invitation) {
 
       var link = util.format(
         "http://%s/community/invite/%s",
         process.env.DOMAIN, invitation.get('token')
       );
 
-      Email.sendInvitation(opts.email, {
+      return Email.sendInvitation(opts.email, {
         inviter_name: opts.user.get('name'),
         recipient: opts.email,
         community_name: opts.community.get('name'),
         invite_link: link
-      }, cb);
-
+      });
     });
   }
 

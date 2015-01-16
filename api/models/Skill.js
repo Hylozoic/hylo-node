@@ -1,3 +1,6 @@
+var Promise = require('bluebird'),
+  ListModel = require('./abstract/ListModel');
+
 module.exports = bookshelf.Model.extend({
   tableName: 'users_skill',
 
@@ -6,11 +9,6 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-
-  simpleList: function(user) {
-    return _.map(user.relations.skills.models, function(model) {
-      return model.attributes.skill_name;
-    });
-  }
-
+  simpleList: ListModel.simpleListFn('skill_name'),
+  update: ListModel.updateFn('Skill', 'users_skill', 'skill_name')
 });

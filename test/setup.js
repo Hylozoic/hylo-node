@@ -109,11 +109,19 @@ TestSetup.prototype.initDb = function(done) {
       table.string('token');
       table.integer('role');
       table.datetime('created');
+    }),
+    knex.schema.createTable('users_skill', function(table) {
+      table.bigInteger('users_id');
+      table.string('skill_name');
+    }),
+    knex.schema.createTable('users_org', function(table) {
+      table.bigInteger('users_id');
+      table.string('org_name');
     })
-  ]).then(function() {
-    this.dbInited = true;
-    done();
-  }.bind(this));
+    ]).then(function() {
+      this.dbInited = true;
+      done();
+    }.bind(this));
 };
 
 TestSetup.prototype.clearDb = function(done) {

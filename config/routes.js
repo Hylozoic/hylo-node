@@ -68,6 +68,9 @@ module.exports.routes = {
 
   'GET    /admin/login':                          'SessionController.create',
   'GET    /admin/login/oauth':                    'SessionController.oauth',
-  'GET    /admin':                                'AdminController.index'
+  'GET    /admin':                                'AdminController.index',
+
+  'GET    /noo/linkedin/authorize':               'LinkedinController.authorize',
+  'GET    /noo/linkedin/provide':                 'LinkedinController.provideData'
 
 };

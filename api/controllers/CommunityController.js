@@ -5,7 +5,8 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var validator = require('validator');
+var Promise = require('bluebird'),
+  validator = require('validator');
 
 var communityAttributes = function(community, membership) {
   return _.extend(community.attributes, {
@@ -49,24 +50,25 @@ module.exports = {
         return email.trim();
       });
 
-      async.map(emails, function(email, cb) {
+      Promise.map(emails, function(email) {
         if (!validator.isEmail(email)) {
-          return cb(null, {email: email, error: "not a valid email address"});
+          return {email: email, error: "not a valid email address"};
         }
 
-        Invitation.createAndSend({
+        return Invitation.createAndSend({
           user: req.session.user,
           email: email,
           community: community,
           moderator: req.param('moderator')
-        }, function(err) {
-          return cb(null, {email: email, error: (err ? err.message : null)});
+        }).then(function() {
+          return {email: email, error: null};
+        }).catch(function(err) {
+          return {email: email, error: err.message};
         });
-
-      }, function(err, results) {
+      })
+      .then(function(results) {
         res.ok({results: results});
       });
-
     });
   },
 

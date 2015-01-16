@@ -5,6 +5,8 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
+var Promise = require('bluebird');
+
 module.exports = {
 
   findSelf: function(req, res) {
@@ -39,7 +41,7 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          qb.whereIn("community.id", Membership.getActiveMembershipCommunityIds(req.session.user.id));
+          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.user.id));
         }
 
         qb.where({"post.active": true});
@@ -85,7 +87,7 @@ module.exports = {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
 
-          qb.whereIn("community.id", Membership.getActiveMembershipCommunityIds(req.session.user.id));
+          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.user.id));
         }
 
         qb.where({"comment.active": true, "post.active": true});
@@ -116,7 +118,30 @@ module.exports = {
   },
 
   update: function(req, res) {
+    var attrs = _.pick(req.allParams(), [
+      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url'
+    ]);
 
+    User.find(req.param('id')).then(function(user) {
+      user.setSanely(attrs);
+
+      var promises = [user.save()],
+        skills = req.param('skills'),
+        organizations = req.param('organizations');
+
+      if (skills)
+        promises.push(Skill.update(skills, user.id));
+
+      if (organizations)
+        promises.push(Organizations.update(organizations, user.id));
+
+      return Promise.all(promises);
+
+    }).then(function() {
+      res.ok({});
+    }).catch(function(err) {
+      res.serverError(err);
+    });
   }
 
 };

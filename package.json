@@ -35,13 +35,15 @@
     "passport-google-oauth": "^0.1.5",
     "pg": "^3.6.2",
     "rc": "~0.5.0",
+    "request": "^2.51.0",
     "rollbar": "^0.4.0",
     "root-path": "^0.2.0",
     "sails": "~0.10.5",
     "sanitize-html": "^1.5.0",
     "cheerio": "0.18.0",
     "sendwithus": "^2.8.0",
-    "validator": "^3.22.1"
+    "validator": "^3.22.1",
+    "xml2js": "^0.4.4"
   },
   "scripts": {
     "start": "node app.js",
