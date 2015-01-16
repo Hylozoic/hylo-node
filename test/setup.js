@@ -31,7 +31,6 @@ TestSetup.prototype.initDb = function(done) {
   if (this.dbInited) return done();
   var knex = this.knex;
 
-
   Promise.all([
     knex.schema.createTable('users', function(table) {
       table.increments();
@@ -126,7 +125,10 @@ TestSetup.prototype.initDb = function(done) {
 
 TestSetup.prototype.clearDb = function(done) {
   async.each(
-    ['users', 'community', 'users_community', 'community_invite'],
+    ['users', 'community', 'users_community', 'community_invite',
+      'users_org', 'users_skill', 'post_community', 'follower',
+      'notification', 'comment', 'contributor', 'post'
+    ],
     function(table, cb) {
       this.knex.raw('delete from ' + table).exec(cb);
     }.bind(this),

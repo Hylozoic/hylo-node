@@ -31,7 +31,10 @@ describe('PostController', function() {
             done(err);
           }
         };
+
         done()
+
+
       });
     });
   });
@@ -52,7 +55,6 @@ describe('PostController', function() {
       expect(data).to.exist;
       expect(data.followers.length).to.equal(2);
       expect(data.name).to.equal("NewPost");
-      console.log(data.description);
       expect(data.description).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
       done();
     };
@@ -87,18 +89,15 @@ describe('PostController', function() {
     res.locals = {
       post: fixtures.p1
     };
-    done();
 
+    res.ok = function(data) {
+      expect(data).to.exist;
+      expect(data.user).to.exist;
+      expect(data.text).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
+      done();
+    };
 
-    // TODO write test for comments... throwing aggregate error right now...
-    //res.ok = function(data) {
-    //  expect(data).to.exist;
-    //  expect(data.user).to.exist;
-    //  expect(data.text).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
-    //  done();
-    //};
-    //
-    //PostController.comment(req, res);
+    PostController.comment(req, res);
   })
 
 });
