@@ -2,10 +2,11 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('User', function() {
 
+  var cat = new User({name: 'Cat'});
+
   before(function(done) {
     setup.initDb(function() {
-      var user = new User({name: 'Cat'});
-      user.save().exec(done);
+      cat.save().exec(done);
     });
   });
 
@@ -14,20 +15,17 @@ describe('User', function() {
   });
 
   it('can be found', function(done) {
-    User.where({name: 'Cat'}).fetch().then(function(cat) {
-      expect(cat).to.exist;
-      expect(cat.get('name')).to.equal('Cat');
+    User.where({name: 'Cat'}).fetch().then(function(user) {
+      expect(user).to.exist;
+      expect(user.get('name')).to.equal('Cat');
     }).exec(done);
   })
 
   it('can join communities', function(done) {
     var community1 = new Community({name: 'House'}),
-      community2 = new Community({name: 'Yard'}),
-      cat;
+      community2 = new Community({name: 'Yard'});
 
-    User.named('Cat')
-    .then(function(u) { cat = u; })
-    .then(function() { return community1.save(); })
+    community1.save()
     .then(function() { return community2.save(); })
     .then(function() { return cat.joinCommunity(community1); })
     .then(function() { return cat.joinCommunity(community2); })
@@ -45,11 +43,9 @@ describe('User', function() {
 
   it('can become moderator', function(done) {
     var house = new Community({name: 'House'}),
-      cat, membership;
+      membership;
 
-    User.named('Cat')
-    .then(function(user) { cat = user; })
-    .then(function() { return house.save(); })
+    house.save()
     .then(function() { return cat.joinCommunity(house); })
     .then(function() { return cat.setModeratorRole(house); })
     .then(function() { return cat.memberships().query({where: {community_id: house.id}}).fetchOne(); })
@@ -58,6 +54,24 @@ describe('User', function() {
       expect(membership.get('role')).to.equal(1);
     })
     .done(done);
+
+  });
+
+  describe('#setSanely', function() {
+
+    it("doesn't assume that any particular field is set", function() {
+      new User().setSanely({});
+    });
+
+    it('sanitizes twitter usernames', function() {
+      var user = new User();
+
+      user.setSanely({twitter_name: '@user'});
+      expect(user.get('twitter_name')).to.equal('user');
+
+      user.setSanely({twitter_name: ' '});
+      expect(user.get('twitter_name')).to.be.null;
+    });
 
   });
 

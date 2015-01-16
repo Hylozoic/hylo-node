@@ -68,7 +68,7 @@ module.exports = bookshelf.Model.extend({
       });
   },
 
-  getActiveMembershipCommunityIds: function(user_id) {
+  activeCommunityIds: function(user_id) {
     return bookshelf.knex.select("community_id")
       .from("users_community")
       .where("users_id", "=", user_id)

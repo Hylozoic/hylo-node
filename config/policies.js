@@ -33,6 +33,8 @@ module.exports.policies = {
     oauth: true
   },
 
+  LinkedinController: ['playSessionCheck', 'sessionAuth'],
+
   AdminController: {
     index: ['isAdmin']
   },
