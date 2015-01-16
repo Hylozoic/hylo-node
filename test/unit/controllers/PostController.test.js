@@ -52,7 +52,6 @@ describe('PostController', function() {
       expect(data).to.exist;
       expect(data.followers.length).to.equal(2);
       expect(data.name).to.equal("NewPost");
-      console.log(data.description);
       expect(data.description).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
       done();
     };
