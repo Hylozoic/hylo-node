@@ -14,6 +14,10 @@ global.requireFromRoot = function(path) {
   return require(root(path));
 };
 
+var i18n = require('sails/node_modules/i18n');
+i18n.configure(requireFromRoot('config/i18n'));
+global.__ = i18n.__;
+
 var TestSetup = function() {
   this.knex = require('knex')({client: 'sqlite3', connection: {filename: ':memory:'}});
   global.bookshelf = require('bookshelf')(this.knex);
@@ -30,7 +34,6 @@ var TestSetup = function() {
 TestSetup.prototype.initDb = function(done) {
   if (this.dbInited) return done();
   var knex = this.knex;
-
 
   Promise.all([
     knex.schema.createTable('users', function(table) {
