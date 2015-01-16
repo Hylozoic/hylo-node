@@ -159,11 +159,9 @@ module.exports = {
   },
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId']);
-
-    var cleanDescription = sanitizeMentionsText(params.description);
-
-    var mentions = getMentions(cleanDescription);
+    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId']),
+        cleanDescription = sanitizeMentionsText(params.description),
+        mentions = getMentions(cleanDescription);
 
     bookshelf.transaction(function(trx) {
       return new Post({
@@ -186,12 +184,20 @@ module.exports = {
         .tap(function (post) {
           // Add any followers to new post
           return Promise.map(mentions, function (userId) {
-            return Follower.addFollower(post.id, userId, req.session.user.id, {transacting: trx});
+            return Follower.addFollower(post.id, {
+                followerId: userId,
+                addedById: req.session.user.id,
+                transacting: trx
+              });
           });
         })
         .tap(function (post) {
           // Add seed creator as a follower
-          return Follower.addFollower(post.id, req.session.user.id, req.session.user.id, {transacting: trx});
+          return Follower.addFollower(post.id, {
+              followerId: req.session.user.id,
+              addedById: req.session.user.id,
+              transacting: trx
+            });
         })
         .then(function (post) {
           return post.load([
@@ -237,7 +243,11 @@ module.exports = {
         .tap(function (comment) {
           // add followers to post of new comment
           return Promise.map(mentions, function (userId) {
-            return Follower.addFollower(res.locals.post.id, userId, req.session.user.id, {transacting: trx});
+            return Follower.addFollower(res.locals.post.id, {
+              followerId: userId,
+              addedById: req.session.user.id,
+              transacting: trx
+            });
           });
         })
         .tap(function (comment) {
