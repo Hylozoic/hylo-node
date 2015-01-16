@@ -64,7 +64,7 @@ module.exports.routes = {
   'GET    /noo/community/:id/members':            'CommunityController.findMembers',
 
   'POST   /noo/seed/:id/comment':                 'PostController.comment',
-  'POST   /noo/seed':                             'PostController.createSeed',
+  'POST   /noo/seed':                             'PostController.create',
 
   'GET    /admin/login':                          'SessionController.create',
   'GET    /admin/login/oauth':                    'SessionController.oauth',
