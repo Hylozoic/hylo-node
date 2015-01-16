@@ -99,17 +99,9 @@ module.exports = {
   },
 
   findMembers: function(req, res) {
-    Community.find(req.param('id')).then(function(community) {
+    var params = _.pick(req.allParams(), ['search', 'id', 'limit', 'offset']);
 
-      return community.users().query(function(qb) {
-        var search = req.param('search');
-        if (search) {
-          qb.where("name", "ILIKE", '%' + search + '%');
-          qb.limit(10);
-        }
-      }).fetch();
-
-    }).then(function(users) {
+    Community.members(params.id, params.search, {limit: params.limit, offset: params.offset}).then(function(users) {
 
       res.ok(users.map(function(user) {
         return {
