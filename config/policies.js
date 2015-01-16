@@ -49,17 +49,18 @@ module.exports.policies = {
 
   CommunityController: {
     findDefault: ['playSessionCheck', 'sessionAuth'],
-    findOne: ['playSessionCheck', 'sessionAuth', 'isMember'],
+    findOne: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership'],
     update: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     invite: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     findModerators: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     addModerator: ['playSessionCheck', 'sessionAuth', 'isModerator'],
     removeModerator: ['playSessionCheck', 'sessionAuth', 'isModerator'],
-    findMembers: ['playSessionCheck', 'sessionAuth', 'isMember']
+    findMembers: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership'],
+    removeMember: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership']
   },
 
   PostController: {
-    find: ['playSessionCheck', 'sessionAuth', 'isMember'],
+    find: ['playSessionCheck', 'sessionAuth', 'checkAndSetMembership'],
     create: ['playSessionCheck', 'sessionAuth'],
     comment: ['playSessionCheck', 'sessionAuth', 'checkAndSetPost']
   }
