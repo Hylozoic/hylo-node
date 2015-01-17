@@ -29,7 +29,7 @@ module.exports = {
   },
 
   findOne: function(req, res) {
-    Community.find(req.param('id')).then(function(community) {
+    Community.find(req.param('communityId')).then(function(community) {
       Membership.find(req.session.userId, community.id).then(function(membership) {
         res.ok(communityAttributes(community, membership));
       });
@@ -39,7 +39,7 @@ module.exports = {
   update: function(req, res) {
     var whitelist = ['banner_url', 'avatar_url', 'name', 'description'],
       attributes = _.pick(req.allParams(), whitelist),
-      community = new Community({id: req.param('id')});
+      community = new Community({id: req.param('communityId')});
 
     community.save(attributes, {patch: true}).then(function(community) {
       res.ok({});
@@ -47,7 +47,7 @@ module.exports = {
   },
 
   invite: function(req, res) {
-    Community.find(req.param('id')).then(function(community) {
+    Community.find(req.param('communityId')).then(function(community) {
 
       var emails = (req.param('emails') || '').split(',').map(function(email) {
         return email.trim();
@@ -76,7 +76,7 @@ module.exports = {
   },
 
   findModerators: function(req, res) {
-    Community.find(req.param('id')).then(function(community) {
+    Community.find(req.param('communityId')).then(function(community) {
       return community.moderators().fetch();
     }).then(function(moderators) {
       res.ok(moderators.map(function(user) {
@@ -90,13 +90,13 @@ module.exports = {
   },
 
   addModerator: function(req, res) {
-    Membership.setModeratorRole(req.param('user_id'), req.param('id')).then(function() {
+    Membership.setModeratorRole(req.param('userId'), req.param('communityId')).then(function() {
       res.ok({});
     });
   },
 
   removeModerator: function(req, res) {
-    Membership.removeModeratorRole(req.param('user_id'), req.param('id')).then(function() {
+    Membership.removeModeratorRole(req.param('userId'), req.param('communityId')).then(function() {
       res.ok({});
     });
   },

@@ -17,19 +17,17 @@ module.exports = {
   },
 
   findOne: function(req, res) {
-    User.fetchForOther(req.param('id')).then(function(attributes) {
+    User.fetchForOther(req.param('userId')).then(function(attributes) {
       res.ok(attributes);
     })
   },
 
   contributions: function(req, res) {
-    var params = _.pick(req.allParams(), ['id', 'limit', 'start']),
+    var params = _.pick(req.allParams(), ['userId', 'limit', 'start']),
       limit = params.limit ? params.limit : 15,
-      start = params.start ? params.start : 0;
-
-    var userId = params.id;
-
-    var isSelf = req.session.userId === userId;
+      start = params.start ? params.start : 0,
+      userId = params.userId,
+      isSelf = req.session.userId === userId;
 
     User.find(userId).then(function(user) {
       user.contributions().query(function(qb) {
@@ -68,13 +66,11 @@ module.exports = {
   },
 
   thanks: function(req, res) {
-    var params = _.pick(req.allParams(), ['id', 'limit', 'start']),
+    var params = _.pick(req.allParams(), ['userId', 'limit', 'start']),
       limit = params.limit ? params.limit : 15,
-      start = params.start ? params.start : 0;
-
-    var userId = params.id;
-
-    var isSelf = req.session.userId === userId;
+      start = params.start ? params.start : 0,
+      userId = params.userId,
+      isSelf = req.session.userId === userId;
 
     User.find(userId).then(function(user) {
       user.thanks().query(function(qb) {
@@ -124,7 +120,7 @@ module.exports = {
       'send_email_preference', 'daily_digest'
     ]);
 
-    User.find(req.param('id'))
+    User.find(req.param('userId'))
     .tap(function(user) {
       var newEmail = attrs.email, oldEmail = user.get('email');
       if (newEmail && newEmail != oldEmail) {
