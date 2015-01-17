@@ -102,9 +102,9 @@ module.exports = {
   },
 
   findMembers: function(req, res) {
-    var params = _.pick(req.allParams(), ['search', 'id', 'limit', 'offset']);
+    var params = _.pick(req.allParams(), ['search', 'communityId', 'limit', 'offset']);
 
-    Community.members(params.id, params.search, {limit: params.limit, offset: params.offset}).then(function(users) {
+    Community.members(params.communityId, params.search, {limit: params.limit, offset: params.offset}).then(function(users) {
 
       res.ok(users.map(function(user) {
         return {
@@ -126,4 +126,3 @@ module.exports = {
   }
 
 };
-
