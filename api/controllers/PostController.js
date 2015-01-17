@@ -118,7 +118,7 @@ var findPosts = function(req, res, opts) {
         });
       }
 
-      if (!opts.isSelf) {
+      if (opts.isOther) {
         qb.join("post_community", "post_community.post_id", "=", "post.id");
         qb.join("community", "community.id", "=", "post_community.community_id");
         qb.whereIn("community.id", Membership.activeCommunityIds(req.session.userId));
@@ -167,7 +167,7 @@ module.exports = {
   findForUser: function(req, res) {
     findPosts(req, res, {
       findParent: User.find(req.param('userId')),
-      isSelf: req.session.userId == req.param('userId')
+      isOther: req.session.userId != req.param('userId')
     });
   },
 
