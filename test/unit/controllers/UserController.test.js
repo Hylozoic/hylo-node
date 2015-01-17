@@ -28,14 +28,15 @@ describe('UserController', function() {
     it('halts on invalid email', function(done) {
 
       _.extend(req, {
-        params: {id: u1.id, email: 'lol'}
+        params: {userId: u1.id, email: 'lol'}
       });
 
       res = {
         badRequest: function(message) {
           expect(message).to.equal(__('invalid-email'));
           done();
-        }
+        },
+        serverError: done
       };
 
       UserController.update(req, res);
@@ -43,14 +44,15 @@ describe('UserController', function() {
 
     it('halts on duplicate email', function(done) {
       _.extend(req, {
-        params: {id: u1.id, email: 'baz@bax.com'}
+        params: {userId: u1.id, email: 'baz@bax.com'}
       });
 
       res = {
         badRequest: function(message) {
           expect(message).to.equal(__('duplicate-email'));
           done();
-        }
+        },
+        serverError: done
       };
 
       UserController.update(req, res);
@@ -58,15 +60,15 @@ describe('UserController', function() {
 
     it('only updates changed fields', function(done) {
       _.extend(req, {
-        params: {id: u1.id, twitter_name: 'ev'}
+        params: {userId: u1.id, twitter_name: 'ev'}
       });
 
       res = {
         ok: function() { done(); }
       };
 
-      User.find = function() {
-        return Promise.resolve(u1);
+      User.find = function(id) {
+        return Promise.resolve(id == u1.id ? u1 : null);
       }
 
       u1.save = function(fields, options) {
@@ -79,7 +81,7 @@ describe('UserController', function() {
 
     it('updates skills', function(done) {
       _.extend(req, {
-        params: {id: u1.id, skills: ['standing', 'sitting']}
+        params: {userId: u1.id, skills: ['standing', 'sitting']}
       });
 
       res = {
