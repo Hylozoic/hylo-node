@@ -116,8 +116,8 @@ module.exports = {
 
   update: function(req, res) {
     var attrs = _.pick(req.allParams(), [
-      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'email',
-      'send_email_preference', 'daily_digest'
+      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
+      'email', 'send_email_preference', 'daily_digest'
     ]);
 
     User.find(req.param('userId'))
