@@ -47,31 +47,32 @@ module.exports.routes = {
   ***************************************************************************/
 
 
-  'GET    /noo/user/me':                          'UserController.findSelf',
-  'GET    /noo/user/:id':                         'UserController.findOne',
-  'POST   /noo/user/:id':                         'UserController.update',
-  'GET    /noo/user/:id/contributions':           'UserController.contributions',
-  'GET    /noo/user/:id/thanks':                  'UserController.thanks',
+  'GET    /noo/user/me':                                  'UserController.findSelf',
+  'GET    /noo/user/:userId':                             'UserController.findOne',
+  'POST   /noo/user/:userId':                             'UserController.update',
+  'GET    /noo/user/:userId/contributions':               'UserController.contributions',
+  'GET    /noo/user/:userId/thanks':                      'UserController.thanks',
+  'GET    /noo/user/:userId/seeds':                       'PostController.findForUser',
 
-  'GET    /noo/community/default':                'CommunityController.findDefault',
-  'GET    /noo/community/:id':                    'CommunityController.findOne',
-  'POST   /noo/community/:id':                    'CommunityController.update',
-  'POST   /noo/community/:id/invite':             'CommunityController.invite',
-  'GET    /noo/community/:id/posts':              'PostController.find',
-  'GET    /noo/community/:id/moderators':         'CommunityController.findModerators',
-  'POST   /noo/community/:id/moderators':         'CommunityController.addModerator',
-  'DELETE /noo/community/:id/moderator/:user_id': 'CommunityController.removeModerator',
-  'GET    /noo/community/:id/members':            'CommunityController.findMembers',
-  'DELETE /noo/community/:id/member/:user_id':    'CommunityController.removeMember',
+  'GET    /noo/community/default':                        'CommunityController.findDefault',
+  'GET    /noo/community/:communityId':                   'CommunityController.findOne',
+  'POST   /noo/community/:communityId':                   'CommunityController.update',
+  'POST   /noo/community/:communityId/invite':            'CommunityController.invite',
+  'GET    /noo/community/:communityId/posts':             'PostController.findForCommunity',
+  'GET    /noo/community/:communityId/moderators':        'CommunityController.findModerators',
+  'POST   /noo/community/:communityId/moderators':        'CommunityController.addModerator',
+  'DELETE /noo/community/:communityId/moderator/:userId': 'CommunityController.removeModerator',
+  'GET    /noo/community/:communityId/members':           'CommunityController.findMembers',
+  'DELETE /noo/community/:communityId/member/:userId':    'CommunityController.removeMember',
 
-  'POST   /noo/seed/:id/comment':                 'PostController.comment',
-  'POST   /noo/seed':                             'PostController.create',
+  'POST   /noo/seed/:postId/comment':                     'PostController.comment',
+  'POST   /noo/seed':                                     'PostController.create',
 
-  'GET    /admin/login':                          'SessionController.create',
-  'GET    /admin/login/oauth':                    'SessionController.oauth',
-  'GET    /admin':                                'AdminController.index',
+  'GET    /admin/login':                                  'SessionController.create',
+  'GET    /admin/login/oauth':                            'SessionController.oauth',
+  'GET    /admin':                                        'AdminController.index',
 
-  'GET    /noo/linkedin/authorize':               'LinkedinController.authorize',
-  'GET    /noo/linkedin/provide':                 'LinkedinController.provideData'
+  'GET    /noo/linkedin/authorize':                       'LinkedinController.authorize',
+  'GET    /noo/linkedin/provide':                         'LinkedinController.provideData'
 
 };

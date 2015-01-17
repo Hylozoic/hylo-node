@@ -60,7 +60,8 @@ module.exports.policies = {
   },
 
   PostController: {
-    find: ['sessionAuth', 'checkAndSetMembership'],
+    findForUser: ['sessionAuth', 'inSameCommunity'],
+    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     create: ['sessionAuth'],
     comment: ['sessionAuth', 'checkAndSetPost']
   }
