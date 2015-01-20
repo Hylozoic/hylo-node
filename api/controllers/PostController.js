@@ -89,73 +89,90 @@ var getMentions = function(text) {
   }).get());
 };
 
-module.exports = {
-  find: function(req, res) {
-    var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q']),
-      sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
+var findPosts = function(req, res, opts) {
+  var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q']),
+    sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
 
-    Community.find(req.param('id')).then(function(community) {
+  opts.findParent.then(function(parent) {
 
-      return community.posts().query(function(qb) {
-        if (params.postType && params.postType != 'all') {
-          qb.where({type: params.postType});
-        }
-        qb.where({active: true});
+    return parent.posts().query(function(qb) {
+      if (params.postType && params.postType != 'all') {
+        qb.where({type: params.postType});
+      }
+      qb.where({active: true});
 
-        if (params.q && params.q.trim().length > 0) {
-          var query = _.chain(params.q.trim().split(/\s*\s/)) // split on whitespace
-            .map(function(term) { // Remove any invalid characters
-              return term.replace(/[,;'|:&()!]+/, '');
-            })
-            .reject(_.isEmpty)
-            .reduce(function(result, term, key) { // Build the tsquery string using logical | (OR) operands
-              result += " | " + term;
-              return result;
-            }).value();
+      if (params.q && params.q.trim().length > 0) {
+        var query = _.chain(params.q.trim().split(/\s*\s/)) // split on whitespace
+          .map(function(term) { // Remove any invalid characters
+            return term.replace(/[,;'|:&()!]+/, '');
+          })
+          .reject(_.isEmpty)
+          .reduce(function(result, term, key) { // Build the tsquery string using logical | (OR) operands
+            result += " | " + term;
+            return result;
+          }).value();
 
-          qb.where(function() {
-            this.whereRaw("(to_tsvector('english', post.name) @@ to_tsquery(?)) OR (to_tsvector('english', post.description) @@ to_tsquery(?))", [query, query]);
-            //this.where("name", "ILIKE", query).orWhere("description", "ILIKE", query ) // Basic 'icontains' searching
-          });
-        }
+        qb.where(function() {
+          this.whereRaw("(to_tsvector('english', post.name) @@ to_tsquery(?)) OR (to_tsvector('english', post.description) @@ to_tsquery(?))", [query, query]);
+          //this.where("name", "ILIKE", query).orWhere("description", "ILIKE", query ) // Basic 'icontains' searching
+        });
+      }
 
-        qb.orderBy(sortCol, 'desc');
-        qb.limit(params.limit);
-        qb.offset(params.start);
-      }).fetch({
-        withRelated: [
-          {"creator": function(qb) {
-            qb.column("id", "name", "avatar_url");
-          }},
-          {"communities": function(qb) {
-            qb.column("id", 'name', "slug");
-          }},
-          "followers",
-          {"followers.user": function(qb) {
-            qb.column("id", "name", "avatar_url");
-          }},
-          "contributors",
-          {"contributors.user": function(qb) {
-            qb.column("id", "name", "avatar_url");
-          }}
-        ]
-      });
+      if (opts.isOther) {
+        qb.join("post_community", "post_community.post_id", "=", "post.id");
+        qb.join("community", "community.id", "=", "post_community.community_id");
+        qb.whereIn("community.id", Membership.activeCommunityIds(req.session.userId));
+      }
 
-    }).then(function(posts) {
-
-      var postIds = posts.pluck("id");
-      return Promise.props({
-        posts: posts,
-        votes: Vote.forUserInPosts(req.session.user.id, postIds).pluck("post_id")
-      });
-
-    }).then(function(data) {
-
-      res.ok(data.posts.map(function(post) {
-        return postAttributes(post, _.contains(data.votes, post.get("id")));
-      }));
-
+      qb.orderBy(sortCol, 'desc');
+      qb.limit(params.limit);
+      qb.offset(params.start);
+    }).fetch({
+      withRelated: [
+        {"creator": function(qb) {
+          qb.column("id", "name", "avatar_url");
+        }},
+        {"communities": function(qb) {
+          qb.column("id", 'name', "slug");
+        }},
+        "followers",
+        {"followers.user": function(qb) {
+          qb.column("id", "name", "avatar_url");
+        }},
+        "contributors",
+        {"contributors.user": function(qb) {
+          qb.column("id", "name", "avatar_url");
+        }}
+      ]
     });
+
+  }).then(function(posts) {
+
+    var postIds = posts.pluck("id");
+    return Promise.props({
+      posts: posts,
+      votes: Vote.forUserInPosts(req.session.userId, postIds).pluck("post_id")
+    });
+
+  }).then(function(data) {
+
+    res.ok(data.posts.map(function(post) {
+      return postAttributes(post, _.contains(data.votes, post.get("id")));
+    }));
+
+  });
+};
+
+module.exports = {
+  findForUser: function(req, res) {
+    findPosts(req, res, {
+      findParent: User.find(req.param('userId')),
+      isOther: req.session.userId != req.param('userId')
+    });
+  },
+
+  findForCommunity: function(req, res) {
+    findPosts(req, res, {findParent: Community.find(req.param('communityId'))});
   },
 
   create: function(req, res) {
@@ -168,7 +185,7 @@ module.exports = {
         name: params.name,
         description: cleanDescription,
         type: params.postType,
-        creator_id: req.session.user.id,
+        creator_id: req.session.userId,
         creation_date: new Date(),
         last_updated: new Date(),
         active: true,
@@ -186,7 +203,7 @@ module.exports = {
           return Promise.map(mentions, function (userId) {
             return Follower.addFollower(post.id, {
                 followerId: userId,
-                addedById: req.session.user.id,
+                addedById: req.session.userId,
                 transacting: trx
               });
           });
@@ -194,8 +211,8 @@ module.exports = {
         .tap(function (post) {
           // Add seed creator as a follower
           return Follower.addFollower(post.id, {
-              followerId: req.session.user.id,
-              addedById: req.session.user.id,
+              followerId: req.session.userId,
+              addedById: req.session.userId,
               transacting: trx
             });
         })
@@ -237,7 +254,7 @@ module.exports = {
         comment_text: cleanText,
         date_commented: new Date(),
         post_id: res.locals.post.id,
-        user_id: req.session.user.id,
+        user_id: req.session.userId,
         active: true
       }).save(null, {transacting: trx})
         .tap(function (comment) {
@@ -245,13 +262,13 @@ module.exports = {
           return Promise.map(mentions, function (userId) {
             return Follower.addFollower(res.locals.post.id, {
               followerId: userId,
-              addedById: req.session.user.id,
+              addedById: req.session.userId,
               transacting: trx
             });
           });
         })
         .tap(function (comment) {
-          return Notification.createCommentNotification(res.locals.post.id, comment.id, req.session.user.id, {transacting: trx})
+          return Notification.createCommentNotification(res.locals.post.id, comment.id, req.session.userId, {transacting: trx})
         })
         .tap(function (comment) {
           return Aggregate.count(res.locals.post.comments()).then(function(numComments) {

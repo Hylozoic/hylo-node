@@ -11,6 +11,13 @@ module.exports = bookshelf.Model.extend({
 
   hasModeratorRole: function() {
     return this.get('role') == Membership.MODERATOR_ROLE;
+  },
+
+  // this is a workaround for the absence of an id column on this table.
+  // perhaps it is possible to override the default implementation of #destroy
+  // instead of creating a method with a different name.
+  destroyMe: function() {
+    return this.where(_.pick(this.attributes, 'users_id', 'community_id')).destroy();
   }
 
 }, {

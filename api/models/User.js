@@ -101,8 +101,8 @@ module.exports = bookshelf.Model.extend({
       ]
     }).then(function(user) {
       return Promise.join(user, extraUserAttributes(user));
-    }).then(function(values) {
-      return _.extend(values[0].toJSON(), values[1]);
+    }).spread(function(user, extraAttributes) {
+      return _.extend(user.toJSON(), extraAttributes);
     });
   },
 
@@ -111,11 +111,21 @@ module.exports = bookshelf.Model.extend({
       withRelated: ['skills', 'organizations']
     }).then(function(user) {
       return Promise.join(user, extraUserAttributes(user));
-    }).then(function(values) {
-      return _.chain(values[0].attributes)
+    }).spread(function(user, extraAttributes) {
+      return _.chain(user.attributes)
         .pick(['id', 'name', 'avatar_url'])
-        .extend(values[1]).value();
+        .extend(extraAttributes).value();
     });
+  },
+
+  isEmailUnique: function(email, notEmail) {
+    // FIXME there should be a better way to do this
+    return bookshelf.knex('users')
+      .where('email', email).andWhere('email', '!=', notEmail)
+      .count('*')
+      .then(function(result) {
+        return result[0].count == 0;
+      });
   }
 
 });

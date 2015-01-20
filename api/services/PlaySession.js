@@ -30,7 +30,7 @@ _.extend(PlaySession.prototype, {
     return this.data['pa.u.exp'] < new Date().getTime();
   },
   fetchUser: function(callback) {
-    var providerKey = this.data['pa.p.id'], providerId = this.data['pa.u.id'];
+    var providerKey = this.providerKey(), providerId = this.providerId();
     if (providerKey == 'password') {
       return User.where({email: providerId, active: true}).fetch();
     } else {
@@ -51,6 +51,12 @@ _.extend(PlaySession.prototype, {
         }
       });
     }
+  },
+  providerKey: function() {
+    return this.data['pa.p.id'];
+  },
+  providerId: function() {
+    return this.data['pa.u.id'];
   }
 });
 
