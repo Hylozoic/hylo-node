@@ -22,7 +22,8 @@ describe('PostController', function() {
           session: {
             user: {
               id: fixtures.u1.id
-            }
+            },
+            userId: fixtures.u1.id
           }
         };
 

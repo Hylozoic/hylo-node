@@ -29,6 +29,12 @@ var TestSetup = function() {
       global[modelName] = require(root('api/models/' + modelName));
     }
   });
+  _.each(fs.readdirSync(root('api/services')), function(filename) {
+    if (path.extname(filename) == '.js') {
+      var serviceName = path.basename(filename, '.js');
+      global[serviceName] = require(root('api/services/' + serviceName));
+    }
+  });
 };
 
 TestSetup.prototype.initDb = function(done) {
