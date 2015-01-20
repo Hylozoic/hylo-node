@@ -33,9 +33,7 @@ describe('PostController', function() {
           }
         };
 
-        done()
-
-
+        done();
       });
     });
   });
