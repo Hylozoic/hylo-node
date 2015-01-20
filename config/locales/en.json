@@ -1,4 +1,6 @@
 {
 	"Welcome": "Welcome",
-	"A brand new app.": "A brand new app."
+	"A brand new app.": "A brand new app.",
+  "invalid-email": "That email address is not valid.",
+  "duplicate-email": "That email address is already in use."
 }

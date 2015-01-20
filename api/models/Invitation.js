@@ -1,4 +1,5 @@
-var util = require('util'),
+var Promise = require('bluebird'),
+  util = require('util'),
   uuid = require('node-uuid');
 
 module.exports = bookshelf.Model.extend({
@@ -18,8 +19,8 @@ module.exports = bookshelf.Model.extend({
     var role = (opts.moderator ? Membership.MODERATOR_ROLE : Membership.DEFAULT_ROLE);
 
     return new Invitation({
-      invited_by_id: opts.user.id,
-      community_id: opts.community.id,
+      invited_by_id: opts.userId,
+      community_id: opts.communityId,
       email: opts.email,
       role: role,
       token: uuid.v4(),
@@ -30,6 +31,12 @@ module.exports = bookshelf.Model.extend({
   createAndSend: function(opts) {
     return Invitation.create(opts)
     .then(function(invitation) {
+      return Promise.join(
+        invitation.load('creator'),
+        invitation.load('community')
+      );
+    })
+    .spread(function(invitation) {
 
       var link = util.format(
         "http://%s/community/invite/%s",
@@ -37,9 +44,9 @@ module.exports = bookshelf.Model.extend({
       );
 
       return Email.sendInvitation(opts.email, {
-        inviter_name: opts.user.get('name'),
+        inviter_name: invitation.relations.creator.get('name'),
         recipient: opts.email,
-        community_name: opts.community.get('name'),
+        community_name: invitation.relations.community.get('name'),
         invite_link: link
       });
     });
