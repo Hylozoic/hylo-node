@@ -156,21 +156,15 @@ module.exports = {
         })
         .tap(function (post) {
           // Add any followers to new post
-          return Promise.map(mentions, function (userId) {
-            return Follower.create(post.id, {
-                followerId: userId,
-                addedById: req.session.userId,
-                transacting: trx
-              });
-          });
+          return post.addFollowers(mentions, req.session.userId, trx);
         })
         .tap(function (post) {
           // Add seed creator as a follower
           return Follower.create(post.id, {
-              followerId: req.session.userId,
-              addedById: req.session.userId,
-              transacting: trx
-            });
+            followerId: req.session.userId,
+            addedById: req.session.userId,
+            transacting: trx
+          });
         })
         .then(function (post) {
           return post.load([

@@ -1,3 +1,5 @@
+var Promise = require('bluebird');
+
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
 
@@ -19,7 +21,19 @@ module.exports = bookshelf.Model.extend({
 
   comments: function () {
     return this.hasMany(Comment, "post_id").query({where: {active: true}});
+  },
+
+  addFollowers: function(userIds, addingUserId, transaction) {
+    var postId = this.id;
+    return Promise.map(userIds, function(userId) {
+      return Follower.create(postId, {
+        followerId: userId,
+        addedById: addingUserId,
+        transacting: transaction
+      });
+    });
   }
+
 },{
 
   countForUser: function(user) {
