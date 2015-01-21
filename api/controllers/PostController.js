@@ -157,7 +157,7 @@ module.exports = {
         .tap(function (post) {
           // Add any followers to new post
           return Promise.map(mentions, function (userId) {
-            return Follower.addFollower(post.id, {
+            return Follower.create(post.id, {
                 followerId: userId,
                 addedById: req.session.userId,
                 transacting: trx
@@ -166,7 +166,7 @@ module.exports = {
         })
         .tap(function (post) {
           // Add seed creator as a follower
-          return Follower.addFollower(post.id, {
+          return Follower.create(post.id, {
               followerId: req.session.userId,
               addedById: req.session.userId,
               transacting: trx
