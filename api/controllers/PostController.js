@@ -128,6 +128,20 @@ var findPosts = function(req, res, opts) {
 };
 
 module.exports = {
+
+  findOne: function(req, res) {
+    res.locals.post.load(postRelations)
+    .then(function(post) {
+      return Promise.join(post, post.userVote(req.session.userId));
+    })
+    .spread(function(post, vote) {
+      res.ok(postAttributes(post, !!vote));
+    })
+    .catch(function(err) {
+      res.serverError(err);
+    });
+  },
+
   findForUser: function(req, res) {
     findPosts(req, res, {
       findParent: User.find(req.param('userId')),
@@ -188,9 +202,11 @@ module.exports = {
         .then(function (post) {
           return post.load(postRelations, {transacting: trx});
         });
-    }).then(function (post) {
+    })
+    .then(function (post) {
       res.ok(postAttributes(post, false));
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       res.serverError(err);
     });
   }

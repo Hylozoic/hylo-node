@@ -27,6 +27,14 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Media);
   },
 
+  votes: function () {
+    return this.hasMany(Vote);
+  },
+
+  userVote: function (userId) {
+    return this.votes().query({where: {user_id: userId}}).fetchOne();
+  },
+
   addFollowers: function(userIds, addingUserId, transaction) {
     var postId = this.id;
     return Promise.map(userIds, function(userId) {
