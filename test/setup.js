@@ -126,11 +126,16 @@ TestSetup.prototype.initDb = function(done) {
     knex.schema.createTable('users_org', function(table) {
       table.bigInteger('users_id');
       table.string('org_name');
+    }),
+    knex.schema.createTable('media', function(table) {
+      table.increments();
+      table.bigInteger('post_id');
+      table.string('url');
     })
-    ]).then(function() {
-      this.dbInited = true;
-      done();
-    }.bind(this));
+  ]).then(function() {
+    this.dbInited = true;
+    done();
+  }.bind(this));
 };
 
 TestSetup.prototype.clearDb = function(done) {
