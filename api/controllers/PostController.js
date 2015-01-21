@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 var sanitizeHtml = require('sanitize-html');
 var Cheerio = require('cheerio');
+
 var postAttributes = function(post, hasVote) {
 
   var followers = post.related("followers").map(function(follower) {
@@ -61,6 +62,8 @@ var commentAttributes = function(comment, isThanked) {
 };
 
 var sanitizeMentionsText = function(text) {
+  if (!text) return '';
+
   // Remove leading &nbsp; from html. (a side-effect of contenteditable is the leading &nbsp;)
   var strippedText = text.replace(/<p>&nbsp;|<p>&NBSP;/g, "<p>");
 
