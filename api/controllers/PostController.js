@@ -1,5 +1,22 @@
 var Promise = require('bluebird');
 
+var postRelations = [
+  {"creator": function(qb) {
+    qb.column("id", "name", "avatar_url");
+  }},
+  {"communities": function(qb) {
+    qb.column("id", 'name', "slug");
+  }},
+  "followers",
+  {"followers.user": function(qb) {
+    qb.column("id", "name", "avatar_url");
+  }},
+  "contributors",
+  {"contributors.user": function(qb) {
+    qb.column("id", "name", "avatar_url");
+  }}
+];
+
 var postAttributes = function(post, hasVote) {
 
   var followers = post.related("followers").map(function(follower) {
@@ -84,22 +101,7 @@ var findPosts = function(req, res, opts) {
       qb.limit(params.limit);
       qb.offset(params.start);
     }).fetch({
-      withRelated: [
-        {"creator": function(qb) {
-          qb.column("id", "name", "avatar_url");
-        }},
-        {"communities": function(qb) {
-          qb.column("id", 'name', "slug");
-        }},
-        "followers",
-        {"followers.user": function(qb) {
-          qb.column("id", "name", "avatar_url");
-        }},
-        "contributors",
-        {"contributors.user": function(qb) {
-          qb.column("id", "name", "avatar_url");
-        }}
-      ]
+      withRelated: postRelations
     });
 
   }).then(function(posts) {
@@ -167,23 +169,7 @@ module.exports = {
           });
         })
         .then(function (post) {
-          return post.load([
-              {"creator": function(qb) {
-                qb.column("id", "name", "avatar_url");
-              }},
-              {"communities": function(qb) {
-                qb.column("id", 'name', "slug");
-              }},
-              "followers",
-              {"followers.user": function(qb) {
-                qb.column("id", "name", "avatar_url");
-              }},
-              "contributors",
-              {"contributors.user": function(qb) {
-                qb.column("id", "name", "avatar_url");
-              }}
-            ], {transacting: trx}
-          );
+          return post.load(postRelations, {transacting: trx});
         });
     }).then(function (post) {
       res.ok(postAttributes(post, false));
