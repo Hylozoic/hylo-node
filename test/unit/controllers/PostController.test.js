@@ -1,6 +1,6 @@
-var setup = require(require('root-path')('test/setup'));
-var Promise = require("bluebird");
-var PostController = requireFromRoot('api/controllers/PostController');
+var setup = require(require('root-path')('test/setup')),
+  Promise = require("bluebird"),
+  PostController = requireFromRoot('api/controllers/PostController');
 
 describe('PostController', function() {
   var fixtures, req, res;
@@ -19,19 +19,10 @@ describe('PostController', function() {
           allParams: function() {
             return this.params;
           },
-          session: {
-            user: {
-              id: fixtures.u1.id
-            },
-            userId: fixtures.u1.id
-          }
+          session: {userId: fixtures.u1.id}
         };
 
-        res = {
-          serverError: function(err) {
-            done(err);
-          }
-        };
+        res = {serverError: done};
 
         done();
       });
@@ -83,29 +74,5 @@ describe('PostController', function() {
     });
 
   });
-
-  describe('#comment', function() {
-
-    it('creates a comment', function(done) {
-      req.params = {
-        text: "<p>Hey <a data-user-id='" + fixtures.u2.id + "'>U2</a>, you're mentioned ;)</p>"
-      };
-
-      res.locals = {
-        post: fixtures.p1
-      };
-
-      res.ok = function(data) {
-        expect(data).to.exist;
-        expect(data.user).to.exist;
-        expect(data.text).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
-        done();
-      };
-
-      PostController.comment(req, res);
-    });
-
-  });
-
 
 });
