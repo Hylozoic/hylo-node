@@ -42,61 +42,70 @@ describe('PostController', function() {
     setup.clearDb(done);
   });
 
-  it('can be saved with mentions', function(done) {
-    req.params = {
-      name: "NewPost",
-        description: "<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>",
+  describe('#create', function() {
+
+    it('saves mentions', function(done) {
+      req.params = {
+        name: "NewPost",
+          description: "<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>",
+          postType: "intention",
+          communityId: fixtures.c1.id
+      };
+
+      res.ok = function(data) {
+        expect(data).to.exist;
+        expect(data.followers.length).to.equal(2);
+        expect(data.name).to.equal("NewPost");
+        expect(data.description).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
+        done();
+      };
+
+      PostController.create(req, res);
+    });
+
+    it('sanitizes the description', function(done) {
+      req.params = {
+        name: "NewMaliciousPost",
+        description: "<script>alert('test')</script><p>Hey <a data-user-id='" + fixtures.u2.id + "' data-malicious='alert(blah)'>U2</a>, you're mentioned ;)</p>",
         postType: "intention",
         communityId: fixtures.c1.id
-    };
+      };
 
-    res.ok = function(data) {
-      expect(data).to.exist;
-      expect(data.followers.length).to.equal(2);
-      expect(data.name).to.equal("NewPost");
-      expect(data.description).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
-      done();
-    };
+      res.ok = function(data) {
+        expect(data).to.exist;
+        expect(data.followers.length).to.equal(2);
+        expect(data.name).to.equal("NewMaliciousPost");
+        expect(data.description).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
+        done();
+      };
 
-    PostController.create(req, res);
+      PostController.create(req, res);
+    });
+
   });
 
-  it('can be saved with sanitized description', function(done) {
-    req.params = {
-      name: "NewMaliciousPost",
-      description: "<script>alert('test')</script><p>Hey <a data-user-id='" + fixtures.u2.id + "' data-malicious='alert(blah)'>U2</a>, you're mentioned ;)</p>",
-      postType: "intention",
-      communityId: fixtures.c1.id
-    };
+  describe('#comment', function() {
 
-    res.ok = function(data) {
-      expect(data).to.exist;
-      expect(data.followers.length).to.equal(2);
-      expect(data.name).to.equal("NewMaliciousPost");
-      expect(data.description).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
-      done();
-    };
+    it('creates a comment', function(done) {
+      req.params = {
+        text: "<p>Hey <a data-user-id='" + fixtures.u2.id + "'>U2</a>, you're mentioned ;)</p>"
+      };
 
-    PostController.create(req, res);
+      res.locals = {
+        post: fixtures.p1
+      };
+
+      res.ok = function(data) {
+        expect(data).to.exist;
+        expect(data.user).to.exist;
+        expect(data.text).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
+        done();
+      };
+
+      PostController.comment(req, res);
+    });
+
   });
 
-  it('can receive comments', function(done) {
-    req.params = {
-      text: "<p>Hey <a data-user-id='" + fixtures.u2.id + "'>U2</a>, you're mentioned ;)</p>"
-    };
-
-    res.locals = {
-      post: fixtures.p1
-    };
-
-    res.ok = function(data) {
-      expect(data).to.exist;
-      expect(data.user).to.exist;
-      expect(data.text).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
-      done();
-    };
-
-    PostController.comment(req, res);
-  })
 
 });
