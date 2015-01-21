@@ -23,6 +23,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Comment, "post_id").query({where: {active: true}});
   },
 
+  media: function () {
+    return this.hasMany(Media);
+  },
+
   addFollowers: function(userIds, addingUserId, transaction) {
     var postId = this.id;
     return Promise.map(userIds, function(userId) {

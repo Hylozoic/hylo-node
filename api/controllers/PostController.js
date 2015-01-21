@@ -14,6 +14,9 @@ var postRelations = [
   "contributors",
   {"contributors.user": function(qb) {
     qb.column("id", "name", "avatar_url");
+  }},
+  {media: function(qb) {
+    qb.column('id', 'post_id', 'url');
   }}
 ];
 
@@ -21,45 +24,48 @@ var postAttributes = function(post, hasVote) {
 
   var followers = post.related("followers").map(function(follower) {
     return {
-      "value": Number(follower.related("user").get("id")),
-      "name": follower.related("user").get("name"),
-      "avatar": follower.related("user").get("avatar_url")
+      value: Number(follower.related("user").get("id")),
+      name: follower.related("user").get("name"),
+      avatar: follower.related("user").get("avatar_url")
     }
   });
 
   var contributors = post.related("contributors").map(function(contributor) {
     return {
-      "id": Number(contributor.related("user").get("id")),
-      "name": contributor.related("user").get("name"),
-      "avatar": contributor.related("user").get("avatar_url")
+      id: Number(contributor.related("user").get("id")),
+      name: contributor.related("user").get("name"),
+      avatar: contributor.related("user").get("avatar_url")
     };
   });
 
-  return {
-    "id": Number(post.get("id")),
-    "name": post.get("name"),
-    "description": post.get("description"),
-    "postType": post.get("type"),
-    "imageUrl": post.get("image_url"),
-    "user": {
-      "id": Number(post.related("creator").get("id")),
-      "name": post.related("creator").get("name"),
-      "avatar": post.related("creator").get("avatar_url")
+  var standardAttributes = _.pick(post.toJSON(), [
+    'name', 'description', 'fulfilled', 'media'
+  ]);
+
+  var nonStandardAttributes = {
+    id: Number(post.get("id")),
+    postType: post.get("type"),
+    user: {
+      id: Number(post.related("creator").get("id")),
+      name: post.related("creator").get("name"),
+      avatar: post.related("creator").get("avatar_url")
     },
-    "creationDate": post.get("creation_date"),
-    "votes": post.get("num_votes"),
-    "numComments": post.get("num_comments"),
-    "fulfilled": post.get("fulfilled"),
-    "contributors": contributors,
-    "communitySlug": post.related("communities").first().get("slug"),
-    "cName": post.related("communities").first().get("name"),
-    "myVote": hasVote,
-    "comments": [], // TODO Load Comments?
-    "commentsLoaded": false,
-    "followers": followers,
-    "followersLoaded": true,
-    "numFollowers": followers.length
-  }
+    creationDate: post.get("creation_date"),
+    votes: post.get("num_votes"),
+    numComments: post.get("num_comments"),
+    contributors: contributors,
+    communitySlug: post.related("communities").first().get("slug"),
+    cName: post.related("communities").first().get("name"),
+    myVote: hasVote,
+    comments: [], // TODO Load Comments?
+    commentsLoaded: false,
+    followers: followers,
+    followersLoaded: true,
+    numFollowers: followers.length,
+    hasMedia: post.related('media').length > 0
+  };
+
+  return _.extend(standardAttributes, nonStandardAttributes);
 };
 
 var findPosts = function(req, res, opts) {
@@ -134,24 +140,26 @@ module.exports = {
   },
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId']),
+    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId', 'imageUrl']),
         cleanDescription = RichText.sanitize(params.description),
         mentions = RichText.getUserMentions(cleanDescription);
 
+    var attrs = {
+      name:          params.name,
+      description:   cleanDescription,
+      type:          params.postType,
+      creator_id:    req.session.userId,
+      creation_date: new Date(),
+      last_updated:  new Date(),
+      active:        true,
+      num_comments:  0,
+      num_votes:     0,
+      fulfilled:     false,
+      edited:        false
+    };
+
     bookshelf.transaction(function(trx) {
-      return new Post({
-        name: params.name,
-        description: cleanDescription,
-        type: params.postType,
-        creator_id: req.session.userId,
-        creation_date: new Date(),
-        last_updated: new Date(),
-        active: true,
-        num_comments: 0,
-        num_votes: 0,
-        fulfilled: false,
-        edited: false
-      }).save(null, {transacting: trx})
+      return new Post(attrs).save(null, {transacting: trx})
         .tap(function (post) {
           // Attach post to the community
           return new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx});
@@ -167,6 +175,15 @@ module.exports = {
             addedById: req.session.userId,
             transacting: trx
           });
+        })
+        .tap(function (post) {
+          if (params.imageUrl) {
+            return Media.create({
+              postId: post.id,
+              url: params.imageUrl,
+              transacting: trx
+            });
+          }
         })
         .then(function (post) {
           return post.load(postRelations, {transacting: trx});
