@@ -1,6 +1,4 @@
 var Promise = require('bluebird');
-var sanitizeHtml = require('sanitize-html');
-var Cheerio = require('cheerio');
 
 var postAttributes = function(post, hasVote) {
 
@@ -59,37 +57,6 @@ var commentAttributes = function(comment, isThanked) {
       "avatar": comment.related("user").get("avatar_url")
     }
   }
-};
-
-var sanitizeMentionsText = function(text) {
-  if (!text) return '';
-
-  // Remove leading &nbsp; from html. (a side-effect of contenteditable is the leading &nbsp;)
-  var strippedText = text.replace(/<p>&nbsp;|<p>&NBSP;/g, "<p>");
-
-  var cleanText = sanitizeHtml(strippedText, {
-    allowedTags: [ 'a', 'p' ],
-    allowedAttributes: {
-      'a': [ 'href', 'data-user-id' ]
-    },
-
-    // Removes empty paragraphs
-    exclusiveFilter: function(frame) {
-      return frame.tag === 'p' && !frame.text.trim();
-    }
-  });
-
-  return cleanText;
-};
-
-/**
- * @returns a set of unique ids of any @mentions found in the text
- */
-var getMentions = function(text) {
-  var $ = Cheerio.load(text);
-  return _.uniq($("a[data-user-id]").map(function(i, elem) {
-    return $(this).data("user-id");
-  }).get());
 };
 
 var findPosts = function(req, res, opts) {
@@ -180,8 +147,8 @@ module.exports = {
 
   create: function(req, res) {
     var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId']),
-        cleanDescription = sanitizeMentionsText(params.description),
-        mentions = getMentions(cleanDescription);
+        cleanDescription = RichText.sanitize(params.description),
+        mentions = RichText.getUserMentions(cleanDescription);
 
     bookshelf.transaction(function(trx) {
       return new Post({
@@ -246,11 +213,9 @@ module.exports = {
   },
 
   comment: function(req, res) {
-    var params = _.pick(req.allParams(), ['text']);
-
-    var cleanText = sanitizeMentionsText(params.text);
-
-    var mentions = getMentions(cleanText);
+    var params = _.pick(req.allParams(), ['text']),
+      cleanText = RichText.sanitize(params.text),
+      mentions = RichText.getUserMentions(cleanText);
 
     bookshelf.transaction(function(trx) {
       return new Comment({
