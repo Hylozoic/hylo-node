@@ -58,12 +58,12 @@ module.exports.routes = {
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
   'POST   /noo/community/:communityId/invite':            'CommunityController.invite',
-  'GET    /noo/community/:communityId/posts':             'PostController.findForCommunity',
   'GET    /noo/community/:communityId/moderators':        'CommunityController.findModerators',
   'POST   /noo/community/:communityId/moderators':        'CommunityController.addModerator',
   'DELETE /noo/community/:communityId/moderator/:userId': 'CommunityController.removeModerator',
   'GET    /noo/community/:communityId/members':           'CommunityController.findMembers',
   'DELETE /noo/community/:communityId/member/:userId':    'CommunityController.removeMember',
+  'GET    /noo/community/:communityId/seeds':             'PostController.findForCommunity',
 
   'POST   /noo/seed/:postId/comment':                     'PostController.comment',
   'POST   /noo/seed':                                     'PostController.create',
