@@ -32,7 +32,7 @@ module.exports = {
         .tap(function (comment) {
           // add followers to post of new comment
           return Promise.map(mentions, function (userId) {
-            return Follower.addFollower(res.locals.post.id, {
+            return Follower.create(res.locals.post.id, {
               followerId: userId,
               addedById: req.session.userId,
               transacting: trx
