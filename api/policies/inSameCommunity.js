@@ -6,5 +6,8 @@ module.exports = function isSelf(req, res, next) {
   Membership.inSameCommunity([req.session.userId, req.param('userId')])
     .then(function(inSameCommunity) {
       inSameCommunity ? next() : res.forbidden();
-    });
+    })
+    .catch(function(err) {
+      res.forbidden();
+    })
 };
