@@ -18,7 +18,7 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-  createCommentNotification: function(postId, commentId, actorUserId, options) {
+  createForComment: function(postId, commentId, actorUserId, options) {
     return new Notification({
       actor_id: actorUserId,
       timestamp: new Date(),
