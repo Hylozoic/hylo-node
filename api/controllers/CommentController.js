@@ -40,7 +40,7 @@ module.exports = {
           });
         })
         .tap(function (comment) {
-          return Notification.createCommentNotification(res.locals.post.id, comment.id, req.session.userId, {transacting: trx})
+          return Notification.createForComment(res.locals.post.id, comment.id, req.session.userId, {transacting: trx})
         })
         .tap(function (comment) {
           return Aggregate.count(res.locals.post.comments(), {transacting: trx}).then(function(numComments) {
