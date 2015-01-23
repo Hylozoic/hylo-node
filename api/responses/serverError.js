@@ -12,6 +12,8 @@
  * automatically.
  */
 
+var rollbar = require('rollbar');
+
 module.exports = function serverError (data, options) {
 
   // Get access to `req`, `res`, & `sails`
@@ -32,6 +34,7 @@ module.exports = function serverError (data, options) {
   // is not set to 'production'.  In production, we shouldn't
   // send back any identifying information about errors.
   if (sails.config.environment === 'production') {
+    rollbar.handleError(data, req);
     data = undefined;
   }
 
