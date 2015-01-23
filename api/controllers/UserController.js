@@ -147,7 +147,7 @@ module.exports = {
         promises.push(Skill.update(skills, user.id));
 
       if (organizations)
-        promises.push(Organizations.update(organizations, user.id));
+        promises.push(Organization.update(organizations, user.id));
 
       return Promise.all(promises);
 
