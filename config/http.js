@@ -10,6 +10,7 @@
  */
 
 require('colors');
+var util = require('util');
 
 module.exports.http = {
 
@@ -59,7 +60,7 @@ module.exports.http = {
   ****************************************************************************/
 
     requestLogger: function (req, res, next) {
-      sails.log.info(req.method.magenta + ' ' + req.url);
+      sails.log.info(util.format(' %s %s ', req.method, req.url).black.bgYellow);
       next();
     }
 
