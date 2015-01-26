@@ -24,7 +24,6 @@ passport.deserializeUser(function(user, done) {
 module.exports = {
   http: {
     customMiddleware: function(app) {
-      sails.log.debug('Loading passport middleware');
       app.use(passport.initialize());
       app.use(passport.session());
     }
