@@ -9,6 +9,8 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.http.html
  */
 
+require('colors');
+
 module.exports.http = {
 
   /****************************************************************************
@@ -36,13 +38,12 @@ module.exports.http = {
       'startRequestTimer',
       'cookieParser',
       'session',
-      'myRequestLogger',
       'bodyParser',
       'handleBodyParserError',
       'compress',
       'methodOverride',
       'poweredBy',
-      '$custom',
+      'requestLogger',
       'router',
       'www',
       'favicon',
@@ -57,11 +58,10 @@ module.exports.http = {
   *                                                                           *
   ****************************************************************************/
 
-    // myRequestLogger: function (req, res, next) {
-    //     console.log("Requested :: ", req.method, req.url);
-    //     return next();
-    // }
-
+    requestLogger: function (req, res, next) {
+      sails.log.info(req.method.magenta + ' ' + req.url);
+      next();
+    }
 
   /***************************************************************************
   *                                                                          *
