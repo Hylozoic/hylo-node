@@ -25,7 +25,7 @@ if (url.auth) {
   password = url.auth.slice(i + 1);
 }
 
-module.exports.bootstrap = function(cb) {
+module.exports.bootstrap = function(done) {
 
   var knex = require('knex')({
     client: 'pg',
@@ -38,19 +38,24 @@ module.exports.bootstrap = function(cb) {
     }
   });
 
+  // log SQL queries
   if (sails.config.environment == 'development') {
     require('colors');
     knex.on('query', function(data) {
       var args = _.clone(data.bindings).map(function(s) { return s.cyan; });
       args.unshift(data.sql.replace(/\?/g, '%s'));
-      // TODO add single quotes around strings
+
+      // TODO
+      // add single quotes around strings
+      // fix missing limit and boolean values
       var query = util.format.apply(util, args);
+
       sails.log.debug(query.replace(/^(select|update)/, '$1'.green));
     });
   }
 
+  // add bookshelf and each model to global namespace
   global.bookshelf = require('bookshelf')(knex);
-
   _.each(fs.readdirSync(root('api/models')), function(filename) {
     if (path.extname(filename) == '.js') {
       var modelName = path.basename(filename, '.js');
@@ -58,7 +63,18 @@ module.exports.bootstrap = function(cb) {
     }
   });
 
+  // fix request titles in New Relic
+  if (process.env.NEW_RELIC_LICENSE_KEY) {
+    var newrelic = require('newrelic');
+    sails.on('router:route', function(data) {
+      if (_.has(data.options, 'controller') && _.has(data.options, 'action')) {
+        var transactionName = util.format('%s#%s', data.options.controller, data.options.action);
+        newrelic.setTransactionName(transactionName);
+      }
+    });
+  }
+
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
-  cb();
+  done();
 };
