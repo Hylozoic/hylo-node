@@ -13,7 +13,8 @@ require('dotenv').load();
 
 var fs = require('fs'),
   path = require('path'),
-  root = require('root-path');
+  root = require('root-path'),
+  util = require('util');
 
 if (!process.env.DATABASE_URL) throw 'DATABASE_URL is not set';
 
@@ -28,7 +29,6 @@ module.exports.bootstrap = function(cb) {
 
   var knex = require('knex')({
     client: 'pg',
-    debug: process.env.DEBUG_SQL,
     connection: {
       host: url.hostname,
       port: url.port,
@@ -37,6 +37,17 @@ module.exports.bootstrap = function(cb) {
       database: url.path.substring(1)
     }
   });
+
+  if (sails.config.environment == 'development') {
+    require('colors');
+    knex.on('query', function(data) {
+      var args = _.clone(data.bindings).map(function(s) { return s.cyan; });
+      args.unshift(data.sql.replace(/\?/g, '%s'));
+      // TODO add single quotes around strings
+      var query = util.format.apply(util, args);
+      sails.log.debug(query.replace(/^(select|update)/, '$1'.green));
+    });
+  }
 
   global.bookshelf = require('bookshelf')(knex);
 
