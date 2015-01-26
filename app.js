@@ -18,6 +18,8 @@
  * `node app.js --silent --port=80 --prod`
  */
 
+require('dotenv').load();
+
 if (process.env.NEW_RELIC_LICENSE_KEY) {
   require('newrelic');
 }
