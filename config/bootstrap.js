@@ -42,15 +42,17 @@ module.exports.bootstrap = function(done) {
   if (sails.config.environment == 'development') {
     require('colors');
     knex.on('query', function(data) {
-      var args = _.clone(data.bindings).map(function(s) { return s.cyan; });
+      var args = _.clone(data.bindings).map(function(s) {
+        if (s === null) return 'null'.blue;
+        return s.toString().blue;
+      });
       args.unshift(data.sql.replace(/\?/g, '%s'));
 
-      // TODO
-      // add single quotes around strings
-      // fix missing limit and boolean values
-      var query = util.format.apply(util, args);
+      // TODO fix missing limit and boolean values
+      var query = util.format.apply(util, args)
+        .replace(/^(select|insert|update)/, '$1'.black.bgGreen);
 
-      sails.log.debug(query.replace(/^(select|update)/, '$1'.green));
+      sails.log.debug(query);
     });
   }
 
