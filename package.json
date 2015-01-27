@@ -51,9 +51,10 @@
   },
   "scripts": {
     "start": "node app.js",
+    "console": "node console.js",
     "debug": "node-debug app.js",
     "test": "./node_modules/.bin/mocha test/**/*.js",
-    "start-worker": ""
+    "worker": "node worker.js"
   },
   "main": "app.js",
   "repository": {
