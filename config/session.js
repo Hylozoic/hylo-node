@@ -12,6 +12,8 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.session.html
  */
 
+var redisInfo = require('parse-redis-url')().parse(process.env.REDIS_URL);
+
 module.exports.session = {
 
   /***************************************************************************
@@ -22,7 +24,6 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
   secret: '406cf5647d40abc02507cd812856b634',
-
 
   /***************************************************************************
   *                                                                          *
@@ -41,7 +42,7 @@ module.exports.session = {
   * session store that can be shared across multiple Sails.js servers        *
   ***************************************************************************/
 
-  // adapter: 'redis',
+  adapter: 'redis',
 
   /***************************************************************************
   *                                                                          *
@@ -52,13 +53,12 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
 
-  // host: 'localhost',
-  // port: 6379,
-  // ttl: <redis session TTL in seconds>,
-  // db: 0,
-  // pass: <redis auth password>
-  // prefix: 'sess:'
-
+  host: redisInfo.host,
+  port: redisInfo.port,
+  ttl: 86400 * 60,
+  db: 0,
+  pass: redisInfo.password,
+  prefix: 'sess:'
 
   /***************************************************************************
   *                                                                          *
