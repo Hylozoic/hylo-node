@@ -14,7 +14,7 @@
     "bookshelf": "^0.7.9",
     "cheerio": "0.18.0",
     "colors": "^1.0.3",
-    "connect-redis": "^1.4.5",
+    "connect-redis": "1.4.5",
     "cookie": "0.1.2",
     "dotenv": "^0.4.0",
     "ejs": "~0.8.4",
