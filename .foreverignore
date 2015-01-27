@@ -3,6 +3,6 @@
 **/.git/**
 **/node_modules/**
 **/test/**
-./worker.js
-./console.js
-./npm-debug.log
+worker.js
+console.js
+npm-debug.log
