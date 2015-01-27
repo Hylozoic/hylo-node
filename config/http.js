@@ -44,6 +44,7 @@ module.exports.http = {
       'compress',
       'methodOverride',
       'poweredBy',
+      '$custom', // this allows other config files to define http.customMiddleware
       'requestLogger',
       'router',
       'www',
