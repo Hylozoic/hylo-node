@@ -36,7 +36,8 @@ module.exports.policies = {
   LinkedinController: ['sessionAuth'],
 
   AdminController: {
-    index: ['isAdmin']
+    index: ['isAdmin'],
+    test: ['isAdmin']
   },
 
   UserController: {
