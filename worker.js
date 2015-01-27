@@ -1,6 +1,6 @@
 var _ = require('lodash'),
   colors = require('colors'),
-  rc = require('sails/node_modules/rc'),
+  rc = require('rc'),
   sails = require('sails'),
   util = require('util');
 
@@ -38,7 +38,9 @@ var listen = function() {
 
   queue.process('test', processTest);
 
-  // check for delayed jobs
+  // check for delayed jobs to enqueue.
+  // this must be run in only one process to avoid a race condition:
+  // https://github.com/learnboost/kue#delayed-jobs
   queue.promote(1000);
 };
 
