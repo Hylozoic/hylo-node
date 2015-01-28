@@ -26,6 +26,8 @@ module.exports.http = {
 
   middleware: {
 
+    passportInit: require('passport').initialize(),
+    passportSession: require('passport').session(),
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
   /***************************************************************************
@@ -39,12 +41,13 @@ module.exports.http = {
       'startRequestTimer',
       'cookieParser',
       'session',
+      'passportInit',
+      'passportSession',
       'bodyParser',
       'handleBodyParserError',
       'compress',
       'methodOverride',
       'poweredBy',
-      '$custom', // this allows other config files to define http.customMiddleware
       'requestLogger',
       'router',
       'www',

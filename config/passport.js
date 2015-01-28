@@ -20,12 +20,3 @@ passport.serializeUser(function(user, done) {
 passport.deserializeUser(function(user, done) {
   done(null, user);
 });
-
-module.exports = {
-  http: {
-    customMiddleware: function(app) {
-      app.use(passport.initialize());
-      app.use(passport.session());
-    }
-  }
-};
