@@ -14,57 +14,63 @@ var commentAttributes = function(comment, isThanked) {
   }
 };
 
+var createComment = function(userId, text, post) {
+  var text = RichText.sanitize(text),
+    mentions = RichText.getUserMentions(text),
+    attrs = {
+      comment_text: text,
+      date_commented: new Date(),
+      post_id: post.id,
+      user_id: userId,
+      active: true
+    };
+
+  return bookshelf.transaction(function(trx) {
+    return new Comment(attrs).save(null, {transacting: trx})
+    .tap(function(comment) {
+
+      return Promise.join(
+        // add followers
+        Promise.map(mentions, function(mentionedUserId) {
+          return Follower.create(post.id, {
+            followerId: mentionedUserId,
+            addedById: userId,
+            transacting: trx
+          });
+        }),
+
+        // create notification
+        Notification.createForComment(post.id, comment.id, userId, {transacting: trx}),
+
+        // update number of comments on post
+        Aggregate.count(post.comments(), {transacting: trx})
+        .then(function(numComments) {
+          return post.save({
+            num_comments: numComments,
+            last_updated: new Date()
+          }, {patch: true, transacting: trx});
+        })
+      );
+
+    }); // tap
+  }); // transaction
+
+};
+
 module.exports = {
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), ['text']),
-      cleanText = RichText.sanitize(params.text),
-      mentions = RichText.getUserMentions(cleanText);
-
-    bookshelf.transaction(function(trx) {
-      return new Comment({
-        comment_text: cleanText,
-        date_commented: new Date(),
-        post_id: res.locals.post.id,
-        user_id: req.session.userId,
-        active: true
-      }).save(null, {transacting: trx})
-        .tap(function (comment) {
-          // add followers to post of new comment
-          return Promise.map(mentions, function (userId) {
-            return Follower.create(res.locals.post.id, {
-              followerId: userId,
-              addedById: req.session.userId,
-              transacting: trx
-            });
-          });
-        })
-        .tap(function (comment) {
-          return Notification.createForComment(res.locals.post.id, comment.id, req.session.userId, {transacting: trx})
-        })
-        .tap(function (comment) {
-          return Aggregate.count(res.locals.post.comments(), {transacting: trx}).then(function(numComments) {
-            return res.locals.post.save({
-              num_comments: numComments,
-              last_updated: new Date()
-            }, {patch: true, transacting: trx});
-          });
-        })
-        .then(function(comment) {
-          return Promise.props({
-            comment: comment.load([
-                {
-                  "user": function (qb) {
-                    qb.column("id", "name", "avatar_url");
-                  }
-                }
-              ], {transacting: trx}),
-            isThanked: false
-          });
-        });
-    }).then(function (data) {
-      res.ok(commentAttributes(data.comment, data.isThanked))
-    }).catch(function (err) {
+    createComment(req.session.userId, req.param('text'), res.locals.post)
+    .then(function(comment) {
+      return comment.load([
+        {user: function (qb) {
+          qb.column("id", "name", "avatar_url");
+        }}
+      ]);
+    })
+    .then(function(comment) {
+      res.ok(commentAttributes(comment, false));
+    }).catch(function(err) {
       res.serverError(err);
     });
   }

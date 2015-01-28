@@ -16,9 +16,6 @@ describe('CommentController', function() {
         fixtures = props;
 
         req = {
-          allParams: function() {
-            return this.params;
-          },
           session: {userId: fixtures.u1.id}
         };
 
@@ -36,8 +33,9 @@ describe('CommentController', function() {
   describe('#create', function() {
 
     it('creates a comment', function(done) {
-      req.params = {
-        text: "<p>Hey <a data-user-id='" + fixtures.u2.id + "'>U2</a>, you're mentioned ;)</p>"
+      req.param = function(name) {
+        if (name == 'text')
+          return "<p>Hey <a data-user-id='" + fixtures.u2.id + "'>U2</a>, you're mentioned ;)</p>";
       };
 
       res.locals = {
