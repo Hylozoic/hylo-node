@@ -53,6 +53,7 @@
   },
   "scripts": {
     "start": "node app.js",
+    "dev": "forever -w app.js",
     "console": "node console.js",
     "debug": "node-debug app.js",
     "test": "./node_modules/.bin/mocha test/**/*.js",
