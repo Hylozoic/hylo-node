@@ -42,7 +42,7 @@ module.exports.bootstrap = function(done) {
   if (sails.config.environment == 'development') {
     require('colors');
     knex.on('query', function(data) {
-      var args = _.clone(data.bindings).map(function(s) {
+      var args = (_.clone(data.bindings) || []).map(function(s) {
         if (s === null) return 'null'.blue;
         return s.toString().blue;
       });
