@@ -71,6 +71,7 @@ module.exports.routes = {
 
   'GET    /admin/login':                                  'SessionController.create',
   'GET    /admin/login/oauth':                            'SessionController.oauth',
+  'GET    /admin/logout':                                 'SessionController.destroy',
   'GET    /admin':                                        'AdminController.index',
   'GET    /admin/test':                                   'AdminController.test',
 

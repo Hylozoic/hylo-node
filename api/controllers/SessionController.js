@@ -15,6 +15,11 @@ module.exports = {
         return res.redirect('/admin');
       });
     })(req, res, next);
+  },
+
+  destroy: function(req, res) {
+    req.logout();
+    res.redirect('/');
   }
 
 }
