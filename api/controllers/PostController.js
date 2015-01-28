@@ -124,6 +124,8 @@ var findPosts = function(req, res, opts) {
       return postAttributes(post, _.contains(data.votes, post.get("id")));
     }));
 
+  }).catch(function(err) {
+    res.serverError(err);
   });
 };
 
