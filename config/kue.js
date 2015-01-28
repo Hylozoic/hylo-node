@@ -11,12 +11,3 @@ redisInfo.db = redisInfo.database;
 kue.createQueue({
   redis: redisInfo
 });
-
-// TODO set up monitoring UI
-// module.exports = {
-//   http: {
-//     customMiddleware: function(app) {
-//       app.use('/admin/kue', kue.app);
-//     }
-//   }
-// };

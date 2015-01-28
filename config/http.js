@@ -30,6 +30,11 @@ module.exports.http = {
     passportSession: require('passport').session(),
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
+    requestLogger: function (req, res, next) {
+      sails.log.info(util.format(' %s %s ', req.method, req.url).black.bgYellow);
+      next();
+    },
+
   /***************************************************************************
   *                                                                          *
   * The order in which middleware should be run for HTTP request. (the Sails *
@@ -49,6 +54,7 @@ module.exports.http = {
       'methodOverride',
       'poweredBy',
       'requestLogger',
+      '$custom',
       'router',
       'www',
       'favicon',
@@ -56,17 +62,6 @@ module.exports.http = {
       'rollbar',
       '500'
     ],
-
-  /****************************************************************************
-  *                                                                           *
-  * Example custom middleware; logs each request to the console.              *
-  *                                                                           *
-  ****************************************************************************/
-
-    requestLogger: function (req, res, next) {
-      sails.log.info(util.format(' %s %s ', req.method, req.url).black.bgYellow);
-      next();
-    }
 
   /***************************************************************************
   *                                                                          *
@@ -79,6 +74,13 @@ module.exports.http = {
 
     // bodyParser: require('skipper')
 
+  },
+
+  customMiddleware: function(app) {
+    var kue = require('kue'),
+      isAdmin = require('../api/policies/isAdmin');
+    app.use('/admin/kue', isAdmin);
+    app.use('/admin/kue', kue.app);
   }
 
   /***************************************************************************

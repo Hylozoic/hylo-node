@@ -30,7 +30,8 @@ module.exports.policies = {
 
   SessionController: {
     create: true,
-    oauth: true
+    oauth: true,
+    destroy: true
   },
 
   LinkedinController: ['sessionAuth'],
