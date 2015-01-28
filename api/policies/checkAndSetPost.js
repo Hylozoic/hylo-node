@@ -1,5 +1,6 @@
-module.exports = function isMember(req, res, next) {
-  if (Admin.isSignedIn(req)) return next();
+module.exports = function checkAndSetPost(req, res, next) {
+  // TODO check that the post is in a community the user belongs to,
+  // or bypass for admins (but still set res.locals.post)
 
   Post.find(req.param('postId')).then(function(post) {
     if (post) {
