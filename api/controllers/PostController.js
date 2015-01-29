@@ -177,33 +177,32 @@ module.exports = {
     bookshelf.transaction(function(trx) {
       return new Post(attrs).save(null, {transacting: trx})
         .tap(function (post) {
-          // Attach post to the community
-          return new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx});
-        })
-        .tap(function (post) {
-          // Add any followers to new post
-          return post.addFollowers(mentions, req.session.userId, trx);
-        })
-        .tap(function (post) {
-          // Add seed creator as a follower
-          return Follower.create(post.id, {
-            followerId: req.session.userId,
-            addedById: req.session.userId,
-            transacting: trx
-          });
-        })
-        .tap(function (post) {
-          if (params.imageUrl) {
-            return Media.create({
+
+          return Promise.join(
+            // Attach post to the community
+            new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx}),
+
+            // Add any followers to new post
+            post.addFollowers(mentions, req.session.userId, trx),
+
+            // Add seed creator as a follower
+            Follower.create(post.id, {
+              followerId: req.session.userId,
+              addedById: req.session.userId,
+              transacting: trx
+            }),
+
+            (params.imageUrl ? Media.create({
               postId: post.id,
               url: params.imageUrl,
               transacting: trx
-            });
-          }
-        })
-        .then(function (post) {
-          return post.load(postRelations, {transacting: trx});
+            }) : null)
+
+          );
         });
+    })
+    .then(function (post) {
+      return post.load(postRelations);
     })
     .then(function (post) {
       res.ok(postAttributes(post, false));
