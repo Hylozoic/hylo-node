@@ -32,7 +32,17 @@ var getMentions = function(text) {
   }).get());
 };
 
+var qualifyLinks = function(text) {
+  var $ = Cheerio.load(text);
+  $('[data-user-id]').each(function() {
+    var $this = $(this);
+    $this.attr('href', Frontend.Route.profile({id: $this.data('user-id')}));
+  });
+  return $.html();
+};
+
 module.exports = {
   sanitize: sanitize,
-  getUserMentions: getMentions
+  getUserMentions: getMentions,
+  qualifyLinks: qualifyLinks
 };

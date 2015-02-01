@@ -18,11 +18,18 @@ module.exports = {
     }));
   },
 
-  sendNewCommentNotification: function(email, data, cb) {
-    return sendEmail(_.extend(defaultOptions, {
+  sendNewCommentNotification: function(opts) {
+    return sendEmail(_.merge(defaultOptions, {
       email_id: 'tem_tP6JzrYzvvDXhgTNmtkxuW',
-      recipient: {address: email},
-      email_data: data
-    }), cb);
+      recipient: {address: opts.email},
+      email_data: opts.data,
+      version_name: opts.version,
+      sender: opts.sender
+    }));
+  },
+
+  seedReplyAddress: function(postId, userId) {
+    // TODO
+    return 'placeholder-todo@hylo.com';
   }
 };
