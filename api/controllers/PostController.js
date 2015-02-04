@@ -211,6 +211,21 @@ module.exports = {
     .catch(function (err) {
       res.serverError(err);
     });
+  },
+
+  addFollowers: function(req, res) {
+    res.locals.post.load('followers').then(function(post) {
+      var added = req.param('userIds').map(function(x) { return parseInt(x) }),
+        existing = post.relations.followers.map(function(f) { return f.attributes.user_id });
+
+      return post.addFollowers(_.difference(added, existing), req.session.userId);
+    })
+    .then(function() {
+      res.ok({});
+    })
+    .catch(function(err) {
+      res.serverError(err);
+    })
   }
 
 };
