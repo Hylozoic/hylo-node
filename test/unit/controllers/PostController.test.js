@@ -19,7 +19,10 @@ describe('PostController', function() {
           allParams: function() {
             return this.params;
           },
-          session: {userId: fixtures.u1.id}
+          param: function(name){
+            return this.params[name];
+          },
+          session: {userId: fixtures.u1.id},
         };
 
         res = {serverError: done};
