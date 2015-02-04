@@ -63,16 +63,7 @@ var createComment = function(commenterId, text, post) {
           }),
 
           // add all non-following mentioned users as followers
-          Promise.map(_.difference(mentioned, existing), function(userId) {
-            // TODO now that we're not attempting to re-add existing followers,
-            // we can remove the logic that checks for re-adds in Follower.create
-            // and do a single batch insert
-            return Follower.create(post.id, {
-              followerId: userId,
-              addedById: commenterId,
-              transacting: trx
-            });
-          })
+          post.addFollowers(_.difference(mentioned, existing), commenterId, trx)
 
         );
       });

@@ -156,13 +156,12 @@ module.exports = {
   },
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), ['name', 'description', 'postType', 'communityId', 'imageUrl']),
-        cleanDescription = RichText.sanitize(params.description),
-        mentions = RichText.getUserMentions(cleanDescription);
+    var params = _.pick(req.allParams(), ['name', 'postType', 'communityId', 'imageUrl']),
+        description = RichText.sanitize(req.param('description'));
 
     var attrs = {
       name:          params.name,
-      description:   cleanDescription,
+      description:   description,
       type:          params.postType,
       creator_id:    req.session.userId,
       creation_date: new Date(),
@@ -177,21 +176,16 @@ module.exports = {
     bookshelf.transaction(function(trx) {
       return new Post(attrs).save(null, {transacting: trx})
         .tap(function (post) {
+          var mentions = RichText.getUserMentions(description);
 
           return Promise.join(
             // Attach post to the community
             new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx}),
 
-            // Add any followers to new post
-            post.addFollowers(mentions, req.session.userId, trx),
+            // Add mentioned users and creator as followers
+            post.addFollowers(mentions.concat(req.session.userId), req.session.userId, trx),
 
-            // Add seed creator as a follower
-            Follower.create(post.id, {
-              followerId: req.session.userId,
-              addedById: req.session.userId,
-              transacting: trx
-            }),
-
+            // Add image, if any
             (params.imageUrl ? Media.create({
               postId: post.id,
               url: params.imageUrl,
