@@ -24,7 +24,7 @@ module.exports = bookshelf.Model.extend({
       .fetch(_.pick(options, "transacting"))
       .then(function(existingFollower) {
         if (existingFollower) {
-          sails.log.debug("user already following post... returning follower");
+          sails.log.error("user is already following post!");
           return Promise.resolve(existingFollower);
         } else {
           return new Follower({

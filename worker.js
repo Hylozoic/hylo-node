@@ -37,6 +37,7 @@ var listen = function() {
   })
 
   queue.process('test', processTest);
+  queue.process('Comment.sendNotificationEmail', sendCommentNotificationEmail);
 
   // check for delayed jobs to enqueue.
   // this must be run in only one process to avoid a race condition:
@@ -49,3 +50,9 @@ var processTest = function(job, done) {
   console.dir(job.data);
   done('whoops');
 };
+
+var sendCommentNotificationEmail = function(job, done) {
+  Comment.sendNotificationEmail(job.data.recipientId, job.data.commentId, job.data.version)
+  .then(function() { done(); })
+  .catch(done);
+}
