@@ -14,45 +14,70 @@ var commentAttributes = function(comment, isThanked) {
   }
 };
 
-var createComment = function(userId, text, post) {
+var createComment = function(commenterId, text, post) {
   var text = RichText.sanitize(text),
-    mentions = RichText.getUserMentions(text),
     attrs = {
       comment_text: text,
       date_commented: new Date(),
       post_id: post.id,
-      user_id: userId,
+      user_id: commenterId,
       active: true
     };
 
   return bookshelf.transaction(function(trx) {
     return new Comment(attrs).save(null, {transacting: trx})
     .tap(function(comment) {
+      // update number of comments on post
+      return Aggregate.count(post.comments(), {transacting: trx})
+      .then(function(numComments) {
+        return post.save({
+          num_comments: numComments,
+          last_updated: new Date()
+        }, {patch: true, transacting: trx});
+      });
+    })
+    .tap(function(comment) {
 
-      return Promise.join(
-        // add followers
-        Promise.map(mentions, function(mentionedUserId) {
-          return Follower.create(post.id, {
-            followerId: mentionedUserId,
-            addedById: userId,
-            transacting: trx
-          });
-        }),
+      return post.load('followers', {transacting: trx}).then(function(post) {
+        // find all existing followers and all mentioned users
+        // (there may be some users in both groups)
+        return [
+          post.relations.followers.map(function(f) { return f.attributes.user_id }),
+          RichText.getUserMentions(text)
+        ];
 
-        // create notification
-        Notification.createForComment(post.id, comment.id, userId, {transacting: trx}),
+      }).spread(function(existing, mentioned) {
 
-        // update number of comments on post
-        Aggregate.count(post.comments(), {transacting: trx})
-        .then(function(numComments) {
-          return post.save({
-            num_comments: numComments,
-            last_updated: new Date()
-          }, {patch: true, transacting: trx});
-        })
-      );
+        // don't send anything to the commenter
+        existing = _.without(existing, commenterId);
 
-    }); // tap
+        return Promise.join(
+          // send a mention notification to all mentioned users
+          Promise.map(mentioned, function(userId) {
+            return Comment.queueNotificationEmail(userId, comment.id, 'mention');
+          }),
+
+          // send a comment notification to all non-mentioned existing followers
+          Promise.map(_.difference(existing, mentioned), function(userId) {
+            return Comment.queueNotificationEmail(userId, comment.id, 'default');
+          }),
+
+          // add all non-following mentioned users as followers
+          Promise.map(_.difference(mentioned, existing), function(userId) {
+            // TODO now that we're not attempting to re-add existing followers,
+            // we can remove the logic that checks for re-adds in Follower.create
+            // and do a single batch insert
+            return Follower.create(post.id, {
+              followerId: userId,
+              addedById: commenterId,
+              transacting: trx
+            });
+          })
+
+        );
+      });
+
+    });
   }); // transaction
 
 };

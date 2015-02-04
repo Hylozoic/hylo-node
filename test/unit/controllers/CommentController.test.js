@@ -38,14 +38,15 @@ describe('CommentController', function() {
           return "<p>Hey <a data-user-id='" + fixtures.u2.id + "'>U2</a>, you're mentioned ;)</p>";
       };
 
-      res.locals = {
-        post: fixtures.p1
-      };
+      res.locals = {post: fixtures.p1};
 
       res.ok = function(data) {
         expect(data).to.exist;
         expect(data.user).to.exist;
         expect(data.text).to.equal("<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>");
+
+        // mentioning should cause an email notification
+        expect(require('kue').jobCount()).to.equal(1);
         done();
       };
 

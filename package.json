@@ -34,6 +34,7 @@
     "knex": "^0.7.3",
     "kue": "^0.8.11",
     "lodash": "2.4.1",
+    "mock-kue": "schinkowitch/mock-kue",
     "newrelic": "^1.15.0",
     "node-uuid": "^1.4.1",
     "parse-redis-url": "0.0.1",

@@ -10,6 +10,8 @@ require('dotenv').load(); // loads ".env.test"
 global.expect = require('chai').expect;
 global._      = require('lodash');
 
+require('mock-kue');
+
 global.requireFromRoot = function(path) {
   return require(root(path));
 };
@@ -140,7 +142,8 @@ TestSetup.prototype.initDb = function(done) {
 
 TestSetup.prototype.clearDb = function(done) {
   async.each(
-    ['users', 'community', 'users_community', 'community_invite',
+    [
+      'users', 'community', 'users_community', 'community_invite',
       'users_org', 'users_skill', 'post_community', 'follower',
       'notification', 'comment', 'contributor', 'post'
     ],
