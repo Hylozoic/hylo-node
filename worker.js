@@ -2,6 +2,7 @@ var _ = require('lodash'),
   colors = require('colors'),
   Promise = require('bluebird'),
   rc = require('rc'),
+  rollbar = require('rollbar'),
   sails = require('sails'),
   util = require('util');
 
@@ -11,13 +12,17 @@ var _ = require('lodash'),
 var jobDefinitions = {
   'test': Promise.method(function(job) {
     console.log(new Date().toString().magenta);
-    console.dir(job.data);
     throw new Error('whoops!');
   }),
 
   'Comment.sendNotificationEmail': function(job) {
     return Comment.sendNotificationEmail(job.data.recipientId, job.data.commentId, job.data.version);
+  },
+
+  'Post.sendNotificationEmail': function(job) {
+    return Post.sendNotificationEmail(job.data.recipientId, job.data.seedId);
   }
+
 };
 
 var Worker = function() {
@@ -32,8 +37,19 @@ Worker.prototype.start = function() {
     queue.process(name, function(job, done) {
 
       // put common behavior for all jobs here
-      sails.log.info(util.format('Job %s: %s', job.id, name));
-      promise(job).then(function() { done(); }).catch(done);
+
+      var label = util.format(' Job %s ', job.id).bgBlue.black + ' ';
+      sails.log.info(label + name);
+
+      promise(job).then(function() {
+        sails.log.info(label + 'done'.green);
+        done();
+      })
+      .catch(function(err) {
+        sails.log.error(label + err.message.red);
+        rollbar.handleError(err);
+        done(err);
+      });
 
     });
   });
