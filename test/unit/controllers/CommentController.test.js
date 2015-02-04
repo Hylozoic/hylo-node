@@ -47,7 +47,11 @@ describe('CommentController', function() {
 
         // mentioning should cause an email notification
         expect(require('kue').jobCount()).to.equal(1);
-        done();
+
+        fixtures.p1.load('followers').then(function(post) {
+          expect(post.relations.followers.length).to.equal(1);
+          done();
+        })
       };
 
       CommentController.create(req, res);
