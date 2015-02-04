@@ -67,6 +67,7 @@ module.exports.routes = {
 
   'GET    /noo/seed/:postId':                             'PostController.findOne',
   'POST   /noo/seed/:postId/comment':                     'CommentController.create',
+  'POST   /noo/seed/:postId/followers':                   'PostController.addFollowers',
   'POST   /noo/seed':                                     'PostController.create',
 
   'GET    /admin/login':                                  'SessionController.create',
