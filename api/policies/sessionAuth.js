@@ -33,8 +33,11 @@ module.exports = function(req, res, next) {
           req.session.userProvider = playSession.providerKey();
           req.rollbar_person = user.pick('id', 'name', 'email');
           req.session.version = sessionDataVersion;
+          next();
+        } else {
+          sails.log.debug("policy: sessionAuth: fail (valid session but no user!?)");
+          res.forbidden();
         }
-        next();
       });
     } else {
       // User is not allowed
