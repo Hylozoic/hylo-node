@@ -29,6 +29,7 @@ module.exports = bookshelf.Model.extend({
       commentId: commentId,
       version: version
     })
+    .delay(5000) // because the job is queued while an object it depends upon hasn't been saved yet
     .attempts(3)
     .backoff({delay: 5000, type: 'exponential'});
 
@@ -50,13 +51,13 @@ module.exports = bookshelf.Model.extend({
 
       var seed = comment.relations.post,
         commenter = comment.relations.user,
-        poster = seed.relations.creator,
+        creator = seed.relations.creator,
         community = seed.relations.communities.models[0],
         text = comment.get('comment_text'),
         replyTo = Email.seedReplyAddress(seed.id, recipient.id);
 
       var seedLabel = format('%s %s',
-        (recipient.id == poster.id ? 'your' : 'the'), seed.get('type'));
+        (recipient.id == creator.id ? 'your' : 'the'), seed.get('type'));
 
       text = RichText.qualifyLinks(text);
 

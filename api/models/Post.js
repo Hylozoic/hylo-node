@@ -1,4 +1,5 @@
-var Promise = require('bluebird');
+var format = require('util').format,
+  Promise = require('bluebird');
 
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
@@ -54,7 +55,59 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
-  find: function(id) {
-    return Post.where({id: id}).fetch();
+  find: function(id, options) {
+    return Post.where({id: id}).fetch(options);
+  },
+
+  queueNotificationEmail: function(recipientId, seedId) {
+    var queue = require('kue').createQueue();
+
+    var job = queue.create('Post.sendNotificationEmail', {
+      recipientId: recipientId,
+      seedId: seedId
+    })
+    .delay(5000) // because the job is queued while an object it depends upon hasn't been saved yet
+    .attempts(3)
+    .backoff({delay: 5000, type: 'exponential'});
+
+    return Promise.promisify(job.save, job)();
+  },
+
+  sendNotificationEmail: function(recipientId, seedId) {
+
+    return Promise.join(
+      User.find(recipientId),
+      Post.find(seedId, {withRelated: ['communities', 'creator']})
+    )
+    .spread(function(recipient, seed) {
+
+      var creator = seed.relations.creator,
+        community = seed.relations.communities.first(),
+        description = RichText.qualifyLinks(seed.get('description')),
+        replyTo = Email.seedReplyAddress(seed.id, recipient.id);
+
+      return Email.sendSeedMentionNotification({
+        email: recipient.get('email'),
+        sender: {
+          address: replyTo,
+          reply_to: replyTo,
+          name: format('%s (via Hylo)', creator.get('name'))
+        },
+        data: {
+          community_name:      community.get('name'),
+          creator_name:        creator.get('name'),
+          creator_avatar_url:  creator.get('avatar_url'),
+          creator_profile_url: Frontend.Route.profile(creator),
+          seed_description:    description,
+          seed_title:          seed.get('name'),
+          seed_type:           seed.get('type'),
+          seed_url:            Frontend.Route.seed(seed, community),
+          unfollow_url:        Frontend.Route.unfollow(seed)
+        }
+      });
+
+    });
+
   }
+
 });

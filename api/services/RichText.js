@@ -25,10 +25,10 @@ var sanitize = function(text) {
 /**
  * @returns a set of unique ids of any @mentions found in the text
  */
-var getMentions = function(text) {
+var getUserMentions = function(text) {
   var $ = Cheerio.load(text);
   return _.uniq($("a[data-user-id]").map(function(i, elem) {
-    return $(this).data("user-id");
+    return parseInt($(this).data("user-id"));
   }).get());
 };
 
@@ -42,7 +42,7 @@ var qualifyLinks = function(text) {
 };
 
 module.exports = {
-  sanitize: sanitize,
-  getUserMentions: getMentions,
-  qualifyLinks: qualifyLinks
+  getUserMentions: getUserMentions,
+  qualifyLinks:    qualifyLinks,
+  sanitize:        sanitize
 };

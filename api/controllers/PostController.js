@@ -157,13 +157,14 @@ module.exports = {
 
   create: function(req, res) {
     var params = _.pick(req.allParams(), ['name', 'postType', 'communityId', 'imageUrl']),
-        description = RichText.sanitize(req.param('description'));
+        description = RichText.sanitize(req.param('description')),
+        creatorId = parseInt(req.session.userId);
 
     var attrs = {
       name:          params.name,
       description:   description,
       type:          params.postType,
-      creator_id:    req.session.userId,
+      creator_id:    creatorId,
       creation_date: new Date(),
       last_updated:  new Date(),
       active:        true,
@@ -176,14 +177,20 @@ module.exports = {
     bookshelf.transaction(function(trx) {
       return new Post(attrs).save(null, {transacting: trx})
         .tap(function (post) {
-          var mentions = RichText.getUserMentions(description);
+          var mentioned = RichText.getUserMentions(description),
+            followerIds = _.uniq(mentioned.concat(creatorId));
 
           return Promise.join(
             // Attach post to the community
             new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx}),
 
             // Add mentioned users and creator as followers
-            post.addFollowers(mentions.concat(req.session.userId), req.session.userId, trx),
+            post.addFollowers(followerIds, creatorId, trx),
+
+            // send a mention notification to all mentioned users
+            Promise.map(_.without(mentioned, creatorId), function(userId) {
+              return Post.queueNotificationEmail(userId, post.id);
+            }),
 
             // Add image, if any
             (params.imageUrl ? Media.create({
