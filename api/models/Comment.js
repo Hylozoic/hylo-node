@@ -21,6 +21,20 @@ module.exports = bookshelf.Model.extend({
     return Comment.where({id: id}).fetch(options);
   },
 
+  queueNotificationEmail: function(recipientId, commentId, version) {
+    var queue = require('kue').createQueue();
+
+    var job = queue.create('Comment.sendNotificationEmail', {
+      recipientId: recipientId,
+      commentId: commentId,
+      version: version
+    })
+    .attempts(3)
+    .backoff({delay: 5000, type: 'exponential'});
+
+    return Promise.promisify(job.save, job)();
+  },
+
   sendNotificationEmail: function(recipientId, commentId, version) {
     // the version argument corresponds to names of versions in SendWithUs
 
@@ -65,11 +79,9 @@ module.exports = bookshelf.Model.extend({
           seed_url:              Frontend.Route.seed(seed, community),
           unfollow_url:          Frontend.Route.unfollow(seed)
         }
-      })
+      });
 
     })
-
-
 
   },
 
