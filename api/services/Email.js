@@ -1,4 +1,5 @@
 var api = require('sendwithus')(process.env.SENDWITHUS_KEY),
+  format = require('util').format,
   Promise = require('bluebird'),
   sendEmail = Promise.promisify(api.send, api);
 
@@ -28,8 +29,8 @@ module.exports = {
     }));
   },
 
-  seedReplyAddress: function(postId, userId) {
-    // TODO
-    return 'placeholder-todo@hylo.com';
+  seedReplyAddress: function(seedId, userId) {
+    var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, seedId, userId);
+    return format('reply-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);
   }
 };

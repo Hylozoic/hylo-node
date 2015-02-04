@@ -22,7 +22,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendNotificationEmail: function(recipientId, commentId, version) {
-    // version corresponds to names of versions in SendWithUs
+    // the version argument corresponds to names of versions in SendWithUs
 
     return Promise.join(
       User.find(recipientId),
@@ -38,7 +38,8 @@ module.exports = bookshelf.Model.extend({
         commenter = comment.relations.user,
         poster = seed.relations.creator,
         community = seed.relations.communities.models[0],
-        text = comment.get('comment_text');
+        text = comment.get('comment_text'),
+        replyTo = Email.seedReplyAddress(seed.id, recipient.id);
 
       var seedLabel = format('%s %s',
         (recipient.id == poster.id ? 'your' : 'the'), seed.get('type'));
@@ -49,7 +50,8 @@ module.exports = bookshelf.Model.extend({
         version: version,
         email: recipient.get('email'),
         sender: {
-          address: Email.seedReplyAddress(seed.id, recipient.id),
+          address: replyTo,
+          reply_to: replyTo,
           name: format('%s (via Hylo)', commenter.get('name'))
         },
         data: {
