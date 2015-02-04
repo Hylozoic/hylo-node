@@ -187,7 +187,7 @@ module.exports = {
             // Add mentioned users and creator as followers
             post.addFollowers(followerIds, creatorId, trx),
 
-            // send a mention notification to all mentioned users
+            // send a mention notification to all mentioned users except the creator
             Promise.map(_.without(mentioned, creatorId), function(userId) {
               return Post.queueNotificationEmail(userId, post.id);
             }),
