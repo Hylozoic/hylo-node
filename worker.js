@@ -20,8 +20,6 @@ var jobDefinitions = {
   }
 };
 
-sails.log.info("Lifting...".yellow);
-
 var Worker = function() {
   this.queue = require('kue').createQueue();
 };
@@ -65,6 +63,7 @@ process.on('SIGINT', function() {
 });
 
 // go!
+sails.log.info("Lifting...".yellow);
 sails.lift(_.merge(rc('sails'), {
   log: {noShip: true},
   hooks: {http: false, sockets: false, views: false}
