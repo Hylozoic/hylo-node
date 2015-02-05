@@ -21,6 +21,8 @@ module.exports = bookshelf.Model.extend({
     return Comment.where({id: id}).fetch(options);
   },
 
+  // TODO this method and the similar one in Post should be extracted into a general method
+  // for queueing class methods
   queueNotificationEmail: function(recipientId, commentId, version) {
     var queue = require('kue').createQueue();
 
