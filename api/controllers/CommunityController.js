@@ -54,6 +54,14 @@ module.exports = {
         return email.trim();
       });
 
+      var marked = require('marked');
+      marked.setOptions({
+        gfm: true,
+        breaks: true
+      });
+
+      var message = marked(req.param('message') || '');
+
       return Promise.map(emails, function(email) {
         if (!validator.isEmail(email)) {
           return {email: email, error: "not a valid email address"};
@@ -63,7 +71,7 @@ module.exports = {
           email:       email,
           userId:      req.session.userId,
           communityId: community.id,
-          message:     require('marked')(req.param('message') || ''),
+          message:     message,
           moderator:   req.param('moderator'),
           subject:     req.param('subject')
         }).then(function() {
