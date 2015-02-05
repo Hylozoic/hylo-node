@@ -12,10 +12,11 @@ var defaultOptions = {
 
 module.exports = {
   sendInvitation: function(email, data) {
-    return sendEmail(_.extend(defaultOptions, {
+    return sendEmail(_.merge(defaultOptions, {
       email_id: 'tem_ZXZuvouDYKKhCrdEWYbEp9',
       recipient: {address: email},
-      email_data: data
+      email_data: data,
+      version_name: 'user-edited text'
     }));
   },
 

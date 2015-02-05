@@ -47,31 +47,35 @@ module.exports = {
   },
 
   invite: function(req, res) {
-    Community.find(req.param('communityId')).then(function(community) {
+    Community.find(req.param('communityId'))
+    .then(function(community) {
 
       var emails = (req.param('emails') || '').split(',').map(function(email) {
         return email.trim();
       });
 
-      Promise.map(emails, function(email) {
+      return Promise.map(emails, function(email) {
         if (!validator.isEmail(email)) {
           return {email: email, error: "not a valid email address"};
         }
 
         return Invitation.createAndSend({
-          userId: req.session.userId,
+          email:       email,
+          userId:      req.session.userId,
           communityId: community.id,
-          email: email,
-          moderator: req.param('moderator')
+          message:     require('marked')(req.param('message') || ''),
+          moderator:   req.param('moderator'),
+          subject:     req.param('subject')
         }).then(function() {
           return {email: email, error: null};
         }).catch(function(err) {
           return {email: email, error: err.message};
         });
-      })
-      .then(function(results) {
-        res.ok({results: results});
       });
+
+    })
+    .then(function(results) {
+      res.ok({results: results});
     });
   },
 
