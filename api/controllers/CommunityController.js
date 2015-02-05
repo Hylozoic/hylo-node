@@ -51,7 +51,11 @@ module.exports = {
     .then(function(community) {
 
       var emails = (req.param('emails') || '').split(',').map(function(email) {
-        return email.trim();
+        var trimmed = email.trim(),
+          matchLongFormat = trimmed.match(/.*<(.*)>/);
+
+        if (matchLongFormat) return matchLongFormat[1];
+        return trimmed;
       });
 
       var marked = require('marked');
