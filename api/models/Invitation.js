@@ -38,17 +38,14 @@ module.exports = bookshelf.Model.extend({
     })
     .spread(function(invitation) {
 
-      var link = util.format(
-        "http://%s/community/invite/%s",
-        process.env.DOMAIN, invitation.get('token')
-      );
-
-      return Email.sendInvitation(opts.email, {
+      var data = _.extend(_.pick(opts, 'message', 'subject'), {
         inviter_name: invitation.relations.creator.get('name'),
-        recipient: opts.email,
         community_name: invitation.relations.community.get('name'),
-        invite_link: link
+        invite_link: util.format("http://%s/community/invite/%s",
+          process.env.DOMAIN, invitation.get('token'))
       });
+
+      return Email.sendInvitation(opts.email, data);
     });
   }
 
