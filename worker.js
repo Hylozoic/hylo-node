@@ -9,6 +9,10 @@ var _ = require('lodash'),
 // define new jobs here.
 // each job should return a promise.
 // use Promise.method if the job is synchronous.
+//
+// TODO these job definitions should go elsewhere.
+// the common case of queueing a class method could also be handled with
+// a single job.
 var jobDefinitions = {
   'test': Promise.method(function(job) {
     console.log(new Date().toString().magenta);
