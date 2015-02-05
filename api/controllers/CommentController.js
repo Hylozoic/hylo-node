@@ -24,6 +24,8 @@ var createComment = function(commenterId, text, post) {
       active: true
     };
 
+  commenterId = parseInt(commenterId);
+
   return bookshelf.transaction(function(trx) {
     return new Comment(attrs).save(null, {transacting: trx})
     .tap(function(comment) {
@@ -42,14 +44,11 @@ var createComment = function(commenterId, text, post) {
         // find all existing followers and all mentioned users
         // (there may be some users in both groups)
         return [
-          post.relations.followers.map(function(f) { return f.attributes.user_id }),
+          post.relations.followers.map(function(f) { return parseInt(f.attributes.user_id) }),
           RichText.getUserMentions(text)
         ];
 
       }).spread(function(existing, mentioned) {
-
-        // don't send anything to the commenter
-        existing = _.without(existing, commenterId);
 
         return Promise.join(
           // send a mention notification to all mentioned users
@@ -57,13 +56,13 @@ var createComment = function(commenterId, text, post) {
             return Comment.queueNotificationEmail(userId, comment.id, 'mention');
           }),
 
-          // send a comment notification to all non-mentioned existing followers
-          Promise.map(_.difference(existing, mentioned), function(userId) {
+          // send a comment notification to all followers except the commenter and mentioned users
+          Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
             return Comment.queueNotificationEmail(userId, comment.id, 'default');
           }),
 
-          // add all non-following mentioned users as followers
-          post.addFollowers(_.difference(mentioned, existing), commenterId, trx)
+          // add all mentioned users and the commenter as followers, if not already following
+          post.addFollowers(_.difference(mentioned.concat(commenterId), existing), commenterId, trx)
 
         );
       });

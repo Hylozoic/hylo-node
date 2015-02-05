@@ -44,7 +44,7 @@ describe('CommentController', function() {
 
       res.locals = {post: fixtures.p1};
 
-      // FIXME find a better solution to this nested try/catch
+      // FIXME find a better solution than this nested try/catch
       res.ok = function(data) {
         try {
           expect(data).to.exist;
@@ -54,9 +54,10 @@ describe('CommentController', function() {
           // mentioning should cause email notifications
           expect(require('kue').jobCount()).to.equal(2);
 
+          // the two mentioned users and the commenter should now be followers
           fixtures.p1.load('followers').then(function(post) {
             try {
-              expect(post.relations.followers.length).to.equal(2);
+              expect(post.relations.followers.length).to.equal(3);
               done();
             } catch(err) {
               done(err);
