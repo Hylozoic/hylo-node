@@ -32,7 +32,7 @@ module.exports = bookshelf.Model.extend({
     return Community.where({id: id_or_slug}).fetch();
   },
 
-  members: function(communityId, term, options) {
+  members: function(communityId, options) {
     _.defaults(options, {
       limit: 10,
       offset: 0
@@ -40,8 +40,8 @@ module.exports = bookshelf.Model.extend({
 
     return Community.find(communityId).then(function(community) {
       return community.users().query(function(qb) {
-        if (term) {
-          qb.where("name", "ILIKE", '%' + term + '%');
+        if (options.term) {
+          qb.where("name", "ILIKE", '%' + options.term + '%');
         }
         qb.where("users.active", "=", true);
 
