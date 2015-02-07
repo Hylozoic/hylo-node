@@ -55,6 +55,13 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
+  isVisibleToUser: function(postId, userId) {
+    return bookshelf.knex('post_community').then(function(results) {
+      var communityId = results[0].community_id;
+      return Membership.find(userId, communityId);
+    }).then(function(mship) { return !!mship });
+  },
+
   find: function(id, options) {
     return Post.where({id: id}).fetch(options);
   },
