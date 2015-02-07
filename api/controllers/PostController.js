@@ -229,11 +229,43 @@ module.exports = {
   },
 
   update: function(req, res) {
-    var params = _.pick(req.allParams(), 'name', 'description', 'type'),
-      post = res.locals.post;
+    var post = res.locals.post,
+      attrs = _.extend(
+        _.pick(req.allParams(), 'name', 'description', 'type'),
+        {edited: true, edited_timestamp: new Date()}
+      );
 
-    _.extend(post.attributes, params, {edited: true, edited_timestamp: new Date()});
-    post.save().then(function() {
+    bookshelf.transaction(function(trx) {
+
+      return post.save(attrs, {patch: true, transacting: trx})
+      .tap(function() {
+        var imageUrl = req.param('imageUrl'),
+          imageRemoved = req.param('imageRemoved');
+
+        if (!imageUrl && !imageRemoved) return;
+
+        return post.load('media').then(function(post) {
+          var media = post.relations.media.first();
+
+          if (media && imageRemoved) { // remove media
+            return media.destroy({transacting: trx});
+
+          } else if (media) { // replace url in existing media
+            return media.save({url: imageUrl}, {patch: true, transacting: trx});
+
+          } else if (imageUrl) { // create new media
+            return Media.create({
+              postId: post.id,
+              url: imageUrl,
+              transacting: trx
+            });
+
+          }
+        });
+
+      })
+    })
+    .then(function() {
       res.ok({});
     })
     .catch(function(err) {
