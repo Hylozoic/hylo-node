@@ -163,7 +163,7 @@ module.exports = {
     var attrs = {
       name:          params.name,
       description:   description,
-      type:          params.type,
+      type:          params.type || req.param('postType'),
       creator_id:    creatorId,
       creation_date: new Date(),
       last_updated:  new Date(),
