@@ -39,7 +39,7 @@ var postAttributes = function(post, hasVote) {
   });
 
   var standardAttributes = _.pick(post.toJSON(), [
-    'name', 'description', 'fulfilled', 'media'
+    'name', 'description', 'fulfilled', 'media', 'type'
   ]);
 
   var nonStandardAttributes = {
@@ -156,14 +156,14 @@ module.exports = {
   },
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), ['name', 'postType', 'communityId', 'imageUrl']),
+    var params = _.pick(req.allParams(), ['name', 'type', 'communityId', 'imageUrl']),
         description = RichText.sanitize(req.param('description')),
         creatorId = parseInt(req.session.userId);
 
     var attrs = {
       name:          params.name,
       description:   description,
-      type:          params.postType,
+      type:          params.type,
       creator_id:    creatorId,
       creation_date: new Date(),
       last_updated:  new Date(),
@@ -221,6 +221,19 @@ module.exports = {
       return post.addFollowers(_.difference(added, existing), req.session.userId);
     })
     .then(function() {
+      res.ok({});
+    })
+    .catch(function(err) {
+      res.serverError(err);
+    })
+  },
+
+  update: function(req, res) {
+    var params = _.pick(req.allParams(), 'name', 'description', 'type'),
+      post = res.locals.post;
+
+    _.extend(post.attributes, params, {edited: true, edited_timestamp: new Date()});
+    post.save().then(function() {
       res.ok({});
     })
     .catch(function(err) {

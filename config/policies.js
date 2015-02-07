@@ -66,6 +66,7 @@ module.exports.policies = {
     findForUser: ['sessionAuth', 'inSameCommunity'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     create: ['sessionAuth', 'checkAndSetMembership'],
+    update: ['sessionAuth', 'checkAndSetWritablePost'],
     addFollowers: ['sessionAuth', 'checkAndSetPost']
   },
 

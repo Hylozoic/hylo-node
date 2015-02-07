@@ -58,6 +58,12 @@ module.exports = bookshelf.Model.extend({
     }).update({role: Membership.DEFAULT_ROLE});
   },
 
+  hasModeratorRole: function(user_id, community_id) {
+    return this.find(user_id, community_id).then(function(mship) {
+      return mship && mship.hasModeratorRole();
+    });
+  },
+
   // do all of the users have at least one community in common?
   inSameCommunity: function(user_ids) {
     user_ids = _.uniq(user_ids);
