@@ -40,8 +40,8 @@ module.exports = bookshelf.Model.extend({
 
     return Community.find(communityId).then(function(community) {
       return community.users().query(function(qb) {
-        if (options.term) {
-          qb.where("name", "ILIKE", '%' + options.term + '%');
+        if (options.search) {
+          qb.where("name", "ILIKE", '%' + options.search + '%');
         }
         qb.where("users.active", "=", true);
 
