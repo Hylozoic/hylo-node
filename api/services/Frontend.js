@@ -15,7 +15,7 @@ module.exports = {
     },
 
     seed: function(seed, community) {
-      return url('/c/%s/s/%s/comments', community.get('slug'), seed.id);
+      return url('/c/%s/s/%s', community.get('slug'), seed.id);
     },
 
     unfollow: function(seed) {
