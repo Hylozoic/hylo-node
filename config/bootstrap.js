@@ -55,6 +55,18 @@ module.exports.bootstrap = function(done) {
 
       sails.log.debug(query);
     });
+
+  } else if (sails.config.environment == 'production') {
+    var rollbar = require('rollbar');
+
+    knex.on('query', function(data) {
+      if (_.contains(data.bindings, 'undefined')) {
+        rollbar.handleError('undefined value in SQL query', {
+          sql: data.sql,
+          bindings: data.bindings
+        });
+      }
+    });
   }
 
   // add bookshelf and each model to global namespace
