@@ -1,3 +1,5 @@
+require('./config/kue');
+
 var _ = require('lodash'),
   colors = require('colors'),
   Promise = require('bluebird'),
