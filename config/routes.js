@@ -46,6 +46,7 @@ module.exports.routes = {
   'GET    /':                                             'StaticPageController.proxy',
   'GET    /about':                                        'StaticPageController.proxy',
 
+  'GET    /noo/user/status':                              'UserController.status',
   'GET    /noo/user/me':                                  'UserController.findSelf',
   'GET    /noo/user/:userId':                             'UserController.findOne',
   'POST   /noo/user/:userId':                             'UserController.update',

@@ -44,6 +44,7 @@ module.exports.policies = {
   },
 
   UserController: {
+    status: true,
     findSelf: ['sessionAuth'],
     findOne: ['sessionAuth', 'inSameCommunity'],
     update: ['sessionAuth', 'isSelf'],

@@ -10,6 +10,23 @@ var Promise = require('bluebird'),
 
 module.exports = {
 
+  status: function(req, res) {
+    var playSession = new PlaySession(req);
+    if (playSession.isValid()) {
+      playSession.fetchUser().then(function(user) {
+        if (user) {
+          res.ok({signedIn: true});
+        } else {
+          res.ok({signedIn: false});
+          next();
+        }
+      });
+      return;
+    }
+
+    res.ok({signedIn: false});
+  },
+
   findSelf: function(req, res) {
     User.fetchForSelf(req.session.userId).then(function(attributes) {
       res.ok(_.extend(attributes, {provider_key: req.session.userProvider}));
