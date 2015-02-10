@@ -28,6 +28,8 @@ module.exports.policies = {
 
   '*': false,
 
+  StaticPageController: true,
+
   SessionController: {
     create: true,
     oauth: true,

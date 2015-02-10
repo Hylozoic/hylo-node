@@ -32,9 +32,6 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  '/': {
-    view: 'homepage'
-  },
 
   /***************************************************************************
   *                                                                          *
@@ -46,6 +43,8 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
+  'GET    /':                                             'StaticPageController.proxy',
+  'GET    /about':                                        'StaticPageController.proxy',
 
   'GET    /noo/user/me':                                  'UserController.findSelf',
   'GET    /noo/user/:userId':                             'UserController.findOne',
