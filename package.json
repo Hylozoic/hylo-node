@@ -34,6 +34,7 @@
     "knex": "^0.7.3",
     "kue": "^0.8.11",
     "lodash": "2.4.1",
+    "lru-cache": "^2.5.0",
     "marked": "^0.3.3",
     "mock-kue": "schinkowitch/mock-kue",
     "newrelic": "^1.15.0",

@@ -1,23 +1,47 @@
-var request = require('request'),
+var LRU = require('lru-cache'),
+  request = require('request'),
   url = require('url'),
   util = require('util');
+
+var cache = LRU(10);
 
 module.exports = {
 
   proxy: function(req, res) {
-    // TODO caching
-
     var u = url.parse(req.url);
+
+    // remove trailing slash
     u.pathname = u.pathname.replace(/\/$/, '');
+
+    // a path without an extension should be served by index.html in
+    // the folder of the same name.
     if (!u.pathname.match(/\./)) {
       u.pathname += '/index.html';
     }
+
+    // add the deploy-specific (cache-busting) path prefix
     u.pathname = util.format('assets/%s%s', process.env.BUNDLE_VERSION, u.pathname);
 
     var newUrl = util.format('%s/%s', process.env.AWS_S3_CONTENT_URL, url.format(u));
-    sails.log.info(util.format(' ↑ %s', newUrl));
 
-    req.pipe(request(newUrl)).pipe(res);
+    // use path without query params as cache key
+    var cacheKey = u.pathname,
+      cached = cache.get(cacheKey);
+
+    if (cached) {
+      sails.log.info(util.format(' ☺ %s', newUrl));
+      res.ok(cached);
+    } else {
+      sails.log.info(util.format(' ↑ %s', newUrl));
+      request(newUrl, function(err, response, body) {
+        if (err || response.statusCode != 200) {
+          return res.serverError(util.format("upstream: %s %s", response.statusCode, err));
+        }
+
+        cache.set(cacheKey, body);
+        res.ok(body);
+      })
+    }
   }
 
 }
