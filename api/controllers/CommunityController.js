@@ -123,15 +123,32 @@ module.exports = {
       {limit: 1000}
     );
 
+    if (req.param('with')) {
+      options.withRelated = _.flatten([req.param('with')]);
+    }
+
     Community.members(req.param('communityId'), options)
     .then(function(users) {
 
       res.ok(users.map(function(user) {
-        return {
+        var attributes = {
           id: Number(user.id),
           name: user.get('name'),
           avatar_url: user.get('avatar_url')
         };
+
+        if (options.withRelated) {
+          _.each(options.withRelated, function(relation) {
+            var model;
+            switch (relation) {
+              case 'skills': model = Skill; break;
+              case 'organizations': model = Organization;
+            }
+            attributes[relation] = model.simpleList(user.relations[relation]);
+          });
+        }
+
+        return attributes;
       }));
 
     });
