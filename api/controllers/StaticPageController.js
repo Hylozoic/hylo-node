@@ -47,7 +47,7 @@ module.exports = {
     } else {
       sails.log.info(util.format(' ↑ %s', newUrl));
       request(newUrl, function(err, response, body) {
-        if (response.statusCode == 403) {
+        if (response && response.statusCode == 403) {
           // a 403 from S3 could also be a 404
           return res.notFound();
         }
