@@ -22,6 +22,8 @@ module.exports = {
       return user.communities().fetchOne();
     })
     .then(function(community) {
+      if (!community) return res.ok({});
+
       Membership.find(req.session.userId, community.id).then(function(membership) {
         res.ok(communityAttributes(community, membership));
       })
