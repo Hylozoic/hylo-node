@@ -47,7 +47,7 @@ module.exports = bookshelf.Model.extend({
 
         qb.limit(options.limit);
         qb.offset(options.offset);
-      }).fetch();
+      }).fetch(_.pick(options, 'withRelated'));
     })
   }
 
