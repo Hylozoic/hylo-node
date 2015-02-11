@@ -78,6 +78,8 @@ module.exports.routes = {
   'GET    /admin/test':                                   'AdminController.test',
 
   'GET    /noo/linkedin/authorize':                       'LinkedinController.authorize',
-  'GET    /noo/linkedin/provide':                         'LinkedinController.provideData'
+  'GET    /noo/linkedin/provide':                         'LinkedinController.provideData',
+
+  '/*':                                                   'StaticPageController.proxy'
 
 };
