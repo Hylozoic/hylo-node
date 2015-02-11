@@ -1,7 +1,9 @@
-var Promise = require('bluebird');
+var format = require('util').format,
+  Promise = require('bluebird');
 
 var extraUserAttributes = function(user) {
   return Promise.props({
+    public_email: user.encryptedEmail(),
     skills: Skill.simpleList(user.relations.skills),
     organizations: Organization.simpleList(user.relations.organizations),
     seed_count: Post.countForUser(user),
@@ -78,6 +80,11 @@ module.exports = bookshelf.Model.extend({
     }
 
     return this.set(saneAttrs);
+  },
+
+  encryptedEmail: function() {
+    var plaintext = format('%s%s', process.env.MAILGUN_EMAIL_SALT, this.get('email'));
+    return format('u=%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);
   }
 
 }, {
