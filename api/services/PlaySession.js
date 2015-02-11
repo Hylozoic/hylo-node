@@ -1,7 +1,8 @@
-var cookie = require('cookie');
-var crypto = require('crypto');
-var qs     = require('querystring');
-var _      = require('lodash');
+var cookie = require('cookie'),
+  crypto = require('crypto'),
+  Promise = require('bluebird'),
+  qs = require('querystring'),
+  _ = require('lodash');
 
 var noop = function(x) { return x };
 
@@ -31,26 +32,26 @@ _.extend(PlaySession.prototype, {
   },
   fetchUser: function(callback) {
     var providerKey = this.providerKey(), providerId = this.providerId();
-    if (providerKey == 'password') {
-      return User.where({email: providerId, active: true}).fetch();
-    } else {
-      return LinkedAccount.query(function(qb) {
-        qb.where({
-            provider_key: providerKey,
-            provider_user_id: providerId,
-            "users.active": true
-        }).leftJoin("users", function() {
-          this.on("users.id", "=", "linked_account.user_id");
-        });
-      }).fetch().then(function (account) {
-        if (account) {
-          return account.activeUser().fetch();
-        } else {
-          sails.log.error("PlaySession failed to retrieve linkedAccount", providerKey, providerId);
-          return null;
-        }
+
+    if (!providerKey || !providerId)
+      return Promise.resolve(null);
+
+    return LinkedAccount.query(function(qb) {
+      qb.where({
+          provider_key: providerKey,
+          provider_user_id: providerId,
+          "users.active": true
+      }).leftJoin("users", function() {
+        this.on("users.id", "=", "linked_account.user_id");
       });
-    }
+    }).fetch().then(function (account) {
+      if (account) {
+        return account.activeUser().fetch();
+      } else {
+        sails.log.error("PlaySession failed to retrieve linkedAccount", providerKey, providerId);
+        return null;
+      }
+    });
   },
   providerKey: function() {
     return this.data['pa.p.id'];
