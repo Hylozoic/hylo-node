@@ -5,6 +5,14 @@ var LRU = require('lru-cache'),
 
 var cache = LRU(10);
 
+var appPathPrefixes = [
+  /^\/c\//,
+  /^\/u\//,
+  /^\/settings/,
+  /^\/edit-profile/,
+  /^\/create\/community/
+];
+
 module.exports = {
 
   proxy: function(req, res) {
@@ -12,6 +20,11 @@ module.exports = {
 
     // remove trailing slash
     u.pathname = u.pathname.replace(/\/$/, '');
+
+    // for Angular app requests, serve the base file.
+    if (_.any(appPathPrefixes, function(r) { return u.pathname.match(r); })) {
+      u.pathname = '/app';
+    }
 
     // a path without an extension should be served by index.html in
     // the folder of the same name.
@@ -34,6 +47,11 @@ module.exports = {
     } else {
       sails.log.info(util.format(' ↑ %s', newUrl));
       request(newUrl, function(err, response, body) {
+        if (response.statusCode == 403) {
+          // a 403 from S3 could also be a 404
+          return res.notFound();
+        }
+
         if (err || response.statusCode != 200) {
           return res.serverError(util.format("upstream: %s %s", response.statusCode, err));
         }
