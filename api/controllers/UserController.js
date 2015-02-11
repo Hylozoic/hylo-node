@@ -18,7 +18,6 @@ module.exports = {
           res.ok({signedIn: true});
         } else {
           res.ok({signedIn: false});
-          next();
         }
       });
       return;
