@@ -16,6 +16,8 @@ var appPathPrefixes = [
 module.exports = {
 
   proxy: function(req, res) {
+    if (process.env.DISABLE_PROXY) return res.ok('');
+
     var u = url.parse(req.url);
 
     // remove trailing slash
