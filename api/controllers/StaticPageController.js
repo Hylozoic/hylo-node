@@ -53,7 +53,8 @@ module.exports = {
         }
 
         if (err || response.statusCode != 200) {
-          return res.serverError(util.format("upstream: %s %s", response.statusCode, err));
+          var code = (response ? response.statusCode : 'X');
+          return res.serverError(util.format("upstream: %s %s", code, err));
         }
 
         cache.set(cacheKey, body);
