@@ -36,6 +36,7 @@
     "lodash": "2.4.1",
     "lru-cache": "^2.5.0",
     "marked": "^0.3.3",
+    "minimist": "^1.1.0",
     "mock-kue": "schinkowitch/mock-kue",
     "newrelic": "^1.15.0",
     "node-uuid": "^1.4.1",
