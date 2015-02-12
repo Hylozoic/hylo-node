@@ -36,6 +36,10 @@ _.extend(PlaySession.prototype, {
     if (!providerKey || !providerId)
       return Promise.resolve(null);
 
+    if (providerKey == 'password') {
+      return User.where({email: providerId, active: true}).fetch();
+    }
+
     return LinkedAccount.query(function(qb) {
       qb.where({
           provider_key: providerKey,
