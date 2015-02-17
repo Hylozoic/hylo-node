@@ -18,6 +18,7 @@ var sendDailyDigests = function() {
   .then(function(communityIds) {
     return Community.query(function(qb) {
       qb.whereIn('id', communityIds);
+      qb.where('daily_digest', true);
     }).fetchAll();
   })
   .then(function(communities) {
