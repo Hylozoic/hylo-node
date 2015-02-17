@@ -40,7 +40,7 @@ var processJobs = function() {
 
   // load jobs
   _.forIn(jobDefinitions, function(promise, name) {
-    queue.process(name, function(job, done) {
+    queue.process(name, 10, function(job, done) {
 
       // put common behavior for all jobs here
 
