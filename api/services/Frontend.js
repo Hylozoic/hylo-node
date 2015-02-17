@@ -10,6 +10,10 @@ var url = function() {
 module.exports = {
 
   Route: {
+    community: function(community) {
+      return url('/c/%s', community.get('slug'));
+    },
+
     profile: function(user) {
       return url('/u/%s', user.id);
     },
@@ -20,7 +24,11 @@ module.exports = {
 
     unfollow: function(seed) {
       return url('/email/unfollow/%s', seed.id);
+    },
+
+    userSettings: function() {
+      return url('/settings');
     }
   }
 
-}
+};

@@ -21,6 +21,18 @@ module.exports = bookshelf.Model.extend({
     return Comment.where({id: id}).fetch(options);
   },
 
+  createdInTimeRange: function(collection, startTime, endTime) {
+    if (endTime == undefined) {
+      endTime = startTime;
+      startTime = collection;
+      collection = Comment;
+    }
+
+    return collection.query(function(qb) {
+      qb.whereRaw('comment.date_commented between ? and ?', [startTime, endTime]);
+    })
+  },
+
   // TODO this method and the similar one in Post should be extracted into a general method
   // for queueing class methods
   queueNotificationEmail: function(recipientId, commentId, version) {

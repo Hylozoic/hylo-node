@@ -5,6 +5,7 @@ var _ = require('lodash'),
   colors = require('colors'),
   Promise = require('bluebird'),
   queue = require('kue').createQueue(),
+  rollbar = skiff.rollbar,
   sails = skiff.sails,
   util = require('util');
 
@@ -27,6 +28,10 @@ var jobDefinitions = {
 
   'Post.sendNotificationEmail': function(job) {
     return Post.sendNotificationEmail(job.data.recipientId, job.data.seedId);
+  },
+
+  'Email.sendCommunityDigest': function(job) {
+    return Email.sendCommunityDigest(job.data.emailData);
   }
 
 };
