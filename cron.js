@@ -2,11 +2,11 @@
 var skiff = require('./lib/skiff'), // this must be required first
   rollbar = skiff.rollbar,
   sails = skiff.sails,
-  moment = require('moment'),
+  moment = require('moment-timezone'),
   Changes = require('./lib/community/changes'),
   Digest = require('./lib/community/digest');
 
-require('moment-timezone');
+require('colors');
 
 var sendDailyDigests = function() {
   sails.log.info('Sending daily digests');
@@ -21,7 +21,7 @@ var sendDailyDigests = function() {
     }).fetchAll();
   })
   .then(function(communities) {
-    return Promise.map(communities, function(community) {
+    return Promise.map(communities.models, function(community) {
       var dg = new Digest(community, yesterday, today);
       dg.fetchData().then(dg.queueEmails.bind(dg));
     });
@@ -53,8 +53,14 @@ var intervals = {
 
 skiff.lift({
   start: function(argv) {
-    sails.log.info('running ' + argv.interval + ' job');
-    intervals[argv.interval]();
+    try {
+      sails.log.info('running ' + argv.interval + ' job');
+      intervals[argv.interval]();
+    } catch(err) {
+      sails.log.error(label + err.message.red);
+      rollbar.handleError(err);
+    }
+
     skiff.lower();
   }
 });
