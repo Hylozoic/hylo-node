@@ -39,6 +39,14 @@ module.exports = {
     }));
   },
 
+  sendCommunityDigest: function(opts) {
+    return sendEmail(_.merge(defaultOptions, {
+      email_id: 'tem_rkZiuPHBvLDFrZ6rv8VixH',
+      recipient: {address: opts.email},
+      email_data: opts.data
+    }))
+  },
+
   seedReplyAddress: function(seedId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, seedId, userId);
     return format('reply-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);

@@ -66,6 +66,17 @@ module.exports = bookshelf.Model.extend({
     return Post.where({id: id}).fetch(options);
   },
 
+  createdInTimeRange: function(collection, startTime, endTime) {
+    if (endTime == undefined) {
+      endTime = startTime;
+      startTime = collection;
+      collection = Post;
+    }
+    return collection.query(function(qb) {
+      qb.whereRaw('post.creation_date between ? and ?', [startTime, endTime]);
+    })
+  },
+
   queueNotificationEmail: function(recipientId, seedId) {
     var queue = require('kue').createQueue();
 

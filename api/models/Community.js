@@ -21,6 +21,22 @@ module.exports = bookshelf.Model.extend({
     return this
       .belongsToMany(User, 'users_community', 'community_id', 'users_id')
       .query({where: {role: Membership.MODERATOR_ROLE}});
+  },
+
+  comments: function() {
+    // FIXME get this to use the model relation API
+    // instead of the Collection API so that the use
+    // of fetch vs. fetchAll isn't confusing.
+    // as it is now, it uses "fetchAll" when all the
+    // other relations use "fetch"
+    var communityId = this.id;
+    return Comment.query(function(qb) {
+      qb.where({
+        'post_community.community_id': communityId,
+      }).leftJoin('post_community', function() {
+        this.on('post_community.post_id', '=', 'comment.post_id');
+      })
+    });
   }
 
 }, {

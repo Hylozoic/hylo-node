@@ -97,6 +97,17 @@ module.exports = bookshelf.Model.extend({
     return User.where({name: name}).fetch();
   },
 
+  createdInTimeRange: function(collection, startTime, endTime) {
+    if (endTime == undefined) {
+      endTime = startTime;
+      startTime = collection;
+      collection = User;
+    }
+    return collection.query(function(qb) {
+      qb.whereRaw('users.date_created between ? and ?', [startTime, endTime]);
+    });
+  },
+
   fetchForSelf: function(id) {
     return User.find(id, {
       withRelated: [
