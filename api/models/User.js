@@ -121,7 +121,7 @@ module.exports = bookshelf.Model.extend({
     }).spread(function(user, extraAttributes) {
       return _.chain(user.attributes)
         .pick([
-          'id', 'name', 'avatar_url',
+          'id', 'name', 'avatar_url', 'bio',
           'twitter_name', 'linkedin_url', 'facebook_url'
         ])
         .extend(extraAttributes).value();
