@@ -74,7 +74,8 @@ module.exports.policies = {
   },
 
   CommentController: {
-    create: ['sessionAuth', 'checkAndSetPost']
+    create: ['sessionAuth', 'checkAndSetPost'],
+    createFromEmail: true,
   }
 
   /***************************************************************************

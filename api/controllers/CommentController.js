@@ -88,6 +88,25 @@ module.exports = {
     }).catch(function(err) {
       res.serverError(err);
     });
+  },
+
+  createFromEmail: function(req, res) {
+    try {
+      var replyData = Email.decodeSeedReplyAddress(req.param('To'));
+    } catch(e) {
+      return res.serverError(new Error('Invalid reply address: ' + req.param('To')));
+    }
+
+    Post.find(replyData.seedId)
+    .then(function(seed) {
+      return createComment(replyData.userId, req.param('stripped-text'), seed);
+    })
+    .then(function() {
+      res.ok({});
+    })
+    .catch(function(err) {
+      res.serverError(err);
+    });
   }
 
 }
