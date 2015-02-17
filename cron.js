@@ -11,7 +11,7 @@ require('moment-timezone');
 var sendDailyDigests = function() {
   sails.log.info('Sending daily digests');
 
-  var today = now.clone().startOf('day'),
+  var today = moment.tz('America/Los_Angeles').clone().startOf('day'),
     yesterday = today.clone().subtract(1, 'day');
 
   Changes.changedCommunities(yesterday, today)
