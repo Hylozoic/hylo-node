@@ -44,7 +44,7 @@ module.exports = {
       email_id: 'tem_rkZiuPHBvLDFrZ6rv8VixH',
       recipient: {address: opts.email},
       email_data: opts.data
-    }))
+    }));
   },
 
   seedReplyAddress: function(seedId, userId) {

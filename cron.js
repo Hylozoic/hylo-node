@@ -23,7 +23,7 @@ var sendDailyDigests = function() {
   .then(function(communities) {
     return Promise.map(communities.models, function(community) {
       var dg = new Digest(community, yesterday, today);
-      dg.fetchData().then(dg.queueEmails.bind(dg));
+      return dg.fetchData().then(dg.queueEmails.bind(dg));
     });
   });
 
