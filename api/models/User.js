@@ -120,7 +120,10 @@ module.exports = bookshelf.Model.extend({
       return Promise.join(user, extraUserAttributes(user));
     }).spread(function(user, extraAttributes) {
       return _.chain(user.attributes)
-        .pick(['id', 'name', 'avatar_url'])
+        .pick([
+          'id', 'name', 'avatar_url',
+          'twitter_name', 'linkedin_url', 'facebook_url'
+        ])
         .extend(extraAttributes).value();
     });
   },
