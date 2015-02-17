@@ -80,6 +80,8 @@ module.exports.routes = {
   'GET    /noo/linkedin/authorize':                       'LinkedinController.authorize',
   'GET    /noo/linkedin/provide':                         'LinkedinController.provideData',
 
+  'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
+
   '/*':                                                   'StaticPageController.proxy'
 
 };
