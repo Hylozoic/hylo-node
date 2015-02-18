@@ -1,2 +1,2 @@
-web: forever --minUptime 1000 --spinSleepTime 1000 -w app.js
-worker: forever --minUptime 1000 --spinSleepTime 1000 -w worker.js
+web: forever -al /dev/null --minUptime 1000 --spinSleepTime 1000 -w app.js
+worker: forever -al /dev/null --minUptime 1000 --spinSleepTime 1000 -w worker.js
