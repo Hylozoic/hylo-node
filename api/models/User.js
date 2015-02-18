@@ -51,6 +51,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Thank, 'user_id')
   },
 
+  onboarding: function() {
+    return this.hasOne(Tour).query({where: {type: 'onboarding'}});
+  },
+
   setModeratorRole: function(community) {
     return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community));
   },
@@ -115,7 +119,8 @@ module.exports = bookshelf.Model.extend({
         'memberships.community',
         'skills',
         'organizations',
-        'linkedAccounts'
+        'linkedAccounts',
+        'onboarding'
       ]
     }).then(function(user) {
       return Promise.join(user, extraUserAttributes(user));
