@@ -45,10 +45,10 @@ var processJobs = function() {
       // put common behavior for all jobs here
 
       var label = util.format(' Job %s ', job.id).bgBlue.black + ' ';
-      sails.log.info(label + name);
+      sails.log.debug(label + name);
 
       promise(job).then(function() {
-        sails.log.info(label + 'done'.green);
+        sails.log.debug(label + 'done'.green);
         done();
       })
       .catch(function(err) {
