@@ -53,7 +53,7 @@ module.exports.bootstrap = function(done) {
       var query = util.format.apply(util, args)
         .replace(/^(select|insert|update)/, '$1'.black.bgGreen);
 
-      sails.log.debug(query);
+      sails.log.info(query);
     });
 
   } else if (sails.config.environment == 'production') {
