@@ -2,6 +2,9 @@
   "name": "hylo-node",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": "0.10.35"
+  },
   "description": "a Sails application",
   "keywords": [],
   "devDependencies": {
