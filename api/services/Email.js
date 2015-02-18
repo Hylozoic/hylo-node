@@ -12,7 +12,7 @@ var defaultOptions = {
 
 module.exports = {
   sendInvitation: function(email, data) {
-    return sendEmail(_.merge(defaultOptions, {
+    return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_ZXZuvouDYKKhCrdEWYbEp9',
       recipient: {address: email},
       email_data: data,
@@ -21,7 +21,7 @@ module.exports = {
   },
 
   sendNewCommentNotification: function(opts) {
-    return sendEmail(_.merge(defaultOptions, {
+    return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_tP6JzrYzvvDXhgTNmtkxuW',
       recipient: {address: opts.email},
       email_data: opts.data,
@@ -31,7 +31,7 @@ module.exports = {
   },
 
   sendSeedMentionNotification: function(opts) {
-    return sendEmail(_.merge(defaultOptions, {
+    return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_wXiqtyNzAr8EF4fqBna5WQ',
       recipient: {address: opts.email},
       email_data: opts.data,
@@ -40,7 +40,7 @@ module.exports = {
   },
 
   sendCommunityDigest: function(opts) {
-    return sendEmail(_.merge(defaultOptions, {
+    return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_rkZiuPHBvLDFrZ6rv8VixH',
       recipient: {address: opts.email},
       email_data: opts.data
