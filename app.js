@@ -24,6 +24,9 @@ if (process.env.NEW_RELIC_LICENSE_KEY) {
   require('newrelic');
 }
 
+var _ = require('lodash');
+require('colors');
+
 // Ensure we're in the project directory, so relative paths work as expected
 // no matter where we actually lift from.
 process.chdir(__dirname);
@@ -61,7 +64,12 @@ process.chdir(__dirname);
 
 
   // Start server
-  sails.lift(rc('sails'));
+  sails.log.info('Lifting...'.yellow);
+  sails.lift(_.merge(rc('sails'), {
+    log: {noShip: true}
+  }), function(err) {
+    sails.log.info('Aloft.'.blue);
+  });
 
   module.exports = sails;
 })();
