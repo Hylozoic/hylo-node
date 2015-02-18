@@ -35,7 +35,7 @@ skiff.lift({
       sails.log.debug('running ' + argv.interval + ' job');
       intervals[argv.interval]();
     } catch(err) {
-      sails.log.error(label + err.message.red);
+      sails.log.error(err.message.red);
       rollbar.handleError(err);
     }
 
