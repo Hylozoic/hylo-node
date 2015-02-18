@@ -1,5 +1,6 @@
 
 var skiff = require('./lib/skiff'), // this must be required first
+  moment = require('moment-timezone'),
   rollbar = skiff.rollbar,
   sails = skiff.sails,
   Digest = require('./lib/community/digest');
