@@ -7,6 +7,7 @@ var cache = LRU(10);
 
 var appPathPrefixes = [
   /^\/c\//,
+  /^\/h\//,
   /^\/u\//,
   /^\/settings/,
   /^\/edit-profile/,
