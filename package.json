@@ -68,7 +68,9 @@
     "cron": "node cron.js",
     "debug": "node-debug app.js",
     "test": "./node_modules/.bin/mocha test/**/*.js",
-    "worker": "node worker.js"
+    "worker": "node worker.js",
+    "migrate": "./node_modules/.bin/knex migrate:latest",
+    "rollback": "./node_modules/.bin/knex migrate:rollback"
   },
   "main": "app.js",
   "repository": {
