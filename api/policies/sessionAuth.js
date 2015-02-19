@@ -17,6 +17,13 @@
 //
 var sessionDataVersion = '2';
 
+var fail = function(res) {
+  // sending Unauthorized instead of Forbidden so that this triggers
+  // http-auth-interceptor in the Angular app
+  res.status(401);
+  res.send('Unauthorized');
+};
+
 module.exports = function(req, res, next) {
 
   if (req.session.authenticated && req.session.version == sessionDataVersion) {
@@ -36,14 +43,12 @@ module.exports = function(req, res, next) {
           next();
         } else {
           sails.log.debug("policy: sessionAuth: fail (valid session but no user!?)");
-          res.forbidden();
+          fail(res);
         }
       });
     } else {
-      // User is not allowed
-      // (default res.forbidden() behavior can be overridden in `config/403.js`)
       sails.log.debug("policy: sessionAuth: fail");
-      res.forbidden();
+      fail(res);
     }
   }
 };
