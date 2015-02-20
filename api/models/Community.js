@@ -20,7 +20,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   posts: function() {
-    return this.belongsToMany(Post, 'post_community', 'community_id', 'post_id');
+    return this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
+      .query({where: {'post.active': true}});
   },
 
   moderators: function() {
@@ -39,9 +40,10 @@ module.exports = bookshelf.Model.extend({
     return Comment.query(function(qb) {
       qb.where({
         'post_community.community_id': communityId,
+        'comment.active': true
       }).leftJoin('post_community', function() {
         this.on('post_community.post_id', '=', 'comment.post_id');
-      })
+      });
     });
   }
 
