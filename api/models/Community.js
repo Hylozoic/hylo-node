@@ -6,7 +6,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   users: function() {
-    return this.belongsToMany(User, 'users_community', 'community_id', 'users_id');
+    return this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+      .query({where: {'users_community.active': true}});
+  },
+
+  inactiveUsers: function() {
+    return this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+      .query({where: {'users_community.active': false}});
   },
 
   invitations: function() {
