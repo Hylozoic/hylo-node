@@ -91,8 +91,6 @@ module.exports = {
   },
 
   createFromEmail: function(req, res) {
-    return res.serverError('feature temporarily disabled');
-
     try {
       var replyData = Email.decodeSeedReplyAddress(req.param('To'));
     } catch(e) {
