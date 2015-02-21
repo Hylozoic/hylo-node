@@ -117,6 +117,7 @@ module.exports = bookshelf.Model.extend({
       withRelated: [
         'memberships',
         'memberships.community',
+        'memberships.community.leader',
         'skills',
         'organizations',
         'linkedAccounts',

@@ -30,6 +30,10 @@ module.exports = bookshelf.Model.extend({
       .query({where: {role: Membership.MODERATOR_ROLE}});
   },
 
+  leader: function() {
+    return this.belongsTo(User, 'leader_id');
+  },
+
   comments: function() {
     // FIXME get this to use the model relation API
     // instead of the Collection API so that the use
