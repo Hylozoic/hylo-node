@@ -54,7 +54,7 @@ module.exports = {
 
   decodeSeedReplyAddress: function(address) {
     var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT)),
-      match = address.match(/reply-(.*)@/),
+      match = address.match(/reply-(.*?)@/),
       plaintext = PlayCrypto.decrypt(match[1]).replace(salt, ''),
       ids = plaintext.split('|');
 
