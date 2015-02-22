@@ -34,4 +34,12 @@ describe('Email', function() {
 
   });
 
+  describe('.decodeSeedReplyAddress', function() {
+    it('works with human-readable formats', function() {
+      var address = '"reply-7152e5d64e5fd9e75e6108c1e9356ef418b81bb1a3f77f32cbf42b11c7d50e0e@mg.hylo.com" <reply-7152e5d64e5fd9e75e6108c1e9356ef418b81bb1a3f77f32cbf42b11c7d50e0e@mg.hylo.com>';
+
+      expect(Email.decodeSeedReplyAddress(address)).to.deep.equal({seedId: '7823', userId: '5942'});
+    })
+  })
+
 });
