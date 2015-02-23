@@ -48,6 +48,7 @@ TestSetup.prototype.initDb = function(done) {
       table.increments();
       table.string('name');
       table.string('email');
+      table.boolean('active');
     }),
     knex.schema.createTable('post', function(table) {
       table.increments();

@@ -6,6 +6,10 @@ describe('Invitation', function() {
     setup.initDb(done);
   });
 
+  after(function(done) {
+    setup.clearDb(done);
+  });
+
   describe("#create", function() {
 
     it('generates a valid uuid', function(done) {
