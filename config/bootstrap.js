@@ -71,6 +71,9 @@ module.exports.bootstrap = function(done) {
     });
   }
 
+  // because we use this all the time
+  global.Promise = require('bluebird');
+
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
   done();
