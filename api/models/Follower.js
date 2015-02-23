@@ -1,5 +1,3 @@
-var Promise = require('bluebird');
-
 module.exports = bookshelf.Model.extend({
   tableName: 'follower',
 

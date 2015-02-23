@@ -1,5 +1,4 @@
 var setup = require(require('root-path')('test/setup')),
-  Promise = require("bluebird"),
   UserController = requireFromRoot('api/controllers/UserController');
 
 describe('UserController', function() {

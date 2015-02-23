@@ -1,6 +1,5 @@
 var cookie = require('cookie'),
   crypto = require('crypto'),
-  Promise = require('bluebird'),
   qs = require('querystring'),
   _ = require('lodash');
 

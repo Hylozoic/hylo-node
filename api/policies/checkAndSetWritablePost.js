@@ -1,5 +1,4 @@
-var format = require('util').format,
-  Promise = require('bluebird');
+var format = require('util').format;
 
 module.exports = function checkAndSetWritablePost(req, res, next) {
 

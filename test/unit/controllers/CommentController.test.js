@@ -1,6 +1,5 @@
 var setup = require(require('root-path')('test/setup')),
   format = require('util').format,
-  Promise = require("bluebird"),
   CommentController = requireFromRoot('api/controllers/CommentController');
 
 describe('CommentController', function() {

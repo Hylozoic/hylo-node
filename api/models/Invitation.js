@@ -1,5 +1,4 @@
-var Promise = require('bluebird'),
-  util = require('util'),
+var util = require('util'),
   uuid = require('node-uuid');
 
 module.exports = bookshelf.Model.extend({

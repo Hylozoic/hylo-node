@@ -1,5 +1,4 @@
-var Promise = require('bluebird'),
-  ListModel = require('./abstract/ListModel');
+var ListModel = require('./abstract/ListModel');
 
 module.exports = bookshelf.Model.extend({
   tableName: 'users_skill',

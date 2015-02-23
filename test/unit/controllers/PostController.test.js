@@ -1,5 +1,4 @@
 var setup = require(require('root-path')('test/setup')),
-  Promise = require("bluebird"),
   PostController = requireFromRoot('api/controllers/PostController');
 
 describe('PostController', function() {
