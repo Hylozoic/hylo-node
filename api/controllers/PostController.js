@@ -1,5 +1,3 @@
-var Promise = require('bluebird');
-
 var postRelations = [
   {"creator": function(qb) {
     qb.column("id", "name", "avatar_url");

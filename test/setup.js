@@ -1,14 +1,14 @@
 var async = require('async'),
   fs = require('fs'),
   path = require('path'),
-  root = require('root-path'),
-  Promise = require('bluebird');
+  root = require('root-path');
 
 process.env.NODE_ENV = 'test';
 require('dotenv').load(); // loads ".env.test"
 
-global.expect = require('chai').expect;
-global._      = require('lodash');
+global.expect  = require('chai').expect;
+global._       = require('lodash');
+global.Promise = require('bluebird');
 
 require('mock-kue');
 

@@ -5,8 +5,7 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var Promise = require('bluebird'),
-  validator = require('validator');
+var validator = require('validator');
 
 module.exports = {
 

@@ -1,5 +1,4 @@
-var setup = require(require('root-path')('test/setup')),
-  Promise = require('bluebird');
+var setup = require(require('root-path')('test/setup'));
 
 describe('Skill', function() {
 

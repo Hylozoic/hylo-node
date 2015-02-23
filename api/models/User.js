@@ -1,5 +1,4 @@
-var format = require('util').format,
-  Promise = require('bluebird');
+var format = require('util').format;
 
 var extraUserAttributes = function(user) {
   return Promise.props({

@@ -1,5 +1,3 @@
-var Promise = require('bluebird');
-
 var commentAttributes = function(comment, isThanked) {
   return {
     "id": Number(comment.get("id")),

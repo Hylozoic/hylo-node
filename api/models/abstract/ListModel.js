@@ -1,8 +1,6 @@
 
 // shared code for the Skill and Organization models
 
-var Promise = require('bluebird');
-
 var simpleListFn = function(columnName) {
   return function(collection) {
     return _.map(collection.models, function(model) {
