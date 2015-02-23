@@ -1,5 +1,5 @@
-require(require('root-path')('test/setup'));
-var PlaySession = requireFromRoot('api/services/PlaySession');
+var setup = require(require('root-path')('test/setup')),
+  PlaySession = requireFromRoot('api/services/PlaySession');
 
 var request = {
   headers: {
@@ -34,6 +34,37 @@ describe('PlaySession', function() {
         'pa.p.id': 'password',
         'pa.u.id': 'l@lw.io'
       });
+    });
+  });
+
+  describe('#fetchUser', function() {
+
+    var email = 'FoO@baR.com';
+
+    before(function(done) {
+      setup.initDb(function() {
+        new User({email: email, active: true}).save().then(function() {
+          done();
+        });
+      });
+    });
+
+    after(function(done) {
+      setup.clearDb(done);
+    });
+
+    it('is case-insensitive with emails', function(done) {
+      var session = new PlaySession({});
+      _.extend(session, {
+        providerKey: function() { return 'password' },
+        providerId: function() { return 'fOo@bAr.com' }
+      });
+
+      session.fetchUser().then(function(user) {
+        expect(user).not.to.be.null;
+        expect(user.get('email')).to.equal(email);
+        done();
+      }).catch(done);
     });
   });
 

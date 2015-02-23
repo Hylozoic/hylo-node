@@ -30,14 +30,16 @@ _.extend(PlaySession.prototype, {
   isExpired: function() {
     return this.data['pa.u.exp'] < new Date().getTime();
   },
-  fetchUser: function(callback) {
+  fetchUser: function() {
     var providerKey = this.providerKey(), providerId = this.providerId();
 
     if (!providerKey || !providerId)
       return Promise.resolve(null);
 
     if (providerKey == 'password') {
-      return User.where({email: providerId, active: true}).fetch();
+      return User.query(function(qb) {
+        qb.whereRaw('lower(email) = lower(?) and active = ?', [providerId.toLowerCase(), true]);
+      }).fetch();
     }
 
     return LinkedAccount.query(function(qb) {
