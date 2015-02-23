@@ -27,6 +27,7 @@ module.exports.bootstrap = function(done) {
       var args = (_.clone(data.bindings) || []).map(function(s) {
         if (s === null) return 'null'.blue;
         if (s === undefined) return 'undefined'.red;
+        if (typeof(s) === 'object') return JSON.stringify(s).blue;
         return s.toString().blue;
       });
       args.unshift(data.sql.replace(/\?/g, '%s'));
