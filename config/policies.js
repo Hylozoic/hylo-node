@@ -52,6 +52,10 @@ module.exports.policies = {
     thanks: ['sessionAuth', 'inSameCommunity']
   },
 
+  OnboardingController: {
+    update: ['sessionAuth', 'isSelf']
+  },
+
   CommunityController: {
     findDefault: ['sessionAuth'],
     findOne: ['sessionAuth', 'checkAndSetMembership'],
