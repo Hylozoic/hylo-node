@@ -119,8 +119,12 @@ module.exports = {
   },
 
   findMembers: function(req, res) {
+    if (TokenAuth.isAuthenticated(res)) {
+      if (!RequestValidation.requireTimeRange(req, res)) return;
+    }
+
     var options = _.defaults(
-      _.pick(req.allParams(), 'search', 'limit', 'offset'),
+      _.pick(req.allParams(), 'search', 'limit', 'offset', 'start_time', 'end_time'),
       {limit: 1000}
     );
 

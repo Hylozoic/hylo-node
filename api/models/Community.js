@@ -75,6 +75,11 @@ module.exports = bookshelf.Model.extend({
 
         qb.limit(options.limit);
         qb.offset(options.offset);
+
+        if (options.start_time && options.end_time) {
+          qb.whereRaw('users.date_created between ? and ?', [options.start_time, options.end_time]);
+        }
+
       }).fetch(_.pick(options, 'withRelated'));
     })
   }
