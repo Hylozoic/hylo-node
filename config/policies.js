@@ -58,20 +58,20 @@ module.exports.policies = {
 
   CommunityController: {
     findDefault: ['sessionAuth'],
-    findOne: ['sessionAuth', 'checkAndSetMembership'],
+    findOne: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     update: ['sessionAuth', 'isModerator'],
     invite: ['sessionAuth', 'isModerator'],
     findModerators: ['sessionAuth', 'isModerator'],
     addModerator: ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
-    findMembers: ['sessionAuth', 'checkAndSetMembership'],
+    findMembers: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     removeMember: ['sessionAuth', 'checkAndSetMembership']
   },
 
   PostController: {
     findOne: ['sessionAuth', 'checkAndSetPost'],
     findForUser: ['sessionAuth', 'inSameCommunity'],
-    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
+    findForCommunity: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     create: ['sessionAuth', 'checkAndSetMembership'],
     update: ['sessionAuth', 'checkAndSetWritablePost'],
     addFollowers: ['sessionAuth', 'checkAndSetPost']
