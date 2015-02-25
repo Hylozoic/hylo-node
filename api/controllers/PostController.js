@@ -86,7 +86,7 @@ var textSearch = function(qb, term) {
 };
 
 var findPosts = function(req, res, opts) {
-  var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q']),
+  var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q', 'start_time', 'end_time']),
     sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
 
   opts.findParent.then(function(parent) {
@@ -110,6 +110,12 @@ var findPosts = function(req, res, opts) {
       qb.orderBy(sortCol, 'desc');
       qb.limit(params.limit);
       qb.offset(params.start);
+
+      if (params.start_time && params.end_time) {
+        qb.whereRaw('(post.creation_date between ? and ?) or (post.last_updated between ? and ?)',
+          [params.start_time, params.end_time, params.start_time, params.end_time]);
+      }
+
     }).fetch({
       withRelated: postRelations
     });
@@ -156,6 +162,10 @@ module.exports = {
   },
 
   findForCommunity: function(req, res) {
+    if (TokenAuth.isAuthenticated(res)) {
+      if (!RequestValidation.requireTimeRange(req, res)) return;
+    }
+
     findPosts(req, res, {findParent: Community.find(req.param('communityId'))});
   },
 
