@@ -1,6 +1,9 @@
 module.exports = function checkAndSetMembership(req, res, next) {
-  // TODO figure out how to set res.locals.membership for admins
-  if (Admin.isSignedIn(req)) return next();
+  if (Admin.isSignedIn(req))
+    return next();
+
+  if (TokenAuth.isPermitted(res, req.param('communityId')))
+    return next();
 
   Membership.find(req.session.userId, req.param('communityId'))
   .then(function(membership) {

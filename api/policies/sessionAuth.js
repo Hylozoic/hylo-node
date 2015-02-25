@@ -26,8 +26,13 @@ var fail = function(res) {
 
 module.exports = function(req, res, next) {
 
-  if (req.session.authenticated && req.session.version == sessionDataVersion) {
+  if (TokenAuth.isAuthenticated(res)) {
+    sails.log.debug("policy: sessionAuth: validated by token");
     next();
+
+  } else if (req.session.authenticated && req.session.version == sessionDataVersion) {
+    next();
+
   } else {
     var playSession = new PlaySession(req);
     if (playSession.isValid()) {
