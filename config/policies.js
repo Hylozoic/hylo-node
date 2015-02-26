@@ -30,10 +30,14 @@ module.exports.policies = {
 
   StaticPageController: true,
 
-  SessionController: {
+  AdminSessionController: {
     create: true,
     oauth: true,
     destroy: true
+  },
+
+  SessionController: {
+    destroy: ['sessionAuth']
   },
 
   LinkedinController: ['sessionAuth'],
