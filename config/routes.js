@@ -43,9 +43,6 @@ module.exports.routes = {
   *                                                                          *
   ***************************************************************************/
 
-  'GET    /':                                             'StaticPageController.proxy',
-  'GET    /about':                                        'StaticPageController.proxy',
-
   'GET    /noo/user/status':                              'UserController.status',
   'GET    /noo/user/me':                                  'UserController.findSelf',
   'GET    /noo/user/:userId':                             'UserController.findOne',
@@ -72,9 +69,9 @@ module.exports.routes = {
   'POST   /noo/seed':                                     'PostController.create',
   'POST   /noo/seed/:postId':                             'PostController.update',
 
-  'GET    /admin/login':                                  'SessionController.create',
-  'GET    /admin/login/oauth':                            'SessionController.oauth',
-  'GET    /admin/logout':                                 'SessionController.destroy',
+  'GET    /admin/login':                                  'AdminSessionController.create',
+  'GET    /admin/login/oauth':                            'AdminSessionController.oauth',
+  'GET    /admin/logout':                                 'AdminSessionController.destroy',
   'GET    /admin':                                        'AdminController.index',
   'GET    /admin/test':                                   'AdminController.test',
 
@@ -82,6 +79,8 @@ module.exports.routes = {
   'GET    /noo/linkedin/provide':                         'LinkedinController.provideData',
 
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
+
+  'GET    /noo/logout':                                   'SessionController.destroy',
 
   '/*':                                                   'StaticPageController.proxy'
 
