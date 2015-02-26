@@ -136,11 +136,10 @@ module.exports = {
     .then(function(users) {
 
       res.ok(users.map(function(user) {
-        var attributes = {
-          id: Number(user.id),
-          name: user.get('name'),
-          avatar_url: user.get('avatar_url')
-        };
+        var attributes = _.merge(
+          _.pick(user.attributes, 'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
+          {id: Number(user.id)}
+        );
 
         if (options.withRelated) {
           _.each(options.withRelated, function(relation) {
