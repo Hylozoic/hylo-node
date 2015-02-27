@@ -23,6 +23,23 @@ var Onboarding = {
     .then(function(props) {
       return Tour.resetOnboarding(user.id, props);
     });
+  },
+
+  maybeStart: function(userId) {
+    if (!process.env.AUTO_ONBOARD)
+      return Promise.resolve(null);
+
+    return Tour.collection().query().where({user_id: userId, type: 'onboarding'}).count()
+    .then(function(row) {
+      return (row.count > 0 ? null : Membership.find(userId, 9));
+    })
+    .then(function(membership) {
+      if (!membership) return;
+
+      return User.find(userId).then(function(user) {
+        return Onboarding.startForUser(user);
+      });
+    });
   }
 
 };
