@@ -26,7 +26,10 @@ module.exports = {
   },
 
   findSelf: function(req, res) {
-    User.fetchForSelf(req.session.userId).then(function(attributes) {
+    Onboarding.maybeStart(req.session.userId)
+    .then(function() {
+      return User.fetchForSelf(req.session.userId);
+    }).then(function(attributes) {
       res.ok(_.extend(attributes, {provider_key: req.session.userProvider}));
     }).catch(res.serverError.bind(res));
   },
