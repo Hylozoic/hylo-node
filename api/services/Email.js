@@ -16,7 +16,11 @@ module.exports = {
       email_id: 'tem_ZXZuvouDYKKhCrdEWYbEp9',
       recipient: {address: email},
       email_data: data,
-      version_name: 'user-edited text'
+      version_name: 'user-edited text',
+      sender: {
+        name: format('%s (via Hylo)', data.inviter_name),
+        reply_to: data.inviter_email
+      }
     }));
   },
 
