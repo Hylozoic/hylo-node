@@ -39,6 +39,7 @@ module.exports = bookshelf.Model.extend({
 
       var data = _.extend(_.pick(opts, 'message', 'subject'), {
         inviter_name: invitation.relations.creator.get('name'),
+        inviter_email: invitation.relations.creator.get('email'),
         community_name: invitation.relations.community.get('name'),
         invite_link: util.format("http://%s/community/invite/%s",
           process.env.DOMAIN, invitation.get('token'))
