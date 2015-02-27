@@ -135,7 +135,7 @@ module.exports = {
   update: function(req, res) {
     var attrs = _.pick(req.allParams(), [
       'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
-      'email', 'send_email_preference', 'daily_digest'
+      'email', 'send_email_preference', 'daily_digest', 'work', 'intention', 'extra_info'
     ]);
 
     User.find(req.param('userId'))
@@ -154,18 +154,21 @@ module.exports = {
     .then(function(user) {
       user.setSanely(attrs);
 
-      var promises = [],
-        skills = req.param('skills'),
-        organizations = req.param('organizations');
+      var promises = [];
 
       if (!_.isEmpty(user.changed))
         promises.push(user.save(user.changed, {patch: true}));
 
-      if (skills)
-        promises.push(Skill.update(skills, user.id));
-
-      if (organizations)
-        promises.push(Organization.update(organizations, user.id));
+      _.each([
+        ['skills', Skill],
+        ['organizations', Organization],
+        ['phones', UserPhone],
+        ['emails', UserEmail],
+        ['websites', UserWebsite]
+      ], function(model) {
+        var param = req.param(model[0]);
+        if (param) promises.push(model[1].update(param, user.id));
+      });
 
       return Promise.all(promises);
 

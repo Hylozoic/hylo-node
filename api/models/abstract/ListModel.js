@@ -14,20 +14,20 @@ var updateFn = function(modelName, tableName, columnName) {
     // this must be looked up at runtime
     var model = global[modelName];
 
-    return model.where({users_id: userId}).fetchAll().then(function(collection) {
+    return model.where({user_id: userId}).fetchAll().then(function(collection) {
       var existing = model.simpleList(collection),
         toAdd = _.difference(skills, existing),
         toRemove = _.difference(existing, skills),
         queries = [], q;
 
       if (toRemove.length > 0) {
-        q = bookshelf.knex(tableName).where('users_id', userId).whereIn(columnName, toRemove).del();
+        q = bookshelf.knex(tableName).where('user_id', userId).whereIn(columnName, toRemove).del();
         queries.push(q);
       }
 
       if (toAdd.length > 0) {
         var values = _.map(toAdd, function(name) {
-          var ret = {users_id: userId};
+          var ret = {user_id: userId};
           ret[columnName] = name;
           return ret;
         })

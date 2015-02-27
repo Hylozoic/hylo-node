@@ -10,9 +10,9 @@ describe('Organization', function() {
       Promise.join(cat.save(), otherCat.save())
       .then(function() {
         return Promise.join(
-          new Organization({org_name: 'House of Yes', users_id: cat.id}).save(),
-          new Organization({org_name: 'Cat Club', users_id: cat.id}).save(),
-          new Organization({org_name: 'House of Yes', users_id: otherCat.id}).save()
+          new Organization({org_name: 'House of Yes', user_id: cat.id}).save(),
+          new Organization({org_name: 'Cat Club', user_id: cat.id}).save(),
+          new Organization({org_name: 'House of Yes', user_id: otherCat.id}).save()
         );
       })
       .then(done.bind(this, null))
