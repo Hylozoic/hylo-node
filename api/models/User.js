@@ -5,6 +5,9 @@ var extraUserAttributes = function(user) {
     public_email: user.encryptedEmail(),
     skills: Skill.simpleList(user.relations.skills),
     organizations: Organization.simpleList(user.relations.organizations),
+    phones: UserPhone.simpleList(user.relations.phones),
+    emails: UserEmail.simpleList(user.relations.emails),
+    websites: UserWebsite.simpleList(user.relations.websites),
     seed_count: Post.countForUser(user),
     contribution_count: Contribution.countForUser(user),
     thank_count: Thank.countForUser(user)
@@ -35,19 +38,31 @@ module.exports = bookshelf.Model.extend({
   },
 
   skills: function() {
-    return this.hasMany(Skill, 'users_id');
+    return this.hasMany(Skill);
   },
 
   organizations: function() {
-    return this.hasMany(Organization, 'users_id');
+    return this.hasMany(Organization);
+  },
+
+  phones: function() {
+    return this.hasMany(UserPhone);
+  },
+
+  emails: function() {
+    return this.hasMany(UserEmail);
+  },
+
+  websites: function() {
+    return this.hasMany(UserWebsite);
   },
 
   contributions: function() {
-    return this.hasMany(Contribution, 'user_id');
+    return this.hasMany(Contribution);
   },
 
   thanks: function() {
-    return this.hasMany(Thank, 'user_id')
+    return this.hasMany(Thank)
   },
 
   onboarding: function() {
@@ -114,13 +129,9 @@ module.exports = bookshelf.Model.extend({
   fetchForSelf: function(id) {
     return User.find(id, {
       withRelated: [
-        'memberships',
-        'memberships.community',
-        'memberships.community.leader',
-        'skills',
-        'organizations',
-        'linkedAccounts',
-        'onboarding'
+        'memberships', 'memberships.community', 'memberships.community.leader',
+        'skills', 'organizations', 'phones', 'emails', 'websites',
+        'linkedAccounts', 'onboarding'
       ]
     }).then(function(user) {
       return Promise.join(user, extraUserAttributes(user));
@@ -131,13 +142,13 @@ module.exports = bookshelf.Model.extend({
 
   fetchForOther: function(id) {
     return User.find(id, {
-      withRelated: ['skills', 'organizations']
+      withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']
     }).then(function(user) {
       return Promise.join(user, extraUserAttributes(user));
     }).spread(function(user, extraAttributes) {
       return _.chain(user.attributes)
         .pick([
-          'id', 'name', 'avatar_url', 'bio',
+          'id', 'name', 'avatar_url', 'bio', 'work', 'intention', 'extra_info',
           'twitter_name', 'linkedin_url', 'facebook_url'
         ])
         .extend(extraAttributes).value();

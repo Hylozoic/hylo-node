@@ -1,12 +1,13 @@
 var ListModel = require('./abstract/ListModel');
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'users_org',
+  tableName: 'phones',
 
   user: function() {
     return this.belongsTo(User);
   }
+
 }, {
-  simpleList: ListModel.simpleListFn('org_name'),
-  update: ListModel.updateFn('Organization', 'users_org', 'org_name')
-})
+  simpleList: ListModel.simpleListFn('value'),
+  update: ListModel.updateFn('UserPhone', 'phones', 'value')
+});

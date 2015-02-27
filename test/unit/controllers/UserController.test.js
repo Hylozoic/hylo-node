@@ -89,7 +89,8 @@ describe('UserController', function() {
             expect(Skill.simpleList(user.relations.skills)).to.eql(['standing', 'sitting']);
             done();
           });
-        }
+        },
+        serverError: function(err) { done(err); }
       };
 
       UserController.update(req, res);

@@ -10,9 +10,9 @@ describe('Skill', function() {
       Promise.join(cat.save(), otherCat.save())
       .then(function() {
         return Promise.join(
-          new Skill({skill_name: 'meowing', users_id: cat.id}).save(),
-          new Skill({skill_name: 'clawing', users_id: cat.id}).save(),
-          new Skill({skill_name: 'meowing', users_id: otherCat.id}).save()
+          new Skill({skill_name: 'meowing', user_id: cat.id}).save(),
+          new Skill({skill_name: 'clawing', user_id: cat.id}).save(),
+          new Skill({skill_name: 'meowing', user_id: otherCat.id}).save()
         );
       })
       .then(done.bind(this, null))

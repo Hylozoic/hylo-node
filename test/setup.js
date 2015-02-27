@@ -123,11 +123,11 @@ TestSetup.prototype.initDb = function(done) {
       table.datetime('created');
     }),
     knex.schema.createTable('users_skill', function(table) {
-      table.bigInteger('users_id');
+      table.bigInteger('user_id');
       table.string('skill_name');
     }),
     knex.schema.createTable('users_org', function(table) {
-      table.bigInteger('users_id');
+      table.bigInteger('user_id');
       table.string('org_name');
     }),
     knex.schema.createTable('media', function(table) {
