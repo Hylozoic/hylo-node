@@ -86,11 +86,11 @@ module.exports = bookshelf.Model.extend({
           community_name:        community.get('name'),
           commenter_name:        commenter.get('name'),
           commenter_avatar_url:  commenter.get('avatar_url'),
-          commenter_profile_url: Frontend.Route.profile(commenter),
+          commenter_profile_url: Frontend.Route.profile(commenter) + '?ctt=comment_email',
           comment_text:          text,
           seed_label:            seedLabel,
           seed_title:            seed.get('name'),
-          seed_url:              Frontend.Route.seed(seed, community),
+          seed_url:              Frontend.Route.seed(seed, community) + '?ctt=comment_email',
           unfollow_url:          Frontend.Route.unfollow(seed)
         }
       });
