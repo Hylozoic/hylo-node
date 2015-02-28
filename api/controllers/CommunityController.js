@@ -138,7 +138,10 @@ module.exports = {
       res.ok(users.map(function(user) {
         var attributes = _.merge(
           _.pick(user.attributes, 'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
-          {id: Number(user.id)}
+          {
+            id: Number(user.id),
+            public_email: user.encryptedEmail()
+          }
         );
 
         if (options.withRelated) {
