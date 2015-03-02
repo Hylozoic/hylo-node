@@ -97,6 +97,13 @@ module.exports = {
 
     Post.find(replyData.seedId)
     .then(function(seed) {
+      Analytics.track({
+        userId: replyData.userId,
+        event: 'Post: Comment: Add by Email',
+        properties: {
+          post_id: seed.id
+        }
+      });
       return createComment(replyData.userId, req.param('stripped-text'), seed);
     })
     .then(function() {
