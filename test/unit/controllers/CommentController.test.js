@@ -72,5 +72,56 @@ describe('CommentController', function() {
 
   });
 
+  describe('#createFromEmail', function() {
+    var params = {
+      'stripped-text': 'foo bar baz'
+    };
+
+    before(function() {
+      req = {
+        param: function(name) {
+          return params[name];
+        }
+      };
+      res = {};
+
+      Analytics.track = chai.spy(Analytics.track);
+    });
+
+    it('raises an error with an invalid address', function() {
+      res = {
+        serverError: chai.spy(function(err) {})
+      };
+
+      CommentController.createFromEmail(req, res);
+      expect(res.serverError).to.have.been.called;
+    });
+
+    it('creates a comment', function(done) {
+      params.To = Email.seedReplyAddress(fixtures.p1.id, fixtures.u3.id);
+
+      res = {
+        ok: chai.spy(function() {}),
+        serverError: done
+      };
+
+      CommentController.createFromEmail(req, res)
+      .then(function() {
+        expect(Analytics.track).to.have.been.called;
+        expect(res.ok).to.have.been.called;
+        return fixtures.p1.comments().fetch();
+      })
+      .then(function(comments) {
+        var comment = comments.last();
+        expect(comment.get('comment_text')).to.equal('foo bar baz');
+        expect(comment.get('post_id')).to.equal(fixtures.p1.id);
+        expect(comment.get('user_id')).to.equal(fixtures.u3.id);
+        done();
+      })
+      .catch(done);
+    });
+
+  });
+
 
 });

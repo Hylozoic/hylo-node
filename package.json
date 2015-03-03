@@ -17,6 +17,7 @@
     "async": "^0.9.0",
     "bluebird": "^2.3.11",
     "bookshelf": "^0.7.9",
+    "chai-spies": "^0.5.1",
     "cheerio": "0.18.0",
     "colors": "^1.0.3",
     "connect-redis": "1.4.5",
