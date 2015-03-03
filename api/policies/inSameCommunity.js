@@ -1,4 +1,4 @@
-module.exports = function isSelf(req, res, next) {
+module.exports = function inSameCommunity(req, res, next) {
   if (Admin.isSignedIn(req)) return next();
 
   if (req.session.userId === req.param('userId')) return next();
