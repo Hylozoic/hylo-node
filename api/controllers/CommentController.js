@@ -73,7 +73,7 @@ var createComment = function(commenterId, text, post) {
 module.exports = {
 
   create: function(req, res) {
-    createComment(req.session.userId, req.param('text'), res.locals.post)
+    return createComment(req.session.userId, req.param('text'), res.locals.post)
     .then(function(comment) {
       return comment.load([
         {user: function (qb) {
