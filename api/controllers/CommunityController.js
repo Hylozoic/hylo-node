@@ -18,7 +18,7 @@ module.exports = {
 
   findDefault: function(req, res) {
     User.find(req.session.userId).then(function(user) {
-      return user.communities().fetchOne();
+      return user.communities().query(function(qb) { qb.orderBy('id', 'desc') }).fetchOne();
     })
     .then(function(community) {
       if (!community) return res.ok({});
