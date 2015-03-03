@@ -38,12 +38,14 @@ module.exports = {
   },
 
   update: function(req, res) {
-    var whitelist = ['banner_url', 'avatar_url', 'name', 'description'],
+    var whitelist = ['banner_url', 'avatar_url', 'name', 'description', 'settings'],
       attributes = _.pick(req.allParams(), whitelist),
       community = new Community({id: req.param('communityId')});
 
     community.save(attributes, {patch: true}).then(function(community) {
       res.ok({});
+    }).catch(function(err) {
+      res.serverError(err);
     })
   },
 
