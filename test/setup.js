@@ -1,4 +1,5 @@
 var async = require('async'),
+  chai = require('chai'),
   fs = require('fs'),
   path = require('path'),
   root = require('root-path');
@@ -6,11 +7,14 @@ var async = require('async'),
 process.env.NODE_ENV = 'test';
 require('dotenv').load(); // loads ".env.test"
 
-global.expect  = require('chai').expect;
+global.chai    = chai;
+global.expect  = chai.expect;
 global._       = require('lodash');
 global.Promise = require('bluebird');
 
 require('mock-kue');
+
+chai.use(require('chai-spies'));
 
 global.requireFromRoot = function(path) {
   return require(root(path));

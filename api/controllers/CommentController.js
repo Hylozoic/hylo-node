@@ -95,7 +95,7 @@ module.exports = {
       return res.serverError(new Error('Invalid reply address: ' + req.param('To')));
     }
 
-    Post.find(replyData.seedId)
+    return Post.find(replyData.seedId)
     .then(function(seed) {
       Analytics.track({
         userId: replyData.userId,
