@@ -82,6 +82,13 @@ module.exports = bookshelf.Model.extend({
 
       }).fetch(_.pick(options, 'withRelated'));
     })
+  },
+
+  canInvite: function(userId, communityId) {
+    return Community.find(communityId).then(function(community) {
+      if (community.get('settings').all_can_invite) return true;
+      return Membership.hasModeratorRole(userId, communityId);
+    });
   }
 
 });

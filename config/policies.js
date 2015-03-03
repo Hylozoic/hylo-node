@@ -64,7 +64,7 @@ module.exports.policies = {
     findDefault: ['sessionAuth'],
     findOne: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     update: ['sessionAuth', 'isModerator'],
-    invite: ['sessionAuth', 'isModerator'],
+    invite: ['sessionAuth', 'canInvite'],
     findModerators: ['sessionAuth', 'isModerator'],
     addModerator: ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
