@@ -211,10 +211,16 @@ module.exports = {
           role: Membership.MODERATOR_ROLE,
           transacting: trx
         });
-      })
+      });
     })
     .then(function() {
-      res.ok(communityAttributes(community));
+      return Membership.where({
+        users_id: req.session.userId,
+        community_id: community.id
+      }).fetch({withRelated: ['community']});
+    })
+    .then(function(membership) {
+      res.ok(membership);
     })
     .catch(res.serverError.bind(res));
   }
