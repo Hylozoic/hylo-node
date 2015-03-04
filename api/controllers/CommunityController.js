@@ -179,10 +179,10 @@ module.exports = {
     if (params.constraint === 'unique') {
       // this whitelist prevents SQL injection
       if (!_.contains(allowedColumns, params.column))
-        return res.serverError(format('invalid value "%s" for parameter "column"', params.column));
+        return res.badRequest(format('invalid value "%s" for parameter "column"', params.column));
 
       if (!params.value)
-        return res.serverError('missing required parameter "value"');
+        return res.badRequest('missing required parameter "value"');
 
       var statement = format('lower(%s) = lower(?)', params.column);
 
@@ -193,7 +193,7 @@ module.exports = {
       .catch(res.serverError.bind(res));
 
     } else {
-      res.serverError('unrecognized constraint: ' + params.constraint);
+      res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint));
     }
   }
 
