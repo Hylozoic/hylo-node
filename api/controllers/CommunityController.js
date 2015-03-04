@@ -217,6 +217,10 @@ module.exports = {
       });
     })
     .then(function() {
+      // FIXME this additional lookup wouldn't be necessary
+      // if we had a Membership instance from the previous
+      // step. But the absence of an id column on the table
+      // doesn't play nice with Bookshelf.
       return Membership.where({
         users_id: req.session.userId,
         community_id: community.id
