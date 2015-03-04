@@ -109,7 +109,10 @@ TestSetup.prototype.initDb = function(done) {
     knex.schema.createTable('users_community', function(table) {
       table.bigInteger('users_id');
       table.bigInteger('community_id');
+      table.boolean('active');
       table.integer('role');
+      table.datetime('date_joined');
+      table.bigInteger('fee');
     }),
     knex.schema.createTable('post_community', function(table) {
       table.bigInteger('post_id');
