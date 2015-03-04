@@ -44,6 +44,18 @@ module.exports = bookshelf.Model.extend({
     return fetch(community_id_or_slug);
   },
 
+  create: function(userId, communityId, opts) {
+    if (!opts) opts = {};
+    return bookshelf.knex('users_community').transacting(opts.transacting).insert({
+      users_id: userId,
+      community_id: communityId,
+      date_joined: new Date(),
+      fee: 0,
+      active: true,
+      role: opts.role || Membership.DEFAULT_ROLE
+    });
+  },
+
   setModeratorRole: function(user_id, community_id) {
     return bookshelf.knex('users_community').where({
       users_id: user_id,

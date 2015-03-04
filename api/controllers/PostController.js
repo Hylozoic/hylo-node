@@ -222,9 +222,7 @@ module.exports = {
     .then(function (post) {
       res.ok(postAttributes(post, false));
     })
-    .catch(function (err) {
-      res.serverError(err);
-    });
+    .catch(res.serverError.bind(res));
   },
 
   addFollowers: function(req, res) {

@@ -195,6 +195,28 @@ module.exports = {
     } else {
       res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint));
     }
+  },
+
+  create: function(req, res) {
+    var attrs = _.pick(req.allParams(),
+      'name', 'description', 'slug', 'category',
+      'beta_access_code', 'banner_url', 'avatar_url');
+
+    var community = new Community(attrs);
+
+    bookshelf.transaction(function(trx) {
+      return community.save(null, {transacting: trx})
+      .tap(function() {
+        return Membership.create(req.session.userId, community.id, {
+          role: Membership.MODERATOR_ROLE,
+          transacting: trx
+        });
+      })
+    })
+    .then(function() {
+      res.ok(communityAttributes(community));
+    })
+    .catch(res.serverError.bind(res));
   }
 
 };
