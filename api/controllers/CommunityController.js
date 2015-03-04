@@ -5,7 +5,8 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var validator = require('validator');
+var format = require('util').format,
+  validator = require('validator');
 
 var communityAttributes = function(community, membership) {
   return _.extend(community.attributes, {
@@ -169,6 +170,31 @@ module.exports = {
       res.ok({});
     })
     .catch(res.serverError.bind(res));
+  },
+
+  validate: function(req, res) {
+    var allowedColumns = ['name', 'slug', 'beta_access_code'],
+      params = _.pick(req.allParams(), 'constraint', 'column', 'value');
+
+    if (params.constraint === 'unique') {
+      // this whitelist prevents SQL injection
+      if (!_.contains(allowedColumns, params.column))
+        return res.serverError(format('invalid value "%s" for parameter "column"', params.column));
+
+      if (!params.value)
+        return res.serverError('missing required parameter "value"');
+
+      var statement = format('lower(%s) = lower(?)', params.column);
+
+      Community.query().whereRaw(statement, params.value).count()
+      .then(function(rows) {
+        res.ok({unique: parseInt(rows[0].count) == 0});
+      })
+      .catch(res.serverError.bind(res));
+
+    } else {
+      res.serverError('unrecognized constraint: ' + params.constraint);
+    }
   }
 
 };
