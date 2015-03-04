@@ -70,7 +70,8 @@ module.exports.policies = {
     removeModerator: ['sessionAuth', 'isModerator'],
     findMembers: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     removeMember: ['sessionAuth', 'checkAndSetMembership'],
-    validate: ['sessionAuth']
+    validate: ['sessionAuth'],
+    create: ['allowTokenAuth', 'sessionAuth']
   },
 
   PostController: {

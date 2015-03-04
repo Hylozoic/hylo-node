@@ -78,11 +78,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   joinCommunity: function(community) {
-    return bookshelf.knex('users_community').insert({
-      users_id: this.id,
-      community_id: (typeof community === 'object' ? community.id : community),
-      role: Membership.DEFAULT_ROLE
-    });
+    var communityId = (typeof community === 'object' ? community.id : community);
+    return Membership.create(this.id, communityId, {role: Membership.DEFAULT_ROLE});
   },
 
   // sanitize certain values before storing them

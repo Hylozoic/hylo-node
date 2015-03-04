@@ -52,6 +52,7 @@ module.exports.routes = {
   'GET    /noo/user/:userId/seeds':                       'PostController.findForUser',
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
 
+  'POST   /noo/community':                                'CommunityController.create',
   'GET    /noo/community/default':                        'CommunityController.findDefault',
   'POST   /noo/community/validate':                       'CommunityController.validate',
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
