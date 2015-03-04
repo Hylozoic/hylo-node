@@ -53,6 +53,7 @@ module.exports.routes = {
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
 
   'GET    /noo/community/default':                        'CommunityController.findDefault',
+  'POST   /noo/community/validate':                       'CommunityController.validate',
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
   'POST   /noo/community/:communityId/invite':            'CommunityController.invite',
