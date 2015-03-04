@@ -202,7 +202,10 @@ module.exports = {
       'name', 'description', 'slug', 'category',
       'beta_access_code', 'banner_url', 'avatar_url');
 
-    var community = new Community(attrs);
+    var community = new Community(_.merge(attrs, {
+      date_created: new Date(),
+      created_by_id: req.session.userId
+    }));
 
     bookshelf.transaction(function(trx) {
       return community.save(null, {transacting: trx})
