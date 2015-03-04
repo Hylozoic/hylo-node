@@ -71,7 +71,7 @@ module.exports.policies = {
     findMembers: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     removeMember: ['sessionAuth', 'checkAndSetMembership'],
     validate: ['sessionAuth'],
-    create: ['allowTokenAuth', 'sessionAuth']
+    create: ['sessionAuth']
   },
 
   PostController: {
