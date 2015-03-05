@@ -54,6 +54,9 @@ var postAttributes = function(post, hasVote) {
     contributors: contributors,
     communitySlug: post.related("communities").first().get("slug"),
     cName: post.related("communities").first().get("name"),
+    community: {
+      id: post.related("communities").first().id
+    },
     myVote: hasVote,
     comments: [], // TODO Load Comments?
     commentsLoaded: false,
