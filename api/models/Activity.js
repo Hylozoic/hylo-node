@@ -58,6 +58,12 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
+  unreadCountForUser: function(user) {
+    return Activity.query().where({reader_id: user.id, unread: true}).count().then(function(rows) {
+      return parseInt(rows[0].count);
+    });
+  },
+
   createAllForReader: function(userId, startTime, endTime) {
     // make sure userId is a string
     userId = '' + userId + '';
