@@ -71,6 +71,12 @@ module.exports.routes = {
   'POST   /noo/seed':                                     'PostController.create',
   'POST   /noo/seed/:postId':                             'PostController.update',
 
+  'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
+
+  'GET    /noo/activity':                                 'ActivityController.find',
+  'POST   /noo/activity':                                 'ActivityController.update',
+  'POST   /noo/activity/:activityId':                     'ActivityController.update',
+
   'GET    /admin/login':                                  'AdminSessionController.create',
   'GET    /admin/login/oauth':                            'AdminSessionController.oauth',
   'GET    /admin/logout':                                 'AdminSessionController.destroy',

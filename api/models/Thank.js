@@ -14,6 +14,7 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+
   didUserThank: function(commentId, userId) {
     return bookshelf.knex("thank_you").where({
       comment_id: commentId,
@@ -25,5 +26,15 @@ module.exports = bookshelf.Model.extend({
     return bookshelf.knex('thank_you').count().where({user_id: user.id}).then(function(rows) {
       return rows[0].count;
     });
+  },
+
+  create: function(comment, userId) {
+    return new Thank({
+      thanked_by_id: userId,
+      comment_id: comment.get('id'),
+      user_id: comment.get('user_id'),
+      date_thanked: new Date()
+    }).save();
   }
+
 });

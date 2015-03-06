@@ -56,6 +56,11 @@ module.exports.policies = {
     thanks: ['sessionAuth', 'inSameCommunity']
   },
 
+  ActivityController: {
+    find: ['sessionAuth'],
+    update: ['sessionAuth', 'isOwner']
+  },
+
   OnboardingController: {
     update: ['sessionAuth', 'isSelf']
   },
@@ -85,6 +90,7 @@ module.exports.policies = {
 
   CommentController: {
     create: ['sessionAuth', 'checkAndSetPost'],
+    thank: ['sessionAuth'],
     createFromEmail: true,
   }
 

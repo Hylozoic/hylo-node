@@ -112,6 +112,23 @@ module.exports = {
     .catch(function(err) {
       res.serverError(err);
     });
+  },
+
+  thank: function(req, res) {
+    Comment.find(req.param('commentId'), {withRelated: [
+      {thanks: function(qb) {
+        qb.where('thanked_by_id', req.session.userId);
+      }}
+    ]}).then(function(comment) {
+      var thank = comment.relations.thanks.first();
+      if (thank) {
+        return thank.destroy();
+      } else {
+        return Thank.create(comment, req.session.userId);
+      }
+    }).then(function() {
+      res.ok({});
+    }).catch(res.serverError.bind(res));
   }
 
 }
