@@ -138,7 +138,7 @@ module.exports = bookshelf.Model.extend({
         'linkedAccounts', 'onboarding'
       ]
     }).then(function(user) {
-      return Promise.join(user.attributes, extraUserAttributes(user), selfOnlyAttributes(user));
+      return Promise.join(user.toJSON(), extraUserAttributes(user), selfOnlyAttributes(user));
     }).then(function(attributes) {
       return _.extend.apply(_, attributes);
     });
