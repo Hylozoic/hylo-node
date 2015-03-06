@@ -13,7 +13,16 @@ module.exports = bookshelf.Model.extend({
 
   text: function() {
     return this.get('comment_text');
+  },
+
+  mentions: function() {
+    return RichText.getUserMentions(this.text());
+  },
+
+  thanks: function() {
+    return this.hasMany(Thank);
   }
+
 }, {
 
   find: function(id, options) {
