@@ -115,7 +115,7 @@ var findPosts = function(req, res, opts) {
       qb.offset(params.start);
 
       if (params.start_time && params.end_time) {
-        qb.whereRaw('(post.creation_date between ? and ?) or (post.last_updated between ? and ?)',
+        qb.whereRaw('((post.creation_date between ? and ?) or (post.last_updated between ? and ?))',
           [params.start_time, params.end_time, params.start_time, params.end_time]);
       }
 
