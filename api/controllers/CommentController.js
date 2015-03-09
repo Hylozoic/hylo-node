@@ -68,8 +68,7 @@ var createComment = function(commenterId, text, post) {
           }),
 
           // add all mentioned users and the commenter as followers, if not already following
-          post.addFollowers(_.difference(mentioned.concat(commenterId), existing), commenterId, trx)
-
+          post.addFollowers(_.difference(mentioned.concat(commenterId), existing), commenterId, {transacting: trx})
         );
       });
 
