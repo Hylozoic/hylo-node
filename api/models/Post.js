@@ -36,13 +36,30 @@ module.exports = bookshelf.Model.extend({
   },
 
   addFollowers: function(userIds, addingUserId, opts) {
-    var postId = this.id;
+    var postId = this.id, creatorId = this.get('creator_id');
     if (!opts) opts = {};
+
     return Promise.map(userIds, function(userId) {
       return Follower.create(postId, {
         followerId: userId,
         addedById: addingUserId,
         transacting: opts.transacting
+      }).tap(function(follow) {
+        if (!opts.createActivity) return;
+
+        return Promise.join(
+          // notify users they have been added as followers
+          (userId === addingUserId ?
+            null :
+            Activity.forFollowAdd(follow, userId).save({}, _.pick(opts, 'transacting'))
+          ),
+
+          // notify creator that people have joined
+          (creatorId === addingUserId ?
+            null :
+            Activity.forFollow(follow, creatorId).save({}, _.pick(opts, 'transacting'))
+          )
+        );
       });
     });
   }
