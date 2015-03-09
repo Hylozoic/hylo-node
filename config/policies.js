@@ -85,7 +85,8 @@ module.exports.policies = {
     findForCommunity: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     create: ['sessionAuth', 'checkAndSetMembership'],
     update: ['sessionAuth', 'checkAndSetWritablePost'],
-    addFollowers: ['sessionAuth', 'checkAndSetPost']
+    addFollowers: ['sessionAuth', 'checkAndSetPost'],
+    follow: ['sessionAuth', 'checkAndSetPost']
   },
 
   CommentController: {
