@@ -206,7 +206,10 @@ module.exports = {
 
             // send a mention notification to all mentioned users except the creator
             Promise.map(_.without(mentioned, creatorId), function(userId) {
-              return Post.queueNotificationEmail(userId, post.id);
+              return Queue.addJob('Post.sendNotificationEmail', {
+                recipientId: userId,
+                seedId: post.id
+              });
             }),
 
             // Add image, if any

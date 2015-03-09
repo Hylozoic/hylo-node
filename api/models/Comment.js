@@ -42,23 +42,6 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  // TODO this method and the similar one in Post should be extracted into a general method
-  // for queueing class methods
-  queueNotificationEmail: function(recipientId, commentId, version) {
-    var queue = require('kue').createQueue();
-
-    var job = queue.create('Comment.sendNotificationEmail', {
-      recipientId: recipientId,
-      commentId: commentId,
-      version: version
-    })
-    .delay(5000) // because the job is queued while an object it depends upon hasn't been saved yet
-    .attempts(3)
-    .backoff({delay: 5000, type: 'exponential'});
-
-    return Promise.promisify(job.save, job)();
-  },
-
   sendNotificationEmail: function(recipientId, commentId, version) {
     // the version argument corresponds to names of versions in SendWithUs
 

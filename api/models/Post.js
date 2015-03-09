@@ -77,20 +77,6 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  queueNotificationEmail: function(recipientId, seedId) {
-    var queue = require('kue').createQueue();
-
-    var job = queue.create('Post.sendNotificationEmail', {
-      recipientId: recipientId,
-      seedId: seedId
-    })
-    .delay(5000) // because the job is queued while an object it depends upon hasn't been saved yet
-    .attempts(3)
-    .backoff({delay: 5000, type: 'exponential'});
-
-    return Promise.promisify(job.save, job)();
-  },
-
   sendNotificationEmail: function(recipientId, seedId) {
 
     return Promise.join(

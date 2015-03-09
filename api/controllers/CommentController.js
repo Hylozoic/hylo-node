@@ -51,12 +51,20 @@ var createComment = function(commenterId, text, post) {
         return Promise.join(
           // send a mention notification to all mentioned users
           Promise.map(mentioned, function(userId) {
-            return Comment.queueNotificationEmail(userId, comment.id, 'mention');
+            return Queue.addJob('Comment.sendNotificationEmail', {
+              recipientId: userId,
+              commentId: comment.id,
+              version: 'mention'
+            });
           }),
 
           // send a comment notification to all followers except the commenter and mentioned users
           Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
-            return Comment.queueNotificationEmail(userId, comment.id, 'default');
+            return Queue.addJob('Comment.sendNotificationEmail', {
+              recipientId: userId,
+              commentId: comment.id,
+              version: 'default'
+            });
           }),
 
           // add all mentioned users and the commenter as followers, if not already following
