@@ -31,12 +31,13 @@ module.exports = bookshelf.Model.extend({
     return this.where({id: id}).fetch();
   },
 
-  forComment: function(comment, userId) {
-    var action;
-    if (_.contains(comment.mentions(), parseInt(userId)))
-      action = this.Action.Mention;
-    else
-      action = this.Action.Comment;
+  forComment: function(comment, userId, action) {
+    if (!action) {
+      if (_.contains(comment.mentions(), parseInt(userId)))
+        action = this.Action.Mention;
+      else
+        action = this.Action.Comment;
+    }
 
     return new Activity({
       reader_id: userId,
