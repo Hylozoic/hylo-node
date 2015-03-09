@@ -69,6 +69,16 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
+  forFollow: function(follow, userId) {
+    return new Activity({
+      reader_id: userId,
+      actor_id: follow.get('user_id'),
+      post_id: follow.get('post_id'),
+      action: this.Action.Follow,
+      created_at: follow.get('date_added')
+    });
+  },
+
   unreadCountForUser: function(user) {
     return Activity.query().where({reader_id: user.id, unread: true}).count().then(function(rows) {
       return parseInt(rows[0].count);

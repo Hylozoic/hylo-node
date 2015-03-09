@@ -239,14 +239,17 @@ module.exports = {
       var added = req.param('userIds').map(function(x) { return parseInt(x) }),
         existing = post.relations.followers.map(function(f) { return f.attributes.user_id });
 
-      return post.addFollowers(_.difference(added, existing), req.session.userId);
+      return bookshelf.transaction(function(trx) {
+        return post.addFollowers(_.difference(added, existing), req.session.userId, {
+          transacting: trx,
+          createActivity: true
+        });
+      });
     })
     .then(function() {
       res.ok({});
     })
-    .catch(function(err) {
-      res.serverError(err);
-    })
+    .catch(res.serverError.bind(res));
   },
 
   update: function(req, res) {
