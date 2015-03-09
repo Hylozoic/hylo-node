@@ -49,6 +49,16 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
+  forSeed: function(seed, userId) {
+    return new Activity({
+      reader_id: userId,
+      actor_id: seed.get('creator_id'),
+      post_id: seed.id,
+      action: this.Action.Mention,
+      created_at: seed.get('creation_date')
+    })
+  },
+
   forFollowAdd: function(follow, userId) {
     return new Activity({
       reader_id: userId,
