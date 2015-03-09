@@ -49,22 +49,29 @@ var createComment = function(commenterId, text, post) {
       }).spread(function(existing, mentioned) {
 
         return Promise.join(
-          // send a mention notification to all mentioned users
+          // create activity and send mention notification to all mentioned users
           Promise.map(mentioned, function(userId) {
-            return Queue.addJob('Comment.sendNotificationEmail', {
-              recipientId: userId,
-              commentId: comment.id,
-              version: 'mention'
-            });
+            return Promise.join(
+              Queue.addJob('Comment.sendNotificationEmail', {
+                recipientId: userId,
+                commentId: comment.id,
+                version: 'mention'
+              }),
+              Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx})
+            );
           }),
 
-          // send a comment notification to all followers except the commenter and mentioned users
+          // create activity and send comment notification to all followers,
+          // except the commenter and mentioned users
           Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
-            return Queue.addJob('Comment.sendNotificationEmail', {
-              recipientId: userId,
-              commentId: comment.id,
-              version: 'default'
-            });
+            return Promise.join(
+                Queue.addJob('Comment.sendNotificationEmail', {
+                recipientId: userId,
+                commentId: comment.id,
+                version: 'default'
+              }),
+              Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx})
+            );
           }),
 
           // add all mentioned users and the commenter as followers, if not already following
