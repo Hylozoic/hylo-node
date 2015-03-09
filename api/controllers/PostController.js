@@ -21,19 +21,11 @@ var postRelations = [
 var postAttributes = function(post, hasVote) {
 
   var followers = post.related("followers").map(function(follower) {
-    return {
-      value: Number(follower.related("user").get("id")),
-      name: follower.related("user").get("name"),
-      avatar: follower.related("user").get("avatar_url")
-    }
+    return _.pick(follower.relations.user.attributes, 'id', 'name', 'avatar_url');
   });
 
   var contributors = post.related("contributors").map(function(contributor) {
-    return {
-      id: Number(contributor.related("user").get("id")),
-      name: contributor.related("user").get("name"),
-      avatar: contributor.related("user").get("avatar_url")
-    };
+    return _.pick(contributor.relations.user.attributes, 'id', 'name', 'avatar_url');
   });
 
   var standardAttributes = _.pick(post.toJSON(), [
@@ -248,6 +240,24 @@ module.exports = {
     })
     .then(function() {
       res.ok({});
+    })
+    .catch(res.serverError.bind(res));
+  },
+
+  follow: function(req, res) {
+    var userId = req.session.userId, post = res.locals.post;
+    Follower.query().where({user_id: userId, post_id: post.id}).count()
+    .then(function(rows) {
+      if (parseInt(rows[0].count) > 0)
+        return post.removeFollower(userId, {createActivity: true}).then(function() {
+          res.ok({});
+        });
+
+      return post.addFollowers([userId], userId, {createActivity: true}).then(function(follows) {
+        return User.find(req.session.userId);
+      }).then(function(user) {
+        res.ok(_.pick(user.attributes, 'id', 'name', 'avatar_url'));
+      });
     })
     .catch(res.serverError.bind(res));
   },

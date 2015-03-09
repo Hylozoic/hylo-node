@@ -62,6 +62,15 @@ module.exports = bookshelf.Model.extend({
         );
       });
     });
+  },
+
+  removeFollower: function(userId, opts) {
+    var self = this;
+    return Follower.where({user_id: userId, post_id: this.id}).destroy()
+    .tap(function() {
+      if (!opts.createActivity) return;
+      return Activity.forUnfollow(self, userId).save();
+    });
   }
 
 }, {
