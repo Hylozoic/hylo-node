@@ -16,7 +16,7 @@ module.exports = {
         qb.where('thanked_by_id', req.session.userId);
       }},
       {post: function(qb) {
-        qb.column('id', 'name', 'creator_id', 'type');
+        qb.column('id', 'name', 'creator_id', 'type', 'description');
       }},
       {'post.communities': function(qb) {
         qb.column('id', 'slug');

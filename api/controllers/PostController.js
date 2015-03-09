@@ -204,12 +204,15 @@ module.exports = {
             // Add mentioned users and creator as followers
             post.addFollowers(followerIds, creatorId, {transacting: trx}),
 
-            // send a mention notification to all mentioned users except the creator
+            // create activity and send notification to all mentioned users except the creator
             Promise.map(_.without(mentioned, creatorId), function(userId) {
-              return Queue.addJob('Post.sendNotificationEmail', {
-                recipientId: userId,
-                seedId: post.id
-              });
+              return Promise.join(
+                Queue.addJob('Post.sendNotificationEmail', {
+                  recipientId: userId,
+                  seedId: post.id
+                }),
+                Activity.forSeed(post, userId).save({}, {transacting: trx})
+              );
             }),
 
             // Add image, if any
