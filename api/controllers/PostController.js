@@ -202,7 +202,7 @@ module.exports = {
             new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx}),
 
             // Add mentioned users and creator as followers
-            post.addFollowers(followerIds, creatorId, trx),
+            post.addFollowers(followerIds, creatorId, {transacting: trx}),
 
             // send a mention notification to all mentioned users except the creator
             Promise.map(_.without(mentioned, creatorId), function(userId) {

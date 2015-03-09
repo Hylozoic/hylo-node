@@ -35,13 +35,14 @@ module.exports = bookshelf.Model.extend({
     return this.votes().query({where: {user_id: userId}}).fetchOne();
   },
 
-  addFollowers: function(userIds, addingUserId, transaction) {
+  addFollowers: function(userIds, addingUserId, opts) {
     var postId = this.id;
+    if (!opts) opts = {};
     return Promise.map(userIds, function(userId) {
       return Follower.create(postId, {
         followerId: userId,
         addedById: addingUserId,
-        transacting: transaction
+        transacting: opts.transacting
       });
     });
   }
