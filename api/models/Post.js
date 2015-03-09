@@ -73,6 +73,7 @@ module.exports = bookshelf.Model.extend({
     }
     return collection.query(function(qb) {
       qb.whereRaw('post.creation_date between ? and ?', [startTime, endTime]);
+      qb.where('active', true);
     })
   },
 
