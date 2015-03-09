@@ -127,6 +127,7 @@ module.exports = bookshelf.Model.extend({
     }
     return collection.query(function(qb) {
       qb.whereRaw('users.date_created between ? and ?', [startTime, endTime]);
+      qb.where('active', true);
     });
   },
 

@@ -38,6 +38,7 @@ module.exports = bookshelf.Model.extend({
 
     return collection.query(function(qb) {
       qb.whereRaw('comment.date_commented between ? and ?', [startTime, endTime]);
+      qb.where('active', true);
     })
   },
 
