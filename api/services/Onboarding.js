@@ -26,9 +26,6 @@ var Onboarding = {
   },
 
   maybeStart: function(userId) {
-    if (!process.env.AUTO_ONBOARD)
-      return Promise.resolve(null);
-
     return Tour.collection().query().where({user_id: userId, type: 'onboarding'}).count()
     .then(function(row) {
       return (row.count > 0 ? null : Membership.find(userId, 842));
