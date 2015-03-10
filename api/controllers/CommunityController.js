@@ -207,6 +207,14 @@ module.exports = {
       created_by_id: req.session.userId
     }));
 
+    if (process.env.NODE_ENV) {
+      community.set('leader_id', 21);
+      community.set('welcome_message', "Thank you for joining us here at Hylo. " +
+        "Through our communities, we can find everything we need. If we share " +
+        "with each other the unique gifts and intentions we each have, we can " +
+        "create extraordinary things. Let's get started!");
+    }
+
     bookshelf.transaction(function(trx) {
       return community.save(null, {transacting: trx})
       .tap(function() {
