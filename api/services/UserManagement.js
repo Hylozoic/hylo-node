@@ -20,12 +20,11 @@ var userFieldsToCopy = [
 
 // knex is passed as an argument here because it can be a transaction object
 // see http://knexjs.org/#Transactions
-var generateQueries = function(primaryUserId, secondaryUserId, knex) {
+var generateMergeQueries = function(primaryUserId, secondaryUserId, knex) {
 
   var ps = [primaryUserId, secondaryUserId],
       psp = [primaryUserId, secondaryUserId, primaryUserId],
-      updates = [],
-      deletes = [];
+      updates = [];
 
   // simple updates
   [
@@ -65,10 +64,17 @@ var generateQueries = function(primaryUserId, secondaryUserId, knex) {
       table, userCol, userCol, uniqueCol, uniqueCol, table, userCol), psp));
   });
 
+  return {updates: updates, deletes: generateDeleteQueries(secondaryUserId, knex)};
+};
+
+var generateDeleteQueries = function(userId, knex) {
+
+  var deletes = [];
+
   // cascading deletes
   deletes.push(knex.raw('delete from notification_status where notification_id in ' +
-    '(select id from notification where vote_id in (select id from vote where user_id = ?))', secondaryUserId));
-  deletes.push(knex.raw('delete from notification where vote_id in (select id from vote where user_id = ?)', secondaryUserId));
+    '(select id from notification where vote_id in (select id from vote where user_id = ?))', userId));
+  deletes.push(knex.raw('delete from notification where vote_id in (select id from vote where user_id = ?)', userId));
 
   // deletes
   [
@@ -92,21 +98,25 @@ var generateQueries = function(primaryUserId, secondaryUserId, knex) {
     ['vote',                'user_id'],
     ['users',               'id']
   ].forEach(function(args) {
-    deletes.push(knex.raw(format('delete from %s where %s = ?', args[0], args[1]), [secondaryUserId]));
+    deletes.push(knex.raw(format('delete from %s where %s = ?', args[0], args[1]), [userId]));
   });
 
-  return {updates: updates, deletes: deletes};
-};
+  return deletes;
+}
 
 module.exports = {
 
-  generateQueries: generateQueries,
+  removeUser: function(userId) {
+    return bookshelf.knex.transaction(function(trx) {
+      return Promise.all(generateDeleteQueries(userId, trx));
+    });
+  },
 
-  perform: function(primaryUserId, secondaryUserId) {
+  mergeUsers: function(primaryUserId, secondaryUserId) {
     var queries;
 
     return bookshelf.knex.transaction(function(trx) {
-      queries = generateQueries(primaryUserId, secondaryUserId, trx);
+      queries = generateMergeQueries(primaryUserId, secondaryUserId, trx);
 
       return Promise.join(
         User.find(primaryUserId, {transacting: trx}),
