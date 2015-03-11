@@ -78,6 +78,8 @@ module.exports.routes = {
   'POST   /noo/activity':                                 'ActivityController.update',
   'POST   /noo/activity/:activityId':                     'ActivityController.update',
 
+  'GET    /noo/search':                                   'SearchController.show',
+
   'GET    /admin/login':                                  'AdminSessionController.create',
   'GET    /admin/login/oauth':                            'AdminSessionController.oauth',
   'GET    /admin/logout':                                 'AdminSessionController.destroy',
