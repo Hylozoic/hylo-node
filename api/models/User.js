@@ -10,8 +10,7 @@ var extraUserAttributes = function(user) {
     websites: UserWebsite.simpleList(user.relations.websites),
     seed_count: Post.countForUser(user),
     contribution_count: Contribution.countForUser(user),
-    thank_count: Thank.countForUser(user),
-
+    thank_count: Thank.countForUser(user)
   });
 };
 
@@ -139,6 +138,7 @@ module.exports = bookshelf.Model.extend({
         'linkedAccounts', 'onboarding'
       ]
     }).then(function(user) {
+      if (!user) throw "User not found";
       return Promise.join(user.toJSON(), extraUserAttributes(user), selfOnlyAttributes(user));
     }).then(function(attributes) {
       return _.extend.apply(_, attributes);
@@ -149,6 +149,7 @@ module.exports = bookshelf.Model.extend({
     return User.find(id, {
       withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']
     }).then(function(user) {
+      if (!user) throw "User not found";
       return Promise.join(user, extraUserAttributes(user));
     }).spread(function(user, extraAttributes) {
       return _.chain(user.attributes)
