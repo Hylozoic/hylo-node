@@ -31,6 +31,7 @@ var generateQueries = function(primaryUserId, secondaryUserId, knex) {
   [
     // table name, user id column
     ['post',             'creator_id'],
+    ['post',             'deactivated_by_id'],
     ['activity',         'actor_id'],
     ['comment',          'user_id'],
     ['comment',          'deactivated_by_id'],
