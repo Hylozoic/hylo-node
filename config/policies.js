@@ -47,6 +47,10 @@ module.exports.policies = {
     test: ['isAdmin']
   },
 
+  SearchController: {
+    show: ['sessionAuth', 'checkAndSetMembership']
+  },
+
   UserController: {
     status: true,
     findSelf: ['sessionAuth'],
