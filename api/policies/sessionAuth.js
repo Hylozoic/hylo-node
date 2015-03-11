@@ -15,7 +15,7 @@
 // note that if you want to delete a key from existing sessions,
 // you'll have to add "delete req.session.foo"
 //
-var sessionDataVersion = '2';
+var sessionDataVersion = '3';
 
 var fail = function(res) {
   // sending Unauthorized instead of Forbidden so that this triggers
