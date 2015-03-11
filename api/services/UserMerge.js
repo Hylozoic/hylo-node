@@ -112,8 +112,6 @@ module.exports = {
         User.find(secondaryUserId, {transacting: trx})
       )
       .spread(function(primaryUser, secondaryUser) {
-        console.log(primaryUser.attributes);
-        console.log(secondaryUser.attributes);
         userFieldsToCopy.forEach(function(attr) {
           if (!primaryUser.get(attr)) {
             primaryUser.set(attr, secondaryUser.get(attr));
