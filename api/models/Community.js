@@ -67,20 +67,14 @@ module.exports = bookshelf.Model.extend({
     });
 
     return Community.find(communityId).then(function(community) {
-      return community.users().query(function(qb) {
-        if (options.search) {
-          qb.where("name", "ILIKE", '%' + options.search + '%');
+      var opts = _.merge(
+        _.pick(options, 'limit', 'offset', 'start_time', 'end_time'),
+        {
+          term: options.search,
+          communities: [communityId]
         }
-        qb.where("users.active", "=", true);
-
-        qb.limit(options.limit);
-        qb.offset(options.offset);
-
-        if (options.start_time && options.end_time) {
-          qb.whereRaw('users.date_created between ? and ?', [options.start_time, options.end_time]);
-        }
-
-      }).fetch(_.pick(options, 'withRelated'));
+      );
+      return Search.forUsers(opts).fetchAll(_.pick(options, 'withRelated'));
     })
   },
 
