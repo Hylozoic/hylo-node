@@ -2,31 +2,39 @@ module.exports = {
 
   show: function(req, res) {
     var term = req.param('q').trim(),
-      communityId = req.param('communityId'),
       resultTypes = req.param('include'),
       offset = req.param('offset') || 0;
 
-    return Promise.join(
+    var findCommunityIds = Promise.method(function() {
+      if (req.param('communityId')) {
+        return [parseInt(req.param('communityId'))];
+      } else {
+        return Membership.activeCommunityIds(req.session.userId);
+      }
+    });
 
-      (!_.contains(resultTypes, 'seeds') ? [] :
-        Search.forSeeds({
-          term: term,
-          limit: 10,
-          offset: offset,
-          communities: [parseInt(communityId)]
-        }).fetchAll()
-      ),
+    return findCommunityIds().then(function(communityIds) {
 
-      (!_.contains(resultTypes, 'people') ? [] :
-        Search.forUsers({
-          term: term,
-          limit: 10,
-          offset: offset,
-          communities: [parseInt(communityId)]
-        }).fetchAll({withRelated: ['skills', 'organizations']})
-      )
+      return Promise.join(
+        (!_.contains(resultTypes, 'seeds') ? [] :
+          Search.forSeeds({
+            term: term,
+            limit: 10,
+            offset: offset,
+            communities: communityIds
+          }).fetchAll()
+        ),
+        (!_.contains(resultTypes, 'people') ? [] :
+          Search.forUsers({
+            term: term,
+            limit: 10,
+            offset: offset,
+            communities: communityIds
+          }).fetchAll({withRelated: ['skills', 'organizations']})
+        )
+      );
 
-    ).spread(function(seeds, people) {
+    }).spread(function(seeds, people) {
 
       res.ok({
         seeds: seeds,
