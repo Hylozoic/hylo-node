@@ -1,4 +1,7 @@
 module.exports = function checkAndSetMembership(req, res, next) {
+  if (!req.param('communityId'))
+    return next();
+
   if (Admin.isSignedIn(req))
     return next();
 
