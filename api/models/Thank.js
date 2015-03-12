@@ -23,7 +23,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   countForUser: function(user) {
-    return bookshelf.knex('thank_you').count().where({user_id: user.id}).then(function(rows) {
+    return this.query().count()
+    .where({
+      'thank_you.user_id': user.id,
+      'comment.active': true
+    })
+    .join('comment', function() {
+      this.on('comment.id', '=', 'thank_you.comment_id')
+    })
+    .then(function(rows) {
       return rows[0].count;
     });
   },

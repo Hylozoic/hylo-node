@@ -12,7 +12,15 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   countForUser: function(user) {
-    return bookshelf.knex('contributor').count().where({user_id: user.id}).then(function(rows) {
+    return this.query().count()
+    .where({
+      'contributor.user_id': user.id,
+      'post.active': true
+    })
+    .join('post', function() {
+      this.on('post.id', '=', 'contributor.post_id')
+    })
+    .then(function(rows) {
       return rows[0].count;
     });
   }
