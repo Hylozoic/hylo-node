@@ -61,6 +61,14 @@ module.exports.bootstrap = function(done) {
     }
   });
 
+  // add presenters to global namespace
+  _.each(fs.readdirSync(root('api/presenters')), function(filename) {
+    if (path.extname(filename) == '.js') {
+      var modelName = path.basename(filename, '.js');
+      global[modelName] = require(root('api/presenters/' + modelName));
+    }
+  });
+
   // fix request titles in New Relic
   if (process.env.NEW_RELIC_LICENSE_KEY) {
     var newrelic = require('newrelic');

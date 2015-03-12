@@ -1,65 +1,3 @@
-var postRelations = [
-  {"creator": function(qb) {
-    qb.column("id", "name", "avatar_url");
-  }},
-  {"communities": function(qb) {
-    qb.column("id", 'name', "slug");
-  }},
-  "followers",
-  {"followers.user": function(qb) {
-    qb.column("id", "name", "avatar_url");
-  }},
-  "contributors",
-  {"contributors.user": function(qb) {
-    qb.column("id", "name", "avatar_url");
-  }},
-  {media: function(qb) {
-    qb.column('id', 'post_id', 'url');
-  }}
-];
-
-var postAttributes = function(post, hasVote) {
-
-  var followers = post.related("followers").map(function(follower) {
-    return _.pick(follower.relations.user.attributes, 'id', 'name', 'avatar_url');
-  });
-
-  var contributors = post.related("contributors").map(function(contributor) {
-    return _.pick(contributor.relations.user.attributes, 'id', 'name', 'avatar_url');
-  });
-
-  var standardAttributes = _.pick(post.toJSON(), [
-    'name', 'description', 'fulfilled', 'media', 'type'
-  ]);
-
-  var nonStandardAttributes = {
-    id: Number(post.get("id")),
-    postType: post.get("type"),
-    user: {
-      id: Number(post.related("creator").get("id")),
-      name: post.related("creator").get("name"),
-      avatar: post.related("creator").get("avatar_url")
-    },
-    creationDate: post.get("creation_date"),
-    votes: post.get("num_votes"),
-    numComments: post.get("num_comments"),
-    contributors: contributors,
-    communitySlug: post.related("communities").first().get("slug"),
-    cName: post.related("communities").first().get("name"),
-    community: {
-      id: post.related("communities").first().id
-    },
-    myVote: hasVote,
-    comments: [], // TODO Load Comments?
-    commentsLoaded: false,
-    followers: followers,
-    followersLoaded: true,
-    numFollowers: followers.length,
-    hasMedia: post.related('media').length > 0
-  };
-
-  return _.extend(standardAttributes, nonStandardAttributes);
-};
 
 var findPosts = function(req, res, opts) {
   var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q', 'start_time', 'end_time']),
@@ -76,43 +14,24 @@ var findPosts = function(req, res, opts) {
     end_time: params.end_time,
     sort: sortCol
   }).then(function(args) {
-
     return Search.forSeeds(args).fetchAll({
-      withRelated: postRelations
+      withRelated: PostPresenter.relations(req.session.userId)
     });
-
   }).then(function(posts) {
-
-    var postIds = posts.pluck("id");
-    return Promise.props({
-      posts: posts,
-      votes: Vote.forUserInPosts(req.session.userId, postIds).pluck("post_id")
-    });
-
-  }).then(function(data) {
-
-    res.ok(data.posts.map(function(post) {
-      return postAttributes(post, _.contains(data.votes, post.get("id")));
+    res.ok(posts.map(function(post) {
+      return PostPresenter.present(post);
     }));
-
-  }).catch(function(err) {
-    res.serverError(err);
-  });
+  }).catch(res.serverError.bind(res));
 };
 
 module.exports = {
 
   findOne: function(req, res) {
-    res.locals.post.load(postRelations)
+    res.locals.post.load(PostPresenter.relations(req.session.userId))
     .then(function(post) {
-      return Promise.join(post, post.userVote(req.session.userId));
+      res.ok(PostPresenter.present(post));
     })
-    .spread(function(post, vote) {
-      res.ok(postAttributes(post, !!vote));
-    })
-    .catch(function(err) {
-      res.serverError(err);
-    });
+    .catch(res.serverError.bind(res));
   },
 
   findForUser: function(req, res) {
@@ -184,10 +103,10 @@ module.exports = {
         });
     })
     .then(function (post) {
-      return post.load(postRelations);
+      return post.load(PostPresenter.relations(req.session.userId));
     })
     .then(function (post) {
-      res.ok(postAttributes(post, false));
+      res.ok(PostPresenter.present(post));
     })
     .catch(res.serverError.bind(res));
   },
