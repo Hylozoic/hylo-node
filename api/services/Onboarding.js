@@ -28,8 +28,8 @@ var Onboarding = {
   // re-onboard existing users who are part of Impact Hub Oakland
   maybeStart: function(userId) {
     return Tour.collection().query().where({user_id: userId, type: 'onboarding'}).count()
-    .then(function(row) {
-      return (row.count > 0 ? null : Membership.find(userId, 9));
+    .then(function(rows) {
+      return (rows[0].count > 0 ? null : Membership.find(userId, 9));
     })
     .then(function(membership) {
       if (!membership) return;
