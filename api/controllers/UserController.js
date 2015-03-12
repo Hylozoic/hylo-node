@@ -47,23 +47,26 @@ module.exports = {
       userId = params.userId,
       isSelf = req.session.userId === userId;
 
-    User.find(userId).then(function(user) {
-      user.contributions().query(function(qb) {
+    Promise.method(function() {
+      if (!isSelf) return Membership.activeCommunityIds(req.session.userId);
+    })().then(function(communityIds) {
+
+      Contribution.query(function(qb) {
         qb.orderBy("date_contributed");
         qb.limit(limit);
         qb.offset(start);
         qb.join("post", "post.id", "=", "contributor.post_id");
+        qb.where({user_id: userId});
 
         if (!isSelf) {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
-
-          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.userId));
+          qb.whereIn("community.id", communityIds);
         }
 
         qb.where({"post.active": true});
 
-      }).fetch({
+      }).fetchAll({
         withRelated: [
           {
             "post.creator": function(qb) {
@@ -90,8 +93,11 @@ module.exports = {
       userId = params.userId,
       isSelf = req.session.userId === userId;
 
-    User.find(userId).then(function(user) {
-      user.thanks().query(function(qb) {
+    Promise.method(function() {
+      if (!isSelf) return Membership.activeCommunityIds(req.session.userId);
+    })().then(function(communityIds) {
+
+      Thank.query(function(qb) {
         qb.orderBy("date_thanked");
         qb.limit(limit);
         qb.offset(start);
@@ -101,12 +107,11 @@ module.exports = {
         if (!isSelf) {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
-
-          qb.whereIn("community.id", Membership.activeCommunityIds(req.session.userId));
+          qb.whereIn("community.id", communityIds);
         }
 
         qb.where({"comment.active": true, "post.active": true});
-      }).fetch({
+      }).fetchAll({
         withRelated: [
           {
             "thankedBy": function(qb) {

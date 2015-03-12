@@ -96,8 +96,10 @@ module.exports = bookshelf.Model.extend({
   activeCommunityIds: function(user_id) {
     return bookshelf.knex.select("community_id")
       .from("users_community")
-      .where("users_id", "=", user_id)
-      .where("active", "=", true);
+      .where({users_id: user_id, active: true})
+      .map(function(row) {
+        return parseInt(row.community_id);
+      });
   }
 
 });
