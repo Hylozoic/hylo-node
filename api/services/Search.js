@@ -7,16 +7,34 @@ module.exports = {
 
       qb.limit(opts.limit);
       qb.offset(opts.offset);
+      qb.where({active: true});
+
+      if (opts.users) {
+        qb.whereIn('post.creator_id', opts.users);
+      }
 
       if (opts.communities) {
         qb.join('post_community', 'post_community.post_id', '=', 'post.id');
-        qb.whereIn('post_community.community_id', [opts.communities]);
+        qb.whereIn('post_community.community_id', opts.communities);
       }
 
       if (opts.term) {
         Search.addTermToQueryBuilder(opts.term, qb, {
           columns: ['post.name', 'post.description']
         });
+      }
+
+      if (opts.type && opts.type != 'all') {
+        qb.where({type: opts.type});
+      }
+
+      if (opts.start_time && opts.end_time) {
+        qb.whereRaw('((post.creation_date between ? and ?) or (post.last_updated between ? and ?))',
+          [opts.start_time, opts.end_time, opts.start_time, opts.end_time]);
+      }
+
+      if (opts.sort) {
+        qb.orderBy(opts.sort, 'desc');
       }
 
     });
