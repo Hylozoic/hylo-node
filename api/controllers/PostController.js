@@ -65,36 +65,19 @@ var findPosts = function(req, res, opts) {
   var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q', 'start_time', 'end_time']),
     sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
 
-  opts.findParent.then(function(parent) {
+  Promise.props({
+    communities: opts.communities,
+    users: opts.users,
+    type: params.postType,
+    term: (params.q ? params.q.trim() : null),
+    limit: params.limit,
+    offset: params.start,
+    start_time: params.start_time,
+    end_time: params.end_time,
+    sort: sortCol
+  }).then(function(args) {
 
-    return parent.posts().query(function(qb) {
-      if (params.postType && params.postType != 'all') {
-        qb.where({type: params.postType});
-      }
-      qb.where({active: true});
-
-      if (params.q && params.q.trim().length > 0) {
-        Search.addTermToQueryBuilder(params.q.trim(), qb, {
-          columns: ['post.name', 'post.description']
-        });
-      }
-
-      if (opts.isOther) {
-        qb.join("post_community", "post_community.post_id", "=", "post.id");
-        qb.join("community", "community.id", "=", "post_community.community_id");
-        qb.whereIn("community.id", Membership.activeCommunityIds(req.session.userId));
-      }
-
-      qb.orderBy(sortCol, 'desc');
-      qb.limit(params.limit);
-      qb.offset(params.start);
-
-      if (params.start_time && params.end_time) {
-        qb.whereRaw('((post.creation_date between ? and ?) or (post.last_updated between ? and ?))',
-          [params.start_time, params.end_time, params.start_time, params.end_time]);
-      }
-
-    }).fetch({
+    return Search.forSeeds(args).fetchAll({
       withRelated: postRelations
     });
 
@@ -134,8 +117,8 @@ module.exports = {
 
   findForUser: function(req, res) {
     findPosts(req, res, {
-      findParent: User.find(req.param('userId')),
-      isOther: req.session.userId != req.param('userId')
+      users: [req.param('userId')],
+      communities: Membership.activeCommunityIds(req.session.userId)
     });
   },
 
@@ -144,7 +127,7 @@ module.exports = {
       if (!RequestValidation.requireTimeRange(req, res)) return;
     }
 
-    findPosts(req, res, {findParent: Community.find(req.param('communityId'))});
+    findPosts(req, res, {communities: [req.param('communityId')]});
   },
 
   create: function(req, res) {
