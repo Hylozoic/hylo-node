@@ -7,7 +7,7 @@ module.exports = {
 
       qb.limit(opts.limit);
       qb.offset(opts.offset);
-      qb.where({active: true});
+      qb.where({'post.active': true});
 
       if (opts.users) {
         qb.whereIn('post.creator_id', opts.users);
