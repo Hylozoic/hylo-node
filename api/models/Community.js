@@ -60,24 +60,6 @@ module.exports = bookshelf.Model.extend({
     return Community.where({id: id_or_slug}).fetch();
   },
 
-  members: function(communityId, options) {
-    _.defaults(options, {
-      limit: 10,
-      offset: 0
-    });
-
-    return Community.find(communityId).then(function(community) {
-      var opts = _.merge(
-        _.pick(options, 'autocomplete', 'limit', 'offset', 'start_time', 'end_time'),
-        {
-          term: options.search,
-          communities: [communityId]
-        }
-      );
-      return Search.forUsers(opts).fetchAll(_.pick(options, 'withRelated'));
-    })
-  },
-
   canInvite: function(userId, communityId) {
     return Community.find(communityId).then(function(community) {
       if (community.get('settings').all_can_invite) return true;
