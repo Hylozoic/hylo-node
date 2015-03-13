@@ -94,8 +94,8 @@ module.exports = {
       })
       .reject(_.isEmpty)
       .reduce(function(result, word, key) {
-        // build the tsquery string using logical | (OR) operands
-        result += " | " + word;
+        // build the tsquery string using logical AND operands
+        result += " & " + word;
         return result;
       }).value(),
 
