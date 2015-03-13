@@ -1,5 +1,4 @@
 require(require('root-path')('test/setup'));
-var Email = requireFromRoot('api/services/Email');
 
 describe('Email', function() {
 

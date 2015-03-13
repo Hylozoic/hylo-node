@@ -5,15 +5,13 @@ describe('Membership', function() {
   var user, community;
 
   before(function(done) {
-    setup.initDb(function() {
-      community = new Community({slug: 'foo', name: 'Foo'});
-      community.save().then(function() {
-        user = new User({name: 'Cat'});
-        return user.save();
-      }).then(function() {
-        return user.joinCommunity(community);
-      }).exec(done);
-    });
+    community = new Community({slug: 'foo', name: 'Foo'});
+    community.save().then(function() {
+      user = new User({name: 'Cat'});
+      return user.save();
+    }).then(function() {
+      return user.joinCommunity(community);
+    }).exec(done);
   });
 
   after(function(done) {

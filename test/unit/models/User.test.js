@@ -2,12 +2,11 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('User', function() {
 
-  var cat = new User({name: 'Cat'});
+  var cat;
 
   before(function(done) {
-    setup.initDb(function() {
-      cat.save().exec(done);
-    });
+    cat = new User({name: 'Cat'});
+    cat.save().exec(done);
   });
 
   after(function(done) {

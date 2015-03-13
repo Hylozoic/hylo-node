@@ -1,20 +1,39 @@
-var async = require('async'),
+process.env.NODE_ENV = 'test';
+
+var skiff = require('../lib/skiff'),
   chai = require('chai'),
   fs = require('fs'),
   path = require('path'),
-  root = require('root-path');
+  root = require('root-path'),
+  setup;
 
-process.env.NODE_ENV = 'test';
-require('dotenv').load(); // loads ".env.test"
-
-global.chai    = chai;
-global.expect  = chai.expect;
-global._       = require('lodash');
-global.Promise = require('bluebird');
+chai.use(require('chai-spies'));
+global.spy = chai.spy;
+global.expect = chai.expect;
 
 require('mock-kue');
 
-chai.use(require('chai-spies'));
+before(function(done) {
+  this.timeout(5000);
+  skiff.lift({
+    silent: true,
+
+    start: function() {
+      // add controllers to the global namespace; they would otherwise be excluded
+      // since the sails "http" module is not being loaded in the test env
+      _.each(fs.readdirSync(root('api/controllers')), function(filename) {
+        if (path.extname(filename) == '.js') {
+          var modelName = path.basename(filename, '.js');
+          global[modelName] = require(root('api/controllers/' + modelName));
+        }
+      });
+
+      global.__ = skiff.sails.__;
+
+      setup.initDb(done);
+    }
+  });
+});
 
 global.requireFromRoot = function(path) {
   return require(root(path));
@@ -22,30 +41,16 @@ global.requireFromRoot = function(path) {
 
 var i18n = require('sails/node_modules/i18n');
 i18n.configure(requireFromRoot('config/i18n'));
-global.__ = i18n.__;
 
 var TestSetup = function() {
-  this.knex = require('knex')({client: 'sqlite3', connection: {filename: ':memory:'}});
-  global.bookshelf = require('bookshelf')(this.knex);
-
-  // FIXME this is duplicated from bootstrap.js
-  _.each(fs.readdirSync(root('api/models')), function(filename) {
-    if (path.extname(filename) == '.js') {
-      var modelName = path.basename(filename, '.js');
-      global[modelName] = require(root('api/models/' + modelName));
-    }
-  });
-  _.each(fs.readdirSync(root('api/services')), function(filename) {
-    if (path.extname(filename) == '.js') {
-      var serviceName = path.basename(filename, '.js');
-      global[serviceName] = require(root('api/services/' + serviceName));
-    }
-  });
+  this.sails = skiff.sails;
 };
+
+setup = new TestSetup();
 
 TestSetup.prototype.initDb = function(done) {
   if (this.dbInited) return done();
-  var knex = this.knex;
+  var knex = this.knex = bookshelf.knex;
 
   Promise.all([
     knex.schema.createTable('users', function(table) {
@@ -68,6 +73,12 @@ TestSetup.prototype.initDb = function(done) {
       table.boolean('active');
       table.boolean('edited');
       table.datetime('last_updated')
+    }),
+    knex.schema.createTable('vote', function(table) {
+      table.increments();
+      table.bigInteger('post_id');
+      table.bigInteger('user_id');
+      table.datetime('date_voted');
     }),
     knex.schema.createTable('contributor', function(table) {
       table.increments();
@@ -159,19 +170,20 @@ TestSetup.prototype.initDb = function(done) {
 };
 
 TestSetup.prototype.clearDb = function(done) {
-  async.each(
+  Promise.map(
     [
       'users', 'community', 'users_community', 'community_invite',
       'users_org', 'users_skill', 'post_community', 'follower',
-      'notification', 'comment', 'contributor', 'post'
+      'notification', 'comment', 'contributor', 'post', 'media', 'vote'
     ],
-    function(table, cb) {
-      this.knex.raw('delete from ' + table).exec(cb);
-    }.bind(this),
-    function(err) {
-      done();
-    }
-  );
+    function(table) {
+      return this.knex.raw('delete from ' + table);
+    }.bind(this)
+  )
+  .then(function() {
+    done();
+  })
+  .catch(done);
 };
 
-module.exports = new TestSetup();
+module.exports = setup;

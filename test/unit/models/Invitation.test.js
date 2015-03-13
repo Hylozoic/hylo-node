@@ -2,10 +2,6 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('Invitation', function() {
 
-  before(function(done) {
-    setup.initDb(done);
-  });
-
   after(function(done) {
     setup.clearDb(done);
   });

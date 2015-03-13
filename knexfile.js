@@ -27,6 +27,13 @@ var defaults = {
 
 module.exports = {
 
+  test: {
+    client: 'sqlite',
+    connection: {
+      filename: ':memory:'
+    }
+  },
+
   development: defaults,
 
   staging: defaults,

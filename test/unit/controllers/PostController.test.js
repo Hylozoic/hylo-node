@@ -1,5 +1,4 @@
-var setup = require(require('root-path')('test/setup')),
-  PostController = requireFromRoot('api/controllers/PostController');
+var setup = require(require('root-path')('test/setup'));
 
 describe('PostController', function() {
   var fixtures, req, res;

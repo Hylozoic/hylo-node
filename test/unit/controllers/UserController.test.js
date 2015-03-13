@@ -1,17 +1,18 @@
-var setup = require(require('root-path')('test/setup')),
-  UserController = requireFromRoot('api/controllers/UserController');
+var setup = require(require('root-path')('test/setup'));
 
 describe('UserController', function() {
 
-  var u1 = new User({email: 'foo@bar.com'}),
-    u2 = new User({email: 'baz@bax.com'}),
+  var req, res, u1, u2;
+
+  before(function(done) {
     req = {
       allParams: function() { return this.params },
       param: function(key) { return this.params[key] },
       __: __
-    }, res;
+    };
+    u1 = new User({email: 'foo@bar.com'});
+    u2 = new User({email: 'baz@bax.com'});
 
-  before(function(done) {
     setup.initDb(function() {
       Promise.join(
         u1.save(),

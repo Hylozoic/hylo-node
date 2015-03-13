@@ -2,22 +2,22 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('Organization', function() {
 
-  var cat = new User({name: 'Cat'}),
-    otherCat = new User({name: 'Other Cat'});
+  var cat, otherCat;
 
   before(function(done) {
-    setup.initDb(function() {
-      Promise.join(cat.save(), otherCat.save())
-      .then(function() {
-        return Promise.join(
-          new Organization({org_name: 'House of Yes', user_id: cat.id}).save(),
-          new Organization({org_name: 'Cat Club', user_id: cat.id}).save(),
-          new Organization({org_name: 'House of Yes', user_id: otherCat.id}).save()
-        );
-      })
-      .then(done.bind(this, null))
-      .catch(done);
-    });
+    cat = new User({name: 'Cat'});
+    otherCat = new User({name: 'Other Cat'});
+
+    Promise.join(cat.save(), otherCat.save())
+    .then(function() {
+      return Promise.join(
+        new Organization({org_name: 'House of Yes', user_id: cat.id}).save(),
+        new Organization({org_name: 'Cat Club', user_id: cat.id}).save(),
+        new Organization({org_name: 'House of Yes', user_id: otherCat.id}).save()
+      );
+    })
+    .then(done.bind(this, null))
+    .catch(done);
   });
 
   after(function(done) {

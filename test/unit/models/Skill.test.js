@@ -2,22 +2,22 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('Skill', function() {
 
-  var cat = new User({name: 'Cat'}),
-    otherCat = new User({name: 'Other Cat'});
+  var cat, otherCat;
 
   before(function(done) {
-    setup.initDb(function() {
-      Promise.join(cat.save(), otherCat.save())
-      .then(function() {
-        return Promise.join(
-          new Skill({skill_name: 'meowing', user_id: cat.id}).save(),
-          new Skill({skill_name: 'clawing', user_id: cat.id}).save(),
-          new Skill({skill_name: 'meowing', user_id: otherCat.id}).save()
-        );
-      })
-      .then(done.bind(this, null))
-      .catch(done);
-    });
+    cat = new User({name: 'Cat'});
+    otherCat = new User({name: 'Other Cat'});
+
+    Promise.join(cat.save(), otherCat.save())
+    .then(function() {
+      return Promise.join(
+        new Skill({skill_name: 'meowing', user_id: cat.id}).save(),
+        new Skill({skill_name: 'clawing', user_id: cat.id}).save(),
+        new Skill({skill_name: 'meowing', user_id: otherCat.id}).save()
+      );
+    })
+    .then(done.bind(this, null))
+    .catch(done);
   });
 
   after(function(done) {
