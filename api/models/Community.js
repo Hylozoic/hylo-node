@@ -68,7 +68,7 @@ module.exports = bookshelf.Model.extend({
 
     return Community.find(communityId).then(function(community) {
       var opts = _.merge(
-        _.pick(options, 'limit', 'offset', 'start_time', 'end_time'),
+        _.pick(options, 'autocomplete', 'limit', 'offset', 'start_time', 'end_time'),
         {
           term: options.search,
           communities: [communityId]
