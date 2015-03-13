@@ -22,7 +22,8 @@ module.exports = {
             term: term,
             limit: limit,
             offset: offset,
-            communities: communityIds
+            communities: communityIds,
+            sort: 'post.creation_date'
           }).fetchAll({withRelated: PostPresenter.relations(req.session.userId)})
         ),
         (!_.contains(resultTypes, 'people') ? [] :
