@@ -9,6 +9,10 @@ module.exports = {
       qb.offset(opts.offset);
       qb.where({'post.active': true});
 
+      // this counts total rows matching the criteria, disregarding limit,
+      // which is useful for pagination
+      qb.select(bookshelf.knex.raw('*, count(*) over () as total'));
+
       if (opts.users) {
         qb.whereIn('post.creator_id', opts.users);
       }
@@ -47,6 +51,10 @@ module.exports = {
       qb.offset(opts.offset || 0);
       qb.distinct('users.id');
       qb.where("users.active", "=", true);
+
+      // this counts total rows matching the criteria, disregarding limit,
+      // which is useful for pagination
+      qb.select(bookshelf.knex.raw('count(users.*) over () as total'));
 
       if (opts.communities) {
         qb.join('users_community', 'users_community.users_id', '=', 'users.id');
