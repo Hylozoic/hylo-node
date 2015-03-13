@@ -1,6 +1,5 @@
 var setup = require(require('root-path')('test/setup')),
-  format = require('util').format,
-  CommentController = requireFromRoot('api/controllers/CommentController');
+  format = require('util').format;
 
 describe('CommentController', function() {
   var fixtures, req, res;
@@ -43,7 +42,7 @@ describe('CommentController', function() {
       res = {
         locals: {post: fixtures.p1},
         serverError: done,
-        ok: chai.spy(function(x) { responseData = x; })
+        ok: spy(function(x) { responseData = x; })
       };
 
       CommentController.create(req, res)
@@ -80,12 +79,12 @@ describe('CommentController', function() {
       };
       res = {};
 
-      Analytics.track = chai.spy(Analytics.track);
+      Analytics.track = spy(Analytics.track);
     });
 
     it('raises an error with an invalid address', function() {
       res = {
-        serverError: chai.spy(function(err) {})
+        serverError: spy(function(err) {})
       };
 
       CommentController.createFromEmail(req, res);
@@ -96,7 +95,7 @@ describe('CommentController', function() {
       params.To = Email.seedReplyAddress(fixtures.p1.id, fixtures.u3.id);
 
       res = {
-        ok: chai.spy(function() {}),
+        ok: spy(function() {}),
         serverError: done
       };
 

@@ -1,6 +1,5 @@
 require(require('root-path')('test/setup'));
-var RichText = requireFromRoot('api/services/RichText'),
-  format = require('util').format;
+var format = require('util').format;
 
 describe('RichText', function() {
 

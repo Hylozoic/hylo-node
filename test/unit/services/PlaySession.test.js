@@ -1,5 +1,4 @@
-var setup = require(require('root-path')('test/setup')),
-  PlaySession = requireFromRoot('api/services/PlaySession');
+var setup = require(require('root-path')('test/setup'));
 
 var request = {
   headers: {
@@ -42,10 +41,8 @@ describe('PlaySession', function() {
     var email = 'FoO@baR.com';
 
     before(function(done) {
-      setup.initDb(function() {
-        new User({email: email, active: true}).save().then(function() {
-          done();
-        });
+      new User({email: email, active: true}).save().then(function() {
+        done();
       });
     });
 

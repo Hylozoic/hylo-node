@@ -4,11 +4,14 @@ describe('Activity', function() {
 
   describe("#forComment", function() {
 
-    var comment = new Comment({
-      id: '4',
-      user_id: '5',
-      post_id: '6',
-      comment_text: 'foo'
+    var comment;
+    before(function() {
+      comment = new Comment({
+        id: '4',
+        user_id: '5',
+        post_id: '6',
+        comment_text: 'foo'
+      });
     });
 
     it('works', function() {

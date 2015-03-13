@@ -1,5 +1,4 @@
 require(require('root-path')('test/setup'));
-var PlayCrypto = requireFromRoot('api/services/PlayCrypto');
 
 describe('PlayCrypto', function() {
 
