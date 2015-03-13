@@ -49,7 +49,6 @@ module.exports = {
 
       qb.limit(opts.limit || 1000);
       qb.offset(opts.offset || 0);
-      qb.distinct('users.id');
       qb.where("users.active", "=", true);
 
       // this counts total rows matching the criteria, disregarding limit,
@@ -72,6 +71,9 @@ module.exports = {
           columns: ['users.name', 'users.bio', 'users_skill.skill_name', 'users_org.org_name']
         });
       }
+
+      // prevent duplicates due to the joins
+      qb.groupBy('users.id');
 
       if (opts.start_time && opts.end_time) {
         qb.whereRaw('users.date_created between ? and ?', [opts.start_time, opts.end_time]);
