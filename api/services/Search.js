@@ -61,6 +61,10 @@ module.exports = {
         qb.whereIn('users_community.community_id', opts.communities);
       }
 
+      if (opts.autocomplete) {
+        qb.whereRaw("users.name ilike ?", opts.autocomplete + '%');
+      }
+
       if (opts.term) {
         qb.leftJoin('users_skill', 'users_skill.user_id', '=', 'users.id');
         qb.leftJoin('users_org', 'users_org.user_id', '=', 'users.id');

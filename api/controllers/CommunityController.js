@@ -127,7 +127,7 @@ module.exports = {
     }
 
     var options = _.defaults(
-      _.pick(req.allParams(), 'search', 'limit', 'offset', 'start_time', 'end_time'),
+      _.pick(req.allParams(), 'search', 'autocomplete', 'limit', 'offset', 'start_time', 'end_time'),
       {limit: 1000}
     );
 
