@@ -1,7 +1,7 @@
 
 var findPosts = function(req, res, opts) {
   var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q', 'start_time', 'end_time']),
-    sortCol = (params.sort == 'top' ? 'num_votes' : 'last_updated');
+    sortCol = (params.sort == 'top' ? 'post.num_votes' : 'post.last_updated');
 
   Promise.props({
     communities: opts.communities,
