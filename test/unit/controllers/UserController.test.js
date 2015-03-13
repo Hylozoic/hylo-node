@@ -8,7 +8,7 @@ describe('UserController', function() {
     req = {
       allParams: function() { return this.params },
       param: function(key) { return this.params[key] },
-      __: __
+      __: sails.__
     };
     u1 = new User({email: 'foo@bar.com'});
     u2 = new User({email: 'baz@bax.com'});
@@ -33,7 +33,7 @@ describe('UserController', function() {
 
       res = {
         badRequest: function(message) {
-          expect(message).to.equal(__('invalid-email'));
+          expect(message).to.equal(sails.__('invalid-email'));
           done();
         },
         serverError: done
@@ -49,7 +49,7 @@ describe('UserController', function() {
 
       res = {
         badRequest: function(message) {
-          expect(message).to.equal(__('duplicate-email'));
+          expect(message).to.equal(sails.__('duplicate-email'));
           done();
         },
         serverError: done

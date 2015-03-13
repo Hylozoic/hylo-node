@@ -1,11 +1,13 @@
 process.env.NODE_ENV = 'test';
 
+var TestSetup = function() {};
+
 var skiff = require('../lib/skiff'),
   chai = require('chai'),
   fs = require('fs'),
   path = require('path'),
   root = require('root-path'),
-  setup;
+  setup = new TestSetup();
 
 chai.use(require('chai-spies'));
 global.spy = chai.spy;
@@ -15,10 +17,15 @@ require('mock-kue');
 
 before(function(done) {
   this.timeout(5000);
+
+  var i18n = require('sails/node_modules/i18n');
+  i18n.configure(require(root('config/i18n')));
+  global.sails = skiff.sails;
+
   skiff.lift({
     silent: true,
-
     start: function() {
+
       // add controllers to the global namespace; they would otherwise be excluded
       // since the sails "http" module is not being loaded in the test env
       _.each(fs.readdirSync(root('api/controllers')), function(filename) {
@@ -28,25 +35,10 @@ before(function(done) {
         }
       });
 
-      global.__ = skiff.sails.__;
-
       setup.initDb(done);
     }
   });
 });
-
-global.requireFromRoot = function(path) {
-  return require(root(path));
-};
-
-var i18n = require('sails/node_modules/i18n');
-i18n.configure(requireFromRoot('config/i18n'));
-
-var TestSetup = function() {
-  this.sails = skiff.sails;
-};
-
-setup = new TestSetup();
 
 TestSetup.prototype.initDb = function(done) {
   if (this.dbInited) return done();
@@ -177,8 +169,8 @@ TestSetup.prototype.clearDb = function(done) {
       'notification', 'comment', 'contributor', 'post', 'media', 'vote'
     ],
     function(table) {
-      return this.knex.raw('delete from ' + table);
-    }.bind(this)
+      return bookshelf.knex.raw('delete from ' + table);
+    }
   )
   .then(function() {
     done();
