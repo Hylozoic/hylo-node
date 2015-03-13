@@ -51,6 +51,10 @@ module.exports = {
       qb.offset(opts.offset || 0);
       qb.where("users.active", "=", true);
 
+      // this is not necessarily what any consumer desires, but
+      // some ordering must be specified for pagination
+      qb.orderBy('name', 'asc');
+
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
       qb.select(bookshelf.knex.raw('count(users.*) over () as total'));
