@@ -128,22 +128,31 @@ module.exports = {
 
     var options = _.defaults(
       _.pick(req.allParams(), 'search', 'autocomplete', 'limit', 'offset', 'start_time', 'end_time'),
-      {limit: 1000}
+      {
+        limit: 1000,
+        communities: [req.param('communityId')]
+      }
     );
 
     if (req.param('with')) {
       options.withRelated = _.flatten([req.param('with')]);
     }
 
-    Community.members(req.param('communityId'), options)
+    Search.forUsers(options).fetchAll(_.pick(options, 'withRelated'))
     .then(function(users) {
 
       res.ok(users.map(function(user) {
         var attributes = _.merge(
-          _.pick(user.attributes, 'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
+          _.pick(user.attributes,
+            'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
           {
             id: Number(user.id),
-            public_email: user.encryptedEmail()
+            public_email: user.encryptedEmail(),
+            total: user.get('total')
+            // FIXME: total shouldn't go here, but this endpoint is also used
+            // for autocomplete, and the Angular resource is already configured
+            // to expect an array response, so we can't refactor this response
+            // without changing the frontend
           }
         );
 
