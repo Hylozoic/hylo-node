@@ -173,8 +173,23 @@ module.exports = {
     });
   },
 
-  removeMember: function(req, res) {
+  leave: function(req, res) {
     res.locals.membership.destroyMe()
+    .then(function() {
+      res.ok({});
+    })
+    .catch(res.serverError.bind(res));
+  },
+
+  removeMember: function(req, res) {
+    Membership.where({
+      users_id: req.param('userId'),
+      community_id: req.param('communityId')
+    }).query().update({
+      active: false,
+      deactivated_at: new Date(),
+      deactivator_id: req.session.userId
+    })
     .then(function() {
       res.ok({});
     })

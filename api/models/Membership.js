@@ -9,6 +9,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Community);
   },
 
+  deactivator: function() {
+    return this.belongsTo(User, 'deactivator_id');
+  },
+
   hasModeratorRole: function() {
     return this.get('role') == Membership.MODERATOR_ROLE;
   },
