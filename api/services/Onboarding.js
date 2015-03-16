@@ -25,14 +25,18 @@ var Onboarding = {
     });
   },
 
-  // re-onboard existing users who are part of Impact Hub Oakland
+  // re-onboard all new users, and existing users who are part of Impact Hub Oakland
   maybeStart: function(userId) {
     return Tour.collection().query().where({user_id: userId, type: 'onboarding'}).count()
     .then(function(rows) {
-      return (rows[0].count > 0 ? null : Membership.find(userId, 9));
+      return (rows[0].count > 0 ? null : Membership.where({users_id: userId}).fetchAll());
     })
-    .then(function(membership) {
-      if (!membership) return;
+    .then(function(memberships) {
+      if (!_.any(memberships.models, function(membership) {
+        return membership.get('community_id') == '9' ||
+          new Date().getTime() - membership.get('date_joined').getTime() < 86400 * 1000;
+      }))
+        return;
 
       return User.find(userId).then(function(user) {
         return Onboarding.startForUser(user);
