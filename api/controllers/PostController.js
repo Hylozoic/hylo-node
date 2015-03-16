@@ -1,15 +1,14 @@
 
 var findPosts = function(req, res, opts) {
-  var params = _.pick(req.allParams(), ['sort', 'limit', 'start', 'postType', 'q', 'start_time', 'end_time']),
+  var params = _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
     sortCol = (params.sort == 'top' ? 'post.num_votes' : 'post.last_updated');
 
   Promise.props({
     communities: opts.communities,
     users: opts.users,
-    type: params.postType,
-    term: (params.q ? params.q.trim() : null),
+    type: params.type,
     limit: params.limit,
-    offset: params.start,
+    offset: params.offset,
     start_time: params.start_time,
     end_time: params.end_time,
     sort: sortCol
@@ -18,9 +17,10 @@ var findPosts = function(req, res, opts) {
       withRelated: PostPresenter.relations(req.session.userId)
     });
   }).then(function(posts) {
-    res.ok(posts.map(function(post) {
-      return PostPresenter.present(post);
-    }));
+    res.ok({
+      seeds_total: Number(posts.first().get('total')),
+      seeds: posts.map(PostPresenter.present)
+    });
   }).catch(res.serverError.bind(res));
 };
 
