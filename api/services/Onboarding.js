@@ -32,11 +32,14 @@ var Onboarding = {
       return (rows[0].count > 0 ? null : Membership.where({users_id: userId}).fetchAll());
     })
     .then(function(memberships) {
-      if (!_.any(memberships.models, function(membership) {
+      if (!memberships) return;
+
+      var isNewOrHubOakland = function(membership) {
         return membership.get('community_id') == '9' ||
           new Date().getTime() - membership.get('date_joined').getTime() < 86400 * 1000;
-      }))
-        return;
+      };
+
+      if (!_.any(memberships.models, isNewOrHubOakland)) return;
 
       return User.find(userId).then(function(user) {
         return Onboarding.startForUser(user);
