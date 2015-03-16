@@ -17,8 +17,9 @@ var findPosts = function(req, res, opts) {
       withRelated: PostPresenter.relations(req.session.userId)
     });
   }).then(function(posts) {
+    var total = posts.first() ? Number(posts.first().get('total')) : 0;
     res.ok({
-      seeds_total: Number(posts.first().get('total')),
+      seeds_total: total,
       seeds: posts.map(PostPresenter.present)
     });
   }).catch(res.serverError.bind(res));
