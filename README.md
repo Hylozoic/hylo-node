@@ -5,7 +5,7 @@ a [Sails](http://sailsjs.org) application
 ### setup
 
 ```shell
-npm install -g forever sails
+npm install -g forever sails foreman
 npm install
 ```
 
@@ -36,6 +36,6 @@ SENDWITHUS_KEY=...
 forever -w app.js # optionally with --port PORT
 ```
 
-The `.env` file you created above gets read automatically by the Node app, using [dotenv](http://www.npmjs.org/package/dotenv), and `forever` restarts the server when any files are updated. 
+The `.env` file you created above gets read automatically by the Node app, using [dotenv](http://www.npmjs.org/package/dotenv), and `forever` restarts the server when any files are updated.
 
 Now visit [localhost:1337](http://localhost:1337) (or whatever `PORT` is).

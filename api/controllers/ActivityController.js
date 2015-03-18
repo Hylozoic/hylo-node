@@ -39,16 +39,15 @@ module.exports = {
     .catch(res.serverError.bind(res));
   },
 
-  update: function(req, res) {
-    if (req.param('action') == 'markAllRead') {
-      Activity.query().where({reader_id: req.session.userId}).update({unread: false})
+  markAllRead: function(req, res) {
+    Activity.query().where({reader_id: req.session.userId}).update({unread: false})
       .then(function() {
         res.ok({});
       })
       .catch(res.serverError.bind(res));
-      return;
-    }
+  },
 
+  update: function(req, res) {
     Activity.find(req.param('activityId')).then(function(activity) {
       activity.attributes = _.pick(req.allParams(), 'unread');
       return activity.save();
@@ -59,4 +58,4 @@ module.exports = {
     .catch(res.serverError.bind(res));
   }
 
-}
+};
