@@ -78,6 +78,7 @@ module.exports.routes = {
 
   'GET    /noo/activity':                                 'ActivityController.find',
   'POST   /noo/activity':                                 'ActivityController.update',
+  'POST   /noo/activity/mark-all-read':                   'ActivityController.markAllRead',
   'POST   /noo/activity/:activityId':                     'ActivityController.update',
 
   'GET    /noo/search':                                   'SearchController.show',
