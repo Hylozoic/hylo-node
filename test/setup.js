@@ -34,7 +34,6 @@ before(function(done) {
           global[modelName] = require(root('api/controllers/' + modelName));
         }
       });
-
       setup.initDb(done);
     }
   });

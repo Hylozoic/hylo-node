@@ -83,9 +83,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   isVisibleToUser: function(postId, userId) {
-    return bookshelf.knex('post_community').then(function(results) {
-      var communityId = results[0].community_id;
-      return Membership.find(userId, communityId);
+    return bookshelf.knex('post_community').where({post_id: postId})
+      .then(function(results) {
+        var communityId = results[0].community_id;
+        return Membership.find(userId, communityId);
     }).then(function(mship) { return !!mship });
   },
 
