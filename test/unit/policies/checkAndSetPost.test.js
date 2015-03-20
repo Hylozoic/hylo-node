@@ -1,5 +1,5 @@
 var setup = require(require('root-path')('test/setup'));
-
+var checkAndSetPost = require(require('root-path')('api/policies/checkAndSetPost'));
 describe('checkAndSetPost', function() {
   var fixtures, req, res, next;
 
