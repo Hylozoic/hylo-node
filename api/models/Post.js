@@ -87,8 +87,7 @@ module.exports = bookshelf.Model.extend({
       .then(function(results) {
         var communityId = results[0].community_id;
         return Membership.find(userId, communityId);
-    }).then(function(mship) {
-        return !!mship });
+    }).then(function(mship) { return !!mship });
   },
 
   find: function(id, options) {
