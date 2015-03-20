@@ -34,7 +34,12 @@ before(function(done) {
           global[modelName] = require(root('api/controllers/' + modelName));
         }
       });
-
+      _.each(fs.readdirSync(root('api/policies')), function(filename) {
+        if (path.extname(filename) == '.js') {
+          var policyName = path.basename(filename, '.js');
+          global[policyName] = require(root('api/policies/' + policyName));
+        }
+      });
       setup.initDb(done);
     }
   });
