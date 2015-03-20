@@ -47,7 +47,7 @@ describe('CommentController', function() {
 
       CommentController.create(req, res)
       .then(function() {
-        expect(res.ok).to.have.been.called;
+        expect(res.ok).to.have.been.called();
         expect(responseData).to.exist;
         expect(responseData.user).to.exist;
         expect(responseData.text).to.equal(commentText);
@@ -78,8 +78,6 @@ describe('CommentController', function() {
         }
       };
       res = {};
-
-      Analytics.track = spy(Analytics.track);
     });
 
     it('raises an error with an invalid address', function() {
@@ -88,10 +86,11 @@ describe('CommentController', function() {
       };
 
       CommentController.createFromEmail(req, res);
-      expect(res.serverError).to.have.been.called;
+      expect(res.serverError).to.have.been.called();
     });
 
     it('creates a comment', function(done) {
+      Analytics.track = spy(Analytics.track);
       params.To = Email.seedReplyAddress(fixtures.p1.id, fixtures.u3.id);
 
       res = {
@@ -101,8 +100,8 @@ describe('CommentController', function() {
 
       CommentController.createFromEmail(req, res)
       .then(function() {
-        expect(Analytics.track).to.have.been.called;
-        expect(res.ok).to.have.been.called;
+        expect(Analytics.track).to.have.been.called();
+        expect(res.ok).to.have.been.called();
         return fixtures.p1.comments().fetch();
       })
       .then(function(comments) {
