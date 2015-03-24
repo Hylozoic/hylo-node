@@ -90,7 +90,7 @@ module.exports = {
     var query = _.chain(term.split(/\s*\s/)) // split on whitespace
       .map(function(word) {
         // remove any invalid characters
-        return word.replace(/[,;'|:&()!]+/, '');
+        return word.replace(/[,;'|:&()!\\]+/, '');
       })
       .reject(_.isEmpty)
       .reduce(function(result, word, key) {
