@@ -53,11 +53,11 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  find: function(id_or_slug) {
+  find: function(id_or_slug, options) {
     if (isNaN(Number(id_or_slug))) {
-      return Community.where({slug: id_or_slug}).fetch();
+      return Community.where({slug: id_or_slug}).fetch(options);
     }
-    return Community.where({id: id_or_slug}).fetch();
+    return Community.where({id: id_or_slug}).fetch(options);
   },
 
   canInvite: function(userId, communityId) {

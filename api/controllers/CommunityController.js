@@ -9,11 +9,11 @@ var format = require('util').format,
   validator = require('validator');
 
 var communityAttributes = function(community, membership) {
-  return _.extend(community.attributes, {
+  return _.extend(community.toJSON(), {
     canModerate: membership && membership.hasModeratorRole(),
     id: Number(community.id)
-  })
-}
+  });
+};
 
 module.exports = {
 
@@ -31,7 +31,11 @@ module.exports = {
   },
 
   findOne: function(req, res) {
-    Community.find(req.param('communityId')).then(function(community) {
+    Community.find(req.param('communityId'), {
+      withRelated: [{leader: function(qb) {
+        qb.column('id', 'name', 'avatar_url');
+      }}]
+    }).then(function(community) {
       Membership.find(req.session.userId, community.id).then(function(membership) {
         res.ok(communityAttributes(community, membership));
       });
@@ -39,7 +43,7 @@ module.exports = {
   },
 
   update: function(req, res) {
-    var whitelist = ['banner_url', 'avatar_url', 'name', 'description', 'settings'],
+    var whitelist = ['banner_url', 'avatar_url', 'name', 'description', 'settings', 'welcome_message', 'leader_id'],
       attributes = _.pick(req.allParams(), whitelist),
       community = new Community({id: req.param('communityId')});
 
@@ -127,9 +131,9 @@ module.exports = {
     }
 
     var options = _.defaults(
-      _.pick(req.allParams(), 'search', 'autocomplete', 'limit', 'offset', 'start_time', 'end_time'),
+      _.pick(req.allParams(), 'autocomplete', 'limit', 'offset', 'start_time', 'end_time'),
       {
-        limit: 1000,
+        limit: 10,
         communities: [req.param('communityId')]
       }
     );
