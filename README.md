@@ -54,7 +54,7 @@ SENDWITHUS_KEY=test_4333d54e6bdc840048adb031dee00e77898aceb1
 npm run dev
 ```
 
-The `.env` file you created above gets read automatically by the Node app, using [dotenv](http://www.npmjs.org/package/dotenv), and `forever` restarts the server when any files are updated.
+This reads the `.env` file you created above, using [dotenv](http://www.npmjs.org/package/dotenv), and starts two processes managed by `foreman`: one web server process and one background job worker process, as listed in `Procfile.dev`.
 
 Now visit [localhost:1337](http://localhost:1337).
 
