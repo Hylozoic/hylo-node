@@ -57,3 +57,29 @@ npm run dev
 The `.env` file you created above gets read automatically by the Node app, using [dotenv](http://www.npmjs.org/package/dotenv), and `forever` restarts the server when any files are updated.
 
 Now visit [localhost:1337](http://localhost:1337).
+
+### creating and running database migrations
+
+Migrations are managed by the [knex][http://knexjs.org] library. Create a new migration with this command:
+
+```shell
+knex migrate:make my_migration_name
+```
+
+(You can either install knex globally with `npm install -g knex`, or run the version in your `node_modules` with `./node_modules/.bin/knex`.)
+
+Run migrations with `npm run migrate` and rollback the last one with `npm run rollback`.
+
+### loading database snapshots
+
+The values of `DB_USERNAME`, `DB_HOST`, `DB_PORT`, and `DB_NAME` below can be obtained from `DATABASE_URL` in `heroku config`.
+
+```shell
+LOCAL_DB_NAME=hylo
+DUMP_FILENAME=dbdump
+pg_dump -O -U $DB_USERNAME -h $DB_HOST -p $DB_PORT $DB_NAME > $DUMP_FILENAME
+# stop all processes that have open database connections, then:
+dropdb $LOCAL_DB_NAME -h localhost 
+createdb $LOCAL_DB_NAME -h localhost
+cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
+```
