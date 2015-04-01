@@ -93,7 +93,8 @@ module.exports.policies = {
     update: ['sessionAuth', 'checkAndSetWritablePost'],
     addFollowers: ['sessionAuth', 'checkAndSetPost'],
     follow: ['sessionAuth', 'checkAndSetPost'],
-    findFollowed: ['sessionAuth', 'isSelf']
+    findFollowed: ['sessionAuth', 'isSelf'],
+    findAllForUser: ['sessionAuth', 'isSelf']
   },
 
   CommentController: {

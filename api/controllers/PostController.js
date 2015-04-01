@@ -56,11 +56,28 @@ module.exports = {
   findFollowed: function(req, res) {
     Search.forSeeds({
       follower: req.session.userId,
-      limit: req.param('limit'),
+      limit: req.param('limit') || 10,
       offset: req.param('offset'),
       sort: 'post.last_updated'
     }).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId)
+    })
+    .then(function(posts) {
+      respondWithPosts(res, posts);
+    }).catch(res.serverError.bind(res));
+  },
+
+  findAllForUser: function(req, res) {
+    Membership.activeCommunityIds(req.session.userId)
+    .then(function(communityIds) {
+      return Search.forSeeds({
+        communities: communityIds,
+        limit: req.param('limit') || 10,
+        offset: req.param('offset'),
+        sort: 'post.last_updated'
+      }).fetchAll({
+        withRelated: PostPresenter.relations(req.session.userId)
+      });
     })
     .then(function(posts) {
       respondWithPosts(res, posts);
