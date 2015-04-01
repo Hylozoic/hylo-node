@@ -1,3 +1,10 @@
+var respondWithPosts = function(res, posts) {
+  var total = posts.first() ? Number(posts.first().get('total')) : 0;
+  res.ok({
+    seeds_total: total,
+    seeds: posts.map(PostPresenter.present)
+  });
+};
 
 var findPosts = function(req, res, opts) {
   var params = _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
@@ -17,11 +24,7 @@ var findPosts = function(req, res, opts) {
       withRelated: PostPresenter.relations(req.session.userId)
     });
   }).then(function(posts) {
-    var total = posts.first() ? Number(posts.first().get('total')) : 0;
-    res.ok({
-      seeds_total: total,
-      seeds: posts.map(PostPresenter.present)
-    });
+    respondWithPosts(res, posts);
   }).catch(res.serverError.bind(res));
 };
 
@@ -48,6 +51,20 @@ module.exports = {
     }
 
     findPosts(req, res, {communities: [req.param('communityId')]});
+  },
+
+  findFollowed: function(req, res) {
+    Search.forSeeds({
+      follower: req.session.userId,
+      limit: req.param('limit'),
+      offset: req.param('offset'),
+      sort: 'post.last_updated'
+    }).fetchAll({
+      withRelated: PostPresenter.relations(req.session.userId)
+    })
+    .then(function(posts) {
+      respondWithPosts(res, posts);
+    }).catch(res.serverError.bind(res));
   },
 
   create: function(req, res) {
