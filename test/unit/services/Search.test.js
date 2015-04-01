@@ -5,8 +5,21 @@ var heredoc = require('heredoc');
 describe('Search', function() {
 
   describe('.forSeeds', function() {
+    var tz;
+
+    // set timezone to UTC for this test for consistency across
+    // different test environments
+    beforeEach(function() {
+      tz = process.env.TZ;
+      process.env.TZ = 'UTC';
+    });
+
+    afterEach(function() {
+      process.env.TZ = tz;
+    })
 
     it('produces the expected SQL for a complex query', function() {
+
       var query = Search.forSeeds({
         limit: 5,
         offset: 7,
@@ -33,8 +46,8 @@ describe('Search', function() {
         and "follower"."user_id" = 37
         and "post"."creator_id" != 37
         and "type" = 'request'
-        and ((post.creation_date between '2015-03-24 19:54:12.983' and '2015-03-31 19:54:12.983')
-          or (post.last_updated between '2015-03-24 19:54:12.983' and '2015-03-31 19:54:12.983'))
+        and ((post.creation_date between '2015-03-25 02:54:12.983' and '2015-04-01 02:54:12.983')
+          or (post.last_updated between '2015-03-25 02:54:12.983' and '2015-04-01 02:54:12.983'))
         order by "post"."last_updated" desc
         limit 5
         offset 7
