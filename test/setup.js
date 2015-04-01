@@ -23,6 +23,7 @@ before(function(done) {
   global.sails = skiff.sails;
 
   skiff.lift({
+    log: {level: 'warn'},
     silent: true,
     start: function() {
 
