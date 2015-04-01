@@ -15,8 +15,8 @@ describe('Search', function() {
         follower: 37,
         term: 'milk toast',
         type: 'request',
-        start_time: new Date(1427856852983), // Tue Mar 31 2015 19:54:12 GMT-0700 (PDT)
-        end_time: new Date(1427252052983), // Tue Mar 24 2015 19:54:12 GMT-0700 (PDT)
+        start_time: new Date(1427252052983), // Tue Mar 24 2015 19:54:12 GMT-0700 (PDT)
+        end_time: new Date(1427856852983), // Tue Mar 31 2015 19:54:12 GMT-0700 (PDT)
         sort: 'post.last_updated'
       }).query().toString();
 
@@ -33,8 +33,8 @@ describe('Search', function() {
         and "follower"."user_id" = 37
         and "post"."creator_id" != 37
         and "type" = 'request'
-        and ((post.creation_date between '2015-03-31 19:54:12.983' and '2015-03-24 19:54:12.983')
-          or (post.last_updated between '2015-03-31 19:54:12.983' and '2015-03-24 19:54:12.983'))
+        and ((post.creation_date between '2015-03-24 19:54:12.983' and '2015-03-31 19:54:12.983')
+          or (post.last_updated between '2015-03-24 19:54:12.983' and '2015-03-31 19:54:12.983'))
         order by "post"."last_updated" desc
         limit 5
         offset 7
