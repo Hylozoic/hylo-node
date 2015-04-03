@@ -10,8 +10,8 @@ var postRelations = function(userId) {
     {"followers.user": function(qb) {
       qb.column("id", "name", "avatar_url");
     }},
-    "contributors",
-    {"contributors.user": function(qb) {
+    "contributions",
+    {"contributions.user": function(qb) {
       qb.column("id", "name", "avatar_url");
     }},
     {media: function(qb) {
@@ -27,11 +27,11 @@ var postRelations = function(userId) {
 var postAttributes = function(post) {
 
   var followers = post.related("followers").map(function(follower) {
-    return _.pick(follower.relations.user.attributes, 'id', 'name', 'avatar_url');
+    return follower.relations.user.pick('id', 'name', 'avatar_url');
   });
 
-  var contributors = post.related("contributors").map(function(contributor) {
-    return _.pick(contributor.relations.user.attributes, 'id', 'name', 'avatar_url');
+  var contributors = post.related("contributions").map(function(contribution) {
+    return contribution.relations.user.pick('id', 'name', 'avatar_url');
   });
 
   var standardAttributes = _.pick(post.toJSON(), [
