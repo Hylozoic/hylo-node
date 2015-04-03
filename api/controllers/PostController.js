@@ -225,6 +225,30 @@ module.exports = {
     .catch(function(err) {
       res.serverError(err);
     })
+  },
+
+  fulfill: function(req, res) {
+    bookshelf.transaction(function(trx) {
+
+      return res.locals.post.save({
+        fulfilled: true,
+        date_fulfilled: new Date()
+      }, {patch: true, transacting: trx})
+      .tap(function() {
+        return Promise.map(req.param('contributors'), function(userId) {
+          return new Contribution({
+            post_id: res.locals.post.id,
+            user_id: userId,
+            date_contributed: new Date()
+          }).save(null, {transacting: trx});
+        });
+      });
+
+    })
+    .then(function() {
+      res.ok({});
+    })
+    .catch(res.serverError.bind(res));
   }
 
 };
