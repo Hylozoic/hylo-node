@@ -72,6 +72,7 @@ module.exports.routes = {
   'POST   /noo/seed/:postId/followers':                   'PostController.addFollowers',
   'POST   /noo/seed/:postId/follow':                      'PostController.follow',
   'POST   /noo/seed/:postId/fulfill':                     'PostController.fulfill',
+  'POST   /noo/seed/:postId/vote':                        'PostController.vote',
   'POST   /noo/seed':                                     'PostController.create',
   'POST   /noo/seed/:postId':                             'PostController.update',
 

@@ -249,6 +249,24 @@ module.exports = {
       res.ok({});
     })
     .catch(res.serverError.bind(res));
+  },
+
+  vote: function(req, res) {
+    res.locals.post.votes().query({where: {user_id: req.session.userId}}).fetchOne()
+    .then(function(vote) {
+      if (vote) {
+        return vote.destroy();
+      } else {
+        return new Vote({
+          post_id: res.locals.post.id,
+          user_id: req.session.userId
+        }).save();
+      }
+    })
+    .then(function() {
+      res.ok({});
+    })
+    .catch(res.serverError.bind(res));
   }
 
 };
