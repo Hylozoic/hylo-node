@@ -4,7 +4,7 @@ var postRelations = function(userId) {
       qb.column("id", "name", "avatar_url");
     }},
     {"communities": function(qb) {
-      qb.column("id", 'name', "slug");
+      qb.column('id', 'name', 'slug', 'avatar_url');
     }},
     "followers",
     {"followers.user": function(qb) {
@@ -52,7 +52,7 @@ var postAttributes = function(post) {
     votes: post.get("num_votes"),
     numComments: post.get("num_comments"),
     contributors: contributors,
-    community: community.pick('id', 'name', 'slug'),
+    community: community.pick('id', 'name', 'slug', 'avatar_url'),
     myVote: post.relations.votes.length > 0,
     comments: [], // TODO Load Comments?
     commentsLoaded: false,
