@@ -150,7 +150,7 @@ module.exports = {
           _.pick(user.attributes,
             'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
           {
-            id: Number(user.id),
+            id: Number(user.id), // FIXME this shouldn't be forced to be a number
             public_email: user.encryptedEmail(),
             total: user.get('total')
             // FIXME: total shouldn't go here, but this endpoint is also used
