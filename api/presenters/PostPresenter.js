@@ -38,6 +38,8 @@ var postAttributes = function(post) {
     'name', 'description', 'fulfilled', 'media', 'type'
   ]);
 
+  var community = post.relations.communities.first();
+
   var nonStandardAttributes = {
     id: Number(post.get("id")),
     postType: post.get("type"),
@@ -50,11 +52,7 @@ var postAttributes = function(post) {
     votes: post.get("num_votes"),
     numComments: post.get("num_comments"),
     contributors: contributors,
-    communitySlug: post.related("communities").first().get("slug"),
-    cName: post.related("communities").first().get("name"),
-    community: {
-      id: post.related("communities").first().id
-    },
+    community: community.pick('id', 'name', 'slug'),
     myVote: post.relations.votes.length > 0,
     comments: [], // TODO Load Comments?
     commentsLoaded: false,
