@@ -35,20 +35,20 @@ var postAttributes = function(post) {
   });
 
   var standardAttributes = _.pick(post.toJSON(), [
-    'name', 'description', 'fulfilled', 'media', 'type'
+    'name', 'description', 'fulfilled', 'media', 'type', 'creation_date', 'last_updated'
   ]);
 
-  var community = post.relations.communities.first();
+  var community = post.relations.communities.first(),
+    creator = post.relations.creator;
 
   var nonStandardAttributes = {
     id: Number(post.get("id")),
     postType: post.get("type"),
     user: {
-      id: Number(post.related("creator").get("id")),
-      name: post.related("creator").get("name"),
-      avatar: post.related("creator").get("avatar_url")
+      id: Number(creator.get("id")),
+      name: creator.get("name"),
+      avatar: creator.get("avatar_url")
     },
-    creationDate: post.get("creation_date"),
     votes: post.get("num_votes"),
     numComments: post.get("num_comments"),
     contributors: contributors,
@@ -57,8 +57,6 @@ var postAttributes = function(post) {
     comments: [], // TODO Load Comments?
     commentsLoaded: false,
     followers: followers,
-    followersLoaded: true,
-    numFollowers: followers.length,
     hasMedia: post.related('media').length > 0
   };
 
