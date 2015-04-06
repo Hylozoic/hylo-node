@@ -47,19 +47,16 @@ module.exports = bookshelf.Model.extend({
       }).tap(function(follow) {
         if (!opts.createActivity) return;
 
-        return Promise.join(
-          // notify users they have been added as followers
-          (userId === addingUserId ?
-            null :
-            Activity.forFollowAdd(follow, userId).save({}, _.pick(opts, 'transacting'))
-          ),
-
-          // notify creator that people have joined
-          (creatorId === addingUserId ?
-            null :
-            Activity.forFollow(follow, creatorId).save({}, _.pick(opts, 'transacting'))
-          )
-        );
+        var updates = [];
+        if (userId !== addingUserId) {
+          updates.push(Activity.forFollowAdd(follow, userId).save({}, _.pick(opts, 'transacting')));
+          updates.push(User.incNewNotificationCount(userId, trx));
+        }
+        if (creatorId !== addingUserId) {
+          updates.push(Activity.forFollow(follow, creatorId).save({}, _.pick(opts, 'transacting')));
+          updates.push(User.incNewNotificationCount(creatorId, trx))
+        }
+        return Promise.all(updates);
       });
     });
   },

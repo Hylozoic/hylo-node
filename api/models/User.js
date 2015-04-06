@@ -122,6 +122,11 @@ module.exports = bookshelf.Model.extend({
       .then(function(result) {
         return result[0].count == 0;
       });
+  },
+
+  incNewNotificationCount: function(userId, transaction) {
+    var query = User.query().where({id: userId}).increment('new_notification_count', 1);
+    return (transaction ? query.transacting(transaction) : query);
   }
 
 });

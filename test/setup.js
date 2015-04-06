@@ -50,6 +50,7 @@ TestSetup.prototype.initDb = function(done) {
       table.string('name');
       table.string('email');
       table.boolean('active');
+      table.integer('new_notification_count').defaultTo(0);
     }),
     knex.schema.createTable('post', function(table) {
       table.increments();

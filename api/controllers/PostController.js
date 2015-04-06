@@ -123,7 +123,8 @@ module.exports = {
                   recipientId: userId,
                   seedId: post.id
                 }),
-                Activity.forSeed(post, userId).save({}, {transacting: trx})
+                Activity.forSeed(post, userId).save({}, {transacting: trx}),
+                User.incNewNotificationCount(userId, trx)
               );
             }),
 
