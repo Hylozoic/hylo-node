@@ -57,7 +57,8 @@ var createComment = function(commenterId, text, post) {
                 commentId: comment.id,
                 version: 'mention'
               }),
-              Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx})
+              Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx}),
+              User.incNewNotificationCount(userId, trx)
             );
           }),
 
@@ -70,7 +71,8 @@ var createComment = function(commenterId, text, post) {
                 commentId: comment.id,
                 version: 'default'
               }),
-              Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx})
+              Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
+              User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
             );
           }),
 
