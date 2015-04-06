@@ -43,7 +43,6 @@ var postAttributes = function(post) {
 
   var nonStandardAttributes = {
     id: Number(post.get("id")),
-    postType: post.get("type"),
     user: {
       id: Number(creator.get("id")),
       name: creator.get("name"),
