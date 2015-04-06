@@ -146,6 +146,19 @@ module.exports = bookshelf.Model.extend({
       });
     });
 
+  },
+
+  resetNewNotificationCounts: function() {
+    return Activity.query()
+    .where('unread', true)
+    .count()
+    .select('reader_id')
+    .groupBy('reader_id')
+    .then(function(rows) {
+      return Promise.map(rows, function(row) {
+        return User.query().where({id: row.reader_id}).update({new_notification_count: row.count});
+      });
+    });
   }
 
 });

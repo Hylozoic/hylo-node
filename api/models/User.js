@@ -55,6 +55,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasOne(Tour).query({where: {type: 'onboarding'}});
   },
 
+  activity: function() {
+    return this.hasMany(Activity, 'reader_id');
+  },
+
   setModeratorRole: function(community) {
     return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community));
   },
