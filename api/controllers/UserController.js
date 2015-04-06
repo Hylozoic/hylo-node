@@ -28,14 +28,14 @@ module.exports = {
   findSelf: function(req, res) {
     Onboarding.maybeStart(req.session.userId)
     .then(function() {
-      return User.fetchForSelf(req.session.userId);
+      return UserPresenter.fetchForSelf(req.session.userId);
     }).then(function(attributes) {
-      res.ok(_.extend(attributes, {provider_key: req.session.userProvider}));
+      res.ok(UserPresenter.presentForSelf(attributes, req.session));
     }).catch(res.serverError.bind(res));
   },
 
   findOne: function(req, res) {
-    User.fetchForOther(req.param('userId')).then(function(attributes) {
+    UserPresenter.fetchForOther(req.param('userId')).then(function(attributes) {
       res.ok(attributes);
     }).catch(res.serverError.bind(res));
   },
