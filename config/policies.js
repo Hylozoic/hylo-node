@@ -86,7 +86,7 @@ module.exports.policies = {
   },
 
   PostController: {
-    findOne: ['sessionAuth', 'checkAndSetPost'],
+    findOne: ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForUser: ['sessionAuth', 'inSameCommunity'],
     findForCommunity: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     create: ['sessionAuth', 'checkAndSetMembership'],
