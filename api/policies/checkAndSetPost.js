@@ -8,14 +8,16 @@ module.exports = function checkAndSetPost(req, res, next) {
   .then(function(post) {
     res.locals.post = post;
 
-    // Perform any checks against viewing this post
-    return Promise.all([
-      Admin.isSignedIn(req),
-      Post.isVisibleToUser(post.id, req.session.userId)
-    ]);
+    if (Admin.isSignedIn(req))
+      return Promise.resolve(true);
+
+    if (res.locals.publicAccessAllowed && post.isPublicReadable())
+      return Promise.resolve(true);
+
+    return Post.isVisibleToUser(post.id, req.session.userId);
   })
   .then(function(allowed) {
-    if (_.any(allowed, Boolean)) {
+    if (allowed) {
       next();
     } else {
       sails.log.debug(format("Fail checkAndSetPost policy: uId:%s postId:%s", req.session.userId, req.param('postId')));

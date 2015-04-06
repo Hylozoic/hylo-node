@@ -68,9 +68,18 @@ module.exports = bookshelf.Model.extend({
       if (!opts.createActivity) return;
       return Activity.forUnfollow(self, userId).save();
     });
+  },
+
+  isPublicReadable: function() {
+    return this.get('visibility') == Post.Visibility.PUBLIC_READABLE;
   }
 
 }, {
+
+  Visibility: {
+    DEFAULT: 0,
+    PUBLIC_READABLE: 1
+  },
 
   countForUser: function(user) {
     return this.query().count().where({creator_id: user.id, active: true})

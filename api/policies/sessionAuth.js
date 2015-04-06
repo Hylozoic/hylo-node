@@ -30,6 +30,10 @@ module.exports = function(req, res, next) {
     sails.log.debug("policy: sessionAuth: validated by token");
     next();
 
+  } else if (res.locals.publicAccessAllowed) {
+    sails.log.debug("policy: sessionAuth: skipped due to publicAccessAllowed");
+    next();
+
   } else if (req.session.authenticated && req.session.version == sessionDataVersion) {
     next();
 
