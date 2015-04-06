@@ -1,25 +1,5 @@
 var format = require('util').format;
 
-var extraUserAttributes = function(user) {
-  return Promise.props({
-    public_email: user.encryptedEmail(),
-    skills: Skill.simpleList(user.relations.skills),
-    organizations: Organization.simpleList(user.relations.organizations),
-    phones: UserPhone.simpleList(user.relations.phones),
-    emails: UserEmail.simpleList(user.relations.emails),
-    websites: UserWebsite.simpleList(user.relations.websites),
-    seed_count: Post.countForUser(user),
-    contribution_count: Contribution.countForUser(user),
-    thank_count: Thank.countForUser(user)
-  });
-};
-
-var selfOnlyAttributes = function(user) {
-  return Promise.props({
-    notification_count: Activity.unreadCountForUser(user)
-  });
-};
-
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
 
@@ -127,37 +107,6 @@ module.exports = bookshelf.Model.extend({
     return collection.query(function(qb) {
       qb.whereRaw('users.date_created between ? and ?', [startTime, endTime]);
       qb.where('users.active', true);
-    });
-  },
-
-  fetchForSelf: function(id) {
-    return User.find(id, {
-      withRelated: [
-        'memberships', 'memberships.community', 'memberships.community.leader',
-        'skills', 'organizations', 'phones', 'emails', 'websites',
-        'linkedAccounts', 'onboarding'
-      ]
-    }).then(function(user) {
-      if (!user) throw "User not found";
-      return Promise.join(user.toJSON(), extraUserAttributes(user), selfOnlyAttributes(user));
-    }).then(function(attributes) {
-      return _.extend.apply(_, attributes);
-    });
-  },
-
-  fetchForOther: function(id) {
-    return User.find(id, {
-      withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']
-    }).then(function(user) {
-      if (!user) throw "User not found";
-      return Promise.join(user, extraUserAttributes(user));
-    }).spread(function(user, extraAttributes) {
-      return _.chain(user.attributes)
-        .pick([
-          'id', 'name', 'avatar_url', 'bio', 'work', 'intention', 'extra_info',
-          'twitter_name', 'linkedin_url', 'facebook_url'
-        ])
-        .extend(extraAttributes).value();
     });
   },
 
