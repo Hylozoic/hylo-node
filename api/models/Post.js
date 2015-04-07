@@ -50,11 +50,11 @@ module.exports = bookshelf.Model.extend({
         var updates = [];
         if (userId !== addingUserId) {
           updates.push(Activity.forFollowAdd(follow, userId).save({}, _.pick(opts, 'transacting')));
-          updates.push(User.incNewNotificationCount(userId, trx));
+          updates.push(User.incNewNotificationCount(userId, opts.transacting));
         }
         if (creatorId !== addingUserId) {
           updates.push(Activity.forFollow(follow, creatorId).save({}, _.pick(opts, 'transacting')));
-          updates.push(User.incNewNotificationCount(creatorId, trx))
+          updates.push(User.incNewNotificationCount(creatorId, opts.transacting));
         }
         return Promise.all(updates);
       });
