@@ -31,15 +31,10 @@ module.exports = {
   },
 
   findOne: function(req, res) {
-    Community.find(req.param('communityId'), {
-      withRelated: [{leader: function(qb) {
-        qb.column('id', 'name', 'avatar_url');
-      }}]
-    }).then(function(community) {
-      Membership.find(req.session.userId, community.id).then(function(membership) {
-        res.ok(communityAttributes(community, membership));
-      });
-    });
+    if (!req.session.userId)
+      return res.ok(res.locals.community.pick('id', 'name', 'avatar_url'));
+
+    res.ok(communityAttributes(res.locals.community, res.locals.membership));
   },
 
   update: function(req, res) {

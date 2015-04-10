@@ -54,6 +54,7 @@ module.exports = bookshelf.Model.extend({
       })
     )
     .spread(function(recipient, comment) {
+      if (!comment) return;
 
       var seed = comment.relations.post,
         commenter = comment.relations.user,
