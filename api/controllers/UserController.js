@@ -173,7 +173,7 @@ module.exports = {
         ['websites', UserWebsite]
       ], function(model) {
         var param = req.param(model[0]);
-        if (param) promises.push(model[1].update(param, user.id));
+        if (param) promises.push(model[1].update(_.flatten([param]), user.id));
       });
 
       return Promise.all(promises);
