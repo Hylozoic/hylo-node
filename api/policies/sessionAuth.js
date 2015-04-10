@@ -18,46 +18,51 @@
 var sessionDataVersion = '3';
 
 var fail = function(res) {
+  sails.log.debug("policy: sessionAuth: fail");
+
   // sending Unauthorized instead of Forbidden so that this triggers
   // http-auth-interceptor in the Angular app
   res.status(401);
   res.send('Unauthorized');
 };
 
+var tryPublic = function(res, next) {
+  if (res.locals.publicAccessAllowed) {
+    sails.log.debug("policy: sessionAuth: publicAccessAllowed");
+    return next();
+  }
+
+  fail(res);
+};
+
 module.exports = function(req, res, next) {
 
   if (TokenAuth.isAuthenticated(res)) {
     sails.log.debug("policy: sessionAuth: validated by token");
-    next();
-
-  } else if (res.locals.publicAccessAllowed) {
-    sails.log.debug("policy: sessionAuth: skipped due to publicAccessAllowed");
-    next();
-
+    return next();
   } else if (req.session.authenticated && req.session.version == sessionDataVersion) {
-    next();
+    return next();
+  }
+
+  var playSession = new PlaySession(req);
+
+  if (playSession.isValid()) {
+    playSession.fetchUser().then(function(user) {
+      if (!user)
+        return tryPublic(res);
+
+      sails.log.debug("policy: sessionAuth: validated as " + user.get('email'));
+
+      req.session.authenticated = true;
+      req.session.userId = user.id;
+      req.session.userProvider = playSession.providerKey();
+      req.rollbar_person = user.pick('id', 'name', 'email');
+      req.session.version = sessionDataVersion;
+      next();
+    });
 
   } else {
-    var playSession = new PlaySession(req);
-    if (playSession.isValid()) {
-      playSession.fetchUser().then(function(user) {
-        if (user) {
-          sails.log.debug("policy: sessionAuth: validated as " + user.get('email'));
-
-          req.session.authenticated = true;
-          req.session.userId = user.id;
-          req.session.userProvider = playSession.providerKey();
-          req.rollbar_person = user.pick('id', 'name', 'email');
-          req.session.version = sessionDataVersion;
-          next();
-        } else {
-          sails.log.debug("policy: sessionAuth: fail (valid session but no user!?)");
-          fail(res);
-        }
-      });
-    } else {
-      sails.log.debug("policy: sessionAuth: fail");
-      fail(res);
-    }
+    tryPublic(res);
   }
+
 };

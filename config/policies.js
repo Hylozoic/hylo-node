@@ -72,7 +72,7 @@ module.exports.policies = {
 
   CommunityController: {
     findDefault: ['sessionAuth'],
-    findOne: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findOne: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     update: ['sessionAuth', 'isModerator'],
     invite: ['sessionAuth', 'canInvite'],
     findModerators: ['sessionAuth', 'isModerator'],
@@ -102,6 +102,8 @@ module.exports.policies = {
   CommentController: {
     create: ['sessionAuth', 'checkAndSetPost'],
     thank: ['sessionAuth'],
+    findForPost: ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    destroy: ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true,
   }
 
