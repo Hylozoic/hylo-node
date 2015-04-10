@@ -49,7 +49,7 @@ module.exports = function(req, res, next) {
   if (playSession.isValid()) {
     playSession.fetchUser().then(function(user) {
       if (!user)
-        return tryPublic(res);
+        return tryPublic(res, next);
 
       sails.log.debug("policy: sessionAuth: validated as " + user.get('email'));
 
@@ -62,7 +62,7 @@ module.exports = function(req, res, next) {
     });
 
   } else {
-    tryPublic(res);
+    tryPublic(res, next);
   }
 
 };
