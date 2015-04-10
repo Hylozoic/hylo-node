@@ -1,15 +1,8 @@
-var commentAttributes = function(comment, isThanked) {
-  return {
-    "id": Number(comment.get("id")),
-    "isThanked": isThanked,
-    "text": comment.get("comment_text"),
-    "timestamp": comment.get("date_commented"),
-    "user": {
-      "id": Number(comment.related("user").get("id")),
-      "name": comment.related("user").get("name"),
-      "avatar": comment.related("user").get("avatar_url")
-    }
-  }
+var commentAttributes = function(comment) {
+  var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'date_commented', 'user');
+  return _.extend({
+    isThanked: _.isEmpty(comment.relations.thanks)
+  }, attrs);
 };
 
 var createComment = function(commenterId, text, post) {
@@ -88,6 +81,23 @@ var createComment = function(commenterId, text, post) {
 
 module.exports = {
 
+  findForPost: function(req, res) {
+    Comment.query(function(qb) {
+      qb.where({post_id: res.locals.post.id, active: true});
+      qb.orderBy('id', 'asc');
+    }).fetchAll({withRelated: [
+      {user: function(qb) {
+        qb.column('id', 'name', 'avatar_url');
+      }},
+      {thanks: function(qb) {
+        qb.where('thanked_by_id', req.session.userId);
+      }}
+    ]}).then(function(comments) {
+      res.ok(comments.map(commentAttributes));
+    })
+    .catch(res.serverError.bind(res));
+  },
+
   create: function(req, res) {
     return createComment(req.session.userId, req.param('text'), res.locals.post)
     .then(function(comment) {
@@ -98,7 +108,7 @@ module.exports = {
       ]);
     })
     .then(function(comment) {
-      res.ok(commentAttributes(comment, false));
+      res.ok(commentAttributes(comment));
     }).catch(function(err) {
       res.serverError(err);
     });
@@ -142,6 +152,20 @@ module.exports = {
       } else {
         return Thank.create(comment, req.session.userId);
       }
+    }).then(function() {
+      res.ok({});
+    }).catch(res.serverError.bind(res));
+  },
+
+  destroy: function(req, res) {
+    bookshelf.transaction(function(trx) {
+      return Comment.find(req.param('commentId')).then(function(comment) {
+        return Promise.join(
+          Activity.where('comment_id', comment.id).destroy({transacting: trx}),
+          Post.query().where('id', comment.get('post_id')).decrement('num_comments', 1).transacting(trx),
+          comment.destroy({transacting: trx})
+        );
+      });
     }).then(function() {
       res.ok({});
     }).catch(res.serverError.bind(res));

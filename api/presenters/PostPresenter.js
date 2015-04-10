@@ -53,8 +53,6 @@ var postAttributes = function(post) {
     contributors: contributors,
     community: community.pick('id', 'name', 'slug', 'avatar_url'),
     myVote: post.relations.votes.length > 0,
-    comments: [], // TODO Load Comments?
-    commentsLoaded: false,
     followers: followers,
     hasMedia: post.related('media').length > 0
   };
