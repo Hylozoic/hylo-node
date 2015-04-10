@@ -50,7 +50,7 @@ describe('CommentController', function() {
         expect(res.ok).to.have.been.called();
         expect(responseData).to.exist;
         expect(responseData.user).to.exist;
-        expect(responseData.text).to.equal(commentText);
+        expect(responseData.comment_text).to.equal(commentText);
 
         // mentioning should cause email notifications
         expect(require('kue').jobCount()).to.equal(2);
