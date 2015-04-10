@@ -62,7 +62,7 @@ module.exports.policies = {
 
   ActivityController: {
     find: ['sessionAuth'],
-    update: ['sessionAuth', 'isOwner'],
+    update: ['sessionAuth', 'isActivityOwner'],
     markAllRead: ['sessionAuth']
   },
 
