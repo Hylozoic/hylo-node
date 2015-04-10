@@ -26,6 +26,9 @@ module.exports = {
   },
 
   findSelf: function(req, res) {
+    if (!req.session.userId)
+      return res.ok({});
+
     Onboarding.maybeStart(req.session.userId)
     .then(function() {
       return UserPresenter.fetchForSelf(req.session.userId);
