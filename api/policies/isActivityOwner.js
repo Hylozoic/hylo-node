@@ -1,4 +1,4 @@
-module.exports = function isOwner(req, res, next) {
+module.exports = function isActivityOwner(req, res, next) {
 
   if (Admin.isSignedIn(req))
     return next();

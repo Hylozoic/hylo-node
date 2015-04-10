@@ -10,14 +10,14 @@ var simpleListFn = function(columnName) {
 };
 
 var updateFn = function(modelName, tableName, columnName) {
-  return function(skills, userId) {
+  return function(entries, userId) {
     // this must be looked up at runtime
     var model = global[modelName];
 
     return model.where({user_id: userId}).fetchAll().then(function(collection) {
       var existing = model.simpleList(collection),
-        toAdd = _.difference(skills, existing),
-        toRemove = _.difference(existing, skills),
+        toAdd = _.difference(entries, existing),
+        toRemove = _.difference(existing, entries),
         queries = [], q;
 
       if (toRemove.length > 0) {

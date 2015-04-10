@@ -2,11 +2,11 @@ module.exports = bookshelf.Model.extend({
   tableName: 'thank_you',
 
   comment: function() {
-    return this.belongsTo(Comment, 'comment_id');
+    return this.belongsTo(Comment);
   },
 
   user: function() {
-    return this.belongsTo(User, "user_id").query({where: {active: true}});
+    return this.belongsTo(User).query({where: {active: true}});
   },
 
   thankedBy: function() {
