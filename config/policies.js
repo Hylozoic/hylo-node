@@ -53,7 +53,7 @@ module.exports.policies = {
 
   UserController: {
     status: true,
-    findSelf: ['sessionAuth'],
+    findSelf: ['allowPublicAccess', 'sessionAuth'],
     findOne: ['sessionAuth', 'inSameCommunity'],
     update: ['sessionAuth', 'isSelf'],
     contributions: ['sessionAuth', 'inSameCommunity'],
