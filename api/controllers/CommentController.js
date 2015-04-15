@@ -158,13 +158,19 @@ module.exports = {
   },
 
   destroy: function(req, res) {
-    bookshelf.transaction(function(trx) {
-      return Comment.find(req.param('commentId')).then(function(comment) {
+    Comment.find(req.param('commentId')).then(function(comment) {
+      return bookshelf.transaction(function(trx) {
+
         return Promise.join(
           Activity.where('comment_id', comment.id).destroy({transacting: trx}),
           Post.query().where('id', comment.get('post_id')).decrement('num_comments', 1).transacting(trx),
-          comment.destroy({transacting: trx})
+          comment.save({
+            deactivated_by_id: req.session.userId,
+            deactivated_on: new Date(),
+            active: false
+          }, {patch: true})
         );
+
       });
     }).then(function() {
       res.ok({});

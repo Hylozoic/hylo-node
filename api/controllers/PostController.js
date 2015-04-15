@@ -268,6 +268,20 @@ module.exports = {
       res.ok({});
     })
     .catch(res.serverError.bind(res));
+  },
+
+  destroy: function(req, res) {
+    return bookshelf.transaction(function(trx) {
+
+      // FIXME this post will still be accessible via activity about a comment
+      return Promise.join(
+        Activity.where('post_id', res.locals.post.id).destroy({transacting: trx}),
+        res.locals.post.save({active: false}, {patch: true, transacting: trx})
+      )
+
+    }).then(function() {
+      res.ok({});
+    }).catch(res.serverError.bind(res));
   }
 
 };

@@ -76,6 +76,7 @@ module.exports.routes = {
   'POST   /noo/seed/:postId/vote':                        'PostController.vote',
   'POST   /noo/seed':                                     'PostController.create',
   'POST   /noo/seed/:postId':                             'PostController.update',
+  'DELETE /noo/seed/:postId':                             'PostController.destroy',
 
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',
