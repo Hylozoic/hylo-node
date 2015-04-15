@@ -6,11 +6,12 @@ module.exports = function checkAndSetWritablePost(req, res, next) {
   .tap(function(post) {
     if (!post) throw new Error(format('Seed %s not found', req.param('postId')));
 
-    return Promise.any([
-      Admin.isSignedIn(req),
-      post.get('creator_id') == req.session.userId,
-      Membership.hasModeratorRole(req.session.userId, req.param('communityId'))
-    ]);
+    if (Admin.isSignedIn(req) || post.get('creator_id') == req.session.userId)
+      return Promise.resolve(true);
+
+    return Membership.hasModeratorRole(req.session.userId, req.param('communityId')).then(function(isModerator) {
+      return (isModerator ? Promise.resolve() : Promise.reject());
+    });
   })
   .then(function(post) {
     res.locals.post = post;
