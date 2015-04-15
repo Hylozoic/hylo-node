@@ -60,13 +60,11 @@ module.exports = bookshelf.Model.extend({
         commenter = comment.relations.user,
         creator = seed.relations.creator,
         community = seed.relations.communities.models[0],
-        text = comment.get('comment_text'),
+        text = RichText.qualifyLinks(comment.get('comment_text')),
         replyTo = Email.seedReplyAddress(seed.id, recipient.id);
 
       var seedLabel = format('%s %s',
         (recipient.id == creator.id ? 'your' : 'the'), seed.get('type'));
-
-      text = RichText.qualifyLinks(text);
 
       return Email.sendNewCommentNotification({
         version: version,
@@ -85,7 +83,8 @@ module.exports = bookshelf.Model.extend({
           seed_label:            seedLabel,
           seed_title:            seed.get('name'),
           seed_url:              Frontend.Route.seed(seed, community) + '?ctt=comment_email',
-          unfollow_url:          Frontend.Route.unfollow(seed)
+          unfollow_url:          Frontend.Route.unfollow(seed),
+          tracking_pixel_url:    Analytics.pixelUrl('Comment', {userId: recipient.id})
         }
       });
 

@@ -141,7 +141,8 @@ module.exports = bookshelf.Model.extend({
           seed_title:          seed.get('name'),
           seed_type:           seed.get('type'),
           seed_url:            Frontend.Route.seed(seed, community),
-          unfollow_url:        Frontend.Route.unfollow(seed)
+          unfollow_url:        Frontend.Route.unfollow(seed),
+          tracking_pixel_url:  Analytics.pixelUrl('Mention in Seed', {userId: recipient.id})
         }
       });
 
