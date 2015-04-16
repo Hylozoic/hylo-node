@@ -94,6 +94,34 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
+  authenticate: function(email, password) {
+    var bcrypt = require('bcrypt'),
+      compare = Promise.promisify(bcrypt.compare, bcrypt);
+
+    return User.where({email: email}).fetch({withRelated: ['linkedAccounts']})
+    .then(function(user) {
+      if (!user)
+        throw 'email not found';
+
+      var account = user.relations.linkedAccounts.where({provider_key: 'password'})[0];
+      if (!account) {
+        var keys = user.relations.linkedAccounts.pluck('provider_key');
+        throw format('password account not found. available: [%s]', keys.join(', '));
+      }
+
+      return compare(password, account.get('provider_user_id')).then(function(match) {
+        if (!match)
+          throw 'password does not match';
+
+        return user.id;
+      });
+    });
+  },
+
+  create: function(options) {
+
+  },
+
   find: function(id, options) {
     return User.where({id: id}).fetch(options);
   },
