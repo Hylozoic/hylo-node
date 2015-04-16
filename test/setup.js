@@ -10,6 +10,8 @@ var skiff = require('../lib/skiff'),
   setup = new TestSetup();
 
 chai.use(require('chai-spies'));
+chai.use(require('chai-as-promised'));
+
 global.spy = chai.spy;
 global.expect = chai.expect;
 
@@ -51,6 +53,12 @@ TestSetup.prototype.initDb = function(done) {
       table.string('email');
       table.boolean('active');
       table.integer('new_notification_count').defaultTo(0);
+    }),
+    knex.schema.createTable('linked_account', function(table) {
+      table.increments();
+      table.bigInteger('user_id').references('id').inTable('users');
+      table.string('provider_user_id');
+      table.string('provider_key');
     }),
     knex.schema.createTable('post', function(table) {
       table.increments();

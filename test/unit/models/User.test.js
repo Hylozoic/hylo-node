@@ -5,7 +5,7 @@ describe('User', function() {
   var cat;
 
   before(function(done) {
-    cat = new User({name: 'Cat'});
+    cat = new User({name: 'Cat', email: 'iam@cat.org'});
     cat.save().exec(done);
   });
 
@@ -70,6 +70,26 @@ describe('User', function() {
 
       user.setSanely({twitter_name: ' '});
       expect(user.get('twitter_name')).to.be.null;
+    });
+
+  });
+
+  describe('.authenticate', function() {
+
+    before(function() {
+      return new LinkedAccount({
+        provider_user_id: '$2a$10$UPh85nJvMSrm6gMPqYIS.OPhLjAMbZiFnlpjq1xrtoSBTyV6fMdJS',
+        provider_key: 'password',
+        user_id: cat.id
+      }).save();
+    })
+
+    it('accepts a valid password', function() {
+      return expect(User.authenticate('iam@cat.org', 'password')).to.become(cat.id);
+    });
+
+    it('rejects an invalid password', function() {
+      return expect(User.authenticate('iam@cat.org', 'pawsword')).to.be.rejected;
     });
 
   });
