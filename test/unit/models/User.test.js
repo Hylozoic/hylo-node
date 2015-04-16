@@ -85,7 +85,10 @@ describe('User', function() {
     })
 
     it('accepts a valid password', function() {
-      return expect(User.authenticate('iam@cat.org', 'password')).to.become(cat.id);
+      return expect(User.authenticate('iam@cat.org', 'password'))
+      .to.eventually.satisfy(function(user) {
+        return user && user.id == cat.id && user.name == cat.name;
+      });
     });
 
     it('rejects an invalid password', function() {

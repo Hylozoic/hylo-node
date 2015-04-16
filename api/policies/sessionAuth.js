@@ -8,15 +8,6 @@
  *
  */
 
-// if you change the keys that are added to the session below,
-// change this version number. it will cause existing sessions
-// to get updated.
-//
-// note that if you want to delete a key from existing sessions,
-// you'll have to add "delete req.session.foo"
-//
-var sessionDataVersion = '3';
-
 var fail = function(res) {
   sails.log.debug("policy: sessionAuth: fail");
 
@@ -40,7 +31,7 @@ module.exports = function(req, res, next) {
   if (TokenAuth.isAuthenticated(res)) {
     sails.log.debug("policy: sessionAuth: validated by token");
     return next();
-  } else if (req.session.authenticated && req.session.version == sessionDataVersion) {
+  } else if (req.session.authenticated && req.session.version == UserSession.version) {
     return next();
   }
 
@@ -53,11 +44,7 @@ module.exports = function(req, res, next) {
 
       sails.log.debug("policy: sessionAuth: validated as " + user.get('email'));
 
-      req.session.authenticated = true;
-      req.session.userId = user.id;
-      req.session.userProvider = playSession.providerKey();
-      req.rollbar_person = user.pick('id', 'name', 'email');
-      req.session.version = sessionDataVersion;
+      UserSession.setup(req, user, playSession.providerKey);
       next();
     });
 

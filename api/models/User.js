@@ -113,7 +113,7 @@ module.exports = bookshelf.Model.extend({
         if (!match)
           throw 'password does not match';
 
-        return user.id;
+        return user;
       });
     });
   },
