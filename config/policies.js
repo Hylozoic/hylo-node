@@ -37,6 +37,7 @@ module.exports.policies = {
   },
 
   SessionController: {
+    create: true,
     destroy: ['sessionAuth']
   },
 

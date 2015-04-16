@@ -101,6 +101,7 @@ module.exports.routes = {
 
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
 
+  'POST   /noo/login':                                    'SessionController.create',
   'GET    /noo/logout':                                   'SessionController.destroy',
 
   '/*':                                                   'StaticPageController.proxy'
