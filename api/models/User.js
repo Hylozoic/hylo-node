@@ -106,7 +106,7 @@ module.exports = bookshelf.Model.extend({
       var account = user.relations.linkedAccounts.where({provider_key: 'password'})[0];
       if (!account) {
         var keys = user.relations.linkedAccounts.pluck('provider_key');
-        throw format('password account not found. available: [%s]', keys.join(', '));
+        throw format('password account not found. available: [%s]', keys.join(','));
       }
 
       return compare(password, account.get('provider_user_id')).then(function(match) {
