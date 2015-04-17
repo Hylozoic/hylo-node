@@ -34,7 +34,9 @@ module.exports = {
     if (!req.session.userId)
       return res.ok(res.locals.community.pick('id', 'name', 'avatar_url'));
 
-    res.ok(communityAttributes(res.locals.community, res.locals.membership));
+    Membership.find(req.session.userId, req.param('communityId')).then(function(membership) {
+      res.ok(communityAttributes(res.locals.community, membership));
+    });
   },
 
   update: function(req, res) {
