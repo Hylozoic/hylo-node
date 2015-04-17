@@ -6,14 +6,10 @@ module.exports = {
 
     User.authenticate(email, password).then(function(user) {
       UserSession.setup(req, user, 'password');
-      return user.save({last_login: new Date()}, {patch: true}).then(function() {
-        return UserPresenter.fetchForSelf(user.id);
-      });
-
-    }).then(function(attributes) {
-      res.ok(UserPresenter.presentForSelf(attributes, req.session));
+      return user.save({last_login: new Date()}, {patch: true});
+    }).then(function() {
+      res.ok({});
     }).catch(function(err) {
-      sails.log(err);
       res.badRequest(err);
       res.status(422); // well-formed but semantically invalid
     });
