@@ -21,6 +21,10 @@ module.exports = bookshelf.Model.extend({
 
   thanks: function() {
     return this.hasMany(Thank);
+  },
+
+  community: function() {
+    return this.relations.post.relations.communities.first();
   }
 
 }, {
