@@ -15,6 +15,7 @@ module.exports = {
     }).catch(function(err) {
       sails.log(err);
       res.badRequest(err);
+      res.status(422); // well-formed but semantically invalid
     });
   },
 
