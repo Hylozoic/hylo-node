@@ -10,4 +10,14 @@ module.exports = bookshelf.Model.extend({
       .query({where: {active: true}});
   }
 
+}, {
+
+  forUserWithPassword: function(user, password) {
+    return new LinkedAccount({
+      provider_key: 'password',
+      provider_user_id: password,
+      user_id: user.id
+    });
+  }
+
 });
