@@ -5,9 +5,46 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var validator = require('validator');
+var crypto = require('crypto'),
+  format = require('util').format,
+  validator = require('validator');
+
+var gravatar = function(email) {
+  var emailHash = crypto.createHash('md5').update(email).digest('hex');
+  return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash);
+};
 
 module.exports = {
+
+  create: function(req, res) {
+    var params = _.pick(req.allParams(), 'name', 'email', 'password', 'code');
+
+    Community.where({beta_access_code: params.code}).fetch()
+    .then(function(community) {
+      if (!community)
+        throw 'bad code';
+
+      var attrs = _.merge(_.pick(params, 'name', 'email'), {
+        community: community,
+        password: params.password,
+        avatar_url: gravatar(params.email)
+      });
+
+      return bookshelf.transaction(function(trx) {
+        return User.create(attrs, {transacting: trx});
+      });
+    })
+    .then(function(user) {
+      if (req.param('login')) {
+        UserSession.setup(req, user, 'password');
+      }
+      res.ok({});
+    })
+    .catch(function(err) {
+      res.badRequest(err.detail ? err.detail : err);
+      res.status(422);
+    });
+  },
 
   status: function(req, res) {
     var playSession = new PlaySession(req);

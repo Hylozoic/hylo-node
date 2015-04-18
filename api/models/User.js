@@ -118,8 +118,20 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
-  create: function(options) {
+  create: function(attributes, options) {
+    var trx = options.transacting,
+      password = attributes.password,
+      community = attributes.community;
 
+    delete attributes.password;
+    delete attributes.community;
+
+    return new User(attributes).save({}, {transacting: trx}).tap(function(user) {
+      return Promise.join(
+        LinkedAccount.forUserWithPassword(user, password).save({}, {transacting: trx}),
+        Membership.create(user.id, community.id, {transacting: trx})
+      );
+    });
   },
 
   find: function(id, options) {

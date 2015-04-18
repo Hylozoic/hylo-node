@@ -46,6 +46,7 @@ module.exports.routes = {
   'GET    /noo/user/status':                              'UserController.status',
   'GET    /noo/user/me':                                  'UserController.findSelf',
   'GET    /noo/user/:userId':                             'UserController.findOne',
+  'POST   /noo/user':                                     'UserController.create',
   'POST   /noo/user/:userId':                             'UserController.update',
   'GET    /noo/user/:userId/contributions':               'UserController.contributions',
   'GET    /noo/user/:userId/thanks':                      'UserController.thanks',
