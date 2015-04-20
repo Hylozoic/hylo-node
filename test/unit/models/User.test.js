@@ -1,4 +1,5 @@
-var setup = require(require('root-path')('test/setup'));
+var bcrypt = require('bcrypt'),
+  setup = require(require('root-path')('test/setup'));
 
 describe('User', function() {
 
@@ -96,5 +97,41 @@ describe('User', function() {
     });
 
   });
+
+  describe('.create', function() {
+
+    var community;
+
+    before(function(done) {
+      community = new Community({name: 'foo'});
+      community.save().exec(done);
+    });
+
+    it('works', function(done) {
+      bookshelf.transaction(function(trx) {
+        return User.create({email: 'foo@bar.com', password: 'password!', community: community}, {transacting: trx});
+      })
+      .then(function(user) {
+        expect(user.id).to.exist;
+
+        Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
+            expect(account).to.exist;
+            expect(account.get('provider_key')).to.equal('password');
+            expect(bcrypt.compareSync('password!', account.get('provider_user_id'))).to.be.true;
+          }),
+          Membership.where({users_id: user.id}).fetch().then(function(membership) {
+            expect(membership).to.exist;
+            expect(membership.get('community_id')).to.equal(community.id);
+          })
+        ).then(function() {
+          done();
+        });
+
+      })
+      .catch(done);
+    });
+
+  })
 
 })

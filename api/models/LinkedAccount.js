@@ -1,3 +1,5 @@
+var bcrypt = require('bcrypt');
+
 module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
 
@@ -12,12 +14,15 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  forUserWithPassword: function(user, password) {
-    return new LinkedAccount({
-      provider_key: 'password',
-      provider_user_id: password,
-      user_id: user.id
-    });
+  createForUserWithPassword: function(user, password, options) {
+    var hash = Promise.promisify(bcrypt.hash, bcrypt);
+    return hash(password, 10).then(function(hashed) {
+      return new LinkedAccount({
+        provider_key: 'password',
+        provider_user_id: hashed,
+        user_id: user.id
+      }).save({}, _.pick(options, 'transacting'));
+    })
   }
 
 });
