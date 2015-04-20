@@ -19,7 +19,7 @@ module.exports = {
   create: function(req, res) {
     var params = _.pick(req.allParams(), 'name', 'email', 'password', 'code');
 
-    Community.where({beta_access_code: params.code}).fetch()
+    return Community.where({beta_access_code: params.code}).fetch()
     .then(function(community) {
       if (!community)
         throw 'bad code';
