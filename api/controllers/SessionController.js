@@ -4,7 +4,7 @@ module.exports = {
     var email = req.param('email'),
       password = req.param('password');
 
-    User.authenticate(email, password).then(function(user) {
+    return User.authenticate(email, password).then(function(user) {
       UserSession.setup(req, user, 'password');
       return user.save({last_login: new Date()}, {patch: true});
     }).then(function() {
