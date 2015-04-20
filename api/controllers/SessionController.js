@@ -10,8 +10,7 @@ module.exports = {
     }).then(function() {
       res.ok({});
     }).catch(function(err) {
-      res.badRequest(err);
-      res.status(422); // well-formed but semantically invalid
+      res.status(422).send(err); // well-formed but semantically invalid
     });
   },
 
