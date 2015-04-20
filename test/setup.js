@@ -51,6 +51,7 @@ TestSetup.prototype.initDb = function(done) {
       table.increments();
       table.string('name');
       table.string('email');
+      table.string('avatar_url');
       table.boolean('active');
       table.integer('new_notification_count').defaultTo(0);
     }),
