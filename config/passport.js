@@ -3,13 +3,16 @@ var passport = require('passport'),
 
 // just return the user's email address
 
-passport.use(new GoogleStrategy({
+var adminStrategy = new GoogleStrategy({
   clientID: process.env.ADMIN_GOOGLE_CLIENT_ID,
   clientSecret: process.env.ADMIN_GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.PROTOCOL + '://' + process.env.DOMAIN + '/admin/login/oauth'
 }, function(accessToken, refreshToken, profile, done) {
   done(null, {email: profile.emails[0].value});
-}));
+});
+adminStrategy.name = 'admin';
+
+passport.use(adminStrategy);
 
 // and serialize this small object in the session
 
