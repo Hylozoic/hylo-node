@@ -128,7 +128,7 @@ module.exports = bookshelf.Model.extend({
 
     return new User(attributes).save({}, {transacting: trx}).tap(function(user) {
       return Promise.join(
-        LinkedAccount.forUserWithPassword(user, password).save({}, {transacting: trx}),
+        LinkedAccount.createForUserWithPassword(user, password, {transacting: trx}),
         Membership.create(user.id, community.id, {transacting: trx})
       );
     });
