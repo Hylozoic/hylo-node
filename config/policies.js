@@ -38,6 +38,8 @@ module.exports.policies = {
 
   SessionController: {
     create: true,
+    startGoogleOAuth: true,
+    finishGoogleOAuth: true,
     destroy: ['sessionAuth']
   },
 
