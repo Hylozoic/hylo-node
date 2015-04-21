@@ -23,6 +23,14 @@ module.exports = bookshelf.Model.extend({
         user_id: user.id
       }).save({}, _.pick(options, 'transacting'));
     })
+  },
+
+  createForUserWithGoogle: function(user, googleId, options) {
+    return new LinkedAccount({
+      provider_key: 'google',
+      provider_user_id: googleId,
+      user_id: user.id
+    }).save({}, _.pick(options, 'transacting'));
   }
 
 });
