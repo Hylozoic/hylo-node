@@ -26,8 +26,8 @@ module.exports = {
 
       var attrs = _.merge(_.pick(params, 'name', 'email'), {
         community: community,
-        password: params.password,
-        avatar_url: gravatar(params.email)
+        avatar_url: gravatar(params.email),
+        account: {password: params.password},
       });
 
       return bookshelf.transaction(function(trx) {

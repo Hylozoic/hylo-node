@@ -107,14 +107,18 @@ describe('User', function() {
       community.save().exec(done);
     });
 
-    it('works', function(done) {
-      bookshelf.transaction(function(trx) {
-        return User.create({email: 'foo@bar.com', password: 'password!', community: community}, {transacting: trx});
+    it('works with a password', function() {
+      return bookshelf.transaction(function(trx) {
+        return User.create({
+          email: 'foo@bar.com',
+          community: community,
+          account: {password: 'password!'}
+        }, {transacting: trx});
       })
       .then(function(user) {
         expect(user.id).to.exist;
 
-        Promise.join(
+        return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
             expect(account).to.exist;
             expect(account.get('provider_key')).to.equal('password');
@@ -124,13 +128,13 @@ describe('User', function() {
             expect(membership).to.exist;
             expect(membership.get('community_id')).to.equal(community.id);
           })
-        ).then(function() {
-          done();
-        });
-
-      })
-      .catch(done);
+        );
+      });
     });
+
+    it('works with a google id', function() {
+      todo;
+    })
 
   })
 

@@ -120,17 +120,24 @@ module.exports = bookshelf.Model.extend({
 
   create: function(attributes, options) {
     var trx = options.transacting,
-      password = attributes.password,
+      account = attributes.account,
       community = attributes.community;
 
-    delete attributes.password;
+    delete attributes.account;
     delete attributes.community;
 
-    return new User(attributes).save({}, {transacting: trx}).tap(function(user) {
-      return Promise.join(
-        LinkedAccount.createForUserWithPassword(user, password, {transacting: trx}),
-        Membership.create(user.id, community.id, {transacting: trx})
-      );
+    return new User(_.merge({}, attributes, {
+      date_created: new Date()
+    })).save({}, {transacting: trx}).tap(function(user) {
+      var actions = [Membership.create(user.id, community.id, {transacting: trx})];
+
+      if (account.password) {
+        actions.push(LinkedAccount.createForUserWithPassword(user, account.password, {transacting: trx}));
+      } else if (account.google) {
+        actions.push(LinkedAccount.createForUserWithGoogle(user, account.google.id, {transacting: trx}));
+      }
+
+      return Promise.all(actions);
     });
   },
 
