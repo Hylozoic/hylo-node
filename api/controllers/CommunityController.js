@@ -199,27 +199,35 @@ module.exports = {
 
   validate: function(req, res) {
     var allowedColumns = ['name', 'slug', 'beta_access_code'],
+      allowedConstraints = ['exists', 'unique'],
       params = _.pick(req.allParams(), 'constraint', 'column', 'value');
 
-    if (params.constraint === 'unique') {
-      // this whitelist prevents SQL injection
-      if (!_.contains(allowedColumns, params.column))
-        return res.badRequest(format('invalid value "%s" for parameter "column"', params.column));
+    // prevent SQL injection
+    if (!_.include(allowedColumns, params.column))
+      return res.badRequest(format('invalid value "%s" for parameter "column"', params.column));
 
-      if (!params.value)
-        return res.badRequest('missing required parameter "value"');
+    if (!params.value)
+      return res.badRequest('missing required parameter "value"');
 
-      var statement = format('lower(%s) = lower(?)', params.column);
+    if (!_.include(allowedConstraints, params.constraint))
+      return res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint));
 
-      Community.query().whereRaw(statement, params.value).count()
-      .then(function(rows) {
-        res.ok({unique: parseInt(rows[0].count) == 0});
-      })
-      .catch(res.serverError.bind(res));
-
-    } else {
-      res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint));
-    }
+    var statement = format('lower(%s) = lower(?)', params.column);
+    Community.query().whereRaw(statement, params.value).count()
+    .then(function(rows) {
+      var data;
+      if (params.constraint === 'unique') {
+        data = {unique: parseInt(rows[0].count) == 0};
+      } else if (params.constraint === 'exists') {
+        // HACKKK
+        if (params.column === 'beta_access_code') {
+          req.session.validatedCommunityCode = params.value;
+        }
+        data = {exists: parseInt(rows[0].count) >= 1};
+      }
+      res.ok(data);
+    })
+    .catch(res.serverError.bind(res));
   },
 
   create: function(req, res) {

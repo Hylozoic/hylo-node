@@ -1,7 +1,8 @@
 var passport = require('passport'),
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
-// just return the user's email address
+/////////////////////////////
+// admin login
 
 var adminStrategy = new GoogleStrategy({
   clientID: process.env.ADMIN_GOOGLE_CLIENT_ID,
@@ -20,8 +21,6 @@ adminStrategy.name = 'admin';
 
 passport.use(adminStrategy);
 
-// and serialize this small object in the session
-
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -31,16 +30,23 @@ passport.deserializeUser(function(user, done) {
 });
 
 
-var userStrategy = new GoogleStrategy({
+/////////////////////////////
+// user login
+//
+// doesn't use the serialize and deserialize handlers above
+// because we're using workarounds to play nice with Play
+// (see UserSession)
+
+var googleUserStrategy = new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
   callbackURL: process.env.PROTOCOL + '://' + process.env.DOMAIN + '/noo/login/google/oauth'
 }, function(accessToken, refreshToken, profile, done) {
-  done(null, {
+  done(null, _.extend(profile, {
     name: profile.displayName,
     email: profile.emails[0].value,
-  });
+  }));
 });
-userStrategy.name = 'google';
+googleUserStrategy.name = 'google';
 
-passport.use(userStrategy);
+passport.use(googleUserStrategy);
