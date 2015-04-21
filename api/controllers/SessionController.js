@@ -21,22 +21,59 @@ module.exports = {
   },
 
   finishGoogleOAuth: function(req, res, next) {
+    var done = function() {
+      res.view('popupDone', {context: 'google', url: null, layout: null});
+    };
+
+    // FIXME fucking promisify this plz
     passport.authenticate('google', function(err, profile, info) {
       if (err) { return next(err); }
       if (!profile) { return res.redirect('/h/login'); }
 
-      // TODO or find by google id
-      User.where({email: profile.email}).fetch({
+      sails.log.warn(profile);
+
+      User.query(function(qb) {
+        qb.leftJoin('linked_account', function() {
+          this.on('linked_account.user_id', '=', 'users.id');
+        });
+        qb.where('linked_account.provider_key', 'google');
+        qb.where('email', profile.email).orWhere('provider_user_id', profile.id);
+      }).fetch({
         withRelated: ['linkedAccounts']
       }).then(function(user) {
+
         if (user) {
           UserSession.setup(req, user, 'google');
-          // TODO create linked account if necessary
+
+          // if this is a new Google account, link it to the user
+          if (!user.relations.linkedAccounts.where({provider_key: 'google'})[0]) {
+            LinkedAccount.createForUserWithGoogle(user, profile.id).then(function() {
+              done();
+            });
+          } else {
+            done();
+          }
+
         } else {
-          // TODO create a new user with name, email, google linked account
-          UserSession.setup(req, user, 'google');
+          // create a new user linked to google
+          // HACKKK this fucking validatedCommunityCode thing
+          Community.where({beta_access_code: req.session.validatedCommunityCode}).fetch()
+          .then(function(community) {
+            return bookshelf.transaction(function(trx) {
+              return User.create({
+                email: profile.email,
+                name: profile.name,
+                account: {google: profile},
+                community: community
+              }, {transacting: trx});
+            });
+          })
+          .then(function(user) {
+            UserSession.setup(req, user, 'google');
+            done();
+          });
         }
-        res.redirect('/app');
+
       });
     })(req, res, next);
   },

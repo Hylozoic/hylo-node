@@ -85,7 +85,7 @@ module.exports.policies = {
     findMembers: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     removeMember: ['sessionAuth', 'isModerator'],
     leave: ['sessionAuth', 'checkAndSetMembership'],
-    validate: ['sessionAuth'],
+    validate: true,
     create: ['sessionAuth']
   },
 
