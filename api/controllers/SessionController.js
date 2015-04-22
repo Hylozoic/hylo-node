@@ -1,4 +1,5 @@
-var passport = require('passport');
+var format = require('util').format,
+  passport = require('passport');
 
 var findUser = function(service, email, id) {
   return User.query(function(qb) {
@@ -108,7 +109,9 @@ module.exports = {
             return bookshelf.transaction(function(trx) {
               return User.create(_.merge(_.pick(profile, 'email', 'name'), {
                 account: {facebook: profile},
-                community: community
+                community: community,
+                facebook_url: profile.profileUrl,
+                avatar_url: format('http://graph.facebook.com/%s/picture?type=large', profile.id)
               }), {transacting: trx});
             });
           })
