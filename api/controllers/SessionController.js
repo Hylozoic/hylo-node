@@ -84,7 +84,10 @@ module.exports = {
   },
 
   startFacebookOAuth: function(req, res) {
-    passport.authenticate('facebook', {scope: ['email', 'public_profile', 'user_friends']})(req, res);
+    passport.authenticate('facebook', {
+      display: 'popup',
+      scope: ['email', 'public_profile', 'user_friends']
+    })(req, res);
   },
 
   finishFacebookOAuth: function(req, res, next) {
