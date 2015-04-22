@@ -38,7 +38,7 @@ module.exports.policies = {
 
   SessionController: {
     create: true,
-    startOAuth: true,
+    startGoogleOAuth: true,
     finishGoogleOAuth: true,
     startFacebookOAuth: true,
     finishFacebookOAuth: true,
