@@ -40,19 +40,7 @@ module.exports = {
   },
 
   status: function(req, res) {
-    var playSession = new PlaySession(req);
-    if (playSession.isValid()) {
-      playSession.fetchUser().then(function(user) {
-        if (user) {
-          res.ok({signedIn: true});
-        } else {
-          res.ok({signedIn: false});
-        }
-      });
-      return;
-    }
-
-    res.ok({signedIn: false});
+    res.ok({signedIn: UserSession.isLoggedIn(req)});
   },
 
   findSelf: function(req, res) {

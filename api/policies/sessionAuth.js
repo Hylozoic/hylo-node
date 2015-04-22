@@ -27,7 +27,6 @@ var tryPublic = function(res, next) {
 };
 
 module.exports = function(req, res, next) {
-
   if (TokenAuth.isAuthenticated(res)) {
     sails.log.debug("policy: sessionAuth: validated by token");
     return next();
@@ -35,21 +34,5 @@ module.exports = function(req, res, next) {
     return next();
   }
 
-  var playSession = new PlaySession(req);
-
-  if (playSession.isValid()) {
-    playSession.fetchUser().then(function(user) {
-      if (!user)
-        return tryPublic(res, next);
-
-      sails.log.debug("policy: sessionAuth: validated as " + user.get('email'));
-
-      UserSession.setup(req, user, playSession.providerKey);
-      next();
-    });
-
-  } else {
-    tryPublic(res, next);
-  }
-
+  tryPublic(res, next);
 };
