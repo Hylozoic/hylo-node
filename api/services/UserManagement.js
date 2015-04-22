@@ -64,22 +64,35 @@ var generateMergeQueries = function(primaryUserId, secondaryUserId, knex) {
       table, userCol, userCol, uniqueCol, uniqueCol, table, userCol), psp));
   });
 
-  return {updates: updates, deletes: generateDeleteQueries(secondaryUserId, knex)};
+  return {updates: updates, deletes: generateRemoveQueries(secondaryUserId, knex)};
 };
 
-var generateDeleteQueries = function(userId, knex) {
+var generateRemoveQueries = function(userId, knex) {
 
-  var deletes = [];
+  var removals = [];
+
+  // clear columns without deleting rows
+  [
+    ['comment',   'deactivated_by_id'],
+    ['community', 'created_by_id'],
+    ['follower',  'added_by_id']
+  ].forEach(function(args) {
+    removals.push(knex.raw(format('update %s set %s = null where %s = %s', args[0], args[1], args[1], userId)));
+  });
 
   // cascading deletes
-  deletes.push(knex.raw('delete from notification_status where notification_id in ' +
+  removals.push(knex.raw('delete from notification_status where notification_id in ' +
     '(select id from notification where vote_id in (select id from vote where user_id = ?))', userId));
-  deletes.push(knex.raw('delete from notification where vote_id in (select id from vote where user_id = ?)', userId));
+  removals.push(knex.raw('delete from notification where vote_id in (select id from vote where user_id = ?)', userId));
+  removals.push(knex.raw('delete from thank_you where comment_id in ' +
+    '(select id from comment where user_id = ?)', userId));
 
   // deletes
   [
     // table, user id column
     ['users_community',     'users_id'],
+    ['community_invite',    'invited_by_id'],
+    ['community_invite',    'used_by_id'],
     ['contributor',         'user_id'],
     ['follower',            'user_id'],
     ['linked_account',      'user_id'],
@@ -93,22 +106,24 @@ var generateDeleteQueries = function(userId, knex) {
     ['user_post_relevance', 'user_id'],
     ['notification_status', 'recipient_id'],
     ['activity',            'reader_id'],
+    ['activity',            'actor_id'],
     ['token_action',        'target_user_id'],
     ['tours',               'user_id'],
     ['vote',                'user_id'],
+    ['comment',             'user_id'],
     ['users',               'id']
   ].forEach(function(args) {
-    deletes.push(knex.raw(format('delete from %s where %s = ?', args[0], args[1]), [userId]));
+    removals.push(knex.raw(format('delete from %s where %s = ?', args[0], args[1]), [userId]));
   });
 
-  return deletes;
+  return removals;
 }
 
 module.exports = {
 
   removeUser: function(userId) {
     return bookshelf.knex.transaction(function(trx) {
-      return Promise.all(generateDeleteQueries(userId, trx));
+      return Promise.all(generateRemoveQueries(userId, trx));
     });
   },
 
