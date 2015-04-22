@@ -133,7 +133,28 @@ describe('User', function() {
     });
 
     it('works with a google id', function() {
-      todo;
+      return bookshelf.transaction(function(trx) {
+        return User.create({
+          email: 'foo@bar.com',
+          community: community,
+          account: {google: {id: 'foo'}}
+        }, {transacting: trx});
+      })
+      .then(function(user) {
+        expect(user.id).to.exist;
+
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
+            expect(account).to.exist;
+            expect(account.get('provider_key')).to.equal('google');
+            expect(account.get('provider_user_id')).to.equal('foo');
+          }),
+          Membership.where({users_id: user.id}).fetch().then(function(membership) {
+            expect(membership).to.exist;
+            expect(membership.get('community_id')).to.equal(community.id);
+          })
+        );
+      });
     })
 
   })

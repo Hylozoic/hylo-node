@@ -1,5 +1,8 @@
-var passport = require('passport'),
-  GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+
+var format = require('util').format,
+  passport = require('passport'),
+  GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
+  FacebookStrategy = require('passport-facebook').Strategy;
 
 /////////////////////////////
 // admin login
@@ -7,7 +10,7 @@ var passport = require('passport'),
 var adminStrategy = new GoogleStrategy({
   clientID: process.env.ADMIN_GOOGLE_CLIENT_ID,
   clientSecret: process.env.ADMIN_GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.PROTOCOL + '://' + process.env.DOMAIN + '/admin/login/oauth'
+  callbackURL: format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, '/admin/login/oauth')
 }, function(accessToken, refreshToken, profile, done) {
   var email = profile.emails[0].value;
 
@@ -18,7 +21,6 @@ var adminStrategy = new GoogleStrategy({
   }
 });
 adminStrategy.name = 'admin';
-
 passport.use(adminStrategy);
 
 passport.serializeUser(function(user, done) {
@@ -36,17 +38,32 @@ passport.deserializeUser(function(user, done) {
 // doesn't use the serialize and deserialize handlers above
 // because we're using workarounds to play nice with Play
 // (see UserSession)
+//
+// TODO at some point when Play is totally out of the picture, refactor all this
+// so that the user logins are more in line with conventional usage of Passport, e.g.
+// use req.login to set req.user, and only the admin login is unconventional
+//
 
-var googleUserStrategy = new GoogleStrategy({
+var googleStrategy = new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.PROTOCOL + '://' + process.env.DOMAIN + '/noo/login/google/oauth'
+  callbackURL: format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, '/noo/login/google/oauth')
 }, function(accessToken, refreshToken, profile, done) {
   done(null, _.extend(profile, {
     name: profile.displayName,
     email: profile.emails[0].value,
   }));
 });
-googleUserStrategy.name = 'google';
+passport.use(googleStrategy);
 
-passport.use(googleUserStrategy);
+var facebookStrategy = new FacebookStrategy({
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  callbackURL: format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, '/noo/login/facebook/oauth')
+}, function(accessToken, refreshToken, profile, done) {
+  done(null, _.extend(profile, {
+    name: profile.displayName,
+    email: profile.emails[0].value
+  }));
+});
+passport.use(facebookStrategy);
