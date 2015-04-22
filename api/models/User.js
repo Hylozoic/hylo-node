@@ -132,10 +132,10 @@ module.exports = bookshelf.Model.extend({
     delete attributes.account;
     delete attributes.community;
 
-    return new User(_.merge({}, attributes, {
+    return new User(_.merge({}, {
       avatar_url: gravatar(attributes.email),
       date_created: new Date()
-    })).save({}, {transacting: trx}).tap(function(user) {
+    }, attributes)).save({}, {transacting: trx}).tap(function(user) {
       var actions = [Membership.create(user.id, community.id, {transacting: trx})];
 
       if (account.password) {
