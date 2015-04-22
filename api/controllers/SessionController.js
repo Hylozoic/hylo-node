@@ -21,16 +21,14 @@ module.exports = {
   },
 
   finishGoogleOAuth: function(req, res, next) {
-    var done = function() {
-      res.view('popupDone', {context: 'google', url: null, layout: null});
+    var done = function(err) {
+      res.view('popupDone', {context: 'google', error: err, layout: null});
     };
 
-    // FIXME fucking promisify this plz
+    // FIXME promisify this plz
     passport.authenticate('google', function(err, profile, info) {
       if (err) { return next(err); }
       if (!profile) { return res.redirect('/h/login'); }
-
-      sails.log.warn(profile);
 
       User.query(function(qb) {
         qb.leftJoin('linked_account', function() {
@@ -38,6 +36,7 @@ module.exports = {
         });
         qb.where('linked_account.provider_key', 'google');
         qb.where('email', profile.email).orWhere('provider_user_id', profile.id);
+
       }).fetch({
         withRelated: ['linkedAccounts']
       }).then(function(user) {
@@ -55,17 +54,19 @@ module.exports = {
           }
 
         } else {
+          if (!req.session.invitationCode) {
+            done('no community');
+            return;
+          }
+
           // create a new user linked to google
-          // HACKKK this fucking validatedCommunityCode thing
-          Community.where({beta_access_code: req.session.validatedCommunityCode}).fetch()
+          Community.where({beta_access_code: req.session.invitationCode}).fetch()
           .then(function(community) {
             return bookshelf.transaction(function(trx) {
-              return User.create({
-                email: profile.email,
-                name: profile.name,
+              return User.create(_.merge(_.pick(profile, 'email', 'name'), {
                 account: {google: profile},
                 community: community
-              }, {transacting: trx});
+              }), {transacting: trx});
             });
           })
           .then(function(user) {

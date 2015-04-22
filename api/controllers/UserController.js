@@ -5,14 +5,8 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var crypto = require('crypto'),
-  format = require('util').format,
+var format = require('util').format,
   validator = require('validator');
-
-var gravatar = function(email) {
-  var emailHash = crypto.createHash('md5').update(email).digest('hex');
-  return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash);
-};
 
 module.exports = {
 
@@ -26,8 +20,7 @@ module.exports = {
 
       var attrs = _.merge(_.pick(params, 'name', 'email'), {
         community: community,
-        avatar_url: gravatar(params.email),
-        account: {password: params.password},
+        account: {password: params.password}
       });
 
       return bookshelf.transaction(function(trx) {
