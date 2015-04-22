@@ -29,7 +29,7 @@ module.exports = {
     })
     .then(function(user) {
       if (req.param('login')) {
-        UserSession.setup(req, user, 'password');
+        UserSession.login(req, user, 'password');
       }
       res.ok({});
     })

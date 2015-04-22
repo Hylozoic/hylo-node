@@ -25,10 +25,18 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  createForUserWithGoogle: function(user, googleId, options) {
+  createForUserWithGoogle: function(user, id, options) {
     return new LinkedAccount({
       provider_key: 'google',
-      provider_user_id: googleId,
+      provider_user_id: id,
+      user_id: user.id
+    }).save({}, _.pick(options, 'transacting'));
+  },
+
+  createForUserWithFacebook: function(user, id, options) {
+    return new LinkedAccount({
+      provider_key: 'facebook',
+      provider_user_id: id,
       user_id: user.id
     }).save({}, _.pick(options, 'transacting'));
   }

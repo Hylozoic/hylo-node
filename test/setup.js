@@ -55,6 +55,7 @@ TestSetup.prototype.initDb = function(done) {
       table.boolean('active');
       table.integer('new_notification_count').defaultTo(0);
       table.datetime('last_login');
+      table.datetime('date_created');
     }),
     knex.schema.createTable('linked_account', function(table) {
       table.increments();

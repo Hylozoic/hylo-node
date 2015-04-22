@@ -142,6 +142,8 @@ module.exports = bookshelf.Model.extend({
         actions.push(LinkedAccount.createForUserWithPassword(user, account.password, {transacting: trx}));
       } else if (account.google) {
         actions.push(LinkedAccount.createForUserWithGoogle(user, account.google.id, {transacting: trx}));
+      } else if (account.facebook) {
+        actions.push(LinkedAccount.createForUserWithFacebook(user, account.facebook.id, {transacting: trx}));
       }
 
       return Promise.all(actions);

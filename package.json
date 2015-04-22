@@ -55,6 +55,7 @@
     "node-uuid": "^1.4.1",
     "parse-redis-url": "0.0.1",
     "passport": "^0.2.1",
+    "passport-facebook": "^2.0.0",
     "passport-google-oauth": "^0.1.5",
     "pg": "^3.6.2",
     "promirepl": "^1.0.1",

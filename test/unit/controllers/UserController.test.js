@@ -124,12 +124,12 @@ describe('UserController', function() {
         ok: spy(noop())
       };
 
-      UserSession.setup = spy(function() {});
+      UserSession.login = spy(function() {});
       User.create = spy(User.create);
 
       UserController.create(req, res).then(function() {
         expect(User.create).to.have.been.called();
-        expect(UserSession.setup).to.have.been.called();
+        expect(UserSession.login).to.have.been.called();
         expect(res.ok).to.have.been.called();
         expect(res.badRequest).not.to.have.been.called();
         done();
