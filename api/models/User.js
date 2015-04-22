@@ -1,4 +1,10 @@
-var format = require('util').format;
+var crypto = require('crypto'),
+  format = require('util').format;
+
+var gravatar = function(email) {
+  var emailHash = crypto.createHash('md5').update(email).digest('hex');
+  return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash);
+};
 
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
@@ -127,6 +133,7 @@ module.exports = bookshelf.Model.extend({
     delete attributes.community;
 
     return new User(_.merge({}, attributes, {
+      avatar_url: gravatar(attributes.email),
       date_created: new Date()
     })).save({}, {transacting: trx}).tap(function(user) {
       var actions = [Membership.create(user.id, community.id, {transacting: trx})];

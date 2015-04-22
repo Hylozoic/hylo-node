@@ -219,11 +219,13 @@ module.exports = {
       if (params.constraint === 'unique') {
         data = {unique: parseInt(rows[0].count) == 0};
       } else if (params.constraint === 'exists') {
-        // HACKKK
-        if (params.column === 'beta_access_code') {
-          req.session.validatedCommunityCode = params.value;
+        var exists = parseInt(rows[0].count) >= 1;
+        data = {exists: exists};
+
+        // store the code for use later in signup
+        if (exists && params.column === 'beta_access_code' && req.param('store_value')) {
+          req.session.invitationCode = params.value;
         }
-        data = {exists: parseInt(rows[0].count) >= 1};
       }
       res.ok(data);
     })
