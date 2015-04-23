@@ -14,31 +14,22 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  createForUserWithPassword: function(user, password, options) {
-    var hash = Promise.promisify(bcrypt.hash, bcrypt);
-    return hash(password, 10).then(function(hashed) {
+  create: function(userId, data, options) {
+    if (!options) options = {};
+
+    return (function() {
+      if (data.type === 'password') {
+        var hash = Promise.promisify(bcrypt.hash, bcrypt);
+        return hash(data.password, 10);
+      }
+      return Promise.resolve(null);
+    })().then(function(hashed) {
       return new LinkedAccount({
-        provider_key: 'password',
-        provider_user_id: hashed,
-        user_id: user.id
+        provider_key: data.type,
+        provider_user_id: hashed || data.profile.id,
+        user_id: userId
       }).save({}, _.pick(options, 'transacting'));
-    })
-  },
-
-  createForUserWithGoogle: function(user, id, options) {
-    return new LinkedAccount({
-      provider_key: 'google',
-      provider_user_id: id,
-      user_id: user.id
-    }).save({}, _.pick(options, 'transacting'));
-  },
-
-  createForUserWithFacebook: function(user, id, options) {
-    return new LinkedAccount({
-      provider_key: 'facebook',
-      provider_user_id: id,
-      user_id: user.id
-    }).save({}, _.pick(options, 'transacting'));
+    });
   }
 
 });

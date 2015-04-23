@@ -1,11 +1,6 @@
 var crypto = require('crypto'),
   format = require('util').format;
 
-var gravatar = function(email) {
-  var emailHash = crypto.createHash('md5').update(email).digest('hex');
-  return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash);
-};
-
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
 
@@ -129,24 +124,28 @@ module.exports = bookshelf.Model.extend({
       account = attributes.account,
       community = attributes.community;
 
-    delete attributes.account;
-    delete attributes.community;
-
-    return new User(_.merge({}, {
-      avatar_url: gravatar(attributes.email),
+    attributes = _.merge(_.omit(attributes, 'account', 'community'), {
+      avatar_url: User.gravatar(attributes.email),
       date_created: new Date()
-    }, attributes)).save({}, {transacting: trx}).tap(function(user) {
-      var actions = [Membership.create(user.id, community.id, {transacting: trx})];
+    });
 
-      if (account.password) {
-        actions.push(LinkedAccount.createForUserWithPassword(user, account.password, {transacting: trx}));
-      } else if (account.google) {
-        actions.push(LinkedAccount.createForUserWithGoogle(user, account.google.id, {transacting: trx}));
-      } else if (account.facebook) {
-        actions.push(LinkedAccount.createForUserWithFacebook(user, account.facebook.id, {transacting: trx}));
-      }
+    if (account.type === 'facebook') {
+      _.merge(attributes, {
+        facebook_url: account.profile.profileUrl,
+        avatar_url: format('http://graph.facebook.com/%s/picture?type=large', account.profile.id)
+      });
+    } else if (account.type === 'linkedin') {
+      _.merge(attributes, {
+        linkedin_url: account.profile._json.publicProfileUrl,
+        avatar_url: account.profile.photos[0]
+      });
+    }
 
-      return Promise.all(actions);
+    return new User(attributes).save({}, {transacting: trx}).tap(function(user) {
+      return Promise.join(
+        Membership.create(user.id, community.id, {transacting: trx}),
+        LinkedAccount.create(user.id, account, {transacting: trx})
+      );
     });
   },
 
@@ -183,6 +182,11 @@ module.exports = bookshelf.Model.extend({
   incNewNotificationCount: function(userId, transaction) {
     var query = User.query().where({id: userId}).increment('new_notification_count', 1);
     return (transaction ? query.transacting(transaction) : query);
+  },
+
+  gravatar: function(email) {
+    var emailHash = crypto.createHash('md5').update(email).digest('hex');
+    return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash);
   }
 
 });

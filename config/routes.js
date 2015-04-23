@@ -107,6 +107,8 @@ module.exports.routes = {
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
   'GET    /noo/login/facebook/oauth':                     'SessionController.finishFacebookOAuth',
+  'GET    /noo/login/linkedin':                           'SessionController.startLinkedinOAuth',
+  'GET    /noo/login/linkedin/oauth':                     'SessionController.finishLinkedinOAuth',
   'GET    /noo/logout':                                   'SessionController.destroy',
 
   '/*':                                                   'StaticPageController.proxy'

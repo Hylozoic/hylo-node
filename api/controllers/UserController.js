@@ -20,7 +20,7 @@ module.exports = {
 
       var attrs = _.merge(_.pick(params, 'name', 'email'), {
         community: community,
-        account: {password: params.password}
+        account: {type: 'password', password: params.password}
       });
 
       return bookshelf.transaction(function(trx) {

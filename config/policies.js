@@ -38,11 +38,13 @@ module.exports.policies = {
 
   SessionController: {
     create: true,
+    destroy: true,
     startGoogleOAuth: true,
     finishGoogleOAuth: true,
     startFacebookOAuth: true,
     finishFacebookOAuth: true,
-    destroy: true
+    startLinkedinOAuth: true,
+    finishLinkedinOAuth: true
   },
 
   LinkedinController: ['sessionAuth'],
