@@ -52,6 +52,8 @@ TestSetup.prototype.initDb = function(done) {
       table.string('name');
       table.string('email');
       table.string('avatar_url');
+      table.string('facebook_url');
+      table.string('linkedin_url');
       table.boolean('active');
       table.integer('new_notification_count').defaultTo(0);
       table.datetime('last_login');

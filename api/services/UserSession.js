@@ -20,5 +20,5 @@ module.exports = {
   // note that if you want to delete a key from existing sessions,
   // you'll have to add "delete req.session.foo"
   //
-  version: '3'
+  version: '4'
 }

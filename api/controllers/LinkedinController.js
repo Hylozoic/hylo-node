@@ -54,7 +54,7 @@ module.exports = {
       return doc.person['public-profile-url'][0];
     })
     .then(function(url) {
-      return res.view('popupDone', {context: 'linkedin', url: url, layout: null});
+      return res.view('popupDone', {context: 'linkedin-profile', url: url, layout: null});
     })
     .catch(function(err) {
       res.serverError(err);

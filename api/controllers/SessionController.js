@@ -22,6 +22,47 @@ var findCommunity = function(code) {
   return Community.where({beta_access_code: code}).fetch();
 };
 
+var finishOAuth = function(service, req, res, next) {
+  passport.authenticate(service, function(err, profile, info) {
+    if (err || !profile) {
+      res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null});
+      return;
+    }
+
+    findUser(service, profile.email, profile.id)
+    .then(function(user) {
+      if (user) {
+        UserSession.login(req, user, service);
+
+        // if this is a new account, link it to the user
+        if (!hasLinkedAccount(user, service)) {
+          return LinkedAccount.create(user.id, {type: service, profile: profile});
+        }
+      } else {
+        return findCommunity(req.session.invitationCode)
+        .then(function(community) {
+          return bookshelf.transaction(function(trx) {
+            return User.create(_.merge(_.pick(profile, 'email', 'name'), {
+              account: {type: service, profile: profile},
+              community: community
+            }), {transacting: trx});
+          });
+        })
+        .then(function(user) {
+          UserSession.login(req, user, service);
+        });
+      }
+    })
+    .then(function() {
+      res.view('popupDone', {context: 'oauth', layout: null});
+    })
+    .catch(function(err) {
+      res.view('popupDone', {context: 'oauth', error: err, layout: null});
+    });
+
+  })(req, res, next);
+};
+
 module.exports = {
 
   create: function(req, res) {
@@ -43,44 +84,7 @@ module.exports = {
   },
 
   finishGoogleOAuth: function(req, res, next) {
-    passport.authenticate('google', function(err, profile, info) {
-      if (err || !profile) {
-        res.view('popupDone', {context: 'google', error: err || 'no user', layout: null});
-        return;
-      }
-
-      findUser('google', profile.email, profile.id)
-      .then(function(user) {
-        if (user) {
-          UserSession.login(req, user, 'google');
-
-          // if this is a new Google account, link it to the user
-          if (!hasLinkedAccount(user, 'google')) {
-            return LinkedAccount.createForUserWithGoogle(user, profile.id);
-          }
-        } else {
-          return findCommunity(req.session.invitationCode)
-          .then(function(community) {
-            return bookshelf.transaction(function(trx) {
-              return User.create(_.merge(_.pick(profile, 'email', 'name'), {
-                account: {google: profile},
-                community: community
-              }), {transacting: trx});
-            });
-          })
-          .then(function(user) {
-            UserSession.login(req, user, 'google');
-          });
-        }
-      })
-      .then(function() {
-        res.view('popupDone', {context: 'google', layout: null});
-      })
-      .catch(function(err) {
-        res.view('popupDone', {context: 'google', error: err, layout: null});
-      });
-
-    })(req, res, next);
+    finishOAuth('google', req, res, next);
   },
 
   startFacebookOAuth: function(req, res) {
@@ -91,46 +95,15 @@ module.exports = {
   },
 
   finishFacebookOAuth: function(req, res, next) {
-    passport.authenticate('facebook', function(err, profile, info) {
-      if (err || !profile) {
-        res.view('popupDone', {context: 'facebook', error: err || 'no user', layout: null});
-        return;
-      }
+    finishOAuth('facebook', req, res, next);
+  },
 
-      sails.log.warn('facebook info', profile);
+  startLinkedinOAuth: function(req, res) {
+    passport.authenticate('linkedin')(req, res);
+  },
 
-      findUser('facebook', profile.email, profile.id)
-      .then(function(user) {
-        if (user) {
-          UserSession.login(req, user, 'facebook');
-          if (!hasLinkedAccount(user, 'facebook')) {
-            return LinkedAccount.createForUserWithFacebook(user, profile.id);
-          }
-        } else {
-          return findCommunity(req.session.invitationCode)
-          .then(function(community) {
-            return bookshelf.transaction(function(trx) {
-              return User.create(_.merge(_.pick(profile, 'email', 'name'), {
-                account: {facebook: profile},
-                community: community,
-                facebook_url: profile.profileUrl,
-                avatar_url: format('http://graph.facebook.com/%s/picture?type=large', profile.id)
-              }), {transacting: trx});
-            });
-          })
-          .then(function(user) {
-            UserSession.login(req, user, 'facebook');
-          });
-        }
-      })
-      .then(function() {
-        res.view('popupDone', {context: 'facebook', layout: null});
-      })
-      .catch(function(err) {
-        res.view('popupDone', {context: 'facebook', error: err, layout: null});
-      });
-
-    })(req, res, next);
+  finishLinkedinOauth: function(req, res, next) {
+    finishOAuth('linkedin', req, res, next);
   },
 
   destroy: function(req, res) {
