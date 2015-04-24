@@ -1,4 +1,6 @@
-var format = require('util').format;
+var bcrypt = require('bcrypt'),
+  crypto = require('crypto'),
+  format = require('util').format;
 
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
@@ -90,13 +92,26 @@ module.exports = bookshelf.Model.extend({
   encryptedEmail: function() {
     var plaintext = format('%s%s', process.env.MAILGUN_EMAIL_SALT, this.get('email'));
     return format('u=%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);
+  },
+
+  generateTokenContents: function() {
+    return format('crumbly:%s:%s:%s', this.id, this.get('email'), this.get('date_created'));
+  },
+
+  generateToken: function() {
+    var hash = Promise.promisify(bcrypt.hash, bcrypt);
+    return hash(this.generateTokenContents(), 10);
+  },
+
+  checkToken: function(token) {
+    var compare = Promise.promisify(bcrypt.compare, bcrypt);
+    return compare(this.generateTokenContents(), token);
   }
 
 }, {
 
   authenticate: function(email, password) {
-    var bcrypt = require('bcrypt'),
-      compare = Promise.promisify(bcrypt.compare, bcrypt);
+    var compare = Promise.promisify(bcrypt.compare, bcrypt);
 
     return User.where({email: email}).fetch({withRelated: ['linkedAccounts']})
     .then(function(user) {
@@ -118,8 +133,34 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
-  create: function(options) {
+  create: function(attributes, options) {
+    var trx = options.transacting,
+      account = attributes.account,
+      community = attributes.community;
 
+    attributes = _.merge(_.omit(attributes, 'account', 'community'), {
+      avatar_url: User.gravatar(attributes.email),
+      date_created: new Date()
+    });
+
+    if (account.type === 'facebook') {
+      _.merge(attributes, {
+        facebook_url: account.profile.profileUrl,
+        avatar_url: format('http://graph.facebook.com/%s/picture?type=large', account.profile.id)
+      });
+    } else if (account.type === 'linkedin') {
+      _.merge(attributes, {
+        linkedin_url: account.profile._json.publicProfileUrl,
+        avatar_url: account.profile.photos[0]
+      });
+    }
+
+    return new User(attributes).save({}, {transacting: trx}).tap(function(user) {
+      return Promise.join(
+        Membership.create(user.id, community.id, {transacting: trx}),
+        LinkedAccount.create(user.id, account, {transacting: trx})
+      );
+    });
   },
 
   find: function(id, options) {
@@ -155,6 +196,11 @@ module.exports = bookshelf.Model.extend({
   incNewNotificationCount: function(userId, transaction) {
     var query = User.query().where({id: userId}).increment('new_notification_count', 1);
     return (transaction ? query.transacting(transaction) : query);
+  },
+
+  gravatar: function(email) {
+    var emailHash = crypto.createHash('md5').update(email).digest('hex');
+    return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash);
   }
 
 });

@@ -11,6 +11,15 @@ var defaultOptions = {
 };
 
 module.exports = {
+
+  sendPasswordReset: function(opts) {
+    return sendEmail(_.merge({}, defaultOptions, {
+      email_id: 'tem_mccpcJNEzS4822mAnDNmGT',
+      recipient: {address: opts.email},
+      email_data: opts.templateData
+    }));
+  },
+
   sendInvitation: function(email, data) {
     return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_ZXZuvouDYKKhCrdEWYbEp9',

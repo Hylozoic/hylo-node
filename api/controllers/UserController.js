@@ -5,24 +5,42 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var validator = require('validator');
+var format = require('util').format,
+  validator = require('validator');
 
 module.exports = {
 
-  status: function(req, res) {
-    var playSession = new PlaySession(req);
-    if (playSession.isValid()) {
-      playSession.fetchUser().then(function(user) {
-        if (user) {
-          res.ok({signedIn: true});
-        } else {
-          res.ok({signedIn: false});
-        }
-      });
-      return;
-    }
+  create: function(req, res) {
+    var params = _.pick(req.allParams(), 'name', 'email', 'password', 'code');
 
-    res.ok({signedIn: false});
+    return Community.where({beta_access_code: params.code}).fetch()
+    .then(function(community) {
+      if (!community)
+        throw 'bad code';
+
+      var attrs = _.merge(_.pick(params, 'name', 'email'), {
+        community: community,
+        account: {type: 'password', password: params.password}
+      });
+
+      return bookshelf.transaction(function(trx) {
+        return User.create(attrs, {transacting: trx});
+      });
+    })
+    .then(function(user) {
+      if (req.param('login')) {
+        UserSession.login(req, user, 'password');
+      }
+      res.ok({});
+    })
+    .catch(function(err) {
+      res.badRequest(err.detail ? err.detail : err);
+      res.status(422);
+    });
+  },
+
+  status: function(req, res) {
+    res.ok({signedIn: UserSession.isLoggedIn(req)});
   },
 
   findSelf: function(req, res) {
@@ -161,6 +179,8 @@ module.exports = {
       }
     })
     .then(function(user) {
+      // FIXME this should be in a transaction
+
       user.setSanely(attrs);
 
       var promises = [];
@@ -179,6 +199,17 @@ module.exports = {
         if (param) promises.push(model[1].update(_.flatten([param]), user.id));
       });
 
+      var newPassword = req.param('password');
+      if (newPassword) {
+        promises.push(
+          LinkedAccount.where({user_id: user.id, provider_key: 'password'}).fetch()
+          .then(function(account) {
+            if (account) return account.updatePassword(newPassword);
+            return LinkedAccount.create(user.id, {type: 'password', password: newPassword});
+          })
+        );
+      }
+
       return Promise.all(promises);
 
     }).then(function() {
@@ -190,6 +221,26 @@ module.exports = {
         res.serverError(err);
       }
     });
+  },
+
+  sendPasswordReset: function(req, res) {
+    var email = req.param('email');
+    User.where('email', email).fetch().then(function(user) {
+      if (!user) {
+        res.ok({error: 'no user'});
+      } else {
+        user.generateToken().then(function(token) {
+          Queue.addJob('Email.sendPasswordReset', {
+            email: user.get('email'),
+            templateData: {
+              login_url: Frontend.Route.tokenLogin(user, token)
+            }
+          });
+          res.ok({});
+        });
+      }
+    })
+    .catch(res.serverError.bind(res));
   }
 
 };

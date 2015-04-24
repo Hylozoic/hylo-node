@@ -1,5 +1,11 @@
 <html>
 <body>
-<script type="text/javascript">opener.popupDone({context: '<%= context %>', url: '<%= url %>'});</script>
+<script type="text/javascript">
+opener.popupDone({
+  context: '<%= context %>',
+  error:   <%- typeof(error) === "undefined" ? 'null' : '"' + error + '"' %>,
+  url:     '<%= typeof(url) === "undefined" ? "" : url %>'
+});
+</script>
 </body>
 </html>

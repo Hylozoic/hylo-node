@@ -2,7 +2,8 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('UserController', function() {
 
-  var req, res, u1, u2;
+  var noop = function() { return (function() {}); },
+    req, res, u1, u2;
 
   before(function(done) {
     req = {
@@ -23,7 +24,7 @@ describe('UserController', function() {
     })
   });
 
-  describe('#update', function() {
+  describe('.update', function() {
 
     it('halts on invalid email', function(done) {
 
@@ -98,5 +99,45 @@ describe('UserController', function() {
     });
 
   });
+
+  describe('.create', function() {
+
+    before(function(done) {
+      new Community({beta_access_code: 'foo', name: 'foo'}).save().exec(done);
+    });
+
+    it('works with a username and password', function(done) {
+      _.extend(req, {
+        params: {
+          email: 'foo@bar.com',
+          password: 'password!',
+          code: 'foo',
+          login: true
+        }
+      });
+
+      res = {
+        badRequest: spy(function(err) {
+          console.error('badRequest: ' + err);
+        }),
+        status: noop(),
+        ok: spy(noop())
+      };
+
+      UserSession.login = spy(function() {});
+      User.create = spy(User.create);
+
+      UserController.create(req, res).then(function() {
+        expect(User.create).to.have.been.called();
+        expect(UserSession.login).to.have.been.called();
+        expect(res.ok).to.have.been.called();
+        expect(res.badRequest).not.to.have.been.called();
+        done();
+      })
+      .catch(done);
+
+    })
+
+  })
 
 });

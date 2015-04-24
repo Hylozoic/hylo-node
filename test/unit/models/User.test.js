@@ -1,4 +1,5 @@
-var setup = require(require('root-path')('test/setup'));
+var bcrypt = require('bcrypt'),
+  setup = require(require('root-path')('test/setup'));
 
 describe('User', function() {
 
@@ -97,4 +98,133 @@ describe('User', function() {
 
   });
 
-})
+  describe('.create', function() {
+
+    var community,
+      catPic = 'http://i.imgur.com/Kwe1K7k.jpg';
+
+    before(function(done) {
+      community = new Community({name: 'foo'});
+      community.save().exec(done);
+    });
+
+    it('works with a password', function() {
+      return bookshelf.transaction(function(trx) {
+        return User.create({
+          email: 'foo@bar.com',
+          community: community,
+          account: {type: 'password', password: 'password!'}
+        }, {transacting: trx});
+      })
+      .then(function(user) {
+        expect(user.id).to.exist;
+        expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'));
+        expect(user.get('date_created').getTime()).to.be.closeTo(new Date().getTime(), 2000);
+
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
+            expect(account).to.exist;
+            expect(account.get('provider_key')).to.equal('password');
+            expect(bcrypt.compareSync('password!', account.get('provider_user_id'))).to.be.true;
+          }),
+          Membership.find(user.id, community.id).then(function(membership) {
+            expect(membership).to.exist;
+          })
+        );
+      });
+    });
+
+    it('works with google', function() {
+      return bookshelf.transaction(function(trx) {
+        return User.create({
+          email: 'foo@bar.com',
+          community: community,
+          account: {type: 'google', profile: {id: 'foo'}}
+        }, {transacting: trx});
+      })
+      .then(function(user) {
+        expect(user.id).to.exist;
+
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
+            expect(account).to.exist;
+            expect(account.get('provider_key')).to.equal('google');
+            expect(account.get('provider_user_id')).to.equal('foo');
+          }),
+          Membership.find(user.id, community.id).then(function(membership) {
+            expect(membership).to.exist;
+          })
+        );
+      });
+    });
+
+    it('works with facebook', function() {
+      return bookshelf.transaction(function(trx) {
+        return User.create({
+          email: 'foo@bar.com',
+          community: community,
+          account: {
+            type: 'facebook',
+            profile: {
+              id: 'foo',
+              profileUrl: 'http://www.facebook.com/foo'
+            }
+          }
+        }, {transacting: trx});
+      })
+      .then(function(user) {
+        expect(user.id).to.exist;
+        expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/foo/picture?type=large');
+        expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo');
+
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
+            expect(account).to.exist;
+            expect(account.get('provider_key')).to.equal('facebook');
+            expect(account.get('provider_user_id')).to.equal('foo');
+          }),
+          Membership.find(user.id, community.id).then(function(membership) {
+            expect(membership).to.exist;
+          })
+        );
+      });
+    });
+
+    it('works with linkedin', function() {
+      return bookshelf.transaction(function(trx) {
+        return User.create({
+          email: 'foo@bar.com',
+          community: community,
+          account: {
+            type: 'linkedin',
+            profile: {
+              id: 'foo',
+              photos: [catPic],
+              _json: {
+                publicProfileUrl: 'https://www.linkedin.com/in/foobar'
+              }
+            }
+          }
+        }, {transacting: trx});
+      })
+      .then(function(user) {
+        expect(user.id).to.exist;
+        expect(user.get('avatar_url')).to.equal(catPic);
+        expect(user.get('linkedin_url')).to.equal('https://www.linkedin.com/in/foobar');
+
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
+            expect(account).to.exist;
+            expect(account.get('provider_key')).to.equal('linkedin');
+            expect(account.get('provider_user_id')).to.equal('foo');
+          }),
+          Membership.find(user.id, community.id).then(function(membership) {
+            expect(membership).to.exist;
+          })
+        );
+      });
+    });
+
+  });
+
+});

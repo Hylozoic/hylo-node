@@ -14,7 +14,7 @@ var Onboarding = {
   startForUser: function(user) {
     var isNewUser = newUserThreshold(user.get('date_created'));
 
-    Promise.props({
+    return Promise.props({
       new_user: isNewUser,
       can_skip_seed_form: (!isNewUser ? Aggregate.count(user.posts()).then(function(count) {
         return count > 0;

@@ -21,7 +21,7 @@ module.exports.bootstrap = function(done) {
   var knex = require('knex')(require('../knexfile')[process.env.NODE_ENV]);
 
   // log SQL queries
-  if (sails.config.environment == 'development') {
+  if (_.include(['development', 'test'], sails.config.environment)) {
     require('colors');
     knex.on('query', function(data) {
       var args = (_.clone(data.bindings) || []).map(function(s) {

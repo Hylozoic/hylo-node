@@ -1,12 +1,16 @@
-// logic for setting up the session when a user logs in
 
 module.exports = {
-  setup: function(req, user, providerKey) {
+  // logic for setting up the session when a user logs in
+  login: function(req, user, providerKey) {
     req.session.authenticated = true;
     req.session.userId = user.id;
     req.session.userProvider = providerKey;
     req.rollbar_person = user.pick('id', 'name', 'email');
     req.session.version = this.version;
+  },
+
+  isLoggedIn: function(req) {
+    return !!req.session.authenticated;
   },
 
   // if you change the keys that are added to the session above,
@@ -16,5 +20,5 @@ module.exports = {
   // note that if you want to delete a key from existing sessions,
   // you'll have to add "delete req.session.foo"
   //
-  version: '3'
+  version: '4'
 }

@@ -199,27 +199,37 @@ module.exports = {
 
   validate: function(req, res) {
     var allowedColumns = ['name', 'slug', 'beta_access_code'],
+      allowedConstraints = ['exists', 'unique'],
       params = _.pick(req.allParams(), 'constraint', 'column', 'value');
 
-    if (params.constraint === 'unique') {
-      // this whitelist prevents SQL injection
-      if (!_.contains(allowedColumns, params.column))
-        return res.badRequest(format('invalid value "%s" for parameter "column"', params.column));
+    // prevent SQL injection
+    if (!_.include(allowedColumns, params.column))
+      return res.badRequest(format('invalid value "%s" for parameter "column"', params.column));
 
-      if (!params.value)
-        return res.badRequest('missing required parameter "value"');
+    if (!params.value)
+      return res.badRequest('missing required parameter "value"');
 
-      var statement = format('lower(%s) = lower(?)', params.column);
+    if (!_.include(allowedConstraints, params.constraint))
+      return res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint));
 
-      Community.query().whereRaw(statement, params.value).count()
-      .then(function(rows) {
-        res.ok({unique: parseInt(rows[0].count) == 0});
-      })
-      .catch(res.serverError.bind(res));
+    var statement = format('lower(%s) = lower(?)', params.column);
+    Community.query().whereRaw(statement, params.value).count()
+    .then(function(rows) {
+      var data;
+      if (params.constraint === 'unique') {
+        data = {unique: parseInt(rows[0].count) == 0};
+      } else if (params.constraint === 'exists') {
+        var exists = parseInt(rows[0].count) >= 1;
+        data = {exists: exists};
 
-    } else {
-      res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint));
-    }
+        // store the code for use later in signup
+        if (exists && params.column === 'beta_access_code' && req.param('store_value')) {
+          req.session.invitationCode = params.value;
+        }
+      }
+      res.ok(data);
+    })
+    .catch(res.serverError.bind(res));
   },
 
   create: function(req, res) {

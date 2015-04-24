@@ -45,7 +45,9 @@ module.exports.routes = {
 
   'GET    /noo/user/status':                              'UserController.status',
   'GET    /noo/user/me':                                  'UserController.findSelf',
+  'POST   /noo/user/password':                            'UserController.sendPasswordReset',
   'GET    /noo/user/:userId':                             'UserController.findOne',
+  'POST   /noo/user':                                     'UserController.create',
   'POST   /noo/user/:userId':                             'UserController.update',
   'GET    /noo/user/:userId/contributions':               'UserController.contributions',
   'GET    /noo/user/:userId/thanks':                      'UserController.thanks',
@@ -102,6 +104,13 @@ module.exports.routes = {
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
 
   'POST   /noo/login':                                    'SessionController.create',
+  'GET    /noo/login/token':                              'SessionController.createWithToken',
+  'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
+  'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
+  'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
+  'GET    /noo/login/facebook/oauth':                     'SessionController.finishFacebookOAuth',
+  'GET    /noo/login/linkedin':                           'SessionController.startLinkedinOAuth',
+  'GET    /noo/login/linkedin/oauth':                     'SessionController.finishLinkedinOAuth',
   'GET    /noo/logout':                                   'SessionController.destroy',
 
   '/*':                                                   'StaticPageController.proxy'
