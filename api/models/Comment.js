@@ -87,7 +87,7 @@ module.exports = bookshelf.Model.extend({
           seed_label:            seedLabel,
           seed_title:            seed.get('name'),
           seed_url:              Frontend.Route.seed(seed, community) + '?ctt=comment_email',
-          unfollow_url:          Frontend.Route.unfollow(seed),
+          unfollow_url:          Frontend.Route.unfollow(seed, community),
           tracking_pixel_url:    Analytics.pixelUrl('Comment', {userId: recipient.id})
         }
       });

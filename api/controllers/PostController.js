@@ -169,7 +169,7 @@ module.exports = {
     var userId = req.session.userId, post = res.locals.post;
     Follower.query().where({user_id: userId, post_id: post.id}).count()
     .then(function(rows) {
-      if (parseInt(rows[0].count) > 0)
+      if (parseInt(rows[0].count) > 0 || req.param('force') === 'unfollow')
         return post.removeFollower(userId, {createActivity: true}).then(function() {
           res.ok({});
         });

@@ -22,8 +22,8 @@ module.exports = {
       return url('/c/%s/s/%s', community.get('slug'), seed.id);
     },
 
-    unfollow: function(seed) {
-      return url('/email/unfollow/%s', seed.id);
+    unfollow: function(seed, community) {
+      return this.seed(seed, community) + '?action=unfollow';
     },
 
     userSettings: function() {
