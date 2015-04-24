@@ -32,6 +32,10 @@ var jobDefinitions = {
 
   'Email.sendCommunityDigest': function(job) {
     return Email.sendCommunityDigest(job.data.emailData);
+  },
+
+  'Email.sendPasswordReset': function(job) {
+    return Email.sendPasswordReset(job.data);
   }
 
 };

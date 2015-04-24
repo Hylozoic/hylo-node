@@ -1,4 +1,5 @@
-var crypto = require('crypto'),
+var bcrypt = require('bcrypt'),
+  crypto = require('crypto'),
   format = require('util').format;
 
 module.exports = bookshelf.Model.extend({
@@ -91,13 +92,26 @@ module.exports = bookshelf.Model.extend({
   encryptedEmail: function() {
     var plaintext = format('%s%s', process.env.MAILGUN_EMAIL_SALT, this.get('email'));
     return format('u=%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);
+  },
+
+  generateTokenContents: function() {
+    return format('crumbly:%s:%s:%s', this.id, this.get('email'), this.get('date_created'));
+  },
+
+  generateToken: function() {
+    var hash = Promise.promisify(bcrypt.hash, bcrypt);
+    return hash(this.generateTokenContents(), 10);
+  },
+
+  checkToken: function(token) {
+    var compare = Promise.promisify(bcrypt.compare, bcrypt);
+    return compare(this.generateTokenContents(), token);
   }
 
 }, {
 
   authenticate: function(email, password) {
-    var bcrypt = require('bcrypt'),
-      compare = Promise.promisify(bcrypt.compare, bcrypt);
+    var compare = Promise.promisify(bcrypt.compare, bcrypt);
 
     return User.where({email: email}).fetch({withRelated: ['linkedAccounts']})
     .then(function(user) {

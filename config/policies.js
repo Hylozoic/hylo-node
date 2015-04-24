@@ -19,35 +19,16 @@
 
 module.exports.policies = {
 
-  /***************************************************************************
-  *                                                                          *
-  * Default policy for all controllers and actions (`true` allows public     *
-  * access)                                                                  *
-  *                                                                          *
-  ***************************************************************************/
-
   '*': false,
-
   StaticPageController: true,
+  SessionController: true,
+  LinkedinController: ['sessionAuth'],
 
   AdminSessionController: {
     create: true,
     oauth: true,
     destroy: true
   },
-
-  SessionController: {
-    create: true,
-    destroy: true,
-    startGoogleOAuth: true,
-    finishGoogleOAuth: true,
-    startFacebookOAuth: true,
-    finishFacebookOAuth: true,
-    startLinkedinOAuth: true,
-    finishLinkedinOAuth: true
-  },
-
-  LinkedinController: ['sessionAuth'],
 
   AdminController: {
     index: ['isAdmin'],
@@ -65,7 +46,8 @@ module.exports.policies = {
     findOne: ['sessionAuth', 'inSameCommunity'],
     update: ['sessionAuth', 'isSelf'],
     contributions: ['sessionAuth', 'inSameCommunity'],
-    thanks: ['sessionAuth', 'inSameCommunity']
+    thanks: ['sessionAuth', 'inSameCommunity'],
+    sendPasswordReset: true
   },
 
   ActivityController: {
@@ -115,26 +97,5 @@ module.exports.policies = {
     destroy: ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true,
   }
-
-  /***************************************************************************
-  *                                                                          *
-  * Here's an example of mapping some policies to run before a controller    *
-  * and its actions                                                          *
-  *                                                                          *
-  ***************************************************************************/
-	// RabbitController: {
-
-		// Apply the `false` policy as the default for all of RabbitController's actions
-		// (`false` prevents all access, which ensures that nothing bad happens to our rabbits)
-		// '*': false,
-
-		// For the action `nurture`, apply the 'isRabbitMother' policy
-		// (this overrides `false` above)
-		// nurture	: 'isRabbitMother',
-
-		// Apply the `isNiceToAnimals` AND `hasRabbitFood` policies
-		// before letting any users feed our rabbits
-		// feed : ['isNiceToAnimals', 'hasRabbitFood']
-	// }
 
 };
