@@ -28,6 +28,10 @@ module.exports = {
 
     userSettings: function() {
       return url('/settings');
+    },
+
+    tokenLogin: function(user, token) {
+      return url('/noo/login/token?u=%s&t=%s', user.id, token);
     }
   }
 

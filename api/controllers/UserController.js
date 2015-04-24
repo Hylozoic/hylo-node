@@ -179,6 +179,8 @@ module.exports = {
       }
     })
     .then(function(user) {
+      // FIXME this should be in a transaction
+
       user.setSanely(attrs);
 
       var promises = [];
@@ -197,6 +199,17 @@ module.exports = {
         if (param) promises.push(model[1].update(_.flatten([param]), user.id));
       });
 
+      var newPassword = req.param('password');
+      if (newPassword) {
+        promises.push(
+          LinkedAccount.where({user_id: user.id, provider_key: 'password'}).fetch()
+          .then(function(account) {
+            if (account) return account.updatePassword(newPassword);
+            return LinkedAccount.create(user.id, {type: 'password', password: newPassword});
+          })
+        );
+      }
+
       return Promise.all(promises);
 
     }).then(function() {
@@ -208,6 +221,26 @@ module.exports = {
         res.serverError(err);
       }
     });
+  },
+
+  sendPasswordReset: function(req, res) {
+    var email = req.param('email');
+    User.where('email', email).fetch().then(function(user) {
+      if (!user) {
+        res.ok({error: 'no user'});
+      } else {
+        user.generateToken().then(function(token) {
+          Queue.addJob('Email.sendPasswordReset', {
+            email: user.get('email'),
+            templateData: {
+              login_url: Frontend.Route.tokenLogin(user, token)
+            }
+          });
+          res.ok({});
+        });
+      }
+    })
+    .catch(res.serverError.bind(res));
   }
 
 };

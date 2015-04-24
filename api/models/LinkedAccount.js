@@ -1,4 +1,6 @@
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcrypt'),
+  Promise = require('bluebird'),
+  hash = Promise.promisify(bcrypt.hash, bcrypt);
 
 module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
@@ -10,6 +12,13 @@ module.exports = bookshelf.Model.extend({
   activeUser: function() {
     return this.belongsTo(User)
       .query({where: {active: true}});
+  },
+
+  updatePassword: function(password) {
+    var self = this;
+    return hash(password, 10).then(function(hashed) {
+      return self.save({provider_user_id: hashed}, {patch: true});
+    });
   }
 
 }, {
@@ -19,7 +28,6 @@ module.exports = bookshelf.Model.extend({
 
     return (function() {
       if (data.type === 'password') {
-        var hash = Promise.promisify(bcrypt.hash, bcrypt);
         return hash(data.password, 10);
       }
       return Promise.resolve(null);

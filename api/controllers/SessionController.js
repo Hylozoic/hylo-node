@@ -109,6 +109,27 @@ module.exports = {
   destroy: function(req, res) {
     req.session.destroy();
     res.redirect('/');
+  },
+
+  createWithToken: function(req, res) {
+    User.find(req.param('u')).then(function(user) {
+      if (!user) {
+        res.status(422).send("No user id");
+        return;
+      }
+
+      return Promise.join(user, user.checkToken(req.param('t')));
+    })
+    .spread(function(user, match) {
+      if (!match) {
+        res.status(422).send("Token doesn't match");
+        return;
+      }
+
+      UserSession.login(req, user, 'password');
+      res.redirect(Frontend.Route.userSettings());
+    })
+    .catch(res.serverError.bind(res));
   }
 
 }
