@@ -10,7 +10,7 @@ module.exports = {
   },
 
   isLoggedIn: function(req) {
-    return !!req.session.authenticated;
+    return !!req.session.authenticated && req.session.version == this.version;
   },
 
   // if you change the keys that are added to the session above,
