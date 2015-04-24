@@ -22,6 +22,7 @@ module.exports.policies = {
   '*': false,
   StaticPageController: true,
   SessionController: true,
+  InvitationController: true,
   LinkedinController: ['sessionAuth'],
 
   AdminSessionController: {

@@ -10,9 +10,32 @@ module.exports = bookshelf.Model.extend({
 
   creator: function() {
     return this.belongsTo(User, 'invited_by_id');
+  },
+
+  isUsed: function() {
+    return !!this.get('used_by_id');
+  },
+
+  use: function(userId, opts) {
+    if (!opts) opts = {};
+    var self = this, trx = opts.transacting;
+    return Membership.create(
+      userId,
+      this.get('community_id'),
+      {
+        role: Number(this.get('role')),
+        transacting: trx
+      }
+    ).tap(function() {
+      return self.save({used_by_id: userId, used_on: new Date()}, {patch: true, transacting: trx});
+    });
   }
 
 }, {
+
+  find: function(id, opts) {
+    return Invitation.where({id: id}).fetch(opts);
+  },
 
   create: function(opts) {
     var role = (opts.moderator ? Membership.MODERATOR_ROLE : Membership.DEFAULT_ROLE);

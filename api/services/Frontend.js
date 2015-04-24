@@ -32,6 +32,10 @@ module.exports = {
 
     tokenLogin: function(user, token) {
       return url('/noo/login/token?u=%s&t=%s', user.id, token);
+    },
+
+    error: function(key) {
+      return url('/error?key=' + encodeURIComponent(key));
     }
   }
 

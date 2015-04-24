@@ -2,7 +2,7 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('UserController', function() {
 
-  var noop = function() { return (function() {}); },
+  var noop = function() { return (function() { return this }); },
     req, res, u1, u2;
 
   before(function(done) {
@@ -113,14 +113,13 @@ describe('UserController', function() {
           password: 'password!',
           code: 'foo',
           login: true
-        }
+        },
+        session: {}
       });
 
       res = {
-        badRequest: spy(function(err) {
-          console.error('badRequest: ' + err);
-        }),
-        status: noop(),
+        send: console.error,
+        status: spy(noop()),
         ok: spy(noop())
       };
 
@@ -128,10 +127,10 @@ describe('UserController', function() {
       User.create = spy(User.create);
 
       UserController.create(req, res).then(function() {
+        expect(res.status).not.to.have.been.called();
         expect(User.create).to.have.been.called();
         expect(UserSession.login).to.have.been.called();
         expect(res.ok).to.have.been.called();
-        expect(res.badRequest).not.to.have.been.called();
         done();
       })
       .catch(done);

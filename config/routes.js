@@ -92,6 +92,8 @@ module.exports.routes = {
 
   'GET    /noo/search':                                   'SearchController.show',
 
+  'POST   /noo/invitation/:token':                        'InvitationController.use',
+
   'GET    /admin/login':                                  'AdminSessionController.create',
   'GET    /admin/login/oauth':                            'AdminSessionController.oauth',
   'GET    /admin/logout':                                 'AdminSessionController.destroy',

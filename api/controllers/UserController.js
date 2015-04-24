@@ -8,34 +8,46 @@
 var format = require('util').format,
   validator = require('validator');
 
+var findCommunity = function(req) {
+  if (req.session.invitationId) {
+    return Invitation.find(req.session.invitationId, {withRelated: ['community']})
+    .then(function(invitation) {
+      return [invitation.relations.community, invitation];
+    });
+  }
+
+  return Promise.join(Community.where({beta_access_code: req.param('code')}).fetch());
+};
+
 module.exports = {
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), 'name', 'email', 'password', 'code');
+    var params = _.pick(req.allParams(), 'name', 'email', 'password');
 
-    return Community.where({beta_access_code: params.code}).fetch()
-    .then(function(community) {
-      if (!community)
+    return findCommunity(req)
+    .spread(function(community, invitation) {
+      if (!community && !invitation)
         throw 'bad code';
 
       var attrs = _.merge(_.pick(params, 'name', 'email'), {
-        community: community,
+        community: (invitation ? null : community),
         account: {type: 'password', password: params.password}
       });
 
       return bookshelf.transaction(function(trx) {
-        return User.create(attrs, {transacting: trx});
+        return User.create(attrs, {transacting: trx}).tap(function(user) {
+          return (invitation ? invitation.use(user.id, {transacting: trx}) : null);
+        });
       });
     })
     .then(function(user) {
-      if (req.param('login')) {
+      if (req.param('login'))
         UserSession.login(req, user, 'password');
-      }
+
       res.ok({});
     })
     .catch(function(err) {
-      res.badRequest(err.detail ? err.detail : err);
-      res.status(422);
+      res.send(err.detail ? err.detail : err).status(422);
     });
   },
 

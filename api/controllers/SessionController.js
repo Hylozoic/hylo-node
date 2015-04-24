@@ -17,9 +17,15 @@ var hasLinkedAccount = function(user, service) {
   return !!user.relations.linkedAccounts.where({provider_key: service})[0];
 };
 
-var findCommunity = function(code) {
-  if (!code) throw 'no community';
-  return Community.where({beta_access_code: code}).fetch();
+var findCommunity = function(req) {
+  if (req.session.invitationId) {
+    return Invitation.find(req.session.invitationId, {withRelated: ['community']})
+    .then(function(invitation) {
+      return [invitation.relations.community, invitation];
+    });
+  }
+
+  return Promise.join(Community.where({beta_access_code: req.session.invitationCode}).fetch());
 };
 
 var finishOAuth = function(service, req, res, next) {
@@ -39,13 +45,20 @@ var finishOAuth = function(service, req, res, next) {
           return LinkedAccount.create(user.id, {type: service, profile: profile});
         }
       } else {
-        return findCommunity(req.session.invitationCode)
-        .then(function(community) {
+        return findCommunity(req)
+        .spread(function(community, invitation) {
+          if (!community && !invitation)
+            throw 'no community';
+
+          var attrs = _.merge(_.pick(profile, 'email', 'name'), {
+            community: (invitation ? null : community),
+            account: {type: service, profile: profile}
+          });
+
           return bookshelf.transaction(function(trx) {
-            return User.create(_.merge(_.pick(profile, 'email', 'name'), {
-              account: {type: service, profile: profile},
-              community: community
-            }), {transacting: trx});
+            return User.create(attrs, {transacting: trx}).tap(function(user) {
+              return (invitation ? invitation.use(user.id, {transacting: trx}) : null);
+            });
           });
         })
         .then(function(user) {

@@ -151,6 +151,7 @@ TestSetup.prototype.initDb = function(done) {
       table.bigInteger('invited_by_id');
       table.bigInteger('used_by_id');
       table.bigInteger('community_id');
+      table.datetime('used_on');
       table.string('email');
       table.string('token');
       table.integer('role');
