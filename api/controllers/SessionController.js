@@ -127,7 +127,7 @@ module.exports = {
       }
 
       UserSession.login(req, user, 'password');
-      res.redirect(Frontend.Route.userSettings());
+      res.redirect(Frontend.Route.userSettings() + '?expand=password');
     })
     .catch(res.serverError.bind(res));
   }
