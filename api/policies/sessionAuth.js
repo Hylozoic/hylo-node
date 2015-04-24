@@ -30,7 +30,7 @@ module.exports = function(req, res, next) {
   if (TokenAuth.isAuthenticated(res)) {
     sails.log.debug("policy: sessionAuth: validated by token");
     return next();
-  } else if (req.session.authenticated && req.session.version == UserSession.version) {
+  } else if (UserSession.isLoggedIn(req)) {
     return next();
   }
 
