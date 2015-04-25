@@ -11,12 +11,6 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  getFollowers: function(postId) {
-    return bookshelf.knex("follower").where({
-      post_id: postId
-    });
-  },
-
   create: function(postId, options) {
     // TODO add validation to make sure follower is a member of the community that the post belongs to.
     return new Follower({

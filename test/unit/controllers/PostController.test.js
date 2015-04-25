@@ -4,29 +4,27 @@ describe('PostController', function() {
   var fixtures, req, res;
 
   before(function(done) {
-    setup.initDb(function() {
-      return Promise.props({
-        u1: new User({name: 'U1'}).save(),
-        u2: new User({name: 'U2'}).save(),
-        p1: new Post({name: 'P1'}).save(),
-        c1: new Community({name: "C1"}).save()
-      }).then(function(props) {
-        fixtures = props;
+    return Promise.props({
+      u1: new User({name: 'U1'}).save(),
+      u2: new User({name: 'U2'}).save(),
+      p1: new Post({name: 'P1'}).save(),
+      c1: new Community({name: "C1"}).save()
+    }).then(function(props) {
+      fixtures = props;
 
-        req = {
-          allParams: function() {
-            return this.params;
-          },
-          param: function(name){
-            return this.params[name];
-          },
-          session: {userId: fixtures.u1.id},
-        };
+      req = {
+        allParams: function() {
+          return this.params;
+        },
+        param: function(name){
+          return this.params[name];
+        },
+        session: {userId: fixtures.u1.id},
+      };
 
-        res = {serverError: done};
+      res = {serverError: done};
 
-        done();
-      });
+      done();
     });
   });
 

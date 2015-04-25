@@ -3,25 +3,20 @@ var setup = require(require('root-path')('test/setup'));
 describe('UserController', function() {
 
   var noop = function() { return (function() { return this }); },
-    req, res, u1, u2;
+    req, res, u1;
 
-  before(function(done) {
+  beforeEach(function(done) {
     req = {
       allParams: function() { return this.params },
       param: function(key) { return this.params[key] },
       __: sails.__
     };
     u1 = new User({email: 'foo@bar.com'});
-    u2 = new User({email: 'baz@bax.com'});
+    u1.save().exec(done);
+  });
 
-    setup.initDb(function() {
-      Promise.join(
-        u1.save(),
-        u2.save()
-      ).then(function() {
-        done();
-      }).catch(done);
-    })
+  afterEach(function(done) {
+    setup.clearDb(done);
   });
 
   describe('.update', function() {
@@ -59,25 +54,35 @@ describe('UserController', function() {
       UserController.update(req, res);
     });
 
-    it('only updates changed fields', function(done) {
+    it('only updates changed fields', function() {
       _.extend(req, {
         params: {userId: u1.id, twitter_name: 'ev'}
       });
 
       res = {
-        ok: function() { done(); }
+        ok: spy(noop()),
+        serverError: function(err) {
+          console.error(err);
+          console.error(err.stack);
+        }
       };
 
+      User.trueFind = User.find;
       User.find = function(id) {
         return Promise.resolve(id == u1.id ? u1 : null);
-      }
+      };
 
-      u1.save = function(fields, options) {
+      u1.save = spy(function(fields, options) {
         expect(fields).to.eql({twitter_name: 'ev'});
         expect(options).to.eql({patch: true});
-      }
+      });
 
-      UserController.update(req, res);
+      return UserController.update(req, res).then(function() {
+        expect(u1.save).to.have.been.called();
+      })
+      .finally(function() {
+        User.find = User.trueFind;
+      });
     });
 
     it('updates skills', function(done) {
@@ -137,6 +142,33 @@ describe('UserController', function() {
 
     })
 
-  })
+  });
+
+  describe('.findSelf', function() {
+
+    it('returns a response with private details', function() {
+      var response;
+
+      req.session = {
+        userId: u1.id
+      };
+
+      res = {
+        ok: spy(function(data) {
+          response = data;
+        }),
+        serverError: spy(function(err) {
+          console.error(err);
+          console.error(err.stack);
+        })
+      };
+
+      return UserController.findSelf(req, res).then(function() {
+        expect(res.ok).to.have.been.called();
+        expect(res.serverError).not.to.have.been.called();
+        expect(response.notification_count).to.exist;
+      });
+    });
+  });
 
 });

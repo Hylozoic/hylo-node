@@ -54,6 +54,7 @@ TestSetup.prototype.initDb = function(done) {
       table.string('avatar_url');
       table.string('facebook_url');
       table.string('linkedin_url');
+      table.string('twitter_name');
       table.boolean('active');
       table.integer('new_notification_count').defaultTo(0);
       table.datetime('last_login');
@@ -165,10 +166,43 @@ TestSetup.prototype.initDb = function(done) {
       table.bigInteger('user_id');
       table.string('org_name');
     }),
+    knex.schema.createTable('phones', function(table) {
+      table.increments().primary();
+      table.bigInteger('user_id').references('id').inTable('users');
+      table.string('value');
+    }),
+    knex.schema.createTable('emails', function(table) {
+      table.increments().primary();
+      table.bigInteger('user_id').references('id').inTable('users');
+      table.string('value');
+    }),
+    knex.schema.createTable('websites', function(table) {
+      table.increments().primary();
+      table.bigInteger('user_id').references('id').inTable('users');
+      table.string('value');
+    }),
+    knex.schema.table('users', function(table) {
+      table.text('work');
+      table.text('intention');
+      table.text('extra_info');
+    }),
     knex.schema.createTable('media', function(table) {
       table.increments();
       table.bigInteger('post_id');
       table.string('url');
+    }),
+    knex.schema.createTable('tours', function(table) {
+      table.increments();
+      table.bigInteger('user_id');
+      table.string('type');
+      table.json('status');
+    }),
+    knex.schema.createTable('thank_you', function(table) {
+      table.increments();
+      table.bigInteger('user_id');
+      table.bigInteger('comment_id');
+      table.datetime('date_thanked');
+      table.bigInteger('thanked_by_id');
     })
   ]).then(function() {
     this.dbInited = true;

@@ -4,24 +4,22 @@ describe('checkAndSetPost', function() {
   var fixtures, req, res, next;
 
   before(function(done) {
-    setup.initDb(function() {
-      Promise.props({
-        u1: new User({name: 'U1'}).save(),
-        c1: new Community({name: "C1"}).save(),
-        c2: new Community({name: "C2"}).save(),
-        p1: new Post({name: "P1"}).save(),
-        p2: new Post({name: "P2"}).save()
-      }).then(function(props) {
-        fixtures = props;
-        return Promise.props({
-          pc1: props.c1.posts().attach(props.p1.id),
-          pc2: props.c2.posts().attach(props.p2.id),
-          m1: new Membership({community_id: props.c1.id, users_id: props.u1.id}).save()
-        });
-      }).then(function(props) {
-        fixtures.m1 = props.m1;
-        done();
+    Promise.props({
+      u1: new User({name: 'U1'}).save(),
+      c1: new Community({name: "C1"}).save(),
+      c2: new Community({name: "C2"}).save(),
+      p1: new Post({name: "P1"}).save(),
+      p2: new Post({name: "P2"}).save()
+    }).then(function(props) {
+      fixtures = props;
+      return Promise.props({
+        pc1: props.c1.posts().attach(props.p1.id),
+        pc2: props.c2.posts().attach(props.p2.id),
+        m1: new Membership({community_id: props.c1.id, users_id: props.u1.id}).save()
       });
+    }).then(function(props) {
+      fixtures.m1 = props.m1;
+      done();
     });
   });
 

@@ -59,7 +59,7 @@ module.exports = {
     if (!req.session.userId)
       return res.ok({});
 
-    Onboarding.maybeStart(req.session.userId)
+    return Onboarding.maybeStart(req.session.userId)
     .then(function() {
       return UserPresenter.fetchForSelf(req.session.userId);
     }).then(function(attributes) {
@@ -177,7 +177,7 @@ module.exports = {
       'new_notification_count'
     ]);
 
-    User.find(req.param('userId'))
+    return User.find(req.param('userId'))
     .tap(function(user) {
       var newEmail = attrs.email, oldEmail = user.get('email');
       if (newEmail && newEmail != oldEmail) {
