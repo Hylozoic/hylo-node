@@ -103,8 +103,13 @@ module.exports = {
       edited:        false
     };
 
-    bookshelf.transaction(function(trx) {
-      return new Post(attrs).save(null, {transacting: trx})
+    Community.find(params.communityId).then(function(community) {
+      if (community.isNewContentPublic())
+        attrs.visibility = Post.Visibility.PUBLIC_READABLE;
+    })
+    .then(function(community) {
+      return bookshelf.transaction(function(trx) {
+        return new Post(attrs).save(null, {transacting: trx})
         .tap(function (post) {
           var mentioned = RichText.getUserMentions(description),
             followerIds = _.uniq(mentioned.concat(creatorId));
@@ -134,9 +139,10 @@ module.exports = {
               url: params.imageUrl,
               transacting: trx
             }) : null)
-
           );
+
         });
+      });
     })
     .then(function (post) {
       return post.load(PostPresenter.relations(req.session.userId));

@@ -49,6 +49,10 @@ module.exports = bookshelf.Model.extend({
         this.on('post_community.post_id', '=', 'comment.post_id');
       });
     });
+  },
+
+  isNewContentPublic: function() {
+    return this.get('default_public_content') && this.get('allow_public_content');
   }
 
 }, {
