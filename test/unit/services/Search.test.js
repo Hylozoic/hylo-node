@@ -1,22 +1,12 @@
 require(require('root-path')('test/setup'));
 
-var heredoc = require('heredoc');
+var format = require('util').format,
+  heredoc = require('heredoc'),
+  time = require('time');
 
 describe('Search', function() {
 
   describe('.forSeeds', function() {
-    var tz;
-
-    // set timezone to UTC for this test for consistency across
-    // different test environments
-    beforeEach(function() {
-      tz = process.env.TZ;
-      process.env.TZ = 'UTC';
-    });
-
-    afterEach(function() {
-      process.env.TZ = tz;
-    })
 
     it('produces the expected SQL for a complex query', function() {
 
@@ -33,7 +23,16 @@ describe('Search', function() {
         sort: 'post.last_updated'
       }).query().toString();
 
-      var expected = heredoc.strip(function() {/*
+      var tz = new time.Date().getTimezone();
+      if (tz == 'America/Los_Angeles') {
+        var startTime = '2015-03-24 19:54:12.983',
+          endTime = '2015-03-31 19:54:12.983';
+      } else {
+        var startTime = '2015-03-25 02:54:12.983',
+          endTime = '2015-04-01 02:54:12.983';
+      }
+
+      var expected = format(heredoc.strip(function() {/*
         select *, count(*) over () as total
         from "post"
         inner join "post_community" on "post_community"."post_id" = "post"."id"
@@ -46,12 +45,12 @@ describe('Search', function() {
         and "follower"."user_id" = 37
         and "post"."creator_id" != 37
         and "type" = 'request'
-        and ((post.creation_date between '2015-03-25 02:54:12.983' and '2015-04-01 02:54:12.983')
-          or (post.last_updated between '2015-03-25 02:54:12.983' and '2015-04-01 02:54:12.983'))
+        and ((post.creation_date between '%s' and '%s')
+          or (post.last_updated between '%s' and '%s'))
         order by "post"."last_updated" desc
         limit 5
         offset 7
-      */}).replace(/(\n\s*)/g, ' ').trim();
+      */}).replace(/(\n\s*)/g, ' ').trim(), startTime, endTime, startTime, endTime);
 
       expect(query).to.equal(expected);
     });
