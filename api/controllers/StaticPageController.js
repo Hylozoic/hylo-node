@@ -12,6 +12,7 @@ var appPathPrefixes = [
   /^\/settings/,
   /^\/edit-profile/,
   /^\/create\/community/,
+  /^\/community\/invite/
 ];
 
 module.exports = {
