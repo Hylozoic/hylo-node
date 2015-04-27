@@ -36,6 +36,10 @@ module.exports = {
 
     error: function(key) {
       return url('/error?key=' + encodeURIComponent(key));
+    },
+
+    useInvitation: function(token) {
+      return url('/h/use-invitation?token=%s', token);
     }
   }
 
