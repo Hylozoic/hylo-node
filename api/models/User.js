@@ -52,6 +52,11 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Thank)
   },
 
+  devices: function() {
+    return this.hasMany(Device, 'user_id');
+  },
+
+    
   onboarding: function() {
     return this.hasOne(Tour).query({where: {type: 'onboarding'}});
   },
@@ -104,7 +109,7 @@ module.exports = bookshelf.Model.extend({
   checkToken: function(token) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt);
     return compare(this.generateTokenContents(), token);
-  }
+  },
 
 }, {
 
