@@ -37,7 +37,7 @@ module.exports.policies = {
   },
 
   SearchController: {
-    show: ['sessionAuth', 'checkAndSetMembership']
+    show: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership']
   },
 
   UserController: {
@@ -78,8 +78,8 @@ module.exports.policies = {
 
   PostController: {
     findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    findForCommunity: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findForUser:      ['sessionAuth', 'inSameCommunity'],
-    findForCommunity: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     create:           ['sessionAuth', 'checkAndSetMembership'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],
     addFollowers:     ['sessionAuth', 'checkAndSetPost'],

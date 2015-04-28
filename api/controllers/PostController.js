@@ -18,6 +18,7 @@ var findPosts = function(req, res, opts) {
     offset: params.offset,
     start_time: params.start_time,
     end_time: params.end_time,
+    visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE),
     sort: sortCol
   }).then(function(args) {
     return Search.forSeeds(args).fetchAll({

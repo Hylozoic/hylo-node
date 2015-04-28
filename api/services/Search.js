@@ -43,6 +43,10 @@ module.exports = {
           [opts.start_time, opts.end_time, opts.start_time, opts.end_time]);
       }
 
+      if (opts.visibility) {
+        qb.where({visibility: opts.visibility});
+      }
+
       if (opts.sort) {
         qb.orderBy(opts.sort, 'desc');
       }

@@ -31,8 +31,13 @@ module.exports = {
   },
 
   findOne: function(req, res) {
-    if (!req.session.userId)
-      return res.ok(res.locals.community.pick('id', 'name', 'avatar_url'));
+    if (!req.session.userId) {
+      var limitedAttributes = _.merge(
+        res.locals.community.pick('id', 'name', 'avatar_url', 'banner_url', 'description'),
+        {readonly: true}
+      );
+      return res.ok(limitedAttributes);
+    }
 
     Membership.find(req.session.userId, req.param('communityId')).then(function(membership) {
       res.ok(communityAttributes(res.locals.community, membership));
