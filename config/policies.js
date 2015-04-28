@@ -26,14 +26,14 @@ module.exports.policies = {
   LinkedinController: ['sessionAuth'],
 
   AdminSessionController: {
-    create: true,
-    oauth: true,
+    create:  true,
+    oauth:   true,
     destroy: true
   },
 
   AdminController: {
     index: ['isAdmin'],
-    test: ['isAdmin']
+    test:  ['isAdmin']
   },
 
   SearchController: {
@@ -41,19 +41,19 @@ module.exports.policies = {
   },
 
   UserController: {
-    status: true,
-    create: true,
-    findSelf: ['allowPublicAccess', 'sessionAuth'],
-    findOne: ['sessionAuth', 'inSameCommunity'],
-    update: ['sessionAuth', 'isSelf'],
-    contributions: ['sessionAuth', 'inSameCommunity'],
-    thanks: ['sessionAuth', 'inSameCommunity'],
+    status:            true,
+    create:            true,
+    findSelf:          ['allowPublicAccess', 'sessionAuth'],
+    findOne:           ['sessionAuth', 'inSameCommunity'],
+    update:            ['sessionAuth', 'isSelf'],
+    contributions:     ['sessionAuth', 'inSameCommunity'],
+    thanks:            ['sessionAuth', 'inSameCommunity'],
     sendPasswordReset: true
   },
 
   ActivityController: {
-    find: ['sessionAuth'],
-    update: ['sessionAuth', 'isActivityOwner'],
+    find:        ['sessionAuth'],
+    update:      ['sessionAuth', 'isActivityOwner'],
     markAllRead: ['sessionAuth']
   },
 
@@ -62,40 +62,40 @@ module.exports.policies = {
   },
 
   CommunityController: {
-    findDefault: ['sessionAuth'],
-    findOne: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    update: ['sessionAuth', 'isModerator'],
-    invite: ['sessionAuth', 'canInvite'],
-    findModerators: ['sessionAuth', 'isModerator'],
-    addModerator: ['sessionAuth', 'isModerator'],
+    findDefault:     ['sessionAuth'],
+    findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    update:          ['sessionAuth', 'isModerator'],
+    invite:          ['sessionAuth', 'canInvite'],
+    findModerators:  ['sessionAuth', 'isModerator'],
+    addModerator:    ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
-    findMembers: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    removeMember: ['sessionAuth', 'isModerator'],
-    leave: ['sessionAuth', 'checkAndSetMembership'],
-    validate: true,
-    create: ['sessionAuth']
+    findMembers:     ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    removeMember:    ['sessionAuth', 'isModerator'],
+    leave:           ['sessionAuth', 'checkAndSetMembership'],
+    validate:        true,
+    create:          ['sessionAuth']
   },
 
   PostController: {
-    findOne: ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
-    findForUser: ['sessionAuth', 'inSameCommunity'],
+    findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    findForUser:      ['sessionAuth', 'inSameCommunity'],
     findForCommunity: ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    create: ['sessionAuth', 'checkAndSetMembership'],
-    update: ['sessionAuth', 'checkAndSetWritablePost'],
-    addFollowers: ['sessionAuth', 'checkAndSetPost'],
-    follow: ['sessionAuth', 'checkAndSetPost'],
-    findFollowed: ['sessionAuth', 'isSelf'],
-    findAllForUser: ['sessionAuth', 'isSelf'],
-    fulfill: ['sessionAuth', 'checkAndSetOwnPost'],
-    vote: ['sessionAuth', 'checkAndSetPost'],
-    destroy: ['sessionAuth', 'checkAndSetWritablePost']
+    create:           ['sessionAuth', 'checkAndSetMembership'],
+    update:           ['sessionAuth', 'checkAndSetWritablePost'],
+    addFollowers:     ['sessionAuth', 'checkAndSetPost'],
+    follow:           ['sessionAuth', 'checkAndSetPost'],
+    findFollowed:     ['sessionAuth', 'isSelf'],
+    findAllForUser:   ['sessionAuth', 'isSelf'],
+    fulfill:          ['sessionAuth', 'checkAndSetOwnPost'],
+    vote:             ['sessionAuth', 'checkAndSetPost'],
+    destroy:          ['sessionAuth', 'checkAndSetWritablePost']
   },
 
   CommentController: {
-    create: ['sessionAuth', 'checkAndSetPost'],
-    thank: ['sessionAuth'],
-    findForPost: ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
-    destroy: ['sessionAuth', 'isCommentOwner'],
+    create:          ['sessionAuth', 'checkAndSetPost'],
+    thank:           ['sessionAuth'],
+    findForPost:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    destroy:         ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true,
   }
 
