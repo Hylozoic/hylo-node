@@ -114,6 +114,11 @@ module.exports.policies = {
     invite:     ['sessionAuth', 'checkAndSetWritableProject'],
     join:       ['sessionAuth', 'checkAndSetProject'],
     removeUser: ['sessionAuth', 'checkAndSetWritableProject']
+  },
+
+  PushNotificationController: {
+      test: true,
+      addDevice: true,
   }
 
 };

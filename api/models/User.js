@@ -111,6 +111,8 @@ module.exports = bookshelf.Model.extend({
     return compare(this.generateTokenContents(), token);
   },
 
+
+    
 }, {
 
   authenticate: function(email, password) {

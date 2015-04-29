@@ -127,6 +127,9 @@ module.exports.routes = {
   'GET    /noo/login/linkedin/oauth':                     'SessionController.finishLinkedinOAuth',
   'GET    /noo/logout':                                   'SessionController.destroy',
 
+    'GET    /noo/pn/test':                                   'PushNotificationController.test',
+  'POST    /noo/pn/add-device':                                   'PushNotificationController.addDevice',        
+
   '/*':                                                   'StaticPageController.proxy'
 
 };
