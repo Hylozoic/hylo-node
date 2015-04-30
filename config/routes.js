@@ -104,6 +104,7 @@ module.exports.routes = {
   'GET    /noo/linkedin/provide':                         'LinkedinController.provideData',
 
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
+  'POST   /noo/hook/message':                             'MessageController.relayFromEmail',
 
   'POST   /noo/login':                                    'SessionController.create',
   'GET    /noo/login/token':                              'SessionController.createWithToken',

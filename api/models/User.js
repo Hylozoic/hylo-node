@@ -90,8 +90,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   encryptedEmail: function() {
-    var plaintext = format('%s%s', process.env.MAILGUN_EMAIL_SALT, this.get('email'));
-    return format('u=%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);
+    return User.encryptEmail(this.get('email'));
   },
 
   generateTokenContents: function() {
@@ -202,6 +201,21 @@ module.exports = bookshelf.Model.extend({
   gravatar: function(email) {
     var emailHash = crypto.createHash('md5').update(email).digest('hex');
     return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash);
+  },
+
+  encryptEmail: function(email) {
+    var plaintext = format('%s%s', process.env.MAILGUN_EMAIL_SALT, email);
+    return format('u=%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);
+  },
+
+  decryptEmail: function(email) {
+    var pattern = new RegExp(format("u=(\\w+)@%s", process.env.MAILGUN_DOMAIN)),
+      match = email.match(pattern),
+      hash = match[1],
+      decrypted = PlayCrypto.decrypt(hash),
+      unsalted = decrypted.replace(new RegExp('^' + process.env.MAILGUN_EMAIL_SALT), '');
+
+    return unsalted;
   }
 
 });

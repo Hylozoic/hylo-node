@@ -97,6 +97,10 @@ module.exports.policies = {
     findForPost:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     destroy:         ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true,
+  },
+
+  MessageController: {
+    relayFromEmail: true
   }
 
 };
