@@ -6,8 +6,8 @@ var email = require('email-addresses'),
 module.exports = {
 
   relayFromEmail: function(req, res) {
-    var from = email.parseOneAddress(req.param('To')),
-      to = email.parseOneAddress(req.param('From')),
+    var from = email.parseOneAddress(req.param('From')),
+      to = email.parseOneAddress(req.param('To')),
       recipient, sender;
 
     try {
