@@ -31,6 +31,9 @@ module.exports = {
       html: req.param('body-html')
     });
 
+    // TODO add attachments
+    // var attachmentCount = Number(req.param('attachment-count') || 0);
+
     var buildMessage = Promise.promisify(composer.buildMessage, composer),
       mg = new Mailgun(process.env.MAILGUN_API_KEY),
       sendRaw = Promise.promisify(mg.sendRaw, mg);
