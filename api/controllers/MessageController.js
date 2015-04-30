@@ -15,7 +15,7 @@ module.exports = {
       sender = User.encryptEmail(from.address);
     } catch (e) {
       res.send('Not Acceptable').status(406);
-      require('rollbar').handleError(e, {to: to, from: from});
+      require('rollbar').handleError(e, req);
       return;
     }
 
