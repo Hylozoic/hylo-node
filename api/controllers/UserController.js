@@ -89,16 +89,14 @@ module.exports = {
         qb.limit(limit);
         qb.offset(start);
         qb.join("post", "post.id", "=", "contributor.post_id");
-        qb.where({user_id: userId});
+
+        qb.where({user_id: userId, "post.active": true});
 
         if (!isSelf) {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
           qb.whereIn("community.id", communityIds);
         }
-
-        qb.where({"post.active": true});
-
       }).fetchAll({
         withRelated: [
           {
@@ -137,13 +135,17 @@ module.exports = {
         qb.join("comment", "comment.id", "=", "thank_you.comment_id");
         qb.join("post", "post.id", "=", "comment.post_id");
 
+        qb.where({
+          'comment.user_id': userId,
+          "comment.active": true,
+          "post.active": true
+        });
+
         if (!isSelf) {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
           qb.join("community", "community.id", "=", "post_community.community_id");
           qb.whereIn("community.id", communityIds);
         }
-
-        qb.where({"comment.active": true, "post.active": true});
       }).fetchAll({
         withRelated: [
           {

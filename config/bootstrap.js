@@ -34,7 +34,7 @@ module.exports.bootstrap = function(done) {
 
       // TODO fix missing limit and boolean values
       var query = util.format.apply(util, args)
-        .replace(/^(select|insert|update)/, '$1'.green);
+        .replace(/^(select|insert|update)/, '$1'.yellow);
 
       sails.log.info(query);
     });
