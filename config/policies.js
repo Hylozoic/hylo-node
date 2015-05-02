@@ -101,6 +101,10 @@ module.exports.policies = {
 
   MessageController: {
     relayFromEmail: true
+  },
+
+  ProjectController: {
+    create: ['sessionAuth']
   }
 
 };

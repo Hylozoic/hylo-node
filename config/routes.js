@@ -90,6 +90,8 @@ module.exports.routes = {
   'POST   /noo/activity/mark-all-read':                   'ActivityController.markAllRead',
   'POST   /noo/activity/:activityId':                     'ActivityController.update',
 
+  'POST   /noo/project':                                  'ProjectController.create',
+
   'GET    /noo/search':                                   'SearchController.show',
 
   'POST   /noo/invitation/:token':                        'InvitationController.use',

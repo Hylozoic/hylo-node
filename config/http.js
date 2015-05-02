@@ -31,7 +31,7 @@ module.exports.http = {
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
     requestLogger: function (req, res, next) {
-      sails.log.info(util.format(' %s %s ', req.method, req.url).black.bgYellow);
+      sails.log.info(util.format('%s %s ', req.method, req.url).magenta);
       next();
     },
 
