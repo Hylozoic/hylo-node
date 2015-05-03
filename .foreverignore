@@ -1,5 +1,6 @@
 **/.tmp/**
 **/views/**
+**/coverage/**
 **/.git/**
 **/node_modules/**
 **/test/**
