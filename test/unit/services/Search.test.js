@@ -28,8 +28,8 @@ describe('Search', function() {
         var startTime = '2015-03-24T19:54:12.983-07:00',
           endTime = '2015-03-31T19:54:12.983-07:00';
       } else {
-        var startTime = '2015-03-25T02:54:12.983',
-          endTime = '2015-04-01T02:54:12.983';
+        var startTime = '2015-03-25T02:54:12.983+00:00',
+          endTime = '2015-04-01T02:54:12.983+00:00';
       }
 
       var expected = format(heredoc.strip(function() {/*
