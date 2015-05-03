@@ -4,24 +4,20 @@ describe('Organization', function() {
 
   var cat, otherCat;
 
-  before(function(done) {
+  before(function() {
     cat = new User({name: 'Cat'});
     otherCat = new User({name: 'Other Cat'});
 
-    Promise.join(cat.save(), otherCat.save())
+    return setup.resetDb().then(function() {
+      return Promise.join(cat.save(), otherCat.save());
+    })
     .then(function() {
       return Promise.join(
-        new Organization({org_name: 'House of Yes', user_id: cat.id}).save(),
-        new Organization({org_name: 'Cat Club', user_id: cat.id}).save(),
-        new Organization({org_name: 'House of Yes', user_id: otherCat.id}).save()
+        Organization.query().insert({org_name: 'House of Yes', user_id: cat.id}),
+        Organization.query().insert({org_name: 'Cat Club', user_id: cat.id}),
+        Organization.query().insert({org_name: 'House of Yes', user_id: otherCat.id})
       );
-    })
-    .then(done.bind(this, null))
-    .catch(done);
-  });
-
-  after(function(done) {
-    setup.clearDb(done);
+    });
   });
 
   describe('#update', function() {

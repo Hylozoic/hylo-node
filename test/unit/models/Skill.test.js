@@ -4,24 +4,20 @@ describe('Skill', function() {
 
   var cat, otherCat;
 
-  before(function(done) {
+  before(function() {
     cat = new User({name: 'Cat'});
     otherCat = new User({name: 'Other Cat'});
 
-    Promise.join(cat.save(), otherCat.save())
+    return setup.resetDb().then(function() {
+      return Promise.join(cat.save(), otherCat.save());
+    })
     .then(function() {
       return Promise.join(
-        new Skill({skill_name: 'meowing', user_id: cat.id}).save(),
-        new Skill({skill_name: 'clawing', user_id: cat.id}).save(),
-        new Skill({skill_name: 'meowing', user_id: otherCat.id}).save()
+        Skill.query().insert({skill_name: 'meowing', user_id: cat.id}),
+        Skill.query().insert({skill_name: 'clawing', user_id: cat.id}),
+        Skill.query().insert({skill_name: 'meowing', user_id: otherCat.id})
       );
-    })
-    .then(done.bind(this, null))
-    .catch(done);
-  });
-
-  after(function(done) {
-    setup.clearDb(done);
+    });
   });
 
   describe('#update', function() {

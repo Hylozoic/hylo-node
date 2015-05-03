@@ -3,28 +3,26 @@ var checkAndSetPost = require(require('root-path')('api/policies/checkAndSetPost
 describe('checkAndSetPost', function() {
   var fixtures, req, res, next;
 
-  before(function(done) {
-    Promise.props({
-      u1: new User({name: 'U1'}).save(),
-      c1: new Community({name: "C1"}).save(),
-      c2: new Community({name: "C2"}).save(),
-      p1: new Post({name: "P1"}).save(),
-      p2: new Post({name: "P2"}).save()
-    }).then(function(props) {
+  before(function() {
+    return setup.resetDb().then(function() {
+      return Promise.props({
+        u1: new User({name: 'U1'}).save(),
+        c1: new Community({name: "C1"}).save(),
+        c2: new Community({name: "C2"}).save(),
+        p1: new Post({name: "P1"}).save(),
+        p2: new Post({name: "P2"}).save()
+      });
+    })
+    .then(function(props) {
       fixtures = props;
       return Promise.props({
         pc1: props.c1.posts().attach(props.p1.id),
         pc2: props.c2.posts().attach(props.p2.id),
-        m1: new Membership({community_id: props.c1.id, users_id: props.u1.id}).save()
+        m1: Membership.create(props.u1.id, props.c1.id)
       });
     }).then(function(props) {
       fixtures.m1 = props.m1;
-      done();
     });
-  });
-
-  after(function(done) {
-    setup.clearDb(done);
   });
 
   describe('#user', function() {

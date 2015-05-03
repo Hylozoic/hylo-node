@@ -104,7 +104,7 @@ module.exports = {
       edited:        false
     };
 
-    Community.find(params.communityId).then(function(community) {
+    return Community.find(params.communityId).then(function(community) {
       if (community.isNewContentPublic())
         attrs.visibility = Post.Visibility.PUBLIC_READABLE;
     })

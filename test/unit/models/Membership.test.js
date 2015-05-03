@@ -4,32 +4,31 @@ describe('Membership', function() {
 
   var user, community;
 
-  before(function(done) {
-    community = new Community({slug: 'foo', name: 'Foo'});
-    community.save().then(function() {
-      user = new User({name: 'Cat'});
-      return user.save();
-    }).then(function() {
-      return user.joinCommunity(community);
-    }).exec(done);
-  });
-
-  after(function(done) {
-    setup.clearDb(done);
-  });
-
   describe('.find', function() {
 
-    it('works with a community id', function(done) {
-      Membership.find(user.id, community.id).then(function(membership) {
-        expect(membership).to.exist;
-      }).exec(done);
+    before(function() {
+      community = new Community({slug: 'foo', name: 'Foo'});
+      user = new User({name: 'Cat'});
+      return setup.resetDb().then(function() {
+        return Promise.join(
+          community.save(),
+          user.save()
+        );
+      }).then(function() {
+        return user.joinCommunity(community);
+      });
     });
 
-    it('works with a community slug', function(done) {
-      Membership.find(user.id, community.get('slug')).then(function(membership) {
+    it('works with a community id', function() {
+      return Membership.find(user.id, community.id).then(function(membership) {
         expect(membership).to.exist;
-      }).exec(done);
+      });
+    });
+
+    it('works with a community slug', function() {
+      return Membership.find(user.id, community.get('slug')).then(function(membership) {
+        expect(membership).to.exist;
+      });
     });
 
   });

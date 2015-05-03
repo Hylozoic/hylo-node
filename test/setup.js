@@ -7,7 +7,7 @@ var skiff = require('../lib/skiff'),
   fs = require('fs'),
   path = require('path'),
   root = require('root-path'),
-  setup = new TestSetup();
+  setup;
 
 chai.use(require('chai-spies'));
 chai.use(require('chai-as-promised'));
@@ -37,194 +37,191 @@ before(function(done) {
           global[modelName] = require(root('api/controllers/' + modelName));
         }
       });
-      setup.initDb(done);
+
+      setup.resetDb()
+      .then(function() {
+        done();
+      }).catch(done);
     }
   });
 });
 
-TestSetup.prototype.initDb = function(done) {
-  if (this.dbInited) return done();
-  var knex = this.knex = bookshelf.knex;
+module.exports = setup = {
 
-  Promise.all([
-    knex.schema.createTable('users', function(table) {
-      table.increments();
-      table.string('name');
-      table.string('email');
-      table.string('avatar_url');
-      table.string('facebook_url');
-      table.string('linkedin_url');
-      table.string('twitter_name');
-      table.boolean('active');
-      table.integer('new_notification_count').defaultTo(0);
-      table.datetime('last_login');
-      table.datetime('date_created');
-    }),
-    knex.schema.createTable('linked_account', function(table) {
-      table.increments();
-      table.bigInteger('user_id').references('id').inTable('users');
-      table.string('provider_user_id');
-      table.string('provider_key');
-    }),
-    knex.schema.createTable('post', function(table) {
-      table.increments();
-      table.string('name');
-      table.string('description');
-      table.string('type');
-      table.string('image_url');
-      table.bigInteger('creator_id');
-      table.datetime('creation_date');
-      table.integer('num_votes');
-      table.integer('num_comments');
-      table.boolean('fulfilled');
-      table.boolean('active');
-      table.boolean('edited');
-      table.datetime('last_updated')
-    }),
-    knex.schema.createTable('vote', function(table) {
-      table.increments();
-      table.bigInteger('post_id');
-      table.bigInteger('user_id');
-      table.datetime('date_voted');
-    }),
-    knex.schema.createTable('contributor', function(table) {
-      table.increments();
-      table.bigInteger('post_id');
-      table.bigInteger('user_id');
-      table.datetime('date_contributed');
-    }),
-    knex.schema.createTable('comment', function(table) {
-      table.increments();
-      table.bigInteger('post_id');
-      table.bigInteger('user_id');
-      table.datetime('date_commented');
-      table.string("comment_text");
-      table.boolean("active");
-    }),
-    knex.schema.createTable('notification', function(table) {
-      table.increments();
-      table.bigInteger('post_id');
-      table.bigInteger('comment_id');
-      table.bigInteger('vote_id');
-      table.bigInteger('actor_id');
-      table.datetime('timestamp');
-      table.string("type");
-      table.boolean("processed");
-    }),
-    knex.schema.createTable('activity', function(table) {
-      table.increments().primary();
-      table.bigInteger('actor_id').references('id').inTable('users');
-      table.bigInteger('reader_id').references('id').inTable('users');
-      table.bigInteger('post_id').references('id').inTable('post');
-      table.bigInteger('comment_id').references('id').inTable('comment');
-      table.string('action');
-      table.boolean('unread').defaultTo(true);
-      table.timestamps();
-    }),
-    knex.schema.createTable('follower', function(table) {
-      table.increments();
-      table.bigInteger('post_id');
-      table.bigInteger('user_id');
-      table.bigInteger('added_by_id');
-      table.datetime('date_added');
-    }),
-    knex.schema.createTable('community', function(table) {
-      table.increments();
-      table.string('name');
-      table.string('beta_access_code');
-      table.string('slug');
-    }),
-    knex.schema.createTable('users_community', function(table) {
-      table.bigInteger('users_id');
-      table.bigInteger('community_id');
-      table.boolean('active');
-      table.integer('role');
-      table.datetime('date_joined');
-      table.bigInteger('fee');
-    }),
-    knex.schema.createTable('post_community', function(table) {
-      table.bigInteger('post_id');
-      table.bigInteger('community_id');
-      table.integer('role');
-    }),
-    knex.schema.createTable('community_invite', function(table) {
-      table.increments();
-      table.bigInteger('invited_by_id');
-      table.bigInteger('used_by_id');
-      table.bigInteger('community_id');
-      table.datetime('used_on');
-      table.string('email');
-      table.string('token');
-      table.integer('role');
-      table.datetime('created');
-    }),
-    knex.schema.createTable('users_skill', function(table) {
-      table.bigInteger('user_id');
-      table.string('skill_name');
-    }),
-    knex.schema.createTable('users_org', function(table) {
-      table.bigInteger('user_id');
-      table.string('org_name');
-    }),
-    knex.schema.createTable('phones', function(table) {
-      table.increments().primary();
-      table.bigInteger('user_id').references('id').inTable('users');
-      table.string('value');
-    }),
-    knex.schema.createTable('emails', function(table) {
-      table.increments().primary();
-      table.bigInteger('user_id').references('id').inTable('users');
-      table.string('value');
-    }),
-    knex.schema.createTable('websites', function(table) {
-      table.increments().primary();
-      table.bigInteger('user_id').references('id').inTable('users');
-      table.string('value');
-    }),
-    knex.schema.table('users', function(table) {
-      table.text('work');
-      table.text('intention');
-      table.text('extra_info');
-    }),
-    knex.schema.createTable('media', function(table) {
-      table.increments();
-      table.bigInteger('post_id');
-      table.string('url');
-    }),
-    knex.schema.createTable('tours', function(table) {
-      table.increments();
-      table.bigInteger('user_id');
-      table.string('type');
-      table.json('status');
-    }),
-    knex.schema.createTable('thank_you', function(table) {
-      table.increments();
-      table.bigInteger('user_id');
-      table.bigInteger('comment_id');
-      table.datetime('date_thanked');
-      table.bigInteger('thanked_by_id');
-    })
-  ]).then(function() {
-    this.dbInited = true;
-    done();
-  }.bind(this));
-};
+  resetDb: function() {
+    var knex = bookshelf.knex;
 
-TestSetup.prototype.clearDb = function(done) {
-  Promise.map(
-    [
-      'users', 'community', 'users_community', 'community_invite',
-      'users_org', 'users_skill', 'post_community', 'follower',
-      'notification', 'comment', 'contributor', 'post', 'media', 'vote'
-    ],
-    function(table) {
-      return bookshelf.knex.raw('delete from ' + table);
-    }
-  )
-  .then(function() {
-    done();
-  })
-  .catch(done);
-};
+    return bookshelf.transaction(function(trx) {
 
-module.exports = setup;
+      var createTable = function(name, commands) {
+        return knex.schema.createTable(name, commands).transacting(trx);
+      };
+
+      return knex.raw('drop schema public cascade').transacting(trx)
+      .then(function() {
+        return knex.raw('create schema public').transacting(trx);
+      }).then(function() {
+        return Promise.join(
+          createTable('users', function(table) {
+            table.bigIncrements();
+            table.string('name');
+            table.string('email');
+            table.string('avatar_url');
+            table.string('facebook_url');
+            table.string('linkedin_url');
+            table.string('twitter_name');
+            table.boolean('active');
+            table.integer('new_notification_count').defaultTo(0);
+            table.datetime('last_login');
+            table.datetime('date_created');
+            table.text('work');
+            table.text('intention');
+            table.text('extra_info');
+          }),
+          createTable('linked_account', function(table) {
+            table.increments();
+            table.bigInteger('user_id').references('id').inTable('users');
+            table.string('provider_user_id');
+            table.string('provider_key');
+          }),
+          createTable('post', function(table) {
+            table.bigIncrements();
+            table.string('name');
+            table.string('description');
+            table.string('type');
+            table.string('image_url');
+            table.bigInteger('creator_id');
+            table.datetime('creation_date');
+            table.integer('num_votes');
+            table.integer('num_comments');
+            table.boolean('fulfilled');
+            table.boolean('active');
+            table.boolean('edited');
+            table.datetime('last_updated')
+          }),
+          createTable('vote', function(table) {
+            table.increments();
+            table.bigInteger('post_id');
+            table.bigInteger('user_id');
+            table.datetime('date_voted');
+          }),
+          createTable('contributor', function(table) {
+            table.increments();
+            table.bigInteger('post_id');
+            table.bigInteger('user_id');
+            table.datetime('date_contributed');
+          }),
+          createTable('comment', function(table) {
+            table.increments();
+            table.bigInteger('post_id');
+            table.bigInteger('user_id');
+            table.datetime('date_commented');
+            table.string("comment_text");
+            table.boolean("active");
+          }),
+          createTable('notification', function(table) {
+            table.increments();
+            table.bigInteger('post_id');
+            table.bigInteger('comment_id');
+            table.bigInteger('vote_id');
+            table.bigInteger('actor_id');
+            table.datetime('timestamp');
+            table.string("type");
+            table.boolean("processed");
+          }),
+          createTable('activity', function(table) {
+            table.increments().primary();
+            table.bigInteger('actor_id').references('id').inTable('users');
+            table.bigInteger('reader_id').references('id').inTable('users');
+            table.bigInteger('post_id').references('id').inTable('post');
+            table.bigInteger('comment_id').references('id').inTable('comment');
+            table.string('action');
+            table.boolean('unread').defaultTo(true);
+            table.timestamps();
+          }),
+          createTable('follower', function(table) {
+            table.increments();
+            table.bigInteger('post_id');
+            table.bigInteger('user_id');
+            table.bigInteger('added_by_id');
+            table.datetime('date_added');
+          }),
+          createTable('community', function(table) {
+            table.increments();
+            table.string('name');
+            table.string('beta_access_code');
+            table.string('slug');
+          }),
+          createTable('users_community', function(table) {
+            table.bigInteger('users_id');
+            table.bigInteger('community_id');
+            table.boolean('active');
+            table.integer('role');
+            table.datetime('date_joined');
+            table.bigInteger('fee');
+          }),
+          createTable('post_community', function(table) {
+            table.bigInteger('post_id');
+            table.bigInteger('community_id');
+            table.integer('role');
+          }),
+          createTable('community_invite', function(table) {
+            table.increments();
+            table.bigInteger('invited_by_id');
+            table.bigInteger('used_by_id');
+            table.bigInteger('community_id');
+            table.datetime('used_on');
+            table.string('email');
+            table.string('token');
+            table.integer('role');
+            table.datetime('created');
+          }),
+          createTable('users_skill', function(table) {
+            table.bigInteger('user_id');
+            table.string('skill_name');
+          }),
+          createTable('users_org', function(table) {
+            table.bigInteger('user_id');
+            table.string('org_name');
+          }),
+          createTable('phones', function(table) {
+            table.increments().primary();
+            table.bigInteger('user_id').references('id').inTable('users');
+            table.string('value');
+          }),
+          createTable('emails', function(table) {
+            table.increments().primary();
+            table.bigInteger('user_id').references('id').inTable('users');
+            table.string('value');
+          }),
+          createTable('websites', function(table) {
+            table.increments().primary();
+            table.bigInteger('user_id').references('id').inTable('users');
+            table.string('value');
+          }),
+          createTable('media', function(table) {
+            table.increments();
+            table.bigInteger('post_id');
+            table.string('url');
+          }),
+          createTable('tours', function(table) {
+            table.increments();
+            table.bigInteger('user_id');
+            table.string('type');
+            table.json('status');
+            table.timestamps();
+          }),
+          createTable('thank_you', function(table) {
+            table.increments();
+            table.bigInteger('user_id');
+            table.bigInteger('comment_id');
+            table.datetime('date_thanked');
+            table.bigInteger('thanked_by_id');
+          })
+        );
+      });
+
+    }); // transaction
+
+  }
+}

@@ -10,7 +10,9 @@ var validSession = function() {
   return new PlaySession(request, {secret: 'iamasecret'});
 };
 
+
 describe('PlaySession', function() {
+
   describe('#isValid', function() {
 
     it('is false when there is no cookie', function() {
@@ -40,28 +42,23 @@ describe('PlaySession', function() {
 
     var email = 'FoO@baR.com';
 
-    before(function(done) {
-      new User({email: email, active: true}).save().then(function() {
-        done();
+    beforeEach(function() {
+      return setup.resetDb().then(function() {
+        return new User({email: email, active: true}).save();
       });
     });
 
-    after(function(done) {
-      setup.clearDb(done);
-    });
-
-    it('is case-insensitive with emails', function(done) {
+    it('is case-insensitive with emails', function() {
       var session = new PlaySession({});
       _.extend(session, {
         providerKey: function() { return 'password' },
         providerId: function() { return 'fOo@bAr.com' }
       });
 
-      session.fetchUser().then(function(user) {
+      return session.fetchUser().then(function(user) {
         expect(user).not.to.be.null;
         expect(user.get('email')).to.equal(email);
-        done();
-      }).catch(done);
+      });
     });
   });
 
