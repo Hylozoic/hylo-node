@@ -36,7 +36,10 @@ module.exports = {
 
       return bookshelf.transaction(function(trx) {
         return User.create(attrs, {transacting: trx}).tap(function(user) {
-          return (invitation ? invitation.use(user.id, {transacting: trx}) : null);
+          return Promise.join(
+            Tour.startOnboarding(user.id, {transacting: trx}),
+            (invitation ? invitation.use(user.id, {transacting: trx}) : null)
+          );
         });
       });
     })
@@ -59,10 +62,8 @@ module.exports = {
     if (!req.session.userId)
       return res.ok({});
 
-    return Onboarding.maybeStart(req.session.userId)
-    .then(function() {
-      return UserPresenter.fetchForSelf(req.session.userId);
-    }).then(function(attributes) {
+    return UserPresenter.fetchForSelf(req.session.userId)
+    .then(function(attributes) {
       res.ok(UserPresenter.presentForSelf(attributes, req.session));
     }).catch(res.serverError.bind(res));
   },

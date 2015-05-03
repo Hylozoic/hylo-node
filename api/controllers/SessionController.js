@@ -57,7 +57,10 @@ var finishOAuth = function(service, req, res, next) {
 
           return bookshelf.transaction(function(trx) {
             return User.create(attrs, {transacting: trx}).tap(function(user) {
-              return (invitation ? invitation.use(user.id, {transacting: trx}) : null);
+              return Promise.join(
+                Tour.startOnboarding(user.id, {transacting: trx}),
+                (invitation ? invitation.use(user.id, {transacting: trx}) : null)
+              );
             });
           });
         })
