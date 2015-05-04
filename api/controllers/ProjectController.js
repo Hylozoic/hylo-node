@@ -43,16 +43,10 @@ module.exports = {
   },
 
   find: function(req, res) {
-    var id = req.param('projectId');
-    Project.query(function(qb) {
-      if (isNaN(Number(id))) {
-        qb.where('slug', id);
-      } else {
-        qb.where('id', id);
-      }
-      // TODO permissions
-
-    }).fetch().then(function(project) {
+    Project.find(res.locals.project.id, {withRelated: [
+      {user: function(qb) { qb.column('id', 'name', 'avatar_url') }},
+      {community: function(qb) { qb.column('id', 'name', 'avatar_url') }}
+    ]}).then(function(project) {
       res.ok(project);
     })
     .catch(res.serverError.bind(res));

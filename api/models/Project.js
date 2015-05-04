@@ -1,5 +1,21 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'projects'
+  tableName: 'projects',
+
+  user: function() {
+    return this.belongsTo(User);
+  },
+
+  community: function() {
+    return this.belongsTo(Community);
+  },
+
+  isDraft: function() {
+    return !this.get('published_at');
+  },
+
+  isPublic: function() {
+    return this.get('visibility') === Post.Visibility.PUBLIC;
+  }
 
 }, {
 

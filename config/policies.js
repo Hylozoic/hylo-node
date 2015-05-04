@@ -105,8 +105,8 @@ module.exports.policies = {
 
   ProjectController: {
     create: ['sessionAuth'],
-    update: ['sessionAuth', 'canEditProject'],
-    find: ['allowPublicAccess', 'sessionAuth']
+    update: ['sessionAuth', 'checkAndSetWritableProject'],
+    find: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject']
   }
 
 };
