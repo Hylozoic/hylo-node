@@ -1,32 +1,36 @@
 var LRU = require('lru-cache'),
   request = require('request'),
   url = require('url'),
-  util = require('util');
-
-var cache = LRU(10);
-
-var appPathPrefixes = [
-  /^\/c\//,
-  /^\/h\//,
-  /^\/u\//,
-  /^\/settings/,
-  /^\/edit-profile/,
-  /^\/create\/community/,
-  /^\/community\/invite/
-];
+  util = require('util'),
+  cache = LRU(10),
+  equals = function(b) {
+    return function(a) {
+      return a == b;
+    };
+  },
+  staticPages = [
+    '',
+    '/faq',
+    '/about',
+    '/about/careers',
+    '/about/contact',
+    '/about/team'
+  ];
 
 module.exports = {
 
   proxy: function(req, res) {
-    if (process.env.DISABLE_PROXY) return res.ok('');
+    if (process.env.DISABLE_PROXY) {
+      return res.status(503).send('Service Unavailable');
+    }
 
     var u = url.parse(req.url);
 
     // remove trailing slash
     u.pathname = u.pathname.replace(/\/$/, '');
 
-    // for Angular app requests, serve the base file.
-    if (_.any(appPathPrefixes, function(r) { return u.pathname.match(r); })) {
+    // for any paths not explicitly listed, serve the Angular app.
+    if (!_.any(staticPages, equals(u.pathname))) {
       u.pathname = '/app';
     }
 
