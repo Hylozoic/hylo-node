@@ -75,13 +75,13 @@
     "xml2js": "^0.4.4"
   },
   "scripts": {
-    "start": "node app.js",
+    "start": "node --harmony app.js",
     "dev": "nf -j Procfile.dev -p 1337 start -t 1000",
     "console": "node console.js",
     "cron": "node cron.js",
     "debug": "node-debug app.js",
     "test": "./node_modules/.bin/mocha test/**/*.js",
-    "worker": "node worker.js",
+    "worker": "node --harmony worker.js",
     "migrate": "./node_modules/.bin/knex migrate:latest",
     "rollback": "./node_modules/.bin/knex migrate:rollback",
     "migrate-make": "./node_modules/.bin/knex migrate:make"
