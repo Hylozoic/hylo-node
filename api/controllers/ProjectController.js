@@ -46,6 +46,8 @@ module.exports = {
 
     if (req.param('publish'))
       updatedAttrs.published_at = new Date();
+    else if (req.param('unpublish'))
+      updatedAttrs.published_at = null;
 
     Promise.method(function() {
       if (updatedAttrs.video_url) {
