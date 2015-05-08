@@ -1,5 +1,3 @@
-var format = require('util').format;
-
 module.exports = function checkAndSetWritablePost(req, res, next) {
 
   Post.find(req.param('postId'), {withRelated: [{communities: function(qb) { qb.column('id'); }}]})

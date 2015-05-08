@@ -31,6 +31,12 @@ describe('Membership', function() {
       });
     });
 
+    it('returns nothing for a blank user id', function() {
+      return Membership.find(null, community.id).then(function(membership) {
+        expect(membership).not.to.exist;
+      })
+    })
+
   });
 
 });

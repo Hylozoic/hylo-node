@@ -1,5 +1,4 @@
 var api = require('sendwithus')(process.env.SENDWITHUS_KEY),
-  format = require('util').format,
   Promise = require('bluebird'),
   sendEmail = Promise.promisify(api.send, api);
 

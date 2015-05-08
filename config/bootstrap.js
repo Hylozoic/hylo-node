@@ -16,6 +16,10 @@ var fs = require('fs'),
   root = require('root-path'),
   util = require('util');
 
+// very handy, these
+global.format = util.format;
+global.Promise = require('bluebird');
+
 module.exports.bootstrap = function(done) {
 
   var knex = require('knex')(require('../knexfile')[process.env.NODE_ENV]);
@@ -79,9 +83,6 @@ module.exports.bootstrap = function(done) {
       }
     });
   }
-
-  // because we use this all the time
-  global.Promise = require('bluebird');
 
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)

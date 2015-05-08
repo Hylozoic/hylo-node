@@ -1,5 +1,4 @@
 var email = require('email-addresses'),
-  format = require('util').format,
   Mailgun = require('mailgun').Mailgun,
   MailComposer = require('mailcomposer').MailComposer;
 

@@ -1,5 +1,4 @@
 var crypto = require('crypto'),
-  format = require('util').format,
   Promise = require('bluebird'),
   request = require('request'),
 

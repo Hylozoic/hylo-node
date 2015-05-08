@@ -1,5 +1,3 @@
-var format = require('util').format;
-
 module.exports = {
 
   forSeeds: function(opts) {

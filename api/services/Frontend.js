@@ -1,5 +1,4 @@
-var format = require('util').format,
-  prefix = format('%s://%s', process.env.PROTOCOL, process.env.DOMAIN);
+var prefix = format('%s://%s', process.env.PROTOCOL, process.env.DOMAIN);
 
 var url = function() {
   var args = Array.prototype.slice.call(arguments);

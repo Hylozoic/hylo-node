@@ -1,6 +1,4 @@
 require(require('root-path')('test/setup'));
-var format = require('util').format;
-
 describe('RichText', function() {
 
   describe('.qualifyLinks', function() {

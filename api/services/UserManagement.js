@@ -1,5 +1,3 @@
-var format = require('util').format;
-
 var userFieldsToCopy = [
   'avatar_url',
   'banner_url',
