@@ -75,16 +75,16 @@
     "xml2js": "^0.4.4"
   },
   "scripts": {
-    "start": "node --harmony app.js",
-    "dev": "nf -j Procfile.dev -p 1337 start -t 1000",
-    "console": "node console.js",
-    "cron": "node cron.js",
-    "debug": "node-debug app.js",
-    "test": "./node_modules/.bin/mocha --harmony test/**/*.js",
-    "worker": "node --harmony worker.js",
-    "migrate": "./node_modules/.bin/knex migrate:latest",
-    "rollback": "./node_modules/.bin/knex migrate:rollback",
-    "migrate-make": "./node_modules/.bin/knex migrate:make"
+    "start":        "node --harmony app.js",
+    "console":      "node --harmony console.js",
+    "cron":         "node --harmony cron.js",
+    "worker":       "node --harmony worker.js",
+    "migrate":      "node --harmony ./node_modules/.bin/knex migrate:latest",
+    "rollback":     "node --harmony ./node_modules/.bin/knex migrate:rollback",
+    "migrate-make": "node --harmony ./node_modules/.bin/knex migrate:make",
+    "debug":        "node-debug app.js",
+    "dev":          "nf -j Procfile.dev -p 1337 start -t 1000",
+    "test":         "./node_modules/.bin/mocha --harmony test/**/*.js"
   },
   "main": "app.js",
   "repository": {
