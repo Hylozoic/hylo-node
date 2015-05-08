@@ -1,7 +1,7 @@
 var crypto = require('crypto');
 
 var placeholderSlug = function() {
-  return crypto.randomBytes(4).toString('hex');
+  return crypto.randomBytes(3).toString('hex');
 };
 
 var editableAttributes = [
@@ -44,6 +44,9 @@ module.exports = {
     var project = res.locals.project,
       updatedAttrs = _.pick(req.allParams(), editableAttributes);
 
+    if (req.param('publish'))
+      updatedAttrs.published_at = new Date();
+
     Promise.method(function() {
       if (updatedAttrs.video_url) {
         return Project.generateThumbnailUrl(updatedAttrs.video_url)
@@ -51,7 +54,7 @@ module.exports = {
       }
     })()
     .then(() => project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true}))
-    .then(() => res.ok(_.pick(project.toJSON(), 'slug')))
+    .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
     .catch(res.serverError);
   },
 
