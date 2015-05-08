@@ -8,6 +8,12 @@ var editableAttributes = [
   'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility'
 ];
 
+var projectAttributes = project => _.extend(project.toJSON(), {
+  contributor_count: project.relations.contributors.length,
+  open_request_count: project.relations.posts.length,
+  thumbnail_url: project.thumbnailUrl()
+});
+
 module.exports = {
 
   create: function(req, res) {
@@ -46,6 +52,7 @@ module.exports = {
       }
     }).fetchAll({
       withRelated: [
+        {user: qb => qb.column('id', 'name', 'avatar_url')},
         {community: qb => qb.column('id', 'name', 'avatar_url')},
         {contributors: qb => qb.column('users.id')},
         {posts: qb => {
@@ -54,10 +61,7 @@ module.exports = {
         }}
       ]
     })
-    .then(projects => projects.map(project => _.extend(project.toJSON(), {
-      contributor_count: project.relations.contributors.length,
-      open_request_count: project.relations.posts.length
-    })))
+    .then(projects => projects.map(projectAttributes))
     .then(res.ok)
     .catch(res.serverError);
   },

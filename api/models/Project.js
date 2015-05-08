@@ -23,6 +23,16 @@ module.exports = bookshelf.Model.extend({
 
   isPublic: function() {
     return this.get('visibility') === Post.Visibility.PUBLIC;
+  },
+
+  thumbnailUrl: function() {
+    if (this.get('image_url')) return this.get('image_url');
+    if (!this.get('video_url')) return;
+
+    var videoIdMatch = this.get('video_url').match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-]+)/),
+      videoId = videoIdMatch[2];
+
+    return format('http://img.youtube.com/vi/%s/hqdefault.jpg', videoId);
   }
 
 }, {
