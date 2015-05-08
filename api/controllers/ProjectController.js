@@ -10,8 +10,7 @@ var editableAttributes = [
 
 var projectAttributes = project => _.extend(project.toJSON(), {
   contributor_count: project.relations.contributors.length,
-  open_request_count: project.relations.posts.length,
-  thumbnail_url: project.thumbnailUrl()
+  open_request_count: project.relations.posts.length
 });
 
 module.exports = {
@@ -29,7 +28,14 @@ module.exports = {
       }
     );
 
-    new Project(attrs).save()
+    Promise.method(function() {
+      if (attrs.video_url) {
+        return Project.generateThumbnailUrl(attrs.video_url)
+        .then(url => attrs.thumbnail_url = url);
+      }
+    })()
+    .then(() => new Project(attrs))
+    .then(project => project.save())
     .then(project => res.ok(_.pick(project.toJSON(), 'slug')))
     .catch(res.serverError);
   },
@@ -38,7 +44,13 @@ module.exports = {
     var project = res.locals.project,
       updatedAttrs = _.pick(req.allParams(), editableAttributes);
 
-    project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
+    Promise.method(function() {
+      if (updatedAttrs.video_url) {
+        return Project.generateThumbnailUrl(updatedAttrs.video_url)
+        .then(url => updatedAttrs.thumbnail_url = url);
+      }
+    })()
+    .then(() => project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true}))
     .then(() => res.ok(_.pick(project.toJSON(), 'slug')))
     .catch(res.serverError);
   },

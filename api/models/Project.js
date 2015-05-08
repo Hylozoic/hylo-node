@@ -25,14 +25,11 @@ module.exports = bookshelf.Model.extend({
     return this.get('visibility') === Post.Visibility.PUBLIC;
   },
 
-  thumbnailUrl: function() {
-    if (this.get('image_url')) return this.get('image_url');
-    if (!this.get('video_url')) return;
-
-    var videoIdMatch = this.get('video_url').match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-]+)/),
-      videoId = videoIdMatch[2];
-
-    return format('http://img.youtube.com/vi/%s/hqdefault.jpg', videoId);
+  setThumbnailUrl: function() {
+    return this.generateThumbnailUrl().then(url => {
+      this.set('thumbnail_url', url);
+      return this;
+    });
   }
 
 }, {
@@ -47,6 +44,21 @@ module.exports = bookshelf.Model.extend({
       return Project.where({slug: id_or_slug}).fetch(options);
     }
     return Project.where({id: id_or_slug}).fetch(options);
-  }
+  },
+
+  generateThumbnailUrl: Promise.method(function(videoUrl) {
+    if (!videoUrl || videoUrl === '') return;
+
+    if (videoUrl.match(/youtu\.?be/)) {
+      var videoId = videoUrl.match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-]+)/)[2];
+      return format('http://img.youtube.com/vi/%s/hqdefault.jpg', videoId);
+
+    } else if (videoUrl.match(/vimeo/)) {
+      var videoId = videoUrl.match(/vimeo\.com\/(\d+)/)[1],
+        request = Promise.promisify(require('request'));
+      return request(format('http://vimeo.com/api/v2/video/%s.json', videoId))
+      .spread((response, body) => JSON.parse(body)[0].thumbnail_large);
+    }
+  })
 
 });
