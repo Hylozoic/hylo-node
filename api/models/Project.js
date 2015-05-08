@@ -9,6 +9,14 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Community);
   },
 
+  posts: function() {
+    return this.belongsToMany(Post, 'posts_projects');
+  },
+
+  contributors: function() {
+    return this.belongsToMany(User, 'projects_users');
+  },
+
   isDraft: function() {
     return !this.get('published_at');
   },

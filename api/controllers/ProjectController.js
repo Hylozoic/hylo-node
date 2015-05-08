@@ -1,4 +1,5 @@
-var crypto = require('crypto');
+var crypto = require('crypto'),
+  format = require('util').format;
 
 var placeholderSlug = function() {
   return crypto.randomBytes(4).toString('hex');
@@ -23,33 +24,52 @@ module.exports = {
       }
     );
 
-    var project = new Project(attrs);
-
-    project.save().then(function() {
-      res.ok(_.pick(project.toJSON(), 'slug'));
-    })
-    .catch(res.serverError.bind(res));
+    new Project(attrs).save()
+    .then(project => res.ok(_.pick(project.toJSON(), 'slug')))
+    .catch(res.serverError);
   },
 
   update: function(req, res) {
-    var project = res.locals.project;
-    project.save(
-      _.merge(_.pick(req.allParams(), editableAttributes), {updated_at: new Date()}),
-      {patch: true}
-    ).then(function() {
-      res.ok(_.pick(project.toJSON(), 'slug'));
-    })
-    .catch(res.serverError.bind(res));
+    var project = res.locals.project,
+      updatedAttrs = _.pick(req.allParams(), editableAttributes);
+
+    project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
+    .then(() => res.ok(_.pick(project.toJSON(), 'slug')))
+    .catch(res.serverError);
   },
 
   find: function(req, res) {
-    Project.find(res.locals.project.id, {withRelated: [
-      {user: function(qb) { qb.column('id', 'name', 'avatar_url') }},
-      {community: function(qb) { qb.column('id', 'name', 'avatar_url') }}
-    ]}).then(function(project) {
-      res.ok(project);
+    Project.query(qb => {
+      if (req.param('context') == 'mine') {
+        qb.where('user_id', req.session.userId);
+      } else {
+        throw format('unknown context: %s', req.param('context'));
+      }
+    }).fetchAll({
+      withRelated: [
+        {community: qb => qb.column('id', 'name', 'avatar_url')},
+        {contributors: qb => qb.column('users.id')},
+        {posts: qb => {
+          qb.column('post.id');
+          qb.where('type', Post.Type.REQUEST);
+        }}
+      ]
     })
-    .catch(res.serverError.bind(res));
+    .then(projects => projects.map(project => _.extend(project.toJSON(), {
+      contributor_count: project.relations.contributors.length,
+      open_request_count: project.relations.posts.length
+    })))
+    .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  findOne: function(req, res) {
+    Project.find(res.locals.project.id, {withRelated: [
+      {user: qb => qb.column('id', 'name', 'avatar_url')},
+      {community: qb => qb.column('id', 'name', 'avatar_url')}
+    ]})
+    .then(res.ok)
+    .catch(res.serverError);
   }
 
 };

@@ -76,6 +76,12 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
+  Type: {
+    REQUEST: 'request',
+    OFFER: 'offer',
+    INTENTION: 'intention'
+  },
+
   Visibility: {
     DEFAULT: 0,
     PUBLIC_READABLE: 1
