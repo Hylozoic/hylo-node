@@ -22,7 +22,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   isPublic: function() {
-    return this.get('visibility') === Post.Visibility.PUBLIC;
+    return this.get('visibility') === Project.Visibility.PUBLIC;
   },
 
   setThumbnailUrl: function() {

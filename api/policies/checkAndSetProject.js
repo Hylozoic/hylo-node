@@ -1,36 +1,33 @@
 module.exports = function(req, res, next) {
 
-  Project.find(req.param('projectId')).then(function(project) {
+  Project.find(req.param('projectId')).then(project => {
 
-    var pass = function() {
+    var pass = () => {
       res.locals.project = project;
       next();
     }
 
-    var fail = function(log) {
+    var fail = log => {
       sails.log.debug('policy: checkAndSetProject: ' + log);
       res.forbidden();
     }
 
     // TODO passthrough for valid invitation links
 
-    if (project.isDraft()) {
-      if (req.session.userId === project.get('user_id')) {
-        // you're the creator
-        pass();
-      } else {
-        fail('no access to draft');
-        // TODO you're a participant
-      }
+    if (req.session.userId === project.get('user_id')) {
+      // you're the creator
+      pass();
+    } else if (project.isDraft()) {
+      // you're a contributor
+      ProjectMembership.find(req.session.userId, project.id)
+      .then(membership => membership ? pass() : fail('not a contributor'));
+    } else if (project.isPublic()) {
+      // it's published and public
+      pass();
     } else {
-      if (project.isPublic()) {
-        // it's published and public
-        pass();
-      } else {
-        Membership.find(req.session.userId, project.get('community_id')).then(function() {
-          membership ? pass() : res.forbidden('not in community');
-        });
-      }
+      // you're a community member
+      Membership.find(req.session.userId, project.get('community_id'))
+      .then(membership => membership ? pass() : fail('not in community'));
     }
 
   })
