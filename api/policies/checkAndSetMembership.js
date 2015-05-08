@@ -1,5 +1,3 @@
-var format = require('util').format;
-
 module.exports = function checkAndSetMembership(req, res, next) {
   var communityId = req.param('communityId');
   // if no community id is specified, continue.

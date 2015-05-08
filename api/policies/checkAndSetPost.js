@@ -1,5 +1,3 @@
-var format = require('util').format;
-
 module.exports = function checkAndSetPost(req, res, next) {
   return Post.find(req.param('postId'))
   .tap(function(post) {

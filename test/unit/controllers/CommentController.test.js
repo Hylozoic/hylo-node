@@ -1,5 +1,4 @@
-var setup = require(require('root-path')('test/setup')),
-  format = require('util').format;
+var setup = require(require('root-path')('test/setup'));
 
 describe('CommentController', function() {
   var fixtures, req, res;

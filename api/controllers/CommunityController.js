@@ -5,8 +5,7 @@
  * @help        :: See http://links.sailsjs.org/docs/controllers
  */
 
-var format = require('util').format,
-  validator = require('validator');
+var validator = require('validator');
 
 var communityAttributes = function(community, membership) {
   return _.extend(community.toJSON(), {

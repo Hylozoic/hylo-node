@@ -1,7 +1,6 @@
 require(require('root-path')('test/setup'));
 
-var format = require('util').format,
-  heredoc = require('heredoc'),
+var heredoc = require('heredoc'),
   time = require('time');
 
 describe('Search', function() {

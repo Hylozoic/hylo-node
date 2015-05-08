@@ -1,6 +1,5 @@
 var bcrypt = require('bcrypt'),
-  crypto = require('crypto'),
-  format = require('util').format;
+  crypto = require('crypto');
 
 module.exports = bookshelf.Model.extend({
   tableName: 'users',

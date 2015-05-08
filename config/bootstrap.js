@@ -16,6 +16,8 @@ var fs = require('fs'),
   root = require('root-path'),
   util = require('util');
 
+global.format = util.format;
+
 module.exports.bootstrap = function(done) {
 
   var knex = require('knex')(require('../knexfile')[process.env.NODE_ENV]);

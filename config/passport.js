@@ -1,6 +1,5 @@
 
-var format = require('util').format,
-  passport = require('passport'),
+var passport = require('passport'),
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
   FacebookStrategy = require('passport-facebook').Strategy,
   LinkedinStrategy = require('passport-linkedin-oauth2').Strategy;

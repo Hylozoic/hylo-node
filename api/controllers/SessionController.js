@@ -1,5 +1,4 @@
-var format = require('util').format,
-  passport = require('passport');
+var passport = require('passport');
 
 var findUser = function(service, email, id) {
   return User.query(function(qb) {

@@ -1,5 +1,4 @@
-var crypto = require('crypto'),
-  format = require('util').format;
+var crypto = require('crypto');
 
 var placeholderSlug = function() {
   return crypto.randomBytes(4).toString('hex');
