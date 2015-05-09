@@ -95,10 +95,13 @@ module.exports = {
   findPosts: function(req, res) {
     Search.forPosts({
       project: req.param('projectId'),
-      sort: 'post.last_updated'
+      sort: 'post.last_updated',
+      limit: req.param('limit') || 10,
+      offset: req.param('offset') || 0
     })
     .fetchAll({withRelated: PostPresenter.relations(req.session.userId, {fromProject: true})})
-    .then(posts => res.ok(posts.map(PostPresenter.present)))
+    .then(PostPresenter.mapPresentWithTotal)
+    .then(res.ok)
     .catch(res.serverError);
   }
 
