@@ -1,12 +1,12 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'projects_users',
 
-  user: function() {
-    return this.belongsTo(User);
-  },
-
   project: function() {
     return this.belongsTo(Project);
+  },
+
+  user: function() {
+    return this.belongsTo(User);
   }
 
 }, {

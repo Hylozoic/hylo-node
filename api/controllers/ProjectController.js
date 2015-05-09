@@ -90,6 +90,16 @@ module.exports = {
     ]})
     .then(res.ok)
     .catch(res.serverError);
+  },
+
+  findPosts: function(req, res) {
+    Search.forSeeds({
+      project: req.param('projectId'),
+      sort: 'post.last_updated'
+    })
+    .fetchAll({withRelated: PostPresenter.relations(req.session.userId)})
+    .then(posts => res.ok(posts.map(PostPresenter.present)))
+    .catch(res.serverError);
   }
 
 };

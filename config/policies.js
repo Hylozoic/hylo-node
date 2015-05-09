@@ -107,7 +107,8 @@ module.exports.policies = {
     find: ['sessionAuth'],
     create: ['sessionAuth'],
     update: ['sessionAuth', 'checkAndSetWritableProject'],
-    findOne: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject']
+    findOne: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    findPosts: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject']
   }
 
 };

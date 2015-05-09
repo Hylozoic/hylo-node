@@ -20,6 +20,11 @@ module.exports = {
         qb.whereIn('post_community.community_id', opts.communities);
       }
 
+      if (opts.project) {
+        qb.join('posts_projects', 'posts_projects.post_id', '=', 'post.id');
+        qb.whereIn('posts_projects.project_id', opts.project);
+      }
+
       if (opts.term) {
         Search.addTermToQueryBuilder(opts.term, qb, {
           columns: ['post.name', 'post.description']

@@ -86,7 +86,7 @@ module.exports = {
   },
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), ['name', 'type', 'communityId', 'imageUrl']),
+    var params = _.pick(req.allParams(), ['name', 'type', 'communityId', 'imageUrl', 'projectId']),
         description = RichText.sanitize(req.param('description')),
         creatorId = parseInt(req.session.userId);
 
@@ -111,7 +111,12 @@ module.exports = {
     .then(function(community) {
       return bookshelf.transaction(function(trx) {
         return new Post(attrs).save(null, {transacting: trx})
-        .tap(function (post) {
+        .tap(post => {
+          // Attach post to project, if any
+          if (params.projectId)
+            return PostProjectMembership.create(post.id, params.projectId, {transacting: trx});
+        })
+        .tap(post => {
           var mentioned = RichText.getUserMentions(description),
             followerIds = _.uniq(mentioned.concat(creatorId));
 
