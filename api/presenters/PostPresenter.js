@@ -1,4 +1,4 @@
-var postRelations = userId => [
+var postRelations = (userId, opts) => _.filter([
   {creator: qb => qb.column("id", "name", "avatar_url")},
   {communities: qb => qb.column('id', 'name', 'slug', 'avatar_url')},
   "contributions",
@@ -6,11 +6,12 @@ var postRelations = userId => [
   "followers",
   {"followers.user": qb => qb.column("id", "name", "avatar_url")},
   {media: qb => qb.column('id', 'post_id', 'url')},
+  (opts && opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
   {votes: qb => { // only the user's own vote
     qb.column('id', 'post_id');
     qb.where('user_id', userId);
   }}
-]
+], x => !!x)
 
 var postAttributes = post => {
   var creator = post.relations.creator;
@@ -23,7 +24,8 @@ var postAttributes = post => {
       'media',
       'type',
       'creation_date',
-      'last_updated'
+      'last_updated',
+      'projects'
     ]),
     {
       id:           Number(post.get("id")), // FIXME no need to number-ize this now that Play's gone

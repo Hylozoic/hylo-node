@@ -29,6 +29,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Vote);
   },
 
+  projects: function() {
+    return this.belongsToMany(Project, 'posts_projects');
+  },
+
   userVote: function (userId) {
     return this.votes().query({where: {user_id: userId}}).fetchOne();
   },

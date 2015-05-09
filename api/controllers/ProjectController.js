@@ -97,7 +97,7 @@ module.exports = {
       project: req.param('projectId'),
       sort: 'post.last_updated'
     })
-    .fetchAll({withRelated: PostPresenter.relations(req.session.userId)})
+    .fetchAll({withRelated: PostPresenter.relations(req.session.userId, {fromProject: true})})
     .then(posts => res.ok(posts.map(PostPresenter.present)))
     .catch(res.serverError);
   }

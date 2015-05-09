@@ -33,10 +33,9 @@ module.exports = {
 
   findOne: function(req, res) {
     res.locals.post.load(PostPresenter.relations(req.session.userId))
-    .then(function(post) {
-      res.ok(PostPresenter.present(post));
-    })
-    .catch(res.serverError.bind(res));
+    .then(PostPresenter.present)
+    .then(res.ok)
+    .catch(res.serverError);
   },
 
   findForUser: function(req, res) {
