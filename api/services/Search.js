@@ -1,6 +1,6 @@
 module.exports = {
 
-  forSeeds: function(opts) {
+  forPosts: function(opts) {
     return Post.query(function(qb) {
 
       qb.limit(opts.limit);

@@ -116,21 +116,21 @@ module.exports = {
 
   createFromEmail: function(req, res) {
     try {
-      var replyData = Email.decodeSeedReplyAddress(req.param('To'));
+      var replyData = Email.decodePostReplyAddress(req.param('To'));
     } catch(e) {
       return res.serverError(new Error('Invalid reply address: ' + req.param('To')));
     }
 
-    return Post.find(replyData.seedId)
-    .then(function(seed) {
+    return Post.find(replyData.postId)
+    .then(function(post) {
       Analytics.track({
         userId: replyData.userId,
         event: 'Post: Comment: Add by Email',
         properties: {
-          post_id: seed.id
+          post_id: post.id
         }
       });
-      return createComment(replyData.userId, req.param('stripped-text'), seed);
+      return createComment(replyData.userId, req.param('stripped-text'), post);
     })
     .then(function() {
       res.ok({});

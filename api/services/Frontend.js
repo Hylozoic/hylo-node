@@ -17,12 +17,12 @@ module.exports = {
       return url('/u/%s', user.id);
     },
 
-    seed: function(seed, community) {
-      return url('/c/%s/s/%s', community.get('slug'), seed.id);
+    post: function(post, community) {
+      return url('/c/%s/s/%s', community.get('slug'), post.id);
     },
 
-    unfollow: function(seed, community) {
-      return this.seed(seed, community) + '?action=unfollow';
+    unfollow: function(post, community) {
+      return this.post(post, community) + '?action=unfollow';
     },
 
     userSettings: function() {

@@ -27,7 +27,7 @@ var jobDefinitions = {
   },
 
   'Post.sendNotificationEmail': function(job) {
-    return Post.sendNotificationEmail(job.data.recipientId, job.data.seedId);
+    return Post.sendNotificationEmail(job.data.recipientId, job.data.postId);
   },
 
   'Email.sendCommunityDigest': function(job) {

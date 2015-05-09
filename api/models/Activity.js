@@ -21,11 +21,11 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   Action: {
-    Mention: 'mention',     // you are mentioned in a seed or comment
-    Comment: 'comment',     // someone makes a comment on a seed you follow
+    Mention: 'mention',     // you are mentioned in a post or comment
+    Comment: 'comment',     // someone makes a comment on a post you follow
     FollowAdd: 'followAdd', // you are added as a follower
-    Follow: 'follow',       // someone follows your seed
-    Unfollow: 'unfollow'    // someone leaves your seed
+    Follow: 'follow',       // someone follows your post
+    Unfollow: 'unfollow'    // someone leaves your post
   },
 
   find: function(id) {
@@ -50,13 +50,13 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
-  forSeed: function(seed, userId) {
+  forPost: function(post, userId) {
     return new Activity({
       reader_id: userId,
-      actor_id: seed.get('creator_id'),
-      post_id: seed.id,
+      actor_id: post.get('creator_id'),
+      post_id: post.id,
       action: this.Action.Mention,
-      created_at: seed.get('creation_date')
+      created_at: post.get('creation_date')
     })
   },
 
@@ -80,11 +80,11 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
-  forUnfollow: function(seed, unfollowerId) {
+  forUnfollow: function(post, unfollowerId) {
     return new Activity({
-      reader_id: seed.get('creator_id'),
+      reader_id: post.get('creator_id'),
       actor_id: unfollowerId,
-      post_id: seed.id,
+      post_id: post.id,
       action: this.Action.Unfollow,
       created_at: new Date()
     });

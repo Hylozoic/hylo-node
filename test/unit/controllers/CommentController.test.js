@@ -87,7 +87,7 @@ describe('CommentController', function() {
 
     it('creates a comment', function(done) {
       Analytics.track = spy(Analytics.track);
-      params.To = Email.seedReplyAddress(fixtures.p1.id, fixtures.u3.id);
+      params.To = Email.postReplyAddress(fixtures.p1.id, fixtures.u3.id);
 
       res = {
         ok: spy(function() {}),

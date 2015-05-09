@@ -58,15 +58,15 @@ module.exports = bookshelf.Model.extend({
     .spread(function(recipient, comment) {
       if (!comment) return;
 
-      var seed = comment.relations.post,
+      var post = comment.relations.post,
         commenter = comment.relations.user,
-        creator = seed.relations.creator,
-        community = seed.relations.communities.models[0],
+        creator = post.relations.creator,
+        community = post.relations.communities.models[0],
         text = RichText.qualifyLinks(comment.get('comment_text')),
-        replyTo = Email.seedReplyAddress(seed.id, recipient.id);
+        replyTo = Email.postReplyAddress(post.id, recipient.id);
 
-      var seedLabel = format('%s %s',
-        (recipient.id == creator.id ? 'your' : 'the'), seed.get('type'));
+      var postLabel = format('%s %s',
+        (recipient.id == creator.id ? 'your' : 'the'), post.get('type'));
 
       return Email.sendNewCommentNotification({
         version: version,
@@ -82,10 +82,10 @@ module.exports = bookshelf.Model.extend({
           commenter_avatar_url:  commenter.get('avatar_url'),
           commenter_profile_url: Frontend.Route.profile(commenter) + '?ctt=comment_email',
           comment_text:          text,
-          seed_label:            seedLabel,
-          seed_title:            seed.get('name'),
-          seed_url:              Frontend.Route.seed(seed, community) + '?ctt=comment_email',
-          unfollow_url:          Frontend.Route.unfollow(seed, community),
+          seed_label:            postLabel,
+          seed_title:            post.get('name'),
+          seed_url:              Frontend.Route.post(post, community) + '?ctt=comment_email',
+          unfollow_url:          Frontend.Route.unfollow(post, community),
           tracking_pixel_url:    Analytics.pixelUrl('Comment', {userId: recipient.id})
         }
       });

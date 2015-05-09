@@ -5,11 +5,11 @@ var heredoc = require('heredoc'),
 
 describe('Search', function() {
 
-  describe('.forSeeds', function() {
+  describe('.forPosts', function() {
 
     it('produces the expected SQL for a complex query', function() {
 
-      var query = Search.forSeeds({
+      var query = Search.forPosts({
         limit: 5,
         offset: 7,
         users: [42, 41],

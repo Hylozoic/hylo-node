@@ -23,7 +23,7 @@ var extraAttributes = function(user) {
     phones: UserPhone.simpleList(user.relations.phones),
     emails: UserEmail.simpleList(user.relations.emails),
     websites: UserWebsite.simpleList(user.relations.websites),
-    seed_count: Post.countForUser(user),
+    post_count: Post.countForUser(user),
     contribution_count: Contribution.countForUser(user),
     thank_count: Thank.countForUser(user)
   });

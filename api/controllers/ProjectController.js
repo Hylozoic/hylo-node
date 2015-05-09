@@ -93,7 +93,7 @@ module.exports = {
   },
 
   findPosts: function(req, res) {
-    Search.forSeeds({
+    Search.forPosts({
       project: req.param('projectId'),
       sort: 'post.last_updated'
     })

@@ -17,8 +17,8 @@ module.exports = {
     return findCommunityIds().then(function(communityIds) {
 
       return Promise.join(
-        (!_.contains(resultTypes, 'seeds') ? [] :
-          Search.forSeeds({
+        (!_.contains(resultTypes, 'posts') ? [] :
+          Search.forPosts({
             term: term,
             limit: limit,
             offset: offset,
@@ -36,14 +36,12 @@ module.exports = {
         )
       );
 
-    }).spread(function(seeds, people) {
+    }).spread(function(posts, people) {
 
       res.ok({
-        seeds_total: (seeds.length > 0 ? parseInt(seeds.first().get('total')) : 0),
+        posts_total: (posts.length > 0 ? parseInt(posts.first().get('total')) : 0),
 
-        seeds: seeds.map(function(seed) {
-          return PostPresenter.present(seed);
-        }),
+        posts: posts.map(PostPresenter.present),
 
         people_total: (people.length > 0 ? parseInt(people.first().get('total')) : 0),
 

@@ -1,11 +1,3 @@
-var respondWithPosts = function(res, posts) {
-  var total = posts.first() ? Number(posts.first().get('total')) : 0;
-  res.ok({
-    seeds_total: total,
-    seeds: posts.map(PostPresenter.present)
-  });
-};
-
 var findPosts = function(req, res, opts) {
   var params = _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
     sortCol = (params.sort == 'top' ? 'post.num_votes' : 'post.last_updated');
@@ -21,12 +13,13 @@ var findPosts = function(req, res, opts) {
     visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE),
     sort: sortCol
   }).then(function(args) {
-    return Search.forSeeds(args).fetchAll({
+    return Search.forPosts(args).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId)
     });
-  }).then(function(posts) {
-    respondWithPosts(res, posts);
-  }).catch(res.serverError.bind(res));
+  })
+  .then(PostPresenter.mapPresentWithTotal)
+  .then(res.ok)
+  .catch(res.serverError);
 };
 
 module.exports = {
@@ -54,7 +47,7 @@ module.exports = {
   },
 
   findFollowed: function(req, res) {
-    Search.forSeeds({
+    Search.forPosts({
       follower: req.session.userId,
       limit: req.param('limit') || 10,
       offset: req.param('offset'),
@@ -62,15 +55,15 @@ module.exports = {
     }).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId)
     })
-    .then(function(posts) {
-      respondWithPosts(res, posts);
-    }).catch(res.serverError.bind(res));
+    .then(PostPresenter.mapPresentWithTotal)
+    .then(res.ok)
+    .catch(res.serverError);
   },
 
   findAllForUser: function(req, res) {
     Membership.activeCommunityIds(req.session.userId)
     .then(function(communityIds) {
-      return Search.forSeeds({
+      return Search.forPosts({
         communities: communityIds,
         limit: req.param('limit') || 10,
         offset: req.param('offset'),
@@ -79,9 +72,9 @@ module.exports = {
         withRelated: PostPresenter.relations(req.session.userId)
       });
     })
-    .then(function(posts) {
-      respondWithPosts(res, posts);
-    }).catch(res.serverError.bind(res));
+    .then(PostPresenter.mapPresentWithTotal)
+    .then(res.ok)
+    .catch(res.serverError);
   },
 
   create: function(req, res) {
@@ -131,9 +124,9 @@ module.exports = {
               return Promise.join(
                 Queue.addJob('Post.sendNotificationEmail', {
                   recipientId: userId,
-                  seedId: post.id
+                  postId: post.id
                 }),
-                Activity.forSeed(post, userId).save({}, {transacting: trx}),
+                Activity.forPost(post, userId).save({}, {transacting: trx}),
                 User.incNewNotificationCount(userId, trx)
               );
             }),

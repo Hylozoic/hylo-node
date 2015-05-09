@@ -120,20 +120,20 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  sendNotificationEmail: function(recipientId, seedId) {
+  sendNotificationEmail: function(recipientId, postId) {
 
     return Promise.join(
       User.find(recipientId),
-      Post.find(seedId, {withRelated: ['communities', 'creator']})
+      Post.find(postId, {withRelated: ['communities', 'creator']})
     )
-    .spread(function(recipient, seed) {
+    .spread(function(recipient, post) {
 
-      var creator = seed.relations.creator,
-        community = seed.relations.communities.first(),
-        description = RichText.qualifyLinks(seed.get('description')),
-        replyTo = Email.seedReplyAddress(seed.id, recipient.id);
+      var creator = post.relations.creator,
+        community = post.relations.communities.first(),
+        description = RichText.qualifyLinks(post.get('description')),
+        replyTo = Email.postReplyAddress(post.id, recipient.id);
 
-      return Email.sendSeedMentionNotification({
+      return Email.sendPostMentionNotification({
         email: recipient.get('email'),
         sender: {
           address: replyTo,
@@ -146,11 +146,11 @@ module.exports = bookshelf.Model.extend({
           creator_avatar_url:  creator.get('avatar_url'),
           creator_profile_url: Frontend.Route.profile(creator),
           seed_description:    description,
-          seed_title:          seed.get('name'),
-          seed_type:           seed.get('type'),
-          seed_url:            Frontend.Route.seed(seed, community),
-          unfollow_url:        Frontend.Route.unfollow(seed, community),
-          tracking_pixel_url:  Analytics.pixelUrl('Mention in Seed', {userId: recipient.id})
+          seed_title:          post.get('name'),
+          seed_type:           post.get('type'),
+          seed_url:            Frontend.Route.post(post, community),
+          unfollow_url:        Frontend.Route.unfollow(post, community),
+          tracking_pixel_url:  Analytics.pixelUrl('Mention in Post', {userId: recipient.id})
         }
       });
 

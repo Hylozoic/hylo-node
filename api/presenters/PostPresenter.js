@@ -45,7 +45,21 @@ var postAttributes = post => {
   );
 };
 
+// this supports a pattern we're using for infinite scrolling.
+// we just keep reporting how many posts there are in total,
+// and the front-end keeps track of how many posts it has so far
+// so that it knows when to stop expecting more.
+// we can't always use a naive approach to pagination, because
+// the order of results could shift while searching.
+var mapPresentWithTotal = function(posts) {
+  return {
+    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
+    posts: posts.map(PostPresenter.present)
+  };
+};
+
 module.exports = {
   relations: postRelations,
-  present: postAttributes
+  present: postAttributes,
+  mapPresentWithTotal: mapPresentWithTotal
 };

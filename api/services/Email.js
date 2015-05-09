@@ -42,7 +42,7 @@ module.exports = {
     }));
   },
 
-  sendSeedMentionNotification: function(opts) {
+  sendPostMentionNotification: function(opts) {
     return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_wXiqtyNzAr8EF4fqBna5WQ',
       recipient: {address: opts.email},
@@ -59,18 +59,18 @@ module.exports = {
     }));
   },
 
-  seedReplyAddress: function(seedId, userId) {
-    var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, seedId, userId);
+  postReplyAddress: function(postId, userId) {
+    var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId);
     return format('reply-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN);
   },
 
-  decodeSeedReplyAddress: function(address) {
+  decodePostReplyAddress: function(address) {
     var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT)),
       match = address.match(/reply-(.*?)@/),
       plaintext = PlayCrypto.decrypt(match[1]).replace(salt, ''),
       ids = plaintext.split('|');
 
-    return {seedId: ids[0], userId: ids[1]};
+    return {postId: ids[0], userId: ids[1]};
   }
 
 };
