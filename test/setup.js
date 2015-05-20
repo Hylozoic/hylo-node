@@ -74,6 +74,7 @@ module.exports = setup = {
             table.integer('new_notification_count').defaultTo(0);
             table.datetime('last_login');
             table.datetime('date_created');
+            table.string('bio');
             table.text('work');
             table.text('intention');
             table.text('extra_info');

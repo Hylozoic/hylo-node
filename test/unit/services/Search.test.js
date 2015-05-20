@@ -56,4 +56,49 @@ describe('Search', function() {
 
   });
 
+  describe('.forUsers', () => {
+    var cat, dog, house;
+
+    before(() => {
+      cat = new User({name: 'Mister Cat', email: 'iam@cat.org', active: true});
+      dog = new User({name: 'Mister Dog', email: 'iam@dog.org', active: true});
+      house = new Community({name: 'House', slug: 'House'});
+
+      return cat.save()
+      .then(() => dog.save())
+      .then(() => house.save())
+      .then(() => cat.joinCommunity(house));
+    });
+
+    it('finds members based on name', () => {
+      return Search.forUsers({term: 'mister'}).fetchAll().then(users => {
+        expect(users.length).to.equal(2);
+      })
+    });
+
+    describe('for a community', () => {
+
+      it('finds members', () => {
+        return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll().then(users => {
+          expect(users.length).to.equal(1);
+          expect(users.first().get('name')).to.equal('Mister Cat');
+        });
+      });
+
+      it('excludes inactive members', () => {
+
+        return Membership.query().where({
+          users_id: cat.id,
+          community_id: house.id
+        }).update({active: false}).then(() => {
+          return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll().then(users => {
+            expect(users.length).to.equal(0);
+          })
+        });
+      });
+
+    });
+
+  });
+
 })

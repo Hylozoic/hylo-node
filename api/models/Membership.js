@@ -34,7 +34,8 @@ module.exports = bookshelf.Model.extend({
     var fetch = function(community_id) {
       return Membership.where({
         users_id: user_id,
-        community_id: community_id
+        community_id: community_id,
+        active: true
       }).fetch();
     };
 

@@ -34,8 +34,19 @@ describe('Membership', function() {
     it('returns nothing for a blank user id', function() {
       return Membership.find(null, community.id).then(function(membership) {
         expect(membership).not.to.exist;
-      })
-    })
+      });
+    });
+
+    it('does not return an inactive membership', function() {
+      return Membership.query().where({
+        users_id: user.id,
+        community_id: community.id
+      }).update({active: false}).then(() => {
+        return Membership.find(user.id, community.id);
+      }).then(membership => {
+        expect(membership).not.to.exist;
+      });
+    });
 
   });
 

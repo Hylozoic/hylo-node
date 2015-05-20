@@ -75,6 +75,7 @@ module.exports = {
       if (opts.communities) {
         qb.join('users_community', 'users_community.users_id', '=', 'users.id');
         qb.whereIn('users_community.community_id', opts.communities);
+        qb.where('users_community.active', true);
       }
 
       if (opts.autocomplete) {
