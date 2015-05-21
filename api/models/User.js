@@ -111,6 +111,15 @@ module.exports = bookshelf.Model.extend({
     return compare(this.generateTokenContents(), token);
   },
 
+  sendPushNotification: function(alert, url) {
+    self.devices()
+      .fetch()
+      .then(function (devices) {
+        return devices.map(function (device) {
+          device.sendPushNotification(alert, url)
+        })
+      })
+  }
 
     
 }, {

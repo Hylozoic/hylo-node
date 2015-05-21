@@ -17,16 +17,16 @@ module.exports = {
 		token: req.param("deviceToken"),
 		user_id: req.session.userId
 	    })
-		.save()
-		.then(function (device) {
-		    res.ok({result: "Added"})		
-		})
-		.otherwise(function (err) {
-		    res.ok({result: "Failed to save"})		
-		})
-            //res.json("Here")
+	    .save()
+	    .then(function (device) {
+	      res.ok({result: "Added"})		
+	    })
+	    .otherwise(function (err) {
+	      res.ok({result: "Failed to save"})		
+	    })
 	} else {
-	    res.json({toplevel: {user_name: user.get("name"), user_id: req.session.userId, query_dt: req.param("deviceToken")}})
+          // this is debugging and should be removed
+	  res.json({toplevel: {user_name: user.get("name"), user_id: req.session.userId, query_dt: req.param("deviceToken")}})
 	}
     },
     
