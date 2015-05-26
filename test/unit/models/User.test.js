@@ -38,8 +38,9 @@ describe('User', function() {
       expect(communities).to.exist;
       expect(communities.models).to.exist;
       expect(communities.models).not.to.be.empty;
-      expect(communities.models[0].get('name')).to.equal('House');
-      expect(communities.models[1].get('name')).to.equal('Yard');
+      var names = communities.models.map(c => c.get('name')).sort();
+      expect(names[0]).to.equal('House');
+      expect(names[1]).to.equal('Yard');
     });
 
   });
