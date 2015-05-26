@@ -77,7 +77,7 @@ var linkedinStrategy = new LinkedinStrategy({
   clientID: process.env.LINKEDIN_API_KEY,
   clientSecret: process.env.LINKEDIN_API_SECRET,
   callbackURL: url('/noo/login/linkedin/oauth'),
-  scope: ['r_emailaddress', 'r_fullprofile'],
+  scope: ['r_emailaddress', 'r_basicprofile'],
   state: true
 }, function(accessToken, refreshToken, profile, done) {
   done(null, formatProfile(profile));
