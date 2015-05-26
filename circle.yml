@@ -6,3 +6,6 @@ deployment:
     branch: master
     heroku:
       appname: hylo-node
+general:
+  artifacts:
+    - "coverage"
