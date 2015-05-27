@@ -18,15 +18,15 @@ module.exports = {
 
   findDefault: function(req, res) {
     User.find(req.session.userId).then(function(user) {
-      return user.communities().query(function(qb) { qb.orderBy('id', 'desc') }).fetchOne();
+      return user.communities().query(qb => qb.orderBy('id', 'desc')).fetchOne();
     })
     .then(function(community) {
       if (!community) return res.ok({});
 
       Membership.find(req.session.userId, community.id).then(function(membership) {
         res.ok(communityAttributes(community, membership));
-      })
-    })
+      });
+    });
   },
 
   findOne: function(req, res) {
@@ -52,7 +52,7 @@ module.exports = {
       res.ok({});
     }).catch(function(err) {
       res.serverError(err);
-    })
+    });
   },
 
   invite: function(req, res) {
@@ -221,7 +221,7 @@ module.exports = {
     .then(function(rows) {
       var data;
       if (params.constraint === 'unique') {
-        data = {unique: parseInt(rows[0].count) == 0};
+        data = {unique: parseInt(rows[0].count) === 0};
       } else if (params.constraint === 'exists') {
         var exists = parseInt(rows[0].count) >= 1;
         data = {exists: exists};
