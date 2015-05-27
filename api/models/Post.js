@@ -145,10 +145,10 @@ module.exports = bookshelf.Model.extend({
           creator_name:        creator.get('name'),
           creator_avatar_url:  creator.get('avatar_url'),
           creator_profile_url: Frontend.Route.profile(creator),
-          seed_description:    description,
-          seed_title:          post.get('name'),
-          seed_type:           post.get('type'),
-          seed_url:            Frontend.Route.post(post, community),
+          post_description:    description,
+          post_title:          post.get('name'),
+          post_type:           post.get('type'),
+          post_url:            Frontend.Route.post(post, community),
           unfollow_url:        Frontend.Route.unfollow(post, community),
           tracking_pixel_url:  Analytics.pixelUrl('Mention in Post', {userId: recipient.id})
         }

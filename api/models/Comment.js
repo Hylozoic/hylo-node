@@ -82,9 +82,9 @@ module.exports = bookshelf.Model.extend({
           commenter_avatar_url:  commenter.get('avatar_url'),
           commenter_profile_url: Frontend.Route.profile(commenter) + '?ctt=comment_email',
           comment_text:          text,
-          seed_label:            postLabel,
-          seed_title:            post.get('name'),
-          seed_url:              Frontend.Route.post(post, community) + '?ctt=comment_email',
+          post_label:            postLabel,
+          post_title:            post.get('name'),
+          post_url:              Frontend.Route.post(post, community) + '?ctt=comment_email',
           unfollow_url:          Frontend.Route.unfollow(post, community),
           tracking_pixel_url:    Analytics.pixelUrl('Comment', {userId: recipient.id})
         }
