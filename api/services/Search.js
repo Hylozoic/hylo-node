@@ -78,6 +78,11 @@ module.exports = {
         qb.where('users_community.active', true);
       }
 
+      if (opts.project) {
+        qb.join('projects_users', 'projects_users.user_id', '=', 'users.id');
+        qb.whereIn('projects_users.project_id', opts.project);
+      }
+
       if (opts.autocomplete) {
         qb.whereRaw("users.name ilike ?", opts.autocomplete + '%');
       }

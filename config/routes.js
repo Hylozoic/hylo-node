@@ -93,6 +93,7 @@ module.exports.routes = {
   'GET    /noo/project':                                  'ProjectController.find',
   'GET    /noo/project/:projectId':                       'ProjectController.findOne',
   'GET    /noo/project/:projectId/posts':                 'ProjectController.findPosts',
+  'GET    /noo/project/:projectId/users':                 'ProjectController.findUsers',
   'POST   /noo/project':                                  'ProjectController.create',
   'POST   /noo/project/:projectId':                       'ProjectController.update',
 

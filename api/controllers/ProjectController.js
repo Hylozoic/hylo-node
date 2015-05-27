@@ -103,6 +103,20 @@ module.exports = {
     .then(PostPresenter.mapPresentWithTotal)
     .then(res.ok)
     .catch(res.serverError);
+  },
+
+  findUsers: function(req, res) {
+    Search.forUsers({
+      project: req.param('projectId'),
+      sort: 'post.last_updated',
+      limit: req.param('limit') || 10,
+      offset: req.param('offset') || 0
+    })
+    .fetchAll()
+    .then(users => users.map(u => u.pick('id', 'name', 'avatar_url', 'bio',
+      'twitter_name', 'facebook_url', 'linkedin_url')))
+    .then(res.ok)
+    .catch(res.serverError);
   }
 
 };
