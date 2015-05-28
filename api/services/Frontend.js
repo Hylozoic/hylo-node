@@ -1,3 +1,9 @@
+/*
+This file exists because we sometimes need to refer to URL's that live
+in the Angular app. Better to contain all that kind of coupling here
+than to spread it throughout the code.
+*/
+
 var prefix = format('%s://%s', process.env.PROTOCOL, process.env.DOMAIN);
 
 var url = function() {
@@ -15,6 +21,10 @@ module.exports = {
 
     profile: function(user) {
       return url('/u/%s', user.id);
+    },
+
+    project: function(project) {
+      return url('/project/%s', project.get('slug'));
     },
 
     post: function(post, community) {

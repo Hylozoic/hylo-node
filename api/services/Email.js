@@ -11,6 +11,18 @@ var defaultOptions = {
 
 module.exports = {
 
+  sendProjectInvitation: function(email, data) {
+    return sendEmail(_.merge({}, defaultOptions, {
+      email_id: 'tem_5karBhDbANcCEmrvuuQtgn',
+      recipient: {address: email},
+      email_data: data,
+      sender: {
+        name: format('%s (via Hylo)', data.inviter_name),
+        reply_to: data.inviter_email
+      }
+    }));
+  },
+
   sendPasswordReset: function(opts) {
     return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_mccpcJNEzS4822mAnDNmGT',

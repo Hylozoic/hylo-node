@@ -1,4 +1,5 @@
-var crypto = require('crypto');
+var crypto = require('crypto'),
+  marked = require('marked');
 
 var placeholderSlug = function() {
   return crypto.randomBytes(3).toString('hex');
@@ -116,6 +117,47 @@ module.exports = {
     .then(users => users.map(u => u.pick('id', 'name', 'avatar_url', 'bio',
       'twitter_name', 'facebook_url', 'linkedin_url')))
     .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  invite: function(req, res) {
+    var invited = req.param('emails').map(email => { return {email: email} }),
+      projectId = req.param('projectId'),
+      user, project;
+
+    marked.setOptions({
+      gfm: true,
+      breaks: true
+    });
+
+    var message = marked(req.param('message') || '');
+
+    Promise.join(
+      User.find(req.session.userId),
+      Project.find(projectId)
+    ).spread((user_, project_) => {
+      user = user_;
+      project = project_;
+      return bookshelf.transaction(trx => {
+        return User.where('id', 'in', req.param('users')).fetchAll()
+        .tap(users => {
+          invited = invited.concat(users.map(u => { return {email: u.get('email'), id: u.id} }));
+          return Promise.map(invited, person => ProjectInvitation.create(projectId, {
+            userId: person.id,
+            email: person.email,
+            transacting: trx
+          }));
+        });
+      });
+    })
+    .then(() => Promise.map(invited, person => Email.sendProjectInvitation(person.email, {
+      subject: req.param('subject'),
+      message: message,
+      inviter_name: user.get('name'),
+      inviter_email: user.get('email'),
+      invite_link: Frontend.Route.project(project)
+    })))
+    .then(() => res.ok({}))
     .catch(res.serverError);
   }
 
