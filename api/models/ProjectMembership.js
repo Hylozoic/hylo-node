@@ -1,4 +1,4 @@
-module.exports = bookshelf.Model.extend({
+var ProjectMembership = module.exports = bookshelf.Model.extend({
   tableName: 'projects_users',
 
   project: function() {
@@ -16,7 +16,18 @@ module.exports = bookshelf.Model.extend({
   },
 
   create: function(userId, projectId, opts) {
-    return new this({user_id: userId, project_id: projectId}).save({}, _.pick(opts, 'transacting'));
+    return new this({
+      user_id: userId,
+      project_id: projectId,
+      created_at: new Date()
+    }).save({}, _.pick(opts, 'transacting'))
+    .catch(err => {
+      if (err.message.contains('duplicate key value')) {
+        return ProjectMembership.find(userId, projectId, opts);
+      } else {
+        throw err;
+      }
+    });
   }
 
 });
