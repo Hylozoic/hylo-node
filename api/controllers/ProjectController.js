@@ -1,5 +1,4 @@
-var crypto = require('crypto'),
-  marked = require('marked');
+var crypto = require('crypto');
 
 var placeholderSlug = function() {
   return crypto.randomBytes(3).toString('hex');
@@ -118,7 +117,7 @@ module.exports = {
   findUsers: function(req, res) {
     Search.forUsers({
       project: req.param('projectId'),
-      sort: 'post.last_updated',
+      sort: 'users.name',
       limit: req.param('limit') || 10,
       offset: req.param('offset') || 0
     })
@@ -130,16 +129,9 @@ module.exports = {
   },
 
   invite: function(req, res) {
-    var invited = req.param('emails').map(email => { return {email: email} }),
+    var invited = req.param('emails').map(email => ({email: email})),
       projectId = req.param('projectId'),
       user, project;
-
-    marked.setOptions({
-      gfm: true,
-      breaks: true
-    });
-
-    var message = marked(req.param('message') || '');
 
     Promise.join(
       User.find(req.session.userId),
@@ -150,7 +142,7 @@ module.exports = {
       return bookshelf.transaction(trx => {
         return User.where('id', 'in', req.param('users')).fetchAll()
         .then(users => {
-          invited = invited.concat(users.map(u => { return {email: u.get('email'), id: u.id} }));
+          invited = invited.concat(users.map(u => ({email: u.get('email'), id: u.id})));
           return Promise.map(invited, person => ProjectInvitation.create(projectId, {
             userId: person.id,
             email: person.email,
@@ -162,7 +154,7 @@ module.exports = {
     .then(invitations => Promise.map(invitations, inv =>
       Email.sendProjectInvitation(inv.get('email'), {
         subject: req.param('subject'),
-        message: message,
+        message: RichText.markdown(req.param('message')),
         inviter_name: user.get('name'),
         inviter_email: user.get('email'),
         invite_link: Frontend.Route.project(project) + '?token=' + inv.get('token')

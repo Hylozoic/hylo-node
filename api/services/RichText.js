@@ -1,4 +1,5 @@
 var Cheerio = require('cheerio'),
+  marked = require('marked'),
   sanitizeHtml = require('sanitize-html');
 
 var sanitize = function(text) {
@@ -41,8 +42,18 @@ var qualifyLinks = function(text) {
   return $.html();
 };
 
+var markdown = function(source) {
+  marked.setOptions({
+    gfm: true,
+    breaks: true
+  });
+
+  return marked(source || '');
+};
+
 module.exports = {
   getUserMentions: getUserMentions,
   qualifyLinks:    qualifyLinks,
-  sanitize:        sanitize
+  sanitize:        sanitize,
+  markdown:        markdown
 };
