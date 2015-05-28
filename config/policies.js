@@ -105,13 +105,15 @@ module.exports.policies = {
   },
 
   ProjectController: {
-    find:      ['sessionAuth'],
-    create:    ['sessionAuth'],
-    update:    ['sessionAuth', 'checkAndSetWritableProject'],
-    findOne:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findPosts: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findUsers: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    invite:    ['sessionAuth', 'checkAndSetWritableProject']
+    find:       ['sessionAuth'],
+    create:     ['sessionAuth'],
+    update:     ['sessionAuth', 'checkAndSetWritableProject'],
+    findOne:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    findPosts:  ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    findUsers:  ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    invite:     ['sessionAuth', 'checkAndSetWritableProject'],
+    join:       ['sessionAuth', 'checkAndSetProject'],
+    removeUser: ['sessionAuth', 'checkAndSetWritableProject']
   }
 
 };

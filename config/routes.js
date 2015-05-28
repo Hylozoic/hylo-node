@@ -94,9 +94,11 @@ module.exports.routes = {
   'GET    /noo/project/:projectId':                       'ProjectController.findOne',
   'GET    /noo/project/:projectId/posts':                 'ProjectController.findPosts',
   'GET    /noo/project/:projectId/users':                 'ProjectController.findUsers',
+  'DELETE /noo/project/:projectId/user/:userId':          'ProjectController.removeUser',
   'POST   /noo/project':                                  'ProjectController.create',
   'POST   /noo/project/:projectId':                       'ProjectController.update',
   'POST   /noo/project/:projectId/invite':                'ProjectController.invite',
+  'POST   /noo/project/:projectId/join':                  'ProjectController.join',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',

@@ -87,9 +87,14 @@ module.exports = {
   findOne: function(req, res) {
     Project.find(res.locals.project.id, {withRelated: [
       {user: qb => qb.column('id', 'name', 'avatar_url')},
-      {community: qb => qb.column('id', 'name', 'avatar_url')}
+      {community: qb => qb.column('id', 'name', 'avatar_url')},
+      {contributors: qb => qb.where('users.id', req.session.userId)},
+      {posts: qb => qb.where('fulfilled', false)}
     ]})
-    .then(res.ok)
+    .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'contributors', 'posts'), {
+      is_contributor: project.relations.contributors.length > 0,
+      open_request_count: project.relations.posts.length
+    })))
     .catch(res.serverError);
   },
 
@@ -158,6 +163,20 @@ module.exports = {
       invite_link: Frontend.Route.project(project)
     })))
     .then(() => res.ok({}))
+    .catch(res.serverError);
+  },
+
+  join: function(req, res) {
+    ProjectMembership.create(req.session.userId, req.param('projectId'))
+    .then(() => res.ok({}))
+    .catch(res.serverError);
+  },
+
+  removeUser: function(req, res) {
+    ProjectMembership.where({
+      user_id: req.param('userId'),
+      project_id: req.param('projectId')
+    }).destroy().then(() => res.ok({}))
     .catch(res.serverError);
   }
 
