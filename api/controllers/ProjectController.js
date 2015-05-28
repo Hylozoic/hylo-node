@@ -179,7 +179,7 @@ module.exports = {
   join: function(req, res) {
     bookshelf.transaction(trx => {
       return Promise.join(
-        ProjectInvitation.findByToken(req.param('token')).then(i => i.use(req.session.userId)),
+        ProjectInvitation.findByToken(req.param('token')).then(i => i ? i.use(req.session.userId) : null),
         ProjectMembership.create(req.session.userId, req.param('projectId'))
       );
     })
