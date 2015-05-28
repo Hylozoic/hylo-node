@@ -1,3 +1,5 @@
+var url = require('url');
+
 module.exports = bookshelf.Model.extend({
   tableName: 'comment',
 
@@ -56,6 +58,7 @@ module.exports = bookshelf.Model.extend({
       })
     )
     .spread(function(recipient, comment) {
+
       if (!comment) return;
 
       var post = comment.relations.post,
@@ -91,6 +94,37 @@ module.exports = bookshelf.Model.extend({
       });
 
     })
+
+  },
+  
+  sendPushNotification: function(recipientId, comment) {
+
+    return Promise.join(
+      User.find(recipientId),
+      comment.load(['user', 'post', 'post.communities', 'post.creator'])                        
+    )
+      .spread(function(recipient, comment) {      
+
+        if (!comment) return;
+
+        var seed = comment.relations.post,
+            commenter = comment.relations.user,
+            creator = seed.relations.creator;
+
+        if (seed.relations.communities) {
+          var community = seed.relations.communities.models[0],
+              text = RichText.qualifyLinks(comment.get('comment_text')),
+              replyTo = Email.seedReplyAddress(seed.id, recipient.id),
+              path = url.parse(Frontend.Route.seed(seed,community)).path;
+
+          return recipient.sendPushNotification("Someone Commented On Your Post", path)
+          
+        } else {
+          
+          return false
+          
+        }
+     })
 
   },
 

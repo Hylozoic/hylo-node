@@ -117,8 +117,8 @@ module.exports.policies = {
   },
 
   PushNotificationController: {
-      test: true,
-      addDevice: true,
+      updateBadgeNo: true,
+      addDevice: true
   }
-
+  
 };

@@ -112,11 +112,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotification: function(alert, url) {
-    self.devices()
+    this.devices()
       .fetch()
       .then(function (devices) {
         return devices.map(function (device) {
-          device.sendPushNotification(alert, url)
+          device.sendPushNotification(alert, url);
         })
       })
   }
@@ -231,6 +231,12 @@ module.exports = bookshelf.Model.extend({
       unsalted = decrypted.replace(new RegExp('^' + process.env.MAILGUN_EMAIL_SALT), '');
 
     return unsalted;
+  },
+  
+  sendPushNotification: function(userId, alert, url) {
+    return User.find(userId)
+      .fetch()
+      .sendPushNotification(alert, url)
   }
 
 });
