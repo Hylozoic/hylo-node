@@ -7,15 +7,21 @@
 
 var validator = require('validator');
 
-var findCommunity = function(req) {
+var findContext = function(req) {
+  if (req.param('projectId')) {
+    var valid = ProjectInvitation.validate(req.param('projectId'), req.param('projectToken'))
+    .tap(valid => { if (!valid) throw('bad project token') });
+    return Promise.props({validProjectToken: valid});
+  }
+
   if (req.session.invitationId) {
     return Invitation.find(req.session.invitationId, {withRelated: ['community']})
     .then(function(invitation) {
-      return [invitation.relations.community, invitation];
+      return {community: invitation.relations.community, invitation: invitation};
     });
   }
 
-  return Promise.join(Community.where({beta_access_code: req.param('code')}).fetch());
+  return Promise.props({community: Community.where({beta_access_code: req.param('code')}).fetch()});
 };
 
 module.exports = {
@@ -23,13 +29,13 @@ module.exports = {
   create: function(req, res) {
     var params = _.pick(req.allParams(), 'name', 'email', 'password');
 
-    return findCommunity(req)
-    .spread(function(community, invitation) {
-      if (!community && !invitation)
+    return findContext(req)
+    .then(ctx => {
+      if (!ctx.community && !ctx.invitation && !ctx.validProjectToken)
         throw 'bad code';
 
       var attrs = _.merge(_.pick(params, 'name', 'email'), {
-        community: (invitation ? null : community),
+        community: (ctx.invitation ? null : ctx.community),
         account: {type: 'password', password: params.password}
       });
 
@@ -37,7 +43,7 @@ module.exports = {
         return User.create(attrs, {transacting: trx}).tap(function(user) {
           return Promise.join(
             Tour.startOnboarding(user.id, {transacting: trx}),
-            (invitation ? invitation.use(user.id, {transacting: trx}) : null)
+            (ctx.invitation ? ctx.invitation.use(user.id, {transacting: trx}) : null)
           );
         });
       });

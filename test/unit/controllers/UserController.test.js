@@ -15,9 +15,20 @@ describe('UserController', function() {
   });
 
   describe('.create', function() {
+    var community;
 
     beforeEach(function() {
-      return new Community({beta_access_code: 'foo', name: 'foo'}).save();
+      res = {
+        send: console.error,
+        status: spy(noop()),
+        ok: spy(noop())
+      };
+
+      UserSession.login = spy(function() {});
+      User.create = spy(User.create);
+
+      community = new Community({beta_access_code: 'foo', name: 'foo'});
+      return community.save();
     });
 
     it('works with a username and password', function() {
@@ -30,15 +41,6 @@ describe('UserController', function() {
         },
         session: {}
       });
-
-      res = {
-        send: console.error,
-        status: spy(noop()),
-        ok: spy(noop())
-      };
-
-      UserSession.login = spy(function() {});
-      User.create = spy(User.create);
 
       return UserController.create(req, res).then(function() {
         expect(res.status).not.to.have.been.called();
@@ -55,6 +57,41 @@ describe('UserController', function() {
         expect(onboarding.get('type')).to.equal('onboarding');
         expect(onboarding.get('status').step).to.equal('start');
       });
+    });
+
+    describe('with an invitation to a community', function() {
+
+      var invitation;
+
+      beforeEach(() => {
+        return Invitation.create({communityId: community.id}).tap(i => invitation = i);
+      });
+
+      it('works', function() {
+        _.extend(req, {
+          params: {
+            email: 'foo@bar.com',
+            password: 'password!',
+            login: true
+          },
+          session: {invitationId: invitation.id}
+        });
+
+        return UserController.create(req, res).then(function() {
+          expect(res.status).not.to.have.been.called();
+          expect(User.create).to.have.been.called();
+          expect(UserSession.login).to.have.been.called();
+          expect(res.ok).to.have.been.called();
+
+          return User.where({email: 'foo@bar.com'}).fetch({withRelated: ['communities']});
+        })
+        .then(user => {
+          var community = user.relations.communities.first();
+          expect(community).to.exist;
+          expect(community.get('name')).to.equal('foo');
+        });
+      });
+
     });
 
   });

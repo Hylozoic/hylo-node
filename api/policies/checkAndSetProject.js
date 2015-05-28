@@ -12,19 +12,27 @@ module.exports = function(req, res, next) {
       res.forbidden();
     }
 
-    if (req.param('token')) {
-      // you have a valid invitation link
+    var checkInvitationToken = function() {
       ProjectInvitation.validate(project.id, req.param('token'))
       .then(valid => valid ? pass() : fail('not a valid token'));
+    };
 
-    } else if (req.session.userId === project.get('user_id')) {
+    if (req.session.userId === project.get('user_id')) {
       // you're the creator
       pass();
 
     } else if (project.isDraft()) {
       // you're a contributor
       ProjectMembership.find(req.session.userId, project.id)
-      .then(membership => membership ? pass() : fail('not a contributor'));
+      .then(membership => {
+        if (membership) {
+          pass();
+        } else if (req.param('token')) {
+          checkInvitationToken();
+        } else {
+          fail('not a contributor');
+        }
+      });
 
     } else if (project.isPublic()) {
       // it's published and public
@@ -33,7 +41,15 @@ module.exports = function(req, res, next) {
     } else {
       // you're a community member
       Membership.find(req.session.userId, project.get('community_id'))
-      .then(membership => membership ? pass() : fail('not in community'));
+      .then(membership => {
+        if (membership) {
+          pass();
+        } else if (req.param('token')) {
+          checkInvitationToken();
+        } else {
+          fail('not in community');
+        }
+      });
     }
 
   })

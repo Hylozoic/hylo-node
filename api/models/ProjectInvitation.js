@@ -7,6 +7,13 @@ module.exports = bookshelf.Model.extend({
 
   project: function() {
     return this.belongsTo(Project);
+  },
+
+  use: function(userId, opts) {
+    return Promise.join(
+      this.save({user_id: userId, accepted_at: new Date}, _.pick(opts, 'transacting')),
+      ProjectMembership.create(userId, this.get('project_id'), _.pick(opts, 'transacting'))
+    );
   }
 
 }, {
@@ -21,6 +28,10 @@ module.exports = bookshelf.Model.extend({
     };
 
     return new ProjectInvitation(attrs).save({}, _.pick(opts.transacting));
+  },
+
+  findByToken: function(token) {
+    return this.where({token: token}).fetch();
   },
 
   validate: function(projectId, token) {

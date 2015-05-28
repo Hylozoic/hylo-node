@@ -145,7 +145,7 @@ module.exports = {
       project = project_;
       return bookshelf.transaction(trx => {
         return User.where('id', 'in', req.param('users')).fetchAll()
-        .tap(users => {
+        .then(users => {
           invited = invited.concat(users.map(u => { return {email: u.get('email'), id: u.id} }));
           return Promise.map(invited, person => ProjectInvitation.create(projectId, {
             userId: person.id,
@@ -155,19 +155,25 @@ module.exports = {
         });
       });
     })
-    .then(() => Promise.map(invited, person => Email.sendProjectInvitation(person.email, {
-      subject: req.param('subject'),
-      message: message,
-      inviter_name: user.get('name'),
-      inviter_email: user.get('email'),
-      invite_link: Frontend.Route.project(project)
-    })))
+    .then(invitations => Promise.map(invitations, inv =>
+      Email.sendProjectInvitation(inv.get('email'), {
+        subject: req.param('subject'),
+        message: message,
+        inviter_name: user.get('name'),
+        inviter_email: user.get('email'),
+        invite_link: Frontend.Route.project(project) + '?token=' + inv.get('token')
+      })))
     .then(() => res.ok({}))
     .catch(res.serverError);
   },
 
   join: function(req, res) {
-    ProjectMembership.create(req.session.userId, req.param('projectId'))
+    bookshelf.transaction(trx => {
+      return Promise.join(
+        ProjectInvitation.findByToken(req.param('token')).then(i => i.use(req.session.userId)),
+        ProjectMembership.create(req.session.userId, req.param('projectId'))
+      );
+    })
     .then(() => res.ok({}))
     .catch(res.serverError);
   },
