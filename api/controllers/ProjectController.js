@@ -63,11 +63,20 @@ module.exports = {
 
   find: function(req, res) {
     Project.query(qb => {
-      if (req.param('context') == 'mine') {
+      if (req.param('context') === 'creator') {
         qb.where('user_id', req.session.userId);
+
+      } else if (req.param('context') === 'creator-or-contributor') {
+        qb.leftJoin('projects_users', () => this.on('projects.id', '=', 'projects_users.project_id'));
+        qb.where('projects.user_id', req.session.userId).orWhere(function() {
+          this.where('projects_users.user_id', req.session.userId);
+        });
+
       } else {
         throw format('unknown context: %s', req.param('context'));
       }
+
+      qb.groupBy('projects.id');
     }).fetchAll({
       withRelated: [
         {user: qb => qb.column('id', 'name', 'avatar_url')},
