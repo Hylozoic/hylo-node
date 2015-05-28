@@ -14,11 +14,16 @@ var projectAttributes = project => _.extend(project.toJSON(), {
   open_request_count: project.relations.posts.length
 });
 
+var maybeGenerateVideoThumbnail = Promise.method(function(attrs) {
+  if (attrs.video_url) {
+    return Project.generateThumbnailUrl(attrs.video_url)
+    .then(url => attrs.thumbnail_url = url);
+  }
+});
+
 module.exports = {
 
   create: function(req, res) {
-    console.log(JSON.stringify(req.allParams(), null, 2));
-
     var attrs = _.defaults(
       _.pick(req.allParams(), editableAttributes),
       {
@@ -29,12 +34,7 @@ module.exports = {
       }
     );
 
-    Promise.method(function() {
-      if (attrs.video_url) {
-        return Project.generateThumbnailUrl(attrs.video_url)
-        .then(url => attrs.thumbnail_url = url);
-      }
-    })()
+    maybeGenerateVideoThumbnail(attrs)
     .then(() => new Project(attrs))
     .then(project => project.save())
     .then(project => res.ok(_.pick(project.toJSON(), 'slug')))
@@ -50,12 +50,7 @@ module.exports = {
     else if (req.param('unpublish'))
       updatedAttrs.published_at = null;
 
-    Promise.method(function() {
-      if (updatedAttrs.video_url) {
-        return Project.generateThumbnailUrl(updatedAttrs.video_url)
-        .then(url => updatedAttrs.thumbnail_url = url);
-      }
-    })()
+    maybeGenerateVideoThumbnail(updatedAttrs)
     .then(() => project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true}))
     .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
     .catch(res.serverError);
