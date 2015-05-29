@@ -24,7 +24,7 @@ describe('PostController', function() {
         session: {userId: fixtures.u1.id},
       };
 
-      res = {serverError: function() {}};
+      res = {serverError: function() {}, ok: function() {}};
     });
   });
 
@@ -33,9 +33,9 @@ describe('PostController', function() {
     it('saves mentions', function() {
       req.params = {
         name: "NewPost",
-          description: "<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>",
-          postType: "intention",
-          communityId: fixtures.c1.id
+        description: "<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>",
+        postType: "intention",
+        communityId: fixtures.c1.id
       };
 
       res.ok = function(data) {
@@ -64,6 +64,36 @@ describe('PostController', function() {
       };
 
       return PostController.create(req, res);
+    });
+
+    describe('for a draft project', () => {
+
+      var project;
+
+      beforeEach(() => {
+        project = new Project({community_id: fixtures.c1.id});
+        return project.save();
+      });
+
+      it('sets visibility to DRAFT_PROJECT', () => {
+        req.params = {
+          name: "i want!",
+          description: "<p>woo</p>",
+          postType: "request",
+          projectId: project.id,
+          communityId: fixtures.c1.id
+        };
+
+        return PostController.create(req, res)
+        .then(() => project.load('posts'))
+        .then(() => {
+          var post = project.relations.posts.first();
+          expect(post).to.exist;
+          expect(post.get('name')).to.equal('i want!');
+          expect(post.get('visibility')).to.equal(Post.Visibility.DRAFT_PROJECT);
+        })
+      });
+
     });
 
   });

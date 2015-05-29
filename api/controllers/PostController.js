@@ -100,6 +100,14 @@ module.exports = {
       if (community.isNewContentPublic())
         attrs.visibility = Post.Visibility.PUBLIC_READABLE;
     })
+    .tap(() => {
+      if (params.projectId) {
+        return Project.find(params.projectId).then(project => {
+          if (project.isDraft())
+            attrs.visibility = Post.Visibility.DRAFT_PROJECT;
+        })
+      }
+    })
     .then(function(community) {
       return bookshelf.transaction(function(trx) {
         return new Post(attrs).save(null, {transacting: trx})

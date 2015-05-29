@@ -50,7 +50,23 @@ module.exports = {
       updatedAttrs.published_at = null;
 
     maybeGenerateVideoThumbnail(updatedAttrs)
-    .then(() => project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true}))
+    .then(() => {
+      return bookshelf.transaction(trx => {
+        return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
+        .tap(() => {
+          if (!_.has(updatedAttrs, 'published_at')) return;
+
+          var vis = updatedAttrs.published_at
+            ? Post.Visibility.DEFAULT
+            : Post.Visibility.DRAFT_PROJECT;
+
+          return project.load('posts')
+          .then(() =>
+            Post.query().where('id', 'in', project.relations.posts.map('id'))
+            .update({visibility: vis}));
+        })
+      })
+    })
     .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
     .catch(res.serverError);
   },

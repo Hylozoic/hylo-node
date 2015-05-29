@@ -23,6 +23,8 @@ module.exports = {
       if (opts.project) {
         qb.join('posts_projects', 'posts_projects.post_id', '=', 'post.id');
         qb.whereIn('posts_projects.project_id', opts.project);
+      } else {
+        qb.where('post.visibility', '!=', Post.Visibility.DRAFT_PROJECT);
       }
 
       if (opts.term) {

@@ -98,7 +98,8 @@ module.exports = setup = {
             table.boolean('fulfilled');
             table.boolean('active');
             table.boolean('edited');
-            table.datetime('last_updated')
+            table.datetime('last_updated');
+            table.integer('visibility').defaultTo(0);
           }),
           createTable('vote', function(table) {
             table.increments();
@@ -218,6 +219,17 @@ module.exports = setup = {
             table.bigInteger('comment_id');
             table.datetime('date_thanked');
             table.bigInteger('thanked_by_id');
+          }),
+          createTable('projects', table => {
+            table.increments();
+            table.bigInteger('community_id').references('id').inTable('community');
+            table.timestamps();
+          }),
+          createTable('posts_projects', table => {
+            table.increments();
+            table.bigInteger('post_id');
+            table.bigInteger('project_id');
+            table.timestamps();
           })
         );
       });

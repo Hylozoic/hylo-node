@@ -86,7 +86,8 @@ module.exports = bookshelf.Model.extend({
 
   Visibility: {
     DEFAULT: 0,
-    PUBLIC_READABLE: 1
+    PUBLIC_READABLE: 1,
+    DRAFT_PROJECT: 2
   },
 
   countForUser: function(user) {
