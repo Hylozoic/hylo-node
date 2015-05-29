@@ -23,7 +23,8 @@ module.exports = bookshelf.Model.extend({
           badge_no: badge_no,
           time_queued: (new Date()).toISOString()
         })
-          .save();
+          .save()
+          .then(pushNotification => pushNotification.send());
       });
   }
   

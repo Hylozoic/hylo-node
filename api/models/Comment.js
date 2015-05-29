@@ -115,10 +115,9 @@ module.exports = bookshelf.Model.extend({
 
         if (post.relations.communities) {
           var community = post.relations.communities.models[0],
-              text = RichText.qualifyLinks(comment.get('comment_text')),
               path = url.parse(Frontend.Route.post(post,community)).path;
 
-          return recipient.sendPushNotification("Someone Commented On Your Post", path);
+          return recipient.sendPushNotification(commenter.get("name") + " commented on \"" + post.get("name") + "\"", path);
           
         } else {
           
