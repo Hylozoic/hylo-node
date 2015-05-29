@@ -17,7 +17,10 @@ module.exports = function(req, res, next) {
       .then(valid => valid ? pass() : fail('not a valid token'));
     };
 
-    if (req.session.userId === project.get('user_id')) {
+    if (!project) {
+      fail('no project');
+
+    } else if (req.session.userId === project.get('user_id')) {
       // you're the creator
       pass();
 
