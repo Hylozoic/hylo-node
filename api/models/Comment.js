@@ -97,31 +97,32 @@ module.exports = bookshelf.Model.extend({
 
   },
   
-  sendPushNotification: function(recipientId, comment) {
+  sendPushNotification: function(recipientId, comment, options) {
 
+
+    
     return Promise.join(
       User.find(recipientId),
-      comment.load(['user', 'post', 'post.communities', 'post.creator'])                        
+      comment.load(['user', 'post', 'post.communities', 'post.creator'], _.pick(options, "transacting"))                        
     )
       .spread(function(recipient, comment) {      
 
         if (!comment) return;
 
-        var seed = comment.relations.post,
+        var post = comment.relations.post,
             commenter = comment.relations.user,
-            creator = seed.relations.creator;
+            creator = post.relations.creator;
 
-        if (seed.relations.communities) {
-          var community = seed.relations.communities.models[0],
+        if (post.relations.communities) {
+          var community = post.relations.communities.models[0],
               text = RichText.qualifyLinks(comment.get('comment_text')),
-              replyTo = Email.seedReplyAddress(seed.id, recipient.id),
-              path = url.parse(Frontend.Route.seed(seed,community)).path;
+              path = url.parse(Frontend.Route.post(post,community)).path;
 
-          return recipient.sendPushNotification("Someone Commented On Your Post", path)
+          return recipient.sendPushNotification("Someone Commented On Your Post", path);
           
         } else {
           
-          return false
+          return false;
           
         }
      })

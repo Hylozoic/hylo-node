@@ -54,23 +54,12 @@ module.exports = {
             badge_no: req.param("badgeNo") || 0
           })
         })
-        .then(function() {
-	  res.ok({result: "Updated"})		
-	})
+        .then(() => res.ok({result: "Updated"}))
 	.otherwise(function (err) {
 	  res.ok({result: "Failed to Update"})		
-	})
-    } else {
-      // this is debugging and should be removed
-      res.json({toplevel: {user_name: user.get("name"), user_id: req.session.userId, query_dt: req.param("deviceToken")}})
-    }
-    
-//    res.json({toplevel: {badgeno: req.param("badgeNo"), dt: req.param("deviceToken")}})
-
-  },
-    
-  
-  
+	});
+    }   
+  }        
   
 };
 

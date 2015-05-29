@@ -236,7 +236,7 @@ module.exports = bookshelf.Model.extend({
   sendPushNotification: function(userId, alert, url) {
     return User.find(userId)
       .fetch()
-      .sendPushNotification(alert, url)
+      .sendPushNotification(alert, url);
   }
 
 });

@@ -6,59 +6,40 @@ var apnOptions = {passphrase: "kniujhYY&u",
                key: "/Users/robbiecarlton/programming/node/apntest/key.pem",
                cert: "/Users/robbiecarlton/programming/node/apntest/cert.pem"
               };
-    
+
 var apnConnection = new apn.Connection(apnOptions)
 
 skiff.lift({
   start: function(argv) {
 
-    Qdpush.query(function(qb) {
+    PushNotification.query(function(qb) {
       qb.whereNull("time_sent")
     })
       .fetchAll()
-      .then(function (qdpushes) {
-        return qdpushes.map(function (qdpush) {
+      .then(function (pushNotifications) {
+        return pushNotifications.map(function (pushNotification) {
           
-          var myDevice = new apn.Device(qdpush.get("device_token"));
+          var myDevice = new apn.Device(pushNotification.get("device_token"));
           
-          var note = new apn.Notification()
+          var note = new apn.Notification();
           
           note.expiry = Math.floor(Date.now() / 1000) + 3600;
-          note.badge = qdpush.get("badge_no");
-          note.alert = qdpush.get("alert");
-          note.payload = JSON.parse(qdpush.get("payload"));
+          note.badge = pushNotification.get("badge_no");
+          note.alert = pushNotification.get("alert");
+          note.payload = JSON.parse(pushNotification.get("payload"));
           
           apnConnection.pushNotification(note, myDevice);
           
-          console.log(qdpush.get("payload"));
+          console.log(pushNotification.get("payload"));
 
-          qdpush.set("time_sent", (new Date()).toISOString());
+          pushNotification.set("time_sent", (new Date()).toISOString());
 
-          qdpush.save();
+          pushNotification.save();
           
-          return qdpush;
-        })
-      })
+          return pushNotification;
+        });
+      });
+
+    
   }
 });
-  
-/*
-
-knex('queued_pushes')
-  .whereNull("time_sent")
-  .map(function(qdpush) {
-
-  });
-
-knex('queued_pushes')
-  .whereNull("time_sent")
-  .update({
-    time_sent: 
-  })
-  .catch(function(error) {
-    console.log(error)
-  })
-
-
-
-*/

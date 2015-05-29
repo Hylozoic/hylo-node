@@ -66,7 +66,7 @@ var createComment = function(commenterId, text, post) {
               }),
               sails.log("in controller: " + comment.id.toString()),
               Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
-              Comment.sendPushNotification(userId, comment),
+              Comment.sendPushNotification(userId, comment, {transacting: trx}),
               User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
             );
           }),
