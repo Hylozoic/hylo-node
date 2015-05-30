@@ -62,7 +62,7 @@ Now visit [localhost:1337](http://localhost:1337).
 
 ### creating and running database migrations
 
-Migrations are managed by the [knex][http://knexjs.org] library. Create a new migration with this command:
+Migrations are managed by the [knex](http://knexjs.org) library. Create a new migration with this command:
 
 ```shell
 knex migrate:make my_migration_name
