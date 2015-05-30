@@ -59,12 +59,14 @@ var createComment = function(commenterId, text, post) {
           // except the commenter and mentioned users
           Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
             return Promise.join(
-                Queue.addJob('Comment.sendNotificationEmail', {
+              Queue.addJob('Comment.sendNotificationEmail', {
                 recipientId: userId,
                 commentId: comment.id,
                 version: 'default'
               }),
+              sails.log("in controller: " + comment.id.toString()),
               Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
+              Comment.sendPushNotification(userId, comment, {transacting: trx}),
               User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
             );
           }),

@@ -57,6 +57,7 @@
     "moment-timezone": "^0.3.0",
     "newrelic": "^1.15.0",
     "node-uuid": "^1.4.1",
+    "nzero-push": "^2.1.2",
     "parse-redis-url": "0.0.1",
     "passport": "^0.2.1",
     "passport-facebook": "^2.0.0",

@@ -1,3 +1,5 @@
+var url = require('url');
+
 module.exports = bookshelf.Model.extend({
   tableName: 'comment',
 
@@ -56,6 +58,7 @@ module.exports = bookshelf.Model.extend({
       })
     )
     .spread(function(recipient, comment) {
+
       if (!comment) return;
 
       var post = comment.relations.post,
@@ -91,6 +94,37 @@ module.exports = bookshelf.Model.extend({
       });
 
     })
+
+  },
+  
+  sendPushNotification: function(recipientId, comment, options) {
+
+
+    
+    return Promise.join(
+      User.find(recipientId),
+      comment.load(['user', 'post', 'post.communities', 'post.creator'], _.pick(options, "transacting"))                        
+    )
+      .spread(function(recipient, comment) {      
+
+        if (!comment) return;
+
+        var post = comment.relations.post,
+            commenter = comment.relations.user,
+            creator = post.relations.creator;
+
+        if (post.relations.communities) {
+          var community = post.relations.communities.models[0],
+              path = url.parse(Frontend.Route.post(post,community)).path;
+
+          return recipient.sendPushNotification(commenter.get("name") + " commented on \"" + post.get("name") + "\"", path);
+          
+        } else {
+          
+          return false;
+          
+        }
+     })
 
   },
 
