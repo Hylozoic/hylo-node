@@ -67,10 +67,10 @@ module.exports.policies = {
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     update:          ['sessionAuth', 'isModerator'],
     invite:          ['sessionAuth', 'canInvite'],
-    findModerators:  ['sessionAuth', 'isModerator'],
+    findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController
     addModerator:    ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
-    findMembers:     ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findMembers:     ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'], // FIXME move to UserController
     removeMember:    ['sessionAuth', 'isModerator'],
     leave:           ['sessionAuth', 'checkAndSetMembership'],
     validate:        true,
@@ -105,15 +105,16 @@ module.exports.policies = {
   },
 
   ProjectController: {
-    find:       ['sessionAuth'],
-    create:     ['sessionAuth'],
-    update:     ['sessionAuth', 'checkAndSetWritableProject'],
-    findOne:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findPosts:  ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findUsers:  ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    invite:     ['sessionAuth', 'checkAndSetWritableProject'],
-    join:       ['sessionAuth', 'checkAndSetProject'],
-    removeUser: ['sessionAuth', 'checkAndSetWritableProject']
+    create:           ['sessionAuth'],
+    update:           ['sessionAuth', 'checkAndSetWritableProject'],
+    findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    findPosts:        ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'], // FIXME move to PostController
+    findUsers:        ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'], // FIXME move to UserController
+    invite:           ['sessionAuth', 'checkAndSetWritableProject'],
+    join:             ['sessionAuth', 'checkAndSetProject'],
+    removeUser:       ['sessionAuth', 'checkAndSetWritableProject'],
+    findForUser:      ['sessionAuth', 'isSelf'],
+    findForCommunity: ['sessionAuth', 'checkAndSetMembership']
   }
 
 };

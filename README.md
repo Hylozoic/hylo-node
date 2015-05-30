@@ -86,6 +86,10 @@ createdb $LOCAL_DB_NAME -h localhost
 cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 ```
 
+### design guidelines
+
+* GET methods on `FooController` should return instances of `Foo`. (See policies.js for some related FIXME's)
+
 ### (un)license
 
 This is free and unencumbered software released into the public domain.

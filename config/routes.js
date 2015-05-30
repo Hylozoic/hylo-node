@@ -55,6 +55,7 @@ module.exports.routes = {
   'GET    /noo/user/:userId/followed-posts':              'PostController.findFollowed',
   'GET    /noo/user/:userId/all-community-posts':         'PostController.findAllForUser',
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
+  'GET    /noo/user/:userId/projects':                    'ProjectController.findForUser',
 
   'POST   /noo/community':                                'CommunityController.create',
   'GET    /noo/community/default':                        'CommunityController.findDefault',
@@ -68,6 +69,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/members':           'CommunityController.findMembers',
   'DELETE /noo/community/:communityId/member/:userId':    'CommunityController.removeMember',
   'GET    /noo/community/:communityId/posts':             'PostController.findForCommunity',
+  'GET    /noo/community/:communityId/projects':          'ProjectController.findForCommunity',
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
@@ -90,7 +92,6 @@ module.exports.routes = {
   'POST   /noo/activity/mark-all-read':                   'ActivityController.markAllRead',
   'POST   /noo/activity/:activityId':                     'ActivityController.update',
 
-  'GET    /noo/project':                                  'ProjectController.find',
   'GET    /noo/project/:projectId':                       'ProjectController.findOne',
   'GET    /noo/project/:projectId/posts':                 'ProjectController.findPosts',
   'GET    /noo/project/:projectId/users':                 'ProjectController.findUsers',

@@ -8,6 +8,16 @@ var editableAttributes = [
   'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility'
 ];
 
+var projectRelations = [
+  {user: qb => qb.column('id', 'name', 'avatar_url')},
+  {community: qb => qb.column('id', 'name', 'avatar_url')},
+  {contributors: qb => qb.column('users.id')},
+  {posts: qb => {
+    qb.column('post.id');
+    qb.where('type', Post.Type.REQUEST);
+  }}
+];
+
 var projectAttributes = project => _.extend(project.toJSON(), {
   contributor_count: project.relations.contributors.length,
   open_request_count: project.relations.posts.length
@@ -68,38 +78,6 @@ module.exports = {
       })
     })
     .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
-    .catch(res.serverError);
-  },
-
-  find: function(req, res) {
-    Project.query(qb => {
-      if (req.param('context') === 'creator') {
-        qb.where('user_id', req.session.userId);
-
-      } else if (req.param('context') === 'creator-or-contributor') {
-        qb.leftJoin('projects_users', () => this.on('projects.id', '=', 'projects_users.project_id'));
-        qb.where('projects.user_id', req.session.userId).orWhere(function() {
-          this.where('projects_users.user_id', req.session.userId);
-        });
-
-      } else {
-        throw format('unknown context: %s', req.param('context'));
-      }
-
-      qb.groupBy('projects.id');
-    }).fetchAll({
-      withRelated: [
-        {user: qb => qb.column('id', 'name', 'avatar_url')},
-        {community: qb => qb.column('id', 'name', 'avatar_url')},
-        {contributors: qb => qb.column('users.id')},
-        {posts: qb => {
-          qb.column('post.id');
-          qb.where('type', Post.Type.REQUEST);
-        }}
-      ]
-    })
-    .then(projects => projects.map(projectAttributes))
-    .then(res.ok)
     .catch(res.serverError);
   },
 
@@ -195,6 +173,20 @@ module.exports = {
       user_id: req.param('userId'),
       project_id: req.param('projectId')
     }).destroy().then(() => res.ok({}))
+    .catch(res.serverError);
+  },
+
+  findForUser: function(req, res) {
+    Search.forProjects({user: req.param('userId')}).fetchAll({withRelated: projectRelations})
+    .then(projects => projects.map(projectAttributes))
+    .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  findForCommunity: function(req, res) {
+    Search.forProjects({community: req.param('communityId')}).fetchAll({withRelated: projectRelations})
+    .then(projects => projects.map(projectAttributes))
+    .then(res.ok)
     .catch(res.serverError);
   }
 

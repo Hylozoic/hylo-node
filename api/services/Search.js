@@ -1,5 +1,22 @@
 module.exports = {
 
+  forProjects: function(opts) {
+    return Project.query(qb => {
+      if (opts.user) {
+        qb.leftJoin('projects_users', () => this.on('projects.id', '=', 'projects_users.project_id'));
+        qb.where('projects.user_id', opts.user).orWhere(function() {
+          this.where('projects_users.user_id', opts.user);
+        });
+      }
+
+      if (opts.community) {
+        qb.where('community_id', opts.community);
+      }
+
+      qb.groupBy('projects.id');
+    });
+  },
+
   forPosts: function(opts) {
     return Post.query(function(qb) {
 
