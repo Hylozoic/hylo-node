@@ -230,6 +230,12 @@ module.exports = setup = {
             table.bigInteger('post_id');
             table.bigInteger('project_id');
             table.timestamps();
+          }),
+          createTable('projects_users', table => {
+            table.increments();
+            table.bigInteger('project_id');
+            table.bigInteger('user_id');
+            table.timestamps();
           })
         );
       });

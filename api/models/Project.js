@@ -59,6 +59,14 @@ module.exports = bookshelf.Model.extend({
       return request(format('http://vimeo.com/api/v2/video/%s.json', videoId))
       .spread((response, body) => JSON.parse(body)[0].thumbnail_large);
     }
-  })
+  }),
+
+  isVisibleToUser: function(projectId, userId) {
+    return Project.find(projectId).then(project => {
+      if (project.get('user_id') === userId) return true;
+
+      return ProjectMembership.find(userId, projectId).then(pm => !!pm);
+    });
+  }
 
 });
