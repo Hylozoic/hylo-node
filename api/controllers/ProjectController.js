@@ -65,17 +65,14 @@ module.exports = {
         return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
         .tap(() => {
           if (!_.has(updatedAttrs, 'published_at')) return;
-
-          var vis = updatedAttrs.published_at
-            ? Post.Visibility.DEFAULT
-            : Post.Visibility.DRAFT_PROJECT;
+          var vis = Post.Visibility[updatedAttrs.published_at ? 'DEFAULT' : 'DRAFT_PROJECT'];
 
           return project.load('posts')
           .then(() =>
             Post.query().where('id', 'in', project.relations.posts.map('id'))
             .update({visibility: vis}));
-        })
-      })
+        });
+      });
     })
     .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
     .catch(res.serverError);
@@ -177,14 +174,16 @@ module.exports = {
   },
 
   findForUser: function(req, res) {
-    Search.forProjects({user: req.param('userId')}).fetchAll({withRelated: projectRelations})
+    Search.forProjects({user: req.param('userId')})
+    .fetchAll({withRelated: projectRelations})
     .then(projects => projects.map(projectAttributes))
     .then(res.ok)
     .catch(res.serverError);
   },
 
   findForCommunity: function(req, res) {
-    Search.forProjects({community: req.param('communityId')}).fetchAll({withRelated: projectRelations})
+    Search.forProjects({community: req.param('communityId')})
+    .fetchAll({withRelated: projectRelations})
     .then(projects => projects.map(projectAttributes))
     .then(res.ok)
     .catch(res.serverError);
