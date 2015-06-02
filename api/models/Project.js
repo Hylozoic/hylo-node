@@ -84,10 +84,10 @@ module.exports = bookshelf.Model.extend({
       var creator = project.relations.user,
         community = post.relations.communities.first();
 
-      project.relations.contributors.map(user => {
+      return project.relations.contributors.map(user => {
         if (_.contains(opts.exclude, user.id)) return;
 
-        Email.sendNewProjectPostNotification(user.get('email'), {
+        return Email.sendNewProjectPostNotification(user.get('email'), {
           creator_profile_url: Frontend.Route.profile(creator),
           creator_avatar_url: creator.get('avatar_url'),
           creator_name: creator.get('name'),
@@ -98,7 +98,7 @@ module.exports = bookshelf.Model.extend({
           post_description: post.get('description'),
           post_type: post.get('type'),
           post_url: Frontend.Route.post(post, community)
-        })
+        });
       });
     });
   }
