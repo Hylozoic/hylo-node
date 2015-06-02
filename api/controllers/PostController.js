@@ -140,23 +140,23 @@ module.exports = {
             post.addFollowers(followerIds, creatorId, {transacting: trx}),
 
             // create activity and send notification to all mentioned users except the creator
-            Promise.map(_.without(mentioned, creatorId), function(userId) {
-              return Promise.join(
-                Queue.addJob('Post.sendNotificationEmail', {
-                  recipientId: userId,
-                  postId: post.id
-                }),
-                Activity.forPost(post, userId).save({}, {transacting: trx}),
-                User.incNewNotificationCount(userId, trx)
-              );
-            }),
+            Promise.map(_.without(mentioned, creatorId), userId =>
+              Post.notifyAboutMention(post, userId, {transacting: trx})),
 
             // Add image, if any
             (params.imageUrl ? Media.create({
               postId: post.id,
               url: params.imageUrl,
               transacting: trx
+            }) : null),
+
+            // Send notifications to project contributors if applicable
+            (params.projectId ? Queue.addJob('Project.notifyAboutNewPost', {
+              projectId: params.projectId,
+              postId: post.id,
+              exclude: mentioned
             }) : null)
+
           );
 
         });
@@ -173,8 +173,8 @@ module.exports = {
 
   addFollowers: function(req, res) {
     res.locals.post.load('followers').then(function(post) {
-      var added = req.param('userIds').map(function(x) { return parseInt(x) }),
-        existing = post.relations.followers.map(function(f) { return f.attributes.user_id });
+      var added = req.param('userIds').map(Number),
+        existing = post.relations.followers.map(f => f.get('user_id'));
 
       return bookshelf.transaction(function(trx) {
         return post.addFollowers(_.difference(added, existing), req.session.userId, {
@@ -242,14 +242,10 @@ module.exports = {
           }
         });
 
-      })
+      });
     })
-    .then(function() {
-      res.ok({});
-    })
-    .catch(function(err) {
-      res.serverError(err);
-    })
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   fulfill: function(req, res) {
@@ -270,10 +266,8 @@ module.exports = {
       });
 
     })
-    .then(function() {
-      res.ok({});
-    })
-    .catch(res.serverError.bind(res));
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   vote: function(req, res) {
@@ -288,10 +282,8 @@ module.exports = {
         }).save();
       }
     })
-    .then(function() {
-      res.ok({});
-    })
-    .catch(res.serverError.bind(res));
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   destroy: function(req, res) {
@@ -301,11 +293,11 @@ module.exports = {
       return Promise.join(
         Activity.where('post_id', res.locals.post.id).destroy({transacting: trx}),
         res.locals.post.save({active: false}, {patch: true, transacting: trx})
-      )
+      );
 
-    }).then(function() {
-      res.ok({});
-    }).catch(res.serverError.bind(res));
+    })
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   }
 
 };

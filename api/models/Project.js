@@ -67,6 +67,32 @@ module.exports = bookshelf.Model.extend({
 
       return ProjectMembership.find(userId, projectId).then(pm => !!pm);
     });
+  },
+
+  notifyAboutNewPost: function(opts) {
+    return Promise.join(
+      Project.find(opts.projectId, {withRelated: ['contributors', 'user']}),
+      Post.find(opts.postId, {withRelated: ['communities']})
+    ).spread((project, post) => {
+      var creator = project.relations.user,
+        community = post.relations.communities.first();
+
+      project.relations.contributors.map(user => {
+        if (_.contains(opts.exclude, user.id)) return;
+
+        Email.sendNewProjectPostNotification(user.get('email'), {
+          creator_profile_url: Frontend.Route.profile(creator),
+          creator_avatar_url: creator.get('avatar_url'),
+          creator_name: creator.get('name'),
+          project_title: project.get('title'),
+          project_url: Frontend.Route.project(project),
+          post_title: post.get('name'),
+          post_description: post.get('description'),
+          post_type: post.get('type'),
+          post_url: Frontend.Route.post(post, community)
+        })
+      });
+    });
   }
 
 });

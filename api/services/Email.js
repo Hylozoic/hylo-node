@@ -9,7 +9,19 @@ var defaultOptions = {
   }
 };
 
+var sendSimpleEmail = function(email, templateId, data) {
+  return sendEmail(_.merge({}, defaultOptions, {
+    email_id: templateId,
+    recipient: {address: email},
+    email_data: data
+  }));
+};
+
 module.exports = {
+
+  sendNewProjectPostNotification: function(email, data) {
+    return sendSimpleEmail(email, 'tem_bG7zNWk3sqbLKkg2TLcYgE', data);
+  },
 
   sendProjectInvitation: function(email, data) {
     return sendEmail(_.merge({}, defaultOptions, {
@@ -24,11 +36,7 @@ module.exports = {
   },
 
   sendPasswordReset: function(opts) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_mccpcJNEzS4822mAnDNmGT',
-      recipient: {address: opts.email},
-      email_data: opts.templateData
-    }));
+    return sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData);
   },
 
   sendInvitation: function(email, data) {
@@ -64,11 +72,7 @@ module.exports = {
   },
 
   sendCommunityDigest: function(opts) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_rkZiuPHBvLDFrZ6rv8VixH',
-      recipient: {address: opts.email},
-      email_data: opts.data
-    }));
+    return sendSimpleEmail(opts.email, 'tem_rkZiuPHBvLDFrZ6rv8VixH', opts.data);
   },
 
   postReplyAddress: function(postId, userId) {

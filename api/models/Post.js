@@ -167,6 +167,17 @@ module.exports = bookshelf.Model.extend({
 
     });
 
+  },
+
+  notifyAboutMention: function(post, userId, opts) {
+    return Promise.join(
+      Queue.addJob('Post.sendNotificationEmail', {
+        recipientId: userId,
+        postId: post.id
+      }),
+      Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
+      User.incNewNotificationCount(userId, opts.transacting)
+    );
   }
 
 });

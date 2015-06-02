@@ -36,6 +36,10 @@ var jobDefinitions = {
 
   'Email.sendPasswordReset': function(job) {
     return Email.sendPasswordReset(job.data);
+  },
+
+  'Project.notifyAboutNewPost': function(job) {
+    return Project.notifyAboutNewPost(job.data);
   }
 
 };
