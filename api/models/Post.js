@@ -131,11 +131,11 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  sendNotificationEmail: function(recipientId, postId) {
+  sendNotificationEmail: function(opts) {
 
     return Promise.join(
-      User.find(recipientId),
-      Post.find(postId, {withRelated: ['communities', 'creator']})
+      User.find(opts.recipientId),
+      Post.find(opts.postId, {withRelated: ['communities', 'creator']})
     )
     .spread(function(recipient, post) {
 
@@ -171,7 +171,7 @@ module.exports = bookshelf.Model.extend({
 
   notifyAboutMention: function(post, userId, opts) {
     return Promise.join(
-      Queue.addJob('Post.sendNotificationEmail', {
+      Queue.classMethod('Post', 'sendNotificationEmail', {
         recipientId: userId,
         postId: post.id
       }),

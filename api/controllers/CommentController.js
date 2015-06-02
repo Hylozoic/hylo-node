@@ -45,7 +45,7 @@ var createComment = function(commenterId, text, post) {
           // create activity and send mention notification to all mentioned users
           Promise.map(mentioned, function(userId) {
             return Promise.join(
-              Queue.addJob('Comment.sendNotificationEmail', {
+              Queue.classMethod('Comment', 'sendNotificationEmail', {
                 recipientId: userId,
                 commentId: comment.id,
                 version: 'mention'
@@ -59,7 +59,7 @@ var createComment = function(commenterId, text, post) {
           // except the commenter and mentioned users
           Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
             return Promise.join(
-                Queue.addJob('Comment.sendNotificationEmail', {
+                Queue.classMethod('Comment', 'sendNotificationEmail', {
                 recipientId: userId,
                 commentId: comment.id,
                 version: 'default'

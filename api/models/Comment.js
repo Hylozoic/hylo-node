@@ -44,12 +44,12 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  sendNotificationEmail: function(recipientId, commentId, version) {
-    // the version argument corresponds to names of versions in SendWithUs
+  sendNotificationEmail: function(opts) {
+    // opts.version corresponds to names of versions in SendWithUs
 
     return Promise.join(
-      User.find(recipientId),
-      Comment.find(commentId, {
+      User.find(opts.recipientId),
+      Comment.find(opts.commentId, {
         withRelated: [
           'user', 'post', 'post.communities', 'post.creator'
         ]
@@ -69,7 +69,7 @@ module.exports = bookshelf.Model.extend({
         (recipient.id == creator.id ? 'your' : 'the'), post.get('type'));
 
       return Email.sendNewCommentNotification({
-        version: version,
+        version: opts.version,
         email: recipient.get('email'),
         sender: {
           address: replyTo,

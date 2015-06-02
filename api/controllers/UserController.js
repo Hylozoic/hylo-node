@@ -250,7 +250,7 @@ module.exports = {
         res.ok({error: 'no user'});
       } else {
         user.generateToken().then(function(token) {
-          Queue.addJob('Email.sendPasswordReset', {
+          Queue.classMethod('Email', 'sendPasswordReset', {
             email: user.get('email'),
             templateData: {
               login_url: Frontend.Route.tokenLogin(user, token)

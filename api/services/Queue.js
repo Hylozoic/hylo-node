@@ -10,5 +10,13 @@ module.exports = {
     .backoff({delay: 5000, type: 'exponential'});
 
     return Promise.promisify(job.save, job)();
+  },
+
+  classMethod: function(className, methodName, data) {
+    var data = _.merge({
+      className: className,
+      methodName: methodName
+    }, data);
+    return this.addJob('classMethod', data);
   }
 };

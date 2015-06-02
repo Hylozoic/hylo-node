@@ -151,7 +151,7 @@ module.exports = {
             }) : null),
 
             // Send notifications to project contributors if applicable
-            (params.projectId ? Queue.addJob('Project.notifyAboutNewPost', {
+            (params.projectId ? Queue.classMethod('Project', 'notifyAboutNewPost', {
               projectId: params.projectId,
               postId: post.id,
               exclude: mentioned
