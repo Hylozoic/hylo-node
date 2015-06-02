@@ -75,7 +75,10 @@ module.exports = bookshelf.Model.extend({
 
   notifyAboutNewPost: function(opts) {
     return Promise.join(
-      Project.find(opts.projectId, {withRelated: ['contributors', 'user']}),
+      Project.find(opts.projectId, {withRelated: [
+        {contributors: qb => qb.where('notify_on_new_posts', true)},
+        'user'
+      ]}),
       Post.find(opts.postId, {withRelated: ['communities']})
     ).spread((project, post) => {
       var creator = project.relations.user,
@@ -90,6 +93,7 @@ module.exports = bookshelf.Model.extend({
           creator_name: creator.get('name'),
           project_title: project.get('title'),
           project_url: Frontend.Route.project(project),
+          project_settings_url: Frontend.Route.projectSettings(project),
           post_title: post.get('name'),
           post_description: post.get('description'),
           post_type: post.get('type'),

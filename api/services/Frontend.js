@@ -27,6 +27,10 @@ module.exports = {
       return url('/project/%s', project.get('slug'));
     },
 
+    projectSettings: function(project) {
+      return url('/project/%s/settings', project.get('slug'));
+    },
+
     post: function(post, community) {
       return url('/c/%s/s/%s', community.get('slug'), post.id);
     },
