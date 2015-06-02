@@ -126,26 +126,23 @@ module.exports = {
 
   addTermToQueryBuilder: function(term, qb, opts) {
     var query = _.chain(term.split(/\s*\s/)) // split on whitespace
-      .map(function(word) {
-        // remove any invalid characters and add prefix matching
-        return word.replace(/[,;'|:&()!\\]+/, '') + ':*';
-      })
+      .map(word => word.replace(/[,;'|:&()!\\]+/, ''))
       .reject(_.isEmpty)
-      .reduce(function(result, word, key) {
+      .map(word => word + ':*') // add prefix matching
+      .reduce((result, word) => {
         // build the tsquery string using logical AND operands
         result += " & " + word;
         return result;
       }).value(),
 
-      statement = '(' + opts.columns.map(function(col) {
-      return format("(to_tsvector('english', %s) @@ to_tsquery(?))", col);
-    }).join(' or ') + ')',
+      statement = format('(%s)',
+        opts.columns
+        .map(col => format("(to_tsvector('english', %s) @@ to_tsquery(?))", col))
+        .join(' or ')),
 
-      values = _.times(opts.columns.length, function() { return query });
+      values = _.times(opts.columns.length, () => query);
 
-    qb.where(function() {
-      this.whereRaw(statement, values);
-    });
+    qb.where(() => this.whereRaw(statement, values));
   }
 
 }
