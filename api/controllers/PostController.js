@@ -4,17 +4,18 @@ var findPosts = function(req, res, opts) {
 
   Promise.props({
     communities: opts.communities,
+    project: opts.project,
     users: opts.users,
     type: params.type,
     limit: params.limit,
     offset: params.offset,
     start_time: params.start_time,
     end_time: params.end_time,
-    visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE),
+    visibility: opts.visibility,
     sort: sortCol
   }).then(function(args) {
     return Search.forPosts(args).fetchAll({
-      withRelated: PostPresenter.relations(req.session.userId)
+      withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
     });
   })
   .then(PostPresenter.mapPresentWithTotal)
@@ -34,7 +35,8 @@ module.exports = {
   findForUser: function(req, res) {
     findPosts(req, res, {
       users: [req.param('userId')],
-      communities: Membership.activeCommunityIds(req.session.userId)
+      communities: Membership.activeCommunityIds(req.session.userId),
+      visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
     });
   },
 
@@ -43,7 +45,17 @@ module.exports = {
       if (!RequestValidation.requireTimeRange(req, res)) return;
     }
 
-    findPosts(req, res, {communities: [req.param('communityId')]});
+    findPosts(req, res, {
+      communities: [req.param('communityId')],
+      visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
+    });
+  },
+
+  findForProject: function(req, res) {
+    findPosts(req, res, {
+      project: req.param('projectId'),
+      relationsOpts: {fromProject: true}
+    });
   },
 
   findFollowed: function(req, res) {

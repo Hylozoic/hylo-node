@@ -100,33 +100,6 @@ module.exports = {
     .catch(res.serverError);
   },
 
-  findPosts: function(req, res) {
-    Search.forPosts({
-      project: req.param('projectId'),
-      sort: 'post.last_updated',
-      limit: req.param('limit') || 10,
-      offset: req.param('offset') || 0
-    })
-    .fetchAll({withRelated: PostPresenter.relations(req.session.userId, {fromProject: true})})
-    .then(PostPresenter.mapPresentWithTotal)
-    .then(res.ok)
-    .catch(res.serverError);
-  },
-
-  findUsers: function(req, res) {
-    Search.forUsers({
-      project: req.param('projectId'),
-      sort: 'users.name',
-      limit: req.param('limit') || 10,
-      offset: req.param('offset') || 0
-    })
-    .fetchAll()
-    .then(users => users.map(u => u.pick('id', 'name', 'avatar_url', 'bio',
-      'twitter_name', 'facebook_url', 'linkedin_url')))
-    .then(res.ok)
-    .catch(res.serverError);
-  },
-
   invite: function(req, res) {
     var invited = req.param('emails').map(email => ({email: email})),
       projectId = req.param('projectId'),

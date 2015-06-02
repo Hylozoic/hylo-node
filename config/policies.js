@@ -49,7 +49,8 @@ module.exports.policies = {
     update:            ['sessionAuth', 'isSelf'],
     contributions:     ['sessionAuth', 'inSameCommunity'],
     thanks:            ['sessionAuth', 'inSameCommunity'],
-    sendPasswordReset: true
+    sendPasswordReset: true,
+    findForProject:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject']
   },
 
   ActivityController: {
@@ -80,6 +81,7 @@ module.exports.policies = {
   PostController: {
     findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findForProject:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForUser:      ['sessionAuth', 'inSameCommunity'],
     create:           ['sessionAuth', 'checkAndSetMembership'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],
@@ -108,8 +110,6 @@ module.exports.policies = {
     create:           ['sessionAuth'],
     update:           ['sessionAuth', 'checkAndSetWritableProject'],
     findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findPosts:        ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'], // FIXME move to PostController
-    findUsers:        ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'], // FIXME move to UserController
     invite:           ['sessionAuth', 'checkAndSetWritableProject'],
     join:             ['sessionAuth', 'checkAndSetProject'],
     removeUser:       ['sessionAuth', 'checkAndSetWritableProject'],
