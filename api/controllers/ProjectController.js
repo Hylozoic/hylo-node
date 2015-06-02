@@ -30,6 +30,14 @@ var maybeGenerateVideoThumbnail = Promise.method(function(attrs) {
   }
 });
 
+var searchForProjects = function(res, opts) {
+  Search.forProjects(opts)
+  .fetchAll({withRelated: projectRelations})
+  .then(projects => projects.map(projectAttributes))
+  .then(res.ok)
+  .catch(res.serverError);
+};
+
 module.exports = {
 
   create: function(req, res) {
@@ -174,19 +182,11 @@ module.exports = {
   },
 
   findForUser: function(req, res) {
-    Search.forProjects({user: req.param('userId')})
-    .fetchAll({withRelated: projectRelations})
-    .then(projects => projects.map(projectAttributes))
-    .then(res.ok)
-    .catch(res.serverError);
+    searchForProjects(res, {user: req.param('userId')});
   },
 
   findForCommunity: function(req, res) {
-    Search.forProjects({community: req.param('communityId')})
-    .fetchAll({withRelated: projectRelations})
-    .then(projects => projects.map(projectAttributes))
-    .then(res.ok)
-    .catch(res.serverError);
+    searchForProjects(res, {community: req.param('communityId')});
   }
 
 };
