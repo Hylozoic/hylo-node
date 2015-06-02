@@ -17,6 +17,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User, 'projects_users');
   },
 
+  memberships: function() {
+    return this.hasMany(ProjectMembership);
+  },
+
   isDraft: function() {
     return !this.get('published_at');
   },

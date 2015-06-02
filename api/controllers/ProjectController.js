@@ -90,11 +90,11 @@ module.exports = {
     Project.find(res.locals.project.id, {withRelated: [
       {user: qb => qb.column('id', 'name', 'avatar_url')},
       {community: qb => qb.column('id', 'name', 'avatar_url')},
-      {contributors: qb => qb.where('users.id', req.session.userId)},
+      {memberships: qb => qb.where('user_id', req.session.userId)},
       {posts: qb => qb.where('fulfilled', false)}
     ]})
-    .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'contributors', 'posts'), {
-      is_contributor: project.relations.contributors.length > 0,
+    .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'posts', 'memberships'), {
+      membership: project.relations.memberships.first(),
       open_request_count: project.relations.posts.length
     })))
     .catch(res.serverError);
@@ -160,6 +160,15 @@ module.exports = {
 
   findForCommunity: function(req, res) {
     searchForProjects(res, {community: req.param('communityId')});
+  },
+
+  updateMembership: function(req, res) {
+    ProjectMembership.query().where({
+      user_id: req.param('userId'),
+      project_id: req.param('projectId')
+    }).update(_.pick(req.allParams(), 'notify_on_new_posts'))
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   }
 
 };

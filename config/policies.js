@@ -114,7 +114,8 @@ module.exports.policies = {
     join:             ['sessionAuth', 'checkAndSetProject'],
     removeUser:       ['sessionAuth', 'checkAndSetWritableProject'],
     findForUser:      ['sessionAuth', 'isSelf'],
-    findForCommunity: ['sessionAuth', 'checkAndSetMembership']
+    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
+    updateMembership: ['sessionAuth', 'isSelf', 'checkAndSetProject']
   }
 
 };
