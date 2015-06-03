@@ -6,7 +6,7 @@ exports.up = function(knex, Promise) {
 	table.bigInteger('user_id').references('id').inTable('users');
 	table.string('token');
 	table.timestamps();
-    })
+    });
 };
 
 exports.down = function(knex, Promise) {

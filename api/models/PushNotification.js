@@ -27,6 +27,6 @@ module.exports = bookshelf.Model.extend({
           return console.log(response);
         });
       });        
-  }
+  };
     
 });

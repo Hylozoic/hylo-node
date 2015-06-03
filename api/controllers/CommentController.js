@@ -38,9 +38,9 @@ var createComment = function(commenterId, text, post) {
           post.relations.followers.map(function(f) { return parseInt(f.attributes.user_id) }),
           RichText.getUserMentions(text)
         ];
-
+        
       }).spread(function(existing, mentioned) {
-
+        
         return Promise.join(
           // create activity and send mention notification to all mentioned users
           Promise.map(mentioned, function(userId) {
@@ -51,10 +51,11 @@ var createComment = function(commenterId, text, post) {
                 version: 'mention'
               }),
               Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx}),
+              Comment.sendPushNotification(userId, comment, 'mention', {transacting: trx}),
               User.incNewNotificationCount(userId, trx)
             );
           }),
-
+          
           // create activity and send comment notification to all followers,
           // except the commenter and mentioned users
           Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
@@ -64,13 +65,12 @@ var createComment = function(commenterId, text, post) {
                 commentId: comment.id,
                 version: 'default'
               }),
-              sails.log("in controller: " + comment.id.toString()),
               Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
-              Comment.sendPushNotification(userId, comment, {transacting: trx}),
+              Comment.sendPushNotification(userId, comment, 'default', {transacting: trx}),
               User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
             );
           }),
-
+          
           // add all mentioned users and the commenter as followers, if not already following
           post.addFollowers(_.difference(mentioned.concat(commenterId), existing), commenterId, {transacting: trx})
         );

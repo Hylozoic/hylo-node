@@ -112,13 +112,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotification: function(alert, url) {
-    this.devices()
-      .fetch()
-      .then(function (devices) {
-        return devices.map(function (device) {
-          device.sendPushNotification(alert, url);
-        })
-      })
+    return this.devices()
+    .fetch()
+    .then(function (devices) {
+      return devices.map(function (device) {
+        device.sendPushNotification(alert, url);
+      });
+    });
   }
 
     
@@ -235,8 +235,8 @@ module.exports = bookshelf.Model.extend({
   
   sendPushNotification: function(userId, alert, url) {
     return User.find(userId)
-      .fetch()
-      .sendPushNotification(alert, url);
+    .fetch()
+    .sendPushNotification(alert, url);
   }
 
 });

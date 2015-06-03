@@ -7,7 +7,7 @@ exports.up = function(knex, Promise) {
 	table.string('payload');
 	table.dateTime('time_queued');
 	table.dateTime('time_sent');
-    })
+    });
 };
 
 exports.down = function(knex, Promise) {
