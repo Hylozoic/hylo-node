@@ -26,6 +26,6 @@ module.exports = bookshelf.Model.extend({
         .save()
         .then(pushNotification => pushNotification.send());
       });
-  };
+  }
   
 });
