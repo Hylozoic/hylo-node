@@ -4,17 +4,22 @@ var root = require('root-path'),
   moment = require('moment');
 
 describe('Digest', function() {
-  var community;
+  var community, user;
 
-  before(function(done) {
+  before(() => {
     community = new Community({name: 'foo', slug: 'foo'});
-    community.save().exec(done);
+    user = new User({name: 'Cat'});
+
+    return community.save().then(community => user.save())
+    .then(() => user.joinCommunity(community))
+    .then(() => new Post({creator_id: user.id, name: 'Hi!'}).save())
+    .then(post => community.posts().attach(post.id));
   });
 
-  describe('.fetchData', function() {
+  describe('.sendTestEmail', function() {
     it("doesn't throw errors", function() {
       var digest = new Digest(community, moment(), moment().subtract(1, 'week'));
-      return digest.fetchData();
+      return digest.fetchData().then(() => digest.sendTestEmail('foo@bar.com'));
     });
   });
 
