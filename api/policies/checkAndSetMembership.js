@@ -8,22 +8,30 @@ module.exports = function checkAndSetMembership(req, res, next) {
 
   Community.find(communityId, {
     withRelated: [
-      {leader: function(qb) { qb.column('id', 'name', 'avatar_url'); }}
+      {leader: qb => qb.column('id', 'name', 'avatar_url')}
     ]
   }).then(function(community) {
     if (!community)
       return res.notFound();
 
+    var allowed;
     res.locals.community = community;
 
+    // allow regardless of membership, but also set res.locals.membership
+    // so that it can be used in controllers if it exists, ensuring that
+    // being signed in as an admin doesn't interfere with normal usage
     if (Admin.isSignedIn(req)
-      || TokenAuth.isPermitted(res, communityId)
       || (res.locals.publicAccessAllowed && community.get('allow_public_content')))
+      allowed = true;
+
+    // no need to set res.locals.membership in this case,
+    // because token auth clients do not sign in as users
+    if (TokenAuth.isPermitted(res, communityId))
       return next();
 
     Membership.find(req.session.userId, communityId)
     .then(function(membership) {
-      if (membership) {
+      if (membership || allowed) {
         res.locals.membership = membership;
         next();
 

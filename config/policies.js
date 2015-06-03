@@ -64,7 +64,6 @@ module.exports.policies = {
   },
 
   CommunityController: {
-    findDefault:     ['sessionAuth'],
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     update:          ['sessionAuth', 'isModerator'],
     invite:          ['sessionAuth', 'canInvite'],
