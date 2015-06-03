@@ -13,6 +13,10 @@ module.exports = {
         qb.where('community_id', opts.community);
       }
 
+      if (opts.published) {
+        qb.whereRaw('published_at is not null');
+      }
+
       qb.groupBy('projects.id');
     });
   },

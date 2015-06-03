@@ -159,7 +159,7 @@ module.exports = {
   },
 
   findForCommunity: function(req, res) {
-    searchForProjects(res, {community: req.param('communityId')});
+    searchForProjects(res, {community: req.param('communityId'), published: true});
   },
 
   updateMembership: function(req, res) {
