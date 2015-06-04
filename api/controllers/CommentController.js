@@ -51,6 +51,7 @@ var createComment = function(commenterId, text, post) {
                 version: 'mention'
               }),
               Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx}),
+              Comment.sendPushNotification(userId, comment, 'mention', {transacting: trx}),
               User.incNewNotificationCount(userId, trx)
             );
           }),
@@ -59,12 +60,13 @@ var createComment = function(commenterId, text, post) {
           // except the commenter and mentioned users
           Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
             return Promise.join(
-                Queue.classMethod('Comment', 'sendNotificationEmail', {
+              Queue.classMethod('Comment', 'sendNotificationEmail', {
                 recipientId: userId,
                 commentId: comment.id,
                 version: 'default'
               }),
               Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
+              Comment.sendPushNotification(userId, comment, 'default', {transacting: trx}),
               User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
             );
           }),
@@ -177,4 +179,4 @@ module.exports = {
     }).catch(res.serverError.bind(res));
   }
 
-}
+};

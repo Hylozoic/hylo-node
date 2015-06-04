@@ -115,6 +115,11 @@ module.exports.policies = {
     findForUser:      ['sessionAuth', 'isSelf'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     updateMembership: ['sessionAuth', 'isSelf', 'checkAndSetProject']
+  },
+
+  PushNotificationController: {
+      updateBadgeNo: true,
+      addDevice: true
   }
 
 };
