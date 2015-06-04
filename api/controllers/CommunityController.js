@@ -51,11 +51,9 @@ module.exports = {
       attributes = _.pick(req.allParams(), whitelist),
       community = new Community({id: req.param('communityId')});
 
-    community.save(attributes, {patch: true}).then(function(community) {
-      res.ok({});
-    }).catch(function(err) {
-      res.serverError(err);
-    });
+    community.save(attributes, {patch: true})
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   invite: function(req, res) {
@@ -90,9 +88,7 @@ module.exports = {
       });
 
     })
-    .then(function(results) {
-      res.ok({results: results});
-    });
+    .then(results => res.ok({results: results}));
   },
 
   findModerators: function(req, res) {
@@ -110,15 +106,15 @@ module.exports = {
   },
 
   addModerator: function(req, res) {
-    Membership.setModeratorRole(req.param('userId'), req.param('communityId')).then(function() {
-      res.ok({});
-    });
+    Membership.setModeratorRole(req.param('userId'), req.param('communityId'))
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   removeModerator: function(req, res) {
-    Membership.removeModeratorRole(req.param('userId'), req.param('communityId')).then(function() {
-      res.ok({});
-    });
+    Membership.removeModeratorRole(req.param('userId'), req.param('communityId'))
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   findMembers: function(req, res) {
@@ -175,10 +171,8 @@ module.exports = {
 
   leave: function(req, res) {
     res.locals.membership.destroyMe()
-    .then(function() {
-      res.ok({});
-    })
-    .catch(res.serverError.bind(res));
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   removeMember: function(req, res) {
@@ -190,10 +184,8 @@ module.exports = {
       deactivated_at: new Date(),
       deactivator_id: req.session.userId
     })
-    .then(function() {
-      res.ok({});
-    })
-    .catch(res.serverError.bind(res));
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   },
 
   validate: function(req, res) {
@@ -268,10 +260,8 @@ module.exports = {
         community_id: community.id
       }).fetch({withRelated: ['community']});
     })
-    .then(function(membership) {
-      res.ok(membership);
-    })
-    .catch(res.serverError.bind(res));
+    .then(membership => res.ok(membership))
+    .catch(res.serverError);
   }
 
 };
