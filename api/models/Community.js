@@ -1,38 +1,18 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
 
-  memberships: function() {
-    return this.hasMany(Membership);
-  },
-
-  users: function() {
-    return this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
-      .query({where: {'users_community.active': true}});
-  },
-
-  inactiveUsers: function() {
-    return this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
-      .query({where: {'users_community.active': false}});
-  },
-
-  invitations: function() {
-    return this.hasMany(Invitation);
-  },
-
-  posts: function() {
-    return this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
-      .query({where: {'post.active': true}});
-  },
-
-  moderators: function() {
-    return this
-      .belongsToMany(User, 'users_community', 'community_id', 'users_id')
-      .query({where: {role: Membership.MODERATOR_ROLE}});
-  },
-
-  leader: function() {
-    return this.belongsTo(User, 'leader_id');
-  },
+  inactiveUsers: () => this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+                       .query({where: {'users_community.active': false}}),
+  invitations:   () => this.hasMany(Invitation),
+  leader:        () => this.belongsTo(User, 'leader_id'),
+  memberships:   () => this.hasMany(Membership),
+  moderators:    () => this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+                       .query({where: {role: Membership.MODERATOR_ROLE}}),
+  network:       () => this.belongsTo(Network),
+  posts:         () => this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
+                       .query({where: {'post.active': true}}),
+  users:         () => this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+                       .query({where: {'users_community.active': true}}),
 
   comments: function() {
     // FIXME get this to use the model relation API

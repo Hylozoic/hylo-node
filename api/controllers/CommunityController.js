@@ -8,10 +8,17 @@
 var validator = require('validator');
 
 var communityAttributes = function(community, membership) {
-  var attrs = community.toJSON();
+  var attrs = community.toJSON(),
+    network = community.relations.network;
+
   if (!membership.hasModeratorRole()) {
     delete attrs.beta_access_code;
   }
+
+  if (network) {
+    attrs.network = network.pick('id', 'name', 'slug');
+  }
+
   return _.extend(attrs, {
     canModerate: membership && membership.hasModeratorRole(),
     id: Number(community.id)
@@ -21,6 +28,8 @@ var communityAttributes = function(community, membership) {
 module.exports = {
 
   findOne: function(req, res) {
+    var community = res.locals.community;
+
     if (!req.session.userId) {
       var limitedAttributes = _.merge(
         res.locals.community.pick('id', 'name', 'avatar_url', 'banner_url', 'description'),
@@ -29,7 +38,8 @@ module.exports = {
       return res.ok(limitedAttributes);
     }
 
-    res.ok(communityAttributes(res.locals.community, res.locals.membership));
+    return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
+    .then(() => res.ok(communityAttributes(community, res.locals.membership)));
   },
 
   update: function(req, res) {
