@@ -56,7 +56,6 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Device, 'user_id');
   },
 
-    
   onboarding: function() {
     return this.hasOne(Tour).query({where: {type: 'onboarding'}});
   },
@@ -112,16 +111,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotification: function(alert, url) {
-    return this.devices()
-    .fetch()
-    .then(function (devices) {
-      return devices.map(function (device) {
-        device.sendPushNotification(alert, url);
-      });
-    });
+    return this.devices().fetch()
+    .then(devices => devices.map(device => device.sendPushNotification(alert, url)));
   }
 
-    
 }, {
 
   authenticate: function(email, password) {
@@ -232,7 +225,7 @@ module.exports = bookshelf.Model.extend({
 
     return unsalted;
   },
-  
+
   sendPushNotification: function(userId, alert, url) {
     return User.find(userId)
     .fetch()

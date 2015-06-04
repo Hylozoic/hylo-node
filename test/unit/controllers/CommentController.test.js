@@ -26,7 +26,7 @@ describe('CommentController', function() {
       };
     });
 
-    it('creates a comment', function(done) {
+    it('creates a comment', function() {
       var commentText = format("<p>Hey <a data-user-id=\"%s\">U2</a> and <a data-user-id=\"%s\">U3</a>! ;)</p>",
         fixtures.u2.id, fixtures.u3.id),
         responseData;
@@ -37,13 +37,14 @@ describe('CommentController', function() {
 
       res = {
         locals: {post: fixtures.p1},
-        serverError: done,
+        serverError: spy(console.error),
         ok: spy(function(x) { responseData = x; })
       };
 
-      CommentController.create(req, res)
+      return CommentController.create(req, res)
       .then(function() {
         expect(res.ok).to.have.been.called();
+        expect(res.serverError).not.to.have.been.called();
         expect(responseData).to.exist;
         expect(responseData.user).to.exist;
         expect(responseData.comment_text).to.equal(commentText);
@@ -53,11 +54,9 @@ describe('CommentController', function() {
 
         return fixtures.p1.load('followers');
       })
-      .then(function(post) {
+      .then(post => {
         expect(post.relations.followers.length).to.equal(3);
-        done();
-      })
-      .catch(done);
+      });
     });
 
   });

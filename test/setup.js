@@ -236,6 +236,11 @@ module.exports = setup = {
             table.bigInteger('project_id');
             table.bigInteger('user_id');
             table.timestamps();
+          }),
+          createTable('devices', table => {
+            table.increments();
+            table.bigInteger('user_id');
+            table.timestamps();
           })
         );
       });

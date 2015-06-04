@@ -96,38 +96,37 @@ module.exports = bookshelf.Model.extend({
     })
 
   },
-  
-  sendPushNotification: function(recipientId, comment, version, options) {
 
-    return Promise.join(
-      User.find(recipientId, _.pick(options, "transacting")),
-      comment.load(['user', 'post', 'post.communities', 'post.creator'],  _.pick(options, "transacting"))                        
-    )
-    .spread(function(recipient, comment) {      
-      if (!comment) return;
-      
-      var post = comment.relations.post,
-          commenter = comment.relations.user,
-          creator = post.relations.creator;
-      
-      if (post.relations.communities) {
-        var community = post.relations.communities.models[0],
+  sendPushNotification: function(userId, comment, version, options) {
+    return Device.where({user_id: userId}).fetchAll()
+    .then(devices => {
+      if (devices.length === 0)
+        return;
+
+      return comment.load(
+        ['user', 'post', 'post.communities', 'post.creator'],
+        _.pick(options, "transacting")
+      ).then(comment => {
+        var post = comment.relations.post,
+            commenter = comment.relations.user,
+            creator = post.relations.creator,
+            community = post.relations.communities.models[0],
             path = url.parse(Frontend.Route.post(post,community)).path,
             alertText;
-        
-        switch(version) {
+
+        switch (version) {
         case 'mention':
           alertText = commenter.get("name") + " mentioned you in a comment";
           break;
         default:
           alertText = commenter.get("name") + " commented on \"" + post.get("name") + "\"";
         };
-        
-        return recipient.sendPushNotification(alertText, path);
-        
-      } else {
-        return false;
-      };
+
+        return [alertText, path];
+      })
+      .spread((text, path) => {
+        return Promise.map(devices, d => d.sendPushNotification(text, path));
+      });
     });
   },
 
