@@ -102,6 +102,7 @@ module.exports.routes = {
   'POST   /noo/project/:projectId/join':                  'ProjectController.join',
 
   'GET    /noo/network/:networkId':                       'NetworkController.findOne',
+  'GET    /noo/network/:networkId/posts':                 'PostController.findForNetwork',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',

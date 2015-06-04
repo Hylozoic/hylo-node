@@ -82,6 +82,7 @@ module.exports.policies = {
     findForCommunity: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findForProject:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForUser:      ['sessionAuth', 'inSameCommunity'],
+    findForNetwork:   ['sessionAuth', 'inNetwork'],
     create:           ['sessionAuth', 'checkAndSetMembership'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],
     addFollowers:     ['sessionAuth', 'checkAndSetPost'],
@@ -123,7 +124,7 @@ module.exports.policies = {
   },
 
   NetworkController: {
-    findOne: ['sessionAuth', 'isInNetwork']
+    findOne: ['sessionAuth', 'inNetwork']
   }
 
 };

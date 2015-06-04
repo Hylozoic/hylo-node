@@ -58,6 +58,15 @@ module.exports = {
     });
   },
 
+  findForNetwork: function(req, res) {
+    Community.where({network_id: req.param('networkId')}).fetchAll()
+    .then(communities => {
+      findPosts(req, res, {
+        communities: communities.map(c => c.id)
+      })
+    });
+  },
+
   findFollowed: function(req, res) {
     Search.forPosts({
       follower: req.session.userId,
