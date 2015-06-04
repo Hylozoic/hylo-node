@@ -9,8 +9,8 @@
   "description": "a Sails application",
   "keywords": [],
   "devDependencies": {
-    "chai": "latest",
-    "chai-as-promised": "^5.0.0",
+    "chai": "~2.3",
+    "chai-as-promised": "5.0.0",
     "chai-spies": "^0.5.1",
     "istanbul-harmony": "^0.3.12",
     "mocha": "^2.2.4",
