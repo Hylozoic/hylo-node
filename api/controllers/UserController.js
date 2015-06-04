@@ -250,7 +250,7 @@ module.exports = {
         res.ok({error: 'no user'});
       } else {
         user.generateToken().then(function(token) {
-          Queue.addJob('Email.sendPasswordReset', {
+          Queue.classMethod('Email', 'sendPasswordReset', {
             email: user.get('email'),
             templateData: {
               login_url: Frontend.Route.tokenLogin(user, token)
@@ -261,6 +261,20 @@ module.exports = {
       }
     })
     .catch(res.serverError.bind(res));
+  },
+
+  findForProject: function(req, res) {
+    Search.forUsers({
+      project: req.param('projectId'),
+      sort: 'users.name',
+      limit: req.param('limit') || 10,
+      offset: req.param('offset') || 0
+    })
+    .fetchAll()
+    .then(users => users.map(u => u.pick('id', 'name', 'avatar_url', 'bio',
+      'twitter_name', 'facebook_url', 'linkedin_url')))
+    .then(res.ok)
+    .catch(res.serverError);
   }
 
 };

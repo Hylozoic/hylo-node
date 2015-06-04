@@ -8,26 +8,17 @@
 var validator = require('validator');
 
 var communityAttributes = function(community, membership) {
-  return _.extend(community.toJSON(), {
+  var attrs = community.toJSON();
+  if (!membership.hasModeratorRole()) {
+    delete attrs.beta_access_code;
+  }
+  return _.extend(attrs, {
     canModerate: membership && membership.hasModeratorRole(),
     id: Number(community.id)
   });
 };
 
 module.exports = {
-
-  findDefault: function(req, res) {
-    User.find(req.session.userId).then(function(user) {
-      return user.communities().query(qb => qb.orderBy('id', 'desc')).fetchOne();
-    })
-    .then(function(community) {
-      if (!community) return res.ok({});
-
-      Membership.find(req.session.userId, community.id).then(function(membership) {
-        res.ok(communityAttributes(community, membership));
-      });
-    });
-  },
 
   findOne: function(req, res) {
     if (!req.session.userId) {
@@ -38,13 +29,14 @@ module.exports = {
       return res.ok(limitedAttributes);
     }
 
-    Membership.find(req.session.userId, req.param('communityId')).then(function(membership) {
-      res.ok(communityAttributes(res.locals.community, membership));
-    });
+    res.ok(communityAttributes(res.locals.community, res.locals.membership));
   },
 
   update: function(req, res) {
-    var whitelist = ['banner_url', 'avatar_url', 'name', 'description', 'settings', 'welcome_message', 'leader_id'],
+    var whitelist = [
+        'banner_url', 'avatar_url', 'name', 'description', 'settings',
+        'welcome_message', 'leader_id', 'beta_access_code'
+      ],
       attributes = _.pick(req.allParams(), whitelist),
       community = new Community({id: req.param('communityId')});
 
@@ -67,14 +59,6 @@ module.exports = {
         return trimmed;
       });
 
-      var marked = require('marked');
-      marked.setOptions({
-        gfm: true,
-        breaks: true
-      });
-
-      var message = marked(req.param('message') || '');
-
       return Promise.map(emails, function(email) {
         if (!validator.isEmail(email)) {
           return {email: email, error: "not a valid email address"};
@@ -84,7 +68,7 @@ module.exports = {
           email:       email,
           userId:      req.session.userId,
           communityId: community.id,
-          message:     message,
+          message:     RichText.markdown(req.param('message')),
           moderator:   req.param('moderator'),
           subject:     req.param('subject')
         }).then(function() {

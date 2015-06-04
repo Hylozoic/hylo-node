@@ -2,7 +2,7 @@
 
 Thanks for checking out our code. The documentation below may be incomplete or incorrect. We welcome pull requests! But we're a very small team, so we can't guarantee timely responses.
 
-<3, [Edward](https://github.com/edwardwest), [Ray](https://github.com/razorman8669), [Lawrence](https://github.com/levity), & [Minda](https://github.com/Minda)
+<3, [Edward](https://github.com/edwardwest), [Ray](https://github.com/razorman8669), [Lawrence](https://github.com/levity), [Minda](https://github.com/Minda), & [Robbie](https://github.com/robbiecarlton)
 
 [![Code Climate](https://codeclimate.com/github/Hylozoic/hylo-node/badges/gpa.svg)](https://codeclimate.com/github/Hylozoic/hylo-node) [![Test Coverage](https://codeclimate.com/github/Hylozoic/hylo-node/badges/coverage.svg)](https://codeclimate.com/github/Hylozoic/hylo-node/coverage)
 
@@ -62,7 +62,7 @@ Now visit [localhost:1337](http://localhost:1337).
 
 ### creating and running database migrations
 
-Migrations are managed by the [knex][http://knexjs.org] library. Create a new migration with this command:
+Migrations are managed by the [knex](http://knexjs.org) library. Create a new migration with this command:
 
 ```shell
 knex migrate:make my_migration_name
@@ -85,6 +85,10 @@ dropdb $LOCAL_DB_NAME -h localhost
 createdb $LOCAL_DB_NAME -h localhost
 cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 ```
+
+### design guidelines
+
+* GET methods on `FooController` should return instances of `Foo`. (See policies.js for some related FIXME's)
 
 ### (un)license
 

@@ -47,4 +47,39 @@ describe('Post', function() {
     });
   });
 
+  describe('#isVisibleToUser', () => {
+
+    var post, community, project, user;
+
+    beforeEach(() => {
+      post = new Post({name: 'hello'});
+      user = new User({name: 'Cat'});
+      return Promise.join(post.save(), user.save());
+    });
+
+    it('is false if the user is not connected by community or project', () => {
+      return Post.isVisibleToUser(post.id, user.id)
+      .then(visible => expect(visible).to.be.false);
+    });
+
+    it("is true if the user is in the post's community", () => {
+      community = new Community();
+      return community.save()
+      .then(() => Membership.create(user.id, community.id))
+      .then(() => community.posts().attach(post.id))
+      .then(() => Post.isVisibleToUser(post.id, user.id))
+      .then(visible => expect(visible).to.be.true);
+    });
+
+    it("is true if the user is in the post's project", () => {
+      project = new Project();
+      return project.save()
+      .then(() => ProjectMembership.create(user.id, project.id))
+      .then(() => PostProjectMembership.create(post.id, project.id))
+      .then(() => Post.isVisibleToUser(post.id, user.id))
+      .then(visible => expect(visible).to.be.true);
+    });
+
+  });
+
 });

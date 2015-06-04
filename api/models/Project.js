@@ -17,6 +17,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User, 'projects_users');
   },
 
+  memberships: function() {
+    return this.hasMany(ProjectMembership);
+  },
+
   isDraft: function() {
     return !this.get('published_at');
   },
@@ -59,6 +63,44 @@ module.exports = bookshelf.Model.extend({
       return request(format('http://vimeo.com/api/v2/video/%s.json', videoId))
       .spread((response, body) => JSON.parse(body)[0].thumbnail_large);
     }
-  })
+  }),
+
+  isVisibleToUser: function(projectId, userId) {
+    return Project.find(projectId).then(project => {
+      if (project.get('user_id') === userId) return true;
+
+      return ProjectMembership.find(userId, projectId).then(pm => !!pm);
+    });
+  },
+
+  notifyAboutNewPost: function(opts) {
+    return Promise.join(
+      Project.find(opts.projectId, {withRelated: [
+        {contributors: qb => qb.where('notify_on_new_posts', true)},
+        'user'
+      ]}),
+      Post.find(opts.postId, {withRelated: ['communities']})
+    ).spread((project, post) => {
+      var creator = project.relations.user,
+        community = post.relations.communities.first();
+
+      return project.relations.contributors.map(user => {
+        if (_.contains(opts.exclude, user.id)) return;
+
+        return Email.sendNewProjectPostNotification(user.get('email'), {
+          creator_profile_url: Frontend.Route.profile(creator),
+          creator_avatar_url: creator.get('avatar_url'),
+          creator_name: creator.get('name'),
+          project_title: project.get('title'),
+          project_url: Frontend.Route.project(project),
+          project_settings_url: Frontend.Route.projectSettings(project),
+          post_title: post.get('name'),
+          post_description: post.get('description'),
+          post_type: post.get('type'),
+          post_url: Frontend.Route.post(post, community)
+        });
+      });
+    });
+  }
 
 });

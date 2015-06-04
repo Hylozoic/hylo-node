@@ -22,20 +22,9 @@ var jobDefinitions = {
     throw new Error('whoops!');
   }),
 
-  'Comment.sendNotificationEmail': function(job) {
-    return Comment.sendNotificationEmail(job.data.recipientId, job.data.commentId, job.data.version);
-  },
-
-  'Post.sendNotificationEmail': function(job) {
-    return Post.sendNotificationEmail(job.data.recipientId, job.data.postId);
-  },
-
-  'Email.sendCommunityDigest': function(job) {
-    return Email.sendCommunityDigest(job.data.emailData);
-  },
-
-  'Email.sendPasswordReset': function(job) {
-    return Email.sendPasswordReset(job.data);
+  'classMethod': function(job) {
+    sails.log.debug(format('Job %s: %s.%s', job.id, job.data.className, job.data.methodName));
+    return global[job.data.className][job.data.methodName](_.omit(job.data, 'className', 'methodName'));
   }
 
 };
@@ -44,15 +33,15 @@ var processJobs = function() {
 
   // load jobs
   _.forIn(jobDefinitions, function(promise, name) {
-    queue.process(name, 10, function(job, done) {
+    queue.process(name, 10, function(job, ctx, done) {
 
       // put common behavior for all jobs here
 
-      var label = util.format(' Job %s ', job.id).bgBlue.black + ' ';
+      var label = util.format('Job %s: ', job.id);
       sails.log.debug(label + name);
 
       promise(job).then(function() {
-        sails.log.debug(label + 'done'.green);
+        sails.log.debug(label + 'done');
         done();
       })
       .catch(function(err) {
@@ -63,16 +52,11 @@ var processJobs = function() {
 
     });
   });
-
-  // check for delayed jobs to enqueue.
-  // this must be run in only one process to avoid a race condition:
-  // https://github.com/learnboost/kue#delayed-jobs
-  queue.promote(2000);
 };
 
 skiff.lift({
   start: processJobs,
   stop: function(done) {
-    queue.shutdown(done, 5000);
+    queue.shutdown(5000, done);
   }
 });

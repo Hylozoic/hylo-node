@@ -49,7 +49,8 @@ module.exports.policies = {
     update:            ['sessionAuth', 'isSelf'],
     contributions:     ['sessionAuth', 'inSameCommunity'],
     thanks:            ['sessionAuth', 'inSameCommunity'],
-    sendPasswordReset: true
+    sendPasswordReset: true,
+    findForProject:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject']
   },
 
   ActivityController: {
@@ -63,14 +64,13 @@ module.exports.policies = {
   },
 
   CommunityController: {
-    findDefault:     ['sessionAuth'],
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     update:          ['sessionAuth', 'isModerator'],
     invite:          ['sessionAuth', 'canInvite'],
-    findModerators:  ['sessionAuth', 'isModerator'],
+    findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController
     addModerator:    ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
-    findMembers:     ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findMembers:     ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'], // FIXME move to UserController
     removeMember:    ['sessionAuth', 'isModerator'],
     leave:           ['sessionAuth', 'checkAndSetMembership'],
     validate:        true,
@@ -80,6 +80,7 @@ module.exports.policies = {
   PostController: {
     findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findForProject:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForUser:      ['sessionAuth', 'inSameCommunity'],
     create:           ['sessionAuth', 'checkAndSetMembership'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],
@@ -105,20 +106,20 @@ module.exports.policies = {
   },
 
   ProjectController: {
-    find:       ['sessionAuth'],
-    create:     ['sessionAuth'],
-    update:     ['sessionAuth', 'checkAndSetWritableProject'],
-    findOne:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findPosts:  ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findUsers:  ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    invite:     ['sessionAuth', 'checkAndSetWritableProject'],
-    join:       ['sessionAuth', 'checkAndSetProject'],
-    removeUser: ['sessionAuth', 'checkAndSetWritableProject']
+    create:           ['sessionAuth'],
+    update:           ['sessionAuth', 'checkAndSetWritableProject'],
+    findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    invite:           ['sessionAuth', 'checkAndSetWritableProject'],
+    join:             ['sessionAuth', 'checkAndSetProject'],
+    removeUser:       ['sessionAuth', 'checkAndSetWritableProject'],
+    findForUser:      ['sessionAuth', 'isSelf'],
+    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
+    updateMembership: ['sessionAuth', 'isSelf', 'checkAndSetProject']
   },
 
   PushNotificationController: {
       updateBadgeNo: true,
       addDevice: true
   }
-  
+
 };

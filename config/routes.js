@@ -55,9 +55,9 @@ module.exports.routes = {
   'GET    /noo/user/:userId/followed-posts':              'PostController.findFollowed',
   'GET    /noo/user/:userId/all-community-posts':         'PostController.findAllForUser',
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
+  'GET    /noo/user/:userId/projects':                    'ProjectController.findForUser',
 
   'POST   /noo/community':                                'CommunityController.create',
-  'GET    /noo/community/default':                        'CommunityController.findDefault',
   'POST   /noo/community/validate':                       'CommunityController.validate',
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
@@ -68,6 +68,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/members':           'CommunityController.findMembers',
   'DELETE /noo/community/:communityId/member/:userId':    'CommunityController.removeMember',
   'GET    /noo/community/:communityId/posts':             'PostController.findForCommunity',
+  'GET    /noo/community/:communityId/projects':          'ProjectController.findForCommunity',
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
@@ -90,11 +91,11 @@ module.exports.routes = {
   'POST   /noo/activity/mark-all-read':                   'ActivityController.markAllRead',
   'POST   /noo/activity/:activityId':                     'ActivityController.update',
 
-  'GET    /noo/project':                                  'ProjectController.find',
   'GET    /noo/project/:projectId':                       'ProjectController.findOne',
-  'GET    /noo/project/:projectId/posts':                 'ProjectController.findPosts',
-  'GET    /noo/project/:projectId/users':                 'ProjectController.findUsers',
+  'GET    /noo/project/:projectId/posts':                 'PostController.findForProject',
+  'GET    /noo/project/:projectId/users':                 'UserController.findForProject',
   'DELETE /noo/project/:projectId/user/:userId':          'ProjectController.removeUser',
+  'POST   /noo/project/:projectId/user/:userId':          'ProjectController.updateMembership',
   'POST   /noo/project':                                  'ProjectController.create',
   'POST   /noo/project/:projectId':                       'ProjectController.update',
   'POST   /noo/project/:projectId/invite':                'ProjectController.invite',

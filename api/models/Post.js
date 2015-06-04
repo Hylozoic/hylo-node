@@ -86,7 +86,8 @@ module.exports = bookshelf.Model.extend({
 
   Visibility: {
     DEFAULT: 0,
-    PUBLIC_READABLE: 1
+    PUBLIC_READABLE: 1,
+    DRAFT_PROJECT: 2
   },
 
   countForUser: function(user) {
@@ -98,10 +99,19 @@ module.exports = bookshelf.Model.extend({
 
   isVisibleToUser: function(postId, userId) {
     return bookshelf.knex('post_community').where({post_id: postId})
-      .then(function(results) {
-        var communityId = results[0].community_id;
-        return Membership.find(userId, communityId);
-    }).then(function(mship) { return !!mship });
+    .then(function(results) {
+      if (results.length === 0) return false;
+      var communityId = results[0].community_id;
+      return Membership.find(userId, communityId);
+    })
+    .then(mship => {
+      if (mship) return true;
+      return PostProjectMembership.where({post_id: postId}).fetch()
+      .then(ppm => {
+        if (!ppm) return false;
+        return Project.isVisibleToUser(ppm.get('project_id'), userId);
+      });
+    });
   },
 
   find: function(id, options) {
@@ -117,14 +127,15 @@ module.exports = bookshelf.Model.extend({
     return collection.query(function(qb) {
       qb.whereRaw('post.creation_date between ? and ?', [startTime, endTime]);
       qb.where('post.active', true);
+      qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT);
     })
   },
 
-  sendNotificationEmail: function(recipientId, postId) {
+  sendNotificationEmail: function(opts) {
 
     return Promise.join(
-      User.find(recipientId),
-      Post.find(postId, {withRelated: ['communities', 'creator']})
+      User.find(opts.recipientId),
+      Post.find(opts.postId, {withRelated: ['communities', 'creator']})
     )
     .spread(function(recipient, post) {
 
@@ -156,6 +167,17 @@ module.exports = bookshelf.Model.extend({
 
     });
 
+  },
+
+  notifyAboutMention: function(post, userId, opts) {
+    return Promise.join(
+      Queue.classMethod('Post', 'sendNotificationEmail', {
+        recipientId: userId,
+        postId: post.id
+      }),
+      Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
+      User.incNewNotificationCount(userId, opts.transacting)
+    );
   }
 
 });

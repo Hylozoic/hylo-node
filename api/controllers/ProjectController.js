@@ -1,5 +1,4 @@
-var crypto = require('crypto'),
-  marked = require('marked');
+var crypto = require('crypto');
 
 var placeholderSlug = function() {
   return crypto.randomBytes(3).toString('hex');
@@ -9,16 +8,39 @@ var editableAttributes = [
   'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility'
 ];
 
+var projectRelations = [
+  {user: qb => qb.column('id', 'name', 'avatar_url')},
+  {community: qb => qb.column('id', 'name', 'avatar_url')},
+  {contributors: qb => qb.column('users.id')},
+  {posts: qb => {
+    qb.column('post.id');
+    qb.where('type', Post.Type.REQUEST);
+  }}
+];
+
 var projectAttributes = project => _.extend(project.toJSON(), {
   contributor_count: project.relations.contributors.length,
   open_request_count: project.relations.posts.length
 });
 
+var maybeGenerateVideoThumbnail = Promise.method(function(attrs) {
+  if (attrs.video_url) {
+    return Project.generateThumbnailUrl(attrs.video_url)
+    .then(url => attrs.thumbnail_url = url);
+  }
+});
+
+var searchForProjects = function(res, opts) {
+  Search.forProjects(opts)
+  .fetchAll({withRelated: projectRelations})
+  .then(projects => projects.map(projectAttributes))
+  .then(res.ok)
+  .catch(res.serverError);
+};
+
 module.exports = {
 
   create: function(req, res) {
-    console.log(JSON.stringify(req.allParams(), null, 2));
-
     var attrs = _.defaults(
       _.pick(req.allParams(), editableAttributes),
       {
@@ -29,12 +51,7 @@ module.exports = {
       }
     );
 
-    Promise.method(function() {
-      if (attrs.video_url) {
-        return Project.generateThumbnailUrl(attrs.video_url)
-        .then(url => attrs.thumbnail_url = url);
-      }
-    })()
+    maybeGenerateVideoThumbnail(attrs)
     .then(() => new Project(attrs))
     .then(project => project.save())
     .then(project => res.ok(_.pick(project.toJSON(), 'slug')))
@@ -50,46 +67,22 @@ module.exports = {
     else if (req.param('unpublish'))
       updatedAttrs.published_at = null;
 
-    Promise.method(function() {
-      if (updatedAttrs.video_url) {
-        return Project.generateThumbnailUrl(updatedAttrs.video_url)
-        .then(url => updatedAttrs.thumbnail_url = url);
-      }
-    })()
-    .then(() => project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true}))
-    .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
-    .catch(res.serverError);
-  },
+    maybeGenerateVideoThumbnail(updatedAttrs)
+    .then(() => {
+      return bookshelf.transaction(trx => {
+        return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
+        .tap(() => {
+          if (!_.has(updatedAttrs, 'published_at')) return;
+          var vis = Post.Visibility[updatedAttrs.published_at ? 'DEFAULT' : 'DRAFT_PROJECT'];
 
-  find: function(req, res) {
-    Project.query(qb => {
-      if (req.param('context') === 'creator') {
-        qb.where('user_id', req.session.userId);
-
-      } else if (req.param('context') === 'creator-or-contributor') {
-        qb.leftJoin('projects_users', () => this.on('projects.id', '=', 'projects_users.project_id'));
-        qb.where('projects.user_id', req.session.userId).orWhere(function() {
-          this.where('projects_users.user_id', req.session.userId);
+          return project.load('posts')
+          .then(() =>
+            Post.query().where('id', 'in', project.relations.posts.map('id'))
+            .update({visibility: vis}));
         });
-
-      } else {
-        throw format('unknown context: %s', req.param('context'));
-      }
-
-      qb.groupBy('projects.id');
-    }).fetchAll({
-      withRelated: [
-        {user: qb => qb.column('id', 'name', 'avatar_url')},
-        {community: qb => qb.column('id', 'name', 'avatar_url')},
-        {contributors: qb => qb.column('users.id')},
-        {posts: qb => {
-          qb.column('post.id');
-          qb.where('type', Post.Type.REQUEST);
-        }}
-      ]
+      });
     })
-    .then(projects => projects.map(projectAttributes))
-    .then(res.ok)
+    .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
     .catch(res.serverError);
   },
 
@@ -97,54 +90,20 @@ module.exports = {
     Project.find(res.locals.project.id, {withRelated: [
       {user: qb => qb.column('id', 'name', 'avatar_url')},
       {community: qb => qb.column('id', 'name', 'avatar_url')},
-      {contributors: qb => qb.where('users.id', req.session.userId)},
+      {memberships: qb => qb.where('user_id', req.session.userId)},
       {posts: qb => qb.where('fulfilled', false)}
     ]})
-    .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'contributors', 'posts'), {
-      is_contributor: project.relations.contributors.length > 0,
+    .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'posts', 'memberships'), {
+      membership: project.relations.memberships.first(),
       open_request_count: project.relations.posts.length
     })))
     .catch(res.serverError);
   },
 
-  findPosts: function(req, res) {
-    Search.forPosts({
-      project: req.param('projectId'),
-      sort: 'post.last_updated',
-      limit: req.param('limit') || 10,
-      offset: req.param('offset') || 0
-    })
-    .fetchAll({withRelated: PostPresenter.relations(req.session.userId, {fromProject: true})})
-    .then(PostPresenter.mapPresentWithTotal)
-    .then(res.ok)
-    .catch(res.serverError);
-  },
-
-  findUsers: function(req, res) {
-    Search.forUsers({
-      project: req.param('projectId'),
-      sort: 'post.last_updated',
-      limit: req.param('limit') || 10,
-      offset: req.param('offset') || 0
-    })
-    .fetchAll()
-    .then(users => users.map(u => u.pick('id', 'name', 'avatar_url', 'bio',
-      'twitter_name', 'facebook_url', 'linkedin_url')))
-    .then(res.ok)
-    .catch(res.serverError);
-  },
-
   invite: function(req, res) {
-    var invited = req.param('emails').map(email => { return {email: email} }),
+    var invited = req.param('emails').map(email => ({email: email})),
       projectId = req.param('projectId'),
       user, project;
-
-    marked.setOptions({
-      gfm: true,
-      breaks: true
-    });
-
-    var message = marked(req.param('message') || '');
 
     Promise.join(
       User.find(req.session.userId),
@@ -155,7 +114,7 @@ module.exports = {
       return bookshelf.transaction(trx => {
         return User.where('id', 'in', req.param('users')).fetchAll()
         .then(users => {
-          invited = invited.concat(users.map(u => { return {email: u.get('email'), id: u.id} }));
+          invited = invited.concat(users.map(u => ({email: u.get('email'), id: u.id})));
           return Promise.map(invited, person => ProjectInvitation.create(projectId, {
             userId: person.id,
             email: person.email,
@@ -167,7 +126,7 @@ module.exports = {
     .then(invitations => Promise.map(invitations, inv =>
       Email.sendProjectInvitation(inv.get('email'), {
         subject: req.param('subject'),
-        message: message,
+        message: RichText.markdown(req.param('message')),
         inviter_name: user.get('name'),
         inviter_email: user.get('email'),
         invite_link: Frontend.Route.project(project) + '?token=' + inv.get('token')
@@ -179,7 +138,7 @@ module.exports = {
   join: function(req, res) {
     bookshelf.transaction(trx => {
       return Promise.join(
-        ProjectInvitation.findByToken(req.param('token')).then(i => i.use(req.session.userId)),
+        ProjectInvitation.findByToken(req.param('token')).then(i => i ? i.use(req.session.userId) : null),
         ProjectMembership.create(req.session.userId, req.param('projectId'))
       );
     })
@@ -192,6 +151,23 @@ module.exports = {
       user_id: req.param('userId'),
       project_id: req.param('projectId')
     }).destroy().then(() => res.ok({}))
+    .catch(res.serverError);
+  },
+
+  findForUser: function(req, res) {
+    searchForProjects(res, {user: req.param('userId')});
+  },
+
+  findForCommunity: function(req, res) {
+    searchForProjects(res, {community: req.param('communityId'), published: true});
+  },
+
+  updateMembership: function(req, res) {
+    ProjectMembership.query().where({
+      user_id: req.param('userId'),
+      project_id: req.param('projectId')
+    }).update(_.pick(req.allParams(), 'notify_on_new_posts'))
+    .then(() => res.ok({}))
     .catch(res.serverError);
   }
 

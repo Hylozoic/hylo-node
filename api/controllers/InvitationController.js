@@ -12,8 +12,14 @@ module.exports = {
       }
 
       if (UserSession.isLoggedIn(req)) {
-        return invitation.use(req.session.userId).then(function() {
-          res.ok({});
+        return invitation.use(req.session.userId)
+        .then(() => res.ok({}))
+        .catch(err => {
+          if (err.contains('duplicate key value')) {
+            return res.ok({error: 'already a member'});
+          } else {
+            throw err;
+          }
         });
       }
 
@@ -24,7 +30,7 @@ module.exports = {
         }));
       });
     })
-    .catch(res.serverError.bind(res));
+    .catch(res.serverError);
   }
 
 };

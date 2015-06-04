@@ -1,5 +1,26 @@
 module.exports = {
 
+  forProjects: function(opts) {
+    return Project.query(qb => {
+      if (opts.user) {
+        qb.leftJoin('projects_users', () => this.on('projects.id', '=', 'projects_users.project_id'));
+        qb.where('projects.user_id', opts.user).orWhere(function() {
+          this.where('projects_users.user_id', opts.user);
+        });
+      }
+
+      if (opts.community) {
+        qb.where('community_id', opts.community);
+      }
+
+      if (opts.published) {
+        qb.whereRaw('published_at is not null');
+      }
+
+      qb.groupBy('projects.id');
+    });
+  },
+
   forPosts: function(opts) {
     return Post.query(function(qb) {
 
@@ -22,7 +43,9 @@ module.exports = {
 
       if (opts.project) {
         qb.join('posts_projects', 'posts_projects.post_id', '=', 'post.id');
-        qb.whereIn('posts_projects.project_id', opts.project);
+        qb.where('posts_projects.project_id', opts.project);
+      } else {
+        qb.where('post.visibility', '!=', Post.Visibility.DRAFT_PROJECT);
       }
 
       if (opts.term) {
@@ -107,26 +130,23 @@ module.exports = {
 
   addTermToQueryBuilder: function(term, qb, opts) {
     var query = _.chain(term.split(/\s*\s/)) // split on whitespace
-      .map(function(word) {
-        // remove any invalid characters and add prefix matching
-        return word.replace(/[,;'|:&()!\\]+/, '') + ':*';
-      })
+      .map(word => word.replace(/[,;'|:&()!\\]+/, ''))
       .reject(_.isEmpty)
-      .reduce(function(result, word, key) {
+      .map(word => word + ':*') // add prefix matching
+      .reduce((result, word) => {
         // build the tsquery string using logical AND operands
         result += " & " + word;
         return result;
       }).value(),
 
-      statement = '(' + opts.columns.map(function(col) {
-      return format("(to_tsvector('english', %s) @@ to_tsquery(?))", col);
-    }).join(' or ') + ')',
+      statement = format('(%s)',
+        opts.columns
+        .map(col => format("(to_tsvector('english', %s) @@ to_tsquery(?))", col))
+        .join(' or ')),
 
-      values = _.times(opts.columns.length, function() { return query });
+      values = _.times(opts.columns.length, () => query);
 
-    qb.where(function() {
-      this.whereRaw(statement, values);
-    });
+    qb.where(() => this.whereRaw(statement, values));
   }
 
 }

@@ -38,14 +38,14 @@ var createComment = function(commenterId, text, post) {
           post.relations.followers.map(function(f) { return parseInt(f.attributes.user_id) }),
           RichText.getUserMentions(text)
         ];
-        
+
       }).spread(function(existing, mentioned) {
-        
+
         return Promise.join(
           // create activity and send mention notification to all mentioned users
           Promise.map(mentioned, function(userId) {
             return Promise.join(
-              Queue.addJob('Comment.sendNotificationEmail', {
+              Queue.classMethod('Comment', 'sendNotificationEmail', {
                 recipientId: userId,
                 commentId: comment.id,
                 version: 'mention'
@@ -55,12 +55,12 @@ var createComment = function(commenterId, text, post) {
               User.incNewNotificationCount(userId, trx)
             );
           }),
-          
+
           // create activity and send comment notification to all followers,
           // except the commenter and mentioned users
           Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
             return Promise.join(
-              Queue.addJob('Comment.sendNotificationEmail', {
+              Queue.classMethod('Comment', 'sendNotificationEmail', {
                 recipientId: userId,
                 commentId: comment.id,
                 version: 'default'
@@ -70,7 +70,7 @@ var createComment = function(commenterId, text, post) {
               User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
             );
           }),
-          
+
           // add all mentioned users and the commenter as followers, if not already following
           post.addFollowers(_.difference(mentioned.concat(commenterId), existing), commenterId, {transacting: trx})
         );
@@ -179,4 +179,4 @@ module.exports = {
     }).catch(res.serverError.bind(res));
   }
 
-}
+};

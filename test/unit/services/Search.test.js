@@ -39,6 +39,7 @@ describe('Search', function() {
         where "post"."active" = 'true'
         and "post"."creator_id" in ('42', '41')
         and "post_community"."community_id" in ('9', '12')
+        and "post"."visibility" != '2'
         and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
           or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
         and "follower"."user_id" = '37'
