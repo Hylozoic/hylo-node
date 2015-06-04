@@ -118,8 +118,12 @@ module.exports.policies = {
   },
 
   PushNotificationController: {
-      updateBadgeNo: true,
-      addDevice: true
+    updateBadgeNo: true,
+    addDevice: true
+  },
+
+  NetworkController: {
+    findOne: ['sessionAuth', 'isInNetwork']
   }
 
 };

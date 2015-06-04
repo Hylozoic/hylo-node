@@ -101,6 +101,8 @@ module.exports.routes = {
   'POST   /noo/project/:projectId/invite':                'ProjectController.invite',
   'POST   /noo/project/:projectId/join':                  'ProjectController.join',
 
+  'GET    /noo/network/:networkId':                       'NetworkController.findOne',
+
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',
 
@@ -129,7 +131,7 @@ module.exports.routes = {
   'GET    /noo/logout':                                   'SessionController.destroy',
 
   'POST    /noo/pn/add-device':                           'PushNotificationController.addDevice',
-  'POST    /noo/pn/update-badge-no':                      'PushNotificationController.updateBadgeNo',          
+  'POST    /noo/pn/update-badge-no':                      'PushNotificationController.updateBadgeNo',
 
   '/*':                                                   'StaticPageController.proxy'
 
