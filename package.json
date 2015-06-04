@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "analytics-node": "^1.2.0",
-    "apn": "^1.7.3",
+    "apn": "argon/node-apn#fd7c2e8",
     "async": "^0.9.0",
     "bcrypt": "^0.8.2",
     "bluebird": "^2.3.11",
