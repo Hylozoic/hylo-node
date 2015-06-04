@@ -11,7 +11,7 @@ var communityAttributes = function(community, membership) {
   var attrs = community.toJSON(),
     network = community.relations.network;
 
-  if (!membership.hasModeratorRole()) {
+  if (!membership || !membership.hasModeratorRole()) {
     delete attrs.beta_access_code;
   }
 
@@ -39,7 +39,8 @@ module.exports = {
     }
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => res.ok(communityAttributes(community, res.locals.membership)));
+    .then(() => res.ok(communityAttributes(community, res.locals.membership)))
+    .catch(res.serverError);
   },
 
   update: function(req, res) {
