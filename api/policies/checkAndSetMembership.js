@@ -35,6 +35,10 @@ module.exports = function checkAndSetMembership(req, res, next) {
         res.locals.membership = membership;
         next();
 
+      } else if (community.get('network_id') && req.session.userId) {
+        Network.containsUser(community.get('network_id'), req.session.userId)
+        .then(contains => contains ? next() : res.forbidden());
+
       } else {
         sails.log.debug(format("policy: checkAndSetMembership: fail. user %s, community %s",
           req.session.userId, communityId));

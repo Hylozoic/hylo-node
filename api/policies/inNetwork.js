@@ -4,10 +4,8 @@ module.exports = function(req, res, next) {
     if (!network) return res.notFound();
     res.locals.network = network;
 
-    return Membership.activeCommunityIds(req.session.userId)
-    .then(ids => Network.containsAnyCommunity(network.id, ids))
-    .then(isInNetwork => isInNetwork ? next() : res.forbidden());
-
+    return Network.containsUser(network.id, req.session.userId)
+    .then(contains => contains ? next() : res.forbidden());
   })
 
 };

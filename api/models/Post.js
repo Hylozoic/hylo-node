@@ -98,18 +98,29 @@ module.exports = bookshelf.Model.extend({
   },
 
   isVisibleToUser: function(postId, userId) {
+    var communityId;
     return bookshelf.knex('post_community').where({post_id: postId})
     .then(function(results) {
       if (results.length === 0) return false;
-      var communityId = results[0].community_id;
+      communityId = results[0].community_id;
       return Membership.find(userId, communityId);
     })
-    .then(mship => {
-      if (mship) return true;
+    .then(mship => !!mship)
+    .then(success => {
+      if (success) return true;
+
       return PostProjectMembership.where({post_id: postId}).fetch()
       .then(ppm => {
         if (!ppm) return false;
         return Project.isVisibleToUser(ppm.get('project_id'), userId);
+      });
+    })
+    .then(success => {
+      if (success) return true;
+
+      return Community.find(communityId).then(community => {
+        if (community.get('network_id'))
+          return Network.containsUser(community.get('network_id'), userId);
       });
     });
   },
