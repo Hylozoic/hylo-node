@@ -7,7 +7,7 @@
 
 var validator = require('validator');
 
-var communityAttributes = function(community, membership) {
+var communityAttributes = function(community, membership, memberCount) {
   var attrs = community.toJSON(),
     network = community.relations.network;
 
@@ -19,10 +19,14 @@ var communityAttributes = function(community, membership) {
     attrs.network = network.pick('id', 'name', 'slug');
   }
 
-  return _.extend(attrs, {
-    canModerate: membership && membership.hasModeratorRole(),
-    id: Number(community.id)
-  });
+  return _.extend(
+    _.omit(attrs, 'memberships'),
+    {
+      id: Number(community.id), // FIXME this isn't necessary post-Scala
+      canModerate: membership && membership.hasModeratorRole(),
+      memberCount: memberCount
+    }
+  );
 };
 
 module.exports = {
@@ -260,7 +264,18 @@ module.exports = {
         community_id: community.id
       }).fetch({withRelated: ['community']});
     })
-    .then(membership => res.ok(membership))
+    .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  findForNetwork: function(req, res) {
+    Community.where('network_id', req.param('networkId'))
+    .fetchAll({withRelated: ['memberships']})
+    .then(communities => communities.map(c => {
+      var membership = c.relations.memberships.find(m => m.get('users_id') === req.session.userId);
+      return communityAttributes(c, membership, c.relations.memberships.length);
+    }))
+    .then(res.ok)
     .catch(res.serverError);
   }
 

@@ -74,7 +74,8 @@ module.exports.policies = {
     removeMember:    ['sessionAuth', 'isModerator'],
     leave:           ['sessionAuth', 'checkAndSetMembership'],
     validate:        true,
-    create:          ['sessionAuth']
+    create:          ['sessionAuth'],
+    findForNetwork:  ['sessionAuth', 'inNetwork']
   },
 
   PostController: {

@@ -5,7 +5,7 @@ module.exports = bookshelf.Model.extend({
                        .query({where: {'users_community.active': false}}),
   invitations:   () => this.hasMany(Invitation),
   leader:        () => this.belongsTo(User, 'leader_id'),
-  memberships:   () => this.hasMany(Membership),
+  memberships:   () => this.hasMany(Membership).query({where: {'users_community.active': true}}),
   moderators:    () => this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
                        .query({where: {role: Membership.MODERATOR_ROLE}}),
   network:       () => this.belongsTo(Network),
