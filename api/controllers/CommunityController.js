@@ -34,6 +34,10 @@ var communityAttributes = function(community, membership, memberCount) {
 
 module.exports = {
 
+  find: function(req, res) {
+    Community.fetchAll().then(res.ok).catch(res.serverError);
+  },
+
   findOne: function(req, res) {
     var community = res.locals.community;
 

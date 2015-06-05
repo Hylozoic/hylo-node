@@ -10,7 +10,7 @@ var passport = require('passport'),
 var adminStrategy = new GoogleStrategy({
   clientID: process.env.ADMIN_GOOGLE_CLIENT_ID,
   clientSecret: process.env.ADMIN_GOOGLE_CLIENT_SECRET,
-  callbackURL: format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, '/admin/login/oauth')
+  callbackURL: format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, '/noo/admin/login/oauth')
 }, function(accessToken, refreshToken, profile, done) {
   var email = profile.emails[0].value;
 

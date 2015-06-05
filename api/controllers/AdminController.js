@@ -1,7 +1,7 @@
 module.exports = {
 
   index: function(req, res) {
-    res.view('admin');
+    res.ok(req.user);
   },
 
   test: function(req, res) {

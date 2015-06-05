@@ -57,6 +57,7 @@ module.exports.routes = {
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
   'GET    /noo/user/:userId/projects':                    'ProjectController.findForUser',
 
+  'GET    /noo/community':                                'CommunityController.find',
   'POST   /noo/community':                                'CommunityController.create',
   'POST   /noo/community/validate':                       'CommunityController.validate',
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
@@ -110,11 +111,11 @@ module.exports.routes = {
 
   'POST   /noo/invitation/:token':                        'InvitationController.use',
 
-  'GET    /admin/login':                                  'AdminSessionController.create',
-  'GET    /admin/login/oauth':                            'AdminSessionController.oauth',
-  'GET    /admin/logout':                                 'AdminSessionController.destroy',
-  'GET    /admin':                                        'AdminController.index',
-  'GET    /admin/test':                                   'AdminController.test',
+  'GET    /noo/admin/login':                              'AdminSessionController.create',
+  'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',
+  'GET    /noo/admin/logout':                             'AdminSessionController.destroy',
+  'GET    /noo/admin':                                    'AdminController.index',
+  'GET    /noo/admin/test':                               'AdminController.test',
 
   'GET    /noo/linkedin/authorize':                       'LinkedinController.authorize',
   'GET    /noo/linkedin/provide':                         'LinkedinController.provideData',
