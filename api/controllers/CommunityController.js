@@ -19,12 +19,15 @@ var communityAttributes = function(community, membership, memberCount) {
     attrs.network = network.pick('id', 'name', 'slug');
   }
 
+  if (memberCount) {
+    attrs.memberCount = memberCount;
+  }
+
   return _.extend(
     _.omit(attrs, 'memberships'),
     {
       id: Number(community.id), // FIXME this isn't necessary post-Scala
-      canModerate: membership && membership.hasModeratorRole(),
-      memberCount: memberCount
+      canModerate: membership && membership.hasModeratorRole()
     }
   );
 };
