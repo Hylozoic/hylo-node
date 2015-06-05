@@ -3,6 +3,6 @@ module.exports = function(req, res, next) {
     sails.log.debug('isAdmin: ' + req.user.email);
     next();
   } else {
-    res.redirect('/admin/login');
+    res.redirect('/noo/admin/login');
   }
 };
