@@ -1,7 +1,13 @@
 module.exports = function checkAndSetPost(req, res, next) {
+
+  var fail = function(log) {
+    sails.log.debug(format('policy: checkAndSetPost: %s', log));
+    res.forbidden();
+  };
+
   return Post.find(req.param('postId'))
-  .tap(function(post) {
-    if (!post) throw new Error(format('Post %s not found', req.param('postId')));
+  .tap(post => {
+    if (!post) throw new Error(format('post %s not found', req.param('postId')));
   })
   .then(function(post) {
     res.locals.post = post;
@@ -14,16 +20,6 @@ module.exports = function checkAndSetPost(req, res, next) {
 
     return Post.isVisibleToUser(post.id, req.session.userId);
   })
-  .then(function(allowed) {
-    if (allowed) {
-      next();
-    } else {
-      sails.log.debug(format("Fail checkAndSetPost policy: uId:%s postId:%s", req.session.userId, req.param('postId')));
-      res.forbidden();
-    }
-  })
-  .catch(function(err) {
-    sails.log.debug(format("Fail checkAndSetPost policy %s %s: %s", req.session.userId, req.param('postId'), err.message));
-    res.forbidden();
-  });
+  .then(allowed => allowed ? next() : fail('not allowed'))
+  .catch(err => fail(err.message));
 };

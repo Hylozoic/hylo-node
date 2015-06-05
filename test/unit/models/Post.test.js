@@ -49,7 +49,7 @@ describe('Post', function() {
 
   describe('#isVisibleToUser', () => {
 
-    var post, community, project, user;
+    var post, community, community2, network, project, user;
 
     beforeEach(() => {
       post = new Post({name: 'hello'});
@@ -76,6 +76,19 @@ describe('Post', function() {
       return project.save()
       .then(() => ProjectMembership.create(user.id, project.id))
       .then(() => PostProjectMembership.create(post.id, project.id))
+      .then(() => Post.isVisibleToUser(post.id, user.id))
+      .then(visible => expect(visible).to.be.true);
+    });
+
+    it("is true if the user is in the post's community's network", () => {
+      network = new Network();
+      return network.save()
+      .then(() => {
+        community = new Community({network_id: network.id});
+        community2 = new Community({network_id: network.id});
+      })
+      .then(() => Membership.create(user.id, community2.id))
+      .then(() => community.posts().attach(post.id))
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true);
     });

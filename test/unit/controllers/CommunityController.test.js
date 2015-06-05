@@ -44,7 +44,8 @@ describe('CommunityController', () => {
             name: 'foo',
             slug: 'foo',
             canModerate: false,
-            leader: {}
+            leader: {},
+            network_id: null
           });
         });
 
