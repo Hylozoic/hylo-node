@@ -153,6 +153,7 @@ module.exports = setup = {
             table.string('name');
             table.string('beta_access_code');
             table.string('slug');
+            table.bigInteger('network_id').references('id').inTable('networks');
           }),
           createTable('users_community', function(table) {
             table.bigInteger('users_id');
@@ -240,6 +241,15 @@ module.exports = setup = {
           createTable('devices', table => {
             table.increments();
             table.bigInteger('user_id');
+            table.timestamps();
+          }),
+          createTable('networks', table => {
+            table.increments();
+            table.string('name');
+            table.text('description');
+            table.string('avatar_url');
+            table.string('banner_url');
+            table.string('slug').unique();
             table.timestamps();
           })
         );

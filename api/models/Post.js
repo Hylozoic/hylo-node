@@ -119,8 +119,11 @@ module.exports = bookshelf.Model.extend({
       if (success) return true;
 
       return Community.find(communityId).then(community => {
-        if (community.get('network_id'))
+        if (community && community.get('network_id')) {
           return Network.containsUser(community.get('network_id'), userId);
+        } else {
+          return false;
+        }
       });
     });
   },
