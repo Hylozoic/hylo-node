@@ -125,7 +125,7 @@ module.exports = bookshelf.Model.extend({
         return [alertText, path];
       })
       .spread((text, path) => {
-        return Promise.map(devices, d => d.sendPushNotification(text, path));
+        return Promise.map(devices.models, d => d.sendPushNotification(text, path));
       });
     });
   },
