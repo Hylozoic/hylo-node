@@ -9,15 +9,17 @@ var defaultOptions = {
   }
 };
 
-var sendSimpleEmail = function(email, templateId, data) {
+var sendSimpleEmail = function(email, templateId, data, extraOptions) {
   return sendEmail(_.merge({}, defaultOptions, {
     email_id: templateId,
     recipient: {address: email},
     email_data: data
-  }));
+  }, extraOptions));
 };
 
 module.exports = {
+
+  sendSimpleEmail: sendSimpleEmail,
 
   sendNewProjectPostNotification: function(email, data) {
     return sendSimpleEmail(email, 'tem_bG7zNWk3sqbLKkg2TLcYgE', data);

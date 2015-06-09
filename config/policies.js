@@ -105,7 +105,8 @@ module.exports.policies = {
   },
 
   MessageController: {
-    relayFromEmail: true
+    relayFromEmail: true,
+    createWaitlistRequest: true
   },
 
   ProjectController: {

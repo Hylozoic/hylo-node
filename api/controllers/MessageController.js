@@ -4,6 +4,16 @@ var email = require('email-addresses'),
 
 module.exports = {
 
+  createWaitlistRequest: function(req, res) {
+    var form = _.pick(req.allParams(), 'name', 'email', 'details');
+
+    Email.sendSimpleEmail('edward@hylo.com', 'tem_8bNZg82ZUPzuXAqu2eRJF6', form, {
+      cc: [{address: process.env.WAITLIST_ASANA_EMAIL_ADDRESS}]
+    })
+    .then(() => res.ok({}))
+    .catch(res.serverError);
+  },
+
   relayFromEmail: function(req, res) {
     var from = email.parseOneAddress(req.param('From')),
       to = email.parseOneAddress(req.param('To')),
