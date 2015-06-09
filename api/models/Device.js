@@ -8,13 +8,13 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, "user_id");
   },
 
-  sendPushNotification: function(alert, url) {
+  sendPushNotification: function(alert, path) {
     var badge_no = this.get('badge_no') + 1;
     this.set("badge_no", badge_no);
     return this.save()
       .then(function (device) {
         
-        var payload = JSON.stringify({url: url});
+        var payload = JSON.stringify({path: path});
         
         return PushNotification.forge({
           device_token: device.get('token'),
