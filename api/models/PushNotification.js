@@ -14,7 +14,7 @@ module.exports = bookshelf.Model.extend({
       notification = {
         alert: this.get("alert"),
         info: JSON.parse(this.get("payload")),
-        badge: "+1"
+        badge: this.get("badge_no")
       };
 
     this.set("time_sent", (new Date()).toISOString());
