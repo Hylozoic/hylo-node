@@ -15,7 +15,7 @@ module.exports = {
         return invitation.use(req.session.userId)
         .then(() => res.ok({}))
         .catch(err => {
-          if (err.contains('duplicate key value')) {
+          if (err.message && err.message.contains('duplicate key value')) {
             return res.ok({error: 'already a member'});
           } else {
             throw err;
