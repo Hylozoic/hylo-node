@@ -7,7 +7,7 @@ module.exports = bookshelf.Model.extend({
 
   send: function() {
 
-    var zeroPush = new ZeroPush(process.env.ZEROPUSH_SERVER_TOKEN),
+    var zeroPush = new ZeroPush(process.env.ZEROPUSH_PROD_TOKEN),
       notify = Promise.promisify(zeroPush.notify, zeroPush),
       platform = "ios_macos",
       deviceTokens = [this.get("device_token")],
