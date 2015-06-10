@@ -8,10 +8,15 @@
 var validator = require('validator');
 
 var findContext = function(req) {
-  if (req.param('projectId')) {
-    var valid = ProjectInvitation.validate(req.param('projectId'), req.param('projectToken'))
-    .tap(valid => { if (!valid) throw('bad project token') });
-    return Promise.props({validProjectToken: valid});
+  var projectId = req.param('projectId');
+  if (projectId) {
+    return Project.find(projectId).then(project => {
+      if (!project) return {};
+      if (project.isPublic()) return {project: project};
+
+      return ProjectInvitation.validate(projectId, req.param('projectToken'))
+      .then(valid => (valid ? {project: project} : {}));
+    });
   }
 
   if (req.session.invitationId) {
@@ -31,7 +36,7 @@ module.exports = {
 
     return findContext(req)
     .then(ctx => {
-      if (!ctx.community && !ctx.invitation && !ctx.validProjectToken)
+      if (!ctx.community && !ctx.invitation && !ctx.project)
         throw 'bad code';
 
       var attrs = _.merge(_.pick(params, 'name', 'email'), {
