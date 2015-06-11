@@ -1,5 +1,7 @@
 var LRU = require('lru-cache'),
+  mime = require('mime'),
   request = require('request'),
+  streamifier = require('streamifier'),
   url = require('url'),
   util = require('util'),
   cache = LRU(50),
@@ -56,16 +58,20 @@ module.exports = {
 
     if (cached) {
       sails.log.info(util.format(' ☺ %s', newUrl));
-      res.ok(cached);
+      var mimeType = mime.lookup(newUrl),
+        isText = _.contains(['application/javascript', 'text/html', 'text/css', 'text/plain'], mimeType);
+
+      res.set('Content-Type', mimeType);
+      streamifier.createReadStream(cached).pipe(res);
     } else {
       sails.log.info(util.format(' ↑ %s', newUrl));
 
-      var cacheData = [];
+      var chunks = [];
 
       request.get(newUrl)
       .on('response', upstreamRes => {
-        upstreamRes.on('data', d => cacheData.push(d));
-        upstreamRes.on('end', () => (cacheKey ? cache.set(cacheKey, Buffer.concat(cacheData)) : null));
+        upstreamRes.on('data', d => chunks.push(d));
+        upstreamRes.on('end', () => (cacheKey ? cache.set(cacheKey, Buffer.concat(chunks)) : null));
       })
       .pipe(res);
     }
