@@ -2,7 +2,7 @@ var LRU = require('lru-cache'),
   request = require('request'),
   url = require('url'),
   util = require('util'),
-  cache = LRU(10),
+  cache = LRU(50),
   equals = function(b) {
     return function(a) {
       return a == b;
@@ -43,34 +43,31 @@ module.exports = {
       u.pathname += '/index.html';
     }
 
-    // add the deploy-specific (cache-busting) path prefix
-    u.pathname = util.format('assets/%s%s', process.env.BUNDLE_VERSION, u.pathname);
+    if (!u.pathname.startsWith('/assets')) {
+      // add the deploy-specific (cache-busting) path prefix
+      u.pathname = util.format('/assets/%s%s', process.env.BUNDLE_VERSION, u.pathname);
+    }
 
-    var newUrl = util.format('%s/%s', process.env.ASSET_HOST_URL, url.format(u));
+    var newUrl = util.format('%s%s', process.env.ASSET_HOST_URL.replace(/\/$/, ''), url.format(u));
 
     // use path without query params as cache key
-    var cacheKey = u.pathname,
-      cached = (sails.config.environment === 'development' ? null : cache.get(cacheKey));
+    var cacheKey = (sails.config.environment === 'development' ? null : u.pathname),
+      cached = (cacheKey ? cache.get(cacheKey) : null);
 
     if (cached) {
       sails.log.info(util.format(' ☺ %s', newUrl));
       res.ok(cached);
     } else {
       sails.log.info(util.format(' ↑ %s', newUrl));
-      request(newUrl, function(err, response, body) {
-        if (response && response.statusCode == 403) {
-          // a 403 from S3 could also be a 404
-          return res.notFound();
-        }
 
-        if (err || response.statusCode != 200) {
-          var code = (response ? response.statusCode : 'X');
-          return res.serverError(util.format("upstream: %s %s", code, err));
-        }
+      var cacheData = [];
 
-        cache.set(cacheKey, body);
-        res.ok(body);
+      request.get(newUrl)
+      .on('response', upstreamRes => {
+        upstreamRes.on('data', d => cacheData.push(d));
+        upstreamRes.on('end', () => (cacheKey ? cache.set(cacheKey, Buffer.concat(cacheData)) : null));
       })
+      .pipe(res);
     }
   }
 
