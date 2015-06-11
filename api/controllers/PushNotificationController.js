@@ -13,8 +13,8 @@ module.exports = {
   addDevice: function (req, res) {
     if (req.session.userId && req.param("deviceToken")) {
       Device.forge({
-	token: req.param("deviceToken"),
-	user_id: req.session.userId
+        token: req.param("deviceToken"),
+        user_id: req.session.userId
       })
       .fetch()
       .then(function (device) {
@@ -25,10 +25,10 @@ module.exports = {
           })
           .save()
           .then(function(device) {
-	    res.ok({result: "Added"})
+	    res.ok({result: "Added"});
           })
-          .otherwise(function (err) {
-	    res.ok({result: "Failed to save"})		
+          .catch(function (e) {
+            res.serverError(e);
 	  })
         };          
       });
@@ -38,8 +38,8 @@ module.exports = {
   updateBadgeNo: function (req, res) {
     if (req.session.userId && req.param("deviceToken")) {
       Device.forge({
-	token: req.param("deviceToken"),
-	user_id: req.session.userId
+        token: req.param("deviceToken"),
+        user_id: req.session.userId
       })
       .fetch()
       .then(function (device) {
@@ -48,8 +48,8 @@ module.exports = {
         });
       })
       .then(() => res.ok({result: "Updated"}))
-      .otherwise(function (err) {
-	res.ok({result: "Failed to Update"})		
+      .catch(function (e) {
+        res.serverError(e);          
       });
     };
   }     
