@@ -58,7 +58,7 @@ module.exports = {
 
     if (cached) {
       sails.log.info(util.format(' ☺ %s', newUrl));
-      var mimeType = mime.lookup(newUrl),
+      var mimeType = mime.lookup(u.pathname),
         isText = _.contains(['application/javascript', 'text/html', 'text/css', 'text/plain'], mimeType);
 
       res.set('Content-Type', mimeType);
