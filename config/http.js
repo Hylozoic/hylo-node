@@ -89,6 +89,8 @@ module.exports.http = {
     app.use('/admin/kue', isAdmin);
     app.use('/admin/kue/api', kue.app);
     app.use('/admin/kue', kueUI.app);
+
+    app.use(require('prerender-node'));
   }
 
   /***************************************************************************
