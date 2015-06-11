@@ -19,7 +19,7 @@ var communityAttributes = function(community, membership, memberCount) {
     attrs.network = network.pick('id', 'name', 'slug');
   }
 
-  if (memberCount) {
+  if (memberCount != undefined) {
     attrs.memberCount = memberCount;
   }
 
@@ -282,6 +282,7 @@ module.exports = {
       var membership = c.relations.memberships.find(m => m.get('users_id') === req.session.userId);
       return communityAttributes(c, membership, c.relations.memberships.length);
     }))
+    .then(communities => _.sortBy(communities, c => -c.memberCount))
     .then(res.ok)
     .catch(res.serverError);
   }
