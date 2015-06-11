@@ -23,7 +23,7 @@ Create a `.env` file in the root of the working copy, with contents like this:
 ```
 ADMIN_GOOGLE_CLIENT_ID=foo
 ADMIN_GOOGLE_CLIENT_SECRET=foo
-AWS_S3_CONTENT_URL=http://hylo-staging.s3.amazonaws.com
+ASSET_HOST_URL=http://localhost:3001
 BUNDLE_VERSION=dev
 DATABASE_URL=postgres://postgres:password@localhost:5432/hylo
 DEBUG_SQL=false
@@ -45,10 +45,11 @@ SEGMENT_KEY=foo
 SENDWITHUS_KEY=foo
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
-* `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in  [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
-* `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
+* `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:3001` by default.
 * `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 * `DATABASE_URL`: set to your local DB instance
+* `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in  [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
+* `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
 
 ### running the dev server
 

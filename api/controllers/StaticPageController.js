@@ -31,25 +31,26 @@ module.exports = {
     // remove trailing slash
     u.pathname = u.pathname.replace(/\/$/, '');
 
-    // for any paths not explicitly listed, serve the Angular app.
-    if (!_.any(staticPages, equals(u.pathname))) {
-      u.pathname = '/app';
-    }
-
     // a path without an extension should be served by index.html in
     // the folder of the same name.
-    if (!u.pathname.match(/\./)) {
+    if (!u.pathname.match(/\.\w{3,4}$/)) {
+
+      // for any paths not explicitly listed, serve the Angular app.
+      if (!_.any(staticPages, equals(u.pathname))) {
+        u.pathname = '/app';
+      }
+
       u.pathname += '/index.html';
     }
 
     // add the deploy-specific (cache-busting) path prefix
     u.pathname = util.format('assets/%s%s', process.env.BUNDLE_VERSION, u.pathname);
 
-    var newUrl = util.format('%s/%s', process.env.AWS_S3_CONTENT_URL, url.format(u));
+    var newUrl = util.format('%s/%s', process.env.ASSET_HOST_URL, url.format(u));
 
     // use path without query params as cache key
     var cacheKey = u.pathname,
-      cached = cache.get(cacheKey);
+      cached = (sails.config.environment === 'development' ? null : cache.get(cacheKey));
 
     if (cached) {
       sails.log.info(util.format(' ☺ %s', newUrl));
