@@ -33,7 +33,7 @@ module.exports = {
 
     // a path without an extension should be served by index.html in
     // the folder of the same name.
-    if (!u.pathname.match(/\.\w{3,4}$/)) {
+    if (!u.pathname.match(/\.\w{2,4}$/)) {
 
       // for any paths not explicitly listed, serve the Angular app.
       if (!_.any(staticPages, equals(u.pathname))) {
