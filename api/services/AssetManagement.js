@@ -1,4 +1,5 @@
 var aws = require('aws-sdk'),
+  crypto = require('crypto'),
   mime = require('mime'),
   path = require('path'),
   request = require('request'),
@@ -11,13 +12,17 @@ var promisifyStream = function(stream) {
   });
 };
 
+var basename = function(url) {
+  var name = path.basename(url).replace(/\?.*/, '').replace('%', '');
+  return name === '' ? crypto.randomBytes(2).toString('hex') : name;
+}
+
 module.exports = {
 
   copyAsset: function(instance, modelName, attr) {
     var subfolder = attr.replace('_url', ''),
       url = instance.get(attr),
-      basename = path.basename(url).replace(/\?.*/, '').replace('%', ''),
-      key = path.join(modelName.toLowerCase(), instance.id, subfolder, basename),
+      key = path.join(modelName.toLowerCase(), instance.id, subfolder, basename(url)),
       newUrl = process.env.AWS_S3_CONTENT_URL + '/' + key;
 
     console.log('from: ' + url);
