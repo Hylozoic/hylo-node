@@ -1,6 +1,7 @@
 var format = require('util').format,
-  Promise = require('bluebird'),
-  ZeroPush = require("nzero-push");
+    Promise = require('bluebird'),
+    ZeroPush = require('nzero-push'),
+    rollbar = require('rollbar');
 
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
@@ -19,7 +20,8 @@ module.exports = bookshelf.Model.extend({
 
     this.set("time_sent", (new Date()).toISOString());
     return this.save()
-    .then(pn => notify(platform, deviceTokens, notification));
+      .then(pn => notify(platform, deviceTokens, notification))
+      .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ZEROPUSH_PROD_TOKEN, device_token: deviceTokens}}));
   }
 
 });
