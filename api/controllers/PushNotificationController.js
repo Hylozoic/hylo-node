@@ -20,8 +20,8 @@ module.exports = {
       .then(function (device) {
         if(!device) {
           Device.forge({
-	    token: req.param("deviceToken"),
-	    user_id: req.session.userId
+            token: req.param("deviceToken"),
+            user_id: req.session.userId
           })
           .save()
           .then(function(device) {
