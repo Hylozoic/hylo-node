@@ -16,7 +16,8 @@ module.exports = {
   copyAsset: function(instance, modelName, attr) {
     var subfolder = attr.replace('_url', ''),
       url = instance.get(attr),
-      key = path.join(modelName.toLowerCase(), instance.id, subfolder, path.basename(url)),
+      basename = path.basename(url).replace(/\?.*/, ''),
+      key = path.join(modelName.toLowerCase(), instance.id, subfolder, basename),
       newUrl = process.env.AWS_S3_CONTENT_URL + '/' + key;
 
     console.log('from: ' + url);
