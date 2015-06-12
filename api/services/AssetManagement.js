@@ -1,5 +1,6 @@
 var aws = require('aws-sdk'),
   crypto = require('crypto'),
+  gm = require('gm'),
   mime = require('mime'),
   path = require('path'),
   request = require('request'),
@@ -43,5 +44,40 @@ module.exports = {
       return promisifyStream(download)
       .then(instance.save(changes, {patch: true}));
     }
+  },
+
+  resizeAsset: function(instance, attr, settings) {
+    var s3 = new aws.S3(),
+      getObject = Promise.promisify(s3.getObject, s3),
+      url = instance.get(attr),
+      key = url.replace(process.env.AWS_S3_CONTENT_URL + '/', ''),
+      newKey = key.replace(/(\.\w{2,4})?$/, '-resized$1'),
+      newUrl = process.env.AWS_S3_CONTENT_URL + '/' + newKey;
+
+    console.log('from: ' + url);
+    console.log('to:   ' + newUrl);
+
+    return getObject({
+      Bucket: process.env.AWS_S3_BUCKET,
+      Key: key
+    }).then(obj => {
+      var resize = gm(obj.Body)
+      .resize(settings.width, settings.height)
+      .stream();
+
+      resize.pipe(s3stream.upload({
+        Bucket: process.env.AWS_S3_BUCKET,
+        ACL: 'public-read',
+        ContentType: mime.lookup(key),
+        Key: newKey
+      }));
+
+      var changes = {};
+      changes[attr] = newUrl;
+
+      return promisifyStream(resize)
+      .then(instance.save(changes, {patch: true}));
+    });
   }
+
 }
