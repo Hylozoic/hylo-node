@@ -13,7 +13,7 @@ var promisifyStream = function(stream) {
 };
 
 var basename = function(url) {
-  var name = path.basename(url).replace(/\?.*/, '').replace('%', '');
+  var name = path.basename(url).replace(/(\?.*|[ %+])/g, '');
   return name === '' ? crypto.randomBytes(2).toString('hex') : name;
 }
 
