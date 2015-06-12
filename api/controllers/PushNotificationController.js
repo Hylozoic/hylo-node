@@ -25,7 +25,7 @@ module.exports = {
           })
           .save()
           .then(function(device) {
-	    res.ok({result: "Added"});
+            res.ok({result: "Added"});
           })
           .catch(function (e) {
             res.serverError(e);
