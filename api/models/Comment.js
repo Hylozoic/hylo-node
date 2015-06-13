@@ -98,14 +98,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotification: function(userId, comment, version, options) {
-    return Device.where({user_id: userId}).fetchAll()
+
+    return Device.where({user_id: userId}).fetchAll(options)
     .then(devices => {
       if (devices.length === 0)
         return;
 
       return comment.load(
         ['user', 'post', 'post.communities', 'post.creator'],
-        _.pick(options, "transacting")
+        options
       ).then(comment => {
         var post = comment.relations.post,
             commenter = comment.relations.user,
@@ -125,7 +126,7 @@ module.exports = bookshelf.Model.extend({
         return [alertText, path];
       })
       .spread((text, path) => {
-        return Promise.map(devices.models, d => d.sendPushNotification(text, path));
+        return Promise.map(devices.models, d => d.sendPushNotification(text, path, options));
       });
     });
   },
