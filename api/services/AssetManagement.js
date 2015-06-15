@@ -3,6 +3,7 @@ var aws = require('aws-sdk'),
   gm = require('gm'),
   mime = require('mime'),
   path = require('path'),
+  Promise = require('bluebird'),
   request = require('request'),
   s3stream = require('s3-upload-stream')(new aws.S3());
 
