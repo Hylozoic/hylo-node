@@ -7,11 +7,11 @@
 
 var validator = require('validator');
 
-var communityAttributes = function(community, membership, memberCount) {
+var communityAttributes = function(community, membership, memberCount, isAdmin) {
   var attrs = community.toJSON(),
     network = community.relations.network;
 
-  if (!membership || !membership.hasModeratorRole()) {
+  if (!isAdmin && (!membership || !membership.hasModeratorRole())) {
     delete attrs.beta_access_code;
   }
 
@@ -50,7 +50,7 @@ module.exports = {
     }
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => res.ok(communityAttributes(community, res.locals.membership)))
+    .then(() => res.ok(communityAttributes(community, res.locals.membership, undefined, Admin.isSignedIn(req))))
     .catch(res.serverError);
   },
 

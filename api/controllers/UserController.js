@@ -72,7 +72,7 @@ module.exports = {
     if (!req.session.userId)
       return res.ok({});
 
-    return UserPresenter.fetchForSelf(req.session.userId)
+    return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
     .then(function(attributes) {
       res.ok(UserPresenter.presentForSelf(attributes, req.session));
     }).catch(res.serverError.bind(res));

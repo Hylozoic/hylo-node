@@ -29,23 +29,20 @@ var extraAttributes = function(user) {
   });
 };
 
-var selfOnlyAttributes = function(user) {
+var selfOnlyAttributes = function(user, isAdmin) {
   return Promise.props({
-    notification_count: Activity.unreadCountForUser(user)
+    notification_count: Activity.unreadCountForUser(user),
+    is_admin: isAdmin
   });
 };
 
 var UserPresenter = module.exports = {
 
-  fetchForSelf: function(userId) {
-    return User.find(userId, {
-      withRelated: relationsForSelf
-    }).then(function(user) {
-      if (!user) throw "User not found";
-      return Promise.join(user.toJSON(), extraAttributes(user), selfOnlyAttributes(user));
-    }).then(function(attributes) {
-      return _.extend.apply(_, attributes);
-    });
+  fetchForSelf: function(userId, isAdmin) {
+    return User.find(userId, {withRelated: relationsForSelf})
+    .tap(user => { if (!user) throw "User not found"; })
+    .then(user => Promise.join(user.toJSON(), extraAttributes(user), selfOnlyAttributes(user, isAdmin)))
+    .then(attributes => _.extend.apply(_, attributes));
   },
 
   presentForSelf: function(attributes, session) {
@@ -53,19 +50,16 @@ var UserPresenter = module.exports = {
   },
 
   fetchForOther: function(id) {
-    return User.find(id, {
-      withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']
-    }).then(function(user) {
-      if (!user) throw "User not found";
-      return Promise.join(user, extraAttributes(user));
-    }).spread(function(user, extraAttributes) {
-      return _.chain(user.attributes)
-        .pick([
-          'id', 'name', 'avatar_url', 'bio', 'work', 'intention', 'extra_info',
-          'twitter_name', 'linkedin_url', 'facebook_url'
-        ])
-        .extend(extraAttributes).value();
-    });
+    return User.find(id, {withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']})
+    .tap(user => { if (!user) throw "User not found"; })
+    .then(user => Promise.join(user, extraAttributes(user)))
+    .spread((user, extraAttributes) =>
+      _.chain(user.attributes)
+      .pick([
+        'id', 'name', 'avatar_url', 'bio', 'work', 'intention', 'extra_info',
+        'twitter_name', 'linkedin_url', 'facebook_url'
+      ])
+      .extend(extraAttributes).value());
   }
 
 };
