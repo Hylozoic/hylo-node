@@ -6,7 +6,7 @@
  */
 
 module.exports = {
-	
+
   /**
    * `PushNotificationController.addDevice()`
    */
@@ -29,12 +29,12 @@ module.exports = {
           })
           .catch(function (e) {
             res.serverError(e);
-	  })
-        };          
+      	  })
+        };
       });
     };
   },
-  
+
   updateBadgeNo: function (req, res) {
     if (req.session.userId && req.param("deviceToken")) {
       Device.forge({
@@ -49,10 +49,10 @@ module.exports = {
       })
       .then(() => res.ok({result: "Updated"}))
       .catch(function (e) {
-        res.serverError(e);          
+        res.serverError(e);
       });
     };
-  }     
-  
+  }
+
 };
 
