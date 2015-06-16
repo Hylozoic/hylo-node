@@ -17,7 +17,7 @@ var promisifyStream = function(stream) {
 var basename = function(url) {
   var name = path.basename(url).replace(/(\?.*|[ %+])/g, '');
   return name === '' ? crypto.randomBytes(2).toString('hex') : name;
-}
+};
 
 module.exports = {
 
@@ -63,7 +63,7 @@ module.exports = {
       Key: key
     }).then(obj => {
       var resize = gm(obj.Body)
-      .resize(settings.width, settings.height)
+      .resize(settings.width, settings.height, '>') // do not resize if already smaller
       .stream();
 
       resize.pipe(s3stream.upload({
