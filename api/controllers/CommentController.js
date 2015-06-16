@@ -30,6 +30,9 @@ var createComment = function(commenterId, text, post) {
       });
     })
     .tap(function(comment) {
+      return comment.load(['user', 'post', 'post.communities', 'post.creator'], {transacting: trx})
+    })
+    .tap(function(comment) {
 
       return post.load('followers', {transacting: trx}).then(function(post) {
         // find all existing followers and all mentioned users
