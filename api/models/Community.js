@@ -49,6 +49,13 @@ module.exports = bookshelf.Model.extend({
       if (community.get('settings').all_can_invite) return true;
       return Membership.hasModeratorRole(userId, communityId);
     });
+  },
+
+  copyAssets: function(opts) {
+    return Community.find(opts.communityId).then(c => Promise.join(
+      AssetManagement.copyAsset(c, 'community', 'avatar_url'),
+      AssetManagement.copyAsset(c, 'community', 'banner_url')
+    ));
   }
 
 });
