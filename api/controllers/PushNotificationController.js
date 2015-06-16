@@ -16,28 +16,24 @@ module.exports = {
       return res.serverError('no device token');
     }
 
-    Device.forge({
+    return Device.forge({
       token: req.param("deviceToken"),
       user_id: req.session.userId
     })
     .fetch()
-    .then(function (device) {
-      if (!device) {
-        Device.forge({
-          token: req.param("deviceToken"),
-          user_id: req.session.userId
-        })
-        .save()
-        .then(function (device) {
-          res.ok({result: "Added"});
-        })
-        .catch(function (e) {
-          res.serverError(e);
-      	});
-      } else {
-        res.ok({result: "Known"});
-      };
-    });
+    .then(device => {
+      if (device) {
+        return res.ok({result: "Known"});
+      }
+
+      return Device.forge({
+        token: req.param("deviceToken"),
+        user_id: req.session.userId
+      })
+      .save()
+      .then(device => res.ok({result: "Added"}));
+    })
+    .catch(res.serverError);
   },
 
   updateBadgeNo: function (req, res) {
@@ -46,20 +42,14 @@ module.exports = {
       return res.serverError('no device token');
     }
 
-    Device.forge({
+    return Device.forge({
       token: token,
       user_id: req.session.userId
     })
     .fetch()
-    .then(function (device) {
-      device.save({
-        badge_no: req.param("badgeNo") || 0
-      });
-    })
+    .then(device => device.save({badge_no: req.param("badgeNo") || 0}))
     .then(() => res.ok({result: "Updated"}))
-    .catch(function (e) {
-      res.serverError(e);
-    });
+    .catch(res.serverError);
   }
 
 };
