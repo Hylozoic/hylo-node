@@ -103,31 +103,23 @@ module.exports = bookshelf.Model.extend({
     .then(devices => {
       if (devices.length === 0)
         return;
-
-      return comment.load(
-        ['user', 'post', 'post.communities', 'post.creator'],
-        options
-      ).then(comment => {
-        var post = comment.relations.post,
-            commenter = comment.relations.user,
-            creator = post.relations.creator,
-            community = post.relations.communities.models[0],
-            path = url.parse(Frontend.Route.post(post,community)).path,
-            alertText;
-
-        switch (version) {
-        case 'mention':
-          alertText = commenter.get("name") + " mentioned you in a comment";
-          break;
-        default:
-          alertText = commenter.get("name") + " commented on \"" + post.get("name") + "\"";
-        };
-
-        return [alertText, path];
-      })
-      .spread((text, path) => {
-        return Promise.map(devices.models, d => d.sendPushNotification(text, path, options));
-      });
+      
+      var post = comment.relations.post,
+        commenter = comment.relations.user,
+        creator = post.relations.creator,
+        community = post.relations.communities.models[0],
+        path = url.parse(Frontend.Route.post(post,community)).path,
+        alertText;
+      
+      switch (version) {
+      case 'mention':
+        alertText = commenter.get("name") + " mentioned you in a comment";
+        break;
+      default:
+        alertText = commenter.get("name") + " commented on \"" + post.get("name") + "\"";
+      };
+      
+      return Promise.map(devices.models, d => d.sendPushNotification(alertText, path, options));
     });
   },
 
