@@ -108,11 +108,53 @@ module.exports = {
       scope: ['email', 'public_profile', 'user_friends']
     })(req, res);
   },
-
+  
   finishFacebookOAuth: function(req, res, next) {
     finishOAuth('facebook', req, res, next);
   },
 
+  startFacebookTokenOAuth: function(req, res) {
+    passport.authenticate('facebook', {
+      display: 'popup',
+      scope: ['email', 'public_profile', 'user_friends']
+    })(req, res);
+  },
+
+  finishFacebookTokenOAuth: function(req, res, next) {
+
+    
+    
+    sails.log("finishFacebookETC");
+
+/*    
+    passport.authenticate('facebook-token', function(err, profile, info) {
+      
+      findUser('facebook', profile.email, profile.id)
+        .then(function(user) {
+          if (user) {
+            sails.log("Found User")
+            res.send(200)
+          } else {
+            sails.log("Didn't find User")
+            res.send(401)
+          }
+        }, e => sails.log(e))
+    })(req, res);
+*/
+    finishOAuth('facebook-token', req, res, next);
+  },
+  
+  startFacebook2OAuth: function(req, res) {
+    passport.authenticate('facebook2', {
+      display: 'popup',
+      scope: ['email', 'public_profile', 'user_friends']
+    })(req, res);
+  },
+
+  finishFacebook2OAuth: function(req, res, next) {
+    finishOAuth('facebook2', req, res, next);
+  },
+  
   startLinkedinOAuth: function(req, res) {
     passport.authenticate('linkedin')(req, res);
   },
