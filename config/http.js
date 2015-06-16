@@ -90,7 +90,7 @@ module.exports.http = {
     app.use('/admin/kue/api', kue.app);
     app.use('/admin/kue', kueUI.app);
 
-    app.use(require('prerender-node'));
+    app.use(require('prerender-node').set('protocol', process.env.PROTOCOL));
   }
 
   /***************************************************************************
