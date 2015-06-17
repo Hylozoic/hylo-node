@@ -182,9 +182,15 @@ module.exports = {
 
   joinWithCode: function(req, res) {
     Community.where('beta_access_code', req.param('code')).fetch()
-    .then(community => Membership.create(req.session.userId, community.id))
-    .then(() => res.ok({}))
-    .catch(res.serverError);
+    .tap(community => Membership.create(req.session.userId, community.id))
+    .then(community => res.ok(community.pick('id', 'slug')))
+    .catch(err => {
+      if (err.message && err.message.contains('duplicate key value')) {
+        res.ok(community.pick('id', 'slug'));
+      } else {
+        res.serverError(err);
+      }
+    });
   },
 
   leave: function(req, res) {
