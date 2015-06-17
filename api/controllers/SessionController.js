@@ -17,7 +17,7 @@ var hasLinkedAccount = function(user, service) {
 };
 
 var findCommunity = function(req) {
-  if (!req.session.invitationId) return;
+  if (!req.session.invitationId) return Promise.resolve([null, null]);
 
   return Invitation.find(req.session.invitationId, {withRelated: ['community']})
   .then(function(invitation) {
