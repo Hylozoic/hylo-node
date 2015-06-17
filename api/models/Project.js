@@ -44,10 +44,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function(id_or_slug, options) {
-    if (isNaN(Number(id_or_slug))) {
+    if (isNaN(Number(id_or_slug)) || id_or_slug.match(/a-z/)) {
       return Project.where({slug: id_or_slug}).fetch(options);
     }
-    return Project.where({id: id_or_slug}).fetch(options);
+    return Project.where({id: id_or_slug}).fetch(options).catch(err => {
+      if (err.message && err.message.contains('invalid input syntax for integer')) {
+        return Project.where({slug: id_or_slug}).fetch(options);
+      }
+      throw err;
+    });
   },
 
   generateThumbnailUrl: Promise.method(function(videoUrl) {
