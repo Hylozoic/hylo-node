@@ -82,15 +82,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   // do all of the users have at least one community in common?
-  inSameCommunity: function(user_ids) {
-    user_ids = _.uniq(user_ids);
+  inSameCommunity: function(userIds) {
+    userIds = _.uniq(userIds);
     return bookshelf.knex
       .select('community_id')
       .count('*')
       .from('users_community')
-      .whereIn('users_id', user_ids)
+      .whereIn('users_id', userIds)
       .groupBy('community_id')
-      .havingRaw('count(*) = ?', [user_ids.length])
+      .havingRaw('count(*) = ?', [userIds.length])
       .then(function(sharedMemberships) {
         // the number of rows is equal to the number
         // of communities the users have in common
@@ -98,13 +98,20 @@ module.exports = bookshelf.Model.extend({
       });
   },
 
+  inSameNetwork: function(userId, otherUserId) {
+    return Network.idsForUser(userId)
+    .then(ids => {
+      if (_.isEmpty(ids)) return false;
+
+      return Network.idsForUser(otherUserId)
+      .then(otherIds => !_.isEmpty(_.intersection(ids, otherIds)));
+    });
+  },
+
   activeCommunityIds: function(user_id) {
-    return bookshelf.knex.select("community_id")
-      .from("users_community")
+    return bookshelf.knex('users_community').select("community_id")
       .where({users_id: user_id, active: true})
-      .map(function(row) {
-        return parseInt(row.community_id);
-      });
+      .map(row => parseInt(row.community_id));
   }
 
 });

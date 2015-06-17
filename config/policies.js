@@ -45,10 +45,10 @@ module.exports.policies = {
     status:            true,
     create:            true,
     findSelf:          ['allowPublicAccess', 'sessionAuth'],
-    findOne:           ['sessionAuth', 'inSameCommunity'],
+    findOne:           ['sessionAuth', 'inSameCommunityOrNetwork'],
     update:            ['sessionAuth', 'isSelf'],
-    contributions:     ['sessionAuth', 'inSameCommunity'],
-    thanks:            ['sessionAuth', 'inSameCommunity'],
+    contributions:     ['sessionAuth', 'inSameCommunityOrNetwork'],
+    thanks:            ['sessionAuth', 'inSameCommunityOrNetwork'],
     sendPasswordReset: true,
     findForProject:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject']
   },
@@ -76,14 +76,15 @@ module.exports.policies = {
     leave:           ['sessionAuth', 'checkAndSetMembership'],
     validate:        true,
     create:          ['sessionAuth'],
-    findForNetwork:  ['sessionAuth', 'inNetwork']
+    findForNetwork:  ['sessionAuth', 'inNetwork'],
+    joinWithCode:    ['sessionAuth']
   },
 
   PostController: {
     findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findForProject:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findForUser:      ['sessionAuth', 'inSameCommunity'],
+    findForUser:      ['sessionAuth', 'inSameCommunityOrNetwork'],
     findForNetwork:   ['sessionAuth', 'inNetwork'],
     create:           ['sessionAuth', 'checkAndSetMembership'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],

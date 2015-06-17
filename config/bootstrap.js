@@ -73,17 +73,6 @@ module.exports.bootstrap = function(done) {
     }
   });
 
-  // fix request titles in New Relic
-  if (process.env.NEW_RELIC_LICENSE_KEY) {
-    var newrelic = require('newrelic');
-    sails.on('router:route', function(data) {
-      if (_.has(data.options, 'controller') && _.has(data.options, 'action')) {
-        var transactionName = util.format('%s#%s', data.options.controller, data.options.action);
-        newrelic.setTransactionName(transactionName);
-      }
-    });
-  }
-
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
   done();

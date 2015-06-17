@@ -180,6 +180,19 @@ module.exports = {
     });
   },
 
+  joinWithCode: function(req, res) {
+    Community.where('beta_access_code', req.param('code')).fetch()
+    .tap(community => Membership.create(req.session.userId, community.id))
+    .then(community => res.ok(community.pick('id', 'slug')))
+    .catch(err => {
+      if (err.message && err.message.contains('duplicate key value')) {
+        res.ok(community.pick('id', 'slug'));
+      } else {
+        res.serverError(err);
+      }
+    });
+  },
+
   leave: function(req, res) {
     res.locals.membership.destroyMe()
     .then(() => res.ok({}))
@@ -223,11 +236,6 @@ module.exports = {
       } else if (params.constraint === 'exists') {
         var exists = parseInt(rows[0].count) >= 1;
         data = {exists: exists};
-
-        // store the code for use later in signup
-        if (exists && params.column === 'beta_access_code' && req.param('store_value')) {
-          req.session.invitationCode = params.value;
-        }
       }
       res.ok(data);
     })
@@ -240,7 +248,7 @@ module.exports = {
       'beta_access_code', 'banner_url', 'avatar_url');
 
     var community = new Community(_.merge(attrs, {
-      date_created: new Date(),
+      created_at: new Date(),
       created_by_id: req.session.userId
     }));
 

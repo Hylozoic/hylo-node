@@ -65,7 +65,7 @@ module.exports = {
       }
 
       if (opts.start_time && opts.end_time) {
-        qb.whereRaw('((post.creation_date between ? and ?) or (post.last_updated between ? and ?))',
+        qb.whereRaw('((post.created_at between ? and ?) or (post.updated_at between ? and ?))',
           [opts.start_time, opts.end_time, opts.start_time, opts.end_time]);
       }
 
@@ -122,7 +122,7 @@ module.exports = {
       qb.groupBy('users.id');
 
       if (opts.start_time && opts.end_time) {
-        qb.whereRaw('users.date_created between ? and ?', [opts.start_time, opts.end_time]);
+        qb.whereRaw('users.created_at between ? and ?', [opts.start_time, opts.end_time]);
       }
 
     });

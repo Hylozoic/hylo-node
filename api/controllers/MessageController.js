@@ -20,7 +20,7 @@ module.exports = {
 
   relayFromEmail: function(req, res) {
     var from = email.parseOneAddress(req.param('From')),
-      to = email.parseOneAddress(req.param('To')),
+      to = _.find(email.parseAddressList(req.param('To')), e => e.domain === process.env.MAILGUN_DOMAIN),
       recipient, sender;
 
     try {

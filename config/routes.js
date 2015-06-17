@@ -59,6 +59,7 @@ module.exports.routes = {
 
   'GET    /noo/community':                                'CommunityController.find',
   'POST   /noo/community':                                'CommunityController.create',
+  'POST   /noo/community/code':                           'CommunityController.joinWithCode',
   'POST   /noo/community/validate':                       'CommunityController.validate',
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
