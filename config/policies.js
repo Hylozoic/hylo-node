@@ -76,7 +76,8 @@ module.exports.policies = {
     leave:           ['sessionAuth', 'checkAndSetMembership'],
     validate:        true,
     create:          ['sessionAuth'],
-    findForNetwork:  ['sessionAuth', 'inNetwork']
+    findForNetwork:  ['sessionAuth', 'inNetwork'],
+    joinWithCode:    ['sessionAuth']
   },
 
   PostController: {

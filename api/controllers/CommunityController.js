@@ -180,6 +180,13 @@ module.exports = {
     });
   },
 
+  joinWithCode: function(req, res) {
+    Community.where('beta_access_code', req.param('code')).fetch()
+    .then(community => Membership.create(req.session.userId, community.id))
+    .then(() => res.ok({}))
+    .catch(res.serverError);
+  },
+
   leave: function(req, res) {
     res.locals.membership.destroyMe()
     .then(() => res.ok({}))
