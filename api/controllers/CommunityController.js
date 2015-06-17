@@ -180,6 +180,13 @@ module.exports = {
     });
   },
 
+  joinWithCode: function(req, res) {
+    Community.where('beta_access_code', req.param('code')).fetch()
+    .then(community => Membership.create(req.session.userId, community.id))
+    .then(() => res.ok({}))
+    .catch(res.serverError);
+  },
+
   leave: function(req, res) {
     res.locals.membership.destroyMe()
     .then(() => res.ok({}))
@@ -223,11 +230,6 @@ module.exports = {
       } else if (params.constraint === 'exists') {
         var exists = parseInt(rows[0].count) >= 1;
         data = {exists: exists};
-
-        // store the code for use later in signup
-        if (exists && params.column === 'beta_access_code' && req.param('store_value')) {
-          req.session.invitationCode = params.value;
-        }
       }
       res.ok(data);
     })
