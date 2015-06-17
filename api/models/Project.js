@@ -27,13 +27,6 @@ module.exports = bookshelf.Model.extend({
 
   isPublic: function() {
     return this.get('visibility') === Project.Visibility.PUBLIC;
-  },
-
-  setThumbnailUrl: function() {
-    return this.generateThumbnailUrl().then(url => {
-      this.set('thumbnail_url', url);
-      return this;
-    });
   }
 
 }, {
