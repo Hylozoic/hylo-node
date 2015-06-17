@@ -116,24 +116,13 @@ module.exports = {
   },
 
   finishFacebookTokenOAuth: function(req, res, next) {
-    sails.log("finishFacebookETC");
+    sails.log("finishFacebooToken");
     finishOAuth('facebook-token', req, res, next);
   },
 
   finishGoogleTokenOAuth: function(req, res, next) {
     sails.log("finishGoogleToken");
     finishOAuth('google-token', req, res, next);
-  },
-  
-  startFacebook2OAuth: function(req, res) {
-    passport.authenticate('facebook2', {
-      display: 'popup',
-      scope: ['email', 'public_profile', 'user_friends']
-    })(req, res);
-  },
-
-  finishFacebook2OAuth: function(req, res, next) {
-    finishOAuth('facebook2', req, res, next);
   },
   
   startLinkedinOAuth: function(req, res) {

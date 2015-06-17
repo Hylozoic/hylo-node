@@ -75,15 +75,6 @@ var facebookStrategy = new FacebookStrategy({
 });
 passport.use(facebookStrategy);
 
-var facebookStrategy2 = new FacebookStrategy({
-  clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: url('/noo/login/facebook2/oauth')
-}, function(accessToken, refreshToken, profile, done) {
-  done(null, formatProfile(profile));
-});
-passport.use('facebook2', facebookStrategy);
-
 var facebookTokenStrategy = new FacebookTokenStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET
