@@ -1,30 +1,4 @@
-/**
- * CommunityController
- *
- * @description :: Server-side logic for managing communities
- * @help        :: See http://links.sailsjs.org/docs/controllers
- */
-
 var validator = require('validator');
-
-var communityAttributes = function(community, membership, memberCount, isAdmin) {
-  var attrs = community.toJSON(),
-    network = community.relations.network;
-
-  if (!isAdmin && (!membership || !membership.hasModeratorRole())) {
-    delete attrs.beta_access_code;
-  }
-
-  if (network) {
-    attrs.network = network.pick('id', 'name', 'slug');
-  }
-
-  if (memberCount != undefined) {
-    attrs.memberCount = memberCount;
-  }
-
-  return _.omit(attrs, 'memberships');
-};
 
 module.exports = {
 
@@ -35,16 +9,24 @@ module.exports = {
   findOne: function(req, res) {
     var community = res.locals.community;
 
-    if (!req.session.userId) {
-      var limitedAttributes = _.merge(
-        res.locals.community.pick('id', 'name', 'avatar_url', 'banner_url', 'description'),
-        {readonly: true}
-      );
-      return res.ok(limitedAttributes);
-    }
-
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => res.ok(communityAttributes(community, res.locals.membership, undefined, Admin.isSignedIn(req))))
+    .then(() => _.merge(community.pick(
+      'id', 'name', 'slug', 'avatar_url', 'banner_url', 'description'
+    ), {
+      network: community.relations.network ? community.relations.network.pick('id', 'name', 'slug') : null
+    }))
+    .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  findSettings: function(req, res) {
+    Community.find(req.param('communityId'), {withRelated: ['leader']})
+    .then(community => _.merge(community.pick(
+      'welcome_message', 'beta_access_code', 'settings'
+    ), {
+      leader: community.relations.leader.pick('id', 'name', 'avatar_url')
+    }))
+    .then(res.ok)
     .catch(res.serverError);
   },
 
@@ -279,10 +261,10 @@ module.exports = {
   findForNetwork: function(req, res) {
     Community.where('network_id', req.param('networkId'))
     .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => {
-      var membership = c.relations.memberships.find(m => m.get('users_id') === req.session.userId);
-      return communityAttributes(c, membership, c.relations.memberships.length);
-    }))
+    .then(communities => communities.map(c =>
+      _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+        memberCount: c.relations.memberships.length
+      })))
     .then(communities => _.sortBy(communities, c => -c.memberCount))
     .then(res.ok)
     .catch(res.serverError);
