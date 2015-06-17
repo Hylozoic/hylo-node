@@ -2,7 +2,8 @@
 var passport = require('passport'),
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
   FacebookStrategy = require('passport-facebook').Strategy,
-  FacebookTokenStrategy = require('passport-facebook-token').Strategy,    
+  FacebookTokenStrategy = require('passport-facebook-token').Strategy,
+  GoogleTokenStrategy = require('passport-google-token').Strategy,        
   LinkedinStrategy = require('passport-linkedin-oauth2').Strategy;
 
 /////////////////////////////
@@ -92,6 +93,17 @@ var facebookTokenStrategy = new FacebookTokenStrategy({
   return done(null, formatProfile(profile));
 });
 passport.use(facebookTokenStrategy);
+
+var googleTokenStrategy = new GoogleTokenStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID_IOS,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET_IOS
+}, function(accessToken, refreshToken, profile, done) {
+  sails.log("gTS Callback");
+  sails.log(accessToken);
+  sails.log(profile);    
+  return done(null, formatProfile(profile));
+});
+passport.use(googleTokenStrategy);
 
 var linkedinStrategy = new LinkedinStrategy({
   clientID: process.env.LINKEDIN_API_KEY,
