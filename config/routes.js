@@ -63,6 +63,7 @@ module.exports.routes = {
   'POST   /noo/community/validate':                       'CommunityController.validate',
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
+  'GET    /noo/community/:communityId/settings':          'CommunityController.findSettings',
   'POST   /noo/community/:communityId/invite':            'CommunityController.invite',
   'GET    /noo/community/:communityId/moderators':        'CommunityController.findModerators',
   'POST   /noo/community/:communityId/moderators':        'CommunityController.addModerator',

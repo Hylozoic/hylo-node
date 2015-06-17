@@ -66,6 +66,7 @@ module.exports.policies = {
   CommunityController: {
     find:            ['sessionAuth', 'isAdmin'],
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findSettings:    ['sessionAuth', 'isModerator'],
     update:          ['sessionAuth', 'isModerator'],
     invite:          ['sessionAuth', 'canInvite'],
     findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController

@@ -1,11 +1,6 @@
 var relationsForSelf = [
   'memberships',
-  {'memberships.community': function(qb) {
-    qb.column('id', 'name', 'avatar_url', 'background_url', 'description', 'leader_id', 'slug', 'welcome_message');
-  }},
-  {'memberships.community.leader': function(qb) {
-    qb.column('id', 'name', 'avatar_url');
-  }},
+  {'memberships.community': qb => qb.column('id', 'name', 'slug')},
   'skills',
   'organizations',
   'phones',
