@@ -181,7 +181,7 @@ module.exports = {
   },
 
   joinWithCode: function(req, res) {
-    Community.where('beta_access_code', req.param('code')).fetch()
+    Community.query('whereRaw', 'lower(beta_access_code) = lower(?)', req.param('code')).fetch()
     .tap(community => Membership.create(req.session.userId, community.id))
     .then(community => res.ok(community.pick('id', 'slug')))
     .catch(err => {
