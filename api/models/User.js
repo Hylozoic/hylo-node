@@ -148,6 +148,8 @@ module.exports = bookshelf.Model.extend({
     attributes = _.merge(_.omit(attributes, 'account', 'community'), {
       avatar_url: User.gravatar(attributes.email),
       date_created: new Date(),
+      daily_digest: true,
+      send_email_preference: true,
       active: true
     });
 
