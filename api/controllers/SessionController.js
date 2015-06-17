@@ -17,14 +17,12 @@ var hasLinkedAccount = function(user, service) {
 };
 
 var findCommunity = function(req) {
-  if (req.session.invitationId) {
-    return Invitation.find(req.session.invitationId, {withRelated: ['community']})
-    .then(function(invitation) {
-      return [invitation.relations.community, invitation];
-    });
-  }
+  if (!req.session.invitationId) return;
 
-  return Promise.join(Community.where({beta_access_code: req.session.invitationCode}).fetch());
+  return Invitation.find(req.session.invitationId, {withRelated: ['community']})
+  .then(function(invitation) {
+    return [invitation.relations.community, invitation];
+  });
 };
 
 var finishOAuth = function(service, req, res, next) {
@@ -46,9 +44,6 @@ var finishOAuth = function(service, req, res, next) {
       } else {
         return findCommunity(req)
         .spread(function(community, invitation) {
-          if (!community && !invitation)
-            throw 'no community';
-
           var attrs = _.merge(_.pick(profile, 'email', 'name'), {
             community: (invitation ? null : community),
             account: {type: service, profile: profile}

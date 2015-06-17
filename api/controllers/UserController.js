@@ -36,9 +36,6 @@ module.exports = {
 
     return findContext(req)
     .then(ctx => {
-      if (!ctx.community && !ctx.invitation && !ctx.project)
-        throw 'bad code';
-
       var attrs = _.merge(_.pick(params, 'name', 'email'), {
         community: (ctx.invitation ? null : ctx.community),
         account: {type: 'password', password: params.password}

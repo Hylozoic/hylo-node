@@ -230,11 +230,6 @@ module.exports = {
       } else if (params.constraint === 'exists') {
         var exists = parseInt(rows[0].count) >= 1;
         data = {exists: exists};
-
-        // store the code for use later in signup
-        if (exists && params.column === 'beta_access_code' && req.param('store_value')) {
-          req.session.invitationCode = params.value;
-        }
       }
       res.ok(data);
     })
