@@ -99,12 +99,9 @@ module.exports = bookshelf.Model.extend({
   },
 
   activeCommunityIds: function(user_id) {
-    return bookshelf.knex.select("community_id")
-      .from("users_community")
+    return bookshelf.knex('users_community').select("community_id")
       .where({users_id: user_id, active: true})
-      .map(function(row) {
-        return parseInt(row.community_id);
-      });
+      .map(row => parseInt(row.community_id));
   }
 
 });

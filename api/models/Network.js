@@ -1,3 +1,5 @@
+var knex = bookshelf.knex;
+
 module.exports = bookshelf.Model.extend({
   tableName: 'networks',
 
@@ -22,6 +24,18 @@ module.exports = bookshelf.Model.extend({
   containsUser: function(networkId, userId) {
     return Membership.activeCommunityIds(userId)
     .then(ids => Network.containsAnyCommunity(networkId, ids));
+  },
+
+  activeCommunityIds: function(userId, rawQuery) {
+    var query = knex.select('id').from('community')
+    .whereIn('network_id',
+      knex.select('network_id').from('community')
+      .whereIn('id',
+        knex.select('community_id').from('users_community')
+        .where({users_id: userId, active: true})));
+
+    if (rawQuery) return query;
+    return query.then(rows => _.pluck(rows, 'id'));
   }
 
 });
