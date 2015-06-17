@@ -71,6 +71,8 @@ module.exports = setup = {
             table.string('linkedin_url');
             table.string('twitter_name');
             table.boolean('active');
+            table.boolean('daily_digest');
+            table.boolean('send_email_preference');
             table.integer('new_notification_count').defaultTo(0);
             table.datetime('last_login');
             table.datetime('date_created');

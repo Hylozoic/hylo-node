@@ -124,6 +124,8 @@ describe('User', function() {
         expect(user.get('active')).to.be.true;
         expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'));
         expect(user.get('date_created').getTime()).to.be.closeTo(new Date().getTime(), 2000);
+        expect(user.get('daily_digest')).to.be.true;
+        expect(user.get('send_email_preference')).to.be.true;
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
@@ -149,6 +151,8 @@ describe('User', function() {
       .then(function(user) {
         expect(user.id).to.exist;
         expect(user.get('active')).to.be.true;
+        expect(user.get('daily_digest')).to.be.true;
+        expect(user.get('send_email_preference')).to.be.true;
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
@@ -182,6 +186,8 @@ describe('User', function() {
         expect(user.get('active')).to.be.true;
         expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/foo/picture?type=large');
         expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo');
+        expect(user.get('daily_digest')).to.be.true;
+        expect(user.get('send_email_preference')).to.be.true;
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
@@ -218,6 +224,8 @@ describe('User', function() {
         expect(user.get('active')).to.be.true;
         expect(user.get('avatar_url')).to.equal(catPic);
         expect(user.get('linkedin_url')).to.equal('https://www.linkedin.com/in/foobar');
+        expect(user.get('daily_digest')).to.be.true;
+        expect(user.get('send_email_preference')).to.be.true;
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function(account) {
