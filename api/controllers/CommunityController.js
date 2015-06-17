@@ -23,13 +23,7 @@ var communityAttributes = function(community, membership, memberCount, isAdmin) 
     attrs.memberCount = memberCount;
   }
 
-  return _.extend(
-    _.omit(attrs, 'memberships'),
-    {
-      id: Number(community.id), // FIXME this isn't necessary post-Scala
-      canModerate: membership && membership.hasModeratorRole()
-    }
-  );
+  return _.omit(attrs, 'memberships');
 };
 
 module.exports = {
