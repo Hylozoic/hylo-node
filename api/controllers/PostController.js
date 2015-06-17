@@ -1,6 +1,6 @@
 var findPosts = function(req, res, opts) {
   var params = _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
-    sortCol = (params.sort == 'top' ? 'post.num_votes' : 'post.last_updated');
+    sortCol = (params.sort == 'top' ? 'post.num_votes' : 'post.updated_at');
 
   Promise.props({
     communities: opts.communities,
@@ -72,7 +72,7 @@ module.exports = {
       follower: req.session.userId,
       limit: req.param('limit') || 10,
       offset: req.param('offset'),
-      sort: 'post.last_updated'
+      sort: 'post.updated_at'
     }).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId)
     })
@@ -88,7 +88,7 @@ module.exports = {
         communities: communityIds,
         limit: req.param('limit') || 10,
         offset: req.param('offset'),
-        sort: 'post.last_updated'
+        sort: 'post.updated_at'
       }).fetchAll({
         withRelated: PostPresenter.relations(req.session.userId)
       });
@@ -108,8 +108,8 @@ module.exports = {
       description:   description,
       type:          params.type || req.param('postType'),
       creator_id:    creatorId,
-      creation_date: new Date(),
-      last_updated:  new Date(),
+      created_at: new Date(),
+      updated_at:  new Date(),
       active:        true,
       num_comments:  0,
       num_votes:     0,

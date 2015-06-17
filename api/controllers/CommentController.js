@@ -25,7 +25,7 @@ var createComment = function(commenterId, text, post) {
       .then(function(numComments) {
         return post.save({
           num_comments: numComments,
-          last_updated: new Date()
+          updated_at: new Date()
         }, {patch: true, transacting: trx});
       });
     })

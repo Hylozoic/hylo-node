@@ -75,7 +75,7 @@ module.exports = setup = {
             table.boolean('send_email_preference');
             table.integer('new_notification_count').defaultTo(0);
             table.datetime('last_login');
-            table.datetime('date_created');
+            table.datetime('created_at');
             table.string('bio');
             table.text('work');
             table.text('intention');
@@ -94,13 +94,13 @@ module.exports = setup = {
             table.string('type');
             table.string('image_url');
             table.bigInteger('creator_id');
-            table.datetime('creation_date');
+            table.datetime('created_at');
             table.integer('num_votes');
             table.integer('num_comments');
             table.boolean('fulfilled');
             table.boolean('active');
             table.boolean('edited');
-            table.datetime('last_updated');
+            table.datetime('updated_at');
             table.integer('visibility').defaultTo(0);
           }),
           createTable('vote', function(table) {

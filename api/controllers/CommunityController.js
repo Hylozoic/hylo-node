@@ -248,7 +248,7 @@ module.exports = {
       'beta_access_code', 'banner_url', 'avatar_url');
 
     var community = new Community(_.merge(attrs, {
-      date_created: new Date(),
+      created_at: new Date(),
       created_by_id: req.session.userId
     }));
 

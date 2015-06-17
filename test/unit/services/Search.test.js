@@ -19,7 +19,7 @@ describe('Search', function() {
         type: 'request',
         start_time: new Date(1427252052983), // Tue Mar 24 2015 19:54:12 GMT-0700 (PDT)
         end_time: new Date(1427856852983), // Tue Mar 31 2015 19:54:12 GMT-0700 (PDT)
-        sort: 'post.last_updated'
+        sort: 'post.updated_at'
       }).query().toString();
 
       var tz = new time.Date().getTimezone();
@@ -45,9 +45,9 @@ describe('Search', function() {
         and "follower"."user_id" = '37'
         and "post"."creator_id" != '37'
         and "type" = 'request'
-        and ((post.creation_date between '%s' and '%s')
-          or (post.last_updated between '%s' and '%s'))
-        order by "post"."last_updated" desc
+        and ((post.created_at between '%s' and '%s')
+          or (post.updated_at between '%s' and '%s'))
+        order by "post"."updated_at" desc
         limit '5'
         offset '7'
       */}).replace(/(\n\s*)/g, ' ').trim(), startTime, endTime, startTime, endTime);

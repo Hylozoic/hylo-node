@@ -56,7 +56,7 @@ module.exports = bookshelf.Model.extend({
       actor_id: post.get('creator_id'),
       post_id: post.id,
       action: this.Action.Mention,
-      created_at: post.get('creation_date')
+      created_at: post.get('created_at')
     })
   },
 

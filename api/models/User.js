@@ -97,7 +97,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   generateTokenContents: function() {
-    return format('crumbly:%s:%s:%s', this.id, this.get('email'), this.get('date_created'));
+    return format('crumbly:%s:%s:%s', this.id, this.get('email'), this.get('created_at'));
   },
 
   generateToken: function() {
@@ -147,7 +147,7 @@ module.exports = bookshelf.Model.extend({
 
     attributes = _.merge(_.omit(attributes, 'account', 'community'), {
       avatar_url: User.gravatar(attributes.email),
-      date_created: new Date(),
+      created_at: new Date(),
       daily_digest: true,
       send_email_preference: true,
       active: true
@@ -188,7 +188,7 @@ module.exports = bookshelf.Model.extend({
       collection = User;
     }
     return collection.query(function(qb) {
-      qb.whereRaw('users.date_created between ? and ?', [startTime, endTime]);
+      qb.whereRaw('users.created_at between ? and ?', [startTime, endTime]);
       qb.where('users.active', true);
     });
   },

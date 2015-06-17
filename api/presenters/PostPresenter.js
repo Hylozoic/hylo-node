@@ -23,8 +23,8 @@ var postAttributes = post => {
       'fulfilled',
       'media',
       'type',
-      'creation_date',
-      'last_updated',
+      'created_at',
+      'updated_at',
       'projects'
     ]),
     {

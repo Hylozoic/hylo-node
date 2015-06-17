@@ -139,7 +139,7 @@ module.exports = bookshelf.Model.extend({
       collection = Post;
     }
     return collection.query(function(qb) {
-      qb.whereRaw('post.creation_date between ? and ?', [startTime, endTime]);
+      qb.whereRaw('post.created_at between ? and ?', [startTime, endTime]);
       qb.where('post.active', true);
       qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT);
     })

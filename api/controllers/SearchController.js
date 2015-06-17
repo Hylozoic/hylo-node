@@ -23,7 +23,7 @@ module.exports = {
             limit: limit,
             offset: offset,
             communities: communityIds,
-            sort: 'post.creation_date'
+            sort: 'post.created_at'
           }).fetchAll({withRelated: PostPresenter.relations(req.session.userId)})
         ),
         (!_.contains(resultTypes, 'people') ? [] :
@@ -57,7 +57,7 @@ module.exports = {
   autocomplete: function(req, res) {
     var term = req.param('q').trim(),
       resultType = req.param('type'),
-      sort = resultType === 'posts' ? 'post.creation_date' : null,
+      sort = resultType === 'posts' ? 'post.created_at' : null,
       method = resultType === 'posts' ? Search.forPosts : Search.forUsers;
 
     return findCommunityIds(req).then(communityIds => {

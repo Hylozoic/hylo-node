@@ -123,7 +123,7 @@ describe('User', function() {
         expect(user.id).to.exist;
         expect(user.get('active')).to.be.true;
         expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'));
-        expect(user.get('date_created').getTime()).to.be.closeTo(new Date().getTime(), 2000);
+        expect(user.get('created_at').getTime()).to.be.closeTo(new Date().getTime(), 2000);
         expect(user.get('daily_digest')).to.be.true;
         expect(user.get('send_email_preference')).to.be.true;
 
