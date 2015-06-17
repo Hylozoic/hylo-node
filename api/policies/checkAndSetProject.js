@@ -20,6 +20,9 @@ module.exports = function(req, res, next) {
     if (!project) {
       fail('no project');
 
+    } else if (Admin.isSignedIn(req)) {
+      pass();
+
     } else if (req.session.userId === project.get('user_id')) {
       // you're the creator
       pass();
