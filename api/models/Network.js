@@ -36,6 +36,14 @@ module.exports = bookshelf.Model.extend({
 
     if (rawQuery) return query;
     return query.then(rows => _.pluck(rows, 'id'));
+  },
+
+  idsForUser: function(userId) {
+    return knex.select('network_id').from('community')
+    .whereIn('id',
+      knex.select('id').from('users_community')
+      .where('users_id', userId))
+    .then(rows => _.pluck(rows, 'id'));
   }
 
 });
