@@ -57,7 +57,7 @@ module.exports = {
       res.ok({});
     })
     .catch(function(err) {
-      res.send(err.detail ? err.detail : err).status(422);
+      res.status(422).send(err.detail ? err.detail : err);
     });
   },
 
