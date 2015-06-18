@@ -31,6 +31,47 @@ var findPosts = function(req, res, opts) {
   .catch(res.serverError);
 };
 
+var newPostAttrs = function(userId, params) {
+  return {
+    name:          params.name,
+    description:   RichText.sanitize(params.description),
+    type:          params.type,
+    creator_id:    userId,
+    created_at:    new Date(),
+    updated_at:    new Date(),
+    active:        true,
+    num_comments:  0,
+    num_votes:     0,
+    edited:        false
+  };
+};
+
+var afterSavingPost = function(post, opts) {
+  var creatorId = post.get('creator_id'),
+    mentioned = RichText.getUserMentions(post.get('description')),
+    followerIds = _.uniq(mentioned.concat(creatorId));
+
+  return Promise.join(
+    // Attach post to the community
+    new Community({id: opts.communityId}).posts().attach(post.id, _.pick(opts, 'transacting')),
+
+    // Add mentioned users and creator as followers
+    post.addFollowers(followerIds, creatorId, _.pick(opts, 'transacting')),
+
+    // create activity and send notification to all mentioned users except the creator
+    Promise.map(_.without(mentioned, creatorId), userId =>
+      Post.notifyAboutMention(post, userId, _.pick(opts, 'transacting'))),
+
+    // Add image, if any
+    (opts.imageUrl ? Media.create({
+      postId: post.id,
+      url: opts.imageUrl,
+      transacting: opts.transacting
+    }) : null)
+  ).then(() => mentioned);
+
+};
+
 module.exports = {
 
   findOne: function(req, res) {
@@ -108,84 +149,57 @@ module.exports = {
   },
 
   create: function(req, res) {
-    var params = _.pick(req.allParams(), ['name', 'type', 'communityId', 'imageUrl', 'projectId']),
-        description = RichText.sanitize(req.param('description')),
-        creatorId = parseInt(req.session.userId);
+    var attrs = newPostAttrs(req.session.userId, req.allParams());
 
-    var attrs = {
-      name:          params.name,
-      description:   description,
-      type:          params.type || req.param('postType'),
-      creator_id:    creatorId,
-      created_at: new Date(),
-      updated_at:  new Date(),
-      active:        true,
-      num_comments:  0,
-      num_votes:     0,
-      edited:        false
-    };
-
-    return Community.find(params.communityId).then(function(community) {
+    return Community.find(req.param('communityId'))
+    .tap(community => {
       if (community.isNewContentPublic())
         attrs.visibility = Post.Visibility.PUBLIC_READABLE;
     })
-    .tap(() => {
-      if (params.projectId) {
-        return Project.find(params.projectId).then(project => {
-          if (project.isDraft())
-            attrs.visibility = Post.Visibility.DRAFT_PROJECT;
-        })
-      }
+    .then(community => bookshelf.transaction(trx => {
+      return new Post(attrs).save(null, {transacting: trx})
+      .tap(post => afterSavingPost(post, {
+        communityId: community.id,
+        imageUrl: req.param('imageUrl'),
+        transacting: trx
+      }));
+    }))
+    .then(post => post.load(PostPresenter.relations(req.session.userId)))
+    .then(PostPresenter.present)
+    .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  createForProject: function(req, res) {
+    var attrs = newPostAttrs(req.session.userId, req.allParams()),
+      projectId = req.param('projectId');
+
+    return Project.find(projectId)
+    .tap(project => {
+      if (project.isDraft())
+        attrs.visibility = Post.Visibility.DRAFT_PROJECT;
     })
-    .then(function(community) {
-      return bookshelf.transaction(function(trx) {
-        return new Post(attrs).save(null, {transacting: trx})
-        .tap(post => {
-          // Attach post to project, if any
-          if (params.projectId)
-            return PostProjectMembership.create(post.id, params.projectId, {transacting: trx});
-        })
-        .tap(post => {
-          var mentioned = RichText.getUserMentions(description),
-            followerIds = _.uniq(mentioned.concat(creatorId));
-
-          return Promise.join(
-            // Attach post to the community
-            new Community({id: params.communityId}).posts().attach(post.id, {transacting: trx}),
-
-            // Add mentioned users and creator as followers
-            post.addFollowers(followerIds, creatorId, {transacting: trx}),
-
-            // create activity and send notification to all mentioned users except the creator
-            Promise.map(_.without(mentioned, creatorId), userId =>
-              Post.notifyAboutMention(post, userId, {transacting: trx})),
-
-            // Add image, if any
-            (params.imageUrl ? Media.create({
-              postId: post.id,
-              url: params.imageUrl,
-              transacting: trx
-            }) : null),
-
-            // Send notifications to project contributors if applicable
-            (params.projectId ? Queue.classMethod('Project', 'notifyAboutNewPost', {
-              projectId: params.projectId,
-              postId: post.id,
-              exclude: mentioned
-            }) : null)
-
-          );
-
-        });
-      });
-    })
-    .then(function (post) {
-      return post.load(PostPresenter.relations(req.session.userId));
-    })
-    .then(function (post) {
-      res.ok(PostPresenter.present(post));
-    })
-    .catch(res.serverError.bind(res));
+    .then(project => bookshelf.transaction(trx => {
+      return new Post(attrs).save(null, {transacting: trx})
+      .tap(post => PostProjectMembership.create(post.id, projectId, {transacting: trx}))
+      .tap(post =>
+        afterSavingPost(post, {
+          communityId: req.param('communityId'),
+          imageUrl: req.param('imageUrl'),
+          transacting: trx
+        }).then(mentioned => {
+          // Send notifications to project contributors
+          Queue.classMethod('Project', 'notifyAboutNewPost', {
+            projectId: projectId,
+            postId: post.id,
+            exclude: mentioned
+          });
+      }));
+    }))
+    .then(post => post.load(PostPresenter.relations(req.session.userId)))
+    .then(PostPresenter.present)
+    .then(res.ok)
+    .catch(res.serverError);
   },
 
   addFollowers: function(req, res) {

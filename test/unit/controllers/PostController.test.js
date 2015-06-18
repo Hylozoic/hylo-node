@@ -1,10 +1,10 @@
 var setup = require(require('root-path')('test/setup'));
 
-describe('PostController', function() {
+describe('PostController', () => {
   var fixtures, req, res;
 
-  before(function() {
-    return setup.resetDb().then(function() {
+  before(() => {
+    return setup.resetDb().then(() => {
       return Promise.props({
         u1: new User({name: 'U1'}).save(),
         u2: new User({name: 'U2'}).save(),
@@ -15,7 +15,7 @@ describe('PostController', function() {
       fixtures = props;
 
       req = {
-        allParams: function() {
+        allParams: () => {
           return this.params;
         },
         param: function(name){
@@ -24,13 +24,13 @@ describe('PostController', function() {
         session: {userId: fixtures.u1.id},
       };
 
-      res = {serverError: function() {}, ok: function() {}};
+      res = {serverError: () => {}, ok: () => {}};
     });
   });
 
-  describe('#create', function() {
+  describe('#create', () => {
 
-    it('saves mentions', function() {
+    it('saves mentions', () => {
       req.params = {
         name: "NewPost",
         description: "<p>Hey <a data-user-id=\"" + fixtures.u2.id + "\">U2</a>, you're mentioned ;)</p>",
@@ -48,7 +48,7 @@ describe('PostController', function() {
       return PostController.create(req, res);
     });
 
-    it('sanitizes the description', function() {
+    it('sanitizes the description', () => {
       req.params = {
         name: "NewMaliciousPost",
         description: "<script>alert('test')</script><p>Hey <a data-user-id='" + fixtures.u2.id + "' data-malicious='alert(blah)'>U2</a>, you're mentioned ;)</p>",
@@ -65,6 +65,9 @@ describe('PostController', function() {
 
       return PostController.create(req, res);
     });
+  });
+
+  describe('#createForProject', () => {
 
     describe('for a draft project', () => {
 
@@ -84,7 +87,7 @@ describe('PostController', function() {
           communityId: fixtures.c1.id
         };
 
-        return PostController.create(req, res)
+        return PostController.createForProject(req, res)
         .then(() => project.load('posts'))
         .then(() => {
           var post = project.relations.posts.first();
