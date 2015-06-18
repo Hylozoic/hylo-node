@@ -97,7 +97,7 @@ module.exports = setup = {
             table.datetime('created_at');
             table.integer('num_votes');
             table.integer('num_comments');
-            table.boolean('fulfilled');
+            table.datetime('fulfilled_at');
             table.boolean('active');
             table.boolean('edited');
             table.datetime('updated_at');

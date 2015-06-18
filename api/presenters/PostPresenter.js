@@ -20,7 +20,7 @@ var postAttributes = post => {
     _.pick(post.toJSON(), [
       'name',
       'description',
-      'fulfilled',
+      'fulfilled_at',
       'media',
       'type',
       'created_at',

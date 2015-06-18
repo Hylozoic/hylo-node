@@ -1,6 +1,14 @@
 var findPosts = function(req, res, opts) {
-  var params = _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
-    sortCol = (params.sort == 'top' ? 'post.num_votes' : 'post.updated_at');
+  var params = _.merge(
+    _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
+    _.pick(opts, 'sort')
+  );
+
+  switch (params.sort) {
+    case 'fulfilled-last': var sortCol = 'fulfilled_at'; break;
+    case 'top':            var sortCol = 'post.num_votes'; break;
+    default:               var sortCol = 'post.updated_at'; break;
+  }
 
   Promise.props({
     communities: opts.communities,
@@ -54,7 +62,8 @@ module.exports = {
   findForProject: function(req, res) {
     findPosts(req, res, {
       project: req.param('projectId'),
-      relationsOpts: {fromProject: true}
+      relationsOpts: {fromProject: true},
+      sort: 'fulfilled-last'
     });
   },
 
@@ -113,7 +122,6 @@ module.exports = {
       active:        true,
       num_comments:  0,
       num_votes:     0,
-      fulfilled:     false,
       edited:        false
     };
 
@@ -261,8 +269,7 @@ module.exports = {
     bookshelf.transaction(function(trx) {
 
       return res.locals.post.save({
-        fulfilled: true,
-        date_fulfilled: new Date()
+        fulfilled_at: new Date()
       }, {patch: true, transacting: trx})
       .tap(function() {
         return Promise.map(req.param('contributors'), function(userId) {

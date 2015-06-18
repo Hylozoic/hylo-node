@@ -73,7 +73,9 @@ module.exports = {
         qb.where({visibility: opts.visibility});
       }
 
-      if (opts.sort) {
+      if (opts.sort === 'fulfilled_at') {
+        qb.orderByRaw('post.fulfilled_at desc, post.updated_at desc');
+      } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc');
       }
 
