@@ -99,7 +99,6 @@ var generateRemoveQueries = function(userId, knex) {
     ['phones',              'user_id'],
     ['emails',              'user_id'],
     ['websites',            'user_id'],
-    ['users_security_role', 'users_id'],
     ['invite_request',      'user_id'],
     ['user_post_relevance', 'user_id'],
     ['notification_status', 'recipient_id'],
