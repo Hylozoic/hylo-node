@@ -32,40 +32,19 @@ describe('CommunityController', () => {
       });
     });
 
-    describe('for a normal member', () => {
-
-      it('does not include the invitation code', () => {
-        return checkAndSetMembership(req, res)
-        .then(() => CommunityController.findOne(req, res))
-        .then(() => {
-          expect(res.ok).to.have.been.called();
-          expect(res.body).to.deep.equal({
-            id: community.id,
-            name: 'foo',
-            slug: 'foo',
-            canModerate: false,
-            leader: {},
-            network_id: null
-          });
+    it('does not include the invitation code', () => {
+      return checkAndSetMembership(req, res)
+      .then(() => CommunityController.findOne(req, res))
+      .then(() => {
+        expect(res.ok).to.have.been.called();
+        expect(res.body).to.deep.equal({
+          id: community.id,
+          name: 'foo',
+          slug: 'foo'
         });
-
       });
 
     });
-
-    describe('for a moderator', () => {
-      beforeEach(() => user.setModeratorRole(community));
-
-      it('includes the invitation code', () => {
-        return checkAndSetMembership(req, res)
-        .then(() => CommunityController.findOne(req, res))
-        .then(() => {
-          expect(res.ok).to.have.been.called();
-          expect(res.body.beta_access_code).to.equal('sekrit');
-        });
-      });
-    });
-
 
   });
 

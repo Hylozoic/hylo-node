@@ -10,11 +10,11 @@ module.exports = {
     var community = res.locals.community;
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => _.merge(community.pick(
-      'id', 'name', 'slug', 'avatar_url', 'banner_url', 'description'
-    ), {
-      network: community.relations.network ? community.relations.network.pick('id', 'name', 'slug') : null
-    }))
+    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description'))
+    .tap(data => {
+      var network = community.relations.network;
+      if (network) data.network = network.pick('id', 'name', 'slug');
+    })
     .then(res.ok)
     .catch(res.serverError);
   },
