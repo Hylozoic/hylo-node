@@ -21,7 +21,7 @@ module.exports = {
         qb.column('id', 'name', 'avatar_url');
       }},
       {comment: function(qb) {
-        qb.column('id', 'comment_text', 'date_commented');
+        qb.column('id', 'comment_text', 'created_at');
       }},
       {'comment.thanks': function(qb) {
         qb.where('thanked_by_id', req.session.userId);

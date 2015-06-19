@@ -119,7 +119,7 @@ module.exports = setup = {
             table.increments();
             table.bigInteger('post_id');
             table.bigInteger('user_id');
-            table.datetime('date_commented');
+            table.datetime('created_at');
             table.string("comment_text");
             table.boolean("active");
           }),
