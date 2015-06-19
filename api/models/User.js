@@ -5,11 +5,11 @@ module.exports = bookshelf.Model.extend({
   tableName: 'users',
 
   memberships: function() {
-    return this.hasMany(Membership, 'users_id');
+    return this.hasMany(Membership);
   },
 
   communities: function() {
-    return this.belongsToMany(Community, 'users_community', 'users_id', 'community_id');
+    return this.belongsToMany(Community, 'users_community');
   },
 
   posts: function() {

@@ -98,7 +98,7 @@ module.exports = {
       qb.select(bookshelf.knex.raw('count(users.*) over () as total'));
 
       if (opts.communities) {
-        qb.join('users_community', 'users_community.users_id', '=', 'users.id');
+        qb.join('users_community', 'users_community.user_id', '=', 'users.id');
         qb.whereIn('users_community.community_id', opts.communities);
         qb.where('users_community.active', true);
       }

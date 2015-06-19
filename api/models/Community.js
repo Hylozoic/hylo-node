@@ -1,17 +1,17 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
 
-  inactiveUsers: () => this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+  inactiveUsers: () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {'users_community.active': false}}),
   invitations:   () => this.hasMany(Invitation),
   leader:        () => this.belongsTo(User, 'leader_id'),
   memberships:   () => this.hasMany(Membership).query({where: {'users_community.active': true}}),
-  moderators:    () => this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+  moderators:    () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {role: Membership.MODERATOR_ROLE}}),
   network:       () => this.belongsTo(Network),
   posts:         () => this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
                        .query({where: {'post.active': true}}),
-  users:         () => this.belongsToMany(User, 'users_community', 'community_id', 'users_id')
+  users:         () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {'users_community.active': true}}),
 
   comments: function() {

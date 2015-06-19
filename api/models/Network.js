@@ -2,7 +2,7 @@ var knex = bookshelf.knex;
 
 var networkIdsQuery = function(userId) {
   var communityIdsQuery = knex.select('community_id').from('users_community')
-  .where({users_id: userId, active: true});
+  .where({user_id: userId, active: true});
 
   return knex.select().distinct('network_id').from('community')
   .whereIn('id', communityIdsQuery).whereRaw('network_id is not null');

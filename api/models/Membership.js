@@ -2,7 +2,7 @@ module.exports = bookshelf.Model.extend({
   tableName: 'users_community',
 
   user: function() {
-    return this.belongsTo(User, 'users_id');
+    return this.belongsTo(User);
   },
 
   community: function() {
@@ -21,7 +21,7 @@ module.exports = bookshelf.Model.extend({
   // perhaps it is possible to override the default implementation of #destroy
   // instead of creating a method with a different name.
   destroyMe: function() {
-    return this.where(_.pick(this.attributes, 'users_id', 'community_id')).destroy();
+    return this.where(_.pick(this.attributes, 'user_id', 'community_id')).destroy();
   }
 
 }, {
@@ -29,20 +29,20 @@ module.exports = bookshelf.Model.extend({
   DEFAULT_ROLE: 0,
   MODERATOR_ROLE: 1,
 
-  find: function(user_id, community_id_or_slug) {
+  find: function(user_id, community_id_or_slug, options) {
 
     var fetch = function(community_id) {
       return Membership.where({
-        users_id: user_id,
+        user_id: user_id,
         community_id: community_id,
         active: true
-      }).fetch();
+      }).fetch(options);
     };
 
     if (isNaN(Number(community_id_or_slug))) {
       return Community.find(community_id_or_slug)
       .then(function(community) {
-        if (community) return fetch(community.id);
+        if (community) return fetch(community.id, options);
       });
     }
 
@@ -52,7 +52,7 @@ module.exports = bookshelf.Model.extend({
   create: function(userId, communityId, opts) {
     if (!opts) opts = {};
     return bookshelf.knex('users_community').transacting(opts.transacting).insert({
-      users_id: userId,
+      user_id: userId,
       community_id: communityId,
       date_joined: new Date(),
       fee: 0,
@@ -63,14 +63,14 @@ module.exports = bookshelf.Model.extend({
 
   setModeratorRole: function(user_id, community_id) {
     return bookshelf.knex('users_community').where({
-      users_id: user_id,
+      user_id: user_id,
       community_id: community_id
     }).update({role: Membership.MODERATOR_ROLE});
   },
 
   removeModeratorRole: function(user_id, community_id) {
     return bookshelf.knex('users_community').where({
-      users_id: user_id,
+      user_id: user_id,
       community_id: community_id
     }).update({role: Membership.DEFAULT_ROLE});
   },
@@ -88,7 +88,7 @@ module.exports = bookshelf.Model.extend({
       .select('community_id')
       .count('*')
       .from('users_community')
-      .whereIn('users_id', userIds)
+      .whereIn('user_id', userIds)
       .groupBy('community_id')
       .havingRaw('count(*) = ?', [userIds.length])
       .then(function(sharedMemberships) {
@@ -110,7 +110,7 @@ module.exports = bookshelf.Model.extend({
 
   activeCommunityIds: function(user_id) {
     return bookshelf.knex('users_community').select("community_id")
-      .where({users_id: user_id, active: true})
+      .where({user_id: user_id, active: true})
       .map(row => parseInt(row.community_id));
   }
 

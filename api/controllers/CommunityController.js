@@ -176,14 +176,12 @@ module.exports = {
   },
 
   removeMember: function(req, res) {
-    Membership.where({
-      users_id: req.param('userId'),
-      community_id: req.param('communityId')
-    }).query().update({
+    Membership.find(req.param('userId'), req.param('communityId'))
+    .then(membership => membership.save({
       active: false,
       deactivated_at: new Date(),
       deactivator_id: req.session.userId
-    })
+    }, {patch: true}))
     .then(() => res.ok({}))
     .catch(res.serverError);
   },
@@ -250,10 +248,7 @@ module.exports = {
     // if we had a Membership instance from the previous
     // step. But the absence of an id column on the table
     // doesn't play nice with Bookshelf.
-    .then(() => Membership.where({
-      users_id: req.session.userId,
-      community_id: community.id
-    }).fetch({withRelated: ['community']}))
+    .then(() => Membership.find(req.session.userId, community.id, {withRelated: ['community']}))
     .then(res.ok)
     .catch(res.serverError);
   },

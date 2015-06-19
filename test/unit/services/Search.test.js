@@ -89,7 +89,7 @@ describe('Search', function() {
       it('excludes inactive members', () => {
 
         return Membership.query().where({
-          users_id: cat.id,
+          user_id: cat.id,
           community_id: house.id
         }).update({active: false}).then(() => {
           return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll().then(users => {

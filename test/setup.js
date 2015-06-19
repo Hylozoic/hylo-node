@@ -158,7 +158,7 @@ module.exports = setup = {
             table.bigInteger('network_id').references('id').inTable('networks');
           }),
           createTable('users_community', function(table) {
-            table.bigInteger('users_id');
+            table.bigInteger('user_id');
             table.bigInteger('community_id');
             table.boolean('active');
             table.integer('role');

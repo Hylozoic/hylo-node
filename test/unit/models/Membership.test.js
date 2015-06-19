@@ -39,7 +39,7 @@ describe('Membership', function() {
 
     it('does not return an inactive membership', function() {
       return Membership.query().where({
-        users_id: user.id,
+        user_id: user.id,
         community_id: community.id
       }).update({active: false}).then(() => {
         return Membership.find(user.id, community.id);
