@@ -40,6 +40,15 @@ module.exports = bookshelf.Model.extend({
       token: token,
       accepted_at: null
     }).fetch().then(invitation => !!invitation);
+  },
+
+  forUser: function(userId, projectId) {
+    return ProjectInvitation.query(qb => {
+      if (projectId) qb.where('project_id', projectId);
+      qb.where(() =>
+        this.where('user_id', userId)
+        .orWhere('email', bookshelf.knex('users').select('email').where('id', userId)));
+    });
   }
 
 });
