@@ -301,17 +301,20 @@ module.exports = {
   },
 
   vote: function(req, res) {
-    res.locals.post.votes().query({where: {user_id: req.session.userId}}).fetchOne()
-    .then(function(vote) {
-      if (vote) {
-        return vote.destroy();
-      } else {
-        return new Vote({
+    var post = res.locals.post;
+
+    post.votes().query({where: {user_id: req.session.userId}}).fetchOne()
+    .then(vote => bookshelf.transaction(trx => {
+      var inc = delta => () =>
+        Post.query().where('id', post.id).increment('num_votes', delta).transacting(trx);
+
+      return (vote ?
+        vote.destroy({transacting: trx}).then(inc(-1)) :
+        new Vote({
           post_id: res.locals.post.id,
           user_id: req.session.userId
-        }).save();
-      }
-    })
+        }).save().then(inc(1)));
+    }))
     .then(() => res.ok({}))
     .catch(res.serverError);
   },
