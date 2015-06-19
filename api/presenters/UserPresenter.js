@@ -1,6 +1,6 @@
 var relationsForSelf = [
   'memberships',
-  {'memberships.community': qb => qb.column('id', 'name', 'slug')},
+  {'memberships.community': qb => qb.column('id', 'name', 'slug', 'avatar_url')},
   'skills',
   'organizations',
   'phones',
