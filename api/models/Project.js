@@ -78,9 +78,9 @@ module.exports = bookshelf.Model.extend({
         {contributors: qb => qb.where('notify_on_new_posts', true)},
         'user'
       ]}),
-      Post.find(opts.postId, {withRelated: ['communities']})
+      Post.find(opts.postId, {withRelated: ['communities', 'creator']})
     ).spread((project, post) => {
-      var creator = project.relations.user,
+      var creator = post.relations.creator,
         community = post.relations.communities.first();
 
       return project.relations.contributors.map(user => {
