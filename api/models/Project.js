@@ -85,6 +85,7 @@ module.exports = bookshelf.Model.extend({
 
       return project.relations.contributors.map(user => {
         if (_.contains(opts.exclude, user.id)) return;
+        var replyTo = Email.postReplyAddress(post.id, user.id);
 
         return Email.sendNewProjectPostNotification(user.get('email'), {
           creator_profile_url: Frontend.Route.profile(creator),
@@ -97,6 +98,11 @@ module.exports = bookshelf.Model.extend({
           post_description: post.get('description'),
           post_type: post.get('type'),
           post_url: Frontend.Route.post(post, community)
+        }, {
+          sender: {
+            address: replyTo,
+            reply_to: replyTo
+          }
         });
       });
     });
