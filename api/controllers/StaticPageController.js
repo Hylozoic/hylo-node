@@ -18,7 +18,8 @@ var LRU = require('lru-cache'),
     '/about/contact',
     '/about/team',
     '/admin',
-    '/styleguide'
+    '/styleguide',
+    '/terms'
   ];
 
 module.exports = {
