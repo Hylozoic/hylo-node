@@ -15,8 +15,6 @@ var createComment = function(commenterId, text, post) {
       active: true
     };
 
-  commenterId = parseInt(commenterId);
-
   return bookshelf.transaction(function(trx) {
     return new Comment(attrs).save(null, {transacting: trx})
     .tap(function(comment) {
@@ -38,7 +36,7 @@ var createComment = function(commenterId, text, post) {
         // find all existing followers and all mentioned users
         // (there may be some users in both groups)
         return [
-          post.relations.followers.map(function(f) { return parseInt(f.attributes.user_id) }),
+          post.relations.followers.pluck('user_id'),
           RichText.getUserMentions(text)
         ];
 

@@ -15,7 +15,7 @@ var TokenAuth = module.exports = {
 
   isPermitted: function(res, communityId) {
     return TokenAuth.isAuthenticated(res) &&
-      parseInt(communityId) == parseInt(process.env.KISS_AUTH_COMMUNITY_ID);
+      communityId === process.env.KISS_AUTH_COMMUNITY_ID;
   }
 
 };

@@ -28,9 +28,7 @@ var sanitize = function(text) {
  */
 var getUserMentions = function(text) {
   var $ = Cheerio.load(text);
-  return _.uniq($("a[data-user-id]").map(function(i, elem) {
-    return parseInt($(this).data("user-id"));
-  }).get());
+  return _.uniq($("a[data-user-id]").map(() => $(this).data("user-id").toString()).get());
 };
 
 var qualifyLinks = function(text) {
