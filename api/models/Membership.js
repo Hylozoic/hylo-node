@@ -58,6 +58,8 @@ module.exports = bookshelf.Model.extend({
       fee: 0,
       active: true,
       role: opts.role || Membership.DEFAULT_ROLE
+    }).tap(() => {
+      Analytics.track({userId: userId, event: 'Joined community', properties: {id: communityId}});
     });
   },
 
