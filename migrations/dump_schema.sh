@@ -1,2 +1,2 @@
 #!/bin/bash
-pg_dump -O -s -n public hylo
+pg_dump -Osxn public hylo

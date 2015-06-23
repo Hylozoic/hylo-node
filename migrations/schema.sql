@@ -2291,16 +2291,6 @@ ALTER TABLE ONLY websites
 
 
 --
--- Name: public; Type: ACL; Schema: -; Owner: -
---
-
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM lawrence;
-GRANT ALL ON SCHEMA public TO lawrence;
-GRANT ALL ON SCHEMA public TO PUBLIC;
-
-
---
 -- PostgreSQL database dump complete
 --
 
