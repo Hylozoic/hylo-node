@@ -45,7 +45,7 @@ var generateMergeQueries = function(primaryUserId, secondaryUserId, knex) {
   // updates where we have to avoid duplicate records
   [
     // table name, user id column, column with unique value
-    ['users_community', 'users_id',    'community_id'],
+    ['users_community', 'user_id',     'community_id'],
     ['contributor',     'user_id',     'post_id'],
     ['follower',        'user_id',     'post_id'],
     ['linked_account',  'user_id',     'provider_user_id'],
@@ -88,7 +88,7 @@ var generateRemoveQueries = function(userId, knex) {
   // deletes
   [
     // table, user id column
-    ['users_community',     'users_id'],
+    ['users_community',     'user_id'],
     ['community_invite',    'invited_by_id'],
     ['community_invite',    'used_by_id'],
     ['contributor',         'user_id'],
@@ -99,7 +99,6 @@ var generateRemoveQueries = function(userId, knex) {
     ['phones',              'user_id'],
     ['emails',              'user_id'],
     ['websites',            'user_id'],
-    ['users_security_role', 'users_id'],
     ['invite_request',      'user_id'],
     ['user_post_relevance', 'user_id'],
     ['notification_status', 'recipient_id'],

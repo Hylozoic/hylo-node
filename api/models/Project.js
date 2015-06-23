@@ -27,13 +27,6 @@ module.exports = bookshelf.Model.extend({
 
   isPublic: function() {
     return this.get('visibility') === Project.Visibility.PUBLIC;
-  },
-
-  setThumbnailUrl: function() {
-    return this.generateThumbnailUrl().then(url => {
-      this.set('thumbnail_url', url);
-      return this;
-    });
   }
 
 }, {
@@ -85,13 +78,14 @@ module.exports = bookshelf.Model.extend({
         {contributors: qb => qb.where('notify_on_new_posts', true)},
         'user'
       ]}),
-      Post.find(opts.postId, {withRelated: ['communities']})
+      Post.find(opts.postId, {withRelated: ['communities', 'creator']})
     ).spread((project, post) => {
-      var creator = project.relations.user,
+      var creator = post.relations.creator,
         community = post.relations.communities.first();
 
       return project.relations.contributors.map(user => {
         if (_.contains(opts.exclude, user.id)) return;
+        var replyTo = Email.postReplyAddress(post.id, user.id);
 
         return Email.sendNewProjectPostNotification(user.get('email'), {
           creator_profile_url: Frontend.Route.profile(creator),
@@ -104,6 +98,11 @@ module.exports = bookshelf.Model.extend({
           post_description: post.get('description'),
           post_type: post.get('type'),
           post_url: Frontend.Route.post(post, community)
+        }, {
+          sender: {
+            address: replyTo,
+            reply_to: replyTo
+          }
         });
       });
     });

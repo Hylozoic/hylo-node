@@ -4,9 +4,9 @@ module.exports = {
     return Project.query(qb => {
       if (opts.user) {
         qb.leftJoin('projects_users', () => this.on('projects.id', '=', 'projects_users.project_id'));
-        qb.where('projects.user_id', opts.user).orWhere(function() {
-          this.where('projects_users.user_id', opts.user);
-        });
+        qb.where(() =>
+          this.where('projects.user_id', opts.user)
+          .orWhere('projects_users.user_id', opts.user));
       }
 
       if (opts.community) {
@@ -73,7 +73,9 @@ module.exports = {
         qb.where({visibility: opts.visibility});
       }
 
-      if (opts.sort) {
+      if (opts.sort === 'fulfilled_at') {
+        qb.orderByRaw('post.fulfilled_at desc, post.updated_at desc');
+      } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc');
       }
 
@@ -96,7 +98,7 @@ module.exports = {
       qb.select(bookshelf.knex.raw('count(users.*) over () as total'));
 
       if (opts.communities) {
-        qb.join('users_community', 'users_community.users_id', '=', 'users.id');
+        qb.join('users_community', 'users_community.user_id', '=', 'users.id');
         qb.whereIn('users_community.community_id', opts.communities);
         qb.where('users_community.active', true);
       }

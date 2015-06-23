@@ -1,5 +1,13 @@
 var knex = bookshelf.knex;
 
+var networkIdsQuery = function(userId) {
+  var communityIdsQuery = knex.select('community_id').from('users_community')
+  .where({user_id: userId, active: true});
+
+  return knex.select().distinct('network_id').from('community')
+  .whereIn('id', communityIdsQuery).whereRaw('network_id is not null');
+}
+
 module.exports = bookshelf.Model.extend({
   tableName: 'networks',
 
@@ -14,36 +22,22 @@ module.exports = bookshelf.Model.extend({
     return this.where({id: idOrSlug}).fetch(options);
   },
 
-  containsAnyCommunity: function(networkId, communityIds) {
-    return Community.query()
-    .where('id', 'in', communityIds)
-    .where('network_id', networkId)
-    .count().then(rows => Number(rows[0].count) > 0);
-  },
-
   containsUser: function(networkId, userId) {
-    return Membership.activeCommunityIds(userId)
-    .then(ids => Network.containsAnyCommunity(networkId, ids));
+    return this.idsForUser(userId)
+    .then(ids => _.contains(ids, networkId.toString()));
   },
 
   activeCommunityIds: function(userId, rawQuery) {
     var query = knex.select('id').from('community')
-    .whereIn('network_id',
-      knex.select('network_id').from('community')
-      .whereIn('id',
-        knex.select('community_id').from('users_community')
-        .where({users_id: userId, active: true})));
+    .whereIn('network_id', networkIdsQuery(userId));
 
     if (rawQuery) return query;
     return query.then(rows => _.pluck(rows, 'id'));
   },
 
   idsForUser: function(userId) {
-    return knex.select('network_id').from('community')
-    .whereIn('id',
-      knex.select('id').from('users_community')
-      .where('users_id', userId))
-    .then(rows => _.pluck(rows, 'id'));
+    return networkIdsQuery(userId)
+    .then(rows => _.pluck(rows, 'network_id'));
   }
 
 });

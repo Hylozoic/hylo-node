@@ -1,5 +1,5 @@
 var commentAttributes = function(comment) {
-  var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'date_commented', 'user');
+  var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'created_at', 'user');
   return _.extend({
     isThanked: _.isEmpty(comment.relations.thanks)
   }, attrs);
@@ -9,13 +9,11 @@ var createComment = function(commenterId, text, post) {
   var text = RichText.sanitize(text),
     attrs = {
       comment_text: text,
-      date_commented: new Date(),
+      created_at: new Date(),
       post_id: post.id,
       user_id: commenterId,
       active: true
     };
-
-  commenterId = parseInt(commenterId);
 
   return bookshelf.transaction(function(trx) {
     return new Comment(attrs).save(null, {transacting: trx})
@@ -38,7 +36,7 @@ var createComment = function(commenterId, text, post) {
         // find all existing followers and all mentioned users
         // (there may be some users in both groups)
         return [
-          post.relations.followers.map(function(f) { return parseInt(f.attributes.user_id) }),
+          post.relations.followers.pluck('user_id'),
           RichText.getUserMentions(text)
         ];
 

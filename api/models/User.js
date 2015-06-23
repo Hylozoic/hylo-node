@@ -4,65 +4,22 @@ var bcrypt = require('bcrypt'),
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
 
-  memberships: function() {
-    return this.hasMany(Membership, 'users_id');
-  },
-
-  communities: function() {
-    return this.belongsToMany(Community, 'users_community', 'users_id', 'community_id');
-  },
-
-  posts: function() {
-    return this.hasMany(Post, 'creator_id');
-  },
-
-  linkedAccounts: function() {
-    return this.hasMany(LinkedAccount);
-  },
-
-  sentInvitations: function() {
-    return this.hasMany(Invitation, 'invited_by_id');
-  },
-
-  skills: function() {
-    return this.hasMany(Skill);
-  },
-
-  organizations: function() {
-    return this.hasMany(Organization);
-  },
-
-  phones: function() {
-    return this.hasMany(UserPhone);
-  },
-
-  emails: function() {
-    return this.hasMany(UserEmail);
-  },
-
-  websites: function() {
-    return this.hasMany(UserWebsite);
-  },
-
-  contributions: function() {
-    return this.hasMany(Contribution);
-  },
-
-  thanks: function() {
-    return this.hasMany(Thank)
-  },
-
-  devices: function() {
-    return this.hasMany(Device, 'user_id');
-  },
-
-  onboarding: function() {
-    return this.hasOne(Tour).query({where: {type: 'onboarding'}});
-  },
-
-  activity: function() {
-    return this.hasMany(Activity, 'reader_id');
-  },
+  activity:        () => this.hasMany(Activity, 'reader_id'),
+  comments:        () => this.hasMany(Comment),
+  communities:     () => this.belongsToMany(Community, 'users_community'),
+  contributions:   () => this.hasMany(Contribution),
+  devices:         () => this.hasMany(Device, 'user_id'),
+  emails:          () => this.hasMany(UserEmail),
+  linkedAccounts:  () => this.hasMany(LinkedAccount),
+  memberships:     () => this.hasMany(Membership),
+  onboarding:      () => this.hasOne(Tour).query({where: {type: 'onboarding'}}),
+  organizations:   () => this.hasMany(Organization),
+  phones:          () => this.hasMany(UserPhone),
+  posts:           () => this.hasMany(Post, 'creator_id'),
+  sentInvitations: () => this.hasMany(Invitation, 'invited_by_id'),
+  skills:          () => this.hasMany(Skill),
+  thanks:          () => this.hasMany(Thank),
+  websites:        () => this.hasMany(UserWebsite),
 
   setModeratorRole: function(community) {
     return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community));

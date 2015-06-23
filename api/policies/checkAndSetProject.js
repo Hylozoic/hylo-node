@@ -12,9 +12,27 @@ module.exports = function(req, res, next) {
       res.forbidden();
     }
 
-    var checkInvitationToken = function() {
-      ProjectInvitation.validate(project.id, req.param('token'))
-      .then(valid => valid ? pass() : fail('not a valid token'));
+    var checkProjectMembership = function(passed) {
+      if (passed) return true;
+
+      return ProjectMembership.find(req.session.userId, project.id)
+      .then(membership => !!membership);
+    };
+
+    var checkInvitation = function(passed) {
+      if (passed) return true;
+
+      if (req.param('token')) {
+        return ProjectInvitation.validate(project.id, req.param('token'));
+
+      }
+
+      if (req.session.userId) {
+        // the token is not present but there is a valid invitation, i.e.
+        // the invited user went directly to the project page
+        return ProjectInvitation.forUser(req.session.userId, project.id)
+        .fetch().then(invitation => !!invitation);
+      }
     };
 
     if (!project) {
@@ -28,34 +46,21 @@ module.exports = function(req, res, next) {
       pass();
 
     } else if (project.isDraft()) {
-      // you're a contributor
-      ProjectMembership.find(req.session.userId, project.id)
-      .then(membership => {
-        if (membership) {
-          pass();
-        } else if (req.param('token')) {
-          checkInvitationToken();
-        } else {
-          fail('not a contributor');
-        }
-      });
+      checkProjectMembership(false)
+      .then(checkInvitation)
+      .then(passed => passed ? pass() : fail('no access to draft'));
 
     } else if (project.isPublic()) {
       // it's published and public
       pass();
 
     } else {
-      // you're a community member
+      // it's a published community project
       Membership.find(req.session.userId, project.get('community_id'))
-      .then(membership => {
-        if (membership) {
-          pass();
-        } else if (req.param('token')) {
-          checkInvitationToken();
-        } else {
-          fail('not in community');
-        }
-      });
+      .then(membership => !!membership)
+      .then(checkProjectMembership)
+      .then(checkInvitation)
+      .then(passed => passed ? pass() : fail('no access to community project'));
     }
 
   })

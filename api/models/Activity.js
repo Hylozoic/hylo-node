@@ -34,7 +34,7 @@ module.exports = bookshelf.Model.extend({
 
   forComment: function(comment, userId, action) {
     if (!action) {
-      if (_.contains(comment.mentions(), parseInt(userId)))
+      if (_.contains(comment.mentions(), userId.toString()))
         action = this.Action.Mention;
       else
         action = this.Action.Comment;
@@ -46,7 +46,7 @@ module.exports = bookshelf.Model.extend({
       comment_id: comment.id,
       post_id: comment.get('post_id'),
       action: action,
-      created_at: comment.get('date_commented')
+      created_at: comment.get('created_at')
     });
   },
 

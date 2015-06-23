@@ -6,11 +6,7 @@ module.exports = function checkAndSetMembership(req, res, next) {
   if (!communityId)
     return next();
 
-  Community.find(communityId, {
-    withRelated: [
-      {leader: qb => qb.column('id', 'name', 'avatar_url')}
-    ]
-  }).then(function(community) {
+  Community.find(communityId).then(community => {
     if (!community)
       return res.notFound();
 

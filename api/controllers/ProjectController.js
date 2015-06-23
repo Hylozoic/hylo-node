@@ -91,7 +91,7 @@ module.exports = {
       {user: qb => qb.column('id', 'name', 'avatar_url')},
       {community: qb => qb.column('id', 'name', 'avatar_url')},
       {memberships: qb => qb.where('user_id', req.session.userId)},
-      {posts: qb => qb.where({fulfilled: false, active: true})}
+      {posts: qb => qb.where({fulfilled_at: null, active: true})}
     ]})
     .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'posts', 'memberships'), {
       membership: project.relations.memberships.first(),

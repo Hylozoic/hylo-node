@@ -98,7 +98,7 @@
     "debug": "node-debug app.js",
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
     "test": "./node_modules/.bin/mocha --harmony test/**/*.js",
-    "test-coverage": "node --harmony ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -u exports -R spec test/**/*.js"
+    "test-coverage": "node --harmony ./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- -u exports -R spec test/**/*.test.js"
   },
   "main": "app.js",
   "repository": {

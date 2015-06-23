@@ -9,7 +9,7 @@ describe('Membership', function() {
     before(function() {
       community = new Community({slug: 'foo', name: 'Foo'});
       user = new User({name: 'Cat'});
-      return setup.resetDb().then(function() {
+      return setup.clearDb().then(function() {
         return Promise.join(
           community.save(),
           user.save()
@@ -39,7 +39,7 @@ describe('Membership', function() {
 
     it('does not return an inactive membership', function() {
       return Membership.query().where({
-        users_id: user.id,
+        user_id: user.id,
         community_id: community.id
       }).update({active: false}).then(() => {
         return Membership.find(user.id, community.id);

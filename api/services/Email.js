@@ -21,8 +21,8 @@ module.exports = {
 
   sendSimpleEmail: sendSimpleEmail,
 
-  sendNewProjectPostNotification: function(email, data) {
-    return sendSimpleEmail(email, 'tem_bG7zNWk3sqbLKkg2TLcYgE', data);
+  sendNewProjectPostNotification: function(email, data, extraOptions) {
+    return sendSimpleEmail(email, 'tem_bG7zNWk3sqbLKkg2TLcYgE', data, extraOptions);
   },
 
   sendProjectInvitation: function(email, data) {

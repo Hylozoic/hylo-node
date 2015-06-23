@@ -1,36 +1,4 @@
-/**
- * CommunityController
- *
- * @description :: Server-side logic for managing communities
- * @help        :: See http://links.sailsjs.org/docs/controllers
- */
-
 var validator = require('validator');
-
-var communityAttributes = function(community, membership, memberCount, isAdmin) {
-  var attrs = community.toJSON(),
-    network = community.relations.network;
-
-  if (!isAdmin && (!membership || !membership.hasModeratorRole())) {
-    delete attrs.beta_access_code;
-  }
-
-  if (network) {
-    attrs.network = network.pick('id', 'name', 'slug');
-  }
-
-  if (memberCount != undefined) {
-    attrs.memberCount = memberCount;
-  }
-
-  return _.extend(
-    _.omit(attrs, 'memberships'),
-    {
-      id: Number(community.id), // FIXME this isn't necessary post-Scala
-      canModerate: membership && membership.hasModeratorRole()
-    }
-  );
-};
 
 module.exports = {
 
@@ -41,16 +9,24 @@ module.exports = {
   findOne: function(req, res) {
     var community = res.locals.community;
 
-    if (!req.session.userId) {
-      var limitedAttributes = _.merge(
-        res.locals.community.pick('id', 'name', 'avatar_url', 'banner_url', 'description'),
-        {readonly: true}
-      );
-      return res.ok(limitedAttributes);
-    }
-
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => res.ok(communityAttributes(community, res.locals.membership, undefined, Admin.isSignedIn(req))))
+    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description'))
+    .tap(data => {
+      var network = community.relations.network;
+      if (network) data.network = network.pick('id', 'name', 'slug');
+    })
+    .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  findSettings: function(req, res) {
+    Community.find(req.param('communityId'), {withRelated: ['leader']})
+    .then(community => _.merge(community.pick(
+      'welcome_message', 'beta_access_code', 'settings'
+    ), {
+      leader: community.relations.leader.pick('id', 'name', 'avatar_url')
+    }))
+    .then(res.ok)
     .catch(res.serverError);
   },
 
@@ -151,9 +127,8 @@ module.exports = {
       res.ok(users.map(function(user) {
         var attributes = _.merge(
           _.pick(user.attributes,
-            'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
+            'id', 'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
           {
-            id: Number(user.id), // FIXME this shouldn't be forced to be a number
             public_email: user.encryptedEmail(),
             total: user.get('total')
             // FIXME: total shouldn't go here, but this endpoint is also used
@@ -181,7 +156,7 @@ module.exports = {
   },
 
   joinWithCode: function(req, res) {
-    Community.where('beta_access_code', req.param('code')).fetch()
+    Community.query('whereRaw', 'lower(beta_access_code) = lower(?)', req.param('code')).fetch()
     .tap(community => Membership.create(req.session.userId, community.id))
     .then(community => res.ok(community.pick('id', 'slug')))
     .catch(err => {
@@ -200,14 +175,12 @@ module.exports = {
   },
 
   removeMember: function(req, res) {
-    Membership.where({
-      users_id: req.param('userId'),
-      community_id: req.param('communityId')
-    }).query().update({
+    Membership.find(req.param('userId'), req.param('communityId'))
+    .then(membership => membership.save({
       active: false,
       deactivated_at: new Date(),
       deactivator_id: req.session.userId
-    })
+    }, {patch: true}))
     .then(() => res.ok({}))
     .catch(res.serverError);
   },
@@ -274,10 +247,7 @@ module.exports = {
     // if we had a Membership instance from the previous
     // step. But the absence of an id column on the table
     // doesn't play nice with Bookshelf.
-    .then(() => Membership.where({
-      users_id: req.session.userId,
-      community_id: community.id
-    }).fetch({withRelated: ['community']}))
+    .then(() => Membership.find(req.session.userId, community.id, {withRelated: ['community']}))
     .then(res.ok)
     .catch(res.serverError);
   },
@@ -285,10 +255,10 @@ module.exports = {
   findForNetwork: function(req, res) {
     Community.where('network_id', req.param('networkId'))
     .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => {
-      var membership = c.relations.memberships.find(m => m.get('users_id') === req.session.userId);
-      return communityAttributes(c, membership, c.relations.memberships.length);
-    }))
+    .then(communities => communities.map(c =>
+      _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+        memberCount: c.relations.memberships.length
+      })))
     .then(communities => _.sortBy(communities, c => -c.memberCount))
     .then(res.ok)
     .catch(res.serverError);

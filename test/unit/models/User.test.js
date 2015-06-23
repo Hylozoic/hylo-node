@@ -18,22 +18,18 @@ describe('User', function() {
   })
 
   it('can join communities', function() {
-    var community1 = new Community({name: 'House'}),
-      community2 = new Community({name: 'Yard'});
+    var community1 = new Community({name: 'House', slug: 'house'}),
+      community2 = new Community({name: 'Yard', slug: 'yard'});
 
     return Promise.join(
       community1.save(),
       community2.save()
     )
-    .then(function() {
-      return Promise.join(
-        cat.joinCommunity(community1),
-        cat.joinCommunity(community2)
-      );
-    })
-    .then(function() {
-      return cat.communities().fetch();
-    })
+    .then(() => Promise.join(
+      cat.joinCommunity(community1),
+      cat.joinCommunity(community2)
+    ))
+    .then(() => cat.communities().fetch())
     .then(function(communities) {
       expect(communities).to.exist;
       expect(communities.models).to.exist;
@@ -46,14 +42,14 @@ describe('User', function() {
   });
 
   it('can become moderator', function() {
-    var house = new Community({name: 'House'}),
+    var street = new Community({name: 'Street', slug: 'street'}),
       membership;
 
-    return house.save()
-    .then(function() { return cat.joinCommunity(house); })
-    .then(function() { return cat.setModeratorRole(house); })
-    .then(function() { return cat.memberships().query({where: {community_id: house.id}}).fetchOne(); })
-    .then(function(membership) {
+    return street.save()
+    .then(() => cat.joinCommunity(street))
+    .then(() => cat.setModeratorRole(street))
+    .then(() => cat.memberships().query({where: {community_id: street.id}}).fetchOne())
+    .then(membership => {
       expect(membership).to.exist;
       expect(membership.get('role')).to.equal(1);
     });
@@ -107,7 +103,7 @@ describe('User', function() {
       catPic = 'http://i.imgur.com/Kwe1K7k.jpg';
 
     before(function(done) {
-      community = new Community({name: 'foo'});
+      community = new Community({name: 'foo', slug: 'foo'});
       community.save().exec(done);
     });
 
@@ -143,7 +139,7 @@ describe('User', function() {
     it('works with google', function() {
       return bookshelf.transaction(function(trx) {
         return User.create({
-          email: 'foo@bar.com',
+          email: 'foo2@bar.com',
           community: community,
           account: {type: 'google', profile: {id: 'foo'}}
         }, {transacting: trx});
@@ -170,7 +166,7 @@ describe('User', function() {
     it('works with facebook', function() {
       return bookshelf.transaction(function(trx) {
         return User.create({
-          email: 'foo@bar.com',
+          email: 'foo3@bar.com',
           community: community,
           account: {
             type: 'facebook',
@@ -205,7 +201,7 @@ describe('User', function() {
     it('works with linkedin', function() {
       return bookshelf.transaction(function(trx) {
         return User.create({
-          email: 'foo@bar.com',
+          email: 'foo4@bar.com',
           community: community,
           account: {
             type: 'linkedin',

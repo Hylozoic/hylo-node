@@ -18,9 +18,10 @@ var postAttributes = post => {
 
   return _.extend(
     _.pick(post.toJSON(), [
+      'id',
       'name',
       'description',
-      'fulfilled',
+      'fulfilled_at',
       'media',
       'type',
       'created_at',
@@ -28,7 +29,6 @@ var postAttributes = post => {
       'projects'
     ]),
     {
-      id:           Number(post.get("id")), // FIXME no need to number-ize this now that Play's gone
       community:    post.relations.communities.first().pick('id', 'name', 'slug', 'avatar_url'),
       contributors: post.relations.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers:    post.relations.followers.map(f => f.relations.user.pick('id', 'name', 'avatar_url')),
@@ -36,11 +36,7 @@ var postAttributes = post => {
       myVote:       post.relations.votes.length > 0,
       numComments:  post.get("num_comments"),
       votes:        post.get("num_votes"),
-      user: {
-        id: Number(creator.get("id")),
-        name: creator.get("name"),
-        avatar: creator.get("avatar_url")
-      }
+      user:         creator.pick('id', 'name', 'avatar_url')
     }
   );
 };

@@ -41,7 +41,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     return collection.query(function(qb) {
-      qb.whereRaw('comment.date_commented between ? and ?', [startTime, endTime]);
+      qb.whereRaw('comment.created_at between ? and ?', [startTime, endTime]);
       qb.where('comment.active', true);
     })
   },
@@ -103,14 +103,14 @@ module.exports = bookshelf.Model.extend({
     .then(devices => {
       if (devices.length === 0)
         return;
-      
+
       var post = comment.relations.post,
         commenter = comment.relations.user,
         creator = post.relations.creator,
         community = post.relations.communities.models[0],
         path = url.parse(Frontend.Route.post(post,community)).path,
         alertText;
-      
+
       switch (version) {
       case 'mention':
         alertText = commenter.get("name") + " mentioned you in a comment";
@@ -118,7 +118,7 @@ module.exports = bookshelf.Model.extend({
       default:
         alertText = commenter.get("name") + " commented on \"" + post.get("name") + "\"";
       };
-      
+
       return Promise.map(devices.models, d => d.sendPushNotification(alertText, path, options));
     });
   },

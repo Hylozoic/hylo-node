@@ -60,12 +60,14 @@ module.exports.policies = {
   },
 
   OnboardingController: {
+    find:   ['sessionAuth'],
     update: ['sessionAuth', 'isSelf']
   },
 
   CommunityController: {
     find:            ['sessionAuth', 'isAdmin'],
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findSettings:    ['sessionAuth', 'isModerator'],
     update:          ['sessionAuth', 'isModerator'],
     invite:          ['sessionAuth', 'canInvite'],
     findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController
@@ -87,6 +89,7 @@ module.exports.policies = {
     findForUser:      ['sessionAuth', 'inSameCommunityOrNetwork'],
     findForNetwork:   ['sessionAuth', 'inNetwork'],
     create:           ['sessionAuth', 'checkAndSetMembership'],
+    createForProject: ['sessionAuth', 'checkAndSetProject', 'canCreateProjectPost'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],
     addFollowers:     ['sessionAuth', 'checkAndSetPost'],
     follow:           ['sessionAuth', 'checkAndSetPost'],

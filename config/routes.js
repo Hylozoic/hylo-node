@@ -54,6 +54,7 @@ module.exports.routes = {
   'GET    /noo/user/:userId/posts':                       'PostController.findForUser',
   'GET    /noo/user/:userId/followed-posts':              'PostController.findFollowed',
   'GET    /noo/user/:userId/all-community-posts':         'PostController.findAllForUser',
+  'GET    /noo/user/:userId/onboarding':                  'OnboardingController.find',
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
   'GET    /noo/user/:userId/projects':                    'ProjectController.findForUser',
 
@@ -63,6 +64,7 @@ module.exports.routes = {
   'POST   /noo/community/validate':                       'CommunityController.validate',
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
+  'GET    /noo/community/:communityId/settings':          'CommunityController.findSettings',
   'POST   /noo/community/:communityId/invite':            'CommunityController.invite',
   'GET    /noo/community/:communityId/moderators':        'CommunityController.findModerators',
   'POST   /noo/community/:communityId/moderators':        'CommunityController.addModerator',
@@ -95,6 +97,7 @@ module.exports.routes = {
 
   'GET    /noo/project/:projectId':                       'ProjectController.findOne',
   'GET    /noo/project/:projectId/posts':                 'PostController.findForProject',
+  'POST   /noo/project/:projectId/posts':                 'PostController.createForProject',
   'GET    /noo/project/:projectId/users':                 'UserController.findForProject',
   'DELETE /noo/project/:projectId/user/:userId':          'ProjectController.removeUser',
   'POST   /noo/project/:projectId/user/:userId':          'ProjectController.updateMembership',
