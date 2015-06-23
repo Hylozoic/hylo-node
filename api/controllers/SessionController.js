@@ -26,12 +26,17 @@ var findCommunity = function(req) {
 };
 
 var finishOAuth = function(service, req, res, next) {
+  sails.log("finishOAuth");  
   passport.authenticate(service, function(err, profile, info) {
     if (err || !profile) {
+      sails.log("Error:");
+      sails.log(err);      
       res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null});
       return;
     }
 
+    sails.log(profile);
+    
     findUser(service, profile.email, profile.id)
     .then(function(user) {
       if (user) {
@@ -106,13 +111,6 @@ module.exports = {
   
   finishFacebookOAuth: function(req, res, next) {
     finishOAuth('facebook', req, res, next);
-  },
-
-  startFacebookTokenOAuth: function(req, res) {
-    passport.authenticate('facebook', {
-      display: 'popup',
-      scope: ['email', 'public_profile', 'user_friends']
-    })(req, res);
   },
 
   finishFacebookTokenOAuth: function(req, res, next) {

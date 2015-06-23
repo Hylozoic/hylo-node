@@ -86,8 +86,8 @@ var facebookTokenStrategy = new FacebookTokenStrategy({
 passport.use(facebookTokenStrategy);
 
 var googleTokenStrategy = new GoogleTokenStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID_IOS,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET_IOS
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET
 }, function(accessToken, refreshToken, profile, done) {
   sails.log("gTS Callback");
   sails.log(accessToken);

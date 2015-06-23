@@ -135,7 +135,6 @@ module.exports.routes = {
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
   'GET    /noo/login/facebook/oauth':                     'SessionController.finishFacebookOAuth',
-  'GET    /noo/login/facebook-token':                     'SessionController.startFacebookTokenOAuth',
   'GET    /noo/login/facebook-token/oauth':               'SessionController.finishFacebookTokenOAuth',
   'POST   /noo/login/facebook-token/oauth':               'SessionController.finishFacebookTokenOAuth',
   'GET    /noo/login/google-token/oauth':                 'SessionController.finishGoogleTokenOAuth',
