@@ -103,11 +103,19 @@ module.exports = {
       scope: ['email', 'public_profile', 'user_friends']
     })(req, res);
   },
-
+  
   finishFacebookOAuth: function(req, res, next) {
     finishOAuth('facebook', req, res, next);
   },
 
+  finishFacebookTokenOAuth: function(req, res, next) {
+    finishOAuth('facebook-token', req, res, next);
+  },
+
+  finishGoogleTokenOAuth: function(req, res, next) {
+    finishOAuth('google-token', req, res, next);
+  },
+  
   startLinkedinOAuth: function(req, res) {
     passport.authenticate('linkedin')(req, res);
   },

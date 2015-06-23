@@ -2,6 +2,8 @@
 var passport = require('passport'),
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
   FacebookStrategy = require('passport-facebook').Strategy,
+  FacebookTokenStrategy = require('passport-facebook-token').Strategy,
+  GoogleTokenStrategy = require('passport-google-token').Strategy,        
   LinkedinStrategy = require('passport-linkedin-oauth2').Strategy;
 
 /////////////////////////////
@@ -72,6 +74,22 @@ var facebookStrategy = new FacebookStrategy({
   done(null, formatProfile(profile));
 });
 passport.use(facebookStrategy);
+
+var facebookTokenStrategy = new FacebookTokenStrategy({
+  clientID: process.env.FACEBOOK_APP_ID,
+  clientSecret: process.env.FACEBOOK_APP_SECRET
+}, function(accessToken, refreshToken, profile, done) {
+  return done(null, formatProfile(profile));
+});
+passport.use(facebookTokenStrategy);
+
+var googleTokenStrategy = new GoogleTokenStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET
+}, function(accessToken, refreshToken, profile, done) {
+  return done(null, formatProfile(profile));
+});
+passport.use(googleTokenStrategy);
 
 var linkedinStrategy = new LinkedinStrategy({
   clientID: process.env.LINKEDIN_API_KEY,
