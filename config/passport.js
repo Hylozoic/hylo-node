@@ -79,8 +79,6 @@ var facebookTokenStrategy = new FacebookTokenStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET
 }, function(accessToken, refreshToken, profile, done) {
-  sails.log("fTS Callback");  
-  sails.log(accessToken);
   return done(null, formatProfile(profile));
 });
 passport.use(facebookTokenStrategy);
@@ -89,9 +87,6 @@ var googleTokenStrategy = new GoogleTokenStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET
 }, function(accessToken, refreshToken, profile, done) {
-  sails.log("gTS Callback");
-  sails.log(accessToken);
-  sails.log(profile);    
   return done(null, formatProfile(profile));
 });
 passport.use(googleTokenStrategy);
