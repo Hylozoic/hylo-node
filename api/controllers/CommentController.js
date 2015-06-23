@@ -42,6 +42,9 @@ var createComment = function(commenterId, text, post) {
 
       }).spread(function(existing, mentioned) {
 
+        var newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existing),
+          unmentionedOldFollowers = _.difference(_.without(existing, commenterId), mentioned);
+
         return Promise.join(
           // create activity and send mention notification to all mentioned users
           Promise.map(mentioned, function(userId) {
@@ -59,7 +62,7 @@ var createComment = function(commenterId, text, post) {
 
           // create activity and send comment notification to all followers,
           // except the commenter and mentioned users
-          Promise.map(_.difference(_.without(existing, commenterId), mentioned), function(userId) {
+          Promise.map(unmentionedOldFollowers, function(userId) {
             return Promise.join(
               Queue.classMethod('Comment', 'sendNotificationEmail', {
                 recipientId: userId,
@@ -73,7 +76,7 @@ var createComment = function(commenterId, text, post) {
           }),
 
           // add all mentioned users and the commenter as followers, if not already following
-          post.addFollowers(_.difference(mentioned.concat(commenterId), existing), commenterId, {transacting: trx})
+          post.addFollowers(newFollowers, commenterId, {transacting: trx})
         );
       });
 
