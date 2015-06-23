@@ -8,7 +8,7 @@ describe('Skill', function() {
     cat = new User({name: 'Cat'});
     otherCat = new User({name: 'Other Cat'});
 
-    return setup.resetDb().then(function() {
+    return setup.clearDb().then(function() {
       return Promise.join(cat.save(), otherCat.save());
     })
     .then(function() {
@@ -27,7 +27,7 @@ describe('Skill', function() {
         return cat.load('skills');
       }).then(function() {
         var skills = Skill.simpleList(cat.relations.skills);
-        expect(skills).to.deep.equal(['clawing', 'sleeping', 'pouncing']);
+        expect(skills.sort()).to.deep.equal(['clawing', 'pouncing', 'sleeping']);
         return otherCat.load('skills');
       }).then(function() {
         // should not affect other users' skills

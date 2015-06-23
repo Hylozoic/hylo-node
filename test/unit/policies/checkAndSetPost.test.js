@@ -4,11 +4,11 @@ describe('checkAndSetPost', function() {
   var fixtures, req, res, next;
 
   before(function() {
-    return setup.resetDb().then(function() {
+    return setup.clearDb().then(function() {
       return Promise.props({
         u1: new User({name: 'U1'}).save(),
-        c1: new Community({name: "C1"}).save(),
-        c2: new Community({name: "C2"}).save(),
+        c1: new Community({name: "C1", slug: 'c1'}).save(),
+        c2: new Community({name: "C2", slug: 'c2'}).save(),
         p1: new Post({name: "P1"}).save(),
         p2: new Post({name: "P2"}).save()
       });

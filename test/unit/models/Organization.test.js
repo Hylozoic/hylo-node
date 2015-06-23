@@ -8,7 +8,7 @@ describe('Organization', function() {
     cat = new User({name: 'Cat'});
     otherCat = new User({name: 'Other Cat'});
 
-    return setup.resetDb().then(function() {
+    return setup.clearDb().then(function() {
       return Promise.join(cat.save(), otherCat.save());
     })
     .then(function() {
@@ -27,7 +27,7 @@ describe('Organization', function() {
         return cat.load('organizations');
       }).then(function() {
         var organizations = Organization.simpleList(cat.relations.organizations);
-        expect(organizations).to.deep.equal(['Cat Club', 'Heliopolis', 'Dance Church']);
+        expect(organizations.sort()).to.deep.equal(['Cat Club', 'Dance Church', 'Heliopolis']);
         return otherCat.load('organizations');
       }).then(function() {
         // should not affect other users' organizations

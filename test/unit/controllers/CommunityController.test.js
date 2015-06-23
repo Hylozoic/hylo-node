@@ -40,7 +40,10 @@ describe('CommunityController', () => {
         expect(res.body).to.deep.equal({
           id: community.id,
           name: 'foo',
-          slug: 'foo'
+          slug: 'foo',
+          avatar_url: null,
+          banner_url: null,
+          description: null
         });
       });
 

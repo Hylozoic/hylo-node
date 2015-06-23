@@ -4,12 +4,12 @@ describe('PostController', () => {
   var fixtures, req, res;
 
   before(() => {
-    return setup.resetDb().then(() => {
+    return setup.clearDb().then(() => {
       return Promise.props({
         u1: new User({name: 'U1'}).save(),
         u2: new User({name: 'U2'}).save(),
         p1: new Post({name: 'P1'}).save(),
-        c1: new Community({name: "C1"}).save()
+        c1: new Community({name: "C1", slug: 'c1'}).save()
       });
     }).then(function(props) {
       fixtures = props;
@@ -74,7 +74,7 @@ describe('PostController', () => {
       var project;
 
       beforeEach(() => {
-        project = new Project({community_id: fixtures.c1.id});
+        project = new Project({title: 'Project!', slug: 'project', community_id: fixtures.c1.id});
         return project.save();
       });
 

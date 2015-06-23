@@ -63,7 +63,7 @@ describe('Post', function() {
     });
 
     it("is true if the user is in the post's community", () => {
-      community = new Community();
+      community = new Community({name: 'House', slug: 'house'});
       return community.save()
       .then(() => Membership.create(user.id, community.id))
       .then(() => community.posts().attach(post.id))
@@ -72,7 +72,7 @@ describe('Post', function() {
     });
 
     it("is true if the user is in the post's project", () => {
-      project = new Project();
+      project = new Project({title: 'Lazy day', slug: 'lazy-day'});
       return project.save()
       .then(() => ProjectMembership.create(user.id, project.id))
       .then(() => PostProjectMembership.create(post.id, project.id))
@@ -84,8 +84,9 @@ describe('Post', function() {
       network = new Network();
       return network.save()
       .then(() => {
-        community = new Community({network_id: network.id});
-        community2 = new Community({network_id: network.id});
+        community = new Community({name: 'c1', slug: 'c1', network_id: network.id});
+        community2 = new Community({name: 'c2', slug: 'c2', network_id: network.id});
+        return Promise.join(community.save(), community2.save())
       })
       .then(() => Membership.create(user.id, community2.id))
       .then(() => community.posts().attach(post.id))

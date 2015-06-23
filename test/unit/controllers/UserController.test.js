@@ -2,16 +2,16 @@ var setup = require(require('root-path')('test/setup'));
 
 describe('UserController', function() {
 
-  var noop = function() { return (function() { return this }); },
+  var noop = () => () => this,
     req, res;
 
   beforeEach(function() {
     req = {
-      allParams: function() { return this.params },
-      param: function(key) { return this.params[key] },
+      allParams: () => this.params,
+      param: key => this.params[key],
       __: sails.__
     };
-    return setup.resetDb();
+    return setup.clearDb();
   });
 
   describe('.create', function() {
@@ -27,7 +27,7 @@ describe('UserController', function() {
       UserSession.login = spy(function() {});
       User.create = spy(User.create);
 
-      community = new Community({beta_access_code: 'foo', name: 'foo'});
+      community = new Community({beta_access_code: 'foo', name: 'foo', slug: 'foo'});
       return community.save();
     });
 
@@ -64,7 +64,14 @@ describe('UserController', function() {
       var invitation;
 
       beforeEach(() => {
-        return Invitation.create({communityId: community.id}).tap(i => invitation = i);
+        var inviter = new User({email: 'inviter@foo.com'});
+        return inviter.save()
+        .then(() => Invitation.create({
+          communityId: community.id,
+          userId: inviter.id,
+          email: "foo@bar.com"
+        }))
+        .tap(i => invitation = i);
       });
 
       it('works', function() {
@@ -179,7 +186,7 @@ describe('UserController', function() {
         res = {
           ok: function() {
             u1.load('skills').then(function(user) {
-              expect(Skill.simpleList(user.relations.skills)).to.eql(['standing', 'sitting']);
+              expect(Skill.simpleList(user.relations.skills).sort()).to.eql(['sitting', 'standing']);
               done();
             });
           },

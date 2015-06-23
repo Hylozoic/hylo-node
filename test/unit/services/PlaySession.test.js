@@ -43,7 +43,7 @@ describe('PlaySession', function() {
     var email = 'FoO@baR.com';
 
     beforeEach(function() {
-      return setup.resetDb().then(function() {
+      return setup.clearDb().then(function() {
         return new User({email: email, active: true}).save();
       });
     });
