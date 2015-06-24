@@ -8,6 +8,8 @@ module.exports = bookshelf.Model.extend({
 
   send: function(options) {
 
+    if (process.env.NODE_ENV == 'test') return;
+
     var zeroPush = new ZeroPush(process.env.ZEROPUSH_PROD_TOKEN),
       notify = Promise.promisify(zeroPush.notify, zeroPush),
       platform = "ios_macos",
