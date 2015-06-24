@@ -46,6 +46,63 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  sendNotifications: function(opts) {
+    var comment, post;
+    return bookshelf.transaction(trx => {
+      return Comment.find(opts.commentId, {
+        withRelated: ['user', 'post', 'post.communities', 'post.creator', 'post.followers'],
+        transacting: trx
+      }).then(c => {
+        comment = c;
+        post = c.relations.post;
+        return [
+          post.relations.followers.pluck('user_id'),
+          RichText.getUserMentions(comment.get('comment_text'))
+        ]
+      })
+      .spread((existing, mentioned) => {
+
+        var commenterId = comment.get('user_id'),
+          newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existing),
+          unmentionedOldFollowers = _.difference(_.without(existing, commenterId), mentioned);
+
+        return Promise.join(
+          // create activity and send mention notification to all mentioned users
+          Promise.map(mentioned, function(userId) {
+            return Promise.join(
+              Queue.classMethod('Comment', 'sendNotificationEmail', {
+                recipientId: userId,
+                commentId: comment.id,
+                version: 'mention'
+              }),
+              Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx}),
+              Comment.sendPushNotification(userId, comment, 'mention', {transacting: trx}),
+              User.incNewNotificationCount(userId, trx)
+            );
+          }),
+
+          // create activity and send comment notification to all followers,
+          // except the commenter and mentioned users
+          Promise.map(unmentionedOldFollowers, function(userId) {
+            return Promise.join(
+              Queue.classMethod('Comment', 'sendNotificationEmail', {
+                recipientId: userId,
+                commentId: comment.id,
+                version: 'default'
+              }),
+              Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
+              Comment.sendPushNotification(userId, comment, 'default', {transacting: trx}),
+              User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
+            );
+          }),
+
+          // add all mentioned users and the commenter as followers, if not already following
+          post.addFollowers(newFollowers, commenterId, {transacting: trx})
+        );
+      });
+    }); // transaction
+  },
+
   sendNotificationEmail: function(opts) {
     // opts.version corresponds to names of versions in SendWithUs
 
@@ -107,8 +164,8 @@ module.exports = bookshelf.Model.extend({
       var post = comment.relations.post,
         commenter = comment.relations.user,
         creator = post.relations.creator,
-        community = post.relations.communities.models[0],
-        path = url.parse(Frontend.Route.post(post,community)).path,
+        community = post.relations.communities.first(),
+        path = url.parse(Frontend.Route.post(post, community)).path,
         alertText;
 
       switch (version) {

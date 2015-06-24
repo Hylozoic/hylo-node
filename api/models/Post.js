@@ -74,6 +74,15 @@ module.exports = bookshelf.Model.extend({
 
   isPublicReadable: function() {
     return this.get('visibility') == Post.Visibility.PUBLIC_READABLE;
+  },
+
+  updateCommentCount: function(trx) {
+    var self = this;
+    return Aggregate.count(this.comments(), {transacting: trx})
+    .tap(count => self.save({
+      num_comments: count,
+      updated_at: new Date()
+    }, {patch: true, transacting: trx}));
   }
 
 }, {

@@ -17,71 +17,9 @@ var createComment = function(commenterId, text, post) {
 
   return bookshelf.transaction(function(trx) {
     return new Comment(attrs).save(null, {transacting: trx})
-    .tap(function(comment) {
-      // update number of comments on post
-      return Aggregate.count(post.comments(), {transacting: trx})
-      .then(function(numComments) {
-        return post.save({
-          num_comments: numComments,
-          updated_at: new Date()
-        }, {patch: true, transacting: trx});
-      });
-    })
-    .tap(function(comment) {
-      return comment.load(['user', 'post', 'post.communities', 'post.creator'], {transacting: trx})
-    })
-    .tap(function(comment) {
-
-      return post.load('followers', {transacting: trx}).then(function(post) {
-        // find all existing followers and all mentioned users
-        // (there may be some users in both groups)
-        return [
-          post.relations.followers.pluck('user_id'),
-          RichText.getUserMentions(text)
-        ];
-
-      }).spread(function(existing, mentioned) {
-
-        var newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existing),
-          unmentionedOldFollowers = _.difference(_.without(existing, commenterId), mentioned);
-
-        return Promise.join(
-          // create activity and send mention notification to all mentioned users
-          Promise.map(mentioned, function(userId) {
-            return Promise.join(
-              Queue.classMethod('Comment', 'sendNotificationEmail', {
-                recipientId: userId,
-                commentId: comment.id,
-                version: 'mention'
-              }),
-              Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx}),
-              Comment.sendPushNotification(userId, comment, 'mention', {transacting: trx}),
-              User.incNewNotificationCount(userId, trx)
-            );
-          }),
-
-          // create activity and send comment notification to all followers,
-          // except the commenter and mentioned users
-          Promise.map(unmentionedOldFollowers, function(userId) {
-            return Promise.join(
-              Queue.classMethod('Comment', 'sendNotificationEmail', {
-                recipientId: userId,
-                commentId: comment.id,
-                version: 'default'
-              }),
-              Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
-              Comment.sendPushNotification(userId, comment, 'default', {transacting: trx}),
-              User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
-            );
-          }),
-
-          // add all mentioned users and the commenter as followers, if not already following
-          post.addFollowers(newFollowers, commenterId, {transacting: trx})
-        );
-      });
-
-    });
-  }); // transaction
+    .tap(() => post.updateCommentCount(trx));
+  })
+  .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}));
 
 };
 

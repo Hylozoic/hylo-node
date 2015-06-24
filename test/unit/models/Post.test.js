@@ -1,4 +1,5 @@
-var setup = require(require('root-path')('test/setup'));
+var moment = require('moment'),
+  setup = require(require('root-path')('test/setup'));
 
 describe('Post', function() {
 
@@ -94,6 +95,28 @@ describe('Post', function() {
       .then(visible => expect(visible).to.be.true);
     });
 
+  });
+
+  describe('#updateCommentCount', () => {
+    var post;
+
+    before(() => {
+      post = new Post({updated_at: moment().subtract(1, 'month').toDate()});
+      return post.save()
+      .then(post => Promise.join(
+        new Comment({post_id: post.id, active: true}).save(),
+        new Comment({post_id: post.id, active: true}).save()
+      ))
+    });
+
+    it('updates the count and updated_at', () => {
+      return post.updateCommentCount()
+      .then(count => {
+        expect(count).to.equal(2);
+        expect(post.get('num_comments')).to.equal(2);
+        expect(post.get('updated_at').getTime()).to.be.closeTo(new Date().getTime(), 2000);
+      });
+    });
   });
 
 });

@@ -10,6 +10,7 @@ module.exports = bookshelf.Model.extend({
   contributions:   () => this.hasMany(Contribution),
   devices:         () => this.hasMany(Device, 'user_id'),
   emails:          () => this.hasMany(UserEmail),
+  follows:         () => this.hasMany(Follower),
   linkedAccounts:  () => this.hasMany(LinkedAccount),
   memberships:     () => this.hasMany(Membership),
   onboarding:      () => this.hasOne(Tour).query({where: {type: 'onboarding'}}),

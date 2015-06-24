@@ -48,15 +48,22 @@ describe('CommentController', function() {
         expect(responseData).to.exist;
         expect(responseData.user).to.exist;
         expect(responseData.comment_text).to.equal(commentText);
-
-        // mentioning should cause email notifications
-        expect(require('kue').jobCount()).to.equal(2);
-
-        return fixtures.p1.load('followers');
+        return fixtures.p1.load('comments');
       })
       .then(post => {
-        expect(post.relations.followers.length).to.equal(3);
+        var comment = post.relations.comments.first();
+
+        var job = require('kue').getJobs()[0];
+        expect(job).to.exist;
+        expect(job.type).to.equal('classMethod');
+        expect(job.data).to.deep.equal({
+          className: 'Comment',
+          methodName: 'sendNotifications',
+          commentId: comment.id
+        });
+
       });
+
     });
 
   });
@@ -95,11 +102,6 @@ describe('CommentController', function() {
       };
 
       CommentController.createFromEmail(req, res)
-      .tap(() => {
-        return Comment.query().count().then(rows => {
-          console.log('comment count: ' + rows[0].count);
-        });
-      })
       .then(function() {
         expect(Analytics.track).to.have.been.called();
         expect(res.ok).to.have.been.called();
