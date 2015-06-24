@@ -105,7 +105,10 @@ module.exports = {
 
       if (opts.project) {
         qb.join('projects_users', 'projects_users.user_id', '=', 'users.id');
-        qb.whereIn('projects_users.project_id', opts.project);
+        qb.leftJoin('projects', 'projects.user_id', '=', 'users.id');
+        qb.where(() =>
+          this.whereRaw('projects.id is not null')
+          .orWhere('projects_users.project_id', opts.project));
       }
 
       if (opts.autocomplete) {

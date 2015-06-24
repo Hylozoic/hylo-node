@@ -60,14 +60,22 @@ module.exports = {
       sort = resultType === 'posts' ? 'post.created_at' : null,
       method = resultType === 'posts' ? Search.forPosts : Search.forUsers;
 
-    return findCommunityIds(req).then(communityIds => {
-      return method({
-        autocomplete: term,
-        limit: req.param('limit') || 5,
-        communities: communityIds,
-        sort: sort
-      }).fetchAll()
-    }).then(results => {
+    var setFilters = Promise.method(() => {
+      if (req.param('projectId')) {
+        return {project: req.param('projectId')};
+      } else {
+        return findCommunityIds(req)
+        .then(communityIds => ({communities: communityIds}));
+      }
+    });
+
+    return setFilters()
+    .then(filters => method(_.extend(filters, {
+      autocomplete: term,
+      limit: req.param('limit') || 5,
+      sort: sort
+    })).fetchAll())
+    .then(results => {
       if (resultType === 'posts') {
         res.ok(results.map(result => result.pick('id', 'name')));
       } else {
