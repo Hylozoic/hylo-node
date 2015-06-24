@@ -20,7 +20,8 @@ var extraAttributes = function(user) {
     websites: UserWebsite.simpleList(user.relations.websites),
     post_count: Post.countForUser(user),
     contribution_count: Contribution.countForUser(user),
-    thank_count: Thank.countForUser(user)
+    thank_count: Thank.countForUser(user),
+    extra_info: user.get('extra_info')
   });
 };
 
@@ -31,7 +32,15 @@ var selfOnlyAttributes = function(user, isAdmin) {
   });
 };
 
+var shortAttributes = [
+  'id', 'name', 'avatar_url',
+  'bio', 'intention', 'work',
+  'facebook_url', 'linkedin_url', 'twitter_name'
+];
+
 var UserPresenter = module.exports = {
+
+  shortAttributes: shortAttributes,
 
   fetchForSelf: function(userId, isAdmin) {
     return User.find(userId, {withRelated: relationsForSelf})
@@ -48,13 +57,7 @@ var UserPresenter = module.exports = {
     return User.find(id, {withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']})
     .tap(user => { if (!user) throw "User not found"; })
     .then(user => Promise.join(user, extraAttributes(user)))
-    .spread((user, extraAttributes) =>
-      _.chain(user.attributes)
-      .pick([
-        'id', 'name', 'avatar_url', 'bio', 'work', 'intention', 'extra_info',
-        'twitter_name', 'linkedin_url', 'facebook_url'
-      ])
-      .extend(extraAttributes).value());
+    .spread((user, extra) => _.extend(user.attributes, extra));
   }
 
 };

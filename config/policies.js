@@ -50,7 +50,8 @@ module.exports.policies = {
     contributions:     ['sessionAuth', 'inSameCommunityOrNetwork'],
     thanks:            ['sessionAuth', 'inSameCommunityOrNetwork'],
     sendPasswordReset: true,
-    findForProject:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject']
+    findForProject:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    findForCommunity:  ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership']
   },
 
   ActivityController: {
@@ -73,7 +74,6 @@ module.exports.policies = {
     findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController
     addModerator:    ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
-    findMembers:     ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'], // FIXME move to UserController
     removeMember:    ['sessionAuth', 'isModerator'],
     leave:           ['sessionAuth', 'checkAndSetMembership'],
     validate:        true,

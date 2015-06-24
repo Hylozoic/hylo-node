@@ -1,8 +1,17 @@
-var findCommunityIds = Promise.method(function(req) {
+var findCommunityIds = Promise.method(req => {
   if (req.param('communityId')) {
     return [req.param('communityId')];
   } else {
     return Network.activeCommunityIds(req.session.userId);
+  }
+});
+
+var setFilters = Promise.method(req => {
+  if (req.param('projectId')) {
+    return {project: req.param('projectId')};
+  } else {
+    return findCommunityIds(req)
+    .then(communityIds => ({communities: communityIds}));
   }
 });
 
@@ -43,7 +52,7 @@ module.exports = {
         people_total: (people.length > 0 ? parseInt(people.first().get('total')) : 0),
         people: people.map(function(user) {
           return _.chain(user.attributes)
-          .pick('id', 'name', 'avatar_url', 'bio')
+          .pick(UserPresenter.shortAttributes)
           .extend({
             skills: Skill.simpleList(user.relations.skills),
             organizations: Organization.simpleList(user.relations.organizations)
@@ -60,16 +69,7 @@ module.exports = {
       sort = resultType === 'posts' ? 'post.created_at' : null,
       method = resultType === 'posts' ? Search.forPosts : Search.forUsers;
 
-    var setFilters = Promise.method(() => {
-      if (req.param('projectId')) {
-        return {project: req.param('projectId')};
-      } else {
-        return findCommunityIds(req)
-        .then(communityIds => ({communities: communityIds}));
-      }
-    });
-
-    return setFilters()
+    return setFilters(req)
     .then(filters => method(_.extend(filters, {
       autocomplete: term,
       limit: req.param('limit') || 5,

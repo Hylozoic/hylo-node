@@ -104,57 +104,6 @@ module.exports = {
     .catch(res.serverError);
   },
 
-  findMembers: function(req, res) {
-    if (TokenAuth.isAuthenticated(res)) {
-      if (!RequestValidation.requireTimeRange(req, res)) return;
-    }
-
-    var options = _.defaults(
-      _.pick(req.allParams(), 'autocomplete', 'limit', 'offset', 'start_time', 'end_time'),
-      {
-        limit: 10,
-        communities: [req.param('communityId')]
-      }
-    );
-
-    if (req.param('with')) {
-      options.withRelated = _.flatten([req.param('with')]);
-    }
-
-    Search.forUsers(options).fetchAll(_.pick(options, 'withRelated'))
-    .then(function(users) {
-
-      res.ok(users.map(function(user) {
-        var attributes = _.merge(
-          _.pick(user.attributes,
-            'id', 'name', 'avatar_url', 'bio', 'facebook_url', 'linkedin_url', 'twitter_name'),
-          {
-            public_email: user.encryptedEmail(),
-            total: user.get('total')
-            // FIXME: total shouldn't go here, but this endpoint is also used
-            // for autocomplete, and the Angular resource is already configured
-            // to expect an array response, so we can't refactor this response
-            // without changing the frontend
-          }
-        );
-
-        if (options.withRelated) {
-          _.each(options.withRelated, function(relation) {
-            var model;
-            switch (relation) {
-              case 'skills': model = Skill; break;
-              case 'organizations': model = Organization;
-            }
-            attributes[relation] = model.simpleList(user.relations[relation]);
-          });
-        }
-
-        return attributes;
-      }));
-
-    });
-  },
-
   joinWithCode: function(req, res) {
     Community.query('whereRaw', 'lower(beta_access_code) = lower(?)', req.param('code')).fetch()
     .tap(community => Membership.create(req.session.userId, community.id))

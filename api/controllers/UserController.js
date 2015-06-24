@@ -273,8 +273,31 @@ module.exports = {
       offset: req.param('offset') || 0
     })
     .fetchAll()
-    .then(users => users.map(u => u.pick('id', 'name', 'avatar_url', 'bio',
-      'twitter_name', 'facebook_url', 'linkedin_url')))
+    .then(users => users.map(u => u.pick(UserPresenter.shortAttributes)))
+    .then(res.ok)
+    .catch(res.serverError);
+  },
+
+  findForCommunity: function(req, res) {
+    if (TokenAuth.isAuthenticated(res)
+      && !RequestValidation.requireTimeRange(req, res))
+      return;
+
+    var options = _.defaults(
+      _.pick(req.allParams(), 'limit', 'offset', 'start_time', 'end_time'),
+      {limit: 20, communities: [req.param('communityId')]}
+    ), total;
+
+    Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations']})
+    .tap(users => total = users.first().get('total'))
+    .then(users => users.map(user => _.merge(
+      _.pick(user.attributes, UserPresenter.shortAttributes),
+      {
+        skills: Skill.simpleList(user.relations.skills),
+        organizations: Organization.simpleList(user.relations.organizations),
+        public_email: user.encryptedEmail()
+      })))
+    .then(list => ({people_total: total, people: list}))
     .then(res.ok)
     .catch(res.serverError);
   }
