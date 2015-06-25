@@ -43,7 +43,8 @@ describe('CommunityController', () => {
           slug: 'foo',
           avatar_url: null,
           banner_url: null,
-          description: null
+          description: null,
+          settings: {}
         });
       });
 
