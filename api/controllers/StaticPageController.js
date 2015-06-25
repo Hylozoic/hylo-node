@@ -18,6 +18,7 @@ var LRU = require('lru-cache'),
     '/about/contact',
     '/about/team',
     '/admin',
+    '/subscribe',
     '/styleguide',
     '/terms',
     '/terms/privacy'

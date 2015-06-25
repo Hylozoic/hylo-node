@@ -83,6 +83,7 @@
     "sanitize-html": "^1.5.0",
     "sendwithus": "^2.8.0",
     "streamifier": "^0.1.1",
+    "stripe": "^3.5.0",
     "time": "^0.11.2",
     "to-markdown": "^1.2.1",
     "validator": "^3.22.1",
