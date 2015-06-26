@@ -3,6 +3,14 @@ module.exports = function(req, res, next) {
     sails.log.debug('isAdmin: ' + req.user.email);
     next();
   } else {
-    res.forbidden();
+    if (res.forbidden) {
+      res.forbidden();
+    } else {
+      // when this middleware is used outside of the Sails stack
+      // (see http.js), it needs to fall back to the standard API
+      // for http.ServerResponse
+      res.statusCode = 403;
+      res.end('Forbidden');
+    }
   }
 };
