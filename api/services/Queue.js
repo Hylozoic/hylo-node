@@ -33,7 +33,7 @@ module.exports = {
       return false;
     };
 
-    return rangeByState('complete', 0, size, 'asc')
+    return rangeByState('complete', 0, size-1, 'asc')
     .then(jobs => Promise.map(jobs, removeIfOldEnough))
     .then(results => _.filter(results).length);
   }
