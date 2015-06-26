@@ -1,4 +1,5 @@
-var Promise = require('bluebird');
+var kue = require('kue'),
+  Promise = require('bluebird');
 
 module.exports = {
   addJob: function(name, data) {
@@ -18,5 +19,22 @@ module.exports = {
       methodName: methodName
     }, data);
     return this.addJob('classMethod', data);
+  },
+
+  removeOldCompletedJobs: function(size) {
+    var rangeByState = Promise.promisify(kue.Job.rangeByState, kue.Job),
+      now = new Date().getTime(),
+      days = 7;
+
+    var removeIfOldEnough = job => {
+      if (now - Number(job.created_at) > days * 86400000) {
+        return Promise.promisify(job.remove, job)().then(() => true);
+      }
+      return false;
+    };
+
+    return rangeByState('complete', 0, size, 'asc')
+    .then(jobs => Promise.map(jobs, removeIfOldEnough))
+    .then(results => _.filter(results).length);
   }
 };
