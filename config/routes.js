@@ -148,6 +148,7 @@ module.exports.routes = {
 
   'POST    /noo/subscription':                            'SubscriptionController.create',
 
+  '/hl27209f.htm':                                        'StaticPageController.verification',
   '/*':                                                   'StaticPageController.proxy'
 
 };

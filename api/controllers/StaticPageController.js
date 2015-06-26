@@ -78,6 +78,10 @@ module.exports = {
       })
       .pipe(res);
     }
+  },
+
+  verification: function(req, res) {
+    res.ok('9PxaIOic7w4bnNZ58d0F');
   }
 
 }
