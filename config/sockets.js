@@ -1,3 +1,5 @@
+var redisInfo = require('parse-redis-url')().parse(process.env.REDIS_URL);
+
 /**
  * WebSocket Server Settings
  * (sails.config.sockets)
@@ -75,12 +77,11 @@ module.exports.sockets = {
   *                                                                          *
   ***************************************************************************/
 
-  // adapter: 'redis',
-  // host: '127.0.0.1',
-  // port: 6379,
-  // db: 'sails',
-  // pass: '<redis auth password>'
-
+  adapter: 'socket.io-redis',
+  host: redisInfo.host,
+  port: redisInfo.port,
+  db: redisInfo.database,
+  pass: redisInfo.password
 
   /***************************************************************************
   *                                                                          *

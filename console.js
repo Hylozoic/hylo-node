@@ -33,6 +33,7 @@ console.log("Lifting Sails in interactive mode...".blue);
     log: {
       noShip: true
     },
+    // comment out all of this hook-disabling to test sockets from the console
     hooks: {
       http: false,
       sockets: false,
