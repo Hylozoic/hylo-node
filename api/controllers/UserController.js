@@ -70,15 +70,15 @@ module.exports = {
       return res.ok({});
 
     return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
-    .then(function(attributes) {
-      res.ok(UserPresenter.presentForSelf(attributes, req.session));
-    }).catch(res.serverError.bind(res));
+    .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+    .then(res.ok)
+    .catch(res.serverError);
   },
 
   findOne: function(req, res) {
-    UserPresenter.fetchForOther(req.param('userId')).then(function(attributes) {
-      res.ok(attributes);
-    }).catch(res.serverError.bind(res));
+    UserPresenter.fetchForOther(req.param('userId'))
+    .then(res.ok)
+    .catch(res.serverError);
   },
 
   contributions: function(req, res) {
