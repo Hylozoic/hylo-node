@@ -289,7 +289,7 @@ module.exports = {
     ), total;
 
     Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations']})
-    .tap(users => total = users.first().get('total'))
+    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
     .then(users => users.map(user => _.merge(
       _.pick(user.attributes, UserPresenter.shortAttributes),
       {
