@@ -62,6 +62,7 @@ process.chdir(__dirname);
     }
   }
 
+  sails.role = 'server';
 
   // Start server
   sails.log.info('Lifting...'.yellow);

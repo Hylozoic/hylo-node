@@ -9,6 +9,8 @@ var _ = require('lodash'),
   sails = skiff.sails,
   util = require('util');
 
+sails.role = 'worker';
+
 // define new jobs here.
 // each job should return a promise.
 // use Promise.method if the job is synchronous.

@@ -61,6 +61,7 @@
     "moment": "^2.9.0",
     "moment-timezone": "^0.3.0",
     "newrelic": "^1.17.3",
+    "node-redis-pubsub": "^0.6.0",
     "node-uuid": "^1.4.1",
     "nzero-push": "^2.1.2",
     "parse-redis-url": "0.0.1",
