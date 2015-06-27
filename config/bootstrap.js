@@ -13,7 +13,6 @@ require('dotenv').load();
 
 var fs = require('fs'),
   path = require('path'),
-  Pubsub = require('node-redis-pubsub'),
   root = require('root-path'),
   util = require('util');
 
@@ -73,20 +72,6 @@ module.exports.bootstrap = function(done) {
       global[modelName] = require(root('api/presenters/' + modelName));
     }
   });
-
-  var redisInfo = require('parse-redis-url')().parse(process.env.REDIS_URL);
-  sails.pubsub = new Pubsub({
-    port: redisInfo.port,
-    host: redisInfo.host,
-    auth: redisInfo.password,
-    scope: 'hylo-node'
-  });
-
-  if (sails.role === 'server') {
-    sails.pubsub.on('update:*', function(data, channel) {
-      console.log(format('from Redis pubsub: channel %s: %s', channel, data));
-    });
-  }
 
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
