@@ -25,16 +25,27 @@ var findCommunity = function(req) {
   });
 };
 
-var finishOAuth = function(service, req, res, next) {
-  passport.authenticate(service, function(err, profile, info) {
+var finishOAuth = function(strategy, req, res, next) {
+  var service = strategy;
+    if (strategy=='facebook-token') {
+      service = 'facebook';
+    } else if (strategy=='google-token') {
+      service = 'google';
+    };
+
+  passport.authenticate(strategy, function(err, profile, info) {
+    sails.log("Authenticating with: " + service)
     if (err || !profile) {
+      sails.log("No user or error:");
+      sails.log(err);      
       res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null});
       return;
     }
-
+    
     findUser(service, profile.email, profile.id)
     .then(function(user) {
       if (user) {
+        sails.log("Found User");        
         UserSession.login(req, user, service);
 
         // if this is a new account, link it to the user
@@ -42,6 +53,7 @@ var finishOAuth = function(service, req, res, next) {
           return LinkedAccount.create(user.id, {type: service, profile: profile});
         }
       } else {
+        sails.log("Making new user");                
         return findCommunity(req)
         .spread(function(community, invitation) {
           var attrs = _.merge(_.pick(profile, 'email', 'name'), {
