@@ -38,7 +38,7 @@ var finishOAuth = function(strategy, req, res, next) {
       res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null});
       return;
     }
-    
+
     findUser(service, profile.email, profile.id)
     .then(function(user) {
       if (user) {
