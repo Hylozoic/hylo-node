@@ -34,10 +34,7 @@ var finishOAuth = function(strategy, req, res, next) {
     };
 
   passport.authenticate(strategy, function(err, profile, info) {
-    sails.log("Authenticating with: " + service)
     if (err || !profile) {
-      sails.log("No user or error:");
-      sails.log(err);      
       res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null});
       return;
     }
@@ -45,7 +42,6 @@ var finishOAuth = function(strategy, req, res, next) {
     findUser(service, profile.email, profile.id)
     .then(function(user) {
       if (user) {
-        sails.log("Found User");        
         UserSession.login(req, user, service);
 
         // if this is a new account, link it to the user
@@ -53,7 +49,6 @@ var finishOAuth = function(strategy, req, res, next) {
           return LinkedAccount.create(user.id, {type: service, profile: profile});
         }
       } else {
-        sails.log("Making new user");                
         return findCommunity(req)
         .spread(function(community, invitation) {
           var attrs = _.merge(_.pick(profile, 'email', 'name'), {
