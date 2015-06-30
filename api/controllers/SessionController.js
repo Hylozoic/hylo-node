@@ -25,8 +25,15 @@ var findCommunity = function(req) {
   });
 };
 
-var finishOAuth = function(service, req, res, next) {
-  passport.authenticate(service, function(err, profile, info) {
+var finishOAuth = function(strategy, req, res, next) {
+  var service = strategy;
+  if (strategy==='facebook-token') {
+    service = 'facebook';
+  } else if (strategy==='google-token') {
+    service = 'google';
+  };
+
+  passport.authenticate(strategy, function(err, profile, info) {
     if (err || !profile) {
       res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null});
       return;
