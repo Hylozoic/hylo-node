@@ -89,7 +89,7 @@ module.exports = {
   findOne: function(req, res) {
     Project.find(res.locals.project.id, {withRelated: [
       {user: qb => qb.column('id', 'name', 'avatar_url')},
-      {community: qb => qb.column('id', 'name', 'avatar_url')},
+      {community: qb => qb.column('id', 'name', 'avatar_url', 'slug')},
       {memberships: qb => qb.where('user_id', req.session.userId)},
       {posts: qb => qb.where({fulfilled_at: null, active: true})}
     ]})
