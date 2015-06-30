@@ -27,11 +27,11 @@ var findCommunity = function(req) {
 
 var finishOAuth = function(strategy, req, res, next) {
   var service = strategy;
-    if (strategy=='facebook-token') {
-      service = 'facebook';
-    } else if (strategy=='google-token') {
-      service = 'google';
-    };
+  if (strategy==='facebook-token') {
+    service = 'facebook';
+  } else if (strategy==='google-token') {
+    service = 'google';
+  };
 
   passport.authenticate(strategy, function(err, profile, info) {
     if (err || !profile) {
