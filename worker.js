@@ -54,9 +54,11 @@ var processJobs = function() {
   });
 };
 
-skiff.lift({
-  start: processJobs,
-  stop: function(done) {
-    queue.shutdown(5000, done);
-  }
-});
+setTimeout(() => {
+  skiff.lift({
+    start: processJobs,
+    stop: done => {
+      queue.shutdown(5000, done);
+    }
+  });
+}, Number(process.env.DELAY_START || 0) * 1000);
