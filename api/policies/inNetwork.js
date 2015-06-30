@@ -4,8 +4,10 @@ module.exports = function(req, res, next) {
     if (!network) return res.notFound();
     res.locals.network = network;
 
+    if (Admin.isSignedIn(req)) return next();
+
     return Network.containsUser(network.id, req.session.userId)
     .then(contains => contains ? next() : res.forbidden());
-  })
+  });
 
 };
