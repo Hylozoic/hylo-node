@@ -1,10 +1,11 @@
 
 var passport = require('passport'),
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
+  GoogleTokenStrategy = require('passport-google-token').Strategy,        
   FacebookStrategy = require('passport-facebook').Strategy,
   FacebookTokenStrategy = require('passport-facebook-token').Strategy,
-  GoogleTokenStrategy = require('passport-google-token').Strategy,        
   LinkedinStrategy = require('passport-linkedin-oauth2').Strategy;
+  LinkedInTokenStrategy = require('passport-linkedin-token-oauth2').Strategy;
 
 /////////////////////////////
 // admin login
@@ -101,3 +102,12 @@ var linkedinStrategy = new LinkedinStrategy({
   done(null, formatProfile(profile));
 });
 passport.use(linkedinStrategy);
+
+var linkedinTokenStrategy = new LinkedInTokenStrategy({
+  clientID: process.env.LINKEDIN_API_KEY,
+  clientSecret: process.env.LINKEDIN_API_SECRET,
+  callbackURL: url('/noo/login/linkedin/oauth'),  
+}, function(accessToken, refreshToken, profile, done) {
+  return done(null, formatProfile(profile));
+});
+passport.use(linkedinTokenStrategy);
