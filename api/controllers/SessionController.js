@@ -31,6 +31,8 @@ var finishOAuth = function(strategy, req, res, next) {
     service = 'facebook';
   } else if (strategy==='google-token') {
     service = 'google';
+  } else if (strategy==='linkedin-token') {
+    service = 'linkedin';
   };
 
   passport.authenticate(strategy, function(err, profile, info) {
@@ -129,6 +131,10 @@ module.exports = {
 
   finishLinkedinOauth: function(req, res, next) {
     finishOAuth('linkedin', req, res, next);
+  },
+
+  finishLinkedinTokenOauth: function(req, res, next) {
+    finishOAuth('linkedin-token', req, res, next);
   },
 
   destroy: function(req, res) {
