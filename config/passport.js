@@ -106,7 +106,6 @@ passport.use(linkedinStrategy);
 var linkedinTokenStrategy = new LinkedInTokenStrategy({
   clientID: process.env.LINKEDIN_API_KEY,
   clientSecret: process.env.LINKEDIN_API_SECRET,
-  callbackURL: url('/noo/login/linkedin/oauth'),  
 }, function(accessToken, refreshToken, profile, done) {
   return done(null, formatProfile(profile));
 });
