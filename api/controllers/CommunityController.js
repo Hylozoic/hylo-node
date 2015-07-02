@@ -20,11 +20,13 @@ module.exports = {
   },
 
   findSettings: function(req, res) {
+    var leader;
     Community.find(req.param('communityId'), {withRelated: ['leader']})
+    .tap(community => leader = community.relations.leader)
     .then(community => _.merge(community.pick(
       'welcome_message', 'beta_access_code', 'settings'
     ), {
-      leader: community.relations.leader.pick('id', 'name', 'avatar_url')
+      leader: leader ? leader.pick('id', 'name', 'avatar_url') : null
     }))
     .then(res.ok)
     .catch(res.serverError);
