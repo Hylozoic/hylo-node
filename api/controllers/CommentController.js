@@ -1,7 +1,9 @@
 var commentAttributes = function(comment) {
-  var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'created_at', 'user');
+  var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'created_at', 'user'),
+    thanks = comment.relations.thanks;
+
   return _.extend({
-    isThanked: !!comment.relations.thanks.first()
+    isThanked: !!(thanks && thanks.first())
   }, attrs);
 };
 
