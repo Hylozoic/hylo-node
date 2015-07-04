@@ -110,7 +110,7 @@ module.exports = bookshelf.Model.extend({
       User.find(opts.recipientId),
       Comment.find(opts.commentId, {
         withRelated: [
-          'user', 'post', 'post.communities', 'post.creator'
+          'user', 'post', 'post.communities', 'post.creator', 'post.relatedUsers'
         ]
       })
     )
@@ -125,8 +125,19 @@ module.exports = bookshelf.Model.extend({
         text = RichText.qualifyLinks(comment.get('comment_text')),
         replyTo = Email.postReplyAddress(post.id, recipient.id);
 
-      var postLabel = format('%s %s',
-        (recipient.id == creator.id ? 'your' : 'the'), post.get('type'));
+      var postLabel;
+
+      if (post.get('type') === 'welcome') {
+        var relatedUser = post.relations.relatedUsers.first();
+        if (relatedUser.id === recipient.id) {
+          postLabel = 'your welcoming post';
+        } else {
+          postLabel = format("%s's welcoming post", relatedUser.get('name'));
+        }
+      } else {
+        postLabel = format('%s %s: "%s"',
+          (recipient.id == creator.id ? 'your' : 'the'), post.get('type'), post.get('name'));
+      }
 
       return Email.sendNewCommentNotification({
         version: opts.version,

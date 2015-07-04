@@ -37,7 +37,7 @@ var postAttributes = post => {
       myVote:       post.relations.votes.length > 0,
       numComments:  post.get("num_comments"),
       votes:        post.get("num_votes"),
-      user:         creator.pick('id', 'name', 'avatar_url'),
+      user:         creator && creator.pick('id', 'name', 'avatar_url'),
       relatedUsers: post.relations.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url'))
     }
   );
