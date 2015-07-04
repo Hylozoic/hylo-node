@@ -11,6 +11,11 @@ module.exports = bookshelf.Model.extend({
   network:       () => this.belongsTo(Network),
   posts:         () => this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
                        .query({where: {'post.active': true}}),
+  contentPosts:  () => this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
+                       .query(qb => {
+                         qb.where('post.active', true);
+                         qb.where('post.type', '!=', 'join');
+                       }),
   users:         () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {'users_community.active': true}}),
 
