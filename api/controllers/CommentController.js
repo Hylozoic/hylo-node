@@ -1,7 +1,7 @@
 var commentAttributes = function(comment) {
   var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'created_at', 'user');
   return _.extend({
-    isThanked: _.isEmpty(comment.relations.thanks)
+    isThanked: !_.isEmpty(comment.relations.thanks)
   }, attrs);
 };
 
