@@ -136,7 +136,7 @@ module.exports = bookshelf.Model.extend({
         Promise.join(
           Tour.startOnboarding(user.id, {transacting: trx}),
           invitation && invitation.use(user.id, {transacting: trx}),
-          attrs.community && Post.createWelcomePost(user.id, community.id, trx)
+          attrs.community && Post.createWelcomePost(user.id, attrs.community.id, trx)
         ))),
 
   find: function(id, options) {
