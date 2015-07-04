@@ -207,7 +207,7 @@ module.exports = bookshelf.Model.extend({
 
   createWelcomePost: function(userId, communityId) {
     var attrs = _.merge(Post.newPostAttrs(), {
-      type: 'join'
+      type: 'welcome'
     });
 
     return bookshelf.transaction(trx => {
