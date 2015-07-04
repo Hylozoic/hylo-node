@@ -131,6 +131,14 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
+  createFully: (attrs, invitation) =>
+    bookshelf.transaction(trx =>
+      User.create(attrs, {transacting: trx}).tap(user =>
+        Promise.join(
+          Tour.startOnboarding(user.id, {transacting: trx}),
+          (invitation ? invitation.use(user.id, {transacting: trx}) : null)
+        ))),
+
   find: function(id, options) {
     return User.where({id: id}).fetch(options);
   },

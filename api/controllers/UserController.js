@@ -41,14 +41,7 @@ module.exports = {
         account: {type: 'password', password: params.password}
       });
 
-      return bookshelf.transaction(function(trx) {
-        return User.create(attrs, {transacting: trx}).tap(function(user) {
-          return Promise.join(
-            Tour.startOnboarding(user.id, {transacting: trx}),
-            (ctx.invitation ? ctx.invitation.use(user.id, {transacting: trx}) : null)
-          );
-        });
-      });
+      return User.createFully(attrs, ctx.invitation);
     })
     .then(function(user) {
       if (req.param('login'))
@@ -303,4 +296,3 @@ module.exports = {
   }
 
 };
-

@@ -58,14 +58,7 @@ var finishOAuth = function(strategy, req, res, next) {
             account: {type: service, profile: profile}
           });
 
-          return bookshelf.transaction(function(trx) {
-            return User.create(attrs, {transacting: trx}).tap(function(user) {
-              return Promise.join(
-                Tour.startOnboarding(user.id, {transacting: trx}),
-                (invitation ? invitation.use(user.id, {transacting: trx}) : null)
-              );
-            });
-          });
+          return User.createFully(attrs, invitation);
         })
         .then(function(user) {
           UserSession.login(req, user, service);
@@ -112,7 +105,7 @@ module.exports = {
       scope: ['email', 'public_profile', 'user_friends']
     })(req, res);
   },
-  
+
   finishFacebookOAuth: function(req, res, next) {
     finishOAuth('facebook', req, res, next);
   },
@@ -124,7 +117,7 @@ module.exports = {
   finishGoogleTokenOAuth: function(req, res, next) {
     finishOAuth('google-token', req, res, next);
   },
-  
+
   startLinkedinOAuth: function(req, res) {
     passport.authenticate('linkedin')(req, res);
   },
