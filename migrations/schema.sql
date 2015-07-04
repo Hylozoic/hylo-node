@@ -2217,7 +2217,7 @@ ALTER TABLE ONLY phones
 --
 
 ALTER TABLE ONLY posts_about_users
-    ADD CONSTRAINT posts_about_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+    ADD CONSTRAINT posts_about_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2225,7 +2225,7 @@ ALTER TABLE ONLY posts_about_users
 --
 
 ALTER TABLE ONLY posts_about_users
-    ADD CONSTRAINT posts_about_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT posts_about_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
