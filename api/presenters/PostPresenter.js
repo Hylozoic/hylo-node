@@ -10,7 +10,8 @@ var postRelations = (userId, opts) => _.filter([
   {votes: qb => { // only the user's own vote
     qb.column('id', 'post_id');
     qb.where('user_id', userId);
-  }}
+  }},
+  {relatedUsers: qb => qb.column('id', 'name', 'avatar_url')}
 ], x => !!x)
 
 var postAttributes = post => {
@@ -36,7 +37,8 @@ var postAttributes = post => {
       myVote:       post.relations.votes.length > 0,
       numComments:  post.get("num_comments"),
       votes:        post.get("num_votes"),
-      user:         creator.pick('id', 'name', 'avatar_url')
+      user:         creator.pick('id', 'name', 'avatar_url'),
+      relatedUsers: post.relations.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url'))
     }
   );
 };

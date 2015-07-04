@@ -608,6 +608,16 @@ CREATE TABLE post_view (
 
 
 --
+-- Name: posts_about_users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE posts_about_users (
+    post_id bigint,
+    user_id bigint
+);
+
+
+--
 -- Name: posts_projects; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -2200,6 +2210,22 @@ ALTER TABLE ONLY vote
 
 ALTER TABLE ONLY phones
     ADD CONSTRAINT phones_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: posts_about_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY posts_about_users
+    ADD CONSTRAINT posts_about_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+
+
+--
+-- Name: posts_about_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY posts_about_users
+    ADD CONSTRAINT posts_about_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
 
 
 --

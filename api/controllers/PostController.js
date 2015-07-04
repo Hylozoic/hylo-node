@@ -32,18 +32,12 @@ var findPosts = function(req, res, opts) {
 };
 
 var newPostAttrs = function(userId, params) {
-  return {
+  return _.merge(Post.newPostAttrs(), {
     name:          params.name,
     description:   RichText.sanitize(params.description),
     type:          params.type,
-    creator_id:    userId,
-    created_at:    new Date(),
-    updated_at:    new Date(),
-    active:        true,
-    num_comments:  0,
-    num_votes:     0,
-    edited:        false
-  };
+    creator_id:    userId
+  });
 };
 
 var afterSavingPost = function(post, opts) {
@@ -113,7 +107,7 @@ module.exports = {
     .then(communities => {
       findPosts(req, res, {
         communities: communities.map(c => c.id)
-      })
+      });
     });
   },
 

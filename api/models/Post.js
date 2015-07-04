@@ -37,6 +37,8 @@ module.exports = bookshelf.Model.extend({
     return this.votes().query({where: {user_id: userId}}).fetchOne();
   },
 
+  relatedUsers: () => this.belongsToMany(User, 'posts_about_users'),
+
   addFollowers: function(userIds, addingUserId, opts) {
     var postId = this.id, creatorId = this.get('creator_id');
     if (!opts) opts = {};
@@ -142,7 +144,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   createdInTimeRange: function(collection, startTime, endTime) {
-    if (endTime == undefined) {
+    if (endTime === undefined) {
       endTime = startTime;
       startTime = collection;
       collection = Post;
@@ -151,7 +153,7 @@ module.exports = bookshelf.Model.extend({
       qb.whereRaw('post.created_at between ? and ?', [startTime, endTime]);
       qb.where('post.active', true);
       qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT);
-    })
+    });
   },
 
   sendNotificationEmail: function(opts) {
@@ -201,6 +203,30 @@ module.exports = bookshelf.Model.extend({
       Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
       User.incNewNotificationCount(userId, opts.transacting)
     );
-  }
+  },
+
+  createWelcomePost: function(userId, communityId) {
+    var attrs = _.merge(Post.newPostAttrs(), {
+      type: 'join'
+    });
+
+    return bookshelf.transaction(trx => {
+      return new Post(attrs).save({}, {transacting: trx})
+      .tap(post => Promise.join(
+        post.relatedUsers().attach(userId, {transacting: trx}),
+        post.communities().attach(communityId, {transacting: trx}),
+        Follower.create(post.id, {followerId: userId, transacting: trx})
+      ));
+    });
+  },
+
+  newPostAttrs: () => ({
+    created_at: new Date(),
+    updated_at: new Date(),
+    active: true,
+    num_comments: 0,
+    num_votes: 0,
+    edited: false
+  })
 
 });
