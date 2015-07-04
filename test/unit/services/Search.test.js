@@ -43,7 +43,7 @@ describe('Search', function() {
         and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
           or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
         and "follower"."user_id" = '37'
-        and "post"."creator_id" != '37'
+        and (post.creator_id != '37' or post.creator_id is null)
         and "type" = 'request'
         and ((post.created_at between '%s' and '%s')
           or (post.updated_at between '%s' and '%s'))
@@ -53,6 +53,16 @@ describe('Search', function() {
       */}).replace(/(\n\s*)/g, ' ').trim(), startTime, endTime, startTime, endTime);
 
       expect(query).to.equal(expected);
+    });
+
+    it('excludes welcome posts by default', () => {
+      var query = Search.forPosts({communities: 9}).query().toString();
+      expect(query).to.contain("\"post\".\"type\" != 'welcome'");
+    });
+
+    it('excludes welcome posts when type is "all"', () => {
+      var query = Search.forPosts({communities: 9, type: 'all'}).query().toString();
+      expect(query).to.contain("\"post\".\"type\" != 'welcome'");
     });
 
   });
