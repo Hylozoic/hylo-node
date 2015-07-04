@@ -60,7 +60,9 @@ module.exports = {
         qb.where('post.creator_id', '!=', opts.follower);
       }
 
-      if (opts.type && opts.type != 'all') {
+      if (!opts.type || opts.type === 'all') {
+        qb.where('post.type', '!=', 'welcome');
+      } else if (opts.type !== 'all+welcome') {
         qb.where({type: opts.type});
       }
 
