@@ -123,12 +123,11 @@ module.exports = bookshelf.Model.extend({
       });
     }
 
-    return new User(attributes).save({}, {transacting: trx}).tap(function(user) {
-      return Promise.join(
+    return new User(attributes).save({}, {transacting: trx}).tap(user =>
+      Promise.join(
         LinkedAccount.create(user.id, account, {transacting: trx}),
-        (community ? Membership.create(user.id, community.id, {transacting: trx}) : null)
-      );
-    });
+        community && Membership.create(user.id, community.id, {transacting: trx})
+      ));
   },
 
   createFully: (attrs, invitation) =>
@@ -136,7 +135,8 @@ module.exports = bookshelf.Model.extend({
       User.create(attrs, {transacting: trx}).tap(user =>
         Promise.join(
           Tour.startOnboarding(user.id, {transacting: trx}),
-          (invitation ? invitation.use(user.id, {transacting: trx}) : null)
+          invitation && invitation.use(user.id, {transacting: trx}),
+          attrs.community && Post.createWelcomePost(user.id, community.id, trx)
         ))),
 
   find: function(id, options) {

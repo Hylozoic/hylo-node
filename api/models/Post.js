@@ -205,19 +205,17 @@ module.exports = bookshelf.Model.extend({
     );
   },
 
-  createWelcomePost: function(userId, communityId) {
+  createWelcomePost: function(userId, communityId, trx) {
     var attrs = _.merge(Post.newPostAttrs(), {
       type: 'welcome'
     });
 
-    return bookshelf.transaction(trx => {
-      return new Post(attrs).save({}, {transacting: trx})
-      .tap(post => Promise.join(
-        post.relatedUsers().attach(userId, {transacting: trx}),
-        post.communities().attach(communityId, {transacting: trx}),
-        Follower.create(post.id, {followerId: userId, transacting: trx})
-      ));
-    });
+    return new Post(attrs).save({}, {transacting: trx})
+    .tap(post => Promise.join(
+      post.relatedUsers().attach(userId, {transacting: trx}),
+      post.communities().attach(communityId, {transacting: trx}),
+      Follower.create(post.id, {followerId: userId, transacting: trx})
+    ));
   },
 
   newPostAttrs: () => ({
