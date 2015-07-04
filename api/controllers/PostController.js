@@ -116,7 +116,8 @@ module.exports = {
       follower: req.session.userId,
       limit: req.param('limit') || 10,
       offset: req.param('offset'),
-      sort: 'post.updated_at'
+      sort: 'post.updated_at',
+      type: 'all+welcome'
     }).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId)
     })
@@ -132,7 +133,8 @@ module.exports = {
         communities: communityIds,
         limit: req.param('limit') || 10,
         offset: req.param('offset'),
-        sort: 'post.updated_at'
+        sort: 'post.updated_at',
+        type: 'all+welcome'
       }).fetchAll({
         withRelated: PostPresenter.relations(req.session.userId)
       });

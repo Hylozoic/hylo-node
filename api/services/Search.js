@@ -57,7 +57,7 @@ module.exports = {
       if (opts.follower) {
         qb.join('follower', 'follower.post_id', '=', 'post.id');
         qb.where('follower.user_id', opts.follower);
-        qb.where('post.creator_id', '!=', opts.follower);
+        qb.whereRaw('(post.creator_id != ? or post.creator_id is null)', opts.follower);
       }
 
       if (!opts.type || opts.type === 'all') {
