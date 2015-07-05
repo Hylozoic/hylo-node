@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "engines": {
-    "node": "0.12.2",
+    "node": "0.12.6",
     "npm": "2.7.5"
   },
   "description": "a Sails application",
