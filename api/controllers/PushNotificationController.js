@@ -23,7 +23,7 @@ module.exports = {
     .fetch()
     .then(device => {
       if (device) {
-        device
+        return device
         .save({enabled: true})
         .then(() => res.ok({result: "Known"}))
       } else {
