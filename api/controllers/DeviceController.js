@@ -13,9 +13,6 @@ module.exports = {
       return res.serverError('no device token');
     }
 
-    sails.log("in DeviceC.create");
-    sails.log("token: " + token);
-    
     return Device.forge({
       token: req.param("token"),
       user_id: req.session.userId
