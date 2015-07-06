@@ -145,9 +145,10 @@ module.exports.routes = {
   'POST   /noo/login/linkedin-token/oauth':               'SessionController.finishLinkedinTokenOAuth',  
   'GET    /noo/logout':                                   'SessionController.destroy',
 
-  'POST    /noo/pn/add-device':                           'PushNotificationController.addDevice',
-  'POST    /noo/pn/update-badge-no':                      'PushNotificationController.updateBadgeNo',
-
+  'POST    /noo/device':                                  'DeviceController.create',
+  'DELETE  /noo/device/:token':                           'DeviceController.destroy',  
+  'POST    /noo/device/:token/update-badge-no':           'Device.updateBadgeNo',
+  
   'POST    /noo/subscription':                            'SubscriptionController.create',
 
   '/hl27209f.htm':                                        'StaticPageController.verification',

@@ -125,9 +125,10 @@ module.exports.policies = {
     updateMembership: ['sessionAuth', 'isSelf', 'checkAndSetProject']
   },
 
-  PushNotificationController: {
-    updateBadgeNo:    ['sessionAuth'],
-    addDevice:        ['sessionAuth']
+  DeviceController: {
+    create:           ['sessionAuth'],
+    destroy:          ['sessionAuth'],
+    updateBadgeNo:    ['sessionAuth']    
   },
 
   NetworkController: {
