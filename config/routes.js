@@ -146,6 +146,7 @@ module.exports.routes = {
   'GET    /noo/logout':                                   'SessionController.destroy',
 
   'POST    /noo/pn/add-device':                           'PushNotificationController.addDevice',
+  'POST    /noo/pn/disable-device':                       'PushNotificationController.disableDevice',  
   'POST    /noo/pn/update-badge-no':                      'PushNotificationController.updateBadgeNo',
 
   'POST    /noo/subscription':                            'SubscriptionController.create',

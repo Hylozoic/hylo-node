@@ -127,7 +127,8 @@ module.exports.policies = {
 
   PushNotificationController: {
     updateBadgeNo:    ['sessionAuth'],
-    addDevice:        ['sessionAuth']
+    addDevice:        ['sessionAuth'],
+    disableDevice:    ['sessionAuth']    
   },
 
   NetworkController: {

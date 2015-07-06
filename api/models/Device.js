@@ -10,6 +10,9 @@ module.exports = bookshelf.Model.extend({
 
   sendPushNotification: function(alert, path, options) {
 
+    if (!this.get("enabled"))
+      return;    
+    
     var badge_no = this.get('badge_no') + 1;
     this.set("badge_no", badge_no);
     return this.save({}, options)
