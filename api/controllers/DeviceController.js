@@ -1,23 +1,23 @@
 /**
- * PushNotificationController
+ * DeviceController
  *
- * @description :: Server-side logic for managing pushnotifications
- * @help        :: See http://links.sailsjs.org/docs/controllers
+ * @description :: Server-side logic for managing devices
+ * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
 module.exports = {
 
-  /**
-   * `PushNotificationController.addDevice()`
-   */
-  addDevice: function (req, res) {
-    var token = req.param('deviceToken');
+  create: function (req, res) {
+    var token = req.param('token');
     if (!token) {
       return res.serverError('no device token');
     }
 
+    sails.log("in DeviceC.create");
+    sails.log("token: " + token);
+    
     return Device.forge({
-      token: req.param("deviceToken"),
+      token: req.param("token"),
       user_id: req.session.userId
     })
     .fetch()
@@ -25,7 +25,7 @@ module.exports = {
       if (device) {
         return device
         .save({enabled: true})
-        .then(() => res.ok({result: "Known"}))
+        .then(device => res.ok({result: "Known"}))
       } else {
         return Device.forge({
           token: req.param("deviceToken"),
@@ -38,37 +38,37 @@ module.exports = {
     .catch(res.serverError);
   },
 
-  disableDevice: function (req, res) {
-    var token = req.param('deviceToken');
+  destroy: function (req, res) {
+    var token = req.param('token');
     if (!token) {
       return res.serverError('no device token');
     }
 
-    return Device.forge({
+    return Device.query()
+    .where({
       token: token,
       user_id: req.session.userId
     })
-    .fetch()
-    .then(device => device.save({enabled: false}))
+    .update({enabled: false})
     .then(() => res.ok({result: "Updated"}))
     .catch(res.serverError);
   },
-  
+
   updateBadgeNo: function (req, res) {
-    var token = req.param('deviceToken');
+    var token = req.param('token');
     if (!token) {
       return res.serverError('no device token');
     }
 
-    return Device.forge({
+    return Device.query()
+    .where({
       token: token,
       user_id: req.session.userId
     })
-    .fetch()
-    .then(device => device.save({badge_no: req.param("badgeNo") || 0}))
+    .update({badge_no: req.param("badgeNo") || 0})
     .then(() => res.ok({result: "Updated"}))
     .catch(res.serverError);
   }
-
+  
 };
 
