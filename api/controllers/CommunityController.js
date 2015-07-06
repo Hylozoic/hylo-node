@@ -107,13 +107,15 @@ module.exports = {
   },
 
   joinWithCode: function(req, res) {
+    var community;
     Community.query('whereRaw', 'lower(beta_access_code) = lower(?)', req.param('code')).fetch()
-    .tap(community => bookshelf.transaction(trx =>
+    .tap(c => community = c)
+    .tap(() => bookshelf.transaction(trx =>
       Promise.join(
         Membership.create(req.session.userId, community.id, {transacting: trx}),
         Post.createWelcomePost(req.session.userId, community.id, trx)
       )))
-    .then(community => res.ok(community.pick('id', 'slug')))
+    .then(() => res.ok(community.pick('id', 'slug')))
     .catch(err => {
       if (err.message && err.message.contains('duplicate key value')) {
         res.ok(community.pick('id', 'slug'));
