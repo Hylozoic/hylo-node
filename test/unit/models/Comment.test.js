@@ -22,8 +22,8 @@ describe('Comment', () => {
       )
       .then(() => Promise.join(
         Follower.create(post.id, {followerId: u1.id}),
-        new Device({user_id: u1.id}).save(),
-        new Device({user_id: u2.id}).save(),
+        new Device({user_id: u1.id, enabled: true}).save(),
+        new Device({user_id: u2.id, enabled: true}).save(),
         community.posts().attach(post.id)
       ))
       .spread((f, d1_, d2_) => {

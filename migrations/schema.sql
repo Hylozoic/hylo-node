@@ -208,7 +208,8 @@ CREATE TABLE devices (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     badge_no integer DEFAULT 0,
-    token character varying(255)
+    token character varying(255),
+    enabled boolean DEFAULT true
 );
 
 
