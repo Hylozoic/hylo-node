@@ -20,7 +20,7 @@
 module.exports.policies = {
 
   '*': false,
-  StaticPageController: true,
+
   SessionController: true,
   InvitationController: true,
   LinkedinController: ['sessionAuth'],
@@ -128,7 +128,7 @@ module.exports.policies = {
   DeviceController: {
     create:           ['sessionAuth'],
     destroy:          ['sessionAuth'],
-    updateBadgeNo:    ['sessionAuth']    
+    updateBadgeNo:    ['sessionAuth']
   },
 
   NetworkController: {
@@ -137,6 +137,10 @@ module.exports.policies = {
 
   SubscriptionController: {
     create: true
+  },
+
+  StaticPageController: {
+    proxy: ['renderOpenGraphTags']
   }
 
 };

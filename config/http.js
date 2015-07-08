@@ -89,12 +89,6 @@ module.exports.http = {
     app.use('/admin/kue', isAdmin);
     app.use('/admin/kue/api', kue.app);
     app.use('/admin/kue', kueUI.app);
-
-    var prerender = require('prerender-node')
-      .set('protocol', process.env.PROTOCOL)
-      .blacklisted(['/search', '/u/.*', '/c/.*']);
-
-    app.use(prerender);
   }
 
   /***************************************************************************

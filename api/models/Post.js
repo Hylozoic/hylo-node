@@ -74,7 +74,7 @@ module.exports = bookshelf.Model.extend({
     });
   },
 
-  isPublicReadable: function() {
+  isPublic: function() {
     return this.get('visibility') == Post.Visibility.PUBLIC_READABLE;
   },
 

@@ -15,7 +15,7 @@ module.exports = function checkAndSetPost(req, res, next) {
     if (Admin.isSignedIn(req))
       return Promise.resolve(true);
 
-    if (res.locals.publicAccessAllowed && post.isPublicReadable())
+    if (res.locals.publicAccessAllowed && post.isPublic())
       return Promise.resolve(true);
 
     return Post.isVisibleToUser(post.id, req.session.userId);
