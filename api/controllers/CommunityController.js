@@ -200,6 +200,7 @@ module.exports = {
     // The assets were uploaded to /community/new, since we didn't have an id;
     // copy them over to /community/:id now
     .tap(community => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
+    .tap(community => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
     // FIXME this additional lookup wouldn't be necessary
     // if we had a Membership instance from the previous
     // step. But the absence of an id column on the table

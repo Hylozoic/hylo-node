@@ -1,6 +1,7 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
 
+  creator:       () => this.belongsTo(User, 'created_by_id'),
   inactiveUsers: () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {'users_community.active': false}}),
   invitations:   () => this.hasMany(Invitation),
@@ -61,6 +62,29 @@ module.exports = bookshelf.Model.extend({
       AssetManagement.copyAsset(c, 'community', 'avatar_url'),
       AssetManagement.copyAsset(c, 'community', 'banner_url')
     ));
+  },
+
+  notifyAboutCreate: function(opts) {
+    return Community.find(opts.communityId, {withRelated: ['creator']}).then(c => {
+      var creator = c.relations.creator,
+        recipient = process.env.ASANA_NEW_COMMUNITIES_EMAIL;
+      Email.sendSimpleEmail(recipient, 'tem_nt4RmzAfN4KyPZYxFJWpFE', {
+        subject: c.get('name'),
+        body: format(
+          '<a href="%s">%s</a><br/>'+
+          'created by <a href="%s">%s &lt;%s&gt;</a>',
+          Frontend.Route.community(c),
+          Frontend.Route.community(c),
+          Frontend.Route.profile(creator),
+          creator.get('name'),
+          creator.get('email'))
+      }, {
+        sender: {
+          name: 'Hylobot',
+          address: 'edward@hylo.com'
+        }
+      });
+    });
   }
 
 });
