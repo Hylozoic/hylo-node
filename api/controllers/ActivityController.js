@@ -7,36 +7,21 @@ module.exports = {
       qb.orderBy('created_at', 'desc');
 
       qb.whereRaw('(comment.active = true or comment.id is null)')
-      .leftJoin('comment', function() {
-        this.on('comment.id', '=', 'activity.comment_id')
-      });
+      .leftJoin('comment', () => this.on('comment.id', '=', 'activity.comment_id'));
 
       qb.whereRaw('(post.active = true or post.id is null)')
-      .leftJoin('post', function() {
-        this.on('post.id', '=', 'activity.post_id')
-      });
+      .leftJoin('post', () => this.on('post.id', '=', 'activity.post_id'));
 
     }).fetchAll({withRelated: [
-      {actor: function(qb) {
-        qb.column('id', 'name', 'avatar_url');
-      }},
-      {comment: function(qb) {
-        qb.column('id', 'comment_text', 'created_at');
-      }},
-      {'comment.thanks': function(qb) {
-        qb.where('thanked_by_id', req.session.userId);
-      }},
-      {post: function(qb) {
-        qb.column('id', 'name', 'creator_id', 'type', 'description');
-      }},
-      {'post.communities': function(qb) {
-        qb.column('id', 'slug');
-      }}
+      {actor: qb => qb.column('id', 'name', 'avatar_url')},
+      {comment: qb => qb.column('id', 'comment_text', 'created_at')},
+      {'comment.thanks': qb => qb.where('thanked_by_id', req.session.userId)},
+      {post: qb => qb.column('id', 'name', 'creator_id', 'type', 'description')},
+      {'post.communities': qb => qb.column('id', 'slug')},
+      {'post.relatedUsers': qb => qb.column('id', 'name', 'avatar_url')}
     ]})
-    .then(function(activities) {
-      res.ok(activities);
-    })
-    .catch(res.serverError.bind(res));
+    .then(res.ok)
+    .catch(res.serverError);
   },
 
   markAllRead: function(req, res) {
