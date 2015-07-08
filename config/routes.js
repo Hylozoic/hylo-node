@@ -136,22 +136,21 @@ module.exports.routes = {
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
   'GET    /noo/login/facebook/oauth':                     'SessionController.finishFacebookOAuth',
   'GET    /noo/login/linkedin':                           'SessionController.startLinkedinOAuth',
-  'GET    /noo/login/linkedin/oauth':                     'SessionController.finishLinkedinOAuth',  
+  'GET    /noo/login/linkedin/oauth':                     'SessionController.finishLinkedinOAuth',
   'GET    /noo/login/facebook-token/oauth':               'SessionController.finishFacebookTokenOAuth',
   'POST   /noo/login/facebook-token/oauth':               'SessionController.finishFacebookTokenOAuth',
   'GET    /noo/login/google-token/oauth':                 'SessionController.finishGoogleTokenOAuth',
   'POST   /noo/login/google-token/oauth':                 'SessionController.finishGoogleTokenOAuth',
   'GET    /noo/login/linkedin-token/oauth':               'SessionController.finishLinkedinTokenOAuth',
-  'POST   /noo/login/linkedin-token/oauth':               'SessionController.finishLinkedinTokenOAuth',  
+  'POST   /noo/login/linkedin-token/oauth':               'SessionController.finishLinkedinTokenOAuth',
   'GET    /noo/logout':                                   'SessionController.destroy',
 
   'POST    /noo/device':                                  'DeviceController.create',
-  'DELETE  /noo/device/:token':                           'DeviceController.destroy',  
+  'DELETE  /noo/device/:token':                           'DeviceController.destroy',
   'POST    /noo/device/:token/update-badge-no':           'Device.updateBadgeNo',
-  
+
   'POST    /noo/subscription':                            'SubscriptionController.create',
 
-  '/hl27209f.htm':                                        'StaticPageController.verification',
   '/*':                                                   'StaticPageController.proxy'
 
 };
