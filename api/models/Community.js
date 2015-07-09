@@ -71,13 +71,11 @@ module.exports = bookshelf.Model.extend({
       Email.sendSimpleEmail(recipient, 'tem_nt4RmzAfN4KyPZYxFJWpFE', {
         subject: c.get('name'),
         body: format(
-          '<a href="%s">%s</a><br/>'+
-          'created by <a href="%s">%s &lt;%s&gt;</a>',
+          '%s<br/>created by %s<br/>%s<br/>%s',
           Frontend.Route.community(c),
-          Frontend.Route.community(c),
-          Frontend.Route.profile(creator),
           creator.get('name'),
-          creator.get('email'))
+          creator.get('email'),
+          Frontend.Route.profile(creator))
       }, {
         sender: {
           name: 'Hylobot',
