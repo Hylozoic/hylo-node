@@ -7,7 +7,8 @@ module.exports = {
   },
 
   findOne: function(req, res) {
-    var community = res.locals.community;
+    var community = res.locals.community,
+      membership = res.locals.membership;
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
     .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings'))
@@ -15,6 +16,7 @@ module.exports = {
       var network = community.relations.network;
       if (network) data.network = network.pick('id', 'name', 'slug');
     })
+    .tap(() => membership && membership.updateViewedAt())
     .then(res.ok)
     .catch(res.serverError);
   },

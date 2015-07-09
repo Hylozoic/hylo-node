@@ -22,6 +22,11 @@ module.exports = bookshelf.Model.extend({
   // instead of creating a method with a different name.
   destroyMe: function() {
     return this.where(_.pick(this.attributes, 'user_id', 'community_id')).destroy();
+  },
+
+  updateViewedAt: function() {
+    return this.constructor.query().where(_.pick(this.attributes, 'user_id', 'community_id'))
+    .update({last_viewed_at: new Date()});
   }
 
 }, {
@@ -54,8 +59,8 @@ module.exports = bookshelf.Model.extend({
     return bookshelf.knex('users_community').transacting(opts.transacting).insert({
       user_id: userId,
       community_id: communityId,
-      date_joined: new Date(),
-      fee: 0,
+      created_at: new Date(),
+      last_viewed_at: new Date(),
       active: true,
       role: opts.role || Membership.DEFAULT_ROLE
     }).tap(() => {
