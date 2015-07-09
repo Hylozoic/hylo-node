@@ -1016,13 +1016,11 @@ CREATE TABLE users_community (
     user_id bigint NOT NULL,
     community_id bigint NOT NULL,
     role smallint,
-    date_joined timestamp without time zone,
-    fee bigint,
+    created_at timestamp without time zone,
     active boolean,
-    subscription_guid character varying(63),
-    next_invoice_date date,
     deactivated_at timestamp with time zone,
-    deactivator_id bigint
+    deactivator_id bigint,
+    last_viewed_at timestamp with time zone
 );
 
 
