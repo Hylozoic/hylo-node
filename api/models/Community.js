@@ -12,11 +12,6 @@ module.exports = bookshelf.Model.extend({
   network:       () => this.belongsTo(Network),
   posts:         () => this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
                        .query({where: {'post.active': true}}),
-  contentPosts:  () => this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
-                       .query(qb => {
-                         qb.where('post.active', true);
-                         qb.where('post.type', '!=', 'welcome');
-                       }),
   users:         () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {'users_community.active': true}}),
 
@@ -31,9 +26,8 @@ module.exports = bookshelf.Model.extend({
       qb.where({
         'post_community.community_id': communityId,
         'comment.active': true
-      }).leftJoin('post_community', function() {
-        this.on('post_community.post_id', '=', 'comment.post_id');
-      });
+      }).leftJoin('post_community', () =>
+        this.on('post_community.post_id', 'comment.post_id'));
     });
   },
 
