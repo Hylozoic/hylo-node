@@ -23,7 +23,8 @@ var isBot = function(url, userAgent) {
 
 var crawlerUserAgents = [
   'facebookexternalhit',
-  'twitterbot',
+  'slackbot',
+  'twitterbot'
 ];
 
 var matchingProject = Promise.method(url => {
