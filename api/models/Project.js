@@ -37,7 +37,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function(id_or_slug, options) {
-    if (isNaN(Number(id_or_slug)) || new String(id_or_slug).match(/a-z/)) {
+    if (isNaN(Number(id_or_slug)) || String(id_or_slug).match(/a-z/)) {
       return Project.where({slug: id_or_slug}).fetch(options);
     }
     return Project.where({id: id_or_slug}).fetch(options)
@@ -51,14 +51,15 @@ module.exports = bookshelf.Model.extend({
 
   generateThumbnailUrl: Promise.method(function(videoUrl) {
     if (!videoUrl || videoUrl === '') return;
+    var videoId;
 
     if (videoUrl.match(/youtu\.?be/)) {
-      var videoId = videoUrl.match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-]+)/)[2];
+      videoId = videoUrl.match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-]+)/)[2];
       return format('http://img.youtube.com/vi/%s/hqdefault.jpg', videoId);
 
     } else if (videoUrl.match(/vimeo/)) {
-      var videoId = videoUrl.match(/vimeo\.com\/(\d+)/)[1],
-        request = Promise.promisify(require('request'));
+      var request = Promise.promisify(require('request'));
+      videoId = videoUrl.match(/vimeo\.com\/(\d+)/)[1];
       return request(format('http://vimeo.com/api/v2/video/%s.json', videoId))
       .spread((response, body) => JSON.parse(body)[0].thumbnail_large);
     }
@@ -81,10 +82,11 @@ module.exports = bookshelf.Model.extend({
       Post.find(opts.postId, {withRelated: ['communities', 'creator']})
     ).spread((project, post) => {
       var creator = post.relations.creator,
-        community = post.relations.communities.first();
+        community = post.relations.communities.first(),
+        contributors = project.relations.contributors;
 
-      return project.relations.contributors.map(user => {
-        if (_.contains(opts.exclude, user.id)) return;
+      return contributors.models.concat(project.relations.user).map(user => {
+        if (_.contains(opts.exclude, user.id) || user.id === creator.id) return;
         var replyTo = Email.postReplyAddress(post.id, user.id);
 
         return Email.sendNewProjectPostNotification(user.get('email'), {
