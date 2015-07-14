@@ -21,7 +21,9 @@ instance.pixelUrl = function(emailName, props) {
     properties: props
   };
 
-  if (!data.userId) {
+  if (props.userId) {
+    data.userId = props.userId;
+  } else {
     data.anonymousId = uuid.v4();
   }
 
