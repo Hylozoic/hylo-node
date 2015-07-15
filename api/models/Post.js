@@ -140,7 +140,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function(id, options) {
-    return Post.where({id: id}).fetch(options);
+    return Post.where({id: id}).fetch(options).catch(err => null);
   },
 
   createdInTimeRange: function(collection, startTime, endTime) {

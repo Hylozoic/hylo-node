@@ -4,7 +4,6 @@ var striptags = require('striptags'),
 module.exports = (req, res, next) => {
   var url = require('url').parse(req.url, true);
   if (!isBot(url, req.headers['user-agent'])) return next();
-  console.log(url);
 
   matchingProject(url)
   .then(project =>
