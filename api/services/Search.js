@@ -109,7 +109,7 @@ module.exports = {
         qb.join('projects_users', 'projects_users.user_id', '=', 'users.id');
         qb.leftJoin('projects', 'projects.user_id', '=', 'users.id');
         qb.where(() =>
-          this.whereRaw('projects.id is not null')
+          this.where('projects.id', opts.project)
           .orWhere('projects_users.project_id', opts.project));
       }
 
