@@ -117,14 +117,20 @@ module.exports = {
         Membership.create(req.session.userId, community.id, {transacting: trx}),
         Post.createWelcomePost(req.session.userId, community.id, trx)
       )))
-    .then(() => res.ok(community.pick('id', 'slug')))
     .catch(err => {
       if (err.message && err.message.contains('duplicate key value')) {
-        res.ok(community.pick('id', 'slug'));
+        return true;
       } else {
         res.serverError(err);
+        return false;
       }
-    });
+    })
+    // we get here if the membership was created successfully, or if it already existed
+    .then(ok => ok && Membership.find(req.session.userId, community.id)
+      .then(membership => _.merge(membership.toJSON(), {
+        community: community.pick('id', 'name', 'slug', 'avatar_url')
+      }))
+      .then(res.ok));
   },
 
   leave: function(req, res) {

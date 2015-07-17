@@ -119,6 +119,12 @@ module.exports = bookshelf.Model.extend({
     return bookshelf.knex('users_community').select("community_id")
       .where({user_id: user_id, active: true})
       .pluck('community_id');
-  }
+  },
+
+  lastViewed: userId => Membership.query(q => {
+    q.where('user_id', userId);
+    q.limit(1);
+    q.orderBy('last_viewed_at', 'desc');
+  })
 
 });
