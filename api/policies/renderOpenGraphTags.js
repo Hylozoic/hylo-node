@@ -14,6 +14,7 @@ module.exports = (req, res, next) => {
 };
 
 var isBot = function(url, userAgent) {
+  if (!userAgent) return false;
   if (_.has(url.query, '_escaped_fragment_')) return true;
 
   userAgent = userAgent.toLowerCase();
