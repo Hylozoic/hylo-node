@@ -50,7 +50,7 @@ module.exports = bookshelf.Model.extend({
     var comment, post;
     return bookshelf.transaction(trx => {
       return Comment.find(opts.commentId, {
-        withRelated: ['user', 'post', 'post.communities', 'post.creator', 'post.followers'],
+        withRelated: ['user', 'post', 'post.communities', 'post.creator', 'post.followers', 'post.relatedUsers'],
         transacting: trx
       }).then(c => {
         comment = c;
@@ -161,8 +161,7 @@ module.exports = bookshelf.Model.extend({
         }
       });
 
-    })
-
+    });
   },
 
   sendPushNotification: function(userId, comment, version, options) {
@@ -173,19 +172,9 @@ module.exports = bookshelf.Model.extend({
         return;
 
       var post = comment.relations.post,
-        commenter = comment.relations.user,
-        creator = post.relations.creator,
         community = post.relations.communities.first(),
         path = url.parse(Frontend.Route.post(post, community)).path,
-        alertText;
-
-      switch (version) {
-      case 'mention':
-        alertText = commenter.get("name") + " mentioned you in a comment";
-        break;
-      default:
-        alertText = commenter.get("name") + " commented on \"" + post.get("name") + "\"";
-      };
+        alertText = PushNotification.textForComment(comment, version, userId);
 
       return Promise.map(devices.models, d => d.sendPushNotification(alertText, path, options));
     });

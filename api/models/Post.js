@@ -85,6 +85,10 @@ module.exports = bookshelf.Model.extend({
       num_comments: count,
       updated_at: new Date()
     }, {patch: true, transacting: trx}));
+  },
+
+  isWelcome: function() {
+    return this.get('type') === 'welcome';
   }
 
 }, {
