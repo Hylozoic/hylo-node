@@ -913,6 +913,39 @@ ALTER SEQUENCE tours_id_seq OWNED BY tours.id;
 
 
 --
+-- Name: user_external_data; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE user_external_data (
+    id bigint NOT NULL,
+    user_id bigint,
+    type character varying(255),
+    data jsonb,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: user_external_data_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE user_external_data_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: user_external_data_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE user_external_data_id_seq OWNED BY user_external_data.id;
+
+
+--
 -- Name: user_permission_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1190,6 +1223,13 @@ ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('queued_
 --
 
 ALTER TABLE ONLY tours ALTER COLUMN id SET DEFAULT nextval('tours_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('user_external_data_id_seq'::regclass);
 
 
 --
@@ -1613,6 +1653,14 @@ ALTER TABLE ONLY token_action
 
 ALTER TABLE ONLY vote
     ADD CONSTRAINT uq_vote_1 UNIQUE (user_id, post_id);
+
+
+--
+-- Name: user_external_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY user_external_data
+    ADD CONSTRAINT user_external_data_pkey PRIMARY KEY (id);
 
 
 --
@@ -2297,6 +2345,14 @@ ALTER TABLE ONLY projects_users
 
 ALTER TABLE ONLY tours
     ADD CONSTRAINT tours_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: user_external_data_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY user_external_data
+    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
 
 
 --
