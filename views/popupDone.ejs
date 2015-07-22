@@ -3,7 +3,7 @@
 <script type="text/javascript">
 opener.popupDone({
   context: '<%= context %>',
-  error:   <%- typeof(error) === "undefined" ? 'null' : '"' + error + '"' %>,
+  error:   <%- typeof(error) === "undefined" ? 'null' : '"' + error.message.replace(/"/g, '\\"') + '"' %>,
   url:     '<%= typeof(url) === "undefined" ? "" : url %>'
 });
 </script>
