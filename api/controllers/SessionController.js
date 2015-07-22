@@ -27,13 +27,13 @@ var findCommunity = function(req) {
 
 var finishOAuth = function(strategy, req, res, next) {
   var service = strategy;
-  if (strategy==='facebook-token') {
+  if (strategy === 'facebook-token') {
     service = 'facebook';
-  } else if (strategy==='google-token') {
+  } else if (strategy === 'google-token') {
     service = 'google';
-  } else if (strategy==='linkedin-token') {
+  } else if (strategy === 'linkedin-token') {
     service = 'linkedin';
-  };
+  }
 
   passport.authenticate(strategy, function(err, profile, info) {
     if (err || !profile) {
@@ -42,17 +42,20 @@ var finishOAuth = function(strategy, req, res, next) {
     }
 
     findUser(service, profile.email, profile.id)
-    .then(function(user) {
+    .then(user => {
       if (user) {
         UserSession.login(req, user, service);
 
         // if this is a new account, link it to the user
         if (!hasLinkedAccount(user, service)) {
-          return LinkedAccount.create(user.id, {type: service, profile: profile});
+          return LinkedAccount.create(user.id, {type: service, profile: profile})
+          .then(() => user);
+        } else {
+          return user;
         }
       } else {
         return findCommunity(req)
-        .spread(function(community, invitation) {
+        .spread((community, invitation) => {
           var attrs = _.merge(_.pick(profile, 'email', 'name'), {
             community: (invitation ? null : community),
             account: {type: service, profile: profile}
@@ -60,18 +63,12 @@ var finishOAuth = function(strategy, req, res, next) {
 
           return User.createFully(attrs, invitation);
         })
-        .then(function(user) {
-          UserSession.login(req, user, service);
-        });
+        .tap(user => UserSession.login(req, user, service));
       }
     })
-    .then(function() {
-      res.view('popupDone', {context: 'oauth', layout: null});
-    })
-    .catch(function(err) {
-      res.view('popupDone', {context: 'oauth', error: err, layout: null});
-    });
-
+    .then(user => UserExternalData.store(user.id, service, profile._json))
+    .then(() => res.view('popupDone', {context: 'oauth', layout: null}))
+    .catch(err => res.view('popupDone', {context: 'oauth', error: err, layout: null}));
   })(req, res, next);
 };
 
