@@ -22,8 +22,8 @@ module.exports = {
 
   authorize: function(req, res) {
     var token = generateCSRFToken(),
-      url = format('%s?response_type=code&client_id=%s&state=%s&redirect_uri=%s',
-        authUrlPrefix, process.env.LINKEDIN_API_KEY, token, redirectUri());
+      url = format('%s?response_type=code&scope=%s&client_id=%s&state=%s&redirect_uri=%s',
+        authUrlPrefix, 'r_basicprofile', process.env.LINKEDIN_API_KEY, token, redirectUri());
 
     req.session.linkedinAuthCSRFToken = token;
     res.writeHead(302, {Location: url});
