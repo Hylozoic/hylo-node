@@ -2,6 +2,8 @@ var passport = require('passport');
 
 var findUser = function(service, email, id) {
   return User.query(function(qb) {
+    qb.where('users.active', true);
+
     qb.leftJoin('linked_account', function() {
       this.on('linked_account.user_id', '=', 'users.id');
     });
