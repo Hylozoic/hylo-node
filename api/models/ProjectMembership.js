@@ -7,9 +7,18 @@ var ProjectMembership = module.exports = bookshelf.Model.extend({
 
   user: function() {
     return this.belongsTo(User);
+  },
+
+  isModerator: function() {
+    return this.get('role') === ProjectMembership.Role.MODERATOR;
   }
 
 }, {
+
+  Role: {
+    DEFAULT: 0,
+    MODERATOR: 1
+  },
 
   find: function(userId, projectId, options) {
     return this.where({user_id: userId, project_id: projectId}).fetch(options);

@@ -38,11 +38,6 @@ module.exports = bookshelf.Model.extend({
     PUBLIC: 1
   },
 
-  Role: {
-    DEFAULT: 0,
-    MODERATOR: 1
-  },
-
   find: function(id_or_slug, options) {
     if (isNaN(Number(id_or_slug)) || String(id_or_slug).match(/a-z/)) {
       return Project.where({slug: id_or_slug}).fetch(options);
