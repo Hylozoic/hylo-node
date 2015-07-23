@@ -101,6 +101,7 @@ module.exports.routes = {
   'GET    /noo/project/:projectId/users':                 'UserController.findForProject',
   'DELETE /noo/project/:projectId/user/:userId':          'ProjectController.removeUser',
   'POST   /noo/project/:projectId/user/:userId':          'ProjectController.updateMembership',
+  'POST   /noo/project/:projectId/moderator/:userId':     'ProjectController.toggleModeratorRole',
   'POST   /noo/project':                                  'ProjectController.create',
   'POST   /noo/project/:projectId':                       'ProjectController.update',
   'POST   /noo/project/:projectId/invite':                'ProjectController.invite',

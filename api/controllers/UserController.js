@@ -259,14 +259,14 @@ module.exports = {
   },
 
   findForProject: function(req, res) {
-    Search.forUsers({
-      project: req.param('projectId'),
-      sort: 'users.name',
+    res.locals.project.contributors()
+    .query({
       limit: req.param('limit') || 10,
       offset: req.param('offset') || 0
-    })
-    .fetchAll()
-    .then(users => users.map(u => u.pick(UserPresenter.shortAttributes)))
+    }).fetch()
+    .then(users => users.map(u => _.extend(u.pick(UserPresenter.shortAttributes), {
+      membership: u.pivot.pick('role')
+    })))
     .then(res.ok)
     .catch(res.serverError);
   },

@@ -169,6 +169,15 @@ module.exports = {
     }).update(_.pick(req.allParams(), 'notify_on_new_posts'))
     .then(() => res.ok({}))
     .catch(res.serverError);
+  },
+
+  toggleModeratorRole: function(req, res) {
+    ProjectMembership.query().where({
+      user_id: req.param('userId'),
+      project_id: req.param('projectId')
+    }).update(_.pick(req.allParams(), 'role'))
+    .then(() => res.ok({}))
+    .catch(res.serverError);
   }
 
 };

@@ -14,7 +14,9 @@ module.exports = bookshelf.Model.extend({
   },
 
   contributors: function() {
-    return this.belongsToMany(User, 'projects_users');
+    return this.belongsToMany(User, 'projects_users')
+      .query({where: {active: true}})
+      .withPivot(['role']);
   },
 
   memberships: function() {
@@ -34,6 +36,11 @@ module.exports = bookshelf.Model.extend({
   Visibility: {
     COMMUNITY: 0,
     PUBLIC: 1
+  },
+
+  Role: {
+    DEFAULT: 0,
+    MODERATOR: 1
   },
 
   find: function(id_or_slug, options) {

@@ -114,15 +114,16 @@ module.exports.policies = {
   },
 
   ProjectController: {
-    create:           ['sessionAuth'],
-    update:           ['sessionAuth', 'checkAndSetWritableProject'],
-    findOne:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    invite:           ['sessionAuth', 'checkAndSetWritableProject'],
-    join:             ['sessionAuth', 'checkAndSetProject'],
-    removeUser:       ['sessionAuth', 'checkAndSetWritableProject'],
-    findForUser:      ['sessionAuth', 'isSelf'],
-    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
-    updateMembership: ['sessionAuth', 'isSelf', 'checkAndSetProject']
+    create:              ['sessionAuth'],
+    update:              ['sessionAuth', 'checkAndSetWritableProject'],
+    findOne:             ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    invite:              ['sessionAuth', 'checkAndSetWritableProject'],
+    join:                ['sessionAuth', 'checkAndSetProject'],
+    removeUser:          ['sessionAuth', 'checkAndSetWritableProject'],
+    findForUser:         ['sessionAuth', 'isSelf'],
+    findForCommunity:    ['sessionAuth', 'checkAndSetMembership'],
+    updateMembership:    ['sessionAuth', 'isSelf', 'checkAndSetProject'],
+    toggleModeratorRole: ['sessionAuth', 'checkAndSetWritableProject']
   },
 
   DeviceController: {
