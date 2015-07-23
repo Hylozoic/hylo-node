@@ -2,7 +2,10 @@ var findCommunityIds = Promise.method(req => {
   if (req.param('communityId')) {
     return [req.param('communityId')];
   } else {
-    return Network.activeCommunityIds(req.session.userId);
+    return Promise.join(
+      Network.activeCommunityIds(req.session.userId),
+      Membership.activeCommunityIds(req.session.userId)
+    ).then(ids => _(ids).flatten().uniq().value());
   }
 });
 
