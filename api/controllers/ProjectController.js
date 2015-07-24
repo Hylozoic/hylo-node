@@ -1,8 +1,5 @@
-var crypto = require('crypto');
-
-var placeholderSlug = function() {
-  return crypto.randomBytes(3).toString('hex');
-};
+var crypto = require('crypto'),
+  slug = require('slug');
 
 var editableAttributes = [
   'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility'
@@ -45,16 +42,16 @@ module.exports = {
       _.pick(req.allParams(), editableAttributes),
       {
         title: 'New Project',
-        slug: placeholderSlug(),
         created_at: new Date(),
-        user_id: req.session.userId
+        user_id: req.session.userId,
+        slug: slug(req.param('title') || 'untitled', {mode: 'rfc3986'})
       }
     );
 
     maybeGenerateVideoThumbnail(attrs)
     .then(() => new Project(attrs))
     .then(project => project.save())
-    .then(project => res.ok(_.pick(project.toJSON(), 'slug')))
+    .then(project => res.ok(_.pick(project.toJSON(), 'id', 'slug')))
     .catch(res.serverError);
   },
 
@@ -66,6 +63,9 @@ module.exports = {
       updatedAttrs.published_at = new Date();
     else if (req.param('unpublish'))
       updatedAttrs.published_at = null;
+
+    if (_.has(updatedAttrs, 'title'))
+      updatedAttrs.slug = slug(updatedAttrs.title || 'untitled', {mode: 'rfc3986'});
 
     maybeGenerateVideoThumbnail(updatedAttrs)
     .then(() => {
@@ -82,7 +82,7 @@ module.exports = {
         });
       });
     })
-    .then(() => res.ok(_.pick(project.toJSON(), 'slug', 'published_at')))
+    .then(() => res.ok(_.pick(project.toJSON(), 'id', 'slug', 'published_at')))
     .catch(res.serverError);
   },
 
