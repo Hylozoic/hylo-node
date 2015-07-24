@@ -72,7 +72,7 @@ module.exports = {
       }
 
       if (opts.visibility) {
-        qb.where({visibility: opts.visibility});
+        qb.whereIn('visibility', opts.visibility);
       }
 
       if (opts.sort === 'fulfilled_at') {

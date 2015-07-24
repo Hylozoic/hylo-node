@@ -106,7 +106,8 @@ module.exports = {
     Community.where({network_id: req.param('networkId')}).fetchAll()
     .then(communities => {
       findPosts(req, res, {
-        communities: communities.map(c => c.id)
+        communities: communities.map(c => c.id),
+        visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
       });
     });
   },
