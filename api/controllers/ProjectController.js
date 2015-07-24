@@ -1,6 +1,11 @@
 var crypto = require('crypto'),
   slug = require('slug');
 
+var makeSlug = function(title) {
+  if (!title || title == 'New Project') return 'untitled';
+  return slug(title, {mode: 'rfc3986'});
+};
+
 var editableAttributes = [
   'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility'
 ];
@@ -44,7 +49,7 @@ module.exports = {
         title: 'New Project',
         created_at: new Date(),
         user_id: req.session.userId,
-        slug: slug(req.param('title') || 'untitled', {mode: 'rfc3986'})
+        slug: makeSlug(req.param('title'))
       }
     );
 
@@ -65,7 +70,7 @@ module.exports = {
       updatedAttrs.published_at = null;
 
     if (_.has(updatedAttrs, 'title'))
-      updatedAttrs.slug = slug(updatedAttrs.title || 'untitled', {mode: 'rfc3986'});
+      updatedAttrs.slug = makeSlug(updatedAttrs.title);
 
     maybeGenerateVideoThumbnail(updatedAttrs)
     .then(() => {
