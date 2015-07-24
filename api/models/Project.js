@@ -10,7 +10,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   posts: function() {
-    return this.belongsToMany(Post, 'posts_projects');
+    return this.belongsToMany(Post, 'posts_projects').query({where: {active: true}});
   },
 
   contributors: function() {
