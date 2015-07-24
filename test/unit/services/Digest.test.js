@@ -18,6 +18,7 @@ describe('Digest', function() {
 
   describe('.sendTestEmail', function() {
     it("doesn't throw errors", function() {
+      this.timeout(5000);
       var digest = new Digest(community, moment(), moment().subtract(1, 'week'));
       return digest.fetchData().then(() => digest.sendTestEmail('foo@bar.com'));
     });
