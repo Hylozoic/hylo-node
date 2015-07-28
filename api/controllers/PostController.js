@@ -33,7 +33,7 @@ var findPosts = function(req, res, opts) {
 
 var newPostAttrs = function(userId, params) {
   return _.merge(Post.newPostAttrs(), {
-    name:          params.name,
+    name:          RichText.sanitize(params.name),
     description:   RichText.sanitize(params.description),
     type:          params.type,
     creator_id:    userId

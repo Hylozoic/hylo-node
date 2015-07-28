@@ -11,7 +11,7 @@ var sanitize = function(text) {
   var cleanText = sanitizeHtml(strippedText, {
     allowedTags: ['a', 'p', 'br'],
     allowedAttributes: {
-      'a': [ 'href', 'data-user-id' ]
+      'a': ['href', 'data-user-id']
     },
 
     // Removes empty paragraphs
