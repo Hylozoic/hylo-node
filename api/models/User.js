@@ -140,6 +140,9 @@ module.exports = bookshelf.Model.extend({
         ))),
 
   find: function(id, options) {
+    if (isNaN(Number(id))) {
+      return User.query(q => q.where({email: id}).orWhere({name: id})).fetch(options);
+    }
     return User.where({id: id}).fetch(options);
   },
 
