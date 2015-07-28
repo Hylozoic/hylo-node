@@ -11,8 +11,8 @@ require('colors');
 var jobs = {
 
   daily: function() {
-    sails.log.debug('noop!');
-    return Promise.resolve(null);
+    sails.log.debug('Removing old kue jobs');
+    return Queue.removeOldCompletedJobs(2000);
   },
 
   hourly: function() {
