@@ -8,7 +8,7 @@ describe('Digest', function() {
 
   before(() => {
     community = new Community({name: 'foo', slug: 'foo'});
-    user = new User({name: 'Cat'});
+    user = new User({name: 'Cat', email: 'cat@cat.org'});
 
     return community.save().then(community => user.save())
     .then(() => user.joinCommunity(community))
@@ -20,7 +20,7 @@ describe('Digest', function() {
     it("doesn't throw errors", function() {
       this.timeout(5000);
       var digest = new Digest(community, moment(), moment().subtract(1, 'week'));
-      return digest.fetchData().then(() => digest.sendTestEmail('foo@bar.com'));
+      return digest.fetchData().then(() => digest.sendTestEmail(user));
     });
   });
 

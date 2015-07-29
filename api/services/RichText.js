@@ -31,11 +31,15 @@ var getUserMentions = function(text) {
   return _.uniq($("a[data-user-id]").map(() => $(this).data("user-id").toString()).get());
 };
 
-var qualifyLinks = function(text) {
+var qualifyLinks = function(text, recipient, token) {
   var $ = Cheerio.load(text);
   $('[data-user-id]').each(function() {
-    var $this = $(this);
-    $this.attr('href', Frontend.Route.profile({id: $this.data('user-id')}));
+    var $this = $(this),
+      url = Frontend.Route.profile({id: $this.data('user-id')});
+    if (recipient && token) {
+      url = Frontend.Route.tokenLogin(recipient, token, url);
+    }
+    $this.attr('href', url);
   });
   return $.html();
 };
