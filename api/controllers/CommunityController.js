@@ -140,12 +140,14 @@ module.exports = {
   },
 
   removeMember: function(req, res) {
-    Membership.find(req.param('userId'), req.param('communityId'))
-    .then(membership => membership.save({
+    Membership.query().where({
+      user_id: req.param('userId'),
+      community_id: req.param('communityId')
+    }).update({
       active: false,
       deactivated_at: new Date(),
       deactivator_id: req.session.userId
-    }, {patch: true}))
+    })
     .then(() => res.ok({}))
     .catch(res.serverError);
   },
