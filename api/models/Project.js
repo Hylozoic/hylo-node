@@ -91,23 +91,28 @@ module.exports = bookshelf.Model.extend({
         if (_.contains(opts.exclude, user.id) || user.id === creator.id) return;
         var replyTo = Email.postReplyAddress(post.id, user.id);
 
-        return Email.sendNewProjectPostNotification(user.get('email'), {
-          creator_profile_url: Frontend.Route.profile(creator),
-          creator_avatar_url: creator.get('avatar_url'),
-          creator_name: creator.get('name'),
-          project_title: project.get('title'),
-          project_url: Frontend.Route.project(project),
-          project_settings_url: Frontend.Route.projectSettings(project),
-          post_title: post.get('name'),
-          post_description: post.get('description'),
-          post_type: post.get('type'),
-          post_url: Frontend.Route.post(post, community)
+        return user.generateToken()
+        .then(token => Email.sendNewProjectPostNotification(user.get('email'), {
+          creator_profile_url:  Frontend.Route.tokenLogin(user, token,
+                                  Frontend.Route.profile(creator) + '?ctt=project_post_email'),
+          creator_avatar_url:   creator.get('avatar_url'),
+          creator_name:         creator.get('name'),
+          project_title:        project.get('title'),
+          project_url:          Frontend.Route.tokenLogin(user, token,
+                                  Frontend.Route.project(project) + '?ctt=project_post_email'),
+          project_settings_url: Frontend.Route.tokenLogin(user, token,
+                                  Frontend.Route.projectSettings(project) + '?ctt=project_post_email'),
+          post_title:           post.get('name'),
+          post_description:     post.get('description'),
+          post_type:            post.get('type'),
+          post_url:             Frontend.Route.tokenLogin(user, token,
+                                  Frontend.Route.post(post, community) + '?ctt=project_post_email')
         }, {
           sender: {
             address: replyTo,
             reply_to: replyTo
           }
-        });
+        }));
       });
     });
   }

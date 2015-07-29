@@ -173,7 +173,8 @@ module.exports = bookshelf.Model.extend({
         description = RichText.qualifyLinks(post.get('description')),
         replyTo = Email.postReplyAddress(post.id, recipient.id);
 
-      return Email.sendPostMentionNotification({
+      return recipient.generateToken()
+      .then(token => Email.sendPostMentionNotification({
         email: recipient.get('email'),
         sender: {
           address: replyTo,
@@ -183,16 +184,20 @@ module.exports = bookshelf.Model.extend({
         data: {
           community_name:      community.get('name'),
           creator_name:        creator.get('name'),
-          creator_avatar_url:  creator.get('avatar_url'),
-          creator_profile_url: Frontend.Route.profile(creator),
+          creator_avatar_url:  Frontend.Route.tokenLogin(recipient, token,
+                                 creator.get('avatar_url') + '?ctt=post_mention_email'),
+          creator_profile_url: Frontend.Route.tokenLogin(recipient, token,
+                                 Frontend.Route.profile(creator) + '?ctt=post_mention_email'),
           post_description:    description,
           post_title:          post.get('name'),
           post_type:           post.get('type'),
-          post_url:            Frontend.Route.post(post, community),
-          unfollow_url:        Frontend.Route.unfollow(post, community),
+          post_url:            Frontend.Route.tokenLogin(recipient, token,
+                                 Frontend.Route.post(post, community) + '?ctt=post_mention_email'),
+          unfollow_url:        Frontend.Route.tokenLogin(recipient, token,
+                                 Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email'),
           tracking_pixel_url:  Analytics.pixelUrl('Mention in Post', {userId: recipient.id})
         }
-      });
+      }));
 
     });
 
