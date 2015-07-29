@@ -135,6 +135,8 @@ module.exports = {
   },
 
   createWithToken: function(req, res) {
+    var nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password';
+
     User.find(req.param('u')).then(function(user) {
       if (!user) {
         res.status(422).send("No user id");
@@ -144,15 +146,20 @@ module.exports = {
       return Promise.join(user, user.checkToken(req.param('t')));
     })
     .spread(function(user, match) {
-      if (!match) {
-        res.status(422).send("Token doesn't match");
+      if (match) {
+        UserSession.login(req, user, 'password');
+        res.redirect(nextUrl);
         return;
       }
 
-      UserSession.login(req, user, 'password');
-      res.redirect(Frontend.Route.userSettings() + '?expand=password');
+      if (req.param('n')) {
+        // still redirect, to give the user a chance to log in manually
+        res.redirect(nextUrl);
+      } else {
+        res.status(422).send("Token doesn't match");
+      }
     })
     .catch(res.serverError.bind(res));
   }
 
-}
+};

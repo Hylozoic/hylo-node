@@ -139,7 +139,8 @@ module.exports = bookshelf.Model.extend({
           (recipient.id == creator.id ? 'your' : 'the'), post.get('type'), post.get('name'));
       }
 
-      return Email.sendNewCommentNotification({
+      return recipient.generateToken()
+      .then(token => Email.sendNewCommentNotification({
         version: opts.version,
         email: recipient.get('email'),
         sender: {
@@ -151,15 +152,18 @@ module.exports = bookshelf.Model.extend({
           community_name:        community.get('name'),
           commenter_name:        commenter.get('name'),
           commenter_avatar_url:  commenter.get('avatar_url'),
-          commenter_profile_url: Frontend.Route.profile(commenter) + '?ctt=comment_email',
+          commenter_profile_url: Frontend.Route.tokenLogin(recipient, token,
+                                   Frontend.Route.profile(commenter) + '?ctt=comment_email'),
           comment_text:          text,
           post_label:            postLabel,
           post_title:            post.get('name'),
-          post_url:              Frontend.Route.post(post, community) + '?ctt=comment_email',
-          unfollow_url:          Frontend.Route.unfollow(post, community),
+          post_url:              Frontend.Route.tokenLogin(recipient, token,
+                                   Frontend.Route.post(post, community) + '?ctt=comment_email'),
+          unfollow_url:          Frontend.Route.tokenLogin(recipient, token,
+                                   Frontend.Route.unfollow(post, community)),
           tracking_pixel_url:    Analytics.pixelUrl('Comment', {userId: recipient.id})
         }
-      });
+      }));
 
     });
   },

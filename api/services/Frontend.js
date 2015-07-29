@@ -43,8 +43,9 @@ module.exports = {
       return url('/settings');
     },
 
-    tokenLogin: function(user, token) {
-      return url('/noo/login/token?u=%s&t=%s', user.id, token);
+    tokenLogin: function(user, token, nextUrl) {
+      return url('/noo/login/token?u=%s&t=%s&n=%s',
+        user.id, token, encodeURIComponent(nextUrl || ''));
     },
 
     error: function(key) {
