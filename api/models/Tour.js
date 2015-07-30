@@ -15,6 +15,13 @@ module.exports = bookshelf.Model.extend({
       status: {step: 'start'},
       created_at: new Date()
     }).save({}, _.pick(opts, 'transacting'));
+  },
+
+  skipOnboarding: function(userId) {
+    return Tour.query().where({
+      user_id: userId,
+      type: 'onboarding'
+    }).update({status: {step: 'done'}});
   }
 
 });

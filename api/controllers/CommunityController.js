@@ -211,6 +211,7 @@ module.exports = {
     // copy them over to /community/:id now
     .tap(community => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
     .tap(community => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
+    .tap(() => Tour.skipOnboarding(req.session.userId))
     // FIXME this additional lookup wouldn't be necessary
     // if we had a Membership instance from the previous
     // step. But the absence of an id column on the table
