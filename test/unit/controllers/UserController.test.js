@@ -107,8 +107,8 @@ describe('UserController', function() {
     var u1, u2;
 
     beforeEach(function() {
-      u1 = new User({email: 'foo@bar.com'});
-      u2 = new User({email: 'foo2@bar2.com'});
+      u1 = new User({email: 'foo@bar.com', active: true});
+      u2 = new User({email: 'foo2@bar2.com', active: true});
       return Promise.join(u1.save(), u2.save());
     });
 
