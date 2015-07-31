@@ -44,7 +44,7 @@ var UserPresenter = module.exports = {
 
   fetchForSelf: function(userId, isAdmin) {
     return User.find(userId, {withRelated: relationsForSelf})
-    .tap(user => { if (!user) throw "User not found"; })
+    .tap(user => { if (!user || !user.get('active')) throw "User not found"; })
     .then(user => Promise.join(user.toJSON(), extraAttributes(user), selfOnlyAttributes(user, isAdmin)))
     .then(attributes => _.extend.apply(_, attributes));
   },
@@ -55,7 +55,7 @@ var UserPresenter = module.exports = {
 
   fetchForOther: function(id) {
     return User.find(id, {withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']})
-    .tap(user => { if (!user) throw "User not found"; })
+    .tap(user => { if (!user || !user.get('active')) throw "User not found"; })
     .then(user => Promise.join(user, extraAttributes(user)))
     .spread((user, extra) => _.extend(user.attributes, extra));
   }
