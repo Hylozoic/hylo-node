@@ -36,6 +36,10 @@ module.exports = {
         qb.whereIn('post.creator_id', opts.users);
       }
 
+      if (opts.excludeUsers) {
+        qb.whereNotIn('post.creator_id', opts.excludeUsers);
+      }
+
       if (opts.communities) {
         qb.join('post_community', 'post_community.post_id', '=', 'post.id');
         qb.whereIn('post_community.community_id', opts.communities);
@@ -132,6 +136,9 @@ module.exports = {
         qb.whereRaw('users.created_at between ? and ?', [opts.start_time, opts.end_time]);
       }
 
+      if (opts.exclude) {
+        qb.whereNotIn('id', opts.exclude);
+      }
     });
   },
 

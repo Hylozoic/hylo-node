@@ -736,7 +736,8 @@ CREATE TABLE projects_users (
     user_id bigint NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    notify_on_new_posts boolean DEFAULT true
+    notify_on_new_posts boolean DEFAULT true,
+    role integer DEFAULT 0
 );
 
 
@@ -988,7 +989,8 @@ CREATE TABLE user_post_relevance (
     user_id bigint,
     post_id bigint,
     similarity real,
-    updated_date timestamp without time zone
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -1030,7 +1032,8 @@ CREATE TABLE users (
     work text,
     intention text,
     extra_info text,
-    new_notification_count integer DEFAULT 0
+    new_notification_count integer DEFAULT 0,
+    updated_at timestamp with time zone
 );
 
 
@@ -1521,14 +1524,6 @@ ALTER TABLE ONLY projects
 
 
 --
--- Name: projects_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY projects
-    ADD CONSTRAINT projects_slug_unique UNIQUE (slug);
-
-
---
 -- Name: projects_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1654,6 +1649,14 @@ ALTER TABLE ONLY vote
 
 ALTER TABLE ONLY user_external_data
     ADD CONSTRAINT user_external_data_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY user_post_relevance
+    ADD CONSTRAINT user_id_post_id_unique UNIQUE (user_id, post_id);
 
 
 --
