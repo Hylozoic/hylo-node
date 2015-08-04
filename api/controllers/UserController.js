@@ -198,10 +198,7 @@ module.exports = {
 
       user.setSanely(attrs);
 
-      var promises = [];
-
-      if (!_.isEmpty(user.changed))
-        promises.push(user.save(user.changed, {patch: true}));
+      var promises = [], changed = false;
 
       _.each([
         ['skills', Skill],
@@ -211,8 +208,18 @@ module.exports = {
         ['websites', UserWebsite]
       ], function(model) {
         var param = req.param(model[0]);
-        if (param) promises.push(model[1].update(_.flatten([param]), user.id));
+        if (param) {
+          promises.push(model[1].update(_.flatten([param]), user.id));
+          changed = true;
+        }
       });
+
+      if (!_.isEmpty(user.changed) || changed) {
+        promises.push(user.save(
+          _.extend({updated_at: new Date()}, user.changed),
+          {patch: true}
+        ));
+      }
 
       var newPassword = req.param('password');
       if (newPassword) {
