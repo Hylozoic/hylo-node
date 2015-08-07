@@ -32,8 +32,7 @@ module.exports.policies = {
   },
 
   AdminController: {
-    index: ['isAdmin'],
-    test:  ['isAdmin']
+    '*': ['isAdmin']
   },
 
   SearchController: {

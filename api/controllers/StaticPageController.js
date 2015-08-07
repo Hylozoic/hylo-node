@@ -18,7 +18,6 @@ var LRU = require('lru-cache'),
     '/about/careers',
     '/about/contact',
     '/about/team',
-    '/admin',
     '/subscribe',
     '/styleguide',
     '/terms',
@@ -41,8 +40,11 @@ module.exports = {
     // the folder of the same name.
     if (!u.pathname.match(/\.\w{2,4}$/)) {
 
-      // for any paths not explicitly listed, serve the Angular app.
-      if (!_.any(staticPages, equals(u.pathname))) {
+      if (u.pathname.startsWith('/admin')) {
+        // serve the admin Angular app
+        u.pathname = '/admin';
+      } else if (!_.any(staticPages, equals(u.pathname))) {
+        // for any paths not explicitly listed, serve the Angular app.
         u.pathname = '/app';
       }
 
