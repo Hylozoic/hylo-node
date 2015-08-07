@@ -91,18 +91,18 @@ module.exports = bookshelf.Model.extend({
           serendipity.docVector(self.wordsForUser(user)),
           postVector)),
       {concurrency: Number(process.env.RELEVANCE_UPSERT_CONCURRENCY)}));
-
   },
 
-  generateForNewPosts: function(startTime, endTime, serendipity) {
-    var self = this;
-    return Post.query().select('id')
+  generateForUpdates: function(model, startTime, endTime, serendipity) {
+    var self = this,
+      generateMethod = (model === 'Post' ? self.generateForPost : self.generateForUser);
+    return global[model].query().select('id')
       .whereRaw('updated_at between ? and ?', [startTime, endTime])
     .tap(rows => sails.log.debug())
     .then(rows => _.pluck(rows, 'id'))
     .then(ids => Promise.map(ids, id => {
-      sails.log.debug('generating relevance scores for post ' + id);
-      return self.generateForPost(id, serendipity);
+      sails.log.debug(format('generating relevance scores for %s %s', model, id));
+      return generateMethod.call(self, id, serendipity);
     }, {concurrency: Number(process.env.RELEVANCE_GENERATE_CONCURRENCY)}));
   }
 
