@@ -1,14 +1,14 @@
+var sortColumns = {
+  'fulfilled-last': 'fulfilled_at',
+  'top':            'post.num_votes',
+  'recent':         'post.updated_at'
+};
+
 var findPosts = function(req, res, opts) {
   var params = _.merge(
     _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
     _.pick(opts, 'sort')
   );
-
-  switch (params.sort) {
-    case 'fulfilled-last': var sortCol = 'fulfilled_at'; break;
-    case 'top':            var sortCol = 'post.num_votes'; break;
-    default:               var sortCol = 'post.updated_at'; break;
-  }
 
   Promise.props({
     communities: opts.communities,
@@ -20,7 +20,7 @@ var findPosts = function(req, res, opts) {
     start_time: params.start_time,
     end_time: params.end_time,
     visibility: opts.visibility,
-    sort: sortCol
+    sort: sortColumns[params.sort]
   }).then(function(args) {
     return Search.forPosts(args).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
@@ -134,8 +134,8 @@ module.exports = {
         communities: communityIds,
         limit: req.param('limit') || 10,
         offset: req.param('offset'),
-        sort: 'post.updated_at',
-        type: 'all+welcome'
+        sort: sortColumns[req.param('sort')] || 'post.updated_at',
+        type: req.param('type') || 'all+welcome'
       }).fetchAll({
         withRelated: PostPresenter.relations(req.session.userId)
       });
