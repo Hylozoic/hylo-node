@@ -106,9 +106,10 @@ module.exports = bookshelf.Model.extend({
     attributes = _.merge(_.omit(attributes, 'account', 'community'), {
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
+      updated_at: new Date(),
       daily_digest: true,
       send_email_preference: true,
-      active: true
+      active: true,
     });
 
     if (account.type === 'facebook') {
