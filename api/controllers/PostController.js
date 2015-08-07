@@ -137,7 +137,8 @@ module.exports = {
         limit: req.param('limit') || 10,
         offset: req.param('offset'),
         sort: sortColumns[req.param('sort') || 'recent'],
-        type: req.param('type') || 'all+welcome'
+        type: req.param('type') || 'all+welcome',
+        forUser: req.session.userId
       }).fetchAll({
         withRelated: PostPresenter.relations(req.session.userId)
       });
