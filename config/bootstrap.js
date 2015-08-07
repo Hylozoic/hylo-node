@@ -19,6 +19,7 @@ var fs = require('fs'),
 // very handy, these
 global.format = util.format;
 global.Promise = require('bluebird');
+global._ = require('lodash'); // override Sails' old version of lodash
 
 module.exports.bootstrap = function(done) {
 
