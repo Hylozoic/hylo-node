@@ -90,6 +90,14 @@ module.exports = bookshelf.Model.extend({
           serendipity.docVector(self.wordsForUser(user)),
           postVector))));
 
+  },
+
+  generateForNewPosts: function(startTime, endTime, serendipity) {
+    var self = this;
+    return Post.query().select('id')
+      .whereRaw('updated_at between ? and ?', [startTime, endTime])
+    .then(rows => _.pluck(rows, 'id'))
+    .then(ids => Promise.map(ids, id => self.generateForPost(id, serendipity)));
   }
 
 });
