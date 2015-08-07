@@ -23,7 +23,7 @@ var TestSetup = function() {
 var setup = new TestSetup();
 
 before(function(done) {
-  this.timeout(5000);
+  this.timeout(10000);
 
   var i18n = require('sails/node_modules/i18n');
   i18n.configure(require(root('config/i18n')));
