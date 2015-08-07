@@ -148,6 +148,8 @@ describe('UserController', function() {
       });
 
       it('only updates changed fields', function() {
+        var fields, options;
+
         _.extend(req, {
           params: {userId: u1.id, twitter_name: 'ev'}
         });
@@ -165,13 +167,15 @@ describe('UserController', function() {
           return Promise.resolve(id == u1.id ? u1 : null);
         };
 
-        u1.save = spy(function(fields, options) {
-          expect(fields).to.eql({twitter_name: 'ev'});
-          expect(options).to.eql({patch: true});
+        u1.save = spy(function(f, o) {
+          fields = f;
+          options = o;
         });
 
         return UserController.update(req, res).then(function() {
           expect(u1.save).to.have.been.called();
+          expect(_.omit(fields, 'updated_at')).to.eql({twitter_name: 'ev'});
+          expect(options).to.eql({patch: true});
         })
         .finally(function() {
           User.find = User.trueFind;
