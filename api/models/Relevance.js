@@ -111,13 +111,13 @@ module.exports = bookshelf.Model.extend({
     var self = this,
       endTime = moment(),
       startTime = endTime.clone().subtract(interval, unit);
-      
+
     return this.initSerendipity().then(sd => Promise.join(
       self.generateForUpdates('Post', startTime, endTime, sd),
       self.generateForUpdates('User', startTime, endTime, sd)
     ))
     .spread((posts, users) => {
-      sails.log.debug(format('%s posts, %s users', posts.length, users.length));
+      sails.log.debug(format('processed %s posts and %s users in %ss', posts.length, users.length, (moment() - endTime)/1000.0));
     });
   }
 
