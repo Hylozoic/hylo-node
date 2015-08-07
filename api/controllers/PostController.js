@@ -20,7 +20,7 @@ var findPosts = function(req, res, opts) {
     start_time: params.start_time,
     end_time: params.end_time,
     visibility: opts.visibility,
-    sort: sortColumns[params.sort]
+    sort: sortColumns[params.sort || 'recent']
   }).then(function(args) {
     return Search.forPosts(args).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
@@ -134,7 +134,7 @@ module.exports = {
         communities: communityIds,
         limit: req.param('limit') || 10,
         offset: req.param('offset'),
-        sort: sortColumns[req.param('sort')] || 'post.updated_at',
+        sort: sortColumns[req.param('sort') || 'recent'],
         type: req.param('type') || 'all+welcome'
       }).fetchAll({
         withRelated: PostPresenter.relations(req.session.userId)
