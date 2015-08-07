@@ -27,7 +27,8 @@ var postAttributes = post => {
       'type',
       'created_at',
       'updated_at',
-      'projects'
+      'projects',
+      'similarity'
     ]),
     {
       community:    post.relations.communities.first().pick('id', 'name', 'slug', 'avatar_url'),

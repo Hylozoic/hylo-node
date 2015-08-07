@@ -1,7 +1,8 @@
 var sortColumns = {
   'fulfilled-last': 'fulfilled_at',
   'top':            'post.num_votes',
-  'recent':         'post.updated_at'
+  'recent':         'post.updated_at',
+  'suggested':      'suggested'
 };
 
 var findPosts = function(req, res, opts) {
@@ -20,7 +21,8 @@ var findPosts = function(req, res, opts) {
     start_time: params.start_time,
     end_time: params.end_time,
     visibility: opts.visibility,
-    sort: sortColumns[params.sort || 'recent']
+    sort: sortColumns[params.sort || 'recent'],
+    forUser: req.session.userId
   }).then(function(args) {
     return Search.forPosts(args).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)

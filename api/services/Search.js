@@ -79,7 +79,11 @@ module.exports = {
         qb.whereIn('visibility', opts.visibility);
       }
 
-      if (opts.sort === 'fulfilled_at') {
+      if (opts.sort === 'suggested') {
+        qb.join('user_post_relevance', 'user_post_relevance.post_id', '=', 'post.id');
+        qb.where('user_post_relevance.user_id', opts.forUser);
+        qb.orderBy('similarity', 'desc');
+      } else if (opts.sort === 'fulfilled_at') {
         qb.orderByRaw('post.fulfilled_at desc, post.updated_at desc');
       } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc');
