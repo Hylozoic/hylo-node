@@ -68,7 +68,8 @@ module.exports = bookshelf.Model.extend({
       Relevance.upsert(userId, post.id,
         serendipity.similarity(
           userVector,
-          serendipity.docVector(self.wordsForPost(post))))));
+          serendipity.docVector(self.wordsForPost(post))),
+      {concurrency: Number(process.env.RELEVANCE_UPSERT_CONCURRENCY)})));
   },
 
   generateForPost: function(postId, serendipity) {
@@ -88,7 +89,8 @@ module.exports = bookshelf.Model.extend({
       Relevance.upsert(user.id, postId,
         serendipity.similarity(
           serendipity.docVector(self.wordsForUser(user)),
-          postVector))));
+          postVector)),
+      {concurrency: Number(process.env.RELEVANCE_UPSERT_CONCURRENCY)}));
 
   },
 
@@ -96,11 +98,12 @@ module.exports = bookshelf.Model.extend({
     var self = this;
     return Post.query().select('id')
       .whereRaw('updated_at between ? and ?', [startTime, endTime])
+    .tap(rows => sails.log.debug())
     .then(rows => _.pluck(rows, 'id'))
     .then(ids => Promise.map(ids, id => {
       sails.log.debug('generating relevance scores for post ' + id);
       return self.generateForPost(id, serendipity);
-    }, {concurrency: Number(process.env.RELEVANCE_CONCURRENCY)}));
+    }, {concurrency: Number(process.env.RELEVANCE_GENERATE_CONCURRENCY)}));
   }
 
 });
