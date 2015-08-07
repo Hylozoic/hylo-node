@@ -97,7 +97,10 @@ module.exports = bookshelf.Model.extend({
     return Post.query().select('id')
       .whereRaw('updated_at between ? and ?', [startTime, endTime])
     .then(rows => _.pluck(rows, 'id'))
-    .then(ids => Promise.map(ids, id => self.generateForPost(id, serendipity)));
+    .then(ids => Promise.map(ids, id => {
+      sails.log.debug('generating relevance scores for post ' + id);
+      return self.generateForPost(id, serendipity);
+    }, {concurrency: Number(process.env.RELEVANCE_CONCURRENCY)}));
   }
 
 });
