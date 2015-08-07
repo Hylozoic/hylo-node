@@ -1,4 +1,5 @@
-var Serendipity = require('../..//lib/serendipity'),
+var moment = require('moment'),
+  Serendipity = require('../..//lib/serendipity'),
   striptags = require('striptags');
 
 module.exports = bookshelf.Model.extend({
@@ -104,6 +105,20 @@ module.exports = bookshelf.Model.extend({
       sails.log.debug(format('generating relevance scores for %s %s', model, id));
       return generateMethod.call(self, id, serendipity);
     }, {concurrency: Number(process.env.RELEVANCE_GENERATE_CONCURRENCY)}));
+  },
+
+  cron: function(interval, unit) {
+    var self = this,
+      endTime = moment(),
+      startTime = endTime.clone().subtract(interval, unit);
+      
+    return this.initSerendipity().then(sd => Promise.join(
+      self.generateForUpdates('Post', startTime, endTime, sd),
+      self.generateForUpdates('User', startTime, endTime, sd)
+    ))
+    .spread((posts, users) => {
+      sails.log.debug(format('%s posts, %s users', posts.length, users.length));
+    });
   }
 
 });

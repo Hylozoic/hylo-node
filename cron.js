@@ -16,15 +16,19 @@ var jobs = {
   },
 
   hourly: function() {
-    var now = moment.tz('America/Los_Angeles');
+    var now = moment.tz('America/Los_Angeles'),
+      tasks = [];
 
     switch (now.hour()) {
       case 12:
         sails.log.debug('Sending daily digests');
-        return Digest.sendDaily();
+        tasks.push(Digest.sendDaily());
+        break;
       default:
-        return Promise.resolve(null);
+        tasks.push(Relevance.cron(1, 'hour'));
     }
+
+    return Promise.all(tasks);
   },
 
   every10minutes: function() {
