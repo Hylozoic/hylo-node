@@ -10,10 +10,13 @@ module.exports = bookshelf.Model.extend({
   moderators:    () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {role: Membership.MODERATOR_ROLE}}),
   network:       () => this.belongsTo(Network),
-  posts:         () => this.belongsToMany(Post, 'post_community', 'community_id', 'post_id')
-                       .query({where: {'post.active': true}}),
   users:         () => this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
                        .query({where: {'users_community.active': true}}),
+
+  posts: function() {
+    return this.belongsToMany(Post).through(PostMembership)
+    .query({where: {'post.active': true}});
+  },
 
   comments: function() {
     // FIXME get this to use the model relation API

@@ -187,18 +187,6 @@ CREATE SEQUENCE device_seq
 
 
 --
--- Name: device; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE device (
-    id bigint DEFAULT nextval('device_seq'::regclass) NOT NULL,
-    user_id bigint NOT NULL,
-    token character varying(255) NOT NULL,
-    added timestamp without time zone
-);
-
-
---
 -- Name: devices; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -297,21 +285,6 @@ CREATE SEQUENCE invite_request_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-
---
--- Name: invite_request; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE invite_request (
-    id bigint DEFAULT nextval('invite_request_seq'::regclass) NOT NULL,
-    user_id bigint,
-    community character varying(255),
-    about text,
-    url character varying(255),
-    name text,
-    email text
-);
 
 
 --
@@ -443,23 +416,6 @@ CREATE SEQUENCE notification_seq
 
 
 --
--- Name: notification; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE notification (
-    id bigint DEFAULT nextval('notification_seq'::regclass) NOT NULL,
-    post_id bigint,
-    comment_id bigint,
-    vote_id bigint,
-    actor_id bigint,
-    "timestamp" timestamp without time zone,
-    type character varying(1),
-    processed boolean,
-    CONSTRAINT ck_notification_type CHECK (((type)::text = ANY (ARRAY[('V'::character varying)::text, ('C'::character varying)::text])))
-);
-
-
---
 -- Name: notification_status_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -469,20 +425,6 @@ CREATE SEQUENCE notification_status_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-
---
--- Name: notification_status; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE notification_status (
-    id bigint DEFAULT nextval('notification_status_seq'::regclass) NOT NULL,
-    recipient_id bigint,
-    notification_id bigint,
-    read boolean,
-    date_read timestamp without time zone,
-    sent_email_notification boolean
-);
 
 
 --
@@ -582,8 +524,28 @@ CREATE TABLE post (
 
 CREATE TABLE post_community (
     post_id bigint NOT NULL,
-    community_id bigint NOT NULL
+    community_id bigint NOT NULL,
+    id integer NOT NULL
 );
+
+
+--
+-- Name: post_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE post_community_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: post_community_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE post_community_id_seq OWNED BY post_community.id;
 
 
 --
@@ -596,16 +558,6 @@ CREATE SEQUENCE post_view_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-
---
--- Name: post_view; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE post_view (
-    id bigint DEFAULT nextval('post_view_seq'::regclass) NOT NULL,
-    "timestamp" timestamp without time zone
-);
 
 
 --
@@ -866,21 +818,6 @@ CREATE SEQUENCE token_action_seq
 
 
 --
--- Name: token_action; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE token_action (
-    id bigint DEFAULT nextval('token_action_seq'::regclass) NOT NULL,
-    token character varying(255),
-    target_user_id bigint,
-    type character varying(2),
-    created timestamp without time zone,
-    expires timestamp without time zone,
-    CONSTRAINT ck_token_action_type CHECK (((type)::text = ANY (ARRAY[('EV'::character varying)::text, ('PR'::character varying)::text])))
-);
-
-
---
 -- Name: tours; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -956,16 +893,6 @@ CREATE SEQUENCE user_permission_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-
---
--- Name: user_permission; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE user_permission (
-    id bigint DEFAULT nextval('user_permission_seq'::regclass) NOT NULL,
-    value character varying(255)
-);
 
 
 --
@@ -1049,8 +976,28 @@ CREATE TABLE users_community (
     active boolean,
     deactivated_at timestamp with time zone,
     deactivator_id bigint,
-    last_viewed_at timestamp with time zone
+    last_viewed_at timestamp with time zone,
+    id integer NOT NULL
 );
+
+
+--
+-- Name: users_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE users_community_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: users_community_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE users_community_id_seq OWNED BY users_community.id;
 
 
 --
@@ -1070,16 +1017,6 @@ CREATE TABLE users_org (
 CREATE TABLE users_skill (
     user_id bigint NOT NULL,
     skill_name character varying(255) NOT NULL
-);
-
-
---
--- Name: users_user_permission; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE users_user_permission (
-    users_id bigint NOT NULL,
-    user_permission_id bigint NOT NULL
 );
 
 
@@ -1183,6 +1120,13 @@ ALTER TABLE ONLY phones ALTER COLUMN id SET DEFAULT nextval('phones_id_seq'::reg
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY post_community ALTER COLUMN id SET DEFAULT nextval('post_community_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY posts_projects ALTER COLUMN id SET DEFAULT nextval('posts_projects_id_seq'::regclass);
 
 
@@ -1226,6 +1170,13 @@ ALTER TABLE ONLY tours ALTER COLUMN id SET DEFAULT nextval('tours_id_seq'::regcl
 --
 
 ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('user_external_data_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY users_community ALTER COLUMN id SET DEFAULT nextval('users_community_id_seq'::regclass);
 
 
 --
@@ -1324,27 +1275,11 @@ ALTER TABLE ONLY contributor
 
 
 --
--- Name: pk_device; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY device
-    ADD CONSTRAINT pk_device PRIMARY KEY (id);
-
-
---
 -- Name: pk_follower; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY follower
     ADD CONSTRAINT pk_follower PRIMARY KEY (id);
-
-
---
--- Name: pk_invite_request; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY invite_request
-    ADD CONSTRAINT pk_invite_request PRIMARY KEY (id);
 
 
 --
@@ -1364,22 +1299,6 @@ ALTER TABLE ONLY media
 
 
 --
--- Name: pk_notification; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY notification
-    ADD CONSTRAINT pk_notification PRIMARY KEY (id);
-
-
---
--- Name: pk_notification_status; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY notification_status
-    ADD CONSTRAINT pk_notification_status PRIMARY KEY (id);
-
-
---
 -- Name: pk_org; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1393,22 +1312,6 @@ ALTER TABLE ONLY org
 
 ALTER TABLE ONLY post
     ADD CONSTRAINT pk_post PRIMARY KEY (id);
-
-
---
--- Name: pk_post_community; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY post_community
-    ADD CONSTRAINT pk_post_community PRIMARY KEY (post_id, community_id);
-
-
---
--- Name: pk_post_view; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY post_view
-    ADD CONSTRAINT pk_post_view PRIMARY KEY (id);
 
 
 --
@@ -1428,22 +1331,6 @@ ALTER TABLE ONLY thank_you
 
 
 --
--- Name: pk_token_action; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY token_action
-    ADD CONSTRAINT pk_token_action PRIMARY KEY (id);
-
-
---
--- Name: pk_user_permission; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY user_permission
-    ADD CONSTRAINT pk_user_permission PRIMARY KEY (id);
-
-
---
 -- Name: pk_user_post_relevance; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1457,14 +1344,6 @@ ALTER TABLE ONLY user_post_relevance
 
 ALTER TABLE ONLY users
     ADD CONSTRAINT pk_users PRIMARY KEY (id);
-
-
---
--- Name: pk_users_community; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY users_community
-    ADD CONSTRAINT pk_users_community PRIMARY KEY (user_id, community_id);
 
 
 --
@@ -1484,19 +1363,27 @@ ALTER TABLE ONLY users_skill
 
 
 --
--- Name: pk_users_user_permission; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY users_user_permission
-    ADD CONSTRAINT pk_users_user_permission PRIMARY KEY (users_id, user_permission_id);
-
-
---
 -- Name: pk_vote; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY vote
     ADD CONSTRAINT pk_vote PRIMARY KEY (id);
+
+
+--
+-- Name: post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY post_community
+    ADD CONSTRAINT post_community_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: post_community_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY post_community
+    ADD CONSTRAINT post_community_unique UNIQUE (post_id, community_id);
 
 
 --
@@ -1628,19 +1515,19 @@ ALTER TABLE ONLY community_invite
 
 
 --
--- Name: uq_token_action_token; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY token_action
-    ADD CONSTRAINT uq_token_action_token UNIQUE (token);
-
-
---
 -- Name: uq_vote_1; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY vote
     ADD CONSTRAINT uq_vote_1 UNIQUE (user_id, post_id);
+
+
+--
+-- Name: user_community_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY users_community
+    ADD CONSTRAINT user_community_unique UNIQUE (user_id, community_id);
 
 
 --
@@ -1657,6 +1544,14 @@ ALTER TABLE ONLY user_external_data
 
 ALTER TABLE ONLY user_post_relevance
     ADD CONSTRAINT user_id_post_id_unique UNIQUE (user_id, post_id);
+
+
+--
+-- Name: users_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY users_community
+    ADD CONSTRAINT users_community_pkey PRIMARY KEY (id);
 
 
 --
@@ -1724,13 +1619,6 @@ CREATE INDEX ix_contributor_user_2 ON contributor USING btree (user_id);
 
 
 --
--- Name: ix_device_users_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_device_users_1 ON device USING btree (user_id);
-
-
---
 -- Name: ix_follower_addedby_3; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1752,13 +1640,6 @@ CREATE INDEX ix_follower_user_2 ON follower USING btree (user_id);
 
 
 --
--- Name: ix_invite_request_user_3; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_invite_request_user_3 ON invite_request USING btree (user_id);
-
-
---
 -- Name: ix_linked_account_user_4; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1770,48 +1651,6 @@ CREATE INDEX ix_linked_account_user_4 ON linked_account USING btree (user_id);
 --
 
 CREATE INDEX ix_media_post_1 ON media USING btree (post_id);
-
-
---
--- Name: ix_notification_actor_8; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_notification_actor_8 ON notification USING btree (actor_id);
-
-
---
--- Name: ix_notification_comment_6; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_notification_comment_6 ON notification USING btree (comment_id);
-
-
---
--- Name: ix_notification_post_5; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_notification_post_5 ON notification USING btree (post_id);
-
-
---
--- Name: ix_notification_status_notifi_10; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_notification_status_notifi_10 ON notification_status USING btree (notification_id);
-
-
---
--- Name: ix_notification_status_recipie_9; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_notification_status_recipie_9 ON notification_status USING btree (recipient_id);
-
-
---
--- Name: ix_notification_vote_7; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_notification_vote_7 ON notification USING btree (vote_id);
 
 
 --
@@ -1840,13 +1679,6 @@ CREATE INDEX ix_thank_you_thanked_by_3 ON thank_you USING btree (thanked_by_id);
 --
 
 CREATE INDEX ix_thank_you_user_2 ON thank_you USING btree (user_id);
-
-
---
--- Name: ix_token_action_targetuser_12; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX ix_token_action_targetuser_12 ON token_action USING btree (target_user_id);
 
 
 --
@@ -2000,14 +1832,6 @@ ALTER TABLE ONLY contributor
 
 
 --
--- Name: fk_device_users_1; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY device
-    ADD CONSTRAINT fk_device_users_1 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: fk_follower_addedby_3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2032,14 +1856,6 @@ ALTER TABLE ONLY follower
 
 
 --
--- Name: fk_invite_request_user_3; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY invite_request
-    ADD CONSTRAINT fk_invite_request_user_3 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: fk_linked_account_user_4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2053,54 +1869,6 @@ ALTER TABLE ONLY linked_account
 
 ALTER TABLE ONLY media
     ADD CONSTRAINT fk_media_post_1 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_notification_actor_8; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY notification
-    ADD CONSTRAINT fk_notification_actor_8 FOREIGN KEY (actor_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_notification_comment_6; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY notification
-    ADD CONSTRAINT fk_notification_comment_6 FOREIGN KEY (comment_id) REFERENCES comment(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_notification_post_5; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY notification
-    ADD CONSTRAINT fk_notification_post_5 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_notification_status_notifi_10; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY notification_status
-    ADD CONSTRAINT fk_notification_status_notifi_10 FOREIGN KEY (notification_id) REFERENCES notification(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_notification_status_recipie_9; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY notification_status
-    ADD CONSTRAINT fk_notification_status_recipie_9 FOREIGN KEY (recipient_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_notification_vote_7; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY notification
-    ADD CONSTRAINT fk_notification_vote_7 FOREIGN KEY (vote_id) REFERENCES vote(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2160,14 +1928,6 @@ ALTER TABLE ONLY thank_you
 
 
 --
--- Name: fk_token_action_targetuser_12; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY token_action
-    ADD CONSTRAINT fk_token_action_targetuser_12 FOREIGN KEY (target_user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: fk_upr_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2213,22 +1973,6 @@ ALTER TABLE ONLY users_org
 
 ALTER TABLE ONLY users_skill
     ADD CONSTRAINT fk_users_skill_users_01 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_users_user_permission_user_01; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_user_permission
-    ADD CONSTRAINT fk_users_user_permission_user_01 FOREIGN KEY (users_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_users_user_permission_user_02; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_user_permission
-    ADD CONSTRAINT fk_users_user_permission_user_02 FOREIGN KEY (user_permission_id) REFERENCES user_permission(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

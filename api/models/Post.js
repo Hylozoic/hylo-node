@@ -6,7 +6,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   communities: function () {
-    return this.belongsToMany(Community, 'post_community', 'post_id', 'community_id');
+    return this.belongsToMany(Community).through(PostMembership);
   },
 
   followers: function () {

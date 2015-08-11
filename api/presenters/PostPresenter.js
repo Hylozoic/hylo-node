@@ -1,6 +1,6 @@
 var postRelations = (userId, opts) => _.filter([
   {creator: qb => qb.column("id", "name", "avatar_url")},
-  {communities: qb => qb.column('id', 'name', 'slug', 'avatar_url')},
+  {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
   "contributions",
   {"contributions.user": qb => qb.column("id", "name", "avatar_url")},
   "followers",
@@ -11,8 +11,8 @@ var postRelations = (userId, opts) => _.filter([
     qb.column('id', 'post_id');
     qb.where('user_id', userId);
   }},
-  {relatedUsers: qb => qb.column('id', 'name', 'avatar_url')}
-], x => !!x)
+  {relatedUsers: qb => qb.column('users.id', 'name', 'avatar_url')}
+], x => !!x);
 
 var postAttributes = post => {
   var creator = post.relations.creator;
