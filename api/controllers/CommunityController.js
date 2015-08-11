@@ -3,7 +3,13 @@ var validator = require('validator');
 module.exports = {
 
   find: function(req, res) {
-    Community.fetchAll().then(res.ok).catch(res.serverError);
+    Community.fetchAll({withRelated: [
+      {memberships: q => q.column('community_id')}
+    ]})
+    .then(communities => communities.map(c => _.extend(c.toJSON(), {
+      memberships: c.relations.memberships.length
+    })))
+    .then(res.ok, res.serverError);
   },
 
   findOne: function(req, res) {
