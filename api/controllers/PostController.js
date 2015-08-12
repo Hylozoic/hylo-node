@@ -341,7 +341,7 @@ module.exports = {
     .then(user => Email.sendRawEmail('hello@hylo.com', {
       subject: 'Objectionable content report',
       body: format(
-        '%s <%s> has flagged %s as objectionable',
+        '%s &lt;%s&gt; has flagged %s as objectionable',
         user.get('name'), user.get('email'),
         Frontend.Route.post(post, community)
       )
