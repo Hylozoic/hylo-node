@@ -33,11 +33,11 @@ module.exports = {
       qb.select(bookshelf.knex.raw('*, count(*) over () as total'));
 
       if (opts.users) {
-        qb.whereIn('post.creator_id', opts.users);
+        qb.whereIn('post.user_id', opts.users);
       }
 
       if (opts.excludeUsers) {
-        qb.whereNotIn('post.creator_id', opts.excludeUsers);
+        qb.whereNotIn('post.user_id', opts.excludeUsers);
       }
 
       if (opts.communities) {
@@ -61,7 +61,7 @@ module.exports = {
       if (opts.follower) {
         qb.join('follower', 'follower.post_id', '=', 'post.id');
         qb.where('follower.user_id', opts.follower);
-        qb.whereRaw('(post.creator_id != ? or post.creator_id is null)', opts.follower);
+        qb.whereRaw('(post.user_id != ? or post.user_id is null)', opts.follower);
       }
 
       if (!opts.type || opts.type === 'all') {

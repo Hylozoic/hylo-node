@@ -16,7 +16,7 @@ describe('Post', function() {
         u2.save(),
         u3.save()
       ).then(function() {
-        post.set('creator_id', u1.id);
+        post.set('user_id', u1.id);
         return post.save();
       }).then(function() {
         done();

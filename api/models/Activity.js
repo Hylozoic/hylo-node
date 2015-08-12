@@ -53,11 +53,11 @@ module.exports = bookshelf.Model.extend({
   forPost: function(post, userId) {
     return new Activity({
       reader_id: userId,
-      actor_id: post.get('creator_id'),
+      actor_id: post.get('user_id'),
       post_id: post.id,
       action: this.Action.Mention,
       created_at: post.get('created_at')
-    })
+    });
   },
 
   forFollowAdd: function(follow, userId) {
@@ -82,7 +82,7 @@ module.exports = bookshelf.Model.extend({
 
   forUnfollow: function(post, unfollowerId) {
     return new Activity({
-      reader_id: post.get('creator_id'),
+      reader_id: post.get('user_id'),
       actor_id: unfollowerId,
       post_id: post.id,
       action: this.Action.Unfollow,

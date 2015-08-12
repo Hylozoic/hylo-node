@@ -82,7 +82,7 @@ module.exports = bookshelf.Model.extend({
     .then(post => Community.query().select('id')
       .whereIn('network_id', post.relations.communities.pluck('network_id')))
     .then(rows => Search.forUsers({
-      exclude: [post.get('creator_id')],
+      exclude: [post.get('user_id')],
       community: _.union(post.relations.communities.pluck('id'), _.pluck(rows, 'id')),
       limit: 1000000
     }).fetchAll({withRelated: ['posts', 'organizations', 'skills']}))

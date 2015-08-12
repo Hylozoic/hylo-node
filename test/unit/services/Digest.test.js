@@ -12,7 +12,7 @@ describe('Digest', function() {
 
     return community.save().then(community => user.save())
     .then(() => user.joinCommunity(community))
-    .then(() => new Post({creator_id: user.id, name: 'Hi!'}).save())
+    .then(() => new Post({user_id: user.id, name: 'Hi!'}).save())
     .then(post => community.posts().attach(post.id));
   });
 

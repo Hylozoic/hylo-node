@@ -105,7 +105,7 @@ module.exports = {
               qb.column("id", "name", "avatar_url");
             },
             "post": function (qb) {
-              qb.column("id", "name", "creator_id", "type");
+              qb.column("id", "name", "user_id", "type");
             },
             "post.communities": function(qb) {
               qb.column("id", "name");
@@ -154,13 +154,13 @@ module.exports = {
               qb.column("id", "name", "avatar_url");
             },
             "comment": function(qb) {
-              qb.column("id", 'comment_text', 'post_id')
+              qb.column("id", 'comment_text', 'post_id');
             },
             "comment.post.creator": function (qb) {
               qb.column("id", "name", "avatar_url");
             },
             "comment.post": function (qb) {
-              qb.column("id", "name", "creator_id", "type");
+              qb.column("id", "name", "user_id", "type");
             },
             "comment.post.communities": function(qb) {
               qb.column("id", "name");

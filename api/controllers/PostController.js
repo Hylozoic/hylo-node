@@ -38,25 +38,25 @@ var newPostAttrs = function(userId, params) {
     name:          RichText.sanitize(params.name),
     description:   RichText.sanitize(params.description),
     type:          params.type,
-    creator_id:    userId
+    user_id:       userId
   });
 };
 
 var afterSavingPost = function(post, opts) {
-  var creatorId = post.get('creator_id'),
+  var userId = post.get('user_id'),
     mentioned = RichText.getUserMentions(post.get('description')),
-    followerIds = _.uniq(mentioned.concat(creatorId));
+    followerIds = _.uniq(mentioned.concat(userId));
 
   return Promise.join(
     // Attach post to the community
     new Community({id: opts.communityId}).posts().attach(post.id, _.pick(opts, 'transacting')),
 
     // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, creatorId, _.pick(opts, 'transacting')),
+    post.addFollowers(followerIds, userId, _.pick(opts, 'transacting')),
 
     // create activity and send notification to all mentioned users except the creator
-    Promise.map(_.without(mentioned, creatorId), userId =>
-      Post.notifyAboutMention(post, userId, _.pick(opts, 'transacting'))),
+    Promise.map(_.without(mentioned, userId), mentionedUserId =>
+      Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
 
     // Add image, if any
     (opts.imageUrl ? Media.create({

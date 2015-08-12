@@ -9,7 +9,7 @@ module.exports = function checkAndSetOwnPost(req, res, next) {
     // Perform any checks against viewing this post
     return Promise.all([
       Admin.isSignedIn(req),
-      post.get('creator_id') == req.session.userId
+      post.get('user_id') == req.session.userId
     ]);
   })
   .then(function(allowed) {

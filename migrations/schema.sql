@@ -503,7 +503,7 @@ CREATE TABLE post (
     image_url character varying(255),
     thumbnail_image_url character varying(255),
     created_at timestamp without time zone,
-    creator_id bigint,
+    user_id bigint,
     num_votes integer,
     num_comments integer,
     active boolean,
@@ -1657,7 +1657,7 @@ CREATE INDEX ix_media_post_1 ON media USING btree (post_id);
 -- Name: ix_post_creator_11; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX ix_post_creator_11 ON post USING btree (creator_id);
+CREATE INDEX ix_post_creator_11 ON post USING btree (user_id);
 
 
 --
@@ -1892,7 +1892,7 @@ ALTER TABLE ONLY post_community
 --
 
 ALTER TABLE ONLY post
-    ADD CONSTRAINT fk_post_creator_11 FOREIGN KEY (creator_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_post_creator_11 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

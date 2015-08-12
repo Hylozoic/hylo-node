@@ -4,7 +4,7 @@ module.exports = function checkAndSetWritablePost(req, res, next) {
   .tap(function(post) {
     if (!post) throw new Error(format('post %s not found', req.param('postId')));
 
-    if (Admin.isSignedIn(req) || post.get('creator_id') == req.session.userId)
+    if (Admin.isSignedIn(req) || post.get('user_id') == req.session.userId)
       return true;
 
     var communityId = post.relations.communities.first().id;

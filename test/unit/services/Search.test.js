@@ -37,13 +37,13 @@ describe('Search', function() {
         inner join "post_community" on "post_community"."post_id" = "post"."id"
         inner join "follower" on "follower"."post_id" = "post"."id"
         where "post"."active" = 'true'
-        and "post"."creator_id" in ('42', '41')
+        and "post"."user_id" in ('42', '41')
         and "post_community"."community_id" in ('9', '12')
         and "post"."visibility" != '2'
         and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
           or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
         and "follower"."user_id" = '37'
-        and (post.creator_id != '37' or post.creator_id is null)
+        and (post.user_id != '37' or post.user_id is null)
         and "type" = 'request'
         and ((post.created_at between '%s' and '%s')
           or (post.updated_at between '%s' and '%s'))

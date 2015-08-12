@@ -2,7 +2,7 @@ module.exports = bookshelf.Model.extend({
   tableName: 'post',
 
   creator: function () {
-    return this.belongsTo(User, "creator_id");
+    return this.belongsTo(User);
   },
 
   communities: function () {
@@ -40,25 +40,25 @@ module.exports = bookshelf.Model.extend({
   relatedUsers: () => this.belongsToMany(User, 'posts_about_users'),
 
   addFollowers: function(userIds, addingUserId, opts) {
-    var postId = this.id, creatorId = this.get('creator_id');
+    var postId = this.id, userId = this.get('user_id');
     if (!opts) opts = {};
 
-    return Promise.map(userIds, function(userId) {
+    return Promise.map(userIds, function(followerUserId) {
       return Follower.create(postId, {
-        followerId: userId,
+        followerId: followerUserId,
         addedById: addingUserId,
         transacting: opts.transacting
       }).tap(function(follow) {
         if (!opts.createActivity) return;
 
         var updates = [];
-        if (userId !== addingUserId) {
-          updates.push(Activity.forFollowAdd(follow, userId).save({}, _.pick(opts, 'transacting')));
-          updates.push(User.incNewNotificationCount(userId, opts.transacting));
+        if (followerUserId !== addingUserId) {
+          updates.push(Activity.forFollowAdd(follow, followerUserId).save({}, _.pick(opts, 'transacting')));
+          updates.push(User.incNewNotificationCount(followerUserId, opts.transacting));
         }
-        if (creatorId !== addingUserId) {
-          updates.push(Activity.forFollow(follow, creatorId).save({}, _.pick(opts, 'transacting')));
-          updates.push(User.incNewNotificationCount(creatorId, opts.transacting));
+        if (userId !== addingUserId) {
+          updates.push(Activity.forFollow(follow, userId).save({}, _.pick(opts, 'transacting')));
+          updates.push(User.incNewNotificationCount(userId, opts.transacting));
         }
         return Promise.all(updates);
       });
@@ -106,7 +106,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   countForUser: function(user) {
-    return this.query().count().where({creator_id: user.id, active: true})
+    return this.query().count().where({user_id: user.id, active: true})
     .then(function(rows) {
       return rows[0].count;
     });

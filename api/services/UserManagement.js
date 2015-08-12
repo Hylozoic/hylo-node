@@ -27,7 +27,7 @@ var generateMergeQueries = function(primaryUserId, secondaryUserId, knex) {
   // simple updates
   [
     // table name, user id column
-    ['post',             'creator_id'],
+    ['post',             'user_id'],
     ['post',             'deactivated_by_id'],
     ['activity',         'actor_id'],
     ['comment',          'user_id'],
