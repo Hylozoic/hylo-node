@@ -5,7 +5,7 @@ module.exports = function checkAndSetPost(req, res, next) {
     res.forbidden();
   };
 
-  return Post.find(req.param('postId'))
+  return Post.find(req.param('postId'), {withRelated: 'communities'})
   .tap(post => {
     if (!post) throw new Error(format('post %s not found', req.param('postId')));
   })

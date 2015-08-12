@@ -65,7 +65,7 @@ module.exports = bookshelf.Model.extend({
     return Community.find(opts.communityId, {withRelated: ['creator']}).then(c => {
       var creator = c.relations.creator,
         recipient = process.env.ASANA_NEW_COMMUNITIES_EMAIL;
-      Email.sendSimpleEmail(recipient, 'tem_nt4RmzAfN4KyPZYxFJWpFE', {
+      Email.sendRawEmail(recipient, {
         subject: c.get('name'),
         body: format(
           '%s<br/>created by %s<br/>%s<br/>%s',

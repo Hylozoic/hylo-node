@@ -331,6 +331,22 @@ module.exports = {
     })
     .then(() => res.ok({}))
     .catch(res.serverError);
+  },
+
+  complain: function(req, res) {
+    var post = res.locals.post,
+      community = post.relations.communities.first();
+
+    User.find(req.session.userId)
+    .then(user => Email.sendRawEmail('hello@hylo.com', {
+      subject: 'Objectionable content report',
+      body: format(
+        '%s <%s> has flagged %s as objectionable',
+        user.get('name'), user.get('email'),
+        Frontend.Route.post(post, community)
+      )
+    }))
+    .then(() => res.ok({}), res.serverError);
   }
 
 };

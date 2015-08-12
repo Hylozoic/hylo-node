@@ -21,6 +21,10 @@ module.exports = {
 
   sendSimpleEmail: sendSimpleEmail,
 
+  sendRawEmail: function(email, data, extraOptions) {
+    return sendSimpleEmail(email, 'tem_nt4RmzAfN4KyPZYxFJWpFE', data, extraOptions);
+  },
+
   sendNewProjectPostNotification: function(email, data, extraOptions) {
     return sendSimpleEmail(email, 'tem_bG7zNWk3sqbLKkg2TLcYgE', data, extraOptions);
   },

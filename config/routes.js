@@ -81,6 +81,7 @@ module.exports.routes = {
   'POST   /noo/post/:postId/follow':                      'PostController.follow',
   'POST   /noo/post/:postId/fulfill':                     'PostController.fulfill',
   'POST   /noo/post/:postId/vote':                        'PostController.vote',
+  'POST   /noo/post/:postId/complain':                    'PostController.complain',
   'POST   /noo/post':                                     'PostController.create',
   'POST   /noo/post/:postId':                             'PostController.update',
   'DELETE /noo/post/:postId':                             'PostController.destroy',

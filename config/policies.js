@@ -96,6 +96,7 @@ module.exports.policies = {
     findAllForUser:   ['sessionAuth', 'isSelf'],
     fulfill:          ['sessionAuth', 'checkAndSetOwnPost'],
     vote:             ['sessionAuth', 'checkAndSetPost'],
+    complain:         ['sessionAuth', 'checkAndSetPost'],
     destroy:          ['sessionAuth', 'checkAndSetWritablePost']
   },
 
