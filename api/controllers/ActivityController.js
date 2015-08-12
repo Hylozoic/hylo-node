@@ -17,8 +17,8 @@ module.exports = {
       {comment: qb => qb.column('id', 'comment_text', 'created_at')},
       {'comment.thanks': qb => qb.where('thanked_by_id', req.session.userId)},
       {post: qb => qb.column('id', 'name', 'creator_id', 'type', 'description')},
-      {'post.communities': qb => qb.column('id', 'slug')},
-      {'post.relatedUsers': qb => qb.column('id', 'name', 'avatar_url')}
+      {'post.communities': qb => qb.column('community.id', 'slug')},
+      {'post.relatedUsers': qb => qb.column('users.id', 'name', 'avatar_url')}
     ]})
     .then(res.ok)
     .catch(res.serverError);
