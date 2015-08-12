@@ -12,17 +12,30 @@ var sanitizeForJSON = function(str){
 };
 
 var nvd3Format = function(data, times) {
-  return _(data).keys().map(name => ({
-    key: sanitizeForJSON(name),
-    values: _.map(times, t => [Number(t), data[name][t] || 0])
-  }))
-  .sortBy(series => _.sum(series.values, v => -v[1]))
-  .value();
+  var maxSeries;
+  return _(data).keys()
+  .tap(keys => maxSeries = Math.min(keys.length, 19))
+  .sortByAll([key => -1 * _.sum(_.values(data[key])), _.identity])
+  .reduce((result, name, index, keys) => {
+    if (index < maxSeries) {
+      result.push({
+        key: sanitizeForJSON(name),
+        values: _.map(times, t => [Number(t), data[name][t] || 0])
+      });
+    } else if (index === maxSeries) {
+      var otherNames = keys.slice(index, keys.length);
+      result.push({
+        key: format('Other (%s)', otherNames.length),
+        values: _.map(times, t => [Number(t), _.sum(otherNames, name => data[name][t] || 0)])
+      });
+    }
+    return result;
+  }, []);
 };
 
 var countNew = function(model, interval, unit) {
   var now = moment(),
-    then = moment().clone().subtract(interval, unit),
+    then = now.clone().subtract(interval, unit),
     data = {},
     times = {},
     withRelated = (model === Comment ? ['post.communities'] : ['communities']);
@@ -37,7 +50,7 @@ var countNew = function(model, interval, unit) {
   .then(results => {
     results.models.map(x => {
       var community = (model === Comment ? x.relations.post : x).relations.communities.first(),
-        series = (community ? community.get('name').substring(0, 20) : 'none'),
+        series = (community ? community.get('name').substring(0, 15) : 'none'),
         time = Number(moment(x.get('created_at')).startOf('day'));
 
       // create a nested hash for communities & times
@@ -56,6 +69,8 @@ var countNew = function(model, interval, unit) {
 };
 
 module.exports = {
+
+  countNew: countNew,
 
   index: function(req, res) {
     res.ok(req.user);
