@@ -24,7 +24,8 @@ var countNew = function(model, interval, unit) {
   var now = moment(),
     then = moment().clone().subtract(interval, unit),
     data = {},
-    times = {};
+    times = {},
+    withRelated = (model === Comment ? ['post.communities'] : ['communities']);
 
   return model.query(q => {
     q.whereRaw('created_at between ? and ?', [then, now]);
@@ -32,12 +33,12 @@ var countNew = function(model, interval, unit) {
     if (model === Post) {
       q.where('type', '!=', 'welcome');
     }
-  }).fetchAll({withRelated: ['communities']})
+  }).fetchAll({withRelated: withRelated})
   .then(results => {
-    results.models.map(u => {
-      var community = u.relations.communities.first(),
+    results.models.map(x => {
+      var community = (model === Comment ? x.relations.post : x).relations.communities.first(),
         series = (community ? community.get('name').substring(0, 20) : 'none'),
-        time = Number(moment(u.get('created_at')).startOf('day'));
+        time = Number(moment(x.get('created_at')).startOf('day'));
 
       // create a nested hash for communities & times
       if (!data[series]) data[series] = {};
@@ -63,7 +64,8 @@ module.exports = {
   metrics: function(req, res) {
     Promise.props({
       newUsers: countNew(User, 1, 'month'),
-      newPosts: countNew(Post, 1, 'month')
+      newPosts: countNew(Post, 1, 'month'),
+      newComments: countNew(Comment, 1, 'month')
     })
     .then(res.ok, res.serverError);
   }
