@@ -1,4 +1,5 @@
-var moment = require('moment');
+var heredoc = require('heredoc'),
+  moment = require('moment');
 
 var sanitizeForJSON = function(str){
   return str.replace(/\\/g, "\\\\")
@@ -68,9 +69,53 @@ var countNew = function(model, interval, unit) {
   });
 };
 
+var newUserActionRate = function(table, startTime, pgInterval) {
+  return bookshelf.knex.raw(format(heredoc.strip(function() {/*
+    select
+      cohort,
+      count(*) as user_count,
+      round(sum(sub.acted)/count(*)::float::numeric, 2) as post_rate
+    from (
+      select
+        u.id,
+        u.email,
+        date_trunc('day', u.created_at)::date as cohort,
+        case when count(x.id) > 0 then 1 else 0 end as acted
+      from
+        users u
+        left join %s x on (
+          u.id = x.user_id
+          and x.created_at - u.created_at < interval '%s'
+        )
+      where u.created_at >= ?
+      group by u.id
+    ) sub
+    group by cohort
+    order by cohort desc
+  */}), table, pgInterval), startTime)
+  .then(data => data.rows.map(r => [Date.parse(r.cohort), Number(r.post_rate)]));
+};
+
+var newUserActivity = function(interval, unit) {
+  var startTime = moment().subtract(interval, unit);
+  return Promise.all([
+    Promise.props({
+      key: 'post in 7 days',
+      values: newUserActionRate('post', startTime, '7 days'),
+      color: '#5799c7'
+    }),
+    Promise.props({
+      key: 'comment in 7 days',
+      values: newUserActionRate('comment', startTime, '7 days'),
+      color: '#ff9f4a'
+    })
+  ]);
+};
+
 module.exports = {
 
   countNew: countNew,
+  newUserActivity: newUserActivity,
 
   index: function(req, res) {
     res.ok(req.user);
@@ -80,7 +125,8 @@ module.exports = {
     Promise.props({
       newUsers: countNew(User, 1, 'month'),
       newPosts: countNew(Post, 1, 'month'),
-      newComments: countNew(Comment, 1, 'month')
+      newComments: countNew(Comment, 1, 'month'),
+      newUserActivity: newUserActivity(1, 'month')
     })
     .then(res.ok, res.serverError);
   }
