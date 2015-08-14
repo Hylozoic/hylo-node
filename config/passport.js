@@ -1,7 +1,7 @@
 
 var passport = require('passport'),
   GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
-  GoogleTokenStrategy = require('passport-google-token').Strategy,        
+  GoogleTokenStrategy = require('passport-google-token').Strategy,
   FacebookStrategy = require('passport-facebook').Strategy,
   FacebookTokenStrategy = require('passport-facebook-token').Strategy,
   LinkedinStrategy = require('passport-linkedin-oauth2').Strategy;
@@ -51,10 +51,14 @@ var url = function(path) {
   return format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, path);
 };
 
-var formatProfile = function(profile) {
-  return _.extend(profile, {
+var formatProfile = function(profile, accessToken, refreshToken) {
+  return _.merge(profile, {
     name: profile.displayName,
     email: profile.emails[0].value,
+    _json: {
+      access_token: accessToken,
+      refresh_token: refreshToken
+    }
   });
 };
 
@@ -70,9 +74,10 @@ passport.use(googleStrategy);
 var facebookStrategy = new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
-  callbackURL: url('/noo/login/facebook/oauth')
+  callbackURL: url('/noo/login/facebook/oauth'),
+  scope: ['public_profile', 'email', 'user_friends', 'user_about_me', 'user_likes', 'user_location']
 }, function(accessToken, refreshToken, profile, done) {
-  done(null, formatProfile(profile));
+  done(null, formatProfile(profile, accessToken, refreshToken));
 });
 passport.use(facebookStrategy);
 
@@ -80,7 +85,7 @@ var facebookTokenStrategy = new FacebookTokenStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET
 }, function(accessToken, refreshToken, profile, done) {
-  return done(null, formatProfile(profile));
+  done(null, formatProfile(profile, accessToken, refreshToken));
 });
 passport.use(facebookTokenStrategy);
 
@@ -88,7 +93,7 @@ var googleTokenStrategy = new GoogleTokenStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET
 }, function(accessToken, refreshToken, profile, done) {
-  return done(null, formatProfile(profile));
+  done(null, formatProfile(profile));
 });
 passport.use(googleTokenStrategy);
 
@@ -107,6 +112,6 @@ var linkedinTokenStrategy = new LinkedInTokenStrategy({
   clientID: process.env.LINKEDIN_API_KEY,
   clientSecret: process.env.LINKEDIN_API_SECRET,
 }, function(accessToken, refreshToken, profile, done) {
-  return done(null, formatProfile(profile));
+  done(null, formatProfile(profile));
 });
 passport.use(linkedinTokenStrategy);
