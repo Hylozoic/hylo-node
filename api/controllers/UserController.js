@@ -290,16 +290,25 @@ module.exports = {
 
     Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(user => _.merge(
-      _.pick(user.attributes, UserPresenter.shortAttributes),
-      {
-        skills: Skill.simpleList(user.relations.skills),
-        organizations: Organization.simpleList(user.relations.organizations),
-        public_email: user.encryptedEmail()
-      })))
+    .then(users => users.map(UserPresenter.presentForList))
     .then(list => ({people_total: total, people: list}))
-    .then(res.ok)
-    .catch(res.serverError);
+    .then(res.ok, res.serverError);
+  },
+
+  findForNetwork: function(req, res) {
+    var total;
+
+    Community.query().where('network_id', req.param('networkId')).select('id')
+    .then(rows => _.pluck(rows, 'id'))
+    .then(ids => Search.forUsers({
+      communities: ids,
+      limit: req.param('limit') || 20,
+      offset: req.param('offset') || 0
+    }).fetchAll({withRelated: ['skills', 'organizations']}))
+    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+    .then(users => users.map(UserPresenter.presentForList))
+    .then(list => ({people_total: total, people: list}))
+    .then(res.ok, res.serverError);
   }
 
 };

@@ -50,7 +50,8 @@ module.exports.policies = {
     thanks:            ['sessionAuth', 'inSameCommunityOrNetwork'],
     sendPasswordReset: true,
     findForProject:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findForCommunity:  ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership']
+    findForCommunity:  ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findForNetwork:    ['sessionAuth', 'inNetwork']
   },
 
   ActivityController: {

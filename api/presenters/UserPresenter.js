@@ -58,6 +58,17 @@ var UserPresenter = module.exports = {
     .tap(user => { if (!user || !user.get('active')) throw "User not found"; })
     .then(user => Promise.join(user, extraAttributes(user)))
     .spread((user, extra) => _.extend(user.attributes, extra));
+  },
+
+  presentForList: function(user) {
+    return _.merge(
+      _.pick(user.attributes, UserPresenter.shortAttributes),
+      {
+        skills: Skill.simpleList(user.relations.skills),
+        organizations: Organization.simpleList(user.relations.organizations),
+        public_email: user.encryptedEmail()
+      }
+    );
   }
 
 };
