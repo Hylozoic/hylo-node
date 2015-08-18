@@ -91,7 +91,7 @@ module.exports = {
         qb.offset(start);
         qb.join("post", "post.id", "=", "contributor.post_id");
 
-        qb.where({user_id: userId, "post.active": true});
+        qb.where({'contributor.user_id': userId, "post.active": true});
 
         if (!isSelf) {
           qb.join("post_community", "post_community.post_id", "=", "post.id");
