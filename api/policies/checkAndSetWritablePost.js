@@ -1,6 +1,6 @@
 module.exports = function checkAndSetWritablePost(req, res, next) {
 
-  Post.find(req.param('postId'), {withRelated: [{communities: function(qb) { qb.column('id'); }}]})
+  Post.find(req.param('postId'), {withRelated: [{communities: q => q.column('community.id')}]})
   .tap(function(post) {
     if (!post) throw new Error(format('post %s not found', req.param('postId')));
 
