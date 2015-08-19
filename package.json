@@ -112,5 +112,32 @@
     "url": "git://github.com/Hylozoic/hylo-node.git"
   },
   "author": "Lawrence Wang <l@lw.io>",
-  "license": ""
+  "license": "",
+  "standard": {
+    "global": [
+      "_",
+      "Admin",
+      "Community",
+      "Contribution",
+      "Frontend",
+      "Invitation",
+      "LinkedAccount",
+      "Membership",
+      "Organization",
+      "Project",
+      "ProjectInvitation",
+      "Queue",
+      "RequestValidation",
+      "Search",
+      "Skill",
+      "Thank",
+      "TokenAuth",
+      "User",
+      "UserEmail",
+      "UserPhone",
+      "UserPresenter",
+      "UserSession",
+      "UserWebsite"
+    ]
+  }
 }

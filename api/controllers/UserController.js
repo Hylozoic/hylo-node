@@ -1,314 +1,303 @@
-/**
- * UserController
- *
- * @description :: Server-side logic for managing users
- * @help        :: See http://links.sailsjs.org/docs/controllers
- */
+var validator = require('validator')
 
-var validator = require('validator');
-
-var findContext = function(req) {
-  var projectId = req.param('projectId');
+var findContext = function (req) {
+  var projectId = req.param('projectId')
   if (projectId) {
     return Project.find(projectId).then(project => {
-      if (!project) return {};
-      if (project.isPublic()) return {project: project};
+      if (!project) return {}
+      if (project.isPublic()) return {project: project}
 
       return ProjectInvitation.validate(projectId, req.param('projectToken'))
-      .then(valid => (valid ? {project: project} : {}));
-    });
+        .then(valid => (valid ? {project: project} : {}))
+    })
   }
 
   if (req.session.invitationId) {
     return Invitation.find(req.session.invitationId, {withRelated: ['community']})
-    .then(function(invitation) {
-      return {community: invitation.relations.community, invitation: invitation};
-    });
+      .then(function (invitation) {
+        return {community: invitation.relations.community, invitation: invitation}
+      })
   }
 
-  return Promise.props({community: Community.where({beta_access_code: req.param('code')}).fetch()});
-};
+  return Promise.props({community: Community.where({beta_access_code: req.param('code')}).fetch()})
+}
 
 module.exports = {
-
-  create: function(req, res) {
-    var params = _.pick(req.allParams(), 'name', 'email', 'password');
+  create: function (req, res) {
+    var params = _.pick(req.allParams(), 'name', 'email', 'password')
 
     return findContext(req)
-    .then(ctx => {
-      var attrs = _.merge(_.pick(params, 'name', 'email'), {
-        community: (ctx.invitation ? null : ctx.community),
-        account: {type: 'password', password: params.password}
-      });
+      .then(ctx => {
+        var attrs = _.merge(_.pick(params, 'name', 'email'), {
+          community: (ctx.invitation ? null : ctx.community),
+          account: {type: 'password', password: params.password}
+        })
 
-      return User.createFully(attrs, ctx.invitation);
-    })
-    .then(function(user) {
-      if (req.param('login'))
-        UserSession.login(req, user, 'password');
+        return User.createFully(attrs, ctx.invitation)
+      })
+      .then(function (user) {
+        if (req.param('login')) UserSession.login(req, user, 'password')
 
-      res.ok({});
-    })
-    .catch(function(err) {
-      res.status(422).send(err.detail ? err.detail : err);
-    });
+        res.ok({})
+      })
+      .catch(function (err) {
+        res.status(422).send(err.detail ? err.detail : err)
+      })
   },
 
-  status: function(req, res) {
-    res.ok({signedIn: UserSession.isLoggedIn(req)});
+  status: function (req, res) {
+    res.ok({signedIn: UserSession.isLoggedIn(req)})
   },
 
-  findSelf: function(req, res) {
-    if (!req.session.userId)
-      return res.ok({});
+  findSelf: function (req, res) {
+    if (!req.session.userId) return res.ok({})
 
     return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
-    .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
-    .then(res.ok)
-    .catch(res.serverError);
+      .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+      .then(res.ok)
+      .catch(res.serverError)
   },
 
-  findOne: function(req, res) {
+  findOne: function (req, res) {
     UserPresenter.fetchForOther(req.param('userId'))
-    .then(res.ok)
-    .catch(res.serverError);
+      .then(res.ok)
+      .catch(res.serverError)
   },
 
-  contributions: function(req, res) {
-    var params = _.pick(req.allParams(), ['userId', 'limit', 'start']),
-      limit = params.limit ? params.limit : 15,
-      start = params.start ? params.start : 0,
-      userId = params.userId,
-      isSelf = req.session.userId === userId;
+  contributions: function (req, res) {
+    var params = _.pick(req.allParams(), ['userId', 'limit', 'start'])
+    var limit = params.limit ? params.limit : 15
+    var start = params.start ? params.start : 0
+    var userId = params.userId
+    var isSelf = req.session.userId === userId
 
-    Promise.method(function() {
-      if (!isSelf) return Membership.activeCommunityIds(req.session.userId);
-    })().then(function(communityIds) {
+    Promise.method(function () {
+      if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
+    })().then(function (communityIds) {
+      Contribution.query(function (qb) {
+        qb.orderBy('date_contributed')
+        qb.limit(limit)
+        qb.offset(start)
+        qb.join('post', 'post.id', '=', 'contributor.post_id')
 
-      Contribution.query(function(qb) {
-        qb.orderBy("date_contributed");
-        qb.limit(limit);
-        qb.offset(start);
-        qb.join("post", "post.id", "=", "contributor.post_id");
-
-        qb.where({'contributor.user_id': userId, "post.active": true});
+        qb.where({'contributor.user_id': userId, 'post.active': true})
 
         if (!isSelf) {
-          qb.join("post_community", "post_community.post_id", "=", "post.id");
-          qb.join("community", "community.id", "=", "post_community.community_id");
-          qb.whereIn("community.id", communityIds);
+          qb.join('post_community', 'post_community.post_id', '=', 'post.id')
+          qb.join('community', 'community.id', '=', 'post_community.community_id')
+          qb.whereIn('community.id', communityIds)
         }
       }).fetchAll({
         withRelated: [
           {
-            "post.creator": function(qb) {
-              qb.column("id", "name", "avatar_url");
+            'post.creator': function (qb) {
+              qb.column('id', 'name', 'avatar_url')
             },
-            "post": function (qb) {
-              qb.column("id", "name", "user_id", "type");
+            'post': function (qb) {
+              qb.column('id', 'name', 'user_id', 'type')
             },
-            "post.communities": function(qb) {
-              qb.column("id", "name");
+            'post.communities': function (qb) {
+              qb.column('id', 'name')
             }
           }
         ]
-      }).then(function(contributions) {
-        res.ok(contributions);
-      });
-    });
+      }).then(function (contributions) {
+        res.ok(contributions)
+      })
+    })
   },
 
-  thanks: function(req, res) {
-    var params = _.pick(req.allParams(), ['userId', 'limit', 'start']),
-      limit = params.limit ? params.limit : 15,
-      start = params.start ? params.start : 0,
-      userId = params.userId,
-      isSelf = req.session.userId === userId;
+  thanks: function (req, res) {
+    var params = _.pick(req.allParams(), ['userId', 'limit', 'start'])
+    var limit = params.limit ? params.limit : 15
+    var start = params.start ? params.start : 0
+    var userId = params.userId
+    var isSelf = req.session.userId === userId
 
-    Promise.method(function() {
-      if (!isSelf) return Membership.activeCommunityIds(req.session.userId);
-    })().then(function(communityIds) {
-
-      Thank.query(function(qb) {
-        qb.orderBy("date_thanked");
-        qb.limit(limit);
-        qb.offset(start);
-        qb.join("comment", "comment.id", "=", "thank_you.comment_id");
-        qb.join("post", "post.id", "=", "comment.post_id");
+    Promise.method(function () {
+      if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
+    })().then(function (communityIds) {
+      Thank.query(function (qb) {
+        qb.orderBy('date_thanked')
+        qb.limit(limit)
+        qb.offset(start)
+        qb.join('comment', 'comment.id', '=', 'thank_you.comment_id')
+        qb.join('post', 'post.id', '=', 'comment.post_id')
 
         qb.where({
           'comment.user_id': userId,
-          "comment.active": true,
-          "post.active": true
-        });
+          'comment.active': true,
+          'post.active': true
+        })
 
         if (!isSelf) {
-          qb.join("post_community", "post_community.post_id", "=", "post.id");
-          qb.join("community", "community.id", "=", "post_community.community_id");
-          qb.whereIn("community.id", communityIds);
+          qb.join('post_community', 'post_community.post_id', '=', 'post.id')
+          qb.join('community', 'community.id', '=', 'post_community.community_id')
+          qb.whereIn('community.id', communityIds)
         }
       }).fetchAll({
         withRelated: [
           {
-            "thankedBy": function(qb) {
-              qb.column("id", "name", "avatar_url");
+            'thankedBy': function (qb) {
+              qb.column('id', 'name', 'avatar_url')
             },
-            "comment": function(qb) {
-              qb.column("id", 'comment_text', 'post_id');
+            'comment': function (qb) {
+              qb.column('id', 'comment_text', 'post_id')
             },
-            "comment.post.creator": function (qb) {
-              qb.column("id", "name", "avatar_url");
+            'comment.post.creator': function (qb) {
+              qb.column('id', 'name', 'avatar_url')
             },
-            "comment.post": function (qb) {
-              qb.column("id", "name", "user_id", "type");
+            'comment.post': function (qb) {
+              qb.column('id', 'name', 'user_id', 'type')
             },
-            "comment.post.communities": function(qb) {
-              qb.column("id", "name");
+            'comment.post.communities': function (qb) {
+              qb.column('id', 'name')
             }
           }
         ]
-      }).then(function(thanks) {
-        res.ok(thanks);
-      });
-    });
+      }).then(function (thanks) {
+        res.ok(thanks)
+      })
+    })
   },
 
-  update: function(req, res) {
+  update: function (req, res) {
     var attrs = _.pick(req.allParams(), [
       'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
       'email', 'send_email_preference', 'daily_digest', 'work', 'intention', 'extra_info',
       'new_notification_count'
-    ]);
+    ])
 
     return User.find(req.param('userId'))
-    .tap(function(user) {
-      var newEmail = attrs.email, oldEmail = user.get('email');
-      if (newEmail && newEmail != oldEmail) {
-        if (!validator.isEmail(newEmail)) {
-          throw new Error('invalid-email');
+      .tap(function (user) {
+        var newEmail = attrs.email
+        var oldEmail = user.get('email')
+        if (newEmail && newEmail !== oldEmail) {
+          if (!validator.isEmail(newEmail)) {
+            throw new Error('invalid-email')
+          }
+          return User.isEmailUnique(newEmail, oldEmail).then(function (isUnique) {
+            if (!isUnique) throw new Error('duplicate-email')
+          })
         }
-        return User.isEmailUnique(newEmail, oldEmail).then(function(isUnique) {
-          if (!isUnique) throw new Error('duplicate-email');
-        });
-        attrs.email_validated = false;
+      })
+      .then(function (user) {
+        // FIXME this should be in a transaction
+
+        user.setSanely(attrs)
+
+        var promises = []
+        var changed = false
+
+        _.each([
+          ['skills', Skill],
+          ['organizations', Organization],
+          ['phones', UserPhone],
+          ['emails', UserEmail],
+          ['websites', UserWebsite]
+        ], function (model) {
+          var param = req.param(model[0])
+          if (param) {
+            promises.push(model[1].update(_.flatten([param]), user.id))
+            changed = true
+          }
+        })
+
+        if (!_.isEmpty(user.changed) || changed) {
+          promises.push(user.save(
+            _.extend({updated_at: new Date()}, user.changed),
+            {patch: true}
+          ))
+        }
+
+        var newPassword = req.param('password')
+        if (newPassword) {
+          promises.push(
+            LinkedAccount.where({user_id: user.id, provider_key: 'password'}).fetch()
+              .then(function (account) {
+                if (account) return account.updatePassword(newPassword)
+                return LinkedAccount.create(user.id, {type: 'password', password: newPassword})
+              })
+          )
+        }
+
+        return Promise.all(promises)
+
+      }).then(function () {
+      res.ok({})
+    }).catch(function (err) {
+      if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
+        res.badRequest(req.__(err.message))
+      } else {
+        res.serverError(err)
       }
     })
-    .then(function(user) {
-      // FIXME this should be in a transaction
-
-      user.setSanely(attrs);
-
-      var promises = [], changed = false;
-
-      _.each([
-        ['skills', Skill],
-        ['organizations', Organization],
-        ['phones', UserPhone],
-        ['emails', UserEmail],
-        ['websites', UserWebsite]
-      ], function(model) {
-        var param = req.param(model[0]);
-        if (param) {
-          promises.push(model[1].update(_.flatten([param]), user.id));
-          changed = true;
-        }
-      });
-
-      if (!_.isEmpty(user.changed) || changed) {
-        promises.push(user.save(
-          _.extend({updated_at: new Date()}, user.changed),
-          {patch: true}
-        ));
-      }
-
-      var newPassword = req.param('password');
-      if (newPassword) {
-        promises.push(
-          LinkedAccount.where({user_id: user.id, provider_key: 'password'}).fetch()
-          .then(function(account) {
-            if (account) return account.updatePassword(newPassword);
-            return LinkedAccount.create(user.id, {type: 'password', password: newPassword});
-          })
-        );
-      }
-
-      return Promise.all(promises);
-
-    }).then(function() {
-      res.ok({});
-    }).catch(function(err) {
-      if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
-        res.badRequest(req.__(err.message));
-      } else {
-        res.serverError(err);
-      }
-    });
   },
 
-  sendPasswordReset: function(req, res) {
-    var email = req.param('email');
-    User.where('email', email).fetch().then(function(user) {
+  sendPasswordReset: function (req, res) {
+    var email = req.param('email')
+    User.where('email', email).fetch().then(function (user) {
       if (!user) {
-        res.ok({error: 'no user'});
+        res.ok({error: 'no user'})
       } else {
-        user.generateToken().then(function(token) {
+        user.generateToken().then(function (token) {
           Queue.classMethod('Email', 'sendPasswordReset', {
             email: user.get('email'),
             templateData: {
               login_url: Frontend.Route.tokenLogin(user, token)
             }
-          });
-          res.ok({});
-        });
+          })
+          res.ok({})
+        })
       }
     })
-    .catch(res.serverError.bind(res));
+      .catch(res.serverError.bind(res))
   },
 
-  findForProject: function(req, res) {
+  findForProject: function (req, res) {
     res.locals.project.contributors()
-    .query({
-      limit: req.param('limit') || 10,
-      offset: req.param('offset') || 0
-    }).fetch()
-    .then(users => users.map(u => _.extend(u.pick(UserPresenter.shortAttributes), {
-      membership: u.pivot.pick('role')
-    })))
-    .then(res.ok)
-    .catch(res.serverError);
+      .query({
+        limit: req.param('limit') || 10,
+        offset: req.param('offset') || 0
+      }).fetch()
+      .then(users => users.map(u => _.extend(u.pick(UserPresenter.shortAttributes), {
+        membership: u.pivot.pick('role')
+      })))
+      .then(res.ok)
+      .catch(res.serverError)
   },
 
-  findForCommunity: function(req, res) {
-    if (TokenAuth.isAuthenticated(res)
-      && !RequestValidation.requireTimeRange(req, res))
-      return;
+  findForCommunity: function (req, res) {
+    if (TokenAuth.isAuthenticated(res) &&
+      !RequestValidation.requireTimeRange(req, res)) return
 
     var options = _.defaults(
       _.pick(req.allParams(), 'limit', 'offset', 'start_time', 'end_time'),
       {limit: 20, communities: [req.param('communityId')]}
-    ), total;
+    )
+    var total
 
     Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations']})
-    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(UserPresenter.presentForList))
-    .then(list => ({people_total: total, people: list}))
-    .then(res.ok, res.serverError);
+      .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+      .then(users => users.map(UserPresenter.presentForList))
+      .then(list => ({people_total: total, people: list}))
+      .then(res.ok, res.serverError)
   },
 
-  findForNetwork: function(req, res) {
-    var total;
+  findForNetwork: function (req, res) {
+    var total
 
     Community.query().where('network_id', req.param('networkId')).select('id')
-    .then(rows => _.pluck(rows, 'id'))
-    .then(ids => Search.forUsers({
-      communities: ids,
-      limit: req.param('limit') || 20,
-      offset: req.param('offset') || 0
-    }).fetchAll({withRelated: ['skills', 'organizations']}))
-    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(UserPresenter.presentForList))
-    .then(list => ({people_total: total, people: list}))
-    .then(res.ok, res.serverError);
+      .then(rows => _.pluck(rows, 'id'))
+      .then(ids => Search.forUsers({
+        communities: ids,
+        limit: req.param('limit') || 20,
+        offset: req.param('offset') || 0
+      }).fetchAll({withRelated: ['skills', 'organizations']}))
+      .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+      .then(users => users.map(UserPresenter.presentForList))
+      .then(list => ({people_total: total, people: list}))
+      .then(res.ok, res.serverError)
   }
 
-};
+}
