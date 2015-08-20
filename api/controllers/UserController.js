@@ -97,13 +97,11 @@ module.exports = {
               qb.column('id', 'name', 'user_id', 'type')
             },
             'post.communities': function (qb) {
-              qb.column('id', 'name')
+              qb.column('community.id', 'name')
             }
           }
         ]
-      }).then(function (contributions) {
-        res.ok(contributions)
-      })
+      }).then(res.ok)
     })
   },
 
