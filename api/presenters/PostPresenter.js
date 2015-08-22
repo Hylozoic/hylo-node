@@ -31,7 +31,8 @@ var postAttributes = post => {
       'similarity'
     ]),
     {
-      community:    post.relations.communities.first().pick('id', 'name', 'slug', 'avatar_url'),
+      community: post.relations.communities.first().pick('id', 'name', 'slug', 'avatar_url'),
+      communities: post.relations.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),
       contributors: post.relations.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers: post.relations.followers.map(f => f.relations.user.pick('id', 'name', 'avatar_url')),
       hasMedia: post.related('media').length > 0,

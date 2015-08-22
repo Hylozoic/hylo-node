@@ -88,7 +88,7 @@ module.exports.policies = {
     findForProject:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForUser:      ['sessionAuth', 'inSameCommunityOrNetwork'],
     findForNetwork:   ['sessionAuth', 'inNetwork'],
-    create:           ['sessionAuth', 'checkAndSetMembership'],
+    create:           ['sessionAuth', 'inCommunities'],
     createForProject: ['sessionAuth', 'checkAndSetProject', 'canCreateProjectPost'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],
     addFollowers:     ['sessionAuth', 'checkAndSetPost'],

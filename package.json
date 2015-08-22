@@ -116,9 +116,14 @@
   "standard": {
     "global": [
       "_",
+      "bookshelf",
+      "format",
+      "Activity",
       "Admin",
       "Community",
       "Contribution",
+      "Email",
+      "Follower",
       "Frontend",
       "Invitation",
       "LinkedAccount",
@@ -127,6 +132,7 @@
       "Organization",
       "Post",
       "PostPresenter",
+      "PostProjectMembership",
       "Project",
       "ProjectInvitation",
       "Queue",
@@ -141,7 +147,8 @@
       "UserPhone",
       "UserPresenter",
       "UserSession",
-      "UserWebsite"
+      "UserWebsite",
+      "Vote"
     ]
   }
 }

@@ -80,6 +80,14 @@ module.exports = bookshelf.Model.extend({
         }
       });
     });
+  },
+
+  inNetworkWithUser: function (communityId, userId) {
+    return Community.find(communityId)
+      .then(community =>
+        community && community.get('network_id'))
+      .then(networkId =>
+        networkId && Network.containsUser(networkId, userId))
   }
 
 });
