@@ -234,6 +234,18 @@ module.exports = {
 
     bookshelf.transaction(function (trx) {
       return post.save(attrs, {patch: true, transacting: trx})
+      .tap(() => {
+        var newIds = req.param('communities').sort()
+        var oldIds = post.relations.communities.pluck('id').sort()
+        if (newIds !== oldIds) {
+          return Promise.join(
+            Promise.map(_.difference(newIds, oldIds), id =>
+              post.communities().attach(id, {transacting: trx})),
+            Promise.map(_.difference(oldIds, newIds), id =>
+              post.communities().detach(id, {transacting: trx}))
+          )
+        }
+      })
       .tap(function () {
         var imageUrl = req.param('imageUrl')
         var imageRemoved = req.param('imageRemoved')
