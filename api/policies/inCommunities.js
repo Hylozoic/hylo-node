@@ -11,10 +11,8 @@ module.exports = function (req, res, next) {
     q.whereIn('community_id', communityIds)
     q.where('user_id', userId)
   }).fetchAll()
-    // make an object where keys are community ids
-    // and values are true if there's a membership or a shared network
     .then(mships => Promise.map(communityIds, id =>
-      _.find(mships, m =>
+      mships.find(m =>
         m.get('community_id') === id || Community.inNetworkWithUser(id, userId))))
     .then(ok => _.all(ok) ? next() : res.forbidden())
 
