@@ -146,10 +146,10 @@ module.exports = {
               qb.column('id', 'name', 'avatar_url')
             },
             'comment.post': function (qb) {
-              qb.column('id', 'name', 'user_id', 'type')
+              qb.column('post.id', 'name', 'user_id', 'type')
             },
             'comment.post.communities': function (qb) {
-              qb.column('id', 'name')
+              qb.column('community.id', 'name')
             }
           }
         ]
