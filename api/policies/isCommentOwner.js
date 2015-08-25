@@ -1,24 +1,20 @@
-module.exports = function isCommentOwner(req, res, next) {
+module.exports = function isCommentOwner (req, res, next) {
+  if (Admin.isSignedIn(req)) return next()
 
-  if (Admin.isSignedIn(req))
-    return next();
-
-  if (!req.param('commentId'))
-    return forbidden();
+  if (!req.param('commentId')) return res.forbidden()
 
   Comment.find(req.param('commentId'), {withRelated: [
-    {'post.communities': function(qb) { qb.column('id'); }}
-  ]}).then(function(comment) {
-    if (comment.get('user_id') === req.session.userId)
-      return next();
+    {'post.communities': q => q.column('community.id')}
+  ]}).then(comment => {
+    if (comment.get('user_id') === req.session.userId) return next()
 
-    Membership.hasModeratorRole(req.session.userId, comment.community().id).then(function(isModerator) {
+    Membership.hasModeratorRole(req.session.userId, comment.community().id).then(function (isModerator) {
       if (isModerator) {
-        next();
+        next()
       } else {
-        sails.log.debug("policy: isCommentOwner: fail for user " + req.session.userId);
-        res.forbidden();
+        sails.log.debug('policy: isCommentOwner: fail for user ' + req.session.userId)
+        res.forbidden()
       }
-    });
-  });
-};
+    })
+  })
+}
