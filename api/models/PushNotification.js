@@ -10,21 +10,63 @@ module.exports = bookshelf.Model.extend({
 
     if (process.env.NODE_ENV == 'test') return;
 
-    var zeroPush = new ZeroPush(process.env.ZEROPUSH_PROD_TOKEN),
+    var zeroPushToken = this.zeroPushTokenFromPlatform(),
+      zeroPush = new ZeroPush(zeroPushToken),
       notify = Promise.promisify(zeroPush.notify, zeroPush),
-      platform = "ios_macos",
       deviceTokens = [this.get("device_token")],
-      notification = {
-        alert: this.get("alert"),
-        info: JSON.parse(this.get("payload")),
-        badge: this.get("badge_no")
-      };
+      platform = this.getPlatform(),
+      notification = this.notificationForZP()
+
+    sails.log.debug("---------------------------------------------------------")
+    sails.log.debug("Push notification")
+    sails.log.debug("")
+    sails.log.debug("platform: " + platform)
+    sails.log.debug("deviceTokens: " + deviceTokens[0])
+    sails.log.debug("notification: " + JSON.stringify(notification))
+    sails.log.debug("zeroPushToken: " + zeroPushToken)
+    sails.log.debug("")
+    sails.log.debug("---------------------------------------------------------")
 
     this.set("time_sent", (new Date()).toISOString());
     return this.save({}, options)
       .then(pn => notify(platform, deviceTokens, notification))
       .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ZEROPUSH_PROD_TOKEN, device_token: deviceTokens}}));
+  },
+
+  notificationForZP: function() {
+    if (this.getPlatform() == "ios_macos") {
+      var notification = {
+        alert: this.get("alert"),
+        info: {path: this.get("path")},
+        badge: this.get("badge_no")
+      }
+      return notification
+    } else {
+      var data = {alert: this.get("alert"), path: this.get("path")}
+      var notification = {
+        data: data
+      }
+      return notification
+    }
+  },
+
+  getPlatform: function() {
+    var platform = this.get("platform")
+    if(platform) {
+      return platform
+    } else {
+      return "ios_macos"
+    }
+  },
+
+  zeroPushTokenFromPlatform: function() {
+    if (this.getPlatform() == "ios_macos") {
+      return process.env.ZEROPUSH_PROD_TOKEN
+    } else {
+      return process.env.ZEROPUSH_PROD_TOKEN_ANDROID
+    }
   }
+
 
 }, {
 
