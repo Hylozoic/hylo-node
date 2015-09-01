@@ -32,7 +32,7 @@ describe('Search', function() {
       }
 
       var expected = format(heredoc.strip(function() {/*
-        select *, count(*) over () as total
+        select *, count(*) over () as total, "post".*
         from "post"
         inner join "post_community" on "post_community"."post_id" = "post"."id"
         inner join "follower" on "follower"."post_id" = "post"."id"
