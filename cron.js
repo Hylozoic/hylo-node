@@ -23,6 +23,7 @@ var jobs = {
       case 12:
         sails.log.debug('Sending daily digests');
         tasks.push(Digest.sendDaily());
+        sails.log.debug('Finished: Sending daily digests');
         break;
       default:
         tasks.push(Relevance.cron(1, 'hour'));
