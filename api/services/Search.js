@@ -30,7 +30,7 @@ module.exports = {
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      qb.select(bookshelf.knex.raw('*, count(*) over () as total'));
+      qb.select(bookshelf.knex.raw('*, count(*) over () as total, "post".*'));
 
       if (opts.users) {
         qb.whereIn('post.user_id', opts.users);
