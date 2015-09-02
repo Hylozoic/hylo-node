@@ -25,7 +25,7 @@ module.exports = {
         .then(device => res.ok({result: "Known"}))
       } else {
         return Device.forge({
-          token: req.param("deviceToken"),
+          token: req.param("token"),
           user_id: req.session.userId
         })
         .save()
@@ -66,6 +66,5 @@ module.exports = {
     .then(() => res.ok({result: "Updated"}))
     .catch(res.serverError);
   }
-  
-};
 
+};
