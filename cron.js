@@ -12,7 +12,7 @@ var jobs = {
 
   daily: function() {
     sails.log.debug('Removing old kue jobs');
-    return Queue.removeOldCompletedJobs(2000);
+    return Queue.removeOldCompletedJobs(10000);
   },
 
   hourly: function() {
