@@ -139,6 +139,7 @@
       "Project",
       "ProjectInvitation",
       "Queue",
+      "Relevance",
       "RequestValidation",
       "RichText",
       "Search",
