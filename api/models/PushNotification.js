@@ -15,17 +15,7 @@ module.exports = bookshelf.Model.extend({
       notify = Promise.promisify(zeroPush.notify, zeroPush),
       deviceTokens = [this.get("device_token")],
       platform = this.getPlatform(),
-      notification = this.notificationForZP()
-
-    sails.log.debug("---------------------------------------------------------")
-    sails.log.debug("Push notification")
-    sails.log.debug("")
-    sails.log.debug("platform: " + platform)
-    sails.log.debug("deviceTokens: " + deviceTokens[0])
-    sails.log.debug("notification: " + JSON.stringify(notification))
-    sails.log.debug("zeroPushToken: " + zeroPushToken)
-    sails.log.debug("")
-    sails.log.debug("---------------------------------------------------------")
+      notification = this.notificationForZP()  
 
     this.set("time_sent", (new Date()).toISOString());
     return this.save({}, options)
