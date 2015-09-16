@@ -30,7 +30,7 @@ module.exports = {
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      qb.select(bookshelf.knex.raw('*, count(*) over () as total'));
+      qb.select(bookshelf.knex.raw('*, count(*) over () as total, "post".*'));
 
       if (opts.users) {
         qb.whereIn('post.user_id', opts.users);
@@ -105,7 +105,7 @@ module.exports = {
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      qb.select(bookshelf.knex.raw('count(users.*) over () as total'));
+      qb.select(bookshelf.knex.raw('count(users.*) over () as total, users.*'));
 
       if (opts.communities) {
         qb.join('users_community', 'users_community.user_id', '=', 'users.id');
