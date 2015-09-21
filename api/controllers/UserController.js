@@ -50,11 +50,13 @@ module.exports = {
   },
 
   findSelf: function (req, res) {
-    if (!req.session.userId) return res.ok({})
-
     return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
       .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
       .then(res.ok)
+      .catch(err => {
+        if (err === 'User not found') return res.ok({})
+        throw err
+      })
       .catch(res.serverError)
   },
 

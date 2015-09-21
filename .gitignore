@@ -20,3 +20,5 @@ nbproject
 .idea
 .node_history
 *.iml
+latest.dump
+.env.swp
