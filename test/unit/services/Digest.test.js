@@ -10,7 +10,9 @@ describe('Digest', function() {
     community = new Community({name: 'foo', slug: 'foo'});
     user = new User({name: 'Cat', email: 'cat@cat.org'});
 
-    return community.save().then(community => user.save())
+    return setup.clearDb()
+    .then(() => community.save())
+    .then(() => user.save())
     .then(() => user.joinCommunity(community))
     .then(() => new Post({user_id: user.id, name: 'Hi!'}).save())
     .then(post => community.posts().attach(post.id));

@@ -117,6 +117,7 @@
     "global": [
       "_",
       "after",
+      "afterEach",
       "before",
       "beforeEach",
       "bookshelf",

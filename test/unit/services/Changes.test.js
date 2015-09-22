@@ -1,7 +1,7 @@
 const root = require('root-path')
 const Changes = require(root('lib/community/changes'))
 const moment = require('moment-timezone')
-require(root('test/setup'))
+const setup = require(root('test/setup'))
 
 var now = () => moment.tz('America/Los_Angeles')
 
@@ -22,7 +22,7 @@ describe('Changes', () => {
 
   before(() => {
     community = new Community({name: 'foo', slug: 'foo'})
-    return community.save()
+    return setup.clearDb().then(() => community.save())
   })
 
   describe('with a new post', () => {
