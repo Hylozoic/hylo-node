@@ -116,8 +116,13 @@
   "standard": {
     "global": [
       "_",
+      "after",
+      "before",
       "bookshelf",
+      "describe",
+      "expect",
       "format",
+      "it",
       "sails",
       "Activity",
       "Admin",

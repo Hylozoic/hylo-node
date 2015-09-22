@@ -119,4 +119,25 @@ describe('Post', function() {
     });
   });
 
+  describe('.createdInTimeRange', () => {
+    var post
+
+    before(() => {
+      post = new Post({
+        name: 'foo',
+        created_at: new Date(),
+        active: true
+      })
+      return post.save()
+    })
+
+    it('works', () => {
+      var now = new Date()
+      return Post.createdInTimeRange(new Date(now - 10000), now)
+      .fetch().then(p => {
+        expect(p).to.exist
+        expect(p.id).to.equal(post.id)
+      })
+    })
+  })
 });
