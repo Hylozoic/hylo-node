@@ -78,7 +78,11 @@ module.exports = bookshelf.Model.extend({
   authenticate: function(email, password) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt);
 
-    return User.query('whereRaw', 'lower(email) = lower(?)', email).fetch({withRelated: ['linkedAccounts']})
+    if (!email) throw 'no email provided'
+    if (!password) throw 'no password provided'
+
+    return User.query('whereRaw', 'lower(email) = lower(?)', email)
+    .fetch({withRelated: ['linkedAccounts']})
     .then(function(user) {
       if (!user)
         throw 'email not found';
