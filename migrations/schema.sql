@@ -16,42 +16,6 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: active_admin_comments; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE active_admin_comments (
-    id integer NOT NULL,
-    namespace character varying(255),
-    body text,
-    resource_id character varying(255) NOT NULL,
-    resource_type character varying(255) NOT NULL,
-    author_id integer,
-    author_type character varying(255),
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
-);
-
-
---
--- Name: active_admin_comments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE active_admin_comments_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: active_admin_comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE active_admin_comments_id_seq OWNED BY active_admin_comments.id;
-
-
---
 -- Name: activity; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -85,46 +49,6 @@ CREATE SEQUENCE activity_id_seq
 --
 
 ALTER SEQUENCE activity_id_seq OWNED BY activity.id;
-
-
---
--- Name: admin_users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE admin_users (
-    id integer NOT NULL,
-    email character varying(255) DEFAULT ''::character varying NOT NULL,
-    encrypted_password character varying(255) DEFAULT ''::character varying NOT NULL,
-    reset_password_token character varying(255),
-    reset_password_sent_at timestamp without time zone,
-    remember_created_at timestamp without time zone,
-    sign_in_count integer DEFAULT 0 NOT NULL,
-    current_sign_in_at timestamp without time zone,
-    last_sign_in_at timestamp without time zone,
-    current_sign_in_ip character varying(255),
-    last_sign_in_ip character varying(255),
-    created_at timestamp without time zone,
-    updated_at timestamp without time zone
-);
-
-
---
--- Name: admin_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE admin_users_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: admin_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE admin_users_id_seq OWNED BY admin_users.id;
 
 
 --
@@ -557,30 +481,6 @@ ALTER SEQUENCE phones_id_seq OWNED BY phones.id;
 
 
 --
--- Name: play_evolutions; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE play_evolutions (
-    id integer NOT NULL,
-    hash character varying(255) NOT NULL,
-    applied_at timestamp without time zone NOT NULL,
-    apply_script text,
-    revert_script text,
-    state character varying(255),
-    last_problem text
-);
-
-
---
--- Name: play_evolutions_lock; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE play_evolutions_lock (
-    lock integer NOT NULL
-);
-
-
---
 -- Name: post_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -849,15 +749,6 @@ ALTER SEQUENCE queued_pushes_id_seq OWNED BY push_notifications.id;
 
 
 --
--- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE schema_migrations (
-    version character varying(255) NOT NULL
-);
-
-
---
 -- Name: security_role_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -867,16 +758,6 @@ CREATE SEQUENCE security_role_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-
---
--- Name: security_role; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE security_role (
-    id bigint DEFAULT nextval('security_role_seq'::regclass) NOT NULL,
-    role_name character varying(255)
-);
 
 
 --
@@ -1132,16 +1013,6 @@ CREATE TABLE users_org (
 
 
 --
--- Name: users_security_role; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE users_security_role (
-    users_id bigint NOT NULL,
-    security_role_id bigint NOT NULL
-);
-
-
---
 -- Name: users_skill; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1209,21 +1080,7 @@ ALTER SEQUENCE websites_id_seq OWNED BY websites.id;
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY active_admin_comments ALTER COLUMN id SET DEFAULT nextval('active_admin_comments_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY activity ALTER COLUMN id SET DEFAULT nextval('activity_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY admin_users ALTER COLUMN id SET DEFAULT nextval('admin_users_id_seq'::regclass);
 
 
 --
@@ -1332,27 +1189,11 @@ ALTER TABLE ONLY websites ALTER COLUMN id SET DEFAULT nextval('websites_id_seq':
 
 
 --
--- Name: active_admin_comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY active_admin_comments
-    ADD CONSTRAINT active_admin_comments_pkey PRIMARY KEY (id);
-
-
---
 -- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY activity
     ADD CONSTRAINT activity_pkey PRIMARY KEY (id);
-
-
---
--- Name: admin_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY admin_users
-    ADD CONSTRAINT admin_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -1476,14 +1317,6 @@ ALTER TABLE ONLY post
 
 
 --
--- Name: pk_security_role; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY security_role
-    ADD CONSTRAINT pk_security_role PRIMARY KEY (id);
-
-
---
 -- Name: pk_skill; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1524,14 +1357,6 @@ ALTER TABLE ONLY users_org
 
 
 --
--- Name: pk_users_security_role; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY users_security_role
-    ADD CONSTRAINT pk_users_security_role PRIMARY KEY (users_id, security_role_id);
-
-
---
 -- Name: pk_users_skill; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1545,22 +1370,6 @@ ALTER TABLE ONLY users_skill
 
 ALTER TABLE ONLY vote
     ADD CONSTRAINT pk_vote PRIMARY KEY (id);
-
-
---
--- Name: play_evolutions_lock_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY play_evolutions_lock
-    ADD CONSTRAINT play_evolutions_lock_pkey PRIMARY KEY (lock);
-
-
---
--- Name: play_evolutions_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY play_evolutions
-    ADD CONSTRAINT play_evolutions_pkey PRIMARY KEY (id);
 
 
 --
@@ -1763,41 +1572,6 @@ CREATE INDEX fk_community_created_by_1 ON community USING btree (created_by_id);
 
 
 --
--- Name: index_active_admin_comments_on_author_type_and_author_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX index_active_admin_comments_on_author_type_and_author_id ON active_admin_comments USING btree (author_type, author_id);
-
-
---
--- Name: index_active_admin_comments_on_namespace; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX index_active_admin_comments_on_namespace ON active_admin_comments USING btree (namespace);
-
-
---
--- Name: index_active_admin_comments_on_resource_type_and_resource_id; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX index_active_admin_comments_on_resource_type_and_resource_id ON active_admin_comments USING btree (resource_type, resource_id);
-
-
---
--- Name: index_admin_users_on_email; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE UNIQUE INDEX index_admin_users_on_email ON admin_users USING btree (email);
-
-
---
--- Name: index_admin_users_on_reset_password_token; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE UNIQUE INDEX index_admin_users_on_reset_password_token ON admin_users USING btree (reset_password_token);
-
-
---
 -- Name: ix_comment_post_2; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1921,13 +1695,6 @@ CREATE INDEX ix_vote_post_14 ON vote USING btree (post_id);
 --
 
 CREATE INDEX ix_vote_user_13 ON vote USING btree (user_id);
-
-
---
--- Name: unique_schema_migrations; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE UNIQUE INDEX unique_schema_migrations ON schema_migrations USING btree (version);
 
 
 --
@@ -2200,22 +1967,6 @@ ALTER TABLE ONLY users_community
 
 ALTER TABLE ONLY users_org
     ADD CONSTRAINT fk_users_org_users_01 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_users_security_role_securi_02; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_security_role
-    ADD CONSTRAINT fk_users_security_role_securi_02 FOREIGN KEY (security_role_id) REFERENCES security_role(id);
-
-
---
--- Name: fk_users_security_role_users_01; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_security_role
-    ADD CONSTRAINT fk_users_security_role_users_01 FOREIGN KEY (users_id) REFERENCES users(id);
 
 
 --
