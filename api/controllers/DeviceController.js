@@ -9,12 +9,19 @@ module.exports = {
 
   create: function (req, res) {
     var token = req.param('token');
+    var platform = req.param('platform');
+
     if (!token) {
       return res.serverError('no device token');
     }
 
+    if (!platform) {
+      platform = "ios_macos"
+    }
+
     return Device.forge({
       token: req.param("token"),
+      platform: platform,
       user_id: req.session.userId
     })
     .fetch()
@@ -26,6 +33,7 @@ module.exports = {
       } else {
         return Device.forge({
           token: req.param("token"),
+          platform: platform,
           user_id: req.session.userId
         })
         .save()

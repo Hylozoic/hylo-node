@@ -197,7 +197,8 @@ CREATE TABLE devices (
     updated_at timestamp with time zone,
     badge_no integer DEFAULT 0,
     token character varying(255),
-    enabled boolean DEFAULT true
+    enabled boolean DEFAULT true,
+    platform character varying(255)
 );
 
 
@@ -719,11 +720,12 @@ ALTER SEQUENCE projects_users_id_seq OWNED BY projects_users.id;
 CREATE TABLE push_notifications (
     id integer NOT NULL,
     device_token character varying(255),
-    payload character varying(255),
     time_queued timestamp with time zone,
     time_sent timestamp with time zone,
     alert character varying(255) DEFAULT ''::character varying,
-    badge_no integer DEFAULT 0
+    badge_no integer DEFAULT 0,
+    platform character varying(255),
+    path character varying(255)
 );
 
 
