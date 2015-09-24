@@ -81,7 +81,7 @@ describe('Changes', () => {
         email: 'foo@bar.com',
         active: true,
         created_at: now()
-      }).save().then(u => community.users().attach(u.id)))
+      }).save().then(u => community.users().attach({user_id: u.id, active: true})))
 
     it('returns the community id', () =>
       Changes.changedCommunities(startTime, endTime)
