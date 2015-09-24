@@ -59,6 +59,7 @@ var afterSavingPost = function (post, opts) {
     (opts.imageUrl ? Media.create({
       postId: post.id,
       url: opts.imageUrl,
+      type: 'image',
       transacting: opts.transacting
     }) : null)
   ])).then(() => mentioned)
@@ -265,6 +266,7 @@ module.exports = {
             return Media.create({
               postId: post.id,
               url: imageUrl,
+              type: 'image',
               transacting: trx
             })
           }
