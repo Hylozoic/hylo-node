@@ -8,11 +8,8 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   create: function (opts) {
-    return new Media({
-      post_id: opts.postId,
-      url: opts.url,
-      type: opts.type
-    }).save(null, _.pick(opts, 'transacting'))
+    return new Media(_.pick(opts, 'post_id', 'url', 'type', 'name'))
+    .save(null, _.pick(opts, 'transacting'))
   }
 
 })
