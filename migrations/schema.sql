@@ -962,7 +962,9 @@ CREATE TABLE users (
     intention text,
     extra_info text,
     new_notification_count integer DEFAULT 0,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    push_follow_preference boolean DEFAULT true,
+    push_new_post_preference boolean DEFAULT true
 );
 
 
