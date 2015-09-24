@@ -5,7 +5,7 @@ var postRelations = (userId, opts) => _.filter([
   {'contributions.user': qb => qb.column('id', 'name', 'avatar_url')},
   'followers',
   {'followers.user': qb => qb.column('id', 'name', 'avatar_url')},
-  {media: qb => qb.column('id', 'post_id', 'url')},
+  'media',
   (opts && opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
   {votes: qb => { // only the user's own vote
     qb.column('id', 'post_id')
@@ -23,7 +23,6 @@ var postAttributes = post => {
       'name',
       'description',
       'fulfilled_at',
-      'media',
       'type',
       'created_at',
       'updated_at',
@@ -34,7 +33,7 @@ var postAttributes = post => {
       communities: post.relations.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),
       contributors: post.relations.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers: post.relations.followers.map(f => f.relations.user.pick('id', 'name', 'avatar_url')),
-      hasMedia: post.related('media').length > 0,
+      media: post.relations.media.map(m => m.pick('name', 'type', 'url')),
       myVote: post.relations.votes.length > 0,
       numComments: post.get('num_comments'),
       votes: post.get('num_votes'),

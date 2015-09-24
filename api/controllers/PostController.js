@@ -40,6 +40,24 @@ var newPostAttrs = function (userId, params) {
   })
 }
 
+var createImage = function (postId, url, trx) {
+  return Media.create({
+    post_id: postId,
+    url: url,
+    type: 'image',
+    transacting: trx
+  })
+}
+
+var createDoc = function (postId, doc, trx) {
+  return Media.create({
+    post_id: postId,
+    url: doc.url,
+    type: 'gdoc',
+    name: doc.name
+  })
+}
+
 var afterSavingPost = function (post, opts) {
   var userId = post.get('user_id')
   var mentioned = RichText.getUserMentions(post.get('description'))
@@ -56,12 +74,9 @@ var afterSavingPost = function (post, opts) {
     Promise.map(_.without(mentioned, userId), mentionedUserId => Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
 
     // Add image, if any
-    (opts.imageUrl ? Media.create({
-      postId: post.id,
-      url: opts.imageUrl,
-      type: 'image',
-      transacting: opts.transacting
-    }) : null)
+    (opts.imageUrl && createImage(post.id, opts.imageUrl, opts.transacting)),
+
+    (opts.docs && Promise.map(opts.docs, doc => createDoc(post.id, doc, opts.transacting)))
   ])).then(() => mentioned)
 }
 
@@ -152,6 +167,7 @@ module.exports = {
       .tap(post => afterSavingPost(post, {
         communities: req.param('communities'),
         imageUrl: req.param('imageUrl'),
+        docs: req.param('docs'),
         transacting: trx
       }))
     })
@@ -228,8 +244,9 @@ module.exports = {
 
   update: function (req, res) {
     var post = res.locals.post
+    var params = req.allParams()
     var attrs = _.extend(
-      _.pick(req.allParams(), 'name', 'description', 'type'),
+      _.pick(params, 'name', 'description', 'type'),
       {edited: true, edited_timestamp: new Date()}
     )
 
@@ -247,29 +264,37 @@ module.exports = {
           )
         }
       })
+      .tap(() => {
+        var mediaParams = ['docs', 'removedDocs', 'imageUrl', 'imageRemoved']
+        var isSet = _.partial(_.has, params)
+        if (_.any(mediaParams, isSet)) return post.load('media')
+      })
       .tap(function () {
-        var imageUrl = req.param('imageUrl')
-        var imageRemoved = req.param('imageRemoved')
+        if (!params.imageUrl && !params.imageRemoved) return
+        var media = post.relations.media.find(m => m.get('type') === 'image')
 
-        if (!imageUrl && !imageRemoved) return
-
-        return post.load('media').then(function (post) {
-          var media = post.relations.media.first()
-
-          if (media && imageRemoved) { // remove media
-            return media.destroy({transacting: trx})
-
-          } else if (media) { // replace url in existing media
-            return media.save({url: imageUrl}, {patch: true, transacting: trx})
-
-          } else if (imageUrl) { // create new media
-            return Media.create({
-              postId: post.id,
-              url: imageUrl,
-              type: 'image',
-              transacting: trx
-            })
+        if (media && params.imageRemoved) { // remove media
+          return media.destroy({transacting: trx})
+        } else if (media) { // replace url in existing media
+          if (media.get('url') !== params.imageUrl) {
+            return media.save({url: params.imageUrl}, {patch: true, transacting: trx})
           }
+        } else if (params.imageUrl) { // create new media
+          return createImage(post.id, params.imageUrl, trx)
+        }
+      })
+      .tap(() => {
+        if (!params.removedDocs) return
+        return Promise.map(params.removedDocs, doc => {
+          var media = post.relations.media.find(m => m.get('url') === doc.url)
+          if (media) return media.destroy({transacting: trx})
+        })
+      })
+      .tap(() => {
+        if (!params.docs) return
+        return Promise.map(params.docs, doc => {
+          var media = post.relations.media.find(m => m.get('url') === doc.url)
+          if (!media) return createDoc(post.id, doc, trx)
         })
       })
     })
@@ -303,9 +328,9 @@ module.exports = {
     .then(vote => bookshelf.transaction(trx => {
       var inc = delta => () => Post.query().where('id', post.id).increment('num_votes', delta).transacting(trx)
 
-      return (vote ?
-        vote.destroy({transacting: trx}).then(inc(-1)) :
-        new Vote({
+      return (vote
+        ? vote.destroy({transacting: trx}).then(inc(-1))
+        : new Vote({
           post_id: res.locals.post.id,
           user_id: req.session.userId
         }).save().then(inc(1)))
@@ -320,7 +345,6 @@ module.exports = {
         Activity.where('post_id', res.locals.post.id).destroy({transacting: trx}),
         res.locals.post.save({active: false}, {patch: true, transacting: trx})
       )
-
     })
     .then(() => res.ok({}), res.serverError)
   },
