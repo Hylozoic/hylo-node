@@ -109,6 +109,8 @@ module.exports = bookshelf.Model.extend({
       updated_at: new Date(),
       daily_digest: true,
       send_email_preference: true,
+      push_follow_preference: true,
+      push_new_post_preference: true,
       active: true,
     });
 
