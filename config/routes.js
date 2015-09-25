@@ -147,6 +147,7 @@ module.exports.routes = {
   'GET    /noo/login/linkedin-token/oauth':               'SessionController.finishLinkedinTokenOAuth',
   'POST   /noo/login/linkedin-token/oauth':               'SessionController.finishLinkedinTokenOAuth',
   'GET    /noo/logout':                                   'SessionController.destroy',
+  'DELETE /noo/session':                                  'SessionController.destroySession',
 
   'POST    /noo/device':                                  'DeviceController.create',
   'DELETE  /noo/device/:token':                           'DeviceController.destroy',

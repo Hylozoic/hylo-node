@@ -83,8 +83,14 @@ module.exports = {
     .then(function (user) {
       UserSession.login(req, user, 'password')
       return user.save({last_login: new Date()}, {patch: true})
-    }).then(function () {
-      res.ok({})
+    }).then(user => {
+      if (req.param('resp') === 'user') {
+        return UserPresenter.fetchForSelf(user.id, Admin.isSignedIn(req))
+          .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+          .then(res.ok)
+      } else {
+        return res.ok({})
+      }
     }).catch(function (err) {
       // 422 means 'well-formed but semantically invalid'
       res.status(422).send(err.message)
@@ -133,6 +139,12 @@ module.exports = {
   destroy: function (req, res) {
     req.session.destroy()
     res.redirect('/')
+  },
+
+  // a 'pure' version of the above for API-only use
+  destroySession: function (req, res) {
+    req.session.destroy()
+    res.ok({})
   },
 
   createWithToken: function (req, res) {
