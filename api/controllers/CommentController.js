@@ -19,10 +19,9 @@ var createComment = function (commenterId, text, post) {
 
   return bookshelf.transaction(function (trx) {
     return new Comment(attrs).save(null, {transacting: trx})
-      .tap(() => post.updateCommentCount(trx))
+    .tap(() => post.updateCommentCount(trx))
   })
-    .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
-
+  .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
 }
 
 module.exports = {
@@ -33,24 +32,20 @@ module.exports = {
     }).fetchAll({withRelated: [
       {user: q => q.column('id', 'name', 'avatar_url')},
       {thanks: q => q.where('thanked_by_id', req.session.userId)}
-    ]}).then(function (comments) {
-      res.ok(comments.map(commentAttributes))
-    })
-      .catch(res.serverError.bind(res))
+    ]})
+    .then(cs => cs.map(commentAttributes))
+    .then(res.ok, res.serverError)
   },
 
   create: function (req, res) {
     return createComment(req.session.userId, req.param('text'), res.locals.post)
-      .then(function (comment) {
-        return comment.load([
-          {user: q => q.column('id', 'name', 'avatar_url')}
-        ])
-      })
-      .then(function (comment) {
-        res.ok(commentAttributes(comment))
-      }).catch(function (err) {
-      res.serverError(err)
+    .then(function (comment) {
+      return comment.load([
+        {user: q => q.column('id', 'name', 'avatar_url')}
+      ])
     })
+    .then(commentAttributes)
+    .then(res.ok, res.serverError)
   },
 
   createFromEmail: function (req, res) {
@@ -61,41 +56,37 @@ module.exports = {
     }
 
     return Post.find(replyData.postId)
-      .then(function (post) {
-        Analytics.track({
-          userId: replyData.userId,
-          event: 'Post: Comment: Add by Email',
-          properties: {
-            post_id: post.id
-          }
-        })
-        return createComment(replyData.userId, req.param('stripped-text'), post)
+    .then(post => {
+      Analytics.track({
+        userId: replyData.userId,
+        event: 'Post: Comment: Add by Email',
+        properties: {
+          post_id: post.id
+        }
       })
-      .then(function () {
-        res.ok({})
-      })
-      .catch(function (err) {
-        res.serverError(err)
-      })
+      return createComment(replyData.userId, req.param('stripped-text'), post)
+    })
+    .then(() => res.ok({}), res.serverError)
   },
 
   thank: function (req, res) {
     Comment.find(req.param('commentId'), {withRelated: [
       {thanks: q => q.where('thanked_by_id', req.session.userId)}
-    ]}).then(function (comment) {
+    ]})
+    .then(comment => {
       var thank = comment.relations.thanks.first()
       if (thank) {
         return thank.destroy()
       } else {
         return Thank.create(comment, req.session.userId)
       }
-    }).then(function () {
-      res.ok({})
-    }).catch(res.serverError.bind(res))
+    })
+    .then(() => res.ok({}), res.serverError)
   },
 
   destroy: function (req, res) {
-    Comment.find(req.param('commentId')).then(comment =>
+    Comment.find(req.param('commentId'))
+    .then(comment =>
       bookshelf.transaction(trx => Promise.join(
         Activity.where('comment_id', comment.id).destroy({transacting: trx}),
         Post.query().where('id', comment.get('post_id')).decrement('num_comments', 1).transacting(trx),
@@ -104,8 +95,8 @@ module.exports = {
           deactivated_on: new Date(),
           active: false
         }, {patch: true})
-      )))
-      .then(() => res.ok({}), res.serverError)
+    )))
+    .then(() => res.ok({}), res.serverError)
   }
 
 }

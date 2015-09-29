@@ -89,14 +89,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   isWelcome: function () {
-    return this.get('type') === 'welcome'
+    return this.get('type') === Post.Type.WELCOME
   }
 
 }, {
   Type: {
     REQUEST: 'request',
     OFFER: 'offer',
-    INTENTION: 'intention'
+    INTENTION: 'intention',
+    WELCOME: 'welcome'
   },
 
   Visibility: {
