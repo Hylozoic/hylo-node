@@ -170,10 +170,11 @@ module.exports = bookshelf.Model.extend({
 
   sendPushNotification: function(userId, comment, version, options) {
 
-    return Device.where({user_id: userId}).fetchAll(options)
+    return User.where(id: userId)
+    .fetch()
+    .then(user => user.get("push_follow_preference") && Device.where({user_id: userId}).fetchAll(options))
     .then(devices => {
-      if (devices.length === 0)
-        return;
+      if (!devices || devices.length === 0) return
 
       var post = comment.relations.post,
         community = post.relations.communities.first(),
@@ -181,7 +182,8 @@ module.exports = bookshelf.Model.extend({
         alertText = PushNotification.textForComment(comment, version, userId);
 
       return Promise.map(devices.models, d => d.sendPushNotification(alertText, path, options));
-    });
+
+    })
   },
 
 });

@@ -60,7 +60,10 @@ var afterSavingPost = function (post, opts) {
       postId: post.id,
       url: opts.imageUrl,
       transacting: opts.transacting
-    }) : null)
+    }) : null),
+
+    Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id})
+
   ])).then(() => mentioned)
 }
 

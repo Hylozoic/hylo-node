@@ -203,6 +203,34 @@ module.exports = bookshelf.Model.extend({
 
   },
 
+  sendPushNotifications: function(opts) {
+
+    console.log("Post.sendPushNotifications. postId: ", opts.postId)
+
+    return Post.find(opts.postId, {withRelated: ['communities', 'communities.users', 'creator']})
+      .then((post) => {
+        var communities = post.relations.communities,
+          creator = post.relations.creator,
+          usersWithDupes = communities.map((community => {return community.relations.users.models})),
+          users = _.uniq(_.flatten(usersWithDupes))
+
+        _.remove(users, user => {user.get("id") == creator.get("id")})
+
+        return users.map((user) => {
+          if (!user.get("push_new_post_preference")) return
+
+          var community = _.intersection(user.relations.communities.models, communities.models)[0],
+            path = url.parse(Frontend.Route.post(post, community)).path,
+            alertText = PushNotification.textForNewPost(post, community)
+
+          console.log("PN to ", user.get("id"), user.get("email"))
+          console.log("Alert ", alertText, user.get("email"))
+
+          user.sendPushNotification(alertText, path)
+        })
+      })
+  },
+
   notifyAboutMention: function(post, userId, opts) {
     return Promise.join(
       Queue.classMethod('Post', 'sendNotificationEmail', {
