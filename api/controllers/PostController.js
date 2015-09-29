@@ -55,6 +55,7 @@ var createDoc = function (postId, doc, trx) {
     url: doc.url,
     type: 'gdoc',
     name: doc.name,
+    thumbnail_url: doc.thumbnail_url,
     transacting: trx
   })
 }
