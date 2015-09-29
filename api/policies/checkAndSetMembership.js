@@ -16,8 +16,7 @@ module.exports = function checkAndSetMembership(req, res, next) {
     // allow regardless of membership, but also set res.locals.membership
     // so that it can be used in controllers if it exists, ensuring that
     // being signed in as an admin doesn't interfere with normal usage
-    if (Admin.isSignedIn(req)
-      || (res.locals.publicAccessAllowed && community.get('allow_public_content')))
+    if (Admin.isSignedIn(req) || res.locals.publicAccessAllowed)
       allowed = true;
 
     // no need to set res.locals.membership in this case,
