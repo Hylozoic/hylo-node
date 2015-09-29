@@ -36,7 +36,8 @@ var newPostAttrs = function (userId, params) {
     name: RichText.sanitize(params.name),
     description: RichText.sanitize(params.description),
     type: params.type,
-    user_id: userId
+    user_id: userId,
+    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
   })
 }
 
@@ -249,7 +250,11 @@ module.exports = {
     var params = req.allParams()
     var attrs = _.extend(
       _.pick(params, 'name', 'description', 'type'),
-      {edited: true, edited_timestamp: new Date()}
+      {
+        edited: true,
+        edited_timestamp: new Date(),
+        visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
+      }
     )
 
     bookshelf.transaction(function (trx) {

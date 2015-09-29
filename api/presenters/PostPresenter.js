@@ -38,7 +38,8 @@ var postAttributes = post => {
       numComments: post.get('num_comments'),
       votes: post.get('num_votes'),
       user: creator && creator.pick('id', 'name', 'avatar_url'),
-      relatedUsers: post.relations.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url'))
+      relatedUsers: post.relations.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')),
+      public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE
     }
   )
 }
