@@ -67,6 +67,10 @@ module.exports = {
         qb.where({type: opts.type})
       }
 
+      if (opts.type === 'event' && opts.filter === 'future') {
+        qb.whereRaw('(post.start_time > now())')
+      }
+
       if (opts.start_time && opts.end_time) {
         qb.whereRaw('((post.created_at between ? and ?) or (post.updated_at between ? and ?))',
           [opts.start_time, opts.end_time, opts.start_time, opts.end_time])

@@ -8,23 +8,22 @@ var sortColumns = {
 
 var findPosts = function (req, res, opts) {
   var params = _.merge(
-    _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
+    _.pick(req.allParams(), [
+      'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
+    ]),
     _.pick(opts, 'sort')
   )
 
-  Promise.props({
-    communities: opts.communities,
-    project: opts.project,
-    users: opts.users,
-    type: params.type,
-    limit: params.limit,
-    offset: params.offset,
-    start_time: params.start_time,
-    end_time: params.end_time,
-    visibility: opts.visibility,
-    sort: sortColumns[params.sort || 'recent'],
-    forUser: req.session.userId
-  })
+  // using Promise.props here allows us to pass queries as attributes,
+  // e.g. when looking up communities in PostController.findForUser
+  Promise.props(_.merge(
+    {
+      sort: sortColumns[params.sort || 'recent'],
+      forUser: req.session.userId
+    },
+    _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
+    _.pick(opts, 'communities', 'project', 'users', 'visibility')
+  ))
   .then(args => Search.forPosts(args).fetchAll({
     withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
   }))
