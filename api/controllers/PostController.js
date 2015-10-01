@@ -77,20 +77,12 @@ var afterSavingPost = function (post, opts) {
     Promise.map(_.without(mentioned, userId), mentionedUserId => Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
 
     // Add image, if any
-<<<<<<< HEAD
-    (opts.imageUrl ? Media.create({
-      postId: post.id,
-      url: opts.imageUrl,
-      transacting: opts.transacting
-    }) : null),
-
-    Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id})
-
-=======
     (opts.imageUrl && createImage(post.id, opts.imageUrl, opts.transacting)),
 
     (opts.docs && Promise.map(opts.docs, doc => createDoc(post.id, doc, opts.transacting)))
->>>>>>> master
+
+    Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id})
+
   ])).then(() => mentioned)
 }
 
