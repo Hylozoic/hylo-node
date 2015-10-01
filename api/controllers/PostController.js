@@ -37,7 +37,9 @@ var newPostAttrs = function (userId, params) {
     description: RichText.sanitize(params.description),
     type: params.type,
     user_id: userId,
-    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
+    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
+    start_time: params.startTime,
+    end_time: params.endTime
   })
 }
 
