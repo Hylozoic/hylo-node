@@ -4,101 +4,102 @@ module.exports = bookshelf.Model.extend({
   tableName: 'post',
 
   creator: function () {
-    return this.belongsTo(User);
+    return this.belongsTo(User)
   },
 
   communities: function () {
-    return this.belongsToMany(Community).through(PostMembership);
+    return this.belongsToMany(Community).through(PostMembership)
   },
 
   followers: function () {
-    return this.hasMany(Follower, "post_id");
+    return this.hasMany(Follower, 'post_id')
   },
 
   contributions: function () {
-    return this.hasMany(Contribution, "post_id");
+    return this.hasMany(Contribution, 'post_id')
   },
 
   comments: function () {
-    return this.hasMany(Comment, "post_id").query({where: {active: true}});
+    return this.hasMany(Comment, 'post_id').query({where: {active: true}})
   },
 
   media: function () {
-    return this.hasMany(Media);
+    return this.hasMany(Media)
   },
 
   votes: function () {
-    return this.hasMany(Vote);
+    return this.hasMany(Vote)
   },
 
-  projects: function() {
-    return this.belongsToMany(Project, 'posts_projects');
+  projects: function () {
+    return this.belongsToMany(Project, 'posts_projects')
   },
 
   userVote: function (userId) {
-    return this.votes().query({where: {user_id: userId}}).fetchOne();
+    return this.votes().query({where: {user_id: userId}}).fetchOne()
   },
 
   relatedUsers: () => this.belongsToMany(User, 'posts_about_users'),
 
-  addFollowers: function(userIds, addingUserId, opts) {
-    var postId = this.id, userId = this.get('user_id');
-    if (!opts) opts = {};
+  addFollowers: function (userIds, addingUserId, opts) {
+    var postId = this.id
+    var userId = this.get('user_id')
+    if (!opts) opts = {}
 
-    return Promise.map(userIds, function(followerUserId) {
+    return Promise.map(userIds, function (followerUserId) {
       return Follower.create(postId, {
         followerId: followerUserId,
         addedById: addingUserId,
         transacting: opts.transacting
-      }).tap(function(follow) {
-        if (!opts.createActivity) return;
+      }).tap(function (follow) {
+        if (!opts.createActivity) return
 
-        var updates = [];
+        var updates = []
         if (followerUserId !== addingUserId) {
-          updates.push(Activity.forFollowAdd(follow, followerUserId).save({}, _.pick(opts, 'transacting')));
-          updates.push(User.incNewNotificationCount(followerUserId, opts.transacting));
+          updates.push(Activity.forFollowAdd(follow, followerUserId).save({}, _.pick(opts, 'transacting')))
+          updates.push(User.incNewNotificationCount(followerUserId, opts.transacting))
         }
         if (userId !== addingUserId) {
-          updates.push(Activity.forFollow(follow, userId).save({}, _.pick(opts, 'transacting')));
-          updates.push(User.incNewNotificationCount(userId, opts.transacting));
+          updates.push(Activity.forFollow(follow, userId).save({}, _.pick(opts, 'transacting')))
+          updates.push(User.incNewNotificationCount(userId, opts.transacting))
         }
-        return Promise.all(updates);
-      });
-    });
+        return Promise.all(updates)
+      })
+    })
   },
 
-  removeFollower: function(userId, opts) {
-    var self = this;
+  removeFollower: function (userId, opts) {
+    var self = this
     return Follower.where({user_id: userId, post_id: this.id}).destroy()
-    .tap(function() {
-      if (!opts.createActivity) return;
-      return Activity.forUnfollow(self, userId).save();
-    });
+      .tap(function () {
+        if (!opts.createActivity) return
+        return Activity.forUnfollow(self, userId).save()
+      })
   },
 
-  isPublic: function() {
-    return this.get('visibility') == Post.Visibility.PUBLIC_READABLE;
+  isPublic: function () {
+    return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
   },
 
-  updateCommentCount: function(trx) {
-    var self = this;
+  updateCommentCount: function (trx) {
+    var self = this
     return Aggregate.count(this.comments(), {transacting: trx})
     .tap(count => self.save({
       num_comments: count,
       updated_at: new Date()
-    }, {patch: true, transacting: trx}));
+    }, {patch: true, transacting: trx}))
   },
 
-  isWelcome: function() {
-    return this.get('type') === 'welcome';
+  isWelcome: function () {
+    return this.get('type') === Post.Type.WELCOME
   }
 
 }, {
-
   Type: {
     REQUEST: 'request',
     OFFER: 'offer',
-    INTENTION: 'intention'
+    INTENTION: 'intention',
+    WELCOME: 'welcome'
   },
 
   Visibility: {
@@ -107,73 +108,71 @@ module.exports = bookshelf.Model.extend({
     DRAFT_PROJECT: 2
   },
 
-  countForUser: function(user) {
+  countForUser: function (user) {
     return this.query().count().where({user_id: user.id, active: true})
-    .then(function(rows) {
-      return rows[0].count;
-    });
+      .then(function (rows) {
+        return rows[0].count
+      })
   },
 
-  isVisibleToUser: function(postId, userId) {
-    var communityId;
+  isVisibleToUser: function (postId, userId) {
+    var communityId
     return bookshelf.knex('post_community').where({post_id: postId})
-    .then(function(results) {
-      if (results.length === 0) return false;
-      communityId = results[0].community_id;
-      return Membership.find(userId, communityId);
+    .then(function (results) {
+      if (results.length === 0) return false
+      communityId = results[0].community_id
+      return Membership.find(userId, communityId)
     })
     .then(mship => !!mship)
     .then(success => {
-      if (success) return true;
+      if (success) return true
 
       return PostProjectMembership.where({post_id: postId}).fetch()
-      .then(ppm => {
-        if (!ppm) return false;
-        return Project.isVisibleToUser(ppm.get('project_id'), userId);
-      });
+        .then(ppm => {
+          if (!ppm) return false
+          return Project.isVisibleToUser(ppm.get('project_id'), userId)
+        })
     })
     .then(success => {
-      if (success) return true;
+      if (success) return true
 
       return Community.find(communityId).then(community => {
         if (community && community.get('network_id')) {
-          return Network.containsUser(community.get('network_id'), userId);
+          return Network.containsUser(community.get('network_id'), userId)
         } else {
-          return false;
+          return false
         }
-      });
-    });
+      })
+    })
   },
 
-  find: function(id, options) {
-    return Post.where({id: id}).fetch(options).catch(err => null);
+  find: function (id, options) {
+    return Post.where({id: id}).fetch(options).catch(() => null)
   },
 
-  createdInTimeRange: function(collection, startTime, endTime) {
+  createdInTimeRange: function (collection, startTime, endTime) {
     if (endTime === undefined) {
-      endTime = startTime;
-      startTime = collection;
-      collection = Post;
+      endTime = startTime
+      startTime = collection
+      collection = Post
     }
-    return collection.query(function(qb) {
-      qb.whereRaw('post.created_at between ? and ?', [startTime, endTime]);
-      qb.where('post.active', true);
-      qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT);
-    });
+    return collection.query(function (qb) {
+      qb.whereRaw('post.created_at between ? and ?', [startTime, endTime])
+      qb.where('post.active', true)
+      qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT)
+    })
   },
 
-  sendNotificationEmail: function(opts) {
-
+  sendNotificationEmail: function (opts) {
     return Promise.join(
       User.find(opts.recipientId),
       Post.find(opts.postId, {withRelated: ['communities', 'creator']})
     )
-    .spread(function(recipient, post) {
-
-      var creator = post.relations.creator,
-        community = post.relations.communities.first(),
-        description = RichText.qualifyLinks(post.get('description')),
-        replyTo = Email.postReplyAddress(post.id, recipient.id);
+    .spread(function (recipient, post) {
+      var creator = post.relations.creator
+      var community = post.relations.communities.first()
+      var description = RichText.qualifyLinks(post.get('description'))
+      var replyTo = Email.postReplyAddress(post.id, recipient.id)
 
       return recipient.generateToken()
       .then(token => Email.sendPostMentionNotification({
@@ -184,25 +183,23 @@ module.exports = bookshelf.Model.extend({
           name: format('%s (via Hylo)', creator.get('name'))
         },
         data: {
-          community_name:      community.get('name'),
-          creator_name:        creator.get('name'),
-          creator_avatar_url:  Frontend.Route.tokenLogin(recipient, token,
-                                 creator.get('avatar_url') + '?ctt=post_mention_email'),
+          community_name: community.get('name'),
+          creator_name: creator.get('name'),
+          creator_avatar_url: Frontend.Route.tokenLogin(recipient, token,
+            creator.get('avatar_url') + '?ctt=post_mention_email'),
           creator_profile_url: Frontend.Route.tokenLogin(recipient, token,
-                                 Frontend.Route.profile(creator) + '?ctt=post_mention_email'),
-          post_description:    description,
-          post_title:          post.get('name'),
-          post_type:           post.get('type'),
-          post_url:            Frontend.Route.tokenLogin(recipient, token,
-                                 Frontend.Route.post(post, community) + '?ctt=post_mention_email'),
-          unfollow_url:        Frontend.Route.tokenLogin(recipient, token,
-                                 Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email'),
-          tracking_pixel_url:  Analytics.pixelUrl('Mention in Post', {userId: recipient.id})
+            Frontend.Route.profile(creator) + '?ctt=post_mention_email'),
+          post_description: description,
+          post_title: post.get('name'),
+          post_type: post.get('type'),
+          post_url: Frontend.Route.tokenLogin(recipient, token,
+            Frontend.Route.post(post, community) + '?ctt=post_mention_email'),
+          unfollow_url: Frontend.Route.tokenLogin(recipient, token,
+            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email'),
+          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: recipient.id})
         }
-      }));
-
-    });
-
+      }))
+    })
   },
 
   sendPushNotifications: function(opts) {
@@ -248,7 +245,7 @@ module.exports = bookshelf.Model.extend({
       })
   },
 
-  notifyAboutMention: function(post, userId, opts) {
+  notifyAboutMention: function (post, userId, opts) {
     return Promise.join(
       Queue.classMethod('Post', 'sendNotificationEmail', {
         recipientId: userId,
@@ -256,20 +253,20 @@ module.exports = bookshelf.Model.extend({
       }),
       Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
       User.incNewNotificationCount(userId, opts.transacting)
-    );
+    )
   },
 
-  createWelcomePost: function(userId, communityId, trx) {
+  createWelcomePost: function (userId, communityId, trx) {
     var attrs = _.merge(Post.newPostAttrs(), {
       type: 'welcome'
-    });
+    })
 
     return new Post(attrs).save({}, {transacting: trx})
-    .tap(post => Promise.join(
-      post.relatedUsers().attach(userId, {transacting: trx}),
-      post.communities().attach(communityId, {transacting: trx}),
-      Follower.create(post.id, {followerId: userId, transacting: trx})
-    ));
+      .tap(post => Promise.join(
+          post.relatedUsers().attach(userId, {transacting: trx}),
+          post.communities().attach(communityId, {transacting: trx}),
+          Follower.create(post.id, {followerId: userId, transacting: trx})
+      ))
   },
 
   newPostAttrs: () => ({
@@ -281,4 +278,4 @@ module.exports = bookshelf.Model.extend({
     edited: false
   })
 
-});
+})

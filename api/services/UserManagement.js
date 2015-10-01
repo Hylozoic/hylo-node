@@ -79,9 +79,6 @@ var generateRemoveQueries = function(userId, knex) {
   });
 
   // cascading deletes
-  removals.push(knex.raw('delete from notification_status where notification_id in ' +
-    '(select id from notification where vote_id in (select id from vote where user_id = ?))', userId));
-  removals.push(knex.raw('delete from notification where vote_id in (select id from vote where user_id = ?)', userId));
   removals.push(knex.raw('delete from thank_you where comment_id in ' +
     '(select id from comment where user_id = ?)', userId));
 
@@ -99,12 +96,9 @@ var generateRemoveQueries = function(userId, knex) {
     ['phones',              'user_id'],
     ['emails',              'user_id'],
     ['websites',            'user_id'],
-    ['invite_request',      'user_id'],
     ['user_post_relevance', 'user_id'],
-    ['notification_status', 'recipient_id'],
     ['activity',            'reader_id'],
     ['activity',            'actor_id'],
-    ['token_action',        'target_user_id'],
     ['tours',               'user_id'],
     ['vote',                'user_id'],
     ['comment',             'user_id'],
