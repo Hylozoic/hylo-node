@@ -203,7 +203,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotifications: function(opts) {
-
     var uniqById = function(array) {
       //this is destructive of array
       var result = []
@@ -223,23 +222,19 @@ module.exports = bookshelf.Model.extend({
           users = uniqById(_.flatten(usersWithDupes))
 
         _.remove(users, user => user.get("id") == creator.get("id"))
-
-        return users.map((user) => {
+        return Promise.map(users, (user) => {
           if (!user.get("push_new_post_preference")) return
 
           var userCommunities = user.relations.communities.models,
             postCommunities = communities.models,
             communityIntersection, community, path, alertText
 
-
-
           communityIntersection = _.remove(userCommunities, community => _.find(postCommunities, {'id': community.id}))
           if (communityIntersection.length === 0) return
 
-          community = communityIntersection[0],
-          path = url.parse(Frontend.Route.post(post, community)).path,
+          community = communityIntersection[0]
+          path = url.parse(Frontend.Route.post(post, community)).path
           alertText = PushNotification.textForNewPost(post, community)
-
           return user.sendPushNotification(alertText, path)
         })
       })
