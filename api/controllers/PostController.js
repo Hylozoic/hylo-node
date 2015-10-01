@@ -35,12 +35,9 @@ var newPostAttrs = function (userId, params) {
   return _.merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
     description: RichText.sanitize(params.description),
-    type: params.type,
     user_id: userId,
-    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
-    start_time: params.startTime,
-    end_time: params.endTime
-  })
+    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
+  }, _.pick(params, 'type', 'start_time', 'end_time'))
 }
 
 var createImage = function (postId, url, trx) {
@@ -251,7 +248,7 @@ module.exports = {
     var post = res.locals.post
     var params = req.allParams()
     var attrs = _.extend(
-      _.pick(params, 'name', 'description', 'type'),
+      _.pick(params, 'name', 'description', 'type', 'start_time', 'end_time'),
       {
         edited: true,
         edited_timestamp: new Date(),
