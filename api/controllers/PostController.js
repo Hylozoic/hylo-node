@@ -2,7 +2,8 @@ var sortColumns = {
   'fulfilled-last': 'fulfilled_at',
   'top': 'post.num_votes',
   'recent': 'post.updated_at',
-  'suggested': 'suggested'
+  'suggested': 'suggested',
+  'start_time': ['post.start_time', 'asc']
 }
 
 var findPosts = function (req, res, opts) {

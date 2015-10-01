@@ -85,6 +85,8 @@ module.exports = {
         qb.orderBy('similarity', 'desc');
       } else if (opts.sort === 'fulfilled_at') {
         qb.orderByRaw('post.fulfilled_at desc, post.updated_at desc');
+      } else if (Array.isArray(opts.sort)) {
+        qb.orderBy(opts.sort[0], opts.sort[1])
       } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc');
       }
