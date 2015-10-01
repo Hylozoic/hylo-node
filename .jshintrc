@@ -1,4 +1,6 @@
 {
   "undef": false,
-  "esnext": true
+  "esnext": true,
+  "asi": true,
+  "laxbreak": true
 }
