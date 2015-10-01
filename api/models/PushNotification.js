@@ -88,7 +88,7 @@ module.exports = bookshelf.Model.extend({
     if (post.isWelcome()) {
       relatedUser = post.relations.relatedUsers.first()
       if (relatedUser.id === userId)
-        return format('You joined %s', community.get("name"))
+        return format('You joined %s!', community.get("name"))
       else
         return format('%s joined %s', relatedUser.get("name"), community.get("name"));
     } else {
