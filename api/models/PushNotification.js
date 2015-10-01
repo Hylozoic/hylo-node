@@ -79,7 +79,7 @@ module.exports = bookshelf.Model.extend({
       postName = format('"%s"', post.get('name'));
     }
     return format('%s commented on %s', commenter.get("name"), postName);
-  }
+  },
 
   textForNewPost: function(post, community) {
     var relatedUser, poster,

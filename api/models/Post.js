@@ -1,3 +1,5 @@
+var url = require('url');
+
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
 
@@ -205,28 +207,43 @@ module.exports = bookshelf.Model.extend({
 
   sendPushNotifications: function(opts) {
 
-    console.log("Post.sendPushNotifications. postId: ", opts.postId)
+    var uniqById = function(array) {
+      //this is destructive of array
+      var result = []
+      while(array.length > 0) {
+        var element = array[0]
+        result.push(element)
+        _.remove(array, item => item.get("id") == element.get("id"))
+      }
+      return result;
+    }
 
-    return Post.find(opts.postId, {withRelated: ['communities', 'communities.users', 'creator']})
+    return Post.find(opts.postId, {withRelated: ['communities', 'communities.users', 'communities.users.communities', 'creator']})
       .then((post) => {
         var communities = post.relations.communities,
           creator = post.relations.creator,
-          usersWithDupes = communities.map((community => {return community.relations.users.models})),
-          users = _.uniq(_.flatten(usersWithDupes))
+          usersWithDupes = communities.map((community => community.relations.users.models)),
+          users = uniqById(_.flatten(usersWithDupes))
 
-        _.remove(users, user => {user.get("id") == creator.get("id")})
+        _.remove(users, user => user.get("id") == creator.get("id"))
 
         return users.map((user) => {
           if (!user.get("push_new_post_preference")) return
 
-          var community = _.intersection(user.relations.communities.models, communities.models)[0],
-            path = url.parse(Frontend.Route.post(post, community)).path,
-            alertText = PushNotification.textForNewPost(post, community)
+          var userCommunities = user.relations.communities.models,
+            postCommunities = communities.models,
+            communityIntersection, community, path, alertText
 
-          console.log("PN to ", user.get("id"), user.get("email"))
-          console.log("Alert ", alertText, user.get("email"))
 
-          user.sendPushNotification(alertText, path)
+
+          communityIntersection = _.remove(userCommunities, community => _.find(postCommunities, {'id': community.id}))
+          if (communityIntersection.length === 0) return
+
+          community = communityIntersection[0],
+          path = url.parse(Frontend.Route.post(post, community)).path,
+          alertText = PushNotification.textForNewPost(post, community)
+
+          return user.sendPushNotification(alertText, path)
         })
       })
   },

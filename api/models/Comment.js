@@ -170,7 +170,7 @@ module.exports = bookshelf.Model.extend({
 
   sendPushNotification: function(userId, comment, version, options) {
 
-    return User.where(id: userId)
+    return User.where({id: userId})
     .fetch()
     .then(user => user.get("push_follow_preference") && Device.where({user_id: userId}).fetchAll(options))
     .then(devices => {
