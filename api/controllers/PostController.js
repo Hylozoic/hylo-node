@@ -190,21 +190,6 @@ module.exports = {
     .catch(res.serverError)
   },
 
-  addFollowers: function (req, res) {
-    res.locals.post.load('followers').then(function (post) {
-      var added = req.param('userIds')
-      var existing = post.relations.followers.pluck('user_id')
-
-      return bookshelf.transaction(function (trx) {
-        return post.addFollowers(_.difference(added, existing), req.session.userId, {
-          transacting: trx,
-          createActivity: true
-        })
-      })
-    })
-    .then(() => res.ok({}), res.serverError)
-  },
-
   follow: function (req, res) {
     var userId = req.session.userId
     var post = res.locals.post
