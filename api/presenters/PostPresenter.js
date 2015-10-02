@@ -27,7 +27,9 @@ var postAttributes = post => {
       'created_at',
       'updated_at',
       'projects',
-      'similarity'
+      'similarity',
+      'start_time',
+      'end_time'
     ]),
     {
       communities: post.relations.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),

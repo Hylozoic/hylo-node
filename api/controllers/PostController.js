@@ -2,28 +2,28 @@ var sortColumns = {
   'fulfilled-last': 'fulfilled_at',
   'top': 'post.num_votes',
   'recent': 'post.updated_at',
-  'suggested': 'suggested'
+  'suggested': 'suggested',
+  'start_time': ['post.start_time', 'asc']
 }
 
 var findPosts = function (req, res, opts) {
   var params = _.merge(
-    _.pick(req.allParams(), ['sort', 'limit', 'offset', 'type', 'start_time', 'end_time']),
+    _.pick(req.allParams(), [
+      'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
+    ]),
     _.pick(opts, 'sort')
   )
 
-  Promise.props({
-    communities: opts.communities,
-    project: opts.project,
-    users: opts.users,
-    type: params.type,
-    limit: params.limit,
-    offset: params.offset,
-    start_time: params.start_time,
-    end_time: params.end_time,
-    visibility: opts.visibility,
-    sort: sortColumns[params.sort || 'recent'],
-    forUser: req.session.userId
-  })
+  // using Promise.props here allows us to pass queries as attributes,
+  // e.g. when looking up communities in PostController.findForUser
+  Promise.props(_.merge(
+    {
+      sort: sortColumns[params.sort || 'recent'],
+      forUser: req.session.userId
+    },
+    _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
+    _.pick(opts, 'communities', 'project', 'users', 'visibility')
+  ))
   .then(args => Search.forPosts(args).fetchAll({
     withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
   }))
@@ -35,30 +35,9 @@ var newPostAttrs = function (userId, params) {
   return _.merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
     description: RichText.sanitize(params.description),
-    type: params.type,
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
-  })
-}
-
-var createImage = function (postId, url, trx) {
-  return Media.create({
-    post_id: postId,
-    url: url,
-    type: 'image',
-    transacting: trx
-  })
-}
-
-var createDoc = function (postId, doc, trx) {
-  return Media.create({
-    post_id: postId,
-    url: doc.url,
-    type: 'gdoc',
-    name: doc.name,
-    thumbnail_url: doc.thumbnail_url,
-    transacting: trx
-  })
+  }, _.pick(params, 'type', 'start_time', 'end_time'))
 }
 
 var afterSavingPost = function (post, opts) {
@@ -77,7 +56,7 @@ var afterSavingPost = function (post, opts) {
     Promise.map(_.without(mentioned, userId), mentionedUserId => Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
 
     // Add image, if any
-    (opts.imageUrl && createImage(post.id, opts.imageUrl, opts.transacting)),
+    (opts.imageUrl && Media.createImage(post.id, opts.imageUrl, opts.transacting)),
 
     (opts.docs && Promise.map(opts.docs, doc => createDoc(post.id, doc, opts.transacting))),
 
@@ -214,21 +193,6 @@ module.exports = {
     .catch(res.serverError)
   },
 
-  addFollowers: function (req, res) {
-    res.locals.post.load('followers').then(function (post) {
-      var added = req.param('userIds')
-      var existing = post.relations.followers.pluck('user_id')
-
-      return bookshelf.transaction(function (trx) {
-        return post.addFollowers(_.difference(added, existing), req.session.userId, {
-          transacting: trx,
-          createActivity: true
-        })
-      })
-    })
-    .then(() => res.ok({}), res.serverError)
-  },
-
   follow: function (req, res) {
     var userId = req.session.userId
     var post = res.locals.post
@@ -252,7 +216,7 @@ module.exports = {
     var post = res.locals.post
     var params = req.allParams()
     var attrs = _.extend(
-      _.pick(params, 'name', 'description', 'type'),
+      _.pick(params, 'name', 'description', 'type', 'start_time', 'end_time'),
       {
         edited: true,
         edited_timestamp: new Date(),
@@ -260,7 +224,7 @@ module.exports = {
       }
     )
 
-    bookshelf.transaction(function (trx) {
+    return bookshelf.transaction(function (trx) {
       return post.save(attrs, {patch: true, transacting: trx})
       .tap(() => {
         var newIds = req.param('communities').sort()
@@ -290,7 +254,7 @@ module.exports = {
             return media.save({url: params.imageUrl}, {patch: true, transacting: trx})
           }
         } else if (params.imageUrl) { // create new media
-          return createImage(post.id, params.imageUrl, trx)
+          return Media.createImage(post.id, params.imageUrl, trx)
         }
       })
       .tap(() => {
@@ -304,7 +268,7 @@ module.exports = {
         if (!params.docs) return
         return Promise.map(params.docs, doc => {
           var media = post.relations.media.find(m => m.get('url') === doc.url)
-          if (!media) return createDoc(post.id, doc, trx)
+          if (!media) return Media.createDoc(post.id, doc, trx)
         })
       })
     })
