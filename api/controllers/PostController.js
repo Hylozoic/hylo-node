@@ -159,6 +159,28 @@ module.exports = {
     .catch(res.serverError)
   },
 
+  createFromEmail: function (req, res) {
+    try {
+      var replyData = Email.decodePostCreationAddress(req.param('To'))
+    } catch (e) {
+      return res.serverError(new Error('Invalid reply address: ' + req.param('To')))
+    }
+
+    var allParams = _.assign(req.allParams(), {'type': replyData.type})
+    var attrs = newPostAttrs(replyData.userId, allParams)
+
+    return bookshelf.transaction(trx => {
+      return new Post(attrs).save(null, {transacting: trx})
+      .tap(post => afterSavingPost(post, {
+        communities: [replyData.communityId],
+        imageUrl: req.param('imageUrl'),
+        docs: req.param('docs'),
+        transacting: trx
+      }))
+    })
+    .then(() => res.ok({}), res.serverError)
+  },
+
   createForProject: function (req, res) {
     var attrs = newPostAttrs(req.session.userId, req.allParams())
     var projectId = req.param('projectId')
