@@ -94,8 +94,8 @@ module.exports = {
     return {postId: ids[0], userId: ids[1]}
   },
 
-  postCreationAddress: function (communityId, userId) {
-    var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, communityId, userId)
+  postCreationAddress: function (communityId, userId, type) {
+    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, communityId, userId, type)
     return format('create-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN)
   },
 
@@ -103,9 +103,9 @@ module.exports = {
     var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT)),
       match = address.match(/create-(.*?)@/),
       plaintext = PlayCrypto.decrypt(match[1]).replace(salt, ''),
-      ids = plaintext.split('|')
+      decodedData = plaintext.split('|')
 
-    return {communityId: ids[0], userId: ids[1]}
+    return {communityId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
   }
 
 }
