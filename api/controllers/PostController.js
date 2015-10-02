@@ -40,26 +40,6 @@ var newPostAttrs = function (userId, params) {
   }, _.pick(params, 'type', 'start_time', 'end_time'))
 }
 
-var createImage = function (postId, url, trx) {
-  return Media.create({
-    post_id: postId,
-    url: url,
-    type: 'image',
-    transacting: trx
-  })
-}
-
-var createDoc = function (postId, doc, trx) {
-  return Media.create({
-    post_id: postId,
-    url: doc.url,
-    type: 'gdoc',
-    name: doc.name,
-    thumbnail_url: doc.thumbnail_url,
-    transacting: trx
-  })
-}
-
 var afterSavingPost = function (post, opts) {
   var userId = post.get('user_id')
   var mentioned = RichText.getUserMentions(post.get('description'))
@@ -76,9 +56,9 @@ var afterSavingPost = function (post, opts) {
     Promise.map(_.without(mentioned, userId), mentionedUserId => Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
 
     // Add image, if any
-    (opts.imageUrl && createImage(post.id, opts.imageUrl, opts.transacting)),
+    (opts.imageUrl && Media.createImage(post.id, opts.imageUrl, opts.transacting)),
 
-    (opts.docs && Promise.map(opts.docs, doc => createDoc(post.id, doc, opts.transacting)))
+    (opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, opts.transacting)))
   ])).then(() => mentioned)
 }
 
@@ -256,7 +236,7 @@ module.exports = {
       }
     )
 
-    bookshelf.transaction(function (trx) {
+    return bookshelf.transaction(function (trx) {
       return post.save(attrs, {patch: true, transacting: trx})
       .tap(() => {
         var newIds = req.param('communities').sort()
@@ -286,7 +266,7 @@ module.exports = {
             return media.save({url: params.imageUrl}, {patch: true, transacting: trx})
           }
         } else if (params.imageUrl) { // create new media
-          return createImage(post.id, params.imageUrl, trx)
+          return Media.createImage(post.id, params.imageUrl, trx)
         }
       })
       .tap(() => {
@@ -300,7 +280,7 @@ module.exports = {
         if (!params.docs) return
         return Promise.map(params.docs, doc => {
           var media = post.relations.media.find(m => m.get('url') === doc.url)
-          if (!media) return createDoc(post.id, doc, trx)
+          if (!media) return Media.createDoc(post.id, doc, trx)
         })
       })
     })

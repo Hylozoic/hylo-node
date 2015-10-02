@@ -1,5 +1,6 @@
 var root = require('root-path')
 var setup = require(root('test/setup'))
+var factories = require(root('test/setup/factories'))
 var PostController = require(root('api/controllers/PostController'))
 
 describe('PostController', () => {
@@ -93,6 +94,129 @@ describe('PostController', () => {
           expect(post).to.exist
           expect(post.get('name')).to.equal('i want!')
           expect(post.get('visibility')).to.equal(Post.Visibility.DRAFT_PROJECT)
+        })
+      })
+    })
+  })
+
+  describe('#update', () => {
+    var post, req, res
+
+    beforeEach(() => {
+      req = factories.mock.request()
+      res = factories.mock.response()
+      post = factories.post()
+      req.params.communities = []
+      res.locals.post = post
+      return post.save().tap(() => post.load('communities'))
+    })
+
+    describe('with communities', () => {
+      var cs = []
+
+      beforeEach(() => {
+        for (var i = 0; i < 5; i++) {
+          cs.push(factories.community())
+        }
+        return Promise.all(cs.map(c => c.save()))
+        .tap(() => Promise.map(cs.slice(0, 3), c => post.communities().attach(c.id)))
+        .tap(() => post.load('communities'))
+        .tap(() => {
+          expect(post.relations.communities.map(c => c.id).sort())
+          .to.deep.equal(cs.slice(0, 3).map(c => c.id).sort())
+        })
+      })
+
+      it('changes communities', () => {
+        req.params.communities = cs.slice(2, 5).map(c => c.id)
+
+        return PostController.update(req, res)
+        .tap(() => post.load('communities'))
+        .then(() => {
+          var communities = post.relations.communities
+          expect(communities.length).to.equal(3)
+          expect(communities.map(c => c.id).sort())
+          .to.deep.equal(cs.slice(2, 5).map(c => c.id).sort())
+        })
+      })
+    })
+
+    describe('with docs', () => {
+      var doc1Data = {url: 'http://foo.com', name: 'foo'}
+      var doc2Data = {url: 'http://bar.com', name: 'bar'}
+
+      beforeEach(() => Media.createDoc(post.id, doc1Data))
+
+      it('adds docs', () => {
+        req.params.docs = [doc1Data, doc2Data]
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => {
+          var media = post.relations.media
+          expect(media.length).to.equal(2)
+          expect(media.map(m => m.get('type'))).to.deep.equal(['gdoc', 'gdoc'])
+          expect(_.sortBy(media.models, m => m.get('name')).map(m => ({
+            url: m.get('url'),
+            name: m.get('name')
+          }))).to.deep.equal([doc2Data, doc1Data])
+        })
+      })
+
+      it('adds and removes docs', () => {
+        req.params.removedDocs = [doc1Data]
+        req.params.docs = [doc2Data]
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => {
+          var media = post.relations.media
+          expect(media.length).to.equal(1)
+          expect(media.first().get('url')).to.equal(doc2Data.url)
+          expect(media.first().get('name')).to.equal(doc2Data.name)
+        })
+      })
+    })
+
+    it('saves an image', () => {
+      req.params.imageUrl = 'http://bar.com/foo.png'
+
+      return PostController.update(req, res)
+      .tap(() => post.load('media'))
+      .then(() => {
+        var media = post.relations.media
+        expect(media.length).to.equal(1)
+        var image = media.first()
+        expect(image.get('url')).to.equal('http://bar.com/foo.png')
+        expect(image.get('type')).to.equal('image')
+      })
+    })
+
+    describe('with an existing image', () => {
+      var originalImageId
+      beforeEach(() =>
+        Media.createImage(post.id, 'http://foo.com/bar.png')
+        .tap(image => originalImageId = image.id))
+
+      it('removes the image', () => {
+        req.params.imageRemoved = true
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => expect(post.relations.media.length).to.equal(0))
+      })
+
+      it('updates the image url', () => {
+        req.params.imageUrl = 'http://foo.com/bar2.png'
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => {
+          var media = post.relations.media
+          expect(media.length).to.equal(1)
+          var image = media.first()
+          expect(image.get('url')).to.equal('http://foo.com/bar2.png')
+          expect(image.id).to.equal(originalImageId)
         })
       })
     })
