@@ -80,6 +80,11 @@ module.exports = {
     return sendSimpleEmail(opts.email, 'tem_rkZiuPHBvLDFrZ6rv8VixH', opts.data)
   },
 
+  sendPostSolicitation: function (opts) {
+    sails.log.debug('sPS', opts)
+    return sendSimpleEmail(opts.email, 'tem_GoeP9Ac54t66HjVUtKDwYM', opts.data)
+  },
+
   postReplyAddress: function (postId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId)
     return format('reply-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN)
