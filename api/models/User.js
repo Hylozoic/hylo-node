@@ -163,12 +163,12 @@ module.exports = bookshelf.Model.extend({
       active: true
     }, _.omit(attributes, 'account', 'community'))
 
-    if (account.type === 'facebook') {
+    if (account && account.type === 'facebook') {
       _.merge(attributes, {
         facebook_url: account.profile.profileUrl,
         avatar_url: format('http://graph.facebook.com/%s/picture?type=large', account.profile.id)
       })
-    } else if (account.type === 'linkedin') {
+    } else if (account && account.type === 'linkedin') {
       _.merge(attributes, {
         linkedin_url: account.profile._json.publicProfileUrl,
         avatar_url: account.profile.photos[0]
@@ -176,7 +176,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     return new User(attributes).save({}, {transacting: trx}).tap(user => Promise.join(
-      LinkedAccount.create(user.id, account, {transacting: trx}),
+      account && LinkedAccount.create(user.id, account, {transacting: trx}),
       community && Membership.create(user.id, community.id, {transacting: trx})
     ))
   },
