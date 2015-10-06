@@ -97,6 +97,10 @@ module.exports = bookshelf.Model.extend({
       }
     }
 
+    if (attrs.settings) {
+      saneAttrs.settings = _.merge({}, this.get('settings'), attrs.settings)
+    }
+
     return this.set(saneAttrs)
   },
 
