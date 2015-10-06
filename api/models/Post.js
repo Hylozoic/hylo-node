@@ -1,4 +1,4 @@
-var url = require('url');
+var url = require('url')
 
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
@@ -203,28 +203,28 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  sendPushNotifications: function(opts) {
-    var uniqById = function(array) {
-      //this is destructive of array
+  sendPushNotifications: function (opts) {
+    var uniqById = function (array) {
+      // this is destructive of array
       var result = []
-      while(array.length > 0) {
+      while (array.length > 0) {
         var element = array[0]
         result.push(element)
-        _.remove(array, item => item.get("id") == element.get("id"))
+        _.remove(array, item => item.get('id') == element.get('id'))
       }
-      return result;
+      return result
     }
 
     return Post.find(opts.postId, {withRelated: ['communities', 'communities.users', 'communities.users.communities', 'creator']})
-      .then((post) => {
+      .then(post => {
         var communities = post.relations.communities,
           creator = post.relations.creator,
-          usersWithDupes = communities.map((community => community.relations.users.models)),
+          usersWithDupes = communities.map(community => community.relations.users.models),
           users = uniqById(_.flatten(usersWithDupes))
 
-        _.remove(users, user => user.get("id") == creator.get("id"))
+        _.remove(users, user => user.get('id') == creator.get('id'))
         return Promise.map(users, (user) => {
-          if (!user.get("push_new_post_preference")) return
+          if (!user.get('push_new_post_preference')) return
 
           var userCommunities = user.relations.communities.models,
             postCommunities = communities.models,
