@@ -1,16 +1,17 @@
-
 module.exports = {
   // logic for setting up the session when a user logs in
-  login: function(req, user, providerKey) {
-    req.session.authenticated = true;
-    req.session.userId = user.id;
-    req.session.userProvider = providerKey;
-    req.rollbar_person = user.pick('id', 'name', 'email');
-    req.session.version = this.version;
+  login: function (req, user, providerKey) {
+    req.session.authenticated = true
+    req.session.userId = user.id
+    req.session.userProvider = providerKey
+    req.rollbar_person = user.pick('id', 'name', 'email')
+    req.session.version = this.version
+
+    return user.save({last_login: new Date()}, {patch: true})
   },
 
-  isLoggedIn: function(req) {
-    return !!req.session.authenticated && req.session.version == this.version;
+  isLoggedIn: function (req) {
+    return !!req.session.authenticated && req.session.version === this.version
   },
 
   // if you change the keys that are added to the session above,

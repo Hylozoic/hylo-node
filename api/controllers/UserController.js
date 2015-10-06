@@ -35,11 +35,8 @@ module.exports = {
 
         return User.createFully(attrs, ctx.invitation)
       })
-      .then(function (user) {
-        if (req.param('login')) UserSession.login(req, user, 'password')
-
-        res.ok({})
-      })
+      .then(user => req.param('login') && UserSession.login(req, user, 'password'))
+      .then(() => res.ok({}))
       .catch(function (err) {
         res.status(422).send(err.detail ? err.detail : err)
       })

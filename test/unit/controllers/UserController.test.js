@@ -24,7 +24,7 @@ describe('UserController', function() {
         ok: spy(noop())
       };
 
-      UserSession.login = spy(function() {});
+      UserSession.login = spy(UserSession.login);
       User.create = spy(User.create);
 
       community = new Community({beta_access_code: 'foo', name: 'foo', slug: 'foo'});
@@ -56,6 +56,8 @@ describe('UserController', function() {
         expect(onboarding.get('user_id')).to.equal(user.id);
         expect(onboarding.get('type')).to.equal('onboarding');
         expect(onboarding.get('status').step).to.equal('start');
+
+        expect(user.get('last_login').getTime()).to.be.closeTo(new Date().getTime(), 2000)
       });
     });
 

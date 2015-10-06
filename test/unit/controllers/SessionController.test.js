@@ -37,14 +37,17 @@ describe('SessionController', function() {
       }).exec(done);
     });
 
-    it('works with a valid username and password', function(done) {
-      SessionController.create(req, res).then(function() {
+    it('works with a valid username and password', function() {
+      return SessionController.create(req, res)
+      .then(() => {
         expect(res.status).not.to.have.been.called();
         expect(res.ok).to.have.been.called();
         expect(req.session.userId).to.equal(cat.id);
-        done();
+        return User.find(cat.id);
       })
-      .catch(done);
+      .then(user => {
+        expect(user.get('last_login').getTime()).to.be.closeTo(new Date().getTime(), 2000)
+      })
     })
 
   })
