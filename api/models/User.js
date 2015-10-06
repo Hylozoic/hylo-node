@@ -150,6 +150,7 @@ module.exports = bookshelf.Model.extend({
   }),
 
   create: function (attributes, options) {
+    if (!options) options = {}
     var trx = options.transacting
     var account = attributes.account
     var community = attributes.community
