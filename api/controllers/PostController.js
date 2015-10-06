@@ -58,7 +58,7 @@ var afterSavingPost = function (post, opts) {
     // Add image, if any
     (opts.imageUrl && Media.createImage(post.id, opts.imageUrl, opts.transacting)),
 
-    (opts.docs && Promise.map(opts.docs, doc => createDoc(post.id, doc, opts.transacting))),
+    (opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, opts.transacting))),
 
     Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id})
 
