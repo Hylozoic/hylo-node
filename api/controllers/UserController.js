@@ -35,11 +35,8 @@ module.exports = {
 
         return User.createFully(attrs, ctx.invitation)
       })
-      .then(function (user) {
-        if (req.param('login')) UserSession.login(req, user, 'password')
-
-        res.ok({})
-      })
+      .then(user => req.param('login') && UserSession.login(req, user, 'password'))
+      .then(() => res.ok({}))
       .catch(function (err) {
         res.status(422).send(err.detail ? err.detail : err)
       })
@@ -163,7 +160,7 @@ module.exports = {
 
   update: function (req, res) {
     var attrs = _.pick(req.allParams(), [
-      'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
+      'name', 'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
       'email', 'send_email_preference', 'daily_digest', 'work', 'intention', 'extra_info',
       'new_notification_count', 'push_follow_preference', 'push_new_post_preference'
     ])
@@ -222,7 +219,6 @@ module.exports = {
         }
 
         return Promise.all(promises)
-
       }).then(function () {
       res.ok({})
     }).catch(function (err) {

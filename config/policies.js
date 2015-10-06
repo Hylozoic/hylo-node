@@ -142,6 +142,8 @@ module.exports.policies = {
 
   StaticPageController: {
     proxy: ['renderOpenGraphTags']
-  }
+  },
+
+  NexudusController: true
 
 };

@@ -138,7 +138,7 @@ module.exports = bookshelf.Model.extend({
       var account = user.relations.linkedAccounts.where({provider_key: 'password'})[0]
       if (!account) {
         var keys = user.relations.linkedAccounts.pluck('provider_key')
-        throw format('password account not found. available: [%s]', keys.join(','))
+        throw new Error(format('password account not found. available: [%s]', keys.join(',')))
       }
 
       return compare(password, account.get('provider_user_id')).then(function (match) {
@@ -150,11 +150,12 @@ module.exports = bookshelf.Model.extend({
   }),
 
   create: function (attributes, options) {
+    if (!options) options = {}
     var trx = options.transacting
     var account = attributes.account
     var community = attributes.community
 
-    attributes = _.merge(_.omit(attributes, 'account', 'community'), {
+    attributes = _.merge({
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
       updated_at: new Date(),
@@ -162,15 +163,15 @@ module.exports = bookshelf.Model.extend({
       send_email_preference: true,
       push_follow_preference: true,
       push_new_post_preference: true,
-      active: true,
-    })
+      active: true
+    }, _.omit(attributes, 'account', 'community'))
 
-    if (account.type === 'facebook') {
+    if (account && account.type === 'facebook') {
       _.merge(attributes, {
         facebook_url: account.profile.profileUrl,
         avatar_url: format('http://graph.facebook.com/%s/picture?type=large', account.profile.id)
       })
-    } else if (account.type === 'linkedin') {
+    } else if (account && account.type === 'linkedin') {
       _.merge(attributes, {
         linkedin_url: account.profile._json.publicProfileUrl,
         avatar_url: account.profile.photos[0]
@@ -178,7 +179,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     return new User(attributes).save({}, {transacting: trx}).tap(user => Promise.join(
-      LinkedAccount.create(user.id, account, {transacting: trx}),
+      account && LinkedAccount.create(user.id, account, {transacting: trx}),
       community && Membership.create(user.id, community.id, {transacting: trx})
     ))
   },

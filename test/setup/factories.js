@@ -1,4 +1,6 @@
 const randomstring = require('randomstring')
+const chai = require('chai')
+const sails = require('sails')
 
 var text = function (length) {
   return randomstring.generate({length: length || 10, charset: 'alphabetic'})
@@ -28,13 +30,15 @@ module.exports = {
           return this.params[name]
         },
         session: {},
-        params: {}
+        params: {},
+        __: sails.__ // this is for i18n
       }
     },
     response: function () {
       return {
-        ok: () => null,
+        ok: chai.spy(() => null),
         serverError: function (err) { throw err },
+        status: chai.spy(function () { return this }),
         locals: {}
       }
     }
