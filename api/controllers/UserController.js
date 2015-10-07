@@ -22,6 +22,20 @@ var findContext = function (req) {
   return Promise.props({community: Community.where({beta_access_code: req.param('code')}).fetch()})
 }
 
+var setupReputationQuery = function (req, model) {
+  var params = _.pick(req.allParams(), 'userId', 'limit', 'start')
+  var isSelf = req.session.userId === params.userId
+
+  return Promise.method(function () {
+    if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
+  })()
+  .then(communityIds =>
+    model.queryForUser(params.userId, communityIds).query(q => {
+      q.limit(params.limit || 15)
+      q.offset(params.start || 0)
+    }))
+}
+
 module.exports = {
   create: function (req, res) {
     var params = _.pick(req.allParams(), 'name', 'email', 'password')
@@ -64,98 +78,27 @@ module.exports = {
   },
 
   contributions: function (req, res) {
-    var params = _.pick(req.allParams(), ['userId', 'limit', 'start'])
-    var limit = params.limit ? params.limit : 15
-    var start = params.start ? params.start : 0
-    var userId = params.userId
-    var isSelf = req.session.userId === userId
-
-    Promise.method(function () {
-      if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
-    })().then(function (communityIds) {
-      Contribution.query(function (qb) {
-        qb.orderBy('date_contributed')
-        qb.limit(limit)
-        qb.offset(start)
-        qb.join('post', 'post.id', '=', 'contributor.post_id')
-
-        qb.where({'contributor.user_id': userId, 'post.active': true})
-
-        if (!isSelf) {
-          qb.join('post_community', 'post_community.post_id', '=', 'post.id')
-          qb.join('community', 'community.id', '=', 'post_community.community_id')
-          qb.whereIn('community.id', communityIds)
-        }
-      }).fetchAll({
-        withRelated: [
-          {
-            'post.creator': function (qb) {
-              qb.column('id', 'name', 'avatar_url')
-            },
-            'post': function (qb) {
-              qb.column('id', 'name', 'user_id', 'type')
-            },
-            'post.communities': function (qb) {
-              qb.column('community.id', 'name')
-            }
-          }
-        ]
-      }).then(res.ok)
-    })
+    return setupReputationQuery(req, Contribution)
+    .then(q => q.fetchAll({
+      withRelated: [
+        {post: q => q.column('id', 'name', 'user_id', 'type')},
+        {'post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'post.communities': q => q.column('community.id', 'name')}
+      ]
+    })).then(res.ok, res.serverError)
   },
 
   thanks: function (req, res) {
-    var params = _.pick(req.allParams(), ['userId', 'limit', 'start'])
-    var limit = params.limit ? params.limit : 15
-    var start = params.start ? params.start : 0
-    var userId = params.userId
-    var isSelf = req.session.userId === userId
-
-    Promise.method(function () {
-      if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
-    })().then(function (communityIds) {
-      Thank.query(function (qb) {
-        qb.orderBy('date_thanked')
-        qb.limit(limit)
-        qb.offset(start)
-        qb.join('comment', 'comment.id', '=', 'thank_you.comment_id')
-        qb.join('post', 'post.id', '=', 'comment.post_id')
-
-        qb.where({
-          'comment.user_id': userId,
-          'comment.active': true,
-          'post.active': true
-        })
-
-        if (!isSelf) {
-          qb.join('post_community', 'post_community.post_id', '=', 'post.id')
-          qb.join('community', 'community.id', '=', 'post_community.community_id')
-          qb.whereIn('community.id', communityIds)
-        }
-      }).fetchAll({
-        withRelated: [
-          {
-            'thankedBy': function (qb) {
-              qb.column('id', 'name', 'avatar_url')
-            },
-            'comment': function (qb) {
-              qb.column('id', 'comment_text', 'post_id')
-            },
-            'comment.post.creator': function (qb) {
-              qb.column('id', 'name', 'avatar_url')
-            },
-            'comment.post': function (qb) {
-              qb.column('post.id', 'name', 'user_id', 'type')
-            },
-            'comment.post.communities': function (qb) {
-              qb.column('community.id', 'name')
-            }
-          }
-        ]
-      }).then(function (thanks) {
-        res.ok(thanks)
-      })
-    })
+    return setupReputationQuery(req, Thank)
+    .then(q => q.fetchAll({
+      withRelated: [
+        {thankedBy: q => q.column('id', 'name', 'avatar_url')},
+        {comment: q => q.column('id', 'comment_text', 'post_id')},
+        {'comment.post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
+        {'comment.post.communities': q => q.column('community.id', 'name')}
+      ]
+    })).then(res.ok, res.serverError)
   },
 
   update: function (req, res) {

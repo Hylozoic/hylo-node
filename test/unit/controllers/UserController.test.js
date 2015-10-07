@@ -197,4 +197,68 @@ describe('UserController', function () {
       })
     })
   })
+
+  describe('.contributions', () => {
+    var u1, u2, c
+
+    before(() => {
+      u1 = factories.user()
+      u2 = factories.user()
+      c = factories.community()
+      return Promise.join(u1.save(), u2.save(), c.save())
+      .then(() => Promise.join(u1.joinCommunity(c), u2.joinCommunity(c)))
+    })
+
+    it('works for other users', () => {
+      req.session.userId = u1.id
+      req.params.userId = u2.id
+      return UserController.contributions(req, res)
+      .then(() => {
+        expect(res.ok).to.have.been.called()
+        expect(res.body.toJSON()).to.deep.equal([])
+      })
+    })
+
+    it('works for oneself', () => {
+      req.session.userId = u1.id
+      req.params.userId = u1.id
+      return UserController.contributions(req, res)
+      .then(() => {
+        expect(res.ok).to.have.been.called()
+        expect(res.body.toJSON()).to.deep.equal([])
+      })
+    })
+  })
+
+  describe('.thanks', () => {
+    var u1, u2, c
+
+    before(() => {
+      u1 = factories.user()
+      u2 = factories.user()
+      c = factories.community()
+      return Promise.join(u1.save(), u2.save(), c.save())
+      .then(() => Promise.join(u1.joinCommunity(c), u2.joinCommunity(c)))
+    })
+
+    it('works for other users', () => {
+      req.session.userId = u1.id
+      req.params.userId = u2.id
+      return UserController.thanks(req, res)
+      .then(() => {
+        expect(res.ok).to.have.been.called()
+        expect(res.body.toJSON()).to.deep.equal([])
+      })
+    })
+
+    it('works for oneself', () => {
+      req.session.userId = u1.id
+      req.params.userId = u1.id
+      return UserController.thanks(req, res)
+      .then(() => {
+        expect(res.ok).to.have.been.called()
+        expect(res.body.toJSON()).to.deep.equal([])
+      })
+    })
+  })
 })
