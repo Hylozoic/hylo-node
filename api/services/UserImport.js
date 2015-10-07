@@ -12,7 +12,12 @@ var fs = require('fs')
 var csv = require('csv-parser')
 
 var createUser = function (row, options) {
-  return User.create(_.merge(row, {community: options.community}))
+  return User.create(_.merge(row, {
+    community: options.community,
+    settings: {
+      digest_frequency: 'weekly'
+    }
+  }))
 }
 
 module.exports = {
