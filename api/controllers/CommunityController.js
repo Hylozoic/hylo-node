@@ -45,9 +45,14 @@ module.exports = {
       'welcome_message', 'leader_id', 'beta_access_code'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
+    var saneAttrs = _.clone(attributes)
     var community = new Community({id: req.param('communityId')})
 
-    community.save(attributes, {patch: true})
+    if (attributes.settings) {
+      saneAttrs.settings = _.merge({}, community.get('settings'), attributes.settings)
+    }
+
+    community.save(saneAttrs, {patch: true})
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
