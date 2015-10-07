@@ -33,7 +33,7 @@ module.exports = bookshelf.Model.extend({
 
   users: function () {
     return this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
-      .query({where: {'users_community.active': true}})
+      .query({where: {'users_community.active': true}}).withPivot('role')
   },
 
   posts: function () {
@@ -80,8 +80,8 @@ module.exports = bookshelf.Model.extend({
 
   notifyAboutCreate: function (opts) {
     return Community.find(opts.communityId, {withRelated: ['creator']}).then(c => {
-      var creator = c.relations.creator,
-        recipient = process.env.ASANA_NEW_COMMUNITIES_EMAIL
+      var creator = c.relations.creator
+      var recipient = process.env.ASANA_NEW_COMMUNITIES_EMAIL
       Email.sendRawEmail(recipient, {
         subject: c.get('name'),
         body: format(
@@ -101,8 +101,8 @@ module.exports = bookshelf.Model.extend({
 
   inNetworkWithUser: function (communityId, userId) {
     return Community.find(communityId)
-      .then(community => community && community.get('network_id'))
-      .then(networkId => networkId && Network.containsUser(networkId, userId))
+    .then(community => community && community.get('network_id'))
+    .then(networkId => networkId && Network.containsUser(networkId, userId))
   }
 
 })

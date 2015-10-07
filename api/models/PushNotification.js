@@ -15,7 +15,7 @@ module.exports = bookshelf.Model.extend({
       notify = Promise.promisify(zeroPush.notify, zeroPush),
       deviceTokens = [this.get("device_token")],
       platform = this.getPlatform(),
-      notification = this.notificationForZP()  
+      notification = this.notificationForZP()
 
     this.set("time_sent", (new Date()).toISOString());
     return this.save({}, options)
@@ -79,6 +79,21 @@ module.exports = bookshelf.Model.extend({
       postName = format('"%s"', post.get('name'));
     }
     return format('%s commented on %s', commenter.get("name"), postName);
+  },
+
+  textForNewPost: function(post, community) {
+    var relatedUser, poster,
+      creator = post.relations.creator
+
+    if (post.isWelcome()) {
+      relatedUser = post.relations.relatedUsers.first()
+      if (relatedUser.id === userId)
+        return format('You joined %s!', community.get("name"))
+      else
+        return format('%s joined %s', relatedUser.get("name"), community.get("name"));
+    } else {
+      return format('%s posted in %s', creator.get("name"), community.get("name"))
+    }
   }
 
 });

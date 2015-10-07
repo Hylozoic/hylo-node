@@ -46,15 +46,14 @@ var finishOAuth = function (strategy, req, res, next) {
     findUser(service, profile.email, profile.id)
     .then(user => {
       if (user) {
-        UserSession.login(req, user, service)
-
-        // if this is a new account, link it to the user
-        if (!hasLinkedAccount(user, service)) {
-          return LinkedAccount.create(user.id, {type: service, profile: profile})
-            .then(() => user)
-        } else {
-          return user
-        }
+        return UserSession.login(req, user, service)
+        .tap(() => {
+          // if this is a new account, link it to the user
+          if (!hasLinkedAccount(user, service)) {
+            return LinkedAccount.create(user.id, {type: service, profile: profile})
+          }
+        })
+        .then(() => user)
       } else {
         return findCommunity(req)
           .spread((community, invitation) => {
@@ -80,10 +79,9 @@ module.exports = {
     var password = req.param('password')
 
     return User.authenticate(email, password)
-    .then(function (user) {
-      UserSession.login(req, user, 'password')
-      return user.save({last_login: new Date()}, {patch: true})
-    }).then(user => {
+    .tap(user => UserSession.login(req, user, 'password'))
+    .tap(user => user.save({last_login: new Date()}, {patch: true}))
+    .tap(user => {
       if (req.param('resp') === 'user') {
         return UserPresenter.fetchForSelf(user.id, Admin.isSignedIn(req))
           .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
@@ -150,7 +148,7 @@ module.exports = {
   createWithToken: function (req, res) {
     var nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
 
-    User.find(req.param('u')).then(function (user) {
+    return User.find(req.param('u')).then(function (user) {
       if (!user) {
         res.status(422).send('No user id')
         return
