@@ -20,8 +20,12 @@ var jobs = {
       case 0:
         sails.log.debug('Sending Weekly Post Solicitation')
         tasks.push(Solicitor.sendWeekly())
+        break
+      case 3:
+        sails.log.debug('Sending weekly digests')
+        tasks.push(Digest.sendWeekly())
+        break
     }
-
     return Promise.all(tasks)
   },
 
