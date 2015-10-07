@@ -81,7 +81,6 @@ module.exports = {
   },
 
   sendPostSolicitation: function (opts) {
-    sails.log.debug('sPS', opts)
     return sendSimpleEmail(opts.email, 'tem_GoeP9Ac54t66HjVUtKDwYM', opts.data)
   },
 
