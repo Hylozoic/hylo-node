@@ -170,6 +170,8 @@ module.exports = {
     }
 
     var allParams = _.assign(req.allParams(), {'type': replyData.type})
+    allParams.name = allParams['subject']
+    allParams.description = allParams['stripped-text']
     var attrs = newPostAttrs(replyData.userId, allParams)
 
     return bookshelf.transaction(trx => {
