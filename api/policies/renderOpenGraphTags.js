@@ -60,4 +60,4 @@ var renderPost = function(post, res) {
 };
 
 var projectPathPattern = new RegExp("^/project/([^/]+)"),
-  postPathPattern = new RegExp("^/c/[^/]+/s/([^/]+)");
+  postPathPattern = new RegExp("^/p/([^/]+)");
