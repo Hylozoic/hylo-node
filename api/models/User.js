@@ -163,8 +163,8 @@ module.exports = bookshelf.Model.extend({
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
       updated_at: new Date(),
-      daily_digest: true,
       send_email_preference: true,
+      settings: {digest_frequency: 'daily'},
       active: true
     }, _.omit(attributes, 'account', 'community'))
 
