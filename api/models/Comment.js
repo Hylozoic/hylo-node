@@ -92,7 +92,7 @@ module.exports = bookshelf.Model.extend({
               }),
               Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
               Comment.sendPushNotification(userId, comment, 'default', {transacting: trx}),
-              User.query().where({id: userId}).increment('new_notification_count', 1).transacting(trx)
+              User.incNewNotificationCount(userId, trx)
             );
           }),
 
