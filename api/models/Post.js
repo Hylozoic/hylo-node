@@ -1,3 +1,5 @@
+var url = require('url')
+
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
 
@@ -199,6 +201,39 @@ module.exports = bookshelf.Model.extend({
         }
       }))
     })
+  },
+
+  sendPushNotifications: function (opts) {
+    var uniqById = function (array) {
+      // this is destructive of array
+      var result = []
+      while (array.length > 0) {
+        var element = array[0]
+        result.push(element)
+        _.remove(array, item => item.get('id') == element.get('id'))
+      }
+      return result
+    }
+
+    return Post.find(opts.postId, {withRelated: ['communities', 'communities.users', 'communities.users.communities', 'creator']})
+      .then(post => {
+        var communities = post.relations.communities,
+          creator = post.relations.creator,
+          usersWithDupes = communities.map(community => community.relations.users.models),
+          users = uniqById(_.flatten(usersWithDupes))
+        _.remove(users, user => user.get('id') == creator.get('id'))
+        return Promise.map(users, (user) => {
+          if (!user.get('push_new_post_preference')) return
+          var userCommunities = user.relations.communities.models,
+            postCommunitiesIds = communities.models.map(community => community.get('id')),
+            community, path, alertText
+          community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
+          if (!community) return
+          path = url.parse(Frontend.Route.post(post, community)).path
+          alertText = PushNotification.textForNewPost(post, community)
+          return user.sendPushNotification(alertText, path)
+        })
+      })
   },
 
   notifyAboutMention: function (post, userId, opts) {

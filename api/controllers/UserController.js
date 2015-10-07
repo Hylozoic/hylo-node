@@ -105,7 +105,7 @@ module.exports = {
     var attrs = _.pick(req.allParams(), [
       'name', 'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
       'email', 'send_email_preference', 'work', 'intention', 'extra_info',
-      'new_notification_count', 'settings'
+      'new_notification_count', 'push_follow_preference', 'push_new_post_preference', 'settings'
     ])
 
     return User.find(req.param('userId'))

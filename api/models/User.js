@@ -164,6 +164,8 @@ module.exports = bookshelf.Model.extend({
       created_at: new Date(),
       updated_at: new Date(),
       send_email_preference: true,
+      push_follow_preference: true,
+      push_new_post_preference: true,
       settings: {digest_frequency: 'daily'},
       active: true
     }, _.omit(attributes, 'account', 'community'))
