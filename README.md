@@ -63,7 +63,7 @@ npm run dev
 
 This reads the `.env` file you created above, using [dotenv](http://www.npmjs.org/package/dotenv), and starts two processes managed by `foreman`: one web server process and one background job worker process, as listed in `Procfile.dev`.
 
-Now visit [localhost:1337](http://localhost:3001).
+Now visit [localhost:3001](http://localhost:3001).
 
 ### creating and running database migrations
 
