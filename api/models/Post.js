@@ -221,21 +221,16 @@ module.exports = bookshelf.Model.extend({
           creator = post.relations.creator,
           usersWithDupes = communities.map(community => community.relations.users.models),
           users = uniqById(_.flatten(usersWithDupes))
-          sails.log.debug("Step 1")
         _.remove(users, user => user.get('id') == creator.get('id'))
         return Promise.map(users, (user) => {
           if (!user.get('push_new_post_preference')) return
-          sails.log.debug("Step 2")
           var userCommunities = user.relations.communities.models,
             postCommunitiesIds = communities.models.map(community => community.get('id')),
             community, path, alertText
-sails.log.debug("Step 3")
           community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
           if (!community) return
-sails.log.debug("Step 4")
           path = url.parse(Frontend.Route.post(post, community)).path
           alertText = PushNotification.textForNewPost(post, community)
-          sails.log.debug("Step 5")
           return user.sendPushNotification(alertText, path)
         })
       })
