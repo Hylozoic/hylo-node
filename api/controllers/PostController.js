@@ -198,6 +198,7 @@ module.exports = {
       .tap(post => afterSavingPost(post, {
         communities: [req.param('communityId')],
         imageUrl: req.param('imageUrl'),
+        docs: req.param('docs'),
         transacting: trx
       })
       .then(mentioned => {
