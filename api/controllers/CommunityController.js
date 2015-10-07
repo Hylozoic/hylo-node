@@ -53,7 +53,7 @@ module.exports = {
   },
 
   invite: function (req, res) {
-    Community.find(req.param('communityId'))
+    return Community.find(req.param('communityId'))
     .then(function (community) {
       var emails = (req.param('emails') || '').split(',').map(function (email) {
         var trimmed = email.trim()
@@ -173,7 +173,7 @@ module.exports = {
     }
 
     var statement = format('lower(%s) = lower(?)', params.column)
-    Community.query().whereRaw(statement, params.value).count()
+    return Community.query().whereRaw(statement, params.value).count()
     .then(function (rows) {
       var data
       if (params.constraint === 'unique') {
@@ -197,15 +197,13 @@ module.exports = {
       created_by_id: req.session.userId
     }))
 
-    if (process.env.NODE_ENV) {
-      community.set('leader_id', 21)
-      community.set('welcome_message', 'Thank you for joining us here at Hylo. ' +
-        'Through our communities, we can find everything we need. If we share ' +
-        'with each other the unique gifts and intentions we each have, we can ' +
-        "create extraordinary things. Let's get started!")
-    }
+    community.set('leader_id', req.session.userId)
+    community.set('welcome_message', 'Thank you for joining us here at Hylo. ' +
+      'Through our communities, we can find everything we need. If we share ' +
+      'with each other the unique gifts and intentions we each have, we can ' +
+      "create extraordinary things. Let's get started!")
 
-    bookshelf.transaction(function (trx) {
+    return bookshelf.transaction(function (trx) {
       return community.save(null, {transacting: trx})
       .tap(() => Membership.create(req.session.userId, community.id, {
         role: Membership.MODERATOR_ROLE,
