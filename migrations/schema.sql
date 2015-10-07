@@ -115,7 +115,6 @@ CREATE TABLE community (
     leader_id bigint,
     welcome_message text,
     settings json DEFAULT '{}'::json,
-    allow_public_content boolean DEFAULT false,
     default_public_content boolean DEFAULT false,
     network_id bigint
 );
@@ -516,7 +515,9 @@ CREATE TABLE post (
     updated_at timestamp without time zone,
     edited boolean,
     edited_timestamp date,
-    visibility integer DEFAULT 0
+    visibility integer DEFAULT 0,
+    start_time timestamp with time zone,
+    end_time timestamp with time zone
 );
 
 
@@ -963,7 +964,8 @@ CREATE TABLE users (
     intention text,
     extra_info text,
     new_notification_count integer DEFAULT 0,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    settings jsonb DEFAULT '{}'::jsonb
 );
 
 
