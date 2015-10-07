@@ -157,6 +157,7 @@
       "Project",
       "ProjectInvitation",
       "ProjectMembership",
+      "PushNotification",
       "Queue",
       "Relevance",
       "RequestValidation",
