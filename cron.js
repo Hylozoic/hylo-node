@@ -9,8 +9,19 @@ require('colors')
 
 var jobs = {
   daily: function () {
+    var now = moment.tz('America/Los_Angeles')
+    var tasks = []
+
     sails.log.debug('Removing old kue jobs')
-    return Queue.removeOldCompletedJobs(10000)
+    tasks.push(Queue.removeOldCompletedJobs(10000))
+
+    switch (now.day()) {
+      case 3:
+        sails.log.debug('Sending weekly digests')
+        tasks.push(Digest.sendWeekly())
+        break
+    }
+    return Promise.all(tasks)
   },
 
   hourly: function () {
