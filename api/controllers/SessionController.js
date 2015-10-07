@@ -148,7 +148,7 @@ module.exports = {
   createWithToken: function (req, res) {
     var nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
 
-    User.find(req.param('u')).then(function (user) {
+    return User.find(req.param('u')).then(function (user) {
       if (!user) {
         res.status(422).send('No user id')
         return

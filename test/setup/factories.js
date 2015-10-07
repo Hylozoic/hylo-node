@@ -20,6 +20,13 @@ module.exports = {
     }, attrs))
   },
 
+  user: attrs => {
+    return new User(_.merge({
+      name: text(),
+      email: format('%s@example.com', text())
+    }, attrs))
+  },
+
   mock: {
     request: function () {
       return {
@@ -35,12 +42,15 @@ module.exports = {
       }
     },
     response: function () {
-      return {
-        ok: chai.spy(() => null),
-        serverError: function (err) { throw err },
+      var self = {
+        ok: chai.spy(function (data) { self.body = data }),
+        serverError: chai.spy(function (err) { throw err }),
+        badRequest: chai.spy(function (data) { self.body = data }),
         status: chai.spy(function () { return this }),
+        redirect: chai.spy(function (url) { self.redirected = url }),
         locals: {}
       }
+      return self
     }
   }
 }

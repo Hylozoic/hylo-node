@@ -97,6 +97,10 @@ module.exports = bookshelf.Model.extend({
       }
     }
 
+    if (attrs.settings) {
+      saneAttrs.settings = _.merge({}, this.get('settings'), attrs.settings)
+    }
+
     return this.set(saneAttrs)
   },
 
@@ -159,10 +163,10 @@ module.exports = bookshelf.Model.extend({
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
       updated_at: new Date(),
-      daily_digest: true,
       send_email_preference: true,
       push_follow_preference: true,
       push_new_post_preference: true,
+      settings: {digest_frequency: 'daily'},
       active: true
     }, _.omit(attributes, 'account', 'community'))
 

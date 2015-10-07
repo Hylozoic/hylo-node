@@ -22,6 +22,20 @@ var findContext = function (req) {
   return Promise.props({community: Community.where({beta_access_code: req.param('code')}).fetch()})
 }
 
+var setupReputationQuery = function (req, model) {
+  var params = _.pick(req.allParams(), 'userId', 'limit', 'start')
+  var isSelf = req.session.userId === params.userId
+
+  return Promise.method(function () {
+    if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
+  })()
+  .then(communityIds =>
+    model.queryForUser(params.userId, communityIds).query(q => {
+      q.limit(params.limit || 15)
+      q.offset(params.start || 0)
+    }))
+}
+
 module.exports = {
   create: function (req, res) {
     var params = _.pick(req.allParams(), 'name', 'email', 'password')
@@ -48,178 +62,108 @@ module.exports = {
 
   findSelf: function (req, res) {
     return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
-      .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
-      .then(res.ok)
-      .catch(err => {
-        if (err === 'User not found') return res.ok({})
-        throw err
-      })
-      .catch(res.serverError)
+    .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+    .then(res.ok)
+    .catch(err => {
+      if (err === 'User not found') return res.ok({})
+      throw err
+    })
+    .catch(res.serverError)
   },
 
   findOne: function (req, res) {
     UserPresenter.fetchForOther(req.param('userId'))
-      .then(res.ok)
-      .catch(res.serverError)
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
   contributions: function (req, res) {
-    var params = _.pick(req.allParams(), ['userId', 'limit', 'start'])
-    var limit = params.limit ? params.limit : 15
-    var start = params.start ? params.start : 0
-    var userId = params.userId
-    var isSelf = req.session.userId === userId
-
-    Promise.method(function () {
-      if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
-    })().then(function (communityIds) {
-      Contribution.query(function (qb) {
-        qb.orderBy('date_contributed')
-        qb.limit(limit)
-        qb.offset(start)
-        qb.join('post', 'post.id', '=', 'contributor.post_id')
-
-        qb.where({'contributor.user_id': userId, 'post.active': true})
-
-        if (!isSelf) {
-          qb.join('post_community', 'post_community.post_id', '=', 'post.id')
-          qb.join('community', 'community.id', '=', 'post_community.community_id')
-          qb.whereIn('community.id', communityIds)
-        }
-      }).fetchAll({
-        withRelated: [
-          {
-            'post.creator': function (qb) {
-              qb.column('id', 'name', 'avatar_url')
-            },
-            'post': function (qb) {
-              qb.column('id', 'name', 'user_id', 'type')
-            },
-            'post.communities': function (qb) {
-              qb.column('community.id', 'name')
-            }
-          }
-        ]
-      }).then(res.ok)
-    })
+    return setupReputationQuery(req, Contribution)
+    .then(q => q.fetchAll({
+      withRelated: [
+        {post: q => q.column('id', 'name', 'user_id', 'type')},
+        {'post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'post.communities': q => q.column('community.id', 'name')}
+      ]
+    })).then(res.ok, res.serverError)
   },
 
   thanks: function (req, res) {
-    var params = _.pick(req.allParams(), ['userId', 'limit', 'start'])
-    var limit = params.limit ? params.limit : 15
-    var start = params.start ? params.start : 0
-    var userId = params.userId
-    var isSelf = req.session.userId === userId
-
-    Promise.method(function () {
-      if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
-    })().then(function (communityIds) {
-      Thank.query(function (qb) {
-        qb.orderBy('date_thanked')
-        qb.limit(limit)
-        qb.offset(start)
-        qb.join('comment', 'comment.id', '=', 'thank_you.comment_id')
-        qb.join('post', 'post.id', '=', 'comment.post_id')
-
-        qb.where({
-          'comment.user_id': userId,
-          'comment.active': true,
-          'post.active': true
-        })
-
-        if (!isSelf) {
-          qb.join('post_community', 'post_community.post_id', '=', 'post.id')
-          qb.join('community', 'community.id', '=', 'post_community.community_id')
-          qb.whereIn('community.id', communityIds)
-        }
-      }).fetchAll({
-        withRelated: [
-          {
-            'thankedBy': function (qb) {
-              qb.column('id', 'name', 'avatar_url')
-            },
-            'comment': function (qb) {
-              qb.column('id', 'comment_text', 'post_id')
-            },
-            'comment.post.creator': function (qb) {
-              qb.column('id', 'name', 'avatar_url')
-            },
-            'comment.post': function (qb) {
-              qb.column('post.id', 'name', 'user_id', 'type')
-            },
-            'comment.post.communities': function (qb) {
-              qb.column('community.id', 'name')
-            }
-          }
-        ]
-      }).then(function (thanks) {
-        res.ok(thanks)
-      })
-    })
+    return setupReputationQuery(req, Thank)
+    .then(q => q.fetchAll({
+      withRelated: [
+        {thankedBy: q => q.column('id', 'name', 'avatar_url')},
+        {comment: q => q.column('id', 'comment_text', 'post_id')},
+        {'comment.post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
+        {'comment.post.communities': q => q.column('community.id', 'name')}
+      ]
+    })).then(res.ok, res.serverError)
   },
 
   update: function (req, res) {
     var attrs = _.pick(req.allParams(), [
       'name', 'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
       'email', 'send_email_preference', 'daily_digest', 'work', 'intention', 'extra_info',
-      'new_notification_count', 'push_follow_preference', 'push_new_post_preference'
+      'new_notification_count', 'push_follow_preference', 'push_new_post_preference', 'settings'
     ])
 
     return User.find(req.param('userId'))
-      .tap(function (user) {
-        var newEmail = attrs.email
-        var oldEmail = user.get('email')
-        if (newEmail && newEmail !== oldEmail) {
-          if (!validator.isEmail(newEmail)) {
-            throw new Error('invalid-email')
-          }
-          return User.isEmailUnique(newEmail, oldEmail).then(function (isUnique) {
-            if (!isUnique) throw new Error('duplicate-email')
-          })
+    .tap(function (user) {
+      var newEmail = attrs.email
+      var oldEmail = user.get('email')
+      if (newEmail && newEmail !== oldEmail) {
+        if (!validator.isEmail(newEmail)) {
+          throw new Error('invalid-email')
+        }
+        return User.isEmailUnique(newEmail, oldEmail).then(function (isUnique) {
+          if (!isUnique) throw new Error('duplicate-email')
+        })
+      }
+    })
+    .then(function (user) {
+      // FIXME this should be in a transaction
+
+      user.setSanely(attrs)
+
+      var promises = []
+      var changed = false
+
+      _.each([
+        ['skills', Skill],
+        ['organizations', Organization],
+        ['phones', UserPhone],
+        ['emails', UserEmail],
+        ['websites', UserWebsite]
+      ], function (model) {
+        var param = req.param(model[0])
+        if (param) {
+          promises.push(model[1].update(_.flatten([param]), user.id))
+          changed = true
         }
       })
-      .then(function (user) {
-        // FIXME this should be in a transaction
 
-        user.setSanely(attrs)
+      if (!_.isEmpty(user.changed) || changed) {
+        promises.push(user.save(
+          _.extend({updated_at: new Date()}, user.changed),
+          {patch: true}
+        ))
+      }
 
-        var promises = []
-        var changed = false
+      var newPassword = req.param('password')
+      if (newPassword) {
+        promises.push(
+          LinkedAccount.where({user_id: user.id, provider_key: 'password'}).fetch()
+            .then(function (account) {
+              if (account) return account.updatePassword(newPassword)
+              return LinkedAccount.create(user.id, {type: 'password', password: newPassword})
+            })
+        )
+      }
 
-        _.each([
-          ['skills', Skill],
-          ['organizations', Organization],
-          ['phones', UserPhone],
-          ['emails', UserEmail],
-          ['websites', UserWebsite]
-        ], function (model) {
-          var param = req.param(model[0])
-          if (param) {
-            promises.push(model[1].update(_.flatten([param]), user.id))
-            changed = true
-          }
-        })
-
-        if (!_.isEmpty(user.changed) || changed) {
-          promises.push(user.save(
-            _.extend({updated_at: new Date()}, user.changed),
-            {patch: true}
-          ))
-        }
-
-        var newPassword = req.param('password')
-        if (newPassword) {
-          promises.push(
-            LinkedAccount.where({user_id: user.id, provider_key: 'password'}).fetch()
-              .then(function (account) {
-                if (account) return account.updatePassword(newPassword)
-                return LinkedAccount.create(user.id, {type: 'password', password: newPassword})
-              })
-          )
-        }
-
-        return Promise.all(promises)
-      }).then(function () {
+      return Promise.all(promises)
+    })
+    .then(function () {
       res.ok({})
     }).catch(function (err) {
       if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
@@ -247,20 +191,20 @@ module.exports = {
         })
       }
     })
-      .catch(res.serverError.bind(res))
+    .catch(res.serverError.bind(res))
   },
 
   findForProject: function (req, res) {
     res.locals.project.contributors()
-      .query({
-        limit: req.param('limit') || 10,
-        offset: req.param('offset') || 0
-      }).fetch()
-      .then(users => users.map(u => _.extend(u.pick(UserPresenter.shortAttributes), {
-        membership: u.pivot.pick('role')
-      })))
-      .then(res.ok)
-      .catch(res.serverError)
+    .query({
+      limit: req.param('limit') || 10,
+      offset: req.param('offset') || 0
+    }).fetch()
+    .then(users => users.map(u => _.extend(u.pick(UserPresenter.shortAttributes), {
+      membership: u.pivot.pick('role')
+    })))
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
   findForCommunity: function (req, res) {
@@ -274,26 +218,26 @@ module.exports = {
     var total
 
     Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations']})
-      .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-      .then(users => users.map(UserPresenter.presentForList))
-      .then(list => ({people_total: total, people: list}))
-      .then(res.ok, res.serverError)
+    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+    .then(users => users.map(UserPresenter.presentForList))
+    .then(list => ({people_total: total, people: list}))
+    .then(res.ok, res.serverError)
   },
 
   findForNetwork: function (req, res) {
     var total
 
     Community.query().where('network_id', req.param('networkId')).select('id')
-      .then(rows => _.pluck(rows, 'id'))
-      .then(ids => Search.forUsers({
-        communities: ids,
-        limit: req.param('limit') || 20,
-        offset: req.param('offset') || 0
-      }).fetchAll({withRelated: ['skills', 'organizations']}))
-      .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-      .then(users => users.map(UserPresenter.presentForList))
-      .then(list => ({people_total: total, people: list}))
-      .then(res.ok, res.serverError)
+    .then(rows => _.pluck(rows, 'id'))
+    .then(ids => Search.forUsers({
+      communities: ids,
+      limit: req.param('limit') || 20,
+      offset: req.param('offset') || 0
+    }).fetchAll({withRelated: ['skills', 'organizations']}))
+    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+    .then(users => users.map(UserPresenter.presentForList))
+    .then(list => ({people_total: total, people: list}))
+    .then(res.ok, res.serverError)
   }
 
 }
