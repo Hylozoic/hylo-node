@@ -97,7 +97,8 @@ module.exports.policies = {
     fulfill:          ['sessionAuth', 'checkAndSetOwnPost'],
     vote:             ['sessionAuth', 'checkAndSetPost'],
     complain:         ['sessionAuth', 'checkAndSetPost'],
-    destroy:          ['sessionAuth', 'checkAndSetWritablePost']
+    destroy:          ['sessionAuth', 'checkAndSetWritablePost'],
+    createFromEmail: true,
   },
 
   CommentController: {

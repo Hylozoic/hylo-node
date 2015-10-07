@@ -3,6 +3,7 @@ var moment = require('moment-timezone')
 var rollbar = skiff.rollbar
 var sails = skiff.sails
 var Digest = require('./lib/community/digest')
+var Solicitor = require('./lib/community/solicitor')
 var Promise = require('bluebird')
 
 require('colors')
@@ -16,6 +17,10 @@ var jobs = {
     tasks.push(Queue.removeOldCompletedJobs(10000))
 
     switch (now.day()) {
+      case 0:
+        sails.log.debug('Sending Weekly Post Solicitation')
+        tasks.push(Solicitor.sendWeekly())
+        break
       case 3:
         sails.log.debug('Sending weekly digests')
         tasks.push(Digest.sendWeekly())
