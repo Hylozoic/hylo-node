@@ -37,7 +37,7 @@ var finishOAuth = function (strategy, req, res, next) {
     service = 'linkedin'
   }
 
-  passport.authenticate(strategy, function (err, profile, info) {
+  var authCallback = function (err, profile, info) {
     if (err || !profile) {
       res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null})
       return
@@ -70,7 +70,9 @@ var finishOAuth = function (strategy, req, res, next) {
     .then(user => UserExternalData.store(user.id, service, profile._json))
     .then(() => res.view('popupDone', {context: 'oauth', layout: null}))
     .catch(err => res.view('popupDone', {context: 'oauth', error: err, layout: null}))
-  })(req, res, next)
+  }
+
+  passport.authenticate(strategy, authCallback)(req, res, next)
 }
 
 module.exports = {
