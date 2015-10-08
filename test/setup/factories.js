@@ -38,7 +38,14 @@ module.exports = {
         },
         session: {},
         params: {},
-        __: sails.__ // this is for i18n
+        __: sails.__, // this is for i18n
+        login: function (userId) {
+          _.extend(this.session, {
+            authenticated: true,
+            version: UserSession.version,
+            userId: userId
+          })
+        }
       }
     },
     response: function () {

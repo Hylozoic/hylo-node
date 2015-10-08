@@ -2,11 +2,11 @@ module.exports = bookshelf.Model.extend({
   tableName: 'follower',
 
   post: function() {
-    return this.belongsTo(Post, 'post_id');
+    return this.belongsTo(Post);
   },
 
   user: function() {
-    return this.belongsTo(User, "user_id").query({where: {active: true}})
+    return this.belongsTo(User).query({where: {active: true}})
   }
 
 }, {

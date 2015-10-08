@@ -15,6 +15,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Follower, 'post_id')
   },
 
+  followingUsers: function () {
+    return this.belongsToMany(User).through(Follower)
+  },
+
   contributions: function () {
     return this.hasMany(Contribution, 'post_id')
   },
@@ -210,23 +214,24 @@ module.exports = bookshelf.Model.extend({
       while (array.length > 0) {
         var element = array[0]
         result.push(element)
-        _.remove(array, item => item.get('id') == element.get('id'))
+        _.remove(array, item => item.get('id') === element.get('id'))
       }
       return result
     }
 
     return Post.find(opts.postId, {withRelated: ['communities', 'communities.users', 'communities.users.communities', 'creator']})
       .then(post => {
-        var communities = post.relations.communities,
-          creator = post.relations.creator,
-          usersWithDupes = communities.map(community => community.relations.users.models),
-          users = uniqById(_.flatten(usersWithDupes))
-        _.remove(users, user => user.get('id') == creator.get('id'))
+        var communities = post.relations.communities
+        var creator = post.relations.creator
+        var usersWithDupes = communities.map(community => community.relations.users.models)
+        var users = uniqById(_.flatten(usersWithDupes))
+
+        _.remove(users, user => user.get('id') === creator.get('id'))
         return Promise.map(users, (user) => {
           if (!user.get('push_new_post_preference')) return
-          var userCommunities = user.relations.communities.models,
-            postCommunitiesIds = communities.models.map(community => community.get('id')),
-            community, path, alertText
+          var userCommunities = user.relations.communities.models
+          var postCommunitiesIds = communities.models.map(community => community.get('id'))
+          var community, path, alertText
           community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
           if (!community) return
           path = url.parse(Frontend.Route.post(post, community)).path
