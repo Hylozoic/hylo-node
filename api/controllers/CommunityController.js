@@ -21,7 +21,7 @@ module.exports = {
       var network = community.relations.network
       if (network) data.network = network.pick('id', 'name', 'slug')
     })
-    .tap(() => membership && membership.updateViewedAt())
+    .tap(() => membership && membership.save({last_viewed_at: new Date()}, {patch: true}))
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -141,7 +141,7 @@ module.exports = {
   },
 
   leave: function (req, res) {
-    res.locals.membership.destroyMe()
+    res.locals.membership.destroy()
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
@@ -208,23 +208,19 @@ module.exports = {
       'with each other the unique gifts and intentions we each have, we can ' +
       "create extraordinary things. Let's get started!")
 
-    return bookshelf.transaction(function (trx) {
+    return bookshelf.transaction(trx => {
       return community.save(null, {transacting: trx})
-      .tap(() => Membership.create(req.session.userId, community.id, {
+      .then(() => Membership.create(req.session.userId, community.id, {
         role: Membership.MODERATOR_ROLE,
         transacting: trx
       }))
     })
-    // The assets were uploaded to /community/new, since we didn't have an id
+    // Any assets were uploaded to /community/new, since we didn't have an id;
     // copy them over to /community/:id now
     .tap(community => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
     .tap(community => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
     .tap(() => Tour.skipOnboarding(req.session.userId))
-    // FIXME this additional lookup wouldn't be necessary
-    // if we had a Membership instance from the previous
-    // step. But the absence of an id column on the table
-    // doesn't play nice with Bookshelf.
-    .then(() => Membership.find(req.session.userId, community.id, {withRelated: ['community']}))
+    .then(membership => _.extend(membership.toJSON(), {community: community}))
     .then(res.ok)
     .catch(res.serverError)
   },
