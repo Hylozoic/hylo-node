@@ -55,7 +55,7 @@ module.exports = bookshelf.Model.extend({
         comment = c
         post = c.relations.post
         return [
-          post.relations.followers.pluck('user_id'),
+          post.relations.followers.pluck('id'),
           RichText.getUserMentions(comment.get('comment_text'))
         ]
       })

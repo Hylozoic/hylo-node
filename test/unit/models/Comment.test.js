@@ -21,7 +21,7 @@ describe('Comment', () => {
         community.save(), post.save(), u1.save(), u2.save(), u3.save(), u4.save()
       )
       .then(() => Promise.join(
-        Follower.create(post.id, {followerId: u1.id}),
+        Follow.create(post.id, {followerId: u1.id}),
         new Device({user_id: u1.id, enabled: true}).save(),
         new Device({user_id: u2.id, enabled: true}).save(),
         community.posts().attach(post.id)
@@ -61,11 +61,13 @@ describe('Comment', () => {
           expect(emailJob(u2.id, 'mention')).to.exist,
           expect(emailJob(u3.id, 'mention')).to.exist,
 
-          expect(u4.follows().query({where: {post_id: post.id}}).fetchOne()).to.eventually.exist,
-
           expect(bookshelf.knex('push_notifications')
             .whereIn('id', [d1.id, d2.id]).count()).to.eventually.deep.equal([{count: '2'}])
-        );
+        )
+        .then(() => u4.load('followedPosts'))
+        .then(() => {
+          expect(u4.relations.followedPosts.find({id: post.id})).to.exist
+        });
       });
     });
 

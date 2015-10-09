@@ -221,20 +221,18 @@ module.exports = {
   follow: function (req, res) {
     var userId = req.session.userId
     var post = res.locals.post
-    Follower.query().where({user_id: userId, post_id: post.id}).count()
+    Follow.query().where({user_id: userId, post_id: post.id}).count()
     .then(function (rows) {
       if (Number(rows[0].count) > 0 || req.param('force') === 'unfollow') {
         return post.removeFollower(userId, {createActivity: true})
         .then(() => res.ok({}))
       }
 
-      return post.addFollowers([userId], userId, {createActivity: true}).then(function (follows) {
-        return User.find(req.session.userId)
-      }).then(function (user) {
-        res.ok(_.pick(user.attributes, 'id', 'name', 'avatar_url'))
-      })
+      return post.addFollowers([userId], userId, {createActivity: true})
+      .then(() => User.find(req.session.userId))
+      .then(user => res.ok(_.pick(user.attributes, 'id', 'name', 'avatar_url')))
     })
-    .catch(res.serverError.bind(res))
+    .catch(res.serverError)
   },
 
   update: function (req, res) {

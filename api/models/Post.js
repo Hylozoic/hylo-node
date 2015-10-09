@@ -11,17 +11,8 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Community).through(PostMembership)
   },
 
-  // FIXME convert all uses of this to "follows" instead
   followers: function () {
-    return this.hasMany(Follower, 'post_id')
-  },
-
-  follows: function () {
-    return this.hasMany(Follower, 'post_id')
-  },
-
-  followingUsers: function () {
-    return this.belongsToMany(User).through(Follower)
+    return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
   },
 
   contributions: function () {
@@ -56,7 +47,7 @@ module.exports = bookshelf.Model.extend({
     if (!opts) opts = {}
 
     return Promise.map(userIds, function (followerUserId) {
-      return Follower.create(postId, {
+      return Follow.create(postId, {
         followerId: followerUserId,
         addedById: addingUserId,
         transacting: opts.transacting
@@ -79,7 +70,7 @@ module.exports = bookshelf.Model.extend({
 
   removeFollower: function (userId, opts) {
     var self = this
-    return Follower.where({user_id: userId, post_id: this.id}).destroy()
+    return Follow.where({user_id: userId, post_id: this.id}).destroy()
       .tap(function () {
         if (!opts.createActivity) return
         return Activity.forUnfollow(self, userId).save()
@@ -271,7 +262,7 @@ module.exports = bookshelf.Model.extend({
       .tap(post => Promise.join(
           post.relatedUsers().attach(userId, {transacting: trx}),
           post.communities().attach(communityId, {transacting: trx}),
-          Follower.create(post.id, {followerId: userId, transacting: trx})
+          Follow.create(post.id, {followerId: userId, transacting: trx})
       ))
   },
 

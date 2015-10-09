@@ -33,9 +33,9 @@ describe('Post', function () {
       })
       .spread(function (post, activity) {
         expect(post.relations.followers.length).to.equal(1)
-        var follow = post.relations.followers.first()
-        expect(follow.get('user_id')).to.equal(u2.id)
-        expect(follow.get('added_by_id')).to.equal(u3.id)
+        var follower = post.relations.followers.first()
+        expect(follower.id).to.equal(u2.id)
+        expect(follower.pivot.get('added_by_id')).to.equal(u3.id)
 
         expect(activity.length).to.equal(2)
         var a1 = _.find(activity.models, function (a) { return a.get('reader_id') === u1.id })
