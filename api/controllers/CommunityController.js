@@ -217,8 +217,8 @@ module.exports = {
     })
     // Any assets were uploaded to /community/new, since we didn't have an id;
     // copy them over to /community/:id now
-    .tap(community => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
-    .tap(community => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
+    .tap(() => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
+    .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
     .tap(() => Tour.skipOnboarding(req.session.userId))
     .then(membership => _.extend(membership.toJSON(), {community: community}))
     .then(res.ok)
