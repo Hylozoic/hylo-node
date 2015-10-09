@@ -54,6 +54,27 @@ module.exports = bookshelf.Model.extend({
         'comment.active': true
       }).leftJoin('post_community', () => this.on('post_community.post_id', 'comment.post_id'))
     })
+  },
+
+  createStarterPosts: function (trx) {
+    var self = this
+    return Community.find('starter-posts', {withRelated: ['posts', 'posts.follows']})
+    .tap(c => {
+      if (!c) throw new Error('Starter posts community not found')
+    })
+    .then(c => c.relations.posts.models)
+    .then(posts => Promise.map(posts, post => {
+      var newPost = post.copy()
+      return newPost.save({}, {transacting: trx})
+      .then(() => Promise.all(_.flatten([
+        self.posts().attach(newPost, {transacting: trx}),
+        post.relations.follows.map(f =>
+          Follower.create(newPost.id, {
+            followerId: f.get('user_id'),
+            transacting: trx
+          }))
+      ])))
+    }))
   }
 
 }, {

@@ -138,4 +138,27 @@ describe('Post', function () {
       })
     })
   })
+
+  describe('.copy', () => {
+    var post
+
+    before(() => {
+      post = factories.post()
+      return post.save()
+    })
+
+    it('creates a copy of the post with changed attributes', () => {
+      var p2 = post.copy({
+        description: 'foo'
+      })
+
+      return p2.save()
+      .then(() => {
+        expect(p2.id).to.exist
+        expect(p2.id).not.to.equal(post.id)
+        expect(p2.get('description')).to.equal('foo')
+        expect(p2.get('name')).to.equal(post.get('name'))
+      })
+    })
+  })
 })

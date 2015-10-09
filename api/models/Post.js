@@ -11,7 +11,12 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Community).through(PostMembership)
   },
 
+  // FIXME convert all uses of this to "follows" instead
   followers: function () {
+    return this.hasMany(Follower, 'post_id')
+  },
+
+  follows: function () {
     return this.hasMany(Follower, 'post_id')
   },
 
@@ -96,6 +101,16 @@ module.exports = bookshelf.Model.extend({
 
   isWelcome: function () {
     return this.get('type') === Post.Type.WELCOME
+  },
+
+  copy: function (attrs) {
+    var that = this.clone()
+    _.merge(that.attributes, Post.newPostAttrs(), attrs)
+    delete that.id
+    delete that.attributes.id
+    that._previousAttributes = {}
+    that.changed = {}
+    return that
   }
 
 }, {
