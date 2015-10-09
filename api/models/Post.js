@@ -121,34 +121,29 @@ module.exports = bookshelf.Model.extend({
   },
 
   isVisibleToUser: function (postId, userId) {
-    var communityId
-    return bookshelf.knex('post_community').where({post_id: postId})
-    .then(function (results) {
-      if (results.length === 0) return false
-      communityId = results[0].community_id
-      return Membership.find(userId, communityId)
-    })
-    .then(mship => !!mship)
-    .then(success => {
-      if (success) return true
+    var pcids
 
-      return PostProjectMembership.where({post_id: postId}).fetch()
-        .then(ppm => {
-          if (!ppm) return false
-          return Project.isVisibleToUser(ppm.get('project_id'), userId)
-        })
+    // do the user and post share...
+    return Promise.join(
+      PostMembership.query().where({post_id: postId}),
+      Membership.query().where({user_id: userId})
+    )
+    .spread((postMships, userMships) => {
+      // a community?
+      pcids = postMships.map(m => m.community_id)
+      return _.intersection(pcids, userMships.map(m => m.community_id)).length > 0
     })
-    .then(success => {
-      if (success) return true
-
-      return Community.find(communityId).then(community => {
-        if (community && community.get('network_id')) {
-          return Network.containsUser(community.get('network_id'), userId)
-        } else {
-          return false
-        }
-      })
-    })
+    .then(success =>
+      // or a project?
+      success || PostProjectMembership.where({post_id: postId}).fetch()
+      .then(ppm => ppm && Project.isVisibleToUser(ppm.get('project_id'), userId)))
+    .then(success =>
+      // or a network?
+      success || Community.query().whereIn('id', pcids).pluck('network_id')
+      .then(networkIds =>
+        Promise.map(_.compact(_.uniq(networkIds)), id =>
+          Network.containsUser(id, userId)))
+      .then(results => _.any(results)))
   },
 
   find: function (id, options) {

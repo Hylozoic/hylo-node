@@ -1,5 +1,7 @@
 var moment = require('moment')
-require(require('root-path')('test/setup'))
+var root = require('root-path')
+require(root('test/setup'))
+var factories = require(root('test/setup/factories'))
 
 describe('Post', function () {
   describe('#addFollowers', function () {
@@ -48,12 +50,16 @@ describe('Post', function () {
   })
 
   describe('#isVisibleToUser', () => {
-    var post, community, community2, network, project, user
+    var post, c1, c2, user
 
     beforeEach(() => {
       post = new Post({name: 'hello'})
       user = new User({name: 'Cat'})
-      return Promise.join(post.save(), user.save())
+      c1 = factories.community()
+      c2 = factories.community()
+      return Promise.join(post.save(), user.save(), c1.save(), c2.save())
+      .then(() => user.joinCommunity(c1))
+      .then(() => post.communities().attach(c2.id))
     })
 
     it('is false if the user is not connected by community or project', () => {
@@ -61,17 +67,15 @@ describe('Post', function () {
       .then(visible => expect(visible).to.be.false)
     })
 
-    it("is true if the user is in the post's community", () => {
-      community = new Community({name: 'House', slug: 'house'})
-      return community.save()
-      .then(() => Membership.create(user.id, community.id))
-      .then(() => community.posts().attach(post.id))
+    it('is true if the user and post share a community', () => {
+      return Membership.create(user.id, c2.id)
+      .then(() => post.communities().attach(c1.id))
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
 
     it("is true if the user is in the post's project", () => {
-      project = new Project({title: 'Lazy day', slug: 'lazy-day'})
+      var project = new Project({title: 'Lazy day', slug: 'lazy-day'})
       return project.save()
       .then(() => ProjectMembership.create(user.id, project.id))
       .then(() => PostProjectMembership.create(post.id, project.id))
@@ -79,16 +83,13 @@ describe('Post', function () {
       .then(visible => expect(visible).to.be.true)
     })
 
-    it("is true if the user is in the post's community's network", () => {
-      network = new Network()
+    it('is true if the user and post share a network', () => {
+      var network = new Network()
       return network.save()
-      .then(() => {
-        community = new Community({name: 'c1', slug: 'c1', network_id: network.id})
-        community2 = new Community({name: 'c2', slug: 'c2', network_id: network.id})
-        return Promise.join(community.save(), community2.save())
-      })
-      .then(() => Membership.create(user.id, community2.id))
-      .then(() => community.posts().attach(post.id))
+      .then(() => Promise.join(
+        c1.save({network_id: network.id}, {patch: true}),
+        c2.save({network_id: network.id}, {patch: true})
+      ))
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
