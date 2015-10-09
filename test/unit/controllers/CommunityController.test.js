@@ -144,6 +144,7 @@ describe('CommunityController', () => {
     })
 
     it('works', () => {
+      this.timeout(5000)
       _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
 
       return CommunityController.invite(req, res)
