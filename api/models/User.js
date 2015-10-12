@@ -117,6 +117,10 @@ module.exports = bookshelf.Model.extend({
     return hash(this.generateTokenContents(), 10)
   },
 
+  generateTokenSync: function () {
+    return bcrypt.hashSync(this.generateTokenContents(), 10)
+  },
+
   checkToken: function (token) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt)
     return compare(this.generateTokenContents(), token)
