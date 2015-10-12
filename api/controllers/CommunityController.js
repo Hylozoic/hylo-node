@@ -24,7 +24,7 @@ module.exports = {
     var membership = res.locals.membership
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings'))
+    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings', 'visibility'))
     .tap(data => {
       var network = community.relations.network
       if (network) data.network = network.pick('id', 'name', 'slug')
@@ -50,7 +50,7 @@ module.exports = {
   update: function (req, res) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code'
+      'welcome_message', 'leader_id', 'beta_access_code', 'visibility'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
     var community = new Community({id: req.param('communityId')})
@@ -198,7 +198,7 @@ module.exports = {
   create: function (req, res) {
     var attrs = _.pick(req.allParams(),
       'name', 'description', 'slug', 'category',
-      'beta_access_code', 'banner_url', 'avatar_url')
+      'beta_access_code', 'banner_url', 'avatar_url', 'visibility')
 
     var community = new Community(_.merge(attrs, {
       created_at: new Date(),
@@ -235,7 +235,7 @@ module.exports = {
   findForNetwork: function (req, res) {
     Community.where('network_id', req.param('networkId'))
     .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'visibility'), {
       memberCount: c.relations.memberships.length
     })))
     .then(communities => _.sortBy(communities, c => -c.memberCount))
