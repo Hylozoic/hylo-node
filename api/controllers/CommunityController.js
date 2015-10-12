@@ -1,6 +1,14 @@
 var validator = require('validator')
 
 module.exports = {
+  search: function(req, res) {
+    Community.query('whereRaw', "visibility != 'secret'")
+    .fetchAll()
+    .then(communities => communities.map(c => c.toJSON()))
+    .then(res.ok)
+    .catch(res.serverError)
+  },
+
   find: function (req, res) {
     Community.fetchAll({withRelated: [
         {memberships: q => q.column('community_id')}
