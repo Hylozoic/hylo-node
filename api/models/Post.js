@@ -236,7 +236,7 @@ module.exports = bookshelf.Model.extend({
           community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
           if (!community) return
           path = url.parse(Frontend.Route.post(post, community)).path
-          alertText = PushNotification.textForNewPost(post, community)
+          alertText = PushNotification.textForNewPost(post, community, user.get('id'))
           return user.sendPushNotification(alertText, path)
         })
       })
