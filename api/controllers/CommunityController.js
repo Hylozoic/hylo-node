@@ -24,7 +24,7 @@ module.exports = {
     var membership = res.locals.membership
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings', 'visibility'))
+    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings'))
     .tap(data => {
       var network = community.relations.network
       if (network) data.network = network.pick('id', 'name', 'slug')
@@ -39,7 +39,7 @@ module.exports = {
     Community.find(req.param('communityId'), {withRelated: ['leader']})
     .tap(community => leader = community.relations.leader)
     .then(community => _.merge(community.pick(
-      'welcome_message', 'beta_access_code', 'settings'
+      'welcome_message', 'beta_access_code', 'settings', 'visibility'
     ), {
       leader: leader ? leader.pick('id', 'name', 'avatar_url') : null
     }))
@@ -235,7 +235,7 @@ module.exports = {
   findForNetwork: function (req, res) {
     Community.where('network_id', req.param('networkId'))
     .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'visibility'), {
+    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
       memberCount: c.relations.memberships.length
     })))
     .then(communities => _.sortBy(communities, c => -c.memberCount))
