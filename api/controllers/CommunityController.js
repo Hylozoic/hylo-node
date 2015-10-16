@@ -238,7 +238,7 @@ module.exports = {
   findForNetwork: function (req, res) {
     Community.where('network_id', req.param('networkId'))
     .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'visibility'), {
       memberCount: c.relations.memberships.length
     })))
     .then(communities => _.sortBy(communities, c => -c.memberCount))
