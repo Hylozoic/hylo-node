@@ -4,7 +4,7 @@ module.exports = {
   search: function(req, res) {
     Community.query('whereRaw', "visibility != 'secret'")
     .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'visibility'), {
       memberCount: c.relations.memberships.length
     })))
     .then(communities => _.sortBy(communities, c => -c.memberCount))
