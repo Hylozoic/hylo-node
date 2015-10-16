@@ -3,8 +3,11 @@ var validator = require('validator')
 module.exports = {
   search: function(req, res) {
     Community.query('whereRaw', "visibility != 'secret'")
-    .fetchAll()
-    .then(communities => communities.map(c => c.toJSON()))
+    .fetchAll({withRelated: ['memberships']})
+    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+      memberCount: c.relations.memberships.length
+    })))
+    .then(communities => _.sortBy(communities, c => -c.memberCount))
     .then(res.ok)
     .catch(res.serverError)
   },
