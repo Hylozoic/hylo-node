@@ -65,7 +65,7 @@ module.exports = bookshelf.Model.extend({
     .then(c => c.relations.posts.models)
     .then(posts => Promise.map(posts, post => {
       if (post.get('type') === 'welcome') return
-      
+
       var newPost = post.copy()
       return newPost.save({}, {transacting: trx})
       .then(() => Promise.all(_.flatten([

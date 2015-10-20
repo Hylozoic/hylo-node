@@ -33,13 +33,15 @@ describe('InvitationController', () => {
       .then(() => {
         expect(res.ok).to.have.been.called()
         expect(res.body).to.deep.equal({})
-        return user.load(['followedPosts', 'communities'])
+        return user.load(['followedPosts', 'followedPosts.relatedUsers', 'communities'])
       })
       .then(() => {
         expect(user.relations.communities.first().id).to.equal(community.id)
         var post = user.relations.followedPosts.first()
         expect(post).to.exist
         expect(post.get('type')).to.equal('welcome')
+        var relatedUser = post.relations.relatedUsers.first()
+        expect(relatedUser.id).to.equal(user.id)
       })
     })
   })

@@ -39,7 +39,9 @@ module.exports = bookshelf.Model.extend({
     return this.votes().query({where: {user_id: userId}}).fetchOne()
   },
 
-  relatedUsers: () => this.belongsToMany(User, 'posts_about_users'),
+  relatedUsers: function () {
+    return this.belongsToMany(User, 'posts_about_users')
+  },
 
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id

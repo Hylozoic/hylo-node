@@ -158,4 +158,31 @@ describe('CommunityController', () => {
       })
     })
   })
+
+  describe('.joinWithCode', () => {
+    var community
+    beforeEach(() => {
+      community = factories.community({beta_access_code: 'foo'})
+      return community.save()
+    })
+
+    it('works', () => {
+      req.params.code = 'foo'
+      req.login(user.id)
+
+      return CommunityController.joinWithCode(req, res)
+      .tap(() => Promise.join(
+        community.load(['posts', 'posts.relatedUsers']),
+        user.load('communities')
+      ))
+      .then(() => {
+        var welcome = community.relations.posts.find(p => p.get('type') === 'welcome')
+        expect(welcome).to.exist
+        var relatedUser = welcome.relations.relatedUsers.first()
+        expect(relatedUser).to.exist
+        expect(relatedUser.id).to.equal(user.id)
+        expect(user.relations.communities.map(c => c.id)).to.contain(community.id)
+      })
+    })
+  })
 })

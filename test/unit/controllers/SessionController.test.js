@@ -127,14 +127,16 @@ describe('SessionController', function () {
         expect(res.viewTemplate).to.equal('popupDone')
         expect(res.viewAttrs.error).not.to.exist
 
-        User.find('l@lw.io', {withRelated: ['linkedAccounts']})
+        User.find('l@lw.io', {withRelated: 'linkedAccounts'})
         .then(user => {
           expect(user).to.exist
           expect(user.get('facebook_url')).to.equal('http://www.facebook.com/100101')
           var account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'facebook')
           expect(account).to.exist
+
           done()
         })
+        .catch(done)
       })
       SessionController.finishFacebookOAuth(req, res)
     })
@@ -155,11 +157,19 @@ describe('SessionController', function () {
 
       it('adds the new user to the community', done => {
         setupTest(function () {
-          User.find('l@lw.io', {withRelated: 'communities'})
+          User.find('l@lw.io', {withRelated: ['communities', 'followedPosts', 'followedPosts.relatedUsers']})
           .then(user => {
             var c = user.relations.communities.first()
             expect(c).to.exist
             expect(c.id).to.equal(community.id)
+
+            var welcome = user.relations.followedPosts.first()
+            expect(welcome).to.exist
+            expect(welcome.get('type')).to.equal('welcome')
+            var relatedUser = welcome.relations.relatedUsers.first()
+            expect(relatedUser).to.exist
+            expect(relatedUser.id).to.equal(user.id)
+
             done()
           })
         })

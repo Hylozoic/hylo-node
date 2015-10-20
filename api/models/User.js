@@ -194,12 +194,15 @@ module.exports = bookshelf.Model.extend({
 
   createFully: (attrs, invitation) =>
     bookshelf.transaction(trx =>
-      User.create(attrs, {transacting: trx}).tap(user =>
-        Promise.join(
+      User.create(attrs, {transacting: trx}).tap(user => {
+        var communityId = (attrs.community && attrs.community.id) ||
+          (invitation && invitation.get('community_id'))
+        return Promise.join(
           Tour.startOnboarding(user.id, {transacting: trx}),
           invitation && invitation.use(user.id, {transacting: trx}),
-          attrs.community && Post.createWelcomePost(user.id, attrs.community.id, trx)
-        ))),
+          communityId && Post.createWelcomePost(user.id, communityId, trx)
+        )
+      })),
 
   find: function (id, options) {
     if (isNaN(Number(id))) {
