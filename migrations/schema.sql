@@ -109,7 +109,7 @@ CREATE TABLE community (
     plan_guid character varying(63),
     banner_url text,
     category character varying(64),
-    created_at date,
+    created_at timestamp without time zone,
     created_by_id bigint,
     banner_pos character varying(32),
     leader_id bigint,
@@ -964,9 +964,9 @@ CREATE TABLE users (
     extra_info text,
     new_notification_count integer DEFAULT 0,
     updated_at timestamp with time zone,
+    settings jsonb DEFAULT '{}'::jsonb,
     push_follow_preference boolean DEFAULT true,
-    push_new_post_preference boolean DEFAULT true,
-    settings jsonb DEFAULT '{}'::jsonb
+    push_new_post_preference boolean DEFAULT true
 );
 
 
