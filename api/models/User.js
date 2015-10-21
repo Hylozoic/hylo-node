@@ -129,6 +129,11 @@ module.exports = bookshelf.Model.extend({
   sendPushNotification: function (alert, url) {
     return this.devices().fetch()
       .then(devices => devices.map(device => device.sendPushNotification(alert, url)))
+  },
+
+  resetNotificationCount: function () {
+    return this.devices().fetch()
+      .then(devices => devices.map(device => device.resetNotificationCount()))
   }
 
 }, {

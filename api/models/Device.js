@@ -10,10 +10,8 @@ module.exports = bookshelf.Model.extend({
     if (!this.get('enabled')) {
       return
     }
-    sails.log.debug('about to go into the promise')
     User.find(this.get('user_id'))
     .then(function (user) {
-      sails.log.debug('made it into the promise,', user)
       var badge_no = user.get('new_notification_count')
       return PushNotification.forge({
         device_token: device.get('token'),
@@ -26,5 +24,22 @@ module.exports = bookshelf.Model.extend({
       .save({})
       .then(pushNotification => pushNotification.send())
     })
+  },
+
+  resetNotificationCount: function () {
+    var device = this
+    if (!this.get('enabled') || this.get('platform') !== 'ios_macos') {
+      return
+    }
+    return PushNotification.forge({
+      device_token: device.get('token'),
+      alert: '',
+      path: '',
+      badge_no: 0,
+      platform: device.get('platform'),
+      time_queued: (new Date()).toISOString()
+    })
+    .save({})
+    .then(pushNotification => pushNotification.send())
   }
 })

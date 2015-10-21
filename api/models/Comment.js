@@ -175,14 +175,9 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotification: function (opts) {
-    sails.log.debug('in Comment.sendPushNotification', opts)
     return User.find(opts.recipientId)
-    .then(recipient => {
-      sails.log.debug('then recipient', recipient)
-      return recipient.get('push_follow_preference') && Device.where({user_id: opts.recipientId}).fetchAll()
-    })
+    .then(recipient => recipient.get('push_follow_preference') && Device.where({user_id: opts.recipientId}).fetchAll())
     .then(devices => {
-      sails.log.debug('then devices', devices)
       if (!devices || devices.length === 0) return
 
       return Comment.find(opts.commentId, {
@@ -191,7 +186,6 @@ module.exports = bookshelf.Model.extend({
         ]
       })
       .then(comment => {
-        sails.log.debug('then comment', comment)
         var post = comment.relations.post
         var community = post.relations.communities.first()
         var path = url.parse(Frontend.Route.post(post, community)).path
