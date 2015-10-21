@@ -64,7 +64,7 @@ module.exports = bookshelf.Model.extend({
     var postName, relatedUser
 
     if (version === 'mention') {
-      return commenter.get('name') + ' mentioned you in a comment'
+      return commenter.get('name') + ' mentioned you in a comment on'
     }
 
     if (post.isWelcome()) {
