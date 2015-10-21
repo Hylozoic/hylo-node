@@ -45,7 +45,11 @@ describe('Comment', () => {
       };
 
       var emailJob = function(userId, version) {
-        return _.find(kue.getJobs(), {data: {recipientId: userId, version: version}})
+        return _.find(kue.getJobs(), {data: {methodName: 'sendNotificationEmail', recipientId: userId, version: version}})
+      };
+
+      var pushNotificationJob = function(userId, version) {
+        return _.find(kue.getJobs(), {data: {methodName: 'sendPushNotification', recipientId: userId, version: version}})
       };
 
       return Comment.sendNotifications({commentId: comment.id}).then(() => {
@@ -56,13 +60,13 @@ describe('Comment', () => {
           expect(newNotificationCount(u2.id)).to.eventually.equal(1),
           expect(newNotificationCount(u3.id)).to.eventually.equal(1),
 
-          expect(kue.jobCount()).to.equal(3),
+          expect(kue.jobCount()).to.equal(6),
           expect(emailJob(u1.id, 'default')).to.exist,
           expect(emailJob(u2.id, 'mention')).to.exist,
           expect(emailJob(u3.id, 'mention')).to.exist,
-
-          expect(bookshelf.knex('push_notifications')
-            .whereIn('id', [d1.id, d2.id]).count()).to.eventually.deep.equal([{count: '2'}])
+          expect(pushNotificationJob(u1.id, 'default')).to.exist,
+          expect(pushNotificationJob(u2.id, 'mention')).to.exist,
+          expect(pushNotificationJob(u3.id, 'mention')).to.exist
         )
         .then(() => u4.load('followedPosts'))
         .then(() => {
