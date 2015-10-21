@@ -11,16 +11,16 @@ var request = require('request')
 var fs = require('fs')
 var csv = require('csv-parser')
 
-var createUser = function (row, options) {
-  return User.create(_.merge(row, {
-    community: options.community,
-    settings: {
-      digest_frequency: 'weekly'
-    }
-  }))
-}
-
 module.exports = {
+  createUser: function (row, options) {
+    return User.create(_.merge(row, {
+      community: options.community,
+      settings: {
+        digest_frequency: 'weekly'
+      }
+    }))
+  },
+
   runWithRemoteCSV: function (url, options) {
     return this.runWithCSVStream(request(url), options)
   },
@@ -30,7 +30,9 @@ module.exports = {
   },
 
   runWithCSVStream: function (stream, options) {
+    var self = this
     return stream.pipe(csv({headers: options.headers}))
-    .on('data', row => createUser(row, options))
+    .on('data', row => self.createUser(row, options))
   }
+
 }
