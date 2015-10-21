@@ -109,9 +109,7 @@ module.exports = bookshelf.Model.extend({
     }) // transaction
   },
 
-  sendNotificationEmail: function (opts) { return Promise.resolve() },
-
-  sendNotificationEmailReal: function (opts) {
+  sendNotificationEmail: function (opts) {
     // opts.version corresponds to names of versions in SendWithUs
 
     return Promise.join(
