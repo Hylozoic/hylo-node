@@ -31,13 +31,23 @@ var findPosts = function (req, res, opts) {
   .then(res.ok, res.serverError)
 }
 
-var newPostAttrs = function (userId, params) {
-  return _.merge(Post.newPostAttrs(), {
+var setupNewPostAttrs = function (userId, params) {
+  var attrs = _.merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
     description: RichText.sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
   }, _.pick(params, 'type', 'start_time', 'end_time'))
+
+  if (params.projectId) {
+    return Project.find(params.projectId)
+    .then(project => {
+      if (project && project.isDraft()) attrs.visibility = Post.Visibility.DRAFT_PROJECT
+      return attrs
+    })
+  }
+
+  return Promise.resolve(attrs)
 }
 
 var afterSavingPost = function (post, opts) {
@@ -47,22 +57,33 @@ var afterSavingPost = function (post, opts) {
 
   return Promise.all(_.flatten([
     // Attach post to communities
-    opts.communities.map(id => new Community({id: id}).posts().attach(post.id, _.pick(opts, 'transacting'))),
+    opts.communities.map(id =>
+      new Community({id: id}).posts().attach(post.id, _.pick(opts, 'transacting'))),
 
     // Add mentioned users and creator as followers
     post.addFollowers(followerIds, userId, _.pick(opts, 'transacting')),
 
     // create activity and send notification to all mentioned users except the creator
-    Promise.map(_.without(mentioned, userId), mentionedUserId => Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
+    Promise.map(_.without(mentioned, userId), mentionedUserId =>
+      Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
 
     // Add image, if any
-    (opts.imageUrl && Media.createImage(post.id, opts.imageUrl, opts.transacting)),
+    opts.imageUrl && Media.createImage(post.id, opts.imageUrl, opts.transacting),
 
-    (opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, opts.transacting))),
+    opts.docs && Promise.map(opts.docs, doc =>
+      Media.createDoc(post.id, doc, opts.transacting)),
 
-    Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id})
+    Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id}),
 
-  ])).then(() => mentioned)
+    opts.projectId && PostProjectMembership.create(
+      post.id, opts.projectId, _.pick(opts, 'transacting')),
+
+    opts.projectId && Queue.classMethod('Project', 'notifyAboutNewPost', {
+      projectId: opts.projectId,
+      postId: post.id,
+      exclude: mentioned
+    })
+  ]))
 }
 
 module.exports = {
@@ -145,17 +166,17 @@ module.exports = {
   },
 
   create: function (req, res) {
-    var attrs = newPostAttrs(req.session.userId, req.allParams())
-
-    return bookshelf.transaction(trx => {
-      return new Post(attrs).save(null, {transacting: trx})
-      .tap(post => afterSavingPost(post, {
-        communities: req.param('communities'),
-        imageUrl: req.param('imageUrl'),
-        docs: req.param('docs'),
-        transacting: trx
-      }))
-    })
+    return setupNewPostAttrs(req.session.userId, req.allParams())
+    .then(attrs => bookshelf.transaction(trx =>
+      new Post(attrs).save(null, {transacting: trx})
+      .tap(post =>
+        afterSavingPost(post, {
+          communities: req.param('communities'),
+          imageUrl: req.param('imageUrl'),
+          docs: req.param('docs'),
+          projectId: req.param('projectId'),
+          transacting: trx
+        }))))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
@@ -172,50 +193,17 @@ module.exports = {
     var allParams = _.assign(req.allParams(), {'type': replyData.type})
     allParams.name = allParams['subject']
     allParams.description = allParams['stripped-text']
-    var attrs = newPostAttrs(replyData.userId, allParams)
 
-    return bookshelf.transaction(trx => {
-      return new Post(attrs).save(null, {transacting: trx})
+    return setupNewPostAttrs(replyData.userId, allParams)
+    .then(attrs => bookshelf.transaction(trx =>
+      new Post(attrs).save(null, {transacting: trx})
       .tap(post => afterSavingPost(post, {
         communities: [replyData.communityId],
         imageUrl: req.param('imageUrl'),
         docs: req.param('docs'),
         transacting: trx
-      }))
-    })
+      }))))
     .then(() => res.ok({}), res.serverError)
-  },
-
-  createForProject: function (req, res) {
-    var attrs = newPostAttrs(req.session.userId, req.allParams())
-    var projectId = req.param('projectId')
-
-    return Project.find(projectId)
-    .tap(project => {
-      if (project.isDraft()) attrs.visibility = Post.Visibility.DRAFT_PROJECT
-    })
-    .then(project => bookshelf.transaction(trx => {
-      return new Post(attrs).save(null, {transacting: trx})
-      .tap(post => PostProjectMembership.create(post.id, projectId, {transacting: trx}))
-      .tap(post => afterSavingPost(post, {
-        communities: [req.param('communityId')],
-        imageUrl: req.param('imageUrl'),
-        docs: req.param('docs'),
-        transacting: trx
-      })
-      .then(mentioned => {
-        // Send notifications to project contributors
-        Queue.classMethod('Project', 'notifyAboutNewPost', {
-          projectId: projectId,
-          postId: post.id,
-          exclude: mentioned
-        })
-      }))
-    }))
-    .then(post => post.load(PostPresenter.relations(req.session.userId)))
-    .then(PostPresenter.present)
-    .then(res.ok)
-    .catch(res.serverError)
   },
 
   follow: function (req, res) {
