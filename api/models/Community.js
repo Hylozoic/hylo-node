@@ -58,6 +58,13 @@ module.exports = bookshelf.Model.extend({
 
   createStarterPosts: function (trx) {
     var self = this
+    var now = new Date()
+    var timeShift = {
+      chat: 0,
+      intention: 1,
+      offer: 2,
+      request: 3
+    }
     return Community.find('starter-posts', {withRelated: ['posts', 'posts.followers']})
     .tap(c => {
       if (!c) throw new Error('Starter posts community not found')
@@ -67,7 +74,8 @@ module.exports = bookshelf.Model.extend({
       if (post.get('type') === 'welcome') return
 
       var newPost = post.copy()
-      return newPost.save({}, {transacting: trx})
+      var time = new Date(now - timeShift[newPost.get('type')] * 1000)
+      return newPost.save({created_at: time, updated_at: time}, {transacting: trx})
       .then(() => Promise.all(_.flatten([
         self.posts().attach(newPost, {transacting: trx}),
         post.relations.followers.map(u =>
