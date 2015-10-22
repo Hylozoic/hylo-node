@@ -91,6 +91,15 @@ module.exports.routes = {
 
   'DELETE /noo/membership/:communityId':                  'CommunityController.leave',
 
+  // Logged-in moderator sees a list of join requests for communities she moderates.
+  'GET    /noo/community-join-request/for-moderator':                   'CommunityJoinRequestController.findForModerator',
+  // Logged-in user asks to join a community. Returns a join request id.
+  'POST   /noo/community-join-request/:communityId': 'CommunityJoinRequestController.create',
+  // Logged-in moderator accepts the request for a user to join a community.
+  'POST   /noo/community-join-request/accept/:joinRequestId': 'CommunityJoinRequestController.accept',
+  // Logged-in moderator accepts the request for a user to join a community.
+  'POST   /noo/community-join-request/reject/:joinRequestId': 'CommunityJoinRequestController.reject',
+
   'GET    /noo/activity':                                 'ActivityController.find',
   'POST   /noo/activity':                                 'ActivityController.update',
   'POST   /noo/activity/mark-all-read':                   'ActivityController.markAllRead',
