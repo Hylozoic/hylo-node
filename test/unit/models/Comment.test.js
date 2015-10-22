@@ -18,18 +18,18 @@ describe('Comment', () => {
       return Promise.join(
         community.save(), post.save(), u1.save(), u2.save(), u3.save(), u4.save()
       )
-        .then(() => Promise.join(
-            Follow.create(post.id, {followerId: u1.id}),
-            community.posts().attach(post.id)
-        ))
-        .then(f => {
-          comment = new Comment({
-            comment_text: format('<a data-user-id="%s"></a><a data-user-id="%s"></a>', u2.id, u3.id),
-            post_id: post.id,
-            user_id: u4.id
-          })
-          return comment.save()
+      .then(() => Promise.join(
+          Follow.create(post.id, {followerId: u1.id}),
+          community.posts().attach(post.id)
+      ))
+      .then(f => {
+        comment = new Comment({
+          comment_text: format('<a data-user-id="%s"></a><a data-user-id="%s"></a>', u2.id, u3.id),
+          post_id: post.id,
+          user_id: u4.id
         })
+        return comment.save()
+      })
     })
 
     it('works', () => {
