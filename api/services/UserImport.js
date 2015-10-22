@@ -5,6 +5,11 @@
     headers: ['name', 'email', 'avatar_url'],
     community: {id: 1}
   })
+  UserImport.runWithCSVFile('userdata.csv', {
+    headers: ['name', 'email'],
+    community: {id: 1121}
+  })
+
 */
 
 var request = require('request')
@@ -16,7 +21,8 @@ module.exports = {
     return User.create(_.merge(row, {
       community: options.community,
       settings: {
-        digest_frequency: 'weekly'
+        digest_frequency: 'weekly',
+        email_solicitation_preference: true
       }
     }))
   },
