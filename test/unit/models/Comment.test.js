@@ -60,10 +60,10 @@ describe('Comment', () => {
           expect(pushNotificationJob(u2.id, 'mention')).to.exist,
           expect(pushNotificationJob(u3.id, 'mention')).to.exist
         )
-          .then(() => u4.load('followedPosts'))
-          .then(() => {
-            expect(u4.relations.followedPosts.find({id: post.id})).to.exist
-          })
+        .then(() => u4.load('followedPosts'))
+        .then(() => {
+          expect(u4.relations.followedPosts.find({id: post.id})).to.exist
+        })
       })
     })
   })
