@@ -18,7 +18,7 @@ module.exports = {
       community: options.community,
       settings: {
         digest_frequency: 'weekly',
-        email_solicitation_preference: true
+        receives_email_prompts: true
       }
     }))
   },
