@@ -5,6 +5,7 @@
     headers: ['name', 'email', 'avatar_url'],
     community: {id: 1}
   })
+
 */
 
 var request = require('request')
@@ -16,7 +17,8 @@ module.exports = {
     return User.create(_.merge(row, {
       community: options.community,
       settings: {
-        digest_frequency: 'weekly'
+        digest_frequency: 'weekly',
+        receives_email_prompts: true
       }
     }))
   },

@@ -18,7 +18,7 @@ var jobs = {
 
     switch (now.day()) {
       case 0:
-        sails.log.debug('Sending Weekly Post Solicitation')
+        sails.log.debug('Sending Weekly Post Prompt')
         tasks.push(Solicitor.sendWeekly())
         break
       case 3:

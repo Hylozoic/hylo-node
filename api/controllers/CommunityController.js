@@ -207,6 +207,7 @@ module.exports = {
       'Through our communities, we can find everything we need. If we share ' +
       'with each other the unique gifts and intentions we each have, we can ' +
       "create extraordinary things. Let's get started!")
+    community.set('settings', {sends_email_prompts: true})
 
     return bookshelf.transaction(trx => {
       return community.save(null, {transacting: trx})
