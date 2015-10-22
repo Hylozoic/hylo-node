@@ -5,10 +5,6 @@
     headers: ['name', 'email', 'avatar_url'],
     community: {id: 1}
   })
-  UserImport.runWithCSVFile('userdata.csv', {
-    headers: ['name', 'email'],
-    community: {id: 1121}
-  })
 
 */
 
