@@ -80,7 +80,7 @@ module.exports = {
     return sendSimpleEmail(opts.email, 'tem_rkZiuPHBvLDFrZ6rv8VixH', opts.data)
   },
 
-  sendPostSolicitation: function (opts) {
+  sendPostPrompt: function (opts) {
     return sendSimpleEmail(opts.email, 'tem_GoeP9Ac54t66HjVUtKDwYM', opts.data)
   },
 
