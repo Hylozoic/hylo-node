@@ -73,8 +73,12 @@ module.exports = bookshelf.Model.extend({
                 commentId: comment.id,
                 version: 'mention'
               }),
+              Queue.classMethod('Comment', 'sendPushNotification', {
+                recipientId: userId,
+                commentId: comment.id,
+                version: 'mention'
+              }),
               Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx}),
-              Comment.sendPushNotification(userId, comment, 'mention', {transacting: trx}),
               User.incNewNotificationCount(userId, trx)
             )
           }),
@@ -88,8 +92,12 @@ module.exports = bookshelf.Model.extend({
                 commentId: comment.id,
                 version: 'default'
               }),
+              Queue.classMethod('Comment', 'sendPushNotification', {
+                recipientId: userId,
+                commentId: comment.id,
+                version: 'default'
+              }),
               Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
-              Comment.sendPushNotification(userId, comment, 'default', {transacting: trx}),
               User.incNewNotificationCount(userId, trx)
             )
           }),
@@ -164,20 +172,26 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  sendPushNotification: function (userId, comment, version, options) {
-    return User.where({id: userId})
-    .fetch()
-    .then(user => user.get('push_follow_preference') && Device.where({user_id: userId}).fetchAll(options))
+  sendPushNotification: function (opts) {
+    return User.find(opts.recipientId)
+    .then(recipient => recipient.get('push_follow_preference') && Device.where({user_id: opts.recipientId}).fetchAll())
     .then(devices => {
       if (!devices || devices.length === 0) return
 
-      var post = comment.relations.post
-      var community = post.relations.communities.first()
-      var path = url.parse(Frontend.Route.post(post, community)).path
-      var alertText = PushNotification.textForComment(comment, version, userId)
+      return Comment.find(opts.commentId, {
+        withRelated: [
+          'user', 'post', 'post.communities', 'post.creator', 'post.relatedUsers'
+        ]
+      })
+      .then(comment => {
+        var post = comment.relations.post
+        var community = post.relations.communities.first()
+        var path = url.parse(Frontend.Route.post(post, community)).path
+        var alertText = PushNotification.textForComment(comment, opts.version, opts.recipientId)
 
-      return Promise.map(devices.models, d => d.sendPushNotification(alertText, path, options))
+        return Promise.map(devices.models, d => d.sendPushNotification(alertText, path))
+      })
     })
   }
-
-})
+}
+)

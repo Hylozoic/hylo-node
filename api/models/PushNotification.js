@@ -25,10 +25,16 @@ module.exports = bookshelf.Model.extend({
   notificationForZP: function () {
     var notification
     if (this.getPlatform() === 'ios_macos') {
-      notification = {
-        alert: this.get('alert'),
-        info: {path: this.get('path')},
-        badge: this.get('badge_no')
+      if (this.get('path') === '') {
+        notification = {
+          badge: this.get('badge_no')
+        }
+      } else {
+        notification = {
+          alert: this.get('alert'),
+          info: {path: this.get('path')},
+          badge: this.get('badge_no')
+        }
       }
       return notification
     } else {
@@ -64,7 +70,7 @@ module.exports = bookshelf.Model.extend({
     var postName, relatedUser
 
     if (version === 'mention') {
-      return commenter.get('name') + ' mentioned you in a comment'
+      return commenter.get('name') + ' mentioned you in a comment on'
     }
 
     if (post.isWelcome()) {

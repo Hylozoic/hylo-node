@@ -150,6 +150,10 @@ module.exports = {
         ))
       }
 
+      if (attrs.new_notification_count === 0) {
+        promises.push(user.resetNotificationCount())
+      }
+
       var newPassword = req.param('password')
       if (newPassword) {
         promises.push(
