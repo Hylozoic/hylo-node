@@ -12,7 +12,9 @@ module.exports = bookshelf.Model.extend({
   create: function (postId, options) {
     return new EventResponse({
       post_id: postId,
-      user_id: options.responderId
+      user_id: options.responderId,
+      response: options.response,
+      created_at: new Date()
     }).save(null, _.pick(options, 'transacting'))
   }
 })
