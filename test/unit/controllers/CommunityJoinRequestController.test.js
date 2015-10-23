@@ -65,7 +65,7 @@ describe('CommunityJoinRequestController', function() {
   })
 
   it('creates requests that can be found', () => {
-    return CommunityJoinRequest.find(newUser.id, community.id)
+    return CommunityJoinRequest.findForUserAndCommunity(newUser.id, community.id)
     .then(cjr => {
       expect(cjr.community_id).to.equal(community.id)
       expect(cjr.user_id).to.equal(newUser.id)
@@ -97,7 +97,7 @@ describe('CommunityJoinRequestController', function() {
 
     // Expect that the join request is gone and the user is now
     // a member of the community.
-    .then(() => CommunityJoinRequest.find(newUser.id, community.id))
+    .then(() => CommunityJoinRequest.findForUserAndCommunity(newUser.id, community.id))
     .then(cjr => expect(cjr).to.equal(null))
     .then(() => Community.find(community.id, {withRelated: ['users']}))
     .then(c => {
@@ -117,7 +117,7 @@ describe('CommunityJoinRequestController', function() {
 
     // Expect that the join request is gone and the new user is still
     // not a member of the community.
-    .then(() => CommunityJoinRequest.find(newUser.id, community.id))
+    .then(() => CommunityJoinRequest.findForUserAndCommunity(newUser.id, community.id))
     .then(cjr => expect(cjr).to.equal(null))
     .then(() => Community.find(community.id, {withRelated: ['users']}))
     .then(c => {

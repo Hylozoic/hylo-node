@@ -31,7 +31,7 @@ module.exports = {
     var userId = req.session.userId
     var communityId = req.param('communityId')
     return createCommunityJoinRequest(userId, communityId)
-    .then(() => CommunityJoinRequest.find(userId, communityId))
+    .then(() => CommunityJoinRequest.findForUserAndCommunity(userId, communityId))
     .then(res.ok, res.serverError)
   },
 

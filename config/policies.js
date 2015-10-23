@@ -127,6 +127,13 @@ module.exports.policies = {
     toggleModeratorRole: ['sessionAuth', 'checkAndSetWritableProject']
   },
 
+  CommunityJoinRequestController: {
+    findForModerator: ['sessionAuth'],
+    create:           ['sessionAuth'],
+    accept:           ['sessionAuth', 'isModeratorForJoinRequest'],
+    reject:           ['sessionAuth', 'isModeratorForJoinRequest']
+  },
+
   DeviceController: {
     create:           ['sessionAuth'],
     destroy:          ['sessionAuth'],

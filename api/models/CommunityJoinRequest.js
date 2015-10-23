@@ -11,7 +11,7 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Community, 'community_id')
   },
 }, {
-  find: function(userId, communityId, options) {
+  findForUserAndCommunity: function(userId, communityId, options) {
     if (!Number(userId)) {
       throw 'userId ' + userId + ' is not a positive integer in CommunityJoinRequest.find'
     }
