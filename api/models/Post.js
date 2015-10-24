@@ -49,8 +49,7 @@ module.exports = bookshelf.Model.extend({
     if (!opts) opts = {}
 
     return Promise.map(userIds, function (followerUserId) {
-      return Follow.create(postId, {
-        followerId: followerUserId,
+      return Follow.create(followerUserId, postId, {
         addedById: addingUserId,
         transacting: opts.transacting
       }).tap(function (follow) {
@@ -265,7 +264,7 @@ module.exports = bookshelf.Model.extend({
       .tap(post => Promise.join(
           post.relatedUsers().attach(userId, {transacting: trx}),
           post.communities().attach(communityId, {transacting: trx}),
-          Follow.create(post.id, {followerId: userId, transacting: trx})
+          Follow.create(userId, post.id, {transacting: trx})
       ))
   },
 

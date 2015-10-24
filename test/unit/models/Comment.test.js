@@ -19,7 +19,7 @@ describe('Comment', () => {
         community.save(), post.save(), u1.save(), u2.save(), u3.save(), u4.save()
       )
       .then(() => Promise.join(
-          Follow.create(post.id, {followerId: u1.id}),
+          Follow.create(u1.id, post.id),
           community.posts().attach(post.id)
       ))
       .then(f => {

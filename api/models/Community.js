@@ -79,10 +79,7 @@ module.exports = bookshelf.Model.extend({
       .then(() => Promise.all(_.flatten([
         self.posts().attach(newPost, {transacting: trx}),
         post.relations.followers.map(u =>
-          Follow.create(newPost.id, {
-            followerId: u.id,
-            transacting: trx
-          }))
+          Follow.create(u.id, newPost.id, {transacting: trx}))
       ])))
     }))
   }
