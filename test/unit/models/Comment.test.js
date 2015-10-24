@@ -1,4 +1,4 @@
-var setup = require(require('root-path')('test/setup'))
+require(require('root-path')('test/setup'))
 var kue = require('kue')
 
 describe('Comment', () => {

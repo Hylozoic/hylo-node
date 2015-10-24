@@ -93,6 +93,12 @@ describe('Post', function () {
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
+
+    it('is true if the user is following the post', () => {
+      return Follow.create(user.id, post.id)
+      .then(() => Post.isVisibleToUser(post.id, user.id))
+      .then(visible => expect(visible).to.be.true)
+    })
   })
 
   describe('#updateCommentCount', () => {

@@ -17,5 +17,12 @@ module.exports = bookshelf.Model.extend({
       user_id: userId,
       added_by_id: options.addedById
     }).save(null, _.pick(options, 'transacting'))
+  },
+
+  exists: function (userId, postId) {
+    return Follow.query()
+    .where({user_id: userId, post_id: postId})
+    .count()
+    .then(rows => rows[0].count >= 1)
   }
 })

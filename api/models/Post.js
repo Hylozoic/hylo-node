@@ -130,22 +130,25 @@ module.exports = bookshelf.Model.extend({
   isVisibleToUser: function (postId, userId) {
     var pcids
 
-    // do the user and post share...
+    // is the user...
     return Promise.join(
       PostMembership.query().where({post_id: postId}),
       Membership.query().where({user_id: userId})
     )
     .spread((postMships, userMships) => {
-      // a community?
+      // in one of the post's communities?
       pcids = postMships.map(m => m.community_id)
       return _.intersection(pcids, userMships.map(m => m.community_id)).length > 0
     })
     .then(success =>
-      // or a project?
+      // or following the post?
+      success || Follow.exists(userId, postId))
+    .then(success =>
+      // or in the post's project?
       success || PostProjectMembership.where({post_id: postId}).fetch()
       .then(ppm => ppm && Project.isVisibleToUser(ppm.get('project_id'), userId)))
     .then(success =>
-      // or a network?
+      // or in one of the post's communities' networks?
       success || Community.query().whereIn('id', pcids).pluck('network_id')
       .then(networkIds =>
         Promise.map(_.compact(_.uniq(networkIds)), id =>
