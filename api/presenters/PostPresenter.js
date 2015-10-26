@@ -1,5 +1,6 @@
 var postRelations = (userId, opts) => _.filter([
   {creator: qb => qb.column('id', 'name', 'avatar_url')},
+  {'responders': qb => qb.column('users.id', 'name', 'avatar_url')},
   {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
   'contributions',
   {'contributions.user': qb => qb.column('id', 'name', 'avatar_url')},

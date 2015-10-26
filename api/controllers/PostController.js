@@ -7,6 +7,9 @@ var sortColumns = {
 }
 
 var findPosts = function (req, res, opts) {
+
+  sails.log.debug('findPosts: ', opts)
+
   var params = _.merge(
     _.pick(req.allParams(), [
       'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
