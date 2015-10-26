@@ -1,10 +1,10 @@
 var postRelations = (userId, opts) => _.filter([
   {creator: qb => qb.column('id', 'name', 'avatar_url')},
-  {'responders': qb => qb.column('users.id', 'name', 'avatar_url')},
   {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
   'contributions',
   {'contributions.user': qb => qb.column('id', 'name', 'avatar_url')},
   {'followers': qb => qb.column('users.id', 'name', 'avatar_url')},
+  {'responders': qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
   'media',
   (opts && opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
   {votes: qb => { // only the user's own vote
@@ -35,6 +35,7 @@ var postAttributes = post => {
       communities: post.relations.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),
       contributors: post.relations.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers: post.relations.followers.map(u => u.pick('id', 'name', 'avatar_url')),
+      responders: post.relations.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
       media: post.relations.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url')),
       myVote: post.relations.votes.length > 0,
       numComments: post.get('num_comments'),
