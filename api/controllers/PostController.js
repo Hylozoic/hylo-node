@@ -361,8 +361,7 @@ module.exports = {
     }).fetch()
     .then(eventResponse => {
       if (eventResponse) {
-        eventResponse.set('response', response)
-        return eventResponse.save()
+        return eventResponse.save({response: response}, {patch: true})
       } else {
         return EventResponse.create(post.id, {responderId: userId, response: response})
       }
