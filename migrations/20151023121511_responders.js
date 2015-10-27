@@ -6,6 +6,7 @@ exports.up = function (knex, Promise) {
     table.bigInteger('user_id').references('id').inTable('users')
     table.bigInteger('post_id').references('id').inTable('post')
     table.string('response')
+    table.unique(['user_id', 'post_id'])
     table.timestamps()
   })
 }

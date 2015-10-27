@@ -358,19 +358,11 @@ module.exports = {
     EventResponse.query(qb => {
       qb.where({user_id: userId, post_id: post.id})
       qb.orderBy('created_at', 'desc')
-      return qb
-    }).fetchAll()
-    .then(eventResponses => {
-      if (eventResponses.length > 0) {
-        var lastResponse = eventResponses.models[0].get('response')
-        return Promise.map(eventResponses.models, eventResponse => { eventResponse.destroy() })
-        .then(() => {
-          if (response !== lastResponse) {
-            return EventResponse.create(post.id, {responderId: userId, response: response})
-          } else {
-            return Promise.resolve()
-          }
-        })
+    }).fetch()
+    .then(eventResponse => {
+      if (eventResponse) {
+        eventResponse.set('response', response)
+        return eventResponse.save()
       } else {
         return EventResponse.create(post.id, {responderId: userId, response: response})
       }

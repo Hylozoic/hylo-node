@@ -1265,6 +1265,14 @@ ALTER TABLE ONLY event_responses
 
 
 --
+-- Name: event_responses_user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY event_responses
+    ADD CONSTRAINT event_responses_user_id_post_id_unique UNIQUE (user_id, post_id);
+
+
+--
 -- Name: knex_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
