@@ -36,8 +36,7 @@ var generateMergeQueries = function(primaryUserId, secondaryUserId, knex) {
     ['thank_you',        'user_id'],
     ['thank_you',        'thanked_by_id'],
     ['community_invite', 'invited_by_id'],
-    ['community_invite', 'used_by_id'],
-    ['notification',     'actor_id']
+    ['community_invite', 'used_by_id']
   ].forEach(function(args) {
     updates.push(knex.raw(format('update %s set %s = ? where %s = ?', args[0], args[1], args[1]), ps));
   });
