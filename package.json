@@ -3,8 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "engines": {
-    "node": "0.12.6",
-    "npm": "2.7.5"
+    "node": "0.12.7",
+    "npm": "2.14.7"
   },
   "description": "a Sails application",
   "keywords": [],
@@ -12,9 +12,8 @@
     "chai": "~2.3",
     "chai-as-promised": "5.0.0",
     "chai-spies": "^0.5.1",
-    "istanbul-harmony": "^0.3.12",
-    "mocha": "^2.2.4",
-    "sqlite3": "^3.0.2"
+    "istanbul": "^0.4.0",
+    "mocha": "^2.2.4"
   },
   "dependencies": {
     "analytics-node": "^1.2.0",
@@ -24,7 +23,7 @@
     "bcrypt": "^0.8.2",
     "bluebird": "^2.3.11",
     "bookshelf": "^0.7.9",
-    "cheerio": "0.18.0",
+    "cheerio": "0.19.0",
     "colors": "^1.0.3",
     "connect-redis": "1.4.5",
     "cookie": "0.1.2",
