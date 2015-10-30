@@ -92,6 +92,7 @@ module.exports.policies = {
     createForProject: ['sessionAuth', 'checkAndSetProject', 'canCreateProjectPost'],
     update:           ['sessionAuth', 'checkAndSetWritablePost'],
     follow:           ['sessionAuth', 'checkAndSetPost'],
+    respond:          ['sessionAuth', 'checkAndSetPost'],
     findFollowed:     ['sessionAuth', 'isSelf'],
     findAllForUser:   ['sessionAuth', 'isSelf'],
     fulfill:          ['sessionAuth', 'checkAndSetOwnPost'],

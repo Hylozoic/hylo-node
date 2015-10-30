@@ -56,6 +56,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Post)
   },
 
+  eventsRespondedTo: function () {
+    return this.belongsToMany(Post).through(EventResponse)
+  },
+
   sentInvitations: function () {
     return this.hasMany(Invitation, 'invited_by_id')
   },

@@ -348,6 +348,29 @@ module.exports = {
       )
     }))
     .then(() => res.ok({}), res.serverError)
+  },
+
+  respond: function (req, res) {
+    var userId = req.session.userId
+    var post = res.locals.post
+    var response = req.param('response')
+
+    EventResponse.query(qb => {
+      qb.where({user_id: userId, post_id: post.id})
+      qb.orderBy('created_at', 'desc')
+    }).fetch()
+    .then(eventResponse => {
+      if (eventResponse) {
+        if (eventResponse.get('response') === response) {
+          return eventResponse.destroy()
+        } else {
+          return eventResponse.save({response: response}, {patch: true})
+        }
+      } else {
+        return EventResponse.create(post.id, {responderId: userId, response: response})
+      }
+    })
+    .then(() => res.ok({}), res.serverError)
   }
 
 }
