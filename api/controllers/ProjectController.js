@@ -7,7 +7,7 @@ var makeSlug = function(title) {
 };
 
 var editableAttributes = [
-  'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility'
+  'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility', 'location'
 ];
 
 var projectRelations = [
