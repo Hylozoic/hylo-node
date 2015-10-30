@@ -37,7 +37,7 @@ var setupNewPostAttrs = function (userId, params) {
     description: RichText.sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
-  }, _.pick(params, 'type', 'start_time', 'end_time'))
+  }, _.pick(params, 'type', 'start_time', 'end_time', 'location'))
 
   if (params.projectId) {
     return Project.find(params.projectId)
@@ -226,8 +226,9 @@ module.exports = {
   update: function (req, res) {
     var post = res.locals.post
     var params = req.allParams()
+
     var attrs = _.extend(
-      _.pick(params, 'name', 'description', 'type', 'start_time', 'end_time'),
+      _.pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
       {
         edited: true,
         edited_timestamp: new Date(),
