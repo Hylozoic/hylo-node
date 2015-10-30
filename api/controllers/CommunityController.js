@@ -60,7 +60,7 @@ module.exports = {
   invite: function (req, res) {
     return Community.find(req.param('communityId'))
     .then(function (community) {
-      var emails = (req.param('emails') || '').split(',').map(function (email) {
+      var emails = (req.param('emails') || '').split(/,|\n/).map(function (email) {
         var trimmed = email.trim()
         var matchLongFormat = trimmed.match(/.*<(.*)>/)
 
