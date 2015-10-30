@@ -16,7 +16,7 @@ module.exports = {
     var membership = res.locals.membership
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings'))
+    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings', 'location'))
     .tap(data => {
       var network = community.relations.network
       if (network) data.network = network.pick('id', 'name', 'slug')
