@@ -122,6 +122,7 @@ module.exports = bookshelf.Model.extend({
     )
     .spread(function (recipient, comment) {
       if (!comment) return
+      if (!recipient.get('send_email_preference')) return
 
       var post = comment.relations.post
       var commenter = comment.relations.user
@@ -193,5 +194,4 @@ module.exports = bookshelf.Model.extend({
       })
     })
   }
-}
-)
+})
