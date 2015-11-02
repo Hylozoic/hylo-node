@@ -43,7 +43,8 @@ describe('CommunityController', () => {
           avatar_url: null,
           banner_url: null,
           description: null,
-          settings: {}
+          settings: {},
+          location: null
         })
       })
     })
