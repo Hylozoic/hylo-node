@@ -116,7 +116,8 @@ CREATE TABLE community (
     welcome_message text,
     settings jsonb DEFAULT '{}'::jsonb,
     default_public_content boolean DEFAULT false,
-    network_id bigint
+    network_id bigint,
+    location character varying(255)
 );
 
 
@@ -550,7 +551,8 @@ CREATE TABLE post (
     edited_timestamp date,
     visibility integer DEFAULT 0,
     start_time timestamp with time zone,
-    end_time timestamp with time zone
+    end_time timestamp with time zone,
+    location character varying(255)
 );
 
 
@@ -691,7 +693,8 @@ CREATE TABLE projects (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     slug character varying(255) NOT NULL,
-    thumbnail_url character varying(255)
+    thumbnail_url character varying(255),
+    location character varying(255)
 );
 
 

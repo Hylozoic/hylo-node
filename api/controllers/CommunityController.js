@@ -16,7 +16,7 @@ module.exports = {
     var membership = res.locals.membership
 
     return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings'))
+    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings', 'location'))
     .tap(data => {
       var network = community.relations.network
       if (network) data.network = network.pick('id', 'name', 'slug')
@@ -42,7 +42,7 @@ module.exports = {
   update: function (req, res) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code'
+      'welcome_message', 'leader_id', 'beta_access_code', 'location'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
     var saneAttrs = _.clone(attributes)
@@ -193,9 +193,10 @@ module.exports = {
   },
 
   create: function (req, res) {
+
     var attrs = _.pick(req.allParams(),
       'name', 'description', 'slug', 'category',
-      'beta_access_code', 'banner_url', 'avatar_url')
+      'beta_access_code', 'banner_url', 'avatar_url', 'location')
 
     var community = new Community(_.merge(attrs, {
       created_at: new Date(),
