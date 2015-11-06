@@ -9,7 +9,7 @@ var sanitize = function(text) {
   var strippedText = text.replace(/<p>&nbsp;|<p>&NBSP;/g, "<p>");
 
   var cleanText = sanitizeHtml(strippedText, {
-    allowedTags: ['a', 'p', 'br'],
+    allowedTags: ['a', 'p', 'br', 'ul', 'ol', 'li', 'strong', 'em'],
     allowedAttributes: {
       'a': ['href', 'data-user-id']
     },
