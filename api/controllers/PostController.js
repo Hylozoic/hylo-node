@@ -167,6 +167,9 @@ module.exports = {
 
   create: function (req, res) {
     return setupNewPostAttrs(req.session.userId, req.allParams())
+    .tap(attrs => {
+      if (!attrs.name) throw new Error("title can't be blank")
+    })
     .then(attrs => bookshelf.transaction(trx =>
       new Post(attrs).save(null, {transacting: trx})
       .tap(post =>
@@ -180,7 +183,14 @@ module.exports = {
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
-    .catch(res.serverError)
+    .catch(err => {
+      if (err.message === "title can't be blank") {
+        res.status(422)
+        res.send(err.message)
+      } else {
+        res.serverError(err)
+      }
+    })
   },
 
   createFromEmail: function (req, res) {
