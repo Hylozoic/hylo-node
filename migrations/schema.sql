@@ -1000,9 +1000,9 @@ CREATE TABLE users (
     extra_info text,
     new_notification_count integer DEFAULT 0,
     updated_at timestamp with time zone,
+    settings jsonb DEFAULT '{}'::jsonb,
     push_follow_preference boolean DEFAULT true,
-    push_new_post_preference boolean DEFAULT true,
-    settings jsonb DEFAULT '{}'::jsonb
+    push_new_post_preference boolean DEFAULT true
 );
 
 
@@ -1497,6 +1497,14 @@ ALTER TABLE ONLY push_notifications
 
 ALTER TABLE ONLY tours
     ADD CONSTRAINT tours_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: unique_beta_access_code; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY community
+    ADD CONSTRAINT unique_beta_access_code UNIQUE (beta_access_code);
 
 
 --
