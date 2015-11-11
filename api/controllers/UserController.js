@@ -171,7 +171,8 @@ module.exports = {
       res.ok({})
     }).catch(function (err) {
       if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
-        res.badRequest(req.__(err.message))
+        res.statusCode = 422
+        res.send(req.__(err.message))
       } else {
         res.serverError(err)
       }

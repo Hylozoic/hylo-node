@@ -241,9 +241,7 @@ module.exports = bookshelf.Model.extend({
     return bookshelf.knex('users')
     .where('email', email).andWhere('email', '!=', notEmail)
     .count('*')
-    .then(function (result) {
-      return result[0].count === 0
-    })
+    .then(rows => Number(rows[0].count) === 0)
   },
 
   incNewNotificationCount: function (userId, transaction) {
