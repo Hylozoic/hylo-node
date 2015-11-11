@@ -129,6 +129,11 @@ module.exports = {
       newUserActivity: newUserActivity(1, 'month')
     })
     .then(res.ok, res.serverError);
-  }
+  },
 
+  loginAsUser: function (req, res) {
+    return User.find(req.param('userId'))
+    .then(user => UserSession.login(req, user, 'admin'))
+    .then(() => res.redirect('/'))
+  }
 };
