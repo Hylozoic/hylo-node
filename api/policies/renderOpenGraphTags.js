@@ -3,7 +3,7 @@ var truncate = require('html-truncate')
 
 module.exports = (req, res, next) => {
   var url = require('url').parse(req.url, true)
-  var fullUrl = req.baseUrl + req.originalUrl
+  var fullUrl = req.headers['referer'] || req.baseUrl + req.originalUrl
   if (!isBot(url, req.headers['user-agent'])) return next()
   matchingProject(url)
     .then(project => project && renderProject(project, fullUrl, res))
@@ -50,6 +50,7 @@ var renderProject = function (project, url, res) {
 var renderPost = function (post, url, res) {
   var models = post.relations.media.models
   var image = _.find(models || [], m => m.get('type') === 'image')
+
   res.render('openGraphTags', {
     title: post.get('name'),
     description: truncate(striptags(post.get('description') || ''), 140),
