@@ -54,6 +54,7 @@ module.exports = {
         serverError: chai.spy(function (err) { throw err }),
         badRequest: chai.spy(function (data) { self.body = data }),
         status: chai.spy(function () { return this }),
+        send: chai.spy(function (data) { self.body = data }),
         redirect: chai.spy(function (url) { self.redirected = url }),
         locals: {}
       }

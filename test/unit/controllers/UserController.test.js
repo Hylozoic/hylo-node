@@ -107,26 +107,20 @@ describe('UserController', function () {
       it('halts on invalid email', function () {
         _.extend(req.params, {userId: u1.id, email: 'lol'})
 
-        res.badRequest = spy(function (message) {
-          expect(message).to.equal(sails.__('invalid-email'))
-        })
-
         return UserController.update(req, res)
         .then(() => {
-          expect(res.badRequest).to.have.been.called()
+          expect(res.statusCode).to.equal(422)
+          expect(res.body).to.equal(sails.__('invalid-email'))
         })
       })
 
       it('halts on duplicate email', function () {
         _.extend(req.params, {userId: u1.id, email: u2.get('email')})
 
-        res.badRequest = spy(function (message) {
-          expect(message).to.equal(sails.__('duplicate-email'))
-        })
-
         return UserController.update(req, res)
         .then(() => {
-          expect(res.badRequest).to.have.been.called()
+          expect(res.statusCode).to.equal(422)
+          expect(res.body).to.equal(sails.__('duplicate-email'))
         })
       })
 
