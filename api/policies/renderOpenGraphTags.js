@@ -3,7 +3,6 @@ var truncate = require('html-truncate')
 
 module.exports = (req, res, next) => {
   var url = require('url').parse(req.url, true)
-  var fullUrl = req.headers['referer'] || req.baseUrl + req.originalUrl
   if (!isBot(url, req.headers['user-agent'])) return next()
   matchingProject(url)
     .then(project => project && renderProject(project, fullUrl, res))
@@ -37,25 +36,23 @@ var matchingPost = Promise.method(url => {
   return Post.find(match[1], {withRelated: 'media'}).then(post => post && post.isPublic() && post)
 })
 
-var renderProject = function (project, url, res) {
+var renderProject = function (project, res) {
   res.render('openGraphTags', {
     title: project.get('title'),
     description: project.get('intention'),
-    image: project.get('image_url') || project.get('thumbnail_url'),
-    url: url
+    image: project.get('image_url') || project.get('thumbnail_url')
   })
   return true
 }
 
-var renderPost = function (post, url, res) {
+var renderPost = function (post, res) {
   var models = post.relations.media.models
   var image = _.find(models || [], m => m.get('type') === 'image')
 
   res.render('openGraphTags', {
     title: post.get('name'),
     description: truncate(striptags(post.get('description') || ''), 140),
-    image: image ? image.get('url') : '',
-    url: url
+    image: image ? image.get('url') : ''
   })
   return true
 }
