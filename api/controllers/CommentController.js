@@ -57,6 +57,7 @@ module.exports = {
 
     return Post.find(replyData.postId)
     .then(post => {
+      if (!post) return
       Analytics.track({
         userId: replyData.userId,
         event: 'Post: Comment: Add by Email',
