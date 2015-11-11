@@ -238,10 +238,13 @@ module.exports = bookshelf.Model.extend({
 
   isEmailUnique: function (email, notEmail) {
     // FIXME there should be a better way to do this
-    return bookshelf.knex('users')
-    .where('email', email).andWhere('email', '!=', notEmail)
+    var query = bookshelf.knex('users')
+    .where('email', email)
     .count('*')
-    .then(rows => Number(rows[0].count) === 0)
+
+    if (notEmail) query = query.andWhere('email', '!=', notEmail)
+
+    return query.then(rows => Number(rows[0].count) === 0)
   },
 
   incNewNotificationCount: function (userId, transaction) {
