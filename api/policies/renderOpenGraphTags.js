@@ -5,9 +5,9 @@ module.exports = (req, res, next) => {
   var url = require('url').parse(req.url, true)
   if (!isBot(url, req.headers['user-agent'])) return next()
   matchingProject(url)
-    .then(project => project && renderProject(project, fullUrl, res))
-    .then(done => done || matchingPost(url).then(post => post && renderPost(post, fullUrl, res)))
-    .then(done => done || next())
+  .then(project => project && renderProject(project, res))
+  .then(done => done || matchingPost(url).then(post => post && renderPost(post, res)))
+  .then(done => done || next())
 }
 
 var isBot = function (url, userAgent) {
