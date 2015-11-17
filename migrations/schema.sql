@@ -399,7 +399,10 @@ CREATE TABLE media (
     thumbnail_url character varying(255),
     created_at timestamp without time zone,
     post_id bigint,
-    name character varying(255)
+    name character varying(255),
+    project_id bigint,
+    width integer,
+    height integer
 );
 
 
@@ -535,8 +538,6 @@ CREATE TABLE post (
     name text,
     description text,
     type character varying(255),
-    image_url character varying(255),
-    thumbnail_image_url character varying(255),
     created_at timestamp without time zone,
     user_id bigint,
     num_votes integer,
@@ -2078,6 +2079,14 @@ ALTER TABLE ONLY vote
 
 ALTER TABLE ONLY vote
     ADD CONSTRAINT fk_vote_user_13 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: media_project_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY media
+    ADD CONSTRAINT media_project_id_foreign FOREIGN KEY (project_id) REFERENCES projects(id);
 
 
 --
