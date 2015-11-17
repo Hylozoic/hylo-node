@@ -400,7 +400,9 @@ CREATE TABLE media (
     created_at timestamp without time zone,
     post_id bigint,
     name character varying(255),
-    project_id bigint
+    project_id bigint,
+    width integer,
+    height integer
 );
 
 
