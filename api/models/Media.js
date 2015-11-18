@@ -1,3 +1,5 @@
+var GetImageSize = require('../services/GetImageSize')
+
 module.exports = bookshelf.Model.extend({
   tableName: 'media',
 
@@ -14,12 +16,12 @@ module.exports = bookshelf.Model.extend({
   create: function (opts) {
     return new Media(_.merge({
       created_at: new Date()
-    }, _.pick(opts, 'post_id', 'project_id', 'url', 'type', 'name', 'thumbnail_url')))
+    }, _.pick(opts, 'post_id', 'project_id', 'url', 'type', 'name', 'thumbnail_url', 'width', 'height')))
     .save(null, _.pick(opts, 'transacting'))
   },
 
   createImageForPost: function (postId, url, trx) {
-    return Media.create({
+    return Media.createAddingWidthAndHeight({
       post_id: postId,
       url: url,
       type: 'image',
@@ -28,7 +30,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   createImageForProject: function (projectId, url, trx) {
-    return Media.create({
+    return Media.createAddingWidthAndHeight({
       project_id: projectId,
       url: url,
       type: 'image',
@@ -37,13 +39,33 @@ module.exports = bookshelf.Model.extend({
   },
 
   createVideoForProject: function (projectId, video_url, thumbnail_url, trx) {
-    return Media.create({
+    return Media.createAddingWidthAndHeight({
       project_id: projectId,
       url: video_url,
       thumbnail_url: thumbnail_url,
       type: 'video',
       transacting: trx
     })
+  },
+
+  createAddingWidthAndHeight: function (attrs) {
+    var image_url
+    if (attrs['type'] === 'image') {
+      image_url = attrs['url']
+    } else if (attrs['type'] === 'video') {
+      image_url = attrs['thumbnail_url']
+    }
+    if (image_url) {
+      sails.log.debug('image_url', image_url)
+      sails.log.debug('attrs', attrs)
+      return GetImageSize(image_url)
+      .then(dimensions => {
+        attrs = _.extend(attrs, {width: dimensions.width, height: dimensions.height})
+        return Media.create(attrs)
+      })
+    } else {
+      return Media.create(attrs)
+    }
   },
 
   createDoc: function (postId, doc, trx) {
