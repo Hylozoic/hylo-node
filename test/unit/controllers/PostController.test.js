@@ -209,7 +209,7 @@ describe('PostController', () => {
     describe('with an existing image', () => {
       var originalImageId
       beforeEach(() =>
-        Media.createImage(post.id, 'http://foo.com/bar.png')
+        Media.createImageForPost(post.id, 'http://foo.com/bar.png')
         .tap(image => originalImageId = image.id))
 
       it('removes the image', () => {

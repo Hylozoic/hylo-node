@@ -16,13 +16,35 @@ var projectRelations = [
   {posts: qb => {
     qb.column('post.id')
     qb.where('type', Post.Type.REQUEST)
-  }}
+  }},
+  'media'
 ]
 
-var projectAttributes = project => _.extend(project.toJSON(), {
-  contributor_count: project.relations.contributors.length,
-  open_request_count: project.relations.posts.length
-})
+var projectAttributes = function (project) {
+  var attrs = project.toJSON()
+  attrs = _.extend(attrs, {
+    contributor_count: project.relations.contributors.length,
+    open_request_count: project.relations.posts.length
+  })
+  attrs = _.extend(attrs, mediaAttributes(project))
+  return attrs
+}
+
+var mediaAttributes = function (project) {
+  var attrs = project.toJSON()
+  var media = project.relations.media.models[0]
+  if (media && media.get('type') === 'video') {
+    attrs = _.extend(attrs, {
+      video_url: media.get('url'),
+      thumbnail_url: media.get('thumbnail_url')
+    })
+  } else if (media && media.get('type') === 'image') {
+    attrs = _.extend(attrs, {
+      image_url: media.get('url')
+    })
+  }
+  return attrs
+}
 
 var maybeGenerateVideoThumbnail = Promise.method(function (attrs) {
   if (attrs.video_url) {
@@ -92,12 +114,13 @@ module.exports = {
 
   findOne: function (req, res) {
     Project.find(res.locals.project.id, {withRelated: [
-        {user: qb => qb.column('id', 'name', 'avatar_url')},
-        {community: qb => qb.column('id', 'name', 'avatar_url', 'slug')},
-        {memberships: qb => qb.where('user_id', req.session.userId)},
-        {posts: qb => qb.where({fulfilled_at: null, active: true})}
+      {user: qb => qb.column('id', 'name', 'avatar_url')},
+      {community: qb => qb.column('id', 'name', 'avatar_url', 'slug')},
+      {memberships: qb => qb.where('user_id', req.session.userId)},
+      {posts: qb => qb.where({fulfilled_at: null, active: true})},
+      'media'
     ]})
-    .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'posts', 'memberships'), {
+    .then(project => res.ok(_.merge(_.omit(mediaAttributes(project), 'posts', 'memberships'), {
       membership: project.relations.memberships.first(),
       open_request_count: project.relations.posts.length
     })))

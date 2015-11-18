@@ -276,7 +276,7 @@ module.exports = {
             return media.save({url: params.imageUrl}, {patch: true, transacting: trx})
           }
         } else if (params.imageUrl) { // create new media
-          return Media.createImage(post.id, params.imageUrl, trx)
+          return Media.createImageForPost(post.id, params.imageUrl, trx)
         }
       })
       .tap(() => {

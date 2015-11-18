@@ -23,6 +23,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(ProjectMembership);
   },
 
+  media: function () {
+    return this.hasMany(Media)
+  },
+
   isDraft: function() {
     return !this.get('published_at');
   },
