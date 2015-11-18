@@ -56,8 +56,6 @@ module.exports = bookshelf.Model.extend({
       image_url = attrs['thumbnail_url']
     }
     if (image_url) {
-      sails.log.debug('image_url', image_url)
-      sails.log.debug('attrs', attrs)
       return GetImageSize(image_url)
       .then(dimensions => {
         attrs = _.extend(attrs, {width: dimensions.width, height: dimensions.height})
