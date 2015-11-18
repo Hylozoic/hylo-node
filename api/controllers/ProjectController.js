@@ -46,12 +46,19 @@ var mediaAttributes = function (project) {
   return attrs
 }
 
-var maybeGenerateVideoThumbnail = Promise.method(function (attrs) {
-  if (attrs.video_url) {
-    return Project.generateThumbnailUrl(attrs.video_url)
-      .then(url => attrs.thumbnail_url = url)
-  }
-})
+var createMedia = function (project, attrs) {
+  return Media.where('project_id', '=', project.id)
+  .fetchAll()
+  .then(media => Promise.map(media.models, medium => medium.destroy()))
+  .then(() => {
+    if (attrs.video_url) {
+      return Project.generateThumbnailUrl(attrs.video_url)
+        .then(thumbnail_url => Media.createVideoForProject(project.id, attrs.video_url, thumbnail_url))
+    } else if (attrs.image_url) {
+      return Media.createImageForProject(project.id, attrs.image_url)
+    }
+  })
+}
 
 var searchForProjects = function (res, opts) {
   Search.forProjects(opts)
@@ -73,11 +80,12 @@ module.exports = {
       }
     )
 
-    maybeGenerateVideoThumbnail(attrs)
-      .then(() => new Project(attrs))
-      .then(project => project.save())
-      .then(project => res.ok(_.pick(project.toJSON(), 'id', 'slug')))
-      .catch(res.serverError)
+    return Promise.resolve()
+    .then(() => new Project(attrs))
+    .then(project => project.save())
+    .tap(project => createMedia(project, attrs))
+    .then(project => res.ok(_.pick(project.toJSON(), 'id', 'slug')))
+    .catch(res.serverError)
   },
 
   update: function (req, res) {
@@ -94,7 +102,7 @@ module.exports = {
       updatedAttrs.slug = makeSlug(updatedAttrs.title)
     }
 
-    maybeGenerateVideoThumbnail(updatedAttrs)
+    createMedia(project, updatedAttrs)
       .then(() => {
         return bookshelf.transaction(trx => {
           return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
