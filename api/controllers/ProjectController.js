@@ -5,8 +5,12 @@ var makeSlug = function (title) {
   return slug(title, {mode: 'rfc3986'})
 }
 
-var editableAttributes = [
-  'community_id', 'title', 'intention', 'details', 'video_url', 'image_url', 'visibility', 'location'
+var editableAttributeNames = [
+  'community_id', 'title', 'intention', 'details', 'visibility', 'location'
+]
+
+var mediaAttributeNames = [
+  'image_url', 'thumbnail_url', 'video_url'
 ]
 
 var projectRelations = [
@@ -32,16 +36,19 @@ var projectAttributes = function (project) {
 
 var mediaAttributes = function (project) {
   var attrs = project.toJSON()
-  var media = project.relations.media.models[0]
-  if (media && media.get('type') === 'video') {
-    attrs = _.extend(attrs, {
-      video_url: media.get('url'),
-      thumbnail_url: media.get('thumbnail_url')
-    })
-  } else if (media && media.get('type') === 'image') {
-    attrs = _.extend(attrs, {
-      image_url: media.get('url')
-    })
+  for (var i = 0; i < project.relations.media.length; i++) {
+    var media = project.relations.media.models[i]
+    if (media && media.get('type') === 'video') {
+      attrs = _.extend(attrs, {
+        video_url: media.get('url'),
+        thumbnail_url: media.get('thumbnail_url')
+      })
+    }
+    if (media && media.get('type') === 'image') {
+      attrs = _.extend(attrs, {
+        image_url: media.get('url')
+      })
+    }
   }
   return attrs
 }
@@ -54,7 +61,10 @@ var createMedia = function (project, attrs) {
     if (attrs.video_url) {
       return Project.generateThumbnailUrl(attrs.video_url)
         .then(thumbnail_url => Media.createVideoForProject(project.id, attrs.video_url, thumbnail_url))
-    } else if (attrs.image_url) {
+    }
+  })
+  .then(() => {
+    if (attrs.image_url) {
       return Media.createImageForProject(project.id, attrs.image_url)
     }
   })
@@ -71,7 +81,7 @@ var searchForProjects = function (res, opts) {
 module.exports = {
   create: function (req, res) {
     var attrs = _.defaults(
-      _.pick(req.allParams(), editableAttributes),
+      _.pick(req.allParams(), editableAttributeNames),
       {
         title: 'New Project',
         created_at: new Date(),
@@ -80,17 +90,20 @@ module.exports = {
       }
     )
 
+    var mediaAttrs = _.pick(req.allParams(), mediaAttributeNames)
+
     return Promise.resolve()
     .then(() => new Project(attrs))
     .then(project => project.save())
-    .tap(project => createMedia(project, attrs))
+    .tap(project => createMedia(project, mediaAttrs))
     .then(project => res.ok(_.pick(project.toJSON(), 'id', 'slug')))
     .catch(res.serverError)
   },
 
   update: function (req, res) {
     var project = res.locals.project
-    var updatedAttrs = _.pick(req.allParams(), editableAttributes)
+    var updatedAttrs = _.pick(req.allParams(), editableAttributeNames)
+    var mediaAttrs = _.pick(req.allParams(), mediaAttributeNames)
 
     if (req.param('publish')) {
       updatedAttrs.published_at = new Date()
@@ -102,7 +115,7 @@ module.exports = {
       updatedAttrs.slug = makeSlug(updatedAttrs.title)
     }
 
-    createMedia(project, updatedAttrs)
+    createMedia(project, mediaAttrs)
       .then(() => {
         return bookshelf.transaction(trx => {
           return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
