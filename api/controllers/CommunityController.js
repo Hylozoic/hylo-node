@@ -29,7 +29,7 @@ module.exports = {
     Community.find(req.param('communityId'), {withRelated: ['leader']})
     .tap(community => leader = community.relations.leader)
     .then(community => _.merge(community.pick(
-      'welcome_message', 'beta_access_code', 'settings'
+      'welcome_message', 'beta_access_code', 'slack_hook', 'settings'
     ), {
       leader: leader ? leader.pick('id', 'name', 'avatar_url') : null
     }))
@@ -40,7 +40,7 @@ module.exports = {
   update: function (req, res) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code', 'location'
+      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'slack_hook'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
     var saneAttrs = _.clone(attributes)

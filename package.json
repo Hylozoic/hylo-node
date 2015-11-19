@@ -81,6 +81,7 @@
     "randomstring": "^1.1.0",
     "rc": "~0.5.0",
     "request": "^2.51.0",
+    "request-promise": "^1.0.2",
     "rollbar": "^0.5.3",
     "root-path": "^0.2.0",
     "s3-upload-stream": "^1.0.7",
