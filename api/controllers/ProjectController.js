@@ -34,7 +34,7 @@ var projectAttributes = function (project) {
 }
 
 var mediaAttributes = function (project) {
-  var attrs = project.toJSON()
+  var attrs = {}
   for (var i = 0; i < project.relations.media.length; i++) {
     var media = project.relations.media.models[i]
     if (media && media.get('type') === 'video') {
@@ -139,7 +139,7 @@ module.exports = {
       {posts: qb => qb.where({fulfilled_at: null, active: true})},
       'media'
     ]})
-    .then(project => res.ok(_.merge(_.omit(mediaAttributes(project), 'posts', 'memberships'), {
+    .then(project => res.ok(_.merge(_.omit(project.toJSON(), 'posts', 'memberships'), mediaAttributes(project), {
       membership: project.relations.memberships.first(),
       open_request_count: project.relations.posts.length
     })))
