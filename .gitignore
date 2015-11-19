@@ -22,3 +22,4 @@ nbproject
 *.iml
 latest.dump
 .env.swp
+*.swp
