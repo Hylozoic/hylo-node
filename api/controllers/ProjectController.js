@@ -34,15 +34,19 @@ var projectAttributes = function (project) {
 }
 
 var mediaAttributes = function (project) {
-  var attrs = {}
+  var attrs = project.toJSON()
   for (var i = 0; i < project.relations.media.length; i++) {
     var media = project.relations.media.models[i]
     if (media && media.get('type') === 'video') {
-      attrs.video_url = media.get('url')
-      attrs.thumbnail_url = media.get('thumbnail_url')
+      _.extend(attrs, {
+        video_url: media.get('url'),
+        thumbnail_url: media.get('thumbnail_url')
+      })
     }
     if (media && media.get('type') === 'image') {
-      attrs.image_url = media.get('url')
+      _.extend(attrs, {
+        image_url: media.get('url')
+      })
     }
   }
   return attrs
@@ -117,6 +121,7 @@ module.exports = {
         .tap(() => {
           if (!_.has(updatedAttrs, 'published_at')) return
           var vis = Post.Visibility[updatedAttrs.published_at ? 'DEFAULT' : 'DRAFT_PROJECT']
+
           return project.load('posts')
           .then(() => Post.query().where('id', 'in', project.relations.posts.map('id')).update({visibility: vis}))
         })
