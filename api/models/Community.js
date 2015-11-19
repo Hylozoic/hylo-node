@@ -34,8 +34,6 @@ module.exports = bookshelf.Model.extend({
   users: function () {
     return this.belongsToMany(User).through(Membership)
       .query({where: {'users.active': true}}).withPivot('role')
-    // return this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
-    //   .query({where: {'users_community.active': true}}).withPivot('role')
   },
 
   posts: function () {
