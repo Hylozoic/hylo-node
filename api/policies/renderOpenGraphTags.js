@@ -24,10 +24,16 @@ var crawlerUserAgents = [
   'twitterbot'
 ]
 
+var defaultImage = {
+  url: 'https://www.hylo.com/img/smallh.png',
+  width: 144,
+  height: 144
+}
+
 var matchingProject = Promise.method(url => {
   var match = url.pathname.match(projectPathPattern)
   if (!match) return
-  return Project.find(match[1]).then(project => project && project.isPublic() && project)
+  return Project.find(match[1], {withRelated: 'media'}).then(project => project && project.isPublic() && project)
 })
 
 var matchingPost = Promise.method(url => {
@@ -37,23 +43,53 @@ var matchingPost = Promise.method(url => {
 })
 
 var renderProject = function (project, res) {
-  res.render('openGraphTags', {
+  var attrs = {
     title: project.get('title'),
-    description: project.get('intention'),
-    image: project.get('image_url') || project.get('thumbnail_url')
-  })
+    description: project.get('intention')
+  }
+
+  var models = project.relations.media.models
+  var image = _.find(models || [], m => m.get('type') === 'image')
+  var video = _.find(models || [], m => m.get('type') === 'video')
+
+  if (image) {
+    attrs.image = image.get('url')
+    attrs.width = image.get('width')
+    attrs.height = image.get('height')
+  } else if (video) {
+    attrs.image = video.get('thumbnail_url')
+    attrs.width = video.get('width')
+    attrs.height = video.get('height')
+  } else {
+    attrs.image = defaultImage.url
+    attrs.width = defaultImage.width
+    attrs.height = defaultImage.height
+  }
+
+  res.render('openGraphTags', attrs)
   return true
 }
 
 var renderPost = function (post, res) {
+  var attrs = {
+    title: post.get('name'),
+    description: truncate(striptags(post.get('description') || ''), 140)
+  }
+
   var models = post.relations.media.models
   var image = _.find(models || [], m => m.get('type') === 'image')
 
-  res.render('openGraphTags', {
-    title: post.get('name'),
-    description: truncate(striptags(post.get('description') || ''), 140),
-    image: image ? image.get('url') : ''
-  })
+  if (image) {
+    attrs.image = image.get('url')
+    attrs.width = image.get('width')
+    attrs.height = image.get('height')
+  } else {
+    attrs.image = defaultImage.url
+    attrs.width = defaultImage.width
+    attrs.height = defaultImage.height
+  }
+
+  res.render('openGraphTags', attrs)
   return true
 }
 
