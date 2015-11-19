@@ -103,6 +103,32 @@ cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 
 * GET methods on `FooController` should return instances of `Foo`. (See policies.js for some related FIXME's)
 
+### style guidelines
+
+We're gradually migrating to [Javascript Standard Style](https://github.com/feross/standard). 
+
+The [standard-formatter Atom package](https://atom.io/packages/standard-formatter) helps out a lot. We deviate from its default behavior only in not indenting a multi-line method chain:
+
+```javascript
+# yes
+return Do(() => {
+  amaze()
+  very()
+})
+.then(such)
+.tap(wow)
+
+# no
+return Do(() => {
+  amaze()
+  very()
+})
+  .then(such)
+  .tap(wow)
+```
+
+The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is also very helpful.
+
 ### (un)license
 
 This is free and unencumbered software released into the public domain.
