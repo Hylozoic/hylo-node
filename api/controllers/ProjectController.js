@@ -26,28 +26,23 @@ var projectRelations = [
 
 var projectAttributes = function (project) {
   var attrs = project.toJSON()
-  attrs = _.extend(attrs, {
+  _.extend(attrs, {
     contributor_count: project.relations.contributors.length,
     open_request_count: project.relations.posts.length
-  })
-  attrs = _.extend(attrs, mediaAttributes(project))
+  }, mediaAttributes(project))
   return attrs
 }
 
 var mediaAttributes = function (project) {
-  var attrs = project.toJSON()
+  var attrs = {}
   for (var i = 0; i < project.relations.media.length; i++) {
     var media = project.relations.media.models[i]
     if (media && media.get('type') === 'video') {
-      attrs = _.extend(attrs, {
-        video_url: media.get('url'),
-        thumbnail_url: media.get('thumbnail_url')
-      })
+      attrs.video_url = media.get('url')
+      attrs.thumbnail_url = media.get('thumbnail_url')
     }
     if (media && media.get('type') === 'image') {
-      attrs = _.extend(attrs, {
-        image_url: media.get('url')
-      })
+      attrs.image_url = media.get('url')
     }
   }
   return attrs
@@ -116,21 +111,19 @@ module.exports = {
     }
 
     createMedia(project, mediaAttrs)
-      .then(() => {
-        return bookshelf.transaction(trx => {
-          return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
-            .tap(() => {
-              if (!_.has(updatedAttrs, 'published_at')) return
-              var vis = Post.Visibility[updatedAttrs.published_at ? 'DEFAULT' : 'DRAFT_PROJECT']
-
-              return project.load('posts')
-                .then(() => Post.query().where('id', 'in', project.relations.posts.map('id'))
-                    .update({visibility: vis}))
-            })
+    .then(() => {
+      return bookshelf.transaction(trx => {
+        return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
+        .tap(() => {
+          if (!_.has(updatedAttrs, 'published_at')) return
+          var vis = Post.Visibility[updatedAttrs.published_at ? 'DEFAULT' : 'DRAFT_PROJECT']
+          return project.load('posts')
+          .then(() => Post.query().where('id', 'in', project.relations.posts.map('id')).update({visibility: vis}))
         })
       })
-      .then(() => res.ok(_.pick(project.toJSON(), 'id', 'slug', 'published_at')))
-      .catch(res.serverError)
+    })
+    .then(() => res.ok(_.pick(project.toJSON(), 'id', 'slug', 'published_at')))
+    .catch(res.serverError)
   },
 
   findOne: function (req, res) {
