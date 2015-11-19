@@ -9,6 +9,22 @@ module.exports = bookshelf.Model.extend({
 
   project: function () {
     return this.belongsTo(Project)
+  },
+
+  updateDimensions: function (opts) {
+    var image_url
+    if (this.get('type') === 'image') {
+      image_url = this.get('url')
+    } else if (this.get('type') === 'video') {
+      image_url = this.get('thumbnail_url')
+    }
+    if (image_url) {
+      return GetImageSize(image_url)
+      .then(dimensions => {
+        var attrs = {width: dimensions.width, height: dimensions.height}
+        return this.save(attrs, opts)
+      })
+    }
   }
 
 }, {
