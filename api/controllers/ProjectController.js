@@ -53,7 +53,6 @@ var mediaAttributes = function (project) {
 }
 
 var createMedia = function (project, attrs) {
-  //console.log('Creating Media')
   return Media.where('project_id', '=', project.id)
   .fetchAll()
   .then(media => Promise.map(media.models, medium => medium.destroy()))
@@ -117,7 +116,6 @@ module.exports = {
 
     createMedia(project, mediaAttrs)
     .then(() => {
-      //console.log('Created Media')
       return bookshelf.transaction(trx => {
         return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
         .tap(() => {

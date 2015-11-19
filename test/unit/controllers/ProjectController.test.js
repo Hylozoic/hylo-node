@@ -75,6 +75,7 @@ describe('ProjectController', () => {
     beforeEach(() => {
       project = factories.project()
       res.locals.project = project
+      console.log('locals', res.locals.project)
       return project.save()
     })
 
@@ -82,7 +83,6 @@ describe('ProjectController', () => {
       req.params['image_url'] = 'https://www.hylo.com/img/smallh.png'
 
       return ProjectController.update(req, res)
-      .then(result => console.log(result))
       .tap(() => project.load('media'))
       .then(() => {
         var media = project.relations.media
