@@ -18,11 +18,12 @@ module.exports = bookshelf.Model.extend({
     } else if (this.get('type') === 'video') {
       image_url = this.get('thumbnail_url')
     }
+    var media = this
     if (image_url) {
       return GetImageSize(image_url)
       .then(dimensions => {
         var attrs = {width: dimensions.width, height: dimensions.height}
-        return this.save(attrs, opts)
+        return media.save(attrs, opts)
       })
     }
   }
