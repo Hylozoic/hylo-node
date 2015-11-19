@@ -21,9 +21,10 @@ module.exports = {
   },
 
   project: attrs => {
+    var title = text().toLowerCase()
     return new Project(_.merge({
-      title: text(),
-      slug: text()
+      title: title,
+      slug: title
     }, attrs))
   },
 
