@@ -24,6 +24,23 @@ global._ = require('lodash') // override Sails' old version of lodash
 module.exports.bootstrap = function (done) {
   var knex = require('knex')(require('../knexfile')[process.env.NODE_ENV])
 
+  if (process.env.DEBUG_MEMORY) {
+    require('colors')
+    sails.log.info('memwatch: starting'.red)
+    var memwatch = require('memwatch-next')
+    var heapdiff = new memwatch.HeapDiff()
+
+    memwatch.on('leak', info => sails.log.info('memwatch: memory leak!'.red, info))
+
+    memwatch.on('stats', stats => {
+      sails.log.info('memwatch: stats:'.red + '\n' + util.inspect(stats))
+
+      var diff = heapdiff.end()
+      sails.log.info('memwatch: heap diff:'.red + '\n' + util.inspect(diff, {depth: null, colors: true}))
+      heapdiff = new memwatch.HeapDiff()
+    })
+  }
+
   // log SQL queries
   if (process.env.DEBUG_SQL) {
     require('colors')
