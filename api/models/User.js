@@ -254,7 +254,7 @@ module.exports = bookshelf.Model.extend({
 
   gravatar: function (email) {
     var emailHash = crypto.createHash('md5').update(email).digest('hex')
-    return format('http://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash)
+    return format('https://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash)
   },
 
   encryptEmail: function (email) {
