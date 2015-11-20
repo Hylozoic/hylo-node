@@ -1,21 +1,17 @@
 var imageSize = require('image-size')
 var Promise = require('bluebird')
-var url = require('url')
-var http = require('http')
-var https = require('https')
+var request = require('request')
 
-module.exports = function (image_url) {
-  return new Promise(function (resolve, reject) {
-    var options = url.parse(image_url)
-    var protocol = (options.protocol === 'https:' ? https : http)
-    protocol.get(options, function (response) {
-      var chunks = []
-      response.on('data', function (chunk) {
-        chunks.push(chunk)
-      }).on('end', function () {
-        var buffer = Buffer.concat(chunks)
-        resolve(imageSize(buffer))
-      })
+module.exports = function (imageUrl) {
+  return new Promise((resolve, reject) => {
+    request(imageUrl, {encoding: null}, (error, resp, body) => {
+      if (error) {
+        reject(error)
+      }
+      if (resp.statusCode !== 200) {
+        reject('Status Code: ', resp.statusCode)
+      }
+      resolve(imageSize(resp.body, 'binary'))
     })
   })
 }
