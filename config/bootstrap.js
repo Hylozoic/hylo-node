@@ -26,7 +26,7 @@ module.exports.bootstrap = function(done) {
   var knex = require('knex')(require('../knexfile')[process.env.NODE_ENV]);
 
   // log SQL queries
-  if (_.include(['development', 'test'], sails.config.environment)) {
+  if (process.env.DEBUG_SQL) {
     require('colors');
     knex.on('query', function(data) {
       var args = (_.clone(data.bindings) || []).map(function(s) {
@@ -43,8 +43,9 @@ module.exports.bootstrap = function(done) {
 
       sails.log.info(query);
     });
+  }
 
-  } else if (sails.config.environment == 'production') {
+  if (sails.config.environment == 'production') {
     var rollbar = require('rollbar');
 
     knex.on('query', function(data) {
