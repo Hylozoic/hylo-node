@@ -68,7 +68,7 @@ var afterSavingPost = function (post, opts) {
       Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
 
     // Add image, if any
-    opts.imageUrl && Media.createImage(post.id, opts.imageUrl, opts.transacting),
+    opts.imageUrl && Media.createImageForPost(post.id, opts.imageUrl, opts.transacting),
 
     opts.docs && Promise.map(opts.docs, doc =>
       Media.createDoc(post.id, doc, opts.transacting)),
