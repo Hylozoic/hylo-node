@@ -55,7 +55,7 @@ describe('CommunityController', () => {
       req.session.userId = user.id
       _.extend(req.params, {name: 'Bar', slug: 'bar'})
 
-      CommunityController.create(req, res)
+      return CommunityController.create(req, res)
       .then(() => Community.find('bar', {withRelated: ['users', 'memberships', 'leader']}))
       .then(community => {
         expect(community).to.exist
