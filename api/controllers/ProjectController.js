@@ -114,7 +114,7 @@ module.exports = {
       updatedAttrs.slug = makeSlug(updatedAttrs.title)
     }
 
-    createMedia(project, mediaAttrs)
+    return createMedia(project, mediaAttrs)
     .then(() => {
       return bookshelf.transaction(trx => {
         return project.save(_.merge(updatedAttrs, {updated_at: new Date()}), {patch: true})
