@@ -126,7 +126,6 @@ describe('ProjectController', () => {
         .tap(() => project.load('media'))
         .tap(() => {
           var media = project.relations.media
-          console.log('media.first(): ', media.first())
           expect(media.length).to.equal(0)
         })
       })
@@ -174,7 +173,6 @@ describe('ProjectController', () => {
         .tap(() => project.load('media'))
         .tap(() => {
           var media = project.relations.media
-          console.log('media.first(): ', media.first())
           expect(media.length).to.equal(0)
         })
       })
