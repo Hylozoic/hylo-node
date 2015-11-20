@@ -9,15 +9,6 @@ var findCommunityIds = Promise.method(req => {
   }
 })
 
-var setFilters = Promise.method(req => {
-  if (req.param('projectId')) {
-    return {project: req.param('projectId')}
-  } else {
-    return findCommunityIds(req)
-      .then(communityIds => ({communities: communityIds}))
-  }
-})
-
 module.exports = {
   show: function (req, res) {
     var term = req.param('q').trim()
@@ -67,7 +58,11 @@ module.exports = {
     var sort = resultType === 'posts' ? 'post.created_at' : null
     var method = resultType === 'posts' ? Search.forPosts : Search.forUsers
 
-    return setFilters(req)
+    return findCommunityIds(req)
+    .then(communityIds => ({
+      communities: communityIds,
+      project: req.param('projectId')
+    }))
     .then(filters => method(_.extend(filters, {
       autocomplete: term,
       limit: req.param('limit') || 5,

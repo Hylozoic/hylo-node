@@ -110,17 +110,32 @@ module.exports = {
       // which is useful for pagination
       qb.select(bookshelf.knex.raw('count(users.*) over () as total'))
 
-      if (opts.communities) {
+      if (opts.communities && opts.project) {
+        qb.leftJoin('users_community', 'users_community.user_id', '=', 'users.id')
+        qb.leftJoin('projects_users', 'projects_users.user_id', '=', 'users.id')
+        qb.leftJoin('projects', 'projects.user_id', '=', 'users.id')
+
+        qb.where(function () {
+          this.where(function () {
+            this.whereIn('users_community.community_id', opts.communities)
+            this.where('users_community.active', true)
+          })
+          .orWhere(function () {
+            this.where('projects.id', opts.project)
+            .orWhere('projects_users.project_id', opts.project)
+          })
+        })
+      } else if (opts.communities) {
         qb.join('users_community', 'users_community.user_id', '=', 'users.id')
         qb.whereIn('users_community.community_id', opts.communities)
         qb.where('users_community.active', true)
-      }
-
-      if (opts.project) {
+      } else if (opts.project) {
         qb.join('projects_users', 'projects_users.user_id', '=', 'users.id')
         qb.leftJoin('projects', 'projects.user_id', '=', 'users.id')
-        qb.where(() => this.where('projects.id', opts.project)
-            .orWhere('projects_users.project_id', opts.project))
+        qb.where(function () {
+          this.where('projects.id', opts.project)
+          .orWhere('projects_users.project_id', opts.project)
+        })
       }
 
       if (opts.autocomplete) {
