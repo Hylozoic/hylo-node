@@ -59,6 +59,28 @@ describe('PostController', () => {
       })
     })
 
+    it('creates an image', () => {
+      _.extend(req.params, {
+        name: 'NewImagePost',
+        description: '',
+        postType: 'intention',
+        imageUrl: 'http://bar.com/foo.png',
+        communities: [fixtures.c1.id]
+      })
+
+      return PostController.create(req, res)
+      .then(() => {
+        var data = res.body
+        expect(data).to.exist
+        expect(data.name).to.equal('NewImagePost')
+        expect(data.media.length).to.equal(1)
+        var image = data.media[0]
+        expect(image).to.exist
+        expect(image.type).to.equal('image')
+        expect(image.url).to.equal('http://bar.com/foo.png')
+      })
+    })
+
     describe('for a project', () => {
       var project
 
