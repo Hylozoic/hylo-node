@@ -20,6 +20,13 @@ module.exports = {
     }, attrs))
   },
 
+  project: attrs => {
+    return new Project(_.merge({
+      title: text(),
+      slug: text()
+    }, attrs))
+  },
+
   user: attrs => {
     return new User(_.merge({
       name: text(),
