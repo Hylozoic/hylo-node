@@ -215,7 +215,7 @@ describe('PostController', () => {
     })
 
     it('saves an image', () => {
-      req.params.imageUrl = 'http://bar.com/foo.png'
+      req.params.imageUrl = 'https://www.hylo.com/img/smallh.png'
 
       return PostController.update(req, res)
       .tap(() => post.load('media'))
@@ -223,7 +223,7 @@ describe('PostController', () => {
         var media = post.relations.media
         expect(media.length).to.equal(1)
         var image = media.first()
-        expect(image.get('url')).to.equal('http://bar.com/foo.png')
+        expect(image.get('url')).to.equal('https://www.hylo.com/img/smallh.png')
         expect(image.get('type')).to.equal('image')
       })
     })
@@ -231,7 +231,7 @@ describe('PostController', () => {
     describe('with an existing image', () => {
       var originalImageId
       beforeEach(() =>
-        Media.createImageForPost(post.id, 'http://foo.com/bar.png')
+        Media.createImageForPost(post.id, 'https://www.hylo.com/img/smallh.png')
         .tap(image => originalImageId = image.id))
 
       it('removes the image', () => {
@@ -243,7 +243,7 @@ describe('PostController', () => {
       })
 
       it('updates the image url', () => {
-        req.params.imageUrl = 'http://foo.com/bar2.png'
+        req.params.imageUrl = 'https://www.hylo.com/img/largeh.png'
 
         return PostController.update(req, res)
         .tap(() => post.load('media'))
@@ -251,7 +251,7 @@ describe('PostController', () => {
           var media = post.relations.media
           expect(media.length).to.equal(1)
           var image = media.first()
-          expect(image.get('url')).to.equal('http://foo.com/bar2.png')
+          expect(image.get('url')).to.equal('https://www.hylo.com/img/largeh.png')
           expect(image.id).to.equal(originalImageId)
         })
       })

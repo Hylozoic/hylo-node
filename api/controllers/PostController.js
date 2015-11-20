@@ -274,6 +274,7 @@ module.exports = {
         } else if (media) { // replace url in existing media
           if (media.get('url') !== params.imageUrl) {
             return media.save({url: params.imageUrl}, {patch: true, transacting: trx})
+            .then(media => media.updateDimensions({patch: true, transacting: trx}))
           }
         } else if (params.imageUrl) { // create new media
           return Media.createImageForPost(post.id, params.imageUrl, trx)

@@ -688,13 +688,10 @@ CREATE TABLE projects (
     user_id bigint,
     community_id bigint,
     visibility integer,
-    image_url character varying(255),
-    video_url character varying(255),
     published_at timestamp with time zone,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     slug character varying(255) NOT NULL,
-    thumbnail_url character varying(255),
     location character varying(255)
 );
 

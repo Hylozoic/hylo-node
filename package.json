@@ -47,6 +47,7 @@
     "grunt-sync": "~0.0.4",
     "heredoc": "^1.3.0",
     "html-truncate": "tildedave/nodejs-html-truncate#fix_end_truncation_behavior",
+    "image-size": "^0.3.5",
     "include-all": "~0.1.3",
     "knex": "^0.7.3",
     "kue": "^0.9.0",

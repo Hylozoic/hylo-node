@@ -40,6 +40,8 @@ describe('ProjectController', () => {
           var image = media.first()
           expect(image.get('url')).to.equal('https://www.hylo.com/img/smallh.png')
           expect(image.get('type')).to.equal('image')
+          expect(image.get('width')).to.equal(144)
+          expect(image.get('height')).to.equal(144)
         })
       })
     })
