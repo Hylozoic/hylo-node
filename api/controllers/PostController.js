@@ -108,7 +108,7 @@ module.exports = {
     }
 
     findPosts(req, res, {
-      communities: [req.param('communityId')],
+      communities: [res.locals.community.id],
       visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
     })
   },

@@ -21,10 +21,10 @@ module.exports = function checkAndSetMembership(req, res, next) {
 
     // no need to set res.locals.membership in this case,
     // because token auth clients do not sign in as users
-    if (TokenAuth.isPermitted(res, communityId))
+    if (TokenAuth.isPermitted(res, community.id))
       return next();
 
-    Membership.find(req.session.userId, communityId)
+    Membership.find(req.session.userId, community.id)
     .then(function(membership) {
       if (membership || allowed) {
         res.locals.membership = membership;
@@ -36,7 +36,7 @@ module.exports = function checkAndSetMembership(req, res, next) {
 
       } else {
         sails.log.debug(format("policy: checkAndSetMembership: fail. user %s, community %s",
-          req.session.userId, communityId));
+          req.session.userId, community.id));
         res.forbidden();
       }
     });
