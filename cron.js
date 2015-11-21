@@ -39,7 +39,9 @@ var jobs = {
         tasks.push(Digest.sendDaily())
         break
       default:
-        tasks.push(Relevance.cron(1, 'hour'))
+        if (process.env.SERENDIPITY_ENABLED) {
+          tasks.push(Relevance.cron(1, 'hour'))
+        }
     }
 
     return Promise.all(tasks)
