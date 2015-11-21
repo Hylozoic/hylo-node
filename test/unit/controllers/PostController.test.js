@@ -64,7 +64,7 @@ describe('PostController', () => {
         name: 'NewImagePost',
         description: '',
         postType: 'intention',
-        imageUrl: 'http://bar.com/foo.png',
+        imageUrl: 'https://www.hylo.com/img/smallh.png',
         communities: [fixtures.c1.id]
       })
 
@@ -77,7 +77,7 @@ describe('PostController', () => {
         var image = data.media[0]
         expect(image).to.exist
         expect(image.type).to.equal('image')
-        expect(image.url).to.equal('http://bar.com/foo.png')
+        expect(image.url).to.equal('https://www.hylo.com/img/smallh.png')
       })
     })
 
