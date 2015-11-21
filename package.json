@@ -100,6 +100,7 @@
   },
   "scripts": {
     "start": "node --harmony app.js",
+    "start512": "node --harmony --optimize_for_size --max_old_space_size=460 --gc_interval=100 app.js",
     "console": "node --harmony console.js",
     "cron": "node --harmony cron.js",
     "worker": "node --harmony worker.js",
