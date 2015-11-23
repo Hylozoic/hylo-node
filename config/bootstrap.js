@@ -28,16 +28,11 @@ module.exports.bootstrap = function (done) {
     require('colors')
     sails.log.info('memwatch: starting'.red)
     var memwatch = require('memwatch-next')
-    var heapdiff = new memwatch.HeapDiff()
 
     memwatch.on('leak', info => sails.log.info('memwatch: memory leak!'.red, info))
 
     memwatch.on('stats', stats => {
       sails.log.info('memwatch: stats:'.red + '\n' + util.inspect(stats))
-
-      var diff = heapdiff.end()
-      sails.log.info('memwatch: heap diff:'.red + '\n' + util.inspect(diff, {depth: null, colors: true}))
-      heapdiff = new memwatch.HeapDiff()
     })
   }
 
