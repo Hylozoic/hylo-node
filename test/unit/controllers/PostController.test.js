@@ -27,7 +27,7 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewPost',
         description: '<p>Hey <a data-user-id="' + fixtures.u2.id + '">U2</a>, you\'re mentioned ;)</p>',
-        postType: 'intention',
+        type: 'intention',
         communities: [fixtures.c1.id]
       })
 
@@ -45,7 +45,7 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewMaliciousPost',
         description: "<script>alert('test')</script><p>Hey <a data-user-id='" + fixtures.u2.id + "' data-malicious='alert(blah)'>U2</a>, you're mentioned ;)</p>",
-        postType: 'intention',
+        type: 'intention',
         communities: [fixtures.c1.id]
       })
 
@@ -63,7 +63,7 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewImagePost',
         description: '',
-        postType: 'intention',
+        type: 'intention',
         imageUrl: 'https://www.hylo.com/img/smallh.png',
         communities: [fixtures.c1.id]
       })
@@ -93,7 +93,7 @@ describe('PostController', () => {
         _.extend(req.params, {
           name: 'i want!',
           description: '<p>woo</p>',
-          postType: 'request',
+          type: 'request',
           projectId: project.id,
           communities: [fixtures.c1.id]
         })
@@ -120,7 +120,7 @@ describe('PostController', () => {
         _.extend(req.params, {
           name: 'i want!',
           description: '<p>woo</p>',
-          postType: 'request',
+          type: 'request',
           projectId: project.id,
           communities: [fixtures.c1.id]
         })
