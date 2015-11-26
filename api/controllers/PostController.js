@@ -19,7 +19,8 @@ var findPosts = function (req, res, opts) {
   Promise.props(_.merge(
     {
       sort: sortColumns[params.sort || 'recent'],
-      forUser: req.session.userId
+      forUser: req.session.userId,
+      term: req.param('search')
     },
     _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
     _.pick(opts, 'communities', 'project', 'users', 'visibility')
