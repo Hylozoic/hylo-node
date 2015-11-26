@@ -165,7 +165,7 @@ module.exports = {
 
   addTermToQueryBuilder: function (term, qb, opts) {
     var query = _.chain(term.split(/\s*\s/)) // split on whitespace
-        .map(word => word.replace(/[,;'|:&()!\\]+/, ''))
+        .map(word => word.replace(/[,;|:&()!\\]+/, ''))
         .reject(_.isEmpty)
         .map(word => word + ':*') // add prefix matching
         .reduce((result, word) => {
