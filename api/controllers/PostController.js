@@ -138,7 +138,8 @@ module.exports = {
       limit: req.param('limit') || 10,
       offset: req.param('offset'),
       sort: 'post.updated_at',
-      type: 'all+welcome'
+      type: 'all+welcome',
+      term: req.param('search')
     }).fetchAll({
       withRelated: PostPresenter.relations(req.session.userId)
     })
@@ -156,7 +157,8 @@ module.exports = {
         offset: req.param('offset'),
         sort: sortColumns[req.param('sort') || 'recent'],
         type: req.param('type') || 'all+welcome',
-        forUser: req.session.userId
+        forUser: req.session.userId,
+        term: req.param('search')
       }).fetchAll({
         withRelated: PostPresenter.relations(req.session.userId)
       })
