@@ -36,10 +36,10 @@ module.exports = {
     })
     .spread(function (posts, people) {
       res.ok({
-        posts_total: (posts.length > 0 ? Number(posts.first().get('total')) : 0),
-        posts: posts.map(PostPresenter.present),
-        people_total: (people.length > 0 ? Number(people.first().get('total')) : 0),
-        people: people.map(function (user) {
+        posts_total: posts && (posts.length > 0 ? Number(posts.first().get('total')) : 0),
+        posts: posts && posts.map(PostPresenter.present),
+        people_total: people && (people.length > 0 ? Number(people.first().get('total')) : 0),
+        people: people && people.map(function (user) {
           return _.chain(user.attributes)
             .pick(UserPresenter.shortAttributes)
             .extend({
