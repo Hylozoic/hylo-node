@@ -121,7 +121,7 @@ module.exports = bookshelf.Model.extend({
       }, {
         sender: {
           name: 'Hylobot',
-          address: 'edward@hylo.com'
+          address: 'dev+bot@hylo.com'
         }
       })
     })
