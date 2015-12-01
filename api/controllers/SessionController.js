@@ -37,9 +37,15 @@ var finishOAuth = function (strategy, req, res, next) {
     service = 'linkedin'
   }
 
+  var viewLocals = {
+    context: 'oauth',
+    layout: null,
+    returnDomain: req.session.returnDomain
+  }
+
   var authCallback = function (err, profile, info) {
     if (err || !profile) {
-      res.view('popupDone', {context: 'oauth', error: err || 'no user', layout: null})
+      res.view('popupDone', _.extend({error: err || 'no user'}, viewLocals))
       return
     }
 
@@ -68,8 +74,8 @@ var finishOAuth = function (strategy, req, res, next) {
       }
     })
     .then(user => UserExternalData.store(user.id, service, profile._json))
-    .then(() => res.view('popupDone', {context: 'oauth', layout: null}))
-    .catch(err => res.view('popupDone', {context: 'oauth', error: err, layout: null}))
+    .then(() => res.view('popupDone', viewLocals))
+    .catch(err => res.view('popupDone', _.extend({error: err}, viewLocals)))
   }
 
   passport.authenticate(strategy, authCallback)(req, res, next)
@@ -98,6 +104,7 @@ module.exports = {
   },
 
   startGoogleOAuth: function (req, res) {
+    req.session.returnDomain = req.param('returnDomain')
     passport.authenticate('google', {scope: 'email'})(req, res)
   },
 
@@ -106,6 +113,7 @@ module.exports = {
   },
 
   startFacebookOAuth: function (req, res) {
+    req.session.returnDomain = req.param('returnDomain')
     passport.authenticate('facebook', {
       display: 'popup',
       scope: ['email', 'public_profile', 'user_friends']
@@ -125,6 +133,7 @@ module.exports = {
   },
 
   startLinkedinOAuth: function (req, res) {
+    req.session.returnDomain = req.param('returnDomain')
     passport.authenticate('linkedin')(req, res)
   },
 

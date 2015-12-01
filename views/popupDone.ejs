@@ -1,11 +1,20 @@
 <html>
 <body>
 <script type="text/javascript">
-opener.popupDone({
+var message = {
+  type: 'third party auth',
   context: '<%= context %>',
   error:   <%- typeof(error) === "undefined" ? 'null' : '"' + error.toString().replace(/"/g, '\\"') + '"' %>,
   url:     '<%= typeof(url) === "undefined" ? "" : url %>'
-});
+}
+
+try {
+  opener.popupDone(message)
+} catch (e) {
+  if (e.message.match(/cross-origin/)) {
+    opener.postMessage(message, '<%= returnDomain %>')
+  }
+}
 </script>
 </body>
 </html>
