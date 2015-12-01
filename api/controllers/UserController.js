@@ -218,7 +218,11 @@ module.exports = {
 
     var options = _.defaults(
       _.pick(req.allParams(), 'limit', 'offset', 'start_time', 'end_time'),
-      {limit: 20, communities: [res.locals.community.id]}
+      {
+        limit: 20,
+        communities: [res.locals.community.id],
+        term: req.param('search')
+      }
     )
     var total
 
