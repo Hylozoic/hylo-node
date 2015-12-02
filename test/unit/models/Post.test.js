@@ -62,6 +62,12 @@ describe('Post', function () {
       .then(() => post.communities().attach(c2.id))
     })
 
+    it('is true if the post is public', () => {
+      return post.save({visibility: Post.Visibility.PUBLIC_READABLE}, {patch: true})
+      .then(() => Post.isVisibleToUser(post.id, user.id))
+      .then(visible => expect(visible).to.be.true)
+    })
+
     it('is false if the user is not connected by community or project', () => {
       return Post.isVisibleToUser(post.id, user.id)
       .then(visible => expect(visible).to.be.false)

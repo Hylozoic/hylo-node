@@ -134,16 +134,20 @@ module.exports = bookshelf.Model.extend({
   isVisibleToUser: function (postId, userId) {
     var pcids
 
-    // is the user...
-    return Promise.join(
-      PostMembership.query().where({post_id: postId}),
-      Membership.query().where({user_id: userId})
-    )
-    .spread((postMships, userMships) => {
-      // in one of the post's communities?
-      pcids = postMships.map(m => m.community_id)
-      return _.intersection(pcids, userMships.map(m => m.community_id)).length > 0
-    })
+    return Post.find(postId)
+    // is the post public?
+    .then(post => post.isPublic())
+    .then(success =>
+      // or is the user:
+      success || Promise.join(
+        PostMembership.query().where({post_id: postId}),
+        Membership.query().where({user_id: userId})
+      )
+      .spread((postMships, userMships) => {
+        // in one of the post's communities?
+        pcids = postMships.map(m => m.community_id)
+        return _.intersection(pcids, userMships.map(m => m.community_id)).length > 0
+      }))
     .then(success =>
       // or following the post?
       success || Follow.exists(userId, postId))
