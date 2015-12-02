@@ -10,6 +10,11 @@ module.exports = bookshelf.Model.extend({
     if (process.env.NODE_ENV === 'test') return
 
     var zeroPushToken = this.zeroPushTokenFromPlatform()
+    if (!zeroPushToken) {
+      console.log('ZeroPush token not set. Not sending push notification.')
+      return
+    }
+
     var zeroPush = new ZeroPush(zeroPushToken)
     var notify = Promise.promisify(zeroPush.notify, zeroPush)
     var deviceTokens = [this.get('device_token')]
