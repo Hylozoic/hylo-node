@@ -1,3 +1,5 @@
+/* eslint key-spacing:0, spaced-comment:0 */
+
 /**
  * Route Mappings
  * (sails.config.routes)
@@ -31,7 +33,6 @@ module.exports.routes = {
   * `assets` directory)                                                      *
   *                                                                          *
   ***************************************************************************/
-
 
   /***************************************************************************
   *                                                                          *
@@ -102,6 +103,7 @@ module.exports.routes = {
   'DELETE /noo/project/:projectId/user/:userId':          'ProjectController.removeUser',
   'POST   /noo/project/:projectId/user/:userId':          'ProjectController.updateMembership',
   'POST   /noo/project/:projectId/moderator/:userId':     'ProjectController.toggleModeratorRole',
+  'GET    /noo/project':                                  'ProjectController.find',
   'POST   /noo/project':                                  'ProjectController.create',
   'POST   /noo/project/:projectId':                       'ProjectController.update',
   'POST   /noo/project/:projectId/invite':                'ProjectController.invite',
@@ -159,5 +161,4 @@ module.exports.routes = {
   'POST    /noo/subscription':                            'SubscriptionController.create',
 
   '/*':                                                   'StaticPageController.proxy'
-
-};
+}

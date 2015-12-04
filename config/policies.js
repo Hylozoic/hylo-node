@@ -1,3 +1,5 @@
+/* eslint key-spacing:0 */
+
 /**
  * Policy Mappings
  * (sails.config.policies)
@@ -15,7 +17,6 @@
  * For more information on configuring policies, check out:
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.policies.html
  */
-
 
 module.exports.policies = {
 
@@ -99,7 +100,7 @@ module.exports.policies = {
     vote:             ['sessionAuth', 'checkAndSetPost'],
     complain:         ['sessionAuth', 'checkAndSetPost'],
     destroy:          ['sessionAuth', 'checkAndSetWritablePost'],
-    createFromEmail: true,
+    createFromEmail: true
   },
 
   CommentController: {
@@ -107,7 +108,7 @@ module.exports.policies = {
     thank:           ['sessionAuth'],
     findForPost:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     destroy:         ['sessionAuth', 'isCommentOwner'],
-    createFromEmail: true,
+    createFromEmail: true
   },
 
   MessageController: {
@@ -147,5 +148,4 @@ module.exports.policies = {
   },
 
   NexudusController: true
-
-};
+}
