@@ -8,7 +8,12 @@ module.exports = {
       }
 
       if (opts.community) {
-        qb.whereIn('community_id', opts.community)
+        qb.where(function () {
+          var clause = this.whereIn('community_id', opts.community)
+          if (opts.includePublic) {
+            clause.orWhere('visibility', Project.Visibility.PUBLIC)
+          }
+        })
       }
 
       if (opts.published) {

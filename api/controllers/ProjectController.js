@@ -203,6 +203,15 @@ module.exports = {
     searchForProjects(res, {user: req.param('userId')})
   },
 
+  find: function (req, res) {
+    Membership.activeCommunityIds(req.session.userId)
+    .then(communityIds => searchForProjects(res, {
+      community: communityIds,
+      includePublic: true,
+      published: true
+    }))
+  },
+
   findForCommunity: function (req, res) {
     searchForProjects(res, {community: req.param('communityId'), published: true})
   },

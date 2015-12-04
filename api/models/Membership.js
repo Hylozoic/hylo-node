@@ -107,7 +107,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   activeCommunityIds: function (user_id) {
-    return bookshelf.knex('users_community').select('community_id')
+    return Membership.query()
     .where({user_id: user_id, active: true})
     .pluck('community_id')
   },
