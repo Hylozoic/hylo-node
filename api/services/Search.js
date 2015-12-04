@@ -8,7 +8,7 @@ module.exports = {
       }
 
       if (opts.community) {
-        qb.where('community_id', opts.community)
+        qb.whereIn('community_id', opts.community)
       }
 
       if (opts.published) {
