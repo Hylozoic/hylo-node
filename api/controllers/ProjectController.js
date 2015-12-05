@@ -205,11 +205,18 @@ module.exports = {
 
   find: function (req, res) {
     Membership.activeCommunityIds(req.session.userId)
-    .then(communityIds => searchForProjects(res, {
+    .then(communityIds => Search.forProjects({
       community: communityIds,
       includePublic: true,
-      published: true
+      published: true,
+      limit: req.param('limit') || 20,
+      offset: req.param('offset') || 0
+    }).fetchAll({withRelated: projectRelations}))
+    .then(projects => ({
+      projects: projects.map(projectAttributes),
+      projects_total: projects.first() ? projects.first().get('total') : 0
     }))
+    .then(res.ok, res.serverError)
   },
 
   findForCommunity: function (req, res) {

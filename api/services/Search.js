@@ -2,9 +2,13 @@ module.exports = {
   forProjects: function (opts) {
     return Project.query(qb => {
       if (opts.user) {
-        qb.leftJoin('projects_users', () => this.on('projects.id', '=', 'projects_users.project_id'))
-        qb.where(() => this.where('projects.user_id', opts.user)
-            .orWhere('projects_users.user_id', opts.user))
+        qb.leftJoin('projects_users', function () {
+          this.on('projects.id', '=', 'projects_users.project_id')
+        })
+        qb.where(function () {
+          this.where('projects.user_id', opts.user)
+        })
+        .orWhere('projects_users.user_id', opts.user)
       }
 
       if (opts.community) {
@@ -20,6 +24,12 @@ module.exports = {
         qb.whereRaw('published_at is not null')
       }
 
+      // this counts total rows matching the criteria, disregarding limit,
+      // which is useful for pagination
+      qb.select(bookshelf.knex.raw('projects.*, count(*) over () as total'))
+
+      qb.limit(opts.limit)
+      qb.offset(opts.offset)
       qb.groupBy('projects.id')
     })
   },
