@@ -204,10 +204,20 @@ module.exports = {
   },
 
   find: function (req, res) {
-    Membership.activeCommunityIds(req.session.userId)
+    var includePublic = true
+
+    ;(() => {
+      var communityId = req.param('communityId')
+      if (communityId) {
+        includePublic = false
+        return Community.find(communityId).then(c => [c.id])
+      } else {
+        return Membership.activeCommunityIds(req.session.userId)
+      }
+    })()
     .then(communityIds => Search.forProjects({
       community: communityIds,
-      includePublic: true,
+      includePublic: includePublic,
       published: true,
       limit: req.param('limit') || 20,
       offset: req.param('offset') || 0
