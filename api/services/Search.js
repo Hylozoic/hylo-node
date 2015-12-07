@@ -24,6 +24,12 @@ module.exports = {
         qb.whereRaw('published_at is not null')
       }
 
+      if (opts.term) {
+        Search.addTermToQueryBuilder(opts.term, qb, {
+          columns: ['projects.title', 'projects.intention', 'projects.details']
+        })
+      }
+
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
       qb.select(bookshelf.knex.raw('projects.*, count(*) over () as total'))
