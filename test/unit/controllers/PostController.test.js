@@ -94,8 +94,7 @@ describe('PostController', () => {
           name: 'i want!',
           description: '<p>woo</p>',
           type: 'request',
-          projectId: project.id,
-          communities: [fixtures.c1.id]
+          projectId: project.id
         })
 
         return PostController.create(req, res)
@@ -121,8 +120,7 @@ describe('PostController', () => {
           name: 'i want!',
           description: '<p>woo</p>',
           type: 'request',
-          projectId: project.id,
-          communities: [fixtures.c1.id]
+          projectId: project.id
         })
 
         return PostController.create(req, res)

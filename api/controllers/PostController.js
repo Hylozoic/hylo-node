@@ -56,9 +56,14 @@ var afterSavingPost = function (post, opts) {
   var mentioned = RichText.getUserMentions(post.get('description'))
   var followerIds = _.uniq(mentioned.concat(userId))
 
-  return Promise.all(_.flatten([
+  // no need to specify community ids explicitly if saving for a project
+  return (() => {
+    if (opts.communities) return Promise.resolve(opts.communities)
+    return Project.find(opts.projectId, _.pick(opts, 'transacting')).then(p => [p.get('community_id')])
+  })()
+  .then(communities => Promise.all(_.flatten([
     // Attach post to communities
-    opts.communities.map(id =>
+    communities.map(id =>
       new Community({id: id}).posts().attach(post.id, _.pick(opts, 'transacting'))),
 
     // Add mentioned users and creator as followers
@@ -84,7 +89,7 @@ var afterSavingPost = function (post, opts) {
       postId: post.id,
       exclude: mentioned
     })
-  ]))
+  ])))
 }
 
 module.exports = {

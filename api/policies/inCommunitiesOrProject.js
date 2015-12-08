@@ -1,13 +1,16 @@
 module.exports = function (req, res, next) {
-
   if (Admin.isSignedIn(req)) return next()
 
   var communityIds = req.param('communities')
+  var projectId = req.param('projectId')
   var userId = req.session.userId
 
-  if (!communityIds) return res.forbidden()
+  if (!communityIds && projectId) {
+    return Project.isVisibleToUser(projectId, userId)
+    .then(visible => visible ? next() : res.forbidden())
+  }
 
-  Membership.query(q => {
+  return Membership.query(q => {
     q.whereIn('community_id', communityIds)
     q.where('user_id', userId)
   }).fetchAll()
@@ -15,5 +18,4 @@ module.exports = function (req, res, next) {
       mships.find(m =>
         m.get('community_id') === id || Community.inNetworkWithUser(id, userId))))
     .then(ok => _.all(ok) ? next() : res.forbidden())
-
 }
