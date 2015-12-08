@@ -681,7 +681,7 @@ ALTER SEQUENCE project_invitations_id_seq OWNED BY project_invitations.id;
 --
 
 CREATE TABLE projects (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     title character varying(255) NOT NULL,
     intention character varying(255),
     details text,
