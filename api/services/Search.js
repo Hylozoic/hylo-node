@@ -37,6 +37,7 @@ module.exports = {
       qb.limit(opts.limit)
       qb.offset(opts.offset)
       qb.groupBy('projects.id')
+      qb.orderBy('projects.updated_at', 'desc')
     })
   },
 
