@@ -13,7 +13,7 @@ module.exports = function(req, res, next) {
     }
 
     var checkProjectMembership = function(passed) {
-      if (passed) return true;
+      if (passed) return Promise.resolve(true);
 
       return ProjectMembership.find(req.session.userId, project.id)
       .then(membership => !!membership);
