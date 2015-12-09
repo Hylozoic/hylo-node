@@ -7,8 +7,8 @@ module.exports = {
         })
         qb.where(function () {
           this.where('projects.user_id', opts.user)
+          .orWhere('projects_users.user_id', opts.user)
         })
-        .orWhere('projects_users.user_id', opts.user)
       }
 
       if (opts.community) {
