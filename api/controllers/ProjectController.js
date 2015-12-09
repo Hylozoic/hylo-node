@@ -52,19 +52,20 @@ var mediaAttributes = function (project) {
   return attrs
 }
 
-var createMedia = function (project, attrs) {
-  return Media.where('project_id', '=', project.id)
-  .fetchAll()
-  .then(media => Promise.map(media.models, medium => medium.destroy()))
+var createMedia = function (project, attrs, trx) {
+  return Media.where('project_id', project.id)
+  .fetchAll({transacting: trx})
+  .then(media => Promise.map(media.models, medium => medium.destroy({transacting: trx})))
   .then(() => {
     if (attrs.video_url) {
       return Project.generateThumbnailUrl(attrs.video_url)
-        .then(thumbnail_url => Media.createVideoForProject(project.id, attrs.video_url, thumbnail_url))
+      .tap(thumbnail_url => console.log(thumbnail_url))
+      .then(thumbnail_url => Media.createVideoForProject(project.id, attrs.video_url, thumbnail_url, trx))
     }
   })
   .then(() => {
     if (attrs.image_url) {
-      return Media.createImageForProject(project.id, attrs.image_url)
+      return Media.createImageForProject(project.id, attrs.image_url, trx)
     }
   })
 }
@@ -91,10 +92,10 @@ module.exports = {
 
     var mediaAttrs = _.pick(req.allParams(), mediaAttributeNames)
 
-    return Promise.resolve()
-    .then(() => new Project(attrs))
-    .then(project => project.save())
-    .tap(project => createMedia(project, mediaAttrs))
+    return bookshelf.transaction(trx => {
+      return new Project(attrs).save({}, {transacting: trx})
+      .tap(project => createMedia(project, mediaAttrs, trx))
+    })
     .then(project => res.ok(_.pick(project.toJSON(), 'id', 'slug')))
     .catch(res.serverError)
   },
