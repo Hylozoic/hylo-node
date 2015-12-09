@@ -24,12 +24,12 @@ var projectRelations = [
   'media'
 ]
 
-var projectAttributes = function (project) {
+var projectAttributes = function (project, noLegacy) {
   var attrs = project.toJSON()
   _.extend(attrs, {
     contributor_count: project.relations.contributors.length,
     open_request_count: project.relations.posts.length
-  }, mediaAttributes(project))
+  }, noLegacy || mediaAttributes(project))
   return attrs
 }
 
@@ -226,7 +226,7 @@ module.exports = {
       term: req.param('search')
     }).fetchAll({withRelated: projectRelations}))
     .then(projects => ({
-      projects: projects.map(projectAttributes),
+      projects: projects.map(p => projectAttributes(p, true)),
       projects_total: projects.first() ? projects.first().get('total') : 0
     }))
     .then(res.ok, res.serverError)
