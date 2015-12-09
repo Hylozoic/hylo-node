@@ -59,7 +59,7 @@ module.exports = bookshelf.Model.extend({
     var videoId
 
     if (videoUrl.match(/youtu\.?be/)) {
-      videoId = videoUrl.match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-]+)/)[2]
+      videoId = videoUrl.match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-_]+)/)[2]
       return format('http://img.youtube.com/vi/%s/hqdefault.jpg', videoId)
     } else if (videoUrl.match(/vimeo/)) {
       var request = Promise.promisify(require('request'))
