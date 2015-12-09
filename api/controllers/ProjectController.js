@@ -59,7 +59,6 @@ var createMedia = function (project, attrs, trx) {
   .then(() => {
     if (attrs.video_url) {
       return Project.generateThumbnailUrl(attrs.video_url)
-      .tap(thumbnail_url => console.log(thumbnail_url))
       .then(thumbnail_url => Media.createVideoForProject(project.id, attrs.video_url, thumbnail_url, trx))
     }
   })
