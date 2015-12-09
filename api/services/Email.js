@@ -1,6 +1,6 @@
-var api = require('sendwithus')(process.env.SENDWITHUS_KEY),
-  Promise = require('bluebird'),
-  sendEmail = Promise.promisify(api.send, api)
+var api = require('sendwithus')(process.env.SENDWITHUS_KEY)
+var Promise = require('bluebird')
+var sendEmail = Promise.promisify(api.send, api)
 
 var defaultOptions = {
   sender: {
@@ -90,10 +90,10 @@ module.exports = {
   },
 
   decodePostReplyAddress: function (address) {
-    var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT)),
-      match = address.match(/reply-(.*?)@/),
-      plaintext = PlayCrypto.decrypt(match[1]).replace(salt, ''),
-      ids = plaintext.split('|')
+    var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT))
+    var match = address.match(/reply-(.*?)@/)
+    var plaintext = PlayCrypto.decrypt(match[1]).replace(salt, '')
+    var ids = plaintext.split('|')
 
     return {postId: ids[0], userId: ids[1]}
   },
@@ -104,10 +104,10 @@ module.exports = {
   },
 
   decodePostCreationAddress: function (address) {
-    var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT)),
-      match = address.match(/create-(.*?)@/),
-      plaintext = PlayCrypto.decrypt(match[1]).replace(salt, ''),
-      decodedData = plaintext.split('|')
+    var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT))
+    var match = address.match(/create-(.*?)@/)
+    var plaintext = PlayCrypto.decrypt(match[1]).replace(salt, '')
+    var decodedData = plaintext.split('|')
 
     return {communityId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
   }
