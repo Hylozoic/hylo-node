@@ -43,6 +43,10 @@ var finishOAuth = function (strategy, req, res, next) {
     returnDomain: req.session.returnDomain
   }
 
+  if (req.session.returnDomain) {
+    console.log('use return domain:', req.session.returnDomain)
+  }
+
   var authCallback = function (err, profile, info) {
     if (err || !profile) {
       res.view('popupDone', _.extend({error: err || 'no user'}, viewLocals))
@@ -81,6 +85,15 @@ var finishOAuth = function (strategy, req, res, next) {
   passport.authenticate(strategy, authCallback)(req, res, next)
 }
 
+const setReturnDomain = fn => (req, res) => {
+  const returnDomain = req.param('returnDomain')
+  if (returnDomain) {
+    req.session.returnDomain = returnDomain
+    console.log('set return domain:', returnDomain)
+  }
+  return fn(req, res)
+}
+
 module.exports = {
   create: function (req, res) {
     var email = req.param('email')
@@ -103,22 +116,20 @@ module.exports = {
     })
   },
 
-  startGoogleOAuth: function (req, res) {
-    req.session.returnDomain = req.param('returnDomain')
+  startGoogleOAuth: setReturnDomain(function (req, res) {
     passport.authenticate('google', {scope: 'email'})(req, res)
-  },
+  }),
 
   finishGoogleOAuth: function (req, res, next) {
     finishOAuth('google', req, res, next)
   },
 
-  startFacebookOAuth: function (req, res) {
-    req.session.returnDomain = req.param('returnDomain')
+  startFacebookOAuth: setReturnDomain(function (req, res) {
     passport.authenticate('facebook', {
       display: 'popup',
       scope: ['email', 'public_profile', 'user_friends']
     })(req, res)
-  },
+  }),
 
   finishFacebookOAuth: function (req, res, next) {
     finishOAuth('facebook', req, res, next)
@@ -132,10 +143,9 @@ module.exports = {
     finishOAuth('google-token', req, res, next)
   },
 
-  startLinkedinOAuth: function (req, res) {
-    req.session.returnDomain = req.param('returnDomain')
+  startLinkedinOAuth: setReturnDomain(function (req, res) {
     passport.authenticate('linkedin')(req, res)
-  },
+  }),
 
   finishLinkedinOauth: function (req, res, next) {
     finishOAuth('linkedin', req, res, next)
