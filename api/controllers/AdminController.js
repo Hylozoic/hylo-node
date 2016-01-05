@@ -34,6 +34,9 @@ var nvd3Format = function (data, times) {
   }, [])
 }
 
+// this is the id of the user that owns all the starter posts
+var axolotlId = 13986
+
 var countNew = function (model, interval, unit) {
   var now = moment()
   var then = now.clone().subtract(interval, unit)
@@ -46,6 +49,9 @@ var countNew = function (model, interval, unit) {
 
     if (model === Post) {
       q.where('type', '!=', 'welcome')
+
+      // this removes starter posts from the metrics
+      q.where('user_id', '!=', axolotlId)
     }
   }).fetchAll({withRelated: withRelated})
   .then(results => {
