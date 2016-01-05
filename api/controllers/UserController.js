@@ -200,6 +200,19 @@ module.exports = {
   },
 
   findForProject: function (req, res) {
+    res.locals.project.contributors()
+    .query({
+      limit: req.param('limit') || 10,
+      offset: req.param('offset') || 0
+    }).fetch()
+    .then(users => users.map(u => _.extend(u.pick(UserPresenter.shortAttributes), {
+      membership: u.pivot.pick('role')
+    })))
+    .then(res.ok)
+    .catch(res.serverError)
+  },
+
+  findForProjectRedux: function (req, res) {
     var total
 
     res.locals.project.contributors()
@@ -208,7 +221,7 @@ module.exports = {
       offset: req.param('offset') || 0
     }).fetch({withRelated: ['skills', 'organizations']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(u => UserPresenter.presentForList(_.extend(u, {membership: u.pivot.pick('role')}))))
+    .then(users => users.map(u => _.extend(UserPresenter.presentForList(u), {membership: u.pivot.pick('role')})))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
   },
