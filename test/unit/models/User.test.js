@@ -86,7 +86,7 @@ describe('User', function () {
 
     it('accepts a valid password', function () {
       return expect(User.authenticate('iam@cat.org', 'password'))
-        .to.eventually.satisfy(function (user) {
+      .to.eventually.satisfy(function (user) {
         return user && user.id === cat.id && user.name === cat.name
       })
     })
@@ -205,7 +205,7 @@ describe('User', function () {
             type: 'linkedin',
             profile: {
               id: 'foo',
-              photos: [catPic],
+              photos: [{value: catPic}],
               _json: {
                 publicProfileUrl: 'https://www.linkedin.com/in/foobar'
               }
