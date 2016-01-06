@@ -191,7 +191,7 @@ module.exports = bookshelf.Model.extend({
     } else if (account && account.type === 'linkedin') {
       _.merge(attributes, {
         linkedin_url: account.profile._json.publicProfileUrl,
-        avatar_url: account.profile.photos[0]
+        avatar_url: account.profile.photos[0].value
       })
     }
 
