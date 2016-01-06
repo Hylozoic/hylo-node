@@ -105,8 +105,8 @@ module.exports = {
     .tap(user => {
       if (req.param('resp') === 'user') {
         return UserPresenter.fetchForSelf(user.id, Admin.isSignedIn(req))
-          .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
-          .then(res.ok)
+        .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+        .then(res.ok)
       } else {
         return res.ok({})
       }

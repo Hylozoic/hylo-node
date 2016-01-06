@@ -41,19 +41,27 @@ module.exports = {
     var params = _.pick(req.allParams(), 'name', 'email', 'password')
 
     return findContext(req)
-      .then(ctx => {
-        var attrs = _.merge(_.pick(params, 'name', 'email'), {
-          community: (ctx.invitation ? null : ctx.community),
-          account: {type: 'password', password: params.password}
-        })
+    .then(ctx => {
+      var attrs = _.merge(_.pick(params, 'name', 'email'), {
+        community: (ctx.invitation ? null : ctx.community),
+        account: {type: 'password', password: params.password}
+      })
 
-        return User.createFully(attrs, ctx.invitation)
-      })
-      .then(user => req.param('login') && UserSession.login(req, user, 'password'))
-      .then(() => res.ok({}))
-      .catch(function (err) {
-        res.status(422).send(err.detail ? err.detail : err)
-      })
+      return User.createFully(attrs, ctx.invitation)
+    })
+    .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
+    .then(user => {
+      if (req.param('resp') === 'user') {
+        return UserPresenter.fetchForSelf(user.id, Admin.isSignedIn(req))
+        .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+        .then(res.ok)
+      } else {
+        return res.ok({})
+      }
+    })
+    .catch(function (err) {
+      res.status(422).send(err.detail ? err.detail : err)
+    })
   },
 
   status: function (req, res) {
