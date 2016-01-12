@@ -202,6 +202,25 @@ module.exports = {
   findForProject: function (req, res) {
     var total
 
+    res.locals.project.contributors()
+    .query(qb => {
+      qb.limit(req.param('limit') || 10)
+      qb.offset(req.param('offset') || 0)
+      qb.select(bookshelf.knex.raw('users.*, count(*) over () as total'))
+    })
+    .fetch({withRelated: ['skills', 'organizations']})
+    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+    .then(users => users.map(u => _.extend(UserPresenter.presentForList(u), {membership: u.pivot.pick('role')})))
+    .then(users => {
+      if (req.param('paginate')) {
+        return {people_total: total, people: users}
+      } else {
+        return users
+      }
+    })
+    .then(res.ok, res.serverError)
+
+    /*
     if (req.param('paginate')) {
       res.locals.project.contributors()
       .query({
@@ -224,6 +243,7 @@ module.exports = {
       .then(res.ok)
       .catch(res.serverError)
     }
+    */
   },
 
   findForCommunity: function (req, res) {
