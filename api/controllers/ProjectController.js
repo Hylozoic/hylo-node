@@ -135,6 +135,7 @@ module.exports = {
     Project.find(res.locals.project.id, {withRelated: [
       {user: qb => qb.column('id', 'name', 'avatar_url')},
       {community: qb => qb.column('id', 'name', 'avatar_url', 'slug')},
+      {contributors: qb => qb.column('users.id')},
       {memberships: qb => qb.where('user_id', req.session.userId)},
       {posts: qb => qb.where({fulfilled_at: null, active: true})},
       'media'

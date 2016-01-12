@@ -42,17 +42,18 @@ module.exports.policies = {
   },
 
   UserController: {
-    status:            true,
-    create:            true,
-    findSelf:          ['allowPublicAccess', 'sessionAuth'],
-    findOne:           ['sessionAuth', 'inSameCommunityOrNetwork'],
-    update:            ['sessionAuth', 'isSelf'],
-    contributions:     ['sessionAuth', 'inSameCommunityOrNetwork'],
-    thanks:            ['sessionAuth', 'inSameCommunityOrNetwork'],
-    sendPasswordReset: true,
-    findForProject:    ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findForCommunity:  ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    findForNetwork:    ['sessionAuth', 'inNetwork']
+    status:              true,
+    create:              true,
+    findSelf:            ['allowPublicAccess', 'sessionAuth'],
+    findOne:             ['sessionAuth', 'inSameCommunityOrNetwork'],
+    update:              ['sessionAuth', 'isSelf'],
+    contributions:       ['sessionAuth', 'inSameCommunityOrNetwork'],
+    thanks:              ['sessionAuth', 'inSameCommunityOrNetwork'],
+    sendPasswordReset:   true,
+    findForProject:      ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    findForProjectRedux: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
+    findForCommunity:    ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findForNetwork:      ['sessionAuth', 'inNetwork']
   },
 
   ActivityController: {
