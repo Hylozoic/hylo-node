@@ -16,6 +16,7 @@ var mediaAttributeNames = [
 var projectRelations = [
   {user: qb => qb.column('id', 'name', 'avatar_url')},
   {community: qb => qb.column('id', 'name', 'avatar_url')},
+  {contributors: qb => qb.column('users.id')},
   {posts: qb => {
     qb.column('post.id')
     qb.where('type', Post.Type.REQUEST)
