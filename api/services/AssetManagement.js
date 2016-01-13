@@ -43,7 +43,7 @@ module.exports = {
       changes[attr] = newUrl;
 
       return promisifyStream(download)
-      .then(instance.save(changes, {patch: true}));
+      .then(() => instance.save(changes, {patch: true}));
     }
   },
 
@@ -77,7 +77,7 @@ module.exports = {
       changes[attr] = newUrl;
 
       return promisifyStream(resize)
-      .then(instance.save(changes, {patch: true}));
+      .then(() => instance.save(changes, {patch: true}));
     });
   }
 
