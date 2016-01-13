@@ -1,3 +1,5 @@
+/* eslint spaced-comment:0 */
+
 /**
  * HTTP Server Settings
  * (sails.config.http)
@@ -9,8 +11,8 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.http.html
  */
 
-require('colors');
-var util = require('util');
+require('colors')
+var util = require('util')
 
 module.exports.http = {
 
@@ -31,8 +33,8 @@ module.exports.http = {
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
     requestLogger: function (req, res, next) {
-      sails.log.info(util.format('%s %s ', req.method, req.url).magenta);
-      next();
+      sails.log.info(util.format('%s %s ', req.method, req.url).magenta)
+      next()
     },
 
   /***************************************************************************
@@ -61,7 +63,7 @@ module.exports.http = {
       '404',
       'rollbar',
       '500'
-    ],
+    ]
 
   /***************************************************************************
   *                                                                          *
@@ -76,19 +78,19 @@ module.exports.http = {
 
   },
 
-  customMiddleware: function(app) {
-    var kue = require('kue'),
-      kueUI = require('kue-ui'),
-      isAdmin = require('../api/policies/isAdmin');
+  customMiddleware: function (app) {
+    var kue = require('kue')
+    var kueUI = require('kue-ui')
+    var isAdmin = require('../api/policies/isAdmin')
 
     kueUI.setup({
       apiURL: '/admin/kue/api',
       baseURL: '/admin/kue'
-    });
+    })
 
-    app.use('/admin/kue', isAdmin);
-    app.use('/admin/kue/api', kue.app);
-    app.use('/admin/kue', kueUI.app);
+    app.use('/admin/kue', isAdmin)
+    app.use('/admin/kue/api', kue.app)
+    app.use('/admin/kue', kueUI.app)
   }
 
   /***************************************************************************
@@ -102,4 +104,4 @@ module.exports.http = {
   ***************************************************************************/
 
   // cache: 31557600000
-};
+}
