@@ -193,7 +193,6 @@ module.exports = {
   },
 
   create: function (req, res) {
-
     var attrs = _.pick(req.allParams(),
       'name', 'description', 'slug', 'category',
       'beta_access_code', 'banner_url', 'avatar_url', 'location')
