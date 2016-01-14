@@ -1,8 +1,12 @@
 module.exports = {
   find: function (req, res) {
+    var total
+
     Activity.query(function (qb) {
       qb.where('reader_id', req.session.userId)
       qb.limit(req.param('limit') || 10)
+      qb.offset(req.param('offset') || 0)
+      qb.select(bookshelf.knex.raw('activity.*, count(*) over () as total'))
       qb.orderBy('created_at', 'desc')
 
       qb.whereRaw('(comment.active = true or comment.id is null)')
@@ -19,8 +23,15 @@ module.exports = {
         {'post.communities': qb => qb.column('community.id', 'slug')},
         {'post.relatedUsers': qb => qb.column('users.id', 'name', 'avatar_url')}
     ]})
-    .then(res.ok)
-    .catch(res.serverError)
+    .tap(activities => total = (activities.length > 0 ? activities.first().get('total') : 0))
+    .then(activities => {
+      if (req.param('paginate')) {
+        return {activities_total: total, activities: activities}
+      } else {
+        return activities
+      }
+    })
+    .then(res.ok, res.serverError)
   },
 
   markAllRead: function (req, res) {
