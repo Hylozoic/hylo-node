@@ -214,6 +214,7 @@ module.exports = {
     .query(qb => {
       qb.limit(req.param('limit') || 10)
       qb.offset(req.param('offset') || 0)
+      qb.orderBy('projects_users.created_at', 'desc')
       qb.select(bookshelf.knex.raw('users.*, count(*) over () as total'))
     })
     .fetch({withRelated: ['skills', 'organizations']})

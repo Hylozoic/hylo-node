@@ -251,8 +251,8 @@ module.exports = {
       user_id: req.param('userId'),
       project_id: req.param('projectId')
     }).update(_.pick(req.allParams(), 'role'))
-      .then(() => res.ok({}))
-      .catch(res.serverError)
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   }
 
 }
