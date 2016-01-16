@@ -182,14 +182,12 @@ module.exports = {
   },
 
   join: function (req, res) {
-    bookshelf.transaction(trx => {
-      return Promise.join(
-        ProjectInvitation.findByToken(req.param('token')).then(i => i ? i.use(req.session.userId) : null),
-        ProjectMembership.create(req.session.userId, req.param('projectId'))
-      )
-    })
-      .then(() => res.ok({}))
-      .catch(res.serverError)
+    bookshelf.transaction(trx => Promise.join(
+      ProjectInvitation.findByToken(req.param('token')).then(i => i ? i.use(req.session.userId) : null),
+      ProjectMembership.create(req.session.userId, req.param('projectId'))
+    ))
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   },
 
   removeUser: function (req, res) {
@@ -197,7 +195,7 @@ module.exports = {
       user_id: req.param('userId'),
       project_id: req.param('projectId')
     }).destroy().then(() => res.ok({}))
-      .catch(res.serverError)
+    .catch(res.serverError)
   },
 
   findForUser: function (req, res) {
@@ -242,8 +240,8 @@ module.exports = {
       user_id: req.param('userId'),
       project_id: req.param('projectId')
     }).update(_.pick(req.allParams(), 'notify_on_new_posts'))
-      .then(() => res.ok({}))
-      .catch(res.serverError)
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   },
 
   toggleModeratorRole: function (req, res) {
