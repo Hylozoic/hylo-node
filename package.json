@@ -99,11 +99,10 @@
     "xml2js": "^0.4.4"
   },
   "scripts": {
-    "start": "node --harmony app.js",
-    "start512": "node --harmony --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 app.js",
+    "start": "node --harmony --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 app.js",
     "console": "node --harmony console.js",
     "cron": "node --harmony cron.js",
-    "worker": "node --harmony worker.js",
+    "worker": "node --harmony --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 worker.js",
     "migrate": "node --harmony ./node_modules/.bin/knex migrate:latest",
     "rollback": "node --harmony ./node_modules/.bin/knex migrate:rollback",
     "migrate-make": "node --harmony ./node_modules/.bin/knex migrate:make",

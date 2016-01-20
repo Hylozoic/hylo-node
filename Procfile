@@ -1,2 +1,2 @@
-web: npm run start512
+web: npm start
 worker: npm run worker
