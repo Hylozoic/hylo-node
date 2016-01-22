@@ -548,8 +548,6 @@ CREATE TABLE post (
     deactivated_reason character varying(255),
     fulfilled_at timestamp without time zone,
     updated_at timestamp without time zone,
-    edited boolean,
-    edited_timestamp date,
     visibility integer DEFAULT 0,
     start_time timestamp with time zone,
     end_time timestamp with time zone,

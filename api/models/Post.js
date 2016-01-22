@@ -284,8 +284,7 @@ module.exports = bookshelf.Model.extend({
     updated_at: new Date(),
     active: true,
     num_comments: 0,
-    num_votes: 0,
-    edited: false
+    num_votes: 0
   })
 
 })

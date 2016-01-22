@@ -249,8 +249,7 @@ module.exports = {
     var attrs = _.extend(
       _.pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
       {
-        edited: true,
-        edited_timestamp: new Date(),
+        updated_at: new Date(),
         visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
       }
     )
