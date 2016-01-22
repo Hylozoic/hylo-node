@@ -37,7 +37,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   memberships: function () {
-    return this.hasMany(Membership)
+    return this.hasMany(Membership).query({where: {active: true}})
   },
 
   onboarding: function () {
