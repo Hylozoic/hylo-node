@@ -175,9 +175,8 @@ module.exports = {
 
       return Promise.all(promises)
     })
-    .then(function () {
-      res.ok({})
-    }).catch(function (err) {
+    .then(() => res.ok({}))
+    .catch(function (err) {
       if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
         res.statusCode = 422
         res.send(req.__(err.message))

@@ -1,3 +1,19 @@
+var listModelQuerySettings = (qb, table, column, opts) => {
+  qb.limit(opts.limit || 20)
+
+  // this will require the fetch or fetchAll call to have {columns: [column]}
+  qb.groupBy(column)
+
+  if (opts.autocomplete) {
+    Search.addTermToQueryBuilder(opts.autocomplete, qb, {
+      columns: [format('%s.%s', table, column)]
+    })
+    // qb.whereRaw('users_org.org_name ilike ?', opts.autocomplete + '%')
+  }
+
+  qb.whereRaw(format('length(%s) < 40', column))
+}
+
 module.exports = {
   forProjects: function (opts) {
     return Project.query(qb => {
@@ -185,21 +201,33 @@ module.exports = {
     })
   },
 
+  forSkills: function (opts) {
+    return Skill.query(qb => {
+      listModelQuerySettings(qb, 'users_skill', 'skill_name', opts)
+    })
+  },
+
+  forOrganizations: function (opts) {
+    return Organization.query(qb => {
+      listModelQuerySettings(qb, 'users_org', 'org_name', opts)
+    })
+  },
+
   addTermToQueryBuilder: function (term, qb, opts) {
     var query = _.chain(term.split(/\s*\s/)) // split on whitespace
-        .map(word => word.replace(/[,;|:&()!\\]+/, ''))
-        .reject(_.isEmpty)
-        .map(word => word + ':*') // add prefix matching
-        .reduce((result, word) => {
-          // build the tsquery string using logical AND operands
-          result += ' & ' + word
-          return result
-        }).value()
+    .map(word => word.replace(/[,;|:&()!\\]+/, ''))
+    .reject(_.isEmpty)
+    .map(word => word + ':*') // add prefix matching
+    .reduce((result, word) => {
+      // build the tsquery string using logical AND operands
+      result += ' & ' + word
+      return result
+    }).value()
 
     var statement = format('(%s)',
-        opts.columns
-          .map(col => format("(to_tsvector('english', %s) @@ to_tsquery(?))", col))
-          .join(' or '))
+      opts.columns
+      .map(col => format("(to_tsvector('english', %s) @@ to_tsquery(?))", col))
+      .join(' or '))
 
     var values = _.times(opts.columns.length, () => query)
 

@@ -55,25 +55,57 @@ module.exports = {
   autocomplete: function (req, res) {
     var term = req.param('q').trim()
     var resultType = req.param('type')
-    var sort = resultType === 'posts' ? 'post.created_at' : null
-    var method = resultType === 'posts' ? Search.forPosts : Search.forUsers
+    var sort, method, columns
 
-    return findCommunityIds(req)
-    .then(communityIds => ({
-      communities: communityIds,
-      project: req.param('projectId')
-    }))
+    switch (resultType) {
+      case 'posts':
+        method = Search.forPosts
+        sort = 'post.created_at'
+        break
+      case 'skills':
+        method = Search.forSkills
+        columns = ['skill_name']
+        break
+      case 'organizations':
+        method = Search.forOrganizations
+        columns = ['org_name']
+        break
+      default:
+        method = Search.forUsers
+    }
+
+    return (() => {
+      if (!_.contains(['skills', 'organizations'], resultType)) {
+        return findCommunityIds(req)
+        .then(communityIds => ({
+          communities: communityIds,
+          project: req.param('projectId')
+        }))
+      }
+
+      return Promise.resolve({})
+    })()
     .then(filters => method(_.extend(filters, {
       autocomplete: term,
       limit: req.param('limit') || 5,
       sort: sort
-    })).fetchAll())
-    .then(results => {
-      if (resultType === 'posts') {
-        res.ok(results.map(result => result.pick('id', 'name')))
-      } else {
-        res.ok(results.map(result => result.pick('id', 'name', 'avatar_url')))
+    })).fetchAll({columns: columns}))
+    .then(rows => {
+      var present
+      switch (resultType) {
+        case 'posts':
+          present = row => row.pick('id', 'name')
+          break
+        case 'skills':
+          present = row => ({name: row.get('skill_name')})
+          break
+        case 'organizations':
+          present = row => ({name: row.get('org_name')})
+          break
+        default:
+          present = row => row.pick('id', 'name', 'avatar_url')
       }
+      res.ok(rows.map(present))
     })
     .catch(res.serverError)
   }
