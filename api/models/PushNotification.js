@@ -1,7 +1,8 @@
 var format = require('util').format
 var Promise = require('bluebird')
-var ZeroPush = require('nzero-push')
+var request = require('request')
 var rollbar = require('rollbar')
+var HTTPStatus = require('http-status')
 
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
@@ -15,16 +16,53 @@ module.exports = bookshelf.Model.extend({
       return
     }
 
-    var zeroPush = new ZeroPush(zeroPushToken)
-    var notify = Promise.promisify(zeroPush.notify, zeroPush)
+    var notify = Promise.promisify(this.notify)
     var deviceTokens = [this.get('device_token')]
-    var platform = this.getPlatform()
     var notification = this.notificationForZP()
 
     this.set('time_sent', (new Date()).toISOString())
     return this.save({}, options)
-      .then(pn => notify(platform, deviceTokens, notification))
+      .then(pn => notify(zeroPushToken, deviceTokens, notification))
       .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ZEROPUSH_PROD_TOKEN, device_token: deviceTokens}}))
+  },
+
+  notify: function (zeroPushToken, deviceTokens, notification, callback) {
+    var BASE_URL = 'https://zeropush.pushwoosh.com'
+
+    var requestOptions = {
+      url: BASE_URL + '/notify',
+      method: 'POST',
+      headers: {'Accept': 'application/json', 'User-Agent': 'request', 'Content-Type': 'application/json'},
+      json: true,
+      body: notification
+    }
+
+    requestOptions.body.auth_token = zeroPushToken
+    requestOptions.body.device_tokens = deviceTokens
+
+    request(requestOptions, function (err, res, body) {
+      if (err) return callback(err)
+
+      switch (res.statusCode) {
+        case HTTPStatus.OK:
+          callback(null, body, res.headers)
+          break
+        case HTTPStatus.UNAUTHORIZED:
+          callback(new Error('Resource access denied'))
+          break
+        case HTTPStatus.FORBIDDEN:
+          callback(new Error('Access Forbidden: ' + body.message))
+          break
+        case HTTPStatus.NOT_FOUND:
+          callback(new Error('Resource not found'))
+          break
+        case HTTPStatus.PRECONDITION_FAILED:
+          callback(new Error('Precondition Failed: ' + body.message))
+          break
+        default:
+          callback(new Error('Expected status code ' + HTTPStatus.OK + ' and received ' + res.statusCode))
+      }
+    })
   },
 
   notificationForZP: function () {
