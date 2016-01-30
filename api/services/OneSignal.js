@@ -70,7 +70,7 @@ var OneSignal = module.exports = {
       params = OneSignal.androidNotification(deviceToken, alert, path)
     }
 
-    params['app_id'] = OneSignal.appId(platform)
+    params['app_id'] = process.env.ONESIGNAL_APP_ID
     return params
   },
 
