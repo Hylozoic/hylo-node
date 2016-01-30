@@ -31,7 +31,6 @@ module.exports = bookshelf.Model.extend({
 }, {
   textForComment: function (comment, version, userId) {
     var post = comment.relations.post
-    sails.log.debug('Post', post)
     var commenter = comment.relations.user
     var postName, relatedUser
 
