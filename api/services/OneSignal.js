@@ -3,7 +3,7 @@ var request = require('request')
 
 var OneSignal = module.exports = {
 
-  register: function (deviceToken, platform) {
+  register: function (platform, deviceToken) {
     var url = 'https://onesignal.com/api/v1/players'
     var appId = process.env.ONESIGNAL_APP_ID
     var deviceType = platform === 'ios_macos' ? 0 : 1

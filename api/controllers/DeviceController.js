@@ -24,6 +24,7 @@ module.exports = {
       user_id: req.session.userId
     })
       .fetch()
+      .tap(device => OneSignal.register(platform, req.param('token')))
       .then(device => {
         if (device) {
           return device
