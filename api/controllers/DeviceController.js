@@ -29,7 +29,6 @@ module.exports = {
     return Device.forge({
       token: req.param('token'),
       platform: platform,
-      version: version,
       user_id: req.session.userId
     })
     .fetch()
@@ -43,6 +42,7 @@ module.exports = {
         return Device.forge({
           token: req.param('token'),
           platform: platform,
+          version: version,
           user_id: req.session.userId
         })
         .save()
