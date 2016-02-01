@@ -1,4 +1,19 @@
 module.exports = {
+  lookup: function (req, res) {
+    return Invitation.where({token: req.param('token')}).fetch({withRelated: 'community'})
+    .then(invitation => {
+      if (!invitation) {
+        return res.ok({error: 'bad link'})
+      }
+
+      if (invitation.isUsed()) {
+        return res.ok({error: 'used link'})
+      }
+
+      return res.ok(invitation.relations.community.pick('id', 'name', 'slug', 'avatar_url'))
+    })
+  },
+
   use: function (req, res) {
     return Invitation.where({token: req.param('token')}).fetch()
     .then(function (invitation) {

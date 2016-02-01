@@ -117,6 +117,7 @@ module.exports.routes = {
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',
 
+  'GET    /noo/invitation/:token':                        'InvitationController.lookup',
   'POST   /noo/invitation/:token':                        'InvitationController.use',
 
   'POST   /noo/waitlist':                                 'MessageController.createWaitlistRequest',
