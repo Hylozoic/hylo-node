@@ -198,7 +198,8 @@ CREATE TABLE devices (
     badge_no integer DEFAULT 0,
     token character varying(255),
     enabled boolean DEFAULT true,
-    platform character varying(255)
+    platform character varying(255),
+    version character varying(255)
 );
 
 
