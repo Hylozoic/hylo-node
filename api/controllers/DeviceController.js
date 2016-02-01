@@ -6,22 +6,30 @@
  */
 
 module.exports = {
-
   create: function (req, res) {
-    var token = req.param('token');
-    var platform = req.param('platform');
+    var token = req.param('token')
+    var platform = req.param('platform')
 
     if (!token) {
-      return res.serverError('no device token');
+      return res.serverError('no device token')
     }
 
     if (!platform) {
-      platform = "ios_macos"
+      platform = 'ios_macos'
+    }
+
+    var version
+
+    if (platform === 'ios_macos') {
+      version = req.headers['ios-version']
+    } else {
+      version = req.headers['android-version']
     }
 
     return Device.forge({
-      token: req.param("token"),
+      token: req.param('token'),
       platform: platform,
+      version: version,
       user_id: req.session.userId
     })
     .fetch()
@@ -29,24 +37,26 @@ module.exports = {
       if (device) {
         return device
         .save({enabled: true})
-        .then(device => res.ok({result: "Known"}))
+        .then(device => res.ok({result: 'Known'}))
       } else {
         return Device.forge({
-          token: req.param("token"),
+          token: req.param('token'),
           platform: platform,
+          version: version,
           user_id: req.session.userId
         })
         .save()
-        .then(device => res.ok({result: "Added"}));
-      };
+        .tap(device => version && OneSignal.register(platform, req.param('token')))
+        .then(device => res.ok({result: 'Added'}))
+      }
     })
-    .catch(res.serverError);
+    .catch(res.serverError)
   },
 
   destroy: function (req, res) {
-    var token = req.param('token');
+    var token = req.param('token')
     if (!token) {
-      return res.serverError('no device token');
+      return res.serverError('no device token')
     }
 
     return Device.query()
@@ -55,14 +65,14 @@ module.exports = {
       user_id: req.session.userId
     })
     .update({enabled: false})
-    .then(() => res.ok({result: "Updated"}))
-    .catch(res.serverError);
+    .then(() => res.ok({result: 'Updated'}))
+    .catch(res.serverError)
   },
 
   updateBadgeNo: function (req, res) {
-    var token = req.param('token');
+    var token = req.param('token')
     if (!token) {
-      return res.serverError('no device token');
+      return res.serverError('no device token')
     }
 
     return Device.query()
@@ -70,9 +80,9 @@ module.exports = {
       token: token,
       user_id: req.session.userId
     })
-    .update({badge_no: req.param("badgeNo") || 0})
-    .then(() => res.ok({result: "Updated"}))
-    .catch(res.serverError);
+    .update({badge_no: req.param('badgeNo') || 0})
+    .then(() => res.ok({result: 'Updated'}))
+    .catch(res.serverError)
   }
 
-};
+}

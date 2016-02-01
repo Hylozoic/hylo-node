@@ -10,6 +10,10 @@ module.exports = bookshelf.Model.extend({
     if (!this.get('enabled')) {
       return
     }
+    if (!this.get('version')) {
+      // this will be replaced to a call to an alternative push api for old versions of the app
+      return
+    }
     User.find(this.get('user_id'))
     .then(function (user) {
       var badge_no = user.get('new_notification_count')
