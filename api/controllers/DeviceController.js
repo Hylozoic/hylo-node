@@ -18,29 +18,38 @@ module.exports = {
       platform = 'ios_macos'
     }
 
+    var version
+
+    if (platform === 'ios_macos') {
+      version = req.headers['ios-version']
+    } else {
+      version = req.headers['android-version']
+    }
+
     return Device.forge({
       token: req.param('token'),
       platform: platform,
+      version: version,
       user_id: req.session.userId
     })
-      .fetch()
-      .tap(device => OneSignal.register(platform, req.param('token')))
-      .then(device => {
-        if (device) {
-          return device
-            .save({enabled: true})
-            .then(device => res.ok({result: 'Known'}))
-        } else {
-          return Device.forge({
-            token: req.param('token'),
-            platform: platform,
-            user_id: req.session.userId
-          })
-            .save()
-            .then(device => res.ok({result: 'Added'}))
-        }
-      })
-      .catch(res.serverError)
+    .fetch()
+    .tap(device => OneSignal.register(platform, req.param('token')))
+    .then(device => {
+      if (device) {
+        return device
+        .save({enabled: true})
+        .then(device => res.ok({result: 'Known'}))
+      } else {
+        return Device.forge({
+          token: req.param('token'),
+          platform: platform,
+          user_id: req.session.userId
+        })
+        .save()
+        .then(device => res.ok({result: 'Added'}))
+      }
+    })
+    .catch(res.serverError)
   },
 
   destroy: function (req, res) {
@@ -50,13 +59,13 @@ module.exports = {
     }
 
     return Device.query()
-      .where({
-        token: token,
-        user_id: req.session.userId
-      })
-      .update({enabled: false})
-      .then(() => res.ok({result: 'Updated'}))
-      .catch(res.serverError)
+    .where({
+      token: token,
+      user_id: req.session.userId
+    })
+    .update({enabled: false})
+    .then(() => res.ok({result: 'Updated'}))
+    .catch(res.serverError)
   },
 
   updateBadgeNo: function (req, res) {
@@ -66,13 +75,13 @@ module.exports = {
     }
 
     return Device.query()
-      .where({
-        token: token,
-        user_id: req.session.userId
-      })
-      .update({badge_no: req.param('badgeNo') || 0})
-      .then(() => res.ok({result: 'Updated'}))
-      .catch(res.serverError)
+    .where({
+      token: token,
+      user_id: req.session.userId
+    })
+    .update({badge_no: req.param('badgeNo') || 0})
+    .then(() => res.ok({result: 'Updated'}))
+    .catch(res.serverError)
   }
 
 }
