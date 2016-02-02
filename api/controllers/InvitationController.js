@@ -3,11 +3,11 @@ module.exports = {
     return Invitation.where({token: req.param('token')}).fetch({withRelated: 'community'})
     .then(invitation => {
       if (!invitation) {
-        return res.ok({error: 'bad link'})
+        return res.status(422).send('bad token')
       }
 
       if (invitation.isUsed()) {
-        return res.ok({error: 'used link'})
+        return res.status(422).send('used token')
       }
 
       return res.ok(invitation.relations.community.pick('id', 'name', 'slug', 'avatar_url'))
@@ -18,11 +18,11 @@ module.exports = {
     return Invitation.where({token: req.param('token')}).fetch()
     .then(function (invitation) {
       if (!invitation) {
-        return res.ok({error: 'bad link'})
+        return res.status(422).send('bad token')
       }
 
       if (invitation.isUsed()) {
-        return res.ok({error: 'used link'})
+        return res.status(422).send('used token')
       }
 
       // user is logged in; apply the invitation
@@ -35,7 +35,7 @@ module.exports = {
         .then(() => res.ok({}))
         .catch(err => {
           if (err.message && err.message.contains('duplicate key value')) {
-            return res.ok({error: 'already a member'})
+            res.status(422).send('already a member')
           } else {
             throw err
           }
