@@ -23,8 +23,13 @@ module.exports.policies = {
   '*': false,
 
   SessionController: true,
-  InvitationController: true,
   LinkedinController: ['sessionAuth'],
+
+  InvitationController: {
+    use: true,
+    lookup: true,
+    find: ['sessionAuth', 'canInvite']
+  },
 
   AdminSessionController: {
     create:  true,

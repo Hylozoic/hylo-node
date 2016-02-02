@@ -74,6 +74,7 @@ module.exports.routes = {
   'DELETE /noo/community/:communityId/member/:userId':    'CommunityController.removeMember',
   'GET    /noo/community/:communityId/posts':             'PostController.findForCommunity',
   'GET    /noo/community/:communityId/projects':          'ProjectController.findForCommunity',
+  'GET    /noo/community/:communityId/invitations':       'InvitationController.find',
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',

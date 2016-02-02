@@ -51,6 +51,24 @@ module.exports = {
       })
     })
     .catch(res.serverError)
+  },
+
+  find: function (req, res) {
+    Community.find(req.param('communityId'))
+    .then(community => Invitation.query(qb => {
+      qb.limit(req.param('limit') || 20)
+      qb.offset(req.param('offset') || 0)
+      qb.where('community_id', community.get('id'))
+      qb.select(bookshelf.knex.raw('community_invite.*, count(*) over () as total'))
+      qb.orderBy('created', 'desc')
+    }).fetchAll({withRelated: 'user'}))
+    .then(invitations => ({
+      total: invitations.length > 0 ? Number(invitations.first().get('total')) : 0,
+      items: invitations.map(invitation => _.merge(invitation.toJSON(), {
+        user: invitation.relations.user ? invitation.relations.user.pick('id', 'name', 'avatar_url') : null
+      }))
+    }))
+    .then(res.ok)
   }
 
 }
