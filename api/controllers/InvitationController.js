@@ -29,10 +29,9 @@ module.exports = {
       if (UserSession.isLoggedIn(req)) {
         return bookshelf.transaction(trx => {
           return invitation.use(req.session.userId, {transacting: trx})
-          .then(invitation =>
-            Post.createWelcomePost(req.session.userId, invitation.get('community_id'), trx))
+          .tap(membership => Post.createWelcomePost(req.session.userId, invitation.get('community_id'), trx))
         })
-        .then(() => res.ok({}))
+        .then(membership => membership.load('community').then(() => res.ok(membership)))
         .catch(err => {
           if (err.message && err.message.contains('duplicate key value')) {
             res.status(422).send('already a member')
