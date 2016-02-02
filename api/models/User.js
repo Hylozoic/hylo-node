@@ -196,6 +196,10 @@ module.exports = bookshelf.Model.extend({
       })
     }
 
+    if (!attributes.name) {
+      attributes.name = attributes.email.split('@')[0].replace(/[\._]/g, ' ')
+    }
+
     return new User(attributes).save({}, {transacting: trx}).tap(user => Promise.join(
       account && LinkedAccount.create(user.id, account, {transacting: trx}),
       community && Membership.create(user.id, community.id, {transacting: trx})

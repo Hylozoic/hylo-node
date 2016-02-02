@@ -110,12 +110,14 @@ describe('User', function () {
         return User.create({
           email: 'foo@bar.com',
           community: community,
-          account: {type: 'password', password: 'password!'}
+          account: {type: 'password', password: 'password!'},
+          name: 'foo bar'
         }, {transacting: trx})
       })
         .then(function (user) {
           expect(user.id).to.exist
           expect(user.get('active')).to.be.true
+          expect(user.get('name')).to.equal('foo bar')
           expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'))
           expect(user.get('created_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
           expect(user.get('settings').digest_frequency).to.equal('daily')
@@ -137,7 +139,7 @@ describe('User', function () {
     it('works with google', function () {
       return bookshelf.transaction(function (trx) {
         return User.create({
-          email: 'foo2@bar.com',
+          email: 'foo2.moo2_wow@bar.com',
           community: community,
           account: {type: 'google', profile: {id: 'foo'}}
         }, {transacting: trx})
@@ -145,6 +147,7 @@ describe('User', function () {
         .then(function (user) {
           expect(user.id).to.exist
           expect(user.get('active')).to.be.true
+          expect(user.get('name')).to.equal('foo2 moo2 wow')
           expect(user.get('settings').digest_frequency).to.equal('daily')
           expect(user.get('send_email_preference')).to.be.true
 
