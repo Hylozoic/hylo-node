@@ -144,7 +144,7 @@ describe('CommunityController', () => {
       })
     })
 
-    it('works', () => {
+    it('works', function () {
       this.timeout(5000)
       _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
 

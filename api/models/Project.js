@@ -47,7 +47,7 @@ module.exports = bookshelf.Model.extend({
     }
     return Project.where({id: id_or_slug}).fetch(options)
     .catch(err => {
-      if (err.message && err.message.contains('invalid input syntax for integer')) {
+      if (err.message && err.message.includes('invalid input syntax for integer')) {
         return Project.where({slug: id_or_slug}).fetch(options)
       }
       throw err

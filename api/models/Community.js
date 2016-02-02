@@ -52,7 +52,9 @@ module.exports = bookshelf.Model.extend({
       qb.where({
         'post_community.community_id': communityId,
         'comment.active': true
-      }).leftJoin('post_community', () => this.on('post_community.post_id', 'comment.post_id'))
+      }).leftJoin('post_community', function () {
+        this.on('post_community.post_id', 'comment.post_id')
+      })
     })
   },
 

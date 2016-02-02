@@ -33,7 +33,7 @@ module.exports = {
         })
         .then(membership => membership.load('community').then(() => res.ok(membership)))
         .catch(err => {
-          if (err.message && err.message.contains('duplicate key value')) {
+          if (err.message && err.message.includes('duplicate key value')) {
             res.status(422).send('already a member')
           } else {
             throw err

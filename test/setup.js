@@ -25,7 +25,7 @@ var setup = new TestSetup();
 before(function(done) {
   this.timeout(10000);
 
-  var i18n = require('sails/node_modules/i18n');
+  var i18n = require('i18n');
   i18n.configure(require(root('config/i18n')));
   global.sails = skiff.sails;
 

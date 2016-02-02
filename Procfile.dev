@@ -1,2 +1,2 @@
-web: forever -c "node --harmony" --minUptime 1000 --spinSleepTime 10000 -w app.js
-worker: DELAY_START=5 forever -c "node --harmony" --minUptime 1000 --spinSleepTime 10000 -w worker.js
+web: forever -c node --minUptime 1000 --spinSleepTime 10000 -w app.js
+worker: DELAY_START=5 forever -c node --minUptime 1000 --spinSleepTime 10000 -w worker.js

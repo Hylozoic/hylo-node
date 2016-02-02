@@ -31,7 +31,7 @@ var ProjectMembership = module.exports = bookshelf.Model.extend({
       created_at: new Date()
     }).save({}, _.pick(opts, 'transacting'))
     .catch(err => {
-      if (err.message.contains('duplicate key value')) {
+      if (err.message.includes('duplicate key value')) {
         return ProjectMembership.find(userId, projectId, opts);
       } else {
         throw err;

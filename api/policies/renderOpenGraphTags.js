@@ -15,7 +15,7 @@ var isBot = function (url, userAgent) {
   if (_.has(url.query, '_escaped_fragment_')) return true
 
   userAgent = userAgent.toLowerCase()
-  return crawlerUserAgents.some(u => userAgent.contains(u))
+  return crawlerUserAgents.some(u => userAgent.includes(u))
 }
 
 var crawlerUserAgents = [

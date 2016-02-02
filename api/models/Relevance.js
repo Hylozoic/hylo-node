@@ -29,7 +29,7 @@ module.exports = bookshelf.Model.extend({
       created_at: new Date()
     }).save()
     .catch(err => {
-      if (!err.message || !err.message.contains('duplicate key')) throw err;
+      if (!err.message || !err.message.includes('duplicate key')) throw err;
 
       return Relevance.query().where({
         user_id: userId,

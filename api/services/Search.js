@@ -231,7 +231,9 @@ module.exports = {
 
     var values = _.times(opts.columns.length, () => query)
 
-    qb.where(() => this.whereRaw(statement, values))
+    qb.where(function () {
+      this.whereRaw(statement, values)
+    })
   }
 
 }

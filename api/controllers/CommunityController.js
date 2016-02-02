@@ -125,7 +125,7 @@ module.exports = {
       Post.createWelcomePost(req.session.userId, community.id, trx)
     )))
     .catch(err => {
-      if (err.message && err.message.contains('duplicate key value')) {
+      if (err.message && err.message.includes('duplicate key value')) {
         return true
       } else {
         res.serverError(err)
