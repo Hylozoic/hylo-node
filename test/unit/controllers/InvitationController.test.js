@@ -32,7 +32,6 @@ describe('InvitationController', () => {
       return InvitationController.use(req, res)
       .then(() => {
         expect(res.ok).to.have.been.called()
-        expect(res.body).to.deep.equal({})
         return user.load(['followedPosts', 'followedPosts.relatedUsers', 'communities'])
       })
       .then(() => {
