@@ -37,7 +37,7 @@ var postAttributes = post => {
       contributors: post.relations.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers: post.relations.followers.map(u => u.pick('id', 'name', 'avatar_url')),
       responders: post.relations.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
-      media: post.relations.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url')),
+      media: post.relations.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')),
       myVote: post.relations.votes.length > 0,
       numComments: post.get('num_comments'),
       votes: post.get('num_votes'),
