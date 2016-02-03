@@ -35,6 +35,9 @@ module.exports = {
         return activities
       }
     })
+    .tap(() => req.param('resetCount') && User.query()
+      .where('id', req.param('userId'))
+      .update({new_notification_count: 0}))
     .then(res.ok, res.serverError)
   },
 
