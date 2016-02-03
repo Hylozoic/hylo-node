@@ -9,7 +9,7 @@ const parseEmailList = emails =>
   })
 
 module.exports = {
-  lookup: function (req, res) {
+  findOne: function (req, res) {
     return Invitation.where({token: req.param('token')}).fetch({withRelated: 'community'})
     .then(invitation => {
       if (!invitation) {
