@@ -66,7 +66,6 @@ module.exports.routes = {
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
   'GET    /noo/community/:communityId/settings':          'CommunityController.findSettings',
-  'POST   /noo/community/:communityId/invite':            'CommunityController.invite',
   'GET    /noo/community/:communityId/moderators':        'CommunityController.findModerators',
   'POST   /noo/community/:communityId/moderators':        'CommunityController.addModerator',
   'DELETE /noo/community/:communityId/moderator/:userId': 'CommunityController.removeModerator',
@@ -75,6 +74,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/posts':             'PostController.findForCommunity',
   'GET    /noo/community/:communityId/projects':          'ProjectController.findForCommunity',
   'GET    /noo/community/:communityId/invitations':       'InvitationController.find',
+  'POST   /noo/community/:communityId/invite':            'InvitationController.create',
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',

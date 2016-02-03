@@ -1,5 +1,3 @@
-var validator = require('validator')
-
 module.exports = {
   find: function (req, res) {
     Community.fetchAll({withRelated: [
@@ -55,39 +53,6 @@ module.exports = {
     community.save(saneAttrs, {patch: true})
     .then(() => res.ok({}))
     .catch(res.serverError)
-  },
-
-  invite: function (req, res) {
-    return Community.find(req.param('communityId'))
-    .then(function (community) {
-      var emails = (req.param('emails') || '').split(/,|\n/).map(function (email) {
-        var trimmed = email.trim()
-        var matchLongFormat = trimmed.match(/.*<(.*)>/)
-
-        if (matchLongFormat) return matchLongFormat[1]
-        return trimmed
-      })
-
-      return Promise.map(emails, function (email) {
-        if (!validator.isEmail(email)) {
-          return {email: email, error: 'not a valid email address'}
-        }
-
-        return Invitation.createAndSend({
-          email: email,
-          userId: req.session.userId,
-          communityId: community.id,
-          message: RichText.markdown(req.param('message')),
-          moderator: req.param('moderator'),
-          subject: req.param('subject')
-        }).then(function () {
-          return {email: email, error: null}
-        }).catch(function (err) {
-          return {email: email, error: err.message}
-        })
-      })
-    })
-    .then(results => res.ok({results: results}))
   },
 
   findModerators: function (req, res) {
@@ -240,5 +205,4 @@ module.exports = {
     .then(res.ok)
     .catch(res.serverError)
   }
-
 }

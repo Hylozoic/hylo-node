@@ -20,7 +20,6 @@ module.exports = bookshelf.Model.extend({
     return !!this.get('used_by_id');
   },
 
-
   use: function(userId, opts) {
     if (!opts) opts = {};
     var self = this, trx = opts.transacting;

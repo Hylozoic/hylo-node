@@ -1,3 +1,13 @@
+var validator = require('validator')
+
+const parseEmailList = emails =>
+  emails.split(/,|\n/).map(email => {
+    var trimmed = email.trim()
+    // use only the email portion of a "Joe Bloggs <joe@bloggs.org>" line
+    var match = trimmed.match(/.*<(.*)>/)
+    return match ? match[1] : trimmed
+  })
+
 module.exports = {
   lookup: function (req, res) {
     return Invitation.where({token: req.param('token')}).fetch({withRelated: 'community'})
@@ -69,6 +79,32 @@ module.exports = {
       }))
     }))
     .then(res.ok)
-  }
+  },
 
+  create: function (req, res) {
+    return Community.find(req.param('communityId'))
+    .then(function (community) {
+      var emails = parseEmailList(req.param('emails'))
+
+      return Promise.map(emails, function (email) {
+        if (!validator.isEmail(email)) {
+          return {email, error: 'not a valid email address'}
+        }
+
+        return Invitation.createAndSend({
+          email,
+          userId: req.session.userId,
+          communityId: community.id,
+          message: RichText.markdown(req.param('message')),
+          moderator: req.param('moderator'),
+          subject: req.param('subject')
+        }).then(function () {
+          return {email: email, error: null}
+        }).catch(function (err) {
+          return {email: email, error: err.message}
+        })
+      })
+    })
+    .then(results => res.ok({results: results}))
+  }
 }

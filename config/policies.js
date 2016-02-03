@@ -28,7 +28,8 @@ module.exports.policies = {
   InvitationController: {
     use: true,
     lookup: true,
-    find: ['sessionAuth', 'canInvite']
+    find: ['sessionAuth', 'canInvite'],
+    create: ['sessionAuth', 'canInvite']
   },
 
   AdminSessionController: {
@@ -77,7 +78,6 @@ module.exports.policies = {
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findSettings:    ['sessionAuth', 'canInvite'],
     update:          ['sessionAuth', 'isModerator'],
-    invite:          ['sessionAuth', 'canInvite'],
     findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController
     addModerator:    ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
