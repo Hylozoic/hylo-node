@@ -30,7 +30,7 @@ module.exports = {
     .tap(activities => total = (activities.length > 0 ? activities.first().get('total') : 0))
     .then(activities => {
       if (req.param('paginate')) {
-        return {activities_total: total, activities: activities}
+        return {total, items: activities}
       } else {
         return activities
       }
