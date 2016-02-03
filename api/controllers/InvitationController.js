@@ -74,9 +74,12 @@ module.exports = {
     }).fetchAll({withRelated: 'user'}))
     .then(invitations => ({
       total: invitations.length > 0 ? Number(invitations.first().get('total')) : 0,
-      items: invitations.map(invitation => _.merge(invitation.toJSON(), {
-        user: invitation.relations.user ? invitation.relations.user.pick('id', 'name', 'avatar_url') : null
-      }))
+      items: invitations.map(i => {
+        var user = i.relations.user.pick('id', 'name', 'avatar_url')
+        return _.merge(i.pick('id', 'email', 'created'), {
+          user: !_.isEmpty(user) ? user : null
+        })
+      })
     }))
     .then(res.ok)
   },
