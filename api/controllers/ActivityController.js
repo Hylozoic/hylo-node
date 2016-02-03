@@ -10,10 +10,14 @@ module.exports = {
       qb.orderBy('created_at', 'desc')
 
       qb.whereRaw('(comment.active = true or comment.id is null)')
-      .leftJoin('comment', () => this.on('comment.id', '=', 'activity.comment_id'))
+      .leftJoin('comment', function () {
+        this.on('comment.id', '=', 'activity.comment_id')
+      })
 
       qb.whereRaw('(post.active = true or post.id is null)')
-      .leftJoin('post', () => this.on('post.id', '=', 'activity.post_id'))
+      .leftJoin('post', function () {
+        this.on('post.id', '=', 'activity.post_id')
+      })
     })
     .fetchAll({withRelated: [
       {actor: qb => qb.column('id', 'name', 'avatar_url')},
