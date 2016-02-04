@@ -146,21 +146,5 @@ module.exports = {
     .then(function() {
       return queries;
     });
-  },
-
-  convertWebsitesToExtraInfo: function (userId) {
-    return UserWebsite.where('user_id', userId).fetchAll()
-    .then(sites => {
-      if (sites.length === 0) return
-
-      var sitesMarkdown = sites.map(site => {
-        var text = site.get('value')
-        if (!text.startsWith('http')) text = 'http://' + text
-        var u = url.parse(text)
-        return `[${u.hostname}](${u.href})`
-      }).join('\n')
-
-      return bookshelf.knex.raw(`update users set extra_info = E'${sitesMarkdown}\n\n' || coalesce(extra_info, '') where id = ${userId}`)
-    })
   }
 };
