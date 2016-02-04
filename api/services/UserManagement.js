@@ -160,7 +160,7 @@ module.exports = {
         return `[${u.hostname}](${u.href})`
       }).join('\n')
 
-      return bookshelf.knex.raw(`update users set extra_info = E'${sitesMarkdown}\n\n' || extra_info where id = ${userId}`)
+      return bookshelf.knex.raw(`update users set extra_info = E'${sitesMarkdown}\n\n' || coalesce(extra_info, '') where id = ${userId}`)
     })
   }
 };
