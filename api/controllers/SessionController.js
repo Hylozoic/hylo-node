@@ -45,6 +45,7 @@ var finishOAuth = function (strategy, req, res, next) {
 
   var authCallback = function (err, profile, info) {
     if (err || !profile) {
+      console.error(err.stack)
       res.view('popupDone', _.extend({error: err || 'no user'}, viewLocals))
       return
     }
@@ -72,7 +73,10 @@ var finishOAuth = function (strategy, req, res, next) {
     })
     .then(user => UserExternalData.store(user.id, service, profile._json))
     .then(() => res.view('popupDone', viewLocals))
-    .catch(err => res.view('popupDone', _.extend({error: err}, viewLocals)))
+    .catch(err => {
+      console.error(err.stack)
+      res.view('popupDone', _.extend({error: err}, viewLocals))
+    })
   }
 
   passport.authenticate(strategy, authCallback)(req, res, next)
