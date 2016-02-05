@@ -188,13 +188,16 @@ describe('SessionController', function () {
 
       it('creates a new linked account', done => {
         setupTest(function () {
-          user.load('linkedAccounts')
+          User.find(user.id, {withRelated: 'linkedAccounts'})
           .then(user => {
             var account = user.relations.linkedAccounts.first()
             expect(account).to.exist
             expect(account.get('provider_key')).to.equal('facebook')
+            expect(user.get('facebook_url')).to.equal(mockProfile.profileUrl)
+            expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/100101/picture?type=large')
             done()
           })
+          .catch(done)
         })
         SessionController.finishFacebookOAuth(req, res)
       })

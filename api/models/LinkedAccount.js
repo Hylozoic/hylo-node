@@ -21,15 +21,44 @@ module.exports = bookshelf.Model.extend({
 }, {
   create: function (userId, data, options) {
     if (!options) options = {}
+    var type = data.type
+    var profile = data.profile
 
     return (() =>
-      data.type === 'password'
+      type === 'password'
         ? hash(data.password, 10)
         : Promise.resolve(null))()
     .then(hashed => new LinkedAccount({
-      provider_key: data.type,
-      provider_user_id: hashed || data.profile.id,
+      provider_key: type,
+      provider_user_id: hashed || profile.id,
       user_id: userId
     }).save({}, _.pick(options, 'transacting')))
+    .tap(() => options.updateUser &&
+      User.find(userId, _.pick(options, 'transacting'))
+      .then(user => {
+        var avatar_url = user.get('avatar_url')
+        var attributes = this.socialMediaAttributes(type, profile)
+        if (avatar_url && !avatar_url.match(/gravatar/)) {
+          attributes.avatar_url = avatar_url
+        }
+        return User.query().where('id', userId)
+        .update(attributes)
+        .transacting(options.transacting)
+      }))
+  },
+
+  socialMediaAttributes: function (type, profile) {
+    switch (type) {
+      case 'facebook':
+        return {
+          facebook_url: profile.profileUrl,
+          avatar_url: `http://graph.facebook.com/${profile.id}/picture?type=large`
+        }
+      case 'linkedin':
+        return {
+          linkedin_url: profile._json.publicProfileUrl,
+          avatar_url: profile.photos[0].value
+        }
+    }
   }
 })

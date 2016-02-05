@@ -114,26 +114,26 @@ describe('User', function () {
           name: 'foo bar'
         }, {transacting: trx})
       })
-        .then(function (user) {
-          expect(user.id).to.exist
-          expect(user.get('active')).to.be.true
-          expect(user.get('name')).to.equal('foo bar')
-          expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'))
-          expect(user.get('created_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
-          expect(user.get('settings').digest_frequency).to.equal('daily')
-          expect(user.get('send_email_preference')).to.be.true
+      .then(function (user) {
+        expect(user.id).to.exist
+        expect(user.get('active')).to.be.true
+        expect(user.get('name')).to.equal('foo bar')
+        expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'))
+        expect(user.get('created_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
+        expect(user.get('settings').digest_frequency).to.equal('daily')
+        expect(user.get('send_email_preference')).to.be.true
 
-          return Promise.join(
-            LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
-              expect(account).to.exist
-              expect(account.get('provider_key')).to.equal('password')
-              expect(bcrypt.compareSync('password!', account.get('provider_user_id'))).to.be.true
-            }),
-            Membership.find(user.id, community.id).then(function (membership) {
-              expect(membership).to.exist
-            })
-          )
-        })
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
+            expect(account).to.exist
+            expect(account.get('provider_key')).to.equal('password')
+            expect(bcrypt.compareSync('password!', account.get('provider_user_id'))).to.be.true
+          }),
+          Membership.find(user.id, community.id).then(function (membership) {
+            expect(membership).to.exist
+          })
+        )
+      })
     })
 
     it('works with google', function () {
@@ -144,24 +144,24 @@ describe('User', function () {
           account: {type: 'google', profile: {id: 'foo'}}
         }, {transacting: trx})
       })
-        .then(function (user) {
-          expect(user.id).to.exist
-          expect(user.get('active')).to.be.true
-          expect(user.get('name')).to.equal('foo2 moo2 wow')
-          expect(user.get('settings').digest_frequency).to.equal('daily')
-          expect(user.get('send_email_preference')).to.be.true
+      .then(function (user) {
+        expect(user.id).to.exist
+        expect(user.get('active')).to.be.true
+        expect(user.get('name')).to.equal('foo2 moo2 wow')
+        expect(user.get('settings').digest_frequency).to.equal('daily')
+        expect(user.get('send_email_preference')).to.be.true
 
-          return Promise.join(
-            LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
-              expect(account).to.exist
-              expect(account.get('provider_key')).to.equal('google')
-              expect(account.get('provider_user_id')).to.equal('foo')
-            }),
-            Membership.find(user.id, community.id).then(function (membership) {
-              expect(membership).to.exist
-            })
-          )
-        })
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
+            expect(account).to.exist
+            expect(account.get('provider_key')).to.equal('google')
+            expect(account.get('provider_user_id')).to.equal('foo')
+          }),
+          Membership.find(user.id, community.id).then(function (membership) {
+            expect(membership).to.exist
+          })
+        )
+      })
     })
 
     it('works with facebook', function () {
@@ -178,25 +178,26 @@ describe('User', function () {
           }
         }, {transacting: trx})
       })
-        .then(function (user) {
-          expect(user.id).to.exist
-          expect(user.get('active')).to.be.true
-          expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/foo/picture?type=large')
-          expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo')
-          expect(user.get('settings').digest_frequency).to.equal('daily')
-          expect(user.get('send_email_preference')).to.be.true
+      .then(user => User.find(user.id))
+      .then(user => {
+        expect(user.id).to.exist
+        expect(user.get('active')).to.be.true
+        expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo')
+        expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/foo/picture?type=large')
+        expect(user.get('settings').digest_frequency).to.equal('daily')
+        expect(user.get('send_email_preference')).to.be.true
 
-          return Promise.join(
-            LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
-              expect(account).to.exist
-              expect(account.get('provider_key')).to.equal('facebook')
-              expect(account.get('provider_user_id')).to.equal('foo')
-            }),
-            Membership.find(user.id, community.id).then(function (membership) {
-              expect(membership).to.exist
-            })
-          )
-        })
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
+            expect(account).to.exist
+            expect(account.get('provider_key')).to.equal('facebook')
+            expect(account.get('provider_user_id')).to.equal('foo')
+          }),
+          Membership.find(user.id, community.id).then(function (membership) {
+            expect(membership).to.exist
+          })
+        )
+      })
     })
 
     it('works with linkedin', function () {
@@ -216,25 +217,26 @@ describe('User', function () {
           }
         }, {transacting: trx})
       })
-        .then(function (user) {
-          expect(user.id).to.exist
-          expect(user.get('active')).to.be.true
-          expect(user.get('avatar_url')).to.equal(catPic)
-          expect(user.get('linkedin_url')).to.equal('https://www.linkedin.com/in/foobar')
-          expect(user.get('settings').digest_frequency).to.equal('daily')
-          expect(user.get('send_email_preference')).to.be.true
+      .then(user => User.find(user.id))
+      .then(user => {
+        expect(user.id).to.exist
+        expect(user.get('active')).to.be.true
+        expect(user.get('linkedin_url')).to.equal('https://www.linkedin.com/in/foobar')
+        expect(user.get('avatar_url')).to.equal(catPic)
+        expect(user.get('settings').digest_frequency).to.equal('daily')
+        expect(user.get('send_email_preference')).to.be.true
 
-          return Promise.join(
-            LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
-              expect(account).to.exist
-              expect(account.get('provider_key')).to.equal('linkedin')
-              expect(account.get('provider_user_id')).to.equal('foo')
-            }),
-            Membership.find(user.id, community.id).then(function (membership) {
-              expect(membership).to.exist
-            })
-          )
-        })
+        return Promise.join(
+          LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
+            expect(account).to.exist
+            expect(account.get('provider_key')).to.equal('linkedin')
+            expect(account.get('provider_user_id')).to.equal('foo')
+          }),
+          Membership.find(user.id, community.id).then(function (membership) {
+            expect(membership).to.exist
+          })
+        )
+      })
     })
   })
 })
