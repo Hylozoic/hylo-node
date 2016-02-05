@@ -53,12 +53,9 @@ var finishOAuth = function (strategy, req, res, next) {
     .then(user => {
       if (user) {
         return UserSession.login(req, user, service)
-        .tap(() => {
-          // if this is a new account, link it to the user
-          if (!hasLinkedAccount(user, service)) {
-            return LinkedAccount.create(user.id, {type: service, profile: profile})
-          }
-        })
+        // if this is a new account, link it to the user
+        .tap(() => hasLinkedAccount(user, service) ||
+          LinkedAccount.create(user.id, {type: service, profile}))
         .then(() => user)
       } else {
         return findCommunity(req)
