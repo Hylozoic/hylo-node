@@ -62,15 +62,15 @@ var finishOAuth = function (strategy, req, res, next) {
         .then(() => user)
       } else {
         return findCommunity(req)
-          .spread((community, invitation) => {
-            var attrs = _.merge(_.pick(profile, 'email', 'name'), {
-              community: (invitation ? null : community),
-              account: {type: service, profile: profile}
-            })
-
-            return User.createFully(attrs, invitation)
+        .spread((community, invitation) => {
+          var attrs = _.merge(_.pick(profile, 'email', 'name'), {
+            community: (invitation ? null : community),
+            account: {type: service, profile: profile}
           })
-          .tap(user => UserSession.login(req, user, service))
+
+          return User.createFully(attrs, invitation)
+        })
+        .tap(user => UserSession.login(req, user, service))
       }
     })
     .then(user => UserExternalData.store(user.id, service, profile._json))
