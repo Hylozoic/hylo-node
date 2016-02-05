@@ -38,13 +38,9 @@ var finishOAuth = function (strategy, req, res, next) {
   }
 
   var viewLocals = {
-    context: 'oauth',
+    context: req.session.authContext || 'oauth',
     layout: null,
     returnDomain: req.session.returnDomain
-  }
-
-  if (req.session.returnDomain) {
-    console.log('use return domain:', req.session.returnDomain)
   }
 
   var authCallback = function (err, profile, info) {
@@ -85,12 +81,11 @@ var finishOAuth = function (strategy, req, res, next) {
   passport.authenticate(strategy, authCallback)(req, res, next)
 }
 
-const setReturnDomain = fn => (req, res) => {
-  const returnDomain = req.param('returnDomain')
-  if (returnDomain) {
-    req.session.returnDomain = returnDomain
-    console.log('set return domain:', returnDomain)
-  }
+// save params into session variables so that they can be used to return to the
+// right control flow
+const setSessionFromParams = fn => (req, res) => {
+  req.session.returnDomain = req.param('returnDomain')
+  req.session.authContext = req.param('authContext')
   return fn(req, res)
 }
 
@@ -116,7 +111,7 @@ module.exports = {
     })
   },
 
-  startGoogleOAuth: setReturnDomain(function (req, res) {
+  startGoogleOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('google', {scope: 'email'})(req, res)
   }),
 
@@ -124,7 +119,7 @@ module.exports = {
     finishOAuth('google', req, res, next)
   },
 
-  startFacebookOAuth: setReturnDomain(function (req, res) {
+  startFacebookOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('facebook', {
       display: 'popup',
       scope: ['email', 'public_profile', 'user_friends']
@@ -143,7 +138,7 @@ module.exports = {
     finishOAuth('google-token', req, res, next)
   },
 
-  startLinkedinOAuth: setReturnDomain(function (req, res) {
+  startLinkedinOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('linkedin')(req, res)
   }),
 
