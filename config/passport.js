@@ -73,7 +73,8 @@ var facebookStrategy = new FacebookStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
   clientSecret: process.env.FACEBOOK_APP_SECRET,
   callbackURL: url('/noo/login/facebook/oauth'),
-  scope: ['public_profile', 'email', 'user_friends', 'user_about_me', 'user_likes', 'user_location']
+  scope: ['public_profile', 'email', 'user_friends', 'user_about_me', 'user_likes', 'user_location'],
+  profileFields: ['id', 'displayName', 'email']
 }, function (accessToken, refreshToken, profile, done) {
   done(null, formatProfile(profile, accessToken, refreshToken))
 })
