@@ -27,6 +27,29 @@ var findCommunity = function (req) {
   })
 }
 
+var upsertUser = (req, service, profile) => {
+  return findUser(service, profile.email, profile.id)
+  .then(user => {
+    if (user) {
+      return UserSession.login(req, user, service)
+      // if this is a new account, link it to the user
+      .tap(() => hasLinkedAccount(user, service) ||
+        LinkedAccount.create(user.id, {type: service, profile}, {updateUser: true}))
+    }
+
+    return findCommunity(req)
+    .spread((community, invitation) => {
+      var attrs = _.merge(_.pick(profile, 'email', 'name'), {
+        community: (invitation ? null : community),
+        account: {type: service, profile}
+      })
+
+      return User.createFully(attrs, invitation)
+    })
+    .tap(user => UserSession.login(req, user, service))
+  })
+}
+
 var finishOAuth = function (strategy, req, res, next) {
   var service = strategy
   if (strategy === 'facebook-token') {
@@ -37,46 +60,23 @@ var finishOAuth = function (strategy, req, res, next) {
     service = 'linkedin'
   }
 
-  var viewLocals = {
-    context: req.session.authContext || 'oauth',
-    layout: null,
-    returnDomain: req.session.returnDomain
+  var respond = error => {
+    if (error && error.stack) console.error(error.stack)
+    return res.view('popupDone', {
+      error,
+      context: req.session.authContext || 'oauth',
+      layout: null,
+      returnDomain: req.session.returnDomain
+    })
   }
 
   var authCallback = function (err, profile, info) {
-    if (err || !profile) {
-      console.error(err.stack)
-      res.view('popupDone', _.extend({error: err || 'no user'}, viewLocals))
-      return
-    }
+    if (err || !profile) return respond(err || 'no user')
 
-    findUser(service, profile.email, profile.id)
-    .then(user => {
-      if (user) {
-        return UserSession.login(req, user, service)
-        // if this is a new account, link it to the user
-        .tap(() => hasLinkedAccount(user, service) ||
-          LinkedAccount.create(user.id, {type: service, profile}, {updateUser: true}))
-        .then(() => user)
-      } else {
-        return findCommunity(req)
-        .spread((community, invitation) => {
-          var attrs = _.merge(_.pick(profile, 'email', 'name'), {
-            community: (invitation ? null : community),
-            account: {type: service, profile: profile}
-          })
-
-          return User.createFully(attrs, invitation)
-        })
-        .tap(user => UserSession.login(req, user, service))
-      }
-    })
+    upsertUser(req, service, profile)
     .then(user => UserExternalData.store(user.id, service, profile._json))
-    .then(() => res.view('popupDone', viewLocals))
-    .catch(err => {
-      console.error(err.stack)
-      res.view('popupDone', _.extend({error: err}, viewLocals))
-    })
+    .then(() => respond())
+    .catch(respond)
   }
 
   passport.authenticate(strategy, authCallback)(req, res, next)
