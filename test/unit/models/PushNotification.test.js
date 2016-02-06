@@ -5,7 +5,13 @@ describe('PushNotification', function () {
   var pushNotification
 
   before(function () {
-    pushNotification = new PushNotification({device_token: 'abcd', alert: 'hi', path: '/p', badge_no: 7, platform: 'ios_macos'})
+    pushNotification = new PushNotification({
+      device_token: 'abcd',
+      alert: 'hi',
+      path: '/p',
+      badge_no: 7,
+      platform: 'ios_macos'
+    })
 
     nock('https://onesignal.com').post('/api/v1/notifications').reply(200, {result: 'success'})
 

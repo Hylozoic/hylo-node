@@ -36,7 +36,7 @@ describe('DeviceController', () => {
 
       return DeviceController.create(req, res)
       .then(() => {
-        return Device.forge({token: deviceToken})
+        return Device.where('token', '=', deviceToken)
         .fetch()
         .then(device => {
           expect(device).to.exist
