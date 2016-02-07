@@ -5,8 +5,6 @@ module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
 
   send: function (options) {
-    if (process.env.NODE_ENV === 'test') return
-
     var deviceToken = this.get('device_token')
     var platform = this.getPlatform()
     var alert = this.get('alert')
