@@ -24,7 +24,7 @@ module.exports = bookshelf.Model.extend({
   find: function (user_id, community_id_or_slug, options) {
     var fetch = function (community_id) {
       var attrs = {user_id, community_id}
-      if (options && !options.includeInactive) attrs.active = true
+      if (!options || !options.includeInactive) attrs.active = true
       return Membership.where(attrs).fetch(options)
     }
 
@@ -50,8 +50,8 @@ module.exports = bookshelf.Model.extend({
       role: opts.role || Membership.DEFAULT_ROLE
     })
     .save({}, {transacting: opts.transacting})
-    .tap(() => Community.find(communityId).then(community =>
-      Analytics.track({
+    .tap(() => Community.find(communityId, {transacting: opts.transacting})
+      .then(community => Analytics.track({
         userId: userId,
         event: 'Joined community',
         properties: {id: communityId, slug: community.get('slug')}
