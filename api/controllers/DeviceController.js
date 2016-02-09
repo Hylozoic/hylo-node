@@ -29,14 +29,13 @@ module.exports = {
     return Device.forge({
       token: req.param('token'),
       platform: platform,
-      version: version,
-      user_id: req.session.userId
+      version: version
     })
     .fetch()
     .then(device => {
       if (device) {
         return device
-        .save({enabled: true})
+        .save({enabled: true, user_id: req.session.userId})
         .then(device => res.ok({result: 'Known'}))
       } else {
         return Device.forge({
