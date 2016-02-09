@@ -11,7 +11,9 @@ var networkIdsQuery = function (userId) {
 module.exports = bookshelf.Model.extend({
   tableName: 'networks',
 
-  communities: () => this.hasMany(Community)
+  communities: function () {
+    return this.hasMany(Community)
+  }
 
 }, {
   find: function (idOrSlug, options) {
