@@ -98,7 +98,8 @@ module.exports = {
       }
     })
     // we get here if the membership was created successfully, or if it already existed
-    .then(ok => ok && Membership.find(req.session.userId, community.id)
+    .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
+      .tap(membership => !membership.get('active') && membership.save({active: true}, {patch: true}))
       .then(membership => _.merge(membership.toJSON(), {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       }))

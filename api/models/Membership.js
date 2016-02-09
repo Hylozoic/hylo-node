@@ -23,11 +23,9 @@ module.exports = bookshelf.Model.extend({
 
   find: function (user_id, community_id_or_slug, options) {
     var fetch = function (community_id) {
-      return Membership.where({
-        user_id: user_id,
-        community_id: community_id,
-        active: true
-      }).fetch(options)
+      var attrs = {user_id, community_id}
+      if (options && !options.includeInactive) attrs.active = true
+      return Membership.where(attrs).fetch(options)
     }
 
     if (isNaN(Number(community_id_or_slug))) {
