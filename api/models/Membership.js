@@ -50,11 +50,12 @@ module.exports = bookshelf.Model.extend({
       role: opts.role || Membership.DEFAULT_ROLE
     })
     .save({}, {transacting: opts.transacting})
-    .tap(() => Analytics.track({
-      userId: userId,
-      event: 'Joined community',
-      properties: {id: communityId}
-    }))
+    .tap(() => Community.find(communityId).then(community =>
+      Analytics.track({
+        userId: userId,
+        event: 'Joined community',
+        properties: {id: communityId, slug: community.get('slug')}
+      })))
   },
 
   setModeratorRole: function (user_id, community_id) {
