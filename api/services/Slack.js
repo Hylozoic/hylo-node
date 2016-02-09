@@ -25,7 +25,7 @@ module.exports = {
       body: {
         text: message,
         username: 'Hylobot',
-        icon_url: 'https://cdn.rawgit.com/Connoropolous/hylo-image/master/hylo48.png'
+        icon_url: process.env.HYLO_SLACK_ICON
       },
       json: true // Automatically stringifies the body to JSON
     };

@@ -47,6 +47,7 @@ REDIS_URL=redis://localhost:6379
 ROLLBAR_SERVER_TOKEN=foo
 SEGMENT_KEY=foo
 SENDWITHUS_KEY=foo
+HYLO_SLACK_ICON=https://raw.githubusercontent.com/Connoropolous/hylo-image/master/hylo48.png
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
@@ -55,6 +56,7 @@ SENDWITHUS_KEY=foo
 * `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
 * `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in  [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
 * `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
+* `HYLO_SLACK_ICON`: should be a 48x48 pixel icon optimized for display within slack
 
 ### running the dev server
 
@@ -105,7 +107,7 @@ cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 
 ### style guidelines
 
-We're gradually migrating to [Javascript Standard Style](https://github.com/feross/standard). 
+We're gradually migrating to [Javascript Standard Style](https://github.com/feross/standard).
 
 The [standard-formatter Atom package](https://atom.io/packages/standard-formatter) helps out a lot. We deviate from its default behavior only in not indenting a multi-line method chain:
 
