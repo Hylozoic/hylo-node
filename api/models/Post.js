@@ -241,22 +241,22 @@ module.exports = bookshelf.Model.extend({
 
         _.remove(users, user => user.get('id') === creator.get('id'))
         return Promise.join(
-          Promise.map(communities.models, (community) => {
+          Promise.map(communities.models, community => {
             if (!community.get('slack_hook')) return
-            return Community.sendSlackNotification(community.id, post); 
+            return Community.sendSlackNotification(community.id, post);
           }),
           Promise.map(users, (user) => {
-	    if (!user.get('push_new_post_preference')) return
-	    if (post.isWelcome()) return
-	    var userCommunities = user.relations.communities.models
-	    var postCommunitiesIds = communities.models.map(community => community.get('id'))
-	    var community, path, alertText
-	    community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
-	    if (!community) return
-	    path = url.parse(Frontend.Route.post(post, community)).path
-	    alertText = PushNotification.textForNewPost(post, community, user.get('id'))
-	    return user.sendPushNotification(alertText, path)
-	  })
+            if (!user.get('push_new_post_preference')) return
+            if (post.isWelcome()) return
+            var userCommunities = user.relations.communities.models
+            var postCommunitiesIds = communities.models.map(community => community.get('id'))
+            var community, path, alertText
+            community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
+            if (!community) return
+            path = url.parse(Frontend.Route.post(post, community)).path
+            alertText = PushNotification.textForNewPost(post, community, user.get('id'))
+            return user.sendPushNotification(alertText, path)
+          })
         )
       })
   },
