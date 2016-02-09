@@ -65,8 +65,7 @@ describe('DeviceController', () => {
         platform: platform,
         version: version,
         user_id: fixtures.u2.id
-      })
-      .save()
+      }).save())
       .then(() => DeviceController.create(req, res)
         .then(() => {
           return Device.where('token', '=', deviceToken)
@@ -77,7 +76,7 @@ describe('DeviceController', () => {
             expect(device.get('user_id')).to.equal(fixtures.u1.id)
           })
         })
-      ))
+      )
     })
   })
 })
