@@ -3,6 +3,7 @@ var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var DeviceController = require(root('api/controllers/DeviceController'))
 var nock = require('nock')
+var Promise = require('bluebird')
 
 describe('DeviceController', () => {
   var fixtures, req, res
@@ -57,7 +58,9 @@ describe('DeviceController', () => {
 
       req.headers = {'ios-version': version}
 
-      return Device.forge({
+      return Device.fetchAll()
+      .then(devices => Promise.map(devices.models, device => device.destroy()))
+      .then(() => Device.forge({
         token: req.param('token'),
         platform: platform,
         version: version,
@@ -74,7 +77,7 @@ describe('DeviceController', () => {
             expect(device.get('user_id')).to.equal(fixtures.u1.id)
           })
         })
-      )
+      ))
     })
   })
 })
