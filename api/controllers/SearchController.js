@@ -3,7 +3,7 @@ var findCommunityIds = Promise.method(req => {
     return [req.param('communityId')]
   } else if (req.param('type') === 'communities' && req.param('moderated') && Admin.isSignedIn(req)) {
     return Community.fetchAll()
-    .then(cs => Promise.map(cs.models, c => c.id))
+    .then(cs => cs.pluck('id'))
   } else {
     return Promise.join(
       Network.activeCommunityIds(req.session.userId),
@@ -106,7 +106,6 @@ module.exports = {
     })).fetchAll({columns: columns}))
     .then(rows => {
       var present
-      var filteredRows = rows
       switch (resultType) {
         case 'posts':
           present = row => row.pick('id', 'name')
@@ -120,7 +119,7 @@ module.exports = {
         default:
           present = row => row.pick('id', 'name', 'avatar_url')
       }
-      res.ok(filteredRows.map(present))
+      res.ok(rows.map(present))
     })
     .catch(res.serverError)
   }
