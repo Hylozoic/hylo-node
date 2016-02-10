@@ -142,7 +142,8 @@ module.exports.policies = {
   },
 
   NetworkController: {
-    findOne: ['sessionAuth', 'inNetwork']
+    findOne: ['sessionAuth', 'inNetwork'],
+    create:  ['sessionAuth']
   },
 
   SubscriptionController: {
