@@ -13,9 +13,16 @@ module.exports = {
     }))
 
     return network.save()
-    .tap(network => Promise.map(req.params['communities'], communityId =>
-      Community.find(communityId)
-      .then(community => community.save({network_id: network.id}))
+    .tap(network => Promise.map(req.param('communities'), communityId =>
+      Membership.hasModeratorRole(req.session.userId, communityId)
+      .then(isModerator => {
+        console.log({uid: req.session.userId, cid: communityId, hasRole: isModerator})
+        if (isModerator) {
+          return Community.find(communityId)
+          .then(community => community.save({network_id: network.id}))
+        }
+        return
+      })
     ))
     .then(res.ok)
     .catch(res.serverError)
