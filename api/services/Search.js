@@ -57,6 +57,33 @@ module.exports = {
     })
   },
 
+  forCommunities: function (opts) {
+    return Community.query(qb => {
+      if (opts.communities) {
+        qb.whereIn('community.id', opts.communities)
+      }
+
+      if (opts.autocomplete) {
+        qb.whereRaw('community.name ilike ?', opts.autocomplete + '%')
+      }
+
+      if (opts.term) {
+        Search.addTermToQueryBuilder(opts.term, qb, {
+          columns: ['community.name']
+        })
+      }
+
+      // this counts total rows matching the criteria, disregarding limit,
+      // which is useful for pagination
+      qb.select(bookshelf.knex.raw('community.*, count(*) over () as total'))
+
+      qb.limit(opts.limit)
+      qb.offset(opts.offset)
+      qb.groupBy('community.id')
+      qb.orderBy('community.name', 'asc')
+    })
+  },
+
   forPosts: function (opts) {
     return Post.query(function (qb) {
       qb.limit(opts.limit)

@@ -5,7 +5,14 @@ var findCommunityIds = Promise.method(req => {
     return Promise.join(
       Network.activeCommunityIds(req.session.userId),
       Membership.activeCommunityIds(req.session.userId)
-    ).then(ids => _(ids).flatten().uniq().value())
+    ).then(dupIds => {
+      var ids = _(dupIds).flatten().uniq().value()
+      if (req.param('moderated') && !Admin.isSignedIn(req)) {
+        return Promise.filter(ids, id => Membership.hasModeratorRole(req.session.userId, id))
+      } else {
+        return ids
+      }
+    })
   }
 })
 
@@ -70,6 +77,10 @@ module.exports = {
         method = Search.forOrganizations
         columns = ['org_name']
         break
+      case 'communities':
+        method = Search.forCommunities
+        columns = ['id', 'name', 'avatar_url']
+        break
       default:
         method = Search.forUsers
     }
@@ -92,6 +103,7 @@ module.exports = {
     })).fetchAll({columns: columns}))
     .then(rows => {
       var present
+      var filteredRows = rows
       switch (resultType) {
         case 'posts':
           present = row => row.pick('id', 'name')
@@ -105,7 +117,7 @@ module.exports = {
         default:
           present = row => row.pick('id', 'name', 'avatar_url')
       }
-      res.ok(rows.map(present))
+      res.ok(filteredRows.map(present))
     })
     .catch(res.serverError)
   }
