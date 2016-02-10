@@ -1,3 +1,12 @@
+var Promise = require('bluebird'),
+  request = require('request'),
+  format = require('util').format,
+
+  get = Promise.promisify(request.get),
+  post = Promise.promisify(request.post),
+
+  slackAuthAccess = 'https://slack.com/api/oauth.access';
+
 module.exports = {
   find: function (req, res) {
     Community.fetchAll({withRelated: [
@@ -53,6 +62,29 @@ module.exports = {
     community.save(saneAttrs, {patch: true})
     .then(() => res.ok({}))
     .catch(res.serverError)
+  },
+
+  addSlack: function (req, res) {
+    var code = req.query.code,
+      redirect_uri = req.protocol + '://' + process.env.DOMAIN + req.path,
+      url = format('%s?client_id=%s&client_secret=%s&code=%s&redirect_uri=%s',
+                       slackAuthAccess,
+                       process.env.SLACK_APP_CLIENT_ID,
+                       process.env.SLACK_APP_CLIENT_SECRET,
+                       code,
+                       redirect_uri);
+
+    get(url).spread((resp, body) => {
+      var parsed = JSON.parse(body);
+      Community.find(req.param('communityId')).then(function (community) {
+        var communityToUpdate = new Community({id: req.param('communityId')})
+        communityToUpdate.save({ slack_hook: parsed.incoming_webhook.url }, {patch: true})
+        .then(() => res.redirect(Frontend.Route.community(community) + '/settings'))
+        .catch(() => res.redirect(Frontend.Route.community(community) + '/settings'))
+      })
+    }).catch(err => {
+
+    });
   },
 
   findModerators: function (req, res) {

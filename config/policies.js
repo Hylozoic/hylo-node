@@ -78,6 +78,7 @@ module.exports.policies = {
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findSettings:    ['sessionAuth', 'canInvite'],
     update:          ['sessionAuth', 'isModerator'],
+    addSlack:        ['sessionAuth', 'isModerator'],
     findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController
     addModerator:    ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
