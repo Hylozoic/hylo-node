@@ -23,9 +23,7 @@ module.exports = {
     var options = {
       uri: url,
       body: {
-        text: message,
-        username: 'Hylobot',
-        icon_url: process.env.HYLO_SLACK_ICON
+        text: message
       },
       json: true // Automatically stringifies the body to JSON
     };
