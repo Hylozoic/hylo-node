@@ -12,17 +12,19 @@ module.exports = {
       created_at: new Date()
     }))
 
-    return network.save()
-    .tap(network => Promise.map(req.param('communities'), communityId =>
-      Membership.hasModeratorRole(req.session.userId, communityId)
-      .then(isModerator => {
-        if (isModerator) {
-          return Community.find(communityId)
-          .then(community => community.save({network_id: network.id}))
-        }
-        return
-      })
-    ))
+    return bookshelf.transaction(trx => {
+      return network.save(null, {transacting: trx})
+      .tap(network => Promise.map(req.param('communities'), communityId =>
+        Membership.hasModeratorRole(req.session.userId, communityId)
+        .then(isModerator => {
+          if (isModerator) {
+            return Community.find(communityId)
+            .then(community => community.save({network_id: network.id}, {transacting: trx}))
+          }
+          return
+        })
+      ))
+    })
     .then(res.ok)
     .catch(res.serverError)
   },
