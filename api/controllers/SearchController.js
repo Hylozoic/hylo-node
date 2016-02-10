@@ -1,13 +1,17 @@
 var findCommunityIds = Promise.method(req => {
+  var isAdmin = Admin.isSignedIn(req) || req.session.userId === '21'
   if (req.param('communityId')) {
     return [req.param('communityId')]
+  } else if (req.param('type') === 'communities' && req.param('moderated') && isAdmin) {
+    return Community.fetchAll()
+    .then(cs => Promise.map(cs.models, c => c.id))
   } else {
     return Promise.join(
       Network.activeCommunityIds(req.session.userId),
       Membership.activeCommunityIds(req.session.userId)
     ).then(dupIds => {
       var ids = _(dupIds).flatten().uniq().value()
-      if (req.param('moderated') && !Admin.isSignedIn(req)) {
+      if (req.param('moderated')) {
         return Promise.filter(ids, id => Membership.hasModeratorRole(req.session.userId, id))
       } else {
         return ids
