@@ -1,10 +1,7 @@
 var Promise = require('bluebird'),
   request = require('request'),
   format = require('util').format,
-
   get = Promise.promisify(request.get),
-  post = Promise.promisify(request.post),
-
   slackAuthAccess = 'https://slack.com/api/oauth.access';
 
 module.exports = {
@@ -38,7 +35,7 @@ module.exports = {
     Community.find(req.param('communityId'), {withRelated: ['leader']})
     .tap(community => leader = community.relations.leader)
     .then(community => _.merge(community.pick(
-      'welcome_message', 'beta_access_code', 'slack_hook', 'settings'
+      'welcome_message', 'beta_access_code', 'slack_hook', 'slack_team', 'slack_configure', 'settings'
     ), {
       leader: leader ? leader.pick('id', 'name', 'avatar_url') : null
     }))
@@ -49,7 +46,7 @@ module.exports = {
   update: function (req, res) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'slack_hook'
+      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'slack_hook', 'slack_team', 'slack_configure'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
     var saneAttrs = _.clone(attributes)
@@ -78,12 +75,16 @@ module.exports = {
       var parsed = JSON.parse(body);
       Community.find(req.param('communityId')).then(function (community) {
         var communityToUpdate = new Community({id: req.param('communityId')})
-        communityToUpdate.save({ slack_hook: parsed.incoming_webhook.url }, {patch: true})
-        .then(() => res.redirect(Frontend.Route.community(community) + '/settings'))
-        .catch(() => res.redirect(Frontend.Route.community(community) + '/settings'))
+        communityToUpdate.save({
+          slack_hook: parsed.incoming_webhook.url,
+          slack_team: parsed.team_name,
+          slack_configure: parsed.incoming_webhook.configuration_url
+        }, {patch: true})
+        .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
+        .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=0'))
       })
     }).catch(err => {
-
+      res.redirect(Frontend.Route.community(community) + '/settings?slack=0')
     });
   },
 
