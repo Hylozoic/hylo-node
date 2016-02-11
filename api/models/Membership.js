@@ -80,6 +80,11 @@ module.exports = bookshelf.Model.extend({
 
   // do all of the users have at least one community in common?
   inSameCommunity: function (userIds) {
+    return this.sharedCommunityIds(userIds)
+    .then(ids => ids.length > 0)
+  },
+
+  sharedCommunityIds: function (userIds) {
     userIds = _.uniq(userIds)
     return bookshelf.knex
     .select('community_id')
@@ -88,11 +93,7 @@ module.exports = bookshelf.Model.extend({
     .whereIn('user_id', userIds)
     .groupBy('community_id')
     .havingRaw('count(*) = ?', [userIds.length])
-    .then(function (sharedMemberships) {
-      // the number of rows is equal to the number
-      // of communities the users have in common
-      return sharedMemberships.length > 0
-    })
+    .then(rows => _.pluck(rows, 'community_id'))
   },
 
   inSameNetwork: function (userId, otherUserId) {
