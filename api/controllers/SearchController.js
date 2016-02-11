@@ -1,21 +1,18 @@
 var findCommunityIds = Promise.method(req => {
   if (req.param('communityId')) {
     return [req.param('communityId')]
-  } else if (req.param('type') === 'communities' && req.param('moderated') && Admin.isSignedIn(req)) {
-    return Community.fetchAll()
-    .then(cs => cs.pluck('id'))
+  } else if (req.param('type') === 'communities' && req.param('moderated')) {
+    if (Admin.isSignedIn(req)) {
+      return Community.fetchAll()
+      .then(cs => cs.pluck('id'))
+    } else {
+      return Membership.activeCommunityIds(req.session.userId, true)
+    }
   } else {
     return Promise.join(
       Network.activeCommunityIds(req.session.userId),
       Membership.activeCommunityIds(req.session.userId)
-    ).then(dupIds => {
-      var ids = _(dupIds).flatten().uniq().value()
-      if (req.param('moderated')) {
-        return Promise.filter(ids, id => Membership.hasModeratorRole(req.session.userId, id))
-      } else {
-        return ids
-      }
-    })
+    ).then(ids => _(ids).flatten().uniq().value())
   }
 })
 
