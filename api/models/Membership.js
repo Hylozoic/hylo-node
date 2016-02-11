@@ -105,9 +105,13 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  activeCommunityIds: function (user_id) {
+  activeCommunityIds: function (user_id, moderator) {
+    var query = {user_id: user_id, active: true}
+    if (moderator) {
+      query.role = Membership.MODERATOR_ROLE
+    }
     return Membership.query()
-    .where({user_id: user_id, active: true})
+    .where(query)
     .pluck('community_id')
   },
 

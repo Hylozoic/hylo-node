@@ -114,6 +114,8 @@ module.exports.routes = {
   'GET    /noo/network/:networkId/posts':                 'PostController.findForNetwork',
   'GET    /noo/network/:networkId/communities':           'CommunityController.findForNetwork',
   'GET    /noo/network/:networkId/members':               'UserController.findForNetwork',
+  'POST   /noo/network':                                  'NetworkController.create',
+  'POST   /noo/network/validate':                         'NetworkController.validate',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',

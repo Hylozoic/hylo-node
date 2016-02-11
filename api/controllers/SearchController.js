@@ -1,6 +1,13 @@
 var findCommunityIds = Promise.method(req => {
   if (req.param('communityId')) {
     return [req.param('communityId')]
+  } else if (req.param('type') === 'communities' && req.param('moderated')) {
+    if (Admin.isSignedIn(req)) {
+      return Community.fetchAll()
+      .then(cs => cs.pluck('id'))
+    } else {
+      return Membership.activeCommunityIds(req.session.userId, true)
+    }
   } else {
     return Promise.join(
       Network.activeCommunityIds(req.session.userId),
@@ -69,6 +76,10 @@ module.exports = {
       case 'organizations':
         method = Search.forOrganizations
         columns = ['org_name']
+        break
+      case 'communities':
+        method = Search.forCommunities
+        columns = ['id', 'name', 'avatar_url']
         break
       default:
         method = Search.forUsers

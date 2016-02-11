@@ -71,22 +71,28 @@ describe('CommunityController', () => {
     it('rejects non-whitelisted columns', () => {
       req.params.column = 'foo'
       CommunityController.validate(req, res)
-      expect(res.badRequest).to.have.been.called()
-      expect(res.body).to.equal('invalid value "foo" for parameter "column"')
+      .then(() => {
+        expect(res.badRequest).to.have.been.called()
+        expect(res.body).to.equal('invalid value "foo" for parameter "column"')
+      })
     })
 
     it('requires a value', () => {
       req.params.column = 'name'
       CommunityController.validate(req, res)
-      expect(res.badRequest).to.have.been.called()
-      expect(res.body).to.equal('missing required parameter "value"')
+      .then(() => {
+        expect(res.badRequest).to.have.been.called()
+        expect(res.body).to.equal('missing required parameter "value"')
+      })
     })
 
     it('requires a constraint', () => {
       _.extend(req.params, {column: 'name', value: 'foo', constraint: 'foo'})
       CommunityController.validate(req, res)
-      expect(res.badRequest).to.have.been.called()
-      expect(res.body).to.equal('invalid value "foo" for parameter "constraint"')
+      .then(() => {
+        expect(res.badRequest).to.have.been.called()
+        expect(res.body).to.equal('invalid value "foo" for parameter "constraint"')
+      })
     })
 
     describe('with an existing value', () => {
