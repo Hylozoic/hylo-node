@@ -126,7 +126,15 @@ module.exports = {
   },
 
   validate: function (req, res) {
-    return Validation.validate(req, res, Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
+    return Validation.validate(req.allParams(), Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
+    .then(validation => {
+      if (validation.badRequest) {
+        return res.badRequest(validation.badRequest)
+      } else {
+        return res.ok(validation)
+      }
+    })
+    .catch(res.serverError)
   },
 
   create: function (req, res) {

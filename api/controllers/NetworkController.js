@@ -30,6 +30,14 @@ module.exports = {
   },
 
   validate: function (req, res) {
-    return Validation.validate(req, res, Network, ['name', 'slug'], ['exists', 'unique'])
+    return Validation.validate(req.allParams(), Network, ['name', 'slug'], ['exists', 'unique'])
+    .then(validation => {
+      if (validation.badRequest) {
+        return res.badRequest(validation.badRequest)
+      } else {
+        return res.ok(validation)
+      }
+    })
+    .catch(res.serverError)
   }
 }

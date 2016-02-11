@@ -1,18 +1,18 @@
 module.exports = {
-  validate: function (req, res, model, allowedColumns, allowedConstraints) {
-    var params = _.pick(req.allParams(), 'constraint', 'column', 'value')
+  validate: function (allParams, model, allowedColumns, allowedConstraints) {
+    var params = _.pick(allParams, 'constraint', 'column', 'value')
 
     // prevent SQL injection
     if (!_.include(allowedColumns, params.column)) {
-      return res.badRequest(format('invalid value "%s" for parameter "column"', params.column))
+      return Promise.resolve({badRequest: format('invalid value "%s" for parameter "column"', params.column)})
     }
 
     if (!params.value) {
-      return res.badRequest('missing required parameter "value"')
+      return Promise.resolve({badRequest: 'missing required parameter "value"'})
     }
 
     if (!_.include(allowedConstraints, params.constraint)) {
-      return res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint))
+      return Promise.resolve({badRequest: format('invalid value "%s" for parameter "constraint"', params.constraint)})
     }
 
     var statement = format('lower(%s) = lower(?)', params.column)
@@ -25,8 +25,7 @@ module.exports = {
         var exists = Number(rows[0].count) >= 1
         data = {exists: exists}
       }
-      res.ok(data)
+      return data
     })
-    .catch(res.serverError)
   }
 }
