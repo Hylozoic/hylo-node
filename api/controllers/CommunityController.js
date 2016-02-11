@@ -126,7 +126,8 @@ module.exports = {
   },
 
   validate: function (req, res) {
-    return Validation.validate(req.allParams(), Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
+    return Validation.validate(_.pick(req.allParams(), 'constraint', 'column', 'value'), 
+      Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
     .then(validation => {
       if (validation.badRequest) {
         return res.badRequest(validation.badRequest)

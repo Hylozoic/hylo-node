@@ -1,7 +1,5 @@
 module.exports = {
-  validate: function (allParams, model, allowedColumns, allowedConstraints) {
-    var params = _.pick(allParams, 'constraint', 'column', 'value')
-
+  validate: function (params, model, allowedColumns, allowedConstraints) {
     // prevent SQL injection
     if (!_.include(allowedColumns, params.column)) {
       return Promise.resolve({badRequest: format('invalid value "%s" for parameter "column"', params.column)})
