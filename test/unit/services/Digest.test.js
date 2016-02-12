@@ -1,38 +1,34 @@
 var root = require('root-path')
 var setup = require(root('test/setup'))
+var factories = require(root('test/setup/factories'))
 var Digest = require(root('lib/community/digest'))
-var moment = require('moment')
+var moment = require('moment-timezone')
 
 describe('Digest', function () {
   var community, user, p1, p2
 
   before(() => {
-    var now = new Date()
+    var today = moment.tz('America/Los_Angeles').startOf('day').add(6, 'hours').toDate()
 
     community = new Community({name: 'foo', slug: 'foo'})
-    user = new User({
-      name: 'Cat',
-      email: 'cat@cat.org',
-      active: true,
-      created_at: now
-    })
-
-    var postAttrs = {
-      user_id: user.id,
-      name: 'Hi!',
-      active: true,
-      created_at: now,
-      type: 'chat'
-    }
-
-    p1 = Post.forge(postAttrs)
-    p2 = Post.forge(_.merge(postAttrs, {created_at: moment().subtract(1, 'month')}))
+    user = factories.user({created_at: today})
 
     return setup.clearDb()
     .then(() => Promise.join(
       community.save(),
       user.save()
     ))
+    .then(() => {
+      var postAttrs = {
+        user_id: user.id,
+        name: 'Hi!',
+        active: true,
+        type: 'chat'
+      }
+
+      p1 = Post.forge(_.merge(postAttrs, {created_at: today}))
+      p2 = Post.forge(_.merge(postAttrs, {created_at: moment().subtract(1, 'month')}))
+    })
     .then(() => Promise.join(
       user.joinCommunity(community),
       p1.save(),
@@ -46,7 +42,7 @@ describe('Digest', function () {
         user_id: user.id,
         post_id: p2.id,
         active: true,
-        created_at: now
+        created_at: today
       }).save()
     ))
   })
@@ -67,6 +63,40 @@ describe('Digest', function () {
         expect(digest.commentedPosts.length).to.equal(1)
         expect(digest.commentedPosts[0].id).to.equal(p2.id)
         digest.sendTestEmail(user)
+      })
+    })
+  })
+
+  describe('.sendDaily', function () {
+    before(() => {
+      _.times(2, () => {
+        factories.user({settings: '{"digest_frequency":"daily"}'})
+        .save()
+        .then(user => user.joinCommunity(community))
+      })
+    })
+
+    it('works', () => {
+      return Digest.sendDaily()
+      .then(result => {
+        expect(result).to.deep.equal([2])
+      })
+    })
+  })
+
+  describe('.sendWeekly', function () {
+    before(() => {
+      _.times(3, () => {
+        factories.user({settings: '{"digest_frequency":"weekly"}'})
+        .save()
+        .then(user => user.joinCommunity(community))
+      })
+    })
+
+    it('works', () => {
+      return Digest.sendWeekly()
+      .then(result => {
+        expect(result).to.deep.equal([3])
       })
     })
   })
