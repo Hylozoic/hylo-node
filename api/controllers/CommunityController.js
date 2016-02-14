@@ -1,8 +1,8 @@
-var Promise = require('bluebird'),
-  request = require('request'),
-  format = require('util').format,
-  get = Promise.promisify(request.get),
-  slackAuthAccess = 'https://slack.com/api/oauth.access';
+var Promise = require('bluebird')
+var request = require('request')
+var format = require('util').format
+var get = Promise.promisify(request.get)
+var slackAuthAccess = 'https://slack.com/api/oauth.access'
 
 module.exports = {
   find: function (req, res) {
@@ -35,7 +35,7 @@ module.exports = {
     Community.find(req.param('communityId'), {withRelated: ['leader']})
     .tap(community => leader = community.relations.leader)
     .then(community => _.merge(community.pick(
-      'welcome_message', 'beta_access_code', 'slack_hook', 'slack_team', 'slack_configure', 'settings'
+      'welcome_message', 'beta_access_code', 'slack_hook_url', 'slack_team', 'slack_configure_url', 'settings'
     ), {
       leader: leader ? leader.pick('id', 'name', 'avatar_url') : null
     }))
@@ -46,7 +46,7 @@ module.exports = {
   update: function (req, res) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'slack_hook', 'slack_team', 'slack_configure'
+      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'slack_hook_url', 'slack_team', 'slack_configure_url'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
     var saneAttrs = _.clone(attributes)
@@ -74,11 +74,10 @@ module.exports = {
     get(url).spread((resp, body) => {
       var parsed = JSON.parse(body);
       Community.find(req.param('communityId')).then(function (community) {
-        var communityToUpdate = new Community({id: req.param('communityId')})
-        communityToUpdate.save({
-          slack_hook: parsed.incoming_webhook.url,
+        community.save({
+          slack_hook_url: parsed.incoming_webhook.url,
           slack_team: parsed.team_name,
-          slack_configure: parsed.incoming_webhook.configuration_url
+          slack_configure_url: parsed.incoming_webhook.configuration_url
         }, {patch: true})
         .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
         .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=0'))

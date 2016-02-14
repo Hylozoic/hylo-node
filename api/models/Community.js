@@ -141,9 +141,9 @@ module.exports = bookshelf.Model.extend({
   sendSlackNotification: function (communityId, post) {
     return Community.find(communityId)
     .then(community => {
-      if (!community || !community.get('slack_hook')) return
+      if (!community || !community.get('slack_hook_url')) return
       var slackMessage = Slack.textForNewPost(post, community)
-      return Slack.send(slackMessage, community.get('slack_hook'))
+      return Slack.send(slackMessage, community.get('slack_hook_url'))
     })
   }
 })

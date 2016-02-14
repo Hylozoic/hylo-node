@@ -242,7 +242,7 @@ module.exports = bookshelf.Model.extend({
         _.remove(users, user => user.get('id') === creator.get('id'))
         return Promise.join(
           Promise.map(communities.models, community => {
-            if (!community.get('slack_hook')) return
+            if (!community.get('slack_hook_url')) return
             return Community.sendSlackNotification(community.id, post);
           }),
           Promise.map(users, (user) => {
