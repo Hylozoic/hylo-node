@@ -126,7 +126,7 @@ module.exports = {
   },
 
   validate: function (req, res) {
-    return Validation.validate(_.pick(req.allParams(), 'constraint', 'column', 'value'), 
+    return Validation.validate(_.pick(req.allParams(), 'constraint', 'column', 'value'),
       Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
     .then(validation => {
       if (validation.badRequest) {
@@ -177,13 +177,16 @@ module.exports = {
   },
 
   findForNetwork: function (req, res) {
-    Community.where('network_id', req.param('networkId'))
-    .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
-      memberCount: c.relations.memberships.length
-    })))
-    .then(communities => _.sortBy(communities, c => -c.memberCount))
-    .then(res.ok)
-    .catch(res.serverError)
+    Network.find(req.param('networkId'))
+    .then(network =>
+      Community.where('network_id', network.id)
+      .fetchAll({withRelated: ['memberships']})
+      .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+        memberCount: c.relations.memberships.length
+      })))
+      .then(communities => _.sortBy(communities, c => -c.memberCount))
+      .then(res.ok)
+      .catch(res.serverError)
+    )
   }
 }
