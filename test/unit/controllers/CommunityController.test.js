@@ -149,4 +149,49 @@ describe('CommunityController', () => {
       })
     })
   })
+
+  describe('.findForNetwork', () => {
+    var fixtures, network
+    before(done => {
+      network = new Network({name: 'N1', slug: 'n1'}).save()
+
+      return network
+      .then(network => {
+        return Promise.props({
+          c1: new Community({name: 'C1', slug: 'c1', network_id: network.get('id')}).save(),
+          c2: new Community({name: 'C2', slug: 'c2', network_id: network.get('id')}).save(),
+          c3: new Community({name: 'C3', slug: 'c3'}).save(),
+          n1: network
+        })
+      })
+      .then(props => {
+        fixtures = props
+        done()
+      })
+    })
+
+    it('works with slug', () => {
+      req.params.networkId = 'n1'
+      req.login(user.id)
+      return CommunityController.findForNetwork(req, res)
+      .then(() => {
+        expect(res.body.length).to.equal(2)
+        expect(res.body[0].slug).to.equal('c1')
+        expect(res.body[1].slug).to.equal('c2')
+      })
+    })
+
+    it('works with paginate', () => {
+      req.params.networkId = 'n1'
+      req.params.paginate = true
+      req.params.offset = 1
+      req.params.limit = 1
+      req.login(user.id)
+      return CommunityController.findForNetwork(req, res)
+      .then(() => {
+        expect(res.body.length).to.equal(1)
+        expect(res.body[0].slug).to.equal('c2')
+      })
+    })
+  })
 })
