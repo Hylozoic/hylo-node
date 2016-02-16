@@ -253,19 +253,17 @@ module.exports = {
   findForNetwork: function (req, res) {
     var total
     Network.find(req.param('networkId'))
-    .then(network =>
-      Community.query().where('network_id', network.id).select('id')
-      .then(rows => _.pluck(rows, 'id'))
-      .then(ids => Search.forUsers({
-        communities: ids,
-        limit: req.param('limit') || 20,
-        offset: req.param('offset') || 0
-      }).fetchAll({withRelated: ['skills', 'organizations']}))
-      .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-      .then(users => users.map(UserPresenter.presentForList))
-      .then(list => ({people_total: total, people: list}))
-      .then(res.ok, res.serverError)
-    )
+    .then(network => Community.query().where('network_id', network.id).select('id'))
+    .then(rows => _.pluck(rows, 'id'))
+    .then(ids => Search.forUsers({
+      communities: ids,
+      limit: req.param('limit') || 20,
+      offset: req.param('offset') || 0
+    }).fetchAll({withRelated: ['skills', 'organizations']}))
+    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+    .then(users => users.map(UserPresenter.presentForList))
+    .then(list => ({people_total: total, people: list}))
+    .then(res.ok, res.serverError)
   }
 
 }

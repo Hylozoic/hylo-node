@@ -129,15 +129,13 @@ module.exports = {
 
   findForNetwork: function (req, res) {
     Network.find(req.param('networkId'))
-    .then(network =>
-      Community.where({network_id: network.id}).fetchAll()
-      .then(communities => {
-        findPosts(req, res, {
-          communities: communities.map(c => c.id),
-          visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
-        })
+    .then(network => Community.where({network_id: network.id}).fetchAll())
+    .then(communities => {
+      findPosts(req, res, {
+        communities: communities.map(c => c.id),
+        visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
       })
-    )
+    })
   },
 
   findFollowed: function (req, res) {
