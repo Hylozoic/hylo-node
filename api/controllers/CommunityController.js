@@ -177,16 +177,36 @@ module.exports = {
   },
 
   findForNetwork: function (req, res) {
-    Network.find(req.param('networkId'))
-    .then(network =>
-      Community.where('network_id', network.id)
-      .fetchAll({withRelated: ['memberships']})
-      .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
-        memberCount: c.relations.memberships.length
-      })))
-      .then(communities => _.sortBy(communities, c => -c.memberCount))
-      .then(res.ok)
-      .catch(res.serverError)
-    )
+    var total
+
+    return Network.find(req.param('networkId'))
+    .then(network => {
+      if (req.param('paginate')) {
+        return Community.query(qb => {
+          qb.where('network_id', network.get('id'))
+          qb.limit(req.param('limit') || 10)
+          qb.offset(req.param('offset') || 0)
+          qb.select(bookshelf.knex.raw('community.*, count(*) over () as total'))
+        })
+        .fetchAll({withRelated: ['memberships']})
+      } else {
+        return Community.where('network_id', network.get('id'))
+        .fetchAll({withRelated: ['memberships']})
+      }
+    })
+    .tap(communities => total = (communities.length > 0 ? communities.first().get('total') : 0))
+    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+      memberCount: c.relations.memberships.length
+    })))
+    .then(communities => _.sortBy(communities, c => -c.memberCount))
+    .then(communities => {
+      if (req.param('paginate')) {
+        return {communities_total: total, communities: communities}
+      } else {
+        return communities
+      }
+    })
+    .then(res.ok)
+    .catch(res.serverError)
   }
 }

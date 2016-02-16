@@ -151,23 +151,19 @@ describe('CommunityController', () => {
   })
 
   describe('.findForNetwork', () => {
-    var fixtures, network
+    var network
     before(done => {
       network = new Network({name: 'N1', slug: 'n1'}).save()
-
       return network
       .then(network => {
-        return Promise.props({
+        return Promise.join({
           c1: new Community({name: 'C1', slug: 'c1', network_id: network.get('id')}).save(),
           c2: new Community({name: 'C2', slug: 'c2', network_id: network.get('id')}).save(),
           c3: new Community({name: 'C3', slug: 'c3'}).save(),
           n1: network
         })
       })
-      .then(props => {
-        fixtures = props
-        done()
-      })
+      .then(() => done())
     })
 
     it('works with slug', () => {
@@ -189,8 +185,9 @@ describe('CommunityController', () => {
       req.login(user.id)
       return CommunityController.findForNetwork(req, res)
       .then(() => {
-        expect(res.body.length).to.equal(1)
-        expect(res.body[0].slug).to.equal('c2')
+        expect(res.body.communities_total).to.equal('2')
+        expect(res.body.communities.length).to.equal(1)
+        expect(res.body.communities[0].slug).to.equal('c2')
       })
     })
   })
