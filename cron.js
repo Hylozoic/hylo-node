@@ -66,13 +66,12 @@ var runJob = Promise.method(function (name) {
 skiff.lift({
   start: function (argv) {
     runJob(argv.interval)
-      .then(function () {
-        skiff.lower()
-      })
-      .catch(function (err) {
-        sails.log.error(err.message.red)
-        rollbar.handleError(err)
-        skiff.lower()
-      })
+    .then(function () {
+      skiff.lower()
+    })
+    .catch(function (err) {
+      sails.log.error(err.message.red)
+      rollbar.handleError(err, () => skiff.lower())
+    })
   }
 })
