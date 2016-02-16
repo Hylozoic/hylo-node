@@ -157,9 +157,9 @@ describe('CommunityController', () => {
       return network
       .then(network => {
         return Promise.join({
-          c1: new Community({name: 'C1', slug: 'c1', network_id: network.get('id')}).save(),
-          c2: new Community({name: 'C2', slug: 'c2', network_id: network.get('id')}).save(),
-          c3: new Community({name: 'C3', slug: 'c3'}).save(),
+          c1: new Community({name: 'NC1', slug: 'nc1', network_id: network.get('id')}).save(),
+          c2: new Community({name: 'NC2', slug: 'nc2', network_id: network.get('id')}).save(),
+          c3: new Community({name: 'NC3', slug: 'nc3'}).save(),
           n1: network
         })
       })
@@ -172,8 +172,8 @@ describe('CommunityController', () => {
       return CommunityController.findForNetwork(req, res)
       .then(() => {
         expect(res.body.length).to.equal(2)
-        expect(res.body[0].slug).to.equal('c1')
-        expect(res.body[1].slug).to.equal('c2')
+        expect(res.body[0].slug).to.equal('nc1')
+        expect(res.body[1].slug).to.equal('nc2')
       })
     })
 
@@ -187,7 +187,7 @@ describe('CommunityController', () => {
       .then(() => {
         expect(res.body.communities_total).to.equal('2')
         expect(res.body.communities.length).to.equal(1)
-        expect(res.body.communities[0].slug).to.equal('c2')
+        expect(res.body.communities[0].slug).to.equal('nc2')
       })
     })
   })
