@@ -146,6 +146,7 @@
       "EventResponse",
       "Follow",
       "Frontend",
+      "FullTextSearch",
       "Invitation",
       "LinkedAccount",
       "Media",

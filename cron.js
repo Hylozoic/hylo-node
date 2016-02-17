@@ -48,10 +48,9 @@ var jobs = {
   },
 
   every10minutes: function () {
-    sails.log.debug('noop!')
-    return Promise.resolve(null)
+    sails.log.debug('Refreshing full-text search index')
+    return FullTextSearch.refreshView()
   }
-
 }
 
 var runJob = Promise.method(function (name) {
