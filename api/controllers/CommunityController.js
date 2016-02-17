@@ -178,6 +178,7 @@ module.exports = {
 
   findForNetwork: function (req, res) {
     var total
+    var communityAttributes = ['id', 'name', 'slug', 'avatar_url', 'banner_url', 'memberCount']
 
     return Network.find(req.param('networkId'))
     .then(network => {
@@ -197,7 +198,7 @@ module.exports = {
       } else {
         return Community.where('network_id', network.get('id'))
         .fetchAll({withRelated: ['memberships']})
-        .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
+        .then(communities => communities.map(c => _.extend(c.pick(communityAttributes), {
           memberCount: c.relations.memberships.length
         })))
         .then(communities => _.sortBy(communities, c => -c.memberCount))
@@ -205,7 +206,7 @@ module.exports = {
     })
     .then(communities => {
       if (req.param('paginate')) {
-        return {communities_total: total, communities: communities}
+        return {communities_total: total, communities: communities.map(c => c.pick(communityAttributes))}
       } else {
         return communities
       }
