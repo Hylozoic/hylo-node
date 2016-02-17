@@ -17,5 +17,5 @@ module.exports = function (req, res, next) {
     .then(mships => Promise.map(communityIds, id =>
       mships.find(m =>
         m.get('community_id') === id || Community.inNetworkWithUser(id, userId))))
-    .then(ok => _.all(ok) ? next() : res.forbidden())
+    .then(ok => _.every(ok) ? next() : res.forbidden())
 }
