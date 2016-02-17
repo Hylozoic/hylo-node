@@ -172,6 +172,7 @@ describe('CommunityController', () => {
       return CommunityController.findForNetwork(req, res)
       .then(() => {
         expect(res.body.length).to.equal(2)
+        expect(Number(res.body[0].memberCount)).to.equal(0)
         var slugs = res.body.map(c => c.slug)
         expect(!!_.contains(slugs, 'nc1')).to.equal(true)
         expect(!!_.contains(slugs, 'nc2')).to.equal(true)
@@ -190,6 +191,7 @@ describe('CommunityController', () => {
         expect(res.body.communities_total).to.equal('2')
         expect(res.body.communities.length).to.equal(1)
         expect(res.body.communities[0].slug).to.equal('nc2')
+        expect(Number(res.body.communities[0].memberCount)).to.equal(0)
       })
     })
   })
