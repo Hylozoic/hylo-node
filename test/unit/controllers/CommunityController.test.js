@@ -174,9 +174,9 @@ describe('CommunityController', () => {
         expect(res.body.length).to.equal(2)
         expect(Number(res.body[0].memberCount)).to.equal(0)
         var slugs = res.body.map(c => c.slug)
-        expect(!!_.contains(slugs, 'nc1')).to.equal(true)
-        expect(!!_.contains(slugs, 'nc2')).to.equal(true)
-        expect(!!_.contains(slugs, 'nc3')).to.equal(false)
+        expect(!!_.includes(slugs, 'nc1')).to.equal(true)
+        expect(!!_.includes(slugs, 'nc2')).to.equal(true)
+        expect(!!_.includes(slugs, 'nc3')).to.equal(false)
       })
     })
 
