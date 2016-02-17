@@ -34,7 +34,7 @@ module.exports = bookshelf.Model.extend({
 
   forComment: function(comment, userId, action) {
     if (!action) {
-      if (_.contains(comment.mentions(), userId.toString()))
+      if (_.includes(comment.mentions(), userId.toString()))
         action = this.Action.Mention;
       else
         action = this.Action.Comment;

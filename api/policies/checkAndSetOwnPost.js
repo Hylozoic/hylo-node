@@ -13,7 +13,7 @@ module.exports = function checkAndSetOwnPost(req, res, next) {
     ]);
   })
   .then(function(allowed) {
-    if (_.any(allowed, Boolean)) {
+    if (_.some(allowed, Boolean)) {
       next();
     } else {
       sails.log.debug(format("Fail checkAndSetOwnPost policy: uId:%s postId:%s", req.session.userId, req.param('postId')));

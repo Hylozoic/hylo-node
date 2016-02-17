@@ -177,7 +177,7 @@ module.exports = {
     })
     .then(() => res.ok({}))
     .catch(function (err) {
-      if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
+      if (_.includes(['invalid-email', 'duplicate-email'], err.message)) {
         res.statusCode = 422
         res.send(req.__(err.message))
       } else {
@@ -252,9 +252,10 @@ module.exports = {
 
   findForNetwork: function (req, res) {
     var total
+
     Network.find(req.param('networkId'))
     .then(network => Community.query().where('network_id', network.id).select('id'))
-    .then(rows => _.pluck(rows, 'id'))
+    .then(rows => _.map(rows, 'id'))
     .then(ids => Search.forUsers({
       communities: ids,
       limit: req.param('limit') || 20,

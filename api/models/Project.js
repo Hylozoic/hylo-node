@@ -90,7 +90,7 @@ module.exports = bookshelf.Model.extend({
       var contributors = project.relations.contributors
 
       return contributors.models.concat(project.relations.user).map(user => {
-        if (_.contains(opts.exclude, user.id) || user.id === creator.id) return
+        if (_.includes(opts.exclude, user.id) || user.id === creator.id) return
         var replyTo = Email.postReplyAddress(post.id, user.id)
 
         return user.generateToken()

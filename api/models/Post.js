@@ -161,7 +161,7 @@ module.exports = bookshelf.Model.extend({
       .then(networkIds =>
         Promise.map(_.compact(_.uniq(networkIds)), id =>
           Network.containsUser(id, userId)))
-      .then(results => _.any(results)))
+      .then(results => _.some(results)))
   },
 
   find: function (id, options) {
@@ -246,7 +246,7 @@ module.exports = bookshelf.Model.extend({
           var userCommunities = user.relations.communities.models
           var postCommunitiesIds = communities.models.map(community => community.get('id'))
           var community, path, alertText
-          community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
+          community = _.find(userCommunities, community => _.includes(postCommunitiesIds, community.get('id')))
           if (!community) return
           path = url.parse(Frontend.Route.post(post, community)).path
           alertText = PushNotification.textForNewPost(post, community, user.get('id'))

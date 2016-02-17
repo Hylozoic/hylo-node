@@ -3,19 +3,19 @@ const Changes = require(root('lib/community/changes'))
 const moment = require('moment-timezone')
 const setup = require(root('test/setup'))
 
-var now = () => moment.tz('America/Los_Angeles')
+var noon = () => moment.tz('America/Los_Angeles').startOf('day').add(12, 'hours')
 
 var createPost = (opts) =>
   new Post(_.extend({
     name: 'foo',
     active: true,
     type: 'chat',
-    created_at: now(),
+    created_at: noon().clone().subtract(2, 'hours'),
     visibility: Post.Visibility.DEFAULT
   }, opts)).save()
 
-var startTime = now().subtract(1, 'minute')
-var endTime = now().add(1, 'minute')
+var startTime = noon().clone().subtract(1, 'day')
+var endTime = noon()
 
 describe('Changes', () => {
   var community
@@ -42,7 +42,7 @@ describe('Changes', () => {
 
   describe('with no new post', () => {
     before(() => {
-      return createPost({created_at: now().subtract(2, 'minute')})
+      return createPost({created_at: noon().subtract(2, 'minute')})
     })
 
     it('returns nothing', () =>
@@ -55,14 +55,14 @@ describe('Changes', () => {
 
     before(() =>
       createPost({
-        created_at: now().subtract(1, 'week')
+        created_at: noon().subtract(1, 'week')
       }).tap(p => community.posts().attach(p.id))
       .then(post => {
         comment = new Comment({
           post_id: post.id,
           comment_text: 'foo',
           active: true,
-          created_at: now()
+          created_at: noon()
         })
         return comment.save()
       }))
@@ -80,7 +80,7 @@ describe('Changes', () => {
         name: 'foo',
         email: 'foo@bar.com',
         active: true,
-        created_at: now()
+        created_at: noon()
       }).save().then(u => community.users().attach({user_id: u.id, active: true})))
 
     it('returns the community id', () =>

@@ -93,7 +93,7 @@ module.exports = bookshelf.Model.extend({
     .whereIn('user_id', userIds)
     .groupBy('community_id')
     .havingRaw('count(*) = ?', [userIds.length])
-    .then(rows => _.pluck(rows, 'community_id'))
+    .then(rows => _.map(rows, 'community_id'))
   },
 
   inSameNetwork: function (userId, otherUserId) {

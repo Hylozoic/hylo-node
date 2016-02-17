@@ -48,10 +48,9 @@ var jobs = {
   },
 
   every10minutes: function () {
-    sails.log.debug('noop!')
-    return Promise.resolve(null)
+    sails.log.debug('Refreshing full-text search index')
+    return FullTextSearch.refreshView()
   }
-
 }
 
 var runJob = Promise.method(function (name) {
@@ -66,13 +65,12 @@ var runJob = Promise.method(function (name) {
 skiff.lift({
   start: function (argv) {
     runJob(argv.interval)
-      .then(function () {
-        skiff.lower()
-      })
-      .catch(function (err) {
-        sails.log.error(err.message.red)
-        rollbar.handleError(err)
-        skiff.lower()
-      })
+    .then(function () {
+      skiff.lower()
+    })
+    .catch(function (err) {
+      sails.log.error(err.message.red)
+      rollbar.handleError(err, () => skiff.lower())
+    })
   }
 })
