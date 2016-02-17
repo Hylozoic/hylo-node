@@ -26,14 +26,14 @@ module.exports = {
     return findCommunityIds(req)
     .then(function (communityIds) {
       return Promise.join(
-        _.contains(resultTypes, 'posts') && Search.forPosts({
+        _.includes(resultTypes, 'posts') && Search.forPosts({
           term: term,
           limit: limit,
           offset: offset,
           communities: communityIds,
           sort: 'post.created_at'
         }).fetchAll({withRelated: PostPresenter.relations(req.session.userId)}),
-        _.contains(resultTypes, 'people') && Search.forUsers({
+        _.includes(resultTypes, 'people') && Search.forUsers({
           term: term,
           limit: limit,
           offset: offset,
@@ -86,7 +86,7 @@ module.exports = {
     }
 
     return (() => {
-      if (!_.contains(['skills', 'organizations'], resultType)) {
+      if (!_.includes(['skills', 'organizations'], resultType)) {
         return findCommunityIds(req)
         .then(communityIds => ({
           communities: communityIds,

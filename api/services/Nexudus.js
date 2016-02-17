@@ -57,7 +57,7 @@ module.exports = {
         r2 = records
       })
       .then(records => records
-        .filter(r => _.contains(coworkerIds, r.Id))
+        .filter(r => _.includes(coworkerIds, r.Id))
         .map(self.formatRecord))
     })
     .then(formattedRecords => [r1, r2, formattedRecords])

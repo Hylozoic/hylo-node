@@ -271,7 +271,7 @@ module.exports = {
       .tap(() => {
         var mediaParams = ['docs', 'removedDocs', 'imageUrl', 'imageRemoved']
         var isSet = _.partial(_.has, params)
-        if (_.any(mediaParams, isSet)) return post.load('media')
+        if (_.some(mediaParams, isSet)) return post.load('media')
       })
       .tap(function () {
         if (!params.imageUrl && !params.imageRemoved) return
