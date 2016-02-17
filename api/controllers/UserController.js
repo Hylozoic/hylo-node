@@ -253,7 +253,8 @@ module.exports = {
   findForNetwork: function (req, res) {
     var total
 
-    Community.query().where('network_id', req.param('networkId')).select('id')
+    Network.find(req.param('networkId'))
+    .then(network => Community.query().where('network_id', network.id).select('id'))
     .then(rows => _.map(rows, 'id'))
     .then(ids => Search.forUsers({
       communities: ids,

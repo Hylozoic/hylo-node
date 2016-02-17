@@ -126,7 +126,7 @@ module.exports = {
   },
 
   validate: function (req, res) {
-    return Validation.validate(_.pick(req.allParams(), 'constraint', 'column', 'value'), 
+    return Validation.validate(_.pick(req.allParams(), 'constraint', 'column', 'value'),
       Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
     .then(validation => {
       if (validation.badRequest) {
@@ -177,12 +177,40 @@ module.exports = {
   },
 
   findForNetwork: function (req, res) {
-    Community.where('network_id', req.param('networkId'))
-    .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
-      memberCount: c.relations.memberships.length
-    })))
-    .then(communities => _.sortBy(communities, c => -c.memberCount))
+    var total
+    var communityAttributes = ['id', 'name', 'slug', 'avatar_url', 'banner_url', 'memberCount']
+
+    return Network.find(req.param('networkId'))
+    .then(network => {
+      if (req.param('paginate')) {
+        return Community.query(qb => {
+          qb.where('network_id', network.get('id'))
+          qb.select(bookshelf.knex.raw('community.slug, count(users_community.user_id) as "memberCount", count(community.id) over () as total'))
+          qb.leftJoin('users_community', function () {
+            this.on('community.id', '=', 'users_community.community_id')
+          })
+          qb.groupBy('community.id')
+          qb.orderBy('memberCount', 'desc')
+          qb.limit(req.param('limit') || 20)
+          qb.offset(req.param('offset') || 0)
+        }).fetchAll()
+        .tap(communities => total = (communities.length > 0 ? communities.first().get('total') : 0))
+      } else {
+        return Community.where('network_id', network.get('id'))
+        .fetchAll({withRelated: ['memberships']})
+        .then(communities => communities.map(c => _.extend(c.pick(communityAttributes), {
+          memberCount: c.relations.memberships.length
+        })))
+        .then(communities => _.sortBy(communities, c => -c.memberCount))
+      }
+    })
+    .then(communities => {
+      if (req.param('paginate')) {
+        return {communities_total: total, communities: communities.map(c => c.pick(communityAttributes))}
+      } else {
+        return communities
+      }
+    })
     .then(res.ok)
     .catch(res.serverError)
   }
