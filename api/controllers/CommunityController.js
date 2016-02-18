@@ -191,6 +191,7 @@ module.exports = {
           })
           qb.groupBy('community.id')
           qb.orderBy('memberCount', 'desc')
+          qb.orderBy('slug', 'asc')
           qb.limit(req.param('limit') || 20)
           qb.offset(req.param('offset') || 0)
         }).fetchAll()
