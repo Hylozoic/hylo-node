@@ -144,6 +144,7 @@ module.exports.policies = {
   NetworkController: {
     findOne: ['sessionAuth', 'inNetwork'],
     create:  ['sessionAuth'],
+    update:  ['sessionAuth', 'inNetwork'],
     validate:        true
   },
 

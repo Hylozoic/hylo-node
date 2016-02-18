@@ -2,6 +2,18 @@ module.exports = {
 
   findOne: function (req, res) {
     res.ok(res.locals.network)
+    /*
+    var network = res.locals.network
+    if (req.param('withCommunityIds')) {
+      Community.where('network_id', network.get('id'))
+      .fetchAll()
+      .then(cs =>
+        _.extend(network.toJSON(), {communities: cs.map(c => ({id: c.id, name: c.name, avatar_url: c.avatar_url}))}))
+      .then(res.ok)
+    } else {
+      res.ok(network)
+    }
+    */
   },
 
   create: function (req, res) {
@@ -27,6 +39,15 @@ module.exports = {
     })
     .then(res.ok)
     .catch(res.serverError)
+  },
+
+  update: function (req, res) {
+    var network = res.locals.network
+    var params = req.allParams()
+
+    sails.log.debug('Network ', network)
+    sails.log.debug('Params ', params)
+    return res.ok()
   },
 
   validate: function (req, res) {
