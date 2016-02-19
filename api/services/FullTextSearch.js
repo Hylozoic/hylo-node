@@ -78,10 +78,10 @@ const search = (opts) => {
 
 const searchInCommunities = (communityIds, opts) => {
   var alias = 'search'
-  var columns = [`${alias}.post_id`, 'comment_id', `${alias}.user_id`, 'rank', 'total']
+  var columns = [`${alias}.post_id`, 'comment_id', `${alias}.user_id`, 'rank']
 
   return bookshelf.knex
-  .select(columns)
+  .select(raw(columns.concat('count(*) over () as total').join(', ')))
   .from(search(_.omit(opts, 'limit', 'offset')).as(alias))
   .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
   .leftJoin('comment', 'comment.id', `${alias}.comment_id`)
@@ -93,7 +93,7 @@ const searchInCommunities = (communityIds, opts) => {
     this.where('users_community.community_id', 'in', communityIds)
     .orWhere('post_community.community_id', 'in', communityIds)
   })
-  .groupBy(columns)
+  .groupBy(columns.concat('total'))
   .orderBy('rank', 'desc')
   .limit(opts.limit)
   .offset(opts.offset)
