@@ -16,7 +16,7 @@ var nvd3Format = function (data, times) {
   var maxSeries
   return _(data).keys()
   .tap(keys => maxSeries = Math.min(keys.length, 19))
-  .sortByAll([key => -1 * _.sum(_.values(data[key])), _.identity])
+  .sortBy(key => -1 * _.sum(_.values(data[key])), _.identity)
   .reduce((result, name, index, keys) => {
     if (index < maxSeries) {
       result.push({
