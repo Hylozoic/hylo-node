@@ -158,7 +158,8 @@ module.exports = {
         .fetchAll({withRelated: [
           {'user': userColumns},
           {'post': q => q.column('id', 'type', 'name', 'user_id')},
-          {'post.creator': userColumns}
+          {'post.creator': userColumns},
+          {'post.relatedUsers': userColumns}
         ]}),
 
         ids.people && User.where('id', 'in', ids.people)
