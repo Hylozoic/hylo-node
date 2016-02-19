@@ -1,30 +1,26 @@
-var defaultOpts = {
-  tableName: 'search_index',
-  columnName: 'document',
-  lang: 'english'
-}
+const tableName = 'search_index'
+const columnName = 'document'
+const defaultLang = 'english'
 
-const withDefaultOpts = fn => opts => fn(_.merge({}, defaultOpts, opts))
 const raw = str => bookshelf.knex.raw(str)
 
-const dropView = withDefaultOpts(opts =>
-  raw(`drop materialized view ${opts.tableName}`))
+const dropView = () => raw(`drop materialized view ${tableName}`)
 
-const refreshView = withDefaultOpts(opts =>
-  raw(`refresh materialized view ${opts.tableName}`))
+const refreshView = () => raw(`refresh materialized view ${tableName}`)
 
-const createView = withDefaultOpts(opts => {
+const createView = lang => {
+  if (!lang) lang = defaultLang
   var wv = (column, weight) =>
-    `setweight(to_tsvector('${opts.lang}', ${column}), '${weight}')`
+    `setweight(to_tsvector('${lang}', ${column}), '${weight}')`
 
-  return raw(`create materialized view ${opts.tableName} as (
+  return raw(`create materialized view ${tableName} as (
     select
       p.id as post_id,
       null::bigint as user_id,
       null::bigint as comment_id,
       ${wv('p.name', 'A')} ||
       ${wv('p.description', 'B')} ||
-      ${wv('u.name', 'D')} as ${opts.columnName}
+      ${wv('u.name', 'D')} as ${columnName}
     from post p
     join users u on u.id = p.user_id
     where p.active = true and u.active = true
@@ -37,7 +33,7 @@ const createView = withDefaultOpts(opts => {
       ${wv("u.bio || ' ' || u.intention || ' ' || u.work", 'B')} ||
       ${wv("coalesce(string_agg(distinct s.skill_name, ' '))", 'C')} ||
       ${wv("coalesce(string_agg(distinct o.org_name, ' '))", 'C')} ||
-      ${wv('u.extra_info', 'D')} as ${opts.columnName}
+      ${wv('u.extra_info', 'D')} as ${columnName}
     from users u
     left join users_skill s on u.id = s.user_id
     left join users_org o on u.id = o.user_id
@@ -48,42 +44,63 @@ const createView = withDefaultOpts(opts => {
       null as post_id,
       null as user_id,
       c.id as comment_id,
-      ${wv('c.comment_text', 'A')} ||
-      ${wv('u.name', 'D')} as ${opts.columnName}
+      ${wv('c.comment_text', 'B')} ||
+      ${wv('u.name', 'D')} as ${columnName}
     from comment c
     join users u on u.id = c.user_id
     where c.active = true and u.active = true
   )`)
-  .then(() => raw(`create index idx_fts_search on ${opts.tableName}
-    using gin(${opts.columnName})`))
-})
+  .then(() => raw(`create index idx_fts_search on ${tableName}
+    using gin(${columnName})`))
+}
 
-const search = withDefaultOpts(opts => {
-  var lang = opts.lang
-  var term = opts.term.split(' ').join(' & ')
+const search = (opts) => {
+  var lang = opts.lang || defaultLang
+  var term = opts.term.replace(/'/, '').split(' ').join(' & ')
   var tsquery = `to_tsquery('${lang}', '${term}')`
-  var rank = `ts_rank(${opts.columnName}, ${tsquery})`
+  var rank = `ts_rank(${columnName}, ${tsquery})`
 
   return bookshelf.knex
-  .from(opts.tableName)
-  .where(raw(`${opts.columnName} @@ ${tsquery}`))
-  .orderBy(raw(rank), 'desc')
+  .select(raw(`post_id, comment_id, user_id, ${rank} as rank, count(*) over () as total`))
+  .from(tableName)
+  .where(raw(`${columnName} @@ ${tsquery}`))
+  .orderBy('rank', 'desc')
   .limit(opts.limit)
-  .select(raw({
-    person: 'user_id',
-    post: 'post_id',
-    comment: 'comment_id'
-  }[opts.type] || `post_id, comment_id, user_id, ${rank}`))
+  .offset(opts.offset)
   .where(raw({
     person: 'user_id is not null',
     post: 'post_id is not null',
     comment: 'comment_id is not null'
   }[opts.type] || true))
-})
+}
+
+const searchInCommunities = (communityIds, opts) => {
+  var alias = 'search'
+  var columns = [`${alias}.post_id`, 'comment_id', `${alias}.user_id`, 'rank', 'total']
+
+  return bookshelf.knex
+  .select(columns)
+  .from(search(_.omit(opts, 'limit', 'offset')).as(alias))
+  .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
+  .leftJoin('comment', 'comment.id', `${alias}.comment_id`)
+  .leftJoin('post_community', function () {
+    this.on('post_community.post_id', `${alias}.post_id`)
+    .orOn('post_community.post_id', 'comment.post_id')
+  })
+  .where(function () {
+    this.where('users_community.community_id', 'in', communityIds)
+    .orWhere('post_community.community_id', 'in', communityIds)
+  })
+  .groupBy(columns)
+  .orderBy('rank', 'desc')
+  .limit(opts.limit)
+  .offset(opts.offset)
+}
 
 module.exports = {
   createView,
   dropView,
   refreshView,
-  search
+  search,
+  searchInCommunities
 }

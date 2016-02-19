@@ -118,6 +118,7 @@ module.exports.routes = {
   'POST   /noo/network/validate':                         'NetworkController.validate',
 
   'GET    /noo/search':                                   'SearchController.show',
+  'GET    /noo/search/fulltext':                          'SearchController.showFullText',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',
 
   'GET    /noo/invitation/:token':                        'InvitationController.findOne',

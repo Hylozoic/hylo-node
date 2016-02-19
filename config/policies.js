@@ -44,7 +44,8 @@ module.exports.policies = {
 
   SearchController: {
     show: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    autocomplete: ['sessionAuth', 'checkAndSetMembership']
+    autocomplete: ['sessionAuth', 'checkAndSetMembership'],
+    showFullText: ['sessionAuth']
   },
 
   UserController: {

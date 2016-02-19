@@ -16,6 +16,9 @@ var findCommunityIds = Promise.method(req => {
   }
 })
 
+const getTotal = records =>
+  records && records.length > 0 ? Number(records.first().get('total')) : 0
+
 module.exports = {
   show: function (req, res) {
     var term = req.param('q').trim()
@@ -43,17 +46,15 @@ module.exports = {
     })
     .spread(function (posts, people) {
       res.ok({
-        posts_total: posts && (posts.length > 0 ? Number(posts.first().get('total')) : 0),
+        posts_total: getTotal(posts),
         posts: posts && posts.map(PostPresenter.present),
-        people_total: people && (people.length > 0 ? Number(people.first().get('total')) : 0),
-        people: people && people.map(function (user) {
-          return _.chain(user.attributes)
-            .pick(UserPresenter.shortAttributes)
-            .extend({
-              skills: Skill.simpleList(user.relations.skills),
-              organizations: Organization.simpleList(user.relations.organizations)
-            }).value()
-        })
+        people_total: getTotal(people),
+        people: people && people.map(person => _.chain(person.attributes)
+          .pick(UserPresenter.shortAttributes)
+          .extend({
+            skills: Skill.simpleList(person.relations.skills),
+            organizations: Organization.simpleList(person.relations.organizations)
+          }).value())
       })
     })
     .catch(res.serverError)
@@ -119,6 +120,73 @@ module.exports = {
       res.ok(rows.map(present))
     })
     .catch(res.serverError)
-  }
+  },
 
+  showFullText: function (req, res) {
+    var term = req.param('q')
+    if (!term) return res.badRequest('expected a parameter named "q"')
+    var type = req.param('type')
+    var limit = req.param('limit')
+    var offset = req.param('offset')
+    var userId = req.session.userId
+    var items
+
+    Membership.activeCommunityIds(userId)
+    .then(communityIds =>
+      FullTextSearch.searchInCommunities(communityIds, {term, type, limit, offset}))
+    .then(items_ => {
+      items = items_
+
+      var ids = _.transform(items, (ids, item) => {
+        var type = item.post_id ? 'posts'
+          : item.comment_id ? 'comments' : 'people'
+
+        if (!ids[type]) ids[type] = []
+        var id = item.post_id || item.comment_id || item.user_id
+        ids[type].push(id)
+      }, {})
+
+      var userColumns = q => q.column('id', 'name', 'avatar_url')
+
+      // FIXME factor out this general-purpose object display/formatting code
+
+      return Promise.join(
+        ids.posts && Post.where('id', 'in', ids.posts)
+        .fetchAll({withRelated: PostPresenter.relations(userId)}),
+
+        ids.comments && Comment.where('id', 'in', ids.comments)
+        .fetchAll({withRelated: [
+          {'user': userColumns},
+          {'post': q => q.column('id', 'type', 'name', 'user_id')},
+          {'post.creator': userColumns}
+        ]}),
+
+        ids.people && User.where('id', 'in', ids.people)
+        .fetchAll({withRelated: ['skills', 'organizations']})
+      )
+    })
+    .spread((posts, comments, people) => items.map(item => {
+      var result = {rank: item.rank}
+
+      if (item.user_id) {
+        result.type = 'person'
+        var person = people.find(p => p.id === item.user_id)
+        result.data = UserPresenter.presentForList(person)
+      } else if (item.post_id) {
+        result.type = 'post'
+        var post = posts.find(p => p.id === item.post_id)
+        result.data = PostPresenter.present(post)
+      } else {
+        result.type = 'comment'
+        var comment = comments.find(c => c.id === item.comment_id)
+        result.data = comment.toJSON()
+        result.data.post.user = result.data.post.creator
+        delete result.data.post.creator
+      }
+
+      return result
+    }))
+    .then(results => ({items: results, total: _.get(items, '0.total') || 0}))
+    .then(res.ok)
+  }
 }
