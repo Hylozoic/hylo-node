@@ -31,8 +31,8 @@ const createView = lang => {
       null as comment_id,
       ${wv('u.name', 'A')} ||
       ${wv("u.bio || ' ' || u.intention || ' ' || u.work", 'B')} ||
-      ${wv("coalesce(string_agg(distinct s.skill_name, ' '))", 'C')} ||
-      ${wv("coalesce(string_agg(distinct o.org_name, ' '))", 'C')} ||
+      ${wv("coalesce(string_agg(distinct s.skill_name, ' '), '')", 'C')} ||
+      ${wv("coalesce(string_agg(distinct o.org_name, ' '), '')", 'C')} ||
       ${wv('u.extra_info', 'D')} as ${columnName}
     from users u
     left join users_skill s on u.id = s.user_id
