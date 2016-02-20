@@ -89,25 +89,25 @@ module.exports = bookshelf.Model.extend({
       var community = post.relations.communities.first()
       var contributors = project.relations.contributors
 
-      return contributors.models.concat(project.relations.user).map(user => {
-        if (_.includes(opts.exclude, user.id) || user.id === user.id) return
-        var replyTo = Email.postReplyAddress(post.id, user.id)
+      return contributors.models.concat(project.relations.user).map(recipient => {
+        if (_.includes(opts.exclude, recipient.id) || recipient.id === user.id) return
+        var replyTo = Email.postReplyAddress(post.id, recipient.id)
 
-        return user.generateToken()
-        .then(token => Email.sendNewProjectPostNotification(user.get('email'), {
-          post_user_profile_url: Frontend.Route.tokenLogin(user, token,
+        return recipient.generateToken()
+        .then(token => Email.sendNewProjectPostNotification(recipient.get('email'), {
+          post_user_profile_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.profile(user) + '?ctt=project_post_email'),
           post_user_avatar_url: user.get('avatar_url'),
           post_user_name: user.get('name'),
           project_title: project.get('title'),
-          project_url: Frontend.Route.tokenLogin(user, token,
+          project_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.project(project) + '?ctt=project_post_email'),
-          project_settings_url: Frontend.Route.tokenLogin(user, token,
+          project_settings_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.projectSettings(project) + '?ctt=project_post_email'),
           post_title: post.get('name'),
           post_description: post.get('description'),
           post_type: post.get('type'),
-          post_url: Frontend.Route.tokenLogin(user, token,
+          post_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.post(post, community) + '?ctt=project_post_email')
         }, {
           sender: {address: replyTo, reply_to: replyTo}
