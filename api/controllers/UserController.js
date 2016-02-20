@@ -90,10 +90,11 @@ module.exports = {
     .then(q => q.fetchAll({
       withRelated: [
         {post: q => q.column('id', 'name', 'user_id', 'type')},
-        {'post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'post.user': q => q.column('id', 'name', 'avatar_url')},
         {'post.communities': q => q.column('community.id', 'name')}
       ]
-    })).then(res.ok, res.serverError)
+    }))
+    .then(res.ok, res.serverError)
   },
 
   thanks: function (req, res) {
@@ -102,11 +103,12 @@ module.exports = {
       withRelated: [
         {thankedBy: q => q.column('id', 'name', 'avatar_url')},
         {comment: q => q.column('id', 'comment_text', 'post_id')},
-        {'comment.post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
         {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
         {'comment.post.communities': q => q.column('community.id', 'name')}
       ]
-    })).then(res.ok, res.serverError)
+    }))
+    .then(res.ok, res.serverError)
   },
 
   update: function (req, res) {

@@ -52,7 +52,7 @@ module.exports = bookshelf.Model.extend({
 
   textForNewPost: function (post, community, userId) {
     var relatedUser
-    var creator = post.relations.creator
+    var poster = post.relations.user
 
     if (post.isWelcome()) {
       relatedUser = post.relations.relatedUsers.first()
@@ -62,7 +62,7 @@ module.exports = bookshelf.Model.extend({
         return format('%s joined %s', relatedUser.get('name'), community.get('name'))
       }
     } else {
-      return format('%s posted "%s" in %s', creator.get('name'), post.get('name'), community.get('name'))
+      return format('%s posted "%s" in %s', poster.get('name'), post.get('name'), community.get('name'))
     }
   }
 

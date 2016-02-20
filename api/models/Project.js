@@ -83,22 +83,22 @@ module.exports = bookshelf.Model.extend({
         {contributors: qb => qb.where('notify_on_new_posts', true)},
         'user'
       ]}),
-      Post.find(opts.postId, {withRelated: ['communities', 'creator']})
+      Post.find(opts.postId, {withRelated: ['communities', 'user']})
     ).spread((project, post) => {
-      var creator = post.relations.creator
+      var user = post.relations.user
       var community = post.relations.communities.first()
       var contributors = project.relations.contributors
 
       return contributors.models.concat(project.relations.user).map(user => {
-        if (_.includes(opts.exclude, user.id) || user.id === creator.id) return
+        if (_.includes(opts.exclude, user.id) || user.id === user.id) return
         var replyTo = Email.postReplyAddress(post.id, user.id)
 
         return user.generateToken()
         .then(token => Email.sendNewProjectPostNotification(user.get('email'), {
-          creator_profile_url: Frontend.Route.tokenLogin(user, token,
-            Frontend.Route.profile(creator) + '?ctt=project_post_email'),
-          creator_avatar_url: creator.get('avatar_url'),
-          creator_name: creator.get('name'),
+          post_user_profile_url: Frontend.Route.tokenLogin(user, token,
+            Frontend.Route.profile(user) + '?ctt=project_post_email'),
+          post_user_avatar_url: user.get('avatar_url'),
+          post_user_name: user.get('name'),
           project_title: project.get('title'),
           project_url: Frontend.Route.tokenLogin(user, token,
             Frontend.Route.project(project) + '?ctt=project_post_email'),
@@ -110,10 +110,7 @@ module.exports = bookshelf.Model.extend({
           post_url: Frontend.Route.tokenLogin(user, token,
             Frontend.Route.post(post, community) + '?ctt=project_post_email')
         }, {
-          sender: {
-            address: replyTo,
-            reply_to: replyTo
-          }
+          sender: {address: replyTo, reply_to: replyTo}
         }))
       })
     })
