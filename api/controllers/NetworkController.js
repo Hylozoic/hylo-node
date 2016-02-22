@@ -2,18 +2,6 @@ module.exports = {
 
   findOne: function (req, res) {
     res.ok(res.locals.network)
-    /*
-    var network = res.locals.network
-    if (req.param('withCommunityIds')) {
-      Community.where('network_id', network.get('id'))
-      .fetchAll()
-      .then(cs =>
-        _.extend(network.toJSON(), {communities: cs.map(c => ({id: c.id, name: c.name, avatar_url: c.avatar_url}))}))
-      .then(res.ok)
-    } else {
-      res.ok(network)
-    }
-    */
   },
 
   create: function (req, res) {
@@ -42,12 +30,49 @@ module.exports = {
   },
 
   update: function (req, res) {
-    var network = res.locals.network
-    var params = req.allParams()
+    var whitelist = [
+      'banner_url', 'avatar_url', 'name', 'description'
+    ]
 
-    sails.log.debug('Network ', network)
-    sails.log.debug('Params ', params)
-    return res.ok()
+    var attributes = _.pick(req.allParams(), whitelist)
+
+    return bookshelf.transaction(function (trx) {
+      return Network.find(req.param('networkId'))
+      .then(network => network.save(attributes, {patch: true, transacting: trx}))
+      .then(network => {
+        var postedComs = req.param('communities')
+        return Community.where('network_id', '=', network.id)
+        .fetchAll()
+        .then(coms => {
+          var addedComs = _.difference(postedComs, coms.pluck('id'))
+          var removedComs = _.difference(coms.pluck('id'), postedComs)
+          return Promise.join(
+            Promise.map(addedComs, addedCom => {
+              return Membership.hasModeratorRole(req.session.userId, addedCom)
+              .then(isModerator => {
+                if (isModerator) {
+                  return Community.find(addedCom)
+                  .then(c => c.save({network_id: network.id}, {patch: true, transacting: trx}))
+                }
+                return
+              })
+            }),
+            Promise.map(removedComs, removedCom => {
+              return Membership.hasModeratorRole(req.session.userId, removedCom)
+              .then(isModerator => {
+                if (isModerator) {
+                  return Community.find(removedCom)
+                  .then(c => c.save({network_id: null}, {patch: true, transacting: trx}))
+                }
+                return
+              })
+            })
+          )
+        })
+      })
+    })
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   },
 
   validate: function (req, res) {
