@@ -49,7 +49,7 @@ module.exports = bookshelf.Model.extend({
     var comment, post
     return bookshelf.transaction(trx => {
       return Comment.find(opts.commentId, {
-        withRelated: ['user', 'post', 'post.communities', 'post.creator', 'post.followers', 'post.relatedUsers'],
+        withRelated: ['user', 'post', 'post.communities', 'post.user', 'post.followers', 'post.relatedUsers'],
         transacting: trx
       }).then(c => {
         comment = c
@@ -116,7 +116,7 @@ module.exports = bookshelf.Model.extend({
       User.find(opts.recipientId),
       Comment.find(opts.commentId, {
         withRelated: [
-          'user', 'post', 'post.communities', 'post.creator', 'post.relatedUsers'
+          'user', 'post', 'post.communities', 'post.user', 'post.relatedUsers'
         ]
       })
     )
@@ -126,7 +126,7 @@ module.exports = bookshelf.Model.extend({
 
       var post = comment.relations.post
       var commenter = comment.relations.user
-      var creator = post.relations.creator
+      var poster = post.relations.user
       var community = post.relations.communities.models[0]
       var text = RichText.qualifyLinks(comment.get('comment_text'))
       var replyTo = Email.postReplyAddress(post.id, recipient.id)
@@ -142,7 +142,7 @@ module.exports = bookshelf.Model.extend({
         }
       } else {
         postLabel = format('%s %s: "%s"',
-          (recipient.id === creator.id ? 'your' : 'the'), post.get('type'), post.get('name'))
+          (recipient.id === poster.id ? 'your' : 'the'), post.get('type'), post.get('name'))
       }
 
       return recipient.generateToken()
@@ -181,7 +181,7 @@ module.exports = bookshelf.Model.extend({
 
       return Comment.find(opts.commentId, {
         withRelated: [
-          'user', 'post', 'post.communities', 'post.creator', 'post.relatedUsers'
+          'user', 'post', 'post.communities', 'post.user', 'post.relatedUsers'
         ]
       })
       .then(comment => {

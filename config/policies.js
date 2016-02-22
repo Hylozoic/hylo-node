@@ -44,7 +44,8 @@ module.exports.policies = {
 
   SearchController: {
     show: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    autocomplete: ['sessionAuth', 'checkAndSetMembership']
+    autocomplete: ['sessionAuth', 'checkAndSetMembership'],
+    showFullText: ['sessionAuth']
   },
 
   UserController: {
@@ -124,7 +125,7 @@ module.exports.policies = {
 
   ProjectController: {
     create:              ['sessionAuth'],
-    find:                ['sessionAuth'],
+    find:                ['allowPublicAccess', 'sessionAuth'],
     update:              ['sessionAuth', 'checkAndSetWritableProject'],
     findOne:             ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     invite:              ['sessionAuth', 'checkAndSetWritableProject'],
@@ -143,7 +144,9 @@ module.exports.policies = {
   },
 
   NetworkController: {
-    findOne: ['sessionAuth', 'inNetwork']
+    findOne: ['sessionAuth', 'inNetwork'],
+    create:  ['sessionAuth'],
+    validate:        true
   },
 
   SubscriptionController: {

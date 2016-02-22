@@ -11,7 +11,9 @@ var networkIdsQuery = function (userId) {
 module.exports = bookshelf.Model.extend({
   tableName: 'networks',
 
-  communities: () => this.hasMany(Community)
+  communities: function () {
+    return this.hasMany(Community)
+  }
 
 }, {
   find: function (idOrSlug, options) {
@@ -23,7 +25,7 @@ module.exports = bookshelf.Model.extend({
 
   containsUser: function (networkId, userId) {
     return this.idsForUser(userId)
-      .then(ids => _.contains(ids, networkId.toString()))
+      .then(ids => _.includes(ids, networkId.toString()))
   },
 
   activeCommunityIds: function (userId, rawQuery) {
@@ -31,12 +33,12 @@ module.exports = bookshelf.Model.extend({
       .whereIn('network_id', networkIdsQuery(userId))
 
     if (rawQuery) return query
-    return query.then(rows => _.pluck(rows, 'id'))
+    return query.then(rows => _.map(rows, 'id'))
   },
 
   idsForUser: function (userId) {
     return networkIdsQuery(userId)
-      .then(rows => _.pluck(rows, 'network_id'))
+      .then(rows => _.map(rows, 'network_id'))
   }
 
 })

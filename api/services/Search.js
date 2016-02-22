@@ -30,10 +30,17 @@ module.exports = {
       if (opts.community) {
         qb.where(function () {
           var clause = this.whereIn('community_id', opts.community)
+
           if (opts.includePublic) {
             clause.orWhere('visibility', Project.Visibility.PUBLIC)
           }
+
+          if (opts.publicOnly) {
+            clause.andWhere('visibility', Project.Visibility.PUBLIC)
+          }
         })
+      } else if (opts.publicOnly) {
+        qb.where('visibility', Project.Visibility.PUBLIC)
       }
 
       if (opts.published) {
@@ -54,6 +61,33 @@ module.exports = {
       qb.offset(opts.offset)
       qb.groupBy('projects.id')
       qb.orderBy('projects.updated_at', 'desc')
+    })
+  },
+
+  forCommunities: function (opts) {
+    return Community.query(qb => {
+      if (opts.communities) {
+        qb.whereIn('community.id', opts.communities)
+      }
+
+      if (opts.autocomplete) {
+        qb.whereRaw('community.name ilike ?', opts.autocomplete + '%')
+      }
+
+      if (opts.term) {
+        Search.addTermToQueryBuilder(opts.term, qb, {
+          columns: ['community.name']
+        })
+      }
+
+      // this counts total rows matching the criteria, disregarding limit,
+      // which is useful for pagination
+      qb.select(bookshelf.knex.raw('community.*, count(*) over () as total'))
+
+      qb.limit(opts.limit)
+      qb.offset(opts.offset)
+      qb.groupBy('community.id')
+      qb.orderBy('community.name', 'asc')
     })
   },
 

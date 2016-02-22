@@ -130,7 +130,8 @@ module.exports = {
       }
     })
     // we get here if the membership was created successfully, or if it already existed
-    .then(ok => ok && Membership.find(req.session.userId, community.id)
+    .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
+      .tap(membership => !membership.get('active') && membership.save({active: true}, {patch: true}))
       .then(membership => _.merge(membership.toJSON(), {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       }))
@@ -157,34 +158,14 @@ module.exports = {
   },
 
   validate: function (req, res) {
-    var allowedColumns = ['name', 'slug', 'beta_access_code']
-    var allowedConstraints = ['exists', 'unique']
-    var params = _.pick(req.allParams(), 'constraint', 'column', 'value')
-
-    // prevent SQL injection
-    if (!_.include(allowedColumns, params.column)) {
-      return res.badRequest(format('invalid value "%s" for parameter "column"', params.column))
-    }
-
-    if (!params.value) {
-      return res.badRequest('missing required parameter "value"')
-    }
-
-    if (!_.include(allowedConstraints, params.constraint)) {
-      return res.badRequest(format('invalid value "%s" for parameter "constraint"', params.constraint))
-    }
-
-    var statement = format('lower(%s) = lower(?)', params.column)
-    return Community.query().whereRaw(statement, params.value).count()
-    .then(function (rows) {
-      var data
-      if (params.constraint === 'unique') {
-        data = {unique: Number(rows[0].count) === 0}
-      } else if (params.constraint === 'exists') {
-        var exists = Number(rows[0].count) >= 1
-        data = {exists: exists}
+    return Validation.validate(_.pick(req.allParams(), 'constraint', 'column', 'value'),
+      Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
+    .then(validation => {
+      if (validation.badRequest) {
+        return res.badRequest(validation.badRequest)
+      } else {
+        return res.ok(validation)
       }
-      res.ok(data)
     })
     .catch(res.serverError)
   },
@@ -228,12 +209,41 @@ module.exports = {
   },
 
   findForNetwork: function (req, res) {
-    Community.where('network_id', req.param('networkId'))
-    .fetchAll({withRelated: ['memberships']})
-    .then(communities => communities.map(c => _.extend(c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url'), {
-      memberCount: c.relations.memberships.length
-    })))
-    .then(communities => _.sortBy(communities, c => -c.memberCount))
+    var total
+    var communityAttributes = ['id', 'name', 'slug', 'avatar_url', 'banner_url', 'memberCount']
+
+    return Network.find(req.param('networkId'))
+    .then(network => {
+      if (req.param('paginate')) {
+        return Community.query(qb => {
+          qb.where('network_id', network.get('id'))
+          qb.select(bookshelf.knex.raw('community.slug, count(users_community.user_id) as "memberCount", count(community.id) over () as total'))
+          qb.leftJoin('users_community', function () {
+            this.on('community.id', '=', 'users_community.community_id')
+          })
+          qb.groupBy('community.id')
+          qb.orderBy('memberCount', 'desc')
+          qb.orderBy('slug', 'asc')
+          qb.limit(req.param('limit') || 20)
+          qb.offset(req.param('offset') || 0)
+        }).fetchAll()
+        .tap(communities => total = (communities.length > 0 ? communities.first().get('total') : 0))
+      } else {
+        return Community.where('network_id', network.get('id'))
+        .fetchAll({withRelated: ['memberships']})
+        .then(communities => communities.map(c => _.extend(c.pick(communityAttributes), {
+          memberCount: c.relations.memberships.length
+        })))
+        .then(communities => _.sortBy(communities, c => -c.memberCount))
+      }
+    })
+    .then(communities => {
+      if (req.param('paginate')) {
+        return {communities_total: total, communities: communities.map(c => c.pick(communityAttributes))}
+      } else {
+        return communities
+      }
+    })
     .then(res.ok)
     .catch(res.serverError)
   }

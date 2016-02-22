@@ -23,11 +23,9 @@ module.exports = bookshelf.Model.extend({
 
   find: function (user_id, community_id_or_slug, options) {
     var fetch = function (community_id) {
-      return Membership.where({
-        user_id: user_id,
-        community_id: community_id,
-        active: true
-      }).fetch(options)
+      var attrs = {user_id, community_id}
+      if (!options || !options.includeInactive) attrs.active = true
+      return Membership.where(attrs).fetch(options)
     }
 
     if (isNaN(Number(community_id_or_slug))) {
@@ -52,11 +50,12 @@ module.exports = bookshelf.Model.extend({
       role: opts.role || Membership.DEFAULT_ROLE
     })
     .save({}, {transacting: opts.transacting})
-    .tap(() => Analytics.track({
-      userId: userId,
-      event: 'Joined community',
-      properties: {id: communityId}
-    }))
+    .tap(() => Community.find(communityId, {transacting: opts.transacting})
+      .then(community => Analytics.track({
+        userId: userId,
+        event: 'Joined community',
+        properties: {id: communityId, slug: community.get('slug')}
+      })))
   },
 
   setModeratorRole: function (user_id, community_id) {
@@ -81,6 +80,11 @@ module.exports = bookshelf.Model.extend({
 
   // do all of the users have at least one community in common?
   inSameCommunity: function (userIds) {
+    return this.sharedCommunityIds(userIds)
+    .then(ids => ids.length > 0)
+  },
+
+  sharedCommunityIds: function (userIds) {
     userIds = _.uniq(userIds)
     return bookshelf.knex
     .select('community_id')
@@ -89,11 +93,7 @@ module.exports = bookshelf.Model.extend({
     .whereIn('user_id', userIds)
     .groupBy('community_id')
     .havingRaw('count(*) = ?', [userIds.length])
-    .then(function (sharedMemberships) {
-      // the number of rows is equal to the number
-      // of communities the users have in common
-      return sharedMemberships.length > 0
-    })
+    .then(rows => _.map(rows, 'community_id'))
   },
 
   inSameNetwork: function (userId, otherUserId) {
@@ -106,9 +106,13 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  activeCommunityIds: function (user_id) {
+  activeCommunityIds: function (user_id, moderator) {
+    var query = {user_id: user_id, active: true}
+    if (moderator) {
+      query.role = Membership.MODERATOR_ROLE
+    }
     return Membership.query()
-    .where({user_id: user_id, active: true})
+    .where(query)
     .pluck('community_id')
   },
 

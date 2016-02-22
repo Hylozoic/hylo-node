@@ -3,7 +3,7 @@ var url = require('url')
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
 
-  creator: function () {
+  user: function () {
     return this.belongsTo(User)
   },
 
@@ -161,7 +161,7 @@ module.exports = bookshelf.Model.extend({
       .then(networkIds =>
         Promise.map(_.compact(_.uniq(networkIds)), id =>
           Network.containsUser(id, userId)))
-      .then(results => _.any(results)))
+      .then(results => _.some(results)))
   },
 
   find: function (id, options) {
@@ -184,10 +184,10 @@ module.exports = bookshelf.Model.extend({
   sendNotificationEmail: function (opts) {
     return Promise.join(
       User.find(opts.recipientId),
-      Post.find(opts.postId, {withRelated: ['communities', 'creator']})
+      Post.find(opts.postId, {withRelated: ['communities', 'user']})
     )
     .spread(function (recipient, post) {
-      var creator = post.relations.creator
+      var user = post.relations.user
       var community = post.relations.communities.first()
       var description = RichText.qualifyLinks(post.get('description'))
       var replyTo = Email.postReplyAddress(post.id, recipient.id)
@@ -198,15 +198,15 @@ module.exports = bookshelf.Model.extend({
         sender: {
           address: replyTo,
           reply_to: replyTo,
-          name: format('%s (via Hylo)', creator.get('name'))
+          name: format('%s (via Hylo)', user.get('name'))
         },
         data: {
           community_name: community.get('name'),
-          creator_name: creator.get('name'),
-          creator_avatar_url: Frontend.Route.tokenLogin(recipient, token,
-            creator.get('avatar_url') + '?ctt=post_mention_email'),
-          creator_profile_url: Frontend.Route.tokenLogin(recipient, token,
-            Frontend.Route.profile(creator) + '?ctt=post_mention_email'),
+          post_user_name: user.get('name'),
+          post_user_avatar_url: Frontend.Route.tokenLogin(recipient, token,
+            user.get('avatar_url') + '?ctt=post_mention_email'),
+          post_user_profile_url: Frontend.Route.tokenLogin(recipient, token,
+            Frontend.Route.profile(user) + '?ctt=post_mention_email'),
           post_description: description,
           post_title: post.get('name'),
           post_type: post.get('type'),
@@ -232,15 +232,20 @@ module.exports = bookshelf.Model.extend({
       return result
     }
 
-    return Post.find(opts.postId, {withRelated: ['communities', 'communities.users', 'communities.users.communities', 'creator']})
-      .then(post => {
-        var communities = post.relations.communities
-        var creator = post.relations.creator
-        var usersWithDupes = communities.map(community => community.relations.users.models)
-        var users = uniqById(_.flatten(usersWithDupes))
+    return Post.find(opts.postId, {withRelated: [
+      'communities',
+      'communities.users',
+      'communities.users.communities',
+      'user'
+    ]})
+   .then(post => {
+      var communities = post.relations.communities
+      var poster = post.relations.user
+      var usersWithDupes = communities.map(community => community.relations.users.models)
+      var users = uniqById(_.flatten(usersWithDupes))
 
-        _.remove(users, user => user.get('id') === creator.get('id'))
-        return Promise.join(
+      _.remove(users, user => user.get('id') === poster.get('id'))
+      return Promise.join(
           Promise.map(communities.models, community => {
             if (!community.get('slack_hook_url')) return
             return Community.sendSlackNotification(community.id, post);
@@ -251,14 +256,14 @@ module.exports = bookshelf.Model.extend({
             var userCommunities = user.relations.communities.models
             var postCommunitiesIds = communities.models.map(community => community.get('id'))
             var community, path, alertText
-            community = _.find(userCommunities, community => _.contains(postCommunitiesIds, community.get('id')))
+            community = _.find(userCommunities, community => _.includes(postCommunitiesIds, community.get('id')))
             if (!community) return
             path = url.parse(Frontend.Route.post(post, community)).path
             alertText = PushNotification.textForNewPost(post, community, user.get('id'))
             return user.sendPushNotification(alertText, path)
-          })
-        )
-      })
+        })
+      )
+    })
   },
 
   notifyAboutMention: function (post, userId, opts) {

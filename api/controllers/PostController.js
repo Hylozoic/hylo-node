@@ -128,7 +128,8 @@ module.exports = {
   },
 
   findForNetwork: function (req, res) {
-    Community.where({network_id: req.param('networkId')}).fetchAll()
+    Network.find(req.param('networkId'))
+    .then(network => Community.where({network_id: network.id}).fetchAll())
     .then(communities => {
       findPosts(req, res, {
         communities: communities.map(c => c.id),
@@ -271,7 +272,7 @@ module.exports = {
       .tap(() => {
         var mediaParams = ['docs', 'removedDocs', 'imageUrl', 'imageRemoved']
         var isSet = _.partial(_.has, params)
-        if (_.any(mediaParams, isSet)) return post.load('media')
+        if (_.some(mediaParams, isSet)) return post.load('media')
       })
       .tap(function () {
         if (!params.imageUrl && !params.imageRemoved) return

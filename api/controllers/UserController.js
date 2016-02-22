@@ -90,10 +90,11 @@ module.exports = {
     .then(q => q.fetchAll({
       withRelated: [
         {post: q => q.column('id', 'name', 'user_id', 'type')},
-        {'post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'post.user': q => q.column('id', 'name', 'avatar_url')},
         {'post.communities': q => q.column('community.id', 'name')}
       ]
-    })).then(res.ok, res.serverError)
+    }))
+    .then(res.ok, res.serverError)
   },
 
   thanks: function (req, res) {
@@ -102,11 +103,12 @@ module.exports = {
       withRelated: [
         {thankedBy: q => q.column('id', 'name', 'avatar_url')},
         {comment: q => q.column('id', 'comment_text', 'post_id')},
-        {'comment.post.creator': q => q.column('id', 'name', 'avatar_url')},
+        {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
         {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
         {'comment.post.communities': q => q.column('community.id', 'name')}
       ]
-    })).then(res.ok, res.serverError)
+    }))
+    .then(res.ok, res.serverError)
   },
 
   update: function (req, res) {
@@ -177,7 +179,7 @@ module.exports = {
     })
     .then(() => res.ok({}))
     .catch(function (err) {
-      if (_.contains(['invalid-email', 'duplicate-email'], err.message)) {
+      if (_.includes(['invalid-email', 'duplicate-email'], err.message)) {
         res.statusCode = 422
         res.send(req.__(err.message))
       } else {
@@ -253,8 +255,9 @@ module.exports = {
   findForNetwork: function (req, res) {
     var total
 
-    Community.query().where('network_id', req.param('networkId')).select('id')
-    .then(rows => _.pluck(rows, 'id'))
+    Network.find(req.param('networkId'))
+    .then(network => Community.query().where('network_id', network.id).select('id'))
+    .then(rows => _.map(rows, 'id'))
     .then(ids => Search.forUsers({
       communities: ids,
       limit: req.param('limit') || 20,

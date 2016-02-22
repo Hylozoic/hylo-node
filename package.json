@@ -3,8 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "engines": {
-    "node": "5.5.0",
-    "npm": "3.3.12"
+    "node": "5.6.0"
   },
   "description": "a Sails application",
   "keywords": [],
@@ -52,7 +51,7 @@
     "knex": "^0.7.3",
     "kue": "^0.9.0",
     "kue-ui": "^0.1.0",
-    "lodash": "3.10.1",
+    "lodash": "^4.0",
     "lru-cache": "^2.5.0",
     "mailcomposer": "^0.2.12",
     "mailgun": "^0.5.0",
@@ -66,7 +65,7 @@
     "moment-timezone": "^0.3.0",
     "newrelic": "^1.17.3",
     "nock": "^7.0.2",
-    "node-uuid": "^1.4.1",
+    "node-uuid": "^1.4.7",
     "nzero-push": "^2.1.2",
     "parse-redis-url": "0.0.1",
     "passport": "^0.2.1",
@@ -81,7 +80,7 @@
     "randomstring": "^1.1.0",
     "rc": "~0.5.0",
     "request": "^2.51.0",
-    "rollbar": "^0.5.3",
+    "rollbar": "^0.5.12",
     "root-path": "^0.2.0",
     "s3-upload-stream": "^1.0.7",
     "sails": "~0.12.0-rc8",
@@ -146,6 +145,7 @@
       "EventResponse",
       "Follow",
       "Frontend",
+      "FullTextSearch",
       "Invitation",
       "LinkedAccount",
       "Media",
@@ -178,6 +178,7 @@
       "UserPresenter",
       "UserSession",
       "UserWebsite",
+      "Validation",
       "Vote"
     ]
   }

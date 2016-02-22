@@ -43,7 +43,7 @@ module.exports = {
       if (u.pathname.startsWith('/admin')) {
         // serve the admin Angular app
         u.pathname = '/admin';
-      } else if (!_.any(staticPages, equals(u.pathname))) {
+      } else if (!_.some(staticPages, equals(u.pathname))) {
         // for any paths not explicitly listed, serve the Angular app.
         u.pathname = '/app';
       }
@@ -65,7 +65,7 @@ module.exports = {
     if (cached) {
       sails.log.info(util.format(' ☺ %s', newUrl));
       var mimeType = mime.lookup(u.pathname),
-        isText = _.contains(['application/javascript', 'text/html', 'text/css', 'text/plain'], mimeType);
+        isText = _.includes(['application/javascript', 'text/html', 'text/css', 'text/plain'], mimeType);
 
       res.set('Content-Type', mimeType);
       streamifier.createReadStream(cached).pipe(res);

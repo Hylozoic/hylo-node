@@ -83,37 +83,34 @@ module.exports = bookshelf.Model.extend({
         {contributors: qb => qb.where('notify_on_new_posts', true)},
         'user'
       ]}),
-      Post.find(opts.postId, {withRelated: ['communities', 'creator']})
+      Post.find(opts.postId, {withRelated: ['communities', 'user']})
     ).spread((project, post) => {
-      var creator = post.relations.creator
+      var user = post.relations.user
       var community = post.relations.communities.first()
       var contributors = project.relations.contributors
 
-      return contributors.models.concat(project.relations.user).map(user => {
-        if (_.contains(opts.exclude, user.id) || user.id === creator.id) return
-        var replyTo = Email.postReplyAddress(post.id, user.id)
+      return contributors.models.concat(project.relations.user).map(recipient => {
+        if (_.includes(opts.exclude, recipient.id) || recipient.id === user.id) return
+        var replyTo = Email.postReplyAddress(post.id, recipient.id)
 
-        return user.generateToken()
-        .then(token => Email.sendNewProjectPostNotification(user.get('email'), {
-          creator_profile_url: Frontend.Route.tokenLogin(user, token,
-            Frontend.Route.profile(creator) + '?ctt=project_post_email'),
-          creator_avatar_url: creator.get('avatar_url'),
-          creator_name: creator.get('name'),
+        return recipient.generateToken()
+        .then(token => Email.sendNewProjectPostNotification(recipient.get('email'), {
+          post_user_profile_url: Frontend.Route.tokenLogin(recipient, token,
+            Frontend.Route.profile(user) + '?ctt=project_post_email'),
+          post_user_avatar_url: user.get('avatar_url'),
+          post_user_name: user.get('name'),
           project_title: project.get('title'),
-          project_url: Frontend.Route.tokenLogin(user, token,
+          project_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.project(project) + '?ctt=project_post_email'),
-          project_settings_url: Frontend.Route.tokenLogin(user, token,
+          project_settings_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.projectSettings(project) + '?ctt=project_post_email'),
           post_title: post.get('name'),
           post_description: post.get('description'),
           post_type: post.get('type'),
-          post_url: Frontend.Route.tokenLogin(user, token,
+          post_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.post(post, community) + '?ctt=project_post_email')
         }, {
-          sender: {
-            address: replyTo,
-            reply_to: replyTo
-          }
+          sender: {address: replyTo, reply_to: replyTo}
         }))
       })
     })
