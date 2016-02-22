@@ -205,6 +205,7 @@ module.exports = {
   find: function (req, res) {
     var includePublic = true
     var isMine = req.param('type') === 'mine'
+    var publicOnly = !req.session.userId
 
     ;(() => {
       var communityId = req.param('communityId')
@@ -217,7 +218,8 @@ module.exports = {
     })()
     .then(communityIds => Search.forProjects({
       community: communityIds,
-      includePublic: includePublic,
+      includePublic,
+      publicOnly,
       published: !isMine,
       limit: req.param('limit') || 20,
       offset: req.param('offset') || 0,
