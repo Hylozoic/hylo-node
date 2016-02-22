@@ -16,6 +16,7 @@ module.exports = {
 
   post: attrs => {
     return new Post(_.merge({
+      active: true,
       name: text()
     }, attrs))
   },

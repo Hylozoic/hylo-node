@@ -30,7 +30,7 @@ before(function(done) {
   global.sails = skiff.sails;
 
   skiff.lift({
-    log: {level: 'warn'},
+    log: {level: process.env.LOG_LEVEL || 'warn'},
     silent: true,
     start: function() {
 

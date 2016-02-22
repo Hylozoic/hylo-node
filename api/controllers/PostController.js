@@ -16,7 +16,7 @@ var findPosts = function (req, res, opts) {
 
   // using Promise.props here allows us to pass queries as attributes,
   // e.g. when looking up communities in PostController.findForUser
-  Promise.props(_.merge(
+  return Promise.props(_.merge(
     {
       sort: sortColumns[params.sort || 'recent'],
       forUser: req.session.userId,
@@ -113,9 +113,9 @@ module.exports = {
       if (!RequestValidation.requireTimeRange(req, res)) return
     }
 
-    findPosts(req, res, {
+    return findPosts(req, res, {
       communities: [res.locals.community.id],
-      visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
+      visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
     })
   },
 
