@@ -9,3 +9,6 @@ deployment:
 general:
   artifacts:
     - "coverage"
+  branches:
+    only:
+      - master
