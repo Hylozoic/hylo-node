@@ -30,6 +30,11 @@ module.exports = {
   },
 
   update: function (req, res) {
+    if (!Admin.isSignedIn(req)) {
+      res.statusCode = 403
+      return res.end('Forbidden')
+    }
+
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description'
     ]
