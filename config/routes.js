@@ -165,5 +165,7 @@ module.exports.routes = {
 
   'POST    /noo/subscription':                            'SubscriptionController.create',
 
+  'GET     /noo/auto-update-info':                        'MobileAppController.updateInfo',
+
   '/*':                                                   'StaticPageController.proxy'
 }

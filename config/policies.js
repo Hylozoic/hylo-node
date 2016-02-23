@@ -156,5 +156,7 @@ module.exports.policies = {
     proxy: ['renderOpenGraphTags']
   },
 
-  NexudusController: true
+  NexudusController: true,
+
+  MobileAppController: true
 }
