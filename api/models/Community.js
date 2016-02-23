@@ -1,3 +1,6 @@
+var url = require('url'),
+    Slack = require('../services/Slack')
+
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
 
@@ -133,6 +136,14 @@ module.exports = bookshelf.Model.extend({
     return Community.find(communityId)
     .then(community => community && community.get('network_id'))
     .then(networkId => networkId && Network.containsUser(networkId, userId))
-  }
+  },
 
+  sendSlackNotification: function (communityId, post) {
+    return Community.find(communityId)
+    .then(community => {
+      if (!community || !community.get('slack_hook_url')) return
+      var slackMessage = Slack.textForNewPost(post, community)
+      return Slack.send(slackMessage, community.get('slack_hook_url'))
+    })
+  }
 })

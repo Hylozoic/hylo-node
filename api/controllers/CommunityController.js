@@ -1,3 +1,9 @@
+var Promise = require('bluebird')
+var request = require('request')
+var format = require('util').format
+var post = Promise.promisify(request.post)
+var slackAuthAccess = 'https://slack.com/api/oauth.access'
+
 module.exports = {
   find: function (req, res) {
     Community.fetchAll({withRelated: [
@@ -29,7 +35,7 @@ module.exports = {
     Community.find(req.param('communityId'), {withRelated: ['leader']})
     .tap(community => leader = community.relations.leader)
     .then(community => _.merge(community.pick(
-      'welcome_message', 'beta_access_code', 'settings'
+      'welcome_message', 'beta_access_code', 'slack_hook_url', 'slack_team', 'slack_configure_url', 'settings'
     ), {
       leader: leader ? leader.pick('id', 'name', 'avatar_url') : null
     }))
@@ -40,7 +46,7 @@ module.exports = {
   update: function (req, res) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code', 'location'
+      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'slack_hook_url', 'slack_team', 'slack_configure_url'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
     var saneAttrs = _.clone(attributes)
@@ -53,6 +59,35 @@ module.exports = {
     community.save(saneAttrs, {patch: true})
     .then(() => res.ok({}))
     .catch(res.serverError)
+  },
+
+  addSlack: function (req, res) {
+    var code = req.query.code,
+      redirect_uri = req.protocol + '://' + process.env.DOMAIN + req.path,
+      options = {
+        uri: slackAuthAccess,
+        form: {
+          client_id: process.env.SLACK_APP_CLIENT_ID,
+          client_secret: process.env.SLACK_APP_CLIENT_SECRET,
+          code: code,
+          redirect_uri: redirect_uri
+        }
+      }
+
+    post(options).spread((resp, body) => {
+      var parsed = JSON.parse(body);
+      Community.find(req.param('communityId')).then(function (community) {
+        community.save({
+          slack_hook_url: parsed.incoming_webhook.url,
+          slack_team: parsed.team_name,
+          slack_configure_url: parsed.incoming_webhook.configuration_url
+        }, {patch: true})
+        .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
+        .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=0'))
+      })
+    }).catch(err => {
+      res.redirect(Frontend.Route.community(community) + '/settings?slack=0')
+    });
   },
 
   findModerators: function (req, res) {

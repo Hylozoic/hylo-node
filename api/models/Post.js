@@ -238,25 +238,31 @@ module.exports = bookshelf.Model.extend({
       'communities.users.communities',
       'user'
     ]})
-    .then(post => {
+   .then(post => {
       var communities = post.relations.communities
       var poster = post.relations.user
       var usersWithDupes = communities.map(community => community.relations.users.models)
       var users = uniqById(_.flatten(usersWithDupes))
 
       _.remove(users, user => user.get('id') === poster.get('id'))
-      return Promise.map(users, (user) => {
-        if (!user.get('push_new_post_preference')) return
-        if (post.isWelcome()) return
-        var userCommunities = user.relations.communities.models
-        var postCommunitiesIds = communities.models.map(community => community.get('id'))
-        var community, path, alertText
-        community = _.find(userCommunities, community => _.includes(postCommunitiesIds, community.get('id')))
-        if (!community) return
-        path = url.parse(Frontend.Route.post(post, community)).path
-        alertText = PushNotification.textForNewPost(post, community, user.get('id'))
-        return user.sendPushNotification(alertText, path)
-      })
+      return Promise.join(
+          Promise.map(communities.models, community => {
+            if (!community.get('slack_hook_url')) return
+            return Community.sendSlackNotification(community.get('id'), post)
+          }),
+          Promise.map(users, (user) => {
+            if (!user.get('push_new_post_preference')) return
+            if (post.isWelcome()) return
+            var userCommunities = user.relations.communities.models
+            var postCommunitiesIds = communities.models.map(community => community.get('id'))
+            var community, path, alertText
+            community = _.find(userCommunities, community => _.includes(postCommunitiesIds, community.get('id')))
+            if (!community) return
+            path = url.parse(Frontend.Route.post(post, community)).path
+            alertText = PushNotification.textForNewPost(post, community, user.get('id'))
+            return user.sendPushNotification(alertText, path)
+        })
+      )
     })
   },
 

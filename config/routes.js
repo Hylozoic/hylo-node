@@ -66,6 +66,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId':                   'CommunityController.findOne',
   'POST   /noo/community/:communityId':                   'CommunityController.update',
   'GET    /noo/community/:communityId/settings':          'CommunityController.findSettings',
+  'GET    /noo/community/:communityId/settings/slack':    'CommunityController.addSlack',
   'GET    /noo/community/:communityId/moderators':        'CommunityController.findModerators',
   'POST   /noo/community/:communityId/moderators':        'CommunityController.addModerator',
   'DELETE /noo/community/:communityId/moderator/:userId': 'CommunityController.removeModerator',
