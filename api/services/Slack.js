@@ -5,8 +5,7 @@ var post = Promise.promisify(request.post)
 
 module.exports = {
   textForNewPost: function (post, community) {
-    var relatedUser, creator = post.relations.creator
-
+    var relatedUser, creator = post.relations.user
     if (post.isWelcome()) {
       relatedUser = post.relations.relatedUsers.first()
       return format('<%s|%s> joined <%s|%s>',

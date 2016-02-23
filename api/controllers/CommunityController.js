@@ -1,7 +1,7 @@
 var Promise = require('bluebird')
 var request = require('request')
 var format = require('util').format
-var get = Promise.promisify(request.get)
+var post = Promise.promisify(request.post)
 var slackAuthAccess = 'https://slack.com/api/oauth.access'
 
 module.exports = {
@@ -64,14 +64,17 @@ module.exports = {
   addSlack: function (req, res) {
     var code = req.query.code,
       redirect_uri = req.protocol + '://' + process.env.DOMAIN + req.path,
-      url = format('%s?client_id=%s&client_secret=%s&code=%s&redirect_uri=%s',
-                       slackAuthAccess,
-                       process.env.SLACK_APP_CLIENT_ID,
-                       process.env.SLACK_APP_CLIENT_SECRET,
-                       code,
-                       redirect_uri);
+      options = {
+        uri: slackAuthAccess,
+        form: {
+          client_id: process.env.SLACK_APP_CLIENT_ID,
+          client_secret: process.env.SLACK_APP_CLIENT_SECRET,
+          code: code,
+          redirect_uri: redirect_uri
+        }
+      }
 
-    get(url).spread((resp, body) => {
+    post(options).spread((resp, body) => {
       var parsed = JSON.parse(body);
       Community.find(req.param('communityId')).then(function (community) {
         community.save({

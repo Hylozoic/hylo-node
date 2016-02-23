@@ -248,7 +248,7 @@ module.exports = bookshelf.Model.extend({
       return Promise.join(
           Promise.map(communities.models, community => {
             if (!community.get('slack_hook_url')) return
-            return Community.sendSlackNotification(community.id, post);
+            return Community.sendSlackNotification(community.get('id'), post)
           }),
           Promise.map(users, (user) => {
             if (!user.get('push_new_post_preference')) return
