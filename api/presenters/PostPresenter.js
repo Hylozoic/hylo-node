@@ -17,6 +17,7 @@ var postRelations = (userId, opts) => _.filter([
 ], x => !!x)
 
 var postAttributes = post => {
+  var rel = post.relations
   return _.extend(
     _.pick(post.toJSON(), [
       'id',
@@ -33,16 +34,16 @@ var postAttributes = post => {
       'location'
     ]),
     {
-      user: post.relations.user.pick('id', 'name', 'avatar_url'),
-      communities: post.relations.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),
-      contributors: post.relations.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
-      followers: post.relations.followers.map(u => u.pick('id', 'name', 'avatar_url')),
-      responders: post.relations.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
-      media: post.relations.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')),
-      myVote: post.relations.votes.length > 0,
+      user: rel.user ? rel.user.pick('id', 'name', 'avatar_url') : null,
+      communities: rel.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),
+      contributors: rel.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
+      followers: rel.followers.map(u => u.pick('id', 'name', 'avatar_url')),
+      responders: rel.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
+      media: rel.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')),
+      myVote: rel.votes.length > 0,
       numComments: post.get('num_comments'),
       votes: post.get('num_votes'),
-      relatedUsers: post.relations.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')),
+      relatedUsers: rel.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')),
       public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE
     }
   )
