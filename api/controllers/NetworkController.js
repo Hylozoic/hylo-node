@@ -41,6 +41,17 @@ module.exports = {
 
     var attributes = _.pick(req.allParams(), whitelist)
 
+    var setNetworkIdIfModerator = (communityId, networkId, trx) => {
+      return Membership.hasModeratorRole(req.session.userId, communityId)
+      .then(isModerator => {
+        if (isModerator) {
+          return Community.find(communityId)
+          .then(c => c.save({network_id: networkId}, {patch: true, transacting: trx}))
+        }
+        return
+      })
+    }
+
     return bookshelf.transaction(function (trx) {
       return Network.find(req.param('networkId'))
       .then(network => network.save(attributes, {patch: true, transacting: trx}))
@@ -52,26 +63,8 @@ module.exports = {
           var addedComs = _.difference(postedComs, coms.pluck('id'))
           var removedComs = _.difference(coms.pluck('id'), postedComs)
           return Promise.join(
-            Promise.map(addedComs, addedCom => {
-              return Membership.hasModeratorRole(req.session.userId, addedCom)
-              .then(isModerator => {
-                if (isModerator) {
-                  return Community.find(addedCom)
-                  .then(c => c.save({network_id: network.id}, {patch: true, transacting: trx}))
-                }
-                return
-              })
-            }),
-            Promise.map(removedComs, removedCom => {
-              return Membership.hasModeratorRole(req.session.userId, removedCom)
-              .then(isModerator => {
-                if (isModerator) {
-                  return Community.find(removedCom)
-                  .then(c => c.save({network_id: null}, {patch: true, transacting: trx}))
-                }
-                return
-              })
-            })
+            Promise.map(addedComs, addedCom => setNetworkIdIfModerator(addedCom, network.id, trx)),
+            Promise.map(removedComs, removedCom => setNetworkIdIfModerator(removedCom, null, trx))
           )
         })
       })
