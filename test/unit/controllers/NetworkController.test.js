@@ -58,6 +58,7 @@ describe('NetworkController', () => {
   describe('#update', () => {
     it('works, and doesn\'t change the slug', () => {
       req.session.userId = fixtures.u1.id
+      req.user = {email: 'admin@hylo.com'}
 
       _.extend(req.params, {networkId: 'prefoo', name: 'Foo', slug: 'foo', description: 'abcde', avatar_url: 'http://bar.com/a.jpg', banner_url: 'http://baz.com/b.jpg', communities: []})
       return new Network({name: 'PreFoo', slug: 'prefoo', description: 'preabcde', avatar_url: 'http://prebar.com/prea.jpg', banner_url: 'http://prebaz.com/preb.jpg'}).save()
@@ -75,6 +76,7 @@ describe('NetworkController', () => {
 
     it('updates communities you are a moderator of', () => {
       req.session.userId = fixtures.u1.id
+      req.user = {email: 'admin@hylo.com'}
 
       // u1 is moderator of c1 and c2. foo network contains c1 and c3 to begin.
       // The update tries to add c2 and c4 and remove c1 and c3.
@@ -97,6 +99,24 @@ describe('NetworkController', () => {
         expect(_.includes(communityIds, fixtures.c2.id)).to.equal(true)
         expect(_.includes(communityIds, fixtures.c3.id)).to.equal(true)
         expect(_.includes(communityIds, fixtures.c4.id)).to.equal(false)
+      })
+    })
+
+    it('returns a 403 if you\'re not an admin', () => {
+      req.session.userId = fixtures.u1.id
+
+      _.extend(req.params, {networkId: 'prefoo', name: 'Foo', slug: 'foo', description: 'abcde', avatar_url: 'http://bar.com/a.jpg', banner_url: 'http://baz.com/b.jpg', communities: []})
+      return new Network({name: 'PreFoo', slug: 'prefoo', description: 'preabcde', avatar_url: 'http://prebar.com/prea.jpg', banner_url: 'http://prebaz.com/preb.jpg'}).save()
+      .then(() => NetworkController.update(req, res))
+      .then(() => Network.find('prefoo', {withRelated: ['communities']}))
+      .then(network => {
+        expect(res.statusCode).to.equal(403)
+        expect(network).to.exist
+        expect(network.get('name')).to.equal('PreFoo')
+        expect(network.get('slug')).to.equal('prefoo')
+        expect(network.get('description')).to.equal('preabcde')
+        expect(network.get('avatar_url')).to.equal('http://prebar.com/prea.jpg')
+        expect(network.get('banner_url')).to.equal('http://prebaz.com/preb.jpg')
       })
     })
   })

@@ -32,7 +32,7 @@ module.exports = {
   update: function (req, res) {
     if (!Admin.isSignedIn(req)) {
       res.statusCode = 403
-      return res.end('Forbidden')
+      return res.send('Forbidden')
     }
 
     var whitelist = [
