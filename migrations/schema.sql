@@ -117,7 +117,11 @@ CREATE TABLE community (
     settings jsonb DEFAULT '{}'::jsonb,
     default_public_content boolean DEFAULT false,
     network_id bigint,
-    location character varying(255)
+    location character varying(255),
+    slack_hook_url text,
+    slack_team text,
+    slack_configure_url text,
+    active boolean DEFAULT true
 );
 
 
