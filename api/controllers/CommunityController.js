@@ -64,7 +64,7 @@ module.exports = {
 
   addSlack: function (req, res) {
     var code = req.query.code
-    var redirect_uri = req.protocol + '://' + process.env.DOMAIN + req.path
+    var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path
     var options = {
       uri: slackAuthAccess,
       form: {
@@ -75,8 +75,11 @@ module.exports = {
       }
     }
 
+    console.log('Slack redirect_uri:', redirect_uri)
     post(options).spread((resp, body) => {
       var parsed = JSON.parse(body)
+      console.log('response from Slack:')
+      console.log(parsed)
       Community.find(req.param('communityId')).then(function (community) {
         community.save({
           slack_hook_url: parsed.incoming_webhook.url,
