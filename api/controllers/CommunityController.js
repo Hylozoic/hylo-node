@@ -5,7 +5,9 @@ var slackAuthAccess = 'https://slack.com/api/oauth.access'
 
 module.exports = {
   find: function (req, res) {
-    Community.fetchAll({withRelated: [
+    Community
+    .where('active', true)
+    .fetchAll({withRelated: [
         {memberships: q => q.column('community_id')}
     ]})
     .then(communities => communities.map(c => _.extend(c.toJSON(), {
