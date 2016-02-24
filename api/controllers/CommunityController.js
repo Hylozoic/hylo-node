@@ -74,6 +74,7 @@ module.exports = {
         }
       }
 
+    console.log('Slack redirect_uri:', redirect_uri)
     post(options).spread((resp, body) => {
       var parsed = JSON.parse(body);
       console.log('response from Slack:')
