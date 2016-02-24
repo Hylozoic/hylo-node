@@ -38,7 +38,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   memberships: function () {
-    return this.hasMany(Membership).query({where: {active: true}})
+    return this.hasMany(Membership).query(qb => {
+      qb.where('users_community.active', true)
+      qb.leftJoin('community', function () {
+        this.on('community.id', '=', 'users_community.community_id')
+      })
+      qb.where('community.active', true)
+    })
   },
 
   onboarding: function () {
