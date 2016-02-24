@@ -1,6 +1,5 @@
 var Promise = require('bluebird')
 var request = require('request')
-var format = require('util').format
 var post = Promise.promisify(request.post)
 var slackAuthAccess = 'https://slack.com/api/oauth.access'
 
@@ -62,20 +61,20 @@ module.exports = {
   },
 
   addSlack: function (req, res) {
-    var code = req.query.code,
-      redirect_uri = req.protocol + '://' + process.env.DOMAIN + req.path,
-      options = {
-        uri: slackAuthAccess,
-        form: {
-          client_id: process.env.SLACK_APP_CLIENT_ID,
-          client_secret: process.env.SLACK_APP_CLIENT_SECRET,
-          code: code,
-          redirect_uri: redirect_uri
-        }
+    var code = req.query.code
+    var redirect_uri = req.protocol + '://' + process.env.DOMAIN + req.path
+    var options = {
+      uri: slackAuthAccess,
+      form: {
+        client_id: process.env.SLACK_APP_CLIENT_ID,
+        client_secret: process.env.SLACK_APP_CLIENT_SECRET,
+        code: code,
+        redirect_uri: redirect_uri
       }
+    }
 
     post(options).spread((resp, body) => {
-      var parsed = JSON.parse(body);
+      var parsed = JSON.parse(body)
       Community.find(req.param('communityId')).then(function (community) {
         community.save({
           slack_hook_url: parsed.incoming_webhook.url,
@@ -87,7 +86,7 @@ module.exports = {
       })
     }).catch(err => {
       res.redirect(Frontend.Route.community(community) + '/settings?slack=0')
-    });
+    })
   },
 
   findModerators: function (req, res) {
