@@ -47,7 +47,8 @@ module.exports = {
   update: function (req, res) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'slack_hook_url', 'slack_team', 'slack_configure_url'
+      'welcome_message', 'leader_id', 'beta_access_code', 'location',
+      'slack_hook_url', 'slack_team', 'slack_configure_url', 'active'
     ]
     var attributes = _.pick(req.allParams(), whitelist)
     var saneAttrs = _.clone(attributes)
