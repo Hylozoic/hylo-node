@@ -7,7 +7,7 @@ module.exports = function checkAndSetMembership (req, res, next) {
     return next()
   }
 
-  Community.find(communityId).then(community => {
+  Community.findActive(communityId).then(community => {
     if (!community) {
       return res.notFound()
     }
