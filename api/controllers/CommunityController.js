@@ -117,7 +117,7 @@ module.exports = {
 
   joinWithCode: function (req, res) {
     var community
-    return Community.query('whereRaw', 'lower(beta_access_code) = lower(?)', req.param('code')).fetch()
+    return Community.query('whereRaw', 'lower(beta_access_code) = lower(?) and active=true', req.param('code')).fetch()
     .tap(c => community = c)
     .tap(() => bookshelf.transaction(trx => Promise.join(
       Membership.create(req.session.userId, community.id, {transacting: trx}),
