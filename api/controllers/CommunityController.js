@@ -63,7 +63,7 @@ module.exports = {
 
   addSlack: function (req, res) {
     var code = req.query.code,
-      redirect_uri = req.protocol + '://' + process.env.DOMAIN + req.path,
+      redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path,
       options = {
         uri: slackAuthAccess,
         form: {
