@@ -76,6 +76,8 @@ module.exports = {
 
     post(options).spread((resp, body) => {
       var parsed = JSON.parse(body);
+      console.log('response from Slack:')
+      console.log(parsed)
       Community.find(req.param('communityId')).then(function (community) {
         community.save({
           slack_hook_url: parsed.incoming_webhook.url,
