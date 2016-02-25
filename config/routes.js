@@ -169,7 +169,7 @@ module.exports.routes = {
 
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
 
-  'GET     /noo/live-status':                             'LiveStatusController.liveStatus',
+  'GET     /noo/live-status':                             'LiveStatusController.show',
 
   '/*':                                                   'StaticPageController.proxy'
 }
