@@ -160,5 +160,8 @@ module.exports.policies = {
 
   NexudusController: true,
 
-  MobileAppController: true
+  MobileAppController: true,
+
+  LiveStatusController: ['sessionAuth']
+
 }
