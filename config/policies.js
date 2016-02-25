@@ -162,6 +162,6 @@ module.exports.policies = {
 
   MobileAppController: true,
 
-  LiveStatusController: ['sessionAuth']
+  LiveStatusController: true
 
 }
