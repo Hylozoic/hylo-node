@@ -12,7 +12,7 @@ module.exports = bookshelf.Model.extend({
   tableName: 'networks',
 
   communities: function () {
-    return this.hasMany(Community)
+    return this.hasMany(Community).query({where: {'community.active': true}})
   }
 
 }, {

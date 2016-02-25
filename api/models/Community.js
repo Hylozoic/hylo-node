@@ -1,5 +1,4 @@
-var url = require('url'),
-    Slack = require('../services/Slack')
+var Slack = require('../services/Slack')
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
@@ -95,6 +94,13 @@ module.exports = bookshelf.Model.extend({
       return Community.where({slug: id_or_slug}).fetch(options)
     }
     return Community.where({id: id_or_slug}).fetch(options)
+  },
+
+  findActive: function (id_or_slug, options) {
+    if (isNaN(Number(id_or_slug))) {
+      return Community.where({slug: id_or_slug, active: true}).fetch(options)
+    }
+    return Community.where({id: id_or_slug, active: true}).fetch(options)
   },
 
   canInvite: function (userId, communityId) {

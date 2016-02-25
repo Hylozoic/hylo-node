@@ -14,7 +14,7 @@ module.exports = bookshelf.Model.extend({
 
   communities: function () {
     return this.belongsToMany(Community, 'users_community').through(Membership)
-      .query({where: {'users_community.active': true}}).withPivot('role')
+      .query({where: {'users_community.active': true, 'community.active': true}}).withPivot('role')
   },
 
   contributions: function () {
@@ -38,7 +38,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   memberships: function () {
-    return this.hasMany(Membership).query({where: {active: true}})
+    return this.hasMany(Membership).query(qb => {
+      qb.where('users_community.active', true)
+      qb.leftJoin('community', function () {
+        this.on('community.id', '=', 'users_community.community_id')
+      })
+      qb.where('community.active', true)
+    })
   },
 
   onboarding: function () {

@@ -1,12 +1,13 @@
 var Promise = require('bluebird')
 var request = require('request')
-var format = require('util').format
 var post = Promise.promisify(request.post)
 var slackAuthAccess = 'https://slack.com/api/oauth.access'
 
 module.exports = {
   find: function (req, res) {
-    Community.fetchAll({withRelated: [
+    Community
+    .where('active', true)
+    .fetchAll({withRelated: [
         {memberships: q => q.column('community_id')}
     ]})
     .then(communities => communities.map(c => _.extend(c.toJSON(), {
@@ -62,21 +63,21 @@ module.exports = {
   },
 
   addSlack: function (req, res) {
-    var code = req.query.code,
-      redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path,
-      options = {
-        uri: slackAuthAccess,
-        form: {
-          client_id: process.env.SLACK_APP_CLIENT_ID,
-          client_secret: process.env.SLACK_APP_CLIENT_SECRET,
-          code: code,
-          redirect_uri: redirect_uri
-        }
+    var code = req.query.code
+    var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path
+    var options = {
+      uri: slackAuthAccess,
+      form: {
+        client_id: process.env.SLACK_APP_CLIENT_ID,
+        client_secret: process.env.SLACK_APP_CLIENT_SECRET,
+        code: code,
+        redirect_uri: redirect_uri
       }
+    }
 
     console.log('Slack redirect_uri:', redirect_uri)
     post(options).spread((resp, body) => {
-      var parsed = JSON.parse(body);
+      var parsed = JSON.parse(body)
       console.log('response from Slack:')
       console.log(parsed)
       Community.find(req.param('communityId')).then(function (community) {
@@ -90,7 +91,7 @@ module.exports = {
       })
     }).catch(err => {
       res.redirect(Frontend.Route.community(community) + '/settings?slack=0')
-    });
+    })
   },
 
   findModerators: function (req, res) {
@@ -121,7 +122,11 @@ module.exports = {
 
   joinWithCode: function (req, res) {
     var community
-    return Community.query('whereRaw', 'lower(beta_access_code) = lower(?)', req.param('code')).fetch()
+    return Community.query(qb => {
+      qb.whereRaw('lower(beta_access_code) = lower(?)', req.param('code'))
+      qb.where('active', true)
+    })
+    .fetch()
     .tap(c => community = c)
     .tap(() => bookshelf.transaction(trx => Promise.join(
       Membership.create(req.session.userId, community.id, {transacting: trx}),
@@ -223,6 +228,7 @@ module.exports = {
       if (req.param('paginate')) {
         return Community.query(qb => {
           qb.where('network_id', network.get('id'))
+          qb.where('community.active', true)
           qb.select(bookshelf.knex.raw('community.slug, count(users_community.user_id) as "memberCount", count(community.id) over () as total'))
           qb.leftJoin('users_community', function () {
             this.on('community.id', '=', 'users_community.community_id')
