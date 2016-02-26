@@ -21,7 +21,7 @@ module.exports = {
     })
     .fetchAll({withRelated: [
       {actor: qb => qb.column('id', 'name', 'avatar_url')},
-      {comment: qb => qb.column('id', 'comment_text', 'created_at')},
+      {comment: qb => qb.column('id', 'comment_text', 'created_at', 'post_id')},
       {'comment.thanks': qb => qb.where('thanked_by_id', req.session.userId)},
       {post: qb => qb.column('id', 'name', 'user_id', 'type', 'description')},
       {'post.communities': qb => qb.column('community.id', 'slug')},
@@ -42,22 +42,19 @@ module.exports = {
   },
 
   markAllRead: function (req, res) {
-    Activity.query().where({reader_id: req.session.userId}).update({unread: false})
-    .then(function () {
-      res.ok({})
-    })
-    .catch(res.serverError.bind(res))
+    Activity.query()
+    .where({reader_id: req.session.userId})
+    .update({unread: false})
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   },
 
   update: function (req, res) {
-    Activity.find(req.param('activityId')).then(function (activity) {
-      activity.attributes = _.pick(req.allParams(), 'unread')
-      return activity.save()
-    })
-    .then(function () {
-      res.ok({})
-    })
-    .catch(res.serverError.bind(res))
+    Activity.find(req.param('activityId'))
+    .tap(a => a.attributes = _.pick(req.allParams(), 'unread'))
+    .tap(a => a.save())
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   }
 
 }
