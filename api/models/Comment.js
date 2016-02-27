@@ -186,8 +186,7 @@ module.exports = bookshelf.Model.extend({
       })
       .then(comment => {
         var post = comment.relations.post
-        var community = post.relations.communities.first()
-        var path = url.parse(Frontend.Route.post(post, community)).path
+        var path = url.parse(Frontend.Route.post(post)).path
         var alertText = PushNotification.textForComment(comment, opts.version, opts.recipientId)
 
         return Promise.map(devices.models, d => d.sendPushNotification(alertText, path))

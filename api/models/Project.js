@@ -108,7 +108,7 @@ module.exports = bookshelf.Model.extend({
           post_description: post.get('description'),
           post_type: post.get('type'),
           post_url: Frontend.Route.tokenLogin(recipient, token,
-            Frontend.Route.post(post, community) + '?ctt=project_post_email')
+            Frontend.Route.post(post) + '?ctt=project_post_email')
         }, {
           sender: {address: replyTo, reply_to: replyTo}
         }))

@@ -212,7 +212,7 @@ module.exports = bookshelf.Model.extend({
           post_title: post.get('name'),
           post_type: post.get('type'),
           post_url: Frontend.Route.tokenLogin(recipient, token,
-            Frontend.Route.post(post, community) + '?ctt=post_mention_email'),
+            Frontend.Route.post(post) + '?ctt=post_mention_email'),
           unfollow_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email'),
           tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: recipient.id})

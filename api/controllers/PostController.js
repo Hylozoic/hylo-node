@@ -365,7 +365,7 @@ module.exports = {
       body: format(
         '%s &lt;%s&gt; has flagged %s as objectionable',
         user.get('name'), user.get('email'),
-        Frontend.Route.post(post, community)
+        Frontend.Route.post(post)
       )
     }))
     .then(() => res.ok({}), res.serverError)
