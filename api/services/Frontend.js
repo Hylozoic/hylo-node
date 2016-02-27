@@ -31,8 +31,8 @@ module.exports = {
       return url('/project/%s/settings', project.get('slug'));
     },
 
-    post: function(post, community) {
-      return url('/c/%s/s/%s', community.get('slug'), post.id);
+    post: function(post) {
+      return url(`/p/${post.id}`);
     },
 
     unfollow: function(post, community) {
