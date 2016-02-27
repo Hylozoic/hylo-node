@@ -267,6 +267,17 @@ module.exports = {
     .then(users => users.map(UserPresenter.presentForList))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
-  }
+  },
 
+  findForPostVote: function (req, res) {
+    User.query(q => {
+      q.where('id', 'in', Vote.query()
+        .where({post_id: req.param('postId')})
+        .select('user_id'))
+    })
+    .fetchAll()
+    .then(people => people.map(u => u.pick('id', 'name', 'avatar_url')))
+    .then(people => ({people, people_total: people.length}))
+    .then(res.ok, res.serverError)
+  }
 }

@@ -60,7 +60,8 @@ module.exports.policies = {
     findForProject:      ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForProjectRedux: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForCommunity:    ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    findForNetwork:      ['sessionAuth', 'inNetwork']
+    findForNetwork:      ['sessionAuth', 'inNetwork'],
+    findForPostVote:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost']
   },
 
   ActivityController: {
