@@ -6,7 +6,7 @@ var sortColumns = {
   'start_time': ['post.start_time', 'asc']
 }
 
-var findPosts = function (req, res, opts) {
+var findPosts = function (req, resolve, reject, opts) {
   var params = _.merge(
     _.pick(req.allParams(), [
       'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
@@ -29,7 +29,7 @@ var findPosts = function (req, res, opts) {
     withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
   }))
   .then(PostPresenter.mapPresentWithTotal)
-  .then(res.ok, res.serverError)
+  .then(resolve, reject)
 }
 
 var setupNewPostAttrs = function (userId, params) {
@@ -92,7 +92,7 @@ var afterSavingPost = function (post, opts) {
   ])))
 }
 
-module.exports = {
+var PostController = {
   findOne: function (req, res) {
     res.locals.post.load(PostPresenter.relations(req.session.userId))
     .then(PostPresenter.present)
@@ -101,7 +101,7 @@ module.exports = {
   },
 
   findForUser: function (req, res) {
-    findPosts(req, res, {
+    findPosts(req, res.ok, res.serverError, {
       users: [req.param('userId')],
       communities: Membership.activeCommunityIds(req.session.userId),
       visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
@@ -109,18 +109,22 @@ module.exports = {
   },
 
   findForCommunity: function (req, res) {
+    return PostController.internalFindForCommunity(req, res, res.ok, res.serverError)
+  },
+
+  internalFindForCommunity: function (req, res, resolve, reject) {
     if (TokenAuth.isAuthenticated(res)) {
       if (!RequestValidation.requireTimeRange(req, res)) return
     }
 
-    return findPosts(req, res, {
+    return findPosts(req, resolve, reject, {
       communities: [res.locals.community.id],
       visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
     })
   },
 
   findForProject: function (req, res) {
-    findPosts(req, res, {
+    findPosts(req, res.ok, res.serverError, {
       project: req.param('projectId'),
       relationsOpts: {fromProject: true},
       sort: 'fulfilled-last'
@@ -131,7 +135,7 @@ module.exports = {
     Network.find(req.param('networkId'))
     .then(network => Community.where({network_id: network.id}).fetchAll())
     .then(communities => {
-      findPosts(req, res, {
+      findPosts(req, res.ok, res.serverError, {
         communities: communities.map(c => c.id),
         visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
       })
@@ -417,3 +421,5 @@ module.exports = {
     return Promise.resolve(res.ok(false))
   }
 }
+
+module.exports = PostController

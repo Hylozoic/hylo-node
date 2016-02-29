@@ -323,7 +323,7 @@ describe('PostController', () => {
       })
     })
 
-    it('returns true when a post has been added changed', () => {
+    it('returns true when a post has been added', () => {
       req.params = {
         id: c2.id,
         query: '',
