@@ -357,7 +357,6 @@ module.exports = {
 
   complain: function (req, res) {
     var post = res.locals.post
-    var community = post.relations.communities.first()
 
     User.find(req.session.userId)
     .then(user => Email.sendRawEmail('hello@hylo.com', {
