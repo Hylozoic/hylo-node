@@ -108,6 +108,7 @@ module.exports.policies = {
     vote:             ['sessionAuth', 'checkAndSetPost'],
     complain:         ['sessionAuth', 'checkAndSetPost'],
     destroy:          ['sessionAuth', 'checkAndSetWritablePost'],
+    checkFreshness:   ['allowPublicAccess'],
     createFromEmail: true
   },
 

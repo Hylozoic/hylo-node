@@ -392,6 +392,10 @@ module.exports = {
       }
     })
     .then(() => res.ok({}), res.serverError)
+  },
+
+  checkFreshness: function (req, res) {
+    return res.ok({})
   }
 
 }
