@@ -393,8 +393,27 @@ module.exports = {
     .then(() => res.ok({}), res.serverError)
   },
 
-  checkFreshness: function (req, res) {
+  checkFreshnessForCommunity: function (req, res) {
+    return Promise.resolve(res.ok(false))
+  },
+
+  checkFreshnessForUser: function (req, res) {
+    return Promise.resolve(res.ok(false))
+  },
+
+  checkFreshnessForAllForUser: function (req, res) {
+    return Promise.resolve(res.ok(false))
+  },
+
+  checkFreshnessForFollowed: function (req, res) {
+    return Promise.resolve(res.ok(false))
+  },
+
+  checkFreshnessForProject: function (req, res) {
+    return Promise.resolve(res.ok(false))
+  },
+
+  checkFreshnessForNetwork: function (req, res) {
     return Promise.resolve(res.ok(false))
   }
-
 }

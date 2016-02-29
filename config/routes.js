@@ -50,7 +50,14 @@ module.exports.routes = {
   'POST   /noo/post':                                     'PostController.create',
   'POST   /noo/post/:postId':                             'PostController.update',
   'DELETE /noo/post/:postId':                             'PostController.destroy',
-  'GET    /noo/post/check-freshness':                     'PostController.checkFreshness',
+  // these route namers correspond with the different cases for subject in the
+  // frontend fetchPosts action
+  'GET    /noo/post/check-freshness-for-community':       'PostController.checkFreshnessForCommunity',
+  'GET    /noo/post/check-freshness-for-person':          'PostController.checkFreshnessForUser',
+  'GET    /noo/post/check-freshness-for-all-posts':       'PostController.checkFreshnessForAllForUser',
+  'GET    /noo/post/check-freshness-for-followed-posts':  'PostController.checkFreshnessForFollowed',
+  'GET    /noo/post/check-freshness-for-project':         'PostController.checkFreshnessForProject',
+  'GET    /noo/post/check-freshness-for-network':         'PostController.checkFreshnessForNetwork',
 
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',

@@ -296,7 +296,7 @@ describe('PostController', () => {
     })
   })
 
-  describe('.checkFreshness', () => {
+  describe('.checkFreshnessForCommunity', () => {
     var p2, p3, c2
 
     before(() => {
@@ -310,22 +310,21 @@ describe('PostController', () => {
       ))
     })
 
-    it('for community: returns false when nothing has changed', () => {
+    it('returns false when nothing has changed', () => {
       req.params = {
         subject: 'community',
         id: c2.id,
         query: '',
         posts: [_.pick(p2, ['id', 'updated_at']), _.pick(p3, ['id', 'updated_at'])]
       }
-      return PostController.checkFreshness(req, res)
+      return PostController.checkFreshnessForCommunity(req, res)
       .then(() => {
         expect(res.body).to.equal(false)
       })
     })
 
-    it('for community: returns true when a post has been added changed', () => {
+    it('returns true when a post has been added changed', () => {
       req.params = {
-        subject: 'community',
         id: c2.id,
         query: '',
         posts: [_.pick(p2, ['id', 'updated_at']), _.pick(p3, ['id', 'updated_at'])]
@@ -334,7 +333,7 @@ describe('PostController', () => {
       var p4 = factories.post({type: 'chat', active: true})
       return p4.save()
       .then(() => c2.posts().attach(p4))
-      .then(() => PostController.checkFreshness(req, res))
+      .then(() => PostController.checkFreshnessForCommunity(req, res))
       .then(() => {
         expect(res.body).to.equal(true)
       })
