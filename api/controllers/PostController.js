@@ -394,7 +394,7 @@ module.exports = {
   },
 
   checkFreshness: function (req, res) {
-    return res.ok({})
+    return Promise.resolve(res.ok(false))
   }
 
 }

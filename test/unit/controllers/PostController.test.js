@@ -295,4 +295,49 @@ describe('PostController', () => {
       })
     })
   })
+
+  describe('.checkFreshness', () => {
+    var p2, p3, c2
+
+    before(() => {
+      c2 = factories.community()
+      p2 = factories.post({type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({type: 'chat', active: true})
+      return Promise.join(p2.save(), p3.save(), c2.save())
+      .then(() => Promise.join(
+        c2.posts().attach(p2),
+        c2.posts().attach(p3)
+      ))
+    })
+
+    it('for community: returns false when nothing has changed', () => {
+      req.params = {
+        subject: 'community',
+        id: c2.id,
+        query: '',
+        posts: [_.pick(p2, ['id', 'updated_at']), _.pick(p3, ['id', 'updated_at'])]
+      }
+      return PostController.checkFreshness(req, res)
+      .then(() => {
+        expect(res.body).to.equal(false)
+      })
+    })
+
+    it('for community: returns true when a post has been added changed', () => {
+      req.params = {
+        subject: 'community',
+        id: c2.id,
+        query: '',
+        posts: [_.pick(p2, ['id', 'updated_at']), _.pick(p3, ['id', 'updated_at'])]
+      }
+
+      var p4 = factories.post({type: 'chat', active: true})
+      return p4.save()
+      .then(() => c2.posts().attach(p4))
+      .then(() => PostController.checkFreshness(req, res))
+      .then(() => {
+        expect(res.body).to.equal(true)
+      })
+    })
+  })
 })
