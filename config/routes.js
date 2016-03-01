@@ -50,7 +50,7 @@ module.exports.routes = {
   'POST   /noo/post':                                     'PostController.create',
   'POST   /noo/post/:postId':                             'PostController.update',
   'DELETE /noo/post/:postId':                             'PostController.destroy',
-  // these route namers correspond with the different cases for subject in the
+  // these route names correspond with the different cases for subject in the
   // frontend fetchPosts action
   'POST   /noo/freshness/posts/community/:communityId':   'PostController.checkFreshnessForCommunity',
   'POST   /noo/freshness/posts/person/:userId':           'PostController.checkFreshnessForUser',
