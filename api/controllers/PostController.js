@@ -6,7 +6,7 @@ var sortColumns = {
   'start_time': ['post.start_time', 'asc']
 }
 
-var findPosts = function (req, resolve, reject, opts) {
+var findPosts = function (req, opts) {
   var params = _.merge(
     _.pick(req.allParams(), [
       'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
@@ -28,8 +28,6 @@ var findPosts = function (req, resolve, reject, opts) {
   .then(args => Search.forPosts(args).fetchAll({
     withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
   }))
-  .then(PostPresenter.mapPresentWithTotal)
-  .then(resolve, reject)
 }
 
 var checkFreshness = function (newPosts, cachedPosts) {
@@ -106,44 +104,52 @@ var PostController = {
   },
 
   findForUser: function (req, res) {
-    findPosts(req, res.ok, res.serverError, {
+    findPosts(req, res, {
       users: [req.param('userId')],
       communities: Membership.activeCommunityIds(req.session.userId),
       visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
     })
+    .then(PostPresenter.mapPresentWithTotal)
+    .then(res.ok, res.serverError)
   },
 
   findForCommunity: function (req, res) {
-    return PostController.internalFindForCommunity(req, res, res.ok, res.serverError)
+    return PostController.internalFindForCommunity(req, res)
+    .then(PostPresenter.mapPresentWithTotal)
+    .then(res.ok, res.serverError)
   },
 
-  internalFindForCommunity: function (req, res, resolve, reject) {
+  internalFindForCommunity: function (req, res) {
     if (TokenAuth.isAuthenticated(res)) {
       if (!RequestValidation.requireTimeRange(req, res)) return
     }
 
-    return findPosts(req, resolve, reject, {
+    return findPosts(req, {
       communities: [res.locals.community.id],
       visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
     })
   },
 
   findForProject: function (req, res) {
-    findPosts(req, res.ok, res.serverError, {
+    findPosts(req, res, {
       project: req.param('projectId'),
       relationsOpts: {fromProject: true},
       sort: 'fulfilled-last'
     })
+    .then(PostPresenter.mapPresentWithTotal)
+    .then(res.ok, res.serverError)
   },
 
   findForNetwork: function (req, res) {
     Network.find(req.param('networkId'))
     .then(network => Community.where({network_id: network.id}).fetchAll())
     .then(communities => {
-      findPosts(req, res.ok, res.serverError, {
+      findPosts(req, res, {
         communities: communities.map(c => c.id),
         visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
       })
+      .then(PostPresenter.mapPresentWithTotal)
+      .then(res.ok, res.serverError)
     })
   },
 
@@ -403,11 +409,10 @@ var PostController = {
   },
 
   checkFreshnessForCommunity: function (req, res) {
-    var foundPosts
-    var resolve = value => foundPosts = value
-
-    return PostController.internalFindForCommunity(req, res, resolve, res.serverError)
-    .then(() => checkFreshness(foundPosts.posts, req.param('posts')))
+    req.query.limit = 5
+    req.query.offset = 0
+    return PostController.internalFindForCommunity(req, res)
+    .then(posts => checkFreshness(posts.models, req.param('posts')))
     .then(res.ok)
   },
 
