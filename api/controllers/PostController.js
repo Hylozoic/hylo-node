@@ -409,8 +409,6 @@ var PostController = {
   },
 
   checkFreshnessForCommunity: function (req, res) {
-    req.query.limit = 5
-    req.query.offset = 0
     return PostController.internalFindForCommunity(req, res)
     .then(posts => checkFreshness(posts.models, req.param('posts')))
     .then(res.ok)
