@@ -12,8 +12,24 @@ var request = require('request')
 var fs = require('fs')
 var csv = require('csv-parser')
 var validator = require('validator')
+var _ = require('lodash')
 
-module.exports = {
+var promisifyStream = stream => {
+  return new Promise((resolve, reject) => {
+    stream.on('end', resolve)
+    stream.on('error', reject)
+  })
+}
+
+var UserImport = module.exports = {
+  runWithRemoteCSV: function (url, options) {
+    return promisifyStream(this.runWithCSVStream(request(url), options))
+  },
+
+  runWithCSVFile: function (filename, options) {
+    return promisifyStream(this.runWithCSVStream(fs.createReadStream(filename), options))
+  },
+
   createUser: function (row, options) {
     var attrs = _.omit(row, 'skills', 'organizations')
 
@@ -28,6 +44,8 @@ module.exports = {
         console.error('email already exists: ' + attrs.email)
         return
       }
+
+      if (options.dryRun) return
 
       return User.create(_.merge(attrs, {
         community: options.community,
@@ -50,14 +68,6 @@ module.exports = {
         return Promise.all(promises)
       })
     })
-  },
-
-  runWithRemoteCSV: function (url, options) {
-    return this.runWithCSVStream(request(url), options)
-  },
-
-  runWithCSVFile: function (filename, options) {
-    return this.runWithCSVStream(fs.createReadStream(filename), options)
   },
 
   runWithCSVStream: function (stream, options) {
@@ -90,7 +100,50 @@ module.exports = {
         bio: row['Biography'],
         work: row['Current Projects']
       }
+    },
+
+    sustainableHuman: function (row) {
+      var rawSkills = row['Skills']
+
+      var skills = _.compact(rawSkills.split(/[,#\n]/).map(s => {
+        if (!s) return
+        return s.trim()
+        .split(/(?=[A-Z])/g).map(w => w.toLowerCase()).join(' ')
+        .replace(/- /g, '-')
+        .replace(/ ([a-z])\b/g, '$1')
+        .replace(/ {2,}/g, ' ')
+      }))
+
+      var attrs = _.pickBy({
+        name: `${row['Name First']} ${row['Name Last']}`,
+        email: row['Email'],
+        bio: row['Short Bio (175 char)'],
+        intention: row['Intention'],
+        extra_info: row['Personal Website'],
+        facebook_url: row['Facebook URL'],
+        twitter_name: row['Twitter URL'].replace(/.*twitter.com\/@?/, ''),
+        linkedin_url: row['Linked In URL'],
+        skills
+      })
+
+      // console.log(`${attrs.name}: ${skills.join(' _ ')}`)
+      return attrs
     }
   }
+}
 
+if (require.main === module) {
+  var skiff = require('../../lib/skiff')
+  skiff.lift({
+    log: {
+      level: 'warn'
+    },
+    start: () => {
+      UserImport.runWithCSVFile('../sustainablehuman.csv', {
+        convert: 'sustainableHuman',
+        dryRun: true
+      })
+      .then(() => skiff.lower())
+    }
+  })
 }
