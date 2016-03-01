@@ -310,12 +310,20 @@ describe('PostController', () => {
       ))
     })
 
+    beforeEach(() => {
+      res.locals.community = c2
+      res.locals.membership = new Membership({
+        user_id: fixtures.u1.id,
+        community_id: c2.id
+      })
+    })
+
     it('returns false when nothing has changed', () => {
       req.params = {
         subject: 'community',
         id: c2.id,
         query: '',
-        posts: [_.pick(p2, ['id', 'updated_at']), _.pick(p3, ['id', 'updated_at'])]
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
       return PostController.checkFreshnessForCommunity(req, res)
       .then(() => {
@@ -327,7 +335,7 @@ describe('PostController', () => {
       req.params = {
         id: c2.id,
         query: '',
-        posts: [_.pick(p2, ['id', 'updated_at']), _.pick(p3, ['id', 'updated_at'])]
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
 
       var p4 = factories.post({type: 'chat', active: true})

@@ -398,7 +398,22 @@ var PostController = {
   },
 
   checkFreshnessForCommunity: function (req, res) {
-    return Promise.resolve(res.ok(false))
+    var okValue
+    var serverErrorReason
+    var resolve = value => okValue = value
+    var reject = reason => serverErrorReason = reason
+
+    return PostController.internalFindForCommunity(req, res, resolve, reject)
+    .then(() => {
+      if (serverErrorReason) {
+        return res.serverError(serverErrorReason)
+      } else {
+        var newPosts = okValue.posts.map(p => _.pick(p, ['id', 'updated_at']))
+        var difference = _.differenceBy(newPosts, req.param('posts'), 'id')
+        var anyNewPosts = difference.length !== 0
+        return res.ok(anyNewPosts)
+      }
+    })
   },
 
   checkFreshnessForUser: function (req, res) {
