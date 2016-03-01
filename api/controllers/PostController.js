@@ -32,6 +32,11 @@ var findPosts = function (req, resolve, reject, opts) {
   .then(resolve, reject)
 }
 
+var checkFreshness = function (newPosts, cachedPosts) {
+  var difference = _.differenceBy(newPosts, cachedPosts, 'id')
+  return difference.length !== 0
+}
+
 var setupNewPostAttrs = function (userId, params) {
   var attrs = _.merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
@@ -398,22 +403,12 @@ var PostController = {
   },
 
   checkFreshnessForCommunity: function (req, res) {
-    var okValue
-    var serverErrorReason
-    var resolve = value => okValue = value
-    var reject = reason => serverErrorReason = reason
+    var foundPosts
+    var resolve = value => foundPosts = value
 
-    return PostController.internalFindForCommunity(req, res, resolve, reject)
-    .then(() => {
-      if (serverErrorReason) {
-        return res.serverError(serverErrorReason)
-      } else {
-        var newPosts = okValue.posts.map(p => _.pick(p, ['id', 'updated_at']))
-        var difference = _.differenceBy(newPosts, req.param('posts'), 'id')
-        var anyNewPosts = difference.length !== 0
-        return res.ok(anyNewPosts)
-      }
-    })
+    return PostController.internalFindForCommunity(req, res, resolve, res.serverError)
+    .then(() => checkFreshness(foundPosts.posts, req.param('posts')))
+    .then(res.ok)
   },
 
   checkFreshnessForUser: function (req, res) {
