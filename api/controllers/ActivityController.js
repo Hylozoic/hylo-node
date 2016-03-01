@@ -25,7 +25,7 @@ module.exports = {
       {actor: userColumns},
       {comment: qb => qb.column('id', 'comment_text', 'created_at', 'post_id')},
       'comment.thanks',
-      {'comment.thanks.user': userColumns},
+      {'comment.thanks.thankedBy': userColumns},
       {post: qb => qb.column('id', 'name', 'user_id', 'type', 'description')},
       {'post.communities': qb => qb.column('community.id', 'slug')},
       {'post.relatedUsers': userColumns}

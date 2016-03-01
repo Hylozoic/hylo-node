@@ -27,7 +27,7 @@ module.exports = {
     }).fetchAll({withRelated: [
       {user: userColumns},
       'thanks',
-      {'thanks.user': userColumns}
+      {'thanks.thankedBy': userColumns}
     ]})
     .then(cs => cs.map(present(req.session.userId)))
     .then(res.ok, res.serverError)
