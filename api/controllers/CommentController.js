@@ -17,6 +17,8 @@ var createComment = function (commenterId, text, post) {
 
 var userColumns = q => q.column('id', 'name', 'avatar_url')
 
+var present = userId => _.partialRight(CommentPresenter.present, userId)
+
 module.exports = {
   findForPost: function (req, res) {
     Comment.query(function (qb) {
@@ -27,7 +29,7 @@ module.exports = {
       'thanks',
       {'thanks.user': userColumns}
     ]})
-    .then(cs => cs.map(_.partialRight(CommentPresenter.present, req.session.userId)))
+    .then(cs => cs.map(present(req.session.userId)))
     .then(res.ok, res.serverError)
   },
 
@@ -38,14 +40,14 @@ module.exports = {
         {user: q => q.column('id', 'name', 'avatar_url')}
       ])
     })
-    .then(commentAttributes)
+    .then(present(req.session.userId))
     .then(res.ok, res.serverError)
   },
 
   createFromEmail: function (req, res) {
     try {
       var replyData = Email.decodePostReplyAddress(req.param('To'))
-    } catch(e) {
+    } catch (e) {
       return res.serverError(new Error('Invalid reply address: ' + req.param('To')))
     }
 
