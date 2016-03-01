@@ -17,8 +17,6 @@ var createComment = function (commenterId, text, post) {
 
 var userColumns = q => q.column('id', 'name', 'avatar_url')
 
-var present = userId => _.partialRight(CommentPresenter.present, userId)
-
 module.exports = {
   findForPost: function (req, res) {
     Comment.query(function (qb) {
@@ -29,7 +27,7 @@ module.exports = {
       'thanks',
       {'thanks.thankedBy': userColumns}
     ]})
-    .then(cs => cs.map(present(req.session.userId)))
+    .then(cs => cs.map(c => CommentPresenter.present(c, req.session.userId)))
     .then(res.ok, res.serverError)
   },
 
@@ -40,7 +38,7 @@ module.exports = {
         {user: q => q.column('id', 'name', 'avatar_url')}
       ])
     })
-    .then(present(req.session.userId))
+    .then(c => CommentPresenter.present(c, req.session.userId))
     .then(res.ok, res.serverError)
   },
 
