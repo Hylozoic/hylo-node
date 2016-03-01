@@ -52,12 +52,12 @@ module.exports.routes = {
   'DELETE /noo/post/:postId':                             'PostController.destroy',
   // these route namers correspond with the different cases for subject in the
   // frontend fetchPosts action
-  'GET    /noo/post/check-freshness-for-community':       'PostController.checkFreshnessForCommunity',
-  'GET    /noo/post/check-freshness-for-person':          'PostController.checkFreshnessForUser',
-  'GET    /noo/post/check-freshness-for-all-posts':       'PostController.checkFreshnessForAllForUser',
-  'GET    /noo/post/check-freshness-for-followed-posts':  'PostController.checkFreshnessForFollowed',
-  'GET    /noo/post/check-freshness-for-project':         'PostController.checkFreshnessForProject',
-  'GET    /noo/post/check-freshness-for-network':         'PostController.checkFreshnessForNetwork',
+  'POST   /noo/freshness/posts/community/:communityId':   'PostController.checkFreshnessForCommunity',
+  'POST   /noo/freshness/posts/person/:userId':           'PostController.checkFreshnessForUser',
+  'POST   /noo/freshness/posts/all-posts/:userId':        'PostController.checkFreshnessForAllForUser',
+  'POST   /noo/freshness/posts/followed-posts/:userId':   'PostController.checkFreshnessForFollowed',
+  'POST   /noo/freshness/posts/project/:projectId':       'PostController.checkFreshnessForProject',
+  'POST   /noo/freshness/posts/network/:networkId':       'PostController.checkFreshnessForNetwork',
 
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',
