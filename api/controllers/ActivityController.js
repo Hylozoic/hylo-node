@@ -1,3 +1,5 @@
+var userColumns = q => q.column('users.id', 'name', 'avatar_url')
+
 module.exports = {
   find: function (req, res) {
     var total
@@ -20,14 +22,23 @@ module.exports = {
       })
     })
     .fetchAll({withRelated: [
-      {actor: qb => qb.column('id', 'name', 'avatar_url')},
+      {actor: userColumns},
       {comment: qb => qb.column('id', 'comment_text', 'created_at', 'post_id')},
-      {'comment.thanks': qb => qb.where('thanked_by_id', req.session.userId)},
+      'comment.thanks',
+      {'comment.thanks.user': userColumns},
       {post: qb => qb.column('id', 'name', 'user_id', 'type', 'description')},
       {'post.communities': qb => qb.column('community.id', 'slug')},
-      {'post.relatedUsers': qb => qb.column('users.id', 'name', 'avatar_url')}
+      {'post.relatedUsers': userColumns}
     ]})
     .tap(activities => total = (activities.length > 0 ? activities.first().get('total') : 0))
+    .then(activities => activities.map(activity => {
+      var comment = activity.relations.comment
+      var attrs = activity.toJSON()
+      if (comment) {
+        attrs.comment = CommentPresenter.present(comment, req.session.userId)
+      }
+      return attrs
+    }))
     .then(activities => {
       if (req.param('paginate')) {
         return {total, items: activities}

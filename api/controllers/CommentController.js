@@ -1,12 +1,3 @@
-var commentAttributes = function (comment) {
-  var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'created_at', 'user')
-  var thanks = comment.relations.thanks
-
-  return _.extend({
-    isThanked: !!(thanks && thanks.first())
-  }, attrs)
-}
-
 var createComment = function (commenterId, text, post) {
   text = RichText.sanitize(text)
   var attrs = {
@@ -24,16 +15,19 @@ var createComment = function (commenterId, text, post) {
   .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
 }
 
+var userColumns = q => q.column('id', 'name', 'avatar_url')
+
 module.exports = {
   findForPost: function (req, res) {
     Comment.query(function (qb) {
       qb.where({post_id: res.locals.post.id, active: true})
       qb.orderBy('id', 'asc')
     }).fetchAll({withRelated: [
-      {user: q => q.column('id', 'name', 'avatar_url')},
-      {thanks: q => q.where('thanked_by_id', req.session.userId)}
+      {user: userColumns},
+      'thanks',
+      {'thanks.user': userColumns}
     ]})
-    .then(cs => cs.map(commentAttributes))
+    .then(cs => cs.map(_.partialRight(CommentPresenter.present, req.session.userId)))
     .then(res.ok, res.serverError)
   },
 
