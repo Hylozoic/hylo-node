@@ -63,6 +63,19 @@ var queryForUser = function (req, res) {
 }
 
 var queryForAllForUser = function (req, res) {
+  return Membership.activeCommunityIds(req.session.userId)
+  .then(function (communityIds) {
+    console.log('communityIds!', communityIds)
+    return Search.forPosts({
+      communities: communityIds,
+      limit: req.param('limit') || 10,
+      offset: req.param('offset'),
+      sort: sortColumns[req.param('sort') || 'recent'],
+      type: req.param('type') || 'all+welcome',
+      forUser: req.session.userId,
+      term: req.param('search')
+    })
+  })
 }
 
 var queryForFollowed = function (req, res) {
@@ -193,23 +206,9 @@ var PostController = {
   },
 
   findAllForUser: function (req, res) {
-    Membership.activeCommunityIds(req.session.userId)
-    .then(function (communityIds) {
-      return Search.forPosts({
-        communities: communityIds,
-        limit: req.param('limit') || 10,
-        offset: req.param('offset'),
-        sort: sortColumns[req.param('sort') || 'recent'],
-        type: req.param('type') || 'all+welcome',
-        forUser: req.session.userId,
-        term: req.param('search')
-      }).fetchAll({
-        withRelated: PostPresenter.relations(req.session.userId)
-      })
-    })
-    .then(PostPresenter.mapPresentWithTotal)
-    .then(res.ok)
-    .catch(res.serverError)
+    queryForAllForUser(req, res)
+    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
+    .then(res.ok, res.serverError)
   },
 
   create: function (req, res) {
@@ -435,21 +434,13 @@ var PostController = {
 
   checkFreshnessForUser: createCheckFreshnessAction(queryForUser, 'posts'),
 
-  checkFreshnessForAllForUser: function (req, res) {
-    return Promise.resolve(res.ok(false))
-  },
+  checkFreshnessForAllForUser: createCheckFreshnessAction(queryForAllForUser, 'posts'),
 
-  checkFreshnessForFollowed: function (req, res) {
-    return Promise.resolve(res.ok(false))
-  },
+  checkFreshnessForFollowed: createCheckFreshnessAction(queryForFollowed, 'posts'),
 
-  checkFreshnessForProject: function (req, res) {
-    return Promise.resolve(res.ok(false))
-  },
+  checkFreshnessForProject: createCheckFreshnessAction(queryForProject, 'posts'),
 
-  checkFreshnessForNetwork: function (req, res) {
-    return Promise.resolve(res.ok(false))
-  }
+  checkFreshnessForNetwork: createCheckFreshnessAction(queryForNetwork, 'posts')
 }
 
 module.exports = PostController

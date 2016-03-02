@@ -358,10 +358,7 @@ describe('PostController', () => {
         c2.save()
       )
       .then(() => Promise.join(
-        new Membership({
-          user_id: fixtures.u1.id,
-          community_id: c2.id
-        }).save(),
+        Membership.create(fixtures.u1.id, c2.id),
         c2.posts().attach(p2),
         c2.posts().attach(p3)
       ))
@@ -397,8 +394,61 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForUser(req, res))
       .then(() => {
-        // this test is broken, but the route works against the actual frontend
-        // expect(res.body).to.equal(true)
+        expect(res.body).to.equal(true)
+      })
+    })
+  })
+
+  describe('.checkFreshnessForAllForUser', () => {
+    var p2, p3, c2
+
+    before(() => {
+      c2 = factories.community()
+      p2 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true})
+      return Promise.join(
+        p2.save(),
+        p3.save(),
+        c2.save()
+      )
+      .then(() => Promise.join(
+        Membership.create(fixtures.u1.id, c2.id),
+        c2.posts().attach(p2),
+        c2.posts().attach(p3)
+      ))
+    })
+
+    beforeEach(() => {
+      res.locals.user = fixtures.u2
+    })
+
+    it('returns false when nothing has changed', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        userId: fixtures.u1.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+      PostController.checkFreshnessForAllForUser(req, res)
+      .then(() => {
+        expect(res.body).to.equal(false)
+      })
+    })
+
+    it('returns true when a post has been added', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        userId: fixtures.u1.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+
+      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      return p4.save()
+      .then(() => c2.posts().attach(p4))
+      .then(() => PostController.checkFreshnessForAllForUser(req, res))
+      .then(() => {
+        expect(res.body).to.equal(true)
       })
     })
   })
