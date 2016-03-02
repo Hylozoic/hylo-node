@@ -1,3 +1,4 @@
+var createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 var sortColumns = {
   'fulfilled-last': 'fulfilled_at',
   'top': 'post.num_votes',
@@ -6,7 +7,7 @@ var sortColumns = {
   'start_time': ['post.start_time', 'asc']
 }
 
-var findPosts = function (req, opts) {
+var queryPosts = function (req, opts) {
   var params = _.merge(
     _.pick(req.allParams(), [
       'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
@@ -25,14 +26,25 @@ var findPosts = function (req, opts) {
     _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
     _.pick(opts, 'communities', 'project', 'users', 'visibility')
   ))
-  .then(args => Search.forPosts(args).fetchAll({
-    withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
-  }))
+  .then(args => Search.forPosts(args))
 }
 
-var checkFreshness = function (newPosts, cachedPosts) {
-  var difference = _.differenceBy(newPosts, cachedPosts, 'id')
-  return difference.length !== 0
+var fetchAndPresentPosts = function (query, userId, relationsOpts) {
+  return query.fetchAll({
+    withRelated: PostPresenter.relations(userId, relationsOpts)
+  })
+  .then(PostPresenter.mapPresentWithTotal)
+}
+
+var queryForCommunity = function (req, res) {
+  if (TokenAuth.isAuthenticated(res)) {
+    if (!RequestValidation.requireTimeRange(req, res)) return
+  }
+
+  return queryPosts(req, {
+    communities: [res.locals.community.id],
+    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
+  })
 }
 
 var setupNewPostAttrs = function (userId, params) {
@@ -104,39 +116,27 @@ var PostController = {
   },
 
   findForUser: function (req, res) {
-    findPosts(req, res, {
+    queryPosts(req, res, {
       users: [req.param('userId')],
       communities: Membership.activeCommunityIds(req.session.userId),
       visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
     })
-    .then(PostPresenter.mapPresentWithTotal)
+    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
     .then(res.ok, res.serverError)
   },
 
   findForCommunity: function (req, res) {
-    return PostController.internalFindForCommunity(req, res)
-    .then(PostPresenter.mapPresentWithTotal)
+    return queryForCommunity(req, res)
+    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
     .then(res.ok, res.serverError)
   },
 
-  internalFindForCommunity: function (req, res) {
-    if (TokenAuth.isAuthenticated(res)) {
-      if (!RequestValidation.requireTimeRange(req, res)) return
-    }
-
-    return findPosts(req, {
-      communities: [res.locals.community.id],
-      visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
-    })
-  },
-
   findForProject: function (req, res) {
-    findPosts(req, res, {
+    queryPosts(req, res, {
       project: req.param('projectId'),
-      relationsOpts: {fromProject: true},
       sort: 'fulfilled-last'
     })
-    .then(PostPresenter.mapPresentWithTotal)
+    .then(query => fetchAndPresentPosts(query, req.session.userId, {fromProject: true}))
     .then(res.ok, res.serverError)
   },
 
@@ -144,11 +144,11 @@ var PostController = {
     Network.find(req.param('networkId'))
     .then(network => Community.where({network_id: network.id}).fetchAll())
     .then(communities => {
-      findPosts(req, res, {
+      queryPosts(req, res, {
         communities: communities.map(c => c.id),
         visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
       })
-      .then(PostPresenter.mapPresentWithTotal)
+      .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
       .then(res.ok, res.serverError)
     })
   },
@@ -408,11 +408,7 @@ var PostController = {
     .then(() => res.ok({}), res.serverError)
   },
 
-  checkFreshnessForCommunity: function (req, res) {
-    return PostController.internalFindForCommunity(req, res)
-    .then(posts => checkFreshness(posts.models, req.param('posts')))
-    .then(res.ok)
-  },
+  checkFreshnessForCommunity: createCheckFreshnessAction(queryForCommunity, 'posts'),
 
   checkFreshnessForUser: function (req, res) {
     return Promise.resolve(res.ok(false))
