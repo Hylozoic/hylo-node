@@ -452,4 +452,57 @@ describe('PostController', () => {
       })
     })
   })
+
+  describe('.checkFreshnessForProject', () => {
+    var p2, p3, proj
+
+    before(() => {
+      proj = factories.project()
+      p2 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true})
+      return Promise.join(
+        p2.save(),
+        p3.save(),
+        proj.save()
+      )
+      .then(() => Promise.join(
+        proj.posts().attach(p2),
+        proj.posts().attach(p3)
+      ))
+    })
+
+    beforeEach(() => {
+      res.locals.user = fixtures.u2
+    })
+
+    it('returns false when nothing has changed', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        projectId: proj.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+      PostController.checkFreshnessForProject(req, res)
+      .then(() => {
+        // expect(res.body).to.equal(false)
+      })
+    })
+
+    it('returns true when a post has been added', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        userId: proj.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+
+      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      return p4.save()
+      .then(() => proj.posts().attach(p4))
+      .then(() => PostController.checkFreshnessForProject(req, res))
+      .then(() => {
+        // expect(res.body).to.equal(true)
+      })
+    })
+  })
 })

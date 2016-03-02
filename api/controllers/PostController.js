@@ -18,9 +18,6 @@ var queryPosts = function (req, opts) {
   // using Promise.props here allows us to pass queries as attributes,
   // e.g. when looking up communities in PostController.findForUser
 
-  console.log('queryPosts opts', opts)
-  console.log('queryPosts _.pick(opts)', _.pick(opts, 'communities', 'project', 'users', 'visibility'))
-
   return Promise.props(_.merge(
     {
       sort: sortColumns[params.sort || 'recent'],
@@ -31,7 +28,6 @@ var queryPosts = function (req, opts) {
     _.pick(opts, 'communities', 'project', 'users', 'visibility')
   ))
   .then(args => {
-    console.log('queryPosts args', args)
     return Search.forPosts(args)
   })
 }
@@ -65,7 +61,6 @@ var queryForUser = function (req, res) {
 var queryForAllForUser = function (req, res) {
   return Membership.activeCommunityIds(req.session.userId)
   .then(function (communityIds) {
-    console.log('communityIds!', communityIds)
     return Search.forPosts({
       communities: communityIds,
       limit: req.param('limit') || 10,
@@ -82,6 +77,10 @@ var queryForFollowed = function (req, res) {
 }
 
 var queryForProject = function (req, res) {
+  return queryPosts(req, {
+    project: req.param('projectId'),
+    sort: 'fulfilled-last'
+  })
 }
 
 var queryForNetwork = function (req, res) {
@@ -168,10 +167,7 @@ var PostController = {
   },
 
   findForProject: function (req, res) {
-    queryPosts(req, {
-      project: req.param('projectId'),
-      sort: 'fulfilled-last'
-    })
+    queryForProject(req, res)
     .then(query => fetchAndPresentPosts(query, req.session.userId, {fromProject: true}))
     .then(res.ok, res.serverError)
   },
