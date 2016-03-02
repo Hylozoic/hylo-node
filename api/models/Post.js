@@ -297,6 +297,11 @@ module.exports = bookshelf.Model.extend({
     active: true,
     num_comments: 0,
     num_votes: 0
-  })
+  }),
+
+  create: function (attrs, opts) {
+    return Post.forge(_.merge(Post.newPostAttrs(), attrs))
+    .save(null, _.pick(opts, 'transacting'))
+  }
 
 })

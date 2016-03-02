@@ -181,7 +181,7 @@ module.exports = {
       if (!attrs.type) throw new Error("type can't be blank")
     })
     .then(attrs => bookshelf.transaction(trx =>
-      new Post(attrs).save(null, {transacting: trx})
+      Post.create(attrs, {transacting: trx})
       .tap(post =>
         afterSavingPost(post, {
           communities: req.param('communities'),
