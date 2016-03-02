@@ -74,6 +74,14 @@ var queryForAllForUser = function (req, res) {
 }
 
 var queryForFollowed = function (req, res) {
+  return Promise.resolve(Search.forPosts({
+    follower: req.session.userId,
+    limit: req.param('limit') || 10,
+    offset: req.param('offset'),
+    sort: 'post.updated_at',
+    type: 'all+welcome',
+    term: req.param('search')
+  }))
 }
 
 var queryForProject = function (req, res) {
@@ -161,7 +169,7 @@ var PostController = {
   },
 
   findForUser: function (req, res) {
-    queryForUser(req, res)
+    return queryForUser(req, res)
     .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
     .then(res.ok, res.serverError)
   },
@@ -173,35 +181,25 @@ var PostController = {
   },
 
   findForProject: function (req, res) {
-    queryForProject(req, res)
+    return queryForProject(req, res)
     .then(query => fetchAndPresentPosts(query, req.session.userId, {fromProject: true}))
     .then(res.ok, res.serverError)
   },
 
   findForNetwork: function (req, res) {
-    queryForNetwork(req, res)
+    return queryForNetwork(req, res)
     .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
     .then(res.ok, res.serverError)
   },
 
   findFollowed: function (req, res) {
-    Search.forPosts({
-      follower: req.session.userId,
-      limit: req.param('limit') || 10,
-      offset: req.param('offset'),
-      sort: 'post.updated_at',
-      type: 'all+welcome',
-      term: req.param('search')
-    }).fetchAll({
-      withRelated: PostPresenter.relations(req.session.userId)
-    })
-    .then(PostPresenter.mapPresentWithTotal)
-    .then(res.ok)
-    .catch(res.serverError)
+    return queryForFollowed(req, res)
+    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
+    .then(res.ok, res.serverError)
   },
 
   findAllForUser: function (req, res) {
-    queryForAllForUser(req, res)
+    return queryForAllForUser(req, res)
     .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
     .then(res.ok, res.serverError)
   },

@@ -484,7 +484,7 @@ describe('PostController', () => {
       }
       PostController.checkFreshnessForProject(req, res)
       .then(() => {
-        // expect(res.body).to.equal(false)
+        expect(res.body).to.equal(false)
       })
     })
 
@@ -501,10 +501,11 @@ describe('PostController', () => {
       .then(() => proj.posts().attach(p4))
       .then(() => PostController.checkFreshnessForProject(req, res))
       .then(() => {
-        // expect(res.body).to.equal(true)
+        expect(res.body).to.equal(true)
       })
     })
   })
+
   describe('.checkFreshnessForNetwork', () => {
     var p2, p3, c2, n1
 
@@ -556,6 +557,57 @@ describe('PostController', () => {
       return p4.save()
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForNetwork(req, res))
+      .then(() => {
+        expect(res.body).to.equal(true)
+      })
+    })
+  })
+
+  describe('.checkFreshnessForAllForFollowed', () => {
+    var p2, p3
+
+    before(() => {
+      p2 = factories.post({type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({type: 'chat', active: true})
+      return Promise.join(
+        p2.save(),
+        p3.save()
+      )
+      .then(() => Promise.join(
+        Follow.create(fixtures.u1.id, p2.id),
+        Follow.create(fixtures.u1.id, p3.id)
+      ))
+    })
+
+    beforeEach(() => {
+      res.locals.user = fixtures.u2
+    })
+
+    it('returns false when nothing has changed', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        userId: fixtures.u1.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+      PostController.checkFreshnessForFollowed(req, res)
+      .then(() => {
+        expect(res.body).to.equal(false)
+      })
+    })
+
+    it('returns true when a post has been added', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        userId: fixtures.u1.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+
+      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      return p4.save()
+      .then(() => Follow.create(fixtures.u1.id, p4.id))
+      .then(() => PostController.checkFreshnessForFollowed(req, res))
       .then(() => {
         expect(res.body).to.equal(true)
       })
