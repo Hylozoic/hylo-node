@@ -8,7 +8,6 @@ var sortColumns = {
 }
 
 var queryPosts = function (req, opts) {
-  console.log('queryPosts opts', opts)
   var params = _.merge(
     _.pick(req.allParams(), [
       'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
@@ -18,6 +17,10 @@ var queryPosts = function (req, opts) {
 
   // using Promise.props here allows us to pass queries as attributes,
   // e.g. when looking up communities in PostController.findForUser
+
+  console.log('queryPosts opts', opts)
+  console.log('queryPosts _.pick(opts)', _.pick(opts, 'communities', 'project', 'users', 'visibility'))
+
   return Promise.props(_.merge(
     {
       sort: sortColumns[params.sort || 'recent'],
@@ -27,7 +30,10 @@ var queryPosts = function (req, opts) {
     _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
     _.pick(opts, 'communities', 'project', 'users', 'visibility')
   ))
-  .then(args => Search.forPosts(args))
+  .then(args => {
+    console.log('queryPosts args', args)
+    return Search.forPosts(args)
+  })
 }
 
 var fetchAndPresentPosts = function (query, userId, relationsOpts) {
@@ -46,6 +52,26 @@ var queryForCommunity = function (req, res) {
     communities: [res.locals.community.id],
     visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
   })
+}
+
+var queryForUser = function (req, res) {
+  return queryPosts(req, {
+    users: [req.param('userId')],
+    communities: Membership.activeCommunityIds(req.session.userId),
+    visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
+  })
+}
+
+var queryForAllForUser = function (req, res) {
+}
+
+var queryForFollowed = function (req, res) {
+}
+
+var queryForProject = function (req, res) {
+}
+
+var queryForNetwork = function (req, res) {
 }
 
 var setupNewPostAttrs = function (userId, params) {
@@ -117,11 +143,7 @@ var PostController = {
   },
 
   findForUser: function (req, res) {
-    queryPosts(req, {
-      users: [req.param('userId')],
-      communities: Membership.activeCommunityIds(req.session.userId),
-      visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
-    })
+    queryForUser(req, res)
     .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
     .then(res.ok, res.serverError)
   },
@@ -411,9 +433,7 @@ var PostController = {
 
   checkFreshnessForCommunity: createCheckFreshnessAction(queryForCommunity, 'posts'),
 
-  checkFreshnessForUser: function (req, res) {
-    return Promise.resolve(res.ok(false))
-  },
+  checkFreshnessForUser: createCheckFreshnessAction(queryForUser, 'posts'),
 
   checkFreshnessForAllForUser: function (req, res) {
     return Promise.resolve(res.ok(false))
