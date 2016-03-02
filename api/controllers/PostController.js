@@ -8,6 +8,7 @@ var sortColumns = {
 }
 
 var queryPosts = function (req, opts) {
+  console.log('queryPosts opts', opts)
   var params = _.merge(
     _.pick(req.allParams(), [
       'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
@@ -116,7 +117,7 @@ var PostController = {
   },
 
   findForUser: function (req, res) {
-    queryPosts(req, res, {
+    queryPosts(req, {
       users: [req.param('userId')],
       communities: Membership.activeCommunityIds(req.session.userId),
       visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
@@ -132,7 +133,7 @@ var PostController = {
   },
 
   findForProject: function (req, res) {
-    queryPosts(req, res, {
+    queryPosts(req, {
       project: req.param('projectId'),
       sort: 'fulfilled-last'
     })
@@ -144,7 +145,7 @@ var PostController = {
     Network.find(req.param('networkId'))
     .then(network => Community.where({network_id: network.id}).fetchAll())
     .then(communities => {
-      queryPosts(req, res, {
+      queryPosts(req, {
         communities: communities.map(c => c.id),
         visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
       })
