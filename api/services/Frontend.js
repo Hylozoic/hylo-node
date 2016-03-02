@@ -25,7 +25,7 @@ module.exports = {
     },
 
     project: function (project) {
-      return url('/project/%s', project.get('slug'))
+      return url('/project/%s/%s', project.id, project.get('slug'))
     },
 
     projectSettings: function (project) {
