@@ -9,7 +9,7 @@ describe('CommentController', function() {
         u1: new User({name: 'U1'}).save(),
         u2: new User({name: 'U2'}).save(),
         u3: new User({name: 'U3'}).save(),
-        p1: new Post({name: 'P1'}).save(),
+        p1: new Post({name: 'P1', active: true}).save(),
         c1: new Community({name: "C1", slug: 'c1'}).save()
       });
     })

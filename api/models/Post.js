@@ -166,7 +166,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function (id, options) {
-    return Post.where({id: id}).fetch(options).catch(() => null)
+    return Post.where({id: id, active: true}).fetch(options).catch(() => null)
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {

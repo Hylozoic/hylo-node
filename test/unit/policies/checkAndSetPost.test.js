@@ -9,8 +9,8 @@ describe('checkAndSetPost', function () {
         u1: new User({name: 'U1'}).save(),
         c1: new Community({name: 'C1', slug: 'c1'}).save(),
         c2: new Community({name: 'C2', slug: 'c2'}).save(),
-        p1: new Post({name: 'P1'}).save(),
-        p2: new Post({name: 'P2'}).save()
+        p1: new Post({name: 'P1', active: true}).save(),
+        p2: new Post({name: 'P2', active: true}).save()
       })
     })
     .then(function (props) {

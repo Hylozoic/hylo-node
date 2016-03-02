@@ -53,7 +53,7 @@ describe('Post', function () {
     var post, c1, c2, user
 
     beforeEach(() => {
-      post = new Post({name: 'hello'})
+      post = new Post({name: 'hello', active: true})
       user = new User({name: 'Cat'})
       c1 = factories.community()
       c2 = factories.community()
