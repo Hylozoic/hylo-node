@@ -505,4 +505,60 @@ describe('PostController', () => {
       })
     })
   })
+  describe('.checkFreshnessForNetwork', () => {
+    var p2, p3, c2, n1
+
+    before(() => {
+      n1 = factories.network()
+      c2 = factories.community()
+      p2 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true})
+      return Promise.join(
+        n1.save(),
+        p2.save(),
+        p3.save(),
+        c2.save()
+      )
+      .then(() => Promise.join(
+        Membership.create(fixtures.u1.id, c2.id),
+        c2.posts().attach(p2),
+        c2.posts().attach(p3),
+        c2.save({network_id: n1.id}, {patch: true})
+      ))
+    })
+
+    beforeEach(() => {
+      res.locals.user = fixtures.u2
+    })
+
+    it('returns false when nothing has changed', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        networkId: n1.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+      return PostController.checkFreshnessForNetwork(req, res)
+      .then(() => {
+        expect(res.body).to.equal(false)
+      })
+    })
+
+    it('returns true when a post has been added', () => {
+      req.session.userId = fixtures.u1.id
+      req.params = {
+        networkId: n1.id,
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+
+      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      return p4.save()
+      .then(() => c2.posts().attach(p4))
+      .then(() => PostController.checkFreshnessForNetwork(req, res))
+      .then(() => {
+        expect(res.body).to.equal(true)
+      })
+    })
+  })
 })

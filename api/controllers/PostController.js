@@ -84,6 +84,12 @@ var queryForProject = function (req, res) {
 }
 
 var queryForNetwork = function (req, res) {
+  return Network.find(req.param('networkId'))
+  .then(network => Community.where({network_id: network.id}).fetchAll())
+  .then(communities => queryPosts(req, {
+    communities: communities.map(c => c.id),
+    visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
+  }))
 }
 
 var setupNewPostAttrs = function (userId, params) {
@@ -173,16 +179,9 @@ var PostController = {
   },
 
   findForNetwork: function (req, res) {
-    Network.find(req.param('networkId'))
-    .then(network => Community.where({network_id: network.id}).fetchAll())
-    .then(communities => {
-      queryPosts(req, {
-        communities: communities.map(c => c.id),
-        visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
-      })
-      .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
-      .then(res.ok, res.serverError)
-    })
+    queryForNetwork(req, res)
+    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
+    .then(res.ok, res.serverError)
   },
 
   findFollowed: function (req, res) {
