@@ -320,8 +320,6 @@ describe('PostController', () => {
 
     it('returns false when nothing has changed', () => {
       req.params = {
-        subject: 'community',
-        id: c2.id,
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
@@ -333,7 +331,6 @@ describe('PostController', () => {
 
     it('returns true when a post has been added', () => {
       req.params = {
-        id: c2.id,
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
@@ -342,6 +339,45 @@ describe('PostController', () => {
       return p4.save()
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForCommunity(req, res))
+      .then(() => {
+        expect(res.body).to.equal(true)
+      })
+    })
+  })
+
+  describe('.checkFreshnessForUser', () => {
+    var p2, p3
+
+    before(() => {
+      p2 = factories.post({type: 'chat', active: true, user_id: fixtures.u1.id})
+      p3 = factories.post({type: 'chat', active: true, user_id: fixtures.u1.id})
+      return Promise.join(p2.save(), p3.save())
+    })
+
+    beforeEach(() => {
+      res.locals.user = fixtures.u1
+    })
+
+    it('returns false when nothing has changed', () => {
+      req.params = {
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+      return PostController.checkFreshnessForUser(req, res)
+      .then(() => {
+        expect(res.body).to.equal(false)
+      })
+    })
+
+    it('returns true when a post has been added', () => {
+      req.params = {
+        query: '',
+        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
+      }
+
+      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u1.id})
+      return p4.save()
+      .then(() => PostController.checkFreshnessForUser(req, res))
       .then(() => {
         expect(res.body).to.equal(true)
       })
