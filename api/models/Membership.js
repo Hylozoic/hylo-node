@@ -73,9 +73,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   hasModeratorRole: function (user_id, community_id) {
-    return this.find(user_id, community_id).then(function (mship) {
-      return mship && mship.hasModeratorRole()
-    })
+    return this.find(user_id, community_id)
+    .then(ms => ms && ms.hasModeratorRole())
   },
 
   // do all of the users have at least one community in common?
