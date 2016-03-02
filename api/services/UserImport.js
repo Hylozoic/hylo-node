@@ -169,7 +169,10 @@ const operations = {
         user_id: user.id,
         type: 'intention'
       })
-      .then(post => options.community.posts().attach(post.id))
+      .then(post => Promise.join(
+        options.community.posts().attach(post.id),
+        post.followers().attach(user.id)
+      ))
     })
   }
 }
