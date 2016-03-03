@@ -424,12 +424,15 @@ describe('PostController', () => {
 
     it('returns false when nothing has changed', () => {
       req.session.userId = fixtures.u1.id
-      req.params = {
-        userId: fixtures.u1.id,
-        query: '',
-        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
-      }
-      PostController.checkFreshnessForAllForUser(req, res)
+      return Post.fetchAll()
+      .then(posts => {
+        req.params = {
+          userId: fixtures.u1.id,
+          query: '',
+          posts: posts.map(p => _.pick(p, ['id', 'updated_at']))
+        }
+      })
+      .then(() => PostController.checkFreshnessForAllForUser(req, res))
       .then(() => {
         expect(res.body).to.equal(false)
       })
@@ -437,14 +440,17 @@ describe('PostController', () => {
 
     it('returns true when a post has been added', () => {
       req.session.userId = fixtures.u1.id
-      req.params = {
-        userId: fixtures.u1.id,
-        query: '',
-        posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
-      }
 
       var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
-      return p4.save()
+      return Post.fetchAll()
+      .then(posts => {
+        req.params = {
+          userId: fixtures.u1.id,
+          query: '',
+          posts: posts.map(p => _.pick(p, ['id', 'updated_at']))
+        }
+      })
+      .then(() => p4.save())
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForAllForUser(req, res))
       .then(() => {
@@ -482,7 +488,7 @@ describe('PostController', () => {
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
-      PostController.checkFreshnessForProject(req, res)
+      return PostController.checkFreshnessForProject(req, res)
       .then(() => {
         expect(res.body).to.equal(false)
       })
@@ -590,7 +596,7 @@ describe('PostController', () => {
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
-      PostController.checkFreshnessForFollowed(req, res)
+      return PostController.checkFreshnessForFollowed(req, res)
       .then(() => {
         expect(res.body).to.equal(false)
       })
