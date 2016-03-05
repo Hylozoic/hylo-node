@@ -55,8 +55,8 @@ describe('Post', function () {
     beforeEach(() => {
       post = new Post({name: 'hello', active: true})
       user = new User({name: 'Cat'})
-      c1 = factories.community()
-      c2 = factories.community()
+      c1 = factories.community({active: true})
+      c2 = factories.community({active: true})
       return Promise.join(post.save(), user.save(), c1.save(), c2.save())
       .then(() => user.joinCommunity(c1))
       .then(() => post.communities().attach(c2.id))
@@ -73,8 +73,16 @@ describe('Post', function () {
       .then(visible => expect(visible).to.be.false)
     })
 
-    it('is true if the user and post share a community', () => {
+    it('is false if the user and post share a community', () => {
       return Membership.create(user.id, c2.id)
+      .then(() => post.communities().attach(c1.id))
+      .then(() => Post.isVisibleToUser(post.id, user.id))
+      .then(visible => expect(visible).to.be.true)
+    })
+
+    it("is false if the user has a disabled membership in the post's community", () => {
+      return Membership.create(user.id, c2.id)
+      .then(ms => ms.save({active: false}, {patch: true}))
       .then(() => post.communities().attach(c1.id))
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)

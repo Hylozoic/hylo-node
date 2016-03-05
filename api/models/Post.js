@@ -142,7 +142,7 @@ module.exports = bookshelf.Model.extend({
       // or is the user:
       success || Promise.join(
         PostMembership.query().where({post_id: postId}),
-        Membership.query().where({user_id: userId})
+        Membership.query().where({user_id: userId, active: true})
       )
       .spread((postMships, userMships) => {
         // in one of the post's communities?
