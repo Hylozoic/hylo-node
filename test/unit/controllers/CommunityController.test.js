@@ -153,8 +153,8 @@ describe('CommunityController', () => {
   describe('.findForNetwork', () => {
     var network
     before(done => {
-      network = new Network({name: 'N1', slug: 'n1'}).save()
-      return network
+      network = new Network({name: 'N1', slug: 'n1'})
+      return network.save()
       .then(network => {
         return Promise.join({
           c1: new Community({name: 'NC1', slug: 'nc1', network_id: network.get('id')}).save(),

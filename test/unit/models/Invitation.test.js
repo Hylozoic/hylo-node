@@ -6,7 +6,7 @@ describe('Invitation', function() {
 
   describe('#use', function() {
 
-    var user, community, invitation;
+    var user, community, invitation, inviter;
 
     before(() => {
       inviter = new User({email: 'inviter@bar.com'});
