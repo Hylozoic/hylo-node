@@ -34,7 +34,7 @@ var queryPosts = function (req, opts) {
 
 var fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
-    withRelated: PostPresenter.relations(userId, relationsOpts)
+    withRelated: PostPresenter.relations(userId, relationsOpts || {})
   })
   .then(PostPresenter.mapPresentWithTotal)
 }
@@ -98,6 +98,12 @@ var queryForNetwork = function (req, res) {
     communities: communities.map(c => c.id),
     visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
   }))
+}
+
+var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
+  return queryFunction(req, res)
+  .then(query => fetchAndPresentPosts(query, req.session.userId, relationsOpts))
+  .then(res.ok, res.serverError)
 }
 
 var setupNewPostAttrs = function (userId, params) {
@@ -166,42 +172,6 @@ var PostController = {
     .then(PostPresenter.present)
     .then(res.ok)
     .catch(res.serverError)
-  },
-
-  findForUser: function (req, res) {
-    return queryForUser(req, res)
-    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
-    .then(res.ok, res.serverError)
-  },
-
-  findForCommunity: function (req, res) {
-    return queryForCommunity(req, res)
-    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
-    .then(res.ok, res.serverError)
-  },
-
-  findForProject: function (req, res) {
-    return queryForProject(req, res)
-    .then(query => fetchAndPresentPosts(query, req.session.userId, {fromProject: true}))
-    .then(res.ok, res.serverError)
-  },
-
-  findForNetwork: function (req, res) {
-    return queryForNetwork(req, res)
-    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
-    .then(res.ok, res.serverError)
-  },
-
-  findFollowed: function (req, res) {
-    return queryForFollowed(req, res)
-    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
-    .then(res.ok, res.serverError)
-  },
-
-  findAllForUser: function (req, res) {
-    return queryForAllForUser(req, res)
-    .then(query => fetchAndPresentPosts(query, req.session.userId, {}))
-    .then(res.ok, res.serverError)
   },
 
   create: function (req, res) {
@@ -421,19 +391,20 @@ var PostController = {
       }
     })
     .then(() => res.ok({}), res.serverError)
-  },
-
-  checkFreshnessForCommunity: createCheckFreshnessAction(queryForCommunity, 'posts'),
-
-  checkFreshnessForUser: createCheckFreshnessAction(queryForUser, 'posts'),
-
-  checkFreshnessForAllForUser: createCheckFreshnessAction(queryForAllForUser, 'posts'),
-
-  checkFreshnessForFollowed: createCheckFreshnessAction(queryForFollowed, 'posts'),
-
-  checkFreshnessForProject: createCheckFreshnessAction(queryForProject, 'posts'),
-
-  checkFreshnessForNetwork: createCheckFreshnessAction(queryForNetwork, 'posts')
+  }
 }
+
+PostController.checkFreshnessForCommunity = createCheckFreshnessAction(queryForCommunity, 'posts')
+PostController.checkFreshnessForUser = createCheckFreshnessAction(queryForUser, 'posts')
+PostController.checkFreshnessForAllForUser = createCheckFreshnessAction(queryForAllForUser, 'posts')
+PostController.checkFreshnessForFollowed = createCheckFreshnessAction(queryForFollowed, 'posts')
+PostController.checkFreshnessForProject = createCheckFreshnessAction(queryForProject, 'posts')
+PostController.checkFreshnessForNetwork = createCheckFreshnessAction(queryForNetwork, 'posts')
+PostController.findForCommunity = createFindAction(queryForCommunity)
+PostController.findForUser = createFindAction(queryForUser)
+PostController.findForProject = createFindAction(queryForProject, {fromProject: true})
+PostController.findForNetwork = createFindAction(queryForNetwork)
+PostController.findFollowed = createFindAction(queryForFollowed)
+PostController.findAllForUser = createFindAction(queryForAllForUser)
 
 module.exports = PostController
