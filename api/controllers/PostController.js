@@ -394,17 +394,27 @@ var PostController = {
   }
 }
 
-PostController.checkFreshnessForCommunity = createCheckFreshnessAction(queryForCommunity, 'posts')
-PostController.checkFreshnessForUser = createCheckFreshnessAction(queryForUser, 'posts')
-PostController.checkFreshnessForAllForUser = createCheckFreshnessAction(queryForAllForUser, 'posts')
-PostController.checkFreshnessForFollowed = createCheckFreshnessAction(queryForFollowed, 'posts')
-PostController.checkFreshnessForProject = createCheckFreshnessAction(queryForProject, 'posts')
-PostController.checkFreshnessForNetwork = createCheckFreshnessAction(queryForNetwork, 'posts')
-PostController.findForCommunity = createFindAction(queryForCommunity)
-PostController.findForUser = createFindAction(queryForUser)
-PostController.findForProject = createFindAction(queryForProject, {fromProject: true})
-PostController.findForNetwork = createFindAction(queryForNetwork)
-PostController.findFollowed = createFindAction(queryForFollowed)
-PostController.findAllForUser = createFindAction(queryForAllForUser)
+var queryFunctionsAndSuffixes = [
+  [queryForCommunity, 'ForCommunity'],
+  [queryForUser, 'ForUser'],
+  [queryForAllForUser, 'ForAllForUser'],
+  [queryForFollowed, 'ForFollowed'],
+  [queryForProject, 'ForProject', {fromProject: true}],
+  [queryForNetwork, 'ForNetwork']
+]
+
+for (var i = 0; i < queryFunctionsAndSuffixes.length; i++) {
+  var queryFunctionAndSuffix = queryFunctionsAndSuffixes[i]
+  var queryFunction = queryFunctionAndSuffix[0]
+  var suffix = queryFunctionAndSuffix[1]
+  console.log('suffix: ', suffix)
+  var relationsOpts = queryFunctionAndSuffix[2]
+  console.log('PC, creating: ', 'checkFreshness' + suffix)
+  PostController['checkFreshness' + suffix] = createCheckFreshnessAction(queryFunction, 'posts')
+  PostController['find' + suffix] = createFindAction(queryFunction, relationsOpts)
+}
+
+console.log('PC: ', PostController)
+console.log('PC findForCommunity: ', PostController.findForCommunity)
 
 module.exports = PostController
