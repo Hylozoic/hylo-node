@@ -245,9 +245,9 @@ module.exports = {
     )
     var total
 
-    Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations']})
+    Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations', 'memberships']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(UserPresenter.presentForList))
+    .then(users => users.map(u => UserPresenter.presentForList(u, res.locals.community.id)))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
   },
