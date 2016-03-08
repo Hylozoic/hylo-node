@@ -74,7 +74,7 @@ module.exports = {
         upstreamRes.on('data', d => chunks.push(d))
         upstreamRes.on('end', () => cacheKey && cache.set(cacheKey, Buffer.concat(chunks)))
       })
-      .on('error', err => sails.log.error(err.message))
+      .on('error', err => res.serverError(err.message))
       .pipe(res)
     }
   }
