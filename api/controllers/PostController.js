@@ -407,14 +407,9 @@ for (var i = 0; i < queryFunctionsAndSuffixes.length; i++) {
   var queryFunctionAndSuffix = queryFunctionsAndSuffixes[i]
   var queryFunction = queryFunctionAndSuffix[0]
   var suffix = queryFunctionAndSuffix[1]
-  console.log('suffix: ', suffix)
   var relationsOpts = queryFunctionAndSuffix[2]
-  console.log('PC, creating: ', 'checkFreshness' + suffix)
   PostController['checkFreshness' + suffix] = createCheckFreshnessAction(queryFunction, 'posts')
   PostController['find' + suffix] = createFindAction(queryFunction, relationsOpts)
 }
-
-console.log('PC: ', PostController)
-console.log('PC findForCommunity: ', PostController.findForCommunity)
 
 module.exports = PostController
