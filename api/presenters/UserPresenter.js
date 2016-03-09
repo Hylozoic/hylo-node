@@ -60,15 +60,24 @@ var UserPresenter = module.exports = {
     .spread((user, extra) => _.extend(user.attributes, extra));
   },
 
-  presentForList: function(user) {
+  presentForList: function (user, communityId) {
+    var extraAttributes = {
+      skills: Skill.simpleList(user.relations.skills),
+      organizations: Organization.simpleList(user.relations.organizations),
+      public_email: user.encryptedEmail()
+    }
+
+    if (communityId) {
+      var membership = _.find(user.relations.memberships.models, m => m.get('community_id') === communityId)
+      if (membership && membership.get('role') === Membership.MODERATOR_ROLE) {
+        extraAttributes.isModerator = true
+      }
+    }
+
     return _.merge(
       _.pick(user.attributes, UserPresenter.shortAttributes),
-      {
-        skills: Skill.simpleList(user.relations.skills),
-        organizations: Organization.simpleList(user.relations.organizations),
-        public_email: user.encryptedEmail()
-      }
-    );
+      extraAttributes
+    )
   }
 
 };
