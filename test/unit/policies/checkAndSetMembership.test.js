@@ -21,7 +21,8 @@ describe('checkAndSetMembership', () => {
     return checkAndSetMembership(req, res, next)
     .then(() => {
       expect(next).to.have.been.called()
-      expect(res.locals.membership).to.be.true
+      expect(res.locals.membership).to.exist
+      expect(typeof res.locals.membership.save).to.equal('function')
     })
   })
 })

@@ -1,3 +1,7 @@
+const dummyMembership = {
+  save: () => {}
+}
+
 module.exports = function checkAndSetMembership (req, res, next) {
   var communityId = req.param('communityId')
   // if no community id is specified, continue.
@@ -30,7 +34,7 @@ module.exports = function checkAndSetMembership (req, res, next) {
     return Membership.find(req.session.userId, community.id)
     .then(function (membership) {
       if (membership || allowed) {
-        res.locals.membership = membership || true
+        res.locals.membership = membership || dummyMembership
         next()
       } else if (community.get('network_id') && req.session.userId) {
         Network.containsUser(community.get('network_id'), req.session.userId)
