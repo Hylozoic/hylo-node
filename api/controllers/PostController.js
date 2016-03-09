@@ -47,7 +47,7 @@ var queryForCommunity = function (req, res) {
 
   return queryPosts(req, {
     communities: [res.locals.community.id],
-    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
+    visibility: (res.locals.membership.dummy ? Post.Visibility.PUBLIC_READABLE : null)
   })
 }
 

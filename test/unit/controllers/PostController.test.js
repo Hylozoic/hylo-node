@@ -275,6 +275,7 @@ describe('PostController', () => {
     })
 
     it('shows only public content to non-members', () => {
+      res.locals.membership = {dummy: true, save: () => {}}
       return PostController.findForCommunity(req, res)
       .then(() => {
         expect(res.body.posts_total).to.equal(1)

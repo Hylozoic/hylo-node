@@ -1,5 +1,6 @@
 const dummyMembership = {
-  save: () => {}
+  save: () => {},
+  dummy: true
 }
 
 module.exports = function checkAndSetMembership (req, res, next) {
