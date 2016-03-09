@@ -56,9 +56,10 @@ TestSetup.prototype.createSchema = function () {
       var script = fs.readFileSync(root('migrations/schema.sql')).toString()
       return script.split(/\n/)
       .filter(line => !line.startsWith('--'))
-      .join('')
+      .join(' ')
       .replace(/\s+/g, ' ')
       .split(/;\s?/)
+      .map(line => line.trim())
       .filter(line => line !== '')
     })
     .each(command => {
