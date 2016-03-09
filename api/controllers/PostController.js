@@ -1,3 +1,4 @@
+var _ = require('lodash')
 var createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 var sortColumns = {
   'fulfilled-last': 'fulfilled_at',
@@ -394,22 +395,22 @@ var PostController = {
   }
 }
 
-var queryFunctionsAndSuffixes = [
-  [queryForCommunity, 'ForCommunity'],
-  [queryForUser, 'ForUser'],
-  [queryForAllForUser, 'ForAllForUser'],
-  [queryForFollowed, 'ForFollowed'],
-  [queryForProject, 'ForProject', {fromProject: true}],
-  [queryForNetwork, 'ForNetwork']
-]
-
-for (var i = 0; i < queryFunctionsAndSuffixes.length; i++) {
-  var queryFunctionAndSuffix = queryFunctionsAndSuffixes[i]
-  var queryFunction = queryFunctionAndSuffix[0]
-  var suffix = queryFunctionAndSuffix[1]
-  var relationsOpts = queryFunctionAndSuffix[2]
-  PostController['checkFreshness' + suffix] = createCheckFreshnessAction(queryFunction, 'posts')
-  PostController['find' + suffix] = createFindAction(queryFunction, relationsOpts)
+var queries = {
+  Community: queryForCommunity,
+  User: queryForUser,
+  AllForUser: queryForAllForUser,
+  Followed: queryForFollowed,
+  Project: queryForProject,
+  Network: queryForNetwork
 }
+
+var relationsOpts = {
+  Project: {fromProject: true}
+}
+
+_.forEach(queries, (queryFunction, key) => {
+  PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(queryFunction, 'posts')
+  PostController['findFor' + key] = createFindAction(queryFunction, relationsOpts[key])
+})
 
 module.exports = PostController
