@@ -14,8 +14,8 @@ module.exports.routes = {
   'GET    /noo/user/:userId/contributions':               'UserController.contributions',
   'GET    /noo/user/:userId/thanks':                      'UserController.thanks',
   'GET    /noo/user/:userId/posts':                       'PostController.findForUser',
-  'GET    /noo/user/:userId/followed-posts':              'PostController.findFollowed',
-  'GET    /noo/user/:userId/all-community-posts':         'PostController.findAllForUser',
+  'GET    /noo/user/:userId/followed-posts':              'PostController.findForFollowed',
+  'GET    /noo/user/:userId/all-community-posts':         'PostController.findForAllForUser',
   'GET    /noo/user/:userId/onboarding':                  'OnboardingController.find',
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
   'GET    /noo/user/:userId/projects':                    'ProjectController.findForUser',
@@ -50,6 +50,14 @@ module.exports.routes = {
   'POST   /noo/post':                                     'PostController.create',
   'POST   /noo/post/:postId':                             'PostController.update',
   'DELETE /noo/post/:postId':                             'PostController.destroy',
+  // these route names correspond with the different cases for subject in the
+  // frontend fetchPosts action
+  'POST   /noo/freshness/posts/community/:communityId':   'PostController.checkFreshnessForCommunity',
+  'POST   /noo/freshness/posts/person/:userId':           'PostController.checkFreshnessForUser',
+  'POST   /noo/freshness/posts/all-posts/:userId':        'PostController.checkFreshnessForAllForUser',
+  'POST   /noo/freshness/posts/followed-posts/:userId':   'PostController.checkFreshnessForFollowed',
+  'POST   /noo/freshness/posts/project/:projectId':       'PostController.checkFreshnessForProject',
+  'POST   /noo/freshness/posts/network/:networkId':       'PostController.checkFreshnessForNetwork',
 
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',

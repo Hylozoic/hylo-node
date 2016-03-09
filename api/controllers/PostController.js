@@ -1,3 +1,5 @@
+var _ = require('lodash')
+var createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 var sortColumns = {
   'fulfilled-last': 'fulfilled_at',
   'top': 'post.num_votes',
@@ -6,7 +8,7 @@ var sortColumns = {
   'start_time': ['post.start_time', 'asc']
 }
 
-var findPosts = function (req, res, opts) {
+var queryPosts = function (req, opts) {
   var params = _.merge(
     _.pick(req.allParams(), [
       'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
@@ -16,6 +18,7 @@ var findPosts = function (req, res, opts) {
 
   // using Promise.props here allows us to pass queries as attributes,
   // e.g. when looking up communities in PostController.findForUser
+
   return Promise.props(_.merge(
     {
       sort: sortColumns[params.sort || 'recent'],
@@ -25,10 +28,82 @@ var findPosts = function (req, res, opts) {
     _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
     _.pick(opts, 'communities', 'project', 'users', 'visibility')
   ))
-  .then(args => Search.forPosts(args).fetchAll({
-    withRelated: PostPresenter.relations(req.session.userId, opts.relationsOpts)
-  }))
+  .then(args => {
+    return Search.forPosts(args)
+  })
+}
+
+var fetchAndPresentPosts = function (query, userId, relationsOpts) {
+  return query.fetchAll({
+    withRelated: PostPresenter.relations(userId, relationsOpts || {})
+  })
   .then(PostPresenter.mapPresentWithTotal)
+}
+
+var queryForCommunity = function (req, res) {
+  if (TokenAuth.isAuthenticated(res)) {
+    if (!RequestValidation.requireTimeRange(req, res)) return
+  }
+
+  return queryPosts(req, {
+    communities: [res.locals.community.id],
+    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
+  })
+}
+
+var queryForUser = function (req, res) {
+  return queryPosts(req, {
+    users: [req.param('userId')],
+    communities: Membership.activeCommunityIds(req.session.userId),
+    visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
+  })
+}
+
+var queryForAllForUser = function (req, res) {
+  return Membership.activeCommunityIds(req.session.userId)
+  .then(function (communityIds) {
+    return Search.forPosts({
+      communities: communityIds,
+      limit: req.param('limit') || 10,
+      offset: req.param('offset'),
+      sort: sortColumns[req.param('sort') || 'recent'],
+      type: req.param('type') || 'all+welcome',
+      forUser: req.session.userId,
+      term: req.param('search')
+    })
+  })
+}
+
+var queryForFollowed = function (req, res) {
+  return Promise.resolve(Search.forPosts({
+    follower: req.session.userId,
+    limit: req.param('limit') || 10,
+    offset: req.param('offset'),
+    sort: 'post.updated_at',
+    type: 'all+welcome',
+    term: req.param('search')
+  }))
+}
+
+var queryForProject = function (req, res) {
+  return queryPosts(req, {
+    project: req.param('projectId'),
+    sort: 'fulfilled-last'
+  })
+}
+
+var queryForNetwork = function (req, res) {
+  return Network.find(req.param('networkId'))
+  .then(network => Community.where({network_id: network.id}).fetchAll())
+  .then(communities => queryPosts(req, {
+    communities: communities.map(c => c.id),
+    visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
+  }))
+}
+
+var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
+  return queryFunction(req, res)
+  .then(query => fetchAndPresentPosts(query, req.session.userId, relationsOpts))
   .then(res.ok, res.serverError)
 }
 
@@ -92,84 +167,10 @@ var afterSavingPost = function (post, opts) {
   ])))
 }
 
-module.exports = {
+var PostController = {
   findOne: function (req, res) {
     res.locals.post.load(PostPresenter.relations(req.session.userId))
     .then(PostPresenter.present)
-    .then(res.ok)
-    .catch(res.serverError)
-  },
-
-  findForUser: function (req, res) {
-    findPosts(req, res, {
-      users: [req.param('userId')],
-      communities: Membership.activeCommunityIds(req.session.userId),
-      visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
-    })
-  },
-
-  findForCommunity: function (req, res) {
-    if (TokenAuth.isAuthenticated(res)) {
-      if (!RequestValidation.requireTimeRange(req, res)) return
-    }
-
-    return findPosts(req, res, {
-      communities: [res.locals.community.id],
-      visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
-    })
-  },
-
-  findForProject: function (req, res) {
-    findPosts(req, res, {
-      project: req.param('projectId'),
-      relationsOpts: {fromProject: true},
-      sort: 'fulfilled-last'
-    })
-  },
-
-  findForNetwork: function (req, res) {
-    Network.find(req.param('networkId'))
-    .then(network => Community.where({network_id: network.id}).fetchAll())
-    .then(communities => {
-      findPosts(req, res, {
-        communities: communities.map(c => c.id),
-        visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
-      })
-    })
-  },
-
-  findFollowed: function (req, res) {
-    Search.forPosts({
-      follower: req.session.userId,
-      limit: req.param('limit') || 10,
-      offset: req.param('offset'),
-      sort: 'post.updated_at',
-      type: 'all+welcome',
-      term: req.param('search')
-    }).fetchAll({
-      withRelated: PostPresenter.relations(req.session.userId)
-    })
-    .then(PostPresenter.mapPresentWithTotal)
-    .then(res.ok)
-    .catch(res.serverError)
-  },
-
-  findAllForUser: function (req, res) {
-    Membership.activeCommunityIds(req.session.userId)
-    .then(function (communityIds) {
-      return Search.forPosts({
-        communities: communityIds,
-        limit: req.param('limit') || 10,
-        offset: req.param('offset'),
-        sort: sortColumns[req.param('sort') || 'recent'],
-        type: req.param('type') || 'all+welcome',
-        forUser: req.session.userId,
-        term: req.param('search')
-      }).fetchAll({
-        withRelated: PostPresenter.relations(req.session.userId)
-      })
-    })
-    .then(PostPresenter.mapPresentWithTotal)
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -357,7 +358,6 @@ module.exports = {
 
   complain: function (req, res) {
     var post = res.locals.post
-    var community = post.relations.communities.first()
 
     User.find(req.session.userId)
     .then(user => Email.sendRawEmail('hello@hylo.com', {
@@ -393,5 +393,24 @@ module.exports = {
     })
     .then(() => res.ok({}), res.serverError)
   }
-
 }
+
+var queries = {
+  Community: queryForCommunity,
+  User: queryForUser,
+  AllForUser: queryForAllForUser,
+  Followed: queryForFollowed,
+  Project: queryForProject,
+  Network: queryForNetwork
+}
+
+var relationsOpts = {
+  Project: {fromProject: true}
+}
+
+_.forEach(queries, (queryFunction, key) => {
+  PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(queryFunction, 'posts')
+  PostController['findFor' + key] = createFindAction(queryFunction, relationsOpts[key])
+})
+
+module.exports = PostController

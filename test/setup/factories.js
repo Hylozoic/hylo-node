@@ -36,6 +36,13 @@ module.exports = {
     }, attrs))
   },
 
+  network: attrs => {
+    return new Network(_.merge({
+      name: text(),
+      slug: text()
+    }, attrs))
+  },
+
   mock: {
     request: function () {
       return {
