@@ -10,7 +10,7 @@ describe('Activity', function() {
         id: '4',
         user_id: '5',
         post_id: '6',
-        comment_text: 'foo'
+        text: 'foo'
       });
     });
 
@@ -24,7 +24,7 @@ describe('Activity', function() {
     });
 
     it('sets action = "mention" for mentions', function() {
-      comment.set('comment_text', 'yo <a data-user-id="7">Bob</a>!');
+      comment.set('text', 'yo <a data-user-id="7">Bob</a>!');
       var activity = Activity.forComment(comment, '7');
 
       expect(activity.get('comment_id')).to.equal('4');

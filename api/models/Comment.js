@@ -12,7 +12,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   text: function () {
-    return this.get('comment_text')
+    return this.get('text')
   },
 
   mentions: function () {
@@ -56,7 +56,7 @@ module.exports = bookshelf.Model.extend({
         post = c.relations.post
         return [
           post.relations.followers.pluck('id'),
-          RichText.getUserMentions(comment.get('comment_text'))
+          RichText.getUserMentions(comment.get('text'))
         ]
       })
       .spread((existing, mentioned) => {
@@ -128,7 +128,7 @@ module.exports = bookshelf.Model.extend({
       var commenter = comment.relations.user
       var poster = post.relations.user
       var community = post.relations.communities.models[0]
-      var text = RichText.qualifyLinks(comment.get('comment_text'))
+      var text = RichText.qualifyLinks(comment.get('text'))
       var replyTo = Email.postReplyAddress(post.id, recipient.id)
 
       var postLabel
@@ -160,7 +160,7 @@ module.exports = bookshelf.Model.extend({
           commenter_avatar_url: commenter.get('avatar_url'),
           commenter_profile_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.profile(commenter) + '?ctt=comment_email'),
-          comment_text: text,
+          text: text,
           post_label: postLabel,
           post_title: post.get('name'),
           comment_url: Frontend.Route.tokenLogin(recipient, token,

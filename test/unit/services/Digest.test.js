@@ -38,7 +38,7 @@ describe('Digest', function () {
       community.posts().attach(p1.id),
       community.posts().attach(p2.id),
       Comment.forge({
-        comment_text: 'meow',
+        text: 'meow',
         user_id: user.id,
         post_id: p2.id,
         active: true,

@@ -102,7 +102,7 @@ module.exports = {
     .then(q => q.fetchAll({
       withRelated: [
         {thankedBy: q => q.column('id', 'name', 'avatar_url')},
-        {comment: q => q.column('id', 'comment_text', 'post_id')},
+        {comment: q => q.column('id', 'text', 'post_id')},
         {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
         {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
         {'comment.post.communities': q => q.column('community.id', 'name')}

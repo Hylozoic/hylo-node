@@ -60,7 +60,7 @@ describe('Changes', () => {
       .then(post => {
         comment = new Comment({
           post_id: post.id,
-          comment_text: 'foo',
+          text: 'foo',
           active: true,
           created_at: noon()
         })

@@ -23,7 +23,7 @@ module.exports = {
     })
     .fetchAll({withRelated: [
       {actor: userColumns},
-      {comment: qb => qb.column('id', 'comment_text', 'created_at', 'post_id')},
+      {comment: qb => qb.column('id', 'text', 'created_at', 'post_id')},
       'comment.thanks',
       {'comment.thanks.thankedBy': userColumns},
       {post: qb => qb.column('id', 'name', 'user_id', 'type', 'description')},

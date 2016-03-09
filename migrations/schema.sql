@@ -72,7 +72,7 @@ CREATE TABLE comment (
     user_id bigint,
     post_id bigint,
     created_at timestamp without time zone,
-    comment_text text,
+    text text,
     active boolean,
     deactivated_reason character varying(255),
     deactivated_by_id bigint,

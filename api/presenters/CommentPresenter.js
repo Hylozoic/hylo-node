@@ -1,6 +1,6 @@
 module.exports = {
   present: (comment, userId) => {
-    var attrs = _.pick(comment.toJSON(), 'id', 'comment_text', 'created_at', 'user')
+    var attrs = _.pick(comment.toJSON(), 'id', 'text', 'created_at', 'user')
     var thanks = (comment.relations.thanks || []).map(t => t.relations.thankedBy)
 
     return _.extend(attrs, {

@@ -46,7 +46,7 @@ const createView = lang => {
       null as post_id,
       null as user_id,
       c.id as comment_id,
-      ${wv('c.comment_text', 'B')} ||
+      ${wv('c.text', 'B')} ||
       ${wv('u.name', 'D')} as ${columnName}
     from comment c
     join users u on u.id = c.user_id

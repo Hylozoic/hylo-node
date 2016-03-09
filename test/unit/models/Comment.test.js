@@ -24,7 +24,7 @@ describe('Comment', () => {
       ))
       .then(f => {
         comment = new Comment({
-          comment_text: format('<a data-user-id="%s"></a><a data-user-id="%s"></a>', u2.id, u3.id),
+          text: format('<a data-user-id="%s"></a><a data-user-id="%s"></a>', u2.id, u3.id),
           post_id: post.id,
           user_id: u4.id
         })

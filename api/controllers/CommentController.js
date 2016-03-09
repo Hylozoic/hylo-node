@@ -1,7 +1,7 @@
 var createComment = function (commenterId, text, post) {
   text = RichText.sanitize(text)
   var attrs = {
-    comment_text: text,
+    text: text,
     created_at: new Date(),
     post_id: post.id,
     user_id: commenterId,

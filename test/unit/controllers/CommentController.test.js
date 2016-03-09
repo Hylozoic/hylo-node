@@ -47,7 +47,7 @@ describe('CommentController', function() {
         expect(res.serverError).not.to.have.been.called();
         expect(responseData).to.exist;
         expect(responseData.user).to.exist;
-        expect(responseData.comment_text).to.equal(commentText);
+        expect(responseData.text).to.equal(commentText);
         return fixtures.p1.load('comments');
       })
       .then(post => {
@@ -110,7 +110,7 @@ describe('CommentController', function() {
       .then(function(comments) {
         var comment = comments.find(c => c.get('post_id') === fixtures.p1.id);
         expect(comment).to.exist;
-        expect(comment.get('comment_text')).to.equal('foo bar baz');
+        expect(comment.get('text')).to.equal('foo bar baz');
         expect(comment.get('user_id')).to.equal(fixtures.u3.id);
         done();
       })
