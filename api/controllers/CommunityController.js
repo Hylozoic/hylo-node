@@ -76,22 +76,17 @@ module.exports = {
       }
     }
 
-    console.log('Slack redirect_uri:', redirect_uri)
-    post(options).spread((resp, body) => {
-      var parsed = JSON.parse(body)
-      console.log('response from Slack:')
-      console.log(parsed)
-      Community.find(req.param('communityId')).then(function (community) {
-        community.save({
-          slack_hook_url: parsed.incoming_webhook.url,
-          slack_team: parsed.team_name,
-          slack_configure_url: parsed.incoming_webhook.configuration_url
-        }, {patch: true})
-        .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
-        .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=0'))
-      })
-    }).catch(err => {
-      res.redirect(Frontend.Route.community(community) + '/settings?slack=0')
+    Community.find(req.param('communityId')).then(community => {
+      if (!community) return res.notFound()
+
+      post(options).spread((resp, body) => JSON.parse(body))
+      .then(parsed => community.save({
+        slack_hook_url: parsed.incoming_webhook.url,
+        slack_team: parsed.team_name,
+        slack_configure_url: parsed.incoming_webhook.configuration_url
+      }, {patch: true}))
+      .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
+      .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=0'))
     })
   },
 
