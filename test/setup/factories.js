@@ -72,6 +72,10 @@ module.exports = {
         status: chai.spy(function () { return this }),
         send: chai.spy(function (data) { self.body = data }),
         redirect: chai.spy(function (url) { self.redirected = url }),
+        view: chai.spy(function (template, attrs) {
+          this.viewTemplate = template
+          this.viewAttrs = attrs
+        }),
         locals: {}
       }
       return self

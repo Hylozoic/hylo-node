@@ -1,8 +1,45 @@
-var root = require('root-path')
-var setup = require(root('test/setup'))
-var SessionController = require(root('api/controllers/SessionController'))
-var factories = require(root('test/setup/factories'))
+const setup = require('../../setup')
+const SessionController = require('../../../api/controllers/SessionController')
+var factories = require('../../setup/factories')
 var passport = require('passport')
+
+var findUser = SessionController.findUser
+
+describe('findUser', () => {
+  var u1, u2
+
+  before(() => {
+    u1 = factories.user()
+    u2 = factories.user()
+    return Promise.all([u1.save(), u2.save()])
+  })
+
+  describe('with no directly linked user', () => {
+    it('picks a user with matching email address', () => {
+      return findUser('facebook', u2.get('email'), 'foo')
+      .then(user => {
+        expect(user.id).to.equal(u2.id)
+      })
+    })
+  })
+
+  describe('with a directly linked user', () => {
+    before(() => {
+      return LinkedAccount.create(u1.id, {type: 'facebook', profile: {id: 'foo'}})
+    })
+
+    after(() => {
+      return LinkedAccount.query().where('user_id', u1.id).del()
+    })
+
+    it('returns that user, not one with a matching email address', () => {
+      return findUser('facebook', u2.get('email'), 'foo')
+      .then(user => {
+        expect(user.id).to.equal(u1.id)
+      })
+    })
+  })
+})
 
 describe('SessionController', function () {
   var req, res, cat
@@ -80,18 +117,6 @@ describe('SessionController', function () {
   describe('.finishFacebookOAuth', () => {
     var req, res, mockProfile
 
-    // this is to work around the way passport.authenticate is being used;
-    // because it has a function that takes a callback and returns a function
-    // instead of immediately executing, I don't know how to promisify it
-    var setupTest = function (assertions) {
-      assertions = spy(assertions)
-      res.view = spy(function (template, attrs) {
-        res.viewTemplate = template
-        res.viewAttrs = attrs
-        assertions()
-      })
-    }
-
     beforeEach(() => {
       req = factories.mock.request()
       res = factories.mock.response()
@@ -119,26 +144,23 @@ describe('SessionController', function () {
       return setup.clearDb()
     })
 
-    it('creates a new user', done => {
-      setupTest(function () {
+    it('creates a new user', () => {
+      return SessionController.finishFacebookOAuth(req, res)
+      .then(() => {
         expect(UserSession.login).to.have.been.called()
         expect(User.createFully).to.have.been.called()
         expect(res.view).to.have.been.called()
         expect(res.viewTemplate).to.equal('popupDone')
         expect(res.viewAttrs.error).not.to.exist
 
-        User.find('l@lw.io', {withRelated: 'linkedAccounts'})
-        .then(user => {
-          expect(user).to.exist
-          expect(user.get('facebook_url')).to.equal('http://www.facebook.com/100101')
-          var account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'facebook')
-          expect(account).to.exist
-
-          done()
-        })
-        .catch(done)
+        return User.find('l@lw.io', {withRelated: 'linkedAccounts'})
       })
-      SessionController.finishFacebookOAuth(req, res)
+      .then(user => {
+        expect(user).to.exist
+        expect(user.get('facebook_url')).to.equal('http://www.facebook.com/100101')
+        var account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'facebook')
+        expect(account).to.exist
+      })
     })
 
     describe('with an invitation', () => {
@@ -155,25 +177,22 @@ describe('SessionController', function () {
         .tap(invitation => req.session.invitationId = invitation.id)
       })
 
-      it('adds the new user to the community', done => {
-        setupTest(function () {
-          User.find('l@lw.io', {withRelated: ['communities', 'followedPosts', 'followedPosts.relatedUsers']})
-          .then(user => {
-            var c = user.relations.communities.first()
-            expect(c).to.exist
-            expect(c.id).to.equal(community.id)
+      it('adds the new user to the community', () => {
+        return SessionController.finishFacebookOAuth(req, res)
+        .then(() => User.find('l@lw.io', {withRelated: ['communities', 'followedPosts', 'followedPosts.relatedUsers']}))
+        .then(user => {
+          var c = user.relations.communities.first()
+          expect(c).to.exist
+          expect(c.id).to.equal(community.id)
 
-            var welcome = user.relations.followedPosts.first()
-            expect(welcome).to.exist
-            expect(welcome.get('type')).to.equal('welcome')
-            var relatedUser = welcome.relations.relatedUsers.first()
-            expect(relatedUser).to.exist
-            expect(relatedUser.id).to.equal(user.id)
+          var welcome = user.relations.followedPosts.first()
+          expect(welcome).to.exist
+          expect(welcome.get('type')).to.equal('welcome')
 
-            done()
-          })
+          var relatedUser = welcome.relations.relatedUsers.first()
+          expect(relatedUser).to.exist
+          expect(relatedUser.id).to.equal(user.id)
         })
-        SessionController.finishFacebookOAuth(req, res)
       })
     })
 
@@ -186,37 +205,40 @@ describe('SessionController', function () {
         return user.save()
       })
 
-      it('creates a new linked account', done => {
-        setupTest(function () {
-          User.find(user.id, {withRelated: 'linkedAccounts'})
-          .then(user => {
-            var account = user.relations.linkedAccounts.first()
-            expect(account).to.exist
-            expect(account.get('provider_key')).to.equal('facebook')
-            expect(user.get('facebook_url')).to.equal(mockProfile.profileUrl)
-            expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/100101/picture?type=large')
-            done()
-          })
-          .catch(done)
+      it('creates a new linked account', () => {
+        return SessionController.finishFacebookOAuth(req, res)
+        .then(() => User.find(user.id, {withRelated: 'linkedAccounts'}))
+        .then(user => {
+          var account = user.relations.linkedAccounts.first()
+          expect(account).to.exist
+          expect(account.get('provider_key')).to.equal('facebook')
+          expect(user.get('facebook_url')).to.equal(mockProfile.profileUrl)
+          expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/100101/picture?type=large')
         })
-        SessionController.finishFacebookOAuth(req, res)
       })
 
       describe('with an existing Facebook account', () => {
         beforeEach(() => LinkedAccount.create(user.id, {type: 'facebook', profile: {id: 'foo'}}))
 
-        it('leaves the existing account unchanged', done => {
-          setupTest(function () {
-            user.load('linkedAccounts')
-            .then(user => {
-              expect(user.relations.linkedAccounts.length).to.equal(1)
-              var account = user.relations.linkedAccounts.first()
-              expect(account.get('provider_user_id')).to.equal('foo')
-              done()
-            })
+        it('leaves the existing account unchanged', () => {
+          return SessionController.finishFacebookOAuth(req, res)
+          .then(() => user.load('linkedAccounts'))
+          .then(user => {
+            expect(user.relations.linkedAccounts.length).to.equal(1)
+            var account = user.relations.linkedAccounts.first()
+            expect(account.get('provider_user_id')).to.equal('foo')
           })
-          SessionController.finishFacebookOAuth(req, res)
         })
+      })
+    })
+
+    describe('for an existing user who is logged in', () => {
+      it('creates a new linked account even if the email does not match', () => {
+
+      })
+
+      it('changes the user id on an existing linked account', () => {
+
       })
     })
   })

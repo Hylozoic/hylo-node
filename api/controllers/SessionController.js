@@ -1,6 +1,6 @@
 var passport = require('passport')
 
-var findUser = function (service, email, id) {
+const findUser = function (service, email, id) {
   return User.query(function (qb) {
     qb.where('users.active', true)
 
@@ -8,10 +8,20 @@ var findUser = function (service, email, id) {
       this.on('linked_account.user_id', '=', 'users.id')
     })
 
-    qb.where('email', email).orWhere(function () {
+    qb.where(function () {
       this.where({provider_user_id: id, 'linked_account.provider_key': service})
+      .orWhere('email', email)
     })
-  }).fetch({withRelated: ['linkedAccounts']})
+  }).fetchAll({withRelated: ['linkedAccounts']})
+  .then(users => {
+    // if we find both a user matching the email address and one with a matching
+    // linked account, prioritize the latter
+    if (users.length >= 2) {
+      return users.find(u => _.some(u.relations.linkedAccounts.models, a =>
+        a.get('provider_user_id') === id && a.get('provider_key') === service))
+    }
+    return users.first()
+  })
 }
 
 var hasLinkedAccount = function (user, service) {
@@ -60,26 +70,32 @@ var finishOAuth = function (strategy, req, res, next) {
     service = 'linkedin'
   }
 
-  var respond = error => {
-    if (error && error.stack) console.error(error.stack)
-    return res.view('popupDone', {
-      error,
-      context: req.session.authContext || 'oauth',
-      layout: null,
-      returnDomain: req.session.returnDomain
-    })
-  }
+  return new Promise((resolve, reject) => {
+    var respond = error => {
+      if (error) {
+        if (error.stack) console.error(error.stack)
+        return reject(error)
+      }
 
-  var authCallback = function (err, profile, info) {
-    if (err || !profile) return respond(err || 'no user')
+      return resolve(res.view('popupDone', {
+        error,
+        context: req.session.authContext || 'oauth',
+        layout: null,
+        returnDomain: req.session.returnDomain
+      }))
+    }
 
-    upsertUser(req, service, profile)
-    .then(user => UserExternalData.store(user.id, service, profile._json))
-    .then(() => respond())
-    .catch(respond)
-  }
+    var authCallback = function (err, profile, info) {
+      if (err || !profile) return respond(err || 'no user')
 
-  passport.authenticate(strategy, authCallback)(req, res, next)
+      upsertUser(req, service, profile)
+      .then(user => UserExternalData.store(user.id, service, profile._json))
+      .then(() => respond())
+      .catch(respond)
+    }
+
+    passport.authenticate(strategy, authCallback)(req, res, next)
+  })
 }
 
 // save params into session variables so that they can be used to return to the
@@ -117,7 +133,7 @@ module.exports = {
   }),
 
   finishGoogleOAuth: function (req, res, next) {
-    finishOAuth('google', req, res, next)
+    return finishOAuth('google', req, res, next)
   },
 
   startFacebookOAuth: setSessionFromParams(function (req, res) {
@@ -128,15 +144,15 @@ module.exports = {
   }),
 
   finishFacebookOAuth: function (req, res, next) {
-    finishOAuth('facebook', req, res, next)
+    return finishOAuth('facebook', req, res, next)
   },
 
   finishFacebookTokenOAuth: function (req, res, next) {
-    finishOAuth('facebook-token', req, res, next)
+    return finishOAuth('facebook-token', req, res, next)
   },
 
   finishGoogleTokenOAuth: function (req, res, next) {
-    finishOAuth('google-token', req, res, next)
+    return finishOAuth('google-token', req, res, next)
   },
 
   startLinkedinOAuth: setSessionFromParams(function (req, res) {
@@ -144,11 +160,11 @@ module.exports = {
   }),
 
   finishLinkedinOauth: function (req, res, next) {
-    finishOAuth('linkedin', req, res, next)
+    return finishOAuth('linkedin', req, res, next)
   },
 
   finishLinkedinTokenOauth: function (req, res, next) {
-    finishOAuth('linkedin-token', req, res, next)
+    return finishOAuth('linkedin-token', req, res, next)
   },
 
   destroy: function (req, res) {
@@ -188,6 +204,7 @@ module.exports = {
       }
     })
     .catch(res.serverError)
-  }
+  },
 
+  findUser // this is here for testing
 }
