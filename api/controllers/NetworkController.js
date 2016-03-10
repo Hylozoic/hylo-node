@@ -1,3 +1,13 @@
+var updateCommunityIfModerator = (req, communityId, params, opts) =>
+  Membership.hasModeratorRole(req.session.userId, communityId)
+  .then(isModerator => {
+    if (isModerator || Admin.isSignedIn(req)) {
+      return Community.find(communityId)
+      .then(community => community.save(params, opts))
+    }
+    return
+  })
+
 module.exports = {
 
   findOne: function (req, res) {
@@ -15,14 +25,7 @@ module.exports = {
     return bookshelf.transaction(trx => {
       return network.save(null, {transacting: trx})
       .tap(network => Promise.map(req.param('communities'), communityId =>
-        Membership.hasModeratorRole(req.session.userId, communityId)
-        .then(isModerator => {
-          if (isModerator || Admin.isSignedIn(req)) {
-            return Community.find(communityId)
-            .then(community => community.save({network_id: network.id}, {transacting: trx}))
-          }
-          return
-        })
+        updateCommunityIfModerator(req, communityId, {network_id: network.id}, {transacting: trx})
       ))
     })
     .then(res.ok)
@@ -41,17 +44,6 @@ module.exports = {
 
     var attributes = _.pick(req.allParams(), whitelist)
 
-    var setNetworkIdIfModerator = (communityId, networkId, trx) => {
-      return Membership.hasModeratorRole(req.session.userId, communityId)
-      .then(isModerator => {
-        if (isModerator || Admin.isSignedIn(req)) {
-          return Community.find(communityId)
-          .then(c => c.save({network_id: networkId}, {patch: true, transacting: trx}))
-        }
-        return
-      })
-    }
-
     return bookshelf.transaction(function (trx) {
       return Network.find(req.param('networkId'))
       .then(network => network.save(attributes, {patch: true, transacting: trx}))
@@ -63,8 +55,10 @@ module.exports = {
           var addedComs = _.difference(postedComs, coms.pluck('id'))
           var removedComs = _.difference(coms.pluck('id'), postedComs)
           return Promise.join(
-            Promise.map(addedComs, addedCom => setNetworkIdIfModerator(addedCom, network.id, trx)),
-            Promise.map(removedComs, removedCom => setNetworkIdIfModerator(removedCom, null, trx))
+            Promise.map(addedComs, addedCom =>
+              updateCommunityIfModerator(req, addedCom, {network_id: network.id}, {patch: true, transacting: trx})),
+            Promise.map(removedComs, removedCom =>
+              updateCommunityIfModerator(req, removedCom, {network_id: network.id}, {patch: true, transacting: trx}))
           )
         })
       })
