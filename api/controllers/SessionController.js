@@ -1,4 +1,4 @@
-var passport = require('passport')
+const passport = require('passport')
 
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
@@ -24,11 +24,11 @@ const findUser = function (service, email, id) {
   })
 }
 
-var hasLinkedAccount = function (user, service) {
+const hasLinkedAccount = function (user, service) {
   return !!user.relations.linkedAccounts.where({provider_key: service})[0]
 }
 
-var findCommunity = function (req) {
+const findCommunity = function (req) {
   if (!req.session.invitationId) return Promise.resolve([null, null])
 
   return Invitation.find(req.session.invitationId, {withRelated: ['community']})
@@ -37,7 +37,7 @@ var findCommunity = function (req) {
   })
 }
 
-var upsertUser = (req, service, profile) => {
+const upsertUser = (req, service, profile) => {
   return findUser(service, profile.email, profile.id)
   .then(user => {
     if (user) {
@@ -49,7 +49,7 @@ var upsertUser = (req, service, profile) => {
 
     return findCommunity(req)
     .spread((community, invitation) => {
-      var attrs = _.merge(_.pick(profile, 'email', 'name'), {
+      const attrs = _.merge(_.pick(profile, 'email', 'name'), {
         community: (invitation ? null : community),
         account: {type: service, profile}
       })
@@ -60,7 +60,25 @@ var upsertUser = (req, service, profile) => {
   })
 }
 
-var finishOAuth = function (strategy, req, res, next) {
+const upsertLinkedAccount = (req, service, profile) => {
+  var userId = req.session.userId
+  return LinkedAccount.where({provider_key: service, provider_user_id: profile.id}).fetch()
+  .then(account => {
+    if (account) {
+      // user has this linked account already
+      if (account.get('user_id') === userId) return
+      // linked account belongs to someone else -- change its ownership
+      return account.save({user_id: userId}, {patch: true})
+      .then(() => LinkedAccount.updateUser(userId, {type: service, profile}))
+    }
+
+    // we create a new account regardless of whether one exists for the service;
+    // this allows the user to continue to log in with the old one
+    return LinkedAccount.create(userId, {type: service, profile}, {updateUser: true})
+  })
+}
+
+const finishOAuth = function (strategy, req, res, next) {
   var service = strategy
   if (strategy === 'facebook-token') {
     service = 'facebook'
@@ -88,8 +106,10 @@ var finishOAuth = function (strategy, req, res, next) {
     var authCallback = function (err, profile, info) {
       if (err || !profile) return respond(err || 'no user')
 
-      upsertUser(req, service, profile)
-      .then(user => UserExternalData.store(user.id, service, profile._json))
+      return (UserSession.isLoggedIn(req)
+        ? upsertLinkedAccount
+        : upsertUser)(req, service, profile)
+      .then(() => UserExternalData.store(req.session.userId, service, profile._json))
       .then(() => respond())
       .catch(respond)
     }
@@ -182,18 +202,14 @@ module.exports = {
     var nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
 
     return User.find(req.param('u')).then(function (user) {
-      if (!user) {
-        res.status(422).send('No user id')
-        return
-      }
+      if (!user) return res.status(422).send('No user id')
 
       return Promise.join(user, user.checkToken(req.param('t')))
     })
-    .spread(function (user, match) {
+    .spread((user, match) => {
       if (match) {
         UserSession.login(req, user, 'password')
-        res.redirect(nextUrl)
-        return
+        return res.redirect(nextUrl)
       }
 
       if (req.param('n')) {

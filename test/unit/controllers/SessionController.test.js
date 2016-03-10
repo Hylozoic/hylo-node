@@ -3,10 +3,9 @@ const SessionController = require('../../../api/controllers/SessionController')
 var factories = require('../../setup/factories')
 var passport = require('passport')
 
-var findUser = SessionController.findUser
-
-describe('findUser', () => {
+describe('SessionController.findUser', () => {
   var u1, u2
+  var findUser = SessionController.findUser
 
   before(() => {
     u1 = factories.user()
@@ -115,22 +114,34 @@ describe('SessionController', function () {
   })
 
   describe('.finishFacebookOAuth', () => {
-    var req, res, mockProfile
+    var req, res
+
+    var mockProfile = {
+      displayName: 'Lawrence Wang',
+      email: 'l@lw.io',
+      emails: [ { value: 'l@lw.io' } ],
+      gender: 'male',
+      id: '100101',
+      name: 'Lawrence Wang',
+      profileUrl: 'http://www.facebook.com/100101',
+      provider: 'facebook'
+    }
+
+    const expectMatchMockProfile = userId => {
+      return User.find(userId, {withRelated: 'linkedAccounts'})
+      .then(user => {
+        var account = user.relations.linkedAccounts.first()
+        expect(account).to.exist
+        expect(account.get('provider_key')).to.equal('facebook')
+        expect(user.get('facebook_url')).to.equal(mockProfile.profileUrl)
+        expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/100101/picture?type=large')
+        return user
+      })
+    }
 
     beforeEach(() => {
       req = factories.mock.request()
       res = factories.mock.response()
-
-      mockProfile = {
-        displayName: 'Lawrence Wang',
-        email: 'l@lw.io',
-        emails: [ { value: 'l@lw.io' } ],
-        gender: 'male',
-        id: '100101',
-        name: 'Lawrence Wang',
-        profileUrl: 'http://www.facebook.com/100101',
-        provider: 'facebook'
-      }
 
       UserSession.login = spy(UserSession.login)
       User.createFully = spy(User.createFully)
@@ -200,21 +211,14 @@ describe('SessionController', function () {
       var user
 
       beforeEach(() => {
-        user = factories.user({active: true})
+        user = factories.user()
         mockProfile.email = user.get('email')
         return user.save()
       })
 
       it('creates a new linked account', () => {
         return SessionController.finishFacebookOAuth(req, res)
-        .then(() => User.find(user.id, {withRelated: 'linkedAccounts'}))
-        .then(user => {
-          var account = user.relations.linkedAccounts.first()
-          expect(account).to.exist
-          expect(account.get('provider_key')).to.equal('facebook')
-          expect(user.get('facebook_url')).to.equal(mockProfile.profileUrl)
-          expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/100101/picture?type=large')
-        })
+        .then(() => expectMatchMockProfile(user.id))
       })
 
       describe('with an existing Facebook account', () => {
@@ -232,13 +236,32 @@ describe('SessionController', function () {
       })
     })
 
-    describe('for an existing user who is logged in', () => {
-      it('creates a new linked account even if the email does not match', () => {
+    describe('for a logged-in user', () => {
+      var user
 
+      beforeEach(() => {
+        user = factories.user()
+        return user.save().then(() => req.login(user.id))
       })
 
-      it('changes the user id on an existing linked account', () => {
+      it('creates a new linked account even if the email does not match', () => {
+        return SessionController.finishFacebookOAuth(req, res)
+        .then(() => expectMatchMockProfile(user.id))
+      })
 
+      describe('with a linked account that belongs to a different user', () => {
+        var account
+        beforeEach(() => {
+          return factories.user().save()
+          .then(u2 => LinkedAccount.create(u2.id, {type: 'facebook', profile: {id: mockProfile.id}}))
+          .tap(a => account = a)
+        })
+
+        it('changes ownership', () => {
+          return SessionController.finishFacebookOAuth(req, res)
+          .then(() => expectMatchMockProfile(user.id))
+          .then(user => expect(user.relations.linkedAccounts.first().id).to.equal(account.id))
+        })
       })
     })
   })

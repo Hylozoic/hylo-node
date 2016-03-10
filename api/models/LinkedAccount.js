@@ -33,18 +33,21 @@ module.exports = bookshelf.Model.extend({
       provider_user_id: hashed || profile.id,
       user_id: userId
     }).save({}, _.pick(options, 'transacting')))
-    .tap(() => options.updateUser &&
-      User.find(userId, _.pick(options, 'transacting'))
-      .then(user => {
-        var avatar_url = user.get('avatar_url')
-        var attributes = this.socialMediaAttributes(type, profile)
-        if (avatar_url && !avatar_url.match(/gravatar/)) {
-          attributes.avatar_url = avatar_url
-        }
-        return User.query().where('id', userId)
-        .update(attributes)
-        .transacting(options.transacting)
-      }))
+    .tap(() => options.updateUser && this.updateUser(userId, _.merge({}, data, options)))
+  },
+
+  updateUser: function (userId, options) {
+    return User.find(userId, _.pick(options, 'transacting'))
+    .then(user => {
+      var avatar_url = user.get('avatar_url')
+      var attributes = this.socialMediaAttributes(options.type, options.profile)
+      if (avatar_url && !avatar_url.match(/gravatar/)) {
+        attributes.avatar_url = avatar_url
+      }
+      return User.query().where('id', userId)
+      .update(attributes)
+      .transacting(options.transacting)
+    })
   },
 
   socialMediaAttributes: function (type, profile) {
