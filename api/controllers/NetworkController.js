@@ -39,6 +39,10 @@ module.exports = {
       'banner_url', 'avatar_url', 'name', 'description'
     ]
 
+    if (Admin.isSignedIn(req)) {
+      whitelist.push('slug')
+    }
+
     var attributes = _.pick(req.allParams(), whitelist)
 
     var setNetworkIdIfModerator = (communityId, networkId, trx) => {
