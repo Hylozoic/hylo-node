@@ -17,7 +17,7 @@ module.exports = {
       .tap(network => Promise.map(req.param('communities'), communityId =>
         Membership.hasModeratorRole(req.session.userId, communityId)
         .then(isModerator => {
-          if (isModerator) {
+          if (isModerator || Admin.isSignedIn(req)) {
             return Community.find(communityId)
             .then(community => community.save({network_id: network.id}, {transacting: trx}))
           }
@@ -44,7 +44,7 @@ module.exports = {
     var setNetworkIdIfModerator = (communityId, networkId, trx) => {
       return Membership.hasModeratorRole(req.session.userId, communityId)
       .then(isModerator => {
-        if (isModerator) {
+        if (isModerator || Admin.isSignedIn(req)) {
           return Community.find(communityId)
           .then(c => c.save({network_id: networkId}, {patch: true, transacting: trx}))
         }
