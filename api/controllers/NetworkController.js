@@ -1,9 +1,11 @@
-var updateCommunityIfModerator = (req, communityId, params, opts) =>
+var updateCommunityIfModerator = (req, communityId, params, trx) =>
   Membership.hasModeratorRole(req.session.userId, communityId)
   .then(isModerator => {
     if (isModerator || Admin.isSignedIn(req)) {
-      return Community.find(communityId)
-      .then(community => community.save(params, opts))
+      return Community.query()
+      .where('id', communityId)
+      .update(params)
+      .transacting(trx)
     }
     return
   })
@@ -25,7 +27,7 @@ module.exports = {
     return bookshelf.transaction(trx => {
       return network.save(null, {transacting: trx})
       .tap(network => Promise.map(req.param('communities'), communityId =>
-        updateCommunityIfModerator(req, communityId, {network_id: network.id}, {transacting: trx})
+        updateCommunityIfModerator(req, communityId, {network_id: network.id}, trx)
       ))
     })
     .then(res.ok)
@@ -56,9 +58,9 @@ module.exports = {
           var removedComs = _.difference(coms.pluck('id'), postedComs)
           return Promise.join(
             Promise.map(addedComs, addedCom =>
-              updateCommunityIfModerator(req, addedCom, {network_id: network.id}, {patch: true, transacting: trx})),
+              updateCommunityIfModerator(req, addedCom, {network_id: network.id}, trx)),
             Promise.map(removedComs, removedCom =>
-              updateCommunityIfModerator(req, removedCom, {network_id: network.id}, {patch: true, transacting: trx}))
+              updateCommunityIfModerator(req, removedCom, {network_id: network.id}, trx))
           )
         })
       })
