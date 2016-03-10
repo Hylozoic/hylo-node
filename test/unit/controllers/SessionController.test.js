@@ -114,7 +114,7 @@ describe('SessionController', function () {
   })
 
   describe('.finishFacebookOAuth', () => {
-    var req, res
+    var req, res, origPassportAuthenticate
 
     var mockProfile = {
       displayName: 'Lawrence Wang',
@@ -139,6 +139,10 @@ describe('SessionController', function () {
       })
     }
 
+    before(() => {
+      origPassportAuthenticate = passport.authenticate
+    })
+
     beforeEach(() => {
       req = factories.mock.request()
       res = factories.mock.response()
@@ -147,12 +151,14 @@ describe('SessionController', function () {
       User.createFully = spy(User.createFully)
 
       passport.authenticate = spy(function (strategy, callback) {
-        return function () {
-          callback(null, mockProfile)
-        }
+        return () => callback(null, mockProfile)
       })
 
       return setup.clearDb()
+    })
+
+    afterEach(() => {
+      passport.authenticate = origPassportAuthenticate
     })
 
     it('creates a new user', () => {
@@ -171,6 +177,27 @@ describe('SessionController', function () {
         expect(user.get('facebook_url')).to.equal('http://www.facebook.com/100101')
         var account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'facebook')
         expect(account).to.exist
+      })
+    })
+
+    describe('with no user in the third-party response', () => {
+      var error
+      beforeEach(() => {
+        passport.authenticate = spy(function (strategy, callback) {
+          return () => callback(null, null)
+        })
+        res.serverError = spy(err => error = err)
+      })
+
+      it('returns a server error', () => {
+        return SessionController.finishFacebookOAuth(req, res)
+        .then(() => {
+          throw new Error('the promise should have been rejected')
+        })
+        .catch(() => {
+          expect(res.serverError).to.have.been.called()
+          expect(error).to.equal('no user')
+        })
       })
     })
 

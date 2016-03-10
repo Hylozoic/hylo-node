@@ -92,7 +92,7 @@ const finishOAuth = function (strategy, req, res, next) {
     var respond = error => {
       if (error) {
         if (error.stack) console.error(error.stack)
-        return reject(error)
+        return reject(res.serverError(error))
       }
 
       return resolve(res.view('popupDone', {
