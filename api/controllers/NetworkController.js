@@ -1,6 +1,7 @@
 var updateCommunityIfModerator = (req, communityId, params, trx) =>
   Promise.resolve(Admin.isSignedIn(req) || Membership.hasModeratorRole(req.session.userId, communityId))
-  .then(isAllowed => isAllowed && Community.query()
+  .then(isAllowed => isAllowed &&
+    Community.query()
     .where('id', communityId)
     .update(params)
     .transacting(trx))
