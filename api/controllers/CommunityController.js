@@ -50,6 +50,9 @@ module.exports = {
       'welcome_message', 'leader_id', 'beta_access_code', 'location',
       'slack_hook_url', 'slack_team', 'slack_configure_url', 'active'
     ]
+    if (Admin.isSignedIn(req)) {
+      whitelist.push('slug')
+    }
     var attributes = _.pick(req.allParams(), whitelist)
     var saneAttrs = _.clone(attributes)
     var community = new Community({id: req.param('communityId')})

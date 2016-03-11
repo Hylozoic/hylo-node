@@ -41,7 +41,7 @@ module.exports = {
     }
 
     var whitelist = [
-      'banner_url', 'avatar_url', 'name', 'description'
+      'banner_url', 'avatar_url', 'name', 'description', 'slug'
     ]
 
     var attributes = _.pick(req.allParams(), whitelist)
