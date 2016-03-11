@@ -74,7 +74,9 @@ describe('NetworkController', () => {
       })
     })
 
-    it('updates communities you are a moderator of', () => {
+    it.skip('updates communities you are a moderator of', () => {
+      // this test is currently broken because you can only update networks if you're an admin, but then you can update ALL
+      // communities. Leaving the code here for when Network moderators are a thing.
       req.session.userId = fixtures.u1.id
       req.user = {email: 'admin@hylo.com'}
 

@@ -40,7 +40,7 @@ module.exports = {
       'banner_url', 'avatar_url', 'name', 'description', 'slug'
     ]
 
-    // this is currently redundant because of the check at the top, but is here for when network admins are a thing
+    // this is currently redundant because of the check at the top, but is here for when network moderators are a thing
     if (Admin.isSignedIn(req)) {
       whitelist.push('slug')
     }
