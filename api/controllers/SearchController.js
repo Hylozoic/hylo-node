@@ -80,7 +80,7 @@ module.exports = {
         break
       case 'communities':
         method = Search.forCommunities
-        columns = ['id', 'name', 'avatar_url']
+        columns = ['id', 'name', 'avatar_url', 'slug']
         break
       default:
         method = Search.forUsers
@@ -115,7 +115,7 @@ module.exports = {
           present = row => ({name: row.get('org_name')})
           break
         default:
-          present = row => row.pick('id', 'name', 'avatar_url')
+          present = row => row.pick('id', 'name', 'avatar_url', 'slug')
       }
       res.ok(rows.map(present))
     })
