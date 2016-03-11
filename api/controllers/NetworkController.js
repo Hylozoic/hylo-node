@@ -1,14 +1,9 @@
 var updateCommunityIfModerator = (req, communityId, params, trx) =>
-  Membership.hasModeratorRole(req.session.userId, communityId)
-  .then(isModerator => {
-    if (isModerator || Admin.isSignedIn(req)) {
-      return Community.query()
-      .where('id', communityId)
-      .update(params)
-      .transacting(trx)
-    }
-    return
-  })
+  Promise.resolve(Admin.isSignedIn(req) || Membership.hasModeratorRole(req.session.userId, communityId))
+  .then(isAllowed => isAllowed && Community.query()
+    .where('id', communityId)
+    .update(params)
+    .transacting(trx))
 
 module.exports = {
 
@@ -43,6 +38,11 @@ module.exports = {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'slug'
     ]
+
+    // this is currently redundant because of the check at the top, but is here for when network admins are a thing
+    if (Admin.isSignedIn(req)) {
+      whitelist.push('slug')
+    }
 
     var attributes = _.pick(req.allParams(), whitelist)
 
