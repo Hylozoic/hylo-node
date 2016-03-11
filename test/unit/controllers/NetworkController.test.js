@@ -56,18 +56,18 @@ describe('NetworkController', () => {
   })
 
   describe('#update', () => {
-    it('works, and doesn\'t change the slug', () => {
+    it('works', () => {
       req.session.userId = fixtures.u1.id
       req.user = {email: 'admin@hylo.com'}
 
       _.extend(req.params, {networkId: 'prefoo', name: 'Foo', slug: 'foo', description: 'abcde', avatar_url: 'http://bar.com/a.jpg', banner_url: 'http://baz.com/b.jpg', communities: []})
       return new Network({name: 'PreFoo', slug: 'prefoo', description: 'preabcde', avatar_url: 'http://prebar.com/prea.jpg', banner_url: 'http://prebaz.com/preb.jpg'}).save()
       .then(() => NetworkController.update(req, res))
-      .then(() => Network.find('prefoo', {withRelated: ['communities']}))
+      .then(() => Network.find('foo', {withRelated: ['communities']}))
       .then(network => {
         expect(network).to.exist
         expect(network.get('name')).to.equal('Foo')
-        expect(network.get('slug')).to.equal('prefoo')
+        expect(network.get('slug')).to.equal('foo')
         expect(network.get('description')).to.equal('abcde')
         expect(network.get('avatar_url')).to.equal('http://bar.com/a.jpg')
         expect(network.get('banner_url')).to.equal('http://baz.com/b.jpg')
