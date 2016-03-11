@@ -53,22 +53,20 @@ module.exports = bookshelf.Model.extend({
     var userId = this.get('user_id')
     if (!opts) opts = {}
 
-    return Promise.map(userIds, function (followerUserId) {
-      return Follow.create(followerUserId, postId, {
+    return Promise.map(userIds, function (followerId) {
+      return Follow.create(followerId, postId, {
         addedById: addingUserId,
         transacting: opts.transacting
       }).tap(function (follow) {
         if (!opts.createActivity) return
 
         var updates = []
-        if (followerUserId !== addingUserId) {
-          updates.push(Activity.forFollowAdd(follow, followerUserId).save({}, _.pick(opts, 'transacting')))
-          updates.push(User.incNewNotificationCount(followerUserId, opts.transacting))
+        const addActivity = (recipientId, method) => {
+          updates.push(Activity[method](follow, recipientId).save({}, _.pick(opts, 'transacting')))
+          updates.push(User.incNewNotificationCount(recipientId, opts.transacting))
         }
-        if (userId !== addingUserId) {
-          updates.push(Activity.forFollow(follow, userId).save({}, _.pick(opts, 'transacting')))
-          updates.push(User.incNewNotificationCount(userId, opts.transacting))
-        }
+        if (followerId !== addingUserId) addActivity(followerId, 'forFollowAdd')
+        if (userId !== addingUserId) addActivity(userId, 'forFollow')
         return Promise.all(updates)
       })
     })
@@ -222,17 +220,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotifications: function (opts) {
-    var uniqById = function (array) {
-      // this is destructive of array
-      var result = []
-      while (array.length > 0) {
-        var element = array[0]
-        result.push(element)
-        _.remove(array, item => item.get('id') === element.get('id'))
-      }
-      return result
-    }
-
     return Post.find(opts.postId, {withRelated: [
       'communities',
       'communities.users',
@@ -243,7 +230,7 @@ module.exports = bookshelf.Model.extend({
       var communities = post.relations.communities
       var poster = post.relations.user
       var usersWithDupes = communities.map(community => community.relations.users.models)
-      var users = uniqById(_.flatten(usersWithDupes))
+      var users = _.uniqBy(_.flatten(usersWithDupes), 'id')
 
       _.remove(users, user => user.get('id') === poster.get('id'))
       return Promise.join(
