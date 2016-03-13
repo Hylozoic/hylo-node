@@ -1,4 +1,5 @@
 const passport = require('passport')
+const rollbar = require('rollbar')
 
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
@@ -90,10 +91,7 @@ const finishOAuth = function (strategy, req, res, next) {
 
   return new Promise((resolve, reject) => {
     var respond = error => {
-      if (error) {
-        if (error.stack) console.error(error.stack)
-        return reject(res.serverError(error))
-      }
+      if (error && error.stack) rollbar.handleError(e, req)
 
       return resolve(res.view('popupDone', {
         error,
