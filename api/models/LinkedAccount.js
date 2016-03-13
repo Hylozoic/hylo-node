@@ -63,5 +63,6 @@ module.exports = bookshelf.Model.extend({
           avatar_url: profile.photos[0].value
         }
     }
+    return {}
   }
 })
