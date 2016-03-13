@@ -181,22 +181,17 @@ describe('SessionController', function () {
     })
 
     describe('with no user in the third-party response', () => {
-      var error
       beforeEach(() => {
         passport.authenticate = spy(function (strategy, callback) {
           return () => callback(null, null)
         })
-        res.serverError = spy(err => error = err)
       })
 
-      it('returns a server error', () => {
+      it('sets an error in the view parameters', () => {
         return SessionController.finishFacebookOAuth(req, res)
         .then(() => {
-          throw new Error('the promise should have been rejected')
-        })
-        .catch(() => {
-          expect(res.serverError).to.have.been.called()
-          expect(error).to.equal('no user')
+          expect(res.view).to.have.been.called()
+          expect(res.viewAttrs.error).to.equal('no user')
         })
       })
     })
