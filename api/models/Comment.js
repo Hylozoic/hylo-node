@@ -160,7 +160,7 @@ module.exports = bookshelf.Model.extend({
           commenter_avatar_url: commenter.get('avatar_url'),
           commenter_profile_url: Frontend.Route.tokenLogin(recipient, token,
             Frontend.Route.profile(commenter) + '?ctt=comment_email'),
-          text: text,
+          comment_text: text,
           post_label: postLabel,
           post_title: post.get('name'),
           comment_url: Frontend.Route.tokenLogin(recipient, token,
