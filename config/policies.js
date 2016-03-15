@@ -114,7 +114,8 @@ module.exports.policies = {
     vote:                        ['sessionAuth', 'checkAndSetPost'],
     complain:                    ['sessionAuth', 'checkAndSetPost'],
     destroy:                     ['sessionAuth', 'checkAndSetWritablePost'],
-    createFromEmail: true
+    createFromEmail: true,
+    createFromEmailForm: true
   },
 
   CommentController: {
