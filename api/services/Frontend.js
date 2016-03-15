@@ -55,6 +55,10 @@ module.exports = {
 
     useInvitation: function (token) {
       return url('/h/use-invitation?token=%s', token)
+    },
+
+    emailPostForm: function () {
+      return url('/noo/hook/postForm')
     }
   }
 }
