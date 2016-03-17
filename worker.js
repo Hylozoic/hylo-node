@@ -6,7 +6,6 @@ var Promise = require('bluebird')
 var queue = require('kue').createQueue()
 var rollbar = skiff.rollbar
 var sails = skiff.sails
-var util = require('util')
 
 // define new jobs here.
 // each job should return a promise.
@@ -32,7 +31,7 @@ var processJobs = function () {
     queue.process(name, 10, function (job, ctx, done) {
       // put common behavior for all jobs here
 
-      var label = util.format('Job %s: ', job.id)
+      var label = `Job ${job.id}: `
       sails.log.debug(label + name)
 
       promise(job).then(function () {
@@ -40,7 +39,7 @@ var processJobs = function () {
         done()
       })
       .catch(function (err) {
-        sails.log.error(label + err.message.red)
+        sails.log.error(label + (typeof err === 'string' ? err : err.message).red)
         rollbar.handleError(err)
         done(err)
       })
