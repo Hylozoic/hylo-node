@@ -9,8 +9,6 @@ const _ = require('lodash')
 const fs = require('fs')
 const sails = require('sails')
 
-console.log('Lifting Sails in interactive mode...'.blue)
-
 ;(function () {
   // Try to get `rc` dependency
   var rc
