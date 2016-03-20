@@ -2,7 +2,7 @@ const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
 var postRelations = (userId, opts) => _.filter([
   {user: userColumns},
-  {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
+  {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url', 'banner_url')},
   'contributions',
   {'contributions.user': userColumns},
   {followers: userColumns},
@@ -35,7 +35,7 @@ var postAttributes = post => {
     ]),
     {
       user: rel.user ? rel.user.pick('id', 'name', 'avatar_url') : null,
-      communities: rel.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),
+      communities: rel.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
       contributors: rel.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers: rel.followers.map(u => u.pick('id', 'name', 'avatar_url')),
       responders: rel.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
