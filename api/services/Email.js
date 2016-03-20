@@ -91,6 +91,10 @@ module.exports = {
     return sendSimpleEmail(opts.email, 'tem_GoeP9Ac54t66HjVUtKDwYM', opts.data)
   },
 
+  sendPostPromptForm: function (opts) {
+    return sendSimpleEmail(opts.email, 'tem_C3M8CEAcsh5MC94H7KuMCE', opts.data)
+  },
+
   postReplyAddress: function (postId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId)
     return format('reply-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN)
@@ -117,6 +121,19 @@ module.exports = {
     var decodedData = plaintext.split('|')
 
     return {communityId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
+  },
+
+  postCreationToken: function (communityId, userId) {
+    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, communityId, userId)
+    return PlayCrypto.encrypt(plaintext)
+  },
+
+  decodePostCreationToken: function (token) {
+    var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT))
+    var plaintext = PlayCrypto.decrypt(token).replace(salt, '')
+    var decodedData = plaintext.split('|')
+
+    return {communityId: decodedData[0], userId: decodedData[1]}
   }
 
 }

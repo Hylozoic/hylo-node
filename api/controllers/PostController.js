@@ -113,7 +113,7 @@ var setupNewPostAttrs = function (userId, params) {
     description: RichText.sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
-  }, _.pick(params, 'type', 'start_time', 'end_time', 'location'))
+  }, _.pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
 
   if (params.projectId) {
     return Project.find(params.projectId)
@@ -225,6 +225,35 @@ var PostController = {
         transacting: trx
       }))))
     .then(() => res.ok({}), res.serverError)
+  },
+
+  createFromEmailForm: function (req, res) {
+    try {
+      var tokenData = Email.decodePostCreationToken(req.param('token'))
+    } catch (e) {
+      return res.serverError(new Error('Invalid token: ' + req.param('To')))
+    }
+
+    var attributes = _.merge(
+      {created_from: 'email_form'},
+      _.pick(req.allParams(), ['name', 'description', 'type']))
+
+    var namePrefixes = {
+      'offer': 'I\'d like to share',
+      'request': 'I\'m looking for',
+      'intention': 'I\'d like to create'
+    }
+
+    attributes.name = namePrefixes[attributes.type] + ' ' + attributes.name
+
+    return setupNewPostAttrs(tokenData.userId, attributes)
+    .then(attrs => bookshelf.transaction(trx =>
+      new Post(attrs).save(null, {transacting: trx})
+      .tap(post => afterSavingPost(post, {
+        communities: [tokenData.communityId],
+        transacting: trx
+      }))))
+    .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
   },
 
   follow: function (req, res) {
