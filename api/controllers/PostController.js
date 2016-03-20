@@ -251,8 +251,6 @@ var PostController = {
       new Post(attrs).save(null, {transacting: trx})
       .tap(post => afterSavingPost(post, {
         communities: [tokenData.communityId],
-        imageUrl: req.param('imageUrl'),
-        docs: req.param('docs'),
         transacting: trx
       }))))
     .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
