@@ -159,7 +159,8 @@ module.exports = {
           {'user': userColumns},
           {'post': q => q.column('id', 'type', 'name', 'user_id')},
           {'post.user': userColumns},
-          {'post.relatedUsers': userColumns}
+          {'post.relatedUsers': userColumns},
+          {'thanks.thankedBy': userColumns}
         ]}),
 
         ids.people && User.where('id', 'in', ids.people)
