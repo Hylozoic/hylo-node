@@ -152,7 +152,7 @@ describe('CommunityController', () => {
 
   describe('.findForNetwork', () => {
     var network
-    before(done => {
+    before(() => {
       network = new Network({name: 'N1', slug: 'n1'})
       return network.save()
       .then(network => {
@@ -163,7 +163,6 @@ describe('CommunityController', () => {
           n1: network
         })
       })
-      .then(() => done())
     })
 
     it('works with slug', () => {

@@ -47,8 +47,8 @@ describe('Digest', function () {
     ))
   })
 
-  describe('.sendTestEmail', function () {
-    it("collects correct data and doesn't throw errors", function () {
+  describe('fetching data and sending', function () {
+    it('works correctly', function () {
       this.timeout(5000)
       var startTime = moment().subtract(1, 'week')
       var endTime = moment().add(1, 'minute')
@@ -62,7 +62,8 @@ describe('Digest', function () {
         expect(digest.posts[0].id).to.equal(p1.id)
         expect(digest.commentedPosts.length).to.equal(1)
         expect(digest.commentedPosts[0].id).to.equal(p2.id)
-        digest.sendTestEmail(user)
+        return user.generateToken()
+        .then(token => Email.sendCommunityDigest(digest.emailData(user, token)))
       })
     })
   })

@@ -1,6 +1,13 @@
 var api = require('sendwithus')(process.env.SENDWITHUS_KEY)
 var Promise = require('bluebird')
-var sendEmail = Promise.promisify(api.send, api)
+
+var sendEmail = function (opts) {
+  return new Promise((resolve, reject) => {
+    api.send(opts, (err, resp) => {
+      err ? reject(resp) : resolve(resp)
+    })
+  })
+}
 
 var defaultOptions = {
   sender: {

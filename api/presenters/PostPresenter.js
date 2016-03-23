@@ -50,7 +50,7 @@ var postAttributes = (post, opts) => {
     ]),
     {
       user: rel.user ? rel.user.pick('id', 'name', 'avatar_url') : null,
-      communities: rel.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url')),
+      communities: rel.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
       contributors: rel.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers: rel.followers.map(u => u.pick('id', 'name', 'avatar_url')),
       responders: rel.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),

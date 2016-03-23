@@ -264,7 +264,7 @@ module.exports = {
       offset: req.param('offset') || 0
     }).fetchAll({withRelated: ['skills', 'organizations']}))
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(UserPresenter.presentForList))
+    .then(users => users.map(u => UserPresenter.presentForList(u)))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
   },
