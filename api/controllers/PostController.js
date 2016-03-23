@@ -37,7 +37,7 @@ var fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relations(userId, relationsOpts || {})
   })
-  .then(PostPresenter.mapPresentWithTotal)
+  .then(posts => PostPresenter.mapPresentWithTotal(posts, relationsOpts))
 }
 
 var queryForCommunity = function (req, res) {
@@ -103,7 +103,13 @@ var queryForNetwork = function (req, res) {
 
 var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => fetchAndPresentPosts(query, req.session.userId, relationsOpts))
+  .then(query => fetchAndPresentPosts(
+    query,
+    req.session.userId,
+    _.merge(relationsOpts, {
+      withComments: req.param('comments'),
+      withVotes: req.param('votes')
+    })))
   .then(res.ok, res.serverError)
 }
 
