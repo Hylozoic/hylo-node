@@ -105,6 +105,17 @@ describe('User', function () {
       community.save().exec(done)
     })
 
+    it('rejects an invalid email address', () => {
+      return User.create({
+        email: 'foo@bar@com',
+        community,
+        account: {type: 'password', password: 'password'},
+        name: 'foo bar'
+      })
+      .then(user => expect.fail())
+      .catch(err => expect(err.message).to.equal('invalid email'))
+    })
+
     it('works with a password', function () {
       return bookshelf.transaction(function (trx) {
         return User.create({

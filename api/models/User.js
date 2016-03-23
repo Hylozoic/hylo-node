@@ -1,5 +1,6 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
+var validator = require('validator')
 
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
@@ -173,6 +174,10 @@ module.exports = bookshelf.Model.extend({
     })
   }),
 
+  validate: attrs => {
+    if (!validator.isEmail(attrs.email)) return 'invalid email'
+  },
+
   create: function (attributes, options) {
     if (!options) options = {}
     var trx = options.transacting
@@ -200,6 +205,9 @@ module.exports = bookshelf.Model.extend({
     if (!attributes.name) {
       attributes.name = attributes.email.split('@')[0].replace(/[\._]/g, ' ')
     }
+
+    var validationError = User.validate(attributes)
+    if (validationError) return Promise.reject(new Error(validationError))
 
     return new User(attributes).save({}, {transacting: trx})
     .tap(user => Promise.join(
