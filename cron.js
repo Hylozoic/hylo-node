@@ -14,7 +14,7 @@ var jobs = {
     var tasks = []
 
     sails.log.debug('Removing old kue jobs')
-    tasks.push(Queue.removeOldCompletedJobs(10000))
+    tasks.push(Queue.removeOldCompletedJobs(20000))
 
     switch (now.day()) {
       case 0:

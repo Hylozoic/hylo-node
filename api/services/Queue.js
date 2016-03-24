@@ -1,5 +1,7 @@
 var kue = require('kue')
 var Promise = require('bluebird')
+var promisify = Promise.promisify
+var rangeByState = promisify(kue.Job.rangeByState, kue.Job)
 
 module.exports = {
   addJob: function (name, data) {
@@ -10,7 +12,7 @@ module.exports = {
     .attempts(3)
     .backoff({delay: 20000, type: 'exponential'})
 
-    return Promise.promisify(job.save, job)()
+    return promisify(job.save, job)()
   },
 
   classMethod: function (className, methodName, data) {
@@ -21,14 +23,13 @@ module.exports = {
     return this.addJob('classMethod', data)
   },
 
-  removeOldCompletedJobs: function (size) {
-    var rangeByState = Promise.promisify(kue.Job.rangeByState, kue.Job)
+  removeOldCompletedJobs: function (size, days) {
     var now = new Date().getTime()
-    var days = 7
+    if (!days) days = 3
 
     var removeIfOldEnough = job => {
       if (now - Number(job.created_at) > days * 86400000) {
-        return Promise.promisify(job.remove, job)().then(() => true)
+        return promisify(job.remove, job)().then(() => true)
       }
       return false
     }
