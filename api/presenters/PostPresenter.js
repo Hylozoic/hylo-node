@@ -1,7 +1,6 @@
 const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
-var postRelations = (userId, opts) => {
-  console.log('POST RELATIONS', opts)
+var postRelations = (userId, opts = {}) => {
   var relations = _.filter([
     {user: userColumns},
     {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
@@ -13,25 +12,28 @@ var postRelations = (userId, opts) => {
     {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
     (opts && opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
     (opts && opts.withComments
-      ? {comments: qb => qb.column('comment.id', 'text', 'user_id')}
+      ? {comments: qb => qb.column('comment.id', 'text', 'created_at', 'user_id', 'post_id')}
       : null),
     (opts && opts.withComments
       ? {'comments.user': userColumns}
       : null),
     (opts && opts.withVotes
       ? {votes: qb => { // all votes
-        qb.column('id', 'post_id')
+        qb.column('id', 'post_id', 'user_id')
       }}
       : {votes: qb => { // only the user's own vote
         qb.column('id', 'post_id')
         qb.where('user_id', userId)
-      }})
+      }}),
+    (opts && opts.withVotes
+      ? {'votes.user': userColumns}
+      : null)
   ], x => !!x)
-  console.log('RELATIONS', relations)
   return relations
 }
 
-var postAttributes = (post, opts) => {
+var postAttributes = (post, userId, opts = {}) => {
+  // userId is only used if opts.withVotes, so there are times when this is called with userId=undefined.
   var rel = post.relations
   var extendedPost = _.extend(
     _.pick(post.toJSON(), [
@@ -62,10 +64,17 @@ var postAttributes = (post, opts) => {
       public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE
     })
   if (opts.withComments) {
-    console.log('COMMENTS', rel.comments)
+    extendedPost.comments = rel.comments.map(c => _.merge(
+        c.pick('id', 'text', 'created_at', 'user'),
+        {user: c.relations.user.pick('id', 'name', 'avatar_url')}
+      ))
   }
   if (opts.withVotes) {
-    console.log('VOTES', rel.votes)
+    extendedPost.voters = rel.votes.map(v => v.relations.user.pick('id', 'name', 'avatar_url'))
+
+    // recalculate myVote
+    // (the above calculation relies on rel.votes only containing the current users vote, which is not true if opt.withVotes)
+    extendedPost.myVote = _.includes(extendedPost.voters.map(v => v.id), userId)
   }
   return extendedPost
 }
@@ -76,10 +85,10 @@ var postAttributes = (post, opts) => {
 // so that it knows when to stop expecting more.
 // we can't always use a naive approach to pagination, because
 // the order of results could shift while searching.
-var mapPresentWithTotal = function (posts, opts) {
+var mapPresentWithTotal = function (posts, userId, opts) {
   return {
     posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
-    posts: posts.map(p => PostPresenter.present(p, opts))
+    posts: posts.map(p => PostPresenter.present(p, userId, opts))
   }
 }
 

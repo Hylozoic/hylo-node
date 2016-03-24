@@ -37,7 +37,7 @@ var fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relations(userId, relationsOpts || {})
   })
-  .then(posts => PostPresenter.mapPresentWithTotal(posts, relationsOpts))
+  .then(posts => PostPresenter.mapPresentWithTotal(posts, userId, relationsOpts))
 }
 
 var queryForCommunity = function (req, res) {
@@ -175,8 +175,12 @@ var afterSavingPost = function (post, opts) {
 
 var PostController = {
   findOne: function (req, res) {
-    res.locals.post.load(PostPresenter.relations(req.session.userId))
-    .then(PostPresenter.present)
+    var opts = {
+      withComments: req.param('comments'),
+      withVotes: req.param('votes')
+    }
+    res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
+    .then(post => PostPresenter.present(post, req.session.userId, opts))
     .then(res.ok)
     .catch(res.serverError)
   },
