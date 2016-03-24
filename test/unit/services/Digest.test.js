@@ -63,7 +63,7 @@ describe('Digest', function () {
         expect(digest.commentedPosts.length).to.equal(1)
         expect(digest.commentedPosts[0].id).to.equal(p2.id)
         return user.generateToken()
-        .then(token => Email.sendCommunityDigest(digest.emailData(user, token)))
+        .then(token => Email.sendCommunityDigest(digest.getEmailProps(user, token)))
       })
     })
   })
