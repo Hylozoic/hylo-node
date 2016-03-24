@@ -81,6 +81,38 @@ CREATE TABLE comment (
 
 
 --
+-- Name: communities_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE communities_tags (
+    id integer NOT NULL,
+    community_id bigint,
+    tag_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: communities_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE communities_tags_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: communities_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE communities_tags_id_seq OWNED BY communities_tags.id;
+
+
+--
 -- Name: community_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -636,6 +668,38 @@ ALTER SEQUENCE posts_projects_id_seq OWNED BY posts_projects.id;
 
 
 --
+-- Name: posts_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE posts_tags (
+    id integer NOT NULL,
+    post_id bigint,
+    tag_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: posts_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE posts_tags_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: posts_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE posts_tags_id_seq OWNED BY posts_tags.id;
+
+
+--
 -- Name: project_invitations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -803,6 +867,71 @@ CREATE SEQUENCE skill_seq
 
 
 --
+-- Name: tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE tags (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    description text,
+    owner_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE tags_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE tags_id_seq OWNED BY tags.id;
+
+
+--
+-- Name: tags_users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE tags_users (
+    id integer NOT NULL,
+    tag_id bigint,
+    user_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: tags_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE tags_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: tags_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE tags_users_id_seq OWNED BY tags_users.id;
+
+
+--
 -- Name: thank_you_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -961,7 +1090,7 @@ CREATE SEQUENCE users_seq
 
 CREATE TABLE users (
     id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
-    email character varying(255),
+    email character varying(255) NOT NULL,
     name character varying(255),
     avatar_url character varying(255),
     first_name character varying(255),
@@ -1109,6 +1238,13 @@ ALTER TABLE ONLY activity ALTER COLUMN id SET DEFAULT nextval('activity_id_seq':
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('communities_tags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY devices ALTER COLUMN id SET DEFAULT nextval('devices_id_seq'::regclass);
 
 
@@ -1165,6 +1301,13 @@ ALTER TABLE ONLY posts_projects ALTER COLUMN id SET DEFAULT nextval('posts_proje
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY posts_tags ALTER COLUMN id SET DEFAULT nextval('posts_tags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY project_invitations ALTER COLUMN id SET DEFAULT nextval('project_invitations_id_seq'::regclass);
 
 
@@ -1187,6 +1330,20 @@ ALTER TABLE ONLY projects_users ALTER COLUMN id SET DEFAULT nextval('projects_us
 --
 
 ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('queued_pushes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('tags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users ALTER COLUMN id SET DEFAULT nextval('tags_users_id_seq'::regclass);
 
 
 --
@@ -1218,11 +1375,60 @@ ALTER TABLE ONLY websites ALTER COLUMN id SET DEFAULT nextval('websites_id_seq':
 
 
 --
+-- Name: pk_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT pk_users PRIMARY KEY (id);
+
+
+--
+-- Name: search_index; Type: MATERIALIZED VIEW; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE MATERIALIZED VIEW search_index AS
+ SELECT p.id AS post_id,
+    NULL::bigint AS user_id,
+    NULL::bigint AS comment_id,
+    ((setweight(to_tsvector('english'::regconfig, p.name), 'A'::"char") || setweight(to_tsvector('english'::regconfig, p.description), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+   FROM (post p
+     JOIN users u ON ((u.id = p.user_id)))
+  WHERE ((p.active = true) AND (u.active = true))
+UNION
+ SELECT NULL::bigint AS post_id,
+    u.id AS user_id,
+    NULL::bigint AS comment_id,
+    ((((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, ((((u.bio || ' '::text) || u.intention) || ' '::text) || u.work)), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (s.skill_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (o.org_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, u.extra_info), 'D'::"char")) AS document
+   FROM ((users u
+     LEFT JOIN users_skill s ON ((u.id = s.user_id)))
+     LEFT JOIN users_org o ON ((u.id = o.user_id)))
+  WHERE (u.active = true)
+  GROUP BY u.id
+UNION
+ SELECT NULL::bigint AS post_id,
+    NULL::bigint AS user_id,
+    c.id AS comment_id,
+    (setweight(to_tsvector('english'::regconfig, c.text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+   FROM (comment c
+     JOIN users u ON ((u.id = c.user_id)))
+  WHERE ((c.active = true) AND (u.active = true))
+  WITH NO DATA;
+
+
+--
 -- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY activity
     ADD CONSTRAINT activity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: communities_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY communities_tags
+    ADD CONSTRAINT communities_tags_pkey PRIMARY KEY (id);
 
 
 --
@@ -1370,14 +1576,6 @@ ALTER TABLE ONLY user_post_relevance
 
 
 --
--- Name: pk_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT pk_users PRIMARY KEY (id);
-
-
---
 -- Name: pk_users_org; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1426,6 +1624,14 @@ ALTER TABLE ONLY posts_projects
 
 
 --
+-- Name: posts_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY posts_tags
+    ADD CONSTRAINT posts_tags_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: project_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1455,6 +1661,22 @@ ALTER TABLE ONLY projects_users
 
 ALTER TABLE ONLY push_notifications
     ADD CONSTRAINT queued_pushes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY tags
+    ADD CONSTRAINT tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tags_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT tags_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -1764,6 +1986,22 @@ ALTER TABLE ONLY activity
 
 ALTER TABLE ONLY activity
     ADD CONSTRAINT activity_reader_id_foreign FOREIGN KEY (reader_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: communities_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY communities_tags
+    ADD CONSTRAINT communities_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
+
+
+--
+-- Name: communities_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY communities_tags
+    ADD CONSTRAINT communities_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
 
 
 --
@@ -2095,6 +2333,22 @@ ALTER TABLE ONLY posts_projects
 
 
 --
+-- Name: posts_tags_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY posts_tags
+    ADD CONSTRAINT posts_tags_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+
+
+--
+-- Name: posts_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY posts_tags
+    ADD CONSTRAINT posts_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
+
+
+--
 -- Name: project_invitations_project_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2140,6 +2394,30 @@ ALTER TABLE ONLY projects_users
 
 ALTER TABLE ONLY projects_users
     ADD CONSTRAINT projects_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tags_owner_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags
+    ADD CONSTRAINT tags_owner_id_foreign FOREIGN KEY (owner_id) REFERENCES users(id);
+
+
+--
+-- Name: tags_users_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT tags_users_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
+
+
+--
+-- Name: tags_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT tags_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
 
 
 --
