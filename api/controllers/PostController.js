@@ -37,7 +37,10 @@ var fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relations(userId, relationsOpts || {})
   })
-  .then(PostPresenter.mapPresentWithTotal)
+  .then(posts => ({
+    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
+    posts: posts.map(p => PostPresenter.present(p, userId, relationsOpts))
+  }))
 }
 
 var queryForCommunity = function (req, res) {
@@ -103,7 +106,13 @@ var queryForNetwork = function (req, res) {
 
 var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => fetchAndPresentPosts(query, req.session.userId, relationsOpts))
+  .then(query => fetchAndPresentPosts(
+    query,
+    req.session.userId,
+    _.merge(relationsOpts, {
+      withComments: req.param('comments'),
+      withVotes: req.param('votes')
+    })))
   .then(res.ok, res.serverError)
 }
 
@@ -169,8 +178,12 @@ var afterSavingPost = function (post, opts) {
 
 var PostController = {
   findOne: function (req, res) {
-    res.locals.post.load(PostPresenter.relations(req.session.userId))
-    .then(PostPresenter.present)
+    var opts = {
+      withComments: req.param('comments'),
+      withVotes: req.param('votes')
+    }
+    res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
+    .then(post => PostPresenter.present(post, req.session.userId, opts))
     .then(res.ok)
     .catch(res.serverError)
   },

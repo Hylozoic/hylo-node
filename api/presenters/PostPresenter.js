@@ -1,24 +1,41 @@
 const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
-var postRelations = (userId, opts) => _.filter([
-  {user: userColumns},
-  {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url', 'banner_url')},
-  'contributions',
-  {'contributions.user': userColumns},
-  {followers: userColumns},
-  'media',
-  {relatedUsers: userColumns},
-  {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
-  (opts && opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
-  {votes: qb => { // only the user's own vote
-    qb.column('id', 'post_id')
-    qb.where('user_id', userId)
-  }}
-], x => !!x)
+var postRelations = (userId, opts = {}) => {
+  var relations = _.filter([
+    {user: userColumns},
+    {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
+    'contributions',
+    {'contributions.user': userColumns},
+    {followers: userColumns},
+    'media',
+    {relatedUsers: userColumns},
+    {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
+    (opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
+    (opts.withComments
+      ? {comments: qb => qb.column('comment.id', 'text', 'created_at', 'user_id', 'post_id')}
+      : null),
+    (opts.withComments
+      ? {'comments.user': userColumns}
+      : null),
+    (opts.withVotes
+      ? {votes: qb => { // all votes
+        qb.column('id', 'post_id', 'user_id')
+      }}
+      : {votes: qb => { // only the user's own vote
+        qb.column('id', 'post_id')
+        qb.where('user_id', userId)
+      }}),
+    (opts.withVotes
+      ? {'votes.user': userColumns}
+      : null)
+  ], x => !!x)
+  return relations
+}
 
-var postAttributes = post => {
+var postAttributes = (post, userId, opts = {}) => {
+  // userId is only used if opts.withVotes, so there are times when this is called with userId=undefined.
   var rel = post.relations
-  return _.extend(
+  var extendedPost = _.extend(
     _.pick(post.toJSON(), [
       'id',
       'name',
@@ -40,30 +57,27 @@ var postAttributes = post => {
       followers: rel.followers.map(u => u.pick('id', 'name', 'avatar_url')),
       responders: rel.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
       media: rel.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')),
-      myVote: rel.votes.length > 0,
       numComments: post.get('num_comments'),
-      votes: post.get('num_votes'),
       relatedUsers: rel.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')),
       public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE
-    }
-  )
-}
-
-// this supports a pattern we're using for infinite scrolling.
-// we just keep reporting how many posts there are in total,
-// and the front-end keeps track of how many posts it has so far
-// so that it knows when to stop expecting more.
-// we can't always use a naive approach to pagination, because
-// the order of results could shift while searching.
-var mapPresentWithTotal = function (posts) {
-  return {
-    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
-    posts: posts.map(PostPresenter.present)
+    })
+  if (opts.withComments) {
+    extendedPost.comments = rel.comments.map(c => _.merge(
+      c.pick('id', 'text', 'created_at', 'user'),
+      {user: c.relations.user.pick('id', 'name', 'avatar_url')}
+    ))
   }
+  if (opts.withVotes) {
+    extendedPost.voters = rel.votes.map(v => v.relations.user.pick('id', 'name', 'avatar_url'))
+  } else {
+    // for compatability with angular frontend
+    extendedPost.votes = post.get('num_votes')
+    extendedPost.myVote = rel.votes.length > 0
+  }
+  return extendedPost
 }
 
-var PostPresenter = module.exports = {
+module.exports = {
   relations: postRelations,
-  present: postAttributes,
-  mapPresentWithTotal: mapPresentWithTotal
+  present: postAttributes
 }
