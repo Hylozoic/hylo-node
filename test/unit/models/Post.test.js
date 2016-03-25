@@ -1,6 +1,6 @@
 var moment = require('moment')
 var root = require('root-path')
-require(root('test/setup'))
+var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 
 describe('Post', function () {
@@ -8,19 +8,21 @@ describe('Post', function () {
     var u1, u2, u3, post
 
     before(function (done) {
-      u1 = new User()
-      u2 = new User()
-      u3 = new User()
-      post = new Post()
-      Promise.join(
-        u1.save(),
-        u2.save(),
-        u3.save()
-      ).then(function () {
-        post.set('user_id', u1.id)
-        return post.save()
-      }).then(function () {
-        done()
+      return setup.clearDb().then(function () {
+        u1 = new User({email: 'a@post.c'})
+        u2 = new User({email: 'b@post.c'})
+        u3 = new User({email: 'c@post.c'})
+        post = new Post()
+        return Promise.join(
+          u1.save(),
+          u2.save(),
+          u3.save()
+        ).then(function () {
+          post.set('user_id', u1.id)
+          return post.save()
+        }).then(function () {
+          done()
+        })
       })
     })
 
@@ -54,7 +56,7 @@ describe('Post', function () {
 
     beforeEach(() => {
       post = new Post({name: 'hello', active: true})
-      user = new User({name: 'Cat'})
+      user = factories.user({name: 'Cat'})
       c1 = factories.community({active: true})
       c2 = factories.community({active: true})
       return Promise.join(post.save(), user.save(), c1.save(), c2.save())
