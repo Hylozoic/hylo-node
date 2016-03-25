@@ -6,9 +6,9 @@ describe('CommentController', function() {
   before(function(done) {
     setup.clearDb().then(function() {
       return Promise.props({
-        u1: new User({name: 'U1'}).save(),
-        u2: new User({name: 'U2'}).save(),
-        u3: new User({name: 'U3'}).save(),
+        u1: new User({name: 'U1', email: 'a@b.c'}).save(),
+        u2: new User({name: 'U2', email: 'b@b.c'}).save(),
+        u3: new User({name: 'U3', email: 'c@b.c'}).save(),
         p1: new Post({name: 'P1', active: true}).save(),
         c1: new Community({name: "C1", slug: 'c1'}).save()
       });

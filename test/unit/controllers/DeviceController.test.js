@@ -15,8 +15,8 @@ describe('DeviceController', () => {
   before(() =>
     setup.clearDb()
     .then(() => Promise.props({
-      u1: new User({name: 'U1'}).save(),
-      u2: new User({name: 'U2'}).save()
+      u1: new User({name: 'U1', email: 'a@b.c'}).save(),
+      u2: new User({name: 'U2', email: 'b@b.c'}).save()
     }))
     .then(props => fixtures = props))
 

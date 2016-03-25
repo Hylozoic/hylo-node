@@ -8,7 +8,7 @@ describe('Membership', function() {
 
     before(function() {
       community = new Community({slug: 'foo', name: 'Foo'});
-      user = new User({name: 'Cat'});
+      user = new User({name: 'Cat', email: 'a@b.c'});
       return setup.clearDb().then(function() {
         return Promise.join(
           community.save(),

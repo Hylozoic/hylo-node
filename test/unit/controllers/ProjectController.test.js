@@ -9,7 +9,7 @@ describe('ProjectController', () => {
   before(() =>
     setup.clearDb()
     .then(() => Promise.props({
-      u1: new User({name: 'U1'}).save(),
+      u1: new User({name: 'U1', email: 'a@b.c'}).save(),
       c1: new Community({name: 'C1', slug: 'c1'}).save()
     }))
     .then(props => fixtures = props))

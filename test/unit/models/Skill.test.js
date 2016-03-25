@@ -5,8 +5,8 @@ describe('Skill', function() {
   var cat, otherCat;
 
   before(function() {
-    cat = new User({name: 'Cat'});
-    otherCat = new User({name: 'Other Cat'});
+    cat = new User({name: 'Cat', email: 'a@skill.c'});
+    otherCat = new User({name: 'Other Cat', email: 'b@skill.c'});
 
     return setup.clearDb().then(function() {
       return Promise.join(cat.save(), otherCat.save());

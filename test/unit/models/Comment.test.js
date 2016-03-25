@@ -9,10 +9,10 @@ describe('Comment', () => {
       kue.clear()
       community = new Community({name: 'foo', slug: 'foo'})
       post = new Post()
-      u1 = new User()
-      u2 = new User()
-      u3 = new User()
-      u4 = new User()
+      u1 = new User({email: 'a@b.c'})
+      u2 = new User({email: 'b@b.c'})
+      u3 = new User({email: 'c@b.c'})
+      u4 = new User({email: 'd@b.c'})
       comment = new Comment()
 
       return Promise.join(

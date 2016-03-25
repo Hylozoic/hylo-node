@@ -11,7 +11,7 @@ describe('NetworkController', () => {
     res = factories.mock.response()
     return setup.clearDb()
       .then(() => Promise.props({
-        u1: new User({name: 'U1'}).save(),
+        u1: new User({name: 'U1', email: 'a@b.c'}).save(),
         c1: new Community({name: 'Moderated C1', slug: 'c1'}).save(),
         c2: new Community({name: 'Moderated C2', slug: 'c2'}).save(),
         c3: new Community({name: 'Unmoderated C3', slug: 'c3'}).save(),

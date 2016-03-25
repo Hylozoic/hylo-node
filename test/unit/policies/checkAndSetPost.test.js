@@ -6,7 +6,7 @@ describe('checkAndSetPost', function () {
   before(function () {
     return setup.clearDb().then(function () {
       return Promise.props({
-        u1: new User({name: 'U1'}).save(),
+        u1: new User({name: 'U1', email: 'a@b.c'}).save(),
         c1: new Community({name: 'C1', slug: 'c1'}).save(),
         c2: new Community({name: 'C2', slug: 'c2'}).save(),
         p1: new Post({name: 'P1', active: true}).save(),
