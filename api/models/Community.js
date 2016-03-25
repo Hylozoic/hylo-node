@@ -43,6 +43,10 @@ module.exports = bookshelf.Model.extend({
       .query({where: {'post.active': true}})
   },
 
+  tags: function () {
+    return this.belongsToMany(Tag).through(CommunityTag)
+  },
+
   comments: function () {
     // FIXME get this to use the model relation API
     // instead of the Collection API so that the use

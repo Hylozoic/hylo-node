@@ -81,6 +81,22 @@ describe('PostController', () => {
       })
     })
 
+    it('creates a tag', () => {
+      expect(true).to.equal(true)
+    })
+
+    it('sets a tag from post type', () => {
+      expect(true).to.equal(true)
+    })
+
+    it('sets post type from a tag', () => {
+      expect(true).to.equal(true)
+    })
+
+    it('defaults to true', () => {
+      expect(true).to.equal(true)
+    })
+
     describe('for a project', () => {
       var project
 

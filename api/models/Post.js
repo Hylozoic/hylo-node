@@ -48,6 +48,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User, 'posts_about_users')
   },
 
+  tags: function () {
+    return this.belongsToMany(Tag).through(PostTag)
+  },
+
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id
     var userId = this.get('user_id')
