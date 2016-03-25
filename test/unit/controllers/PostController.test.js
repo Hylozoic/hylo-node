@@ -81,20 +81,41 @@ describe('PostController', () => {
       })
     })
 
-    it('creates a tag', () => {
-      expect(true).to.equal(true)
-    })
+    describe('with tags', () => {
+      it('creates a tag from tag param', () => {
+        _.extend(req.params, {
+          name: 'NewPost',
+          description: '<p>Post Body</p>',
+          type: 'intention',
+          tag: 'tagone',
+          communities: [fixtures.c1.id]
+        })
 
-    it('sets a tag from post type', () => {
-      expect(true).to.equal(true)
-    })
+        return PostController.create(req, res)
+        .then(() => Tag.find('tagone'))
+        .then(tag => {
+          expect(tag).to.exist
+          expect(tag.name).to.equal('tagone')
+          var data = res.body
+          expect(data).to.exist
+          expect(data.name).to.equal('NewPost')
+          expect(data.tags.length).to.equal(1)
+          expect(data.tags[0].name).to.equal('tagone')
+          expect(data.tags[0].selected).to.equal(true)
+        })
+      })
 
-    it('sets post type from a tag', () => {
-      expect(true).to.equal(true)
-    })
+      it('sets a tag from post type', () => {
+        expect(true).to.equal(true)
+      })
 
-    it('defaults to true', () => {
-      expect(true).to.equal(true)
+      it('sets post type from a tag', () => {
+        expect(true).to.equal(true)
+      })
+
+      it('defaults to true', () => {
+        expect(true).to.equal(true)
+      })
     })
 
     describe('for a project', () => {

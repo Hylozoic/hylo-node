@@ -17,4 +17,18 @@ module.exports = bookshelf.Model.extend({
   posts: function () {
     return this.belongsToMany(Post).through(PostTag)
   }
+
+}, {
+
+  find: function (id, options) {
+    if (!id) return Promise.resolve(null)
+    if (isNaN(Number(id))) {
+      return Tag.where({name: id}).fetch(options)
+    }
+    return Tag.where({id: id}).fetch(options)
+  },
+
+  updateForPost: function (post, tag, trx) {
+    return Promise.resolve()
+  }
 })

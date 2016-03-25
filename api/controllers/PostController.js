@@ -172,7 +172,9 @@ var afterSavingPost = function (post, opts) {
       projectId: opts.projectId,
       postId: post.id,
       exclude: mentioned
-    })
+    }),
+
+    Tag.updateForPost(post, opts.tag, opts.transacting)
   ])))
 }
 
@@ -202,6 +204,7 @@ var PostController = {
           imageUrl: req.param('imageUrl'),
           docs: req.param('docs'),
           projectId: req.param('projectId'),
+          tag: req.param('tag'),
           transacting: trx
         }))))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
