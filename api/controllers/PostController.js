@@ -37,7 +37,10 @@ var fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relations(userId, relationsOpts || {})
   })
-  .then(posts => PostPresenter.mapPresentWithTotal(posts, userId, relationsOpts))
+  .then(posts => ({
+    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
+    posts: posts.map(p => PostPresenter.present(p, userId, relationsOpts))
+  }))
 }
 
 var queryForCommunity = function (req, res) {

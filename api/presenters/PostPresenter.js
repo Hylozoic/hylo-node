@@ -10,14 +10,14 @@ var postRelations = (userId, opts = {}) => {
     'media',
     {relatedUsers: userColumns},
     {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
-    (opts && opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
-    (opts && opts.withComments
+    (opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
+    (opts.withComments
       ? {comments: qb => qb.column('comment.id', 'text', 'created_at', 'user_id', 'post_id')}
       : null),
-    (opts && opts.withComments
+    (opts.withComments
       ? {'comments.user': userColumns}
       : null),
-    (opts && opts.withVotes
+    (opts.withVotes
       ? {votes: qb => { // all votes
         qb.column('id', 'post_id', 'user_id')
       }}
@@ -25,7 +25,7 @@ var postRelations = (userId, opts = {}) => {
         qb.column('id', 'post_id')
         qb.where('user_id', userId)
       }}),
-    (opts && opts.withVotes
+    (opts.withVotes
       ? {'votes.user': userColumns}
       : null)
   ], x => !!x)
@@ -57,43 +57,27 @@ var postAttributes = (post, userId, opts = {}) => {
       followers: rel.followers.map(u => u.pick('id', 'name', 'avatar_url')),
       responders: rel.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
       media: rel.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')),
-      myVote: rel.votes.length > 0,
       numComments: post.get('num_comments'),
-      votes: post.get('num_votes'),
       relatedUsers: rel.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')),
       public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE
     })
   if (opts.withComments) {
     extendedPost.comments = rel.comments.map(c => _.merge(
-        c.pick('id', 'text', 'created_at', 'user'),
-        {user: c.relations.user.pick('id', 'name', 'avatar_url')}
-      ))
+      c.pick('id', 'text', 'created_at', 'user'),
+      {user: c.relations.user.pick('id', 'name', 'avatar_url')}
+    ))
   }
   if (opts.withVotes) {
     extendedPost.voters = rel.votes.map(v => v.relations.user.pick('id', 'name', 'avatar_url'))
-
-    // recalculate myVote
-    // (the above calculation relies on rel.votes only containing the current users vote, which is not true if opt.withVotes)
-    extendedPost.myVote = _.includes(extendedPost.voters.map(v => v.id), userId)
+  } else {
+    // for compatability with angular frontend
+    extendedPost.votes = post.get('num_votes')
+    extendedPost.myVote = rel.votes.length > 0
   }
   return extendedPost
 }
 
-// this supports a pattern we're using for infinite scrolling.
-// we just keep reporting how many posts there are in total,
-// and the front-end keeps track of how many posts it has so far
-// so that it knows when to stop expecting more.
-// we can't always use a naive approach to pagination, because
-// the order of results could shift while searching.
-var mapPresentWithTotal = function (posts, userId, opts) {
-  return {
-    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
-    posts: posts.map(p => PostPresenter.present(p, userId, opts))
-  }
-}
-
-var PostPresenter = module.exports = {
+module.exports = {
   relations: postRelations,
-  present: postAttributes,
-  mapPresentWithTotal: mapPresentWithTotal
+  present: postAttributes
 }
