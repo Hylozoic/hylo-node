@@ -961,7 +961,7 @@ CREATE SEQUENCE users_seq
 
 CREATE TABLE users (
     id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
-    email character varying(255),
+    email character varying(255) NOT NULL,
     name character varying(255),
     avatar_url character varying(255),
     first_name character varying(255),
@@ -1218,6 +1218,47 @@ ALTER TABLE ONLY websites ALTER COLUMN id SET DEFAULT nextval('websites_id_seq':
 
 
 --
+-- Name: pk_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT pk_users PRIMARY KEY (id);
+
+
+--
+-- Name: search_index; Type: MATERIALIZED VIEW; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE MATERIALIZED VIEW search_index AS
+ SELECT p.id AS post_id,
+    NULL::bigint AS user_id,
+    NULL::bigint AS comment_id,
+    ((setweight(to_tsvector('english'::regconfig, p.name), 'A'::"char") || setweight(to_tsvector('english'::regconfig, p.description), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+   FROM (post p
+     JOIN users u ON ((u.id = p.user_id)))
+  WHERE ((p.active = true) AND (u.active = true))
+UNION
+ SELECT NULL::bigint AS post_id,
+    u.id AS user_id,
+    NULL::bigint AS comment_id,
+    ((((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, ((((u.bio || ' '::text) || u.intention) || ' '::text) || u.work)), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (s.skill_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (o.org_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, u.extra_info), 'D'::"char")) AS document
+   FROM ((users u
+     LEFT JOIN users_skill s ON ((u.id = s.user_id)))
+     LEFT JOIN users_org o ON ((u.id = o.user_id)))
+  WHERE (u.active = true)
+  GROUP BY u.id
+UNION
+ SELECT NULL::bigint AS post_id,
+    NULL::bigint AS user_id,
+    c.id AS comment_id,
+    (setweight(to_tsvector('english'::regconfig, c.text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+   FROM (comment c
+     JOIN users u ON ((u.id = c.user_id)))
+  WHERE ((c.active = true) AND (u.active = true))
+  WITH NO DATA;
+
+
+--
 -- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1367,14 +1408,6 @@ ALTER TABLE ONLY thank_you
 
 ALTER TABLE ONLY user_post_relevance
     ADD CONSTRAINT pk_user_post_relevance PRIMARY KEY (id);
-
-
---
--- Name: pk_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
---
-
-ALTER TABLE ONLY users
-    ADD CONSTRAINT pk_users PRIMARY KEY (id);
 
 
 --
