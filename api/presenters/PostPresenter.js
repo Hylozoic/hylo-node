@@ -12,7 +12,10 @@ var postRelations = (userId, opts = {}) => {
     {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
     (opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
     (opts.withComments
-      ? {comments: qb => qb.column('comment.id', 'text', 'created_at', 'user_id', 'post_id')}
+      ? {comments: qb => {
+        qb.column('comment.id', 'text', 'created_at', 'user_id', 'post_id')
+        qb.orderBy('comment.id', 'asc')
+      }}
       : null),
     (opts.withComments
       ? {'comments.user': userColumns}
