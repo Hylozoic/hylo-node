@@ -676,7 +676,8 @@ CREATE TABLE posts_tags (
     post_id bigint,
     tag_id bigint,
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    selected boolean
 );
 
 
