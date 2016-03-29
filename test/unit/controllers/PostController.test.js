@@ -30,7 +30,6 @@ describe('PostController', () => {
         type: 'intention',
         communities: [fixtures.c1.id]
       })
-
       return PostController.create(req, res)
       .then(() => {
         var data = res.body
@@ -347,7 +346,9 @@ describe('PostController', () => {
       return PostController.findForCommunity(req, res)
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
-        expect(_.map(res.body.posts, 'id')).to.deep.equal([p2.id, p3.id])
+        var ids = _.map(res.body.posts, 'id')
+        expect(ids).to.contain(p2.id)
+        expect(ids).to.contain(p3.id)
       })
     })
   })
