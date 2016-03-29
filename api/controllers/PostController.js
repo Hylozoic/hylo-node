@@ -116,6 +116,14 @@ var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   .then(res.ok, res.serverError)
 }
 
+var postTypeFromTag = tagName => {
+  if (tagName && _.includes(_.values(Post.Type), tagName)) {
+    return tagName
+  } else {
+    return Post.Type.CHAT
+  }
+}
+
 var setupNewPostAttrs = function (userId, params) {
   var attrs = _.merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
@@ -123,6 +131,10 @@ var setupNewPostAttrs = function (userId, params) {
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
   }, _.pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
+
+  if (!attrs.type) {
+    attrs.type = postTypeFromTag(params.tag)
+  }
 
   if (params.projectId) {
     return Project.find(params.projectId)
@@ -174,7 +186,7 @@ var afterSavingPost = function (post, opts) {
       exclude: mentioned
     }),
 
-    Tag.updateForPost(post, opts.tag, opts.transacting)
+    Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)
   ])))
 }
 
@@ -301,6 +313,10 @@ var PostController = {
       }
     )
 
+    if (!attrs.type) {
+      attrs.type = postTypeFromTag(params.tag)
+    }
+
     return bookshelf.transaction(function (trx) {
       return post.save(attrs, {patch: true, transacting: trx})
       .tap(() => {
@@ -349,6 +365,7 @@ var PostController = {
           if (!media) return Media.createDoc(post.id, doc, trx)
         })
       })
+      .tap(() => Tag.updateForPost(post, req.param('tag') || post.type, trx))
     })
     .then(() => res.ok({}))
     .catch(res.serverError)

@@ -1,4 +1,4 @@
-var tagsInText = text => {
+var tagsInText = (text = '') => {
   return (text.match(/#\w+/g) || []).map(str => str.substr(1, str.length))
 }
 
