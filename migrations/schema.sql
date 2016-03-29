@@ -89,7 +89,8 @@ CREATE TABLE communities_tags (
     community_id bigint,
     tag_id bigint,
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    owner_id bigint
 );
 
 
@@ -875,7 +876,6 @@ CREATE TABLE tags (
     id integer NOT NULL,
     name character varying(255) NOT NULL,
     description text,
-    owner_id bigint,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
@@ -1998,6 +1998,14 @@ ALTER TABLE ONLY communities_tags
 
 
 --
+-- Name: communities_tags_owner_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY communities_tags
+    ADD CONSTRAINT communities_tags_owner_id_foreign FOREIGN KEY (owner_id) REFERENCES users(id);
+
+
+--
 -- Name: communities_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2395,14 +2403,6 @@ ALTER TABLE ONLY projects_users
 
 ALTER TABLE ONLY projects_users
     ADD CONSTRAINT projects_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: tags_owner_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tags
-    ADD CONSTRAINT tags_owner_id_foreign FOREIGN KEY (owner_id) REFERENCES users(id);
 
 
 --
