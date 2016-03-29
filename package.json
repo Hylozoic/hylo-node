@@ -140,6 +140,7 @@
       "Analytics",
       "AssetManagement",
       "Comment",
+      "CommentTag",
       "CommentPresenter",
       "Community",
       "CommunityTag",

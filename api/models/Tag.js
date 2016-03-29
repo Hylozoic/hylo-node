@@ -44,6 +44,10 @@ module.exports = bookshelf.Model.extend({
 
   posts: function () {
     return this.belongsToMany(Post).through(PostTag).withPivot('selected')
+  },
+
+  comments: function () {
+    return this.belongsToMany(Comment).through(CommentTag)
   }
 
 }, {
