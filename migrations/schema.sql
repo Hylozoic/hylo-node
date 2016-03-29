@@ -81,6 +81,38 @@ CREATE TABLE comment (
 
 
 --
+-- Name: comments_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE comments_tags (
+    id integer NOT NULL,
+    comment_id bigint,
+    tag_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: comments_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE comments_tags_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: comments_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE comments_tags_id_seq OWNED BY comments_tags.id;
+
+
+--
 -- Name: communities_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1239,6 +1271,13 @@ ALTER TABLE ONLY activity ALTER COLUMN id SET DEFAULT nextval('activity_id_seq':
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY comments_tags ALTER COLUMN id SET DEFAULT nextval('comments_tags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('communities_tags_id_seq'::regclass);
 
 
@@ -1422,6 +1461,14 @@ UNION
 
 ALTER TABLE ONLY activity
     ADD CONSTRAINT activity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: comments_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY comments_tags
+    ADD CONSTRAINT comments_tags_pkey PRIMARY KEY (id);
 
 
 --
@@ -1987,6 +2034,22 @@ ALTER TABLE ONLY activity
 
 ALTER TABLE ONLY activity
     ADD CONSTRAINT activity_reader_id_foreign FOREIGN KEY (reader_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: comments_tags_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY comments_tags
+    ADD CONSTRAINT comments_tags_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comment(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: comments_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY comments_tags
+    ADD CONSTRAINT comments_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
