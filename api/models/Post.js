@@ -49,7 +49,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   tags: function () {
-    return this.belongsToMany(Tag).through(PostTag)
+    return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
   },
 
   addFollowers: function (userIds, addingUserId, opts) {
