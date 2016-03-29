@@ -1,9 +1,11 @@
 var tagsInText = (text = '') => {
+  // TODO alphanumeric and underscore
   return (text.match(/#\w+/g) || []).map(str => str.substr(1, str.length))
 }
 
 var addToPost = (post, tagName, selected, trx) => {
-  return Tag.find(tagName)
+  return post.load('communities')
+  .then(() => Tag.find(tagName))
   .then(tag => {
     if (tag) {
       return tag
@@ -11,27 +13,33 @@ var addToPost = (post, tagName, selected, trx) => {
       return new Tag({name: tagName}).save({}, {transacting: trx})
     }
   })
-  .then(tag => post.tags().attach({tag_id: tag.id, selected: selected}, {transacting: trx}))
+  .tap(tag => post.tags().attach({tag_id: tag.id, selected: selected}, {transacting: trx}))
+  .then(tag => Promise.map(post.relations.communities.models, com => addToCommunity(com, tag, post.user_id, trx)))
 }
 
 var removeFromPost = (post, tag, trx) => {
   return post.tags().detach(tag.id, {transacting: trx})
 }
 
+var addToCommunity = (community, tag, user_id, trx) => {
+  return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch()
+  .then(comTag => {
+    if (!comTag) {
+      return new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save()
+    }
+  })
+}
+
 module.exports = bookshelf.Model.extend({
 
   tableName: 'tags',
-
-  owner: function () {
-    return this.belongsTo(User, 'owner_id')
-  },
 
   users: function () {
     return this.belongsToMany(User).through(TagUser)
   },
 
   communities: function () {
-    return this.belongsToMany(Community).through(CommunityTag)
+    return this.belongsToMany(Community).through(CommunityTag).withPivot('owner_id')
   },
 
   posts: function () {

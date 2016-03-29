@@ -1,4 +1,6 @@
-var setup = require(require('root-path')('test/setup'))
+var root = require('root-path')
+var setup = require(root('test/setup'))
+var factories = require(root('test/setup/factories'))
 
 describe('Tag', () => {
   before(() => {
@@ -122,6 +124,59 @@ describe('Tag', () => {
           expect(selected.relations.posts.models[0].get('name')).to.equal('New Tagged Post Six')
           expect(selected.relations.posts.models[0].pivot.get('selected')).to.equal(true)
         }))
+    })
+
+    it('associates tags with communities', () => {
+      var user = factories.user()
+      var post = new Post({
+        name: 'New Tagged Post',
+        description: 'no tags in the body'
+      })
+      var c1 = factories.community({name: 'Community One'})
+      var c2 = factories.community({name: 'Community Two'})
+      var c3 = factories.community({name: 'Community Three'})
+      return user.save()
+      .then(user => {
+        post.user_id = user.id
+        return Promise.join(post.save(), c1.save(), c2.save(), c3.save())
+      })
+      .then(() => post.communities().attach(c1.id))
+      .then(() => post.communities().attach(c2.id))
+      .then(() => Tag.updateForPost(post, 'newtagnine'))
+      .then(() => Tag.find('newtagnine', {withRelated: ['communities']}))
+      .then(tag => {
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('newtagnine')
+        expect(tag.relations.communities.length).to.equal(2)
+        expect(tag.relations.communities.models[0].get('name')).to.equal('Community Two')
+        expect(tag.relations.communities.models[0].pivot.get('owner_id')).to.equal(user.id)
+        expect(tag.relations.communities.models[1].get('name')).to.equal('Community One')
+        expect(tag.relations.communities.models[1].pivot.get('owner_id')).to.equal(user.id)
+      })
+    })
+
+    it.skip('assigns an owner to a new tag', () => {
+      var user = factories.user()
+      var post = new Post({
+        name: 'New Tagged Post',
+        description: 'no tags in the body'
+      })
+      var community = factories.community({name: 'Community One'})
+      return user.save()
+      .then(user => {
+        post.user_id = user.id
+        return Promise.join(post.save(), community.save())
+      })
+      .then(post.communities().attach(community.id))
+      .then(() => Tag.updateForPost(post, 'newtagten'))
+      .then(() => Tag.find('newtagten', {withRelated: ['communities']}))
+      .then(tag => {
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('newtagnine')
+        expect(tag.relations.communities.length).to.equal(1)
+        expect(tag.relations.communities.models[0].get('name')).to.equal('Community One')
+        expect(tag.relations.communities.models[0].pivot.get('owner_id')).to.equal(user.id)
+      })
     })
   })
 })

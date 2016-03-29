@@ -44,7 +44,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   tags: function () {
-    return this.belongsToMany(Tag).through(CommunityTag)
+    return this.belongsToMany(Tag).through(CommunityTag).withPivot('owner_id')
   },
 
   comments: function () {
