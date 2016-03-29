@@ -126,7 +126,7 @@ describe('Tag', () => {
         }))
     })
 
-    it('associates tags with communities', () => {
+    it('associates tags and owners with communities', () => {
       var user = factories.user()
       var post = new Post({
         name: 'New Tagged Post',
@@ -134,7 +134,7 @@ describe('Tag', () => {
       })
       var c1 = factories.community({name: 'Community One'})
       var c2 = factories.community({name: 'Community Two'})
-      var c3 = factories.community({name: 'Community Three'})
+      var c3 = factories.community({name: 'Community X'})
       return user.save()
       .then(user => {
         post.user_id = user.id
@@ -148,34 +148,44 @@ describe('Tag', () => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagnine')
         expect(tag.relations.communities.length).to.equal(2)
-        expect(tag.relations.communities.models[0].get('name')).to.equal('Community Two')
-        expect(tag.relations.communities.models[0].pivot.get('owner_id')).to.equal(user.id)
-        expect(tag.relations.communities.models[1].get('name')).to.equal('Community One')
-        expect(tag.relations.communities.models[1].pivot.get('owner_id')).to.equal(user.id)
+        var communities = _.sortBy(tag.relations.communities.models, 'id')
+        expect(communities[0].get('name')).to.equal('Community One')
+        expect(communities[0].pivot.get('owner_id')).to.equal(user.id)
+        expect(communities[1].get('name')).to.equal('Community Two')
+        expect(communities[1].pivot.get('owner_id')).to.equal(user.id)
       })
     })
 
-    it.skip('assigns an owner to a new tag', () => {
+    it('preserves existing tag owner', () => {
       var user = factories.user()
+      var owner = factories.user()
       var post = new Post({
         name: 'New Tagged Post',
         description: 'no tags in the body'
       })
-      var community = factories.community({name: 'Community One'})
+      var tag = new Tag({name: 'newtagten'})
+      var c1 = factories.community({name: 'Community Three'})
+      var c2 = factories.community({name: 'Community Four'})
       return user.save()
       .then(user => {
         post.user_id = user.id
-        return Promise.join(post.save(), community.save())
+        return Promise.join(post.save(), c1.save(), c2.save(), tag.save())
       })
-      .then(post.communities().attach(community.id))
+      .then(() => owner.save())
+      .then(owner => new CommunityTag({community_id: c1.id, tag_id: tag.id, owner_id: owner.id}).save())
+      .then(() => post.communities().attach(c1.id))
+      .then(() => post.communities().attach(c2.id))
       .then(() => Tag.updateForPost(post, 'newtagten'))
       .then(() => Tag.find('newtagten', {withRelated: ['communities']}))
       .then(tag => {
         expect(tag).to.exist
-        expect(tag.get('name')).to.equal('newtagnine')
-        expect(tag.relations.communities.length).to.equal(1)
-        expect(tag.relations.communities.models[0].get('name')).to.equal('Community One')
-        expect(tag.relations.communities.models[0].pivot.get('owner_id')).to.equal(user.id)
+        expect(tag.get('name')).to.equal('newtagten')
+        expect(tag.relations.communities.length).to.equal(2)
+        var communities = _.sortBy(tag.relations.communities.models, 'id')
+        expect(communities[0].get('name')).to.equal('Community Three')
+        expect(communities[0].pivot.get('owner_id')).to.equal(owner.id)
+        expect(communities[1].get('name')).to.equal('Community Four')
+        expect(communities[1].pivot.get('owner_id')).to.equal(user.id)
       })
     })
   })
