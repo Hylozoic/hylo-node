@@ -16,9 +16,6 @@ describe('PostController', () => {
     }))
     .then(props => fixtures = props))
 
-  after(() => PostTag.fetchAll()
-  .then(pts => pts.models.map(pt => pt.destroy())))
-
   beforeEach(() => {
     req = factories.mock.request()
     res = factories.mock.response()

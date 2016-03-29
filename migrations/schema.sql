@@ -1994,7 +1994,7 @@ ALTER TABLE ONLY activity
 --
 
 ALTER TABLE ONLY communities_tags
-    ADD CONSTRAINT communities_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
+    ADD CONSTRAINT communities_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2002,7 +2002,7 @@ ALTER TABLE ONLY communities_tags
 --
 
 ALTER TABLE ONLY communities_tags
-    ADD CONSTRAINT communities_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
+    ADD CONSTRAINT communities_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2338,7 +2338,7 @@ ALTER TABLE ONLY posts_projects
 --
 
 ALTER TABLE ONLY posts_tags
-    ADD CONSTRAINT posts_tags_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+    ADD CONSTRAINT posts_tags_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2346,7 +2346,7 @@ ALTER TABLE ONLY posts_tags
 --
 
 ALTER TABLE ONLY posts_tags
-    ADD CONSTRAINT posts_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
+    ADD CONSTRAINT posts_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2410,7 +2410,7 @@ ALTER TABLE ONLY tags
 --
 
 ALTER TABLE ONLY tags_users
-    ADD CONSTRAINT tags_users_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
+    ADD CONSTRAINT tags_users_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2418,7 +2418,7 @@ ALTER TABLE ONLY tags_users
 --
 
 ALTER TABLE ONLY tags_users
-    ADD CONSTRAINT tags_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT tags_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
