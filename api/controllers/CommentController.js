@@ -38,6 +38,7 @@ module.exports = {
         {user: q => q.column('id', 'name', 'avatar_url')}
       ])
     })
+    .tap(c => Queue.classMethod('Post', 'setRecentComments', {postId: c.get('post_id')}))
     .then(c => CommentPresenter.present(c, req.session.userId))
     .then(res.ok, res.serverError)
   },
@@ -88,10 +89,11 @@ module.exports = {
         comment.save({
           deactivated_by_id: req.session.userId,
           deactivated_on: new Date(),
-          active: false
+          active: false,
+          recent: false
         }, {patch: true})
     )))
+    .tap(c => Queue.classMethod('Post', 'setRecentComments', {postId: c.get('post_id')}))
     .then(() => res.ok({}), res.serverError)
   }
-
 }

@@ -289,6 +289,20 @@ module.exports = bookshelf.Model.extend({
   create: function (attrs, opts) {
     return Post.forge(_.merge(Post.newPostAttrs(), attrs))
     .save(null, _.pick(opts, 'transacting'))
+  },
+
+  setRecentComments: opts => {
+    const comments = () => bookshelf.knex('comment')
+    return comments()
+    .where({post_id: opts.postId, active: true})
+    .orderBy('created_at', 'desc')
+    .pluck('id')
+    .then(ids => {
+      return Promise.all([
+        comments().where('id', 'in', ids.slice(0, 3)).update('recent', true),
+        ids.length > 3 && comments().where('id', 'in', ids.slice(3)).update('recent', false)
+      ])
+    })
   }
 
 })
