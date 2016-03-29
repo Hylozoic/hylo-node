@@ -1,7 +1,7 @@
 const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
 var postRelations = (userId, opts = {}) => {
-  var relations = _.filter([
+  var relations = [
     {user: userColumns},
     {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
     'contributions',
@@ -9,29 +9,39 @@ var postRelations = (userId, opts = {}) => {
     {followers: userColumns},
     'media',
     {relatedUsers: userColumns},
-    {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
-    (opts.fromProject ? null : {projects: qb => qb.column('projects.id', 'title', 'slug')}),
-    (opts.withComments
-      ? {comments: qb => {
+    {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')}
+  ]
+
+  if (!opts.fromProject) {
+    relations.push({projects: qb => qb.column('projects.id', 'title', 'slug')})
+  }
+
+  if (opts.withComments) {
+    relations.push(
+      {comments: qb => {
         qb.column('comment.id', 'text', 'created_at', 'user_id', 'post_id')
-        qb.orderBy('comment.id', 'asc')
-      }}
-      : null),
-    (opts.withComments
-      ? {'comments.user': userColumns}
-      : null),
-    (opts.withVotes
-      ? {votes: qb => { // all votes
+        qb.orderBy('comment.id', 'desc')
+      }},
+      {'comments.user': userColumns}
+    )
+  }
+
+  if (opts.withVotes) {
+    relations.push(
+      {votes: qb => { // all votes
         qb.column('id', 'post_id', 'user_id')
-      }}
-      : {votes: qb => { // only the user's own vote
+      }},
+      {'votes.user': userColumns}
+    )
+  } else {
+    relations.push(
+      {votes: qb => { // only the user's own vote
         qb.column('id', 'post_id')
         qb.where('user_id', userId)
-      }}),
-    (opts.withVotes
-      ? {'votes.user': userColumns}
-      : null)
-  ], x => !!x)
+      }}
+    )
+  }
+
   return relations
 }
 
