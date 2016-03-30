@@ -92,7 +92,7 @@ describe('PostController', () => {
         return PostController.create(req, res)
         .then(() => Tag.find('intention'))
         .then(tag => {
-          // expect(tag).to.exist
+          expect(tag).to.exist
           expect(tag.get('name')).to.equal('intention')
           var data = res.body
           expect(data).to.exist

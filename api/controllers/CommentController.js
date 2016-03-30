@@ -10,6 +10,7 @@ var createComment = function (commenterId, text, post) {
 
   return bookshelf.transaction(function (trx) {
     return new Comment(attrs).save(null, {transacting: trx})
+    .tap(comment => Tag.updateForComment(comment, trx))
     .tap(() => post.updateCommentCount(trx))
   })
   .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))

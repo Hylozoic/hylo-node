@@ -64,6 +64,26 @@ describe('CommentController', function () {
           })
         })
     })
+    it('creates a tag', function () {
+      var commentText = '<p>Hey #commenttag</p>'
+
+      req.param = function (name) {
+        if (name === 'text') return commentText
+      }
+
+      res = {
+        locals: {post: fixtures.p1},
+        ok: x => x
+      }
+
+      return CommentController.create(req, res)
+      .then(() => Tag.find('commenttag', {withRelated: 'comments'}))
+      .then(tag => {
+        expect(tag).to.exist
+        expect(tag.relations.comments.length).to.equal(1)
+        expect(tag.relations.comments.models[0].get('text')).to.equal(commentText)
+      })
+    })
   })
 
   describe('#createFromEmail', function () {
