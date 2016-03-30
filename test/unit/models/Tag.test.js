@@ -189,4 +189,34 @@ describe('Tag', () => {
       })
     })
   })
+
+  describe('updateForComment', () => {
+    it('creates a tag from comment text and associates with the correct communities', () => {
+      var post = new Post({
+        name: 'Commented Post One',
+        description: 'no tags in post'
+      })
+      var comment
+      var c1 = factories.community()
+      return Promise.join(post.save(), c1.save())
+      .then(() => post.communities().attach(c1.id))
+      .then(() => {
+        comment = new Comment({
+          text: 'here is a #commenthashtag test',
+          post_id: post.id
+        })
+        return comment.save()
+      })
+      .then(comment => Tag.updateForComment(comment))
+      .then(() => Tag.find('commenthashtag', {withRelated: ['comments', 'communities']}))
+      .then(tag => {
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('commenthashtag')
+        expect(tag.relations.comments.length).to.equal(1)
+        expect(tag.relations.comments.models[0].get('text')).to.equal('here is a #commenthashtag test')
+        expect(tag.relations.communities.length).to.equal(1)
+        expect(tag.relations.communities.models[0].get('name')).to.equal(c1.get('name'))
+      })
+    })
+  })
 })

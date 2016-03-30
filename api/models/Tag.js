@@ -3,8 +3,19 @@ var tagsInText = (text = '') => {
   return (text.match(/#\w+/g) || []).map(str => str.substr(1, str.length))
 }
 
-var addToPost = (post, tagName, selected, trx) => {
-  return post.load('communities')
+var addToTaggable = (taggable, tagName, selected, trx) => {
+  var association, communities
+  var isPost = !taggable.post
+  if (isPost) {
+    // taggable is a post
+    association = 'communities'
+    communities = post => post.relations.communities.models
+  } else {
+    // taggable is a comment
+    association = 'post.communities'
+    communities = comment => comment.relations.post.relations.communities.models
+  }
+  return taggable.load(association)
   .then(() => Tag.find(tagName))
   .then(tag => {
     if (tag) {
@@ -13,12 +24,18 @@ var addToPost = (post, tagName, selected, trx) => {
       return new Tag({name: tagName}).save({}, {transacting: trx})
     }
   })
-  .tap(tag => post.tags().attach({tag_id: tag.id, selected: selected}, {transacting: trx}))
-  .then(tag => Promise.map(post.relations.communities.models, com => addToCommunity(com, tag, post.user_id, trx)))
+  .tap(tag => {
+    var attachment = {tag_id: tag.id}
+    if (isPost) {
+      attachment.selected = selected
+    }
+    return taggable.tags().attach(attachment, {transacting: trx})
+  })
+  .then(tag => Promise.map(communities(taggable), com => addToCommunity(com, tag, taggable.user_id, trx)))
 }
 
-var removeFromPost = (post, tag, trx) => {
-  return post.tags().detach(tag.id, {transacting: trx})
+var removeFromTaggable = (taggable, tag, trx) => {
+  return taggable.tags().detach(tag.id, {transacting: trx})
 }
 
 var addToCommunity = (community, tag, user_id, trx) => {
@@ -27,6 +44,24 @@ var addToCommunity = (community, tag, user_id, trx) => {
     if (!comTag) {
       return new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save()
     }
+  })
+}
+
+var updateForTaggable = (taggable, text, tagParam, trx) => {
+  var newTags = tagsInText(text).map(tagName => ({name: tagName, selected: false}))
+  if (tagParam) {
+    newTags.push({name: tagParam, selected: true})
+  }
+  return taggable.load('tags')
+  .then(post => {
+    // newTags and oldTags (and thus toAdd and toRemove) are not symmetrical.
+    // newTags and toAdd are JS objects, oldTags and toRemove are bookshelf models
+    var oldTags = taggable.relations.tags.models
+    var toAdd = _.differenceBy(newTags, oldTags, 'id')
+    var toRemove = _.differenceBy(oldTags, newTags, 'id')
+    return Promise.all(
+      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))
+      .concat(toRemove.map(tag => removeFromTaggable(taggable, tag, trx))))
   })
 }
 
@@ -61,20 +96,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateForPost: function (post, tagParam, trx) {
-    var newTags = tagsInText(post.get('description')).map(tagName => ({name: tagName, selected: false}))
-    if (tagParam) {
-      newTags.push({name: tagParam, selected: true})
-    }
-    return post.load('tags')
-    .then(post => {
-      // newTags and oldTags (and thus toAdd and toRemove) are not symmetrical.
-      // newTags and toAdd are JS objects, oldTags and toRemove are bookshelf models
-      var oldTags = post.relations.tags.models
-      var toAdd = _.differenceBy(newTags, oldTags, 'id')
-      var toRemove = _.differenceBy(oldTags, newTags, 'id')
-      return Promise.all(
-        toAdd.map(tag => addToPost(post, tag.name, tag.selected, trx))
-        .concat(toRemove.map(tag => removeFromPost(post, tag, trx))))
-    })
+    return updateForTaggable(post, post.get('description'), tagParam, trx)
+  },
+
+  updateForComment: function (comment, trx) {
+    return updateForTaggable(comment, comment.get('text'), null, trx)
   }
 })
