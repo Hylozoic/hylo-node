@@ -40,11 +40,9 @@ var removeFromTaggable = (taggable, tag, trx) => {
 
 var addToCommunity = (community, tag, user_id, trx) => {
   return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch()
-  .then(comTag => {
-    if (!comTag) {
-      return new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save({}, {transacting: trx})
-    }
-  })
+  .then(comTag => comTag ||
+      new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save({}, {transacting: trx})
+      .catch())
 }
 
 var updateForTaggable = (taggable, text, tagParam, trx) => {
