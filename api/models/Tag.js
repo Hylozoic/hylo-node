@@ -1,6 +1,6 @@
 var tagsInText = (text = '') => {
   // TODO alphanumeric and underscore
-  return (text.match(/#\w+/g) || []).map(str => str.substr(1, str.length))
+  return (text.match(/#\w+/g) || []).map(str => str.substr(1))
 }
 
 var addToTaggable = (taggable, tagName, selected, trx) => {
@@ -42,7 +42,7 @@ var addToCommunity = (community, tag, user_id, trx) => {
   return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch()
   .then(comTag => {
     if (!comTag) {
-      return new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save()
+      return new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save({}, {transacting: trx})
     }
   })
 }
