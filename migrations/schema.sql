@@ -76,7 +76,8 @@ CREATE TABLE comment (
     active boolean,
     deactivated_reason character varying(255),
     deactivated_by_id bigint,
-    deactivated_on timestamp without time zone
+    deactivated_on timestamp without time zone,
+    recent boolean
 );
 
 
@@ -1744,6 +1745,22 @@ ALTER TABLE ONLY community
 
 
 --
+-- Name: unique_comments_tags; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY comments_tags
+    ADD CONSTRAINT unique_comments_tags UNIQUE (comment_id, tag_id);
+
+
+--
+-- Name: unique_communities_tags; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY communities_tags
+    ADD CONSTRAINT unique_communities_tags UNIQUE (community_id, tag_id);
+
+
+--
 -- Name: unique_email; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1760,11 +1777,27 @@ ALTER TABLE ONLY posts_projects
 
 
 --
+-- Name: unique_posts_tags; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY posts_tags
+    ADD CONSTRAINT unique_posts_tags UNIQUE (post_id, tag_id);
+
+
+--
 -- Name: unique_projects_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 
 ALTER TABLE ONLY projects_users
     ADD CONSTRAINT unique_projects_users UNIQUE (user_id, project_id);
+
+
+--
+-- Name: unique_tags_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT unique_tags_users UNIQUE (tag_id, user_id);
 
 
 --
