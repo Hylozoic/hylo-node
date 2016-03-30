@@ -315,7 +315,7 @@ describe('PostController', () => {
 
     before(() => {
       c2 = factories.community()
-      p2 = factories.post({type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p2 = factories.post({type: 'offer', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
       p3 = factories.post({type: 'chat', active: true})
       return Promise.join(p2.save(), p3.save(), c2.save())
       .then(() => Promise.join(
@@ -349,6 +349,25 @@ describe('PostController', () => {
         var ids = _.map(res.body.posts, 'id')
         expect(ids).to.contain(p2.id)
         expect(ids).to.contain(p3.id)
+      })
+    })
+
+    it('returns post type as tag as well', () => {
+      res.locals.membership = {dummy: true, save: () => {}}
+      return PostController.findForCommunity(req, res)
+      .then(() => {
+        expect(res.body.posts_total).to.equal(1)
+        expect(res.body.posts[0].tag).to.equal(p2.get('type'))
+      })
+    })
+
+    it('returns selected tag if present', () => {
+      res.locals.membership = {dummy: true, save: () => {}}
+      return Tag.updateForPost(p2, 'findforcommunitytag')
+      .then(() => PostController.findForCommunity(req, res))
+      .then(() => {
+        expect(res.body.posts_total).to.equal(1)
+        expect(res.body.posts[0].tag).to.equal('findforcommunitytag')
       })
     })
   })

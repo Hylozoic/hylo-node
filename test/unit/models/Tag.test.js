@@ -148,7 +148,7 @@ describe('Tag', () => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagnine')
         expect(tag.relations.communities.length).to.equal(2)
-        var communities = _.sortBy(tag.relations.communities.models, 'id')
+        var communities = _.sortBy(tag.relations.communities.models, c => c.get('name'))
         expect(communities[0].get('name')).to.equal('Community One')
         expect(communities[0].pivot.get('owner_id')).to.equal(user.id)
         expect(communities[1].get('name')).to.equal('Community Two')
