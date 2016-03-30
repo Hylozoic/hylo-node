@@ -110,7 +110,7 @@ var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
     query,
     req.session.userId,
     _.merge(relationsOpts, {
-      withComments: req.param('comments'),
+      withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes')
     })))
   .then(res.ok, res.serverError)
@@ -179,7 +179,7 @@ var afterSavingPost = function (post, opts) {
 var PostController = {
   findOne: function (req, res) {
     var opts = {
-      withComments: req.param('comments'),
+      withComments: req.param('comments') && 'all',
       withVotes: req.param('votes')
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))

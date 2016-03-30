@@ -21,7 +21,7 @@ var postRelations = (userId, opts = {}) => {
       {comments: qb => {
         qb.column('comment.id', 'text', 'created_at', 'user_id', 'post_id')
         qb.orderBy('comment.id', 'desc')
-        qb.where('recent', true)
+        if (opts.withComments === 'recent') qb.where('recent', true)
       }},
       {'comments.user': userColumns}
     )
