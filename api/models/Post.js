@@ -48,6 +48,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User, 'posts_about_users')
   },
 
+  tags: function () {
+    return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
+  },
+
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id
     var userId = this.get('user_id')
@@ -114,7 +118,8 @@ module.exports = bookshelf.Model.extend({
     OFFER: 'offer',
     INTENTION: 'intention',
     WELCOME: 'welcome',
-    EVENT: 'event'
+    EVENT: 'event',
+    CHAT: 'chat'
   },
 
   Visibility: {

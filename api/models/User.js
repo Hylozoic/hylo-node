@@ -76,6 +76,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Skill)
   },
 
+  tags: function () {
+    return this.belongsToMany(Tag).through(TagUser)
+  },
+
   thanks: function () {
     return this.hasMany(Thank)
   },

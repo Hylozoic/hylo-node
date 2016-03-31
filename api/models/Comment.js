@@ -25,6 +25,10 @@ module.exports = bookshelf.Model.extend({
 
   community: function () {
     return this.relations.post.relations.communities.first()
+  },
+
+  tags: function () {
+    return this.belongsToMany(Tag).through(CommentTag)
   }
 
 }, {

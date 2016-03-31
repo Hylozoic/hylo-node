@@ -9,6 +9,7 @@ var postRelations = (userId, opts = {}) => {
     {followers: userColumns},
     'media',
     {relatedUsers: userColumns},
+    'tags',
     {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')}
   ]
 
@@ -49,6 +50,7 @@ var postRelations = (userId, opts = {}) => {
 var postAttributes = (post, userId, opts = {}) => {
   // userId is only used if opts.withVotes, so there are times when this is called with userId=undefined.
   var rel = post.relations
+
   var extendedPost = _.extend(
     _.pick(post.toJSON(), [
       'id',
@@ -73,7 +75,9 @@ var postAttributes = (post, userId, opts = {}) => {
       media: rel.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')),
       numComments: post.get('num_comments'),
       relatedUsers: rel.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')),
-      public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE
+      public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE,
+      tag: rel.tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
+        post.get('type')
     })
   if (opts.withComments) {
     extendedPost.comments = rel.comments.map(c => _.merge(

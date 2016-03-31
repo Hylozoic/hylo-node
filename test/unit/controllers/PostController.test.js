@@ -30,7 +30,6 @@ describe('PostController', () => {
         type: 'intention',
         communities: [fixtures.c1.id]
       })
-
       return PostController.create(req, res)
       .then(() => {
         var data = res.body
@@ -78,6 +77,61 @@ describe('PostController', () => {
         expect(image).to.exist
         expect(image.type).to.equal('image')
         expect(image.url).to.equal('https://www.hylo.com/img/smallh.png')
+      })
+    })
+
+    describe('with tags', () => {
+      it('creates a tag from type param', () => {
+        _.extend(req.params, {
+          name: 'NewPost',
+          description: '<p>Post Body</p>',
+          type: 'intention',
+          communities: [fixtures.c1.id]
+        })
+
+        return PostController.create(req, res)
+        .then(() => Tag.find('intention'))
+        .then(tag => {
+          expect(tag).to.exist
+          expect(tag.get('name')).to.equal('intention')
+          var data = res.body
+          expect(data).to.exist
+          expect(data.name).to.equal('NewPost')
+        })
+      })
+
+      it('sets post type from tag', () => {
+        _.extend(req.params, {
+          name: 'NewPost',
+          description: '<p>Post Body</p>',
+          tag: 'intention',
+          communities: [fixtures.c1.id]
+        })
+
+        return PostController.create(req, res)
+        .then(() => {
+          var data = res.body
+          expect(data).to.exist
+          expect(data.name).to.equal('NewPost')
+          expect(data.type).to.equal('intention')
+        })
+      })
+
+      it('sets post type to chat when custom tag', () => {
+        _.extend(req.params, {
+          name: 'NewPost',
+          description: '<p>Post Body</p>',
+          tag: 'custom',
+          communities: [fixtures.c1.id]
+        })
+
+        return PostController.create(req, res)
+        .then(() => {
+          var data = res.body
+          expect(data).to.exist
+          expect(data.name).to.equal('NewPost')
+          expect(data.type).to.equal('chat')
+        })
       })
     })
 
@@ -261,7 +315,7 @@ describe('PostController', () => {
 
     before(() => {
       c2 = factories.community()
-      p2 = factories.post({type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p2 = factories.post({type: 'offer', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
       p3 = factories.post({type: 'chat', active: true})
       return Promise.join(p2.save(), p3.save(), c2.save())
       .then(() => Promise.join(
@@ -292,7 +346,28 @@ describe('PostController', () => {
       return PostController.findForCommunity(req, res)
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
-        expect(_.map(res.body.posts, 'id')).to.deep.equal([p2.id, p3.id])
+        var ids = _.map(res.body.posts, 'id')
+        expect(ids).to.contain(p2.id)
+        expect(ids).to.contain(p3.id)
+      })
+    })
+
+    it('returns post type as tag as well', () => {
+      res.locals.membership = {dummy: true, save: () => {}}
+      return PostController.findForCommunity(req, res)
+      .then(() => {
+        expect(res.body.posts_total).to.equal(1)
+        expect(res.body.posts[0].tag).to.equal(p2.get('type'))
+      })
+    })
+
+    it('returns selected tag if present', () => {
+      res.locals.membership = {dummy: true, save: () => {}}
+      return Tag.updateForPost(p2, 'findforcommunitytag')
+      .then(() => PostController.findForCommunity(req, res))
+      .then(() => {
+        expect(res.body.posts_total).to.equal(1)
+        expect(res.body.posts[0].tag).to.equal('findforcommunitytag')
       })
     })
   })
