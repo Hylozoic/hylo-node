@@ -122,7 +122,7 @@ module.exports = {
     .tap(function (user) {
       var newEmail = attrs.email
       var oldEmail = user.get('email')
-      if (newEmail && newEmail !== oldEmail) {
+      if (_.has(attrs, 'email') && newEmail !== oldEmail) {
         if (!validator.isEmail(newEmail)) {
           throw new Error('invalid-email')
         }
