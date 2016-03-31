@@ -52,7 +52,7 @@ var url = function (path) {
 var formatProfile = function (profile, accessToken, refreshToken) {
   return _.merge(profile, {
     name: profile.displayName,
-    email: profile.emails[0].value,
+    email: _.get(profile, 'emails.0.value'),
     _json: {
       access_token: accessToken,
       refresh_token: refreshToken

@@ -103,6 +103,7 @@ const finishOAuth = function (strategy, req, res, next) {
 
     var authCallback = function (err, profile, info) {
       if (err || !profile) return respond(err || 'no user')
+      if (!profile.email) return respond('no email')
 
       return (UserSession.isLoggedIn(req)
         ? upsertLinkedAccount

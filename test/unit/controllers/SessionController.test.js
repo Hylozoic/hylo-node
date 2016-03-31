@@ -180,7 +180,24 @@ describe('SessionController', function () {
       })
     })
 
-    describe('with no user in the third-party response', () => {
+    describe('with no email in the auth response', () => {
+      beforeEach(() => {
+        var profile = _.merge(_.cloneDeep(mockProfile), {email: null, emails: null})
+        passport.authenticate = spy((strategy, callback) => () => callback(null, profile))
+      })
+
+      it('sets an error in the view parameters', () => {
+        return SessionController.finishFacebookOAuth(req, res)
+        .then(() => {
+          expect(UserSession.login).not.to.have.been.called()
+          expect(res.view).to.have.been.called()
+          expect(res.viewTemplate).to.equal('popupDone')
+          expect(res.viewAttrs.error).to.equal('no email')
+        })
+      })
+    })
+
+    describe('with no user in the auth response', () => {
       beforeEach(() => {
         passport.authenticate = spy(function (strategy, callback) {
           return () => callback(null, null)
