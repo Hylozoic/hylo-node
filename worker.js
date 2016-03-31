@@ -39,9 +39,10 @@ var processJobs = function () {
         done()
       })
       .catch(function (err) {
-        sails.log.error(label + (typeof err === 'string' ? err : err.message).red)
-        rollbar.handleError(err)
-        done(err)
+        let error = typeof err === 'string' ? new Error(err) : err
+        sails.log.error(label + error.message.red)
+        rollbar.handleError(error)
+        done(error)
       })
     })
   })
