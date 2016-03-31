@@ -40,9 +40,11 @@ var removeFromTaggable = (taggable, tag, trx) => {
 
 var addToCommunity = (community, tag, user_id, trx) => {
   return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch()
+  // the catch here is for the case where another user just created the CommunityTag
+  // the save fails, but we don't care about the result
   .then(comTag => comTag ||
       new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save({}, {transacting: trx})
-      .catch())
+      .catch(() => {}))
 }
 
 var updateForTaggable = (taggable, text, tagParam, trx) => {
