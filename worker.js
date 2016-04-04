@@ -39,7 +39,7 @@ var processJobs = function () {
         done()
       })
       .catch(function (err) {
-        let error = typeof err === 'string' ? new Error(err) : err
+        const error = typeof err === 'string' ? new Error(err) : err
         sails.log.error(label + error.message.red)
         rollbar.handleError(error)
         done(error)
