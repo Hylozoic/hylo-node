@@ -22,30 +22,35 @@ describe('Organization', function() {
 
   describe('#update', function() {
 
-    it('adds and removes orgs for one user', function(done) {
-      Organization.update(['Cat Club', 'Heliopolis', 'Dance Church'], cat.id).then(function() {
+    it('adds and removes orgs for one user', function () {
+      return Organization.update(['Cat Club', 'Heliopolis', 'Dance Church'], cat.id)
+      .then(function() {
         return cat.load('organizations');
-      }).then(function() {
+      })
+      .then(function() {
         var organizations = Organization.simpleList(cat.relations.organizations);
         expect(organizations.sort()).to.deep.equal(['Cat Club', 'Dance Church', 'Heliopolis']);
         return otherCat.load('organizations');
-      }).then(function() {
+      })
+      .then(function() {
         // should not affect other users' organizations
         var organizations = Organization.simpleList(otherCat.relations.organizations);
         expect(organizations).to.deep.equal(['House of Yes']);
-      }).exec(done);
+      })
     });
 
-    it('makes no changes if the list is the same', function(done) {
+    it('makes no changes if the list is the same', function () {
       // the order of skills is reversed in this argument
-      Organization.update(['House of Yes', 'Cat Club'], cat.id).then(function() {
+      return Organization.update(['House of Yes', 'Cat Club'], cat.id)
+      .then(function() {
         return cat.load('organizations');
-      }).then(function() {
+      })
+      .then(function() {
         var organizations = Organization.simpleList(cat.relations.organizations);
         // but the stored order is still the original one,
         // because no changes were made to the database
         expect(organizations).to.deep.equal(['Cat Club', 'House of Yes']);
-      }).exec(done);
+      })
     });
 
   })

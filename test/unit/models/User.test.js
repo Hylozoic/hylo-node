@@ -100,9 +100,9 @@ describe('User', function () {
     var catPic = 'http://i.imgur.com/Kwe1K7k.jpg'
     var community
 
-    before(function (done) {
+    before(function () {
       community = new Community({name: 'foo', slug: 'foo'})
-      community.save().exec(done)
+      return community.save()
     })
 
     it('rejects an invalid email address', () => {
