@@ -78,6 +78,41 @@ describe('Tag', () => {
       })
     })
 
+    it('creates a tag from post name', () => {
+      var post = new Post({
+        name: 'New Tagged Post #nametagone',
+        description: 'no tag in the body'
+      })
+      return post.save()
+      .then(post => Tag.updateForPost(post))
+      .then(() => Tag.find('nametagone', {withRelated: ['posts']}))
+      .then(tag => {
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('nametagone')
+        expect(tag.relations.posts.length).to.equal(1)
+        expect(tag.relations.posts.models[0].get('name')).to.equal('New Tagged Post #nametagone')
+        expect(tag.relations.posts.models[0].pivot.get('selected')).to.equal(false)
+      })
+    })
+
+    it('attaches an existing tag from post name', () => {
+      var post = new Post({
+        name: 'New Tagged Post #nametagtwo',
+        description: 'contains a tag in the body'
+      })
+      return new Tag({name: 'nametagtwo'}).save()
+      .then(() => post.save())
+      .then(post => Tag.updateForPost(post))
+      .then(() => Tag.find('nametagtwo', {withRelated: ['posts']}))
+      .then(tag => {
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('nametagtwo')
+        expect(tag.relations.posts.length).to.equal(1)
+        expect(tag.relations.posts.models[0].get('name')).to.equal('New Tagged Post #nametagtwo')
+        expect(tag.relations.posts.models[0].pivot.get('selected')).to.equal(false)
+      })
+    })
+
     it('removes a tag', () => {
       var post = new Post({
         name: 'New Tagged Post Five',
