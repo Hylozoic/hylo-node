@@ -104,6 +104,17 @@ var queryForNetwork = function (req, res) {
   }))
 }
 
+var queryForTag = function (req, res) {
+  if (TokenAuth.isAuthenticated(res)) {
+    if (!RequestValidation.requireTimeRange(req, res)) return
+  }
+
+  return queryPosts(req, {
+    communities: [res.locals.community.id],
+    visibility: (res.locals.membership.dummy ? Post.Visibility.PUBLIC_READABLE : null)
+  })
+}
+
 var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   return queryFunction(req, res)
   .then(query => fetchAndPresentPosts(
@@ -463,7 +474,8 @@ var queries = {
   AllForUser: queryForAllForUser,
   Followed: queryForFollowed,
   Project: queryForProject,
-  Network: queryForNetwork
+  Network: queryForNetwork,
+  Tag: queryForTag
 }
 
 var relationsOpts = {

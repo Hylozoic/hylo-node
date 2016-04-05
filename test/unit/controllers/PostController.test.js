@@ -310,6 +310,52 @@ describe('PostController', () => {
     })
   })
 
+  describe('.findForTag', () => {
+    var p2, p3, p4, c2
+
+    before(() => {
+      c2 = factories.community()
+      p2 = factories.post({type: 'offer', active: true, description: '#findtesttag', visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({type: 'chat', active: true, description: '#findtesttag'})
+      p4 = factories.post({type: 'request', active: true, description: '#somedifferenttag'})
+      return Promise.join(p2.save(), p3.save(), p4.save(), c2.save())
+      .then(() => Promise.join(
+        Tag.updateForPost(p2),
+        Tag.updateForPost(p3),
+        Tag.updateForPost(p4)
+      ))
+      .then(() => Promise.join(
+        c2.posts().attach(p2),
+        c2.posts().attach(p3),
+        c2.posts().attach(p4)
+      ))
+    })
+
+    beforeEach(() => {
+      res.locals.community = c2
+    })
+
+    it('shows tagged content to members', () => {
+      res.locals.membership = new Membership({
+        user_id: fixtures.u1.id,
+        community_id: c2.id
+      })
+
+      _.extend(req.params, {
+        communityId: c2.get('slug'),
+        tagName: 'findtesttag'
+      })
+
+      return PostController.findForTag(req, res)
+      .then(() => {
+        expect(res.body.posts_total).to.equal(2)
+        var ids = _.map(res.body.posts, 'id')
+        expect(ids).to.contain(p2.id)
+        expect(ids).to.contain(p3.id)
+      })
+    })
+  })
+
   describe('.findForCommunity', () => {
     var p2, p3, c2
 
