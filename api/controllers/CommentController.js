@@ -1,3 +1,8 @@
+const userColumns = q => q.column('id', 'name', 'avatar_url')
+
+const updateRecentComments = postId =>
+  Queue.classMethod('Post', 'setRecentComments', {postId})
+
 var createComment = function (commenterId, text, post) {
   text = RichText.sanitize(text)
   var attrs = {
@@ -14,9 +19,8 @@ var createComment = function (commenterId, text, post) {
     .tap(() => post.updateCommentCount(trx))
   })
   .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
+  .tap(() => updateRecentComments(post.id))
 }
-
-var userColumns = q => q.column('id', 'name', 'avatar_url')
 
 module.exports = {
   findForPost: function (req, res) {
@@ -34,12 +38,7 @@ module.exports = {
 
   create: function (req, res) {
     return createComment(req.session.userId, req.param('text'), res.locals.post)
-    .then(function (comment) {
-      return comment.load([
-        {user: q => q.column('id', 'name', 'avatar_url')}
-      ])
-    })
-    .tap(c => Queue.classMethod('Post', 'setRecentComments', {postId: c.get('post_id')}))
+    .then(comment => comment.load({user: userColumns}))
     .then(c => CommentPresenter.present(c, req.session.userId))
     .then(res.ok, res.serverError)
   },
@@ -71,12 +70,10 @@ module.exports = {
       {thanks: q => q.where('thanked_by_id', req.session.userId)}
     ]})
     .then(comment => {
-      var thank = comment.relations.thanks.first()
-      if (thank) {
-        return thank.destroy()
-      } else {
-        return Thank.create(comment, req.session.userId)
-      }
+      const thank = comment.relations.thanks.first()
+      return thank
+        ? thank.destroy()
+        : Thank.create(comment, req.session.userId)
     })
     .then(() => res.ok({}), res.serverError)
   },
@@ -92,9 +89,8 @@ module.exports = {
           deactivated_on: new Date(),
           active: false,
           recent: false
-        }, {patch: true})
+        }, {patch: true}).tap(c => updateRecentComments(c.get('post_id')))
     )))
-    .tap(c => Queue.classMethod('Post', 'setRecentComments', {postId: c.get('post_id')}))
     .then(() => res.ok({}), res.serverError)
   }
 }
