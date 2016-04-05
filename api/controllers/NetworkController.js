@@ -61,7 +61,7 @@ module.exports = {
             Promise.map(addedComs, addedCom =>
               updateCommunityIfModerator(req, addedCom, {network_id: network.id}, trx)),
             Promise.map(removedComs, removedCom =>
-              updateCommunityIfModerator(req, removedCom, {network_id: network.id}, trx))
+              updateCommunityIfModerator(req, removedCom, {network_id: null}, trx))
           )
         })
       })
