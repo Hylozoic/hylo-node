@@ -33,7 +33,11 @@ module.exports = {
     .tap(activities => total = (activities.length > 0 ? activities.first().get('total') : 0))
     .then(activities => activities.map(activity => {
       var comment = activity.relations.comment
+      var post = activity.relations.post
       var attrs = activity.toJSON()
+      if (post) {
+        attrs.post.tag = post.get('type')
+      }
       if (comment) {
         attrs.comment = CommentPresenter.present(comment, req.session.userId)
       }
