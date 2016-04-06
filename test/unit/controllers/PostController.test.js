@@ -341,16 +341,23 @@ describe('PostController', () => {
         c2.posts().attach(p3),
         c2.posts().attach(p4)
       ))
+      .then(() => Promise.join(
+        Tag.updateForPost(p2),
+        Tag.updateForPost(p3),
+        Tag.updateForPost(p4)
+      ))
+      /*
       .then(() => Tag.updateForPost(p2))
       .then(() => Tag.updateForPost(p3))
       .then(() => Tag.updateForPost(p4))
+      */
     })
 
     beforeEach(() => {
       res.locals.community = c2
     })
 
-    it('shows tagged content to members', () => {
+    it.only('shows tagged content to members', () => {
       res.locals.membership = new Membership({
         user_id: fixtures.u1.id,
         community_id: c2.id

@@ -22,6 +22,7 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
       return tag
     } else {
       return new Tag({name: tagName}).save({}, {transacting: trx})
+      .catch(() => Tag.find(tagName))
     }
   })
   .tap(tag => {
