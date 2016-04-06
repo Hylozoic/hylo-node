@@ -96,7 +96,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateForPost: function (post, tagParam, trx) {
-    return updateForTaggable(post, post.get('description'), tagParam, trx)
+    return updateForTaggable(post, post.get('name') + ' ' + post.get('description'), tagParam, trx)
   },
 
   updateForComment: function (comment, trx) {
