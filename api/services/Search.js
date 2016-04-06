@@ -247,6 +247,18 @@ module.exports = {
     })
   },
 
+  forTags: function (opts) {
+    return Tag.query(q => {
+      if (opts.communities) {
+        q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
+        q.whereIn('communities_tags.community_id', opts.communities)
+      }
+      if (opts.autocomplete) {
+        q.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
+      }
+    })
+  },
+
   addTermToQueryBuilder: function (term, qb, opts) {
     var query = _.chain(term.split(/\s*\s/)) // split on whitespace
     .map(word => word.replace(/[,;|:&()!\\]+/, ''))

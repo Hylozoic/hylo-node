@@ -1,10 +1,9 @@
-var findCommunityIds = Promise.method(req => {
+const findCommunityIds = req => {
   if (req.param('communityId')) {
-    return [req.param('communityId')]
+    return Promise.resolve([req.param('communityId')])
   } else if (req.param('type') === 'communities' && req.param('moderated')) {
     if (Admin.isSignedIn(req)) {
-      return Community.fetchAll()
-      .then(cs => cs.pluck('id'))
+      return Community.query().pluck('id')
     } else {
       return Membership.activeCommunityIds(req.session.userId, true)
     }
@@ -14,7 +13,7 @@ var findCommunityIds = Promise.method(req => {
       Membership.activeCommunityIds(req.session.userId)
     ).then(ids => _(ids).flatten().uniq().value())
   }
-})
+}
 
 const getTotal = records =>
   records && records.length > 0 ? Number(records.first().get('total')) : 0
@@ -84,19 +83,21 @@ module.exports = {
         break
       default:
         method = Search.forUsers
+        if (term.startsWith('@')) {
+          term = term.slice(1)
+        } else if (term.startsWith('#')) {
+          method = Search.forTags
+          term = term.slice(1)
+        }
     }
 
-    return (() => {
-      if (!_.includes(['skills', 'organizations'], resultType)) {
-        return findCommunityIds(req)
+    return (!_.includes(['skills', 'organizations'], resultType)
+      ? findCommunityIds(req)
         .then(communityIds => ({
           communities: communityIds,
           project: req.param('projectId')
         }))
-      }
-
-      return Promise.resolve({})
-    })()
+      : Promise.resolve({}))
     .then(filters => method(_.extend(filters, {
       autocomplete: term,
       limit: req.param('limit') || 5,
