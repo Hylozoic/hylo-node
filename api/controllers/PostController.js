@@ -26,10 +26,11 @@ var queryPosts = function (req, opts) {
       term: req.param('search')
     },
     _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
-    _.pick(opts, 'communities', 'project', 'users', 'visibility')
+    _.pick(opts, 'communities', 'project', 'users', 'visibility', 'tag')
   ))
   .then(args => {
-    return Search.forPosts(args)
+    var result = Search.forPosts(args)
+    return result
   })
 }
 
@@ -109,10 +110,12 @@ var queryForTag = function (req, res) {
     if (!RequestValidation.requireTimeRange(req, res)) return
   }
 
-  return queryPosts(req, {
+  return Tag.find(req.param('tagName'))
+  .then(tag => queryPosts(req, {
     communities: [res.locals.community.id],
+    tag: tag.id,
     visibility: (res.locals.membership.dummy ? Post.Visibility.PUBLIC_READABLE : null)
-  })
+  }))
 }
 
 var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
@@ -195,10 +198,8 @@ var afterSavingPost = function (post, opts) {
       projectId: opts.projectId,
       postId: post.id,
       exclude: mentioned
-    }),
-
-    Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)
-  ])))
+    })]))
+    .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
 }
 
 var PostController = {
