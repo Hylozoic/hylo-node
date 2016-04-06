@@ -90,7 +90,8 @@ module.exports.routes = {
   'POST   /noo/network/validate':                         'NetworkController.validate',
   'POST   /noo/network/:networkId':                       'NetworkController.update',
 
-  'GET    /noo/tag/:communityId/:tagName':                'PostController.findForTag',
+  'GET    /noo/tag/:communityId/:tagName':                'TagController.findOne',
+  'GET    /noo/tag/:communityId/:tagName/posts':          'PostController.findForTag',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/search/fulltext':                          'SearchController.showFullText',

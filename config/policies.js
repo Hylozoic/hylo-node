@@ -172,6 +172,10 @@ module.exports.policies = {
 
   MobileAppController: true,
 
-  LiveStatusController: true
+  LiveStatusController: true,
+
+  TagController: {
+    findOne: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership']
+  }
 
 }
