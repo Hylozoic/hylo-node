@@ -20,15 +20,15 @@ describe('PushNotification', function () {
   })
 
   describe('.send', function () {
-    it('sets time_sent', function (done) {
-      pushNotification.send()
+    it('sets time_sent', function () {
+      return pushNotification.send()
       .then(result => {
         expect(result.body).to.deep.equal({result: 'success'})
         return pushNotification.fetch()
         .then(pn => {
           expect(pn.get('time_sent')).to.not.equal(null)
         })
-      }).exec(done)
+      })
     })
   })
 })

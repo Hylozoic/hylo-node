@@ -25,7 +25,7 @@ before(function (done) {
   this.timeout(30000)
 
   var i18n = require('i18n')
-  i18n.configure(require(root('config/i18n')))
+  i18n.configure(require(root('config/i18n')).i18n)
   global.sails = skiff.sails
 
   skiff.lift({

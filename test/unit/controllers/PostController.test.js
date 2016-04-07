@@ -150,6 +150,24 @@ describe('PostController', () => {
           expect(tag.relations.communities.models[0].id).to.equal(fixtures.c1.id)
         })
       })
+
+      it('creates a tag from post title', () => {
+        _.extend(req.params, {
+          name: 'New Awesome Post #awesome',
+          description: '<p>Post Body</p>',
+          type: 'chat',
+          communities: [fixtures.c1.id]
+        })
+
+        return PostController.create(req, res)
+        .then(() => Tag.find('awesome', {withRelated: ['posts']}))
+        .then(tag => {
+          expect(tag).to.exist
+          expect(tag.get('name')).to.equal('awesome')
+          expect(tag.relations.posts.length).to.equal(1)
+          expect(tag.relations.posts.models[0].get('name')).to.equal('New Awesome Post #awesome')
+        })
+      })
     })
 
     describe('for a project', () => {

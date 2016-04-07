@@ -185,7 +185,7 @@ module.exports = {
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      qb.select(bookshelf.knex.raw('count(users.*) over () as total'))
+      qb.select(bookshelf.knex.raw('users.*, count(users.*) over () as total'))
 
       if (opts.communities && opts.project) {
         qb.leftJoin('users_community', 'users_community.user_id', '=', 'users.id')
@@ -249,6 +249,18 @@ module.exports = {
   forOrganizations: function (opts) {
     return Organization.query(qb => {
       listModelQuerySettings(qb, 'users_org', 'org_name', opts)
+    })
+  },
+
+  forTags: function (opts) {
+    return Tag.query(q => {
+      if (opts.communities) {
+        q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
+        q.whereIn('communities_tags.community_id', opts.communities)
+      }
+      if (opts.autocomplete) {
+        q.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
+      }
     })
   },
 

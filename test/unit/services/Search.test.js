@@ -87,7 +87,8 @@ describe('Search', function () {
 
     describe('for a community', () => {
       it('finds members', () => {
-        return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll().then(users => {
+        return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll()
+        .then(users => {
           expect(users.length).to.equal(1)
           expect(users.first().get('name')).to.equal('Mister Cat')
         })
