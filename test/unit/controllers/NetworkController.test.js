@@ -74,11 +74,37 @@ describe('NetworkController', () => {
       })
     })
 
+    it('updates communities', () => {
+      req.session.userId = fixtures.u1.id
+      req.user = {email: 'admin@hylo.com'}
+
+      // because req.user has an admin email, moderator status is ignored
+      // so c1 and c3 are removed, while c2 and c4 are added
+
+      _.extend(req.params, {networkId: 'foo', name: 'Updated Foo', communities: [fixtures.c2.id, fixtures.c4.id]})
+
+      return new Network({name: 'Foo', slug: 'foo', description: 'abcde', avatar_url: 'http://prebar.com/prea.jpg', banner_url: 'http://prebaz.com/preb.jpg'}).save()
+      .then(network => Promise.join(
+        fixtures.c1.save({network_id: network.id}, {patch: true}),
+        fixtures.c3.save({network_id: network.id}, {patch: true})
+      ))
+      .then(() => NetworkController.update(req, res))
+      .then(() => Network.find('foo', {withRelated: ['communities']}))
+      .then(network => {
+        expect(network).to.exist
+        expect(network.get('slug')).to.equal('foo')
+        var communityIds = network.relations.communities.pluck('id')
+        expect(_.includes(communityIds, fixtures.c1.id)).to.equal(false)
+        expect(_.includes(communityIds, fixtures.c2.id)).to.equal(true)
+        expect(_.includes(communityIds, fixtures.c3.id)).to.equal(false)
+        expect(_.includes(communityIds, fixtures.c4.id)).to.equal(true)
+      })
+    })
+
     it.skip('updates communities you are a moderator of', () => {
       // this test is currently broken because you can only update networks if you're an admin, but then you can update ALL
       // communities. Leaving the code here for when Network moderators are a thing.
       req.session.userId = fixtures.u1.id
-      req.user = {email: 'admin@hylo.com'}
 
       // u1 is moderator of c1 and c2. foo network contains c1 and c3 to begin.
       // The update tries to add c2 and c4 and remove c1 and c3.
