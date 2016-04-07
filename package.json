@@ -146,6 +146,7 @@
       "Email",
       "EventResponse",
       "Follow",
+      "FollowedTag",
       "Frontend",
       "FullTextSearch",
       "Invitation",

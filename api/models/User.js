@@ -34,6 +34,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Post).through(Follow)
   },
 
+  followedTags: function () {
+    return this.belongsToMany(Tag).through(FollowedTag)
+  },
+
   linkedAccounts: function () {
     return this.hasMany(LinkedAccount)
   },
