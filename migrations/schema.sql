@@ -356,6 +356,39 @@ ALTER SEQUENCE event_responses_id_seq OWNED BY event_responses.id;
 
 
 --
+-- Name: followed_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE followed_tags (
+    id integer NOT NULL,
+    community_id bigint,
+    tag_id bigint,
+    user_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: followed_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE followed_tags_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: followed_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE followed_tags_id_seq OWNED BY followed_tags.id;
+
+
+--
 -- Name: follower_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1307,6 +1340,13 @@ ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_resp
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY followed_tags ALTER COLUMN id SET DEFAULT nextval('followed_tags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('knex_migrations_id_seq'::regclass);
 
 
@@ -1510,6 +1550,22 @@ ALTER TABLE ONLY event_responses
 
 ALTER TABLE ONLY event_responses
     ADD CONSTRAINT event_responses_user_id_post_id_unique UNIQUE (user_id, post_id);
+
+
+--
+-- Name: followed_tags_community_id_tag_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY followed_tags
+    ADD CONSTRAINT followed_tags_community_id_tag_id_user_id_unique UNIQUE (community_id, tag_id, user_id);
+
+
+--
+-- Name: followed_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY followed_tags
+    ADD CONSTRAINT followed_tags_pkey PRIMARY KEY (id);
 
 
 --
@@ -2395,6 +2451,30 @@ ALTER TABLE ONLY vote
 
 ALTER TABLE ONLY vote
     ADD CONSTRAINT fk_vote_user_13 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: followed_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY followed_tags
+    ADD CONSTRAINT followed_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: followed_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY followed_tags
+    ADD CONSTRAINT followed_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: followed_tags_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY followed_tags
+    ADD CONSTRAINT followed_tags_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
