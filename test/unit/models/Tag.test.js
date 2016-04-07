@@ -171,10 +171,8 @@ describe('Tag', () => {
       var c2 = factories.community({name: 'Community Two'})
       var c3 = factories.community({name: 'Community X'})
       return user.save()
-      .then(user => {
-        post.user_id = user.id
-        return Promise.join(post.save(), c1.save(), c2.save(), c3.save())
-      })
+      .then(user => post.save({user_id: user.id}))
+      .then(() => Promise.join(post.save(), c1.save(), c2.save(), c3.save()))
       .then(() => post.communities().attach(c1.id))
       .then(() => post.communities().attach(c2.id))
       .then(() => Tag.updateForPost(post, 'newtagnine'))
@@ -202,10 +200,8 @@ describe('Tag', () => {
       var c1 = factories.community({name: 'Community Three'})
       var c2 = factories.community({name: 'Community Four'})
       return user.save()
-      .then(user => {
-        post.user_id = user.id
-        return Promise.join(post.save(), c1.save(), c2.save(), tag.save())
-      })
+      .then(user => post.save({user_id: user.id}))
+      .then(() => Promise.join(post.save(), c1.save(), c2.save(), tag.save()))
       .then(() => owner.save())
       .then(owner => new CommunityTag({community_id: c1.id, tag_id: tag.id, owner_id: owner.id}).save())
       .then(() => post.communities().attach(c1.id))

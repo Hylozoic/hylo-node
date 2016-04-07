@@ -26,10 +26,11 @@ var queryPosts = function (req, opts) {
       term: req.param('search')
     },
     _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
-    _.pick(opts, 'communities', 'project', 'users', 'visibility')
+    _.pick(opts, 'communities', 'project', 'users', 'visibility', 'tag')
   ))
   .then(args => {
-    return Search.forPosts(args)
+    var result = Search.forPosts(args)
+    return result
   })
 }
 
@@ -101,6 +102,19 @@ var queryForNetwork = function (req, res) {
   .then(communities => queryPosts(req, {
     communities: communities.map(c => c.id),
     visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
+  }))
+}
+
+var queryForTag = function (req, res) {
+  if (TokenAuth.isAuthenticated(res)) {
+    if (!RequestValidation.requireTimeRange(req, res)) return
+  }
+
+  return Tag.find(req.param('tagName'))
+  .then(tag => queryPosts(req, {
+    communities: [res.locals.community.id],
+    tag: tag.id,
+    visibility: (res.locals.membership.dummy ? Post.Visibility.PUBLIC_READABLE : null)
   }))
 }
 
@@ -184,10 +198,8 @@ var afterSavingPost = function (post, opts) {
       projectId: opts.projectId,
       postId: post.id,
       exclude: mentioned
-    }),
-
-    Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)
-  ])))
+    })]))
+    .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
 }
 
 var PostController = {
@@ -463,7 +475,8 @@ var queries = {
   AllForUser: queryForAllForUser,
   Followed: queryForFollowed,
   Project: queryForProject,
-  Network: queryForNetwork
+  Network: queryForNetwork,
+  Tag: queryForTag
 }
 
 var relationsOpts = {

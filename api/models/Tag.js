@@ -15,13 +15,14 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
     association = 'post.communities'
     communities = comment => comment.relations.post.relations.communities.models
   }
-  return taggable.load(association)
+  return taggable.load(association, {transacting: trx})
   .then(() => Tag.find(tagName))
   .then(tag => {
     if (tag) {
       return tag
     } else {
       return new Tag({name: tagName}).save({}, {transacting: trx})
+      .catch(() => Tag.find(tagName))
     }
   })
   .tap(tag => {
@@ -31,7 +32,7 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
     }
     return taggable.tags().attach(attachment, {transacting: trx})
   })
-  .then(tag => Promise.map(communities(taggable), com => addToCommunity(com, tag, taggable.user_id, trx)))
+  .then(tag => Promise.map(communities(taggable), com => addToCommunity(com, tag, taggable.get('user_id'), trx)))
 }
 
 var removeFromTaggable = (taggable, tag, trx) => {

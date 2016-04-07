@@ -1769,6 +1769,14 @@ ALTER TABLE ONLY users
 
 
 --
+-- Name: unique_name; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+--
+
+ALTER TABLE ONLY tags
+    ADD CONSTRAINT unique_name UNIQUE (name);
+
+
+--
 -- Name: unique_posts_projects; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
 --
 

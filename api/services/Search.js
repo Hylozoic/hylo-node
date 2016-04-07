@@ -115,6 +115,11 @@ module.exports = {
         qb.groupBy(['post.id', 'post_community.post_id'])
       }
 
+      if (opts.tag) {
+        qb.join('posts_tags', 'posts_tags.post_id', '=', 'post.id')
+        qb.whereIn('posts_tags.tag_id', [opts.tag])
+      }
+
       if (opts.project) {
         qb.join('posts_projects', 'posts_projects.post_id', '=', 'post.id')
         qb.where('posts_projects.project_id', opts.project)
