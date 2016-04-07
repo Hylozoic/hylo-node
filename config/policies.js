@@ -175,7 +175,9 @@ module.exports.policies = {
   LiveStatusController: true,
 
   TagController: {
-    findOne: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership']
+    findOne: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findFollowed: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    follow: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership']
   }
 
 }
