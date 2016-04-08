@@ -261,6 +261,8 @@ module.exports = {
       if (opts.autocomplete) {
         q.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
       }
+
+      q.groupBy('tags.id')
     })
   },
 
