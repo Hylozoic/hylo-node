@@ -22,7 +22,18 @@ module.exports = {
   },
 
   findFollowed: function (req, res) {
-    return res.ok({})
+    return Community.find(req.param('communityId'))
+    .then(com =>
+      FollowedTag.where({community_id: com.id, user_id: req.session.userId})
+      .fetchAll({withRelated: 'tag'}))
+    .then(followedTags => followedTags.map(followedTag => {
+      return {
+        name: followedTag.relations.tag.get('name'),
+        followed: true
+      }
+    }))
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
   follow: function (req, res) {
