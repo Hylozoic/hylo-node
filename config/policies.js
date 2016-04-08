@@ -177,7 +177,7 @@ module.exports.policies = {
   TagController: {
     findOne: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findFollowed: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    follow: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership']
+    follow: ['allowTokenAuth', 'sessionAuth']
   }
 
 }

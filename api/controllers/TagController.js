@@ -26,6 +26,29 @@ module.exports = {
   },
 
   follow: function (req, res) {
-    return res.ok({})
+    return Tag.find(req.param('tagName'))
+    .then(tag => {
+      if (!tag) return res.notFound()
+
+      return FollowedTag.where({
+        community_id: req.param('communityId'),
+        tag_id: tag.id,
+        user_id: req.session.userId
+      }).fetch()
+      .then(followedTag => {
+        if (followedTag) {
+          return followedTag.destroy()
+        } else {
+          return new FollowedTag({
+            community_id: req.param('communityId'),
+            tag_id: tag.id,
+            user_id: req.session.userId
+          })
+          .save()
+        }
+      })
+    })
+    .then(res.ok)
+    .catch(res.serverError)
   }
 }
