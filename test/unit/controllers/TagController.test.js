@@ -23,7 +23,7 @@ describe('TagController', () => {
     it('creates a FollowedTag', () => {
       req.session.userId = fixtures.u1.id
       _.extend(req.params, {
-        communityId: fixtures.c1.id,
+        communityId: fixtures.c1.get('slug'),
         tagName: fixtures.t1.get('name')
       })
 
@@ -41,7 +41,7 @@ describe('TagController', () => {
     it('removes an existing FollowedTag', () => {
       req.session.userId = fixtures.u1.id
       _.extend(req.params, {
-        communityId: fixtures.c1.id,
+        communityId: fixtures.c1.get('slug'),
         tagName: fixtures.t2.get('name')
       })
 
