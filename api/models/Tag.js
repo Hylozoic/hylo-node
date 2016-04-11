@@ -49,20 +49,26 @@ var addToCommunity = (community, tag, user_id, trx) => {
 }
 
 var updateForTaggable = (taggable, text, tagParam, trx) => {
+  var differenceOfTags = (a, b) =>
+    _.differenceBy(a, b, t => _.pick(t, 'name', 'selected'))
+
   var newTags = tagsInText(text).map(tagName => ({name: tagName, selected: false}))
   if (tagParam) {
     newTags.push({name: tagParam, selected: true})
   }
   return taggable.load('tags')
   .then(post => {
-    // newTags and oldTags (and thus toAdd and toRemove) are not symmetrical.
-    // newTags and toAdd are JS objects, oldTags and toRemove are bookshelf models
-    var oldTags = taggable.relations.tags.models
-    var toAdd = _.differenceBy(newTags, oldTags, 'id')
-    var toRemove = _.differenceBy(oldTags, newTags, 'id')
+    // making oldTags the same structure as newTags, for easier taking of difference
+    var oldTags = taggable.relations.tags.models.map(t =>
+      _.merge(t.pick('id', 'name'),
+        {selected: t.pivot.get('selected')}))
+
+    var toAdd = _.uniqBy(differenceOfTags(newTags, oldTags), 'name')
+    var toRemove = differenceOfTags(oldTags, newTags)
+
     return Promise.all(
-      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))
-      .concat(toRemove.map(tag => removeFromTaggable(taggable, tag, trx))))
+      toRemove.map(tag => removeFromTaggable(taggable, tag, trx))
+      .concat(toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))))
   })
 }
 
