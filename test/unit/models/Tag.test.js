@@ -78,6 +78,24 @@ describe('Tag', () => {
       })
     })
 
+    it('ignores duplicate tags', () => {
+      var post = new Post({
+        name: 'Tagged Post With Dups',
+        description: 'contains two copies of the #duplicated tag #duplicated in the body'
+      })
+      return new Tag({name: 'duplicated'}).save()
+      .then(() => post.save())
+      .then(post => Tag.updateForPost(post))
+      .then(() => Tag.find('duplicated', {withRelated: ['posts']}))
+      .then(tag => {
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('duplicated')
+        expect(tag.relations.posts.length).to.equal(1)
+        expect(tag.relations.posts.models[0].get('name')).to.equal('Tagged Post With Dups')
+        expect(tag.relations.posts.models[0].pivot.get('selected')).to.equal(false)
+      })
+    })
+
     it('creates a tag from post name', () => {
       var post = new Post({
         name: 'New Tagged Post #nametagone',

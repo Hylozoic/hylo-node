@@ -31,6 +31,7 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
       attachment.selected = selected
     }
     return taggable.tags().attach(attachment, {transacting: trx})
+    .catch(() => {}) // ignores duplicate tags
   })
   .then(tag => Promise.map(communities(taggable), com => addToCommunity(com, tag, taggable.get('user_id'), trx)))
 }
