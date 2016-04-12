@@ -20,6 +20,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, 'leader_id')
   },
 
+  followedTags: function () {
+    return this.hasMany(FollowedTag)
+  },
+
   memberships: function () {
     return this.hasMany(Membership).query({where: {'users_community.active': true}})
   },

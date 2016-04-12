@@ -20,19 +20,20 @@ module.exports = {
     return Tag.find(req.param('tagName'))
     .then(tag => {
       if (!tag) return res.notFound()
-      return Promise.join(
-        CommunityTag.where({community_id: res.locals.community.id, tag_id: tag.id})
-        .fetch({withRelated: 'owner'}),
-        FollowedTag.where({community_id: res.locals.community.id, tag_id: tag.id, user_id: req.session.userId})
-        .fetch(),
-        (communityTag, followedTag) => {
-          var result = communityTag.pick('id', 'description', 'community_id')
-          result.name = tag.get('name')
-          result.owner = communityTag.relations.owner.pick('id', 'name', 'avatar_url')
-          result.followed = !!followedTag
-          result.created = result.owner.id === req.session.userId
-          return result
+      return CommunityTag.where({community_id: res.locals.community.id, tag_id: tag.id})
+      .fetch({withRelated: ['owner', 'community.followedTags']})
+      .then(communityTag => {
+        var result = communityTag.pick('id', 'description', 'community_id')
+        result.name = tag.get('name')
+        result.owner = communityTag.relations.owner.pick('id', 'name', 'avatar_url')
+        result.followed = !!communityTag.relations.community.relations.followedTags.find(ft => {
+          return ft.get('user_id') === req.session.userId &&
+          Number(ft.get('tag_id')) === tag.id
         })
+
+        result.created = result.owner.id === req.session.userId
+        return result
+      })
       .then(res.ok)
       .catch(res.serverError)
     })
@@ -55,7 +56,6 @@ module.exports = {
         created: created
       })
     ))
-    .tap(result => console.log('result of ffLN', result))
     .then(res.ok)
     .catch(res.serverError)
   },
