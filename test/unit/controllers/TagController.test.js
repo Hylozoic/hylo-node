@@ -90,4 +90,36 @@ describe('TagController', () => {
       })
     })
   })
+
+  describe('#findForLeftNav', () => {
+    it('returns followed and created tags ', () => {
+      req.session.userId = fixtures.u1.id
+      _.extend(req.params, {
+        communityId: fixtures.c1.get('slug')
+      })
+
+      return new FollowedTag({
+        community_id: fixtures.c1.id,
+        tag_id: fixtures.t1.id,
+        user_id: fixtures.u1.id
+      }).save()
+      .then(() => new FollowedTag({
+        community_id: fixtures.c1.id,
+        tag_id: fixtures.t2.id,
+        user_id: fixtures.u1.id
+      }).save())
+      .then(() => new CommunityTag({
+        community_id: fixtures.c1.id,
+        tag_id: fixtures.t2.id,
+        owner_id: fixtures.u1.id
+      }).save())
+      .then(() => TagController.findForLeftNav(req, res))
+      .then(() => {
+        expect(res.body.followed.length).to.equal(1)
+        expect(res.body.followed[0].name).to.equal('tagone')
+        expect(res.body.created.length).to.equal(1)
+        expect(res.body.created[0].name).to.equal('tagtwo')
+      })
+    })
+  })
 })

@@ -1,3 +1,19 @@
+var fetchAndPresentFollowed = (communityId, userId) =>
+  FollowedTag.where({community_id: communityId, user_id: userId})
+  .fetchAll({withRelated: 'tag'})
+  .then(followedTags =>
+    followedTags.map(followedTag => ({
+      name: followedTag.relations.tag.get('name')
+    })))
+
+var fetchAndPresentCreated = (communityId, userId) =>
+  CommunityTag.where({community_id: communityId, owner_id: userId})
+  .fetchAll({withRelated: 'tag'})
+  .then(createdTags =>
+    createdTags.map(createdTag => ({
+      name: createdTag.relations.tag.get('name')
+    })))
+
 module.exports = {
 
   findOne: function (req, res) {
@@ -14,6 +30,7 @@ module.exports = {
           result.name = tag.get('name')
           result.owner = communityTag.relations.owner.pick('id', 'name', 'avatar_url')
           result.followed = !!followedTag
+          result.created = result.owner.id === req.session.userId
           return result
         })
       .then(res.ok)
@@ -23,15 +40,22 @@ module.exports = {
 
   findFollowed: function (req, res) {
     return Community.find(req.param('communityId'))
-    .then(com =>
-      FollowedTag.where({community_id: com.id, user_id: req.session.userId})
-      .fetchAll({withRelated: 'tag'}))
-    .then(followedTags => followedTags.map(followedTag => {
-      return {
-        name: followedTag.relations.tag.get('name'),
-        followed: true
-      }
-    }))
+    .then(com => fetchAndPresentFollowed(com.id, req.session.userId))
+    .then(res.ok)
+    .catch(res.serverError)
+  },
+
+  findForLeftNav: function (req, res) {
+    return Community.find(req.param('communityId'))
+    .then(com => Promise.join(
+      fetchAndPresentFollowed(com.id, req.session.userId),
+      fetchAndPresentCreated(com.id, req.session.userId),
+      (followed, created) => ({
+        followed: _.filter(followed, f => !_.includes(_.map(created, 'name'), f.name)),
+        created: created
+      })
+    ))
+    .tap(result => console.log('result of ffLN', result))
     .then(res.ok)
     .catch(res.serverError)
   },
