@@ -20,6 +20,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, 'leader_id')
   },
 
+  tagFollows: function () {
+    return this.hasMany(TagFollow)
+  },
+
   memberships: function () {
     return this.hasMany(Membership).query({where: {'users_community.active': true}})
   },
@@ -44,7 +48,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   tags: function () {
-    return this.belongsToMany(Tag).through(CommunityTag).withPivot('owner_id')
+    return this.belongsToMany(Tag).through(CommunityTag).withPivot('user_id')
   },
 
   comments: function () {

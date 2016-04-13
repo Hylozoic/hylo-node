@@ -172,6 +172,7 @@
       "Search",
       "Skill",
       "Tag",
+      "TagFollow",
       "TagUser",
       "Thank",
       "TokenAuth",

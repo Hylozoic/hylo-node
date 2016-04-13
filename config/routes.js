@@ -92,6 +92,9 @@ module.exports.routes = {
 
   'GET    /noo/tag/:communityId/:tagName':                'TagController.findOne',
   'GET    /noo/tag/:communityId/:tagName/posts':          'PostController.findForTag',
+  'POST   /noo/tag/:communityId/:tagName/follow':         'TagController.follow',
+  'GET    /noo/tags/:communityId/followed':               'TagController.findFollowed',
+  'GET    /noo/tags/:communityId/leftnav':                'TagController.findForLeftNav',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/search/fulltext':                          'SearchController.showFullText',
