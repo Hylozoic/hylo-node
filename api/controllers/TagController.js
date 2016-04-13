@@ -21,16 +21,15 @@ module.exports = {
     .then(tag => {
       if (!tag) return res.notFound()
       return CommunityTag.where({community_id: res.locals.community.id, tag_id: tag.id})
-      .fetch({withRelated: ['owner', 'community.followedTags']})
+      .fetch({withRelated: [
+        'owner',
+        {'community.followedTags': qb => qb.where({'followed_tags.tag_id': tag.id, 'followed_tags.user_id': req.session.userId})}
+      ]})
       .then(communityTag => {
         var result = communityTag.pick('id', 'description', 'community_id')
         result.name = tag.get('name')
         result.owner = communityTag.relations.owner.pick('id', 'name', 'avatar_url')
-        result.followed = !!communityTag.relations.community.relations.followedTags.find(ft => {
-          return ft.get('user_id') === req.session.userId &&
-          Number(ft.get('tag_id')) === tag.id
-        })
-
+        result.followed = communityTag.relations.community.relations.followedTags.length > 0
         result.created = result.owner.id === req.session.userId
         return result
       })
