@@ -73,16 +73,14 @@ module.exports = {
           user_id: req.session.userId
         }).fetch()
         .then(tagFollow => {
-          if (tagFollow) {
-            return tagFollow.destroy()
-          } else {
-            return new TagFollow({
+          return tagFollow
+            ? tagFollow.destroy()
+            : new TagFollow({
               community_id: community.id,
               tag_id: tag.id,
               user_id: req.session.userId
             })
             .save()
-          }
         })
       })
     .then(res.ok)
