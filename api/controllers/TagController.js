@@ -1,6 +1,6 @@
 import { filter, includes, map } from 'lodash'
 
-var fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
+const fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
   joinClass.where({community_id: communityId, user_id: userId})
   .fetchAll({withRelated: 'tag'})
   .then(joins =>
@@ -8,10 +8,10 @@ var fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
       name: join.relations.tag.get('name')
     })))
 
-var fetchAndPresentFollowed = (communityId, userId) =>
+const fetchAndPresentFollowed = (communityId, userId) =>
   fetchAndPresentTagJoins(TagFollow, communityId, userId)
 
-var fetchAndPresentCreated = (communityId, userId) =>
+const fetchAndPresentCreated = (communityId, userId) =>
   fetchAndPresentTagJoins(CommunityTag, communityId, userId)
 
 module.exports = {
@@ -76,11 +76,11 @@ module.exports = {
           return tagFollow
             ? tagFollow.destroy()
             : new TagFollow({
-              community_id: community.id,
-              tag_id: tag.id,
-              user_id: req.session.userId
-            })
-            .save()
+                community_id: community.id,
+                tag_id: tag.id,
+                user_id: req.session.userId
+              })
+              .save()
         })
       })
     .then(res.ok)
