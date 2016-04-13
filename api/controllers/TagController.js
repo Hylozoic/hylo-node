@@ -1,18 +1,16 @@
-var fetchAndPresentFollowed = (communityId, userId) =>
-  FollowedTag.where({community_id: communityId, user_id: userId})
+var fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
+  joinClass.where({community_id: communityId, user_id: userId})
   .fetchAll({withRelated: 'tag'})
-  .then(followedTags =>
-    followedTags.map(followedTag => ({
-      name: followedTag.relations.tag.get('name')
+  .then(joins =>
+    joins.map(join => ({
+      name: join.relations.tag.get('name')
     })))
 
+var fetchAndPresentFollowed = (communityId, userId) =>
+  fetchAndPresentTagJoins(TagFollow, communityId, userId)
+
 var fetchAndPresentCreated = (communityId, userId) =>
-  CommunityTag.where({community_id: communityId, owner_id: userId})
-  .fetchAll({withRelated: 'tag'})
-  .then(createdTags =>
-    createdTags.map(createdTag => ({
-      name: createdTag.relations.tag.get('name')
-    })))
+  fetchAndPresentTagJoins(CommunityTag, communityId, userId)
 
 module.exports = {
 
@@ -23,13 +21,14 @@ module.exports = {
       return CommunityTag.where({community_id: res.locals.community.id, tag_id: tag.id})
       .fetch({withRelated: [
         'owner',
-        {'community.followedTags': qb => qb.where({'followed_tags.tag_id': tag.id, 'followed_tags.user_id': req.session.userId})}
+        {'community.tagFollows': qb =>
+            qb.where({'tag_follows.tag_id': tag.id, 'tag_follows.user_id': req.session.userId})}
       ]})
       .then(communityTag => {
         var result = communityTag.pick('id', 'description', 'community_id')
         result.name = tag.get('name')
         result.owner = communityTag.relations.owner.pick('id', 'name', 'avatar_url')
-        result.followed = communityTag.relations.community.relations.followedTags.length > 0
+        result.followed = communityTag.relations.community.relations.tagFollows.length > 0
         result.created = result.owner.id === req.session.userId
         return result
       })
@@ -66,16 +65,16 @@ module.exports = {
       (tag, community) => {
         if (!tag) return res.notFound()
 
-        return FollowedTag.where({
+        return TagFollow.where({
           community_id: community.id,
           tag_id: tag.id,
           user_id: req.session.userId
         }).fetch()
-        .then(followedTag => {
-          if (followedTag) {
-            return followedTag.destroy()
+        .then(tagFollow => {
+          if (tagFollow) {
+            return tagFollow.destroy()
           } else {
-            return new FollowedTag({
+            return new TagFollow({
               community_id: community.id,
               tag_id: tag.id,
               user_id: req.session.userId

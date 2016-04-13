@@ -44,7 +44,7 @@ var addToCommunity = (community, tag, user_id, trx) => {
   // the catch here is for the case where another user just created the CommunityTag
   // the save fails, but we don't care about the result
   .then(comTag => comTag ||
-    new CommunityTag({community_id: community.id, tag_id: tag.id, owner_id: user_id}).save({}, {transacting: trx})
+    new CommunityTag({community_id: community.id, tag_id: tag.id, user_id: user_id}).save({}, {transacting: trx})
     .catch(() => {}))
 }
 
@@ -75,7 +75,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   communities: function () {
-    return this.belongsToMany(Community).through(CommunityTag).withPivot('owner_id')
+    return this.belongsToMany(Community).through(CommunityTag).withPivot('user_id')
   },
 
   posts: function () {

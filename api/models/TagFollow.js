@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'followed_tags',
+  tableName: 'tag_follows',
 
   community: function () {
     return this.belongsTo(Community)

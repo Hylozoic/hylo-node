@@ -21,7 +21,7 @@ describe('TagController', () => {
   })
 
   describe('#follow', () => {
-    it('creates a FollowedTag', () => {
+    it('creates a TagFollow', () => {
       req.session.userId = fixtures.u1.id
       _.extend(req.params, {
         communityId: fixtures.c1.get('slug'),
@@ -29,36 +29,36 @@ describe('TagController', () => {
       })
 
       return TagController.follow(req, res)
-      .then(() => FollowedTag.where({
+      .then(() => TagFollow.where({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t1.id,
         user_id: fixtures.u1.id
       }).fetch())
-      .then(followedTag => {
-        expect(followedTag).to.exist
+      .then(tagFollow => {
+        expect(tagFollow).to.exist
       })
     })
 
-    it('removes an existing FollowedTag', () => {
+    it('removes an existing TagFollow', () => {
       req.session.userId = fixtures.u1.id
       _.extend(req.params, {
         communityId: fixtures.c1.get('slug'),
         tagName: fixtures.t2.get('name')
       })
 
-      return new FollowedTag({
+      return new TagFollow({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t2.id,
         user_id: fixtures.u1.id
       }).save()
       .then(() => TagController.follow(req, res))
-      .then(() => FollowedTag.where({
+      .then(() => TagFollow.where({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t2.id,
         user_id: fixtures.u1.id
       }).fetch())
-      .then(followedTag => {
-        expect(followedTag).to.not.exist
+      .then(tagFollow => {
+        expect(tagFollow).to.not.exist
       })
     })
   })
@@ -70,12 +70,12 @@ describe('TagController', () => {
         communityId: fixtures.c1.get('slug')
       })
 
-      return new FollowedTag({
+      return new TagFollow({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t1.id,
         user_id: fixtures.u1.id
       }).save()
-      .then(() => new FollowedTag({
+      .then(() => new TagFollow({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t2.id,
         user_id: fixtures.u1.id
@@ -98,12 +98,12 @@ describe('TagController', () => {
         communityId: fixtures.c1.get('slug')
       })
 
-      return new FollowedTag({
+      return new TagFollow({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t1.id,
         user_id: fixtures.u1.id
       }).save()
-      .then(() => new FollowedTag({
+      .then(() => new TagFollow({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t2.id,
         user_id: fixtures.u1.id
@@ -111,7 +111,7 @@ describe('TagController', () => {
       .then(() => new CommunityTag({
         community_id: fixtures.c1.id,
         tag_id: fixtures.t2.id,
-        owner_id: fixtures.u1.id
+        user_id: fixtures.u1.id
       }).save())
       .then(() => TagController.findForLeftNav(req, res))
       .then(() => {
