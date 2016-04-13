@@ -1,3 +1,5 @@
+import { filter, includes, map } from 'lodash'
+
 var fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
   joinClass.where({community_id: communityId, user_id: userId})
   .fetchAll({withRelated: 'tag'})
@@ -50,8 +52,8 @@ module.exports = {
       fetchAndPresentFollowed(com.id, req.session.userId),
       fetchAndPresentCreated(com.id, req.session.userId),
       (followed, created) => ({
-        followed: _.filter(followed, f => !_.includes(_.map(created, 'name'), f.name)),
-        created: created
+        followed: filter(followed, f => !includes(map(created, 'name'), f.name)),
+        created
       })
     ))
     .then(res.ok)
