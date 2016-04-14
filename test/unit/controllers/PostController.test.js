@@ -168,6 +168,27 @@ describe('PostController', () => {
           expect(tag.relations.posts.models[0].get('name')).to.equal('New Awesome Post #awesome')
         })
       })
+
+      it('creates an event with a custom tag', () => {
+        _.extend(req.params, {
+          name: 'New Event',
+          description: '<p>Post Body</p>',
+          type: 'event',
+          tag: 'zounds',
+          communities: [fixtures.c1.id]
+        })
+
+        return PostController.create(req, res)
+        .then(() => Tag.find('zounds', {withRelated: ['posts']}))
+        .then(tag => {
+          expect(tag).to.exist
+          const post = tag.relations.posts.first()
+          expect(post).to.exist
+          expect(post.get('name')).to.equal('New Event')
+          expect(post.get('type')).to.equal('event')
+          expect(post.pivot.get('selected')).to.be.true
+        })
+      })
     })
 
     describe('for a project', () => {
