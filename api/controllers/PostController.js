@@ -63,18 +63,9 @@ var queryForUser = function (req, res) {
   })
 }
 
-var queryForAllForUser = function (req, res) {
-  return Membership.activeCommunityIds(req.session.userId)
-  .then(function (communityIds) {
-    return Search.forPosts({
-      communities: communityIds,
-      limit: req.param('limit') || 10,
-      offset: req.param('offset'),
-      sort: sortColumns[req.param('sort') || 'recent'],
-      type: req.param('type') || 'all+welcome',
-      forUser: req.session.userId,
-      term: req.param('search')
-    })
+const queryForAllForUser = function (req, res) {
+  return queryPosts(req, {
+    communities: Membership.activeCommunityIds(req.session.userId)
   })
 }
 
