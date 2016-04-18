@@ -11,6 +11,7 @@ describe('PostController', () => {
     .then(() => Promise.props({
       u1: new User({name: 'U1', email: 'a@b.c'}).save(),
       u2: new User({name: 'U2', email: 'b@b.c'}).save(),
+      u3: new User({name: 'U3', email: 'c@b.c'}).save(),
       p1: new Post({name: 'P1'}).save(),
       c1: new Community({name: 'C1', slug: 'c1'}).save()
     }))
@@ -454,7 +455,7 @@ describe('PostController', () => {
       res.locals.community = c2
     })
 
-    it.only('shows tagged content to members', () => {
+    it('shows tagged content to members', () => {
       req.session.userId = fixtures.u1.id
 
       _.extend(req.params, {
@@ -587,8 +588,8 @@ describe('PostController', () => {
 
     before(() => {
       c2 = factories.community()
-      p2 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
-      p3 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true})
+      p2 = factories.post({user_id: fixtures.u3.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({user_id: fixtures.u3.id, type: 'chat', active: true})
       return Promise.join(
         p2.save(),
         p3.save(),
@@ -602,13 +603,13 @@ describe('PostController', () => {
     })
 
     beforeEach(() => {
-      res.locals.user = fixtures.u2
+      res.locals.user = fixtures.u3
     })
 
     it('returns false when nothing has changed', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
-        userId: fixtures.u2.id,
+        userId: fixtures.u3.id,
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
@@ -621,12 +622,12 @@ describe('PostController', () => {
     it('returns true when a post has been added', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
-        userId: fixtures.u2.id,
+        userId: fixtures.u3.id,
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
 
-      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u3.id})
       return p4.save()
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForUser(req, res))
