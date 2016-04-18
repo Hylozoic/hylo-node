@@ -392,6 +392,64 @@ describe('PostController', () => {
     })
   })
 
+  describe('.findForTagInAllCommunities', () => {
+    var p2, p3, p4, c2, c3
+
+    before(() => {
+      c2 = factories.community()
+      c3 = factories.community()
+      p2 = factories.post({type: 'offer', active: true, description: '#findtesttag', user_id: fixtures.u2.id})
+      p3 = factories.post({type: 'chat', active: true, description: '#findtesttag', user_id: fixtures.u2.id})
+      p4 = factories.post({type: 'request', active: true, description: '#somedifferenttag', user_id: fixtures.u2.id})
+      return Promise.join(
+        p2.save(),
+        p3.save(),
+        p4.save(),
+        c2.save(),
+        c3.save())
+      .then(() => Promise.join(
+        c2.posts().attach(p2),
+        c3.posts().attach(p3),
+        c2.posts().attach(p4),
+        new Membership({
+          user_id: fixtures.u1.id,
+          community_id: c2.id,
+          active: true
+        }).save(),
+        new Membership({
+          user_id: fixtures.u1.id,
+          community_id: c3.id,
+          active: true
+        }).save()
+      ))
+      .then(() => Promise.join(
+        Tag.updateForPost(p2),
+        Tag.updateForPost(p3),
+        Tag.updateForPost(p4)
+      ))
+    })
+
+    beforeEach(() => {
+      res.locals.community = c2
+    })
+
+    it.only('shows tagged content to members', () => {
+      req.session.userId = fixtures.u1.id
+
+      _.extend(req.params, {
+        tagName: 'findtesttag'
+      })
+
+      return PostController.findForTagInAllCommunities(req, res)
+      .then(() => {
+        expect(res.body.posts_total).to.equal(2)
+        var ids = _.map(res.body.posts, 'id')
+        expect(ids).to.contain(p2.id)
+        expect(ids).to.contain(p3.id)
+      })
+    })
+  })
+
   describe('.findForCommunity', () => {
     var p2, p3, c2
 
