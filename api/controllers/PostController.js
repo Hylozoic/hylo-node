@@ -1,6 +1,6 @@
-var _ = require('lodash')
-var createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
-var sortColumns = {
+const _ = require('lodash')
+const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
+const sortColumns = {
   'fulfilled-last': 'fulfilled_at',
   'top': 'post.num_votes',
   'recent': 'post.updated_at',
@@ -8,33 +8,21 @@ var sortColumns = {
   'start_time': ['post.start_time', 'asc']
 }
 
-var queryPosts = function (req, opts) {
-  var params = _.merge(
-    _.pick(req.allParams(), [
-      'sort', 'limit', 'offset', 'type', 'start_time', 'end_time', 'filter'
-    ]),
-    _.pick(opts, 'sort')
-  )
-
-  // using Promise.props here allows us to pass queries as attributes,
-  // e.g. when looking up communities in PostController.findForUser
-
-  return Promise.props(_.merge(
+const queryPosts = (req, opts) =>
+  // using Promise.props here allows us to pass subqueries, e.g. when looking up
+  // communities in queryForUser
+  Promise.props(_.merge(
     {
-      sort: sortColumns[params.sort || 'recent'],
+      sort: sortColumns[opts.sort || req.param('sort') || 'recent'],
       forUser: req.session.userId,
       term: req.param('search')
     },
-    _.pick(params, 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
+    _.pick(req.allParams(), 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
     _.pick(opts, 'communities', 'project', 'users', 'visibility', 'tag')
   ))
-  .then(args => {
-    var result = Search.forPosts(args)
-    return result
-  })
-}
+  .then(Search.forPosts)
 
-var fetchAndPresentPosts = function (query, userId, relationsOpts) {
+const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relations(userId, relationsOpts || {})
   })
@@ -44,7 +32,7 @@ var fetchAndPresentPosts = function (query, userId, relationsOpts) {
   }))
 }
 
-var queryForCommunity = function (req, res) {
+const queryForCommunity = function (req, res) {
   if (TokenAuth.isAuthenticated(res)) {
     if (!RequestValidation.requireTimeRange(req, res)) return
   }
@@ -55,7 +43,7 @@ var queryForCommunity = function (req, res) {
   })
 }
 
-var queryForUser = function (req, res) {
+const queryForUser = function (req, res) {
   return queryPosts(req, {
     users: [req.param('userId')],
     communities: Membership.activeCommunityIds(req.session.userId),
@@ -69,7 +57,7 @@ const queryForAllForUser = function (req, res) {
   })
 }
 
-var queryForFollowed = function (req, res) {
+const queryForFollowed = function (req, res) {
   return Promise.resolve(Search.forPosts({
     follower: req.session.userId,
     limit: req.param('limit') || 10,
@@ -80,14 +68,14 @@ var queryForFollowed = function (req, res) {
   }))
 }
 
-var queryForProject = function (req, res) {
+const queryForProject = function (req, res) {
   return queryPosts(req, {
     project: req.param('projectId'),
     sort: 'fulfilled-last'
   })
 }
 
-var queryForNetwork = function (req, res) {
+const queryForNetwork = function (req, res) {
   return Network.find(req.param('networkId'))
   .then(network => Community.where({network_id: network.id}).fetchAll())
   .then(communities => queryPosts(req, {
@@ -96,7 +84,7 @@ var queryForNetwork = function (req, res) {
   }))
 }
 
-var queryForTag = function (req, res) {
+const queryForTag = function (req, res) {
   if (TokenAuth.isAuthenticated(res)) {
     if (!RequestValidation.requireTimeRange(req, res)) return
   }
@@ -109,7 +97,7 @@ var queryForTag = function (req, res) {
   }))
 }
 
-var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
+const createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   return queryFunction(req, res)
   .then(query => fetchAndPresentPosts(
     query,
@@ -121,7 +109,7 @@ var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   .then(res.ok, res.serverError)
 }
 
-var postTypeFromTag = tagName => {
+const postTypeFromTag = tagName => {
   if (tagName && _.includes(_.values(Post.Type), tagName)) {
     return tagName
   } else {
@@ -129,8 +117,8 @@ var postTypeFromTag = tagName => {
   }
 }
 
-var setupNewPostAttrs = function (userId, params) {
-  var attrs = _.merge(Post.newPostAttrs(), {
+const setupNewPostAttrs = function (userId, params) {
+  const attrs = _.merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
     description: RichText.sanitize(params.description),
     user_id: userId,
@@ -152,10 +140,10 @@ var setupNewPostAttrs = function (userId, params) {
   return Promise.resolve(attrs)
 }
 
-var afterSavingPost = function (post, opts) {
-  var userId = post.get('user_id')
-  var mentioned = RichText.getUserMentions(post.get('description'))
-  var followerIds = _.uniq(mentioned.concat(userId))
+const afterSavingPost = function (post, opts) {
+  const userId = post.get('user_id')
+  const mentioned = RichText.getUserMentions(post.get('description'))
+  const followerIds = _.uniq(mentioned.concat(userId))
 
   // no need to specify community ids explicitly if saving for a project
   return (() => {
@@ -193,7 +181,7 @@ var afterSavingPost = function (post, opts) {
     .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
 }
 
-var PostController = {
+const PostController = {
   findOne: function (req, res) {
     var opts = {
       withComments: req.param('comments') && 'all',
@@ -460,7 +448,7 @@ var PostController = {
   }
 }
 
-var queries = {
+const queries = {
   Community: queryForCommunity,
   User: queryForUser,
   AllForUser: queryForAllForUser,
@@ -470,7 +458,7 @@ var queries = {
   Tag: queryForTag
 }
 
-var relationsOpts = {
+const relationsOpts = {
   Project: {fromProject: true}
 }
 

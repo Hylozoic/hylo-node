@@ -1,4 +1,4 @@
-var listModelQuerySettings = (qb, table, column, opts) => {
+const listModelQuerySettings = (qb, table, column, opts) => {
   qb.limit(opts.limit || 20)
 
   // this will require the fetch or fetchAll call to have {columns: [column]}
