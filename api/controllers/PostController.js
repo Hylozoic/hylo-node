@@ -118,6 +118,20 @@ var queryForTag = function (req, res) {
   }))
 }
 
+var queryForTagInAllCommunities = function (req, res) {
+  if (TokenAuth.isAuthenticated(res)) {
+    if (!RequestValidation.requireTimeRange(req, res)) return
+  }
+
+  return Promise.join(
+    Tag.find(req.param('tagName')),
+    Membership.activeCommunityIds(req.session.userId),
+    (tag, communityIds) => queryPosts(req, {
+      communities: communityIds,
+      tag: tag.id
+    }))
+}
+
 var createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   return queryFunction(req, res)
   .then(query => fetchAndPresentPosts(
@@ -476,7 +490,8 @@ var queries = {
   Followed: queryForFollowed,
   Project: queryForProject,
   Network: queryForNetwork,
-  Tag: queryForTag
+  Tag: queryForTag,
+  TagInAllCommunities: queryForTagInAllCommunities
 }
 
 var relationsOpts = {

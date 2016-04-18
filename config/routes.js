@@ -59,6 +59,8 @@ module.exports.routes = {
   'POST   /noo/freshness/posts/project/:projectId':       'PostController.checkFreshnessForProject',
   'POST   /noo/freshness/posts/network/:networkId':       'PostController.checkFreshnessForNetwork',
   'POST   /noo/freshness/posts/tag/:communityId/:tagName':'PostController.checkFreshnessForTag',
+  'POST   /noo/freshness/posts/tag-in-all-communities/:tagName':
+    'PostController.checkFreshnessForTagInAllCommunities',
 
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',
@@ -95,6 +97,7 @@ module.exports.routes = {
   'POST   /noo/tag/:communityId/:tagName/follow':         'TagController.follow',
   'GET    /noo/tags/:communityId/followed':               'TagController.findFollowed',
   'GET    /noo/tags/:communityId/leftnav':                'TagController.findForLeftNav',
+  'GET    /noo/tag-in-all-communities/:tagName/posts':    'PostController.findForTagInAllCommunities',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/search/fulltext':                          'SearchController.showFullText',
