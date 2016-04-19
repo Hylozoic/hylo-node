@@ -58,7 +58,9 @@ module.exports.routes = {
   'POST   /noo/freshness/posts/followed-posts/:userId':   'PostController.checkFreshnessForFollowed',
   'POST   /noo/freshness/posts/project/:projectId':       'PostController.checkFreshnessForProject',
   'POST   /noo/freshness/posts/network/:networkId':       'PostController.checkFreshnessForNetwork',
-  'POST   /noo/freshness/posts/tag/:communityId/:tagName':'PostController.checkFreshnessForTag',
+  'POST   /noo/freshness/posts/community/:communityId/tag/:tagName':
+    'PostController.checkFreshnessForTag',
+  'POST   /noo/freshness/posts/tag/:tagName':             'PostController.checkFreshnessForTagInAllCommunities',
 
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',
@@ -90,11 +92,12 @@ module.exports.routes = {
   'POST   /noo/network/validate':                         'NetworkController.validate',
   'POST   /noo/network/:networkId':                       'NetworkController.update',
 
-  'GET    /noo/tag/:communityId/:tagName':                'TagController.findOne',
-  'GET    /noo/tag/:communityId/:tagName/posts':          'PostController.findForTag',
-  'POST   /noo/tag/:communityId/:tagName/follow':         'TagController.follow',
-  'GET    /noo/tags/:communityId/followed':               'TagController.findFollowed',
-  'GET    /noo/tags/:communityId/leftnav':                'TagController.findForLeftNav',
+  'GET    /noo/community/:communityId/tag/:tagName':       'TagController.findOne',
+  'GET    /noo/community/:communityId/tag/:tagName/posts': 'PostController.findForTag',
+  'POST   /noo/community/:communityId/tag/:tagName/follow':'TagController.follow',
+  'GET    /noo/community/:communityId/tags/followed':      'TagController.findFollowed',
+  'GET    /noo/community/:communityId/tags/leftnav':       'TagController.findForLeftNav',
+  'GET    /noo/tag/:tagName/posts':                        'PostController.findForTagInAllCommunities',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/search/fulltext':                          'SearchController.showFullText',
