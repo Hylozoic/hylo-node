@@ -334,12 +334,12 @@ module.exports = bookshelf.Model.extend({
           .then(tagFollows =>
             Promise.map(tagFollows.models, tagFollow =>
               Promise.join(
-                /* Queue.classMethod('Post', 'sendNewPostInTagEmail', {
+                Queue.classMethod('Post', 'sendNewPostInTagEmail', {
                   recipientId: tagFollow.get('user_id'),
                   postId: post.id,
                   communityId: community.id,
                   tagName: tag.get('name')
-                }), */
+                }),
                 Queue.classMethod('Post', 'sendNewPostInTagPushNotification', {
                   recipientId: tagFollow.get('user_id'),
                   postId: post.id,
