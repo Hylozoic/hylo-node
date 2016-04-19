@@ -97,7 +97,8 @@ module.exports = bookshelf.Model.extend({
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
     if (isNaN(Number(id))) {
-      return Tag.where({name: id}).fetch(options)
+      return Tag.query(qb => qb.whereRaw('LOWER(name) = ?', id.toLowerCase()))
+      .fetch(options)
     }
     return Tag.where({id: id}).fetch(options)
   },
