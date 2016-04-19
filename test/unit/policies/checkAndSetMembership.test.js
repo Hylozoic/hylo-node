@@ -25,4 +25,19 @@ describe('checkAndSetMembership', () => {
       expect(typeof res.locals.membership.save).to.equal('function')
     })
   })
+
+  it("doesn't set res.locals.membership if publicAccessAllowed", () => {
+    var req = factories.mock.request()
+    req.params.communityId = community.id
+    req.user = {email: 'lawrence@hylo.com'}
+    var res = factories.mock.response()
+    res.locals.publicAccessAllowed = true
+    var next = spy(() => {})
+
+    return checkAndSetMembership(req, res, next)
+    .then(() => {
+      expect(next).to.have.been.called()
+      expect(res.locals.membership).to.not.exist
+    })
+  })
 })

@@ -24,10 +24,13 @@ module.exports = function checkAndSetMembership (req, res, next) {
     // who should see all community content and someone who should see only
     // public content
     if (Admin.isSignedIn(req) ||
-      res.locals.publicAccessAllowed ||
       TokenAuth.isPermitted(res, community.id)) {
       allowed = true
     }
+
+    // if public access is allowed we don't set membership; controllers use
+    // its absence to determine that they should only show public content
+    if (res.locals.publicAccessAllowed) return next()
 
     // but still look up the actual membership if available, so that things
     // still behave as expected (e.g. in the case of an admin removing their own

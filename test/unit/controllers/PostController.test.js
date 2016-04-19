@@ -491,7 +491,6 @@ describe('PostController', () => {
     })
 
     it('shows only public content to non-members', () => {
-      res.locals.membership = {dummy: true, save: () => {}}
       return PostController.findForCommunity(req, res)
       .then(() => {
         expect(res.body.posts_total).to.equal(1)
@@ -515,7 +514,6 @@ describe('PostController', () => {
     })
 
     it('returns post type as tag as well', () => {
-      res.locals.membership = {dummy: true, save: () => {}}
       return PostController.findForCommunity(req, res)
       .then(() => {
         expect(res.body.posts_total).to.equal(1)
@@ -524,7 +522,6 @@ describe('PostController', () => {
     })
 
     it('returns selected tag if present', () => {
-      res.locals.membership = {dummy: true, save: () => {}}
       return Tag.updateForPost(p2, 'findforcommunitytag')
       .then(() => PostController.findForCommunity(req, res))
       .then(() => {
