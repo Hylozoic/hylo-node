@@ -1,4 +1,5 @@
 var url = require('url')
+import { pick } from 'lodash'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
@@ -224,7 +225,60 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  sendPushNotifications: function (opts) {
+  sendNewPostInTagEmail: function (opts) {
+    return Promise.join(
+      User.find(opts.recipientId),
+      Post.find(opts.postId, {withRelated: ['user']}),
+      Community.find(opts.communityId),
+      (recipient, post, community) => {
+        var user = post.relations.user
+        var description = RichText.qualifyLinks(post.get('description'))
+        var replyTo = Email.postReplyAddress(post.id, recipient.id)
+
+        return recipient.generateToken()
+        .then(token => Email.sendNewPostInTagNotification({
+          email: recipient.get('email'),
+          sender: {
+            address: replyTo,
+            reply_to: replyTo,
+            name: format('%s (via Hylo)', user.get('name'))
+          },
+          data: {
+            tagName: opts.tagName,
+            community_name: community.get('name'),
+            post_user_name: user.get('name'),
+            post_user_avatar_url: Frontend.Route.tokenLogin(recipient, token,
+              user.get('avatar_url') + '?ctt=post_mention_email'),
+            post_user_profile_url: Frontend.Route.tokenLogin(recipient, token,
+              Frontend.Route.profile(user) + '?ctt=post_mention_email'),
+            post_description: description,
+            post_title: post.get('name'),
+            post_type: post.get('type'),
+            post_url: Frontend.Route.tokenLogin(recipient, token,
+              Frontend.Route.post(post) + '?ctt=post_mention_email'),
+            unfollow_url: Frontend.Route.tokenLogin(recipient, token,
+              Frontend.Route.unfollowTag(opts.tagName, community) + '?ctt=post_mention_email')
+          }
+        }))
+      })
+  },
+
+  sendNewPostInTagPushNotification: function (opts) {
+    return Promise.join(
+      User.find(opts.recipientId),
+      Post.find(opts.postId, {withRelated: ['user']}),
+      Community.find(opts.communityId),
+      (recipient, post, community) => {
+        if (!recipient.get('push_new_post_preference')) return
+        if (post.isWelcome()) return
+        if (!community) return
+        const path = url.parse(Frontend.Route.post(post, community)).path
+        const alertText = PushNotification.textForNewPostInTag(post, opts.tagName)
+        return recipient.sendPushNotification(alertText, path)
+      })
+  },
+
+  sendNewPostPushNotifications: function (opts) {
     return Post.find(opts.postId, {withRelated: [
       'communities',
       'communities.users',
@@ -268,6 +322,32 @@ module.exports = bookshelf.Model.extend({
       Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
       User.incNewNotificationCount(userId, opts.transacting)
     )
+  },
+
+  notifyTagFollowers: function (post, opts) {
+    return post.load(['tags', 'communities'], pick(opts, 'transacting'))
+    .then(post =>
+      Promise.map(post.relations.tags.models, tag =>
+        Promise.map(post.relations.communities.models, community =>
+          TagFollow.where({community_id: community.id, tag_id: tag.id})
+          .fetchAll()
+          .then(tagFollows =>
+            Promise.map(tagFollows.models, tagFollow =>
+              Promise.join(
+                Queue.classMethod('Post', 'sendNewPostInTagEmail', {
+                  recipientId: tagFollow.get('user_id'),
+                  postId: post.id,
+                  communityId: community.id,
+                  tagName: tag.get('name')
+                }),
+                Queue.classMethod('Post', 'sendNewPostInTagPushNotification', {
+                  recipientId: tagFollow.get('user_id'),
+                  postId: post.id,
+                  communityId: community.id,
+                  tagName: tag.get('name')
+                })
+              )))
+        )))
   },
 
   createWelcomePost: function (userId, communityId, trx) {

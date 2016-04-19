@@ -83,6 +83,15 @@ module.exports = {
     }))
   },
 
+  sendNewPostInTagNotification: function (opts) {
+    return sendEmail(_.merge({}, defaultOptions, {
+      email_id: 'tem_naaoSk5WEMoKX995DLskGQ',
+      recipient: {address: opts.email},
+      email_data: opts.data,
+      sender: opts.sender
+    }))
+  },
+
   sendCommunityDigest: function (opts) {
     return sendSimpleEmail(opts.email, 'tem_rkZiuPHBvLDFrZ6rv8VixH', opts.data)
   },

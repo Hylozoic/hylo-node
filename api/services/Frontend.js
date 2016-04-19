@@ -40,6 +40,10 @@ module.exports = {
       return this.post(post, community) + '?action=unfollow'
     },
 
+    unfollowTag: function (tagName, community) {
+      return 'TODO'
+    },
+
     userSettings: function () {
       return url('/settings')
     },
