@@ -179,6 +179,7 @@ const afterSavingPost = function (post, opts) {
       exclude: mentioned
     })]))
     .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
+    .then(() => Post.notifyTagFollowers(post, _.pick(opts, 'transacting')))
 }
 
 const PostController = {

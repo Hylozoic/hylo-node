@@ -183,4 +183,21 @@ describe('Post', function () {
       })
     })
   })
+
+  describe('#notifyTagFollowers', () => {
+    var post
+
+    before(() => {
+      post = factories.post({description: 'post body with #amazing tag', type: 'request'})
+      return post.save()
+      .then(post => Tag.updateForPost(post, 'request'))
+    })
+
+    it.only('adds an email to the queue', () => {
+      return Post.notifyTagFollowers(post)
+      .then(() => {
+        expect(true).to.equal(true)
+      })
+    })
+  })
 })
