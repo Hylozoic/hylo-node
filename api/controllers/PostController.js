@@ -39,7 +39,7 @@ const queryForCommunity = function (req, res) {
 
   return queryPosts(req, {
     communities: [res.locals.community.id],
-    visibility: (res.locals.membership.dummy ? Post.Visibility.PUBLIC_READABLE : null)
+    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
   })
 }
 
@@ -89,7 +89,7 @@ const queryForTag = function (req, res) {
   .then(tag => queryPosts(req, {
     communities: [res.locals.community.id],
     tag: tag.id,
-    visibility: (res.locals.membership.dummy ? Post.Visibility.PUBLIC_READABLE : null)
+    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
   }))
 }
 
