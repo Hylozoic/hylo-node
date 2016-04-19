@@ -174,7 +174,7 @@ const afterSavingPost = function (post, opts) {
     opts.docs && Promise.map(opts.docs, doc =>
       Media.createDoc(post.id, doc, opts.transacting)),
 
-    Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id}),
+    Queue.classMethod('Post', 'sendNewPostPushNotifications', {postId: post.id}),
 
     opts.projectId && PostProjectMembership.create(
       post.id, opts.projectId, _.pick(opts, 'transacting')),

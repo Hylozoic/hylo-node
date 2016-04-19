@@ -263,7 +263,22 @@ module.exports = bookshelf.Model.extend({
       })
   },
 
-  sendPushNotifications: function (opts) {
+  sendNewPostInTagPushNotification: function (opts) {
+    return Promise.join(
+      User.find(opts.recipientId),
+      Post.find(opts.postId, {withRelated: ['user']}),
+      Community.find(opts.communityId),
+      (recipient, post, community) => {
+        if (!recipient.get('push_new_post_preference')) return
+        if (post.isWelcome()) return
+        if (!community) return
+        const path = url.parse(Frontend.Route.post(post, community)).path
+        const alertText = PushNotification.textForNewPostInTag(post, opts.tagName)
+        return recipient.sendPushNotification(alertText, path)
+      })
+  },
+
+  sendNewPostPushNotifications: function (opts) {
     return Post.find(opts.postId, {withRelated: [
       'communities',
       'communities.users',
@@ -317,14 +332,21 @@ module.exports = bookshelf.Model.extend({
           TagFollow.where({community_id: community.id, tag_id: tag.id})
           .fetchAll()
           .then(tagFollows =>
-            Promise.map(tagFollows.models, tagFollow => {
-              return Queue.classMethod('Post', 'sendNewPostInTagEmail', {
-                recipientId: tagFollow.get('user_id'),
-                postId: post.id,
-                communityId: community.id,
-                tagName: tag.get('name')
-              })
-            }))
+            Promise.map(tagFollows.models, tagFollow =>
+              Promise.join(
+                /* Queue.classMethod('Post', 'sendNewPostInTagEmail', {
+                  recipientId: tagFollow.get('user_id'),
+                  postId: post.id,
+                  communityId: community.id,
+                  tagName: tag.get('name')
+                }), */
+                Queue.classMethod('Post', 'sendNewPostInTagPushNotification', {
+                  recipientId: tagFollow.get('user_id'),
+                  postId: post.id,
+                  communityId: community.id,
+                  tagName: tag.get('name')
+                })
+              )))
         )))
   },
 

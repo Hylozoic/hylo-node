@@ -193,7 +193,7 @@ describe('Post', function () {
       .then(post => Tag.updateForPost(post, 'request'))
     })
 
-    it.only('adds an email to the queue', () => {
+    it('adds an email to the queue', () => {
       return Post.notifyTagFollowers(post)
       .then(() => {
         expect(true).to.equal(true)

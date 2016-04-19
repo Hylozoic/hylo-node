@@ -64,6 +64,11 @@ module.exports = bookshelf.Model.extend({
     } else {
       return format('%s posted "%s" in %s', poster.get('name'), post.get('name'), community.get('name'))
     }
+  },
+
+  textForNewPostInTag: function (post, tagName) {
+    const poster = post.relations.user
+    return format('%s posted "%s" in #%s', poster.get('name'), post.get('name'), tagName)
   }
 
 })
