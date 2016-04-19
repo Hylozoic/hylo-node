@@ -85,10 +85,6 @@ const queryForNetwork = function (req, res) {
 }
 
 const queryForTag = function (req, res) {
-  if (TokenAuth.isAuthenticated(res)) {
-    if (!RequestValidation.requireTimeRange(req, res)) return
-  }
-
   return Tag.find(req.param('tagName'))
   .then(tag => queryPosts(req, {
     communities: [res.locals.community.id],
@@ -97,11 +93,7 @@ const queryForTag = function (req, res) {
   }))
 }
 
-var queryForTagInAllCommunities = function (req, res) {
-  if (TokenAuth.isAuthenticated(res)) {
-    if (!RequestValidation.requireTimeRange(req, res)) return
-  }
-
+const queryForTagInAllCommunities = function (req, res) {
   return Promise.join(
     Tag.find(req.param('tagName')),
     Membership.activeCommunityIds(req.session.userId),
