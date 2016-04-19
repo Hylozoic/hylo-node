@@ -29,7 +29,7 @@ describe('checkAndSetMembership', () => {
   it("doesn't set res.locals.membership if publicAccessAllowed", () => {
     var req = factories.mock.request()
     req.params.communityId = community.id
-    req.user = {email: 'lawrence@hylo.com'}
+    req.user = {email: 'lawrence@nothylo.com'}
     var res = factories.mock.response()
     res.locals.publicAccessAllowed = true
     var next = spy(() => {})
