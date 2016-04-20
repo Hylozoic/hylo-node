@@ -1,5 +1,7 @@
 var bcrypt = require('bcrypt')
-require(require('root-path')('test/setup'))
+var root = require('root-path')
+require(root('test/setup'))
+var factories = require(root('test/setup/factories'))
 
 describe('User', function () {
   var cat
@@ -247,6 +249,26 @@ describe('User', function () {
             expect(membership).to.exist
           })
         )
+      })
+    })
+  })
+
+  describe('#followDefaultTags', function () {
+    it('creates TagFollows for the default tags of a community', () => {
+      var c1 = factories.community()
+      return Promise.join(
+        new Tag({name: 'offer'}).save(),
+        new Tag({name: 'request'}).save(),
+        new Tag({name: 'intention'}).save())
+      .then(() => c1.save())
+      .then(() => cat.followDefaultTags(c1.id))
+      .then(() => cat.load('tagFollows'))
+      .then(() => {
+        expect(cat.relations.tagFollows.length).to.equal(3)
+        var tagNames = cat.relations.tagFollows.map(t => t.get('name'))
+        expect(_.includes(tagNames, 'offer')).to.deep.equal(true)
+        expect(_.includes(tagNames, 'request')).to.deep.equal(true)
+        expect(_.includes(tagNames, 'intention')).to.deep.equal(true)                
       })
     })
   })
