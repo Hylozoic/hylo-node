@@ -203,6 +203,7 @@ module.exports = {
         .catch(err => {
           if (err.message !== 'Starter posts community not found') throw err
         }))
+      .tap(community => community.createStarterTags(trx))
       .then(() => Membership.create(req.session.userId, community.id, {
         role: Membership.MODERATOR_ROLE,
         transacting: trx

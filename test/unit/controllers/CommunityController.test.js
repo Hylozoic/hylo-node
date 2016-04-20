@@ -51,6 +51,19 @@ describe('CommunityController', () => {
   })
 
   describe('.create', () => {
+    before(() =>
+      Promise.join(
+        Tag.find('request'),
+        Tag.find('offer'),
+        Tag.find('intention'),
+        (request, offer, intention) => {
+          var promises = []
+          if (!request) promises.push(new Tag({name: 'request'}).save())
+          if (!offer) promises.push(new Tag({name: 'offer'}).save())
+          if (!intention) promises.push(new Tag({name: 'intention'}).save())
+          return Promise.all(promises)
+        }))
+
     it('works', () => {
       req.session.userId = user.id
       _.extend(req.params, {name: 'Bar', slug: 'bar'})
@@ -63,6 +76,24 @@ describe('CommunityController', () => {
         expect(community.get('slug')).to.equal('bar')
         expect(community.relations.leader.id).to.equal(user.id)
         expect(community.relations.users.first().pivot.get('role')).to.equal(Membership.MODERATOR_ROLE)
+      })
+    })
+
+    it('creates default tags', () => {
+      req.session.userId = user.id
+      _.extend(req.params, {name: 'Baz', slug: 'baz'})
+
+      return CommunityController.create(req, res)
+      .then(() => Community.find('baz', {withRelated: 'tags'}))
+      .then(community => {
+        expect(community).to.exist
+        expect(community.get('slug')).to.equal('baz')
+        expect(community.relations.tags.length).to.equal(3)
+        const tagNames = community.relations.tags.map(t => t.get('name'))
+
+        expect(_.includes(tagNames, 'request')).to.equal(true)
+        expect(_.includes(tagNames, 'offer')).to.equal(true)
+        expect(_.includes(tagNames, 'intention')).to.equal(true)
       })
     })
   })
