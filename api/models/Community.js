@@ -98,9 +98,8 @@ module.exports = bookshelf.Model.extend({
 
   createStarterTags: function (trx) {
     var self = this
-    var defaultNames = ['request', 'offer', 'intention']
 
-    return Promise.map(defaultNames, name => Tag.find(name, {transacting: trx}))
+    return Tag.defaultTags(trx)
     .then(defaultTags => {
       if (!defaultTags.every(i => i)) throw new Error('Default tags missing')
       return Promise.map(defaultTags, tag => self.tags().attach(tag, {transacting: trx}))

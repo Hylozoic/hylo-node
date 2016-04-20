@@ -97,6 +97,8 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
+  DEFAULT_NAMES: ['offer', 'request', 'intention'],
+
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
     if (isNaN(Number(id))) {
@@ -112,5 +114,9 @@ module.exports = bookshelf.Model.extend({
 
   updateForComment: function (comment, trx) {
     return updateForTaggable(comment, comment.get('text'), null, trx)
+  },
+
+  defaultTags: function (trx) {
+    return Promise.map(Tag.DEFAULT_NAMES, name => Tag.find(name, {transacting: trx}))
   }
 })

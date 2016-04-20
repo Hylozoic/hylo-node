@@ -53,13 +53,13 @@ describe('CommunityController', () => {
   describe('.create', () => {
     before(() =>
       Promise.join(
-        Tag.find('request'),
         Tag.find('offer'),
+        Tag.find('request'),
         Tag.find('intention'),
-        (request, offer, intention) => {
+        (offer, request, intention) => {
           var promises = []
-          if (!request) promises.push(new Tag({name: 'request'}).save())
           if (!offer) promises.push(new Tag({name: 'offer'}).save())
+          if (!request) promises.push(new Tag({name: 'request'}).save())
           if (!intention) promises.push(new Tag({name: 'intention'}).save())
           return Promise.all(promises)
         }))
