@@ -92,11 +92,12 @@ module.exports.routes = {
   'POST   /noo/network/validate':                         'NetworkController.validate',
   'POST   /noo/network/:networkId':                       'NetworkController.update',
 
-  'GET    /noo/community/:communityId/tag/:tagName':       'TagController.findOne',
+  'GET    /noo/community/:communityId/tag/:tagName':       'TagController.findOneInCommunity',
   'GET    /noo/community/:communityId/tag/:tagName/posts': 'PostController.findForTag',
   'POST   /noo/community/:communityId/tag/:tagName/follow':'TagController.follow',
   'GET    /noo/community/:communityId/tags/followed':      'TagController.findFollowed',
   'GET    /noo/community/:communityId/tags/leftnav':       'TagController.findForLeftNav',
+  'GET    /noo/tag/:tagName':                              'TagController.findOne',
   'GET    /noo/tag/:tagName/posts':                        'PostController.findForTagInAllCommunities',
 
   'GET    /noo/search':                                   'SearchController.show',
