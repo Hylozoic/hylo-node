@@ -21,7 +21,10 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
     if (tag) {
       return tag
     } else {
-      return new Tag({name: tagName}).save({}, {transacting: trx})
+      return new Tag({
+        name: tagName,
+        created_at: new Date()
+      }).save({}, {transacting: trx})
       .catch(() => Tag.find(tagName))
     }
   })
