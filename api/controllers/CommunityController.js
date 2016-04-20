@@ -199,11 +199,11 @@ module.exports = {
 
     return bookshelf.transaction(trx => {
       return community.save(null, {transacting: trx})
+      .tap(community => community.createDefaultTags(req.session.userId, trx))
       .tap(community => community.createStarterPosts(trx)
         .catch(err => {
           if (err.message !== 'Starter posts community not found') throw err
         }))
-      .tap(community => community.createStarterTags(trx))
       .then(() => Membership.create(req.session.userId, community.id, {
         role: Membership.MODERATOR_ROLE,
         transacting: trx

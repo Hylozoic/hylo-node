@@ -51,18 +51,7 @@ describe('CommunityController', () => {
   })
 
   describe('.create', () => {
-    before(() =>
-      Promise.join(
-        Tag.find('offer'),
-        Tag.find('request'),
-        Tag.find('intention'),
-        (offer, request, intention) => {
-          var promises = []
-          if (!offer) promises.push(new Tag({name: 'offer'}).save())
-          if (!request) promises.push(new Tag({name: 'request'}).save())
-          if (!intention) promises.push(new Tag({name: 'intention'}).save())
-          return Promise.all(promises)
-        }))
+    before(() => Tag.createDefaultTags())
 
     it('works', () => {
       req.session.userId = user.id
@@ -90,10 +79,12 @@ describe('CommunityController', () => {
         expect(community.get('slug')).to.equal('baz')
         expect(community.relations.tags.length).to.equal(3)
         const tagNames = community.relations.tags.map(t => t.get('name'))
-
         expect(_.includes(tagNames, 'request')).to.equal(true)
         expect(_.includes(tagNames, 'offer')).to.equal(true)
         expect(_.includes(tagNames, 'intention')).to.equal(true)
+        expect(community.relations.tags.models[0].pivot.get('user_id')).to.equal(user.id)
+        expect(community.relations.tags.models[1].pivot.get('user_id')).to.equal(user.id)
+        expect(community.relations.tags.models[2].pivot.get('user_id')).to.equal(user.id)
       })
     })
   })

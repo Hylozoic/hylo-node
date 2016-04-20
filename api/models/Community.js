@@ -96,13 +96,18 @@ module.exports = bookshelf.Model.extend({
     }))
   },
 
-  createStarterTags: function (trx) {
+  createDefaultTags: function (userId, trx) {
     var self = this
 
     return Tag.defaultTags(trx)
     .then(defaultTags => {
       if (!defaultTags.every(i => i)) throw new Error('Default tags missing')
-      return Promise.map(defaultTags, tag => self.tags().attach(tag, {transacting: trx}))
+      return Promise.map(defaultTags, tag =>
+        new CommunityTag({
+          community_id: self.id,
+          tag_id: tag.id,
+          user_id: userId})
+        .save({}, {transacting: trx}))
     })
   }
 
