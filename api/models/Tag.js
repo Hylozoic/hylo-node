@@ -118,5 +118,17 @@ module.exports = bookshelf.Model.extend({
 
   defaultTags: function (trx) {
     return Promise.map(Tag.DEFAULT_NAMES, name => Tag.find(name, {transacting: trx}))
+  },
+
+  createDefaultTags: function (trx) {
+    return Tag.defaultTags(trx)
+    .then(defaultTags => {
+      var undefinedTagNames = _.difference(
+        Tag.DEFAULT_NAMES,
+        defaultTags.map(t => t ? t.get('name') : null)
+      )
+      return Promise.map(undefinedTagNames, tagName =>
+        new Tag({name: tagName}).save({}, {transacting: trx}))
+    })
   }
 })

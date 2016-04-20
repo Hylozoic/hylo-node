@@ -1,11 +1,5 @@
 var setup = require(require('root-path')('test/setup'))
 
-const createDefaultTags = () => Promise.join(
-  new Tag({name: 'offer'}).save(),
-  new Tag({name: 'request'}).save(),
-  new Tag({name: 'intention'}).save()
-)
-
 describe('Membership', function () {
   var user, community
 
@@ -17,7 +11,7 @@ describe('Membership', function () {
         return Promise.join(
           community.save(),
           user.save(),
-          createDefaultTags()
+          Tag.createDefaultTags()
         )
       }).then(function () {
         return user.joinCommunity(community)
