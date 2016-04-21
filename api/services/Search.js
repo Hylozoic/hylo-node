@@ -170,6 +170,10 @@ module.exports = {
       } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc')
       }
+
+      if (opts.omit) {
+        qb.whereNotIn('post.id', opts.omit)
+      }
     })
   },
 

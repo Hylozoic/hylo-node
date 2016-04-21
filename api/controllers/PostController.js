@@ -17,7 +17,8 @@ const queryPosts = (req, opts) =>
       forUser: req.session.userId,
       term: req.param('search')
     },
-    _.pick(req.allParams(), 'type', 'limit', 'offset', 'start_time', 'end_time', 'filter'),
+    _.pick(req.allParams(),
+      'type', 'limit', 'offset', 'start_time', 'end_time', 'filter', 'omit'),
     _.pick(opts, 'communities', 'project', 'users', 'visibility', 'tag')
   ))
   .then(Search.forPosts)
