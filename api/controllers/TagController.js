@@ -58,9 +58,10 @@ module.exports = {
     .then(ct => {
       if (!ct) return res.notFound()
       return res.ok(merge(
-        ct.pick('id', 'description', 'community_id'),
+        ct.pick('description', 'community_id'),
         presentWithPost(tag),
         {
+          id: ct.get('tag_id'),
           owner: ct.relations.owner.pick('id', 'name', 'avatar_url'),
           followed: ct.relations.community.relations.tagFollows.length > 0,
           created: ct.relations.owner.id === req.session.userId
