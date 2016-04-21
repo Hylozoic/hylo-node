@@ -90,6 +90,7 @@ module.exports = bookshelf.Model.extend({
       return newPost.save({created_at: time, updated_at: time}, {transacting: trx})
       .then(() => Promise.all(_.flatten([
         self.posts().attach(newPost, {transacting: trx}),
+        Tag.updateForPost(newPost, newPost.get('type'), trx),
         post.relations.followers.map(u =>
           Follow.create(u.id, newPost.id, {transacting: trx}))
       ])))
