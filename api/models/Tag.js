@@ -59,7 +59,7 @@ var updateForTaggable = (taggable, text, tagParam, trx) => {
   if (tagParam) {
     newTags.push({name: tagParam, selected: true})
   }
-  return taggable.load('tags')
+  return taggable.load('tags', {transacting: trx})
   .then(post => {
     // making oldTags the same structure as newTags, for easier taking of difference
     var oldTags = taggable.relations.tags.models.map(t =>
