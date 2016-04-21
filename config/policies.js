@@ -65,9 +65,10 @@ module.exports.policies = {
   },
 
   ActivityController: {
-    find:        ['sessionAuth'],
-    update:      ['sessionAuth', 'isActivityOwner'],
-    markAllRead: ['sessionAuth']
+    find:             ['sessionAuth'],
+    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
+    update:           ['sessionAuth', 'isActivityOwner'],
+    markAllRead:      ['sessionAuth']
   },
 
   OnboardingController: {
