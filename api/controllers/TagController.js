@@ -26,6 +26,7 @@ const withRelatedSpecialPost = {
 const presentWithPost = tag => {
   const post = tag.relations.posts.first()
   return {
+    id: tag.id,
     name: tag.get('name'),
     post: post ? {id: post.id} : null
   }
@@ -61,7 +62,6 @@ module.exports = {
         ct.pick('description', 'community_id'),
         presentWithPost(tag),
         {
-          id: ct.get('tag_id'),
           owner: ct.relations.owner.pick('id', 'name', 'avatar_url'),
           followed: ct.relations.community.relations.tagFollows.length > 0,
           created: ct.relations.owner.id === req.session.userId
