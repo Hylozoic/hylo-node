@@ -1165,7 +1165,8 @@ CREATE TABLE users_community (
     deactivated_at timestamp with time zone,
     deactivator_id bigint,
     last_viewed_at timestamp with time zone,
-    id integer NOT NULL
+    id integer NOT NULL,
+    settings jsonb DEFAULT '{}'::jsonb
 );
 
 
