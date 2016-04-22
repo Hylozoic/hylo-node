@@ -284,11 +284,11 @@ module.exports = bookshelf.Model.extend({
     })
 
     return new Post(attrs).save({}, {transacting: trx})
-      .tap(post => Promise.join(
-          post.relatedUsers().attach(userId, {transacting: trx}),
-          post.communities().attach(communityId, {transacting: trx}),
-          Follow.create(userId, post.id, {transacting: trx})
-      ))
+    .tap(post => Promise.join(
+      post.relatedUsers().attach(userId, {transacting: trx}),
+      post.communities().attach(communityId, {transacting: trx}),
+      Follow.create(userId, post.id, {transacting: trx})
+    ))
   },
 
   newPostAttrs: () => ({
@@ -310,12 +310,10 @@ module.exports = bookshelf.Model.extend({
     .where({post_id: opts.postId, active: true})
     .orderBy('created_at', 'desc')
     .pluck('id')
-    .then(ids => {
-      return Promise.all([
-        comments().where('id', 'in', ids.slice(0, 3)).update('recent', true),
-        ids.length > 3 && comments().where('id', 'in', ids.slice(3)).update('recent', false)
-      ])
-    })
+    .then(ids => Promise.all([
+      comments().where('id', 'in', ids.slice(0, 3)).update('recent', true),
+      ids.length > 3 && comments().where('id', 'in', ids.slice(3)).update('recent', false)
+    ]))
   }
 
 })
