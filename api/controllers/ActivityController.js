@@ -56,7 +56,6 @@ module.exports = {
       .save({new_notification_count: 0}, {patch: true}))
     .then(community => fetchAndPresentActivity(req, community))
     .then(res.ok, res.serverError)
-    // TODO update notification count
   },
 
   find: function (req, res) {
