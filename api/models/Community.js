@@ -90,10 +90,26 @@ module.exports = bookshelf.Model.extend({
       return newPost.save({created_at: time, updated_at: time}, {transacting: trx})
       .then(() => Promise.all(_.flatten([
         self.posts().attach(newPost, {transacting: trx}),
+        Tag.updateForPost(newPost, newPost.get('type'), trx),
         post.relations.followers.map(u =>
           Follow.create(u.id, newPost.id, {transacting: trx}))
       ])))
     }))
+  },
+
+  createDefaultTags: function (userId, trx) {
+    var self = this
+
+    return Tag.defaultTags(trx)
+    .then(defaultTags => {
+      if (!defaultTags.every(i => i)) throw new Error('Default tags missing')
+      return Promise.map(defaultTags, tag =>
+        new CommunityTag({
+          community_id: self.id,
+          tag_id: tag.id,
+          user_id: userId})
+        .save({}, {transacting: trx}))
+    })
   }
 
 }, {

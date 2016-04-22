@@ -16,7 +16,7 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
     communities = comment => comment.relations.post.relations.communities.models
   }
   return taggable.load(association, {transacting: trx})
-  .then(() => Tag.find(tagName))
+  .then(() => Tag.find(tagName, {transacting: trx}))
   .then(tag => {
     if (tag) {
       return tag
@@ -25,7 +25,7 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
         name: tagName,
         created_at: new Date()
       }).save({}, {transacting: trx})
-      .catch(() => Tag.find(tagName))
+      .catch(() => Tag.find(tagName, {transacting: trx}))
     }
   })
   .tap(tag => {
@@ -43,7 +43,7 @@ var removeFromTaggable = (taggable, tag, trx) => {
 }
 
 var addToCommunity = (community, tag, user_id, trx) => {
-  return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch()
+  return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch({transacting: trx})
   // the catch here is for the case where another user just created the CommunityTag
   // the save fails, but we don't care about the result
   .then(comTag => comTag ||
@@ -59,7 +59,7 @@ var updateForTaggable = (taggable, text, tagParam, trx) => {
   if (tagParam) {
     newTags.push({name: tagParam, selected: true})
   }
-  return taggable.load('tags')
+  return taggable.load('tags', {transacting: trx})
   .then(post => {
     // making oldTags the same structure as newTags, for easier taking of difference
     var oldTags = taggable.relations.tags.models.map(t =>
@@ -97,6 +97,8 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
+  DEFAULT_NAMES: ['offer', 'request', 'intention'],
+
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
     if (isNaN(Number(id))) {
@@ -112,5 +114,21 @@ module.exports = bookshelf.Model.extend({
 
   updateForComment: function (comment, trx) {
     return updateForTaggable(comment, comment.get('text'), null, trx)
+  },
+
+  defaultTags: function (trx) {
+    return Promise.map(Tag.DEFAULT_NAMES, name => Tag.find(name, {transacting: trx}))
+  },
+
+  createDefaultTags: function (trx) {
+    return Tag.defaultTags(trx)
+    .then(defaultTags => {
+      var undefinedTagNames = _.difference(
+        Tag.DEFAULT_NAMES,
+        defaultTags.map(t => t ? t.get('name') : null)
+      )
+      return Promise.map(undefinedTagNames, tagName =>
+        new Tag({name: tagName}).save({}, {transacting: trx}))
+    })
   }
 })
