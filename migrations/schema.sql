@@ -2,12 +2,16 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.1
+-- Dumped by pg_dump version 9.5.1
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 SET search_path = public, pg_catalog;
 
@@ -16,7 +20,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: activity; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: activity; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE activity (
@@ -64,7 +68,7 @@ CREATE SEQUENCE comment_seq
 
 
 --
--- Name: comment; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: comment; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE comment (
@@ -82,7 +86,7 @@ CREATE TABLE comment (
 
 
 --
--- Name: comments_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: comments_tags; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE comments_tags (
@@ -114,7 +118,7 @@ ALTER SEQUENCE comments_tags_id_seq OWNED BY comments_tags.id;
 
 
 --
--- Name: communities_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: communities_tags; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE communities_tags (
@@ -160,7 +164,7 @@ CREATE SEQUENCE community_seq
 
 
 --
--- Name: community; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: community; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE community (
@@ -205,7 +209,7 @@ CREATE SEQUENCE community_invite_seq
 
 
 --
--- Name: community_invite; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: community_invite; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE community_invite (
@@ -234,7 +238,7 @@ CREATE SEQUENCE contributor_seq
 
 
 --
--- Name: contributor; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: contributor; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE contributor (
@@ -258,7 +262,7 @@ CREATE SEQUENCE device_seq
 
 
 --
--- Name: devices; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: devices; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE devices (
@@ -294,7 +298,7 @@ ALTER SEQUENCE devices_id_seq OWNED BY devices.id;
 
 
 --
--- Name: emails; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: emails; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE emails (
@@ -324,7 +328,7 @@ ALTER SEQUENCE emails_id_seq OWNED BY emails.id;
 
 
 --
--- Name: event_responses; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: event_responses; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE event_responses (
@@ -357,7 +361,7 @@ ALTER SEQUENCE event_responses_id_seq OWNED BY event_responses.id;
 
 
 --
--- Name: tag_follows; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: tag_follows; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE tag_follows (
@@ -402,7 +406,7 @@ CREATE SEQUENCE follower_seq
 
 
 --
--- Name: follower; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: follower; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE follower (
@@ -427,7 +431,7 @@ CREATE SEQUENCE invite_request_seq
 
 
 --
--- Name: knex_migrations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: knex_migrations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE knex_migrations (
@@ -470,7 +474,7 @@ CREATE SEQUENCE linked_account_seq
 
 
 --
--- Name: linked_account; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: linked_account; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE linked_account (
@@ -494,7 +498,7 @@ CREATE SEQUENCE media_seq
 
 
 --
--- Name: media; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: media; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE media (
@@ -512,7 +516,7 @@ CREATE TABLE media (
 
 
 --
--- Name: networks; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: networks; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE networks (
@@ -583,7 +587,7 @@ CREATE SEQUENCE org_seq
 
 
 --
--- Name: phones; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: phones; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE phones (
@@ -625,7 +629,7 @@ CREATE SEQUENCE post_seq
 
 
 --
--- Name: post; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: post; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE post (
@@ -652,7 +656,7 @@ CREATE TABLE post (
 
 
 --
--- Name: post_community; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: post_community; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE post_community (
@@ -694,7 +698,7 @@ CREATE SEQUENCE post_view_seq
 
 
 --
--- Name: posts_about_users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: posts_about_users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE posts_about_users (
@@ -704,7 +708,7 @@ CREATE TABLE posts_about_users (
 
 
 --
--- Name: posts_projects; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: posts_projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE posts_projects (
@@ -736,7 +740,7 @@ ALTER SEQUENCE posts_projects_id_seq OWNED BY posts_projects.id;
 
 
 --
--- Name: posts_tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: posts_tags; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE posts_tags (
@@ -769,7 +773,7 @@ ALTER SEQUENCE posts_tags_id_seq OWNED BY posts_tags.id;
 
 
 --
--- Name: project_invitations; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: project_invitations; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE project_invitations (
@@ -804,7 +808,7 @@ ALTER SEQUENCE project_invitations_id_seq OWNED BY project_invitations.id;
 
 
 --
--- Name: projects; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: projects; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE projects (
@@ -843,7 +847,7 @@ ALTER SEQUENCE projects_id_seq OWNED BY projects.id;
 
 
 --
--- Name: projects_users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: projects_users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE projects_users (
@@ -877,7 +881,7 @@ ALTER SEQUENCE projects_users_id_seq OWNED BY projects_users.id;
 
 
 --
--- Name: push_notifications; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: push_notifications; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE push_notifications (
@@ -936,7 +940,7 @@ CREATE SEQUENCE skill_seq
 
 
 --
--- Name: tags; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: tags; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE tags (
@@ -979,7 +983,7 @@ CREATE SEQUENCE thank_you_seq
 
 
 --
--- Name: thank_you; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: thank_you; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE thank_you (
@@ -1004,7 +1008,7 @@ CREATE SEQUENCE token_action_seq
 
 
 --
--- Name: tours; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: tours; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE tours (
@@ -1037,7 +1041,7 @@ ALTER SEQUENCE tours_id_seq OWNED BY tours.id;
 
 
 --
--- Name: user_external_data; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: user_external_data; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE user_external_data (
@@ -1094,7 +1098,7 @@ CREATE SEQUENCE user_post_relevance_seq
 
 
 --
--- Name: user_post_relevance; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: user_post_relevance; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE user_post_relevance (
@@ -1120,7 +1124,7 @@ CREATE SEQUENCE users_seq
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE users (
@@ -1153,7 +1157,7 @@ CREATE TABLE users (
 
 
 --
--- Name: users_community; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: users_community; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE users_community (
@@ -1165,7 +1169,8 @@ CREATE TABLE users_community (
     deactivated_at timestamp with time zone,
     deactivator_id bigint,
     last_viewed_at timestamp with time zone,
-    id integer NOT NULL
+    id integer NOT NULL,
+    new_notification_count integer DEFAULT 0
 );
 
 
@@ -1189,7 +1194,7 @@ ALTER SEQUENCE users_community_id_seq OWNED BY users_community.id;
 
 
 --
--- Name: users_org; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: users_org; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE users_org (
@@ -1199,7 +1204,7 @@ CREATE TABLE users_org (
 
 
 --
--- Name: users_skill; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: users_skill; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE users_skill (
@@ -1221,7 +1226,7 @@ CREATE SEQUENCE vote_seq
 
 
 --
--- Name: vote; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: vote; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE vote (
@@ -1233,7 +1238,7 @@ CREATE TABLE vote (
 
 
 --
--- Name: websites; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+-- Name: websites; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE websites (
@@ -1417,7 +1422,7 @@ ALTER TABLE ONLY websites ALTER COLUMN id SET DEFAULT nextval('websites_id_seq':
 
 
 --
--- Name: pk_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_users; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users
@@ -1425,7 +1430,7 @@ ALTER TABLE ONLY users
 
 
 --
--- Name: search_index; Type: MATERIALIZED VIEW; Schema: public; Owner: -; Tablespace: 
+-- Name: search_index; Type: MATERIALIZED VIEW; Schema: public; Owner: -
 --
 
 CREATE MATERIALIZED VIEW search_index AS
@@ -1458,7 +1463,7 @@ UNION
 
 
 --
--- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activity
@@ -1466,7 +1471,7 @@ ALTER TABLE ONLY activity
 
 
 --
--- Name: comments_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: comments_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments_tags
@@ -1474,7 +1479,7 @@ ALTER TABLE ONLY comments_tags
 
 
 --
--- Name: communities_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: communities_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags
@@ -1482,7 +1487,7 @@ ALTER TABLE ONLY communities_tags
 
 
 --
--- Name: devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY devices
@@ -1490,7 +1495,7 @@ ALTER TABLE ONLY devices
 
 
 --
--- Name: emails_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: emails_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY emails
@@ -1498,7 +1503,7 @@ ALTER TABLE ONLY emails
 
 
 --
--- Name: event_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: event_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY event_responses
@@ -1506,7 +1511,7 @@ ALTER TABLE ONLY event_responses
 
 
 --
--- Name: event_responses_user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: event_responses_user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY event_responses
@@ -1514,7 +1519,7 @@ ALTER TABLE ONLY event_responses
 
 
 --
--- Name: followed_tags_community_id_tag_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: followed_tags_community_id_tag_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows
@@ -1522,7 +1527,7 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: followed_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: followed_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows
@@ -1530,7 +1535,7 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: knex_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: knex_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY knex_migrations
@@ -1538,7 +1543,7 @@ ALTER TABLE ONLY knex_migrations
 
 
 --
--- Name: networks_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: networks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks
@@ -1546,7 +1551,7 @@ ALTER TABLE ONLY networks
 
 
 --
--- Name: networks_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: networks_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks
@@ -1554,7 +1559,7 @@ ALTER TABLE ONLY networks
 
 
 --
--- Name: phones_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: phones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY phones
@@ -1562,7 +1567,7 @@ ALTER TABLE ONLY phones
 
 
 --
--- Name: pk_comment; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_comment; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comment
@@ -1570,7 +1575,7 @@ ALTER TABLE ONLY comment
 
 
 --
--- Name: pk_community; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_community; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community
@@ -1578,7 +1583,7 @@ ALTER TABLE ONLY community
 
 
 --
--- Name: pk_community_invite; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_community_invite; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invite
@@ -1586,7 +1591,7 @@ ALTER TABLE ONLY community_invite
 
 
 --
--- Name: pk_contributor; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_contributor; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY contributor
@@ -1594,7 +1599,7 @@ ALTER TABLE ONLY contributor
 
 
 --
--- Name: pk_follower; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_follower; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follower
@@ -1602,7 +1607,7 @@ ALTER TABLE ONLY follower
 
 
 --
--- Name: pk_linked_account; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_linked_account; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY linked_account
@@ -1610,7 +1615,7 @@ ALTER TABLE ONLY linked_account
 
 
 --
--- Name: pk_media; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_media; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY media
@@ -1618,7 +1623,7 @@ ALTER TABLE ONLY media
 
 
 --
--- Name: pk_post; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_post; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY post
@@ -1626,7 +1631,7 @@ ALTER TABLE ONLY post
 
 
 --
--- Name: pk_thank_you; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_thank_you; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY thank_you
@@ -1634,7 +1639,7 @@ ALTER TABLE ONLY thank_you
 
 
 --
--- Name: pk_user_post_relevance; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_user_post_relevance; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_post_relevance
@@ -1642,7 +1647,7 @@ ALTER TABLE ONLY user_post_relevance
 
 
 --
--- Name: pk_users_org; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_users_org; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users_org
@@ -1650,7 +1655,7 @@ ALTER TABLE ONLY users_org
 
 
 --
--- Name: pk_users_skill; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_users_skill; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users_skill
@@ -1658,7 +1663,7 @@ ALTER TABLE ONLY users_skill
 
 
 --
--- Name: pk_vote; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: pk_vote; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY vote
@@ -1666,7 +1671,7 @@ ALTER TABLE ONLY vote
 
 
 --
--- Name: post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY post_community
@@ -1674,7 +1679,7 @@ ALTER TABLE ONLY post_community
 
 
 --
--- Name: post_community_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: post_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY post_community
@@ -1682,7 +1687,7 @@ ALTER TABLE ONLY post_community
 
 
 --
--- Name: posts_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: posts_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_projects
@@ -1690,7 +1695,7 @@ ALTER TABLE ONLY posts_projects
 
 
 --
--- Name: posts_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: posts_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags
@@ -1698,7 +1703,7 @@ ALTER TABLE ONLY posts_tags
 
 
 --
--- Name: project_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: project_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY project_invitations
@@ -1706,7 +1711,7 @@ ALTER TABLE ONLY project_invitations
 
 
 --
--- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY projects
@@ -1714,7 +1719,7 @@ ALTER TABLE ONLY projects
 
 
 --
--- Name: projects_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: projects_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY projects_users
@@ -1722,7 +1727,7 @@ ALTER TABLE ONLY projects_users
 
 
 --
--- Name: queued_pushes_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: queued_pushes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY push_notifications
@@ -1730,7 +1735,7 @@ ALTER TABLE ONLY push_notifications
 
 
 --
--- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tags
@@ -1738,7 +1743,7 @@ ALTER TABLE ONLY tags
 
 
 --
--- Name: tours_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: tours_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tours
@@ -1746,7 +1751,7 @@ ALTER TABLE ONLY tours
 
 
 --
--- Name: unique_beta_access_code; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_beta_access_code; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community
@@ -1754,7 +1759,7 @@ ALTER TABLE ONLY community
 
 
 --
--- Name: unique_comments_tags; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_comments_tags; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments_tags
@@ -1762,7 +1767,7 @@ ALTER TABLE ONLY comments_tags
 
 
 --
--- Name: unique_communities_tags; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_communities_tags; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags
@@ -1770,7 +1775,7 @@ ALTER TABLE ONLY communities_tags
 
 
 --
--- Name: unique_email; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_email; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users
@@ -1778,7 +1783,7 @@ ALTER TABLE ONLY users
 
 
 --
--- Name: unique_name; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_name; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tags
@@ -1786,7 +1791,7 @@ ALTER TABLE ONLY tags
 
 
 --
--- Name: unique_posts_projects; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_posts_projects; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_projects
@@ -1794,7 +1799,7 @@ ALTER TABLE ONLY posts_projects
 
 
 --
--- Name: unique_posts_tags; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_posts_tags; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags
@@ -1802,7 +1807,7 @@ ALTER TABLE ONLY posts_tags
 
 
 --
--- Name: unique_projects_users; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_projects_users; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY projects_users
@@ -1810,7 +1815,7 @@ ALTER TABLE ONLY projects_users
 
 
 --
--- Name: unique_user_id_type; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: unique_user_id_type; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tours
@@ -1818,7 +1823,7 @@ ALTER TABLE ONLY tours
 
 
 --
--- Name: uq_community_1; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: uq_community_1; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community
@@ -1826,7 +1831,7 @@ ALTER TABLE ONLY community
 
 
 --
--- Name: uq_community_2; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: uq_community_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community
@@ -1834,7 +1839,7 @@ ALTER TABLE ONLY community
 
 
 --
--- Name: uq_no_multiple_contributor_2; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: uq_no_multiple_contributor_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY contributor
@@ -1842,7 +1847,7 @@ ALTER TABLE ONLY contributor
 
 
 --
--- Name: uq_no_multiple_followers_2; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: uq_no_multiple_followers_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follower
@@ -1850,7 +1855,7 @@ ALTER TABLE ONLY follower
 
 
 --
--- Name: uq_no_multiple_thankyous_2; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: uq_no_multiple_thankyous_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY thank_you
@@ -1858,7 +1863,7 @@ ALTER TABLE ONLY thank_you
 
 
 --
--- Name: uq_no_multiple_tokens; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: uq_no_multiple_tokens; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invite
@@ -1866,7 +1871,7 @@ ALTER TABLE ONLY community_invite
 
 
 --
--- Name: uq_vote_1; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: uq_vote_1; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY vote
@@ -1874,7 +1879,7 @@ ALTER TABLE ONLY vote
 
 
 --
--- Name: user_community_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: user_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users_community
@@ -1882,7 +1887,7 @@ ALTER TABLE ONLY users_community
 
 
 --
--- Name: user_external_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: user_external_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_external_data
@@ -1890,7 +1895,7 @@ ALTER TABLE ONLY user_external_data
 
 
 --
--- Name: user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_post_relevance
@@ -1898,7 +1903,7 @@ ALTER TABLE ONLY user_post_relevance
 
 
 --
--- Name: users_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: users_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users_community
@@ -1906,7 +1911,7 @@ ALTER TABLE ONLY users_community
 
 
 --
--- Name: websites_pkey; Type: CONSTRAINT; Schema: public; Owner: -; Tablespace: 
+-- Name: websites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY websites
@@ -1914,133 +1919,133 @@ ALTER TABLE ONLY websites
 
 
 --
--- Name: fk_community_created_by_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: fk_community_created_by_1; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX fk_community_created_by_1 ON community USING btree (created_by_id);
 
 
 --
--- Name: ix_comment_post_2; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_comment_post_2; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_comment_post_2 ON comment USING btree (post_id);
 
 
 --
--- Name: ix_comment_user_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_comment_user_1; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_comment_user_1 ON comment USING btree (user_id);
 
 
 --
--- Name: ix_community_invite_community_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_community_invite_community_1; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_community_invite_community_1 ON community_invite USING btree (community_id);
 
 
 --
--- Name: ix_community_invite_invited_by_3; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_community_invite_invited_by_3; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_community_invite_invited_by_3 ON community_invite USING btree (invited_by_id);
 
 
 --
--- Name: ix_community_invite_used_by_2; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_community_invite_used_by_2; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_community_invite_used_by_2 ON community_invite USING btree (used_by_id);
 
 
 --
--- Name: ix_contributor_post_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_contributor_post_1; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_contributor_post_1 ON contributor USING btree (post_id);
 
 
 --
--- Name: ix_contributor_user_2; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_contributor_user_2; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_contributor_user_2 ON contributor USING btree (user_id);
 
 
 --
--- Name: ix_follower_addedby_3; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_follower_addedby_3; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_follower_addedby_3 ON follower USING btree (added_by_id);
 
 
 --
--- Name: ix_follower_post_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_follower_post_1; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_follower_post_1 ON follower USING btree (post_id);
 
 
 --
--- Name: ix_follower_user_2; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_follower_user_2; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_follower_user_2 ON follower USING btree (user_id);
 
 
 --
--- Name: ix_linked_account_user_4; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_linked_account_user_4; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_linked_account_user_4 ON linked_account USING btree (user_id);
 
 
 --
--- Name: ix_media_post_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_media_post_1; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_media_post_1 ON media USING btree (post_id);
 
 
 --
--- Name: ix_post_creator_11; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_post_creator_11; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_post_creator_11 ON post USING btree (user_id);
 
 
 --
--- Name: ix_thank_you_comment_1; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_thank_you_comment_1; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_thank_you_comment_1 ON thank_you USING btree (comment_id);
 
 
 --
--- Name: ix_thank_you_thanked_by_3; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_thank_you_thanked_by_3; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_thank_you_thanked_by_3 ON thank_you USING btree (thanked_by_id);
 
 
 --
--- Name: ix_thank_you_user_2; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_thank_you_user_2; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_thank_you_user_2 ON thank_you USING btree (user_id);
 
 
 --
--- Name: ix_vote_post_14; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_vote_post_14; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_vote_post_14 ON vote USING btree (post_id);
 
 
 --
--- Name: ix_vote_user_13; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: ix_vote_user_13; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX ix_vote_user_13 ON vote USING btree (user_id);
