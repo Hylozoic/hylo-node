@@ -10,8 +10,7 @@ describe('Membership', function () {
       return setup.clearDb().then(function () {
         return Promise.join(
           community.save(),
-          user.save(),
-          Tag.createDefaultTags()
+          user.save()
         )
       }).then(function () {
         return user.joinCommunity(community)
@@ -54,7 +53,8 @@ describe('Membership', function () {
       user = new User({name: 'Dog', email: 'b@c.d'})
       return Promise.join(
         community.save(),
-        user.save())
+        user.save(),
+        Tag.createDefaultTags())
     })
 
     it('creates tag follows for default tags', function () {
