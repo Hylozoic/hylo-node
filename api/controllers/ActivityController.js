@@ -46,7 +46,14 @@ const fetchAndPresentActivity = (req, community) => {
 
 module.exports = {
   findForCommunity: function (req, res) {
-    Community.find(req.param('communityId'))
+    Community.find(req.param('communityId'), {
+      withRelated: [
+        {memberships: q => q.where({user_id: req.session.userId})}
+      ]
+    })
+    .tap(community => req.param('resetCount') &&
+      community.relations.memberships.first()
+      .save({new_notification_count: 0}, {patch: true}))
     .then(community => fetchAndPresentActivity(req, community))
     .then(res.ok, res.serverError)
     // TODO update notification count
