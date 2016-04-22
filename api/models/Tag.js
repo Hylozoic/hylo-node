@@ -16,7 +16,7 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
     communities = comment => comment.relations.post.relations.communities.models
   }
   return taggable.load(association, {transacting: trx})
-  .then(() => Tag.find(tagName))
+  .then(() => Tag.find(tagName, {transacting: trx}))
   .then(tag => {
     if (tag) {
       return tag
@@ -25,7 +25,7 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
         name: tagName,
         created_at: new Date()
       }).save({}, {transacting: trx})
-      .catch(() => Tag.find(tagName))
+      .catch(() => Tag.find(tagName, {transacting: trx}))
     }
   })
   .tap(tag => {
@@ -43,7 +43,7 @@ var removeFromTaggable = (taggable, tag, trx) => {
 }
 
 var addToCommunity = (community, tag, user_id, trx) => {
-  return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch()
+  return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch({transacting: trx})
   // the catch here is for the case where another user just created the CommunityTag
   // the save fails, but we don't care about the result
   .then(comTag => comTag ||
