@@ -8,23 +8,8 @@ const queryActivity = opts =>
     q.select(bookshelf.knex.raw('activity.*, count(*) over () as total'))
     q.orderBy('created_at', 'desc')
 
-    q.whereRaw('(comment.active = true or comment.id is null)')
-    .leftJoin('comment', function () {
-      this.on('comment.id', '=', 'activity.comment_id')
-    })
-
-    q.whereRaw('(post.active = true or post.id is null)')
-    .leftJoin('post', function () {
-      this.on('post.id', '=', 'activity.post_id')
-    })
-
-    if (opts.community) {
-      q.where('post_community.community_id', opts.community.id)
-      .join('post_community', function () {
-        this.on('comment.post_id', 'post_community.post_id')
-        .orOn('post.id', 'post_community.post_id')
-      })
-    }
+    Activity.joinWithContent(q)
+    if (opts.community) Activity.joinWithCommunity(opts.community.id, q)
   })
 
 const fetchAndPresentActivity = (req, community) => {
@@ -43,8 +28,8 @@ const fetchAndPresentActivity = (req, community) => {
     {'post.communities': q => q.column('community.id', 'slug')},
     {'post.relatedUsers': userColumns}
   ]})
-  .tap(activities => total = (activities.length > 0 ? activities.first().get('total') : 0))
-  .then(activities => activities.map(act => {
+  .tap(acts => total = (acts.length > 0 ? acts.first().get('total') : 0))
+  .then(acts => acts.map(act => {
     const comment = act.relations.comment
     const post = act.relations.post
     const attrs = act.toJSON()
@@ -76,11 +61,19 @@ module.exports = {
   },
 
   markAllRead: function (req, res) {
-    Activity.query()
-    .where({reader_id: req.session.userId})
-    .update({unread: false})
-    .then(() => res.ok({}))
-    .catch(res.serverError)
+    (req.param('communityId')
+      ? Community.find(req.param('communityId'))
+      : Promise.resolve())
+    .then(community => {
+      const subq = Activity.query(q => {
+        q.where({reader_id: req.session.userId, unread: true})
+        Activity.joinWithContent(q)
+        if (community) Activity.joinWithCommunity(community.id, q)
+        q.select('activity.id')
+      }).query()
+      return Activity.query().whereIn('id', subq).update({unread: false})
+    })
+    .then(() => res.ok({}), res.serverError)
   },
 
   update: function (req, res) {

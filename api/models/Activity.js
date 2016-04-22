@@ -16,7 +16,6 @@ module.exports = bookshelf.Model.extend({
   post: function () {
     return this.belongsTo(Post)
   }
-
 }, {
   Action: {
     Mention: 'mention', // you are mentioned in a post or comment
@@ -27,16 +26,34 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function (id) {
-    return this.where({id: id}).fetch()
+    return this.where({id}).fetch()
+  },
+
+  joinWithContent: q => {
+    q.whereRaw('(comment.active = true or comment.id is null)')
+    .leftJoin('comment', function () {
+      this.on('comment.id', '=', 'activity.comment_id')
+    })
+
+    q.whereRaw('(post.active = true or post.id is null)')
+    .leftJoin('post', function () {
+      this.on('post.id', '=', 'activity.post_id')
+    })
+  },
+
+  joinWithCommunity: (communityId, q) => {
+    q.where('post_community.community_id', communityId)
+    .join('post_community', function () {
+      this.on('comment.post_id', 'post_community.post_id')
+      .orOn('post.id', 'post_community.post_id')
+    })
   },
 
   forComment: function (comment, userId, action) {
     if (!action) {
-      if (_.includes(comment.mentions(), userId.toString())) {
-        action = this.Action.Mention
-      } else {
-        action = this.Action.Comment
-      }
+      action = _.includes(comment.mentions(), userId.toString())
+        ? this.Action.Mention
+        : this.Action.Comment
     }
 
     return new Activity({
@@ -90,9 +107,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   unreadCountForUser: function (user) {
-    return Activity.query().where({reader_id: user.id, unread: true}).count().then(function (rows) {
-      return Number(rows[0].count)
-    })
+    return Activity.query().where({reader_id: user.id, unread: true}).count()
+    .then(rows => rows[0].count)
   }
-
 })
