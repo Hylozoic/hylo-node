@@ -66,6 +66,7 @@ module.exports.routes = {
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',
 
   'DELETE /noo/membership/:communityId':                  'CommunityController.leave',
+  'POST /noo/membership/:communityId':                    'CommunityController.updateMembership',
 
   'GET    /noo/activity':                                 'ActivityController.find',
   'POST   /noo/activity':                                 'ActivityController.update',

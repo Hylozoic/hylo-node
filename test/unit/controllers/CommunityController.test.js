@@ -218,4 +218,28 @@ describe('CommunityController', () => {
       })
     })
   })
+
+  describe('.updateMembership', () => {
+    var community
+
+    beforeEach(() => {
+      community = factories.community()
+      return community.save()
+      .then(() => user.joinCommunity(community))
+      .then(() => {
+        req.params.communityId = community.id
+        req.session.userId = user.id
+      })
+    })
+
+    it('works', () => {
+      req.params.settings = {send_email: true, send_push: false}
+
+      return CommunityController.updateMembership(req, res)
+      .then(() => Membership.where({user_id: user.id, community_id: community.id}).fetch())
+      .then(membership => {
+        expect(membership.get('settings')).to.deep.equal({send_email: true, send_push: false})
+      })
+    })
+  })
 })

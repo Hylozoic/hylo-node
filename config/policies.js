@@ -86,6 +86,7 @@ module.exports.policies = {
     removeModerator: ['sessionAuth', 'isModerator'],
     removeMember:    ['sessionAuth', 'isModerator'],
     leave:           ['sessionAuth', 'checkAndSetMembership'],
+    updateMembership:['sessionAuth', 'checkAndSetMembership'],
     validate:        true,
     create:          ['sessionAuth'],
     findForNetwork:  ['sessionAuth', 'inNetwork'],
