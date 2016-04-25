@@ -263,7 +263,6 @@ module.exports = {
   updateMembership: function (req, res) {
     var whitelist = ['settings']
     var attributes = _.pick(req.allParams(), whitelist)
-    var saneAttrs = _.clone(attributes)
 
     return Membership.where({
       user_id: req.session.userId,
@@ -272,10 +271,11 @@ module.exports = {
     .fetch()
     .then(membership => {
       if (!membership) return res.notFound()
+
       if (attributes.settings) {
-        saneAttrs.settings = _.merge({}, membership.get('settings'), attributes.settings)
+        attributes.settings = _.merge({}, membership.get('settings'), attributes.settings)
       }
-      return membership.save(saneAttrs, {patch: true})
+      return membership.save(attributes, {patch: true})
     })
     .then(() => res.ok({}))
     .catch(res.serverError)
