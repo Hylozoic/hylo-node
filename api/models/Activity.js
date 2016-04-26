@@ -15,6 +15,14 @@ module.exports = bookshelf.Model.extend({
 
   post: function () {
     return this.belongsTo(Post)
+  },
+
+  community: function () {
+    return this.belongsTo(Community)
+  },
+
+  notifications: function () {
+    return this.hasMany(Notification)
   }
 }, {
   Action: {
