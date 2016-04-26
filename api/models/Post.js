@@ -57,22 +57,26 @@ module.exports = bookshelf.Model.extend({
     var userId = this.get('user_id')
     if (!opts) opts = {}
 
-    return Promise.map(userIds, function (followerId) {
-      return Follow.create(followerId, postId, {
-        addedById: addingUserId,
-        transacting: opts.transacting
-      }).tap(function (follow) {
-        if (!opts.createActivity) return
+    return this.load('communities')
+    .then(() => {
+      const communityIds = this.relations.communities.pluck('id')
+      return Promise.map(userIds, followerId =>
+        Follow.create(followerId, postId, {
+          addedById: addingUserId,
+          transacting: opts.transacting
+        })
+        .tap(follow => {
+          if (!opts.createActivity) return
 
-        var updates = []
-        const addActivity = (recipientId, method) => {
-          updates.push(Activity[method](follow, recipientId).save({}, _.pick(opts, 'transacting')))
-          updates.push(User.incNewNotificationCount(recipientId, opts.transacting))
-        }
-        if (followerId !== addingUserId) addActivity(followerId, 'forFollowAdd')
-        if (userId !== addingUserId) addActivity(userId, 'forFollow')
-        return Promise.all(updates)
-      })
+          var updates = []
+          const addActivity = (recipientId, method) => {
+            updates.push(Activity[method](follow, recipientId).save({}, _.pick(opts, 'transacting')))
+            updates.push(User.incNewNotificationCount(recipientId, communityIds, opts.transacting))
+          }
+          if (followerId !== addingUserId) addActivity(followerId, 'forFollowAdd')
+          if (userId !== addingUserId) addActivity(userId, 'forFollow')
+          return Promise.all(updates)
+        }))
     })
   },
 
@@ -260,14 +264,18 @@ module.exports = bookshelf.Model.extend({
   },
 
   notifyAboutMention: function (post, userId, opts) {
-    return Promise.join(
-      Queue.classMethod('Post', 'sendNotificationEmail', {
-        recipientId: userId,
-        postId: post.id
-      }),
-      Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
-      User.incNewNotificationCount(userId, opts.transacting)
-    )
+    return post.load('communities')
+    .then(() => {
+      const communityIds = post.relations.communities.pluck('id')
+      return Promise.join(
+        Queue.classMethod('Post', 'sendNotificationEmail', {
+          recipientId: userId,
+          postId: post.id
+        }),
+        Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
+        User.incNewNotificationCount(userId, communityIds, opts.transacting)
+      )
+    })
   },
 
   createWelcomePost: function (userId, communityId, trx) {
@@ -276,11 +284,11 @@ module.exports = bookshelf.Model.extend({
     })
 
     return new Post(attrs).save({}, {transacting: trx})
-      .tap(post => Promise.join(
-          post.relatedUsers().attach(userId, {transacting: trx}),
-          post.communities().attach(communityId, {transacting: trx}),
-          Follow.create(userId, post.id, {transacting: trx})
-      ))
+    .tap(post => Promise.join(
+      post.relatedUsers().attach(userId, {transacting: trx}),
+      post.communities().attach(communityId, {transacting: trx}),
+      Follow.create(userId, post.id, {transacting: trx})
+    ))
   },
 
   newPostAttrs: () => ({
@@ -302,12 +310,10 @@ module.exports = bookshelf.Model.extend({
     .where({post_id: opts.postId, active: true})
     .orderBy('created_at', 'desc')
     .pluck('id')
-    .then(ids => {
-      return Promise.all([
-        comments().where('id', 'in', ids.slice(0, 3)).update('recent', true),
-        ids.length > 3 && comments().where('id', 'in', ids.slice(3)).update('recent', false)
-      ])
-    })
+    .then(ids => Promise.all([
+      comments().where('id', 'in', ids.slice(0, 3)).update('recent', true),
+      ids.length > 3 && comments().where('id', 'in', ids.slice(3)).update('recent', false)
+    ]))
   }
 
 })

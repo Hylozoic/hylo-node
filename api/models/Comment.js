@@ -50,7 +50,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendNotifications: function (opts) {
-    var comment, post
+    var comment, post, communityIds
     return bookshelf.transaction(trx => {
       return Comment.find(opts.commentId, {
         withRelated: ['user', 'post', 'post.communities', 'post.user', 'post.followers', 'post.relatedUsers'],
@@ -58,6 +58,7 @@ module.exports = bookshelf.Model.extend({
       }).then(c => {
         comment = c
         post = c.relations.post
+        communityIds = post.relations.communities.pluck('id')
         return [
           post.relations.followers.pluck('id'),
           RichText.getUserMentions(comment.get('text'))
@@ -68,22 +69,17 @@ module.exports = bookshelf.Model.extend({
         var newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existing)
         var unmentionedOldFollowers = _.difference(_.without(existing, commenterId), mentioned)
 
+        // TODO refactor this so we can get the devices for all the users to
+        // send push notifications to in a single query
         return Promise.join(
           // create activity and send mention notification to all mentioned users
           Promise.map(mentioned, function (userId) {
             return Promise.join(
-              Queue.classMethod('Comment', 'sendNotificationEmail', {
-                recipientId: userId,
-                commentId: comment.id,
-                version: 'mention'
-              }),
-              Queue.classMethod('Comment', 'sendPushNotification', {
-                recipientId: userId,
-                commentId: comment.id,
-                version: 'mention'
-              }),
-              Activity.forComment(comment, userId, Activity.Action.Mention).save({}, {transacting: trx}),
-              User.incNewNotificationCount(userId, trx)
+              queueSend(userId, comment.id, 'email', 'mention'),
+              queueSend(userId, comment.id, 'push', 'mention'),
+              Activity.forComment(comment, userId, Activity.Action.Mention)
+              .save({}, {transacting: trx}),
+              User.incNewNotificationCount(userId, communityIds, trx)
             )
           }),
 
@@ -91,18 +87,11 @@ module.exports = bookshelf.Model.extend({
           // except the commenter and mentioned users
           Promise.map(unmentionedOldFollowers, function (userId) {
             return Promise.join(
-              Queue.classMethod('Comment', 'sendNotificationEmail', {
-                recipientId: userId,
-                commentId: comment.id,
-                version: 'default'
-              }),
-              Queue.classMethod('Comment', 'sendPushNotification', {
-                recipientId: userId,
-                commentId: comment.id,
-                version: 'default'
-              }),
-              Activity.forComment(comment, userId, Activity.Action.Comment).save({}, {transacting: trx}),
-              User.incNewNotificationCount(userId, trx)
+              queueSend(userId, comment.id, 'email'),
+              queueSend(userId, comment.id, 'push'),
+              Activity.forComment(comment, userId, Activity.Action.Comment)
+              .save({}, {transacting: trx}),
+              User.incNewNotificationCount(userId, communityIds, trx)
             )
           }),
 
@@ -198,3 +187,8 @@ module.exports = bookshelf.Model.extend({
     })
   }
 })
+
+const queueSend = (recipientId, commentId, type, version = 'default') => {
+  const fn = `send${type === 'push' ? 'PushNotification' : 'NotificationEmail'}`
+  return Queue.classMethod('Comment', fn, {recipientId, commentId, version})
+}
