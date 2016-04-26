@@ -160,6 +160,7 @@ module.exports = {
 
       post: Post.query(q => {
         q.where('post.created_at', '>', startTime)
+        q.where('post.type', '!=', 'welcome')
         q.join('post_community', 'post.id', 'post_community.post_id')
         q.select(['post.id', 'post.created_at', 'post_community.community_id'])
       }).query(),
