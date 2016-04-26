@@ -1169,6 +1169,7 @@ CREATE TABLE users_community (
     deactivator_id bigint,
     last_viewed_at timestamp with time zone,
     id integer NOT NULL,
+    settings jsonb DEFAULT '{}'::jsonb,
     new_notification_count integer DEFAULT 0
 );
 
@@ -2573,4 +2574,3 @@ ALTER TABLE ONLY websites
 --
 -- PostgreSQL database dump complete
 --
-
