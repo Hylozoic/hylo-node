@@ -11,6 +11,7 @@ describe('CommentController', function () {
         u2: new User({name: 'U2', email: 'b@b.c'}).save(),
         u3: new User({name: 'U3', email: 'c@b.c'}).save(),
         p1: new Post({name: 'P1', active: true}).save(),
+        p2: new Post({name: 'P2', active: true}).save(),
         c1: new Community({name: 'C1', slug: 'c1'}).save()
       })
     })
@@ -64,6 +65,58 @@ describe('CommentController', function () {
           })
         })
     })
+
+    it('creates an activity for post follower', function () {
+      var commentText = 'Replying to a post that u2 is following'
+      var responseData
+
+      req.param = function (name) {
+        if (name === 'text') return commentText
+      }
+
+      res = {
+        locals: {post: fixtures.p2},
+        serverError: spy(console.error),
+        ok: spy(function (x) { responseData = x })
+      }
+
+      return Follow.create(fixtures.u2.id, fixtures.p2.id)
+      .then(() => CommentController.create(req, res))
+      .then(() =>
+        Activity.where({
+          comment_id: responseData.id,
+          reader_id: fixtures.u2.id
+        }).fetch())
+      .then(activity => {
+        expect(activity).to.exist
+      })
+    })
+
+    it('creates an activity when there is a mention', function () {
+      var commentText = `<p>Hey <a data-user-id="${fixtures.u3.id}">U3</a>`
+      var responseData
+
+      req.param = function (name) {
+        if (name === 'text') return commentText
+      }
+
+      res = {
+        locals: {post: fixtures.p2},
+        serverError: spy(console.error),
+        ok: spy(function (x) { responseData = x })
+      }
+
+      return CommentController.create(req, res)
+      .then(() =>
+        Activity.where({
+          comment_id: responseData.id,
+          reader_id: fixtures.u3.id
+        }).fetch())
+      .then(activity => {
+        expect(activity).to.exist
+      })
+    })
+
     it('creates a tag', function () {
       var commentText = '<p>Hey #commenttag</p>'
 
