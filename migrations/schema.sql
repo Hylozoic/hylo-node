@@ -579,10 +579,10 @@ CREATE SEQUENCE notification_status_seq
 CREATE TABLE notifications (
     id integer NOT NULL,
     activity_id bigint,
-    media character varying(255),
     sent_at timestamp with time zone,
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    medium character varying(255)
 );
 
 
