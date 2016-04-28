@@ -298,7 +298,7 @@ describe('Tag', () => {
     })
 
     it('removes rows that would cause duplicates and updates the rest', function () {
-      return Tag.merge('t1', 't2')
+      return Tag.merge(t1.id, t2.id)
       .then(() => t1.load(['posts', 'communities', 'follows', 'users']))
       .then(() => {
         expect(t1.relations.posts.map('id')).to.deep.equal([p1.id, p2.id])

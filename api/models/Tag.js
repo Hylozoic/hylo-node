@@ -138,18 +138,17 @@ module.exports = bookshelf.Model.extend({
   },
 
   merge: (id1, id2) => {
-    return Promise.join(Tag.find(id1), Tag.find(id2),
-      (tag, extraTag) => bookshelf.transaction(trx => {
-        const update = (table, uniqueCols) =>
-          updateOrRemove(table, 'tag_id', extraTag.id, tag.id, uniqueCols, trx)
+    return bookshelf.transaction(trx => {
+      const update = (table, uniqueCols) =>
+        updateOrRemove(table, 'tag_id', id2, id1, uniqueCols, trx)
 
-        return Promise.join(
-          update('posts_tags', ['post_id']),
-          update('communities_tags', ['community_id']),
-          update('tag_follows', ['community_id', 'user_id']),
-          update('tags_users', ['user_id'])
-        )
-        .then(() => extraTag.destroy({transacting: trx}))
-      }))
+      return Promise.join(
+        update('posts_tags', ['post_id']),
+        update('communities_tags', ['community_id']),
+        update('tag_follows', ['community_id', 'user_id']),
+        update('tags_users', ['user_id'])
+      )
+      .then(() => trx('tags').where('id', id2).del())
+    })
   }
 })
