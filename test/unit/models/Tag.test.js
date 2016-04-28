@@ -291,16 +291,19 @@ describe('Tag', () => {
         k('communities_tags').insert({tag_id: t2.id, community_id: c.id}),
         k('communities_tags').insert({tag_id: t3.id, community_id: c.id}),
         k('tag_follows').insert({tag_id: t1.id, community_id: c.id, user_id: u.id}),
-        k('tag_follows').insert({tag_id: t2.id, community_id: c.id, user_id: u.id})
+        k('tag_follows').insert({tag_id: t2.id, community_id: c.id, user_id: u.id}),
+        k('tags_users').insert({tag_id: t1.id, user_id: u.id}),
+        k('tags_users').insert({tag_id: t2.id, user_id: u.id})
       ]))
     })
 
     it('removes rows that would cause duplicates and updates the rest', function () {
       return Tag.merge('t1', 't2')
-      .then(() => t1.load(['posts', 'communities', 'follows']))
+      .then(() => t1.load(['posts', 'communities', 'follows', 'users']))
       .then(() => {
         expect(t1.relations.posts.map('id')).to.deep.equal([p1.id, p2.id])
         expect(t1.relations.communities.map('id')).to.deep.equal([c.id])
+        expect(t1.relations.users.map('id')).to.deep.equal([u.id])
 
         const follows = t1.relations.follows
         expect(follows.length).to.equal(1)

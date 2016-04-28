@@ -146,8 +146,8 @@ module.exports = bookshelf.Model.extend({
         return Promise.join(
           update('posts_tags', ['post_id']),
           update('communities_tags', ['community_id']),
-          update('tag_follows', ['community_id', 'user_id'])
-          // update('tags_users', 'user_id')
+          update('tag_follows', ['community_id', 'user_id']),
+          update('tags_users', ['user_id'])
         )
         .then(() => extraTag.destroy({transacting: trx}))
       }))

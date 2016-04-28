@@ -970,6 +970,38 @@ ALTER SEQUENCE tags_id_seq OWNED BY tags.id;
 
 
 --
+-- Name: tags_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE tags_users (
+    id integer NOT NULL,
+    tag_id bigint,
+    user_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: tags_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE tags_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: tags_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE tags_users_id_seq OWNED BY tags_users.id;
+
+
+--
 -- Name: thank_you_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1169,8 +1201,8 @@ CREATE TABLE users_community (
     deactivator_id bigint,
     last_viewed_at timestamp with time zone,
     id integer NOT NULL,
-    settings jsonb DEFAULT '{}'::jsonb,
-    new_notification_count integer DEFAULT 0
+    new_notification_count integer DEFAULT 0,
+    settings jsonb DEFAULT '{}'::jsonb
 );
 
 
@@ -1391,6 +1423,13 @@ ALTER TABLE ONLY tag_follows ALTER COLUMN id SET DEFAULT nextval('followed_tags_
 --
 
 ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('tags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users ALTER COLUMN id SET DEFAULT nextval('tags_users_id_seq'::regclass);
 
 
 --
@@ -1743,6 +1782,14 @@ ALTER TABLE ONLY tags
 
 
 --
+-- Name: tags_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT tags_users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: tours_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1812,6 +1859,14 @@ ALTER TABLE ONLY posts_tags
 
 ALTER TABLE ONLY projects_users
     ADD CONSTRAINT unique_projects_users UNIQUE (user_id, project_id);
+
+
+--
+-- Name: unique_tags_users; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT unique_tags_users UNIQUE (tag_id, user_id);
 
 
 --
@@ -2537,6 +2592,22 @@ ALTER TABLE ONLY projects_users
 
 ALTER TABLE ONLY projects_users
     ADD CONSTRAINT projects_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tags_users_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT tags_users_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tags_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY tags_users
+    ADD CONSTRAINT tags_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
