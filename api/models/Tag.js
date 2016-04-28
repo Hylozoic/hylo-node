@@ -150,5 +150,13 @@ module.exports = bookshelf.Model.extend({
       )
       .then(() => trx('tags').where('id', id2).del())
     })
+  },
+
+  remove: id => {
+    return bookshelf.transaction(trx => {
+      const tables = ['tags_users', 'tag_follows', 'communities_tags', 'posts_tags']
+      return Promise.all(tables.map(t => trx(t).where('tag_id', id).del()))
+      .then(() => trx('tags').where('id', id).del())
+    })
   }
 })
