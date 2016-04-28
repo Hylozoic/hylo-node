@@ -1,9 +1,11 @@
-var tagsInText = (text = '') => {
+import { updateOrRemove } from '../../lib/util/knex'
+
+const tagsInText = (text = '') => {
   // TODO alphanumeric and underscore
   return (text.match(/#\w+/g) || []).map(str => str.substr(1))
 }
 
-var addToTaggable = (taggable, tagName, selected, trx) => {
+const addToTaggable = (taggable, tagName, selected, trx) => {
   var association, communities
   var isPost = !taggable.post
   if (isPost) {
@@ -38,11 +40,11 @@ var addToTaggable = (taggable, tagName, selected, trx) => {
   .then(tag => Promise.map(communities(taggable), com => addToCommunity(com, tag, taggable.get('user_id'), trx)))
 }
 
-var removeFromTaggable = (taggable, tag, trx) => {
+const removeFromTaggable = (taggable, tag, trx) => {
   return taggable.tags().detach(tag.id, {transacting: trx})
 }
 
-var addToCommunity = (community, tag, user_id, trx) => {
+const addToCommunity = (community, tag, user_id, trx) => {
   return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch({transacting: trx})
   // the catch here is for the case where another user just created the CommunityTag
   // the save fails, but we don't care about the result
@@ -51,7 +53,7 @@ var addToCommunity = (community, tag, user_id, trx) => {
     .catch(() => {}))
 }
 
-var updateForTaggable = (taggable, text, tagParam, trx) => {
+const updateForTaggable = (taggable, text, tagParam, trx) => {
   var differenceOfTags = (a, b) =>
     _.differenceBy(a, b, t => _.pick(t, 'name', 'selected'))
 
@@ -76,7 +78,6 @@ var updateForTaggable = (taggable, text, tagParam, trx) => {
 }
 
 module.exports = bookshelf.Model.extend({
-
   tableName: 'tags',
 
   users: function () {
@@ -93,6 +94,10 @@ module.exports = bookshelf.Model.extend({
 
   comments: function () {
     return this.belongsToMany(Comment).through(CommentTag)
+  },
+
+  follows: function () {
+    return this.hasMany(TagFollow)
   }
 
 }, {
@@ -130,5 +135,21 @@ module.exports = bookshelf.Model.extend({
       return Promise.map(undefinedTagNames, tagName =>
         new Tag({name: tagName}).save({}, {transacting: trx}))
     })
+  },
+
+  merge: (id1, id2) => {
+    return Promise.join(Tag.find(id1), Tag.find(id2),
+      (tag, extraTag) => bookshelf.transaction(trx => {
+        const update = (table, uniqueCols) =>
+          updateOrRemove(table, 'tag_id', extraTag.id, tag.id, uniqueCols, trx)
+
+        return Promise.join(
+          update('posts_tags', ['post_id']),
+          update('communities_tags', ['community_id']),
+          update('tag_follows', ['community_id', 'user_id'])
+          // update('tags_users', 'user_id')
+        )
+        .then(() => extraTag.destroy({transacting: trx}))
+      }))
   }
 })

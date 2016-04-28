@@ -50,7 +50,10 @@ module.exports.bootstrap = function (done) {
 
       // TODO fix missing limit and boolean values
       var query = util.format.apply(util, args)
-        .replace(/^(select|insert|update)/, '$1'.yellow)
+      .replace(/^(select)/, '$1'.cyan)
+      .replace(/^(insert)/, '$1'.green)
+      .replace(/^(update)/, '$1'.yellow)
+      .replace(/^(delete)/, '$1'.red)
 
       sails.log.info(query)
     })
