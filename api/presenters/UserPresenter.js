@@ -1,4 +1,4 @@
-var relationsForSelf = [
+const relationsForSelf = [
   'memberships',
   {'memberships.community': qb => qb.column('id', 'name', 'slug', 'avatar_url')},
   'skills',
@@ -8,10 +8,10 @@ var relationsForSelf = [
   'websites',
   'linkedAccounts',
   'onboarding'
-];
+]
 
-var extraAttributes = function(user) {
-  return Promise.props({
+const extraAttributes = user =>
+  Promise.props({
     public_email: user.encryptedEmail(),
     skills: Skill.simpleList(user.relations.skills),
     organizations: Organization.simpleList(user.relations.organizations),
@@ -22,42 +22,45 @@ var extraAttributes = function(user) {
     contribution_count: Contribution.countForUser(user),
     thank_count: Thank.countForUser(user),
     extra_info: user.get('extra_info')
-  });
-};
+  })
 
-var selfOnlyAttributes = function(user, isAdmin) {
-  return Promise.props({
+const selfOnlyAttributes = (user, isAdmin) =>
+  Promise.props({
     notification_count: Activity.unreadCountForUser(user),
     is_admin: isAdmin
-  });
-};
+  })
 
-var shortAttributes = [
+const shortAttributes = [
   'id', 'name', 'avatar_url',
   'bio', 'intention', 'work',
   'facebook_url', 'linkedin_url', 'twitter_name'
-];
+]
 
-var UserPresenter = module.exports = {
-
+const UserPresenter = module.exports = {
   shortAttributes: shortAttributes,
 
-  fetchForSelf: function(userId, isAdmin) {
+  fetchForSelf: function (userId, isAdmin) {
     return User.find(userId, {withRelated: relationsForSelf})
-    .tap(user => { if (!user || !user.get('active')) throw "User not found"; })
+    .tap(user => {
+      if (!user || !user.get('active')) throw new Error('User not found')
+    })
     .then(user => Promise.join(user.toJSON(), extraAttributes(user), selfOnlyAttributes(user, isAdmin)))
-    .then(attributes => _.extend.apply(_, attributes));
+    .then(attributes => _.extend.apply(_, attributes))
   },
 
-  presentForSelf: function(attributes, session) {
-    return _.extend(attributes, {provider_key: session.userProvider});
+  presentForSelf: function (attributes, session) {
+    return _.extend(attributes, {provider_key: session.userProvider})
   },
 
-  fetchForOther: function(id) {
-    return User.find(id, {withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']})
-    .tap(user => { if (!user || !user.get('active')) throw "User not found"; })
+  fetchForOther: function (id) {
+    return User.find(id, {
+      withRelated: ['skills', 'organizations', 'phones', 'emails', 'websites']
+    })
+    .tap(user => {
+      if (!user || !user.get('active')) throw new Error('User not found')
+    })
     .then(user => Promise.join(user, extraAttributes(user)))
-    .spread((user, extra) => _.extend(user.attributes, extra));
+    .spread((user, extra) => _.extend(user.attributes, extra))
   },
 
   presentForList: function (user, communityId) {
@@ -80,4 +83,4 @@ var UserPresenter = module.exports = {
     )
   }
 
-};
+}

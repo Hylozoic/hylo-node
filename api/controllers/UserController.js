@@ -73,7 +73,7 @@ module.exports = {
     .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
     .then(res.ok)
     .catch(err => {
-      if (err === 'User not found') return res.ok({})
+      if (err.message === 'User not found') return res.ok({})
       throw err
     })
     .catch(res.serverError)
