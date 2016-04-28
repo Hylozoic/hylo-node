@@ -85,21 +85,23 @@ const sanitize = tag => tag.replace(/ /g, '-').replace(invalidCharacterRegex, ''
 const createAsNeeded = tagNames => {
   const lower = t => t.toLowerCase()
 
-  // sure wish knex did this for me automatically
+  // sure wish knex handled this for me automatically
   const sqlize = arr => arr.map(x => `'${x}'`).join(', ')
   const nameMatch = arr => `lower(name) in (${sqlize(map(lower, arr))})`
 
-  return Tag.query()
-  .whereRaw(nameMatch(tagNames)).select(['id', 'name'])
+  // find existing tags
+  return Tag.query().whereRaw(nameMatch(tagNames)).select(['id', 'name'])
   .then(existing => {
     const toCreate = differenceBy(tagNames, map('name', existing), lower)
     const created_at = new Date()
 
+    // create new tags as necessary
     return (isEmpty(toCreate)
       ? Promise.resolve([])
       : bookshelf.knex('tags')
         .insert(toCreate.map(name => ({name, created_at})))
         .then(() => Tag.query().whereRaw(nameMatch(toCreate)).select('id')))
+    // return the ids of existing and created tags together
     .then(created => map('id', existing.concat(created)))
   })
 }
@@ -148,13 +150,16 @@ module.exports = bookshelf.Model.extend({
     return updateForTaggable(comment, comment.get('text'), null, trx)
   },
 
-  addToUser: function (user, values) {
+  addToUser: function (user, values, reset) {
     const created_at = new Date()
-    return createAsNeeded(map(sanitize, values))
-    .then(ids => {
-      const pivot = id => ({tag_id: id, created_at})
-      return user.tags().attach(ids.map(pivot))
-    })
+    const pivot = id => ({tag_id: id, created_at})
+    const tagNames = map(sanitize, values)
+    return (reset
+      ? bookshelf.knex('tags_users').where('user_id', user.id).del()
+      : Promise.resolve()
+    )
+    .then(() => createAsNeeded(tagNames))
+    .then(ids => user.tags().attach(ids.map(pivot)))
   },
 
   defaultTags: function (trx) {

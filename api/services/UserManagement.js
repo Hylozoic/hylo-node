@@ -151,11 +151,11 @@ module.exports = {
     .then(() => queries.updates.concat(queries.deletes).map(q => q.toSQL()))
   },
 
-  convertSkillsToTags: userId => {
+  convertSkillsToTags: (userId, reset) => {
     return User.find(userId, {withRelated: 'skills'})
     .then(user => {
       const skills = user.relations.skills.map(s => s.name())
-      return Tag.addToUser(user, skills)
+      return Tag.addToUser(user, skills, reset)
     })
   }
 }
