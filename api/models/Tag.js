@@ -1,4 +1,6 @@
 import { updateOrRemove } from '../../lib/util/knex'
+import { differenceBy, isEmpty } from 'lodash'
+import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
   // TODO alphanumeric and underscore
@@ -77,6 +79,31 @@ const updateForTaggable = (taggable, text, tagParam, trx) => {
   })
 }
 
+const invalidCharacterRegex = /[^\w\-]/
+const sanitize = tag => tag.replace(/ /g, '-').replace(invalidCharacterRegex, '')
+
+const createAsNeeded = tagNames => {
+  const lower = t => t.toLowerCase()
+
+  // sure wish knex did this for me automatically
+  const sqlize = arr => arr.map(x => `'${x}'`).join(', ')
+  const nameMatch = arr => `lower(name) in (${sqlize(map(lower, arr))})`
+
+  return Tag.query()
+  .whereRaw(nameMatch(tagNames)).select(['id', 'name'])
+  .then(existing => {
+    const toCreate = differenceBy(tagNames, map('name', existing), lower)
+    const created_at = new Date()
+
+    return (isEmpty(toCreate)
+      ? Promise.resolve([])
+      : bookshelf.knex('tags')
+        .insert(toCreate.map(name => ({name, created_at})))
+        .then(() => Tag.query().whereRaw(nameMatch(toCreate)).select('id')))
+    .then(created => map('id', existing.concat(created)))
+  })
+}
+
 module.exports = bookshelf.Model.extend({
   tableName: 'tags',
 
@@ -119,6 +146,15 @@ module.exports = bookshelf.Model.extend({
 
   updateForComment: function (comment, trx) {
     return updateForTaggable(comment, comment.get('text'), null, trx)
+  },
+
+  addToUser: function (user, values) {
+    const created_at = new Date()
+    return createAsNeeded(map(sanitize, values))
+    .then(ids => {
+      const pivot = id => ({tag_id: id, created_at})
+      return user.tags().attach(ids.map(pivot))
+    })
   },
 
   defaultTags: function (trx) {
