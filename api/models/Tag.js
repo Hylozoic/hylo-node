@@ -1,5 +1,5 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, isEmpty } from 'lodash'
+import { differenceBy, isEmpty, pick, uniqBy } from 'lodash'
 import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -22,21 +22,16 @@ const addToTaggable = (taggable, tagName, selected, trx) => {
   return taggable.load(association, {transacting: trx})
   .then(() => Tag.find(tagName, {transacting: trx}))
   .then(tag => {
-    if (tag) {
-      return tag
-    } else {
-      return new Tag({
-        name: tagName,
-        created_at: new Date()
-      }).save({}, {transacting: trx})
-      .catch(() => Tag.find(tagName, {transacting: trx}))
-    }
+    if (tag) return tag
+    return new Tag({
+      name: tagName,
+      created_at: new Date()
+    }).save({}, {transacting: trx})
+    .catch(() => Tag.find(tagName, {transacting: trx}))
   })
   .tap(tag => {
     var attachment = {tag_id: tag.id}
-    if (isPost) {
-      attachment.selected = selected
-    }
+    if (isPost) attachment.selected = selected
     return taggable.tags().attach(attachment, {transacting: trx})
   })
   .then(tag => Promise.map(communities(taggable), com => addToCommunity(com, tag, taggable.get('user_id'), trx)))
@@ -56,23 +51,21 @@ const addToCommunity = (community, tag, user_id, trx) => {
 }
 
 const updateForTaggable = (taggable, text, tagParam, trx) => {
-  var differenceOfTags = (a, b) =>
-    _.differenceBy(a, b, t => _.pick(t, 'name', 'selected'))
+  const lowerName = t => t.name.toLowerCase()
+  const tagDifference = (a, b) =>
+    differenceBy(a, b, t => pick(t, 'name', 'selected'))
 
-  var newTags = tagsInText(text).map(tagName => ({name: tagName, selected: false}))
-  if (tagParam) {
-    newTags.push({name: tagParam, selected: true})
-  }
+  var newTags = tagsInText(text).map(name => ({name, selected: false}))
+  if (tagParam) newTags.push({name: tagParam, selected: true})
   return taggable.load('tags', {transacting: trx})
   .then(post => {
-    // making oldTags the same structure as newTags, for easier taking of difference
-    var oldTags = taggable.relations.tags.models.map(t =>
-      _.merge(t.pick('id', 'name'),
-        {selected: t.pivot.get('selected')}))
-
-    var toAdd = _.uniqBy(differenceOfTags(newTags, oldTags), 'name')
-    var toRemove = differenceOfTags(oldTags, newTags)
-
+    const oldTags = taggable.relations.tags.map(t => ({
+      id: t.id,
+      name: t.get('name'),
+      selected: t.pivot.get('selected')
+    }))
+    const toAdd = uniqBy(tagDifference(newTags, oldTags), lowerName)
+    const toRemove = tagDifference(oldTags, newTags)
     return Promise.all(
       toRemove.map(tag => removeFromTaggable(taggable, tag, trx))
       .concat(toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))))
