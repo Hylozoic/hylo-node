@@ -1,4 +1,5 @@
 var url = require('url')
+import { flatten } from 'lodash'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
@@ -114,6 +115,28 @@ module.exports = bookshelf.Model.extend({
     that._previousAttributes = {}
     that.changed = {}
     return that
+  },
+
+  createActivities: function (trx) {
+    var self = this
+    return self.load(['communities', 'communities.users'], {transacting: trx})
+    .then(() => {
+      const mentioned = RichText.getUserMentions(self.get('description')).map(userId => ({
+        reader_id: userId,
+        post_id: self.id,
+        actor_id: self.get('user_id'),
+        reason: 'mention'
+      }))
+      const members = flatten(self.relations.communities.map(community =>
+        community.relations.users.map(user => ({
+          reader_id: user.id,
+          post_id: self.id,
+          actor_id: self.get('user_id'),
+          community_id: community.id,
+          reason: `newPost: ${community.id}`
+        }))))
+      return Activity.saveReasons(Activity.mergeReasons(mentioned.concat(members)), trx)
+    })
   }
 
 }, {

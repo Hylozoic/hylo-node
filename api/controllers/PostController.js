@@ -166,8 +166,10 @@ const afterSavingPost = function (post, opts) {
     post.addFollowers(followerIds, userId, _.pick(opts, 'transacting')),
 
     // create activity and send notification to all mentioned users except the creator
+    /*
     Promise.map(_.without(mentioned, userId), mentionedUserId =>
       Post.notifyAboutMention(post, mentionedUserId, _.pick(opts, 'transacting'))),
+    */
 
     // Add image, if any
     opts.imageUrl && Media.createImageForPost(post.id, opts.imageUrl, opts.transacting),
@@ -186,6 +188,7 @@ const afterSavingPost = function (post, opts) {
       exclude: mentioned
     })]))
     .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
+    .then(() => post.createActivities(opts.transacting))
 }
 
 const PostController = {

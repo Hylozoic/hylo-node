@@ -1,3 +1,5 @@
+import { values, merge, pick } from 'lodash'
+
 module.exports = bookshelf.Model.extend({
   tableName: 'activity',
 
@@ -117,5 +119,33 @@ module.exports = bookshelf.Model.extend({
   unreadCountForUser: function (user) {
     return Activity.query().where({reader_id: user.id, unread: true}).count()
     .then(rows => rows[0].count)
+  },
+
+  mergeReasons: function (reasons) {
+    const merged = values(reasons.reduce((acc, reason) => {
+      var current = acc[reason.reader_id]
+      if (acc[reason.reader_id]) {
+        const fields = ['actor_id', 'community_id']
+        fields.map(field => {
+          if (reason[field]) {
+            current[field] = reason[field]
+          }
+        })
+        current.reasons.push(reason.reason)
+      } else {
+        acc[reason.reader_id] = reason
+        acc[reason.reader_id].reasons = [acc[reason.reader_id].reason]
+      }
+      return acc
+    }, {}))
+    return merged
+  },
+
+  saveReasons: function (reasons, trx) {
+    return Promise.map(reasons, reason =>
+      new Activity(
+        merge(pick(reason, ['post_id', 'community_id', 'comment_id', 'actor_id', 'reader_id']),
+          {meta: {reasons: reason.reasons}}))
+      .save({}, {transacting: trx}))
   }
 })

@@ -10,7 +10,7 @@ describe('PostController', () => {
     setup.clearDb()
     .then(() => Promise.props({
       u1: new User({name: 'U1', email: 'a@b.c'}).save(),
-      u2: new User({name: 'U2', email: 'b@b.c'}).save(),
+      u2: new User({name: 'U2', email: 'b@b.c', active: true}).save(),
       u3: new User({name: 'U3', email: 'c@b.c'}).save(),
       p1: new Post({name: 'P1'}).save(),
       c1: new Community({name: 'C1', slug: 'c1'}).save()
@@ -95,7 +95,7 @@ describe('PostController', () => {
       .then(activity => {
         expect(activity).to.exist
         expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
-        expect(activity.get('meta')).to.equal({reasons: ['newPost']})
+        expect(activity.get('meta')).to.equal({reasons: [`newPost: ${fixtures.c1.id}`]})
         expect(activity.get('unread')).to.equal(true)
         expect(activity.get('display')).to.equal(false)
       })
@@ -114,7 +114,7 @@ describe('PostController', () => {
       .then(activity => {
         expect(activity).to.exist
         expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
-        expect(activity.get('meta')).to.equal({reasons: ['mention']})
+        expect(activity.get('meta')).to.deep.equal({reasons: ['mention', `newPost: ${fixtures.c1.id}`]})
         expect(activity.get('unread')).to.equal(true)
       })
     })
