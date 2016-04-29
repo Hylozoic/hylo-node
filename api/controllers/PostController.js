@@ -46,6 +46,7 @@ const queryForCommunity = function (req, res) {
 
 const queryForUser = function (req, res) {
   return queryPosts(req, {
+    tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id),
     users: [req.param('userId')],
     communities: Membership.activeCommunityIds(req.session.userId),
     visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
