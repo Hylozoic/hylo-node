@@ -109,12 +109,6 @@ module.exports = {
         qb.whereNotIn('post.user_id', opts.excludeUsers)
       }
 
-      if (opts.communities) {
-        qb.join('post_community', 'post_community.post_id', '=', 'post.id')
-        qb.whereIn('post_community.community_id', opts.communities)
-        qb.groupBy(['post.id', 'post_community.post_id'])
-      }
-
       if (opts.tag) {
         qb.join('posts_tags', 'posts_tags.post_id', '=', 'post.id')
         qb.whereIn('posts_tags.tag_id', [opts.tag])
@@ -173,6 +167,12 @@ module.exports = {
 
       if (opts.omit) {
         qb.whereNotIn('post.id', opts.omit)
+      }
+
+      if (opts.communities) {
+        qb.join('post_community', 'post_community.post_id', '=', 'post.id')
+        qb.whereIn('post_community.community_id', opts.communities)
+        qb.groupBy(['post.id', 'post_community.post_id'])
       }
     })
   },
