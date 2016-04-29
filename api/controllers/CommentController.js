@@ -18,6 +18,7 @@ var createComment = function (commenterId, text, post) {
     .tap(comment => Tag.updateForComment(comment, trx))
     .tap(() => post.updateCommentCount(trx))
   })
+  .tap(comment => comment.createActivities())
   .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
   .tap(() => updateRecentComments(post.id))
 }
