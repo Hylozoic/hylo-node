@@ -4,7 +4,7 @@ import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
   // TODO alphanumeric and underscore
-  return (text.match(/#[\w-]+/g) || []).map(str => str.substr(1))
+  return (text.match(/#[A-Za-z][\w-]+/g) || []).map(str => str.substr(1))
 }
 
 const addToTaggable = (taggable, tagName, selected, trx) => {
