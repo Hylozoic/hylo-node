@@ -143,9 +143,13 @@ module.exports = bookshelf.Model.extend({
 
   saveReasons: function (reasons, trx) {
     return Promise.map(reasons, reason =>
-      new Activity(
+      Activity.createWithNotifications(
         merge(pick(reason, ['post_id', 'community_id', 'comment_id', 'actor_id', 'reader_id']),
-          {meta: {reasons: reason.reasons}}))
-      .save({}, {transacting: trx}))
+          {meta: {reasons: reason.reasons}}),
+        trx))
+  },
+
+  createWithNotifications: function (attributes, trx) {
+    return new Activity(attributes).save({}, {transacting: trx})
   }
 })

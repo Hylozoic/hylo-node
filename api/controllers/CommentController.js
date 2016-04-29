@@ -13,18 +13,22 @@ var createComment = function (commenterId, text, post) {
     active: true
   }
 
-  const mentioned = RichText.getUserMentions(text)
-  const newFollowers = _.uniq(mentioned.concat(commenterId))
+  return post.load('followers')
+  .then(() => {
+    const mentioned = RichText.getUserMentions(text)
+    const existingFollowers = post.relations.followers.pluck('id')
+    const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
 
-  return bookshelf.transaction(function (trx) {
-    return new Comment(attrs).save(null, {transacting: trx})
-    .tap(comment => Tag.updateForComment(comment, trx))
-    .tap(() => post.updateCommentCount(trx))
-    .tap(comment => comment.createActivities(trx))
-    .tap(comment => post.addFollowers(newFollowers, commenterId, {transacting: trx}))
+    return bookshelf.transaction(function (trx) {
+      return new Comment(attrs).save(null, {transacting: trx})
+      .tap(comment => Tag.updateForComment(comment, trx))
+      .tap(() => post.updateCommentCount(trx))
+    })
+    .tap(comment => comment.createActivities())
+    .tap(comment => post.addFollowers(newFollowers, commenterId))
+    .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
+    .tap(() => updateRecentComments(post.id))
   })
-  .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
-  .tap(() => updateRecentComments(post.id))
 }
 
 module.exports = {
