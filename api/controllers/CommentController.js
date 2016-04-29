@@ -13,12 +13,16 @@ var createComment = function (commenterId, text, post) {
     active: true
   }
 
+  const mentioned = RichText.getUserMentions(text)
+  const newFollowers = _.uniq(mentioned.concat(commenterId))
+
   return bookshelf.transaction(function (trx) {
     return new Comment(attrs).save(null, {transacting: trx})
     .tap(comment => Tag.updateForComment(comment, trx))
     .tap(() => post.updateCommentCount(trx))
+    .tap(comment => comment.createActivities(trx))
+    .tap(comment => post.addFollowers(newFollowers, commenterId, {transacting: trx}))
   })
-  .tap(comment => comment.createActivities())
   .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
   .tap(() => updateRecentComments(post.id))
 }
