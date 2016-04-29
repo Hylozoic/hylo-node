@@ -32,11 +32,10 @@ describe('Search', function () {
       var expected = format(heredoc.strip(function () { /*
         select post.*, count(*) over () as total
         from "post"
-        inner join "post_community" on "post_community"."post_id" = "post"."id"
         inner join "follower" on "follower"."post_id" = "post"."id"
+        inner join "post_community" on "post_community"."post_id" = "post"."id"
         where "post"."active" = 'true'
         and "post"."user_id" in ('42', '41')
-        and "post_community"."community_id" in ('9', '12')
         and "post"."visibility" != '2'
         and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
           or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
@@ -45,6 +44,7 @@ describe('Search', function () {
         and "type" = 'request'
         and ((post.created_at between '%s' and '%s')
           or (post.updated_at between '%s' and '%s'))
+        and "post_community"."community_id" in ('9', '12')
         group by "post"."id", "post_community"."post_id"
         order by "post"."updated_at" desc
         limit '5'
