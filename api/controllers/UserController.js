@@ -80,7 +80,7 @@ module.exports = {
   },
 
   findOne: function (req, res) {
-    UserPresenter.fetchForOther(req.param('userId'))
+    UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
     .then(res.ok)
     .catch(res.serverError)
   },
