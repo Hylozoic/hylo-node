@@ -150,6 +150,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   createWithNotifications: function (attributes, trx) {
-    return new Activity(attributes).save({}, {transacting: trx})
+    return new Activity(attributes)
+    .save({}, {transacting: trx})
   }
 })
