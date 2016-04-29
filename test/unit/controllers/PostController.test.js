@@ -95,9 +95,8 @@ describe('PostController', () => {
       .then(activity => {
         expect(activity).to.exist
         expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
-        expect(activity.get('meta')).to.equal({reasons: [`newPost: ${fixtures.c1.id}`]})
+        expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${fixtures.c1.id}`]})
         expect(activity.get('unread')).to.equal(true)
-        expect(activity.get('display')).to.equal(false)
       })
     })
 
@@ -248,7 +247,7 @@ describe('PostController', () => {
         .then(activity => {
           expect(activity).to.exist
           expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
-          expect(activity.get('meta')).to.equal({reasons: [{tag: 'FollowThisTag'}]})
+          expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${fixtures.c1.id}`, 'tag: FollowThisTag']})
           expect(activity.get('unread')).to.equal(true)
         })
       })

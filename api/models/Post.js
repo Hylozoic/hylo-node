@@ -119,8 +119,14 @@ module.exports = bookshelf.Model.extend({
 
   createActivities: function (trx) {
     var self = this
-    return self.load(['communities', 'communities.users'], {transacting: trx})
-    .then(() => {
+    return self.load(['communities', 'communities.users', 'tags'], {transacting: trx})
+    .then(() =>
+      TagFollow.query(qb => {
+        qb.whereIn('tag_id', self.relations.tags.map('id'))
+        qb.whereIn('community_id', self.relations.communities.map('id'))
+      })
+      .fetchAll({withRelated: ['tag'], transacting: trx}))
+    .then(tagFollows => {
       const mentioned = RichText.getUserMentions(self.get('description')).map(userId => ({
         reader_id: userId,
         post_id: self.id,
@@ -135,7 +141,14 @@ module.exports = bookshelf.Model.extend({
           community_id: community.id,
           reason: `newPost: ${community.id}`
         }))))
-      return Activity.saveReasons(Activity.mergeReasons(mentioned.concat(members)), trx)
+      const tagFollowers = tagFollows.map(tagFollow => ({
+        reader_id: tagFollow.get('user_id'),
+        post_id: self.id,
+        actor_id: self.get('user_id'),
+        community_id: tagFollow.get('community_id'),
+        reason: `tag: ${tagFollow.relations.tag.get('name')}`
+      }))
+      return Activity.saveReasons(Activity.mergeReasons(mentioned.concat(members).concat(tagFollowers)), trx)
     })
   }
 
