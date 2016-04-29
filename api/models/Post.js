@@ -52,6 +52,12 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
   },
 
+  // should only be one of these per post
+  selectedTags: function () {
+    return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
+    .query({where: {selected: true}})
+  },
+
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id
     var userId = this.get('user_id')
@@ -331,14 +337,12 @@ module.exports = bookshelf.Model.extend({
   },
 
   setTagIfNeeded: postId => {
-    return Post.find(postId, {withRelated: 'tags'})
+    return Post.find(postId, {withRelated: 'selectedTags'})
     .then(post => {
-      const selectedTag = post.relations.tags.find(t => !!t.get('selected'))
       const type = post.get('type')
-      if (selectedTag || type === 'event') return
+      if (post.relations.selectedTags.first() || type === 'event') return
 
-      return bookshelf.transaction(trx =>
-        Tag.updateForPost(post, type, trx))
+      return bookshelf.transaction(trx => Tag.updateForPost(post, type, trx))
     })
   }
 })
