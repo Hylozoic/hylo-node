@@ -20,7 +20,10 @@ describe('Activity', function () {
       .then(() => Promise.join(
         fixtures.c1.posts().attach(fixtures.p1),
         fixtures.c1.posts().attach(fixtures.p2),
-        fixtures.c2.posts().attach(fixtures.p2))))
+        fixtures.c2.posts().attach(fixtures.p2),
+        fixtures.u1.joinCommunity(fixtures.c1),
+        fixtures.u1.joinCommunity(fixtures.c2)
+      )))
 
     it('creates an in-app notification from a mention', () => {
       return Activity.createWithNotifications({
@@ -30,7 +33,7 @@ describe('Activity', function () {
         meta: {reasons: ['mention']}
       })
       .then(activity =>
-        Notification.where({activity_id: activity.id, medium: 'in-app'})
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.InApp})
         .fetch())
       .then(notification => {
         expect(notification).to.exist
@@ -39,19 +42,107 @@ describe('Activity', function () {
     })
 
     it('creates a push notification when the community setting is true', () => {
-
+      return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
+      .update({settings: {
+        send_push_notifications: true
+      }})
+      .then(() => Activity.createWithNotifications({
+        post_id: fixtures.p1.id,
+        reader_id: fixtures.u1.id,
+        actor_id: fixtures.u2.id,
+        meta: {reasons: ['mention']}
+      }))
+      .then(activity =>
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        .fetch())
+      .then(notification => {
+        expect(notification).to.exist
+        expect(notification.get('sent_at')).to.be.null
+      })
     })
 
     it('creates an email notification when the community setting is true', () => {
-
+      return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
+      .update({settings: {
+        send_email: true
+      }})
+      .then(() => Activity.createWithNotifications({
+        post_id: fixtures.p1.id,
+        reader_id: fixtures.u1.id,
+        actor_id: fixtures.u2.id,
+        meta: {reasons: ['mention']}
+      }))
+      .then(activity =>
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        .fetch())
+      .then(notification => {
+        expect(notification).to.exist
+        expect(notification.get('sent_at')).to.be.null
+      })
     })
 
     it("doesn't creates a push notification when the community setting is false", () => {
-
+      return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
+      .update({settings: {
+        send_push_notifications: false
+      }})
+      .then(() => Activity.createWithNotifications({
+        post_id: fixtures.p1.id,
+        reader_id: fixtures.u1.id,
+        actor_id: fixtures.u2.id,
+        meta: {reasons: ['mention']}
+      }))
+      .then(activity =>
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        .fetch())
+      .then(notification => {
+        expect(notification).not.to.exist
+      })
     })
 
-    it("doesn't creates a push notification when the community setting is false", () => {
+    it("doesn't creates an email when the community setting is false", () => {
+      return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
+      .update({settings: {
+        send_email: false
+      }})
+      .then(() => Activity.createWithNotifications({
+        post_id: fixtures.p1.id,
+        reader_id: fixtures.u1.id,
+        actor_id: fixtures.u2.id,
+        meta: {reasons: ['mention']}
+      }))
+      .then(activity =>
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        .fetch())
+      .then(notification => {
+        expect(notification).not.to.exist
+      })
+    })
 
+    it("doesn't creates in-app or email for new posts ", () => {
+      return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
+      .update({settings: {
+        send_push_notifications: false
+      }})
+      .then(() => Activity.createWithNotifications({
+        post_id: fixtures.p1.id,
+        reader_id: fixtures.u1.id,
+        actor_id: fixtures.u2.id,
+        meta: {reasons: [`newPost: ${fixtures.c1.id}`]}
+      }))
+      .then(activity =>
+        Promise.join(
+          Notification.where({activity_id: activity.id, medium: Notification.MEDIA.InApp})
+          .fetch(),
+          Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Email})
+          .fetch(),
+          Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+          .fetch(),
+          (inApp, email, push) => {
+            expect(inApp).not.to.exist
+            expect(email).not.to.exist
+            expect(push).to.exist
+          }))
     })
 
     it('with multiple communities, it respects the most permissive setting', () => {
