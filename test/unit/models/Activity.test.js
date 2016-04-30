@@ -29,12 +29,9 @@ describe('Activity', function () {
         actor_id: fixtures.u2.id,
         meta: {reasons: ['mention']}
       })
-      .then(activity => {
-        expect(activity).to.exist
-        expect(activity.get('unread')).to.equal(true)
-        return Notification.where({activity_id: activity.id, medium: 'in-app'})
-        .fetch()
-      })
+      .then(activity =>
+        Notification.where({activity_id: activity.id, medium: 'in-app'})
+        .fetch())
       .then(notification => {
         expect(notification).to.exist
         expect(notification.get('sent_at')).to.be.null

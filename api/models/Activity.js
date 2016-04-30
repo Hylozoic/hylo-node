@@ -152,5 +152,19 @@ module.exports = bookshelf.Model.extend({
   createWithNotifications: function (attributes, trx) {
     return new Activity(attributes)
     .save({}, {transacting: trx})
+    .tap(activity => Promise.join(
+      new Notification({
+        activity_id: activity.id,
+        medium: Notification.MEDIA.InApp
+      }).save({}, {transacting: trx}),
+      new Notification({
+        activity_id: activity.id,
+        medium: Notification.MEDIA.Push
+      }).save({}, {transacting: trx}),
+      new Notification({
+        activity_id: activity.id,
+        medium: Notification.MEDIA.Email
+      }).save({}, {transacting: trx})
+    ))
   }
 })
