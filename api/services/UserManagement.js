@@ -157,5 +157,15 @@ module.exports = {
       const skills = user.relations.skills.map(s => s.name())
       return Tag.addToUser(user, skills, reset)
     })
+  },
+
+  setUrlFromExtraInfo: userId => {
+    return User.find(userId).then(user => {
+      const match = user.get('extra_info').match(/\[[^\s]+\]\(([^\s]+)\)/)
+      if (match) {
+        const url = match[1]
+        return user.save({url}, {patch: true})
+      }
+    })
   }
 }
