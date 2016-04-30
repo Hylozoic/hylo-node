@@ -152,19 +152,40 @@ module.exports = bookshelf.Model.extend({
   createWithNotifications: function (attributes, trx) {
     return new Activity(attributes)
     .save({}, {transacting: trx})
-    .tap(activity => Promise.join(
-      new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIA.InApp
-      }).save({}, {transacting: trx}),
-      new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIA.Push
-      }).save({}, {transacting: trx}),
-      new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIA.Email
-      }).save({}, {transacting: trx})
-    ))
+    .tap(activity => Membership.where({
+      user_id: activity.get('reader_id'),
+      community_id: activity.get('community_id')
+    })
+      .fetch()
+      .then(membership => {
+        var promises = []
+        const justNewPost = isJustNewPost(activity)
+
+        if (!justNewPost) {
+          promises.push(new Notification({
+            activity_id: activity.id,
+            medium: Notification.MEDIA.InApp
+          }).save({}, {transacting: trx}))
+        }
+
+        if (!justNewPost) {
+          promises.push(new Notification({
+            activity_id: activity.id,
+            medium: Notification.MEDIA.Email
+          }).save({}, {transacting: trx}))
+        }
+
+        promises.push(new Notification({
+          activity_id: activity.id,
+          medium: Notification.MEDIA.Push
+        }).save({}, {transacting: trx}))
+
+        return Promise.all(promises)
+      }))
   }
 })
+
+const isJustNewPost = activity => {
+  const reasons = activity.get('meta').reasons
+  return reasons.every(reason => reason.match(/^newPost/))
+}
