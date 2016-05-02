@@ -24,7 +24,7 @@ var findContext = function (req) {
 }
 
 var setupReputationQuery = function (req, model) {
-  var params = _.pick(req.allParams(), 'userId', 'limit', 'start')
+  var params = _.pick(req.allParams(), 'userId', 'limit', 'start', 'offset')
   var isSelf = req.session.userId === params.userId
 
   return Promise.method(function () {
@@ -33,7 +33,7 @@ var setupReputationQuery = function (req, model) {
   .then(communityIds =>
     model.queryForUser(params.userId, communityIds).query(q => {
       q.limit(params.limit || 15)
-      q.offset(params.start || 0)
+      q.offset(params.start || params.offset || 0)
     }))
 }
 
@@ -103,7 +103,7 @@ module.exports = {
     .then(q => q.fetchAll({
       withRelated: [
         {thankedBy: q => q.column('id', 'name', 'avatar_url')},
-        {comment: q => q.column('id', 'text', 'post_id')},
+        {comment: q => q.column('id', 'text', 'post_id', 'created_at')},
         {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
         {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
         {'comment.post.communities': q => q.column('community.id', 'name')}
