@@ -1,5 +1,5 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, isEmpty, pick, uniqBy } from 'lodash'
+import { differenceBy, isEmpty, pick, some, uniqBy } from 'lodash'
 import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -34,7 +34,8 @@ const addToTaggable = (taggable, tagName, selected, trx) => {
     if (isPost) attachment.selected = selected
     return taggable.tags().attach(attachment, {transacting: trx})
   })
-  .then(tag => Promise.map(communities(taggable), com => addToCommunity(com, tag, taggable.get('user_id'), trx)))
+  .then(tag => Promise.map(communities(taggable), com =>
+    addToCommunity(com, tag, taggable.get('user_id'), trx)))
 }
 
 const removeFromTaggable = (taggable, tag, trx) => {
@@ -144,15 +145,29 @@ module.exports = bookshelf.Model.extend({
   },
 
   addToUser: function (user, values, reset) {
-    const created_at = new Date()
-    const pivot = id => ({tag_id: id, created_at})
-    const tagNames = map(sanitize, values)
     return (reset
       ? bookshelf.knex('tags_users').where('user_id', user.id).del()
       : Promise.resolve()
     )
-    .then(() => createAsNeeded(tagNames))
-    .then(ids => user.tags().attach(ids.map(pivot)))
+    .then(() => createAsNeeded(map(sanitize, values)))
+    .then(ids => {
+      const created_at = new Date()
+      const pivot = id => ({tag_id: id, created_at})
+      user.tags().attach(ids.map(pivot))
+    })
+  },
+
+  updateUser: function (user, values) {
+    const oldTags = user.relations.tags.map(t => t.pick('id', 'name'))
+    const newTags = map(name => ({name}), values)
+    const lowerName = t => t.name.toLowerCase()
+    const toRemove = differenceBy(oldTags, newTags, lowerName)
+    const toAdd = differenceBy(newTags, oldTags, lowerName)
+
+    return Promise.all([
+      some(toRemove) && user.tags().detach(map('id', toRemove)),
+      some(toAdd) && Tag.addToUser(user, map('name', toAdd))
+    ])
   },
 
   defaultTags: function (trx) {
