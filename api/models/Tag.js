@@ -30,7 +30,7 @@ const addToTaggable = (taggable, tagName, selected, trx) => {
     .catch(() => Tag.find(tagName, {transacting: trx}))
   })
   .tap(tag => {
-    var attachment = {tag_id: tag.id}
+    var attachment = {tag_id: tag.id, created_at: new Date()}
     if (isPost) attachment.selected = selected
     return taggable.tags().attach(attachment, {transacting: trx})
   })
@@ -47,7 +47,12 @@ const addToCommunity = (community, tag, user_id, trx) => {
   // the catch here is for the case where another user just created the CommunityTag
   // the save fails, but we don't care about the result
   .then(comTag => comTag ||
-    new CommunityTag({community_id: community.id, tag_id: tag.id, user_id: user_id}).save({}, {transacting: trx})
+    new CommunityTag({
+      community_id: community.id,
+      tag_id: tag.id,
+      user_id: user_id,
+      created_at: new Date()
+    }).save({}, {transacting: trx})
     .catch(() => {}))
 }
 
