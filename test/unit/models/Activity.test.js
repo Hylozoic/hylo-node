@@ -5,7 +5,7 @@ var factories = require(root('test/setup/factories'))
 const makeGettable = obj => _.merge(obj, {get: key => obj[key]})
 
 describe('Activity', function () {
-  describe('.generateNotifications', () => {
+  describe('.generateNotificationMedia', () => {
     it('returns an in-app notification from a mention', () => {
       const memberships = {models: [{community_id: 1, settings: {}}].map(makeGettable)}
 
@@ -23,9 +23,35 @@ describe('Activity', function () {
         }
       })
 
-      const expected = [{medium: Notification.MEDIUM.InApp, communities: [1]}]
+      const expected = [Notification.MEDIUM.InApp]
 
-      expect(Activity.generateNotifications(activity)).to.deep.equal(expected)
+      expect(Activity.generateNotificationMedia(activity)).to.deep.equal(expected)
+    })
+
+    it('returns just an email for a newPost', () => {
+      const memberships = {models: [
+        {community_id: 1, settings: {send_email: true}}
+      ].map(makeGettable)}
+
+      const activity = makeGettable({
+        meta: {reasons: ['newPost: 1']},
+        relations: {
+          post: {
+            relations: {
+              communities: [{id: 1}, {id: 2}]
+            }
+          },
+          reader: makeGettable({
+            relations: {memberships}
+          })
+        }
+      })
+
+      const expected = [
+        Notification.MEDIUM.Email
+      ]
+
+      expect(Activity.generateNotificationMedia(activity)).to.deep.equal(expected)
     })
 
     it('returns a push and an email for different communities', () => {
@@ -49,12 +75,12 @@ describe('Activity', function () {
       })
 
       const expected = [
-        {medium: Notification.MEDIUM.Email, communities: [1]},
-        {medium: Notification.MEDIUM.Push, communities: [2]},
-        {medium: Notification.MEDIUM.InApp, communities: [1, 2]}
+        Notification.MEDIUM.Email,
+        Notification.MEDIUM.Push,
+        Notification.MEDIUM.InApp
       ]
 
-      expect(Activity.generateNotifications(activity)).to.deep.equal(expected)
+      expect(Activity.generateNotificationMedia(activity)).to.deep.equal(expected)
     })
   })
 

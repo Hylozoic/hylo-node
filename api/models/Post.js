@@ -71,7 +71,9 @@ module.exports = bookshelf.Model.extend({
 
           var updates = []
           const addActivity = (recipientId, method) => {
-            updates.push(Activity[method](follow, recipientId).save({}, _.pick(opts, 'transacting')))
+            updates.push(Activity[method](follow, recipientId)
+              .save({}, _.pick(opts, 'transacting'))
+              .then(activity => activity.createNotifications(opts.transacting)))
             updates.push(User.incNewNotificationCount(recipientId, communityIds, opts.transacting))
           }
           if (followerId !== addingUserId) addActivity(followerId, 'forFollowAdd')
@@ -86,7 +88,9 @@ module.exports = bookshelf.Model.extend({
     return Follow.where({user_id: userId, post_id: this.id}).destroy()
       .tap(function () {
         if (!opts.createActivity) return
-        return Activity.forUnfollow(self, userId).save()
+        return Activity.forUnfollow(self, userId)
+        .save()
+        .then(activity => activity.createNotifications())
       })
   },
 

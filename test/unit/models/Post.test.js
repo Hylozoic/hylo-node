@@ -42,11 +42,11 @@ describe('Post', function () {
         expect(activity.length).to.equal(2)
         var a1 = _.find(activity.models, function (a) { return a.get('reader_id') === u1.id })
         expect(a1).to.exist
-        expect(a1.get('action')).to.equal('follow')
+        expect(a1.get('meta')).to.deep.equal({reasons: ['follow']})
 
         var a2 = _.find(activity.models, function (a) { return a.get('reader_id') === u2.id })
         expect(a2).to.exist
-        expect(a2.get('action')).to.equal('followAdd')
+        expect(a2.get('meta')).to.deep.equal({reasons: ['followAdd']})
       })
     })
   })

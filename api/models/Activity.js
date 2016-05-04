@@ -44,15 +44,15 @@ module.exports = bookshelf.Model.extend({
       'comment.post.communities',
       'community'
     ], {transacting: trx})
-    .then(() => Promise.map(Activity.generateNotifications(self), notification =>
+    .then(() => Promise.map(Activity.generateNotificationMedia(self), medium =>
       new Notification({
         activity_id: self.id,
-        medium: notification.medium
+        medium
       }).save({}, {transacting: trx})))
   }
 
 }, {
-  Action: {
+  Reason: {
     Mention: 'mention', // you are mentioned in a post or comment
     Comment: 'comment', // someone makes a comment on a post you follow
     FollowAdd: 'followAdd', // you are added as a follower
@@ -87,8 +87,8 @@ module.exports = bookshelf.Model.extend({
   forComment: function (comment, userId, action) {
     if (!action) {
       action = _.includes(comment.mentions(), userId.toString())
-        ? this.Action.Mention
-        : this.Action.Comment
+        ? this.Reason.Mention
+        : this.Reason.Comment
     }
 
     return new Activity({
@@ -106,7 +106,7 @@ module.exports = bookshelf.Model.extend({
       reader_id: userId,
       actor_id: post.get('user_id'),
       post_id: post.id,
-      action: this.Action.Mention,
+      meta: {reasons: [this.Reason.Mention]},
       created_at: post.get('created_at')
     })
   },
@@ -116,7 +116,7 @@ module.exports = bookshelf.Model.extend({
       reader_id: userId,
       actor_id: follow.get('added_by_id'),
       post_id: follow.get('post_id'),
-      action: this.Action.FollowAdd,
+      meta: {reasons: [this.Reason.FollowAdd]},
       created_at: follow.get('date_added')
     })
   },
@@ -126,7 +126,7 @@ module.exports = bookshelf.Model.extend({
       reader_id: userId,
       actor_id: follow.get('user_id'),
       post_id: follow.get('post_id'),
-      action: this.Action.Follow,
+      meta: {reasons: [this.Reason.Follow]},
       created_at: follow.get('date_added')
     })
   },
@@ -136,7 +136,7 @@ module.exports = bookshelf.Model.extend({
       reader_id: post.get('user_id'),
       actor_id: unfollowerId,
       post_id: post.id,
-      action: this.Action.Unfollow,
+      meta: {reasons: [this.Reason.Unfollow]},
       created_at: new Date()
     })
   },
@@ -174,7 +174,7 @@ module.exports = bookshelf.Model.extend({
         trx))
   },
 
-  generateNotifications: function (activity) {
+  generateNotificationMedia: function (activity) {
     var notifications = []
     var communities
     var user = activity.relations.reader
@@ -193,24 +193,15 @@ module.exports = bookshelf.Model.extend({
     const pushable = membershipsPermitting('send_push_notifications')
 
     if (!isEmpty(emailable)) {
-      notifications.push({
-        medium: Notification.MEDIUM.Email,
-        communities: emailable.map(mem => mem.get('community_id'))
-      })
+      notifications.push(Notification.MEDIUM.Email)
     }
 
     if (!isEmpty(pushable)) {
-      notifications.push({
-        medium: Notification.MEDIUM.Push,
-        communities: pushable.map(mem => mem.get('community_id'))
-      })
+      notifications.push(Notification.MEDIUM.Push)
     }
 
     if (!isJustNewPost(activity)) {
-      notifications.push({
-        medium: Notification.MEDIUM.InApp,
-        communities: communities
-      })
+      notifications.push(Notification.MEDIUM.InApp)
     }
 
     return notifications
