@@ -40,8 +40,7 @@ const followAttachment = membership => ({
 
 export const convertProjectToPost = projectId => {
   return Project.find(projectId, {withRelated: [
-    'posts',
-    'memberships'
+    'posts', 'memberships', 'media'
   ]})
   .then(project => bookshelf.transaction(trx => {
     if (project.get('visibility') === Project.Visibility.DRAFT_PROJECT) {
@@ -78,6 +77,10 @@ export const convertProjectToPost = projectId => {
 
       // set up community relation
       post.communities().attach(project.get('community_id'), trxOpt),
+
+      // set up media
+      Media.query().where('id', 'in', project.relations.media.map(m => m.id))
+      .update({post_id: post.id}).transacting(trx),
 
       // set up post id for project invitations
       ProjectInvitation.query().where('project_id', project.id)
