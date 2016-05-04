@@ -86,7 +86,6 @@ module.exports = bookshelf.Model.extend({
       Post.find(opts.postId, {withRelated: ['communities', 'user']})
     ).spread((project, post) => {
       var user = post.relations.user
-      var community = post.relations.communities.first()
       var contributors = project.relations.contributors
 
       return contributors.models.concat(project.relations.user).map(recipient => {
@@ -115,5 +114,4 @@ module.exports = bookshelf.Model.extend({
       })
     })
   }
-
 })
