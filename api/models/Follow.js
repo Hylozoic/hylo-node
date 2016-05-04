@@ -9,6 +9,11 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User).query({where: {active: true}})
   }
 }, {
+  Role: {
+    DEFAULT: 0,
+    MODERATOR: 1
+  },
+
   create: function (userId, postId, options) {
     if (!options) options = {}
     return new Follow({
