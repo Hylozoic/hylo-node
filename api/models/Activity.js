@@ -174,17 +174,22 @@ module.exports = bookshelf.Model.extend({
         trx))
   },
 
+  communityIds: function (activity) {
+    if (activity.relations.post) {
+      return get(activity, 'relations.post.relations.communities', []).map(c => c.id)
+    } else if (activity.relations.comment) {
+      return get(activity, 'relations.comment.relations.post.relations.communities', []).map(c => c.id)
+    } else if (activity.relations.community) {
+      return [activity.relations.community.id]
+    }
+    return []
+  },
+
   generateNotificationMedia: function (activity) {
     var notifications = []
-    var communities
+    var communities = Activity.communityIds(activity)
     var user = activity.relations.reader
-    if (activity.relations.post) {
-      communities = get(activity, 'relations.post.relations.communities', []).map(c => c.id)
-    } else if (activity.relations.comment) {
-      communities = get(activity, 'relations.comment.relations.post.relations.communities', []).map(c => c.id)
-    } else if (activity.relations.community) {
-      communities = [activity.relations.community.id]
-    }
+
     const relevantMemberships = filter(user.relations.memberships.models, mem => includes(communities, mem.get('community_id')))
     const membershipsPermitting = (setting) =>
       filter(relevantMemberships, mem => mem.get('settings')[setting])
