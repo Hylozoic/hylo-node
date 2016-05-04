@@ -30,6 +30,25 @@ module.exports = bookshelf.Model.extend({
 
   notifications: function () {
     return this.hasMany(Notification)
+  },
+
+  createNotifications: function (trx) {
+    var self = this
+    return self.load([
+      'reader',
+      'reader.memberships',
+      'post',
+      'post.communities',
+      'comment',
+      'comment.post',
+      'comment.post.communities',
+      'community'
+    ], {transacting: trx})
+    .then(() => Promise.map(Activity.generateNotifications(self), notification =>
+      new Notification({
+        activity_id: self.id,
+        medium: notification.medium
+      }).save({}, {transacting: trx})))
   }
 
 }, {
@@ -200,20 +219,6 @@ module.exports = bookshelf.Model.extend({
   createWithNotifications: function (attributes, trx) {
     return new Activity(attributes)
     .save({}, {transacting: trx})
-    .tap(activity => activity.load([
-      'reader',
-      'reader.memberships',
-      'post',
-      'post.communities',
-      'comment',
-      'comment.post',
-      'comment.post.communities',
-      'community'
-    ])
-      .then(() => Promise.map(Activity.generateNotifications(activity), notification =>
-        new Notification({
-          activity_id: activity.id,
-          medium: notification.medium
-        }).save({}, {transacting: trx}))))
+    .tap(activity => activity.createNotifications(trx))
   }
 })
