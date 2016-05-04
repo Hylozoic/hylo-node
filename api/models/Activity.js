@@ -101,7 +101,7 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  forPost: function (post, userId) {
+  forPostMention: function (post, userId) {
     return new Activity({
       reader_id: userId,
       actor_id: post.get('user_id'),
