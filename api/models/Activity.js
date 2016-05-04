@@ -1,4 +1,9 @@
-import { values, merge, pick } from 'lodash'
+import { values, merge, pick, filter, includes, isEmpty, get } from 'lodash'
+
+const isJustNewPost = activity => {
+  const reasons = activity.get('meta').reasons
+  return reasons.every(reason => reason.match(/^newPost/))
+}
 
 module.exports = bookshelf.Model.extend({
   tableName: 'activity',
@@ -26,6 +31,7 @@ module.exports = bookshelf.Model.extend({
   notifications: function () {
     return this.hasMany(Notification)
   }
+
 }, {
   Action: {
     Mention: 'mention', // you are mentioned in a post or comment
@@ -149,43 +155,65 @@ module.exports = bookshelf.Model.extend({
         trx))
   },
 
+  generateNotifications: function (activity) {
+    var notifications = []
+    var communities
+    var user = activity.relations.reader
+    if (activity.relations.post) {
+      communities = get(activity, 'relations.post.relations.communities', []).map(c => c.id)
+    } else if (activity.relations.comment) {
+      communities = get(activity, 'relations.comment.relations.post.relations.communities', []).map(c => c.id)
+    } else if (activity.relations.community) {
+      communities = [activity.relations.community.id]
+    }
+    const relevantMemberships = filter(user.relations.memberships.models, mem => includes(communities, mem.get('community_id')))
+    const membershipsPermitting = (setting) =>
+      filter(relevantMemberships, mem => mem.get('settings')[setting])
+
+    const emailable = membershipsPermitting('send_email')
+    const pushable = membershipsPermitting('send_push_notifications')
+
+    if (!isEmpty(emailable)) {
+      notifications.push({
+        medium: Notification.MEDIUM.Email,
+        communities: emailable.map(mem => mem.get('community_id'))
+      })
+    }
+
+    if (!isEmpty(pushable)) {
+      notifications.push({
+        medium: Notification.MEDIUM.Push,
+        communities: pushable.map(mem => mem.get('community_id'))
+      })
+    }
+
+    if (!isJustNewPost(activity)) {
+      notifications.push({
+        medium: Notification.MEDIUM.InApp,
+        communities: communities
+      })
+    }
+
+    return notifications
+  },
+
   createWithNotifications: function (attributes, trx) {
     return new Activity(attributes)
     .save({}, {transacting: trx})
-    .tap(activity => Membership.where({
-      user_id: activity.get('reader_id'),
-      community_id: activity.get('community_id')
-    })
-      .fetch()
-      .then(membership => {
-        var promises = []
-        const justNewPost = isJustNewPost(activity)
-
-        if (!justNewPost) {
-          promises.push(new Notification({
-            activity_id: activity.id,
-            medium: Notification.MEDIA.InApp
-          }).save({}, {transacting: trx}))
-        }
-
-        if (!justNewPost) {
-          promises.push(new Notification({
-            activity_id: activity.id,
-            medium: Notification.MEDIA.Email
-          }).save({}, {transacting: trx}))
-        }
-
-        promises.push(new Notification({
+    .tap(activity => activity.load([
+      'reader',
+      'reader.memberships',
+      'post',
+      'post.communities',
+      'comment',
+      'comment.post',
+      'comment.post.communities',
+      'community'
+    ])
+      .then(() => Promise.map(Activity.generateNotifications(activity), notification =>
+        new Notification({
           activity_id: activity.id,
-          medium: Notification.MEDIA.Push
-        }).save({}, {transacting: trx}))
-
-        return Promise.all(promises)
-      }))
+          medium: notification.medium
+        }).save({}, {transacting: trx}))))
   }
 })
-
-const isJustNewPost = activity => {
-  const reasons = activity.get('meta').reasons
-  return reasons.every(reason => reason.match(/^newPost/))
-}

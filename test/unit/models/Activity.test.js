@@ -2,7 +2,62 @@ const root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 
+const makeGettable = obj => _.merge(obj, {get: key => obj[key]})
+
 describe('Activity', function () {
+  describe('.generateNotifications', () => {
+    it('returns an in-app notification from a mention', () => {
+      const memberships = {models: [{community_id: 1, settings: {}}].map(makeGettable)}
+
+      const activity = makeGettable({
+        meta: {reasons: ['mention']},
+        relations: {
+          post: {
+            relations: {
+              communities: [{id: 1}]
+            }
+          },
+          reader: makeGettable({
+            relations: {memberships}
+          })
+        }
+      })
+
+      const expected = [{medium: Notification.MEDIUM.InApp, communities: [1]}]
+
+      expect(Activity.generateNotifications(activity)).to.deep.equal(expected)
+    })
+
+    it('returns a push and an email for different communities', () => {
+      const memberships = {models: [
+        {community_id: 1, settings: {send_email: true}},
+        {community_id: 2, settings: {send_push_notifications: true}}
+      ].map(makeGettable)}
+
+      const activity = makeGettable({
+        meta: {reasons: ['mention']},
+        relations: {
+          post: {
+            relations: {
+              communities: [{id: 1}, {id: 2}]
+            }
+          },
+          reader: makeGettable({
+            relations: {memberships}
+          })
+        }
+      })
+
+      const expected = [
+        {medium: Notification.MEDIUM.Email, communities: [1]},
+        {medium: Notification.MEDIUM.Push, communities: [2]},
+        {medium: Notification.MEDIUM.InApp, communities: [1, 2]}
+      ]
+
+      expect(Activity.generateNotifications(activity)).to.deep.equal(expected)
+    })
+  })
+
   describe('#createWithNotifications', () => {
     var fixtures
 
@@ -33,7 +88,7 @@ describe('Activity', function () {
         meta: {reasons: ['mention']}
       })
       .then(activity =>
-        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.InApp})
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.InApp})
         .fetch())
       .then(notification => {
         expect(notification).to.exist
@@ -53,7 +108,7 @@ describe('Activity', function () {
         meta: {reasons: ['mention']}
       }))
       .then(activity =>
-        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.Push})
         .fetch())
       .then(notification => {
         expect(notification).to.exist
@@ -73,7 +128,7 @@ describe('Activity', function () {
         meta: {reasons: ['mention']}
       }))
       .then(activity =>
-        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.Email})
         .fetch())
       .then(notification => {
         expect(notification).to.exist
@@ -81,7 +136,7 @@ describe('Activity', function () {
       })
     })
 
-    it("doesn't creates a push notification when the community setting is false", () => {
+    it("doesn't create a push notification when the community setting is false", () => {
       return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
       .update({settings: {
         send_push_notifications: false
@@ -93,14 +148,14 @@ describe('Activity', function () {
         meta: {reasons: ['mention']}
       }))
       .then(activity =>
-        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.Push})
         .fetch())
       .then(notification => {
         expect(notification).not.to.exist
       })
     })
 
-    it("doesn't creates an email when the community setting is false", () => {
+    it("doesn't create an email when the community setting is false", () => {
       return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
       .update({settings: {
         send_email: false
@@ -112,17 +167,17 @@ describe('Activity', function () {
         meta: {reasons: ['mention']}
       }))
       .then(activity =>
-        Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+        Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.Push})
         .fetch())
       .then(notification => {
         expect(notification).not.to.exist
       })
     })
 
-    it("doesn't creates in-app or email for new posts ", () => {
+    it("doesn't create in-app or email for new posts ", () => {
       return Membership.query().where({user_id: fixtures.u1.id, community_id: fixtures.c1.id})
       .update({settings: {
-        send_push_notifications: false
+        send_push_notifications: true
       }})
       .then(() => Activity.createWithNotifications({
         post_id: fixtures.p1.id,
@@ -132,21 +187,17 @@ describe('Activity', function () {
       }))
       .then(activity =>
         Promise.join(
-          Notification.where({activity_id: activity.id, medium: Notification.MEDIA.InApp})
+          Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.InApp})
           .fetch(),
-          Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Email})
+          Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.Email})
           .fetch(),
-          Notification.where({activity_id: activity.id, medium: Notification.MEDIA.Push})
+          Notification.where({activity_id: activity.id, medium: Notification.MEDIUM.Push})
           .fetch(),
           (inApp, email, push) => {
             expect(inApp).not.to.exist
             expect(email).not.to.exist
             expect(push).to.exist
           }))
-    })
-
-    it('with multiple communities, it respects the most permissive setting', () => {
-
     })
   })
 

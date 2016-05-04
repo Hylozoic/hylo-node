@@ -8,10 +8,21 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  MEDIA: {
+  MEDIUM: {
     InApp: 'in-app',
     Push: 'push',
     Email: 'email'
+  },
+
+  TYPE: {
+    Mention: 'mention', // you are mentioned in a post or comment
+    TagFollow: 'TagFollow',
+    NewPost: 'newPost',
+    Comment: 'comment', // someone makes a comment on a post you follow
+    FollowAdd: 'followAdd', // you are added as a follower
+    Follow: 'follow', // someone follows your post
+    Unfollow: 'unfollow', // someone leaves your post
+    Welcome: 'welcome' // a welcome post
   },
 
   find: function (id, options) {
