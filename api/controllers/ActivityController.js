@@ -47,7 +47,7 @@ const fetchAndPresentActivity = (req, community) => {
 
 module.exports = {
   findForCommunity: function (req, res) {
-    Community.find(req.param('communityId'), {
+    return Community.find(req.param('communityId'), {
       withRelated: [
         {memberships: q => q.where({user_id: req.session.userId})}
       ]

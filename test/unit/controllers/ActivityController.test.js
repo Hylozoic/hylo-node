@@ -69,9 +69,97 @@ describe('ActivityController', () => {
         expect(activity.actor.id).to.equal(fixtures.u2.id)
       })
     })
+
+    it('returns 3 activities', () => {
+      var req1 = factories.mock.request()
+      var res1 = factories.mock.response()
+      _.extend(req1.params, {
+        name: 'NewPost 1',
+        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
+        type: 'intention',
+        communities: [fixtures.c1.id]
+      })
+      req1.session.userId = fixtures.u2.id
+
+      var req2 = factories.mock.request()
+      var res2 = factories.mock.response()
+      _.extend(req2.params, {
+        name: 'NewPost 2',
+        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
+        type: 'intention',
+        communities: [fixtures.c1.id]
+      })
+      req2.session.userId = fixtures.u2.id
+
+      var req3 = factories.mock.request()
+      var res3 = factories.mock.response()
+      _.extend(req3.params, {
+        name: 'NewPost 3',
+        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
+        type: 'intention',
+        communities: [fixtures.c1.id]
+      })
+      req3.session.userId = fixtures.u2.id
+
+      req.session.userId = fixtures.u1.id
+      return PostController.create(req1, res1)
+      .then(() => PostController.create(req2, res2))
+      .then(() => PostController.create(req3, res3))
+      .then(() => ActivityController.find(req, res))
+      .then(() => {
+        expect(res.body).to.exist
+        expect(res.body.length).to.equal(3)
+      })
+    })
   })
 
   describe('#findForCommunity', () => {
+    it('returns activities for the given community only', () => {
+      var req1 = factories.mock.request()
+      var res1 = factories.mock.response()
+      _.extend(req1.params, {
+        name: 'NewPost 1',
+        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
+        type: 'intention',
+        communities: [fixtures.c1.id]
+      })
+      req1.session.userId = fixtures.u2.id
+
+      var req2 = factories.mock.request()
+      var res2 = factories.mock.response()
+      _.extend(req2.params, {
+        name: 'NewPost 2',
+        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
+        type: 'intention',
+        communities: [fixtures.c1.id]
+      })
+      req2.session.userId = fixtures.u2.id
+
+      var req3 = factories.mock.request()
+      var res3 = factories.mock.response()
+      _.extend(req3.params, {
+        name: 'NewPost 3, in a different community',
+        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
+        type: 'intention',
+        communities: [fixtures.c2.id]
+      })
+      req3.session.userId = fixtures.u2.id
+
+      _.extend(req.params, {
+        communityId: fixtures.c1.id
+      })
+      req.session.userId = fixtures.u1.id
+      return PostController.create(req1, res1)
+      .then(() => PostController.create(req2, res2))
+      .then(() => PostController.create(req3, res3))
+      .then(() => ActivityController.findForCommunity(req, res))
+      .then(() => {
+        expect(res.body).to.exist
+        expect(res.body.length).to.equal(2)
+        var postNames = res.body.map(activity => activity.post.name)
+        expect(postNames).to.deep.equal(['NewPost 2', 'NewPost 1'])
+      })
+    })
   })
 
   describe('#update', () => {
