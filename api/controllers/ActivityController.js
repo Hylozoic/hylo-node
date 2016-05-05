@@ -68,7 +68,7 @@ module.exports = {
   },
 
   markAllRead: function (req, res) {
-    (req.param('communityId')
+    return (req.param('communityId')
       ? Community.find(req.param('communityId'))
       : Promise.resolve())
     .then(community => {
@@ -84,7 +84,7 @@ module.exports = {
   },
 
   update: function (req, res) {
-    Activity.find(req.param('activityId'))
+    return Activity.find(req.param('activityId'))
     .tap(a => a.attributes = _.pick(req.allParams(), 'unread'))
     .tap(a => a.save())
     .then(() => res.ok({}))
