@@ -1,4 +1,4 @@
-var userFieldsToCopy = [
+const userFieldsToCopy = [
   'avatar_url',
   'banner_url',
   'bio',
@@ -18,7 +18,7 @@ var userFieldsToCopy = [
 
 // knex is passed as an argument here because it can be a transaction object
 // see http://knexjs.org/#Transactions
-var generateMergeQueries = function (userId, duplicateUserId, knex) {
+const generateMergeQueries = function (userId, duplicateUserId, knex) {
   var ps = [userId, duplicateUserId]
   var psp = [userId, duplicateUserId, userId]
   var updates = []
@@ -73,7 +73,7 @@ var generateMergeQueries = function (userId, duplicateUserId, knex) {
   return {updates, deletes: generateRemoveQueries(duplicateUserId, knex)}
 }
 
-var generateRemoveQueries = function (userId, knex) {
+const generateRemoveQueries = function (userId, knex) {
   var removals = []
   var push = (q, values) => removals.push(knex.raw(q, values))
 
@@ -149,5 +149,23 @@ module.exports = {
       .then(() => Promise.all(queries.deletes))
     })
     .then(() => queries.updates.concat(queries.deletes).map(q => q.toSQL()))
+  },
+
+  convertSkillsToTags: (userId, reset) => {
+    return User.find(userId, {withRelated: 'skills'})
+    .then(user => {
+      const skills = user.relations.skills.map(s => s.name())
+      return Tag.addToUser(user, skills, reset)
+    })
+  },
+
+  setUrlFromExtraInfo: userId => {
+    return User.find(userId).then(user => {
+      const match = user.get('extra_info').match(/\[[^\s]+\]\(([^\s]+)\)/)
+      if (match) {
+        const url = match[1]
+        return user.save({url}, {patch: true})
+      }
+    })
   }
 }

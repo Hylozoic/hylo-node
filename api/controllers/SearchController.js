@@ -1,3 +1,5 @@
+import { extend, includes } from 'lodash'
+
 const findCommunityIds = req => {
   if (req.param('communityId')) {
     return Promise.resolve([req.param('communityId')])
@@ -81,6 +83,10 @@ module.exports = {
         method = Search.forCommunities
         columns = ['id', 'name', 'avatar_url', 'slug']
         break
+      case 'tags':
+        method = Search.forTags
+        columns = ['name']
+        break
       default:
         method = Search.forUsers
         if (term.startsWith('@')) {
@@ -91,14 +97,14 @@ module.exports = {
         }
     }
 
-    return (!_.includes(['skills', 'organizations'], resultType)
+    return (!includes(['skills', 'organizations'], resultType)
       ? findCommunityIds(req)
         .then(communityIds => ({
           communities: communityIds,
           project: req.param('projectId')
         }))
       : Promise.resolve({}))
-    .then(filters => method(_.extend(filters, {
+    .then(filters => method(extend(filters, {
       autocomplete: term,
       limit: req.param('limit') || 5,
       sort: sort
@@ -114,6 +120,9 @@ module.exports = {
           break
         case 'organizations':
           present = row => ({name: row.get('org_name')})
+          break
+        case 'tags':
+          present = row => ({name: row.get('name')})
           break
         default:
           present = row => row.pick('id', 'name', 'avatar_url', 'slug')

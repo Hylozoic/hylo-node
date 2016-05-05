@@ -268,4 +268,55 @@ describe('Tag', () => {
       })
     })
   })
+
+  describe('.merge', () => {
+    var t1, t2, t3, p1, p2, c, u
+
+    before(() => {
+      const k = bookshelf.knex
+      t1 = new Tag({name: 't1'})
+      t2 = new Tag({name: 't2'})
+      t3 = new Tag({name: 't3'})
+      p1 = factories.post()
+      p2 = factories.post()
+      c = factories.community()
+      u = factories.user()
+
+      return Promise.all([t1, t2, t3, p1, p2, c, u].map(x => x.save()))
+      .then(() => Promise.all([
+        k('posts_tags').insert({tag_id: t1.id, post_id: p1.id}),
+        k('posts_tags').insert({tag_id: t2.id, post_id: p1.id}),
+        k('posts_tags').insert({tag_id: t2.id, post_id: p2.id}),
+        k('posts_tags').insert({tag_id: t3.id, post_id: p2.id}),
+        k('communities_tags').insert({tag_id: t2.id, community_id: c.id}),
+        k('communities_tags').insert({tag_id: t3.id, community_id: c.id}),
+        k('tag_follows').insert({tag_id: t1.id, community_id: c.id, user_id: u.id}),
+        k('tag_follows').insert({tag_id: t2.id, community_id: c.id, user_id: u.id}),
+        k('tags_users').insert({tag_id: t1.id, user_id: u.id}),
+        k('tags_users').insert({tag_id: t2.id, user_id: u.id})
+      ]))
+    })
+
+    it('removes rows that would cause duplicates and updates the rest', function () {
+      return Tag.merge(t1.id, t2.id)
+      .then(() => t1.load(['posts', 'communities', 'follows', 'users']))
+      .then(() => {
+        expect(t1.relations.posts.map('id')).to.deep.equal([p1.id, p2.id])
+        expect(t1.relations.communities.map('id')).to.deep.equal([c.id])
+        expect(t1.relations.users.map('id')).to.deep.equal([u.id])
+
+        const follows = t1.relations.follows
+        expect(follows.length).to.equal(1)
+        expect(follows.first().pick('community_id', 'user_id')).to.deep.equal({
+          community_id: c.id, user_id: u.id
+        })
+      })
+      .then(() => Tag.find(t2.id))
+      .then(tag => expect(tag).not.to.exist)
+      .then(() => p2.load('tags'))
+      .then(() => {
+        expect(p2.relations.tags.map('id')).to.deep.equal([t1.id, t3.id])
+      })
+    })
+  })
 })

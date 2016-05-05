@@ -24,6 +24,7 @@ const fetchAndPresentActivity = (req, community) => {
     {comment: q => q.column('id', 'text', 'created_at', 'post_id')},
     'comment.thanks',
     {'comment.thanks.thankedBy': userColumns},
+    {'comment.user': userColumns},
     {post: q => q.column('id', 'name', 'user_id', 'type', 'description')},
     {'post.communities': q => q.column('community.id', 'slug')},
     {'post.relatedUsers': userColumns}

@@ -1,4 +1,5 @@
-const _ = require('lodash')
+import { difference, flatten, has, includes, merge, partial, pick, some, uniq, values } from 'lodash'
+
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
   'fulfilled-last': 'fulfilled_at',
@@ -11,15 +12,15 @@ const sortColumns = {
 const queryPosts = (req, opts) =>
   // using Promise.props here allows us to pass subqueries, e.g. when looking up
   // communities in queryForUser
-  Promise.props(_.merge(
+  Promise.props(merge(
     {
       sort: sortColumns[opts.sort || req.param('sort') || 'recent'],
       forUser: req.session.userId,
       term: req.param('search')
     },
-    _.pick(req.allParams(),
+    pick(req.allParams(),
       'type', 'limit', 'offset', 'start_time', 'end_time', 'filter', 'omit'),
-    _.pick(opts, 'communities', 'project', 'users', 'visibility', 'tag')
+    pick(opts, 'communities', 'project', 'users', 'visibility', 'tag')
   ))
   .then(Search.forPosts)
 
@@ -46,6 +47,7 @@ const queryForCommunity = function (req, res) {
 
 const queryForUser = function (req, res) {
   return queryPosts(req, {
+    tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id),
     users: [req.param('userId')],
     communities: Membership.activeCommunityIds(req.session.userId),
     visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
@@ -109,7 +111,7 @@ const createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   .then(query => fetchAndPresentPosts(
     query,
     req.session.userId,
-    _.merge(relationsOpts, {
+    merge(relationsOpts, {
       withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes')
     })))
@@ -117,7 +119,7 @@ const createFindAction = (queryFunction, relationsOpts) => (req, res) => {
 }
 
 const postTypeFromTag = tagName => {
-  if (tagName && _.includes(_.values(Post.Type), tagName)) {
+  if (tagName && includes(values(Post.Type), tagName)) {
     return tagName
   } else {
     return Post.Type.CHAT
@@ -125,12 +127,12 @@ const postTypeFromTag = tagName => {
 }
 
 const setupNewPostAttrs = function (userId, params) {
-  const attrs = _.merge(Post.newPostAttrs(), {
+  const attrs = merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
     description: RichText.sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
-  }, _.pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
+  }, pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
 
   if (!attrs.type) {
     attrs.type = postTypeFromTag(params.tag)
@@ -150,20 +152,20 @@ const setupNewPostAttrs = function (userId, params) {
 const afterSavingPost = function (post, opts) {
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.get('description'))
-  const followerIds = _.uniq(mentioned.concat(userId))
+  const followerIds = uniq(mentioned.concat(userId))
 
   // no need to specify community ids explicitly if saving for a project
   return (() => {
     if (opts.communities) return Promise.resolve(opts.communities)
-    return Project.find(opts.projectId, _.pick(opts, 'transacting')).then(p => [p.get('community_id')])
+    return Project.find(opts.projectId, pick(opts, 'transacting')).then(p => [p.get('community_id')])
   })()
-  .then(communities => Promise.all(_.flatten([
+  .then(communities => Promise.all(flatten([
     // Attach post to communities
     communities.map(id =>
-      new Community({id: id}).posts().attach(post.id, _.pick(opts, 'transacting'))),
+      new Community({id: id}).posts().attach(post.id, pick(opts, 'transacting'))),
 
     // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, userId, _.pick(opts, 'transacting')),
+    post.addFollowers(followerIds, userId, pick(opts, 'transacting')),
 
     // Add image, if any
     opts.imageUrl && Media.createImageForPost(post.id, opts.imageUrl, opts.transacting),
@@ -174,7 +176,7 @@ const afterSavingPost = function (post, opts) {
     Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id}),
 
     opts.projectId && PostProjectMembership.create(
-      post.id, opts.projectId, _.pick(opts, 'transacting')),
+      post.id, opts.projectId, pick(opts, 'transacting')),
 
     opts.projectId && Queue.classMethod('Project', 'notifyAboutNewPost', {
       projectId: opts.projectId,
@@ -189,7 +191,8 @@ const PostController = {
   findOne: function (req, res) {
     var opts = {
       withComments: req.param('comments') && 'all',
-      withVotes: req.param('votes')
+      withVotes: !!req.param('votes'),
+      withChildren: !!req.param('children')
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
     .then(post => PostPresenter.present(post, req.session.userId, opts))
@@ -234,7 +237,7 @@ const PostController = {
       return res.serverError(new Error('Invalid reply address: ' + req.param('To')))
     }
 
-    var allParams = _.assign(req.allParams(), {'type': replyData.type})
+    var allParams = merge(req.allParams(), {'type': replyData.type})
     allParams.name = allParams['subject']
     allParams.description = allParams['stripped-text']
 
@@ -257,9 +260,9 @@ const PostController = {
       return res.serverError(new Error('Invalid token: ' + req.param('To')))
     }
 
-    var attributes = _.merge(
+    var attributes = merge(
       {created_from: 'email_form'},
-      _.pick(req.allParams(), ['name', 'description', 'type']))
+      pick(req.allParams(), ['name', 'description', 'type']))
 
     var namePrefixes = {
       'offer': 'I\'d like to share',
@@ -291,7 +294,7 @@ const PostController = {
 
       return post.addFollowers([userId], userId, {createActivity: true})
       .then(() => User.find(req.session.userId))
-      .then(user => res.ok(_.pick(user.attributes, 'id', 'name', 'avatar_url')))
+      .then(user => res.ok(pick(user.attributes, 'id', 'name', 'avatar_url')))
     })
     .catch(res.serverError)
   },
@@ -300,8 +303,8 @@ const PostController = {
     var post = res.locals.post
     var params = req.allParams()
 
-    var attrs = _.extend(
-      _.pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
+    var attrs = merge(
+      pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
       {
         updated_at: new Date(),
         visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
@@ -319,17 +322,17 @@ const PostController = {
         var oldIds = post.relations.communities.pluck('id').sort()
         if (newIds !== oldIds) {
           return Promise.join(
-            Promise.map(_.difference(newIds, oldIds), id =>
+            Promise.map(difference(newIds, oldIds), id =>
               post.communities().attach(id, {transacting: trx})),
-            Promise.map(_.difference(oldIds, newIds), id =>
+            Promise.map(difference(oldIds, newIds), id =>
               post.communities().detach(id, {transacting: trx}))
           )
         }
       })
       .tap(() => {
         var mediaParams = ['docs', 'removedDocs', 'imageUrl', 'imageRemoved']
-        var isSet = _.partial(_.has, params)
-        if (_.some(mediaParams, isSet)) return post.load('media')
+        var isSet = partial(has, params)
+        if (some(mediaParams, isSet)) return post.load('media')
       })
       .tap(function () {
         if (!params.imageUrl && !params.imageRemoved) return
@@ -452,24 +455,26 @@ const PostController = {
   }
 }
 
-const queries = {
-  Community: queryForCommunity,
-  User: queryForUser,
-  AllForUser: queryForAllForUser,
-  Followed: queryForFollowed,
-  Project: queryForProject,
-  Network: queryForNetwork,
-  Tag: queryForTag,
-  TagInAllCommunities: queryForTagInAllCommunities
-}
+const queries = [
+  ['Community', queryForCommunity],
+  ['User', queryForUser],
+  ['AllForUser', queryForAllForUser],
+  ['Followed', queryForFollowed],
+  ['Project', queryForProject],
+  ['Network', queryForNetwork],
+  ['Tag', queryForTag],
+  ['TagInAllCommunities', queryForTagInAllCommunities]
+]
 
 const relationsOpts = {
   Project: {fromProject: true}
 }
 
-_.forEach(queries, (queryFunction, key) => {
-  PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(queryFunction, 'posts')
-  PostController['findFor' + key] = createFindAction(queryFunction, relationsOpts[key])
+queries.forEach(tuple => {
+  const key = tuple[0]
+  const fn = tuple[1]
+  PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(fn, 'posts')
+  PostController['findFor' + key] = createFindAction(fn, relationsOpts[key])
 })
 
 module.exports = PostController

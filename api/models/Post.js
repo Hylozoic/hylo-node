@@ -52,6 +52,20 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
   },
 
+  // should only be one of these per post
+  selectedTags: function () {
+    return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
+    .query({where: {selected: true}})
+  },
+
+  children: function () {
+    return this.hasMany(Post, 'parent_post_id')
+  },
+
+  parent: function () {
+    return this.belongsTo(Post, 'parent_post_id')
+  },
+
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id
     var userId = this.get('user_id')
@@ -169,11 +183,25 @@ module.exports = bookshelf.Model.extend({
     DRAFT_PROJECT: 2
   },
 
-  countForUser: function (user) {
-    return this.query().count().where({user_id: user.id, active: true})
-      .then(function (rows) {
-        return rows[0].count
-      })
+  countForUser: function (user, type) {
+    const attrs = {user_id: user.id, active: true}
+    if (type) attrs.type = type
+    return this.query().count().where(attrs).then(rows => rows[0].count)
+  },
+
+  groupedCountForUser: function (user) {
+    return this.query(q => {
+      q.join('posts_tags', 'post.id', 'posts_tags.post_id')
+      q.join('tags', 'tags.id', 'posts_tags.tag_id')
+      q.whereIn('tags.name', ['request', 'offer'])
+      q.groupBy('tags.name')
+      q.where({user_id: user.id, active: true})
+      q.select('tags.name')
+    }).query().count()
+    .then(rows => rows.reduce((m, n) => {
+      m[n.name] = n.count
+      return m
+    }, {}))
   },
 
   isVisibleToUser: function (postId, userId) {
@@ -269,6 +297,15 @@ module.exports = bookshelf.Model.extend({
       comments().where('id', 'in', ids.slice(0, 3)).update('recent', true),
       ids.length > 3 && comments().where('id', 'in', ids.slice(3)).update('recent', false)
     ]))
-  }
+  },
 
+  setTagIfNeeded: postId => {
+    return Post.find(postId, {withRelated: 'selectedTags'})
+    .then(post => {
+      const type = post.get('type')
+      if (post.relations.selectedTags.first() || type === 'event') return
+
+      return bookshelf.transaction(trx => Tag.updateForPost(post, type, trx))
+    })
+  }
 })

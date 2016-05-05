@@ -1,4 +1,5 @@
-var validator = require('validator')
+import { flatten } from 'lodash'
+import validator from 'validator'
 
 var findContext = function (req) {
   var projectId = req.param('projectId')
@@ -23,7 +24,7 @@ var findContext = function (req) {
 }
 
 var setupReputationQuery = function (req, model) {
-  var params = _.pick(req.allParams(), 'userId', 'limit', 'start')
+  var params = _.pick(req.allParams(), 'userId', 'limit', 'start', 'offset')
   var isSelf = req.session.userId === params.userId
 
   return Promise.method(function () {
@@ -32,7 +33,7 @@ var setupReputationQuery = function (req, model) {
   .then(communityIds =>
     model.queryForUser(params.userId, communityIds).query(q => {
       q.limit(params.limit || 15)
-      q.offset(params.start || 0)
+      q.offset(params.start || params.offset || 0)
     }))
 }
 
@@ -73,14 +74,14 @@ module.exports = {
     .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
     .then(res.ok)
     .catch(err => {
-      if (err === 'User not found') return res.ok({})
+      if (err.message === 'User not found') return res.ok({})
       throw err
     })
     .catch(res.serverError)
   },
 
   findOne: function (req, res) {
-    UserPresenter.fetchForOther(req.param('userId'))
+    UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -102,7 +103,7 @@ module.exports = {
     .then(q => q.fetchAll({
       withRelated: [
         {thankedBy: q => q.column('id', 'name', 'avatar_url')},
-        {comment: q => q.column('id', 'text', 'post_id')},
+        {comment: q => q.column('id', 'text', 'post_id', 'created_at')},
         {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
         {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
         {'comment.post.communities': q => q.column('community.id', 'name')}
@@ -113,31 +114,34 @@ module.exports = {
 
   update: function (req, res) {
     var attrs = _.pick(req.allParams(), [
-      'name', 'bio', 'avatar_url', 'banner_url', 'twitter_name', 'linkedin_url', 'facebook_url',
-      'email', 'send_email_preference', 'work', 'intention', 'extra_info',
-      'new_notification_count', 'push_follow_preference', 'push_new_post_preference', 'settings'
+      'name', 'bio', 'avatar_url', 'banner_url', 'location',
+      'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
+      'send_email_preference', 'work', 'intention', 'extra_info',
+      'new_notification_count',
+      'push_follow_preference', 'push_new_post_preference', 'settings'
     ])
 
-    return User.find(req.param('userId'))
-    .tap(function (user) {
-      var newEmail = attrs.email
-      var oldEmail = user.get('email')
+    return User.find(req.param('userId'), {withRelated: 'tags'})
+    .tap(user => {
+      const newEmail = attrs.email
+      const oldEmail = user.get('email')
       if (_.has(attrs, 'email') && newEmail !== oldEmail) {
         if (!validator.isEmail(newEmail)) {
           throw new Error('invalid-email')
         }
-        return User.isEmailUnique(newEmail, oldEmail).then(function (isUnique) {
+        return User.isEmailUnique(newEmail, oldEmail).then(isUnique => {
           if (!isUnique) throw new Error('duplicate-email')
         })
       }
     })
-    .then(function (user) {
+    .then(user => {
       // FIXME this should be in a transaction
-
       user.setSanely(attrs)
-
       var promises = []
       var changed = false
+
+      const tags = req.param('tags')
+      if (tags) promises.push(Tag.updateUser(user, req.param('tags')))
 
       _.each([
         ['skills', Skill],
@@ -146,7 +150,7 @@ module.exports = {
         ['emails', UserEmail],
         ['websites', UserWebsite]
       ], function (model) {
-        var param = req.param(model[0])
+        const param = req.param(model[0])
         if (param) {
           promises.push(model[1].update(_.flatten([param]), user.id))
           changed = true
@@ -164,18 +168,18 @@ module.exports = {
         promises.push(user.resetNotificationCount())
       }
 
-      var newPassword = req.param('password')
-      if (newPassword) {
-        promises.push(
-          LinkedAccount.where({user_id: user.id, provider_key: 'password'}).fetch()
-            .then(function (account) {
-              if (account) return account.updatePassword(newPassword)
-              return LinkedAccount.create(user.id, {type: 'password', password: newPassword})
-            })
-        )
+      const password = req.param('password')
+      if (password) {
+        const setPassword = LinkedAccount.where({
+          user_id: user.id, provider_key: 'password'
+        }).fetch()
+        .then(account => account
+          ? account.updatePassword(password)
+          : LinkedAccount.create(user.id, {type: 'password', password}))
+        promises.push(setPassword)
       }
 
-      return Promise.all(promises)
+      return Promise.all(flatten(promises))
     })
     .then(() => res.ok({}))
     .catch(function (err) {

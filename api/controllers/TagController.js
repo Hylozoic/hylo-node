@@ -16,10 +16,10 @@ const fetchAndPresentCreated = (communityId, userId) =>
 
 const withRelatedSpecialPost = {
   withRelated: [
-    {posts: q => q.where({
-      'posts_tags.selected': true,
-      'post.type': 'event'
-    })}
+    {posts: q => {
+      q.where('posts_tags.selected', true)
+      q.where('post.type', 'in', ['event', 'project'])
+    }}
   ]
 }
 

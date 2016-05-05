@@ -107,7 +107,9 @@ module.exports = bookshelf.Model.extend({
         new CommunityTag({
           community_id: self.id,
           tag_id: tag.id,
-          user_id: userId})
+          user_id: userId,
+          created_at: new Date()
+        })
         .save({}, {transacting: trx}))
     })
   }
