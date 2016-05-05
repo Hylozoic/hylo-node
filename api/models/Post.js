@@ -58,6 +58,14 @@ module.exports = bookshelf.Model.extend({
     .query({where: {selected: true}})
   },
 
+  children: function () {
+    return this.hasMany(Post, 'parent_post_id')
+  },
+
+  parent: function () {
+    return this.belongsTo(Post, 'parent_post_id')
+  },
+
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id
     var userId = this.get('user_id')

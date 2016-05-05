@@ -194,7 +194,8 @@ const PostController = {
   findOne: function (req, res) {
     var opts = {
       withComments: req.param('comments') && 'all',
-      withVotes: req.param('votes')
+      withVotes: !!req.param('votes'),
+      withChildren: !!req.param('children')
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
     .then(post => PostPresenter.present(post, req.session.userId, opts))

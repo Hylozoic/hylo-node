@@ -2,7 +2,7 @@ const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
 var postRelations = (userId, opts = {}) => {
   var relations = [
-    {user: userColumns},
+    {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')},
     {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
     'contributions',
     {'contributions.user': userColumns},
@@ -44,11 +44,20 @@ var postRelations = (userId, opts = {}) => {
     )
   }
 
+  if (opts.withChildren) {
+    relations.push(
+      {children: q => {
+        q.column('id', 'parent_post_id', 'name', 'description', 'num_comments')
+      }}
+    )
+  }
+
   return relations
 }
 
 var postAttributes = (post, userId, opts = {}) => {
-  // userId is only used if opts.withVotes, so there are times when this is called with userId=undefined.
+  // userId is only used if opts.withVotes, so there are times when this is
+  // called with userId=undefined.
   var rel = post.relations
 
   var extendedPost = _.extend(
@@ -67,7 +76,7 @@ var postAttributes = (post, userId, opts = {}) => {
       'location'
     ]),
     {
-      user: rel.user ? rel.user.pick('id', 'name', 'avatar_url') : null,
+      user: rel.user ? rel.user.pick('id', 'name', 'avatar_url', 'bio') : null,
       communities: rel.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
       contributors: rel.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
       followers: rel.followers.map(u => u.pick('id', 'name', 'avatar_url')),
@@ -91,6 +100,9 @@ var postAttributes = (post, userId, opts = {}) => {
     // for compatability with angular frontend
     extendedPost.votes = post.get('num_votes')
     extendedPost.myVote = rel.votes.length > 0
+  }
+  if (opts.withChildren) {
+    extendedPost.children = rel.children
   }
   return extendedPost
 }
