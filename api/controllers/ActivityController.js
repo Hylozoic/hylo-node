@@ -47,7 +47,7 @@ const fetchAndPresentActivity = (req, community) => {
 
 module.exports = {
   findForCommunity: function (req, res) {
-    Community.find(req.param('communityId'), {
+    return Community.find(req.param('communityId'), {
       withRelated: [
         {memberships: q => q.where({user_id: req.session.userId})}
       ]
@@ -60,7 +60,7 @@ module.exports = {
   },
 
   find: function (req, res) {
-    fetchAndPresentActivity(req)
+    return fetchAndPresentActivity(req)
     .tap(() => req.param('resetCount') && User.query()
       .where('id', req.session.userId)
       .update({new_notification_count: 0}))
@@ -68,7 +68,7 @@ module.exports = {
   },
 
   markAllRead: function (req, res) {
-    (req.param('communityId')
+    return (req.param('communityId')
       ? Community.find(req.param('communityId'))
       : Promise.resolve())
     .then(community => {
@@ -84,7 +84,7 @@ module.exports = {
   },
 
   update: function (req, res) {
-    Activity.find(req.param('activityId'))
+    return Activity.find(req.param('activityId'))
     .tap(a => a.attributes = _.pick(req.allParams(), 'unread'))
     .tap(a => a.save())
     .then(() => res.ok({}))
