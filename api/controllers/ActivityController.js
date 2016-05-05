@@ -60,7 +60,7 @@ module.exports = {
   },
 
   find: function (req, res) {
-    fetchAndPresentActivity(req)
+    return fetchAndPresentActivity(req)
     .tap(() => req.param('resetCount') && User.query()
       .where('id', req.session.userId)
       .update({new_notification_count: 0}))

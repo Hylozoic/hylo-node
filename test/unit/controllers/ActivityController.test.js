@@ -2,6 +2,7 @@ var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var ActivityController = require(root('api/controllers/ActivityController'))
+var PostController = require(root('api/controllers/PostController'))
 
 const destroyAllActivities = () => {
   return Activity.fetchAll()
@@ -33,7 +34,41 @@ describe('ActivityController', () => {
   })
 
   describe('#find', () => {
+    beforeEach(() => destroyAllActivities())
 
+    it('returns an activity for a mention', () => {
+      var postReq = factories.mock.request()
+      var postRes = factories.mock.response()
+      _.extend(postReq.params, {
+        name: 'NewPost',
+        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U2</a>, you\'re mentioned ;)</p>',
+        type: 'intention',
+        communities: [fixtures.c1.id]
+      })
+      postReq.session.userId = fixtures.u2.id
+      req.session.userId = fixtures.u1.id
+      return PostController.create(postReq, postRes)
+      .then(() => ActivityController.find(req, res))
+      .then(() => {
+        expect(res.body).to.exist
+        expect(res.body.length).to.equal(1)
+        var activity = res.body[0]
+        expect(activity).to.contain({
+          actor_id: fixtures.u2.id,
+          reader_id: fixtures.u1.id,
+          comment_id: null,
+          action: 'mention',
+          unread: true,
+          total: '1'
+        })
+        expect(activity.post).to.contain({
+          name: 'NewPost',
+          user_id: fixtures.u2.id,
+          type: 'intention'
+        })
+        expect(activity.actor.id).to.equal(fixtures.u2.id)
+      })
+    })
   })
 
   describe('#findForCommunity', () => {
