@@ -315,7 +315,7 @@ describe('Tag', () => {
       .then(tag => expect(tag).not.to.exist)
       .then(() => p2.load('tags'))
       .then(() => {
-        expect(p2.relations.tags.map('id')).to.deep.equal([t1.id, t3.id])
+        expect(p2.relations.tags.map('id').sort()).to.deep.equal([t1.id, t3.id].sort())
       })
     })
   })
