@@ -127,10 +127,7 @@ module.exports = {
     })
     .fetch()
     .tap(c => community = c)
-    .tap(() => bookshelf.transaction(trx => Promise.join(
-      Membership.create(req.session.userId, community.id, {transacting: trx}),
-      Post.createWelcomePost(req.session.userId, community.id, trx)
-    )))
+    .tap(() => Membership.create(req.session.userId, community.id))
     .catch(err => {
       if (err.message && err.message.includes('duplicate key value')) {
         return true
