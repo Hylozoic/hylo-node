@@ -18,9 +18,7 @@ module.exports = {
   forProjects: function (opts) {
     return Project.query(qb => {
       if (opts.user) {
-        qb.leftJoin('projects_users', function () {
-          this.on('projects.id', '=', 'projects_users.project_id')
-        })
+        qb.leftJoin('projects_users', 'projects.id', 'projects_users.project_id')
         qb.where(function () {
           this.where('projects.user_id', opts.user)
           .orWhere('projects_users.user_id', opts.user)
@@ -93,7 +91,7 @@ module.exports = {
 
   forPosts: function (opts) {
     return Post.query(function (qb) {
-      qb.limit(opts.limit)
+      qb.limit(opts.limit || 20)
       qb.offset(opts.offset)
       qb.where({'post.active': true})
 
@@ -141,6 +139,14 @@ module.exports = {
 
       if (opts.type === 'event' && opts.filter === 'future') {
         qb.whereRaw('(post.start_time > now())')
+      }
+
+      if (opts.type === 'project' && opts.filter === 'mine') {
+        qb.leftJoin('follower', 'post.id', 'follower.post_id')
+        qb.where(function () {
+          this.where('post.user_id', opts.currentUserId)
+          .orWhere('follower.user_id', opts.currentUserId)
+        })
       }
 
       if (opts.start_time && opts.end_time) {
@@ -192,9 +198,9 @@ module.exports = {
       qb.select(bookshelf.knex.raw('users.*, count(users.*) over () as total'))
 
       if (opts.communities && opts.project) {
-        qb.leftJoin('users_community', 'users_community.user_id', '=', 'users.id')
-        qb.leftJoin('projects_users', 'projects_users.user_id', '=', 'users.id')
-        qb.leftJoin('projects', 'projects.user_id', '=', 'users.id')
+        qb.leftJoin('users_community', 'users_community.user_id', 'users.id')
+        qb.leftJoin('projects_users', 'projects_users.user_id', 'users.id')
+        qb.leftJoin('projects', 'projects.user_id', 'users.id')
 
         qb.where(function () {
           this.where(function () {
@@ -212,7 +218,7 @@ module.exports = {
         qb.where('users_community.active', true)
       } else if (opts.project) {
         qb.join('projects_users', 'projects_users.user_id', '=', 'users.id')
-        qb.leftJoin('projects', 'projects.user_id', '=', 'users.id')
+        qb.leftJoin('projects', 'projects.user_id', 'users.id')
         qb.where(function () {
           this.where('projects.id', opts.project)
           .orWhere('projects_users.project_id', opts.project)
@@ -224,8 +230,8 @@ module.exports = {
       }
 
       if (opts.term) {
-        qb.leftJoin('users_skill', 'users_skill.user_id', '=', 'users.id')
-        qb.leftJoin('users_org', 'users_org.user_id', '=', 'users.id')
+        qb.leftJoin('users_skill', 'users_skill.user_id', 'users.id')
+        qb.leftJoin('users_org', 'users_org.user_id', 'users.id')
         Search.addTermToQueryBuilder(opts.term, qb, {
           columns: ['users.name', 'users.bio', 'users_skill.skill_name', 'users_org.org_name']
         })

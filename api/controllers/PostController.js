@@ -1,4 +1,7 @@
-import { difference, flatten, has, includes, merge, partial, pick, some, uniq, values, without } from 'lodash'
+import {
+  difference, flatten, has, includes, merge, omit, partial, pick, some, uniq,
+  values, without
+} from 'lodash'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -20,7 +23,7 @@ const queryPosts = (req, opts) =>
     },
     pick(req.allParams(),
       'type', 'limit', 'offset', 'start_time', 'end_time', 'filter', 'omit'),
-    pick(opts, 'communities', 'project', 'users', 'visibility', 'tag')
+    omit(opts, 'sort')
   ))
   .then(Search.forPosts)
 
@@ -41,7 +44,8 @@ const queryForCommunity = function (req, res) {
 
   return queryPosts(req, {
     communities: [res.locals.community.id],
-    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
+    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE),
+    currentUserId: req.session.userId
   })
 }
 
@@ -56,7 +60,8 @@ const queryForUser = function (req, res) {
 
 const queryForAllForUser = function (req, res) {
   return queryPosts(req, {
-    communities: Membership.activeCommunityIds(req.session.userId)
+    communities: Membership.activeCommunityIds(req.session.userId),
+    currentUserId: req.session.userId
   })
 }
 
