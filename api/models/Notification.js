@@ -4,6 +4,23 @@ module.exports = bookshelf.Model.extend({
 
   activity: function () {
     return this.belongsToMany(Activity)
+  },
+
+  send: function () {
+    switch (this.get('medium')) {
+      case Notification.MEDIUM.Push:
+        return this.sendPush()
+      case Notification.MEDIUM.Email:
+        return this.sendEmail()
+    }
+  },
+
+  sendPush: function () {
+    
+  },
+
+  sendEmail: function () {
+
   }
 
 }, {
@@ -28,5 +45,18 @@ module.exports = bookshelf.Model.extend({
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
     return Notification.where({id: id}).fetch(options)
+  },
+
+  findUnsent: function (options) {
+    return Notification.query(q => {
+      q.where({sent_at: null})
+      q.where('notifications.medium', '!=', Notification.MEDIUM.InApp)
+    })
+    .fetchAll(options)
+  },
+
+  sendUnsent: function () {
+    Notification.findUnsent()
+    .then(notifications => notifications.map(notification => notification.send()))
   }
 })
