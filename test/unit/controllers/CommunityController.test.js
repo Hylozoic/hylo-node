@@ -162,11 +162,6 @@ describe('CommunityController', () => {
         user.load('communities')
       ))
       .then(() => {
-        var welcome = community.relations.posts.find(p => p.get('type') === 'welcome')
-        expect(welcome).to.exist
-        var relatedUser = welcome.relations.relatedUsers.first()
-        expect(relatedUser).to.exist
-        expect(relatedUser.id).to.equal(user.id)
         expect(user.relations.communities.map(c => c.id)).to.contain(community.id)
       })
     })
