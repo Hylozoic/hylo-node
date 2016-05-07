@@ -176,8 +176,9 @@ const afterSavingPost = function (post, opts) {
     Promise.map(without(mentioned, userId), mentionedUserId =>
       Post.notifyAboutMention(post, mentionedUserId, pick(opts, 'transacting'))),
 
-    // Add image, if any
-    opts.imageUrl && Media.createImageForPost(post.id, opts.imageUrl, opts.transacting),
+    // Add media, if any
+    opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, opts.transacting),
+    opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, opts.transacting),
 
     opts.docs && Promise.map(opts.docs, doc =>
       Media.createDoc(post.id, doc, opts.transacting)),
@@ -342,21 +343,8 @@ const PostController = {
         var isSet = partial(has, params)
         if (some(mediaParams, isSet)) return post.load('media')
       })
-      .tap(function () {
-        if (!params.imageUrl && !params.imageRemoved) return
-        var media = post.relations.media.find(m => m.get('type') === 'image')
-
-        if (media && params.imageRemoved) { // remove media
-          return media.destroy({transacting: trx})
-        } else if (media) { // replace url in existing media
-          if (media.get('url') !== params.imageUrl) {
-            return media.save({url: params.imageUrl}, {patch: true, transacting: trx})
-            .then(media => media.updateDimensions({patch: true, transacting: trx}))
-          }
-        } else if (params.imageUrl) { // create new media
-          return Media.createImageForPost(post.id, params.imageUrl, trx)
-        }
-      })
+      .tap(() => updateMedia(post, 'image', params.imageUrl, params.imageRemoved, trx))
+      .tap(() => updateMedia(post, 'video', params.videoUrl, params.videoRemoved, trx))
       .tap(() => {
         if (!params.removedDocs) return
         return Promise.map(params.removedDocs, doc => {
@@ -486,3 +474,19 @@ queries.forEach(tuple => {
 })
 
 module.exports = PostController
+
+const updateMedia = (post, type, url, remove, trx) => {
+  if (!url && !remove) return
+  var media = post.relations.media.find(m => m.get('type') === type)
+
+  if (media && remove) { // remove media
+    return media.destroy({transacting: trx})
+  } else if (media) { // replace url in existing media
+    if (media.get('url') !== url) {
+      return media.save({url: url}, {patch: true, transacting: trx})
+      .then(media => media.updateDimensions({patch: true, transacting: trx}))
+    }
+  } else if (url) { // create new media
+    return Media.createForPost(post.id, type, url, trx)
+  }
+}

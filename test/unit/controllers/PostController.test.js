@@ -340,7 +340,7 @@ describe('PostController', () => {
     describe('with an existing image', () => {
       var originalImageId
       beforeEach(() =>
-        Media.createImageForPost(post.id, 'https://www.hylo.com/img/smallh.png')
+        Media.createForPost(post.id, 'image', 'https://www.hylo.com/img/smallh.png')
         .tap(image => originalImageId = image.id))
 
       it('removes the image', () => {
