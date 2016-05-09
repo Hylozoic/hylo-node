@@ -1,5 +1,5 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, isEmpty, pick, some, uniqBy } from 'lodash'
+import { differenceBy, includes, isEmpty, pick, some, uniqBy } from 'lodash'
 import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -105,6 +105,13 @@ const createAsNeeded = tagNames => {
   })
 }
 
+const incrementName = name => {
+  const regex = /\d*$/
+  const word = name.replace(regex, '')
+  const number = Number(name.match(regex)[0] || 1) + 1
+  return `${word}${number}`
+}
+
 module.exports = bookshelf.Model.extend({
   tableName: 'tags',
 
@@ -126,8 +133,22 @@ module.exports = bookshelf.Model.extend({
 
   follows: function () {
     return this.hasMany(TagFollow)
-  }
+  },
 
+  saveWithValidName: function (opts) {
+    let name = this.get('name')
+    const word = name.match(/^(.+)(\d*)$/)[1]
+    return Tag.query().where('name', 'ilike', `${word}%`)
+    .transacting(opts.transacting)
+    .pluck('name')
+    .then(names => {
+      const lowerNames = map(n => n.toLowerCase(), names)
+      while (includes(lowerNames, name.toLowerCase())) {
+        name = incrementName(name)
+      }
+      return this.save({name}, opts)
+    })
+  }
 }, {
 
   DEFAULT_NAMES: ['offer', 'request', 'intention'],
