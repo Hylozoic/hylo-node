@@ -9,33 +9,58 @@ module.exports = bookshelf.Model.extend({
   },
 
   send: function () {
+    var action
     switch (this.get('medium')) {
       case Notification.MEDIUM.Push:
-        return this.sendPush()
+        action = this.sendPush()
+        break
       case Notification.MEDIUM.Email:
-        return this.sendEmail()
+        action = this.sendEmail()
+        break
+    }
+    if (action) {
+      return action
+      .then(() => this.save({'sent_at': (new Date()).toISOString()}))
+    } else {
+      return Promise.resolve()
     }
   },
 
   sendPush: function () {
     var reasons = this.relations.activity.get('meta').reasons
     if (reasons.some(reason => reason.match(/^mention/))) {
-      return Promise.resolve()
+      return this.sendPostPush('mention')
+    } else if (reasons.some(reason => reason.match(/^commentMention/))) {
+      return this.sendCommentPush('mention')
+    } else if (reasons.some(reason => reason.match(/^newComment/))) {
+      return this.sendCommentPush()
     } else if (reasons.some(reason => reason.match(/^tag/))) {
       return Promise.resolve()
-    } else {
-      return this.sendNewPostPush()
+    } else if (reasons.some(reason => reason.match(/^newPost/))) {
+      return this.sendPostPush()
     }
   },
 
-  sendNewPostPush: function () {
+  sendPostPush: function (version) {
     var post = this.relations.activity.relations.post
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) return Promise.resolve()
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(post, community)).path
-      var alertText = PushNotification.textForNewPost(post, community, this.get('reader_id'))
+      var alertText = PushNotification.textForPost(post, community, this.get('reader_id'), version)
+      return this.relations.activity.relations.reader.sendPushNotification(alertText, path)
+    })
+  },
+
+  sendCommentPush: function (version) {
+    var comment = this.relations.activity.relations.comment
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => {
+      var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
+      var alertText = PushNotification.textForComment(comment, version, this.get('reader_id'))
       return this.relations.activity.relations.reader.sendPushNotification(alertText, path)
     })
   },
@@ -77,12 +102,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendUnsent: function () {
-    Notification.findUnsent({withRelated: [
+    return Notification.findUnsent({withRelated: [
       'activity',
       'activity.post',
       'activity.post.communities',
       'activity.post.user',
       'activity.comment',
+      'activity.comment.user',
       'activity.comment.post',
       'activity.comment.post.communities',
       'activity.community',

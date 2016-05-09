@@ -26,7 +26,6 @@ var createComment = function (commenterId, text, post) {
     })
     .tap(comment => comment.createActivities())
     .tap(comment => post.addFollowers(newFollowers, commenterId))
-    .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
     .tap(() => updateRecentComments(post.id))
   })
 }

@@ -52,7 +52,7 @@ module.exports = bookshelf.Model.extend({
     return format('%s commented on %s', commenter.get('name'), postName)
   },
 
-  textForNewPost: function (post, community, userId) {
+  textForPost: function (post, community, userId, version) {
     var relatedUser
     var poster = post.relations.user
 
@@ -63,6 +63,8 @@ module.exports = bookshelf.Model.extend({
       } else {
         return format('%s joined %s', relatedUser.get('name'), community.get('name'))
       }
+    } else if (version === 'mention') {
+      return format('%s mentioned you in "%s"', poster.get('name'), post.get('name'))
     } else {
       return format('%s posted "%s" in %s', poster.get('name'), post.get('name'), community.get('name'))
     }

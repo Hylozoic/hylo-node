@@ -28,7 +28,7 @@ describe('Activity', function () {
       expect(Activity.generateNotificationMedia(activity)).to.deep.equal(expected)
     })
 
-    it('returns just an email for a newPost', () => {
+    it("doesn't return an email for a newPost", () => {
       const memberships = {models: [
         {community_id: 1, settings: {send_email: true}}
       ].map(makeGettable)}
@@ -47,8 +47,32 @@ describe('Activity', function () {
         }
       })
 
+      const expected = []
+
+      expect(Activity.generateNotificationMedia(activity)).to.deep.equal(expected)
+    })
+
+    it('returns just a push for a newPost', () => {
+      const memberships = {models: [
+        {community_id: 1, settings: {send_push_notifications: true}}
+      ].map(makeGettable)}
+
+      const activity = makeGettable({
+        meta: {reasons: ['newPost: 1']},
+        relations: {
+          post: {
+            relations: {
+              communities: [{id: 1}, {id: 2}]
+            }
+          },
+          reader: makeGettable({
+            relations: {memberships}
+          })
+        }
+      })
+
       const expected = [
-        Notification.MEDIUM.Email
+        Notification.MEDIUM.Push
       ]
 
       expect(Activity.generateNotificationMedia(activity)).to.deep.equal(expected)

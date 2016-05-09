@@ -172,6 +172,7 @@ module.exports = bookshelf.Model.extend({
         merge(pick(reason, ['post_id', 'community_id', 'comment_id', 'actor_id', 'reader_id']),
           {meta: {reasons: reason.reasons}}),
         trx))
+    .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
   },
 
   communityIds: function (activity) {
@@ -197,7 +198,7 @@ module.exports = bookshelf.Model.extend({
     const emailable = membershipsPermitting('send_email')
     const pushable = membershipsPermitting('send_push_notifications')
 
-    if (!isEmpty(emailable)) {
+    if (!isEmpty(emailable) && !isJustNewPost(activity)) {
       notifications.push(Notification.MEDIUM.Email)
     }
 
