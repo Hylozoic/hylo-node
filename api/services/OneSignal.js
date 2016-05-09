@@ -85,14 +85,14 @@ var OneSignal = module.exports = {
     }
 
     return new Promise((resolve, reject) => {
-      request(requestOptions, (error, resp, body) => {
+      return request(requestOptions, (error, resp, body) => {
         if (error) return reject(error)
 
         if (resp.statusCode !== 200) {
           return reject('OneSignal.notify for device ' + deviceToken + ' failed with status code: ' + resp.statusCode)
         }
 
-        resolve(resp)
+        return resolve(resp)
       })
     })
   }

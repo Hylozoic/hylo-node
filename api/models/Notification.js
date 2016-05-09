@@ -1,9 +1,11 @@
+var url = require('url')
+import { isEmpty } from 'lodash'
 module.exports = bookshelf.Model.extend({
 
   tableName: 'notifications',
 
   activity: function () {
-    return this.belongsToMany(Activity)
+    return this.belongsTo(Activity)
   },
 
   send: function () {
@@ -16,7 +18,26 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPush: function () {
-    
+    var reasons = this.relations.activity.get('meta').reasons
+    if (reasons.some(reason => reason.match(/^mention/))) {
+      return Promise.resolve()
+    } else if (reasons.some(reason => reason.match(/^tag/))) {
+      return Promise.resolve()
+    } else {
+      return this.sendNewPostPush()
+    }
+  },
+
+  sendNewPostPush: function () {
+    var post = this.relations.activity.relations.post
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => {
+      var path = url.parse(Frontend.Route.post(post, community)).path
+      var alertText = PushNotification.textForNewPost(post, community, this.get('reader_id'))
+      return this.relations.activity.relations.reader.sendPushNotification(alertText, path)
+    })
   },
 
   sendEmail: function () {
@@ -56,7 +77,18 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendUnsent: function () {
-    Notification.findUnsent()
+    Notification.findUnsent({withRelated: [
+      'activity',
+      'activity.post',
+      'activity.post.communities',
+      'activity.post.user',
+      'activity.comment',
+      'activity.comment.post',
+      'activity.comment.post.communities',
+      'activity.community',
+      'activity.reader',
+      'activity.actor'
+    ]})
     .then(notifications => notifications.map(notification => notification.send()))
   }
 })

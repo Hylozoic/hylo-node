@@ -15,7 +15,9 @@ describe('Notification', function () {
     .then(u => reader = u)
     .then(() => new Device({
       user_id: reader.id,
-      token: 'eieio'
+      token: 'eieio',
+      version: 20,
+      enabled: true
     }).save())
     .then(d => device = d)
     .then(() => factories.user().save())
@@ -26,8 +28,8 @@ describe('Notification', function () {
     .then(a => activity = a)
   })
 
-  describe('.sendPush', () => {
-    it.only('works for a New Post', () => {
+  describe('.send', () => {
+    it.skip('sends a push for a New Post', () => {
       return new Activity({
         post_id: post.id,
         meta: {reasons: [`newPost: ${community.id}`]},
@@ -38,12 +40,23 @@ describe('Notification', function () {
         activity_id: activity.id,
         medium: Notification.MEDIUM.Push
       }).save())
-      .then(notification => notification.sendPush())
+      .then(notification => notification.load([
+        'activity',
+        'activity.post',
+        'activity.post.user',
+        'activity.post.communities',
+        'activity.comment',
+        'activity.comment.post',
+        'activity.comment.post.communities',
+        'activity.community',
+        'activity.reader',
+        'activity.actor'
+      ]))
+      .then(notification => notification.send())
       .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
       .then(pns => {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
-        console.log(pns)
       })
     })
   })

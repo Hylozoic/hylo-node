@@ -11,10 +11,12 @@ module.exports = bookshelf.Model.extend({
     var path = this.get('path')
     var badgeNo = this.get('badge_no')
 
-    this.set('time_sent', (new Date()).toISOString())
-    return this.save({}, options)
-      .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
-      .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ONESIGNAL_APP_ID, device_token: deviceToken}}))
+    return this.save({'time_sent': (new Date()).toISOString()}, options)
+    .then(res => {
+      return res
+    })
+    .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
+    .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ONESIGNAL_APP_ID, device_token: deviceToken}}))
   },
 
   getPlatform: function () {
