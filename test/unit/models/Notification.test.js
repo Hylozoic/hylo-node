@@ -6,9 +6,11 @@ describe('Notification', function () {
   var post, activity, community, reader, actor, device
 
   before(() => {
-    return factories.post().save()
+    return factories.user({name: 'Joe'}).save()
+    .then(u => actor = u)
+    .then(() => factories.post({name: 'My Post', user_id: actor.id}).save())
     .then(p => post = p)
-    .then(() => factories.community().save())
+    .then(() => factories.community({name: 'My Community'}).save())
     .then(c => community = c)
     .then(() => community.posts().attach(post))
     .then(() => factories.user().save())
@@ -20,8 +22,6 @@ describe('Notification', function () {
       enabled: true
     }).save())
     .then(d => device = d)
-    .then(() => factories.user().save())
-    .then(u => actor = u)
     .then(() => new Activity({
       post_id: post.id
     }).save())
@@ -29,7 +29,7 @@ describe('Notification', function () {
   })
 
   describe('.send', () => {
-    it('sends a push for a New Post', done => {
+    it('sends a push for a New Post', () => {
       return new Activity({
         post_id: post.id,
         meta: {reasons: [`newPost: ${community.id}`]},
@@ -57,7 +57,8 @@ describe('Notification', function () {
       .then(pns => {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
-        done()
+        var pn = pns.first()
+        expect(pn.get('alert')).to.equal('Joe posted "My Post" in My Community')
       })
     })
   })
