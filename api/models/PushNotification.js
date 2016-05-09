@@ -12,9 +12,6 @@ module.exports = bookshelf.Model.extend({
     var badgeNo = this.get('badge_no')
 
     return this.save({'time_sent': (new Date()).toISOString()}, options)
-    .then(res => {
-      return res
-    })
     .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
     .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ONESIGNAL_APP_ID, device_token: deviceToken}}))
   },

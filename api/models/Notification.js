@@ -41,6 +41,8 @@ module.exports = bookshelf.Model.extend({
       return Promise.resolve()
     } else if (hasReason(/^newPost/, reasons)) {
       return this.sendPostPush()
+    } else {
+      return Promise.resolve()
     }
   },
 
@@ -221,5 +223,22 @@ module.exports = bookshelf.Model.extend({
       'activity.actor'
     ]})
     .then(notifications => notifications.map(notification => notification.send()))
+  },
+
+  priorityReason: function (reasons) {
+    if (hasReason(/^mention/, reasons)) {
+      return 'mention'
+    } else if (hasReason(/^commentMention/, reasons)) {
+      return 'commentMention'
+    } else if (hasReason(/^newComment/, reasons)) {
+      return 'newComment'
+    } else if (hasReason(/^tag/, reasons)) {
+      return 'tag'
+    } else if (hasReason(/^newPost/, reasons)) {
+      return 'newPost'
+    } else {
+      return ''
+    }
   }
+
 })
