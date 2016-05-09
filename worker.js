@@ -40,9 +40,16 @@ var processJobs = function () {
       })
       .catch(function (err) {
         const error = typeof err === 'string' ? new Error(err) : err
-        sails.log.error(label + error.message.red)
-        rollbar.handleError(error)
-        done(error)
+        if (error) {
+          sails.log.error(label + error.message.red)
+          rollbar.handleError(error)
+          done(error)
+        } else {
+          const newError = new Error('kue job failed without error')
+          const data = {custom: {jobData: job.data}}
+          rollbar.handleErrorWithPayloadData(newError, data)
+          done(newError)
+        }
       })
     })
   })
