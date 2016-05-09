@@ -1,5 +1,8 @@
 var url = require('url')
 import { isEmpty } from 'lodash'
+
+const hasReason = (regex, reasons) => reasons.some(reason => reason.match(regex))
+
 module.exports = bookshelf.Model.extend({
 
   tableName: 'notifications',
@@ -28,15 +31,15 @@ module.exports = bookshelf.Model.extend({
 
   sendPush: function () {
     var reasons = this.relations.activity.get('meta').reasons
-    if (reasons.some(reason => reason.match(/^mention/))) {
+    if (hasReason(/^mention/, reasons)) {
       return this.sendPostPush('mention')
-    } else if (reasons.some(reason => reason.match(/^commentMention/))) {
+    } else if (hasReason(/^commentMention/, reasons)) {
       return this.sendCommentPush('mention')
-    } else if (reasons.some(reason => reason.match(/^newComment/))) {
+    } else if (hasReason(/^newComment/, reasons)) {
       return this.sendCommentPush()
-    } else if (reasons.some(reason => reason.match(/^tag/))) {
+    } else if (hasReason(/^tag/, reasons)) {
       return Promise.resolve()
-    } else if (reasons.some(reason => reason.match(/^newPost/))) {
+    } else if (hasReason(/^newPost/, reasons)) {
       return this.sendPostPush()
     }
   },
@@ -48,7 +51,7 @@ module.exports = bookshelf.Model.extend({
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(post, community)).path
-      var alertText = PushNotification.textForPost(post, community, this.get('reader_id'), version)
+      var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
       return this.relations.activity.relations.reader.sendPushNotification(alertText, path)
     })
   },
@@ -60,13 +63,114 @@ module.exports = bookshelf.Model.extend({
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
-      var alertText = PushNotification.textForComment(comment, version, this.get('reader_id'))
+      var alertText = PushNotification.textForComment(comment, version, this.relations.activity.get('reader_id'))
       return this.relations.activity.relations.reader.sendPushNotification(alertText, path)
     })
   },
 
   sendEmail: function () {
+    var reasons = this.relations.activity.get('meta').reasons
+    if (hasReason(/^mention/, reasons)) {
+      return this.sendPostMentionEmail()
+    } else if (hasReason(/^commentMention/, reasons)) {
+      return this.sendCommentNotificationEmail('mention')
+    } else if (hasReason(/^newComment/, reasons)) {
+      return this.sendCommentNotificationEmail()
+    }
+  },
 
+  sendPostMentionEmail: function () {
+    var post = this.relations.activity.relations.post
+    var reader = this.relations.activity.relations.reader
+    var user = post.relations.user
+    var description = RichText.qualifyLinks(post.get('description'))
+    var replyTo = Email.postReplyAddress(post.id, reader.id)
+
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => reader.generateToken()
+      .then(token => Email.sendPostMentionNotification({
+        email: reader.get('email'),
+        sender: {
+          address: replyTo,
+          reply_to: replyTo,
+          name: format('%s (via Hylo)', user.get('name'))
+        },
+        data: {
+          community_name: community.get('name'),
+          post_user_name: user.get('name'),
+          post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
+            user.get('avatar_url') + '?ctt=post_mention_email'),
+          post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.profile(user) + '?ctt=post_mention_email'),
+          post_description: description,
+          post_title: post.get('name'),
+          post_type: post.get('type'),
+          post_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.post(post) + '?ctt=post_mention_email'),
+          unfollow_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email'),
+          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
+        }
+      })))
+  },
+
+  sendCommentNotificationEmail: function (version) {
+  // opts.version corresponds to names of versions in SendWithUs
+
+    var comment = this.relations.activity.relations.comment
+    var reader = this.relations.activity.relations.reader
+    if (!comment) return
+
+    var post = comment.relations.post
+    var commenter = comment.relations.user
+    var poster = post.relations.user
+    var text = RichText.qualifyLinks(comment.get('text'))
+    var replyTo = Email.postReplyAddress(post.id, reader.id)
+
+    var postLabel
+
+    if (post.get('type') === 'welcome') {
+      var relatedUser = post.relations.relatedUsers.first()
+      if (relatedUser.id === reader.id) {
+        postLabel = 'your welcoming post'
+      } else {
+        postLabel = format("%s's welcoming post", relatedUser.get('name'))
+      }
+    } else {
+      postLabel = format('%s %s: "%s"',
+        (reader.id === poster.id ? 'your' : 'the'), post.get('type'), post.get('name'))
+    }
+
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => reader.generateToken()
+      .then(token => Email.sendNewCommentNotification({
+        version: version,
+        email: reader.get('email'),
+        sender: {
+          address: replyTo,
+          reply_to: replyTo,
+          name: format('%s (via Hylo)', commenter.get('name'))
+        },
+        data: {
+          community_name: community.get('name'),
+          commenter_name: commenter.get('name'),
+          commenter_avatar_url: commenter.get('avatar_url'),
+          commenter_profile_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.profile(commenter) + '?ctt=comment_email'),
+          comment_text: text,
+          post_label: postLabel,
+          post_title: post.get('name'),
+          comment_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.post(post) + '?ctt=comment_email' + `#comment-${comment.id}`),
+          unfollow_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.unfollow(post, community)),
+          tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})
+        }
+      })))
   }
 
 }, {
@@ -110,6 +214,7 @@ module.exports = bookshelf.Model.extend({
       'activity.comment',
       'activity.comment.user',
       'activity.comment.post',
+      'activity.comment.post.user',
       'activity.comment.post.communities',
       'activity.community',
       'activity.reader',
