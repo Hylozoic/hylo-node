@@ -30,19 +30,19 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPush: function () {
-    var reasons = this.relations.activity.get('meta').reasons
-    if (hasReason(/^mention/, reasons)) {
-      return this.sendPostPush('mention')
-    } else if (hasReason(/^commentMention/, reasons)) {
-      return this.sendCommentPush('mention')
-    } else if (hasReason(/^newComment/, reasons)) {
-      return this.sendCommentPush()
-    } else if (hasReason(/^tag/, reasons)) {
-      return Promise.resolve()
-    } else if (hasReason(/^newPost/, reasons)) {
-      return this.sendPostPush()
-    } else {
-      return Promise.resolve()
+    switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
+      case 'mention':
+        return this.sendPostPush('mention')
+      case 'commentMention':
+        return this.sendCommentPush('mention')
+      case 'newComment':
+        return this.sendCommentPush()
+      case 'tag':
+        return Promise.resolve()
+      case 'newPost':
+        return this.sendPostPush()
+      default:
+        return Promise.resolve()
     }
   },
 
@@ -71,13 +71,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendEmail: function () {
-    var reasons = this.relations.activity.get('meta').reasons
-    if (hasReason(/^mention/, reasons)) {
-      return this.sendPostMentionEmail()
-    } else if (hasReason(/^commentMention/, reasons)) {
-      return this.sendCommentNotificationEmail('mention')
-    } else if (hasReason(/^newComment/, reasons)) {
-      return this.sendCommentNotificationEmail()
+    switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
+      case 'mention':
+        return this.sendPostMentionEmail()
+      case 'commentMention':
+        return this.sendCommentNotificationEmail('mention')
+      case 'newComment':
+        return this.sendCommentNotificationEmail()
+      default:
+        return Promise.resolve()
     }
   },
 
