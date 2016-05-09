@@ -29,7 +29,7 @@ describe('Notification', function () {
   })
 
   describe('.send', () => {
-    it.skip('sends a push for a New Post', () => {
+    it('sends a push for a New Post', done => {
       return new Activity({
         post_id: post.id,
         meta: {reasons: [`newPost: ${community.id}`]},
@@ -57,6 +57,7 @@ describe('Notification', function () {
       .then(pns => {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
+        done()
       })
     })
   })
