@@ -10,9 +10,9 @@ const queryNotification = opts =>
     q.limit(opts.limit)
     q.offset(opts.offset)
     q.select(bookshelf.knex.raw('notifications.*, count(*) over () as total'))
-    q.orderBy('created_at', 'desc')
+    q.orderBy('activity.created_at', 'desc')
 
-    Activity.joinWithContent(q)
+    Activity.filterInactiveContent(q)
     if (opts.community) Activity.joinWithCommunity(opts.community.id, q)
   })
 
@@ -81,7 +81,7 @@ module.exports = {
     .then(community => {
       const subq = Activity.query(q => {
         q.where({reader_id: req.session.userId, unread: true})
-        Activity.joinWithContent(q)
+        Activity.filterInactiveContent(q)
         if (community) Activity.joinWithCommunity(community.id, q)
         q.select('activity.id')
       }).query()

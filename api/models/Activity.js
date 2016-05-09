@@ -64,7 +64,7 @@ module.exports = bookshelf.Model.extend({
     return this.where({id}).fetch()
   },
 
-  joinWithContent: q => {
+  filterInactiveContent: q => {
     q.whereRaw('(comment.active = true or comment.id is null)')
     .leftJoin('comment', function () {
       this.on('comment.id', '=', 'activity.comment_id')
@@ -214,7 +214,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   createWithNotifications: function (attributes, trx) {
-    return new Activity(attributes)
+    return new Activity(_.merge(attributes, {created_at: new Date()}))
     .save({}, {transacting: trx})
     .tap(activity => activity.createNotifications(trx))
   }

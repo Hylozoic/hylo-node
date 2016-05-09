@@ -61,6 +61,7 @@ describe('ActivityController', () => {
           unread: true,
           total: '1'
         })
+        expect(activity.created_at).is.not.null
         expect(activity.post).to.contain({
           name: 'NewPost',
           user_id: fixtures.u2.id,
@@ -157,7 +158,7 @@ describe('ActivityController', () => {
         expect(res.body).to.exist
         expect(res.body.length).to.equal(2)
         var postNames = res.body.map(activity => activity.post.name)
-        expect(postNames.sort()).to.deep.equal(['NewPost 2', 'NewPost 1'].sort())
+        expect(postNames).to.deep.equal(['NewPost 2', 'NewPost 1'])
       })
     })
   })
