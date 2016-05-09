@@ -44,26 +44,14 @@ describe('CommentController', function () {
       }
 
       return CommentController.create(req, res)
-        .then(function () {
-          expect(res.ok).to.have.been.called()
-          expect(res.serverError).not.to.have.been.called()
-          expect(responseData).to.exist
-          expect(responseData.user).to.exist
-          expect(responseData.text).to.equal(commentText)
-          return fixtures.p1.load('comments')
-        })
-        .then(post => {
-          var comment = post.relations.comments.first()
-
-          var job = _.find(require('kue').getJobs(), job => job.data.commentId === comment.id)
-          expect(job).to.exist
-          expect(job.type).to.equal('classMethod')
-          expect(job.data).to.deep.equal({
-            className: 'Comment',
-            methodName: 'sendNotifications',
-            commentId: comment.id
-          })
-        })
+      .then(function () {
+        expect(res.ok).to.have.been.called()
+        expect(res.serverError).not.to.have.been.called()
+        expect(responseData).to.exist
+        expect(responseData.user).to.exist
+        expect(responseData.text).to.equal(commentText)
+        return fixtures.p1.load('comments')
+      })
     })
 
     it('creates an activity for post follower', function () {
