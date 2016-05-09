@@ -55,7 +55,7 @@ describe('CommentController', function () {
         .then(post => {
           var comment = post.relations.comments.first()
 
-          var job = require('kue').getJobs()[0]
+          var job = _.find(require('kue').getJobs(), job => job.data.commentId === comment.id)
           expect(job).to.exist
           expect(job.type).to.equal('classMethod')
           expect(job.data).to.deep.equal({

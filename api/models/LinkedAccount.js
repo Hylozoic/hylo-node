@@ -1,6 +1,7 @@
-var bcrypt = require('bcrypt')
-var Promise = require('bluebird')
-var hash = Promise.promisify(bcrypt.hash, bcrypt)
+import bcrypt from 'bcrypt'
+import Promise from 'bluebird'
+import { get } from 'lodash'
+const hash = Promise.promisify(bcrypt.hash, bcrypt)
 
 module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
@@ -60,7 +61,7 @@ module.exports = bookshelf.Model.extend({
       case 'linkedin':
         return {
           linkedin_url: profile._json.publicProfileUrl,
-          avatar_url: profile.photos[0].value
+          avatar_url: get(profile, 'photos.0.value')
         }
     }
     return {}

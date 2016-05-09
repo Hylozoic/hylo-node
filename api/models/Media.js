@@ -1,4 +1,7 @@
 var GetImageSize = require('../services/GetImageSize')
+import request from 'request'
+import { merge } from 'lodash'
+import { pick } from 'lodash/fp'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'media',
@@ -37,17 +40,24 @@ module.exports = bookshelf.Model.extend({
     .save(null, _.pick(opts, 'transacting'))
   },
 
-  createImageForPost: function (postId, url, trx) {
-    return Media.createAddingWidthAndHeight({
-      post_id: postId,
-      url: url,
-      type: 'image',
-      transacting: trx
-    })
+  createForPost: function (postId, type, url, trx) {
+    switch (type) {
+      case 'image':
+        return createAndAddSize({
+          post_id: postId,
+          url: url,
+          type,
+          transacting: trx
+        })
+      case 'video':
+        return this.generateThumbnailUrl(url)
+        .then(thumbnail_url =>
+          createAndAddSize({post_id: postId, url, thumbnail_url, type}))
+    }
   },
 
   createImageForProject: function (projectId, url, trx) {
-    return Media.createAddingWidthAndHeight({
+    return createAndAddSize({
       project_id: projectId,
       url: url,
       type: 'image',
@@ -56,31 +66,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   createVideoForProject: function (projectId, video_url, thumbnail_url, trx) {
-    return Media.createAddingWidthAndHeight({
+    return createAndAddSize({
       project_id: projectId,
       url: video_url,
       thumbnail_url: thumbnail_url,
       type: 'video',
       transacting: trx
     })
-  },
-
-  createAddingWidthAndHeight: function (attrs) {
-    var image_url
-    if (attrs['type'] === 'image') {
-      image_url = attrs['url']
-    } else if (attrs['type'] === 'video') {
-      image_url = attrs['thumbnail_url']
-    }
-    if (image_url) {
-      return GetImageSize(image_url)
-      .then(dimensions => {
-        attrs = _.extend(attrs, {width: dimensions.width, height: dimensions.height})
-        return Media.create(attrs)
-      })
-    } else {
-      return Media.create(attrs)
-    }
   },
 
   createDoc: function (postId, doc, trx) {
@@ -92,6 +84,40 @@ module.exports = bookshelf.Model.extend({
       thumbnail_url: doc.thumbnail_url,
       transacting: trx
     })
+  },
+
+  generateThumbnailUrl: videoUrl => {
+    if (!videoUrl || videoUrl === '') return Promise.resolve()
+
+    if (videoUrl.match(/youtu\.?be/)) {
+      const videoId = videoUrl.match(/(youtu.be\/|embed\/|\?v=)([A-Za-z0-9\-_]+)/)[2]
+      const url = `http://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+      return Promise.resolve(url)
+    }
+
+    if (videoUrl.match(/vimeo/)) {
+      const videoId = videoUrl.match(/vimeo\.com\/(\d+)/)[1]
+      const url = `http://vimeo.com/api/v2/video/${videoId}.json`
+      return new Promise((resolve, reject) => {
+        request(url, (err, resp, body) => {
+          if (err) reject(err)
+          resolve(JSON.parse(body)[0].thumbnail_large)
+        })
+      })
+    }
+
+    return Promise.resolve()
+  }
+})
+
+const createAndAddSize = function (attrs) {
+  const url = attrs.type === 'image' ? attrs.url
+    : attrs.type === 'video' ? attrs.thumbnail_url : null
+
+  if (url) {
+    return GetImageSize(url).then(dimensions =>
+      Media.create(merge({}, attrs, pick(['width', 'height'], dimensions))))
   }
 
-})
+  return Media.create(attrs)
+}
