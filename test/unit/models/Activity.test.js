@@ -11,6 +11,7 @@ describe('Activity', function () {
 
       const activity = makeGettable({
         meta: {reasons: ['mention']},
+        post_id: 1,
         relations: {
           post: {
             relations: {
@@ -35,6 +36,7 @@ describe('Activity', function () {
 
       const activity = makeGettable({
         meta: {reasons: ['newPost: 1']},
+        post_id: 1,
         relations: {
           post: {
             relations: {
@@ -59,6 +61,7 @@ describe('Activity', function () {
 
       const activity = makeGettable({
         meta: {reasons: ['newPost: 1']},
+        post_id: 1,
         relations: {
           post: {
             relations: {
@@ -86,6 +89,7 @@ describe('Activity', function () {
 
       const activity = makeGettable({
         meta: {reasons: ['mention']},
+        post_id: 1,
         relations: {
           post: {
             relations: {

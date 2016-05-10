@@ -176,11 +176,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   communityIds: function (activity) {
-    if (activity.relations.post) {
+    if (activity.get('post_id')) {
       return get(activity, 'relations.post.relations.communities', []).map(c => c.id)
-    } else if (activity.relations.comment) {
+    } else if (activity.get('comment_id')) {
       return get(activity, 'relations.comment.relations.post.relations.communities', []).map(c => c.id)
-    } else if (activity.relations.community) {
+    } else if (activity.get('community_id')) {
       return [activity.relations.community.id]
     }
     return []
