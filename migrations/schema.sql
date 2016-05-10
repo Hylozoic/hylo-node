@@ -413,7 +413,8 @@ CREATE TABLE follower (
     post_id bigint,
     date_added timestamp without time zone,
     user_id bigint,
-    added_by_id bigint
+    added_by_id bigint,
+    role integer
 );
 
 
@@ -650,7 +651,8 @@ CREATE TABLE post (
     start_time timestamp with time zone,
     end_time timestamp with time zone,
     location character varying(255),
-    created_from character varying(255)
+    created_from character varying(255),
+    parent_post_id bigint
 );
 
 
@@ -783,7 +785,8 @@ CREATE TABLE project_invitations (
     accepted_at timestamp with time zone,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    token character varying(255)
+    token character varying(255),
+    post_id bigint
 );
 
 
@@ -822,7 +825,8 @@ CREATE TABLE projects (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     slug character varying(255) NOT NULL,
-    location character varying(255)
+    location character varying(255),
+    migrated boolean DEFAULT false
 );
 
 
@@ -1183,7 +1187,9 @@ CREATE TABLE users (
     updated_at timestamp with time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     push_follow_preference boolean DEFAULT true,
-    push_new_post_preference boolean DEFAULT true
+    push_new_post_preference boolean DEFAULT true,
+    location character varying(255),
+    url character varying(255)
 );
 
 
@@ -2499,6 +2505,14 @@ ALTER TABLE ONLY phones
 
 
 --
+-- Name: post_parent_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY post
+    ADD CONSTRAINT post_parent_post_id_foreign FOREIGN KEY (parent_post_id) REFERENCES post(id);
+
+
+--
 -- Name: posts_about_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2544,6 +2558,14 @@ ALTER TABLE ONLY posts_tags
 
 ALTER TABLE ONLY posts_tags
     ADD CONSTRAINT posts_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: project_invitations_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY project_invitations
+    ADD CONSTRAINT project_invitations_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
 
 
 --
@@ -2645,3 +2667,4 @@ ALTER TABLE ONLY websites
 --
 -- PostgreSQL database dump complete
 --
+
