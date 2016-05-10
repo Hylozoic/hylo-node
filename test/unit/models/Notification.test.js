@@ -27,14 +27,14 @@ describe('Notification', function () {
   before(() => {
     return factories.user({name: 'Joe'}).save()
     .then(u => actor = u)
-    .then(() => factories.post({name: 'My Post', user_id: actor.id}).save())
+    .then(() => factories.post({name: 'My Post', user_id: actor.id, description: 'The body of the post'}).save())
     .then(p => post = p)
     .then(() => new Comment({text: 'hi', user_id: actor.id, post_id: post.id}).save())
     .then(c => comment = c)
     .then(() => factories.community({name: 'My Community'}).save())
     .then(c => community = c)
     .then(() => community.posts().attach(post))
-    .then(() => factories.user().save())
+    .then(() => factories.user({email: 'readersemail@hylo.com'}).save())
     .then(u => reader = u)
     .then(() => new Device({
       user_id: reader.id,
@@ -140,7 +140,26 @@ describe('Notification', function () {
       })
     })
 
-    it.skip('sends an email for a mention in a post', () => {
+    it('sends an email for a mention in a post', () => {
+      var originalMethod = Email.sendPostMentionNotification
+
+      Email.sendPostMentionNotification = spy(opts => {
+        expect(opts).to.contain({
+          email: 'readersemail@hylo.com'
+        })
+
+        expect(opts.sender).to.contain({
+          name: 'Joe (via Hylo)'
+        })
+
+        expect(opts.data).to.contain({
+          community_name: 'My Community',
+          post_user_name: 'Joe',
+          post_description: 'The body of the post',
+          post_title: 'My Post'
+        })
+      })
+
       return new Activity({
         post_id: post.id,
         meta: {reasons: ['mention']},
@@ -153,9 +172,33 @@ describe('Notification', function () {
       }).save())
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
+      .then(() => {
+        expect(Email.sendPostMentionNotification).to.have.been.called()
+      })
+      .then(() => {
+        Email.sendPostMentionNotification = originalMethod
+      })
     })
 
-    it.skip('sends an email for a comment', () => {
+    it('sends an email for a comment', () => {
+      var originalMethod = Email.sendNewCommentNotification
+
+      Email.sendNewCommentNotification = spy(opts => {
+        expect(opts).to.contain({
+          email: 'readersemail@hylo.com'
+        })
+
+        expect(opts.sender).to.contain({
+          name: 'Joe (via Hylo)'
+        })
+
+        expect(opts.data).to.contain({
+          community_name: 'My Community',
+          commenter_name: 'Joe',
+          post_title: 'My Post'
+        })
+      })
+
       return new Activity({
         comment_id: comment.id,
         meta: {reasons: ['newComment']},
@@ -168,9 +211,34 @@ describe('Notification', function () {
       }).save())
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
+      .then(() => {
+        expect(Email.sendNewCommentNotification).to.have.been.called()
+      })
+      .then(() => {
+        Email.sendNewCommentNotification = originalMethod
+      })
     })
 
-    it.skip('sends an email for a mention in a comment', () => {
+    it('sends an email for a mention in a comment', () => {
+      var originalMethod = Email.sendNewCommentNotification
+
+      Email.sendNewCommentNotification = spy(opts => {
+        expect(opts).to.contain({
+          email: 'readersemail@hylo.com',
+          version: 'mention'
+        })
+
+        expect(opts.sender).to.contain({
+          name: 'Joe (via Hylo)'
+        })
+
+        expect(opts.data).to.contain({
+          community_name: 'My Community',
+          commenter_name: 'Joe',
+          post_title: 'My Post'
+        })
+      })
+
       return new Activity({
         comment_id: comment.id,
         meta: {reasons: ['commentMention']},
@@ -183,6 +251,12 @@ describe('Notification', function () {
       }).save())
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
+      .then(() => {
+        expect(Email.sendNewCommentNotification).to.have.been.called()
+      })
+      .then(() => {
+        Email.sendNewCommentNotification = originalMethod
+      })
     })
   })
 

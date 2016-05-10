@@ -129,7 +129,7 @@ module.exports = bookshelf.Model.extend({
 
     var post = comment.relations.post
     var commenter = comment.relations.user
-    var poster = post.relations.user
+    var poster = comment.relations.user
     var text = RichText.qualifyLinks(comment.get('text'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
