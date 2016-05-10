@@ -2,6 +2,8 @@ import {
   difference, flatten, has, includes, merge, omit, partial, pick, some, uniq,
   values, without
 } from 'lodash'
+import { filter, map, negate } from 'lodash/fp'
+import { inspect } from 'util'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -196,6 +198,41 @@ const afterSavingPost = function (post, opts) {
     .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
 }
 
+const updateChildren = (post, children, trx) => {
+  const isNew = child => child.id.startsWith('new')
+  const created = filter(isNew, children)
+  const updated = filter(negate(isNew), children)
+  return post.load('children', {transacting: trx})
+  .then(() => {
+    const existingIds = map('id', post.relations.children)
+    const removed = filter(id => !includes(map('id', updated), id), existingIds)
+    return Promise.all([
+      // mark removed posts as inactive
+      some(removed) && Post.query().where('id', 'in', removed)
+      .update('active', false).transacting(trx),
+
+      // update name and description for updated requests
+      Promise.map(updated, child =>
+        Post.query().where('id', child.id)
+        .update(omit(child, 'id')).transacting(trx)),
+
+      // create new requests
+      some(created) && Tag.find('request')
+      .then(tag => {
+        const attachment = {tag_id: tag.id, selected: true}
+        return Promise.map(created, child => {
+          const attrs = merge(omit(child, 'id'), {
+            parent_post_id: post.id,
+            user_id: post.get('user_id')
+          })
+          return Post.create(attrs, {transacting: trx})
+          .then(post => post.tags().attach(attachment, {transacting: trx}))
+        })
+      })
+    ])
+  })
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -309,8 +346,8 @@ const PostController = {
   },
 
   update: function (req, res) {
-    var post = res.locals.post
-    var params = req.allParams()
+    const post = res.locals.post
+    const params = req.allParams()
 
     var attrs = merge(
       pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
@@ -324,8 +361,9 @@ const PostController = {
       attrs.type = postTypeFromTag(params.tag)
     }
 
-    return bookshelf.transaction(function (trx) {
+    return bookshelf.transaction(trx => {
       return post.save(attrs, {patch: true, transacting: trx})
+      .tap(() => updateChildren(post, req.param('requests'), trx))
       .tap(() => {
         var newIds = req.param('communities').sort()
         var oldIds = post.relations.communities.pluck('id').sort()
@@ -361,8 +399,9 @@ const PostController = {
       })
       .tap(() => Tag.updateForPost(post, req.param('tag') || post.type, trx))
     })
-    .then(() => res.ok({}))
-    .catch(res.serverError)
+    .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
+    .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
+    .then(res.ok, res.serverError)
   },
 
   fulfill: function (req, res) {
