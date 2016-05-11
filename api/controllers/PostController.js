@@ -288,7 +288,7 @@ const PostController = {
           if (!media) return Media.createDoc(post.id, doc, trx)
         })
       })
-      .tap(() => Tag.updateForPost(post, req.param('tag') || post.type, trx))
+      .tap(() => Tag.updateForPost(post, req.param('tag') || post.get('type'), trx))
     })
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))

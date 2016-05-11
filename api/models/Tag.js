@@ -1,5 +1,5 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, includes, isEmpty, pick, some, uniqBy } from 'lodash'
+import { differenceBy, flatten, includes, isEmpty, pick, some, uniqBy } from 'lodash'
 import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -64,7 +64,7 @@ const updateForTaggable = (taggable, text, tagParam, trx) => {
   var newTags = tagsInText(text).map(name => ({name, selected: false}))
   if (tagParam) newTags.push({name: tagParam, selected: true})
   return taggable.load('tags', {transacting: trx})
-  .then(post => {
+  .then(() => {
     const oldTags = taggable.relations.tags.map(t => ({
       id: t.id,
       name: t.get('name'),
@@ -72,9 +72,10 @@ const updateForTaggable = (taggable, text, tagParam, trx) => {
     }))
     const toAdd = uniqBy(tagDifference(newTags, oldTags), lowerName)
     const toRemove = tagDifference(oldTags, newTags)
-    return Promise.all(
-      toRemove.map(tag => removeFromTaggable(taggable, tag, trx))
-      .concat(toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))))
+    return Promise.all(flatten([
+      toRemove.map(tag => removeFromTaggable(taggable, tag, trx)),
+      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))
+    ]))
   })
 }
 

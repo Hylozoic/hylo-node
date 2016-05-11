@@ -38,35 +38,34 @@ export const afterSavingPost = (post, opts) => {
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.get('description'))
   const followerIds = uniq(mentioned.concat(userId))
+  const trx = opts.transacting
+  const trxOpts = pick(opts, 'transacting')
 
   // no need to specify community ids explicitly if saving for a project
   return (() => {
     if (opts.communities) return Promise.resolve(opts.communities)
-    return Project.find(opts.projectId, pick(opts, 'transacting')).then(p => [p.get('community_id')])
+    return Project.find(opts.projectId, trxOpts).then(p => [p.get('community_id')])
   })()
   .then(communities => Promise.all(flatten([
     // Attach post to communities
-    communities.map(id =>
-      new Community({id}).posts().attach(post.id, pick(opts, 'transacting'))),
+    communities.map(id => new Community({id}).posts().attach(post.id, trxOpts)),
 
     // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, userId, pick(opts, 'transacting')),
+    post.addFollowers(followerIds, userId, trxOpts),
 
     // create activity and send notification to all mentioned users except the creator
     Promise.map(without(mentioned, userId), mentionedUserId =>
-      Post.notifyAboutMention(post, mentionedUserId, pick(opts, 'transacting'))),
+      Post.notifyAboutMention(post, mentionedUserId, trxOpts)),
 
     // Add media, if any
-    opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, opts.transacting),
-    opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, opts.transacting),
-
-    opts.docs && Promise.map(opts.docs, doc =>
-      Media.createDoc(post.id, doc, opts.transacting)),
+    opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, trx),
+    opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, trx),
+    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx)),
 
     Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id}),
 
     opts.projectId && PostProjectMembership.create(
-      post.id, opts.projectId, pick(opts, 'transacting')),
+      post.id, opts.projectId, trxOpts),
 
     opts.projectId && Queue.classMethod('Project', 'notifyAboutNewPost', {
       projectId: opts.projectId,
@@ -74,9 +73,10 @@ export const afterSavingPost = (post, opts) => {
       exclude: mentioned
     }),
 
-    opts.children && updateChildren(post, opts.children, opts.transacting)
-  ]))
-  .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
+    Tag.updateForPost(post, opts.tag || post.get('type'), trx),
+
+    opts.children && updateChildren(post, opts.children, trx)
+  ])))
 }
 
 export const updateChildren = (post, children, trx) => {
