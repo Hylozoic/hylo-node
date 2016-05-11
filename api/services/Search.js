@@ -180,6 +180,10 @@ module.exports = {
         qb.whereIn('post_community.community_id', opts.communities)
         qb.groupBy(['post.id', 'post_community.post_id'])
       }
+
+      if (!opts.includeChildren) {
+        qb.where('parent_post_id', null)
+      }
     })
   },
 

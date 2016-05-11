@@ -15,8 +15,11 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
   return Post.query(q => {
     q.join('posts_tags', 'post.id', 'posts_tags.post_id')
     q.join('tags', 'tags.id', 'posts_tags.tag_id')
-    q.where('tags.name', tag)
-    q.where('user_id', userId)
+    q.where({
+      'tags.name': tag,
+      user_id: userId,
+      parent_post_id: null
+    })
     q.orderBy('id', 'desc')
     q.limit(1)
   })
