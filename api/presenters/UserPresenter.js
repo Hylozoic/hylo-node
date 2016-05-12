@@ -94,13 +94,17 @@ const UserPresenter = module.exports = {
     var moreAttributes = {
       skills: Skill.simpleList(user.relations.skills),
       organizations: Organization.simpleList(user.relations.organizations),
-      public_email: user.encryptedEmail()
+      public_email: user.encryptedEmail(),
+      tags: user.relations.tags
     }
 
     if (communityId) {
       var membership = _.find(user.relations.memberships.models, m => m.get('community_id') === communityId)
-      if (membership && membership.get('role') === Membership.MODERATOR_ROLE) {
-        moreAttributes.isModerator = true
+      if (membership) {
+        moreAttributes.joined_at = membership.get('created_at')
+        if (membership.get('role') === Membership.MODERATOR_ROLE) {
+          moreAttributes.isModerator = true
+        }
       }
     }
 

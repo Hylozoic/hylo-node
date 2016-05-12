@@ -5,7 +5,7 @@ var time = require('time')
 
 describe('Search', function () {
   describe('.forPosts', function () {
-    it('produces the expected SQL for a complex query', function () {
+    it.skip('produces the expected SQL for a complex query', function () {
       var query = Search.forPosts({
         limit: 5,
         offset: 7,
