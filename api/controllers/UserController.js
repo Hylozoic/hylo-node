@@ -38,6 +38,11 @@ var setupReputationQuery = function (req, model) {
     }))
 }
 
+const countTaggedPosts = (userId, tag) =>
+  Search.forPosts({users: [userId], tag})
+  .fetchAll()
+  .then(posts => posts.length > 0 ? posts.first().get('total') : 0)
+
 module.exports = {
   create: function (req, res) {
     var params = _.pick(req.allParams(), 'name', 'email', 'password')
@@ -252,10 +257,14 @@ module.exports = {
     Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations', 'memberships']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
     .then(users => users.map(u => UserPresenter.presentForList(u, res.locals.community.id)))
-    .then(list => Promise.map(list, user =>
-      fetchAndPresentCreated(res.locals.community.id, user.id)
-      .then(tags => merge(user, {createdTags: tags}))
-    ))
+    .then(list =>
+      Tag.find('offer')
+      .then(offer =>
+        Promise.map(list, user =>
+        Promise.join(
+          fetchAndPresentCreated(res.locals.community.id, user.id),
+          countTaggedPosts(user.id, offer.id),
+          (tags, offerCount) => merge(user, {createdTags: tags, offerCount})))))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
   },
