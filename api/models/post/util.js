@@ -81,7 +81,7 @@ export const afterSavingPost = (post, opts) => {
 
 export const updateChildren = (post, children, trx) => {
   const isNew = child => child.id.startsWith('new')
-  const created = filter(isNew, children)
+  const created = filter(c => isNew(c) && !!c.title, children)
   const updated = filter(negate(isNew), children)
   return post.load('children', {transacting: trx})
   .then(() => {
