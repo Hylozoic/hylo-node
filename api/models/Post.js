@@ -163,7 +163,7 @@ module.exports = bookshelf.Model.extend({
         community_id: tagFollow.get('community_id'),
         reason: `tag: ${tagFollow.relations.tag.get('name')}`
       }))
-      return Activity.saveReasons(Activity.mergeReasons(mentioned.concat(members).concat(tagFollowers)), trx)
+      return Activity.mergeAndSave(mentioned.concat(members).concat(tagFollowers), trx)
     })
   }
 

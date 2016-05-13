@@ -47,7 +47,7 @@ module.exports = bookshelf.Model.extend({
         actor_id: self.get('user_id'),
         reason: 'commentMention'
       }))
-      return Activity.saveReasons(Activity.mergeReasons(followers.concat(mentioned), trx))
+      return Activity.mergeAndSave(followers.concat(mentioned), trx)
     })
   }
 }, {

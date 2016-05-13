@@ -5,6 +5,24 @@ const isJustNewPost = activity => {
   return reasons.every(reason => reason.match(/^newPost/))
 }
 
+const mergeByReader = activities => {
+  const fields = ['actor_id', 'community_id']
+  const merged = activities.reduce((acc, activity) => {
+    const current = acc[activity.reader_id]
+    if (acc[activity.reader_id]) {
+      fields.forEach(f => {
+        if (activity[f]) current[f] = activity[f]
+      })
+      current.reasons.push(activity.reason)
+    } else {
+      activity.reasons = [activity.reason]
+      acc[activity.reader_id] = activity
+    }
+    return acc
+  }, {})
+  return values(merged)
+}
+
 module.exports = bookshelf.Model.extend({
   tableName: 'activity',
 
@@ -146,33 +164,17 @@ module.exports = bookshelf.Model.extend({
     .then(rows => rows[0].count)
   },
 
-  mergeReasons: function (reasons) {
-    const merged = values(reasons.reduce((acc, reason) => {
-      var current = acc[reason.reader_id]
-      if (acc[reason.reader_id]) {
-        const fields = ['actor_id', 'community_id']
-        fields.map(field => {
-          if (reason[field]) {
-            current[field] = reason[field]
-          }
-        })
-        current.reasons.push(reason.reason)
-      } else {
-        acc[reason.reader_id] = reason
-        acc[reason.reader_id].reasons = [acc[reason.reader_id].reason]
-      }
-      return acc
-    }, {}))
-    return merged
-  },
-
-  saveReasons: function (reasons, trx) {
-    return Promise.map(reasons, reason =>
+  saveForReasons: function (activities, trx) {
+    return Promise.map(activities, activity =>
       Activity.createWithNotifications(
-        merge(pick(reason, ['post_id', 'community_id', 'comment_id', 'actor_id', 'reader_id']),
-          {meta: {reasons: reason.reasons}}),
+        merge(pick(activity, ['post_id', 'community_id', 'comment_id', 'actor_id', 'reader_id']),
+          {meta: {reasons: activity.reasons}}),
         trx))
     .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
+  },
+
+  mergeAndSave: function (activities, trx) {
+    return Activity.saveForReasons(mergeByReader(activities), trx)
   },
 
   communityIds: function (activity) {
