@@ -278,9 +278,9 @@ describe('Notification', function () {
         }).save())
       .then(() => Notification.findUnsent())
       .then(notifications => {
-        expect(notifications.length).to.equal(1)
-        var notification = notifications.first()
-        expect(notification.get('medium')).to.equal(Notification.MEDIUM.Push)
+        expect(notifications.length).to.equal(2)
+        expect(notifications.models[0].get('medium')).to.equal(Notification.MEDIUM.Push)
+        expect(notifications.models[1].get('medium')).to.equal(Notification.MEDIUM.InApp)
       })
     })
   })
