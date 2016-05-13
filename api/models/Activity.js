@@ -165,16 +165,12 @@ module.exports = bookshelf.Model.extend({
   },
 
   saveForReasons: function (activities, trx) {
-    return Promise.map(activities, activity =>
+    return Promise.map(mergeByReader(activities), activity =>
       Activity.createWithNotifications(
         merge(pick(activity, ['post_id', 'community_id', 'comment_id', 'actor_id', 'reader_id']),
           {meta: {reasons: activity.reasons}}),
         trx))
     .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
-  },
-
-  mergeAndSave: function (activities, trx) {
-    return Activity.saveForReasons(mergeByReader(activities), trx)
   },
 
   communityIds: function (activity) {

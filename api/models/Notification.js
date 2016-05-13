@@ -32,6 +32,9 @@ module.exports = bookshelf.Model.extend({
       case Notification.MEDIUM.Email:
         action = this.sendEmail()
         break
+      case Notification.MEDIUM.InApp:
+        action = this.incUserNewNotificationCount()
+        break
     }
     if (action) {
       return action
@@ -187,6 +190,14 @@ module.exports = bookshelf.Model.extend({
           tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})
         }
       })))
+  },
+
+  incUserNewNotificationCount: function () {
+    var reader = this.reader()
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+
+    return User.incNewNotificationCount(reader.id, communityIds)
   }
 
 }, {
@@ -216,7 +227,6 @@ module.exports = bookshelf.Model.extend({
   findUnsent: function (options) {
     return Notification.query(q => {
       q.where({sent_at: null})
-      q.where('notifications.medium', '!=', Notification.MEDIUM.InApp)
     })
     .fetchAll(options)
   },
