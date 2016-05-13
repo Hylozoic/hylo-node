@@ -1,5 +1,5 @@
 import {
-  flatten, includes, merge, omit, pick, some, uniq, values, without
+  flatten, includes, merge, omit, pick, some, uniq, values
 } from 'lodash'
 import { filter, map, negate } from 'lodash/fp'
 
@@ -34,7 +34,7 @@ export const setupNewPostAttrs = function (userId, params) {
   return Promise.resolve(attrs)
 }
 
-export const afterSavingPost = (post, opts) => {
+export const afterSavingPost = function (post, opts) {
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.get('description'))
   const followerIds = uniq(mentioned.concat(userId))
@@ -48,21 +48,16 @@ export const afterSavingPost = (post, opts) => {
   })()
   .then(communities => Promise.all(flatten([
     // Attach post to communities
-    communities.map(id => new Community({id}).posts().attach(post.id, trxOpts)),
+    communities.map(id => new Community({id: id}).posts().attach(post.id, trxOpts)),
 
     // Add mentioned users and creator as followers
     post.addFollowers(followerIds, userId, trxOpts),
 
-    // create activity and send notification to all mentioned users except the creator
-    Promise.map(without(mentioned, userId), mentionedUserId =>
-      Post.notifyAboutMention(post, mentionedUserId, trxOpts)),
-
     // Add media, if any
     opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, trx),
     opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, trx),
-    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx)),
 
-    Queue.classMethod('Post', 'sendPushNotifications', {postId: post.id}),
+    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx)),
 
     opts.projectId && PostProjectMembership.create(
       post.id, opts.projectId, trxOpts),
@@ -71,12 +66,9 @@ export const afterSavingPost = (post, opts) => {
       projectId: opts.projectId,
       postId: post.id,
       exclude: mentioned
-    }),
-
-    Tag.updateForPost(post, opts.tag || post.get('type'), trx),
-
-    opts.children && updateChildren(post, opts.children, trx)
-  ])))
+    })]))
+    .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), trx)))
+    .then(() => post.createActivities(trx))
 }
 
 export const updateChildren = (post, children, trx) => {
