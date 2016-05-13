@@ -1,7 +1,8 @@
+import { difference, has, merge, omit, partial, pick, some } from 'lodash'
 import {
-  difference, flatten, has, includes, merge, omit, partial, pick, some, uniq,
-  values
-} from 'lodash'
+  afterSavingPost, postTypeFromTag, setupNewPostAttrs, updateChildren,
+  updateMedia
+} from '../models/post/util'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -123,74 +124,6 @@ const createFindAction = (queryFunction, relationsOpts) => (req, res) => {
   .then(res.ok, res.serverError)
 }
 
-const postTypeFromTag = tagName => {
-  if (tagName && includes(values(Post.Type), tagName)) {
-    return tagName
-  } else {
-    return Post.Type.CHAT
-  }
-}
-
-const setupNewPostAttrs = function (userId, params) {
-  const attrs = merge(Post.newPostAttrs(), {
-    name: RichText.sanitize(params.name),
-    description: RichText.sanitize(params.description),
-    user_id: userId,
-    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
-  }, pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
-
-  if (!attrs.type) {
-    attrs.type = postTypeFromTag(params.tag)
-  }
-
-  if (params.projectId) {
-    return Project.find(params.projectId)
-    .then(project => {
-      if (project && project.isDraft()) attrs.visibility = Post.Visibility.DRAFT_PROJECT
-      return attrs
-    })
-  }
-
-  return Promise.resolve(attrs)
-}
-
-const afterSavingPost = function (post, opts) {
-  const userId = post.get('user_id')
-  const mentioned = RichText.getUserMentions(post.get('description'))
-  const followerIds = uniq(mentioned.concat(userId))
-
-  // no need to specify community ids explicitly if saving for a project
-  return (() => {
-    if (opts.communities) return Promise.resolve(opts.communities)
-    return Project.find(opts.projectId, pick(opts, 'transacting')).then(p => [p.get('community_id')])
-  })()
-  .then(communities => Promise.all(flatten([
-    // Attach post to communities
-    communities.map(id =>
-      new Community({id: id}).posts().attach(post.id, pick(opts, 'transacting'))),
-
-    // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, userId, pick(opts, 'transacting')),
-
-    // Add media, if any
-    opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, opts.transacting),
-    opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, opts.transacting),
-
-    opts.docs && Promise.map(opts.docs, doc =>
-      Media.createDoc(post.id, doc, opts.transacting)),
-
-    opts.projectId && PostProjectMembership.create(
-      post.id, opts.projectId, pick(opts, 'transacting')),
-
-    opts.projectId && Queue.classMethod('Project', 'notifyAboutNewPost', {
-      projectId: opts.projectId,
-      postId: post.id,
-      exclude: mentioned
-    })]))
-    .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), opts.transacting)))
-    .then(() => post.createActivities(opts.transacting))
-}
-
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -212,15 +145,15 @@ const PostController = {
     })
     .then(attrs => bookshelf.transaction(trx =>
       Post.create(attrs, {transacting: trx})
-      .tap(post =>
-        afterSavingPost(post, {
-          communities: req.param('communities'),
-          imageUrl: req.param('imageUrl'),
-          docs: req.param('docs'),
-          projectId: req.param('projectId'),
-          tag: req.param('tag'),
-          transacting: trx
-        }))))
+      .tap(post => afterSavingPost(post, {
+        communities: req.param('communities'),
+        imageUrl: req.param('imageUrl'),
+        docs: req.param('docs'),
+        projectId: req.param('projectId'),
+        tag: req.param('tag'),
+        children: req.param('requests'),
+        transacting: trx
+      }))))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
@@ -304,8 +237,8 @@ const PostController = {
   },
 
   update: function (req, res) {
-    var post = res.locals.post
-    var params = req.allParams()
+    const post = res.locals.post
+    const params = req.allParams()
 
     var attrs = merge(
       pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
@@ -319,8 +252,9 @@ const PostController = {
       attrs.type = postTypeFromTag(params.tag)
     }
 
-    return bookshelf.transaction(function (trx) {
+    return bookshelf.transaction(trx => {
       return post.save(attrs, {patch: true, transacting: trx})
+      .tap(() => updateChildren(post, req.param('requests'), trx))
       .tap(() => {
         var newIds = req.param('communities').sort()
         var oldIds = post.relations.communities.pluck('id').sort()
@@ -354,10 +288,11 @@ const PostController = {
           if (!media) return Media.createDoc(post.id, doc, trx)
         })
       })
-      .tap(() => Tag.updateForPost(post, req.param('tag') || post.type, trx))
+      .tap(() => Tag.updateForPost(post, req.param('tag') || post.get('type'), trx))
     })
-    .then(() => res.ok({}))
-    .catch(res.serverError)
+    .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
+    .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
+    .then(res.ok, res.serverError)
   },
 
   fulfill: function (req, res) {
@@ -469,19 +404,3 @@ queries.forEach(tuple => {
 })
 
 module.exports = PostController
-
-const updateMedia = (post, type, url, remove, trx) => {
-  if (!url && !remove) return
-  var media = post.relations.media.find(m => m.get('type') === type)
-
-  if (media && remove) { // remove media
-    return media.destroy({transacting: trx})
-  } else if (media) { // replace url in existing media
-    if (media.get('url') !== url) {
-      return media.save({url: url}, {patch: true, transacting: trx})
-      .then(media => media.updateDimensions({patch: true, transacting: trx}))
-    }
-  } else if (url) { // create new media
-    return Media.createForPost(post.id, type, url, trx)
-  }
-}

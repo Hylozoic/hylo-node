@@ -1,5 +1,5 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, isEmpty, pick, some, uniqBy } from 'lodash'
+import { differenceBy, flatten, includes, isEmpty, pick, some, uniqBy } from 'lodash'
 import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -64,7 +64,7 @@ const updateForTaggable = (taggable, text, tagParam, trx) => {
   var newTags = tagsInText(text).map(name => ({name, selected: false}))
   if (tagParam) newTags.push({name: tagParam, selected: true})
   return taggable.load('tags', {transacting: trx})
-  .then(post => {
+  .then(() => {
     const oldTags = taggable.relations.tags.map(t => ({
       id: t.id,
       name: t.get('name'),
@@ -72,9 +72,10 @@ const updateForTaggable = (taggable, text, tagParam, trx) => {
     }))
     const toAdd = uniqBy(tagDifference(newTags, oldTags), lowerName)
     const toRemove = tagDifference(oldTags, newTags)
-    return Promise.all(
-      toRemove.map(tag => removeFromTaggable(taggable, tag, trx))
-      .concat(toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))))
+    return Promise.all(flatten([
+      toRemove.map(tag => removeFromTaggable(taggable, tag, trx)),
+      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))
+    ]))
   })
 }
 
@@ -105,6 +106,13 @@ const createAsNeeded = tagNames => {
   })
 }
 
+const incrementName = name => {
+  const regex = /\d*$/
+  const word = name.replace(regex, '')
+  const number = Number(name.match(regex)[0] || 1) + 1
+  return `${word}${number}`
+}
+
 module.exports = bookshelf.Model.extend({
   tableName: 'tags',
 
@@ -126,8 +134,22 @@ module.exports = bookshelf.Model.extend({
 
   follows: function () {
     return this.hasMany(TagFollow)
-  }
+  },
 
+  saveWithValidName: function (opts) {
+    let name = this.get('name')
+    const word = name.match(/^(.+)(\d*)$/)[1]
+    return Tag.query().where('name', 'ilike', `${word}%`)
+    .transacting(opts.transacting)
+    .pluck('name')
+    .then(names => {
+      const lowerNames = map(n => n.toLowerCase(), names)
+      while (includes(lowerNames, name.toLowerCase())) {
+        name = incrementName(name)
+      }
+      return this.save({name}, opts)
+    })
+  }
 }, {
 
   DEFAULT_NAMES: ['offer', 'request', 'intention'],

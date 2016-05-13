@@ -15,8 +15,11 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
   return Post.query(q => {
     q.join('posts_tags', 'post.id', 'posts_tags.post_id')
     q.join('tags', 'tags.id', 'posts_tags.tag_id')
-    q.where('tags.name', tag)
-    q.where('user_id', userId)
+    q.where({
+      'tags.name': tag,
+      user_id: userId,
+      parent_post_id: null
+    })
     q.orderBy('id', 'desc')
     q.limit(1)
   })
@@ -91,13 +94,17 @@ const UserPresenter = module.exports = {
     var moreAttributes = {
       skills: Skill.simpleList(user.relations.skills),
       organizations: Organization.simpleList(user.relations.organizations),
-      public_email: user.encryptedEmail()
+      public_email: user.encryptedEmail(),
+      tags: user.relations.tags.models
     }
 
     if (communityId) {
       var membership = _.find(user.relations.memberships.models, m => m.get('community_id') === communityId)
-      if (membership && membership.get('role') === Membership.MODERATOR_ROLE) {
-        moreAttributes.isModerator = true
+      if (membership) {
+        moreAttributes.joined_at = membership.get('created_at')
+        if (membership.get('role') === Membership.MODERATOR_ROLE) {
+          moreAttributes.isModerator = true
+        }
       }
     }
 
