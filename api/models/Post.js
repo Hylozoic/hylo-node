@@ -84,8 +84,8 @@ module.exports = bookshelf.Model.extend({
           var updates = []
           const addActivity = (recipientId, method) => {
             updates.push(Activity[method](follow, recipientId)
-              .save({}, _.pick(opts, 'transacting'))
-              .then(activity => activity.createNotifications(opts.transacting)))
+            .save({}, _.pick(opts, 'transacting'))
+            .then(activity => activity.createNotifications(opts.transacting)))
           }
           if (followerId !== addingUserId) addActivity(followerId, 'forFollowAdd')
           if (userId !== addingUserId) addActivity(userId, 'forFollow')
@@ -252,13 +252,6 @@ module.exports = bookshelf.Model.extend({
       qb.where('post.active', true)
       qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT)
     })
-  },
-
-  notifyAboutMention: function (post, userId, opts) {
-    return post.load('communities')
-    .then(() => Activity.forPostMention(post, userId)
-      .save(null, _.pick(opts, 'transacting'))
-      .createActivities(opts.transacting))
   },
 
   createWelcomePost: function (userId, communityId, trx) {
