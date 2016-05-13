@@ -1,6 +1,5 @@
 import { flatten, merge } from 'lodash'
 import validator from 'validator'
-import { fetchAndPresentCreated } from '../services/tagPresentation'
 
 var findContext = function (req) {
   var projectId = req.param('projectId')
@@ -254,17 +253,13 @@ module.exports = {
       }
     )
     var total
-    Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations', 'memberships']})
+    Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations', 'memberships', 'tags']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
     .then(users => users.map(u => UserPresenter.presentForList(u, res.locals.community.id)))
     .then(list =>
       Tag.find('offer')
-      .then(offer =>
-        Promise.map(list, user =>
-        Promise.join(
-          fetchAndPresentCreated(res.locals.community.id, user.id),
-          countTaggedPosts(user.id, offer.id),
-          (tags, offerCount) => merge(user, {createdTags: tags, offerCount})))))
+      .then(offer => Promise.map(list, user => countTaggedPosts(user.id, offer.id)
+        .then(offerCount => merge(user, {offerCount})))))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
   },

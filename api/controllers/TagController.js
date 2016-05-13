@@ -1,5 +1,5 @@
 import { filter, includes, map, merge } from 'lodash'
-import { fetchAndPresentFollowed, fetchAndPresentCreated, withRelatedSpecialPost, presentWithPost } from '../services/tagPresentation'
+import { fetchAndPresentFollowed, fetchAndPresentCreated, withRelatedSpecialPost, presentWithPost } from '../services/TagPresenter'
 
 module.exports = {
 
