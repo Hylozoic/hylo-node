@@ -1,4 +1,4 @@
-import { flatten, merge } from 'lodash'
+import { flatten, merge, find } from 'lodash'
 import validator from 'validator'
 
 var findContext = function (req) {
@@ -37,10 +37,13 @@ var setupReputationQuery = function (req, model) {
     }))
 }
 
-const countTaggedPosts = (userId, tag) =>
-  Search.forPosts({users: [userId], tag})
-  .fetchAll()
-  .then(posts => posts.length > 0 ? posts.first().get('total') : 0)
+const countTaggedPosts = (userIds, tagId) =>
+  bookshelf.knex('post')
+  .join('posts_tags', 'post.id', 'posts_tags.post_id')
+  .where('post.user_id', 'in', userIds)
+  .where('posts_tags.tag_id', tagId)
+  .groupBy('user_id')
+  .select(bookshelf.knex.raw('count(*), user_id'))
 
 module.exports = {
   create: function (req, res) {
@@ -258,8 +261,11 @@ module.exports = {
     .then(users => users.map(u => UserPresenter.presentForList(u, res.locals.community.id)))
     .then(list =>
       Tag.find('offer')
-      .then(offer => Promise.map(list, user => countTaggedPosts(user.id, offer.id)
-        .then(offerCount => merge(user, {offerCount})))))
+      .then(tag => countTaggedPosts(list.map(user => user.id), tag.id))
+      .then(countResults => list.map(user =>
+        merge(user, {
+          offerCount: (find(countResults, cr => cr.user_id === user.id) || {}).count
+        }))))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
   },
