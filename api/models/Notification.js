@@ -11,6 +11,18 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Activity)
   },
 
+  post: function () {
+    return this.relations.activity.relations.post
+  },
+
+  comment: function () {
+    return this.relations.activity.relations.comment
+  },
+
+  reader: function () {
+    return this.relations.activity.relations.reader
+  },
+
   send: function () {
     var action
     switch (this.get('medium')) {
@@ -47,26 +59,26 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPostPush: function (version) {
-    var post = this.relations.activity.relations.post
+    var post = this.post()
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) return Promise.resolve()
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(post, community)).path
       var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
-      return this.relations.activity.relations.reader.sendPushNotification(alertText, path)
+      return this.reader().sendPushNotification(alertText, path)
     })
   },
 
   sendCommentPush: function (version) {
-    var comment = this.relations.activity.relations.comment
+    var comment = this.comment()
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) return Promise.resolve()
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
       var alertText = PushNotification.textForComment(comment, version, this.relations.activity.get('reader_id'))
-      return this.relations.activity.relations.reader.sendPushNotification(alertText, path)
+      return this.reader().sendPushNotification(alertText, path)
     })
   },
 
@@ -84,8 +96,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPostMentionEmail: function () {
-    var post = this.relations.activity.relations.post
-    var reader = this.relations.activity.relations.reader
+    var post = this.post()
+    var reader = this.reader()
     var user = post.relations.user
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
@@ -123,8 +135,8 @@ module.exports = bookshelf.Model.extend({
   sendCommentNotificationEmail: function (version) {
   // opts.version corresponds to names of versions in SendWithUs
 
-    var comment = this.relations.activity.relations.comment
-    var reader = this.relations.activity.relations.reader
+    var comment = this.comment()
+    var reader = this.reader()
     if (!comment) return
 
     var post = comment.relations.post
