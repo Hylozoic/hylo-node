@@ -167,5 +167,21 @@ module.exports = {
         return user.save({url}, {patch: true})
       }
     })
+  },
+
+  makeEveryoneFollowDefaultTags: () => {
+    return Tag.defaultTags().then(tags => tags.map('id'))
+    .then(tagIds =>
+      bookshelf.knex('users_community')
+      .join('users', 'users.id', 'users_community.user_id')
+      .join('community', 'community.id', 'users_community.community_id')
+      .where({
+        'users.active': true,
+        'users_community.active': true,
+        'community.active': true
+      })
+      .select(['user_id', 'community_id'])
+      .then(rows => Promise.map(rows, row =>
+        User.followTags(row.user_id, row.community_id, tagIds))))
   }
 }

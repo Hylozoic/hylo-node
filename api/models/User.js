@@ -154,20 +154,8 @@ module.exports = bookshelf.Model.extend({
   resetNotificationCount: function () {
     return this.devices().fetch()
     .then(devices => devices.map(device => device.resetNotificationCount()))
-  },
-
-  followDefaultTags: function (communityId, trx) {
-    return Tag.defaultTags(trx)
-    .then(defaultTags => Promise.map(defaultTags, tag =>
-      tag
-        ? new TagFollow({
-          user_id: this.id,
-          community_id: communityId,
-          tag_id: tag.id
-        })
-        .save({}, {transacting: trx})
-      : null))
   }
+
 }, {
   authenticate: Promise.method(function (email, password) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt)
@@ -322,5 +310,23 @@ module.exports = bookshelf.Model.extend({
   sendPushNotification: function (userId, alert, url) {
     return User.find(userId).fetch()
     .sendPushNotification(alert, url)
+  },
+
+  followTags: function (userId, communityId, tagIds, trx) {
+    return Promise.map(tagIds, id =>
+      new TagFollow({
+        user_id: userId,
+        community_id: communityId,
+        tag_id: id
+      })
+      .save({}, {transacting: trx})
+      .catch(err => {
+        if (!err.message.contains('duplicate key error')) throw err
+      }))
+  },
+
+  followDefaultTags: function (userId, communityId, trx) {
+    return Tag.defaultTags(trx).then(tags => tags.map('id'))
+    .then(ids => User.followTags(userId, communityId, ids, trx))
   }
 })

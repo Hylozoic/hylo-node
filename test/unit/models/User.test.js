@@ -258,7 +258,7 @@ describe('User', function () {
       var c1 = factories.community()
       return Tag.createDefaultTags()
       .then(() => c1.save())
-      .then(() => cat.followDefaultTags(c1.id))
+      .then(() => User.followDefaultTags(cat.id, c1.id))
       .then(() => cat.load('tagFollows'))
       .then(() => {
         expect(cat.relations.tagFollows.length).to.equal(3)

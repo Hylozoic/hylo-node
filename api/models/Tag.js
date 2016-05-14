@@ -198,7 +198,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   defaultTags: function (trx) {
-    return Promise.map(Tag.DEFAULT_NAMES, name => Tag.find(name, {transacting: trx}))
+    return Tag.where('name', 'in', Tag.DEFAULT_NAMES).fetchAll()
   },
 
   createDefaultTags: function (trx) {

@@ -50,7 +50,7 @@ module.exports = bookshelf.Model.extend({
       role: opts.role || Membership.DEFAULT_ROLE
     })
     .save({}, {transacting: opts.transacting})
-    .tap(() => new User({id: userId}).followDefaultTags(communityId, opts.transacting))
+    .tap(() => User.followDefaultTags(userId, communityId, opts.transacting))
     .tap(() => Community.find(communityId, {transacting: opts.transacting})
       .then(community => Analytics.track({
         userId: userId,
