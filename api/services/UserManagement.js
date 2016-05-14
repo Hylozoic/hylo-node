@@ -181,7 +181,7 @@ module.exports = {
         'community.active': true
       })
       .select(['user_id', 'community_id'])
-      .then(rows => Promise.map(rows, row =>
+      .then(rows => Promise.each(rows, row =>
         User.followTags(row.user_id, row.community_id, tagIds))))
   }
 }

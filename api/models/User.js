@@ -313,7 +313,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   followTags: function (userId, communityId, tagIds, trx) {
-    return Promise.map(tagIds, id =>
+    return Promise.each(tagIds, id =>
       new TagFollow({
         user_id: userId,
         community_id: communityId,
@@ -321,7 +321,7 @@ module.exports = bookshelf.Model.extend({
       })
       .save({}, {transacting: trx})
       .catch(err => {
-        if (!err.message.contains('duplicate key error')) throw err
+        if (!err.message.match(/duplicate key value/)) throw err
       }))
   },
 
