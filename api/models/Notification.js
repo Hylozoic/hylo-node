@@ -260,6 +260,12 @@ module.exports = bookshelf.Model.extend({
       return 'tag'
     } else if (hasReason(/^newPost/, reasons)) {
       return 'newPost'
+    } else if (hasReason(/^follow/, reasons)) {
+      return 'follow'
+    } else if (hasReason(/^followAdd/, reasons)) {
+      return 'followAdd'
+    } else if (hasReason(/^unfollow/, reasons)) {
+      return 'unfollow'
     } else {
       return ''
     }
