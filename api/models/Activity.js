@@ -215,5 +215,14 @@ module.exports = bookshelf.Model.extend({
     return new Activity(_.merge(attributes, {created_at: new Date()}))
     .save({}, {transacting: trx})
     .tap(activity => activity.createNotifications(trx))
+  },
+
+  removeForComment: function (commentId, trx) {
+    const trxOpt = {transacting: trx}
+    return Activity.where('comment_id', commentId).query()
+    .pluck('id').transacting(trx)
+    .then(ids =>
+      Notification.where('activity_id', 'in', ids).destroy(trxOpt)
+      .then(() => Activity.where('id', 'in', ids).destroy(trxOpt)))
   }
 })

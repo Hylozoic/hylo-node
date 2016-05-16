@@ -90,8 +90,11 @@ module.exports = {
     Comment.find(req.param('commentId'))
     .then(comment =>
       bookshelf.transaction(trx => Promise.join(
-        Activity.where('comment_id', comment.id).destroy({transacting: trx}),
-        Post.query().where('id', comment.get('post_id')).decrement('num_comments', 1).transacting(trx),
+        Activity.removeForComment(comment.id, trx),
+
+        Post.query().where('id', comment.get('post_id'))
+        .decrement('num_comments', 1).transacting(trx),
+
         comment.save({
           deactivated_by_id: req.session.userId,
           deactivated_on: new Date(),
