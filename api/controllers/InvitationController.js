@@ -1,7 +1,7 @@
 var validator = require('validator')
 
 const parseEmailList = emails =>
-  (emails || []).split(/,|\n/).map(email => {
+  (emails || '').split(/,|\n/).map(email => {
     var trimmed = email.trim()
     // use only the email portion of a "Joe Bloggs <joe@bloggs.org>" line
     var match = trimmed.match(/.*<(.*)>/)
