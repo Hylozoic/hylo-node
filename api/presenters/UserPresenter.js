@@ -1,3 +1,5 @@
+import { get } from 'lodash'
+
 const relationsForSelf = [
   'memberships',
   {'memberships.community': qb => qb.column('id', 'name', 'slug', 'avatar_url')},
@@ -95,7 +97,7 @@ const UserPresenter = module.exports = {
       skills: Skill.simpleList(user.relations.skills),
       organizations: Organization.simpleList(user.relations.organizations),
       public_email: user.encryptedEmail(),
-      tags: user.relations.tags.models
+      tags: get(user, 'relations.tags.models')
     }
 
     if (communityId) {
