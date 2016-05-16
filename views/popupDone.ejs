@@ -8,12 +8,26 @@ var message = {
   url:     '<%= typeof(url) === "undefined" ? "" : url %>'
 }
 
+var postMessage = function () {
+  opener.postMessage(message, '<%= returnDomain %>')
+}
+
 try {
-  opener.popupDone(message)
-} catch (e) {
-  if (e.message.match(/cross-origin/)) {
-    opener.postMessage(message, '<%= returnDomain %>')
+  if (!opener.popupDone) {
+    // hylo-next on safari
+    postMessage()
+  } else {
+    try {
+      // hylo-frontend
+      opener.popupDone(message)
+    } catch (e) {
+      // just in case?
+      postMessage()
+    }
   }
+} catch (e) {
+  // hylo-next on chrome
+  postMessage()
 }
 </script>
 </body>
