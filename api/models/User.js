@@ -168,6 +168,7 @@ module.exports = bookshelf.Model.extend({
         .save({}, {transacting: trx})
       : null))
   }
+
 }, {
   authenticate: Promise.method(function (email, password) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt)
@@ -322,5 +323,23 @@ module.exports = bookshelf.Model.extend({
   sendPushNotification: function (userId, alert, url) {
     return User.find(userId).fetch()
     .sendPushNotification(alert, url)
+  },
+
+  followTags: function (userId, communityId, tagIds, trx) {
+    return Promise.each(tagIds, id =>
+      new TagFollow({
+        user_id: userId,
+        community_id: communityId,
+        tag_id: id
+      })
+      .save({}, {transacting: trx})
+      .catch(err => {
+        if (!err.message.match(/duplicate key value/)) throw err
+      }))
+  },
+
+  followDefaultTags: function (userId, communityId, trx) {
+    return Tag.defaultTags(trx).then(tags => tags.map('id'))
+    .then(ids => User.followTags(userId, communityId, ids, trx))
   }
 })
