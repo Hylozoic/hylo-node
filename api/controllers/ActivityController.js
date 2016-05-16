@@ -1,5 +1,17 @@
 const userColumns = q => q.column('users.id', 'name', 'avatar_url')
 
+const actionFromReason = reason => {
+  // this is for backwards compatibility with angular site
+  switch (reason) {
+    case 'newComment':
+      return 'comment'
+    case 'commentMention':
+      return 'mention'
+    default:
+      return reason
+  }
+}
+
 const queryNotification = opts =>
   Notification.query(q => {
     q.where('reader_id', opts.userId)
@@ -38,7 +50,7 @@ const fetchAndPresentNotification = (req, community) => {
     const comment = not.relations.activity.relations.comment
     const post = not.relations.activity.relations.post
     const attrs = not.relations.activity.toJSON()
-    attrs.action = Notification.priorityReason(not.relations.activity.get('meta').reasons)
+    attrs.action = actionFromReason(Notification.priorityReason(not.relations.activity.get('meta').reasons))
     attrs.total = not.get('total')
 
     if (post) {
