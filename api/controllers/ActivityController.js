@@ -1,39 +1,46 @@
 const userColumns = q => q.column('users.id', 'name', 'avatar_url')
 
-const queryActivity = opts =>
-  Activity.query(q => {
+const queryNotification = opts =>
+  Notification.query(q => {
     q.where('reader_id', opts.userId)
+    .leftJoin('activity', function () {
+      this.on('activity.id', '=', 'notifications.activity_id')
+    })
+    q.where('medium', Notification.MEDIUM.InApp)
     q.limit(opts.limit)
     q.offset(opts.offset)
-    q.select(bookshelf.knex.raw('activity.*, count(*) over () as total'))
-    q.orderBy('created_at', 'desc')
+    q.select(bookshelf.knex.raw('notifications.*, count(*) over () as total'))
+    q.orderBy('activity.created_at', 'desc')
 
-    Activity.joinWithContent(q)
+    Activity.filterInactiveContent(q)
     if (opts.community) Activity.joinWithCommunity(opts.community.id, q)
   })
 
-const fetchAndPresentActivity = (req, community) => {
+const fetchAndPresentNotification = (req, community) => {
   var total
-  return queryActivity({
+  return queryNotification({
     userId: req.session.userId,
     limit: req.param('limit') || 10,
     offset: req.param('offset') || 0,
     community
   }).fetchAll({withRelated: [
-    {actor: userColumns},
-    {comment: q => q.column('id', 'text', 'created_at', 'post_id')},
-    'comment.thanks',
-    {'comment.thanks.thankedBy': userColumns},
-    {'comment.user': userColumns},
-    {post: q => q.column('id', 'name', 'user_id', 'type', 'description')},
-    {'post.communities': q => q.column('community.id', 'slug')},
-    {'post.relatedUsers': userColumns}
+    {'activity.actor': userColumns},
+    {'activity.comment': q => q.column('id', 'text', 'created_at', 'post_id')},
+    'activity.comment.thanks',
+    {'activity.comment.thanks.thankedBy': userColumns},
+    {'activity.comment.user': userColumns},
+    {'activity.post': q => q.column('id', 'name', 'user_id', 'type', 'description')},
+    {'activity.post.communities': q => q.column('community.id', 'slug')},
+    {'activity.post.relatedUsers': userColumns}
   ]})
-  .tap(acts => total = (acts.length > 0 ? acts.first().get('total') : 0))
-  .then(acts => acts.map(act => {
-    const comment = act.relations.comment
-    const post = act.relations.post
-    const attrs = act.toJSON()
+  .tap(nots => total = (nots.length > 0 ? nots.first().get('total') : 0))
+  .then(nots => nots.map(not => {
+    const comment = not.relations.activity.relations.comment
+    const post = not.relations.activity.relations.post
+    const attrs = not.relations.activity.toJSON()
+    attrs.action = Notification.priorityReason(not.relations.activity.get('meta').reasons)
+    attrs.total = not.get('total')
+
     if (post) {
       attrs.post.tag = post.get('type')
     }
@@ -55,12 +62,12 @@ module.exports = {
     .tap(community => req.param('resetCount') &&
       community.relations.memberships.first()
       .save({new_notification_count: 0}, {patch: true}))
-    .then(community => fetchAndPresentActivity(req, community))
+    .then(community => fetchAndPresentNotification(req, community))
     .then(res.ok, res.serverError)
   },
 
   find: function (req, res) {
-    return fetchAndPresentActivity(req)
+    return fetchAndPresentNotification(req)
     .tap(() => req.param('resetCount') && User.query()
       .where('id', req.session.userId)
       .update({new_notification_count: 0}))
@@ -74,7 +81,7 @@ module.exports = {
     .then(community => {
       const subq = Activity.query(q => {
         q.where({reader_id: req.session.userId, unread: true})
-        Activity.joinWithContent(q)
+        Activity.filterInactiveContent(q)
         if (community) Activity.joinWithCommunity(community.id, q)
         q.select('activity.id')
       }).query()

@@ -1,4 +1,4 @@
-var url = require('url')
+import { flatten } from 'lodash'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
@@ -73,7 +73,6 @@ module.exports = bookshelf.Model.extend({
 
     return this.load('communities')
     .then(() => {
-      const communityIds = this.relations.communities.pluck('id')
       return Promise.map(userIds, followerId =>
         Follow.create(followerId, postId, {
           addedById: addingUserId,
@@ -84,8 +83,9 @@ module.exports = bookshelf.Model.extend({
 
           var updates = []
           const addActivity = (recipientId, method) => {
-            updates.push(Activity[method](follow, recipientId).save({}, _.pick(opts, 'transacting')))
-            updates.push(User.incNewNotificationCount(recipientId, communityIds, opts.transacting))
+            updates.push(Activity[method](follow, recipientId)
+            .save({}, _.pick(opts, 'transacting'))
+            .then(activity => activity.createNotifications(opts.transacting)))
           }
           if (followerId !== addingUserId) addActivity(followerId, 'forFollowAdd')
           if (userId !== addingUserId) addActivity(userId, 'forFollow')
@@ -99,7 +99,9 @@ module.exports = bookshelf.Model.extend({
     return Follow.where({user_id: userId, post_id: this.id}).destroy()
       .tap(function () {
         if (!opts.createActivity) return
-        return Activity.forUnfollow(self, userId).save()
+        return Activity.forUnfollow(self, userId)
+        .save()
+        .then(activity => activity.createNotifications())
       })
   },
 
@@ -128,6 +130,41 @@ module.exports = bookshelf.Model.extend({
     that._previousAttributes = {}
     that.changed = {}
     return that
+  },
+
+  createActivities: function (trx) {
+    var self = this
+    return self.load(['communities', 'communities.users', 'tags'], {transacting: trx})
+    .then(() =>
+      TagFollow.query(qb => {
+        qb.whereIn('tag_id', self.relations.tags.map('id'))
+        qb.whereIn('community_id', self.relations.communities.map('id'))
+      })
+      .fetchAll({withRelated: ['tag'], transacting: trx}))
+    .then(tagFollows => {
+      const mentioned = RichText.getUserMentions(self.get('description')).map(userId => ({
+        reader_id: userId,
+        post_id: self.id,
+        actor_id: self.get('user_id'),
+        reason: 'mention'
+      }))
+      const members = flatten(self.relations.communities.map(community =>
+        community.relations.users.map(user => ({
+          reader_id: user.id,
+          post_id: self.id,
+          actor_id: self.get('user_id'),
+          community_id: community.id,
+          reason: `newPost: ${community.id}`
+        }))))
+      const tagFollowers = tagFollows.map(tagFollow => ({
+        reader_id: tagFollow.get('user_id'),
+        post_id: self.id,
+        actor_id: self.get('user_id'),
+        community_id: tagFollow.get('community_id'),
+        reason: `tag: ${tagFollow.relations.tag.get('name')}`
+      }))
+      return Activity.saveForReasons(mentioned.concat(members).concat(tagFollowers), trx)
+    })
   }
 
 }, {
@@ -214,95 +251,6 @@ module.exports = bookshelf.Model.extend({
       qb.whereRaw('post.created_at between ? and ?', [startTime, endTime])
       qb.where('post.active', true)
       qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT)
-    })
-  },
-
-  sendNotificationEmail: function (opts) {
-    return Promise.join(
-      User.find(opts.recipientId),
-      Post.find(opts.postId, {withRelated: ['communities', 'user']})
-    )
-    .spread(function (recipient, post) {
-      var user = post.relations.user
-      var community = post.relations.communities.first()
-      var description = RichText.qualifyLinks(post.get('description'))
-      var replyTo = Email.postReplyAddress(post.id, recipient.id)
-
-      return recipient.generateToken()
-      .then(token => Email.sendPostMentionNotification({
-        email: recipient.get('email'),
-        sender: {
-          address: replyTo,
-          reply_to: replyTo,
-          name: format('%s (via Hylo)', user.get('name'))
-        },
-        data: {
-          community_name: community.get('name'),
-          post_user_name: user.get('name'),
-          post_user_avatar_url: Frontend.Route.tokenLogin(recipient, token,
-            user.get('avatar_url') + '?ctt=post_mention_email'),
-          post_user_profile_url: Frontend.Route.tokenLogin(recipient, token,
-            Frontend.Route.profile(user) + '?ctt=post_mention_email'),
-          post_description: description,
-          post_title: post.get('name'),
-          post_type: post.get('type'),
-          post_url: Frontend.Route.tokenLogin(recipient, token,
-            Frontend.Route.post(post) + '?ctt=post_mention_email'),
-          unfollow_url: Frontend.Route.tokenLogin(recipient, token,
-            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email'),
-          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: recipient.id})
-        }
-      }))
-    })
-  },
-
-  sendPushNotifications: function (opts) {
-    return Post.find(opts.postId, {withRelated: [
-      'communities',
-      'communities.users',
-      'communities.users.communities',
-      'user'
-    ]})
-    .then(post => {
-      var communities = post.relations.communities
-      var poster = post.relations.user
-      var usersWithDupes = communities.map(community => community.relations.users.models)
-      var users = _.uniqBy(_.flatten(usersWithDupes), 'id')
-
-      _.remove(users, user => user.get('id') === poster.get('id'))
-      return Promise.join(
-        Promise.map(communities.models, community => {
-          if (!community.get('slack_hook_url')) return
-          return Community.sendSlackNotification(community.get('id'), post)
-        }),
-        Promise.map(users, (user) => {
-          if (!user.get('push_new_post_preference')) return
-          if (post.isWelcome()) return
-          var userCommunities = user.relations.communities.models
-          var postCommunitiesIds = communities.models.map(community => community.get('id'))
-          var community, path, alertText
-          community = _.find(userCommunities, community => _.includes(postCommunitiesIds, community.get('id')))
-          if (!community) return
-          path = url.parse(Frontend.Route.post(post, community)).path
-          alertText = PushNotification.textForNewPost(post, community, user.get('id'))
-          return user.sendPushNotification(alertText, path)
-        })
-      )
-    })
-  },
-
-  notifyAboutMention: function (post, userId, opts) {
-    return post.load('communities')
-    .then(() => {
-      const communityIds = post.relations.communities.pluck('id')
-      return Promise.join(
-        Queue.classMethod('Post', 'sendNotificationEmail', {
-          recipientId: userId,
-          postId: post.id
-        }),
-        Activity.forPost(post, userId).save(null, _.pick(opts, 'transacting')),
-        User.incNewNotificationCount(userId, communityIds, opts.transacting)
-      )
     })
   },
 

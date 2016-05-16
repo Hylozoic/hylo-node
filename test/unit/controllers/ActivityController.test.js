@@ -61,6 +61,7 @@ describe('ActivityController', () => {
           unread: true,
           total: '1'
         })
+        expect(activity.created_at).is.not.null
         expect(activity.post).to.contain({
           name: 'NewPost',
           user_id: fixtures.u2.id,

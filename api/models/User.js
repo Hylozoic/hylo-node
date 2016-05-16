@@ -148,12 +148,25 @@ module.exports = bookshelf.Model.extend({
 
   sendPushNotification: function (alert, url) {
     return this.devices().fetch()
-    .then(devices => devices.map(device => device.sendPushNotification(alert, url)))
+    .then(devices => Promise.map(devices.models, device => device.sendPushNotification(alert, url)))
   },
 
   resetNotificationCount: function () {
     return this.devices().fetch()
-    .then(devices => devices.map(device => device.resetNotificationCount()))
+    .then(devices => Promise.map(devices.models, device => device.resetNotificationCount()))
+  },
+
+  followDefaultTags: function (communityId, trx) {
+    return Tag.defaultTags(trx)
+    .then(defaultTags => Promise.map(defaultTags, tag =>
+      tag
+        ? new TagFollow({
+          user_id: this.id,
+          community_id: communityId,
+          tag_id: tag.id
+        })
+        .save({}, {transacting: trx})
+      : null))
   }
 
 }, {

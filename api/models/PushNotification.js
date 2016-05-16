@@ -11,10 +11,9 @@ module.exports = bookshelf.Model.extend({
     var path = this.get('path')
     var badgeNo = this.get('badge_no')
 
-    this.set('time_sent', (new Date()).toISOString())
-    return this.save({}, options)
-      .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
-      .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ONESIGNAL_APP_ID, device_token: deviceToken}}))
+    return this.save({'time_sent': (new Date()).toISOString()}, options)
+    .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
+    .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ONESIGNAL_APP_ID, device_token: deviceToken}}))
   },
 
   getPlatform: function () {
@@ -50,7 +49,7 @@ module.exports = bookshelf.Model.extend({
     return format('%s commented on %s', commenter.get('name'), postName)
   },
 
-  textForNewPost: function (post, community, userId) {
+  textForPost: function (post, community, userId, version) {
     var relatedUser
     var poster = post.relations.user
 
@@ -61,6 +60,8 @@ module.exports = bookshelf.Model.extend({
       } else {
         return format('%s joined %s', relatedUser.get('name'), community.get('name'))
       }
+    } else if (version === 'mention') {
+      return format('%s mentioned you in "%s"', poster.get('name'), post.get('name'))
     } else {
       return format('%s posted "%s" in %s', poster.get('name'), post.get('name'), community.get('name'))
     }

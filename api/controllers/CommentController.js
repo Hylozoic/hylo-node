@@ -13,13 +13,21 @@ var createComment = function (commenterId, text, post) {
     active: true
   }
 
-  return bookshelf.transaction(function (trx) {
-    return new Comment(attrs).save(null, {transacting: trx})
-    .tap(comment => Tag.updateForComment(comment, trx))
-    .tap(() => post.updateCommentCount(trx))
+  return post.load('followers')
+  .then(() => {
+    const mentioned = RichText.getUserMentions(text)
+    const existingFollowers = post.relations.followers.pluck('id')
+    const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
+
+    return bookshelf.transaction(function (trx) {
+      return new Comment(attrs).save(null, {transacting: trx})
+      .tap(comment => Tag.updateForComment(comment, trx))
+      .tap(() => post.updateCommentCount(trx))
+    })
+    .tap(comment => comment.createActivities())
+    .tap(comment => post.addFollowers(newFollowers, commenterId))
+    .tap(() => updateRecentComments(post.id))
   })
-  .tap(comment => Queue.classMethod('Comment', 'sendNotifications', {commentId: comment.id}))
-  .tap(() => updateRecentComments(post.id))
 }
 
 module.exports = {
