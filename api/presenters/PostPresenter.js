@@ -24,7 +24,8 @@ var postRelations = (userId, opts = {}) => {
         qb.orderBy('comment.id', 'desc')
         if (opts.withComments === 'recent') qb.where('recent', true)
       }},
-      {'comments.user': userColumns}
+      {'comments.user': userColumns},
+      {'comments.thanks.thankedBy': userColumns}
     )
   }
 
@@ -91,7 +92,10 @@ var postAttributes = (post, userId, opts = {}) => {
   if (opts.withComments) {
     extendedPost.comments = rel.comments.map(c => _.merge(
       c.pick('id', 'text', 'created_at', 'user'),
-      {user: c.relations.user.pick('id', 'name', 'avatar_url')}
+      {
+        user: c.relations.user.pick('id', 'name', 'avatar_url'),
+        thanks: c.relations.thanks.map(t => t.relations.thankedBy)
+      }
     ))
   }
   if (opts.withVotes) {
