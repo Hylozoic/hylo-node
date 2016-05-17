@@ -85,7 +85,7 @@ module.exports = {
         break
       case 'tags':
         method = Search.forTags
-        columns = ['name']
+        columns = ['tags.id', 'name']
         break
       default:
         method = Search.forUsers
@@ -112,17 +112,11 @@ module.exports = {
     .then(rows => {
       var present
       switch (resultType) {
-        case 'posts':
-          present = row => row.pick('id', 'name')
-          break
         case 'skills':
           present = row => ({name: row.get('skill_name')})
           break
         case 'organizations':
           present = row => ({name: row.get('org_name')})
-          break
-        case 'tags':
-          present = row => ({name: row.get('name')})
           break
         default:
           present = row => row.pick('id', 'name', 'avatar_url', 'slug')
