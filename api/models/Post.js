@@ -206,11 +206,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   isVisibleToUser: function (postId, userId) {
+    if (!postId) return false
     var pcids
 
     return Post.find(postId)
     // is the post public?
-    .then(post => post.isPublic())
+    .then(post => post.isPublic() ||
+      Post.isVisibleToUser(post.get('parent_post_id'), userId))
     .then(success =>
       // or is the user:
       success || Promise.join(
