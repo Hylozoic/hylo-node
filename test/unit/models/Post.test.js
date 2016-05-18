@@ -1,7 +1,7 @@
 import moment from 'moment'
 import root from 'root-path'
 import { times } from 'lodash'
-const { updateChildren } = require(root('api/models/post/util'))
+const { afterSavingPost, updateChildren } = require(root('api/models/post/util'))
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
@@ -228,6 +228,45 @@ describe('post/util', () => {
         expect(updated.length).to.equal(2)
         expect(updated.find(c => c.id !== children[0].id).get('name')).to.equal('Yay!')
         expect(updated.find(c => c.id === children[0].id).get('name')).to.equal('Another!')
+      })
+    })
+  })
+
+  describe('afterSavingPost', () => {
+    var post
+    const videoUrl = 'https://www.youtube.com/watch?v=jsQ7yKwDPZk'
+
+    before(() => {
+      post = factories.post({description: 'wow!'})
+      return Tag.forge({name: 'request'}).save()
+    })
+
+    it('works', () => {
+      return bookshelf.transaction(trx =>
+        post.save({}, {transacting: trx})
+        .then(() =>
+          afterSavingPost(post, {
+            communities: [],
+            videoUrl,
+            children: [
+              {
+                id: 'new-whatever',
+                name: 'bob',
+                description: 'is your uncle'
+              }
+            ],
+            transacting: trx
+          })))
+      .then(() => post.load(['media', 'children']))
+      .then(() => {
+        const video = post.relations.media.first()
+        expect(video).to.exist
+        expect(video.get('url')).to.equal(videoUrl)
+
+        const child = post.relations.children.first()
+        expect(child).to.exist
+        expect(child.get('name')).to.equal('bob')
+        expect(child.get('description')).to.equal('is your uncle')
       })
     })
   })

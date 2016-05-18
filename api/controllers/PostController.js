@@ -148,6 +148,7 @@ const PostController = {
       .tap(post => afterSavingPost(post, {
         communities: req.param('communities'),
         imageUrl: req.param('imageUrl'),
+        videoUrl: req.param('videoUrl'),
         docs: req.param('docs'),
         projectId: req.param('projectId'),
         tag: req.param('tag'),

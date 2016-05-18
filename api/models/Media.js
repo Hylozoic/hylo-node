@@ -52,7 +52,11 @@ module.exports = bookshelf.Model.extend({
       case 'video':
         return this.generateThumbnailUrl(url)
         .then(thumbnail_url =>
-          createAndAddSize({post_id: postId, url, thumbnail_url, type}))
+          createAndAddSize({
+            post_id: postId,
+            transacting: trx,
+            url, thumbnail_url, type
+          }))
     }
   },
 
