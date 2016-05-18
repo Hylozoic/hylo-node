@@ -106,7 +106,7 @@ module.exports = {
       : Promise.resolve({}))
     .then(filters => method(extend(filters, {
       autocomplete: term,
-      limit: req.param('limit') || 5,
+      limit: req.param('limit') || 10,
       sort: sort
     })).fetchAll({columns: columns}))
     .then(rows => {
