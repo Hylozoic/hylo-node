@@ -60,6 +60,7 @@ module.exports = bookshelf.Model.extend({
 
   children: function () {
     return this.hasMany(Post, 'parent_post_id')
+    .query({where: {active: true}})
   },
 
   parent: function () {

@@ -1,7 +1,7 @@
 import {
   flatten, includes, merge, omit, pick, some, uniq, values
 } from 'lodash'
-import { filter, map, negate } from 'lodash/fp'
+import { filter, map } from 'lodash/fp'
 
 export const postTypeFromTag = tagName => {
   if (tagName && includes(values(Post.Type), tagName)) {
@@ -73,11 +73,11 @@ export const afterSavingPost = function (post, opts) {
 
 export const updateChildren = (post, children, trx) => {
   const isNew = child => child.id.startsWith('new')
-  const created = filter(c => isNew(c) && !!c.title, children)
-  const updated = filter(negate(isNew), children)
+  const created = filter(c => isNew(c) && !!c.name, children)
+  const updated = filter(c => !isNew(c) && !!c.name, children)
   return post.load('children', {transacting: trx})
   .then(() => {
-    const existingIds = map('id', post.relations.children)
+    const existingIds = map('id', post.relations.children.models)
     const removed = filter(id => !includes(map('id', updated), id), existingIds)
     return Promise.all([
       // mark removed posts as inactive

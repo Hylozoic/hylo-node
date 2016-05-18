@@ -1,7 +1,9 @@
-var moment = require('moment')
-var root = require('root-path')
-var setup = require(root('test/setup'))
-var factories = require(root('test/setup/factories'))
+import moment from 'moment'
+import root from 'root-path'
+import { times } from 'lodash'
+const { updateChildren } = require(root('api/models/post/util'))
+const setup = require(root('test/setup'))
+const factories = require(root('test/setup/factories'))
 
 describe('Post', function () {
   describe('#addFollowers', function () {
@@ -180,6 +182,52 @@ describe('Post', function () {
         expect(p2.id).not.to.equal(post.id)
         expect(p2.get('description')).to.equal('foo')
         expect(p2.get('name')).to.equal(post.get('name'))
+      })
+    })
+  })
+})
+
+describe('post/util', () => {
+  describe('updateChildren', () => {
+    var post, children
+
+    before(() => {
+      post = factories.post()
+      children = times(3, () => factories.post())
+      return Tag.forge({name: 'request'}).save()
+      .then(() => post.save())
+      .then(() => Promise.all(children.map(c =>
+        c.save({parent_post_id: post.id}))))
+    })
+
+    it('creates, updates, and removes child posts', () => {
+      const childrenParam = [
+        { // ignore
+          id: 'new-foo',
+          name: ''
+        },
+        { // create
+          id: 'new-bar',
+          name: 'Yay!'
+        },
+        { // update
+          id: children[0].id,
+          name: 'Another!'
+        },
+        { // remove
+          id: children[1].id,
+          name: ''
+        }
+        // remove children[2] by omission
+      ]
+
+      return updateChildren(post, childrenParam)
+      .then(() => post.load('children'))
+      .then(() => {
+        const updated = post.relations.children
+        expect(updated.length).to.equal(2)
+        expect(updated.find(c => c.id !== children[0].id).get('name')).to.equal('Yay!')
+        expect(updated.find(c => c.id === children[0].id).get('name')).to.equal('Another!')
       })
     })
   })
