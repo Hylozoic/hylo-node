@@ -188,14 +188,15 @@ describe('Post', function () {
 })
 
 describe('post/util', () => {
+  before(() => Tag.forge({name: 'request'}).save())
+
   describe('updateChildren', () => {
     var post, children
 
     before(() => {
       post = factories.post()
       children = times(3, () => factories.post())
-      return Tag.forge({name: 'request'}).save()
-      .then(() => post.save())
+      return post.save()
       .then(() => Promise.all(children.map(c =>
         c.save({parent_post_id: post.id}))))
     })
@@ -238,7 +239,6 @@ describe('post/util', () => {
 
     before(() => {
       post = factories.post({description: 'wow!'})
-      return Tag.forge({name: 'request'}).save()
     })
 
     it('works', () => {
