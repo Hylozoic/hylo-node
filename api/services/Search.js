@@ -277,6 +277,7 @@ module.exports = {
       }
 
       q.groupBy('tags.id')
+      q.limit(opts.limit)
     })
   },
 
