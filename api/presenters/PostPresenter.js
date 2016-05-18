@@ -74,7 +74,8 @@ var postAttributes = (post, userId, opts = {}) => {
       'similarity',
       'start_time',
       'end_time',
-      'location'
+      'location',
+      'parent_post_id'
     ]),
     {
       user: rel.user ? rel.user.pick('id', 'name', 'avatar_url', 'bio') : null,
