@@ -1,3 +1,5 @@
+import { compact, omit } from 'lodash'
+
 const tableName = 'search_index'
 const columnName = 'document'
 const defaultLang = 'english'
@@ -58,7 +60,7 @@ const createView = lang => {
 
 const search = (opts) => {
   var lang = opts.lang || defaultLang
-  var term = opts.term.replace(/'/, '').split(' ').join(' & ')
+  var term = compact(opts.term.replace(/'/, '').split(' ')).join(' & ')
   var tsquery = `to_tsquery('${lang}', '${term}')`
   var rank = `ts_rank(${columnName}, ${tsquery})`
 
@@ -82,7 +84,7 @@ const searchInCommunities = (communityIds, opts) => {
 
   return bookshelf.knex
   .select(raw(columns.concat('count(*) over () as total').join(', ')))
-  .from(search(_.omit(opts, 'limit', 'offset')).as(alias))
+  .from(search(omit(opts, 'limit', 'offset')).as(alias))
   .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
   .leftJoin('comment', 'comment.id', `${alias}.comment_id`)
   .leftJoin('post_community', function () {
