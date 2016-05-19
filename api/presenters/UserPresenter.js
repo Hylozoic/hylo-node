@@ -92,7 +92,7 @@ const UserPresenter = module.exports = {
     .then(extra => _.extend(user.attributes, extra))
   },
 
-  presentForList: function (user, communityId) {
+  presentForList: function (user, opts) {
     var moreAttributes = {
       skills: Skill.simpleList(user.relations.skills),
       organizations: Organization.simpleList(user.relations.organizations),
@@ -100,14 +100,26 @@ const UserPresenter = module.exports = {
       tags: get(user, 'relations.tags.models')
     }
 
-    if (communityId) {
-      var membership = _.find(user.relations.memberships.models, m => m.get('community_id') === communityId)
+    const getMembership = communityId =>
+      _.find(user.relations.memberships.models, m => m.get('community_id') === communityId)
+
+    if (opts.communityId) {
+      const membership = getMembership(opts.communityId)
       if (membership) {
         moreAttributes.joined_at = membership.get('created_at')
         if (membership.get('role') === Membership.MODERATOR_ROLE) {
           moreAttributes.isModerator = true
         }
       }
+    }
+
+    if (opts.communityIds) {
+      // find the earliest join date among all relevant memberships
+      moreAttributes.joined_at = opts.communityIds.reduce((joinedAt, communityId) => {
+        const membership = getMembership(communityId)
+        if (membership) return new Date(Math.min(joinedAt, membership.get('created_at')))
+        return joinedAt
+      }, new Date())
     }
 
     return _.merge(

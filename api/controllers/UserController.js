@@ -258,7 +258,7 @@ module.exports = {
     var total
     Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations', 'memberships', 'tags']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(u => UserPresenter.presentForList(u, res.locals.community.id)))
+    .then(users => users.map(u => UserPresenter.presentForList(u, {communityId: res.locals.community.id})))
     .then(list =>
       Tag.find('offer')
       .then(tag => countTaggedPosts(list.map(user => user.id), tag.id))
@@ -276,13 +276,13 @@ module.exports = {
     Network.find(req.param('networkId'))
     .then(network => Community.query().where('network_id', network.id).select('id'))
     .then(rows => _.map(rows, 'id'))
-    .then(ids => Search.forUsers({
-      communities: ids,
+    .then(communityIds => Search.forUsers({
+      communities: communityIds,
       limit: req.param('limit') || 20,
       offset: req.param('offset') || 0
-    }).fetchAll({withRelated: ['skills', 'organizations']}))
-    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(u => UserPresenter.presentForList(u)))
+    }).fetchAll({withRelated: ['skills', 'organizations', 'memberships']})
+      .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+      .then(users => users.map(u => UserPresenter.presentForList(u, {communityIds}))))
     .then(list => ({people_total: total, people: list}))
     .then(res.ok, res.serverError)
   },
