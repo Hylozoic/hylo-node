@@ -1,5 +1,5 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, flatten, includes, isEmpty, pick, some, uniqBy } from 'lodash'
+import { differenceBy, flatten, includes, isEmpty, pick, some, uniq, uniqBy } from 'lodash'
 import { map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -176,7 +176,7 @@ module.exports = bookshelf.Model.extend({
       ? bookshelf.knex('tags_users').where('user_id', user.id).del()
       : Promise.resolve()
     )
-    .then(() => createAsNeeded(map(sanitize, values)))
+    .then(() => createAsNeeded(uniq(map(sanitize, values))))
     .then(ids => {
       const created_at = new Date()
       const pivot = id => ({tag_id: id, created_at})
