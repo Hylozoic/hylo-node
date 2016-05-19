@@ -1,3 +1,5 @@
+import { some } from 'lodash'
+
 const userFieldsToCopy = [
   'avatar_url',
   'banner_url',
@@ -155,7 +157,7 @@ module.exports = {
     return User.find(userId, {withRelated: 'skills'})
     .then(user => {
       const skills = user.relations.skills.map(s => s.name())
-      return Tag.addToUser(user, skills, reset)
+      return some(skills) && Tag.addToUser(user, skills, reset)
     })
   },
 
