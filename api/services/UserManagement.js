@@ -1,4 +1,5 @@
 import { some } from 'lodash'
+import { flatten, flow, filter, map, uniq } from 'lodash/fp'
 
 const userFieldsToCopy = [
   'avatar_url',
@@ -156,9 +157,27 @@ module.exports = {
   convertSkillsToTags: (userId, reset) => {
     return User.find(userId, {withRelated: 'skills'})
     .then(user => {
-      const skills = user.relations.skills.map(s => s.name())
+      const skills = flow(
+        map(s => s.name()),
+        map(s => s.split('/')),
+        flatten,
+        filter(s => !s.match(/'/)),
+        filter(s => s.length < 30),
+        uniq
+      )(user.relations.skills.models)
       return some(skills) && Tag.addToUser(user, skills, reset)
     })
+  },
+
+  convertAllSkillsToTags: function (fromId = 0) {
+    User.query().where('active', true)
+    .where('id', '>', fromId)
+    .orderBy('id', 'asc')
+    .pluck('id')
+    .then(ids => ids.reduce((promise, id) =>
+      promise.then(() => {
+        return this.convertSkillsToTags(id, true)
+      }), Promise.resolve()))
   },
 
   setUrlFromExtraInfo: userId => {
