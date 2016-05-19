@@ -1,3 +1,4 @@
+import decode from 'ent/decode'
 var format = require('util').format
 var rollbar = require('rollbar')
 
@@ -39,7 +40,7 @@ module.exports = bookshelf.Model.extend({
         postName = format("%s's welcome post", relatedUser.get('name'))
       }
     } else {
-      postName = format('"%s"', post.get('name'))
+      postName = format('"%s"', decode(post.get('name')))
     }
 
     if (version === 'mention') {
@@ -61,9 +62,9 @@ module.exports = bookshelf.Model.extend({
         return format('%s joined %s', relatedUser.get('name'), community.get('name'))
       }
     } else if (version === 'mention') {
-      return format('%s mentioned you in "%s"', poster.get('name'), post.get('name'))
+      return format('%s mentioned you in "%s"', poster.get('name'), decode(post.get('name')))
     } else {
-      return format('%s posted "%s" in %s', poster.get('name'), post.get('name'), community.get('name'))
+      return format('%s posted "%s" in %s', poster.get('name'), decode(post.get('name')), community.get('name'))
     }
   }
 
