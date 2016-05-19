@@ -1,3 +1,4 @@
+import { extend, merge } from 'lodash'
 const randomstring = require('randomstring')
 const chai = require('chai')
 const sails = require('sails')
@@ -8,28 +9,35 @@ var text = function (length) {
 
 module.exports = {
   community: attrs => {
-    return new Community(_.merge({
+    return new Community(merge({
       name: text(),
       slug: text()
     }, attrs))
   },
 
   post: attrs => {
-    return new Post(_.merge({
+    return new Post(merge({
       active: true,
       name: text()
     }, attrs))
   },
 
+  comment: attrs => {
+    return new Comment(merge({
+      active: true,
+      text: text()
+    }, attrs))
+  },
+
   project: attrs => {
-    return new Project(_.merge({
+    return new Project(merge({
       title: text(),
       slug: text()
     }, attrs))
   },
 
   user: attrs => {
-    return new User(_.merge({
+    return new User(merge({
       name: text(),
       active: true,
       email: format('%s@example.com', text())
@@ -37,7 +45,7 @@ module.exports = {
   },
 
   network: attrs => {
-    return new Network(_.merge({
+    return new Network(merge({
       name: text(),
       slug: text()
     }, attrs))
@@ -56,7 +64,7 @@ module.exports = {
         params: {},
         __: sails.__, // this is for i18n
         login: function (userId) {
-          _.extend(this.session, {
+          extend(this.session, {
             authenticated: true,
             version: UserSession.version,
             userId: userId

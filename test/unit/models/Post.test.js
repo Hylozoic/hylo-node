@@ -185,6 +185,37 @@ describe('Post', function () {
       })
     })
   })
+
+  describe('.deactivate', () => {
+    var post
+
+    beforeEach(() => {
+      post = factories.post()
+      return post.save()
+      .then(() => new Activity({post_id: post.id}).save())
+      .then(activity => new Notification({activity_id: activity.id}).save())
+      .then(() => factories.comment({post_id: post.id}).save())
+      .then(comment => new Activity({comment_id: comment.id}).save())
+      .then(activity => new Notification({activity_id: activity.id}).save())
+    })
+
+    it('handles notifications, comments, and activity', () => {
+      Post.deactivate(post.id)
+      .then(() => post.refresh())
+      .then(() => post.load([
+        'comments',
+        'activities',
+        'activities.notifications',
+        'comments.activities',
+        'comments.activities.notifications'
+      ]))
+      .then(() => {
+        expect(post.relations.activities.length).to.equal(0)
+        expect(post.relations.comments.first().activities.length).to.equal(0)
+        expect(post.get('active')).to.be.false
+      })
+    })
+  })
 })
 
 describe('post/util', () => {

@@ -67,6 +67,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Post, 'parent_post_id')
   },
 
+  activities: function () {
+    return this.hasMany(Activity)
+  },
+
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id
     var userId = this.get('user_id')
@@ -303,5 +307,12 @@ module.exports = bookshelf.Model.extend({
 
       return bookshelf.transaction(trx => Tag.updateForPost(post, type, trx))
     })
-  }
+  },
+
+  deactivate: postId =>
+    bookshelf.transaction(trx =>
+      Promise.join(
+        Activity.removeForPost(postId, trx),
+        Post.where('id', postId).query().update({active: false}).transacting(trx)
+      ))
 })
