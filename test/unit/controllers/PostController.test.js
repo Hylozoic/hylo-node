@@ -3,6 +3,9 @@ var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var PostController = require(root('api/controllers/PostController'))
 
+const testImageUrl = 'https://www.hylo.com/favicon.png'
+const testImageUrl2 = 'https://www.hylo.com/faviconDev.png'
+
 describe('PostController', () => {
   var fixtures, req, res
 
@@ -65,7 +68,7 @@ describe('PostController', () => {
         name: 'NewImagePost',
         description: '',
         type: 'intention',
-        imageUrl: 'https://www.hylo.com/img/smallh.png',
+        imageUrl: testImageUrl,
         communities: [fixtures.c1.id]
       })
 
@@ -78,7 +81,7 @@ describe('PostController', () => {
         var image = data.media[0]
         expect(image).to.exist
         expect(image.type).to.equal('image')
-        expect(image.url).to.equal('https://www.hylo.com/img/smallh.png')
+        expect(image.url).to.equal(testImageUrl)
       })
     })
 
@@ -385,7 +388,7 @@ describe('PostController', () => {
     })
 
     it('saves an image', () => {
-      req.params.imageUrl = 'https://www.hylo.com/img/smallh.png'
+      req.params.imageUrl = testImageUrl
 
       return PostController.update(req, res)
       .tap(() => post.load('media'))
@@ -393,7 +396,7 @@ describe('PostController', () => {
         var media = post.relations.media
         expect(media.length).to.equal(1)
         var image = media.first()
-        expect(image.get('url')).to.equal('https://www.hylo.com/img/smallh.png')
+        expect(image.get('url')).to.equal(testImageUrl)
         expect(image.get('type')).to.equal('image')
       })
     })
@@ -401,7 +404,7 @@ describe('PostController', () => {
     describe('with an existing image', () => {
       var originalImageId
       beforeEach(() =>
-        Media.createForPost(post.id, 'image', 'https://www.hylo.com/img/smallh.png')
+        Media.createForPost(post.id, 'image', testImageUrl)
         .tap(image => originalImageId = image.id))
 
       it('removes the image', () => {
@@ -413,7 +416,7 @@ describe('PostController', () => {
       })
 
       it('updates the image url', () => {
-        req.params.imageUrl = 'https://www.hylo.com/img/largeh.png'
+        req.params.imageUrl = testImageUrl2
 
         return PostController.update(req, res)
         .tap(() => post.load('media'))
@@ -421,7 +424,7 @@ describe('PostController', () => {
           var media = post.relations.media
           expect(media.length).to.equal(1)
           var image = media.first()
-          expect(image.get('url')).to.equal('https://www.hylo.com/img/largeh.png')
+          expect(image.get('url')).to.equal(testImageUrl2)
           expect(image.id).to.equal(originalImageId)
         })
       })

@@ -3,6 +3,9 @@ var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var ProjectController = require(root('api/controllers/ProjectController'))
 
+const testImageUrl = 'https://www.hylo.com/favicon.png'
+const testImageUrl2 = 'https://www.hylo.com/faviconDev.png'
+
 describe('ProjectController', () => {
   var fixtures, req, res
 
@@ -25,7 +28,7 @@ describe('ProjectController', () => {
       _.extend(req.params, {
         title: 'NewProject',
         community_id: fixtures.c1.id,
-        image_url: 'https://www.hylo.com/img/smallh.png'
+        image_url: testImageUrl
       })
 
       return ProjectController.create(req, res)
@@ -38,10 +41,10 @@ describe('ProjectController', () => {
           var media = project.relations.media
           expect(media.length).to.equal(1)
           var image = media.first()
-          expect(image.get('url')).to.equal('https://www.hylo.com/img/smallh.png')
+          expect(image.get('url')).to.equal(testImageUrl)
           expect(image.get('type')).to.equal('image')
-          expect(image.get('width')).to.equal(144)
-          expect(image.get('height')).to.equal(144)
+          expect(image.get('width')).to.equal(32)
+          expect(image.get('height')).to.equal(32)
         })
       })
     })
@@ -86,7 +89,7 @@ describe('ProjectController', () => {
     })
 
     it('saves an image', () => {
-      req.params.image_url = 'https://www.hylo.com/img/smallh.png'
+      req.params.image_url = testImageUrl
 
       return ProjectController.update(req, res)
       .tap(() => project.load('media'))
@@ -94,7 +97,7 @@ describe('ProjectController', () => {
         var media = project.relations.media
         expect(media.length).to.equal(1)
         var image = media.first()
-        expect(image.get('url')).to.equal('https://www.hylo.com/img/smallh.png')
+        expect(image.get('url')).to.equal(testImageUrl)
         expect(image.get('type')).to.equal('image')
       })
     })
@@ -116,7 +119,7 @@ describe('ProjectController', () => {
 
     describe('with an existing image', () => {
       beforeEach(() => {
-        var image_url = 'https://www.hylo.com/img/smallh.png'
+        var image_url = testImageUrl
         req.params.image_url = image_url
         return Media.createImageForProject(project.id, image_url)
       })
@@ -133,7 +136,7 @@ describe('ProjectController', () => {
       })
 
       it('replaces the image', () => {
-        req.params.image_url = 'https://www.hylo.com/img/largeh.png'
+        req.params.image_url = testImageUrl2
 
         return ProjectController.update(req, res)
         .tap(() => project.load('media'))
@@ -142,7 +145,7 @@ describe('ProjectController', () => {
           expect(media.length).to.equal(1)
           var image = media.first()
           expect(image.get('type')).to.equal('image')
-          expect(image.get('url')).to.equal('https://www.hylo.com/img/largeh.png')
+          expect(image.get('url')).to.equal(testImageUrl2)
         })
       })
 
@@ -194,7 +197,7 @@ describe('ProjectController', () => {
       })
 
       it('adds an image', () => {
-        req.params.image_url = 'https://www.hylo.com/img/smallh.png'
+        req.params.image_url = testImageUrl
 
         return ProjectController.update(req, res)
         .tap(() => project.load('media'))
@@ -203,7 +206,7 @@ describe('ProjectController', () => {
           expect(media.length).to.equal(2)
           var image = _.find(media.models || [], m => m.get('type') === 'image')
           expect(image).to.exist
-          expect(image.get('url')).to.equal('https://www.hylo.com/img/smallh.png')
+          expect(image.get('url')).to.equal(testImageUrl)
         })
       })
     })
