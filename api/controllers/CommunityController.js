@@ -226,7 +226,7 @@ module.exports = {
         return Community.query(qb => {
           qb.where('network_id', network.get('id'))
           qb.where('community.active', true)
-          qb.select(bookshelf.knex.raw('community.id, community.slug, count(users_community.user_id) as "memberCount", count(community.id) over () as total'))
+          qb.select(bookshelf.knex.raw('community.id, community.slug, community.name, community.avatar_url, community.banner_url, count(users_community.user_id) as "memberCount", count(community.id) over () as total'))
           qb.leftJoin('users_community', function () {
             this.on('community.id', '=', 'users_community.community_id')
           })
