@@ -276,11 +276,12 @@ module.exports = {
     Network.find(req.param('networkId'))
     .then(network => Community.query().where('network_id', network.id).select('id'))
     .then(rows => _.map(rows, 'id'))
-    .then(communityIds => Search.forUsers({
-      communities: communityIds,
-      limit: req.param('limit') || 20,
-      offset: req.param('offset') || 0
-    }).fetchAll({withRelated: ['skills', 'organizations', 'memberships']})
+    .then(communityIds =>
+      Search.forUsers({
+        communities: communityIds,
+        limit: req.param('limit') || 20,
+        offset: req.param('offset') || 0
+      }).fetchAll({withRelated: ['skills', 'organizations', 'memberships']})
       .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
       .then(users => users.map(u => UserPresenter.presentForList(u, {communityIds}))))
     .then(list => ({people_total: total, people: list}))
