@@ -14,7 +14,7 @@ export const cleanupAll = () => {
   }, {}))
   .then(groups => Promise.map(toPairs(groups), ([name, tags]) => {
     const primaryTag = sortBy('id', tags)[0]
-    if (tags.length === 1 && primaryTag.name === name) return
+    if (tags.length === 1) return
     console.log(`${name}: ${tags.length}`)
 
     const otherTags = filter(t => t.id !== primaryTag.id, tags)
