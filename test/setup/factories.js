@@ -29,13 +29,6 @@ module.exports = {
     }, attrs))
   },
 
-  project: attrs => {
-    return new Project(merge({
-      title: text(),
-      slug: text()
-    }, attrs))
-  },
-
   user: attrs => {
     return new User(merge({
       name: text(),
