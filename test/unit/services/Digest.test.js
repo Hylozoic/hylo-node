@@ -5,45 +5,47 @@ var Digest = require(root('lib/community/digest'))
 var moment = require('moment-timezone')
 
 describe('Digest', function () {
-  var community, user, p1, p2
+  var community, user, p1, p2, p3, p4
 
   before(() => {
-    var today = moment.tz('America/Los_Angeles').startOf('day').add(6, 'hours').toDate()
+    var created_at = moment.tz('America/Los_Angeles').startOf('day').add(6, 'hours').toDate()
+    var user_id
 
     community = new Community({name: 'foo', slug: 'foo'})
-    user = factories.user({created_at: today})
+    user = factories.user({created_at})
 
     return setup.clearDb()
-    .then(() => Promise.join(
-      community.save(),
-      user.save()
-    ))
+    .then(() => Promise.join(community.save(), user.save()))
     .then(() => {
-      var postAttrs = {
-        user_id: user.id,
-        name: 'Hi!',
-        active: true,
-        type: 'chat'
-      }
+      user_id = user.id
 
-      p1 = Post.forge(_.merge(postAttrs, {created_at: today}))
-      p2 = Post.forge(_.merge(postAttrs, {created_at: moment().subtract(1, 'month')}))
+      // should be included
+      p1 = factories.post({user_id, created_at})
+
+      // should be omitted from new posts because it's out of the time range
+      p2 = factories.post({user_id, created_at: moment().subtract(1, 'month')})
+
+      // should be omitted because it's inactive
+      p3 = factories.post({user_id, created_at, active: false})
+
+      // should be omitted because of its type
+      p4 = factories.post({user_id, created_at, type: 'welcome'})
     })
     .then(() => Promise.join(
       user.joinCommunity(community),
-      p1.save(),
-      p2.save()
+      p1.save(), p2.save(), p3.save(), p4.save()
     ))
-    .spread((x, p1, p2) => Promise.join(
-      community.posts().attach(p1.id),
-      community.posts().attach(p2.id),
-      Comment.forge({
-        text: 'meow',
-        user_id: user.id,
-        post_id: p2.id,
-        active: true,
-        created_at: today
-      }).save()
+    .then(() => Promise.join(
+      community.posts().attach([p1, p2, p3, p4].map(p => p.id)),
+
+      // should be included
+      factories.comment({user_id, post_id: p2.id, created_at}).save(),
+
+      // should be omitted because its parent post is inactive
+      factories.comment({user_id, post_id: p3.id, created_at}).save(),
+
+      // should be omitted because it is inactive
+      factories.comment({user_id, post_id: p1.id, created_at, active: false}).save()
     ))
   })
 
