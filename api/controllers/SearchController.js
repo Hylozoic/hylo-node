@@ -98,11 +98,7 @@ module.exports = {
     }
 
     return (!includes(['skills', 'organizations'], resultType)
-      ? findCommunityIds(req)
-        .then(communityIds => ({
-          communities: communityIds,
-          project: req.param('projectId')
-        }))
+      ? findCommunityIds(req).then(communityIds => ({communities: communityIds}))
       : Promise.resolve({}))
     .then(filters => method(extend(filters, {
       autocomplete: term,

@@ -135,9 +135,8 @@ module.exports = bookshelf.Model.extend({
       })))
   },
 
+  // version corresponds to names of versions in SendWithUs
   sendCommentNotificationEmail: function (version) {
-  // opts.version corresponds to names of versions in SendWithUs
-
     var comment = this.comment()
     var reader = this.reader()
     if (!comment) return

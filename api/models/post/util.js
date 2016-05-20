@@ -23,14 +23,6 @@ export const setupNewPostAttrs = function (userId, params) {
     attrs.type = postTypeFromTag(params.tag)
   }
 
-  if (params.projectId) {
-    return Project.find(params.projectId)
-    .then(project => {
-      if (project && project.isDraft()) attrs.visibility = Post.Visibility.DRAFT_PROJECT
-      return attrs
-    })
-  }
-
   return Promise.resolve(attrs)
 }
 
@@ -41,14 +33,9 @@ export const afterSavingPost = function (post, opts) {
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
 
-  // no need to specify community ids explicitly if saving for a project
-  return (() => {
-    if (opts.communities) return Promise.resolve(opts.communities)
-    return Project.find(opts.projectId, trxOpts).then(p => [p.get('community_id')])
-  })()
-  .then(communities => Promise.all(flatten([
+  return Promise.all(flatten([
     // Attach post to communities
-    communities.map(id => new Community({id: id}).posts().attach(post.id, trxOpts)),
+    opts.communities.map(id => new Community({id: id}).posts().attach(post.id, trxOpts)),
 
     // Add mentioned users and creator as followers
     post.addFollowers(followerIds, userId, trxOpts),
@@ -59,18 +46,10 @@ export const afterSavingPost = function (post, opts) {
 
     opts.children && updateChildren(post, opts.children, trx),
 
-    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx)),
-
-    opts.projectId && PostProjectMembership.create(
-      post.id, opts.projectId, trxOpts),
-
-    opts.projectId && Queue.classMethod('Project', 'notifyAboutNewPost', {
-      projectId: opts.projectId,
-      postId: post.id,
-      exclude: mentioned
-    })]))
-    .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), trx)))
-    .then(() => post.createActivities(trx))
+    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
+  ]))
+  .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), trx))
+  .then(() => post.createActivities(trx))
 }
 
 export const updateChildren = (post, children, trx) => {

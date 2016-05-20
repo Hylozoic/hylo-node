@@ -72,7 +72,7 @@ describe('Post', function () {
       .then(visible => expect(visible).to.be.true)
     })
 
-    it('is false if the user is not connected by community or project', () => {
+    it('is false if the user is not connected by community', () => {
       return Post.isVisibleToUser(post.id, user.id)
       .then(visible => expect(visible).to.be.false)
     })
@@ -88,15 +88,6 @@ describe('Post', function () {
       return Membership.create(user.id, c2.id)
       .then(ms => ms.save({active: false}, {patch: true}))
       .then(() => post.communities().attach(c1.id))
-      .then(() => Post.isVisibleToUser(post.id, user.id))
-      .then(visible => expect(visible).to.be.true)
-    })
-
-    it("is true if the user is in the post's project", () => {
-      var project = new Project({title: 'Lazy day', slug: 'lazy-day'})
-      return project.save()
-      .then(() => ProjectMembership.create(user.id, project.id))
-      .then(() => PostProjectMembership.create(post.id, project.id))
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })

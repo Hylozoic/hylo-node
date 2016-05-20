@@ -36,7 +36,6 @@ describe('Search', function () {
         inner join "post_community" on "post_community"."post_id" = "post"."id"
         where "post"."active" = 'true'
         and "post"."user_id" in ('42', '41')
-        and "post"."visibility" != '2'
         and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
           or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
         and "follower"."user_id" = '37'

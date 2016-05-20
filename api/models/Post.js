@@ -32,10 +32,6 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Vote)
   },
 
-  projects: function () {
-    return this.belongsToMany(Project, 'posts_projects')
-  },
-
   responders: function () {
     return this.belongsToMany(User).through(EventResponse)
   },
@@ -184,8 +180,7 @@ module.exports = bookshelf.Model.extend({
 
   Visibility: {
     DEFAULT: 0,
-    PUBLIC_READABLE: 1,
-    DRAFT_PROJECT: 2
+    PUBLIC_READABLE: 1
   },
 
   countForUser: function (user, type) {
@@ -232,10 +227,6 @@ module.exports = bookshelf.Model.extend({
       // or following the post?
       success || Follow.exists(userId, postId))
     .then(success =>
-      // or in the post's project?
-      success || PostProjectMembership.where({post_id: postId}).fetch()
-      .then(ppm => ppm && Project.isVisibleToUser(ppm.get('project_id'), userId)))
-    .then(success =>
       // or in one of the post's communities' networks?
       success || Community.query().whereIn('id', pcids).pluck('network_id')
       .then(networkIds =>
@@ -257,7 +248,6 @@ module.exports = bookshelf.Model.extend({
     return collection.query(function (qb) {
       qb.whereRaw('post.created_at between ? and ?', [startTime, endTime])
       qb.where('post.active', true)
-      qb.where('visibility', '!=', Post.Visibility.DRAFT_PROJECT)
     })
   },
 

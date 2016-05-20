@@ -57,8 +57,6 @@ module.exports.policies = {
     contributions:       ['sessionAuth', 'inSameCommunityOrNetwork'],
     thanks:              ['sessionAuth', 'inSameCommunityOrNetwork'],
     sendPasswordReset:   true,
-    findForProject:      ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    findForProjectRedux: ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForCommunity:    ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findForNetwork:      ['sessionAuth', 'inNetwork'],
     findForPostVote:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost']
@@ -98,13 +96,11 @@ module.exports.policies = {
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity:                     ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForCommunity:           ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    findForProject:                       ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    checkFreshnessForProject:             ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
     findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],
     checkFreshnessForUser:                ['sessionAuth', 'inSameCommunityOrNetwork'],
     findForNetwork:                       ['sessionAuth', 'inNetwork'],
     checkFreshnessForNetwork:             ['sessionAuth', 'inNetwork'],
-    create:                               ['sessionAuth', 'inCommunitiesOrProject'],
+    create:                               ['sessionAuth', 'inCommunities'],
     update:                               ['sessionAuth', 'checkAndSetWritablePost'],
     follow:                               ['sessionAuth', 'checkAndSetPost'],
     respond:                              ['sessionAuth', 'checkAndSetPost'],
@@ -137,20 +133,6 @@ module.exports.policies = {
     createWaitlistRequest: true
   },
 
-  ProjectController: {
-    create:              ['sessionAuth'],
-    find:                ['allowPublicAccess', 'sessionAuth'],
-    update:              ['sessionAuth', 'checkAndSetWritableProject'],
-    findOne:             ['allowPublicAccess', 'sessionAuth', 'checkAndSetProject'],
-    invite:              ['sessionAuth', 'checkAndSetWritableProject'],
-    join:                ['sessionAuth', 'checkAndSetProject'],
-    removeUser:          ['sessionAuth', 'checkAndSetWritableProject'],
-    findForUser:         ['sessionAuth', 'isSelf'],
-    findForCommunity:    ['sessionAuth', 'checkAndSetMembership'],
-    updateMembership:    ['sessionAuth', 'isSelf', 'checkAndSetProject'],
-    toggleModeratorRole: ['sessionAuth', 'checkAndSetWritableProject']
-  },
-
   DeviceController: {
     create:           ['sessionAuth'],
     destroy:          ['sessionAuth'],
@@ -168,14 +150,9 @@ module.exports.policies = {
     create: true
   },
 
-  StaticPageController: {
-    proxy: ['renderOpenGraphTags']
-  },
-
+  StaticPageController: true,
   NexudusController: true,
-
   MobileAppController: true,
-
   LiveStatusController: true,
 
   TagController: {

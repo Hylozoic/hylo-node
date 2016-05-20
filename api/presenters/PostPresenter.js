@@ -13,10 +13,6 @@ var postRelations = (userId, opts = {}) => {
     {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')}
   ]
 
-  if (!opts.fromProject) {
-    relations.push({projects: qb => qb.column('projects.id', 'title', 'slug')})
-  }
-
   if (opts.withComments) {
     relations.push(
       {comments: qb => {
@@ -70,7 +66,6 @@ var postAttributes = (post, userId, opts = {}) => {
       'type',
       'created_at',
       'updated_at',
-      'projects',
       'similarity',
       'start_time',
       'end_time',

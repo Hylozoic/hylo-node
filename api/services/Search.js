@@ -15,53 +15,6 @@ const listModelQuerySettings = (qb, table, column, opts) => {
 }
 
 module.exports = {
-  forProjects: function (opts) {
-    return Project.query(qb => {
-      if (opts.user) {
-        qb.leftJoin('projects_users', 'projects.id', 'projects_users.project_id')
-        qb.where(function () {
-          this.where('projects.user_id', opts.user)
-          .orWhere('projects_users.user_id', opts.user)
-        })
-      }
-
-      if (opts.community) {
-        qb.where(function () {
-          var clause = this.whereIn('community_id', opts.community)
-
-          if (opts.includePublic) {
-            clause.orWhere('visibility', Project.Visibility.PUBLIC)
-          }
-
-          if (opts.publicOnly) {
-            clause.andWhere('visibility', Project.Visibility.PUBLIC)
-          }
-        })
-      } else if (opts.publicOnly) {
-        qb.where('visibility', Project.Visibility.PUBLIC)
-      }
-
-      if (opts.published) {
-        qb.whereRaw('published_at is not null')
-      }
-
-      if (opts.term) {
-        Search.addTermToQueryBuilder(opts.term, qb, {
-          columns: ['projects.title', 'projects.intention', 'projects.details']
-        })
-      }
-
-      // this counts total rows matching the criteria, disregarding limit,
-      // which is useful for pagination
-      qb.select(bookshelf.knex.raw('projects.*, count(*) over () as total'))
-
-      qb.limit(opts.limit)
-      qb.offset(opts.offset)
-      qb.groupBy('projects.id')
-      qb.orderBy('projects.updated_at', 'desc')
-    })
-  },
-
   forCommunities: function (opts) {
     return Community.query(qb => {
       if (opts.communities) {
@@ -110,13 +63,6 @@ module.exports = {
       if (opts.tag) {
         qb.join('posts_tags', 'posts_tags.post_id', '=', 'post.id')
         qb.whereIn('posts_tags.tag_id', [opts.tag])
-      }
-
-      if (opts.project) {
-        qb.join('posts_projects', 'posts_projects.post_id', '=', 'post.id')
-        qb.where('posts_projects.project_id', opts.project)
-      } else {
-        qb.where('post.visibility', '!=', Post.Visibility.DRAFT_PROJECT)
       }
 
       if (opts.term) {
@@ -201,32 +147,10 @@ module.exports = {
       // which is useful for pagination
       qb.select(bookshelf.knex.raw('users.*, count(users.*) over () as total'))
 
-      if (opts.communities && opts.project) {
-        qb.leftJoin('users_community', 'users_community.user_id', 'users.id')
-        qb.leftJoin('projects_users', 'projects_users.user_id', 'users.id')
-        qb.leftJoin('projects', 'projects.user_id', 'users.id')
-
-        qb.where(function () {
-          this.where(function () {
-            this.whereIn('users_community.community_id', opts.communities)
-            this.where('users_community.active', true)
-          })
-          .orWhere(function () {
-            this.where('projects.id', opts.project)
-            .orWhere('projects_users.project_id', opts.project)
-          })
-        })
-      } else if (opts.communities) {
+      if (opts.communities) {
         qb.join('users_community', 'users_community.user_id', '=', 'users.id')
         qb.whereIn('users_community.community_id', opts.communities)
         qb.where('users_community.active', true)
-      } else if (opts.project) {
-        qb.join('projects_users', 'projects_users.user_id', '=', 'users.id')
-        qb.leftJoin('projects', 'projects.user_id', 'users.id')
-        qb.where(function () {
-          this.where('projects.id', opts.project)
-          .orWhere('projects_users.project_id', opts.project)
-        })
       }
 
       if (opts.autocomplete) {
