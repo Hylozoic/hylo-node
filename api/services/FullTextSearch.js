@@ -20,8 +20,8 @@ const createView = lang => {
       p.id as post_id,
       null::bigint as user_id,
       null::bigint as comment_id,
-      ${wv('p.name', 'A')} ||
-      ${wv("coalesce(p.description, '')", 'B')} ||
+      ${wv('p.name', 'B')} ||
+      ${wv("coalesce(p.description, '')", 'C')} ||
       ${wv('u.name', 'D')} as ${columnName}
     from post p
     join users u on u.id = p.user_id
@@ -32,12 +32,10 @@ const createView = lang => {
       u.id as user_id,
       null as comment_id,
       ${wv('u.name', 'A')} ||
-      ${wv("coalesce(u.bio, '')", 'B')} ||
-      ${wv("coalesce(u.intention, '')", 'B')} ||
-      ${wv("coalesce(u.work, '')", 'B')} ||
-      ${wv("coalesce(string_agg(distinct s.skill_name, ' '), '')", 'C')} ||
-      ${wv("coalesce(string_agg(distinct o.org_name, ' '), '')", 'C')} ||
-      ${wv("coalesce(u.extra_info, '')", 'D')} as ${columnName}
+      ${wv("coalesce(u.bio, '')", 'C')} ||
+      ${wv("coalesce(u.intention, '')", 'C')} ||
+      ${wv("coalesce(u.work, '')", 'C')} ||
+      ${wv("coalesce(u.extra_info, '')", 'C')} as ${columnName}
     from users u
     where u.active = true
     group by u.id
@@ -46,7 +44,7 @@ const createView = lang => {
       null as post_id,
       null as user_id,
       c.id as comment_id,
-      ${wv('c.text', 'B')} ||
+      ${wv('c.text', 'C')} ||
       ${wv('u.name', 'D')} as ${columnName}
     from comment c
     join users u on u.id = c.user_id
@@ -60,7 +58,7 @@ const search = (opts) => {
   var lang = opts.lang || defaultLang
   var term = compact(opts.term.replace(/'/, '').split(' ')).join(' & ')
   var tsquery = `to_tsquery('${lang}', '${term}')`
-  var rank = `ts_rank(${columnName}, ${tsquery})`
+  var rank = `ts_rank_cd(${columnName}, ${tsquery})`
 
   return bookshelf.knex
   .select(raw(`post_id, comment_id, user_id, ${rank} as rank, count(*) over () as total`))
