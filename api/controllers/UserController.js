@@ -233,7 +233,7 @@ module.exports = {
         communities: communityIds,
         limit: req.param('limit') || 20,
         offset: req.param('offset') || 0
-      }).fetchAll({withRelated: ['skills', 'organizations', 'memberships']})
+      }).fetchAll({withRelated: ['memberships']})
       .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
       .then(users => users.map(u => UserPresenter.presentForList(u, {communityIds}))))
     .then(list => ({people_total: total, people: list}))
