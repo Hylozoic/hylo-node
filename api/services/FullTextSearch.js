@@ -39,8 +39,6 @@ const createView = lang => {
       ${wv("coalesce(string_agg(distinct o.org_name, ' '), '')", 'C')} ||
       ${wv("coalesce(u.extra_info, '')", 'D')} as ${columnName}
     from users u
-    left join users_skill s on u.id = s.user_id
-    left join users_org o on u.id = o.user_id
     where u.active = true
     group by u.id
   ) union (

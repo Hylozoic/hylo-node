@@ -142,10 +142,8 @@ module.exports = {
       }
 
       if (opts.term) {
-        qb.leftJoin('users_skill', 'users_skill.user_id', 'users.id')
-        qb.leftJoin('users_org', 'users_org.user_id', 'users.id')
         Search.addTermToQueryBuilder(opts.term, qb, {
-          columns: ['users.name', 'users.bio', 'users_skill.skill_name', 'users_org.org_name']
+          columns: ['users.name', 'users.bio']
         })
       }
 
