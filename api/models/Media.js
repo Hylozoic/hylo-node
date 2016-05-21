@@ -10,10 +10,6 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Post)
   },
 
-  project: function () {
-    return this.belongsTo(Project)
-  },
-
   updateDimensions: function (opts) {
     var image_url
     if (this.get('type') === 'image') {
@@ -36,7 +32,7 @@ module.exports = bookshelf.Model.extend({
   create: function (opts) {
     return new Media(_.merge({
       created_at: new Date()
-    }, _.pick(opts, 'post_id', 'project_id', 'url', 'type', 'name', 'thumbnail_url', 'width', 'height')))
+    }, _.pick(opts, 'post_id', 'url', 'type', 'name', 'thumbnail_url', 'width', 'height')))
     .save(null, _.pick(opts, 'transacting'))
   },
 
@@ -58,25 +54,6 @@ module.exports = bookshelf.Model.extend({
             url, thumbnail_url, type
           }))
     }
-  },
-
-  createImageForProject: function (projectId, url, trx) {
-    return createAndAddSize({
-      project_id: projectId,
-      url: url,
-      type: 'image',
-      transacting: trx
-    })
-  },
-
-  createVideoForProject: function (projectId, video_url, thumbnail_url, trx) {
-    return createAndAddSize({
-      project_id: projectId,
-      url: video_url,
-      thumbnail_url: thumbnail_url,
-      type: 'video',
-      transacting: trx
-    })
   },
 
   createDoc: function (postId, doc, trx) {

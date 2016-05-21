@@ -72,7 +72,7 @@ describe('Post', function () {
       .then(visible => expect(visible).to.be.true)
     })
 
-    it('is false if the user is not connected by community or project', () => {
+    it('is false if the user is not connected by community', () => {
       return Post.isVisibleToUser(post.id, user.id)
       .then(visible => expect(visible).to.be.false)
     })
@@ -88,15 +88,6 @@ describe('Post', function () {
       return Membership.create(user.id, c2.id)
       .then(ms => ms.save({active: false}, {patch: true}))
       .then(() => post.communities().attach(c1.id))
-      .then(() => Post.isVisibleToUser(post.id, user.id))
-      .then(visible => expect(visible).to.be.true)
-    })
-
-    it("is true if the user is in the post's project", () => {
-      var project = new Project({title: 'Lazy day', slug: 'lazy-day'})
-      return project.save()
-      .then(() => ProjectMembership.create(user.id, project.id))
-      .then(() => PostProjectMembership.create(post.id, project.id))
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
@@ -182,6 +173,37 @@ describe('Post', function () {
         expect(p2.id).not.to.equal(post.id)
         expect(p2.get('description')).to.equal('foo')
         expect(p2.get('name')).to.equal(post.get('name'))
+      })
+    })
+  })
+
+  describe('.deactivate', () => {
+    var post
+
+    beforeEach(() => {
+      post = factories.post()
+      return post.save()
+      .then(() => new Activity({post_id: post.id}).save())
+      .then(activity => new Notification({activity_id: activity.id}).save())
+      .then(() => factories.comment({post_id: post.id}).save())
+      .then(comment => new Activity({comment_id: comment.id}).save())
+      .then(activity => new Notification({activity_id: activity.id}).save())
+    })
+
+    it('handles notifications, comments, and activity', () => {
+      Post.deactivate(post.id)
+      .then(() => post.refresh())
+      .then(() => post.load([
+        'comments',
+        'activities',
+        'activities.notifications',
+        'comments.activities',
+        'comments.activities.notifications'
+      ]))
+      .then(() => {
+        expect(post.relations.activities.length).to.equal(0)
+        expect(post.relations.comments.first().activities.length).to.equal(0)
+        expect(post.get('active')).to.be.false
       })
     })
   })

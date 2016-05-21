@@ -31,22 +31,6 @@ module.exports = {
     return sendSimpleEmail(email, 'tem_nt4RmzAfN4KyPZYxFJWpFE', data, extraOptions)
   },
 
-  sendNewProjectPostNotification: function (email, data, extraOptions) {
-    return sendSimpleEmail(email, 'tem_bG7zNWk3sqbLKkg2TLcYgE', data, extraOptions)
-  },
-
-  sendProjectInvitation: function (email, data) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_5karBhDbANcCEmrvuuQtgn',
-      recipient: {address: email},
-      email_data: data,
-      sender: {
-        name: format('%s (via Hylo)', data.inviter_name),
-        reply_to: data.inviter_email
-      }
-    }))
-  },
-
   sendPasswordReset: function (opts) {
     return sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData)
   },

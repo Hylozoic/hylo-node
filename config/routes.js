@@ -18,7 +18,6 @@ module.exports.routes = {
   'GET    /noo/user/:userId/all-community-posts':         'PostController.findForAllForUser',
   'GET    /noo/user/:userId/onboarding':                  'OnboardingController.find',
   'POST   /noo/user/:userId/onboarding':                  'OnboardingController.update',
-  'GET    /noo/user/:userId/projects':                    'ProjectController.findForUser',
 
   'GET    /noo/community':                                'CommunityController.find',
   'POST   /noo/community':                                'CommunityController.create',
@@ -34,7 +33,6 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/members':           'UserController.findForCommunity',
   'DELETE /noo/community/:communityId/member/:userId':    'CommunityController.removeMember',
   'GET    /noo/community/:communityId/posts':             'PostController.findForCommunity',
-  'GET    /noo/community/:communityId/projects':          'ProjectController.findForCommunity',
   'GET    /noo/community/:communityId/invitations':       'InvitationController.find',
   'POST   /noo/community/:communityId/invite':            'InvitationController.create',
   'GET    /noo/community/:communityId/activity':          'ActivityController.findForCommunity',
@@ -57,7 +55,6 @@ module.exports.routes = {
   'POST   /noo/freshness/posts/person/:userId':           'PostController.checkFreshnessForUser',
   'POST   /noo/freshness/posts/all-posts/:userId':        'PostController.checkFreshnessForAllForUser',
   'POST   /noo/freshness/posts/followed-posts/:userId':   'PostController.checkFreshnessForFollowed',
-  'POST   /noo/freshness/posts/project/:projectId':       'PostController.checkFreshnessForProject',
   'POST   /noo/freshness/posts/network/:networkId':       'PostController.checkFreshnessForNetwork',
   'POST   /noo/freshness/posts/community/:communityId/tag/:tagName':
     'PostController.checkFreshnessForTag',
@@ -73,18 +70,6 @@ module.exports.routes = {
   'POST   /noo/activity':                                 'ActivityController.update',
   'POST   /noo/activity/mark-all-read':                   'ActivityController.markAllRead',
   'POST   /noo/activity/:activityId':                     'ActivityController.update',
-
-  'GET    /noo/project/:projectId':                       'ProjectController.findOne',
-  'GET    /noo/project/:projectId/posts':                 'PostController.findForProject',
-  'GET    /noo/project/:projectId/users':                 'UserController.findForProject',
-  'DELETE /noo/project/:projectId/user/:userId':          'ProjectController.removeUser',
-  'POST   /noo/project/:projectId/user/:userId':          'ProjectController.updateMembership',
-  'POST   /noo/project/:projectId/moderator/:userId':     'ProjectController.toggleModeratorRole',
-  'GET    /noo/project':                                  'ProjectController.find',
-  'POST   /noo/project':                                  'ProjectController.create',
-  'POST   /noo/project/:projectId':                       'ProjectController.update',
-  'POST   /noo/project/:projectId/invite':                'ProjectController.invite',
-  'POST   /noo/project/:projectId/join':                  'ProjectController.join',
 
   'GET    /noo/network/:networkId':                       'NetworkController.findOne',
   'GET    /noo/network/:networkId/posts':                 'PostController.findForNetwork',

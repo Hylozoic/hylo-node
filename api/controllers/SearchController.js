@@ -1,4 +1,4 @@
-import { extend, includes } from 'lodash'
+import { pick } from 'lodash'
 
 const findCommunityIds = req => {
   if (req.param('communityId')) {
@@ -42,7 +42,7 @@ module.exports = {
           limit: limit,
           offset: offset,
           communities: communityIds
-        }).fetchAll({withRelated: ['skills', 'organizations']})
+        }).fetchAll()
       )
     })
     .spread(function (posts, people) {
@@ -50,12 +50,8 @@ module.exports = {
         posts_total: getTotal(posts),
         posts: posts && posts.map(PostPresenter.present),
         people_total: getTotal(people),
-        people: people && people.map(person => _.chain(person.attributes)
-          .pick(UserPresenter.shortAttributes)
-          .extend({
-            skills: Skill.simpleList(person.relations.skills),
-            organizations: Organization.simpleList(person.relations.organizations)
-          }).value())
+        people: people && people.map(person =>
+          pick(person.attributes, UserPresenter.shortAttributes))
       })
     })
     .catch(res.serverError)
@@ -70,14 +66,6 @@ module.exports = {
       case 'posts':
         method = Search.forPosts
         sort = 'post.created_at'
-        break
-      case 'skills':
-        method = Search.forSkills
-        columns = ['skill_name']
-        break
-      case 'organizations':
-        method = Search.forOrganizations
-        columns = ['org_name']
         break
       case 'communities':
         method = Search.forCommunities
@@ -97,32 +85,15 @@ module.exports = {
         }
     }
 
-    return (!includes(['skills', 'organizations'], resultType)
-      ? findCommunityIds(req)
-        .then(communityIds => ({
-          communities: communityIds,
-          project: req.param('projectId')
-        }))
-      : Promise.resolve({}))
-    .then(filters => method(extend(filters, {
+    return findCommunityIds(req)
+    .then(ids => method({
+      communities: ids,
       autocomplete: term,
       limit: req.param('limit') || 10,
       sort: sort
-    })).fetchAll({columns: columns}))
-    .then(rows => {
-      var present
-      switch (resultType) {
-        case 'skills':
-          present = row => ({name: row.get('skill_name')})
-          break
-        case 'organizations':
-          present = row => ({name: row.get('org_name')})
-          break
-        default:
-          present = row => row.pick('id', 'name', 'avatar_url', 'slug')
-      }
-      res.ok(rows.map(present))
-    })
+    }).fetchAll({columns: columns}))
+    .then(rows => rows.map(row => row.pick('id', 'name', 'avatar_url', 'slug')))
+    .then(res.ok)
     .catch(res.serverError)
   },
 
@@ -168,7 +139,7 @@ module.exports = {
         ]}),
 
         ids.people && User.where('id', 'in', ids.people)
-        .fetchAll({withRelated: ['skills', 'organizations']})
+        .fetchAll()
       )
     })
     .spread((posts, comments, people) => items.map(item => {

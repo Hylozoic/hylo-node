@@ -77,13 +77,6 @@ const queryForFollowed = function (req, res) {
   }))
 }
 
-const queryForProject = function (req, res) {
-  return queryPosts(req, {
-    project: req.param('projectId'),
-    sort: 'fulfilled-last'
-  })
-}
-
 const queryForNetwork = function (req, res) {
   return Network.find(req.param('networkId'))
   .then(network => Community.where({network_id: network.id}).fetchAll())
@@ -112,15 +105,13 @@ const queryForTagInAllCommunities = function (req, res) {
     }))
 }
 
-const createFindAction = (queryFunction, relationsOpts) => (req, res) => {
+const createFindAction = (queryFunction) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => fetchAndPresentPosts(
-    query,
-    req.session.userId,
-    merge(relationsOpts, {
+  .then(query => fetchAndPresentPosts(query, req.session.userId,
+    {
       withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes')
-    })))
+    }))
   .then(res.ok, res.serverError)
 }
 
@@ -150,7 +141,6 @@ const PostController = {
         imageUrl: req.param('imageUrl'),
         videoUrl: req.param('videoUrl'),
         docs: req.param('docs'),
-        projectId: req.param('projectId'),
         tag: req.param('tag'),
         children: req.param('requests'),
         transacting: trx
@@ -333,13 +323,7 @@ const PostController = {
   },
 
   destroy: function (req, res) {
-    return bookshelf.transaction(function (trx) {
-      // FIXME this post will still be accessible via activity about a comment
-      return Promise.join(
-        Activity.where('post_id', res.locals.post.id).destroy({transacting: trx}),
-        res.locals.post.save({active: false}, {patch: true, transacting: trx})
-      )
-    })
+    return Post.deactivate(res.locals.post.id)
     .then(() => res.ok({}), res.serverError)
   },
 
@@ -387,21 +371,16 @@ const queries = [
   ['User', queryForUser],
   ['AllForUser', queryForAllForUser],
   ['Followed', queryForFollowed],
-  ['Project', queryForProject],
   ['Network', queryForNetwork],
   ['Tag', queryForTag],
   ['TagInAllCommunities', queryForTagInAllCommunities]
 ]
 
-const relationsOpts = {
-  Project: {fromProject: true}
-}
-
 queries.forEach(tuple => {
   const key = tuple[0]
   const fn = tuple[1]
   PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(fn, 'posts')
-  PostController['findFor' + key] = createFindAction(fn, relationsOpts[key])
+  PostController['findFor' + key] = createFindAction(fn)
 })
 
 module.exports = PostController

@@ -2,13 +2,7 @@ module.exports = function (req, res, next) {
   if (Admin.isSignedIn(req)) return next()
 
   var communityIds = req.param('communities')
-  var projectId = req.param('projectId')
   var userId = req.session.userId
-
-  if (!communityIds && projectId) {
-    return Project.isVisibleToUser(projectId, userId)
-    .then(visible => visible ? next() : res.forbidden())
-  }
 
   return Membership.query(q => {
     q.whereIn('community_id', communityIds)

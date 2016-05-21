@@ -24,14 +24,6 @@ module.exports = {
       return url('/u/%s', user.id)
     },
 
-    project: function (project) {
-      return url('/project/%s/%s', project.id, project.get('slug'))
-    },
-
-    projectSettings: function (project) {
-      return url('/project/%s/settings', project.get('slug'))
-    },
-
     post: function (post) {
       return url(`/p/${post.id}`)
     },

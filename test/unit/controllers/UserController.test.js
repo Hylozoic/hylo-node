@@ -151,23 +151,9 @@ describe('UserController', function () {
           expect(_.omit(fields, 'updated_at')).to.eql({twitter_name: 'ev'})
           expect(options).to.eql({patch: true})
         })
-          .finally(function () {
-            User.find = User.trueFind
-          })
-      })
-
-      it('updates skills', function () {
-        _.extend(req.params, {userId: u1.id, skills: ['standing', 'sitting']})
-
-        res = {
-          ok: function () {
-            u1.load('skills').then(function (user) {
-              expect(Skill.simpleList(user.relations.skills).sort()).to.eql(['sitting', 'standing'])
-            })
-          }
-        }
-
-        return UserController.update(req, res)
+        .finally(function () {
+          User.find = User.trueFind
+        })
       })
     })
 

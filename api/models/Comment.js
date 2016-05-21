@@ -29,6 +29,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Tag).through(CommentTag)
   },
 
+  activities: function () {
+    return this.hasMany(Activity)
+  },
+
   createActivities: function (trx) {
     var self = this
     return self.load(['post', 'post.followers'])

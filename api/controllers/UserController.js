@@ -2,17 +2,6 @@ import { flatten, merge, find } from 'lodash'
 import validator from 'validator'
 
 var findContext = function (req) {
-  var projectId = req.param('projectId')
-  if (projectId) {
-    return Project.find(projectId).then(project => {
-      if (!project) return {}
-      if (project.isPublic()) return {project: project}
-
-      return ProjectInvitation.validate(projectId, req.param('projectToken'))
-        .then(valid => (valid ? {project: project} : {}))
-    })
-  }
-
   if (req.session.invitationId) {
     return Invitation.find(req.session.invitationId, {withRelated: ['community']})
       .then(function (invitation) {
@@ -151,20 +140,6 @@ module.exports = {
       const tags = req.param('tags')
       if (tags) promises.push(Tag.updateUser(user, req.param('tags')))
 
-      _.each([
-        ['skills', Skill],
-        ['organizations', Organization],
-        ['phones', UserPhone],
-        ['emails', UserEmail],
-        ['websites', UserWebsite]
-      ], function (model) {
-        const param = req.param(model[0])
-        if (param) {
-          promises.push(model[1].update(_.flatten([param]), user.id))
-          changed = true
-        }
-      })
-
       if (!_.isEmpty(user.changed) || changed) {
         promises.push(user.save(
           _.extend({updated_at: new Date()}, user.changed),
@@ -220,29 +195,6 @@ module.exports = {
     .catch(res.serverError.bind(res))
   },
 
-  findForProject: function (req, res) {
-    var total
-
-    res.locals.project.contributors()
-    .query(qb => {
-      qb.limit(req.param('limit') || 10)
-      qb.offset(req.param('offset') || 0)
-      qb.orderBy('projects_users.created_at', 'desc')
-      qb.select(bookshelf.knex.raw('users.*, count(*) over () as total'))
-    })
-    .fetch({withRelated: ['skills', 'organizations']})
-    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(u => _.extend(UserPresenter.presentForList(u), {membership: u.pivot.pick('role')})))
-    .then(users => {
-      if (req.param('paginate')) {
-        return {people_total: total, people: users}
-      } else {
-        return users
-      }
-    })
-    .then(res.ok, res.serverError)
-  },
-
   findForCommunity: function (req, res) {
     if (TokenAuth.isAuthenticated(res) &&
       !RequestValidation.requireTimeRange(req, res)) return
@@ -256,7 +208,7 @@ module.exports = {
       }
     )
     var total
-    Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations', 'memberships', 'tags']})
+    Search.forUsers(options).fetchAll({withRelated: ['memberships', 'tags']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
     .then(users => users.map(u => UserPresenter.presentForList(u, {communityId: res.locals.community.id})))
     .then(list =>
