@@ -127,7 +127,7 @@ module.exports = {
     })
     .fetch()
     .tap(c => community = c)
-    .tap(() => Membership.create(req.session.userId, community.id))
+    .then(() => !!community && Membership.create(req.session.userId, community.id))
     .catch(err => {
       if (err.message && err.message.includes('duplicate key value')) {
         return true
@@ -141,8 +141,8 @@ module.exports = {
       .tap(ms => ms && !ms.get('active') && ms.save({active: true}, {patch: true}))
       .then(ms => _.merge(ms.toJSON(), {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
-      }))
-      .then(res.ok))
+      })))
+    .then(resp => res.ok(resp ? resp : {error: 'invalid code'}))
   },
 
   leave: function (req, res) {
