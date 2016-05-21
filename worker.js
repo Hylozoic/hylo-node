@@ -1,3 +1,4 @@
+require('babel-register')
 var skiff = require('./lib/skiff') // this must be first
 require('./config/kue') // this must be second
 
