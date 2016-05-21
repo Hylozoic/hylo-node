@@ -91,7 +91,7 @@ module.exports = {
       autocomplete: term,
       limit: req.param('limit') || 10,
       sort: sort
-    })).fetchAll({columns: columns})
+    }).fetchAll({columns: columns}))
     .then(rows => rows.map(row => row.pick('id', 'name', 'avatar_url', 'slug')))
     .then(res.ok)
     .catch(res.serverError)
