@@ -140,20 +140,6 @@ module.exports = {
       const tags = req.param('tags')
       if (tags) promises.push(Tag.updateUser(user, req.param('tags')))
 
-      _.each([
-        ['skills', Skill],
-        ['organizations', Organization],
-        ['phones', UserPhone],
-        ['emails', UserEmail],
-        ['websites', UserWebsite]
-      ], function (model) {
-        const param = req.param(model[0])
-        if (param) {
-          promises.push(model[1].update(_.flatten([param]), user.id))
-          changed = true
-        }
-      })
-
       if (!_.isEmpty(user.changed) || changed) {
         promises.push(user.save(
           _.extend({updated_at: new Date()}, user.changed),
@@ -222,7 +208,7 @@ module.exports = {
       }
     )
     var total
-    Search.forUsers(options).fetchAll({withRelated: ['skills', 'organizations', 'memberships', 'tags']})
+    Search.forUsers(options).fetchAll({withRelated: ['memberships', 'tags']})
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
     .then(users => users.map(u => UserPresenter.presentForList(u, res.locals.community.id)))
     .then(list =>
@@ -246,7 +232,7 @@ module.exports = {
       communities: ids,
       limit: req.param('limit') || 20,
       offset: req.param('offset') || 0
-    }).fetchAll({withRelated: ['skills', 'organizations']}))
+    }).fetchAll())
     .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
     .then(users => users.map(u => UserPresenter.presentForList(u)))
     .then(list => ({people_total: total, people: list}))

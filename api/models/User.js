@@ -26,10 +26,6 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Device, 'user_id')
   },
 
-  emails: function () {
-    return this.hasMany(UserEmail)
-  },
-
   followedPosts: function () {
     return this.belongsToMany(Post).through(Follow)
   },
@@ -56,14 +52,6 @@ module.exports = bookshelf.Model.extend({
     return this.hasOne(Tour).query({where: {type: 'onboarding'}})
   },
 
-  organizations: function () {
-    return this.hasMany(Organization)
-  },
-
-  phones: function () {
-    return this.hasMany(UserPhone)
-  },
-
   posts: function () {
     return this.hasMany(Post)
   },
@@ -76,20 +64,12 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Invitation, 'invited_by_id')
   },
 
-  skills: function () {
-    return this.hasMany(Skill)
-  },
-
   tags: function () {
     return this.belongsToMany(Tag).through(TagUser)
   },
 
   thanks: function () {
     return this.hasMany(Thank)
-  },
-
-  websites: function () {
-    return this.hasMany(UserWebsite)
   },
 
   setModeratorRole: function (community) {

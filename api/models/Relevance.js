@@ -41,8 +41,6 @@ module.exports = bookshelf.Model.extend({
   wordsForUser: function(user) {
     return striptags(_.flatten([
       user.relations.posts.map(p => _.values(p.pick('title', 'description'))),
-      user.relations.organizations.map(o => o.get('org_name')),
-      user.relations.skills.map(o => o.get('skill_name')),
       _.values(user.pick('bio', 'work', 'intention', 'extra_info'))
     ]).join(' '));
   },
@@ -54,7 +52,7 @@ module.exports = bookshelf.Model.extend({
   generateForUser: function(userId, serendipity) {
     var self = this, user, userVector;
 
-    return User.find(userId, {withRelated: ['posts', 'organizations', 'skills']})
+    return User.find(userId, {withRelated: ['posts']})
     .tap(u => user = u)
     .tap(u => userVector = serendipity.docVector(self.wordsForUser(u)))
     .then(user => Promise.join(
@@ -85,7 +83,7 @@ module.exports = bookshelf.Model.extend({
       exclude: [post.get('user_id')],
       community: _.union(post.relations.communities.pluck('id'), _.map(rows, 'id')),
       limit: 1000000
-    }).fetchAll({withRelated: ['posts', 'organizations', 'skills']}))
+    }).fetchAll({withRelated: 'posts'}))
     .then(users => Promise.map(users.models, user =>
       Relevance.upsert(user.id, postId,
         serendipity.similarity(

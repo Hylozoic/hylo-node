@@ -157,7 +157,6 @@
       "Network",
       "Notification",
       "OneSignal",
-      "Organization",
       "PlayCrypto",
       "Post",
       "PostTag",
@@ -169,7 +168,6 @@
       "RequestValidation",
       "RichText",
       "Search",
-      "Skill",
       "Tag",
       "TagFollow",
       "TagUser",
@@ -177,12 +175,9 @@
       "TokenAuth",
       "Tour",
       "User",
-      "UserEmail",
       "UserExternalData",
-      "UserPhone",
       "UserPresenter",
       "UserSession",
-      "UserWebsite",
       "Validation",
       "Vote"
     ]

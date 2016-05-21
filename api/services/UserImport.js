@@ -46,10 +46,8 @@ const runWithCSVStream = function (stream, options, rowAction) {
   return promisifyStream(stream)
 }
 
-const createUser = function (row, options) {
-  if (!row) return
-
-  var attrs = _.omit(row, 'skills', 'organizations')
+const createUser = function (attrs, options) {
+  if (!attrs) return
 
   if (!validator.isEmail(attrs.email)) {
     console.error('invalid email for ' + row.name)
@@ -72,19 +70,7 @@ const createUser = function (row, options) {
         receives_email_prompts: true
       }
     }))
-    .then(user => {
-      var promises = []
-
-      if (row.skills) {
-        promises.push(Skill.update(row.skills, user.id))
-      }
-
-      if (row.organizations) {
-        promises.push(Organization.update(row.organizations, user.id))
-      }
-
-      return Promise.all(promises)
-    })
+    // TODO handle skills as tags
   })
 }
 

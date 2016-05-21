@@ -3,10 +3,6 @@ import { get } from 'lodash'
 const relationsForSelf = [
   'memberships',
   {'memberships.community': qb => qb.column('id', 'name', 'slug', 'avatar_url')},
-  'skills',
-  'organizations',
-  'phones',
-  'emails',
   'tags',
   'linkedAccounts',
   'onboarding'
@@ -32,10 +28,6 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
 const extraAttributes = (user, viewingUserId) =>
   Promise.props({
     public_email: user.encryptedEmail(),
-    skills: Skill.simpleList(user.relations.skills),
-    organizations: Organization.simpleList(user.relations.organizations),
-    phones: UserPhone.simpleList(user.relations.phones),
-    emails: UserEmail.simpleList(user.relations.emails),
     post_count: Post.countForUser(user), // TODO remove after hylo-frontend is gone
     event_count: Post.countForUser(user, 'event'),
     grouped_post_count: Post.groupedCountForUser(user),
@@ -81,9 +73,7 @@ const UserPresenter = module.exports = {
 
   fetchForOther: function (id, viewingUserId) {
     var user
-    return User.find(id, {
-      withRelated: ['skills', 'organizations', 'phones', 'emails', 'tags']
-    })
+    return User.find(id, {withRelated: 'tags'})
     .tap(user => {
       if (!user || !user.get('active')) throw new Error('User not found')
     })
@@ -94,8 +84,6 @@ const UserPresenter = module.exports = {
 
   presentForList: function (user, communityId) {
     var moreAttributes = {
-      skills: Skill.simpleList(user.relations.skills),
-      organizations: Organization.simpleList(user.relations.organizations),
       public_email: user.encryptedEmail(),
       tags: get(user, 'relations.tags.models')
     }

@@ -1,19 +1,3 @@
-const listModelQuerySettings = (qb, table, column, opts) => {
-  qb.limit(opts.limit || 20)
-
-  // this will require the fetch or fetchAll call to have {columns: [column]}
-  qb.groupBy(column)
-
-  if (opts.autocomplete) {
-    Search.addTermToQueryBuilder(opts.autocomplete, qb, {
-      columns: [format('%s.%s', table, column)]
-    })
-    // qb.whereRaw('users_org.org_name ilike ?', opts.autocomplete + '%')
-  }
-
-  qb.whereRaw(format('length(%s) < 40', column))
-}
-
 module.exports = {
   forCommunities: function (opts) {
     return Community.query(qb => {
@@ -178,18 +162,6 @@ module.exports = {
     })
   },
 
-  forSkills: function (opts) {
-    return Skill.query(qb => {
-      listModelQuerySettings(qb, 'users_skill', 'skill_name', opts)
-    })
-  },
-
-  forOrganizations: function (opts) {
-    return Organization.query(qb => {
-      listModelQuerySettings(qb, 'users_org', 'org_name', opts)
-    })
-  },
-
   forTags: function (opts) {
     return Tag.query(q => {
       if (opts.communities) {
@@ -227,5 +199,4 @@ module.exports = {
       this.whereRaw(statement, values)
     })
   }
-
 }
