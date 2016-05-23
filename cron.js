@@ -1,3 +1,4 @@
+require('babel-register')
 var skiff = require('./lib/skiff') // this must be required first
 var moment = require('moment-timezone')
 var rollbar = skiff.rollbar
