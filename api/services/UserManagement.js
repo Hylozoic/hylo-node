@@ -63,7 +63,10 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['emails', 'user_id', 'value'],
     ['websites', 'user_id', 'value'],
     ['tours', 'user_id', 'type'],
-    ['vote', 'user_id', 'post_id']
+    ['vote', 'user_id', 'post_id'],
+    ['tag_follows', 'user_id', 'tag_id'],
+    ['communities_tags', 'user_id', 'tag_id'],
+    ['tags_users', 'user_id', 'tag_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -84,7 +87,8 @@ const generateRemoveQueries = function (userId, knex) {
   ;[
     ['comment', 'deactivated_by_id'],
     ['community', 'created_by_id'],
-    ['follower', 'added_by_id']
+    ['follower', 'added_by_id'],
+    ['communities_tags', 'user_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -94,6 +98,8 @@ const generateRemoveQueries = function (userId, knex) {
   // cascading deletes
   push('delete from thank_you where comment_id in ' +
     '(select id from comment where user_id = ?)', userId)
+  push('delete from notifications where activity_id in ' +
+    '(select id from activity where reader_id = ?)', userId)
 
   // deletes
   ;[
@@ -116,6 +122,8 @@ const generateRemoveQueries = function (userId, knex) {
     ['vote', 'user_id'],
     ['comment', 'user_id'],
     ['user_external_data', 'user_id'],
+    ['tags_users', 'user_id'],
+    ['tag_follows', 'user_id'],
     ['users', 'id']
   ].forEach(args => {
     var table = args[0]
