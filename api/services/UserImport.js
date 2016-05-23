@@ -50,7 +50,7 @@ const createUser = function (attrs, options) {
   if (!attrs) return
 
   if (!validator.isEmail(attrs.email)) {
-    console.error('invalid email for ' + row.name)
+    console.error('invalid email for ' + attrs.name)
     return
   }
 
