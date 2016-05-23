@@ -64,11 +64,9 @@ module.exports.bootstrap = function (done) {
 
     knex.on('query', function (data) {
       if (_.includes(data.bindings, 'undefined')) {
-        rollbar.handleErrorWithPayloadData('undefined value in SQL query', {
-          custom: {
-            sql: data.sql,
-            bindings: data.bindings
-          }
+        const err = new Error('undefined value in SQL query')
+        rollbar.handleErrorWithPayloadData(err, {
+          custom: {sql: data.sql, bindings: data.bindings}
         })
       }
     })
