@@ -1,3 +1,4 @@
+import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 
 module.exports = bookshelf.Model.extend({
@@ -134,37 +135,38 @@ module.exports = bookshelf.Model.extend({
   },
 
   createActivities: function (trx) {
-    var self = this
-    return self.load(['communities', 'communities.users', 'tags'], {transacting: trx})
+    return this.load(['communities', 'communities.users', 'tags'], {transacting: trx})
     .then(() =>
       TagFollow.query(qb => {
-        qb.whereIn('tag_id', self.relations.tags.map('id'))
-        qb.whereIn('community_id', self.relations.communities.map('id'))
+        qb.whereIn('tag_id', this.relations.tags.map('id'))
+        qb.whereIn('community_id', this.relations.communities.map('id'))
       })
       .fetchAll({withRelated: ['tag'], transacting: trx}))
     .then(tagFollows => {
-      const mentioned = RichText.getUserMentions(self.get('description')).map(userId => ({
+      const mentioned = RichText.getUserMentions(this.get('description')).map(userId => ({
         reader_id: userId,
-        post_id: self.id,
-        actor_id: self.get('user_id'),
+        post_id: this.id,
+        actor_id: this.get('user_id'),
         reason: 'mention'
       }))
-      const members = flatten(self.relations.communities.map(community =>
+      const members = flatten(this.relations.communities.map(community =>
         community.relations.users.map(user => ({
           reader_id: user.id,
-          post_id: self.id,
-          actor_id: self.get('user_id'),
+          post_id: this.id,
+          actor_id: this.get('user_id'),
           community_id: community.id,
           reason: `newPost: ${community.id}`
         }))))
       const tagFollowers = tagFollows.map(tagFollow => ({
         reader_id: tagFollow.get('user_id'),
-        post_id: self.id,
-        actor_id: self.get('user_id'),
+        post_id: this.id,
+        actor_id: this.get('user_id'),
         community_id: tagFollow.get('community_id'),
         reason: `tag: ${tagFollow.relations.tag.get('name')}`
       }))
-      return Activity.saveForReasons(mentioned.concat(members).concat(tagFollowers), trx)
+      const readers = filter(r => r.reader_id !== this.get('user_id'), 
+        mentioned.concat(members).concat(tagFollowers))
+      return Activity.saveForReasons(readers, trx)
     })
   }
 

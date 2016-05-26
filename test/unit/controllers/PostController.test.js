@@ -93,9 +93,12 @@ describe('PostController', () => {
         communities: [fixtures.c1.id]
       })
 
-      return PostController.create(req, res)
-      .then(() => Activity.where({post_id: res.body.id, reader_id: fixtures.u2.id}).fetch())
-      .then(activity => {
+      return fixtures.u1.joinCommunity(fixtures.c1.id)
+      .then(() => PostController.create(req, res))
+      .then(() => Activity.where({post_id: res.body.id}).fetchAll())
+      .then(activities => {
+        expect(activities.length).to.equal(1)
+        const activity = activities.first()
         expect(activity).to.exist
         expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
         expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${fixtures.c1.id}`]})
