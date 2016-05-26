@@ -164,7 +164,7 @@ module.exports = bookshelf.Model.extend({
         community_id: tagFollow.get('community_id'),
         reason: `tag: ${tagFollow.relations.tag.get('name')}`
       }))
-      const readers = filter(r => r.reader_id !== this.get('user_id'), 
+      const readers = filter(r => r.reader_id !== this.get('user_id'),
         mentioned.concat(members).concat(tagFollowers))
       return Activity.saveForReasons(readers, trx)
     })
