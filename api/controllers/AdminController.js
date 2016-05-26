@@ -142,7 +142,7 @@ module.exports = {
   loginAsUser: function (req, res) {
     return User.find(req.param('userId'))
     .then(user => UserSession.login(req, user, 'admin'))
-    .then(() => res.redirect('/'))
+    .then(() => res.redirect('/app'))
   },
 
   rawMetrics: function (req, res) {
