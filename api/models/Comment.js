@@ -1,3 +1,5 @@
+import { filter } from 'lodash/fp'
+
 module.exports = bookshelf.Model.extend({
   tableName: 'comment',
 
@@ -34,24 +36,24 @@ module.exports = bookshelf.Model.extend({
   },
 
   createActivities: function (trx) {
-    var self = this
-    return self.load(['post', 'post.followers'])
+    return this.load(['post', 'post.followers'])
     .then(() => {
-      const followers = self.relations.post.relations.followers.map(follower => ({
+      const followers = this.relations.post.relations.followers.map(follower => ({
         reader_id: follower.id,
-        comment_id: self.id,
-        post_id: self.relations.post.id,
-        actor_id: self.get('user_id'),
+        comment_id: this.id,
+        post_id: this.relations.post.id,
+        actor_id: this.get('user_id'),
         reason: 'newComment'
       }))
-      const mentioned = RichText.getUserMentions(self.get('text')).map(mentionedId => ({
+      const mentioned = RichText.getUserMentions(this.get('text')).map(mentionedId => ({
         reader_id: mentionedId,
-        comment_id: self.id,
-        post_id: self.relations.post.id,
-        actor_id: self.get('user_id'),
+        comment_id: this.id,
+        post_id: this.relations.post.id,
+        actor_id: this.get('user_id'),
         reason: 'commentMention'
       }))
-      return Activity.saveForReasons(followers.concat(mentioned), trx)
+      const readers = filter(r => r.reader_id !== this.get('user_id'), followers.concat(mentioned))
+      return Activity.saveForReasons(readers, trx)
     })
   }
 }, {

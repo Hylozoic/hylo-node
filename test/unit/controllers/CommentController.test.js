@@ -68,16 +68,18 @@ describe('CommentController', function () {
         ok: spy(function (x) { responseData = x })
       }
 
-      return Follow.create(fixtures.u2.id, fixtures.p2.id)
+      return Promise.join(
+        Follow.create(fixtures.u1.id, fixtures.p2.id),
+        Follow.create(fixtures.u2.id, fixtures.p2.id)
+      )
       .then(() => CommentController.create(req, res))
-      .then(() =>
-        Activity.where({
-          comment_id: responseData.id,
-          reader_id: fixtures.u2.id
-        }).fetch())
-      .then(activity => {
+      .then(() => Activity.where({comment_id: responseData.id}).fetchAll())
+      .then(activities => {
+        expect(activities.length).to.equal(1)
+        const activity = activities.first()
         expect(activity).to.exist
         expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
+        expect(activity.get('reader_id')).to.equal(fixtures.u2.id)
         expect(activity.get('post_id')).to.equal(fixtures.p2.id)
         expect(activity.get('meta')).to.deep.equal({reasons: ['newComment']})
         expect(activity.get('unread')).to.equal(true)
