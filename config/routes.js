@@ -56,8 +56,6 @@ module.exports.routes = {
   'POST   /noo/freshness/posts/all-posts/:userId':        'PostController.checkFreshnessForAllForUser',
   'POST   /noo/freshness/posts/followed-posts/:userId':   'PostController.checkFreshnessForFollowed',
   'POST   /noo/freshness/posts/network/:networkId':       'PostController.checkFreshnessForNetwork',
-  'POST   /noo/freshness/posts/community/:communityId/tag/:tagName':
-    'PostController.checkFreshnessForTag',
   'POST   /noo/freshness/posts/tag/:tagName':             'PostController.checkFreshnessForTagInAllCommunities',
 
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
@@ -80,7 +78,6 @@ module.exports.routes = {
   'POST   /noo/network/:networkId':                       'NetworkController.update',
 
   'GET    /noo/community/:communityId/tag/:tagName':       'TagController.findOneInCommunity',
-  'GET    /noo/community/:communityId/tag/:tagName/posts': 'PostController.findForTag',
   'POST   /noo/community/:communityId/tag/:tagName/follow':'TagController.follow',
   'GET    /noo/community/:communityId/tags/followed':      'TagController.findFollowed',
   'GET    /noo/community/:communityId/tags/leftnav':       'TagController.findForLeftNav',

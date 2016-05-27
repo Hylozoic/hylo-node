@@ -46,7 +46,8 @@ const queryForCommunity = function (req, res) {
   return queryPosts(req, {
     communities: [res.locals.community.id],
     visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE),
-    currentUserId: req.session.userId
+    currentUserId: req.session.userId,
+    tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
   })
 }
 
@@ -86,23 +87,11 @@ const queryForNetwork = function (req, res) {
   }))
 }
 
-const queryForTag = function (req, res) {
-  return Tag.find(req.param('tagName'))
-  .then(tag => queryPosts(req, {
-    communities: [res.locals.community.id],
-    tag: tag.id,
-    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE)
-  }))
-}
-
 const queryForTagInAllCommunities = function (req, res) {
-  return Promise.join(
-    Tag.find(req.param('tagName')),
-    Membership.activeCommunityIds(req.session.userId),
-    (tag, communityIds) => queryPosts(req, {
-      communities: communityIds,
-      tag: tag.id
-    }))
+  return queryPosts(req, {
+    communities: Membership.activeCommunityIds(req.session.userId),
+    tag: Tag.find(req.param('tagName')).then(t => t.id)
+  })
 }
 
 const createFindAction = (queryFunction) => (req, res) => {
@@ -372,7 +361,6 @@ const queries = [
   ['AllForUser', queryForAllForUser],
   ['Followed', queryForFollowed],
   ['Network', queryForNetwork],
-  ['Tag', queryForTag],
   ['TagInAllCommunities', queryForTagInAllCommunities]
 ]
 
