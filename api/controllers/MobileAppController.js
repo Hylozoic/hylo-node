@@ -15,6 +15,7 @@ module.exports = {
 
     switch (req.headers['ios-version']) {
       case '1.6':
+      case '1.65':
         result = {
           type: 'force',  // can be 'force' or 'suggest'
           title: 'A new version of the app is available',
