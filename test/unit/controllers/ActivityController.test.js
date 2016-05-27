@@ -104,7 +104,7 @@ describe('ActivityController', () => {
         expect(res.body).to.exist
         expect(res.body.length).to.equal(2)
         var postNames = res.body.map(activity => activity.post.name)
-        expect(postNames).to.deep.equal(names)
+        expect(postNames.sort()).to.deep.equal(names.sort())
       })
     })
   })
