@@ -49,7 +49,7 @@ export const afterSavingPost = function (post, opts) {
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
   ]))
   .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), trx))
-  .then(() => post.createActivities(trx))
+  .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
 }
 
 export const updateChildren = (post, children, trx) => {

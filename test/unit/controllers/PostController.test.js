@@ -1,7 +1,7 @@
-var root = require('root-path')
-var setup = require(root('test/setup'))
-var factories = require(root('test/setup/factories'))
-var PostController = require(root('api/controllers/PostController'))
+const root = require('root-path')
+const setup = require(root('test/setup'))
+const factories = require(root('test/setup/factories'))
+const PostController = require(root('api/controllers/PostController'))
 
 const testImageUrl = 'https://www.hylo.com/favicon.png'
 const testImageUrl2 = 'https://www.hylo.com/faviconDev.png'
@@ -82,45 +82,6 @@ describe('PostController', () => {
         expect(image).to.exist
         expect(image.type).to.equal('image')
         expect(image.url).to.equal(testImageUrl)
-      })
-    })
-
-    it('creates an activity for community member', () => {
-      _.extend(req.params, {
-        name: 'Just A Post',
-        description: '<p>Hey Communtiy!</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-
-      return fixtures.u1.joinCommunity(fixtures.c1.id)
-      .then(() => PostController.create(req, res))
-      .then(() => Activity.where({post_id: res.body.id}).fetchAll())
-      .then(activities => {
-        expect(activities.length).to.equal(1)
-        const activity = activities.first()
-        expect(activity).to.exist
-        expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
-        expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${fixtures.c1.id}`]})
-        expect(activity.get('unread')).to.equal(true)
-      })
-    })
-
-    it('creates an activity for a follower', () => {
-      _.extend(req.params, {
-        name: 'New Activity Creator',
-        description: '<p>Hey <a data-user-id="' + fixtures.u2.id + '">U2</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-
-      return PostController.create(req, res)
-      .then(() => Activity.where({post_id: res.body.id, reader_id: fixtures.u2.id}).fetch())
-      .then(activity => {
-        expect(activity).to.exist
-        expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
-        expect(activity.get('meta')).to.deep.equal({reasons: ['mention', `newPost: ${fixtures.c1.id}`]})
-        expect(activity.get('unread')).to.equal(true)
       })
     })
 
@@ -231,30 +192,6 @@ describe('PostController', () => {
           expect(post.get('name')).to.equal('New Event')
           expect(post.get('type')).to.equal('event')
           expect(post.pivot.get('selected')).to.be.true
-        })
-      })
-
-      it('creates an activity for a tag follower', () => {
-        _.extend(req.params, {
-          name: 'New Activity Creator',
-          description: '#FollowThisTag',
-          type: 'intention',
-          communities: [fixtures.c1.id]
-        })
-
-        return new Tag({name: 'FollowThisTag'}).save()
-        .then(tag => new TagFollow({
-          tag_id: tag.id,
-          user_id: fixtures.u2.id,
-          community_id: fixtures.c1.id
-        }).save())
-        .then(() => PostController.create(req, res))
-        .then(() => Activity.where({post_id: res.body.id, reader_id: fixtures.u2.id}).fetch())
-        .then(activity => {
-          expect(activity).to.exist
-          expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
-          expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${fixtures.c1.id}`, 'tag: FollowThisTag']})
-          expect(activity.get('unread')).to.equal(true)
         })
       })
     })

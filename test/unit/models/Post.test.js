@@ -207,6 +207,80 @@ describe('Post', function () {
       })
     })
   })
+
+  describe('.createActivities', () => {
+    var u, u2, u3, c
+    before(() => {
+      u = factories.user()
+      u2 = factories.user()
+      u3 = factories.user()
+      c = factories.community()
+      return Promise.join(u.save(), u2.save(), u3.save(), c.save())
+      .then(() => Promise.join(
+        u2.joinCommunity(c),
+        u3.joinCommunity(c)
+      ))
+    })
+
+    it('creates activity for community members', () => {
+      var post = factories.post({user_id: u.id})
+      return post.save()
+      .then(() => post.communities().attach(c.id))
+      .then(() => post.createActivities())
+      .then(() => Activity.where({post_id: post.id}).fetchAll())
+      .then(activities => {
+        expect(activities.length).to.equal(2)
+        expect(activities.pluck('reader_id').sort()).to.deep.equal([u2.id, u3.id])
+        activities.forEach(activity => {
+          expect(activity.get('actor_id')).to.equal(u.id)
+          expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${c.id}`]})
+          expect(activity.get('unread')).to.equal(true)
+        })
+      })
+    })
+
+    it('creates an activity for a mention', () => {
+      var post = factories.post({
+        user_id: u.id,
+        description: `<p>Yo <a data-user-id="${u3.id}">u3</a>, how goes it</p>`
+      })
+      return post.save()
+      .then(() => post.communities().attach(c.id))
+      .then(() => post.createActivities())
+      .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
+      .then(activities => {
+        expect(activities.length).to.equal(1)
+        const activity = activities.first()
+        expect(activity).to.exist
+        expect(activity.get('actor_id')).to.equal(u.id)
+        expect(activity.get('meta')).to.deep.equal({reasons: ['mention', `newPost: ${c.id}`]})
+        expect(activity.get('unread')).to.equal(true)
+      })
+    })
+
+    it('creates an activity for a tag follower', () => {
+      var post = factories.post({
+        user_id: u.id,
+        description: '#FollowThisTag'
+      })
+
+      return new Tag({name: 'FollowThisTag'}).save()
+      .tap(tag => u3.followedTags().attach({tag_id: tag.id, community_id: c.id}))
+      .then(() => post.save())
+      .then(() => Tag.updateForPost(post, null))
+      .then(() => post.communities().attach(c.id))
+      .then(() => post.createActivities())
+      .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
+      .then(activities => {
+        expect(activities.length).to.equal(1)
+        const activity = activities.first()
+        expect(activity).to.exist
+        expect(activity.get('actor_id')).to.equal(u.id)
+        expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${c.id}`, 'tag: FollowThisTag']})
+        expect(activity.get('unread')).to.equal(true)
+      })
+    })
+  })
 })
 
 describe('post/util', () => {
@@ -261,6 +335,12 @@ describe('post/util', () => {
 
     before(() => {
       post = factories.post({description: 'wow!'})
+      Queue._originalClassMethod = Queue.classMethod
+      Queue.classMethod = spy(() => {})
+    })
+
+    after(() => {
+      Queue.classMethod = Queue._originalClassMethod
     })
 
     it('works', () => {
@@ -289,6 +369,9 @@ describe('post/util', () => {
         expect(child).to.exist
         expect(child.get('name')).to.equal('bob')
         expect(child.get('description')).to.equal('is your uncle')
+
+        expect(Queue.classMethod).to.have.been.called
+        .with('Post', 'createActivities', {postId: post.id})
       })
     })
   })

@@ -24,6 +24,7 @@ export const sanitize = text => {
 
 // returns a set of unique ids of any @mentions found in the text
 export const getUserMentions = text => {
+  if (!text) return []
   var $ = Cheerio.load(text)
   return _.uniq($('a[data-user-id]').map(function () {
     return $(this).data('user-id').toString()
