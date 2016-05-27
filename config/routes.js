@@ -101,9 +101,6 @@ module.exports.routes = {
   'GET    /noo/admin/raw-metrics':                        'AdminController.rawMetrics',
   'GET    /noo/admin/login-as/:userId':                   'AdminController.loginAsUser',
 
-  'GET    /noo/linkedin/authorize':                       'LinkedinController.authorize',
-  'GET    /noo/linkedin/provide':                         'LinkedinController.provideData',
-
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
   'POST   /noo/hook/message':                             'MessageController.relayFromEmail',
   'POST   /noo/hook/post':                                'PostController.createFromEmail',
@@ -136,7 +133,5 @@ module.exports.routes = {
 
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
 
-  'GET     /noo/live-status':                             'LiveStatusController.show',
-
-  '/*':                                                   'StaticPageController.proxy'
+  'GET     /noo/live-status':                             'LiveStatusController.show'
 }

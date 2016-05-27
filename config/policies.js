@@ -23,7 +23,6 @@ module.exports.policies = {
   '*': false,
 
   SessionController: true,
-  LinkedinController: ['sessionAuth'],
 
   InvitationController: {
     use: true,
@@ -148,7 +147,6 @@ module.exports.policies = {
     create: true
   },
 
-  StaticPageController: true,
   NexudusController: true,
   MobileAppController: true,
   LiveStatusController: true,
