@@ -2,12 +2,19 @@ var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var ActivityController = require(root('api/controllers/ActivityController'))
-var PostController = require(root('api/controllers/PostController'))
+import { merge, omit, times } from 'lodash'
 
 const destroyAllActivities = () => {
   return Activity.fetchAll()
   .then(activities => activities.map(activity => activity.destroy()))
 }
+
+const createPostWithActivity = (userId, attrs = {}) =>
+  factories.post(merge({
+    description: `<p>Hey <a data-user-id="${userId}">you</a></p>`
+  }, omit(attrs, 'communities'))).save()
+  .tap(post => attrs.communities && post.communities().attach(attrs.communities))
+  .tap(post => post.createActivities())
 
 describe('ActivityController', () => {
   var req, res, fixtures
@@ -37,17 +44,10 @@ describe('ActivityController', () => {
     beforeEach(() => destroyAllActivities())
 
     it('returns an activity for a mention', () => {
-      var postReq = factories.mock.request()
-      var postRes = factories.mock.response()
-      _.extend(postReq.params, {
-        name: 'NewPost',
-        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U2</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-      postReq.session.userId = fixtures.u2.id
+      var post
       req.session.userId = fixtures.u1.id
-      return PostController.create(postReq, postRes)
+      return createPostWithActivity(fixtures.u1.id, {user_id: fixtures.u2.id})
+      .tap(p => post = p)
       .then(() => ActivityController.find(req, res))
       .then(() => {
         expect(res.body).to.exist
@@ -63,49 +63,19 @@ describe('ActivityController', () => {
         })
         expect(activity.created_at).is.not.null
         expect(activity.post).to.contain({
-          name: 'NewPost',
           user_id: fixtures.u2.id,
-          type: 'intention'
+          name: post.name
         })
         expect(activity.actor.id).to.equal(fixtures.u2.id)
       })
     })
 
     it('returns 3 activities', () => {
-      var req1 = factories.mock.request()
-      var res1 = factories.mock.response()
-      _.extend(req1.params, {
-        name: 'NewPost 1',
-        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-      req1.session.userId = fixtures.u2.id
-
-      var req2 = factories.mock.request()
-      var res2 = factories.mock.response()
-      _.extend(req2.params, {
-        name: 'NewPost 2',
-        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-      req2.session.userId = fixtures.u2.id
-
-      var req3 = factories.mock.request()
-      var res3 = factories.mock.response()
-      _.extend(req3.params, {
-        name: 'NewPost 3',
-        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-      req3.session.userId = fixtures.u2.id
-
       req.session.userId = fixtures.u1.id
-      return PostController.create(req1, res1)
-      .then(() => PostController.create(req2, res2))
-      .then(() => PostController.create(req3, res3))
+      return Promise.map(
+        times(3, () => createPostWithActivity(fixtures.u1.id)),
+        x => x
+      )
       .then(() => ActivityController.find(req, res))
       .then(() => {
         expect(res.body).to.exist
@@ -116,49 +86,25 @@ describe('ActivityController', () => {
 
   describe('#findForCommunity', () => {
     it('returns activities for the given community only', () => {
-      var req1 = factories.mock.request()
-      var res1 = factories.mock.response()
-      _.extend(req1.params, {
-        name: 'NewPost 1',
-        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-      req1.session.userId = fixtures.u2.id
-
-      var req2 = factories.mock.request()
-      var res2 = factories.mock.response()
-      _.extend(req2.params, {
-        name: 'NewPost 2',
-        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c1.id]
-      })
-      req2.session.userId = fixtures.u2.id
-
-      var req3 = factories.mock.request()
-      var res3 = factories.mock.response()
-      _.extend(req3.params, {
-        name: 'NewPost 3, in a different community',
-        description: '<p>Hey <a data-user-id="' + fixtures.u1.id + '">U1</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
-        communities: [fixtures.c2.id]
-      })
-      req3.session.userId = fixtures.u2.id
-
-      _.extend(req.params, {
-        communityId: fixtures.c1.id
-      })
+      var names
+      req.params.communityId = fixtures.c1.id
       req.session.userId = fixtures.u1.id
-      return PostController.create(req1, res1)
-      .then(() => PostController.create(req2, res2))
-      .then(() => PostController.create(req3, res3))
+      return Promise.map(
+        times(2, () => createPostWithActivity(fixtures.u1.id, {
+          communities: [fixtures.c1.id]
+        })),
+        x => x
+      )
+      .tap(posts => names = posts.map(p => p.get('name')))
+      .then(() => createPostWithActivity(fixtures.u1.id, {
+        communities: [fixtures.c2.id]
+      }))
       .then(() => ActivityController.findForCommunity(req, res))
       .then(() => {
         expect(res.body).to.exist
         expect(res.body.length).to.equal(2)
         var postNames = res.body.map(activity => activity.post.name)
-        expect(postNames).to.deep.equal(['NewPost 2', 'NewPost 1'])
+        expect(postNames).to.deep.equal(names)
       })
     })
   })
