@@ -226,26 +226,33 @@ module.exports = bookshelf.Model.extend({
   findUnsent: function (options) {
     return Notification.query(q => {
       q.where({sent_at: null})
+      q.limit(200)
     })
     .fetchAll(options)
   },
 
   sendUnsent: function () {
-    return Notification.findUnsent({withRelated: [
-      'activity',
-      'activity.post',
-      'activity.post.communities',
-      'activity.post.user',
-      'activity.comment',
-      'activity.comment.user',
-      'activity.comment.post',
-      'activity.comment.post.user',
-      'activity.comment.post.communities',
-      'activity.community',
-      'activity.reader',
-      'activity.actor'
-    ]})
-    .then(notifications => notifications.map(notification => notification.send()))
+    const sendBatch = () =>
+      Notification.findUnsent({withRelated: [
+        'activity',
+        'activity.post',
+        'activity.post.communities',
+        'activity.post.user',
+        'activity.comment',
+        'activity.comment.user',
+        'activity.comment.post',
+        'activity.comment.post.user',
+        'activity.comment.post.communities',
+        'activity.community',
+        'activity.reader',
+        'activity.actor'
+      ]})
+      .tap(notifications => Promise.map(notifications, notification => notification.send()))
+      .then(notifications => {
+        if (notifications.length > 0) return sendBatch()
+        return Promise.resolve()
+      })
+    return sendBatch()
   },
 
   priorityReason: function (reasons) {
