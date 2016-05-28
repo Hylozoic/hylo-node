@@ -226,6 +226,7 @@ module.exports = bookshelf.Model.extend({
   findUnsent: function (options) {
     return Notification.query(q => {
       q.where({sent_at: null})
+      q.limit(200)
     })
     .fetchAll(options)
   },
