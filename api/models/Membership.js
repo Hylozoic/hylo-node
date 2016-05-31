@@ -45,6 +45,7 @@ module.exports = bookshelf.Model.extend({
       user_id: userId,
       community_id: communityId,
       created_at: new Date(),
+      settings: {send_email: true, send_push_notifications: true},
       last_viewed_at: new Date(),
       active: true,
       role: opts.role || Membership.DEFAULT_ROLE
