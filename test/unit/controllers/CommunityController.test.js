@@ -228,12 +228,12 @@ describe('CommunityController', () => {
     })
 
     it('works', () => {
-      req.params.settings = {send_email: true, send_push: false}
+      req.params.settings = {send_email: true, send_push_notifications: false}
 
       return CommunityController.updateMembership(req, res)
       .then(() => Membership.where({user_id: user.id, community_id: community.id}).fetch())
       .then(membership => {
-        expect(membership.get('settings')).to.deep.equal({send_email: true, send_push: false})
+        expect(membership.get('settings')).to.deep.equal({send_email: true, send_push_notifications: false})
       })
     })
   })
