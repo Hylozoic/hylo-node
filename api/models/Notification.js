@@ -226,7 +226,7 @@ module.exports = bookshelf.Model.extend({
   findUnsent: function (options) {
     return Notification.query(q => {
       q.where({sent_at: null})
-      q.limit(200)
+      q.limit(options.limit || 200)
     })
     .fetchAll(options)
   },
@@ -247,6 +247,7 @@ module.exports = bookshelf.Model.extend({
       'activity.actor'
     ]})
     .then(notifications => notifications.map(notification => notification.send()))
+    .tap(notifications => notifications.length > 0 && Queue.classMethod('Notification', 'sendUnsent'))
   },
 
   priorityReason: function (reasons) {
