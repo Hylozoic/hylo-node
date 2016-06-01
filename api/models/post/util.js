@@ -19,10 +19,6 @@ export const setupNewPostAttrs = function (userId, params) {
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
   }, pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
 
-  if (!attrs.type) {
-    attrs.type = postTypeFromTag(params.tag)
-  }
-
   return Promise.resolve(attrs)
 }
 

@@ -121,7 +121,6 @@ const PostController = {
     return setupNewPostAttrs(req.session.userId, req.allParams())
     .tap(attrs => {
       if (!attrs.name) throw new Error("title can't be blank")
-      if (!attrs.type && !attrs.tag) throw new Error("type and tag can't both be blank")
     })
     .then(attrs => bookshelf.transaction(trx =>
       Post.create(attrs, {transacting: trx})

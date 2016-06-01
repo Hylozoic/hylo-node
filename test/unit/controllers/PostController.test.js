@@ -105,7 +105,7 @@ describe('PostController', () => {
         })
       })
 
-      it('sets post type from tag', () => {
+      it('does not set post type from tag', () => {
         _.extend(req.params, {
           name: 'NewPost',
           description: '<p>Post Body</p>',
@@ -118,11 +118,11 @@ describe('PostController', () => {
           var data = res.body
           expect(data).to.exist
           expect(data.name).to.equal('NewPost')
-          expect(data.type).to.equal('intention')
+          expect(data.type).to.be.undefined
         })
       })
 
-      it('sets post type to chat when custom tag', () => {
+      it('leaves post type blank when a custom tag is set', () => {
         _.extend(req.params, {
           name: 'NewPost',
           description: '<p>Post Body</p>',
@@ -135,7 +135,7 @@ describe('PostController', () => {
           var data = res.body
           expect(data).to.exist
           expect(data.name).to.equal('NewPost')
-          expect(data.type).to.equal('chat')
+          expect(data.type).to.be.undefined
         })
       })
 
@@ -160,7 +160,6 @@ describe('PostController', () => {
         _.extend(req.params, {
           name: 'New Awesome Post #awesome',
           description: '<p>Post Body</p>',
-          type: 'chat',
           communities: [fixtures.c1.id]
         })
 
