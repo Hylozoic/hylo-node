@@ -199,7 +199,6 @@ describe('PostController', () => {
         _.extend(req.params, {
           name: 'New Tag Followed Post',
           description: '<p>this is relevant to #ntfpone and #ntfptwo</p>',
-          type: 'event',
           tag: 'zounds',
           communities: [fixtures.c1.id]
         })
@@ -215,16 +214,16 @@ describe('PostController', () => {
             t2 = nt2
             t3 = nt3
             return Promise.join(
-              fixtures.u1.tagFollows().attach(t1),
-              fixtures.u1.tagFollows().attach(t2),
-              fixtures.u1.tagFollows().attach(t3)
+              new TagFollow({tag_id: t1.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).save(),
+              new TagFollow({tag_id: t2.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).save(),
+              new TagFollow({tag_id: t3.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).save()
             )
           })
         .then(() => PostController.create(req, res))
         .then(() => Promise.join(
-          TagFollow.where({tag_id: t1.id, user_id: fixtures.u1.id}).fetch(),
-          TagFollow.where({tag_id: t2.id, user_id: fixtures.u1.id}).fetch(),
-          TagFollow.where({tag_id: t3.id, user_id: fixtures.u1.id}).fetch(),
+          TagFollow.where({tag_id: t1.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).fetch(),
+          TagFollow.where({tag_id: t2.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).fetch(),
+          TagFollow.where({tag_id: t3.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).fetch(),
           (tf1, tf2, tf3) => {
             expect(tf1.get('new_post_count')).to.equal(1)
             expect(tf2.get('new_post_count')).to.equal(1)
