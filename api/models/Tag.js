@@ -1,9 +1,8 @@
 import { updateOrRemove } from '../../lib/util/knex'
 import { differenceBy, flatten, includes, isEmpty, pick, some, uniq, uniqBy } from 'lodash'
-import { map } from 'lodash/fp'
+import { filter, map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
-  // TODO alphanumeric and underscore
   return (text.match(/#[A-Za-z][\w-]+/g) || []).map(str => str.substr(1))
 }
 
@@ -154,6 +153,8 @@ module.exports = bookshelf.Model.extend({
 
   DEFAULT_NAMES: ['offer', 'request', 'intention'],
 
+  tagsInText,
+
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
     if (isNaN(Number(id))) {
@@ -233,6 +234,24 @@ module.exports = bookshelf.Model.extend({
       const tables = ['tags_users', 'tag_follows', 'communities_tags', 'posts_tags']
       return Promise.all(tables.map(t => trx(t).where('tag_id', id).del()))
       .then(() => trx('tags').where('id', id).del())
+    })
+  },
+
+  nonexistent: (names, communities) => {
+    const isCommunity = id => row => Number(row.community_id) === Number(id)
+    const sameTag = name => row => row.name.toLowerCase() === name.toLowerCase()
+
+    return Tag.query().where('name', 'in', names)
+    .join('communities_tags', 'communities_tags.tag_id', 'tags.id')
+    .where('community_id', 'in', communities)
+    .select(['tags.name', 'community_id'])
+    .then(rows => {
+      return names.reduce((m, n) => {
+        const matching = filter(sameTag(n), rows)
+        const missing = filter(id => !some(matching, isCommunity(id)), communities)
+        if (missing.length > 0) m[n] = missing
+        return m
+      }, {})
     })
   }
 })

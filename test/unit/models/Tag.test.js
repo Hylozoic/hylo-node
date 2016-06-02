@@ -3,8 +3,12 @@ var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 
 describe('Tag', () => {
+  var u
+
   before(() => {
+    u = factories.user()
     return setup.clearDb()
+    .then(() => u.save())
   })
 
   describe('updateForPost', () => {
@@ -271,7 +275,7 @@ describe('Tag', () => {
   })
 
   describe('.merge', () => {
-    var t1, t2, t3, p1, p2, c, u
+    var t1, t2, t3, p1, p2, c
 
     before(() => {
       const k = bookshelf.knex
@@ -281,9 +285,8 @@ describe('Tag', () => {
       p1 = factories.post()
       p2 = factories.post()
       c = factories.community()
-      u = factories.user()
 
-      return Promise.all([t1, t2, t3, p1, p2, c, u].map(x => x.save()))
+      return Promise.all([t1, t2, t3, p1, p2, c].map(x => x.save()))
       .then(() => Promise.all([
         k('posts_tags').insert({tag_id: t1.id, post_id: p1.id}),
         k('posts_tags').insert({tag_id: t2.id, post_id: p1.id}),
@@ -317,6 +320,36 @@ describe('Tag', () => {
       .then(() => p2.load('tags'))
       .then(() => {
         expect(p2.relations.tags.map('id').sort()).to.deep.equal([t1.id, t3.id].sort())
+      })
+    })
+  })
+
+  describe('.nonexistent', () => {
+    var c1, c2, t1, t2, t3
+    beforeEach(() => {
+      c1 = factories.community()
+      c2 = factories.community()
+      t1 = Tag.forge({name: 'tag1'})
+      t2 = Tag.forge({name: 'tag2'})
+      t3 = Tag.forge({name: 'tag3'})
+      return Promise.join(c1.save(), c2.save(), t1.save(), t2.save(), t3.save())
+      .then(() => Promise.join(
+        t1.communities().attach({user_id: u.id, community_id: c2.id}),
+        t2.communities().attach({user_id: u.id, community_id: c1.id}),
+        t3.communities().attach([
+          {user_id: u.id, community_id: c1.id},
+          {user_id: u.id, community_id: c2.id}
+        ])
+      ))
+    })
+
+    it('returns a map of names to the communities they are missing from', () => {
+      return Tag.nonexistent(['tag1', 'tag2', 'tag3'], [c1.id, c2.id])
+      .then(results => {
+        expect(results).to.deep.equal({
+          tag1: [c1.id],
+          tag2: [c2.id]
+        })
       })
     })
   })
