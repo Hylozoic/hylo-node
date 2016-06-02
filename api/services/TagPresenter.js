@@ -3,7 +3,8 @@ export const fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
   .fetchAll({withRelated: 'tag'})
   .then(joins =>
     joins.map(join => ({
-      name: join.relations.tag.get('name')
+      name: join.relations.tag.get('name'),
+      new_post_count: join.get('new_post_count')
     })))
 
 export const fetchAndPresentFollowed = (communityId, userId) =>

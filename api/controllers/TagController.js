@@ -1,4 +1,4 @@
-import { filter, includes, map, merge } from 'lodash'
+import { filter, includes, map, merge, find } from 'lodash'
 import { fetchAndPresentFollowed, fetchAndPresentCreated, withRelatedSpecialPost, presentWithPost } from '../services/TagPresenter'
 
 module.exports = {
@@ -53,7 +53,10 @@ module.exports = {
       fetchAndPresentCreated(com.id, req.session.userId),
       (followed, created) => ({
         followed: filter(followed, f => !includes(map(created, 'name'), f.name)),
-        created
+        created: map(created, c =>
+          includes(map(followed, 'name'), c.name)
+          ? merge(c, {new_post_count: find(followed, f => f.name === c.name).new_post_count})
+          : c)
       })
     ))
     .then(res.ok, res.serverError)
