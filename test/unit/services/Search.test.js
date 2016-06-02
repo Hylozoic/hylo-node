@@ -56,12 +56,12 @@ describe('Search', function () {
 
     it('excludes welcome posts by default', () => {
       var query = Search.forPosts({communities: 9}).query().toString()
-      expect(query).to.contain('"post"."type" != \'welcome\'')
+      expect(query).to.contain('("post"."type" != \'welcome\' or "post"."type" is null)')
     })
 
     it('excludes welcome posts when type is "all"', () => {
       var query = Search.forPosts({communities: 9, type: 'all'}).query().toString()
-      expect(query).to.contain('"post"."type" != \'welcome\'')
+      expect(query).to.contain('("post"."type" != \'welcome\' or "post"."type" is null)')
     })
   })
 
