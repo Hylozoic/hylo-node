@@ -195,7 +195,7 @@ describe('PostController', () => {
         })
       })
 
-      it.only('increments the new_post_count of tag_follows', () => {
+      it('increments the new_post_count of tag_follows', () => {
         _.extend(req.params, {
           name: 'New Tag Followed Post',
           description: '<p>this is relevant to #ntfpone and #ntfptwo</p>',

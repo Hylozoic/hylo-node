@@ -122,4 +122,30 @@ describe('TagController', () => {
       })
     })
   })
+
+  describe('#resetNewPostCount', () => {
+    it('resets new_post_count to 0', () => {
+      req.session.userId = fixtures.u1.id
+      _.extend(req.params, {
+        communityId: fixtures.c1.get('slug'),
+        tagName: fixtures.t1.get('name')
+      })
+
+      return new TagFollow({
+        community_id: fixtures.c1.id,
+        tag_id: fixtures.t1.id,
+        user_id: fixtures.u1.id,
+        new_post_count: 7
+      }).save()
+      .then(() => TagController.resetNewPostCount(req, res))
+      .then(() => TagFollow.where({
+        community_id: fixtures.c1.id,
+        tag_id: fixtures.t1.id,
+        user_id: fixtures.u1.id
+      }).fetch())
+      .then(tagFollow => {
+        expect(tagFollow.get('new_post_count')).to.equal(0)
+      })
+    })
+  })
 })

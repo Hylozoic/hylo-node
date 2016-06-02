@@ -82,9 +82,13 @@ module.exports = {
     return Promise.join(
       Tag.find(req.param('tagName')),
       Community.find(req.param('communityId')),
-      (tag, community) => {
-        console.log({tag, community})
-      })
+      (tag, community) =>
+        TagFollow.where({
+          user_id: req.session.userId,
+          tag_id: tag.id,
+          community_id: community.id
+        }).fetch()
+        .then(tagFollow => tagFollow.save({new_post_count: 0})))
     .then(res.ok)
   }
 }
