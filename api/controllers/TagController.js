@@ -76,5 +76,15 @@ module.exports = {
         .then(tf => tf ? tf.destroy() : new TagFollow(attrs).save())
       })
     .then(res.ok, res.serverError)
+  },
+
+  resetNewPostCount: function (req, res) {
+    return Promise.join(
+      Tag.find(req.param('tagName')),
+      Community.find(req.param('communityId')),
+      (tag, community) => {
+        console.log({tag, community})
+      })
+    .then(res.ok)
   }
 }
