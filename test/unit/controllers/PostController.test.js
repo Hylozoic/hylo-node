@@ -37,6 +37,7 @@ describe('PostController', () => {
       })
       return PostController.create(req, res)
       .then(() => {
+        expect(res.ok).to.have.been.called()
         var data = res.body
         expect(data).to.exist
         expect(data.followers.length).to.equal(2)
@@ -85,31 +86,54 @@ describe('PostController', () => {
       })
     })
 
-    describe('with tags', () => {
-      it('creates a tag from type param', () => {
-        _.extend(req.params, {
-          name: 'NewPost',
-          description: '<p>Post Body</p>',
-          type: 'intention',
-          communities: [fixtures.c1.id]
-        })
+    it('does not create a tag from the type param', () => {
+      _.extend(req.params, {
+        name: 'NewPost',
+        description: '<p>Post Body</p>',
+        type: 'offer',
+        communities: [fixtures.c1.id]
+      })
 
-        return PostController.create(req, res)
-        .then(() => Tag.find('intention'))
-        .then(tag => {
-          expect(tag).to.exist
-          expect(tag.get('name')).to.equal('intention')
-          var data = res.body
-          expect(data).to.exist
-          expect(data.name).to.equal('NewPost')
-        })
+      return PostController.create(req, res)
+      .then(() => Tag.find('offer'))
+      .then(tag => expect(tag).not.to.exist)
+    })
+
+    it('creates an event with a custom tag', () => {
+      _.extend(req.params, {
+        name: 'New Event',
+        description: '<p>Post Body</p>',
+        type: 'event',
+        tag: 'zounds',
+        communities: [fixtures.c1.id]
+      })
+
+      return PostController.create(req, res)
+      .then(() => Tag.find('zounds', {withRelated: ['posts']}))
+      .then(tag => {
+        expect(tag).to.exist
+        const post = tag.relations.posts.first()
+        expect(post).to.exist
+        expect(post.get('name')).to.equal('New Event')
+        expect(post.get('type')).to.equal('event')
+        expect(post.pivot.get('selected')).to.be.true
+      })
+    })
+
+    describe('with an existing tag', () => {
+      before(() => {
+        return Tag.forge({name: 'awesome'}).save()
+        .then(tag => tag.communities().attach({
+          community_id: fixtures.c1.id,
+          user_id: fixtures.u3.id
+        }))
       })
 
       it('does not set post type from tag', () => {
         _.extend(req.params, {
           name: 'NewPost',
           description: '<p>Post Body</p>',
-          tag: 'intention',
+          tag: 'awesome',
           communities: [fixtures.c1.id]
         })
 
@@ -122,75 +146,86 @@ describe('PostController', () => {
         })
       })
 
-      it('leaves post type blank when a custom tag is set', () => {
+      it('works with no tag description', () => {
         _.extend(req.params, {
-          name: 'NewPost',
-          description: '<p>Post Body</p>',
-          tag: 'custom',
+          name: 'New Awesome Post #awesome',
+          communities: [fixtures.c1.id]
+        })
+
+        return PostController.create(req, res)
+        .then(() => Post.find(res.body.id, {withRelated: 'tags'}))
+        .then(post => {
+          expect(post.get('name')).to.equal('New Awesome Post #awesome')
+          expect(post.relations.tags.first().get('name')).to.equal('awesome')
+        })
+      })
+    })
+
+    describe('with new tags', () => {
+      before(() => {
+        return Tag.forge({name: 'tobeattached'}).save()
+        .then(tag => tag.communities().attach({
+          user_id: fixtures.u3.id,
+          community_id: fixtures.c1.id,
+          description: 'First description.'
+        }))
+      })
+
+      it('returns an error when a description is missing', () => {
+        _.extend(req.params, {
+          name: 'NewPostWithoutTagDescriptions',
+          description: '#tobeattached #hello',
           communities: [fixtures.c1.id]
         })
 
         return PostController.create(req, res)
         .then(() => {
-          var data = res.body
-          expect(data).to.exist
-          expect(data.name).to.equal('NewPost')
-          expect(data.type).to.be.undefined
+          expect(res.status).to.have.been.called.with(422)
+          expect(res.body).to.deep.equal({
+            tagsMissingDescriptions: {
+              hello: [fixtures.c1.id]
+            }
+          })
+
+          return Post.where({name: 'NewPostWithoutTagDescriptions'}).fetch()
         })
+        .then(post => expect(post).not.to.exist)
       })
 
-      it('attaches a tag to a community', () => {
-        _.extend(req.params, {
-          name: 'NewPost',
-          description: '#tobeattached',
-          communities: [fixtures.c1.id]
+      it('attaches the tag, with description, to new communities', () => {
+        var c2 = factories.community()
+        return c2.save()
+        .then(() => {
+          _.extend(req.params, {
+            name: 'NewPost',
+            description: '#tobeattached #herewego',
+            tagDescriptions: {
+              tobeattached: 'This is a test tag.',
+              herewego: 'This is another test tag.'
+            },
+            communities: [fixtures.c1.id, c2.id]
+          })
         })
-
-        return PostController.create(req, res)
+        .then(() => PostController.create(req, res))
         .then(() => Tag.find('tobeattached', {withRelated: ['communities']}))
         .then(tag => {
           expect(tag).to.exist
-          expect(tag.get('name')).to.equal('tobeattached')
-          expect(tag.relations.communities.length).to.equal(1)
-          expect(tag.relations.communities.models[0].id).to.equal(fixtures.c1.id)
+          const communities = tag.relations.communities
+          expect(communities.length).to.equal(2)
+          expect(communities.pluck('id').sort()).to.deep.equal([fixtures.c1.id, c2.id])
+          expect(communities.map(c => c.pivot.get('description'))).to.deep.equal([
+            'First description.', 'This is a test tag.'
+          ])
         })
-      })
-
-      it('creates a tag from post title', () => {
-        _.extend(req.params, {
-          name: 'New Awesome Post #awesome',
-          description: '<p>Post Body</p>',
-          communities: [fixtures.c1.id]
-        })
-
-        return PostController.create(req, res)
-        .then(() => Tag.find('awesome', {withRelated: ['posts']}))
+        .then(() => Tag.find('herewego', {withRelated: ['communities']}))
         .then(tag => {
           expect(tag).to.exist
-          expect(tag.get('name')).to.equal('awesome')
-          expect(tag.relations.posts.length).to.equal(1)
-          expect(tag.relations.posts.models[0].get('name')).to.equal('New Awesome Post #awesome')
-        })
-      })
-
-      it('creates an event with a custom tag', () => {
-        _.extend(req.params, {
-          name: 'New Event',
-          description: '<p>Post Body</p>',
-          type: 'event',
-          tag: 'zounds',
-          communities: [fixtures.c1.id]
-        })
-
-        return PostController.create(req, res)
-        .then(() => Tag.find('zounds', {withRelated: ['posts']}))
-        .then(tag => {
-          expect(tag).to.exist
-          const post = tag.relations.posts.first()
-          expect(post).to.exist
-          expect(post.get('name')).to.equal('New Event')
-          expect(post.get('type')).to.equal('event')
-          expect(post.pivot.get('selected')).to.be.true
+          const communities = tag.relations.communities
+          expect(communities.length).to.equal(2)
+          expect(communities.pluck('id').sort()).to.deep.equal([fixtures.c1.id, c2.id])
+          expect(communities.map(c => c.pivot.get('description'))).to.deep.equal([
+            'This is another test tag.', 'This is another test tag.'
+          ])
         })
       })
     })

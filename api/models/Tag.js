@@ -1,12 +1,12 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, flatten, includes, isEmpty, pick, some, uniq, uniqBy } from 'lodash'
+import { differenceBy, flatten, get, includes, isEmpty, pick, some, uniq, uniqBy } from 'lodash'
 import { filter, map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
   return (text.match(/#[A-Za-z][\w-]+/g) || []).map(str => str.substr(1))
 }
 
-const addToTaggable = (taggable, tagName, selected, trx) => {
+const addToTaggable = (taggable, tagName, selected, tagDescriptions, trx) => {
   var association, communities
   var isPost = !taggable.post
   if (isPost) {
@@ -33,29 +33,28 @@ const addToTaggable = (taggable, tagName, selected, trx) => {
     if (isPost) attachment.selected = selected
     return taggable.tags().attach(attachment, {transacting: trx})
   })
-  .then(tag => Promise.map(communities(taggable), com =>
-    addToCommunity(com, tag, taggable.get('user_id'), trx)))
+  .then(tag => Promise.map(communities(taggable), com => {
+    const description = get(tagDescriptions, tag.get('name'))
+    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, trx)
+  }))
 }
 
 const removeFromTaggable = (taggable, tag, trx) => {
   return taggable.tags().detach(tag.id, {transacting: trx})
 }
 
-const addToCommunity = (community, tag, user_id, trx) => {
-  return CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch({transacting: trx})
-  // the catch here is for the case where another user just created the CommunityTag
-  // the save fails, but we don't care about the result
+const addToCommunity = (community_id, tag_id, user_id, description, transacting) => {
+  return CommunityTag.where({community_id, tag_id}).fetch({transacting})
   .then(comTag => comTag ||
     new CommunityTag({
-      community_id: community.id,
-      tag_id: tag.id,
-      user_id: user_id,
-      created_at: new Date()
-    }).save({}, {transacting: trx})
-    .catch(() => {}))
+      community_id, tag_id, user_id, description, created_at: new Date()
+    }).save({}, {transacting}).catch(() => {}))
+    // this catch is for the case where another user just created the
+    // CommunityTag (race condition): the save fails, but we don't care about
+    // the result
 }
 
-const updateForTaggable = (taggable, text, tagParam, trx) => {
+const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {
   const lowerName = t => t.name.toLowerCase()
   const tagDifference = (a, b) =>
     differenceBy(a, b, t => pick(t, 'name', 'selected'))
@@ -73,7 +72,7 @@ const updateForTaggable = (taggable, text, tagParam, trx) => {
     const toRemove = tagDifference(oldTags, newTags)
     return Promise.all(flatten([
       toRemove.map(tag => removeFromTaggable(taggable, tag, trx)),
-      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, trx))
+      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions, trx))
     ]))
   })
 }
@@ -120,7 +119,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   communities: function () {
-    return this.belongsToMany(Community).through(CommunityTag).withPivot('user_id')
+    return this.belongsToMany(Community).through(CommunityTag).withPivot(['user_id', 'description'])
   },
 
   posts: function () {
@@ -164,12 +163,12 @@ module.exports = bookshelf.Model.extend({
     return Tag.where({id: id}).fetch(options)
   },
 
-  updateForPost: function (post, tagParam, trx) {
-    return updateForTaggable(post, post.get('name') + ' ' + post.get('description'), tagParam, trx)
+  updateForPost: function (post, tagParam, tagDescriptions, trx) {
+    return updateForTaggable(post, post.get('name') + ' ' + post.get('description'), tagParam, tagDescriptions, trx)
   },
 
   updateForComment: function (comment, trx) {
-    return updateForTaggable(comment, comment.get('text'), null, trx)
+    return updateForTaggable(comment, comment.get('text'), null, null, trx)
   },
 
   addToUser: function (user, values, reset) {
@@ -238,6 +237,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   nonexistent: (names, communities) => {
+    if (names.length === 0) return Promise.resolve({})
+
     const isCommunity = id => row => Number(row.community_id) === Number(id)
     const sameTag = name => row => row.name.toLowerCase() === name.toLowerCase()
 

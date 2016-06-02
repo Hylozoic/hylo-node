@@ -1,4 +1,6 @@
-import { difference, has, merge, omit, partial, pick, some } from 'lodash'
+import {
+  difference, has, includes, isEmpty, merge, omit, partial, pick, pickBy, some
+} from 'lodash'
 import {
   afterSavingPost, postTypeFromTag, setupNewPostAttrs, updateChildren,
   updateMedia
@@ -104,6 +106,25 @@ const createFindAction = (queryFunction) => (req, res) => {
   .then(res.ok, res.serverError)
 }
 
+// throw an error if a tag is included in the post that does not yet exist in
+// one of the specified communities, but no description is supplied
+const checkPostTags = (attrs, opts) => {
+  var tags = Tag.tagsInText(attrs.name + ' ' + attrs.description)
+  if (opts.tag && !includes(['event', 'project'], opts.type)) tags.push(opts.tag)
+
+  const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
+  tags = difference(tags, describedTags)
+
+  return Tag.nonexistent(tags, opts.communities)
+  .then(nonexistent => {
+    if (isEmpty(nonexistent)) return
+
+    const error = new Error('some new tags are missing descriptions')
+    error.tagsMissingDescriptions = nonexistent
+    throw error
+  })
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -118,21 +139,21 @@ const PostController = {
   },
 
   create: function (req, res) {
-    return setupNewPostAttrs(req.session.userId, req.allParams())
+    const params = req.allParams()
+    return setupNewPostAttrs(req.session.userId, params)
     .tap(attrs => {
       if (!attrs.name) throw new Error("title can't be blank")
+      return checkPostTags(attrs, pick(params, 'type', 'tag', 'communities', 'tagDescriptions'))
     })
     .then(attrs => bookshelf.transaction(trx =>
       Post.create(attrs, {transacting: trx})
-      .tap(post => afterSavingPost(post, {
-        communities: req.param('communities'),
-        imageUrl: req.param('imageUrl'),
-        videoUrl: req.param('videoUrl'),
-        docs: req.param('docs'),
-        tag: req.param('tag'),
-        children: req.param('requests'),
-        transacting: trx
-      }))))
+      .tap(post => afterSavingPost(post, merge(
+        pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+        {
+          children: req.param('requests'),
+          transacting: trx
+        }
+      )))))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
@@ -140,6 +161,9 @@ const PostController = {
       if (err.message === "title can't be blank") {
         res.status(422)
         res.send(err.message)
+      } else if (err.tagsMissingDescriptions) {
+        res.status(422)
+        res.send(pick(err, 'tagsMissingDescriptions'))
       } else {
         res.serverError(err)
       }
@@ -267,7 +291,7 @@ const PostController = {
           if (!media) return Media.createDoc(post.id, doc, trx)
         })
       })
-      .tap(() => Tag.updateForPost(post, req.param('tag') || post.get('type'), trx))
+      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))
     })
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))

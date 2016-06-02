@@ -48,7 +48,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   tags: function () {
-    return this.belongsToMany(Tag).through(CommunityTag).withPivot('user_id')
+    return this.belongsToMany(Tag).through(CommunityTag).withPivot(['user_id', 'description'])
   },
 
   comments: function () {
@@ -90,7 +90,7 @@ module.exports = bookshelf.Model.extend({
       return newPost.save({created_at: time, updated_at: time}, {transacting: trx})
       .then(() => Promise.all(_.flatten([
         self.posts().attach(newPost, {transacting: trx}),
-        Tag.updateForPost(newPost, newPost.get('type'), trx),
+        Tag.updateForPost(newPost, newPost.get('type'), null, trx),
         post.relations.followers.map(u =>
           Follow.create(u.id, newPost.id, {transacting: trx}))
       ])))
