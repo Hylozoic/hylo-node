@@ -31,10 +31,7 @@ const updateTagFollows = (post, trxOpts) => post.load('tags', trxOpts)
   .then(() => TagFollow.query(q => {
     q.whereIn('tag_id', post.relations.tags.map('id'))
     q.whereIn('community_id', post.relations.communities.map('id'))
-  }).fetchAll(trxOpts))
-  .then(tagFollows =>
-    tagFollows.map(tagFollow =>
-      tagFollow.save({new_post_count: tagFollow.get('new_post_count') + 1})))
+  }).query().increment('new_post_count').transacting(trxOpts.transacting))
 
 export const afterSavingPost = function (post, opts) {
   const userId = post.get('user_id')
