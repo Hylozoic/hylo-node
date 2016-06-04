@@ -171,9 +171,9 @@ describe('PostController', () => {
         }))
       })
 
-      it('returns an error when a description is missing', () => {
+      it('returns an error when no descriptions are provided', () => {
         _.extend(req.params, {
-          name: 'NewPostWithoutTagDescriptions',
+          name: 'NewPostWithoutTagDescriptions1',
           description: '#tobeattached #hello',
           communities: [fixtures.c1.id]
         })
@@ -187,7 +187,33 @@ describe('PostController', () => {
             }
           })
 
-          return Post.where({name: 'NewPostWithoutTagDescriptions'}).fetch()
+          return Post.where({name: 'NewPostWithoutTagDescriptions1'}).fetch()
+        })
+        .then(post => expect(post).not.to.exist)
+      })
+
+      it('returns an error when at least one description is missing or blank', () => {
+        _.extend(req.params, {
+          name: 'NewPostWithoutTagDescriptions2',
+          description: '#tobeattached #hello #wow #ok',
+          communities: [fixtures.c1.id],
+          tagDescriptions: {
+            wow: '',
+            ok: 'everything is ok'
+          }
+        })
+
+        return PostController.create(req, res)
+        .then(() => {
+          expect(res.status).to.have.been.called.with(422)
+          expect(res.body).to.deep.equal({
+            tagsMissingDescriptions: {
+              hello: [fixtures.c1.id],
+              wow: [fixtures.c1.id]
+            }
+          })
+
+          return Post.where({name: 'NewPostWithoutTagDescriptions2'}).fetch()
         })
         .then(post => expect(post).not.to.exist)
       })
