@@ -36,7 +36,8 @@ const extraAttributes = (user, viewingUserId) =>
     extra_info: user.get('extra_info'),
     tags: user.relations.tags.pluck('name'),
     recent_request: recentTaggedPost(user.id, 'request', viewingUserId),
-    recent_offer: recentTaggedPost(user.id, 'offer', viewingUserId)
+    recent_offer: recentTaggedPost(user.id, 'offer', viewingUserId),
+    shared_communities: Membership.sharedCommunityIds([user.id, viewingUserId])
   })
 
 const selfOnlyAttributes = (user, isAdmin) =>
