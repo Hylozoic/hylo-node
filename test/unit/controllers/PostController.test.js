@@ -5,6 +5,8 @@ const PostController = require(root('api/controllers/PostController'))
 
 const testImageUrl = 'https://www.hylo.com/favicon.png'
 const testImageUrl2 = 'https://www.hylo.com/faviconDev.png'
+const testVideoUrl = 'https://www.youtube.com/watch?v=jsQ7yKwDPZk'
+const testVideoUrl2 = 'https://www.youtube.com/watch?v=gC5-MoDUuRg'
 
 describe('PostController', () => {
   var fixtures, req, res
@@ -37,6 +39,7 @@ describe('PostController', () => {
       })
       return PostController.create(req, res)
       .then(() => {
+        expect(res.ok).to.have.been.called()
         var data = res.body
         expect(data).to.exist
         expect(data.followers.length).to.equal(2)
@@ -85,31 +88,54 @@ describe('PostController', () => {
       })
     })
 
-    describe('with tags', () => {
-      it('creates a tag from type param', () => {
-        _.extend(req.params, {
-          name: 'NewPost',
-          description: '<p>Post Body</p>',
-          type: 'intention',
-          communities: [fixtures.c1.id]
-        })
+    it('does not create a tag from the type param', () => {
+      _.extend(req.params, {
+        name: 'NewPost',
+        description: '<p>Post Body</p>',
+        type: 'offer',
+        communities: [fixtures.c1.id]
+      })
 
-        return PostController.create(req, res)
-        .then(() => Tag.find('intention'))
-        .then(tag => {
-          expect(tag).to.exist
-          expect(tag.get('name')).to.equal('intention')
-          var data = res.body
-          expect(data).to.exist
-          expect(data.name).to.equal('NewPost')
-        })
+      return PostController.create(req, res)
+      .then(() => Tag.find('offer'))
+      .then(tag => expect(tag).not.to.exist)
+    })
+
+    it('creates an event with a custom tag', () => {
+      _.extend(req.params, {
+        name: 'New Event',
+        description: '<p>Post Body</p>',
+        type: 'event',
+        tag: 'zounds',
+        communities: [fixtures.c1.id]
+      })
+
+      return PostController.create(req, res)
+      .then(() => Tag.find('zounds', {withRelated: ['posts']}))
+      .then(tag => {
+        expect(tag).to.exist
+        const post = tag.relations.posts.first()
+        expect(post).to.exist
+        expect(post.get('name')).to.equal('New Event')
+        expect(post.get('type')).to.equal('event')
+        expect(post.pivot.get('selected')).to.be.true
+      })
+    })
+
+    describe('with an existing tag', () => {
+      before(() => {
+        return Tag.forge({name: 'awesome'}).save()
+        .then(tag => tag.communities().attach({
+          community_id: fixtures.c1.id,
+          user_id: fixtures.u3.id
+        }))
       })
 
       it('does not set post type from tag', () => {
         _.extend(req.params, {
           name: 'NewPost',
           description: '<p>Post Body</p>',
-          tag: 'intention',
+          tag: 'awesome',
           communities: [fixtures.c1.id]
         })
 
@@ -122,75 +148,112 @@ describe('PostController', () => {
         })
       })
 
-      it('leaves post type blank when a custom tag is set', () => {
+      it('works with no tag description', () => {
         _.extend(req.params, {
-          name: 'NewPost',
-          description: '<p>Post Body</p>',
-          tag: 'custom',
+          name: 'New Awesome Post #awesome',
+          communities: [fixtures.c1.id]
+        })
+
+        return PostController.create(req, res)
+        .then(() => Post.find(res.body.id, {withRelated: 'tags'}))
+        .then(post => {
+          expect(post.get('name')).to.equal('New Awesome Post #awesome')
+          expect(post.relations.tags.first().get('name')).to.equal('awesome')
+        })
+      })
+    })
+
+    describe('with new tags', () => {
+      before(() => {
+        return Tag.forge({name: 'tobeattached'}).save()
+        .then(tag => tag.communities().attach({
+          user_id: fixtures.u3.id,
+          community_id: fixtures.c1.id,
+          description: 'First description.'
+        }))
+      })
+
+      it('returns an error when no descriptions are provided', () => {
+        _.extend(req.params, {
+          name: 'NewPostWithoutTagDescriptions1',
+          description: '#tobeattached #hello',
           communities: [fixtures.c1.id]
         })
 
         return PostController.create(req, res)
         .then(() => {
-          var data = res.body
-          expect(data).to.exist
-          expect(data.name).to.equal('NewPost')
-          expect(data.type).to.be.undefined
+          expect(res.status).to.have.been.called.with(422)
+          expect(res.body).to.deep.equal({
+            tagsMissingDescriptions: {
+              hello: [fixtures.c1.id]
+            }
+          })
+
+          return Post.where({name: 'NewPostWithoutTagDescriptions1'}).fetch()
         })
+        .then(post => expect(post).not.to.exist)
       })
 
-      it('attaches a tag to a community', () => {
+      it('returns an error when at least one description is missing or blank', () => {
         _.extend(req.params, {
-          name: 'NewPost',
-          description: '#tobeattached',
-          communities: [fixtures.c1.id]
+          name: 'NewPostWithoutTagDescriptions2',
+          description: '#tobeattached #hello #wow #ok',
+          communities: [fixtures.c1.id],
+          tagDescriptions: {
+            wow: '',
+            ok: 'everything is ok'
+          }
         })
 
         return PostController.create(req, res)
+        .then(() => {
+          expect(res.status).to.have.been.called.with(422)
+          expect(res.body).to.deep.equal({
+            tagsMissingDescriptions: {
+              hello: [fixtures.c1.id],
+              wow: [fixtures.c1.id]
+            }
+          })
+
+          return Post.where({name: 'NewPostWithoutTagDescriptions2'}).fetch()
+        })
+        .then(post => expect(post).not.to.exist)
+      })
+
+      it('attaches the tag, with description, to new communities', () => {
+        var c2 = factories.community()
+        return c2.save()
+        .then(() => {
+          _.extend(req.params, {
+            name: 'NewPost',
+            description: '#tobeattached #herewego',
+            tagDescriptions: {
+              tobeattached: 'This is a test tag.',
+              herewego: 'This is another test tag.'
+            },
+            communities: [fixtures.c1.id, c2.id]
+          })
+        })
+        .then(() => PostController.create(req, res))
         .then(() => Tag.find('tobeattached', {withRelated: ['communities']}))
         .then(tag => {
           expect(tag).to.exist
-          expect(tag.get('name')).to.equal('tobeattached')
-          expect(tag.relations.communities.length).to.equal(1)
-          expect(tag.relations.communities.models[0].id).to.equal(fixtures.c1.id)
+          const communities = tag.relations.communities
+          expect(communities.length).to.equal(2)
+          expect(communities.pluck('id').sort()).to.deep.equal([fixtures.c1.id, c2.id])
+          expect(communities.map(c => c.pivot.get('description'))).to.deep.equal([
+            'First description.', 'This is a test tag.'
+          ])
         })
-      })
-
-      it('creates a tag from post title', () => {
-        _.extend(req.params, {
-          name: 'New Awesome Post #awesome',
-          description: '<p>Post Body</p>',
-          communities: [fixtures.c1.id]
-        })
-
-        return PostController.create(req, res)
-        .then(() => Tag.find('awesome', {withRelated: ['posts']}))
+        .then(() => Tag.find('herewego', {withRelated: ['communities']}))
         .then(tag => {
           expect(tag).to.exist
-          expect(tag.get('name')).to.equal('awesome')
-          expect(tag.relations.posts.length).to.equal(1)
-          expect(tag.relations.posts.models[0].get('name')).to.equal('New Awesome Post #awesome')
-        })
-      })
-
-      it('creates an event with a custom tag', () => {
-        _.extend(req.params, {
-          name: 'New Event',
-          description: '<p>Post Body</p>',
-          type: 'event',
-          tag: 'zounds',
-          communities: [fixtures.c1.id]
-        })
-
-        return PostController.create(req, res)
-        .then(() => Tag.find('zounds', {withRelated: ['posts']}))
-        .then(tag => {
-          expect(tag).to.exist
-          const post = tag.relations.posts.first()
-          expect(post).to.exist
-          expect(post.get('name')).to.equal('New Event')
-          expect(post.get('type')).to.equal('event')
-          expect(post.pivot.get('selected')).to.be.true
+          const communities = tag.relations.communities
+          expect(communities.length).to.equal(2)
+          expect(communities.pluck('id').sort()).to.deep.equal([fixtures.c1.id, c2.id])
+          expect(communities.map(c => c.pivot.get('description'))).to.deep.equal([
+            'This is another test tag.', 'This is another test tag.'
+          ])
         })
       })
 
@@ -199,6 +262,11 @@ describe('PostController', () => {
           name: 'New Tag Followed Post',
           description: '<p>this is relevant to #ntfpone and #ntfptwo</p>',
           tag: 'zounds',
+          tagDescriptions: {
+            ntfpone: '1',
+            ntfptwo: '1',
+            zounds: 'an expression of shock (antiquated)'
+          },
           communities: [fixtures.c1.id]
         })
 
@@ -233,13 +301,15 @@ describe('PostController', () => {
   })
 
   describe('#update', () => {
-    var post
+    var post, community
 
     beforeEach(() => {
       post = factories.post()
+      community = factories.community()
       req.params.communities = []
       res.locals.post = post
       return post.save().tap(() => post.load('communities'))
+      .then(() => community.save())
     })
 
     describe('with communities', () => {
@@ -323,6 +393,20 @@ describe('PostController', () => {
       })
     })
 
+    it('saves a video', () => {
+      req.params.videoUrl = testVideoUrl
+
+      return PostController.update(req, res)
+      .tap(() => post.load('media'))
+      .then(() => {
+        var media = post.relations.media
+        expect(media.length).to.equal(1)
+        var video = media.first()
+        expect(video.get('url')).to.equal(testVideoUrl)
+        expect(video.get('type')).to.equal('video')
+      })
+    })
+
     describe('with an existing image', () => {
       var originalImageId
       beforeEach(() =>
@@ -348,6 +432,62 @@ describe('PostController', () => {
           var image = media.first()
           expect(image.get('url')).to.equal(testImageUrl2)
           expect(image.id).to.equal(originalImageId)
+        })
+      })
+    })
+
+    describe('with an existing video', () => {
+      var originalVideoId
+      beforeEach(() =>
+        Media.createForPost(post.id, 'video', testVideoUrl)
+        .tap(video => originalVideoId = video.id))
+
+      it('removes the video', () => {
+        req.params.videoRemoved = true
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => expect(post.relations.media.length).to.equal(0))
+      })
+
+      it('updates the video url', () => {
+        req.params.videoUrl = testVideoUrl2
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => {
+          var media = post.relations.media
+          expect(media.length).to.equal(1)
+          var video = media.first()
+          expect(video.get('url')).to.equal(testVideoUrl2)
+          expect(video.id).to.equal(originalVideoId)
+        })
+      })
+    })
+
+    describe('with a new tag', () => {
+      it('rejects the update if the tag has no description', () => {
+        req.params.description = 'here is a #newtag! yay'
+        req.params.communities = [community.id]
+
+        return PostController.update(req, res)
+        .then(() => expect(res.body).to.deep.equal({
+          tagsMissingDescriptions: {newtag: [community.id]}
+        }))
+      })
+
+      it('saves the tag description to the community', () => {
+        req.params.description = 'here is a #newtag! yay'
+        req.params.tagDescriptions = {newtag: 'i am a new tag'}
+        req.params.communities = [community.id]
+
+        return PostController.update(req, res)
+        .then(() => community.load('tags'))
+        .then(() => {
+          const tag = community.relations.tags.first()
+          expect(tag).to.exist
+          expect(tag.get('name')).to.equal('newtag')
+          expect(tag.pivot.get('description')).to.equal('i am a new tag')
         })
       })
     })

@@ -297,7 +297,7 @@ module.exports = bookshelf.Model.extend({
       const type = post.get('type')
       if (post.relations.selectedTags.first() || type === 'event') return
 
-      return bookshelf.transaction(trx => Tag.updateForPost(post, type, trx))
+      return bookshelf.transaction(trx => Tag.updateForPost(post, type, null, trx))
     })
   },
 

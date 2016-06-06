@@ -1,8 +1,11 @@
-import { difference, has, merge, omit, partial, pick, some } from 'lodash'
+import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
   afterSavingPost, postTypeFromTag, setupNewPostAttrs, updateChildren,
-  updateMedia
+  updateAllMedia, updateCommunities
 } from '../models/post/util'
+import {
+  handleMissingTagDescriptions, throwErrorIfMissingTags
+} from '../../lib/util/controllers'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -104,6 +107,17 @@ const createFindAction = (queryFunction) => (req, res) => {
   .then(res.ok, res.serverError)
 }
 
+// throw an error if a tag is included in the post that does not yet exist in
+// one of the specified communities, but no description is supplied
+const checkPostTags = (attrs, opts) => {
+  var tags = Tag.tagsInText(attrs.name + ' ' + attrs.description)
+  if (opts.tag && !includes(['event', 'project'], opts.type)) tags.push(opts.tag)
+
+  const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
+  tags = difference(tags, describedTags)
+  return throwErrorIfMissingTags(tags, opts.communities)
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -118,25 +132,26 @@ const PostController = {
   },
 
   create: function (req, res) {
-    return setupNewPostAttrs(req.session.userId, req.allParams())
+    const params = req.allParams()
+    return setupNewPostAttrs(req.session.userId, params)
     .tap(attrs => {
       if (!attrs.name) throw new Error("title can't be blank")
+      return checkPostTags(attrs, pick(params, 'type', 'tag', 'communities', 'tagDescriptions'))
     })
     .then(attrs => bookshelf.transaction(trx =>
       Post.create(attrs, {transacting: trx})
-      .tap(post => afterSavingPost(post, {
-        communities: req.param('communities'),
-        imageUrl: req.param('imageUrl'),
-        videoUrl: req.param('videoUrl'),
-        docs: req.param('docs'),
-        tag: req.param('tag'),
-        children: req.param('requests'),
-        transacting: trx
-      }))))
+      .tap(post => afterSavingPost(post, merge(
+        pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+        {
+          children: req.param('requests'),
+          transacting: trx
+        }
+      )))))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
     .catch(err => {
+      if (handleMissingTagDescriptions(err, res)) return
       if (err.message === "title can't be blank") {
         res.status(422)
         res.send(err.message)
@@ -219,59 +234,32 @@ const PostController = {
     const post = res.locals.post
     const params = req.allParams()
 
-    var attrs = merge(
+    const attrs = merge(
       pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
       {
         updated_at: new Date(),
-        visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
+        visibility: Post.Visibility[params.public ? 'PUBLIC_READABLE' : 'DEFAULT'],
+        type: params.type || postTypeFromTag(params.tag)
       }
     )
 
-    if (!attrs.type) {
-      attrs.type = postTypeFromTag(params.tag)
-    }
-
-    return bookshelf.transaction(trx => {
-      return post.save(attrs, {patch: true, transacting: trx})
+    return checkPostTags(
+      pick(params, 'name', 'description'),
+      pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
+    )
+    .then(() => bookshelf.transaction(trx =>
+      post.save(attrs, {patch: true, transacting: trx})
       .tap(() => updateChildren(post, req.param('requests'), trx))
-      .tap(() => {
-        var newIds = req.param('communities').sort()
-        var oldIds = post.relations.communities.pluck('id').sort()
-        if (newIds !== oldIds) {
-          return Promise.join(
-            Promise.map(difference(newIds, oldIds), id =>
-              post.communities().attach(id, {transacting: trx})),
-            Promise.map(difference(oldIds, newIds), id =>
-              post.communities().detach(id, {transacting: trx}))
-          )
-        }
-      })
-      .tap(() => {
-        var mediaParams = ['docs', 'removedDocs', 'imageUrl', 'imageRemoved']
-        var isSet = partial(has, params)
-        if (some(mediaParams, isSet)) return post.load('media')
-      })
-      .tap(() => updateMedia(post, 'image', params.imageUrl, params.imageRemoved, trx))
-      .tap(() => updateMedia(post, 'video', params.videoUrl, params.videoRemoved, trx))
-      .tap(() => {
-        if (!params.removedDocs) return
-        return Promise.map(params.removedDocs, doc => {
-          var media = post.relations.media.find(m => m.get('url') === doc.url)
-          if (media) return media.destroy({transacting: trx})
-        })
-      })
-      .tap(() => {
-        if (!params.docs) return
-        return Promise.map(params.docs, doc => {
-          var media = post.relations.media.find(m => m.get('url') === doc.url)
-          if (!media) return Media.createDoc(post.id, doc, trx)
-        })
-      })
-      .tap(() => Tag.updateForPost(post, req.param('tag') || post.get('type'), trx))
-    })
+      .tap(() => updateCommunities(post, req.param('communities'), trx))
+      .tap(() => updateAllMedia(post, params, trx))
+      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
-    .then(res.ok, res.serverError)
+    .then(res.ok)
+    .catch(err => {
+      if (handleMissingTagDescriptions(err, res)) return
+      res.serverError(err)
+    })
   },
 
   fulfill: function (req, res) {
