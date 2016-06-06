@@ -25,16 +25,6 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
   .then(post => post && PostPresenter.present(post, viewingUserId, opts))
 }
 
-var sharedCommunities = (user, viewingUserId) => Promise.join(
-    Membership.where({user_id: user.id}).fetchAll(),
-    Membership.where({user_id: viewingUserId}).fetchAll(),
-    (userComs, viewerComs) => Community.query(q => {
-      q.select('id')
-      q.whereIn('community.id', userComs.pluck('community_id'))
-      q.whereIn('community.id', viewerComs.pluck('community_id'))
-    }).fetchAll())
-    .then(communities => communities.map('id'))
-
 const extraAttributes = (user, viewingUserId) =>
   Promise.props({
     public_email: user.encryptedEmail(),
@@ -47,7 +37,7 @@ const extraAttributes = (user, viewingUserId) =>
     tags: user.relations.tags.pluck('name'),
     recent_request: recentTaggedPost(user.id, 'request', viewingUserId),
     recent_offer: recentTaggedPost(user.id, 'offer', viewingUserId),
-    shared_communities: sharedCommunities(user, viewingUserId)
+    shared_communities: Membership.sharedCommunityIds([user.id, viewingUserId])
   })
 
 const selfOnlyAttributes = (user, isAdmin) =>
