@@ -242,6 +242,25 @@ describe('Tag', () => {
         expect(communities[1].pivot.get('user_id')).to.equal(user.id)
       })
     })
+
+    it('creates TagFollow for tag creator', () => {
+      var user = factories.user()
+      var post = new Post({
+        name: 'New Tagged Post',
+        description: 'no tags in the body'
+      })
+      var c1 = factories.community()
+      return user.save()
+      .then(user => post.save({user_id: user.id}))
+      .then(() => Promise.join(post.save(), c1.save()))
+      .then(() => post.communities().attach(c1.id))
+      .then(() => Tag.updateForPost(post, 'newtageleven'))
+      .then(() => Tag.find('newtageleven'))
+      .then(tag => TagFollow.where({tag_id: tag.id, user_id: user.id, community_id: c1.id}).fetch())
+      .then(tagFollow => {
+        expect(tagFollow).to.exist
+      })
+    })
   })
 
   describe('updateForComment', () => {

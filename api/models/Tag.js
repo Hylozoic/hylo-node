@@ -44,11 +44,14 @@ const removeFromTaggable = (taggable, tag, trx) => {
 }
 
 const addToCommunity = (community_id, tag_id, user_id, description, transacting) => {
+  const created_at = new Date()
   return CommunityTag.where({community_id, tag_id}).fetch({transacting})
   .then(comTag => comTag ||
-    new CommunityTag({
-      community_id, tag_id, user_id, description, created_at: new Date()
-    }).save({}, {transacting}).catch(() => {}))
+    new CommunityTag({community_id, tag_id, user_id, description, created_at})
+    .save({}, {transacting})
+    .then(() => new TagFollow({community_id, tag_id, user_id, created_at})
+      .save({}, {transacting}))
+    .catch(() => {}))
     // this catch is for the case where another user just created the
     // CommunityTag (race condition): the save fails, but we don't care about
     // the result

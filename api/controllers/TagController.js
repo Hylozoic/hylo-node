@@ -1,5 +1,5 @@
-import { filter, includes, map, merge } from 'lodash'
-import { fetchAndPresentFollowed, fetchAndPresentCreated, withRelatedSpecialPost, presentWithPost } from '../services/TagPresenter'
+import { merge } from 'lodash'
+import { fetchAndPresentFollowed, fetchAndPresentForLeftNav, withRelatedSpecialPost, presentWithPost } from '../services/TagPresenter'
 
 module.exports = {
 
@@ -48,14 +48,7 @@ module.exports = {
 
   findForLeftNav: function (req, res) {
     return Community.find(req.param('communityId'))
-    .then(com => Promise.join(
-      fetchAndPresentFollowed(com.id, req.session.userId),
-      fetchAndPresentCreated(com.id, req.session.userId),
-      (followed, created) => ({
-        followed: filter(followed, f => !includes(map(created, 'name'), f.name)),
-        created
-      })
-    ))
+    .then(com => fetchAndPresentForLeftNav(com.id, req.session.userId))
     .then(res.ok, res.serverError)
   },
 
@@ -76,5 +69,19 @@ module.exports = {
         .then(tf => tf ? tf.destroy() : new TagFollow(attrs).save())
       })
     .then(res.ok, res.serverError)
+  },
+
+  resetNewPostCount: function (req, res) {
+    return Promise.join(
+      Tag.find(req.param('tagName')),
+      Community.find(req.param('communityId')),
+      (tag, community) =>
+        TagFollow.where({
+          user_id: req.session.userId,
+          tag_id: tag.id,
+          community_id: community.id
+        }).fetch()
+        .then(tagFollow => tagFollow.save({new_post_count: 0})))
+    .then(res.ok)
   }
 }
