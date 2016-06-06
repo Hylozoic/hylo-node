@@ -330,7 +330,7 @@ const PostController = {
     .then(() => res.ok({}), res.serverError)
   },
 
-  respond: function (req, res) {
+  rsvp: function (req, res) {
     var userId = req.session.userId
     var post = res.locals.post
     var response = req.param('response')
