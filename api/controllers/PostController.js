@@ -1,8 +1,11 @@
-import { difference, includes, isEmpty, merge, omit, pick, pickBy } from 'lodash'
+import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
   afterSavingPost, postTypeFromTag, setupNewPostAttrs, updateChildren,
   updateAllMedia, updateCommunities
 } from '../models/post/util'
+import {
+  handleMissingTagDescriptions, throwErrorIfMissingTags
+} from '../../lib/util/controllers'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -112,23 +115,7 @@ const checkPostTags = (attrs, opts) => {
 
   const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
   tags = difference(tags, describedTags)
-
-  return Tag.nonexistent(tags, opts.communities)
-  .then(nonexistent => {
-    if (isEmpty(nonexistent)) return
-
-    const error = new Error('some new tags are missing descriptions')
-    error.tagsMissingDescriptions = nonexistent
-    throw error
-  })
-}
-
-const handleMissingTagDescriptions = (err, res) => {
-  if (err.tagsMissingDescriptions) {
-    res.status(422)
-    res.send(pick(err, 'tagsMissingDescriptions'))
-    return true
-  }
+  return throwErrorIfMissingTags(tags, opts.communities)
 }
 
 const PostController = {

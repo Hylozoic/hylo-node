@@ -119,7 +119,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   communities: function () {
-    return this.belongsToMany(Community).through(CommunityTag).withPivot(['user_id', 'description'])
+    return this.belongsToMany(Community).through(CommunityTag)
+    .withPivot(['user_id', 'description'])
   },
 
   posts: function () {
@@ -167,8 +168,8 @@ module.exports = bookshelf.Model.extend({
     return updateForTaggable(post, post.get('name') + ' ' + post.get('description'), tagParam, tagDescriptions, trx)
   },
 
-  updateForComment: function (comment, trx) {
-    return updateForTaggable(comment, comment.get('text'), null, null, trx)
+  updateForComment: function (comment, tagDescriptions, trx) {
+    return updateForTaggable(comment, comment.get('text'), null, tagDescriptions, trx)
   },
 
   addToUser: function (user, values, reset) {
@@ -236,20 +237,20 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  nonexistent: (names, communities) => {
-    if (names.length === 0 || communities.length === 0) return Promise.resolve({})
+  nonexistent: (names, communityIds) => {
+    if (names.length === 0 || communityIds.length === 0) return Promise.resolve({})
 
     const isCommunity = id => row => Number(row.community_id) === Number(id)
     const sameTag = name => row => row.name.toLowerCase() === name.toLowerCase()
 
     return Tag.query().where('name', 'in', names)
     .join('communities_tags', 'communities_tags.tag_id', 'tags.id')
-    .where('community_id', 'in', communities)
+    .where('community_id', 'in', communityIds)
     .select(['tags.name', 'community_id'])
     .then(rows => {
       return names.reduce((m, n) => {
         const matching = filter(sameTag(n), rows)
-        const missing = filter(id => !some(matching, isCommunity(id)), communities)
+        const missing = filter(id => !some(matching, isCommunity(id)), communityIds)
         if (missing.length > 0) m[n] = missing
         return m
       }, {})

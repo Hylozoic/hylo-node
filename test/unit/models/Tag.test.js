@@ -261,15 +261,17 @@ describe('Tag', () => {
         })
         return comment.save()
       })
-      .then(comment => Tag.updateForComment(comment))
+      .then(comment => Tag.updateForComment(comment, {commenthashtag: 'lol'}))
       .then(() => Tag.find('commenthashtag', {withRelated: ['comments', 'communities']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('commenthashtag')
         expect(tag.relations.comments.length).to.equal(1)
         expect(tag.relations.comments.models[0].get('text')).to.equal('here is a #commenthashtag test')
-        expect(tag.relations.communities.length).to.equal(1)
-        expect(tag.relations.communities.models[0].get('name')).to.equal(c1.get('name'))
+        const community = tag.relations.communities.first()
+        expect(community).to.exist
+        expect(community.get('name')).to.equal(c1.get('name'))
+        expect(community.pivot.get('description')).to.equal('lol')
       })
     })
   })

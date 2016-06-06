@@ -1,9 +1,14 @@
+import { difference, isEmpty, pickBy } from 'lodash'
+import {
+  handleMissingTagDescriptions, throwErrorIfMissingTags
+} from '../../lib/util/controllers'
+
 const userColumns = q => q.column('id', 'name', 'avatar_url')
 
 const updateRecentComments = postId =>
   Queue.classMethod('Post', 'setRecentComments', {postId})
 
-var createComment = function (commenterId, text, post) {
+const createComment = function (commenterId, text, post, tagDescriptions) {
   text = RichText.sanitize(text)
   var attrs = {
     text: text,
@@ -21,13 +26,22 @@ var createComment = function (commenterId, text, post) {
 
     return bookshelf.transaction(function (trx) {
       return new Comment(attrs).save(null, {transacting: trx})
-      .tap(comment => Tag.updateForComment(comment, trx))
+      .tap(comment => Tag.updateForComment(comment, tagDescriptions, trx))
       .tap(() => post.updateCommentCount(trx))
     })
     .tap(comment => comment.createActivities())
     .tap(comment => post.addFollowers(newFollowers, commenterId))
     .tap(() => updateRecentComments(post.id))
   })
+}
+
+const checkCommentTags = (text, post, descriptions) => {
+  const tags = Tag.tagsInText(text)
+  const describedTags = Object.keys(pickBy(descriptions, (v, k) => !!v))
+  return isEmpty(difference(tags, describedTags))
+    ? Promise.resolve()
+    : post.load('communities').then(() =>
+        throwErrorIfMissingTags(tags, post.relations.communities.pluck('id')))
 }
 
 module.exports = {
@@ -45,10 +59,19 @@ module.exports = {
   },
 
   create: function (req, res) {
-    return createComment(req.session.userId, req.param('text'), res.locals.post)
+    const text = req.param('text')
+    const post = res.locals.post
+    const tagDescriptions = req.param('tagDescriptions')
+
+    return checkCommentTags(text, post, tagDescriptions)
+    .then(() => createComment(req.session.userId, text, post, tagDescriptions))
     .then(comment => comment.load({user: userColumns}))
     .then(c => CommentPresenter.present(c, req.session.userId))
-    .then(res.ok, res.serverError)
+    .then(res.ok)
+    .catch(err => {
+      if (handleMissingTagDescriptions(err, res)) return
+      res.serverError(err)
+    })
   },
 
   createFromEmail: function (req, res) {
