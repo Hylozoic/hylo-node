@@ -193,6 +193,42 @@ describe('PostController', () => {
           expect(post.pivot.get('selected')).to.be.true
         })
       })
+
+      it('increments the new_post_count of tag_follows', () => {
+        _.extend(req.params, {
+          name: 'New Tag Followed Post',
+          description: '<p>this is relevant to #ntfpone and #ntfptwo</p>',
+          tag: 'zounds',
+          communities: [fixtures.c1.id]
+        })
+
+        var t1, t2, t3
+
+        return Promise.join(
+          new Tag({name: 'ntfpone'}).save(),
+          new Tag({name: 'ntfptwo'}).save(),
+          new Tag({name: 'ntfpthree'}).save(),
+          (nt1, nt2, nt3) => {
+            t1 = nt1
+            t2 = nt2
+            t3 = nt3
+            return Promise.join(
+              new TagFollow({tag_id: t1.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).save(),
+              new TagFollow({tag_id: t2.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).save(),
+              new TagFollow({tag_id: t3.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).save()
+            )
+          })
+        .then(() => PostController.create(req, res))
+        .then(() => Promise.join(
+          TagFollow.where({tag_id: t1.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).fetch(),
+          TagFollow.where({tag_id: t2.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).fetch(),
+          TagFollow.where({tag_id: t3.id, user_id: fixtures.u1.id, community_id: fixtures.c1.id}).fetch(),
+          (tf1, tf2, tf3) => {
+            expect(tf1.get('new_post_count')).to.equal(1)
+            expect(tf2.get('new_post_count')).to.equal(1)
+            expect(tf3.get('new_post_count')).to.equal(0)
+          }))
+      })
     })
   })
 

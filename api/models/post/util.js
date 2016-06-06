@@ -22,6 +22,13 @@ export const setupNewPostAttrs = function (userId, params) {
   return Promise.resolve(attrs)
 }
 
+const updateTagFollows = (post, trxOpts) => post.load('tags', trxOpts)
+  .then(() => post.load('communities', trxOpts))
+  .then(() => TagFollow.query(q => {
+    q.whereIn('tag_id', post.relations.tags.map('id'))
+    q.whereIn('community_id', post.relations.communities.map('id'))
+  }).query().increment('new_post_count').transacting(trxOpts.transacting))
+
 export const afterSavingPost = function (post, opts) {
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.get('description'))
@@ -45,6 +52,7 @@ export const afterSavingPost = function (post, opts) {
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
   ]))
   .then(() => Tag.updateForPost(post, opts.tag || post.get('type'), trx))
+  .then(() => updateTagFollows(post, trxOpts))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
 }
 

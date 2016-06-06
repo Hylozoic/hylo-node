@@ -83,6 +83,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/tags/leftnav':       'TagController.findForLeftNav',
   'GET    /noo/tag/:tagName':                              'TagController.findOne',
   'GET    /noo/tag/:tagName/posts':                        'PostController.findForTagInAllCommunities',
+  'POST   /noo/community/:communityId/tag/:tagName/reset': 'TagController.resetNewPostCount',
 
   'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/search/fulltext':                          'SearchController.showFullText',
@@ -133,5 +134,5 @@ module.exports.routes = {
 
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
 
-  'GET     /noo/live-status':                             'LiveStatusController.show'
+  'GET     /noo/live-status/:communityId':                'LiveStatusController.show'
 }

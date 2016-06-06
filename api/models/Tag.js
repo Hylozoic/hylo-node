@@ -52,6 +52,12 @@ const addToCommunity = (community, tag, user_id, trx) => {
       user_id: user_id,
       created_at: new Date()
     }).save({}, {transacting: trx})
+    .then(() => new TagFollow({
+      community_id: community.id,
+      tag_id: tag.id,
+      user_id: user_id,
+      created_at: new Date()
+    }).save())
     .catch(() => {}))
 }
 
