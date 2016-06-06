@@ -5,6 +5,8 @@ const PostController = require(root('api/controllers/PostController'))
 
 const testImageUrl = 'https://www.hylo.com/favicon.png'
 const testImageUrl2 = 'https://www.hylo.com/faviconDev.png'
+const testVideoUrl = 'https://www.youtube.com/watch?v=jsQ7yKwDPZk'
+const testVideoUrl2 = 'https://www.youtube.com/watch?v=gC5-MoDUuRg'
 
 describe('PostController', () => {
   var fixtures, req, res
@@ -348,6 +350,20 @@ describe('PostController', () => {
       })
     })
 
+    it('saves a video', () => {
+      req.params.videoUrl = testVideoUrl
+
+      return PostController.update(req, res)
+      .tap(() => post.load('media'))
+      .then(() => {
+        var media = post.relations.media
+        expect(media.length).to.equal(1)
+        var video = media.first()
+        expect(video.get('url')).to.equal(testVideoUrl)
+        expect(video.get('type')).to.equal('video')
+      })
+    })
+
     describe('with an existing image', () => {
       var originalImageId
       beforeEach(() =>
@@ -373,6 +389,35 @@ describe('PostController', () => {
           var image = media.first()
           expect(image.get('url')).to.equal(testImageUrl2)
           expect(image.id).to.equal(originalImageId)
+        })
+      })
+    })
+
+    describe('with an existing video', () => {
+      var originalVideoId
+      beforeEach(() =>
+        Media.createForPost(post.id, 'video', testVideoUrl)
+        .tap(video => originalVideoId = video.id))
+
+      it('removes the video', () => {
+        req.params.videoRemoved = true
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => expect(post.relations.media.length).to.equal(0))
+      })
+
+      it('updates the video url', () => {
+        req.params.videoUrl = testVideoUrl2
+
+        return PostController.update(req, res)
+        .tap(() => post.load('media'))
+        .then(() => {
+          var media = post.relations.media
+          expect(media.length).to.equal(1)
+          var video = media.first()
+          expect(video.get('url')).to.equal(testVideoUrl2)
+          expect(video.id).to.equal(originalVideoId)
         })
       })
     })

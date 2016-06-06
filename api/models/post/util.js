@@ -1,5 +1,5 @@
 import {
-  flatten, includes, merge, omit, pick, some, uniq, values
+  difference, flatten, has, includes, isEqual, merge, omit, pick, some, uniq, values
 } from 'lodash'
 import { filter, map } from 'lodash/fp'
 
@@ -83,7 +83,7 @@ export const updateChildren = (post, children, trx) => {
   })
 }
 
-export const updateMedia = (post, type, url, remove, trx) => {
+const updateMedia = (post, type, url, remove, trx) => {
   if (!url && !remove) return
   var media = post.relations.media.find(m => m.get('type') === type)
 
@@ -96,5 +96,43 @@ export const updateMedia = (post, type, url, remove, trx) => {
     }
   } else if (url) { // create new media
     return Media.createForPost(post.id, type, url, trx)
+  }
+}
+
+export const updateAllMedia = (post, params, trx) => {
+  const mediaParams = [
+    'docs', 'removedDocs', 'imageUrl', 'imageRemoved', 'videoUrl', 'videoRemoved'
+  ]
+
+  return (some(mediaParams, p => has(params, p))
+    ? post.load('media')
+    : Promise.resolve())
+  .tap(() => updateMedia(post, 'image', params.imageUrl, params.imageRemoved, trx))
+  .tap(() => updateMedia(post, 'video', params.videoUrl, params.videoRemoved, trx))
+  .tap(() => {
+    if (!params.removedDocs) return
+    return Promise.map(params.removedDocs, doc => {
+      var media = post.relations.media.find(m => m.get('url') === doc.url)
+      if (media) return media.destroy({transacting: trx})
+    })
+  })
+  .tap(() => {
+    if (!params.docs) return
+    return Promise.map(params.docs, doc => {
+      var media = post.relations.media.find(m => m.get('url') === doc.url)
+      if (!media) return Media.createDoc(post.id, doc, trx)
+    })
+  })
+}
+
+export const updateCommunities = (post, newIds, trx) => {
+  const oldIds = post.relations.communities.pluck('id')
+  if (!isEqual(newIds, oldIds)) {
+    const opts = {transacting: trx}
+    const cs = post.communities()
+    return Promise.join(
+      Promise.map(difference(newIds, oldIds), id => cs.attach(id, opts)),
+      Promise.map(difference(oldIds, newIds), id => cs.detach(id, opts))
+    )
   }
 }

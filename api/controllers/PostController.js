@@ -1,9 +1,7 @@
-import {
-  difference, has, includes, isEmpty, merge, omit, partial, pick, pickBy, some
-} from 'lodash'
+import { difference, includes, isEmpty, merge, omit, pick, pickBy } from 'lodash'
 import {
   afterSavingPost, postTypeFromTag, setupNewPostAttrs, updateChildren,
-  updateMedia
+  updateAllMedia, updateCommunities
 } from '../models/post/util'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
@@ -243,56 +241,21 @@ const PostController = {
     const post = res.locals.post
     const params = req.allParams()
 
-    var attrs = merge(
+    const attrs = merge(
       pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
       {
         updated_at: new Date(),
-        visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
+        visibility: Post.Visibility[params.public ? 'PUBLIC_READABLE' : 'DEFAULT'],
+        type: params.type || postTypeFromTag(params.tag)
       }
     )
 
-    if (!attrs.type) {
-      attrs.type = postTypeFromTag(params.tag)
-    }
-
-    return bookshelf.transaction(trx => {
-      return post.save(attrs, {patch: true, transacting: trx})
+    return bookshelf.transaction(trx =>
+      post.save(attrs, {patch: true, transacting: trx})
       .tap(() => updateChildren(post, req.param('requests'), trx))
-      .tap(() => {
-        var newIds = req.param('communities').sort()
-        var oldIds = post.relations.communities.pluck('id').sort()
-        if (newIds !== oldIds) {
-          return Promise.join(
-            Promise.map(difference(newIds, oldIds), id =>
-              post.communities().attach(id, {transacting: trx})),
-            Promise.map(difference(oldIds, newIds), id =>
-              post.communities().detach(id, {transacting: trx}))
-          )
-        }
-      })
-      .tap(() => {
-        var mediaParams = ['docs', 'removedDocs', 'imageUrl', 'imageRemoved']
-        var isSet = partial(has, params)
-        if (some(mediaParams, isSet)) return post.load('media')
-      })
-      .tap(() => updateMedia(post, 'image', params.imageUrl, params.imageRemoved, trx))
-      .tap(() => updateMedia(post, 'video', params.videoUrl, params.videoRemoved, trx))
-      .tap(() => {
-        if (!params.removedDocs) return
-        return Promise.map(params.removedDocs, doc => {
-          var media = post.relations.media.find(m => m.get('url') === doc.url)
-          if (media) return media.destroy({transacting: trx})
-        })
-      })
-      .tap(() => {
-        if (!params.docs) return
-        return Promise.map(params.docs, doc => {
-          var media = post.relations.media.find(m => m.get('url') === doc.url)
-          if (!media) return Media.createDoc(post.id, doc, trx)
-        })
-      })
-      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))
-    })
+      .tap(() => updateCommunities(post, req.param('communities'), trx))
+      .tap(() => updateAllMedia(post, params, trx))
+      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx)))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
     .then(res.ok, res.serverError)
