@@ -11,6 +11,7 @@ module.exports = {
         .then(leftNavTags => res.ok({
           new_notification_count: user.get('new_notification_count'),
           left_nav_tags: leftNavTags,
+          slug: community && community.get('slug'),
           memberships: user.relations.memberships.map(m => ({
             id: m.id,
             new_notification_count: m.get('new_notification_count')
