@@ -262,6 +262,11 @@ describe('PostController', () => {
           name: 'New Tag Followed Post',
           description: '<p>this is relevant to #ntfpone and #ntfptwo</p>',
           tag: 'zounds',
+          tagDescriptions: {
+            ntfpone: '1',
+            ntfptwo: '1',
+            zounds: 'an expression of shock (antiquated)'
+          },
           communities: [fixtures.c1.id]
         })
 

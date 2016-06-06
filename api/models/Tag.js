@@ -6,7 +6,7 @@ const tagsInText = (text = '') => {
   return (text.match(/#[A-Za-z][\w-]+/g) || []).map(str => str.substr(1))
 }
 
-const addToTaggable = (taggable, tagName, selected, tagDescriptions, trx) => {
+const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting) => {
   var association, communities
   var isPost = !taggable.post
   if (isPost) {
@@ -18,29 +18,29 @@ const addToTaggable = (taggable, tagName, selected, tagDescriptions, trx) => {
     association = 'post.communities'
     communities = comment => comment.relations.post.relations.communities.models
   }
-  return taggable.load(association, {transacting: trx})
-  .then(() => Tag.find(tagName, {transacting: trx}))
+  return taggable.load(association, {transacting})
+  .then(() => Tag.find(tagName, {transacting}))
   .then(tag => {
     if (tag) return tag
     return new Tag({
       name: tagName,
       created_at: new Date()
-    }).save({}, {transacting: trx})
-    .catch(() => Tag.find(tagName, {transacting: trx}))
+    }).save({}, {transacting})
+    .catch(() => Tag.find(tagName, {transacting}))
   })
   .tap(tag => {
     var attachment = {tag_id: tag.id, created_at: new Date()}
     if (isPost) attachment.selected = selected
-    return taggable.tags().attach(attachment, {transacting: trx})
+    return taggable.tags().attach(attachment, {transacting})
   })
   .then(tag => Promise.map(communities(taggable), com => {
     const description = get(tagDescriptions, tag.get('name'))
-    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, trx)
+    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, transacting)
   }))
 }
 
-const removeFromTaggable = (taggable, tag, trx) => {
-  return taggable.tags().detach(tag.id, {transacting: trx})
+const removeFromTaggable = (taggable, tag, transacting) => {
+  return taggable.tags().detach(tag.id, {transacting})
 }
 
 const addToCommunity = (community_id, tag_id, user_id, description, transacting) => {
@@ -49,12 +49,13 @@ const addToCommunity = (community_id, tag_id, user_id, description, transacting)
   .then(comTag => comTag ||
     new CommunityTag({community_id, tag_id, user_id, description, created_at})
     .save({}, {transacting})
-    .then(() => new TagFollow({community_id, tag_id, user_id, created_at})
-      .save({}, {transacting}))
     .catch(() => {}))
     // this catch is for the case where another user just created the
     // CommunityTag (race condition): the save fails, but we don't care about
     // the result
+  .then(() => TagFollow.where({community_id, tag_id, user_id}).fetch({transacting}))
+  .then(follow => follow ||
+    new TagFollow({community_id, tag_id, user_id, created_at}).save({}, {transacting}))
 }
 
 const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {
