@@ -1,5 +1,5 @@
-import { filter, includes, map, merge, find } from 'lodash'
-import { fetchAndPresentFollowed, fetchAndPresentCreated, withRelatedSpecialPost, presentWithPost } from '../services/TagPresenter'
+import { merge } from 'lodash'
+import { fetchAndPresentFollowed, fetchAndPresentForLeftNav, withRelatedSpecialPost, presentWithPost } from '../services/TagPresenter'
 
 module.exports = {
 
@@ -48,17 +48,7 @@ module.exports = {
 
   findForLeftNav: function (req, res) {
     return Community.find(req.param('communityId'))
-    .then(com => Promise.join(
-      fetchAndPresentFollowed(com.id, req.session.userId),
-      fetchAndPresentCreated(com.id, req.session.userId),
-      (followed, created) => ({
-        followed: filter(followed, f => !includes(map(created, 'name'), f.name)),
-        created: map(created, c =>
-          includes(map(followed, 'name'), c.name)
-          ? merge(c, {new_post_count: find(followed, f => f.name === c.name).new_post_count})
-          : c)
-      })
-    ))
+    .then(com => fetchAndPresentForLeftNav(com.id, req.session.userId))
     .then(res.ok, res.serverError)
   },
 
