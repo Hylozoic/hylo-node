@@ -123,6 +123,14 @@ const checkPostTags = (attrs, opts) => {
   })
 }
 
+const handleMissingTagDescriptions = (err, res) => {
+  if (err.tagsMissingDescriptions) {
+    res.status(422)
+    res.send(pick(err, 'tagsMissingDescriptions'))
+    return true
+  }
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -156,12 +164,10 @@ const PostController = {
     .then(PostPresenter.present)
     .then(res.ok)
     .catch(err => {
+      if (handleMissingTagDescriptions(err, res)) return
       if (err.message === "title can't be blank") {
         res.status(422)
         res.send(err.message)
-      } else if (err.tagsMissingDescriptions) {
-        res.status(422)
-        res.send(pick(err, 'tagsMissingDescriptions'))
       } else {
         res.serverError(err)
       }
@@ -250,15 +256,23 @@ const PostController = {
       }
     )
 
-    return bookshelf.transaction(trx =>
+    return checkPostTags(
+      pick(params, 'name', 'description'),
+      pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
+    )
+    .then(() => bookshelf.transaction(trx =>
       post.save(attrs, {patch: true, transacting: trx})
       .tap(() => updateChildren(post, req.param('requests'), trx))
       .tap(() => updateCommunities(post, req.param('communities'), trx))
       .tap(() => updateAllMedia(post, params, trx))
-      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx)))
+      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
-    .then(res.ok, res.serverError)
+    .then(res.ok)
+    .catch(err => {
+      if (handleMissingTagDescriptions(err, res)) return
+      res.serverError(err)
+    })
   },
 
   fulfill: function (req, res) {

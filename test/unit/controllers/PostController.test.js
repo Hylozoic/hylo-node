@@ -260,13 +260,15 @@ describe('PostController', () => {
   })
 
   describe('#update', () => {
-    var post
+    var post, community
 
     beforeEach(() => {
       post = factories.post()
+      community = factories.community()
       req.params.communities = []
       res.locals.post = post
       return post.save().tap(() => post.load('communities'))
+      .then(() => community.save())
     })
 
     describe('with communities', () => {
@@ -418,6 +420,33 @@ describe('PostController', () => {
           var video = media.first()
           expect(video.get('url')).to.equal(testVideoUrl2)
           expect(video.id).to.equal(originalVideoId)
+        })
+      })
+    })
+
+    describe('with a new tag', () => {
+      it('rejects the update if the tag has no description', () => {
+        req.params.description = 'here is a #newtag! yay'
+        req.params.communities = [community.id]
+
+        return PostController.update(req, res)
+        .then(() => expect(res.body).to.deep.equal({
+          tagsMissingDescriptions: {newtag: [community.id]}
+        }))
+      })
+
+      it('saves the tag description to the community', () => {
+        req.params.description = 'here is a #newtag! yay'
+        req.params.tagDescriptions = {newtag: 'i am a new tag'}
+        req.params.communities = [community.id]
+
+        return PostController.update(req, res)
+        .then(() => community.load('tags'))
+        .then(() => {
+          const tag = community.relations.tags.first()
+          expect(tag).to.exist
+          expect(tag.get('name')).to.equal('newtag')
+          expect(tag.pivot.get('description')).to.equal('i am a new tag')
         })
       })
     })
