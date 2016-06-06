@@ -1,6 +1,7 @@
 const root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
+import { merge } from 'lodash'
 
 const destroyAllPushNotifications = () => {
   return PushNotification.fetchAll()
@@ -283,6 +284,66 @@ describe('Notification', function () {
           Notification.MEDIUM.Push,
           Notification.MEDIUM.InApp
         ].sort())
+      })
+    })
+  })
+
+  describe('sendCommentNotificationEmail', () => {
+    var original, args, community
+    beforeEach(() => {
+      original = Email.sendNewCommentNotification
+      Email.sendNewCommentNotification = spy(x => args = x)
+      community = factories.community()
+      return community.save()
+    })
+
+    afterEach(() => {
+      Email.sendNewCommentNotification = original
+    })
+
+    it('sets the correct email attributes', () => {
+      const note = new Notification()
+
+      const fakeModel = attrs => {
+        return merge({
+          get: function (name) { return this[name] }
+        }, attrs)
+      }
+
+      note.relations = {
+        activity: fakeModel({
+          comment_id: 5,
+          relations: {
+            comment: fakeModel({
+              id: 5,
+              text: 'I have an opinion',
+              relations: {
+                post: fakeModel({
+                  name: 'hello world',
+                  relations: {
+                    communities: [community]
+                  }
+                }),
+                user: fakeModel({
+                  id: 2,
+                  name: 'Ka Mentor'
+                })
+              }
+            }),
+            reader: new User({
+              id: 1,
+              name: 'Reader Person',
+              email: 'ilovenotifications@foo.com',
+              created_at: new Date()
+            })
+          }
+        })
+      }
+
+      return note.sendCommentNotificationEmail()
+      .then(() => {
+        expect(Email.sendNewCommentNotification).to.have.been.called()
+        expect(args.data.post_label).to.equal('the post: "hello world"')
       })
     })
   })
