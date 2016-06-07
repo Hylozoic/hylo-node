@@ -125,7 +125,7 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.profile(user) + '?ctt=post_mention_email'),
           post_description: description,
           post_title: post.get('name'),
-          post_type: post.get('type'),
+          post_type: 'conversation',
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post) + '?ctt=post_mention_email'),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
