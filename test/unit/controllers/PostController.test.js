@@ -241,7 +241,7 @@ describe('PostController', () => {
           const communities = tag.relations.communities
           expect(communities.length).to.equal(2)
           expect(communities.pluck('id').sort()).to.deep.equal([fixtures.c1.id, c2.id])
-          expect(communities.map(c => c.pivot.get('description'))).to.deep.equal([
+          expect(communities.map(c => c.pivot.get('description')).sort()).to.deep.equal([
             'First description.', 'This is a test tag.'
           ])
         })
