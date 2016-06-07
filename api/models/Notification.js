@@ -157,7 +157,7 @@ module.exports = bookshelf.Model.extend({
         postLabel = format("%s's welcoming post", relatedUser.get('name'))
       }
     } else {
-      postLabel = `${reader.id === poster.id ? 'your' : 'the'} post: "${post.get('name')}"`
+      postLabel = `${reader.id === poster.id ? 'your' : 'the'} conversation: "${post.get('name')}"`
     }
 
     var communityIds = Activity.communityIds(this.relations.activity)
