@@ -157,7 +157,9 @@ module.exports.policies = {
     findFollowed: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     findForLeftNav: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     follow: ['allowTokenAuth', 'sessionAuth'],
-    resetNewPostCount: ['allowTokenAuth', 'sessionAuth']
+    resetNewPostCount: ['allowTokenAuth', 'sessionAuth'],
+    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
+    removeFromCommunity: ['sessionAuth', 'isModerator']
   }
 
 }

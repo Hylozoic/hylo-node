@@ -36,6 +36,8 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/invitations':       'InvitationController.find',
   'POST   /noo/community/:communityId/invite':            'InvitationController.create',
   'GET    /noo/community/:communityId/activity':          'ActivityController.findForCommunity',
+  'GET    /noo/community/:communityId/tags':              'TagController.findForCommunity',
+  'DELETE /noo/community/:communityId/tag/:tagId':        'TagController.removeFromCommunity',
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',

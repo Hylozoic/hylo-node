@@ -1,12 +1,13 @@
-module.exports = function isModerator(req, res, next) {
-  if (Admin.isSignedIn(req)) return next();
-  Membership.hasModeratorRole(req.session.userId, req.param('communityId'))
-  .then(function(isModerator) {
+module.exports = function isModerator (req, res, next) {
+  if (Admin.isSignedIn(req)) return next()
+  const communityId = req.param('communityId')
+  Membership.hasModeratorRole(req.session.userId, communityId)
+  .then(isModerator => {
     if (isModerator) {
-      next();
+      next()
     } else {
-      sails.log.debug("policy: isModerator: fail for user " + req.session.userId + ", community " + req.param('communityId'));
-      res.forbidden();
+      sails.log.debug(`policy: isModerator: fail for user ${req.session.userId}, community ${communityId}`)
+      res.forbidden()
     }
-  });
-};
+  })
+}
