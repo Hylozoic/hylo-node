@@ -44,3 +44,5 @@ export const fetchAndPresentForLeftNav = (communityId, userId) =>
         ? merge(c, {new_post_count: find(followed, f => f.name === c.name).new_post_count})
         : c)
     }))
+
+export const fetchAndPresentForPopover = (community, tag) => {}

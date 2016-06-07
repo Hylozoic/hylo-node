@@ -152,4 +152,8 @@ describe('TagController', () => {
       })
     })
   })
+
+  describe('#findOneForPopover', () => {
+
+  })
 })
