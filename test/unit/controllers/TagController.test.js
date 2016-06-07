@@ -154,6 +154,62 @@ describe('TagController', () => {
   })
 
   describe('#findOneForPopover', () => {
+    var locals
+    var tagDescription = 'the tag for testing the popover api endpoint'
 
+    before(() => {
+      Promise.props({
+        popoverTag: new Tag({name: 'popover'}).save(),
+        u1: factories.user().save(),
+        u2: factories.user().save(),
+        u3: factories.user().save(),
+        u4: factories.user().save()
+      })
+      .then(props => {
+        locals = props
+      })
+      .then(() => Promise.join(
+        new CommunityTag({
+          tag_id: locals.popoverTag.id,
+          user_id: locals.u1.id,
+          community_id: fixtures.c1.id,
+          description: tagDescription
+        }).save(),
+        new TagFollow({tag_id: locals.popoverTag.id, user_id: locals.u2.id, community_id: fixtures.c1.id}).save(),
+        new TagFollow({tag_id: locals.popoverTag.id, user_id: locals.u3.id, community_id: fixtures.c1.id}).save()))
+      .then(() => {
+        var promises = []
+        const userIds = [locals.u1.id, locals.u1.id, locals.u1.id, locals.u2.id, locals.u2.id, locals.u3.id]
+        for (var i = 0; i < 6; i++) {
+          promises.push(factories.post({user_id: userIds[i]}).save()
+            .then(post => post.communities().attach(fixtures.c1))
+            .then(post => post.tags().attach(locals.popoverTag)))
+        }
+        return Promise.all(promises)
+      })
+    })
+
+    it.only('returns the relevant data', () => {
+      _.extend(req.params, {
+        communityId: fixtures.c1.get('slug'),
+        tagName: locals.popoverTag.get('name')
+      })
+
+      return TagController.findOneForPopover(req, res)
+      .then(() => {
+        const expected = {
+          description: tagDescription,
+          active_members: [
+            {name: locals.u1.get('name'), id: locals.u1.id, avatar_url: locals.u1.get('avatar_url'), post_count: 3},
+            {name: locals.u2.get('name'), id: locals.u2.id, avatar_url: locals.u2.get('avatar_url'), post_count: 2},
+            {name: locals.u3.get('name'), id: locals.u3.id, avatar_url: locals.u3.get('avatar_url'), post_count: 1}
+          ],
+          post_count: 6,
+          follower_count: 2
+        }
+        console.log('expected', expected)
+        expect(res.body).to.deep.equal(expected)
+      })
+    })
   })
 })

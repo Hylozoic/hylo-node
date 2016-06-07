@@ -45,4 +45,6 @@ export const fetchAndPresentForLeftNav = (communityId, userId) =>
         : c)
     }))
 
-export const fetchAndPresentForPopover = (community, tag) => {}
+export const fetchAndPresentForPopover = (community, tag) => {
+  return {}
+}

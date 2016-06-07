@@ -61,9 +61,7 @@ module.exports = {
     return Promise.join(
       Community.find(req.param('communityId')),
       Tag.find(req.param('tagName')),
-      (community, tag) => {
-        fetchAndPresentForPopover(community, tag)
-      })
+      fetchAndPresentForPopover)
     .then(res.ok, res.serverError)
   },
 
