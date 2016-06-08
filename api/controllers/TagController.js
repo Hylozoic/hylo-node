@@ -2,7 +2,7 @@
 import { get, merge, omitBy } from 'lodash'
 import {
   fetchAndPresentFollowed, fetchAndPresentForLeftNav, withRelatedSpecialPost,
-  presentWithPost, fetchAndPresentForPopover
+  presentWithPost, fetchAndPresentSummary
 } from '../services/TagPresenter'
 import { countTotal } from '../../lib/util/knex'
 
@@ -57,11 +57,11 @@ module.exports = {
     .then(res.ok, res.serverError)
   },
 
-  findOneForPopover: function (req, res) {
+  findOneSummary: function (req, res) {
     return Promise.join(
       Community.find(req.param('communityId')),
       Tag.find(req.param('tagName')),
-      fetchAndPresentForPopover)
+      fetchAndPresentSummary)
     .then(res.ok, res.serverError)
   },
 

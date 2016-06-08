@@ -160,7 +160,7 @@ module.exports.policies = {
     resetNewPostCount: ['allowTokenAuth', 'sessionAuth'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     removeFromCommunity: ['sessionAuth', 'isModerator'],
-    findOneForPopover: ['sessionAuth', 'checkAndSetMembership']
+    findOneSummary: ['sessionAuth', 'checkAndSetMembership']
   }
 
 }

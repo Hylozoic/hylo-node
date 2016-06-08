@@ -64,7 +64,7 @@ const mostActiveMembers = (community, tag) => {
   })))
 }
 
-export const fetchAndPresentForPopover = (community, tag) =>
+export const fetchAndPresentSummary = (community, tag) =>
   Promise.join(
     CommunityTag.where({community_id: community.id, tag_id: tag.id})
     .fetch(),
