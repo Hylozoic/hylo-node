@@ -1,7 +1,8 @@
+
 import { get, merge, omitBy } from 'lodash'
 import {
   fetchAndPresentFollowed, fetchAndPresentForLeftNav, withRelatedSpecialPost,
-  presentWithPost
+  presentWithPost, fetchAndPresentSummary
 } from '../services/TagPresenter'
 import { countTotal } from '../../lib/util/knex'
 
@@ -53,6 +54,14 @@ module.exports = {
   findForLeftNav: function (req, res) {
     return Community.find(req.param('communityId'))
     .then(com => fetchAndPresentForLeftNav(com.id, req.session.userId))
+    .then(res.ok, res.serverError)
+  },
+
+  findOneSummary: function (req, res) {
+    return Promise.join(
+      Community.find(req.param('communityId')),
+      Tag.find(req.param('tagName')),
+      fetchAndPresentSummary)
     .then(res.ok, res.serverError)
   },
 

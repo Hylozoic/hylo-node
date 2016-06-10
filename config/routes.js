@@ -84,6 +84,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/tags/followed':      'TagController.findFollowed',
   'GET    /noo/community/:communityId/tags/leftnav':       'TagController.findForLeftNav',
   'GET    /noo/tag/:tagName':                              'TagController.findOne',
+  'GET    /noo/tag/:tagName/summary':                      'TagController.findOneSummary',
   'GET    /noo/tag/:tagName/posts':                        'PostController.findForTagInAllCommunities',
   'POST   /noo/community/:communityId/tag/:tagName/reset': 'TagController.resetNewPostCount',
 

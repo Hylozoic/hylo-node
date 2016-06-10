@@ -152,4 +152,65 @@ describe('TagController', () => {
       })
     })
   })
+
+  describe('#findOneSummary', () => {
+    var locals
+    const tagDescription = 'the tag for testing the summary api endpoint'
+    const imageUrl = 'http://img.com/img.jpg'
+
+    it('returns the relevant data', () => {
+      return Promise.props({
+        summaryTag: new Tag({name: 'summary'}).save(),
+        u1: factories.user({avatar_url: imageUrl}).save(),
+        u2: factories.user({avatar_url: imageUrl}).save(),
+        u3: factories.user({avatar_url: imageUrl}).save(),
+        u4: factories.user({avatar_url: imageUrl}).save()
+      })
+      .then(props => {
+        locals = props
+      })
+      .then(() => {
+        _.extend(req.params, {
+          communityId: fixtures.c1.get('slug'),
+          tagName: locals.summaryTag.get('name')
+        })
+      })
+      .then(() => Promise.join(
+        new CommunityTag({
+          tag_id: locals.summaryTag.id,
+          user_id: locals.u1.id,
+          community_id: fixtures.c1.id,
+          description: tagDescription
+        }).save(),
+        new TagFollow({tag_id: locals.summaryTag.id, user_id: locals.u2.id, community_id: fixtures.c1.id}).save(),
+        new TagFollow({tag_id: locals.summaryTag.id, user_id: locals.u3.id, community_id: fixtures.c1.id}).save()))
+      .then(() => factories.post({name: 'one untagged posts', user_id: locals.u1.id}).save()
+        .then(post => post.communities().attach(fixtures.c1)))
+      .then(() => {
+        var promises = []
+        const userIds = [locals.u1.id, locals.u1.id, locals.u1.id, locals.u2.id, locals.u2.id, locals.u3.id]
+        for (var i = 0; i < 6; i++) {
+          promises.push(factories.post({user_id: userIds[i]}).save()
+            .then(post => Promise.join(
+              post.communities().attach(fixtures.c1),
+              post.tags().attach(locals.summaryTag))))
+        }
+        return Promise.all(promises)
+      })
+      .then(() => TagController.findOneSummary(req, res))
+      .then(() => {
+        const expected = {
+          description: tagDescription,
+          active_members: [
+            {name: locals.u1.get('name'), id: locals.u1.id, avatar_url: locals.u1.get('avatar_url'), post_count: '3'},
+            {name: locals.u2.get('name'), id: locals.u2.id, avatar_url: locals.u2.get('avatar_url'), post_count: '2'},
+            {name: locals.u3.get('name'), id: locals.u3.id, avatar_url: locals.u3.get('avatar_url'), post_count: '1'}
+          ],
+          post_count: '6',
+          follower_count: 2
+        }
+        expect(res.body).to.deep.equal(expected)
+      })
+    })
+  })
 })
