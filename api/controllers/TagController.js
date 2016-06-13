@@ -60,7 +60,8 @@ module.exports = {
     return Promise.join(
       Community.find(req.param('communityId')),
       Tag.find(req.param('tagName')),
-      fetchAndPresentSummary)
+      fetchAndPresentSummary
+    )
     .then(res.ok, res.serverError)
   },
 
@@ -93,7 +94,7 @@ module.exports = {
           tag_id: tag.id,
           community_id: community.id
         }).fetch()
-        .then(tagFollow => tagFollow.save({new_post_count: 0})))
+        .then(tf => tf && tf.save({new_post_count: 0})))
     .then(res.ok)
   },
 
