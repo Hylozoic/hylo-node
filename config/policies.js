@@ -159,7 +159,8 @@ module.exports.policies = {
     follow: ['allowTokenAuth', 'sessionAuth'],
     resetNewPostCount: ['allowTokenAuth', 'sessionAuth'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
-    removeFromCommunity: ['sessionAuth', 'isModerator']
+    removeFromCommunity: ['sessionAuth', 'isModerator'],
+    findOneSummary: ['sessionAuth', 'checkAndSetMembership']
   }
 
 }

@@ -88,3 +88,40 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
   }))
   .then(items => ({items, total}))
 }
+
+const mostActiveMembers = (community, tag) => {
+  return User.query(q => {
+    q.select(bookshelf.knex.raw('users.name, users.id, users.avatar_url, count(*)'))
+    q.join('post', 'post.user_id', '=', 'users.id')
+    q.join('posts_tags', 'posts_tags.post_id', '=', 'post.id')
+    q.where('tag_id', '=', tag.id)
+    q.groupBy('users.id')
+    q.orderBy('count', 'desc')
+    q.limit(3)
+  })
+  .fetchAll()
+  .then(users => Promise.map(users.models, user => ({
+    id: user.id,
+    name: user.get('name'),
+    avatar_url: user.get('avatar_url'),
+    post_count: user.get('count')
+  })))
+}
+
+export const fetchAndPresentSummary = (community, tag) =>
+  Promise.join(
+    CommunityTag.where({community_id: community.id, tag_id: tag.id})
+    .fetch(),
+    TagFollow.where({community_id: community.id, tag_id: tag.id})
+    .fetchAll(),
+    Search.forPosts({
+      communities: [community.id],
+      tag: tag.id
+    }).fetchAll(),
+    mostActiveMembers(community, tag),
+    (communityTag, tagFollows, posts, activeMembers) => ({
+      description: communityTag.get('description'),
+      follower_count: tagFollows.length,
+      post_count: posts.length > 0 ? posts.first().get('total') : 0,
+      active_members: activeMembers
+    }))
