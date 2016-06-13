@@ -1,9 +1,8 @@
-import { get, merge, omitBy } from 'lodash'
+import { merge } from 'lodash'
 import {
-  fetchAndPresentFollowed, fetchAndPresentForLeftNav, withRelatedSpecialPost,
-  presentWithPost
+  fetchAndPresentFollowed, fetchAndPresentForCommunity,
+  fetchAndPresentForLeftNav, withRelatedSpecialPost, presentWithPost
 } from '../services/TagPresenter'
-import { countTotal } from '../../lib/util/knex'
 
 module.exports = {
 
@@ -90,25 +89,11 @@ module.exports = {
   },
 
   findForCommunity: function (req, res) {
-    var total
-    return Tag.query(q => {
-      countTotal(q, 'tags')
-      q.join('communities_tags', 'communities_tags.tag_id', 'tags.id')
-      q.where('community_id', res.locals.community.id)
-      q.limit(req.param('limit') || 20)
-      q.offset(req.param('offset') || 0)
-      q.orderBy('name', 'asc')
-    }).fetchAll(withRelatedSpecialPost)
-    .tap(tags => total = tags.first() ? tags.first().get('total') : 0)
-    .then(tags => tags.map(t => {
-      const post = t.relations.posts.first()
-      return omitBy({
-        id: t.id,
-        name: t.get('name'),
-        post_type: get(post, 'attributes.type')
-      }, x => !x)
-    }))
-    .then(items => res.ok({items, total}))
+    return fetchAndPresentForCommunity(res.locals.community.id, {
+      limit: req.param('limit'),
+      offset: req.param('offset')
+    })
+    .then(res.ok)
   },
 
   removeFromCommunity: function (req, res) {

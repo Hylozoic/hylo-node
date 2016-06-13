@@ -30,7 +30,7 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Post).through(Follow)
   },
 
-  tagFollows: function () {
+  followedTags: function () {
     return this.belongsToMany(Tag).through(TagFollow)
   },
 

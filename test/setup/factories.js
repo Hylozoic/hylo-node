@@ -44,6 +44,12 @@ module.exports = {
     }, attrs))
   },
 
+  tag: attrs => {
+    return new Tag(merge({
+      name: text()
+    }, attrs))
+  },
+
   mock: {
     request: function () {
       return {

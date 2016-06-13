@@ -122,6 +122,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User).through(TagUser)
   },
 
+  memberships: function () {
+    return this.hasMany(CommunityTag)
+  },
+
   communities: function () {
     return this.belongsToMany(Community).through(CommunityTag)
     .withPivot(['user_id', 'description'])

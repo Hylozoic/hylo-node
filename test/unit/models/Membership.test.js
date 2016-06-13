@@ -59,10 +59,10 @@ describe('Membership', function () {
 
     it('creates tag follows for default tags', function () {
       return Membership.create(user.id, community.id, {role: Membership.DEFAULT_ROLE})
-      .then(() => user.load('tagFollows'))
+      .then(() => user.load('followedTags'))
       .then(() => {
-        expect(user.relations.tagFollows.length).to.equal(3)
-        var tagNames = user.relations.tagFollows.map(t => t.get('name'))
+        expect(user.relations.followedTags.length).to.equal(3)
+        var tagNames = user.relations.followedTags.map(t => t.get('name'))
         expect(_.includes(tagNames, 'offer')).to.deep.equal(true)
         expect(_.includes(tagNames, 'request')).to.deep.equal(true)
         expect(_.includes(tagNames, 'intention')).to.deep.equal(true)

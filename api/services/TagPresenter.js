@@ -1,4 +1,4 @@
-import { filter, includes, map, merge, find } from 'lodash'
+import { filter, find, get, includes, map, merge, pick } from 'lodash'
 
 export const fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
   joinClass.where({community_id: communityId, user_id: userId})
@@ -44,3 +44,47 @@ export const fetchAndPresentForLeftNav = (communityId, userId) =>
         ? merge(c, {new_post_count: find(followed, f => f.name === c.name).new_post_count})
         : c)
     }))
+
+export const fetchAndPresentForCommunity = (communityId, opts) => {
+  var total
+  const withRelated = withRelatedSpecialPost.withRelated
+  Array.prototype.push.apply(withRelated, [
+    {memberships: q => q.where('community_id', communityId)},
+    {'memberships.owner': q => q.column('users.id', 'name', 'avatar_url')}
+  ])
+
+  return Tag.query(q => {
+    q.select(bookshelf.knex.raw(`tags.*, count(*) over () as total,
+      count(tag_follows.id) as followers`))
+
+    q.join('communities_tags', 'communities_tags.tag_id', 'tags.id')
+    q.where('communities_tags.community_id', communityId)
+
+    q.leftJoin('tag_follows', 'tag_follows.tag_id', 'tags.id')
+    q.where(function () {
+      this.where('tag_follows.community_id', communityId)
+      .orWhere('tag_follows.community_id', null)
+    })
+
+    q.limit(opts.limit || 20)
+    q.offset(opts.offset || 0)
+    q.orderBy('name', 'asc')
+    q.groupBy('tags.id')
+  })
+  .fetchAll({withRelated})
+  .tap(tags => total = tags.first() ? Number(tags.first().get('total')) : 0)
+  .then(tags => tags.map(t => {
+    const attrs = {
+      id: t.id,
+      name: t.get('name'),
+      memberships: t.relations.memberships.map(m => merge(
+        pick(m.toJSON(), 'community_id', 'description', 'created_at', 'owner'),
+        {follower_count: Number(t.get('followers'))}
+      ))
+    }
+    const post_type = get(t.relations.posts.first(), 'attributes.type')
+    if (post_type) attrs.post_type = post_type
+    return attrs
+  }))
+  .then(items => ({items, total}))
+}
