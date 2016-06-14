@@ -109,7 +109,7 @@ const mostActiveMembers = (community, tag) => {
     id: user.id,
     name: user.get('name'),
     avatar_url: user.get('avatar_url'),
-    post_count: user.get('count')
+    post_count: Number(user.get('count'))
   })))
 }
 
@@ -119,14 +119,11 @@ export const fetchAndPresentSummary = (community, tag) =>
     .fetch(),
     TagFollow.where({community_id: community.id, tag_id: tag.id})
     .count(),
-    bookshelf.knex('posts_tags')
-    .join('post_community', 'post_community.post_id', 'posts_tags.post_id')
-    .where({community_id: community.id, tag_id: tag.id})
-    .count(),
+    CommunityTag.taggedPostCount(community.id, tag.id),
     mostActiveMembers(community, tag),
     (communityTag, followerCount, postCount, activeMembers) => ({
       description: communityTag.get('description'),
-      follower_count: followerCount,
-      post_count: postCount[0].count,
+      follower_count: Number(followerCount),
+      post_count: Number(postCount),
       active_members: activeMembers
     }))

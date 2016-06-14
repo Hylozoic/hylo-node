@@ -291,12 +291,12 @@ describe('TagController', () => {
         const expected = {
           description: tagDescription,
           active_members: [
-            {name: locals.u1.get('name'), id: locals.u1.id, avatar_url: locals.u1.get('avatar_url'), post_count: '3'},
-            {name: locals.u2.get('name'), id: locals.u2.id, avatar_url: locals.u2.get('avatar_url'), post_count: '2'},
-            {name: locals.u3.get('name'), id: locals.u3.id, avatar_url: locals.u3.get('avatar_url'), post_count: '1'}
+            {name: locals.u1.get('name'), id: locals.u1.id, avatar_url: locals.u1.get('avatar_url'), post_count: 3},
+            {name: locals.u2.get('name'), id: locals.u2.id, avatar_url: locals.u2.get('avatar_url'), post_count: 2},
+            {name: locals.u3.get('name'), id: locals.u3.id, avatar_url: locals.u3.get('avatar_url'), post_count: 1}
           ],
-          post_count: '6',
-          follower_count: '2'
+          post_count: 6,
+          follower_count: 2
         }
         expect(res.body).to.deep.equal(expected)
       })
