@@ -2,7 +2,7 @@ var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var TagController = require(root('api/controllers/TagController'))
-import { times } from 'lodash'
+import { times, zip } from 'lodash'
 import { sortBy } from 'lodash/fp'
 
 describe('TagController', () => {
@@ -15,6 +15,7 @@ describe('TagController', () => {
       .then(() => Promise.props({
         u1: new User({name: 'U1', email: 'a@b.c'}).save(),
         c1: factories.community().save(),
+        c2: factories.community().save(),
         t1: new Tag({name: 'tagone'}).save(),
         t2: new Tag({name: 'tagtwo'}).save(),
         t3: new Tag({name: 'tagthree'}).save()
@@ -266,20 +267,24 @@ describe('TagController', () => {
           community_id: fixtures.c1.id,
           description: tagDescription
         }).save(),
+        new CommunityTag({
+          tag_id: locals.summaryTag.id,
+          user_id: locals.u1.id,
+          community_id: fixtures.c2.id,
+          description: 'A community tag for the summary tag in a different community'
+        }).save(),
         new TagFollow({tag_id: locals.summaryTag.id, user_id: locals.u2.id, community_id: fixtures.c1.id}).save(),
         new TagFollow({tag_id: locals.summaryTag.id, user_id: locals.u3.id, community_id: fixtures.c1.id}).save()))
       .then(() => factories.post({name: 'one untagged posts', user_id: locals.u1.id}).save()
         .then(post => post.communities().attach(fixtures.c1)))
       .then(() => {
-        var promises = []
-        const userIds = [locals.u1.id, locals.u1.id, locals.u1.id, locals.u2.id, locals.u2.id, locals.u3.id]
-        for (var i = 0; i < 6; i++) {
-          promises.push(factories.post({user_id: userIds[i]}).save()
-            .then(post => Promise.join(
-              post.communities().attach(fixtures.c1),
-              post.tags().attach(locals.summaryTag))))
-        }
-        return Promise.all(promises)
+        const userIds = [locals.u1.id, locals.u1.id, locals.u1.id, locals.u2.id, locals.u2.id, locals.u3.id, locals.u4.id, locals.u4.id]
+        const communities = [fixtures.c1, fixtures.c1, fixtures.c1, fixtures.c1, fixtures.c1, fixtures.c1, fixtures.c2, fixtures.c2]
+
+        return Promise.map(zip(userIds, communities), pair =>
+          factories.post({user_id: pair[0]}).save()
+          .tap(post => post.communities().attach(pair[1]))
+          .then(post => post.tags().attach(locals.summaryTag)))
       })
       .then(() => TagController.findOneSummary(req, res))
       .then(() => {
@@ -291,7 +296,7 @@ describe('TagController', () => {
             {name: locals.u3.get('name'), id: locals.u3.id, avatar_url: locals.u3.get('avatar_url'), post_count: '1'}
           ],
           post_count: '6',
-          follower_count: 2
+          follower_count: '2'
         }
         expect(res.body).to.deep.equal(expected)
       })
