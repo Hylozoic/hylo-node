@@ -90,11 +90,16 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
 }
 
 const mostActiveMembers = (community, tag) => {
+  const subq = PostMembership.query(q => {
+    q.select('post_id')
+    q.where({community_id: community.id})
+  }).query()
   return User.query(q => {
     q.select(bookshelf.knex.raw('users.name, users.id, users.avatar_url, count(*)'))
     q.join('post', 'post.user_id', '=', 'users.id')
     q.join('posts_tags', 'posts_tags.post_id', '=', 'post.id')
     q.where('tag_id', '=', tag.id)
+    q.whereIn('post.id', subq)
     q.groupBy('users.id')
     q.orderBy('count', 'desc')
     q.limit(3)
@@ -104,7 +109,7 @@ const mostActiveMembers = (community, tag) => {
     id: user.id,
     name: user.get('name'),
     avatar_url: user.get('avatar_url'),
-    post_count: user.get('count')
+    post_count: Number(user.get('count'))
   })))
 }
 
@@ -113,15 +118,12 @@ export const fetchAndPresentSummary = (community, tag) =>
     CommunityTag.where({community_id: community.id, tag_id: tag.id})
     .fetch(),
     TagFollow.where({community_id: community.id, tag_id: tag.id})
-    .fetchAll(),
-    Search.forPosts({
-      communities: [community.id],
-      tag: tag.id
-    }).fetchAll(),
+    .count(),
+    CommunityTag.taggedPostCount(community.id, tag.id),
     mostActiveMembers(community, tag),
-    (communityTag, tagFollows, posts, activeMembers) => ({
+    (communityTag, followerCount, postCount, activeMembers) => ({
       description: communityTag.get('description'),
-      follower_count: tagFollows.length,
-      post_count: posts.length > 0 ? posts.first().get('total') : 0,
+      follower_count: Number(followerCount),
+      post_count: Number(postCount),
       active_members: activeMembers
     }))
