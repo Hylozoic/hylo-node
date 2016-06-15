@@ -135,7 +135,7 @@ module.exports = {
       qb.select(bookshelf.knex.raw('users.*, count(users.*) over () as total'))
 
       if (opts.communities) {
-        qb.join('users_community', 'users_community.user_id', '=', 'users.id')
+        qb.join('users_community', 'users_community.user_id', 'users.id')
         qb.whereIn('users_community.community_id', opts.communities)
         qb.where('users_community.active', true)
       }
@@ -145,8 +145,10 @@ module.exports = {
       }
 
       if (opts.term) {
+        qb.leftJoin('tags_users', 'tags_users.user_id', 'users.id')
+        qb.leftJoin('tags', 'tags.id', 'tags_users.tag_id')
         Search.addTermToQueryBuilder(opts.term, qb, {
-          columns: ['users.name', 'users.bio']
+          columns: ['users.name', 'users.bio', 'tags.name']
         })
       }
 
