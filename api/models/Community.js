@@ -68,31 +68,29 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  createStarterPosts: function (trx) {
-    var self = this
+  createStarterPosts: function (transacting) {
     var now = new Date()
-    var timeShift = {
-      chat: 0,
-      intention: 1,
-      offer: 2,
-      request: 3
-    }
-    return Community.find('starter-posts', {withRelated: ['posts', 'posts.followers']})
+    var timeShift = {null: 0, intention: 1, offer: 2, request: 3}
+    return Community.find('starter-posts', {withRelated: [
+      'posts', 'posts.followers', 'posts.selectedTags'
+    ]})
     .tap(c => {
       if (!c) throw new Error('Starter posts community not found')
     })
     .then(c => c.relations.posts.models)
     .then(posts => Promise.map(posts, post => {
       if (post.get('type') === 'welcome') return
+      const tag = post.relations.selectedTags.first()
+      const tagName = tag ? tag.get('name') : null
 
       var newPost = post.copy()
-      var time = new Date(now - timeShift[newPost.get('type')] * 1000)
-      return newPost.save({created_at: time, updated_at: time}, {transacting: trx})
+      var time = new Date(now - timeShift[tagName] * 1000)
+      return newPost.save({created_at: time, updated_at: time}, {transacting})
       .then(() => Promise.all(_.flatten([
-        self.posts().attach(newPost, {transacting: trx}),
-        Tag.updateForPost(newPost, newPost.get('type'), null, trx),
+        this.posts().attach(newPost, {transacting}),
+        Tag.updateForPost(newPost, tagName, null, transacting),
         post.relations.followers.map(u =>
-          Follow.create(u.id, newPost.id, {transacting: trx}))
+          Follow.create(u.id, newPost.id, {transacting}))
       ])))
     }))
   },
