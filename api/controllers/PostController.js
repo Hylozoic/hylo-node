@@ -91,15 +91,23 @@ const queryForNetwork = function (req, res) {
 }
 
 const queryForTagInAllCommunities = function (req, res) {
-  return queryPosts(req, {
-    communities: Membership.activeCommunityIds(req.session.userId),
-    tag: Tag.find(req.param('tagName')).then(t => t.id)
+  return Tag.find(req.param('tagName'))
+  .then(tag => {
+    if (!tag) {
+      res.notFound()
+      return
+    }
+
+    return queryPosts(req, {
+      communities: Membership.activeCommunityIds(req.session.userId),
+      tag: tag.id
+    })
   })
 }
 
 const createFindAction = (queryFunction) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => fetchAndPresentPosts(query, req.session.userId,
+  .then(query => query && fetchAndPresentPosts(query, req.session.userId,
     {
       withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes')
