@@ -1,4 +1,5 @@
 import { filter, find, get, includes, map, merge, pick } from 'lodash'
+import { sortBy } from 'lodash/fp'
 
 export const fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
   joinClass.where({community_id: communityId, user_id: userId})
@@ -73,7 +74,7 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
   })
   .fetchAll({withRelated})
   .tap(tags => total = tags.first() ? Number(tags.first().get('total')) : 0)
-  .then(tags => tags.map(t => {
+  .then(tags => sortBy('name', tags.map(t => {
     const attrs = {
       id: t.id,
       name: t.get('name'),
@@ -85,7 +86,7 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
     const post_type = get(t.relations.posts.first(), 'attributes.type')
     if (post_type) attrs.post_type = post_type
     return attrs
-  }))
+  })))
   .then(items => ({items, total}))
 }
 
