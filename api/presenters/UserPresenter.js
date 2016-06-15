@@ -1,4 +1,4 @@
-import { get } from 'lodash'
+import { find, get, map, merge, pick } from 'lodash'
 
 const relationsForSelf = [
   'memberships',
@@ -85,15 +85,14 @@ const UserPresenter = module.exports = {
 
   presentForList: function (user, opts) {
     var moreAttributes = {
-      public_email: user.encryptedEmail(),
-      tags: get(user, 'relations.tags.models')
+      tags: map(get(user, 'relations.tags.models'), t => t.pick('id', 'name'))
     }
 
     const getMembership = communityId =>
-      _.find(user.relations.memberships.models, m => m.get('community_id') === communityId)
+      find(user.relations.memberships.models, m => m.get('community_id') === communityId)
 
-    if (opts.communityId) {
-      const membership = getMembership(opts.communityId)
+    if (get(opts.communityIds, 'length') === 1) {
+      const membership = getMembership(opts.communityId || opts.communityIds[0])
       if (membership) {
         moreAttributes.joined_at = membership.get('created_at')
         if (membership.get('role') === Membership.MODERATOR_ROLE) {
@@ -102,7 +101,7 @@ const UserPresenter = module.exports = {
       }
     }
 
-    if (opts.communityIds) {
+    if (opts.communityIds && !moreAttributes.joined_at) {
       // find the earliest join date among all relevant memberships
       moreAttributes.joined_at = opts.communityIds.reduce((joinedAt, communityId) => {
         const membership = getMembership(communityId)
@@ -111,8 +110,8 @@ const UserPresenter = module.exports = {
       }, new Date())
     }
 
-    return _.merge(
-      _.pick(user.attributes, UserPresenter.shortAttributes),
+    return merge(
+      pick(user.attributes, UserPresenter.shortAttributes),
       moreAttributes
     )
   }

@@ -56,9 +56,9 @@ module.exports.policies = {
     contributions:       ['sessionAuth', 'inSameCommunityOrNetwork'],
     thanks:              ['sessionAuth', 'inSameCommunityOrNetwork'],
     sendPasswordReset:   true,
-    findForCommunity:    ['allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findForCommunity:    ['sessionAuth', 'checkAndSetMembership'],
     findForNetwork:      ['sessionAuth', 'inNetwork'],
-    findForPostVote:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost']
+    findAll:             ['sessionAuth']
   },
 
   ActivityController: {
@@ -94,7 +94,7 @@ module.exports.policies = {
   PostController: {
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity:                     ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    checkFreshnessForCommunity:           ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],
     checkFreshnessForUser:                ['sessionAuth', 'inSameCommunityOrNetwork'],
     findForNetwork:                       ['sessionAuth', 'inNetwork'],
@@ -107,8 +107,8 @@ module.exports.policies = {
     checkFreshnessForFollowed:            ['sessionAuth', 'isSelf'],
     findForAllForUser:                    ['sessionAuth', 'isSelf'],
     checkFreshnessForAllForUser:          ['sessionAuth', 'isSelf'],
-    findForTagInAllCommunities:           ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    checkFreshnessForTagInAllCommunities: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findForTagInAllCommunities:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
+    checkFreshnessForTagInAllCommunities: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     fulfill:                              ['sessionAuth', 'checkAndSetOwnPost'],
     vote:                                 ['sessionAuth', 'checkAndSetPost'],
     complain:                             ['sessionAuth', 'checkAndSetPost'],
@@ -153,11 +153,11 @@ module.exports.policies = {
 
   TagController: {
     findOne: ['sessionAuth'],
-    findOneInCommunity: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    findFollowed: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    findForLeftNav: ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    follow: ['allowTokenAuth', 'sessionAuth'],
-    resetNewPostCount: ['allowTokenAuth', 'sessionAuth'],
+    findOneInCommunity: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
+    findFollowed: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
+    findForLeftNav: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
+    follow: ['sessionAuth'],
+    resetNewPostCount: ['sessionAuth'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     removeFromCommunity: ['sessionAuth', 'isModerator'],
     findOneSummary: ['sessionAuth', 'checkAndSetMembership']

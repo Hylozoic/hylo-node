@@ -1,4 +1,5 @@
-import { flatten, merge, find } from 'lodash'
+import { find, flatten, merge, pick } from 'lodash'
+import { map } from 'lodash/fp'
 import validator from 'validator'
 
 var findContext = function (req) {
@@ -196,59 +197,46 @@ module.exports = {
   },
 
   findForCommunity: function (req, res) {
-    if (TokenAuth.isAuthenticated(res) &&
-      !RequestValidation.requireTimeRange(req, res)) return
-
-    var options = _.defaults(
-      _.pick(req.allParams(), 'limit', 'offset', 'start_time', 'end_time'),
-      {
-        limit: 20,
-        communities: [res.locals.community.id],
-        term: req.param('search')
-      }
-    )
-    var total
-    Search.forUsers(options).fetchAll({withRelated: ['memberships', 'tags']})
-    .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-    .then(users => users.map(u => UserPresenter.presentForList(u, {communityId: res.locals.community.id})))
-    .then(list =>
-      Tag.find('offer')
-      .then(tag => countTaggedPosts(list.map(user => user.id), tag.id))
-      .then(countResults => list.map(user =>
-        merge(user, {
-          offerCount: (find(countResults, cr => cr.user_id === user.id) || {}).count
-        }))))
-    .then(list => ({people_total: total, people: list}))
-    .then(res.ok, res.serverError)
+    const opts = pick(req.allParams(), 'limit', 'offset', 'search')
+    fetchAndPresentForCommunityIds([res.locals.community.id], opts)
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
   findForNetwork: function (req, res) {
-    var total
-
-    Network.find(req.param('networkId'))
-    .then(network => Community.query().where('network_id', network.id).select('id'))
-    .then(rows => _.map(rows, 'id'))
-    .then(communityIds =>
-      Search.forUsers({
-        communities: communityIds,
-        limit: req.param('limit') || 20,
-        offset: req.param('offset') || 0
-      }).fetchAll({withRelated: ['memberships']})
-      .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-      .then(users => users.map(u => UserPresenter.presentForList(u, {communityIds}))))
-    .then(list => ({people_total: total, people: list}))
-    .then(res.ok, res.serverError)
+    const opts = pick(req.allParams(), 'limit', 'offset', 'search')
+    Network.activeCommunityIds(req.param('networkId'))
+    .then(ids => fetchAndPresentForCommunityIds(ids, opts))
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
-  findForPostVote: function (req, res) {
-    User.query(q => {
-      q.where('id', 'in', Vote.query()
-        .where({post_id: req.param('postId')})
-        .select('user_id'))
-    })
-    .fetchAll()
-    .then(people => people.map(u => u.pick('id', 'name', 'avatar_url')))
-    .then(people => ({people, people_total: people.length}))
-    .then(res.ok, res.serverError)
+  findAll: function (req, res) {
+    const opts = pick(req.allParams(), 'limit', 'offset', 'search')
+    Membership.activeCommunityIds(req.session.userId)
+    .then(ids => fetchAndPresentForCommunityIds(ids, opts))
+    .then(res.ok)
+    .catch(res.serverError)
   }
 }
+
+const fetchAndPresentForCommunityIds = (communityIds, opts) => {
+  var total
+  return Search.forUsers({
+    communities: communityIds,
+    limit: opts.limit || 20,
+    offset: opts.offset || 0,
+    term: opts.search
+  }).fetchAll({withRelated: ['memberships', 'tags']})
+  .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
+  .then(users => users.map(u => UserPresenter.presentForList(u, {communityIds})))
+  .tap(addOfferCounts)
+  .then(items => ({items, total}))
+}
+
+const addOfferCounts = users =>
+  Tag.find('offer')
+  .then(tag => countTaggedPosts(map('id', users), tag.id))
+  .then(counts => users.forEach(user => merge(user, {
+    offerCount: (find(counts, c => c.user_id === user.id) || {}).count
+  })))
