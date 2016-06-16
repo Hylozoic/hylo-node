@@ -145,7 +145,7 @@ describe('CommunityController', () => {
     })
   })
 
-  describe.only('.joinWithCode', () => {
+  describe('.joinWithCode', () => {
     var community1, community2, tag
     before(() => {
       community1 = factories.community({beta_access_code: 'foo'})
