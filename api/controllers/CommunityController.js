@@ -139,6 +139,26 @@ module.exports = {
     // we get here if the membership was created successfully, or if it already existed
     .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
       .tap(ms => ms && !ms.get('active') && ms.save({active: true}, {patch: true}))
+      .tap(ms => {
+        if (!req.param('tagName')) return
+        return Tag.find(req.param('tagName'))
+        .then(tag => {
+          if (!tag) return res.notFound()
+          return new TagFollow({
+            community_id: community.id,
+            tag_id: tag.id,
+            user_id: req.session.userId
+          }).save()
+        })
+        .catch(err => {
+          if (err.message && err.message.includes('duplicate key value')) {
+            return true
+          } else {
+            res.serverError(err)
+            return false
+          }
+        })
+      })
       .then(ms => _.merge(ms.toJSON(), {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       })))
