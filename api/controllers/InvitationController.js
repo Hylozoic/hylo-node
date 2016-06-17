@@ -25,7 +25,7 @@ module.exports = {
   },
 
   use: function (req, res) {
-    return Invitation.where({token: req.param('token')}).fetch()
+    return Invitation.where({token: req.param('token')}).fetch({withRelated: 'tag'})
     .then(function (invitation) {
       if (!invitation) {
         return res.status(422).send('bad token')
@@ -55,6 +55,7 @@ module.exports = {
       // and re-use it after completing signup or login
       return invitation.load('community').then(function () {
         req.session.invitationId = invitation.id
+
         res.ok(_.merge(invitation.toJSON(), {
           signup: true
         }))

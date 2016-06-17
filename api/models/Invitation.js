@@ -1,4 +1,3 @@
-var util = require('util')
 var uuid = require('node-uuid')
 
 module.exports = bookshelf.Model.extend({
@@ -34,10 +33,14 @@ module.exports = bookshelf.Model.extend({
       {
         role: Number(this.get('role')),
         transacting: trx
-      }
-    ).tap(function () {
-      return self.save({used_by_id: userId, used_on: new Date()}, {patch: true, transacting: trx})
-    })
+      })
+    .tap(() => self.save({used_by_id: userId, used_on: new Date()}, {patch: true, transacting: trx}))
+    .tap(() =>
+      self.get('tag_id') && new TagFollow({
+        user_id: userId,
+        tag_id: self.get('tag_id'),
+        community_id: self.get('community_id')
+      }).save())
   }
 
 }, {
