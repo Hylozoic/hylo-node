@@ -27,13 +27,18 @@ module.exports = bookshelf.Model.extend({
     if (!opts) opts = {}
     let self = this
     let trx = opts.transacting
-    return Membership.create(
-      userId,
-      this.get('community_id'),
-      {
-        role: Number(this.get('role')),
-        transacting: trx
-      })
+    return Membership.where({user_id: userId, community_id: this.get('community_id')})
+    .fetch()
+    .then(membership => {
+      if (membership) return
+      return Membership.create(
+        userId,
+        this.get('community_id'),
+        {
+          role: Number(this.get('role')),
+          transacting: trx
+        })
+    })
     .tap(() => self.save({used_by_id: userId, used_on: new Date()}, {patch: true, transacting: trx}))
     .tap(() =>
       self.get('tag_id') && new TagFollow({
