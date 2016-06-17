@@ -219,7 +219,8 @@ CREATE TABLE community_invite (
     token text NOT NULL,
     used_on timestamp without time zone,
     email text NOT NULL,
-    role smallint DEFAULT 0
+    role smallint DEFAULT 0,
+    tag_id bigint
 );
 
 
@@ -858,7 +859,8 @@ CREATE TABLE projects (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     slug character varying(255) NOT NULL,
-    location character varying(255)
+    location character varying(255),
+    migrated boolean DEFAULT false
 );
 
 
@@ -1239,8 +1241,8 @@ CREATE TABLE users_community (
     deactivator_id bigint,
     last_viewed_at timestamp with time zone,
     id integer NOT NULL,
-    settings jsonb DEFAULT '{}'::jsonb,
-    new_notification_count integer DEFAULT 0
+    new_notification_count integer DEFAULT 0,
+    settings jsonb DEFAULT '{}'::jsonb
 );
 
 
@@ -2237,6 +2239,14 @@ ALTER TABLE ONLY communities_tags
 
 ALTER TABLE ONLY communities_tags
     ADD CONSTRAINT communities_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: community_invite_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY community_invite
+    ADD CONSTRAINT community_invite_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
 
 
 --
