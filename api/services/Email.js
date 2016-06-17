@@ -48,6 +48,19 @@ module.exports = {
     }))
   },
 
+  sendTagInvitation: function (email, data) {
+    return sendEmail(_.merge({}, defaultOptions, {
+      email_id: 'tem_tmEEpPvtQ69wGkmf9njCx8',
+      recipient: {address: email},
+      email_data: data,
+      version_name: 'default',
+      sender: {
+        name: format('%s (via Hylo)', data.inviter_name),
+        reply_to: data.inviter_email
+      }
+    }))
+  },
+
   sendNewCommentNotification: function (opts) {
     return sendEmail(_.merge({}, defaultOptions, {
       email_id: 'tem_tP6JzrYzvvDXhgTNmtkxuW',

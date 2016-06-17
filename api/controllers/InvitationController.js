@@ -85,29 +85,40 @@ module.exports = {
   },
 
   create: function (req, res) {
-    return Community.find(req.param('communityId'))
-    .then(function (community) {
-      var emails = parseEmailList(req.param('emails'))
+    let tagName = req.param('tagName')
+    return Promise.join(
+      Community.find(req.param('communityId')),
+      tagName ? Tag.find(req.param('tagName')) : Promise.resolve(),
+      (community, tag) => {
+        var emails = parseEmailList(req.param('emails'))
 
-      return Promise.map(emails, function (email) {
-        if (!validator.isEmail(email)) {
-          return {email, error: 'not a valid email address'}
-        }
+        return Promise.map(emails, function (email) {
+          if (!validator.isEmail(email)) {
+            return {email, error: 'not a valid email address'}
+          }
 
-        return Invitation.createAndSend({
-          email,
-          userId: req.session.userId,
-          communityId: community.id,
-          message: RichText.markdown(req.param('message')),
-          moderator: req.param('moderator'),
-          subject: req.param('subject')
-        }).then(function () {
-          return {email: email, error: null}
-        }).catch(function (err) {
-          return {email: email, error: err.message}
+          let opts = {
+            email,
+            userId: req.session.userId,
+            communityId: community.id
+          }
+
+          if (tag) {
+            opts.tagId = tag.id
+          } else {
+            opts.message = RichText.markdown(req.param('message'))
+            opts.moderator = req.param('moderator')
+            opts.subject = req.param('subject')
+          }
+
+          return Invitation.createAndSend(opts)
+          .then(function () {
+            return {email: email, error: null}
+          }).catch(function (err) {
+            return {email: email, error: err.message}
+          })
         })
       })
-    })
     .then(results => res.ok({results: results}))
   }
 }
