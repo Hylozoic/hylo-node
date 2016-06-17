@@ -121,6 +121,7 @@ module.exports = {
 
   joinWithCode: function (req, res) {
     var community
+    var preexisting
     return Community.query(qb => {
       qb.whereRaw('lower(beta_access_code) = lower(?)', req.param('code'))
       qb.where('active', true)
@@ -130,6 +131,7 @@ module.exports = {
     .then(() => !!community && Membership.create(req.session.userId, community.id))
     .catch(err => {
       if (err.message && err.message.includes('duplicate key value')) {
+        preexisting = true
         return true
       } else {
         res.serverError(err)
@@ -159,7 +161,7 @@ module.exports = {
           }
         })
       })
-      .then(ms => _.merge(ms.toJSON(), {
+      .then(ms => _.merge(ms.toJSON(), {preexisting}, {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       })))
     .then(resp => res.ok(resp ? resp : {error: 'invalid code'}))
