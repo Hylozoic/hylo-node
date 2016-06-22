@@ -374,4 +374,16 @@ describe('Tag', () => {
       })
     })
   })
+
+  describe('.tagsInText', () => {
+    it('finds hashtags', () => {
+      expect(Tag.tagsInText('#foo #bar #baz').sort()).to.deep.equal([
+        'bar', 'baz', 'foo'
+      ])
+    })
+
+    it('does not interpret a hash fragment in a URL as a tag', () => {
+      expect(Tag.tagsInText('hey http://foo.com/bar#bam ok')).to.be.empty
+    })
+  })
 })

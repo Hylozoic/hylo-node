@@ -3,7 +3,13 @@ import { differenceBy, flatten, get, includes, isEmpty, pick, some, uniq, uniqBy
 import { filter, map } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
-  return (text.match(/#[A-Za-z][\w-]+/g) || []).map(str => str.substr(1))
+  const re = /(?:^| )#([A-Za-z][\w-]+)/g
+  var match
+  var tags = []
+  while ((match = re.exec(text)) != null) {
+    tags.push(match[1])
+  }
+  return tags
 }
 
 const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting) => {
