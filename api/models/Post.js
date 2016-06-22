@@ -291,16 +291,6 @@ module.exports = bookshelf.Model.extend({
     ]))
   },
 
-  setTagIfNeeded: postId => {
-    return Post.find(postId, {withRelated: 'selectedTags'})
-    .then(post => {
-      const type = post.get('type')
-      if (post.relations.selectedTags.first() || type === 'event') return
-
-      return bookshelf.transaction(trx => Tag.updateForPost(post, type, null, trx))
-    })
-  },
-
   deactivate: postId =>
     bookshelf.transaction(trx =>
       Promise.join(

@@ -1,7 +1,11 @@
-var Promise = require('bluebird')
-var request = require('request')
-var post = Promise.promisify(request.post)
-var slackAuthAccess = 'https://slack.com/api/oauth.access'
+const Promise = require('bluebird')
+const request = require('request')
+const post = Promise.promisify(request.post)
+const slackAuthAccess = 'https://slack.com/api/oauth.access'
+const welcomeMessage = 'Thank you for joining us here at Hylo. ' +
+  'Through our communities, we can find everything we need. If we share ' +
+  'with each other the unique gifts and intentions we each have, we can ' +
+  "create extraordinary things. Let's get started!"
 
 module.exports = {
   find: function (req, res) {
@@ -162,7 +166,7 @@ module.exports = {
       .then(ms => _.merge(ms.toJSON(), {preexisting}, {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       })))
-    .then(resp => res.ok(resp ? resp : {error: 'invalid code'}))
+    .then(resp => res.ok(resp || {error: 'invalid code'}))
     .catch(err => res.serverError(err))
   },
 
@@ -205,23 +209,16 @@ module.exports = {
 
     var community = new Community(_.merge(attrs, {
       created_at: new Date(),
-      created_by_id: req.session.userId
+      created_by_id: req.session.userId,
+      leader_id: req.session.userId,
+      welcome_message: welcomeMessage,
+      settings: {sends_email_prompts: true}
     }))
-
-    community.set('leader_id', req.session.userId)
-    community.set('welcome_message', 'Thank you for joining us here at Hylo. ' +
-      'Through our communities, we can find everything we need. If we share ' +
-      'with each other the unique gifts and intentions we each have, we can ' +
-      "create extraordinary things. Let's get started!")
-    community.set('settings', {sends_email_prompts: true})
 
     return bookshelf.transaction(trx => {
       return community.save(null, {transacting: trx})
       .tap(community => community.createDefaultTags(req.session.userId, trx))
-      .tap(community => community.createStarterPosts(trx)
-        .catch(err => {
-          if (err.message !== 'Starter posts community not found') throw err
-        }))
+      .tap(community => community.createStarterPosts(trx))
       .then(() => Membership.create(req.session.userId, community.id, {
         role: Membership.MODERATOR_ROLE,
         transacting: trx
