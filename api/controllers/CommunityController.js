@@ -155,8 +155,7 @@ module.exports = {
           if (err.message && err.message.includes('duplicate key value')) {
             return true
           } else {
-            res.serverError(err)
-            return false
+            throw err
           }
         })
       })
@@ -164,6 +163,7 @@ module.exports = {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       })))
     .then(resp => res.ok(resp ? resp : {error: 'invalid code'}))
+    .catch(err => res.serverError(err))
   },
 
   leave: function (req, res) {
