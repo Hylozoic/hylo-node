@@ -158,10 +158,12 @@ describe('CommunityController', () => {
   })
 
   describe('.joinWithCode', () => {
-    var community
-    beforeEach(() => {
-      community = factories.community({beta_access_code: 'foo'})
-      return community.save()
+    var community1, community2, tag
+    before(() => {
+      community1 = factories.community({beta_access_code: 'foo'})
+      community2 = factories.community({beta_access_code: 'bar'})
+      tag = new Tag({name: 'joinwithcodetesttag'})
+      return Promise.join(community1.save(), community2.save(), tag.save())
     })
 
     it('works', () => {
@@ -170,11 +172,40 @@ describe('CommunityController', () => {
 
       return CommunityController.joinWithCode(req, res)
       .tap(() => Promise.join(
-        community.load(['posts', 'posts.relatedUsers']),
+        community1.load(['posts', 'posts.relatedUsers']),
         user.load('communities')
       ))
       .then(() => {
-        expect(user.relations.communities.map(c => c.id)).to.contain(community.id)
+        expect(user.relations.communities.map(c => c.id)).to.contain(community1.id)
+      })
+    })
+
+    it('creates a tag follow with a tagName param if already a member', () => {
+      req.params.code = 'foo'
+      req.params.tagName = tag.get('name')
+      req.login(user.id)
+
+      return CommunityController.joinWithCode(req, res)
+      .then(() => TagFollow.where({user_id: user.id, tag_id: tag.id, community_id: community1.id}).fetch())
+      .then(tagFollow => {
+        expect(tagFollow).to.exist
+      })
+    })
+
+    it('creates a tag follow and membership', () => {
+      req.params.code = 'bar'
+      req.params.tagName = tag.get('name')
+      req.login(user.id)
+
+      return CommunityController.joinWithCode(req, res)
+      .tap(() => Promise.join(
+        community2.load(['posts', 'posts.relatedUsers']),
+        user.load('communities')
+      ))
+      .then(() => TagFollow.where({user_id: user.id, tag_id: tag.id, community_id: community1.id}).fetch())
+      .then(tagFollow => {
+        expect(tagFollow).to.exist
+        expect(user.relations.communities.map(c => c.id)).to.contain(community2.id)
       })
     })
   })

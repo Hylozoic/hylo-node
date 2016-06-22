@@ -1,72 +1,85 @@
-var util = require('util'),
-  uuid = require('node-uuid');
+var uuid = require('node-uuid')
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community_invite',
 
-  community: function() {
-    return this.belongsTo(Community);
+  community: function () {
+    return this.belongsTo(Community)
   },
 
-  creator: function() {
-    return this.belongsTo(User, 'invited_by_id');
+  creator: function () {
+    return this.belongsTo(User, 'invited_by_id')
+  },
+
+  tag: function () {
+    return this.belongsTo(Tag)
   },
 
   user: function () {
     return this.belongsTo(User, 'used_by_id')
   },
 
-  isUsed: function() {
-    return !!this.get('used_by_id');
+  isUsed: function () {
+    return !!this.get('used_by_id')
   },
 
-  use: function(userId, opts) {
-    if (!opts) opts = {};
-    var self = this, trx = opts.transacting;
-    return Membership.create(
-      userId,
-      this.get('community_id'),
-      {
-        role: Number(this.get('role')),
-        transacting: trx
-      }
-    ).tap(function() {
-      return self.save({used_by_id: userId, used_on: new Date()}, {patch: true, transacting: trx});
-    });
+  use: function (userId, opts) {
+    if (!opts) opts = {}
+    let self = this
+    let trx = opts.transacting
+    return Membership.where({user_id: userId, community_id: this.get('community_id')})
+    .fetch()
+    .then(membership => {
+      if (membership) return
+      return Membership.create(
+        userId,
+        this.get('community_id'),
+        {
+          role: Number(this.get('role')),
+          transacting: trx
+        })
+    })
+    .tap(() => self.save({used_by_id: userId, used_on: new Date()}, {patch: true, transacting: trx}))
+    .tap(() =>
+      self.get('tag_id') && new TagFollow({
+        user_id: userId,
+        tag_id: self.get('tag_id'),
+        community_id: self.get('community_id')
+      }).save())
   }
 
 }, {
 
-  find: function(id, opts) {
-    return Invitation.where({id: id}).fetch(opts);
+  find: function (id, opts) {
+    return Invitation.where({id: id}).fetch(opts)
   },
 
-  create: function(opts) {
-    var role = (opts.moderator ? Membership.MODERATOR_ROLE : Membership.DEFAULT_ROLE);
+  create: function (opts) {
+    var role = (opts.moderator ? Membership.MODERATOR_ROLE : Membership.DEFAULT_ROLE)
 
     return new Invitation({
       invited_by_id: opts.userId,
       community_id: opts.communityId,
       email: opts.email,
+      tag_id: opts.tagId,
       role: role,
       token: uuid.v4(),
       created: new Date()
-    }).save();
+    }).save()
   },
 
-  createAndSend: function(opts) {
+  createAndSend: function (opts) {
     return Invitation.create(opts)
-    .then(function(invitation) {
-      return Promise.join(
-        invitation.load('creator'),
-        invitation.load('community')
-      );
-    })
-    .spread(function(invitation) {
-      var creator = invitation.relations.creator,
-        community = invitation.relations.community;
+    .then(invitation => Promise.join(
+      invitation.load('creator'),
+      invitation.load('community'),
+      invitation.load('tag')
+    ))
+    .spread(invitation => {
+      let creator = invitation.relations.creator
+      let community = invitation.relations.community
 
-      var data = _.extend(_.pick(opts, 'message', 'subject'), {
+      let data = _.extend(_.pick(opts, 'message', 'subject'), {
         inviter_name: creator.get('name'),
         inviter_email: creator.get('email'),
         community_name: community.get('name'),
@@ -75,10 +88,13 @@ module.exports = bookshelf.Model.extend({
           recipient: opts.email,
           community: community.get('name')
         })
-      });
-
-      return Email.sendInvitation(opts.email, data);
-    });
+      })
+      if (invitation.get('tag_id')) {
+        data.tag_name = invitation.relations.tag.get('name')
+        return Email.sendTagInvitation(opts.email, data)
+      } else {
+        return Email.sendInvitation(opts.email, data)
+      }
+    })
   }
-
-});
+})

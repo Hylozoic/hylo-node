@@ -124,7 +124,7 @@ module.exports = {
   },
 
   joinWithCode: function (req, res) {
-    var community
+    var community, preexisting
     return Community.query(qb => {
       qb.whereRaw('lower(beta_access_code) = lower(?)', req.param('code'))
       qb.where('active', true)
@@ -134,6 +134,7 @@ module.exports = {
     .then(() => !!community && Membership.create(req.session.userId, community.id))
     .catch(err => {
       if (err.message && err.message.includes('duplicate key value')) {
+        preexisting = true
         return true
       } else {
         res.serverError(err)
@@ -143,10 +144,30 @@ module.exports = {
     // we get here if the membership was created successfully, or if it already existed
     .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
       .tap(ms => ms && !ms.get('active') && ms.save({active: true}, {patch: true}))
-      .then(ms => _.merge(ms.toJSON(), {
+      .tap(ms => {
+        if (!req.param('tagName')) return
+        return Tag.find(req.param('tagName'))
+        .then(tag => {
+          if (!tag) return res.notFound()
+          return new TagFollow({
+            community_id: community.id,
+            tag_id: tag.id,
+            user_id: req.session.userId
+          }).save()
+        })
+        .catch(err => {
+          if (err.message && err.message.includes('duplicate key value')) {
+            return true
+          } else {
+            throw err
+          }
+        })
+      })
+      .then(ms => _.merge(ms.toJSON(), {preexisting}, {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       })))
     .then(resp => res.ok(resp || {error: 'invalid code'}))
+    .catch(err => res.serverError(err))
   },
 
   leave: function (req, res) {
