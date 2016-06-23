@@ -643,7 +643,7 @@ describe('PostController', () => {
       })
     })
 
-    it('returns true when a post has been added', () => {
+    it('returns 1 when a post has been added', () => {
       req.params = {
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
@@ -654,7 +654,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForCommunity(req, res))
       .then(() => {
-        expect(res.body).to.equal(true)
+        expect(res.body).to.equal(1)
       })
     })
   })
@@ -695,7 +695,7 @@ describe('PostController', () => {
       })
     })
 
-    it('returns true when a post has been added', () => {
+    it('returns 2 when two post have been added', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
         userId: fixtures.u3.id,
@@ -703,12 +703,13 @@ describe('PostController', () => {
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
 
-      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u3.id})
-      return p4.save()
-      .then(() => c2.posts().attach(p4))
+      return factories.post({type: 'chat', active: true, user_id: fixtures.u3.id}).save()
+      .then(post => c2.posts().attach(post))
+      .then(() => factories.post({type: 'chat', active: true, user_id: fixtures.u3.id}).save())
+      .then(post => c2.posts().attach(post))
       .then(() => PostController.checkFreshnessForUser(req, res))
       .then(() => {
-        expect(res.body).to.equal(true)
+        expect(res.body).to.equal(2)
       })
     })
   })
@@ -752,7 +753,7 @@ describe('PostController', () => {
       })
     })
 
-    it('returns true when a post has been added', () => {
+    it('returns 1 when a post has been added', () => {
       req.session.userId = fixtures.u1.id
 
       var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
@@ -768,7 +769,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForAllForUser(req, res))
       .then(() => {
-        expect(res.body).to.equal(true)
+        expect(res.body).to.equal(1)
       })
     })
   })
@@ -812,7 +813,7 @@ describe('PostController', () => {
       })
     })
 
-    it('returns true when a post has been added', () => {
+    it('returns 1 when a post has been added', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
         networkId: n1.id,
@@ -825,7 +826,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForNetwork(req, res))
       .then(() => {
-        expect(res.body).to.equal(true)
+        expect(res.body).to.equal(1)
       })
     })
   })
@@ -863,7 +864,7 @@ describe('PostController', () => {
       })
     })
 
-    it('returns true when a post has been added', () => {
+    it('returns 1 when a post has been added', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
         userId: fixtures.u1.id,
@@ -876,7 +877,7 @@ describe('PostController', () => {
       .then(() => Follow.create(fixtures.u1.id, p4.id))
       .then(() => PostController.checkFreshnessForFollowed(req, res))
       .then(() => {
-        expect(res.body).to.equal(true)
+        expect(res.body).to.equal(1)
       })
     })
   })
