@@ -639,7 +639,7 @@ describe('PostController', () => {
       }
       return PostController.checkFreshnessForCommunity(req, res)
       .then(() => {
-        expect(res.body).to.equal(false)
+        expect(res.body.freshCount).to.equal(false)
       })
     })
 
@@ -654,7 +654,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForCommunity(req, res))
       .then(() => {
-        expect(res.body).to.equal(1)
+        expect(res.body.freshCount).to.equal(1)
       })
     })
   })
@@ -691,7 +691,7 @@ describe('PostController', () => {
       }
       return PostController.checkFreshnessForUser(req, res)
       .then(() => {
-        expect(res.body).to.equal(false)
+        expect(res.body.freshCount).to.equal(false)
       })
     })
 
@@ -709,7 +709,7 @@ describe('PostController', () => {
       .then(post => c2.posts().attach(post))
       .then(() => PostController.checkFreshnessForUser(req, res))
       .then(() => {
-        expect(res.body).to.equal(2)
+        expect(res.body.freshCount).to.equal(2)
       })
     })
   })
@@ -749,7 +749,7 @@ describe('PostController', () => {
       })
       .then(() => PostController.checkFreshnessForAllForUser(req, res))
       .then(() => {
-        expect(res.body).to.equal(false)
+        expect(res.body.freshCount).to.equal(false)
       })
     })
 
@@ -769,7 +769,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForAllForUser(req, res))
       .then(() => {
-        expect(res.body).to.equal(1)
+        expect(res.body.freshCount).to.equal(1)
       })
     })
   })
@@ -809,7 +809,7 @@ describe('PostController', () => {
       }
       return PostController.checkFreshnessForNetwork(req, res)
       .then(() => {
-        expect(res.body).to.equal(false)
+        expect(res.body.freshCount).to.equal(false)
       })
     })
 
@@ -826,7 +826,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForNetwork(req, res))
       .then(() => {
-        expect(res.body).to.equal(1)
+        expect(res.body.freshCount).to.equal(1)
       })
     })
   })
@@ -860,7 +860,7 @@ describe('PostController', () => {
       }
       return PostController.checkFreshnessForFollowed(req, res)
       .then(() => {
-        expect(res.body).to.equal(false)
+        expect(res.body.freshCount).to.equal(false)
       })
     })
 
@@ -877,7 +877,7 @@ describe('PostController', () => {
       .then(() => Follow.create(fixtures.u1.id, p4.id))
       .then(() => PostController.checkFreshnessForFollowed(req, res))
       .then(() => {
-        expect(res.body).to.equal(1)
+        expect(res.body.freshCount).to.equal(1)
       })
     })
   })
