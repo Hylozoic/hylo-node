@@ -632,14 +632,14 @@ describe('PostController', () => {
       })
     })
 
-    it('returns false when nothing has changed', () => {
+    it('returns 0 when nothing has changed', () => {
       req.params = {
         query: '',
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
       return PostController.checkFreshnessForCommunity(req, res)
       .then(() => {
-        expect(res.body.freshCount).to.equal(false)
+        expect(res.body.count).to.equal(0)
       })
     })
 
@@ -654,7 +654,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForCommunity(req, res))
       .then(() => {
-        expect(res.body.freshCount).to.equal(1)
+        expect(res.body.count).to.equal(1)
       })
     })
   })
@@ -682,7 +682,7 @@ describe('PostController', () => {
       res.locals.user = fixtures.u3
     })
 
-    it('returns false when nothing has changed', () => {
+    it('returns 0 when nothing has changed', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
         userId: fixtures.u3.id,
@@ -691,7 +691,7 @@ describe('PostController', () => {
       }
       return PostController.checkFreshnessForUser(req, res)
       .then(() => {
-        expect(res.body.freshCount).to.equal(false)
+        expect(res.body.count).to.equal(0)
       })
     })
 
@@ -709,7 +709,7 @@ describe('PostController', () => {
       .then(post => c2.posts().attach(post))
       .then(() => PostController.checkFreshnessForUser(req, res))
       .then(() => {
-        expect(res.body.freshCount).to.equal(2)
+        expect(res.body.count).to.equal(2)
       })
     })
   })
@@ -737,7 +737,7 @@ describe('PostController', () => {
       res.locals.user = fixtures.u2
     })
 
-    it('returns false when nothing has changed', () => {
+    it('returns 0 when nothing has changed', () => {
       req.session.userId = fixtures.u1.id
       return Post.fetchAll()
       .then(posts => {
@@ -749,7 +749,7 @@ describe('PostController', () => {
       })
       .then(() => PostController.checkFreshnessForAllForUser(req, res))
       .then(() => {
-        expect(res.body.freshCount).to.equal(false)
+        expect(res.body.count).to.equal(0)
       })
     })
 
@@ -769,7 +769,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForAllForUser(req, res))
       .then(() => {
-        expect(res.body.freshCount).to.equal(1)
+        expect(res.body.count).to.equal(1)
       })
     })
   })
@@ -800,7 +800,7 @@ describe('PostController', () => {
       res.locals.user = fixtures.u2
     })
 
-    it('returns false when nothing has changed', () => {
+    it('returns 0 when nothing has changed', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
         networkId: n1.id,
@@ -809,7 +809,7 @@ describe('PostController', () => {
       }
       return PostController.checkFreshnessForNetwork(req, res)
       .then(() => {
-        expect(res.body.freshCount).to.equal(false)
+        expect(res.body.count).to.equal(0)
       })
     })
 
@@ -826,7 +826,7 @@ describe('PostController', () => {
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForNetwork(req, res))
       .then(() => {
-        expect(res.body.freshCount).to.equal(1)
+        expect(res.body.count).to.equal(1)
       })
     })
   })
@@ -851,7 +851,7 @@ describe('PostController', () => {
       res.locals.user = fixtures.u2
     })
 
-    it('returns false when nothing has changed', () => {
+    it('returns 0 when nothing has changed', () => {
       req.session.userId = fixtures.u1.id
       req.params = {
         userId: fixtures.u1.id,
@@ -860,7 +860,7 @@ describe('PostController', () => {
       }
       return PostController.checkFreshnessForFollowed(req, res)
       .then(() => {
-        expect(res.body.freshCount).to.equal(false)
+        expect(res.body.count).to.equal(0)
       })
     })
 
@@ -877,7 +877,7 @@ describe('PostController', () => {
       .then(() => Follow.create(fixtures.u1.id, p4.id))
       .then(() => PostController.checkFreshnessForFollowed(req, res))
       .then(() => {
-        expect(res.body.freshCount).to.equal(1)
+        expect(res.body.count).to.equal(1)
       })
     })
   })
