@@ -1,4 +1,4 @@
-import { extend, merge } from 'lodash'
+import { extend, merge, pick } from 'lodash'
 const randomstring = require('randomstring')
 const chai = require('chai')
 const sails = require('sails')
@@ -71,6 +71,7 @@ module.exports = {
         }
       }
     },
+
     response: function () {
       var self = {
         ok: chai.spy(function (data) { self.body = data }),
@@ -86,6 +87,20 @@ module.exports = {
         locals: {}
       }
       return self
+    },
+
+    model: attrs => {
+      return merge({
+        get: function (name) { return this[name] },
+        pick: function () { return pick(this, arguments) },
+        attributes: attrs
+      }, attrs)
+    },
+
+    collection: list => {
+      return {
+        first: () => list[0]
+      }
     }
   }
 }
