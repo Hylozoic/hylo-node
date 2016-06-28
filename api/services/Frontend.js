@@ -16,6 +16,8 @@ var url = function () {
 
 module.exports = {
   Route: {
+    prefix,
+
     community: function (community) {
       return url('/c/%s', community.get('slug'))
     },
