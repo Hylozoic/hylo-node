@@ -377,13 +377,17 @@ describe('Tag', () => {
 
   describe('.tagsInText', () => {
     it('finds hashtags', () => {
-      expect(Tag.tagsInText('#foo #bar #baz').sort()).to.deep.equal([
-        'bar', 'baz', 'foo'
-      ])
+      const text = '#foo #bar #baz'
+      expect(Tag.tagsInText(text)).to.deep.equal(['foo', 'bar', 'baz'])
     })
 
     it('does not interpret a hash fragment in a URL as a tag', () => {
       expect(Tag.tagsInText('hey http://foo.com/bar#bam ok')).to.be.empty
+    })
+
+    it('finds a hashtag inside an anchor tag', () => {
+      const text = 'hey <a>#whoa</a> <a>#nah</a>'
+      expect(Tag.tagsInText(text)).to.deep.equal(['whoa', 'nah'])
     })
   })
 })
