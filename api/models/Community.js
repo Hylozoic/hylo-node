@@ -52,19 +52,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   comments: function () {
-    // FIXME get this to use the model relation API
-    // instead of the Collection API so that the use
-    // of fetch vs. fetchAll isn't confusing.
-    // as it is now, it uses "fetchAll" when all the
-    // other relations use "fetch"
     var communityId = this.id
-    return Comment.query(function (qb) {
-      qb.where({
+    return Comment.collection().query(q => {
+      q.where({
         'post_community.community_id': communityId,
         'comment.active': true
-      }).leftJoin('post_community', function () {
-        this.on('post_community.post_id', 'comment.post_id')
       })
+      q.join('post_community', 'post_community.post_id', 'comment.post_id')
     })
   },
 
