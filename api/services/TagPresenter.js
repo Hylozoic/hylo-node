@@ -1,4 +1,4 @@
-import { filter, find, get, includes, map, merge, pick } from 'lodash'
+import { get, merge, pick } from 'lodash'
 import { sortBy } from 'lodash/fp'
 
 export const fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
