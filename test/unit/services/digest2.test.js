@@ -1,8 +1,11 @@
-require(require('root-path')('test/setup'))
+require('../../setup')
+import moment from 'moment-timezone'
 import formatData from '../../../lib/community/digest2/formatData'
 import personalizeData from '../../../lib/community/digest2/personalizeData'
-import { shouldSendData } from '../../../lib/community/digest2/util'
+import { defaultTimezone, shouldSendData } from '../../../lib/community/digest2/util'
+import { sendAllDigests } from '../../../lib/community/digest2'
 import factories from '../../setup/factories'
+import { spyify, unspyify } from '../../setup/helpers'
 import { merge } from 'lodash'
 const model = factories.mock.model
 const collection = factories.mock.collection
@@ -246,6 +249,70 @@ describe('community digest v2', () => {
     it('is true if there is some data', () => {
       const data = {conversations: [{id: 'foo'}]}
       expect(shouldSendData(data)).to.be.true
+    })
+  })
+
+  describe('sendAllDigests', () => {
+    var args, u1, u2, community, post
+
+    before(() => {
+      spyify(Email, 'sendSimpleEmail', function () { args = arguments })
+      const six = moment.tz(defaultTimezone).startOf('day').add(6, 'hours')
+
+      u1 = factories.user({
+        active: true,
+        settings: {digest_frequency: 'daily'},
+        avatar_url: 'av1'
+      })
+      u2 = factories.user({avatar_url: 'av2'})
+      community = factories.community({daily_digest: true, avatar_url: 'foo'})
+
+      return community.save()
+      .tap(c => u2.save()
+        .then(u => {
+          post = factories.post({created_at: six, user_id: u2.id})
+          return post.save()
+        })
+        .then(p => p.communities().attach(c.id)))
+      .tap(c => u1.save()
+        .then(u => u.communities().attach({community_id: c.id, active: true})))
+    })
+
+    after(() => unspyify(Email, 'sendSimpleEmail'))
+
+    it('prepares expected data for SendWithUs', () => {
+      return sendAllDigests('daily').then(() => {
+        expect(Email.sendSimpleEmail).to.have.been.called()
+        expect(args[0]).to.equal(u1.get('email'))
+        expect(args[2]).to.deep.equal({
+          community_id: community.id,
+          community_name: community.get('name'),
+          community_avatar_url: community.get('avatar_url'),
+          community_url: Frontend.Route.community(community) + '?ctt=digest_email',
+          time_period: 'yesterday',
+          subject: `${community.get('name')}: New activity from ${u2.get('name')}`,
+          requests: [],
+          offers: [],
+          conversations: [
+            {
+              id: post.id,
+              title: post.get('name'),
+              reply_url: Email.postReplyAddress(post.id, u1.id),
+              url: Frontend.Route.post(post),
+              user: u2.pick('id', 'avatar_url', 'name'),
+              comments: []
+            }
+          ],
+          recipient: u1.pick('avatar_url', 'name'),
+          form_action_url: Frontend.Route.emailPostForm(),
+          form_token: Email.postCreationToken(community.id, u1.id),
+          tracking_pixel_url: Analytics.pixelUrl('Digest', {
+            userId: u1.id,
+            community: community.get('name')
+          }),
+          email_settings_url: Frontend.Route.userSettings() + '?expand=account'
+        })
+      })
     })
   })
 })
