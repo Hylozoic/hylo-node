@@ -31,6 +31,8 @@ const u4 = model({
   avatar_url: 'http://cnn.com/man.png'
 })
 
+const community = model({slug: 'foo'})
+
 describe('community digest v2', () => {
   describe('formatData', () => {
     it('organizes new posts and comments', () => {
@@ -84,7 +86,7 @@ describe('community digest v2', () => {
         ]
       }
 
-      expect(formatData(data)).to.deep.equal({
+      expect(formatData(community, data)).to.deep.equal({
         requests: [
           {
             id: 5,
@@ -126,21 +128,21 @@ describe('community digest v2', () => {
       })
     })
 
-    it.skip('truncates data that is too long', () => {})
-
     it('makes sure links are fully qualified', () => {
       const data = {
         comments: [
           model({
             id: 11,
             post_id: 1,
-            text: '<p><a href="/u/42">Lawrence Wang</a> & <a href="/u/5942">Minda Myers</a></p>',
+            text: '<p><a href="/u/42">Lawrence Wang</a> & ' +
+              '<a href="/u/5942">Minda Myers</a> <a>#berkeley</a></p>',
             relations: {
               user: u1,
               post: model({
                 id: 1,
                 name: 'Foo!',
-                description: '<p><a href="/u/21">Edward West</a> & <a href="/u/16325">Julia Pope</a></p>',
+                description: '<p><a href="/u/21">Edward West</a> & ' +
+                  '<a href="/u/16325">Julia Pope</a> <a>#oakland</a></p>',
                 relations: {user: u1}
               })
             }
@@ -150,20 +152,24 @@ describe('community digest v2', () => {
 
       const prefix = Frontend.Route.prefix
 
-      expect(formatData(data)).to.deep.equal({
+      expect(formatData(community, data)).to.deep.equal({
         offers: [],
         requests: [],
         conversations: [
           {
             id: 1,
             title: 'Foo!',
-            details: `<p><a href="${prefix}/u/21">Edward West</a> &amp; <a href="${prefix}/u/16325">Julia Pope</a></p>`,
+            details: `<p><a href="${prefix}/u/21">Edward West</a> &amp; ` +
+              `<a href="${prefix}/u/16325">Julia Pope</a> ` +
+              `<a href="${prefix}/c/foo/tag/oakland">#oakland</a></p>`,
             user: u1.attributes,
             url: Frontend.Route.post({id: 1}),
             comments: [
               {
                 id: 11,
-                text: `<p><a href="${prefix}/u/42">Lawrence Wang</a> &amp; <a href="${prefix}/u/5942">Minda Myers</a></p>`,
+                text: `<p><a href="${prefix}/u/42">Lawrence Wang</a> &amp; ` +
+                `<a href="${prefix}/u/5942">Minda Myers</a> ` +
+                `<a href="${prefix}/c/foo/tag/berkeley">#berkeley</a></p>`,
                 user: u1.attributes
               }
             ]
