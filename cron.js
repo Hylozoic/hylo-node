@@ -19,7 +19,10 @@ var jobs = {
     switch (now.day()) {
       case 3:
         sails.log.debug('Sending weekly digests')
-        tasks.push(digest2.sendAllDigests('weekly'))
+        tasks.push(() => {
+          const results = digest2.sendAllDigests('weekly')
+          sails.log.debug(results)
+        })
         break
     }
     return Promise.all(tasks)
@@ -32,7 +35,10 @@ var jobs = {
     switch (now.hour()) {
       case 12:
         sails.log.debug('Sending daily digests')
-        tasks.push(digest2.sendAllDigests('daily'))
+        tasks.push(() => {
+          const results = digest2.sendAllDigests('daily')
+          sails.log.debug(results)
+        })
         break
       default:
         if (process.env.SERENDIPITY_ENABLED) {
