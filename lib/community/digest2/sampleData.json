@@ -1,0 +1,97 @@
+{
+  "subject": "Stuff is happening in Sandbox!",
+  "community_avatar_url": "https://d3ngex8q79bk55.cloudfront.net/community/1/avatar/devAvatar.png",
+  "community_name": "Sandbox",
+  "email_settings_url": "http://localhost:9000/settings?expand=account",
+  "tracking_pixel_url": "TODO(tracking_pixel_url)",
+  "community_url": "http://localhost:9000/c/sandbox",
+  "form_action_url": "http://localhost:9000/noo/hook/postForm",
+  "time_period": "last week",
+  "recipient": {
+    "name": "Lawrence Wang",
+    "avatar_url": "https://d3ngex8q79bk55.cloudfront.net/user/42/avatar/1463689351761_10209542281777297.jpg"
+  },
+  "requests": [
+    {
+      "id": 1,
+      "user": {
+        "name": "Cynthia Hellen",
+        "avatar_url": "http://rs795.pbsrc.com/albums/yy236/terminatoraf/Funny/mrbeabn.jpg~c200"
+      },
+      "title": "Looking for an intro to Richard Branson, Tony Hsieh, or Bill Gates",
+      "details": "<p>The U.Lab participants at Impact Hub MSP recently got together to try and distill down some of the complex components and definitions in theory U into a bite size one(ish) page document. They're happy to invite others to contribute if you would like or use as a reference if you find it useful. </p><p>Access it using the link below or let me know if you have trouble getting access. </p><p>https://docs.google.com/document/d/1wQy_jVMXeXFHmPk4nhX5TRSp5hEL-_gbMPQnJZUxBTU/edit?usp=sharing<br /></p>",
+      "comments": []
+    },
+    {
+      "id": 2,
+      "user": {
+        "name": "Motoko Kusanagi",
+        "avatar_url": "http://media.steampowered.com/steamcommunity/public/images/avatars/ff/ff652c5079d65d0c98d107586b7630e7275cde74_full.jpg"
+      },
+      "title": "Batou's been putting organic oil in the Tachikomas again!",
+      "details": "<p>Someone make him stop!</p>",
+      "comments": []
+    }
+  ],
+  "offers": [
+    {
+      "id": 3,
+      "user": {
+        "name": "Squawky McSquawkface",
+        "avatar_url": "http://www.picgifs.com/avatars/animals/parrot/avatars-parrot-925060.jpg"
+      },
+      "title": "I've got a lovely bunch of coconuts",
+      "details": "<p>There they are, all standing in a row. Big ones, small ones, some as big as your head</p>",
+      "comments": []
+    },
+    {
+      "id": 4,
+      "user": {
+        "name": "Damian Madray",
+        "avatar_url": "http://graph.facebook.com/10156248948240099/picture?type=large"
+      },
+      "title": "I'd like to install Hylo iOS app on all iPhones we have in our team to beta test the features.",
+      "details": "<p>I implemented a crash analytics and I will be able to see all crashes on a dashboard online (if there will be any) and I could fix all the bugs faster that way.</p>",
+      "comments": []
+    }
+  ],
+  "conversations": [
+    {
+      "id": 5,
+      "user": {
+        "name": "Squawky McSquawkface",
+        "avatar_url": "http://www.picgifs.com/avatars/animals/parrot/avatars-parrot-925060.jpg"
+      },
+      "title": "Hylo: bug reports, feature requests, and general",
+      "details": "<p>Core Intention: Let's work together to make this thing amazing.<p>",
+      "comments": []
+    },
+    {
+      "id": 6,
+      "user": {
+        "name": "Robbie Carlton",
+        "avatar_url": "https://d3ngex8q79bk55.cloudfront.net/user/11204/avatar/fGvpYNkTXeE9rg0aZg3L_Screen_Shot_2015-02-04_at_2.53.53_PM.png"
+      },
+      "title": "Could you please post the recipe for your magic supplements?",
+      "details": "<p><a href=\"/u/21\" data-user-id=\"21\">Edward West</a> <a href=\"/u/16325\" data-user-id=\"16325\">Julia Pope</a> <a>#woo</a></p>",
+      "comments": [
+        {
+          "id": 13,
+          "text": "<p>It's all here: http://magic.foo.com/supplements</p>",
+          "user": {
+            "name": "Motoko",
+            "avatar_url": "http://media.steampowered.com/steamcommunity/public/images/avatars/ff/ff652c5079d65d0c98d107586b7630e7275cde74_full.jpg"
+          }
+        },
+        {
+          "id": 14,
+          "text": "<p>Thanks! Yay! Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce aliquam lorem in condimentum ultricies. Whoah, excuse my Tourette's.</p><p>Fusce finibus auctor metus vel vulputate. Etiam eget turpis auctor, fringilla velit vel, mollis arcu. Nulla at nisl eget nulla bibendum vehicula. Oops, there I go again.</p>",
+          "user": {
+            "name": "Squawky McSquawkface",
+            "avatar_url": "http://www.picgifs.com/avatars/animals/parrot/avatars-parrot-925060.jpg"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -167,6 +167,10 @@ module.exports = bookshelf.Model.extend({
 
   DEFAULT_NAMES: ['offer', 'request', 'intention'],
 
+  isValidTag: function (text) {
+    return !!text.match(/^[A-Za-z][\w\-]+$/)
+  },
+
   tagsInText,
 
   find: function (id, options) {

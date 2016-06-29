@@ -1,7 +1,7 @@
 const root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
-import { merge } from 'lodash'
+const model = factories.mock.model
 
 const destroyAllPushNotifications = () => {
   return PushNotification.fetchAll()
@@ -304,27 +304,21 @@ describe('Notification', function () {
     it('sets the correct email attributes', () => {
       const note = new Notification()
 
-      const fakeModel = attrs => {
-        return merge({
-          get: function (name) { return this[name] }
-        }, attrs)
-      }
-
       note.relations = {
-        activity: fakeModel({
+        activity: model({
           comment_id: 5,
           relations: {
-            comment: fakeModel({
+            comment: model({
               id: 5,
               text: 'I have an opinion',
               relations: {
-                post: fakeModel({
+                post: model({
                   name: 'hello world',
                   relations: {
                     communities: [community]
                   }
                 }),
-                user: fakeModel({
+                user: model({
                   id: 2,
                   name: 'Ka Mentor'
                 })

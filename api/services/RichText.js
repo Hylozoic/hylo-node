@@ -31,13 +31,25 @@ export const getUserMentions = text => {
   }).get())
 }
 
-export const qualifyLinks = (text, recipient, token) => {
+export const qualifyLinks = (text, recipient, token, slug) => {
+  if (!text) return text
+
   var $ = Cheerio.load(text)
-  $('[data-user-id]').each(function () {
-    var $this = $(this)
-    var url = Frontend.Route.profile({id: $this.data('user-id')})
-    if (recipient && token) {
-      url = Frontend.Route.tokenLogin(recipient, token, url)
+  $('a').each(function () {
+    const $this = $(this)
+    const tag = $this.text().replace(/^#/, '')
+    var url = $this.attr('href') || ''
+    if (Tag.isValidTag(tag)) {
+      if (slug) {
+        url = `${Frontend.Route.prefix}/c/${slug}/tag/${tag}`
+      } else {
+        url = `${Frontend.Route.prefix}/tag/${tag}`
+      }
+    } else if (!url.match(/^https?:\/\//)) {
+      url = Frontend.Route.prefix + url
+      if (recipient && token) {
+        url = Frontend.Route.tokenLogin(recipient, token, url)
+      }
     }
     $this.attr('href', url)
   })

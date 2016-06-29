@@ -1,7 +1,7 @@
-var api = require('sendwithus')(process.env.SENDWITHUS_KEY)
-var Promise = require('bluebird')
+const api = require('sendwithus')(process.env.SENDWITHUS_KEY)
+const Promise = require('bluebird')
 
-var sendEmail = function (opts) {
+const sendEmail = function (opts) {
   return new Promise((resolve, reject) => {
     api.send(opts, (err, resp) => {
       err ? reject(resp) : resolve(resp)
@@ -9,23 +9,23 @@ var sendEmail = function (opts) {
   })
 }
 
-var defaultOptions = {
+const defaultOptions = {
   sender: {
     address: process.env.EMAIL_SENDER,
     name: 'Hylo'
   }
 }
 
-var sendSimpleEmail = function (email, templateId, data, extraOptions) {
+const sendSimpleEmail = function (address, templateId, data, extraOptions) {
   return sendEmail(_.merge({}, defaultOptions, {
     email_id: templateId,
-    recipient: {address: email},
+    recipient: {address},
     email_data: data
   }, extraOptions))
 }
 
 module.exports = {
-  sendSimpleEmail: sendSimpleEmail,
+  sendSimpleEmail,
 
   sendRawEmail: function (email, data, extraOptions) {
     return sendSimpleEmail(email, 'tem_nt4RmzAfN4KyPZYxFJWpFE', data, extraOptions)
