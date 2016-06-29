@@ -3,8 +3,7 @@ var skiff = require('./lib/skiff') // this must be required first
 var moment = require('moment-timezone')
 var rollbar = skiff.rollbar
 var sails = skiff.sails
-var Digest = require('./lib/community/digest')
-var Prompter = require('./lib/community/prompter')
+var digest2 = require('./lib/community/digest2')
 var Promise = require('bluebird')
 
 require('colors')
@@ -18,13 +17,9 @@ var jobs = {
     tasks.push(Queue.removeOldCompletedJobs(20000))
 
     switch (now.day()) {
-      case 0:
-        sails.log.debug('Sending Weekly Post Prompt')
-        tasks.push(Prompter.sendWeekly())
-        break
       case 3:
         sails.log.debug('Sending weekly digests')
-        tasks.push(Digest.sendWeekly())
+        tasks.push(digest2.sendAllDigests('weekly'))
         break
     }
     return Promise.all(tasks)
@@ -37,7 +32,7 @@ var jobs = {
     switch (now.hour()) {
       case 12:
         sails.log.debug('Sending daily digests')
-        tasks.push(Digest.sendDaily())
+        tasks.push(digest2.sendAllDigests('daily'))
         break
       default:
         if (process.env.SERENDIPITY_ENABLED) {
