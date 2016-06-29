@@ -218,6 +218,12 @@ const PostController = {
         communities: [tokenData.communityId],
         transacting: trx
       }))))
+      .tap(post => Community.find(tokenData.communityId)
+        .then(c => Analytics.track({
+          userId: tokenData.userId,
+          event: 'Add Post by Email Form',
+          properties: {community: c.get('name')}
+        })))
     .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
   },
 

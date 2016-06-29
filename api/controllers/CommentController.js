@@ -81,14 +81,16 @@ module.exports = {
       return res.serverError(new Error('Invalid reply address: ' + req.param('To')))
     }
 
-    return Post.find(replyData.postId)
+    return Post.find(replyData.postId, {withRelated: 'communities'})
     .then(post => {
       if (!post) return
+      const community = post.relations.communities.first()
       Analytics.track({
         userId: replyData.userId,
         event: 'Post: Comment: Add by Email',
         properties: {
-          post_id: post.id
+          post_id: post.id,
+          community: community && community.get('name')
         }
       })
       return createComment(replyData.userId, req.param('stripped-text'), post)
