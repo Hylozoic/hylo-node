@@ -32,10 +32,7 @@ const createView = lang => {
       u.id as user_id,
       null as comment_id,
       ${wv('u.name', 'A')} ||
-      ${wv("coalesce(u.bio, '')", 'C')} ||
-      ${wv("coalesce(u.intention, '')", 'C')} ||
-      ${wv("coalesce(u.work, '')", 'C')} ||
-      ${wv("coalesce(u.extra_info, '')", 'C')} as ${columnName}
+      ${wv("coalesce(u.bio, '')", 'C')} as ${columnName}
     from users u
     where u.active = true
     group by u.id
