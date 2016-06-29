@@ -1,4 +1,5 @@
-import { find, get, map, merge, pick } from 'lodash'
+import { find, get, isNull, isUndefined, map, merge, pick } from 'lodash'
+import { pickBy } from 'lodash/fp'
 
 const relationsForSelf = [
   'memberships',
@@ -83,7 +84,7 @@ const UserPresenter = module.exports = {
     .then(extra => _.extend(user.attributes, extra))
   },
 
-  presentForList: function (user, opts) {
+  presentForList: function (user, opts = {}) {
     var moreAttributes = {
       tags: map(get(user, 'relations.tags.models'), t => t.pick('id', 'name'))
     }
@@ -110,10 +111,10 @@ const UserPresenter = module.exports = {
       }, new Date())
     }
 
-    return merge(
+    return pickBy(x => !isNull(x) && !isUndefined(x), merge(
       pick(user.attributes, UserPresenter.shortAttributes),
       moreAttributes
-    )
+    ))
   }
 
 }

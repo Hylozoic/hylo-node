@@ -1,9 +1,11 @@
+import { isNull, isUndefined, pickBy } from 'lodash/fp'
+
 const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
 var postRelations = (userId, opts = {}) => {
   var relations = [
     {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')},
-    {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url')},
+    {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url', 'banner_url')},
     'contributions',
     {'contributions.user': userColumns},
     {followers: userColumns},
@@ -104,7 +106,7 @@ var postAttributes = (post, userId, opts = {}) => {
   if (opts.withChildren) {
     extendedPost.children = rel.children
   }
-  return extendedPost
+  return pickBy(x => !isNull(x) && !isUndefined(x), extendedPost)
 }
 
 module.exports = {

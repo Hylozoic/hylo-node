@@ -1,4 +1,6 @@
-import { pick } from 'lodash'
+import { get } from 'lodash/fp'
+
+const userColumns = q => q.column('id', 'name', 'avatar_url')
 
 const findCommunityIds = req => {
   if (req.param('communityId')) {
@@ -16,9 +18,6 @@ const findCommunityIds = req => {
     ).then(ids => _(ids).flatten().uniq().value())
   }
 }
-
-const getTotal = records =>
-  records && records.length > 0 ? Number(records.first().get('total')) : 0
 
 module.exports = {
   autocomplete: function (req, res) {
@@ -70,7 +69,7 @@ module.exports = {
     var userId = req.session.userId
     var items
 
-    Membership.activeCommunityIds(userId)
+    return Membership.activeCommunityIds(userId)
     .then(communityIds =>
       FullTextSearch.searchInCommunities(communityIds, {term, type, limit, offset}))
     .then(items_ => {
@@ -85,47 +84,48 @@ module.exports = {
         ids[type].push(id)
       }, {})
 
-      var userColumns = q => q.column('id', 'name', 'avatar_url')
-
-      // FIXME factor out this general-purpose object display/formatting code
-
       return Promise.join(
-        ids.posts && Post.where('id', 'in', ids.posts)
-        .fetchAll({withRelated: PostPresenter.relations(userId)}),
+        ids.posts && Post.where('id', 'in', ids.posts).fetchAll({
+          withRelated: PostPresenter.relations(userId)
+        }),
 
-        ids.comments && Comment.where('id', 'in', ids.comments)
-        .fetchAll({withRelated: [
-          {'user': userColumns},
-          {'post': q => q.column('id', 'type', 'name', 'user_id')},
-          {'post.user': userColumns},
-          {'post.relatedUsers': userColumns},
-          {'thanks.thankedBy': userColumns}
-        ]}),
+        ids.comments && Comment.where('id', 'in', ids.comments).fetchAll({
+          withRelated: [
+            {'user': userColumns},
+            {'post': q => q.column('id', 'type', 'name', 'user_id')},
+            {'post.user': userColumns},
+            {'post.relatedUsers': userColumns},
+            {'thanks.thankedBy': userColumns}
+          ]
+        }),
 
-        ids.people && User.where('id', 'in', ids.people)
-        .fetchAll()
+        ids.people && User.where('id', 'in', ids.people).fetchAll(),
+
+        (posts, comments, people) =>
+          items.map(formatResult(posts, comments, people))
       )
     })
-    .spread((posts, comments, people) => items.map(item => {
-      var result = {rank: item.rank}
-
-      if (item.user_id) {
-        result.type = 'person'
-        var person = people.find(p => p.id === item.user_id)
-        result.data = UserPresenter.presentForList(person)
-      } else if (item.post_id) {
-        result.type = 'post'
-        var post = posts.find(p => p.id === item.post_id)
-        result.data = PostPresenter.present(post)
-      } else {
-        result.type = 'comment'
-        var comment = comments.find(c => c.id === item.comment_id)
-        result.data = comment.toJSON()
-      }
-
-      return result
-    }))
-    .then(results => ({items: results, total: _.get(items, '0.total') || 0}))
+    .then(results => ({items: results, total: get('0.total', items) || 0}))
     .then(res.ok)
   }
+}
+
+const formatResult = (posts, comments, people) => item => {
+  var result = {rank: item.rank}
+
+  if (item.user_id) {
+    result.type = 'person'
+    const person = people.find(p => p.id === item.user_id)
+    result.data = UserPresenter.presentForList(person)
+  } else if (item.post_id) {
+    result.type = 'post'
+    const post = posts.find(p => p.id === item.post_id)
+    result.data = PostPresenter.present(post)
+  } else {
+    result.type = 'comment'
+    const comment = comments.find(c => c.id === item.comment_id)
+    result.data = comment.toJSON()
+  }
+
+  return result
 }
