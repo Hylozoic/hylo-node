@@ -42,7 +42,6 @@ module.exports.policies = {
   },
 
   SearchController: {
-    show: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     autocomplete: ['sessionAuth', 'checkAndSetMembership'],
     showFullText: ['sessionAuth']
   },
@@ -162,5 +161,4 @@ module.exports.policies = {
     removeFromCommunity: ['sessionAuth', 'isModerator'],
     findOneSummary: ['sessionAuth', 'checkAndSetMembership']
   }
-
 }

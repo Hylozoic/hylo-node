@@ -89,7 +89,6 @@ module.exports.routes = {
   'GET    /noo/tag/:tagName/posts':                         'PostController.findForTagInAllCommunities',
   'POST   /noo/community/:communityId/tag/:tagName/reset':  'TagController.resetNewPostCount',
 
-  'GET    /noo/search':                                   'SearchController.show',
   'GET    /noo/search/fulltext':                          'SearchController.showFullText',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',
 

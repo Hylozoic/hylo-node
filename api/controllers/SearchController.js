@@ -21,42 +21,6 @@ const getTotal = records =>
   records && records.length > 0 ? Number(records.first().get('total')) : 0
 
 module.exports = {
-  show: function (req, res) {
-    var term = req.param('q').trim()
-    var resultTypes = req.param('include')
-    var limit = req.param('limit') || 10
-    var offset = req.param('offset') || 0
-
-    return findCommunityIds(req)
-    .then(function (communityIds) {
-      return Promise.join(
-        _.includes(resultTypes, 'posts') && Search.forPosts({
-          term: term,
-          limit: limit,
-          offset: offset,
-          communities: communityIds,
-          sort: 'post.created_at'
-        }).fetchAll({withRelated: PostPresenter.relations(req.session.userId)}),
-        _.includes(resultTypes, 'people') && Search.forUsers({
-          term: term,
-          limit: limit,
-          offset: offset,
-          communities: communityIds
-        }).fetchAll()
-      )
-    })
-    .spread(function (posts, people) {
-      res.ok({
-        posts_total: getTotal(posts),
-        posts: posts && posts.map(PostPresenter.present),
-        people_total: getTotal(people),
-        people: people && people.map(person =>
-          pick(person.attributes, UserPresenter.shortAttributes))
-      })
-    })
-    .catch(res.serverError)
-  },
-
   autocomplete: function (req, res) {
     var term = req.param('q').trim()
     var resultType = req.param('type')
