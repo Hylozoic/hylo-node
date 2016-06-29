@@ -1,0 +1,245 @@
+require(require('root-path')('test/setup'))
+import formatData from '../../../lib/community/digest2/formatData'
+import personalizeData from '../../../lib/community/digest2/personalizeData'
+import { shouldSendData } from '../../../lib/community/digest2/util'
+import factories from '../../setup/factories'
+import { merge } from 'lodash'
+const model = factories.mock.model
+const collection = factories.mock.collection
+
+const u1 = model({
+  id: 1,
+  name: 'Foo',
+  avatar_url: 'http://google.com/foo.png'
+})
+
+const u2 = model({
+  id: 2,
+  name: 'Bar',
+  avatar_url: 'http://facebook.com/bar.png'
+})
+
+const u3 = model({
+  id: 3,
+  name: 'Baz',
+  avatar_url: 'http://apple.com/baz.png'
+})
+
+const u4 = model({
+  id: 4,
+  name: 'Mr. Man',
+  avatar_url: 'http://cnn.com/man.png'
+})
+
+describe('community digest v2', () => {
+  describe('formatData', () => {
+    it('organizes new posts and comments', () => {
+      const data = {
+        comments: [
+          model({
+            id: 12,
+            text: 'I have two!',
+            post_id: 5,
+            relations: {user: u3}
+          }),
+          model({
+            id: 13,
+            text: 'No, you are wrong',
+            post_id: 8,
+            relations: {
+              user: u3,
+              post: model({id: 8, name: 'I am right', relations: {user: u4}})
+            }
+          })
+        ],
+        posts: [
+          model({
+            id: 5,
+            name: 'Do you have a dollar?',
+            relations: {
+              selectedTags: collection([
+                model({name: 'request'})
+              ]),
+              user: u1
+            }
+          }),
+          model({
+            id: 7,
+            name: 'Kapow!',
+            relations: {
+              selectedTags: collection([]),
+              user: u2
+            }
+          }),
+          model({
+            id: 6,
+            name: 'I have cookies!',
+            relations: {
+              selectedTags: collection([
+                model({name: 'offer'})
+              ]),
+              user: u2
+            }
+          })
+        ]
+      }
+
+      expect(formatData(data)).to.deep.equal({
+        requests: [
+          {
+            id: 5,
+            title: 'Do you have a dollar?',
+            user: u1.attributes,
+            url: Frontend.Route.post({id: 5}),
+            comments: [
+              {id: 12, text: 'I have two!', user: u3.attributes}
+            ]
+          }
+        ],
+        offers: [
+          {
+            id: 6,
+            title: 'I have cookies!',
+            user: u2.attributes,
+            url: Frontend.Route.post({id: 6}),
+            comments: []
+          }
+        ],
+        conversations: [
+          {
+            id: 8,
+            title: 'I am right',
+            user: u4.attributes,
+            url: Frontend.Route.post({id: 8}),
+            comments: [
+              {id: 13, text: 'No, you are wrong', user: u3.attributes}
+            ]
+          },
+          {
+            id: 7,
+            title: 'Kapow!',
+            user: u2.attributes,
+            url: Frontend.Route.post({id: 7}),
+            comments: []
+          }
+        ]
+      })
+    })
+
+    it.skip('truncates data that is too long', () => {})
+
+    it('makes sure links are fully qualified', () => {
+      const data = {
+        comments: [
+          model({
+            id: 11,
+            post_id: 1,
+            text: '<p><a href="/u/42">Lawrence Wang</a> & <a href="/u/5942">Minda Myers</a></p>',
+            relations: {
+              user: u1,
+              post: model({
+                id: 1,
+                name: 'Foo!',
+                description: '<p><a href="/u/21">Edward West</a> & <a href="/u/16325">Julia Pope</a></p>',
+                relations: {user: u1}
+              })
+            }
+          })
+        ]
+      }
+
+      const prefix = Frontend.Route.prefix
+
+      expect(formatData(data)).to.deep.equal({
+        offers: [],
+        requests: [],
+        conversations: [
+          {
+            id: 1,
+            title: 'Foo!',
+            details: `<p><a href="${prefix}/u/21">Edward West</a> &amp; <a href="${prefix}/u/16325">Julia Pope</a></p>`,
+            user: u1.attributes,
+            url: Frontend.Route.post({id: 1}),
+            comments: [
+              {
+                id: 11,
+                text: `<p><a href="${prefix}/u/42">Lawrence Wang</a> &amp; <a href="${prefix}/u/5942">Minda Myers</a></p>`,
+                user: u1.attributes
+              }
+            ]
+          }
+        ]
+      })
+    })
+  })
+
+  describe('personalizeData', () => {
+    var user
+
+    before(() => {
+      user = factories.user({avatar_url: 'http://google.com/logo.png'})
+      return user.save()
+    })
+
+    it('adds expected user-specific attributes', () => {
+      const data = {
+        community_id: '77',
+        community_name: 'foo',
+        requests: [],
+        offers: [
+          {id: 1, title: 'Hi', user: u4.attributes, comments: []}
+        ],
+        conversations: [
+          {
+            id: 2, title: 'Ya', user: u3.attributes,
+            comments: [
+              {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
+              {id: 4, user: u2.attributes, text: 'Woa'}
+            ]
+          }
+        ]
+      }
+
+      return personalizeData(user, data).then(newData =>
+        expect(newData).to.deep.equal(merge({}, data, {
+          offers: [
+            {
+              id: 1, title: 'Hi', user: u4.attributes,
+              reply_url: Email.postReplyAddress(1, user.id)
+            }
+          ],
+          conversations: [
+            {
+              id: 2, title: 'Ya', user: u3.attributes,
+              reply_url: Email.postReplyAddress(2, user.id),
+              comments: [
+                {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
+                {id: 4, user: u2.attributes, text: 'Woa'}
+              ]
+            }
+          ],
+          recipient: {
+            name: user.get('name'),
+            avatar_url: user.get('avatar_url')
+          },
+          email_settings_url: Frontend.Route.userSettings() + '?expand=account',
+          form_action_url: Frontend.Route.emailPostForm(),
+          form_token: Email.postCreationToken(77, user.id),
+          tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, community: 'foo'}),
+          subject: `foo: New activity from ${u4.name}, ${u3.name}, and 1 other`
+        })))
+    })
+  })
+
+  describe('shouldSendData', () => {
+    it('is false if the data is empty', () => {
+      const data = {requests: [], offers: [], conversations: []}
+      expect(shouldSendData(data)).to.be.false
+    })
+
+    it('is true if there is some data', () => {
+      const data = {conversations: [{id: 'foo'}]}
+      expect(shouldSendData(data)).to.be.true
+    })
+  })
+})
