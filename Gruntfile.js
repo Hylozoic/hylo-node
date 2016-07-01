@@ -72,6 +72,7 @@ module.exports = function(grunt) {
 	// (ensure that a default task exists)
 	if (!registerDefinitions.default) {
 		registerDefinitions.default = function (grunt) { grunt.registerTask('default', []); };
+		registerDefinitions.prod = function (grunt) { grunt.registerTask('prod', []); };
 	}
 
 	// Run task functions to configure Grunt.
