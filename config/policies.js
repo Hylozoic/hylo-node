@@ -25,8 +25,8 @@ module.exports.policies = {
   SessionController: true,
 
   InvitationController: {
-    use: true,
     findOne: true,
+    use: ['sessionAuth'],
     find: ['sessionAuth', 'canInvite'],
     create: ['sessionAuth', 'canInvite']
   },
