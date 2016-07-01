@@ -1,6 +1,6 @@
 machine:
   node:
-    version: 5.6.0
+    version: 6.2.2
 deployment:
   production:
     branch: master

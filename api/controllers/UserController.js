@@ -14,16 +14,15 @@ var findContext = function (req) {
 }
 
 var setupReputationQuery = function (req, model) {
-  var params = _.pick(req.allParams(), 'userId', 'limit', 'start', 'offset')
-  var isSelf = req.session.userId === params.userId
+  const { userId, limit, start, offset } = req.allParams()
 
-  return Promise.method(function () {
-    if (!isSelf) return Membership.activeCommunityIds(req.session.userId)
-  })()
+  return (req.session.userId === userId
+    ? Promise.resolve()
+    : Membership.activeCommunityIds(req.session.userId))
   .then(communityIds =>
-    model.queryForUser(params.userId, communityIds).query(q => {
-      q.limit(params.limit || 15)
-      q.offset(params.start || params.offset || 0)
+    model.queryForUser(userId, communityIds).query(q => {
+      q.limit(limit || 15)
+      q.offset(start || offset || 0)
     }))
 }
 
