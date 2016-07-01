@@ -2,17 +2,6 @@ import { find, flatten, merge, pick } from 'lodash'
 import { map } from 'lodash/fp'
 import validator from 'validator'
 
-var findContext = function (req) {
-  if (req.session.invitationId) {
-    return Invitation.find(req.session.invitationId, {withRelated: ['community']})
-      .then(function (invitation) {
-        return {community: invitation.relations.community, invitation: invitation}
-      })
-  }
-
-  return Promise.props({community: Community.where({beta_access_code: req.param('code')}).fetch()})
-}
-
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
 
@@ -36,17 +25,9 @@ const countTaggedPosts = (userIds, tagId) =>
 
 module.exports = {
   create: function (req, res) {
-    var params = _.pick(req.allParams(), 'name', 'email', 'password')
+    const { name, email, password } = req.allParams()
 
-    return findContext(req)
-    .then(ctx => {
-      var attrs = _.merge(_.pick(params, 'name', 'email'), {
-        community: (ctx.invitation ? null : ctx.community),
-        account: {type: 'password', password: params.password}
-      })
-
-      return User.createFully(attrs, ctx.invitation)
-    })
+    return User.create({name, email, account: {type: 'password', password}})
     .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
     .then(user => {
       if (req.param('resp') === 'user') {

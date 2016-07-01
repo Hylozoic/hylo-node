@@ -42,54 +42,10 @@ describe('UserController', function () {
         expect(UserSession.login).to.have.been.called()
         expect(res.ok).to.have.been.called()
 
-        return User.where({email: 'foo@bar.com'}).fetch({withRelated: ['onboarding']})
+        return User.where({email: 'foo@bar.com'}).fetch()
       })
-        .then(function (user) {
-          var onboarding = user.relations.onboarding
-          expect(onboarding).not.to.be.null
-          expect(onboarding.get('user_id')).to.equal(user.id)
-          expect(onboarding.get('type')).to.equal('onboarding')
-          expect(onboarding.get('status').step).to.equal('start')
-
-          expect(user.get('last_login').getTime()).to.be.closeTo(new Date().getTime(), 2000)
-        })
-    })
-
-    describe('with an invitation to a community', function () {
-      var invitation
-
-      beforeEach(() => {
-        var inviter = new User({email: 'inviter@foo.com'})
-        return inviter.save()
-        .then(() => Invitation.create({
-          communityId: community.id,
-          userId: inviter.id,
-          email: 'foo@bar.com'
-        }))
-        .tap(i => invitation = i)
-      })
-
-      it('works', function () {
-        _.extend(req.params, {
-          email: 'foo@bar.com',
-          password: 'password!',
-          login: true
-        })
-        req.session.invitationId = invitation.id
-
-        return UserController.create(req, res).then(function () {
-          expect(res.status).not.to.have.been.called()
-          expect(User.create).to.have.been.called()
-          expect(UserSession.login).to.have.been.called()
-          expect(res.ok).to.have.been.called()
-
-          return User.where({email: 'foo@bar.com'}).fetch({withRelated: ['communities']})
-        })
-        .then(user => {
-          var community = user.relations.communities.first()
-          expect(community).to.exist
-          expect(community.get('name')).to.equal('foo')
-        })
+      .then(user => {
+        expect(user.get('last_login').getTime()).to.be.closeTo(new Date().getTime(), 2000)
       })
     })
   })

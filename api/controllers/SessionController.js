@@ -29,15 +29,6 @@ const hasLinkedAccount = function (user, service) {
   return !!user.relations.linkedAccounts.where({provider_key: service})[0]
 }
 
-const findCommunity = function (req) {
-  if (!req.session.invitationId) return Promise.resolve([null, null])
-
-  return Invitation.find(req.session.invitationId, {withRelated: ['community']})
-  .then(function (invitation) {
-    return [invitation.relations.community, invitation]
-  })
-}
-
 const upsertUser = (req, service, profile) => {
   return findUser(service, profile.email, profile.id)
   .then(user => {
@@ -48,15 +39,11 @@ const upsertUser = (req, service, profile) => {
         LinkedAccount.create(user.id, {type: service, profile}, {updateUser: true}))
     }
 
-    return findCommunity(req)
-    .spread((community, invitation) => {
-      const attrs = _.merge(_.pick(profile, 'email', 'name'), {
-        community: (invitation ? null : community),
-        account: {type: service, profile}
-      })
-
-      return User.createFully(attrs, invitation)
+    const attrs = _.merge(_.pick(profile, 'email', 'name'), {
+      account: {type: service, profile}
     })
+
+    return User.create(attrs)
     .tap(user => UserSession.login(req, user, service))
   })
 }

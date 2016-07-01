@@ -148,7 +148,7 @@ describe('SessionController', function () {
       res = factories.mock.response()
 
       UserSession.login = spy(UserSession.login)
-      User.createFully = spy(User.createFully)
+      User.create = spy(User.create)
 
       passport.authenticate = spy(function (strategy, callback) {
         return () => callback(null, mockProfile)
@@ -165,7 +165,7 @@ describe('SessionController', function () {
       return SessionController.finishFacebookOAuth(req, res)
       .then(() => {
         expect(UserSession.login).to.have.been.called()
-        expect(User.createFully).to.have.been.called()
+        expect(User.create).to.have.been.called()
         expect(res.view).to.have.been.called()
         expect(res.viewTemplate).to.equal('popupDone')
         expect(res.viewAttrs.error).not.to.exist
@@ -209,39 +209,6 @@ describe('SessionController', function () {
         .then(() => {
           expect(res.view).to.have.been.called()
           expect(res.viewAttrs.error).to.equal('no user')
-        })
-      })
-    })
-
-    describe('with an invitation', () => {
-      var community
-
-      beforeEach(() => {
-        community = factories.community()
-        return Promise.join(community.save(), factories.user().save())
-        .spread((community, inviter) => Invitation.create({
-          communityId: community.id,
-          userId: inviter.id,
-          email: 'foo@bar.com'
-        }))
-        .tap(invitation => req.session.invitationId = invitation.id)
-      })
-
-      it('adds the new user to the community', () => {
-        return SessionController.finishFacebookOAuth(req, res)
-        .then(() => User.find('l@lw.io', {withRelated: ['communities', 'followedPosts', 'followedPosts.relatedUsers']}))
-        .then(user => {
-          var c = user.relations.communities.first()
-          expect(c).to.exist
-          expect(c.id).to.equal(community.id)
-
-          var welcome = user.relations.followedPosts.first()
-          expect(welcome).to.exist
-          expect(welcome.get('type')).to.equal('welcome')
-
-          var relatedUser = welcome.relations.relatedUsers.first()
-          expect(relatedUser).to.exist
-          expect(relatedUser.id).to.equal(user.id)
         })
       })
     })
