@@ -1,7 +1,9 @@
 import { merge } from 'lodash'
 import {
-  fetchAndPresentFollowed, fetchAndPresentForCommunity,
-  fetchAndPresentForLeftNav, fetchAndPresentSummary, withRelatedSpecialPost,
+  fetchAndPresentFollowed,
+  fetchAndPresentForCommunity,
+  fetchAndPresentSummary,
+  withRelatedSpecialPost,
   presentWithPost
 } from '../services/TagPresenter'
 
@@ -47,12 +49,6 @@ module.exports = {
   findFollowed: function (req, res) {
     return Community.find(req.param('communityId'))
     .then(com => fetchAndPresentFollowed(com.id, req.session.userId))
-    .then(res.ok, res.serverError)
-  },
-
-  findForLeftNav: function (req, res) {
-    return Community.find(req.param('communityId'))
-    .then(com => fetchAndPresentForLeftNav(com.id, req.session.userId))
     .then(res.ok, res.serverError)
   },
 

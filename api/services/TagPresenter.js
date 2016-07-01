@@ -1,4 +1,4 @@
-import { filter, find, get, includes, map, merge, pick } from 'lodash'
+import { get, merge, pick } from 'lodash'
 import { sortBy } from 'lodash/fp'
 
 export const fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
@@ -33,18 +33,6 @@ export const presentWithPost = tag => {
     post: post ? {id: post.id} : null
   }
 }
-
-export const fetchAndPresentForLeftNav = (communityId, userId) =>
-  Promise.join(
-    fetchAndPresentFollowed(communityId, userId),
-    fetchAndPresentCreated(communityId, userId),
-    (followed, created) => ({
-      followed: filter(followed, f => !includes(map(created, 'name'), f.name)),
-      created: map(created, c =>
-        includes(map(followed, 'name'), c.name)
-        ? merge(c, {new_post_count: find(followed, f => f.name === c.name).new_post_count})
-        : c)
-    }))
 
 export const fetchAndPresentForCommunity = (communityId, opts) => {
   var total
