@@ -166,7 +166,7 @@ module.exports = {
       .then(ms => _.merge(ms.toJSON(), {preexisting}, {
         community: community.pick('id', 'name', 'slug', 'avatar_url')
       })))
-    .then(resp => res.ok(resp || {error: 'invalid code'}))
+    .then(resp => resp ? res.ok(resp) : res.status(422).send('invalid code'))
     .catch(err => res.serverError(err))
   },
 
