@@ -1,4 +1,4 @@
-var validator = require('validator')
+import validator from 'validator'
 
 const parseEmailList = emails =>
   (emails || '').split(/,|\n/).map(email => {
@@ -8,6 +8,11 @@ const parseEmailList = emails =>
     return match ? match[1] : trimmed
   })
 
+// this should match how UserPresenter shows the user's memberships (TODO: DRY)
+const present = membership => Object.assign(membership.toJSON(), {
+  community: membership.relations.community.pick('id', 'slug', 'name', 'avatar_url')
+})
+
 module.exports = {
   findOne: function (req, res) {
     return Invitation.where({token: req.param('token')}).fetch({withRelated: 'community'})
@@ -16,52 +21,28 @@ module.exports = {
         return res.status(422).send('bad token')
       }
 
-      if (invitation.isUsed()) {
-        return res.status(422).send('used token')
-      }
-
       return res.ok(invitation.relations.community.pick('id', 'name', 'slug', 'avatar_url'))
     })
   },
 
   use: function (req, res) {
+    const { userId } = req.session
     return Invitation.where({token: req.param('token')}).fetch({withRelated: 'tag'})
-    .then(function (invitation) {
+    .then(invitation => {
       if (!invitation) {
         return res.status(422).send('bad token')
       }
 
-      if (invitation.isUsed()) {
+      if (invitation.isUsed() && userId !== invitation.get('used_by_id')) {
         return res.status(422).send('used token')
       }
 
-      // user is logged in; apply the invitation
-      if (UserSession.isLoggedIn(req)) {
-        return bookshelf.transaction(trx => {
-          return invitation.use(req.session.userId, {transacting: trx})
-          .tap(membership => Post.createWelcomePost(req.session.userId, invitation.get('community_id'), trx))
-        })
-        .then(membership => membership.load('community').then(() => res.ok(membership)))
-        .catch(err => {
-          if (err.message && err.message.includes('duplicate key value')) {
-            res.status(422).send('already a member')
-          } else {
-            throw err
-          }
-        })
-      }
-
-      // return invitation data so that the front-end can store it
-      // and re-use it after completing signup or login
-      return invitation.load('community').then(function () {
-        req.session.invitationId = invitation.id
-
-        res.ok(_.merge(invitation.toJSON(), {
-          signup: true
-        }))
-      })
+      return invitation.use(userId)
+      .then(membership => membership.load('community'))
+      .then(present)
+      .then(res.ok)
+      .catch(res.serverError)
     })
-    .catch(res.serverError)
   },
 
   find: function (req, res) {

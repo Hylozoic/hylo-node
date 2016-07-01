@@ -31,19 +31,14 @@ describe('InvitationController', () => {
       })
     })
 
-    it('adds the user to the community and creates a welcome post', () => {
+    it('adds the user to the community', () => {
       return InvitationController.use(req, res)
       .then(() => {
         expect(res.ok).to.have.been.called()
-        return user.load(['followedPosts', 'followedPosts.relatedUsers', 'communities'])
+        return user.load(['communities'])
       })
       .then(() => {
         expect(user.relations.communities.first().id).to.equal(community.id)
-        var post = user.relations.followedPosts.first()
-        expect(post).to.exist
-        expect(post.get('type')).to.equal('welcome')
-        var relatedUser = post.relations.relatedUsers.first()
-        expect(relatedUser.id).to.equal(user.id)
       })
     })
   })

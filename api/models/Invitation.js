@@ -23,29 +23,25 @@ module.exports = bookshelf.Model.extend({
     return !!this.get('used_by_id')
   },
 
-  use: function (userId, opts) {
-    if (!opts) opts = {}
-    let self = this
-    let trx = opts.transacting
-    return Membership.where({user_id: userId, community_id: this.get('community_id')})
-    .fetch()
+  use: function (userId, opts = {}) {
+    const { transacting } = opts
+    return Membership.where({
+      user_id: userId, community_id: this.get('community_id')
+    }).fetch()
     .then(membership => {
-      if (membership) return
+      if (membership) return membership
       return Membership.create(
         userId,
         this.get('community_id'),
-        {
-          role: Number(this.get('role')),
-          transacting: trx
-        })
+        {role: Number(this.get('role')), transacting})
     })
-    .tap(() => self.save({used_by_id: userId, used_on: new Date()}, {patch: true, transacting: trx}))
-    .tap(() =>
-      self.get('tag_id') && new TagFollow({
-        user_id: userId,
-        tag_id: self.get('tag_id'),
-        community_id: self.get('community_id')
-      }).save())
+    .tap(() => this.save({used_by_id: userId, used_on: new Date()},
+      {patch: true, transacting}))
+    .tap(() => this.get('tag_id') && new TagFollow({
+      user_id: userId,
+      tag_id: this.get('tag_id'),
+      community_id: this.get('community_id')
+    }).save())
   }
 
 }, {
