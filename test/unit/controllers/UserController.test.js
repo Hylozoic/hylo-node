@@ -98,7 +98,7 @@ describe('UserController', function () {
     var u1, u2
 
     beforeEach(function () {
-      u1 = new User({email: 'foo@bar.com', active: true})
+      u1 = new User({email: 'foo@bar.com', active: true, settings: {leftNavIsOpen: true, currentCommunityId: '7'}})
       u2 = new User({email: 'foo2@bar2.com', active: true})
       return Promise.join(u1.save(), u2.save())
     })
@@ -153,6 +153,16 @@ describe('UserController', function () {
         })
         .finally(function () {
           User.find = User.trueFind
+        })
+      })
+
+      it('only updates changed fields in settings', function () {
+        _.extend(req.params, {userId: u1.id, settings: {currentCommunityId: 'all'}})
+
+        return UserController.update(req, res)
+        .then(() => User.find(u1.id))
+        .then(user => {
+          expect(user.get('settings')).to.deep.equal({leftNavIsOpen: true, currentCommunityId: 'all'})
         })
       })
     })
