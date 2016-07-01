@@ -8,6 +8,9 @@ var Promise = require('bluebird')
 
 require('colors')
 
+const sendAndLogDigests = type =>
+  digest2.sendAllDigests(type).tap(results => sails.log.debug(results))
+
 var jobs = {
   daily: function () {
     var now = moment.tz('America/Los_Angeles')
@@ -19,10 +22,7 @@ var jobs = {
     switch (now.day()) {
       case 3:
         sails.log.debug('Sending weekly digests')
-        tasks.push(() => {
-          const results = digest2.sendAllDigests('weekly')
-          sails.log.debug(results)
-        })
+        tasks.push(sendAndLogDigests('weekly'))
         break
     }
     return Promise.all(tasks)
@@ -35,10 +35,7 @@ var jobs = {
     switch (now.hour()) {
       case 12:
         sails.log.debug('Sending daily digests')
-        tasks.push(() => {
-          const results = digest2.sendAllDigests('daily')
-          sails.log.debug(results)
-        })
+        tasks.push(sendAndLogDigests('daily'))
         break
       default:
         if (process.env.SERENDIPITY_ENABLED) {
