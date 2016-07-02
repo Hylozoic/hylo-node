@@ -1,6 +1,3 @@
-import { some } from 'lodash'
-import { flatten, flow, filter, map, uniq } from 'lodash/fp'
-
 const userFieldsToCopy = [
   'avatar_url',
   'banner_url',
@@ -160,57 +157,5 @@ module.exports = {
       .then(() => Promise.all(queries.deletes))
     })
     .then(() => queries.updates.concat(queries.deletes).map(q => q.toSQL()))
-  },
-
-  convertSkillsToTags: (userId, reset) => {
-    return User.find(userId, {withRelated: 'skills'})
-    .then(user => {
-      const skills = flow(
-        map(s => s.name()),
-        map(s => s.split('/')),
-        flatten,
-        filter(s => !s.match(/'/)),
-        filter(s => s.length < 30),
-        uniq
-      )(user.relations.skills.models)
-      return some(skills) && Tag.addToUser(user, skills, reset)
-    })
-  },
-
-  convertAllSkillsToTags: function (fromId = 0) {
-    User.query().where('active', true)
-    .where('id', '>', fromId)
-    .orderBy('id', 'asc')
-    .pluck('id')
-    .then(ids => ids.reduce((promise, id) =>
-      promise.then(() => {
-        return this.convertSkillsToTags(id, true)
-      }), Promise.resolve()))
-  },
-
-  setUrlFromExtraInfo: userId => {
-    return User.find(userId).then(user => {
-      const match = user.get('extra_info').match(/\[[^\s]+\]\(([^\s]+)\)/)
-      if (match) {
-        const url = match[1]
-        return user.save({url}, {patch: true})
-      }
-    })
-  },
-
-  makeEveryoneFollowDefaultTags: () => {
-    return Tag.defaultTags().then(tags => tags.map('id'))
-    .then(tagIds =>
-      bookshelf.knex('users_community')
-      .join('users', 'users.id', 'users_community.user_id')
-      .join('community', 'community.id', 'users_community.community_id')
-      .where({
-        'users.active': true,
-        'users_community.active': true,
-        'community.active': true
-      })
-      .select(['user_id', 'community_id'])
-      .then(rows => Promise.each(rows, row =>
-        User.followTags(row.user_id, row.community_id, tagIds))))
   }
 }
