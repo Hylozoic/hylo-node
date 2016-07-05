@@ -9,7 +9,8 @@ var Promise = require('bluebird')
 require('colors')
 
 const sendAndLogDigests = type =>
-  digest2.sendAllDigests(type).tap(results => sails.log.debug(results))
+  digest2.sendAllDigests(type)
+  .tap(results => sails.log.debug(`Sent digests to: ${results}`))
 
 var jobs = {
   daily: function () {
