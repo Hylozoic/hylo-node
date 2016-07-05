@@ -281,7 +281,8 @@ describe('community digest v2', () => {
     after(() => unspyify(Email, 'sendSimpleEmail'))
 
     it('prepares expected data for SendWithUs', () => {
-      return sendAllDigests('daily').then(() => {
+      return sendAllDigests('daily').then(result => {
+        expect(result).to.deep.equal([[community.id, 1]])
         expect(Email.sendSimpleEmail).to.have.been.called()
         expect(args[0]).to.equal(u1.get('email'))
         expect(args[2]).to.deep.equal({
