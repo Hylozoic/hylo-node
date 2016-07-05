@@ -97,6 +97,8 @@ const generateRemoveQueries = function (userId, knex) {
     '(select id from comment where user_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
     '(select id from activity where reader_id = ?)', userId)
+  push('delete from notifications where activity_id in ' +
+    '(select id from activity where actor_id = ?)', userId)
 
   // deletes
   ;[
@@ -121,6 +123,7 @@ const generateRemoveQueries = function (userId, knex) {
     ['user_external_data', 'user_id'],
     ['tags_users', 'user_id'],
     ['tag_follows', 'user_id'],
+    ['posts_about_users', 'user_id'],
     ['users', 'id']
   ].forEach(args => {
     var table = args[0]
