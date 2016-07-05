@@ -300,36 +300,6 @@ ALTER SEQUENCE devices_id_seq OWNED BY devices.id;
 
 
 --
--- Name: emails; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE emails (
-    id integer NOT NULL,
-    user_id bigint,
-    value character varying(255)
-);
-
-
---
--- Name: emails_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE emails_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: emails_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE emails_id_seq OWNED BY emails.id;
-
-
---
 -- Name: event_responses; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -513,7 +483,6 @@ CREATE TABLE media (
     created_at timestamp without time zone,
     post_id bigint,
     name character varying(255),
-    project_id bigint,
     width integer,
     height integer
 );
@@ -624,36 +593,6 @@ CREATE SEQUENCE org_seq
 
 
 --
--- Name: phones; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE phones (
-    id integer NOT NULL,
-    user_id bigint,
-    value character varying(255)
-);
-
-
---
--- Name: phones_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE phones_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: phones_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE phones_id_seq OWNED BY phones.id;
-
-
---
 -- Name: post_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -746,38 +685,6 @@ CREATE TABLE posts_about_users (
 
 
 --
--- Name: posts_projects; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE posts_projects (
-    id integer NOT NULL,
-    post_id bigint NOT NULL,
-    project_id bigint NOT NULL,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-
-
---
--- Name: posts_projects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE posts_projects_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: posts_projects_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE posts_projects_id_seq OWNED BY posts_projects.id;
-
-
---
 -- Name: posts_tags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -808,116 +715,6 @@ CREATE SEQUENCE posts_tags_id_seq
 --
 
 ALTER SEQUENCE posts_tags_id_seq OWNED BY posts_tags.id;
-
-
---
--- Name: project_invitations; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE project_invitations (
-    id integer NOT NULL,
-    email character varying(255),
-    user_id bigint,
-    project_id bigint NOT NULL,
-    accepted_at timestamp with time zone,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    token character varying(255),
-    post_id bigint
-);
-
-
---
--- Name: project_invitations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE project_invitations_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: project_invitations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE project_invitations_id_seq OWNED BY project_invitations.id;
-
-
---
--- Name: projects; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE projects (
-    id bigint NOT NULL,
-    title character varying(255) NOT NULL,
-    intention character varying(255),
-    details text,
-    user_id bigint,
-    community_id bigint,
-    visibility integer,
-    published_at timestamp with time zone,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    slug character varying(255) NOT NULL,
-    location character varying(255),
-    migrated boolean DEFAULT false
-);
-
-
---
--- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE projects_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE projects_id_seq OWNED BY projects.id;
-
-
---
--- Name: projects_users; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE projects_users (
-    id integer NOT NULL,
-    project_id bigint NOT NULL,
-    user_id bigint NOT NULL,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    notify_on_new_posts boolean DEFAULT true,
-    role integer DEFAULT 0
-);
-
-
---
--- Name: projects_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE projects_users_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: projects_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE projects_users_id_seq OWNED BY projects_users.id;
 
 
 --
@@ -1077,39 +874,6 @@ CREATE SEQUENCE token_action_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
-
-
---
--- Name: tours; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE tours (
-    id integer NOT NULL,
-    user_id bigint,
-    type character varying(255),
-    status json,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-
-
---
--- Name: tours_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE tours_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: tours_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE tours_id_seq OWNED BY tours.id;
 
 
 --
@@ -1313,36 +1077,6 @@ CREATE TABLE vote (
 
 
 --
--- Name: websites; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE websites (
-    id integer NOT NULL,
-    user_id bigint,
-    value character varying(255)
-);
-
-
---
--- Name: websites_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE websites_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: websites_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE websites_id_seq OWNED BY websites.id;
-
-
---
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1368,13 +1102,6 @@ ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('communiti
 --
 
 ALTER TABLE ONLY devices ALTER COLUMN id SET DEFAULT nextval('devices_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY emails ALTER COLUMN id SET DEFAULT nextval('emails_id_seq'::regclass);
 
 
 --
@@ -1409,13 +1136,6 @@ ALTER TABLE ONLY notifications ALTER COLUMN id SET DEFAULT nextval('notification
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY phones ALTER COLUMN id SET DEFAULT nextval('phones_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY post_community ALTER COLUMN id SET DEFAULT nextval('post_community_id_seq'::regclass);
 
 
@@ -1423,35 +1143,7 @@ ALTER TABLE ONLY post_community ALTER COLUMN id SET DEFAULT nextval('post_commun
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY posts_projects ALTER COLUMN id SET DEFAULT nextval('posts_projects_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY posts_tags ALTER COLUMN id SET DEFAULT nextval('posts_tags_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY project_invitations ALTER COLUMN id SET DEFAULT nextval('project_invitations_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects ALTER COLUMN id SET DEFAULT nextval('projects_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects_users ALTER COLUMN id SET DEFAULT nextval('projects_users_id_seq'::regclass);
 
 
 --
@@ -1486,13 +1178,6 @@ ALTER TABLE ONLY tags_users ALTER COLUMN id SET DEFAULT nextval('tags_users_id_s
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY tours ALTER COLUMN id SET DEFAULT nextval('tours_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('user_external_data_id_seq'::regclass);
 
 
@@ -1501,13 +1186,6 @@ ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('user_ex
 --
 
 ALTER TABLE ONLY users_community ALTER COLUMN id SET DEFAULT nextval('users_community_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY websites ALTER COLUMN id SET DEFAULT nextval('websites_id_seq'::regclass);
 
 
 --
@@ -1582,14 +1260,6 @@ ALTER TABLE ONLY devices
 
 
 --
--- Name: emails_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY emails
-    ADD CONSTRAINT emails_pkey PRIMARY KEY (id);
-
-
---
 -- Name: event_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1651,14 +1321,6 @@ ALTER TABLE ONLY networks
 
 ALTER TABLE ONLY notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
-
-
---
--- Name: phones_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY phones
-    ADD CONSTRAINT phones_pkey PRIMARY KEY (id);
 
 
 --
@@ -1782,43 +1444,11 @@ ALTER TABLE ONLY post_community
 
 
 --
--- Name: posts_projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY posts_projects
-    ADD CONSTRAINT posts_projects_pkey PRIMARY KEY (id);
-
-
---
 -- Name: posts_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags
     ADD CONSTRAINT posts_tags_pkey PRIMARY KEY (id);
-
-
---
--- Name: project_invitations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY project_invitations
-    ADD CONSTRAINT project_invitations_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects
-    ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
-
-
---
--- Name: projects_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects_users
-    ADD CONSTRAINT projects_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -1843,14 +1473,6 @@ ALTER TABLE ONLY tags
 
 ALTER TABLE ONLY tags_users
     ADD CONSTRAINT tags_users_pkey PRIMARY KEY (id);
-
-
---
--- Name: tours_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tours
-    ADD CONSTRAINT tours_pkey PRIMARY KEY (id);
 
 
 --
@@ -1894,14 +1516,6 @@ ALTER TABLE ONLY tags
 
 
 --
--- Name: unique_posts_projects; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY posts_projects
-    ADD CONSTRAINT unique_posts_projects UNIQUE (post_id, project_id);
-
-
---
 -- Name: unique_posts_tags; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1910,27 +1524,11 @@ ALTER TABLE ONLY posts_tags
 
 
 --
--- Name: unique_projects_users; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects_users
-    ADD CONSTRAINT unique_projects_users UNIQUE (user_id, project_id);
-
-
---
 -- Name: unique_tags_users; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tags_users
     ADD CONSTRAINT unique_tags_users UNIQUE (tag_id, user_id);
-
-
---
--- Name: unique_user_id_type; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tours
-    ADD CONSTRAINT unique_user_id_type UNIQUE (user_id, type);
 
 
 --
@@ -2019,14 +1617,6 @@ ALTER TABLE ONLY user_post_relevance
 
 ALTER TABLE ONLY users_community
     ADD CONSTRAINT users_community_pkey PRIMARY KEY (id);
-
-
---
--- Name: websites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY websites
-    ADD CONSTRAINT websites_pkey PRIMARY KEY (id);
 
 
 --
@@ -2279,14 +1869,6 @@ ALTER TABLE ONLY community
 
 ALTER TABLE ONLY devices
     ADD CONSTRAINT devices_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: emails_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY emails
-    ADD CONSTRAINT emails_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2562,27 +2144,11 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: media_project_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY media
-    ADD CONSTRAINT media_project_id_foreign FOREIGN KEY (project_id) REFERENCES projects(id);
-
-
---
 -- Name: notifications_activity_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY notifications
     ADD CONSTRAINT notifications_activity_id_foreign FOREIGN KEY (activity_id) REFERENCES activity(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: phones_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY phones
-    ADD CONSTRAINT phones_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2610,22 +2176,6 @@ ALTER TABLE ONLY posts_about_users
 
 
 --
--- Name: posts_projects_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY posts_projects
-    ADD CONSTRAINT posts_projects_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: posts_projects_project_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY posts_projects
-    ADD CONSTRAINT posts_projects_project_id_foreign FOREIGN KEY (project_id) REFERENCES projects(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: posts_tags_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2639,62 +2189,6 @@ ALTER TABLE ONLY posts_tags
 
 ALTER TABLE ONLY posts_tags
     ADD CONSTRAINT posts_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: project_invitations_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY project_invitations
-    ADD CONSTRAINT project_invitations_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
-
-
---
--- Name: project_invitations_project_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY project_invitations
-    ADD CONSTRAINT project_invitations_project_id_foreign FOREIGN KEY (project_id) REFERENCES projects(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: project_invitations_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY project_invitations
-    ADD CONSTRAINT project_invitations_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects
-    ADD CONSTRAINT projects_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects
-    ADD CONSTRAINT projects_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_users_project_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects_users
-    ADD CONSTRAINT projects_users_project_id_foreign FOREIGN KEY (project_id) REFERENCES projects(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: projects_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY projects_users
-    ADD CONSTRAINT projects_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2714,14 +2208,6 @@ ALTER TABLE ONLY tags_users
 
 
 --
--- Name: tours_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tours
-    ADD CONSTRAINT tours_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: user_external_data_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2735,14 +2221,6 @@ ALTER TABLE ONLY user_external_data
 
 ALTER TABLE ONLY users_community
     ADD CONSTRAINT users_community_deactivator_id_foreign FOREIGN KEY (deactivator_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: websites_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY websites
-    ADD CONSTRAINT websites_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

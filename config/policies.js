@@ -68,8 +68,7 @@ module.exports.policies = {
   },
 
   OnboardingController: {
-    find:   ['sessionAuth'],
-    update: ['sessionAuth', 'isSelf']
+    find: ['sessionAuth']
   },
 
   CommunityController: {

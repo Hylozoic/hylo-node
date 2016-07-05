@@ -5,8 +5,7 @@ const relationsForSelf = [
   'memberships',
   {'memberships.community': qb => qb.column('id', 'name', 'slug', 'avatar_url')},
   'tags',
-  'linkedAccounts',
-  'onboarding'
+  'linkedAccounts'
 ]
 
 const recentTaggedPost = (userId, tag, viewingUserId) => {

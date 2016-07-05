@@ -48,10 +48,6 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  onboarding: function () {
-    return this.hasOne(Tour).query({where: {type: 'onboarding'}})
-  },
-
   posts: function () {
     return this.hasMany(Post)
   },
