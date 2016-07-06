@@ -486,88 +486,6 @@ CREATE TABLE media (
 
 
 --
--- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE users_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE users (
-    id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
-    email character varying(255) NOT NULL,
-    name character varying(255),
-    avatar_url character varying(255),
-    first_name character varying(255),
-    last_name character varying(255),
-    last_login timestamp without time zone,
-    active boolean,
-    email_validated boolean,
-    created_at timestamp without time zone,
-    date_deactivated timestamp without time zone,
-    send_email_preference boolean,
-    bio text,
-    banner_url character varying(255),
-    twitter_name character varying(255),
-    linkedin_url character varying(255),
-    facebook_url character varying(255),
-    work text,
-    intention text,
-    extra_info text,
-    new_notification_count integer DEFAULT 0,
-    updated_at timestamp with time zone,
-    settings jsonb DEFAULT '{}'::jsonb,
-    push_follow_preference boolean DEFAULT true,
-    push_new_post_preference boolean DEFAULT true,
-    location character varying(255),
-    url character varying(255)
-);
-
-
---
--- Name: users_community; Type: TABLE; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE TABLE users_community (
-    user_id bigint NOT NULL,
-    community_id bigint NOT NULL,
-    role smallint,
-    created_at timestamp without time zone,
-    active boolean,
-    deactivated_at timestamp with time zone,
-    deactivator_id bigint,
-    last_viewed_at timestamp with time zone,
-    id integer NOT NULL,
-    new_notification_count integer DEFAULT 0,
-    settings jsonb DEFAULT '{}'::jsonb
-);
-
-
---
--- Name: monthly_new_users; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW monthly_new_users AS
- SELECT count(*) AS count,
-    c.name AS community,
-    (date_trunc('month'::text, u.created_at))::date AS month
-   FROM users u,
-    users_community uc,
-    community c
-  WHERE ((u.id = uc.user_id) AND (uc.community_id = c.id))
-  GROUP BY c.name, (date_trunc('month'::text, u.created_at))::date
-  ORDER BY (date_trunc('month'::text, u.created_at))::date DESC, count(*) DESC;
-
-
---
 -- Name: networks; Type: TABLE; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -1028,6 +946,72 @@ CREATE TABLE user_post_relevance (
 
 
 --
+-- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE users_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE users (
+    id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
+    email character varying(255) NOT NULL,
+    name character varying(255),
+    avatar_url character varying(255),
+    first_name character varying(255),
+    last_name character varying(255),
+    last_login timestamp without time zone,
+    active boolean,
+    email_validated boolean,
+    created_at timestamp without time zone,
+    date_deactivated timestamp without time zone,
+    send_email_preference boolean,
+    bio text,
+    banner_url character varying(255),
+    twitter_name character varying(255),
+    linkedin_url character varying(255),
+    facebook_url character varying(255),
+    work text,
+    intention text,
+    extra_info text,
+    new_notification_count integer DEFAULT 0,
+    updated_at timestamp with time zone,
+    settings jsonb DEFAULT '{}'::jsonb,
+    push_follow_preference boolean DEFAULT true,
+    push_new_post_preference boolean DEFAULT true,
+    location character varying(255),
+    url character varying(255)
+);
+
+
+--
+-- Name: users_community; Type: TABLE; Schema: public; Owner: -; Tablespace: 
+--
+
+CREATE TABLE users_community (
+    user_id bigint NOT NULL,
+    community_id bigint NOT NULL,
+    role smallint,
+    created_at timestamp without time zone,
+    active boolean,
+    deactivated_at timestamp with time zone,
+    deactivator_id bigint,
+    last_viewed_at timestamp with time zone,
+    id integer NOT NULL,
+    new_notification_count integer DEFAULT 0,
+    settings jsonb DEFAULT '{}'::jsonb
+);
+
+
+--
 -- Name: users_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1088,22 +1072,6 @@ CREATE TABLE vote (
     post_id bigint,
     date_voted timestamp without time zone
 );
-
-
---
--- Name: weekly_new_users; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW weekly_new_users AS
- SELECT count(*) AS count,
-    c.name AS community,
-    (date_trunc('week'::text, u.created_at))::date AS week
-   FROM users u,
-    users_community uc,
-    community c
-  WHERE ((u.id = uc.user_id) AND (uc.community_id = c.id))
-  GROUP BY c.name, (date_trunc('week'::text, u.created_at))::date
-  ORDER BY (date_trunc('week'::text, u.created_at))::date DESC, count(*) DESC;
 
 
 --
