@@ -102,7 +102,6 @@ module.exports.routes = {
 
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
   'POST   /noo/hook/message':                             'MessageController.relayFromEmail',
-  'POST   /noo/hook/post':                                'PostController.createFromEmail',
   'POST   /noo/hook/postForm':                            'PostController.createFromEmailForm',
 
   'POST   /noo/login':                                    'SessionController.create',

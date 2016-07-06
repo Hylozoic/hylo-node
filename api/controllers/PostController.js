@@ -169,29 +169,6 @@ const PostController = {
     })
   },
 
-  createFromEmail: function (req, res) {
-    try {
-      var replyData = Email.decodePostCreationAddress(req.param('To'))
-    } catch (e) {
-      return res.serverError(new Error('Invalid reply address: ' + req.param('To')))
-    }
-
-    var allParams = merge(req.allParams(), {'type': replyData.type})
-    allParams.name = allParams['subject']
-    allParams.description = allParams['stripped-text']
-
-    return setupNewPostAttrs(replyData.userId, allParams)
-    .then(attrs => bookshelf.transaction(trx =>
-      new Post(attrs).save(null, {transacting: trx})
-      .tap(post => afterSavingPost(post, {
-        communities: [replyData.communityId],
-        imageUrl: req.param('imageUrl'),
-        docs: req.param('docs'),
-        transacting: trx
-      }))))
-    .then(() => res.ok({}), res.serverError)
-  },
-
   createFromEmailForm: function (req, res) {
     try {
       var tokenData = Email.decodePostCreationToken(req.param('token'))
