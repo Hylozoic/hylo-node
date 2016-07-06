@@ -1,3 +1,4 @@
+import { pick } from 'lodash'
 const Promise = require('bluebird')
 const request = require('request')
 const post = Promise.promisify(request.post)
@@ -12,7 +13,7 @@ module.exports = {
     Community
     .where('active', true)
     .fetchAll({withRelated: [
-        {memberships: q => q.column('community_id')}
+      {memberships: q => q.column('community_id')}
     ]})
     .then(communities => communities.map(c => _.extend(c.toJSON(), {
       memberships: c.relations.memberships.length
@@ -22,15 +23,17 @@ module.exports = {
 
   findOne: function (req, res) {
     var community = res.locals.community
-    var membership = res.locals.membership
+    var mship = res.locals.membership
 
-    return Promise.method(() => community.get('network_id') ? community.load('network') : null)()
-    .then(() => community.pick('id', 'name', 'slug', 'avatar_url', 'banner_url', 'description', 'settings', 'location'))
-    .tap(data => {
-      var network = community.relations.network
-      if (network) data.network = network.pick('id', 'name', 'slug')
-    })
-    .tap(() => membership && membership.save({last_viewed_at: new Date()}, {patch: true}))
+    return community.load([
+      {network: q => q.column('networks.id', 'networks.name', 'networks.slug')},
+      {leader: q => q.column('users.id', 'users.name', 'users.avatar_url')}
+    ])
+    .then(() => community.toJSON())
+    .then(data => pick(data,
+      'id', 'name', 'slug', 'avatar_url', 'banner_url', 'description',
+      'settings', 'location', 'welcome_message', 'leader', 'network'))
+    .tap(() => mship && mship.save({last_viewed_at: new Date()}, {patch: true}))
     .then(res.ok)
     .catch(res.serverError)
   },

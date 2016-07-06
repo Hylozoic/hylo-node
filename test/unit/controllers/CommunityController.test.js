@@ -10,7 +10,7 @@ describe('CommunityController', () => {
   var req, res, user
 
   before(() => {
-    user = factories.user()
+    user = factories.user({avatar_url: 'foo'})
     return user.save()
   })
 
@@ -23,7 +23,10 @@ describe('CommunityController', () => {
     var community
 
     beforeEach(() => {
-      community = factories.community({beta_access_code: 'sekrit'})
+      community = factories.community({
+        beta_access_code: 'sekrit',
+        leader_id: user.id
+      })
       return community.save()
       .then(() => user.joinCommunity(community))
       .then(() => {
@@ -32,7 +35,7 @@ describe('CommunityController', () => {
       })
     })
 
-    it('does not include the invitation code', () => {
+    it('includes some attributes and excludes others', () => {
       return checkAndSetMembership(req, res)
       .then(() => CommunityController.findOne(req, res))
       .then(() => {
@@ -45,7 +48,13 @@ describe('CommunityController', () => {
           banner_url: null,
           description: null,
           settings: {},
-          location: null
+          location: null,
+          welcome_message: null,
+          leader: {
+            id: user.id,
+            name: user.get('name'),
+            avatar_url: user.get('avatar_url')
+          }
         })
       })
     })

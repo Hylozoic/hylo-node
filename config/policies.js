@@ -67,10 +67,6 @@ module.exports.policies = {
     markAllRead:      ['sessionAuth']
   },
 
-  OnboardingController: {
-    find: ['sessionAuth']
-  },
-
   CommunityController: {
     find:            ['sessionAuth', 'isAdmin'],
     findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],

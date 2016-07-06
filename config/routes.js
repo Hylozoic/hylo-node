@@ -17,7 +17,6 @@ module.exports.routes = {
   'GET    /noo/user/:userId/posts':                       'PostController.findForUser',
   'GET    /noo/user/:userId/followed-posts':              'PostController.findForFollowed',
   'GET    /noo/user/:userId/all-community-posts':         'PostController.findForAllForUser',
-  'GET    /noo/user/:userId/onboarding':                  'OnboardingController.find',
 
   'GET    /noo/community':                                  'CommunityController.find',
   'POST   /noo/community':                                  'CommunityController.create',
