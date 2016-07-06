@@ -297,5 +297,9 @@ module.exports = {
     })
     .then(() => res.ok({}))
     .catch(res.serverError)
+  },
+
+  pinPost: function (req, res) {
+    return res.ok({})
   }
 }
