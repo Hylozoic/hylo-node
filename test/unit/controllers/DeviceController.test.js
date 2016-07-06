@@ -8,7 +8,6 @@ var Promise = require('bluebird')
 describe('DeviceController', () => {
   var fixtures, req, res
 
-  var deviceToken = '00000-0000-0000-000'
   var platform = 'ios_macos'
   var version = '1.0.6'
 
@@ -24,13 +23,15 @@ describe('DeviceController', () => {
     req = factories.mock.request()
     res = factories.mock.response()
     req.login(fixtures.u1.id)
-    nock('https://onesignal.com').post('/api/v1/players').reply(200, { success: true, id: deviceToken })
+    nock('https://onesignal.com').post('/api/v1/players').reply(200, { success: true, id: '000' })
   })
 
   describe('#create', () => {
     it('adds a device to the database', () => {
+      var token = '00000-0000-0000-000'
+
       _.extend(req.params, {
-        token: deviceToken,
+        token,
         platform: platform
       })
 
@@ -38,11 +39,11 @@ describe('DeviceController', () => {
 
       return DeviceController.create(req, res)
       .then(() => {
-        return Device.where('token', '=', deviceToken)
+        return Device.where('token', '=', token)
         .fetch()
         .then(device => {
           expect(device).to.exist
-          expect(device.get('token')).to.equal(deviceToken)
+          expect(device.get('token')).to.equal(token)
           expect(device.get('platform')).to.equal(platform)
           expect(device.get('version')).to.equal(version)
           expect(device.get('user_id')).to.equal(fixtures.u1.id)
@@ -50,9 +51,40 @@ describe('DeviceController', () => {
       })
     })
 
-    it('switches current device to new user', () => {
+    it('replaces the same device with a newer version', () => {
+      var oldVersion = '1.0.5'
+      var token = '11111-0000-0000-111'
+
       _.extend(req.params, {
-        token: deviceToken,
+        token,
+        platform: platform
+      })
+
+      req.headers = {'ios-version': version}
+
+      return Device.forge({
+        token,
+        platform,
+        version: oldVersion
+      }).save()
+      .then(() => DeviceController.create(req, res))
+      .then(() => {
+        return Device.where('token', '=', token)
+        .fetchAll()
+        .then(devices => {
+          expect(devices.length).to.equal(1)
+          expect(devices.models[0].get('token')).to.equal(token)
+          expect(devices.models[0].get('platform')).to.equal(platform)
+          expect(devices.models[0].get('version')).to.equal(version)
+          expect(devices.models[0].get('user_id')).to.equal(fixtures.u1.id)
+        })
+      })
+    })
+
+    it('switches current device to new user', () => {
+      var token = '22222-0000-0000-222'
+      _.extend(req.params, {
+        token,
         platform: platform
       })
 
@@ -68,11 +100,11 @@ describe('DeviceController', () => {
       }).save())
       .then(() => DeviceController.create(req, res)
         .then(() => {
-          return Device.where('token', '=', deviceToken)
+          return Device.where('token', '=', token)
           .fetch()
           .then(device => {
             expect(device).to.exist
-            expect(device.get('token')).to.equal(deviceToken)
+            expect(device.get('token')).to.equal(token)
             expect(device.get('user_id')).to.equal(fixtures.u1.id)
           })
         })
