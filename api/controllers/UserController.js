@@ -186,7 +186,7 @@ module.exports = {
   findForNetwork: function (req, res) {
     const opts = pick(req.allParams(), 'limit', 'offset', 'search')
     Network.find(req.param('networkId'))
-    .then(network => Network.activeCommunityIds(network.id))
+    .then(network => Community.where('network_id', network.id).query().pluck('id'))
     .then(ids => fetchAndPresentForCommunityIds(ids, opts))
     .then(res.ok)
     .catch(res.serverError)
