@@ -97,8 +97,6 @@ module.exports.routes = {
   'GET    /noo/admin/login':                              'AdminSessionController.create',
   'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',
   'GET    /noo/admin/logout':                             'AdminSessionController.destroy',
-  'GET    /noo/admin':                                    'AdminController.index',
-  'GET    /noo/admin/metrics':                            'AdminController.metrics',
   'GET    /noo/admin/raw-metrics':                        'AdminController.rawMetrics',
   'GET    /noo/admin/login-as/:userId':                   'AdminController.loginAsUser',
 
