@@ -300,6 +300,16 @@ module.exports = {
   },
 
   pinPost: function (req, res) {
-    return res.ok({})
+    return PostMembership.where({
+      post_id: req.param('postId'),
+      community_id: req.param('communityId')
+    }).fetch()
+    .then(postMembership => {
+      if (!postMembership) return res.notFound()
+
+      return postMembership.save({pinned: !postMembership.get('pinned')})
+    })
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   }
 }
