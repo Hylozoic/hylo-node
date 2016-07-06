@@ -1,4 +1,4 @@
-const removeComment = (postId, knex) => {
+const removeComments = (postId, knex) => {
   return knex('comment').where('post_id', postId).pluck('id')
   .then(ids => {
     if (ids.length === 0) return
@@ -16,14 +16,12 @@ export const removePost = postId => {
       trx(table).where(col, postId).update({[col]: null})
 
     return Promise.all([
-      removeComment(postId, trx),
+      removeComments(postId, trx),
       remove('follower'),
       remove('user_post_relevance'),
       remove('posts_tags'),
-      remove('posts_projects'),
       remove('post_community'),
-      unset('post', 'parent_post_id'),
-      unset('project_invitations')
+      unset('post', 'parent_post_id')
     ])
     .then(() => trx('post').where('id', postId).del())
   })
