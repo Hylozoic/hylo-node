@@ -3,10 +3,11 @@ import { fetchAndPresentFollowed } from '../services/TagPresenter'
 module.exports = {
   show: function (req, res) {
     if (!req.session.userId) return res.ok({})
+    const communityId = req.param('communityId')
 
     return Promise.join(
       User.find(req.session.userId, {withRelated: ['memberships']}),
-      Community.find(req.param('communityId')),
+      communityId && Community.find(communityId),
       (user, community) => (community
         ? fetchAndPresentFollowed(community.id, user.id)
         : Promise.resolve({}))
