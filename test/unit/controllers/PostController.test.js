@@ -608,6 +608,29 @@ describe('PostController', () => {
         expect(res.body.posts[0].tag).to.equal('findforcommunitytag')
       })
     })
+
+    it('returns pinned posts first', () => {
+      var c3 = factories.community()
+      var p4 = factories.post({visibility: Post.Visibility.PUBLIC_READABLE})
+      var p5 = factories.post({visibility: Post.Visibility.PUBLIC_READABLE})
+      return p4.save({updated_at: new Date(Date.now() - 10000)})
+      .then(() => p5.save({updated_at: new Date()}))
+      .then(() => c3.save())
+      .then(() => c3.posts().attach({post_id: p4.id, pinned: true}))
+      .then(() => c3.posts().attach({post_id: p5.id}))
+      .then(() => {
+        res.locals.community = c3
+        res.locals.membership = new Membership({
+          user_id: fixtures.u1.id,
+          community_id: c3.id
+        })
+      })
+      .then(() => PostController.findForCommunity(req, res))
+      .then(() => {
+        expect(res.body.posts_total).to.equal(2)
+        expect(res.body.posts[0].id).to.equal(p4.id)
+      })
+    })
   })
 
   describe('.checkFreshnessForCommunity', () => {
