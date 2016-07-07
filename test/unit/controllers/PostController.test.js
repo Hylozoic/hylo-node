@@ -629,6 +629,7 @@ describe('PostController', () => {
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
         expect(res.body.posts[0].id).to.equal(p4.id)
+        expect(res.body.posts[0].pinned).to.equal(true)
       })
     })
   })

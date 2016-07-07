@@ -30,7 +30,7 @@ describe('Search', function () {
       }
 
       var expected = format(heredoc.strip(function () { /*
-        select post.*, count(*) over () as total
+        select post.*, count(*) over () as total, "post_community"."pinned"
         from "post"
         inner join "follower" on "follower"."post_id" = "post"."id"
         inner join "post_community" on "post_community"."post_id" = "post"."id"
@@ -45,8 +45,8 @@ describe('Search', function () {
           or (post.updated_at between '%s' and '%s'))
         and "post_community"."community_id" in ('9', '12')
         and "parent_post_id" is null
-        group by "post"."id", "post_community"."post_id"
-        order by "post"."updated_at" desc
+        group by "post"."id", "post_community"."post_id", "post_community"."pinned"
+        order by post_community.pinned desc, post.updated_at desc
         limit '5'
         offset '7'
       */}).replace(/(\n\s*)/g, ' ').trim(), startTime, endTime, startTime, endTime)

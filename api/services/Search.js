@@ -111,6 +111,7 @@ module.exports = {
       }
 
       if (opts.communities) {
+        qb.select('post_community.pinned')
         qb.join('post_community', 'post_community.post_id', '=', 'post.id')
         qb.whereIn('post_community.community_id', opts.communities)
         qb.groupBy(['post.id', 'post_community.post_id', 'post_community.pinned'])
