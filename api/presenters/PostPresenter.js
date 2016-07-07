@@ -108,6 +108,9 @@ var postAttributes = (post, userId, opts = {}) => {
   if (opts.withChildren) {
     extendedPost.children = rel.children
   }
+  if (opts.forCommunity) {
+    extendedPost.memberships = {[opts.forCommunity]: {pinned: post.get('pinned')}}
+  }
   return pickBy(x => !isNull(x) && !isUndefined(x), extendedPost)
 }
 

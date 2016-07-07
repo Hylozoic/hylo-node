@@ -110,7 +110,8 @@ const createFindAction = (queryFunction) => (req, res) => {
   .then(query => query && fetchAndPresentPosts(query, req.session.userId,
     {
       withComments: req.param('comments') && 'recent',
-      withVotes: req.param('votes')
+      withVotes: req.param('votes'),
+      forCommunity: req.param('communityId')
     }))
   .then(res.ok, res.serverError)
 }

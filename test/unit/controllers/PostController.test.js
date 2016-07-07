@@ -619,6 +619,7 @@ describe('PostController', () => {
       .then(() => c3.posts().attach({post_id: p4.id, pinned: true}))
       .then(() => c3.posts().attach({post_id: p5.id}))
       .then(() => {
+        req.params.communityId = c3.id
         res.locals.community = c3
         res.locals.membership = new Membership({
           user_id: fixtures.u1.id,
@@ -629,7 +630,7 @@ describe('PostController', () => {
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
         expect(res.body.posts[0].id).to.equal(p4.id)
-        expect(res.body.posts[0].pinned).to.equal(true)
+        expect(res.body.posts[0].memberships).to.deep.equal({[c3.id]: {pinned: true}})
       })
     })
   })
