@@ -196,7 +196,7 @@ describe('User', function () {
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo')
-        expect(user.get('avatar_url')).to.equal('http://graph.facebook.com/foo/picture?type=large')
+        expect(user.get('avatar_url')).to.equal('https://graph.facebook.com/foo/picture?type=large')
         expect(user.get('settings').digest_frequency).to.equal('daily')
         expect(user.get('send_email_preference')).to.be.true
 

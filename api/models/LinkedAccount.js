@@ -56,7 +56,7 @@ module.exports = bookshelf.Model.extend({
       case 'facebook':
         return {
           facebook_url: profile.profileUrl,
-          avatar_url: `http://graph.facebook.com/${profile.id}/picture?type=large`
+          avatar_url: `https://graph.facebook.com/${profile.id}/picture?type=large`
         }
       case 'linkedin':
         return {
