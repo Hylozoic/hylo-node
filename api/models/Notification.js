@@ -1,5 +1,6 @@
 var url = require('url')
 import { isEmpty } from 'lodash'
+import decode from 'ent/decode'
 
 const hasReason = (regex, reasons) => reasons.some(reason => reason.match(regex))
 
@@ -124,7 +125,7 @@ module.exports = bookshelf.Model.extend({
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(user) + '?ctt=post_mention_email'),
           post_description: description,
-          post_title: post.get('name'),
+          post_title: decode(post.get('name')),
           post_type: 'conversation',
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post) + '?ctt=post_mention_email'),
@@ -137,18 +138,18 @@ module.exports = bookshelf.Model.extend({
 
   // version corresponds to names of versions in SendWithUs
   sendCommentNotificationEmail: function (version) {
-    var comment = this.comment()
-    var reader = this.reader()
+    const comment = this.comment()
+    const reader = this.reader()
     if (!comment) return
 
-    var post = comment.relations.post
-    var commenter = comment.relations.user
-    var poster = comment.relations.user
-    var text = RichText.qualifyLinks(comment.get('text'))
-    var replyTo = Email.postReplyAddress(post.id, reader.id)
+    const post = comment.relations.post
+    const commenter = comment.relations.user
+    const poster = comment.relations.user
+    const text = RichText.qualifyLinks(comment.get('text'))
+    const replyTo = Email.postReplyAddress(post.id, reader.id)
+    const title = decode(post.get('name'))
 
     var postLabel
-
     if (post.get('type') === 'welcome') {
       var relatedUser = post.relations.relatedUsers.first()
       if (relatedUser.id === reader.id) {
@@ -157,10 +158,10 @@ module.exports = bookshelf.Model.extend({
         postLabel = format("%s's welcoming post", relatedUser.get('name'))
       }
     } else {
-      postLabel = `${reader.id === poster.id ? 'your' : 'the'} conversation: "${post.get('name')}"`
+      postLabel = `${reader.id === poster.id ? 'your' : 'the'} conversation: "${title}"`
     }
 
-    var communityIds = Activity.communityIds(this.relations.activity)
+    const communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) return Promise.resolve()
     return Community.find(communityIds[0])
     .then(community => reader.generateToken()
@@ -180,7 +181,7 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.profile(commenter) + '?ctt=comment_email'),
           comment_text: text,
           post_label: postLabel,
-          post_title: post.get('name'),
+          post_title: title,
           comment_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post) + '?ctt=comment_email' + `#comment-${comment.id}`),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
