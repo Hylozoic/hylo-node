@@ -300,10 +300,7 @@ module.exports = {
   },
 
   pinPost: function (req, res) {
-    return PostMembership.where({
-      post_id: req.param('postId'),
-      community_id: req.param('communityId')
-    }).fetch()
+    return PostMembership.find(req.param('postId'), req.param('communityId'))
     .then(postMembership => {
       if (!postMembership) return res.notFound()
 
