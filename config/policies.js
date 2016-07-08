@@ -77,6 +77,7 @@ module.exports.policies = {
     addModerator:    ['sessionAuth', 'isModerator'],
     removeModerator: ['sessionAuth', 'isModerator'],
     removeMember:    ['sessionAuth', 'isModerator'],
+    pinPost:         ['sessionAuth', 'isModerator'],
     leave:           ['sessionAuth', 'checkAndSetMembership'],
     updateMembership:['sessionAuth', 'checkAndSetMembership'],
     validate:        true,

@@ -297,5 +297,16 @@ module.exports = {
     })
     .then(() => res.ok({}))
     .catch(res.serverError)
+  },
+
+  pinPost: function (req, res) {
+    return PostMembership.find(req.param('postId'), req.param('communityId'))
+    .then(postMembership => {
+      if (!postMembership) return res.notFound()
+
+      return postMembership.save({pinned: !postMembership.get('pinned')})
+    })
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   }
 }
