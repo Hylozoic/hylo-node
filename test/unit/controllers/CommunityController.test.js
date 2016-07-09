@@ -289,4 +289,40 @@ describe('CommunityController', () => {
       })
     })
   })
+
+  describe('.pinPost', () => {
+    var community, post
+
+    beforeEach(() => {
+      community = factories.community()
+      post = factories.post()
+      return Promise.join(community.save(), post.save())
+      .then(() => post.communities().attach(community))
+      .then(() => user.joinCommunity(community))
+      .then(() => user.setModeratorRole(community))
+      .then(() => {
+        req.params.communityId = community.id
+        req.params.postId = post.id
+        req.session.userId = user.id
+      })
+    })
+
+    it('sets pinned to true, if false', () => {
+      return CommunityController.pinPost(req, res)
+      .then(() => PostMembership.where({post_id: post.id, community_id: community.id}).fetch())
+      .then(postMembership => {
+        expect(postMembership.get('pinned')).to.equal(true)
+      })
+    })
+
+    it('sets pinned to false, if true', () => {
+      return PostMembership.where({post_id: post.id, community_id: community.id}).fetch()
+      .then(postMembership => postMembership.save({pinned: true}))
+      .then(() => CommunityController.pinPost(req, res))
+      .then(() => PostMembership.where({post_id: post.id, community_id: community.id}).fetch())
+      .then(postMembership => {
+        expect(postMembership.get('pinned')).to.equal(false)
+      })
+    })
+  })
 })

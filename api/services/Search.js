@@ -100,6 +100,8 @@ module.exports = {
         qb.orderByRaw('post.fulfilled_at desc, post.updated_at desc')
       } else if (Array.isArray(opts.sort)) {
         qb.orderBy(opts.sort[0], opts.sort[1])
+      } else if (opts.sort === 'post.updated_at' && opts.communities) {
+        qb.orderByRaw('post_community.pinned desc, post.updated_at desc')
       } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc')
       }
@@ -109,9 +111,10 @@ module.exports = {
       }
 
       if (opts.communities) {
+        qb.select('post_community.pinned')
         qb.join('post_community', 'post_community.post_id', '=', 'post.id')
         qb.whereIn('post_community.community_id', opts.communities)
-        qb.groupBy(['post.id', 'post_community.post_id'])
+        qb.groupBy(['post.id', 'post_community.post_id', 'post_community.pinned'])
       }
 
       if (!opts.includeChildren) {

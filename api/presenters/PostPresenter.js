@@ -57,6 +57,7 @@ var postRelations = (userId, opts = {}) => {
 var postAttributes = (post, userId, opts = {}) => {
   // userId is only used if opts.withVotes, so there are times when this is
   // called with userId=undefined.
+
   var rel = post.relations
 
   var extendedPost = _.extend(
@@ -72,7 +73,8 @@ var postAttributes = (post, userId, opts = {}) => {
       'start_time',
       'end_time',
       'location',
-      'parent_post_id'
+      'parent_post_id',
+      'pinned'
     ]),
     {
       user: rel.user ? rel.user.pick('id', 'name', 'avatar_url', 'bio') : null,
@@ -105,6 +107,9 @@ var postAttributes = (post, userId, opts = {}) => {
   }
   if (opts.withChildren) {
     extendedPost.children = rel.children
+  }
+  if (opts.forCommunity) {
+    extendedPost.memberships = {[opts.forCommunity]: {pinned: post.get('pinned')}}
   }
   return pickBy(x => !isNull(x) && !isUndefined(x), extendedPost)
 }
