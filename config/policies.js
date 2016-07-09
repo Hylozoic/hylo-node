@@ -153,5 +153,9 @@ module.exports.policies = {
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     removeFromCommunity: ['sessionAuth', 'isModerator'],
     findOneSummary: ['sessionAuth', 'checkAndSetMembership']
+  },
+
+  LinkPreviewController: {
+    findOne: ['sessionAuth']
   }
 }
