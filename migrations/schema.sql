@@ -436,6 +436,41 @@ ALTER SEQUENCE knex_migrations_id_seq OWNED BY knex_migrations.id;
 
 
 --
+-- Name: link_previews; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE link_previews (
+    id integer NOT NULL,
+    url character varying(255),
+    done boolean DEFAULT false,
+    title text,
+    description text,
+    image_url character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: link_previews_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE link_previews_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: link_previews_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE link_previews_id_seq OWNED BY link_previews.id;
+
+
+--
 -- Name: linked_account_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1122,6 +1157,13 @@ ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('knex_migra
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY link_previews ALTER COLUMN id SET DEFAULT nextval('link_previews_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY networks ALTER COLUMN id SET DEFAULT nextval('networks_id_seq'::regclass);
 
 
@@ -1297,6 +1339,22 @@ ALTER TABLE ONLY tag_follows
 
 ALTER TABLE ONLY knex_migrations
     ADD CONSTRAINT knex_migrations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: link_previews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY link_previews
+    ADD CONSTRAINT link_previews_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: link_previews_url_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY link_previews
+    ADD CONSTRAINT link_previews_url_unique UNIQUE (url);
 
 
 --
