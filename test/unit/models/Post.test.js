@@ -4,6 +4,7 @@ import { times } from 'lodash'
 const { afterSavingPost, updateChildren } = require(root('api/models/post/util'))
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
+import { spyify, unspyify } from '../../setup/helpers'
 
 describe('Post', function () {
   describe('#addFollowers', function () {
@@ -335,13 +336,10 @@ describe('post/util', () => {
 
     before(() => {
       post = factories.post({description: 'wow!'})
-      Queue._originalClassMethod = Queue.classMethod
-      Queue.classMethod = spy(() => {})
+      spyify(Queue, 'classMethod')
     })
 
-    after(() => {
-      Queue.classMethod = Queue._originalClassMethod
-    })
+    after(() => unspyify(Queue, 'classMethod'))
 
     it('works', () => {
       return bookshelf.transaction(trx =>
