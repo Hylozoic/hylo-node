@@ -8,7 +8,9 @@ describe('checkAndSetMembership', () => {
 
   before(() => {
     community = factories.community()
-    return community.save()
+    let network = factories.network()
+    return network.save()
+    .then(() => community.save({network_id: network.id}))
   })
 
   it('sets res.locals.membership for admins', () => {
@@ -30,6 +32,22 @@ describe('checkAndSetMembership', () => {
     var req = factories.mock.request()
     req.params.communityId = community.id
     req.user = {email: 'lawrence@nothylo.com'}
+    var res = factories.mock.response()
+    res.locals.publicAccessAllowed = true
+    var next = spy(() => {})
+
+    return checkAndSetMembership(req, res, next)
+    .then(() => {
+      expect(next).to.have.been.called()
+      expect(res.locals.membership).to.not.exist
+    })
+  })
+
+  it('allows public access for logged in users', () => {
+    var req = factories.mock.request()
+    req.params.communityId = community.id
+    req.user = {email: 'lawrence@nothylo.com'}
+    req.session.userId = 1
     var res = factories.mock.response()
     res.locals.publicAccessAllowed = true
     var next = spy(() => {})
