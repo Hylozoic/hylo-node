@@ -1,14 +1,6 @@
 require(require('root-path')('test/setup'))
 
 describe('Email', function () {
-  describe('.sendInvitation', function () {
-    it('makes a successful request to SendWithUs', function () {
-      this.timeout(5000)
-      return Email.sendInvitation('foo@bar.com', {})
-      .then(result => expect(result.success).to.be.true)
-    })
-  })
-
   describe('.postReplyAddress', () => {
     // this expects dev environment variables:
     // MAILGUN_EMAIL_SALT=FX988194AD22EE636

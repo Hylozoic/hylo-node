@@ -74,12 +74,12 @@ module.exports = {
       (community, tag) => {
         var emails = parseEmailList(req.param('emails'))
 
-        return Promise.map(emails, function (email) {
+        return Promise.map(emails, email => {
           if (!validator.isEmail(email)) {
             return {email, error: 'not a valid email address'}
           }
 
-          let opts = {
+          const opts = {
             email,
             userId: req.session.userId,
             communityId: community.id
@@ -94,13 +94,10 @@ module.exports = {
           }
 
           return Invitation.createAndSend(opts)
-          .then(function () {
-            return {email: email, error: null}
-          }).catch(function (err) {
-            return {email: email, error: err.message}
-          })
+          .then(() => ({email, error: null}))
+          .catch(err => ({email, error: err.message}))
         })
       })
-    .then(results => res.ok({results: results}))
+    .then(results => res.ok({results}))
   }
 }

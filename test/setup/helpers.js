@@ -1,8 +1,9 @@
 export const spyify = (object, methodName, callback) => {
   object['_original' + methodName] = object[methodName]
   object[methodName] = spy(function () {
-    if (callback) callback(...arguments)
-    return object['_original' + methodName](...arguments)
+    const ret = object['_original' + methodName](...arguments)
+    if (callback) return callback(...arguments, ret)
+    return ret
   })
 }
 
