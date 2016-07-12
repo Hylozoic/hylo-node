@@ -2,7 +2,7 @@ var passport = require('passport')
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
 var GoogleTokenStrategy = require('passport-google-token').Strategy
 var FacebookStrategy = require('passport-facebook').Strategy
-var FacebookTokenStrategy = require('passport-facebook-token').Strategy
+var FacebookTokenStrategy = require('passport-facebook-token')
 var LinkedinStrategy = require('passport-linkedin-oauth2').Strategy
 var LinkedInTokenStrategy = require('passport-linkedin-token-oauth2').Strategy
 
