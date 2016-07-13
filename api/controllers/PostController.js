@@ -33,11 +33,11 @@ const queryPosts = (req, opts) =>
 
 const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
-    withRelated: PostPresenter.relations(userId, relationsOpts || {})
+    withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
   })
   .then(posts => ({
     posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
-    posts: posts.map(p => PostPresenter.present(p, userId, relationsOpts))
+    posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
   }))
 }
 

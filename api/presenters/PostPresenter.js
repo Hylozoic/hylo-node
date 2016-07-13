@@ -1,11 +1,10 @@
+import { includes } from 'lodash'
 import { isNull, isUndefined, pickBy } from 'lodash/fp'
 
 const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
 var postRelations = (userId, opts = {}) => {
   var relations = [
-    {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')},
-    {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url', 'banner_url')},
     'contributions',
     {'contributions.user': userColumns},
     {followers: userColumns},
@@ -54,11 +53,20 @@ var postRelations = (userId, opts = {}) => {
   return relations
 }
 
+const showValidType = type =>
+  includes(['event', 'project', 'welcome'], type) ? type : null
+
 var postAttributes = (post, userId, opts = {}) => {
   // userId is only used if opts.withVotes, so there are times when this is
   // called with userId=undefined.
 
-  var rel = post.relations
+  const {
+    user, communities, media, followers, contributions, responders, comments,
+    relatedUsers, tags, votes, children
+  } = post.relations
+  const type = post.get('type')
+  const isEvent = type === 'event'
+  const isWelcome = type === 'welcome'
 
   var extendedPost = _.extend(
     _.pick(post.toJSON(), [
@@ -66,31 +74,31 @@ var postAttributes = (post, userId, opts = {}) => {
       'name',
       'description',
       'fulfilled_at',
-      'type',
       'created_at',
       'updated_at',
       'similarity',
       'start_time',
       'end_time',
       'location',
-      'parent_post_id',
-      'pinned'
+      'parent_post_id'
     ]),
     {
-      user: rel.user ? rel.user.pick('id', 'name', 'avatar_url', 'bio') : null,
-      communities: rel.communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
-      contributors: rel.contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')),
-      followers: rel.followers.map(u => u.pick('id', 'name', 'avatar_url')),
-      responders: rel.responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')),
-      media: rel.media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')),
+      user: user ? user.pick('id', 'name', 'avatar_url', 'bio') : null,
+      communities: communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
+      contributors: contributions.length > 0 ? contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')) : null,
+      followers: followers.map(u => u.pick('id', 'name', 'avatar_url')),
+      responders: isEvent ? responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')) : null,
+      media: media.length > 0 ? media.map(m => m.pick('name', 'type', 'url', 'thumbnail_url', 'width', 'height')) : null,
       numComments: post.get('num_comments'),
-      relatedUsers: rel.relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')),
-      public: post.get('visibility') === Post.Visibility.PUBLIC_READABLE,
-      tag: rel.tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
-        post.get('type')
+      relatedUsers: isWelcome ? relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')) : null,
+      public: (post.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
+      pinned: post.get('pinned') || null,
+      tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
+        type,
+      type: showValidType(post.get('type'))
     })
   if (opts.withComments) {
-    extendedPost.comments = rel.comments.map(c => _.merge(
+    extendedPost.comments = comments.map(c => _.merge(
       c.pick('id', 'text', 'created_at', 'user'),
       {
         user: c.relations.user.pick('id', 'name', 'avatar_url'),
@@ -99,22 +107,34 @@ var postAttributes = (post, userId, opts = {}) => {
     ))
   }
   if (opts.withVotes) {
-    extendedPost.voters = rel.votes.map(v => v.relations.user.pick('id', 'name', 'avatar_url'))
-  } else {
-    // for compatability with angular frontend
-    extendedPost.votes = post.get('num_votes')
-    extendedPost.myVote = rel.votes.length > 0
+    extendedPost.voters = votes.map(v => v.relations.user.pick('id', 'name', 'avatar_url'))
   }
   if (opts.withChildren) {
-    extendedPost.children = rel.children
+    extendedPost.children = children
   }
-  if (opts.forCommunity) {
+  if (opts.forCommunity && post.get('pinned')) {
     extendedPost.memberships = {[opts.forCommunity]: {pinned: post.get('pinned')}}
   }
   return pickBy(x => !isNull(x) && !isUndefined(x), extendedPost)
 }
 
+const postDetailRelations = (userId, opts = {}) => {
+  return postRelations(userId, opts).concat([
+    {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')},
+    {communities: qb => qb.column('community.id', 'name', 'slug', 'avatar_url', 'banner_url')}
+  ])
+}
+
+const postListRelations = (userId, opts = {}) => {
+  return postRelations(userId, opts).concat([
+    {user: userColumns},
+    {communities: qb => qb.column('community.id', 'name', 'slug')}
+  ])
+}
+
 module.exports = {
-  relations: postRelations,
-  present: postAttributes
+  relations: postDetailRelations,
+  present: postAttributes,
+  relationsForList: postListRelations,
+  presentForList: postAttributes
 }
