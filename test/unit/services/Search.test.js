@@ -46,7 +46,7 @@ describe('Search', function () {
         and "post_community"."community_id" in ('9', '12')
         and "parent_post_id" is null
         group by "post"."id", "post_community"."post_id", "post_community"."pinned"
-        order by post_community.pinned desc, post.updated_at desc
+        order by "post"."updated_at" desc
         limit '5'
         offset '7'
       */}).replace(/(\n\s*)/g, ' ').trim(), startTime, endTime, startTime, endTime)

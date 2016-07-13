@@ -1,3 +1,5 @@
+import { get } from 'lodash'
+
 module.exports = {
   forCommunities: function (opts) {
     return Community.query(qb => {
@@ -100,7 +102,7 @@ module.exports = {
         qb.orderByRaw('post.fulfilled_at desc, post.updated_at desc')
       } else if (Array.isArray(opts.sort)) {
         qb.orderBy(opts.sort[0], opts.sort[1])
-      } else if (opts.sort === 'post.updated_at' && opts.communities) {
+      } else if (opts.sort === 'post.updated_at' && get(opts.communities, 'length') === 1) {
         qb.orderByRaw('post_community.pinned desc, post.updated_at desc')
       } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc')
