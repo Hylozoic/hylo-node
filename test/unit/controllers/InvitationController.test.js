@@ -73,7 +73,7 @@ describe('InvitationController', () => {
       })
     })
 
-    it('sends invitations', function () {
+    it('sends invitations', () => {
       this.timeout(10000)
       _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
 
@@ -90,7 +90,7 @@ describe('InvitationController', () => {
       })
     })
 
-    it('returns error message if mail sending fails', function () {
+    it('returns error message if mail sending fails', () => {
       mockify(Email, 'sendInvitation', () => new Promise((res, rej) => rej({message: 'failed'})))
       _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
 
