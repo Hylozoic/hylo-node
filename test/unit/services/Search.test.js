@@ -6,9 +6,13 @@ var moment = require('moment')
 
 describe('Search', function () {
   describe('.forPosts', function () {
-    it.only('produces the expected SQL for a complex query', function () {
-      var start_time_as_js_date = new Date(1427252052983) // Tue Mar 24 2015 19:54:12 GMT-0700 (PDT)
-      var end_time_as_js_date = new Date(1427856852983) // Tue Mar 31 2015 19:54:12 GMT-0700 (PDT)
+    it('produces the expected SQL for a complex query', function () {
+      var startTime = moment('2015-03-24 19:54:12-07:00')
+      var endTime = moment('2015-03-31 19:54:12-07:00')
+      const ISO8601 = 'YYYY-MM-DDTHH:mm:ss.SSSZ'
+      var startTimeAsString = startTime.format(ISO8601)
+      var endTimeAsString = endTime.format(ISO8601)
+
       var query = Search.forPosts({
         limit: 5,
         offset: 7,
@@ -17,13 +21,10 @@ describe('Search', function () {
         follower: 37,
         term: 'milk toast',
         type: 'request',
-        start_time: start_time_as_js_date,
-        end_time: end_time_as_js_date,
+        start_time: startTime.toDate(),
+        end_time: endTime.toDate(),
         sort: 'post.updated_at'
       }).query().toString()
-
-      var startTime = moment(start_time_as_js_date).format('YYYY-MM-DDTHH:mm:ss.SSSZ')
-      var endTime = moment(end_time_as_js_date).format('YYYY-MM-DDTHH:mm:ss.SSSZ')
 
       var expected = format(heredoc.strip(function () { /*
         select post.*, count(*) over () as total, "post_community"."pinned"
@@ -45,7 +46,11 @@ describe('Search', function () {
         order by post_community.pinned desc, post.updated_at desc
         limit '5'
         offset '7'
-      */}).replace(/(\n\s*)/g, ' ').trim(), startTime, endTime, startTime, endTime)
+      */}).replace(/(\n\s*)/g, ' ').trim(),
+      startTimeAsString,
+      endTimeAsString,
+      startTimeAsString,
+      endTimeAsString)
 
       expect(query).to.equal(expected)
     })
