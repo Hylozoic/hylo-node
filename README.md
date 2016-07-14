@@ -66,7 +66,7 @@ SLACK_APP_CLIENT_SECRET=xxxxxxxx
 npm run dev
 ```
 
-This reads the `.env` file you created above, using [dotenv](http://www.npmjs.org/package/dotenv), and starts two processes managed by `foreman`: one web server process and one background job worker process, as listed in `Procfile.dev`.
+This reads the `.env` file you created above, using [dotenv](http://www.npmjs.org/package/dotenv), and starts two processes managed by `foreman`: one web server process and one background job worker process, as listed in `Procfile.dev`. If you want to run only one of the processes, pass its name in `Procfile.dev` as an argument, e.g. `npm run dev -- web`.
 
 Now visit [localhost:3001](http://localhost:3001).
 
