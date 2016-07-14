@@ -74,7 +74,6 @@ describe('InvitationController', () => {
     })
 
     it('sends invitations', () => {
-      this.timeout(10000)
       _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
 
       return InvitationController.create(req, res)
