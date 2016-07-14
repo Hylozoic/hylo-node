@@ -2,7 +2,7 @@ var root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
-import { spyify, unspyify } from '../../setup/helpers'
+import { mockify, unspyify } from '../../setup/helpers'
 
 describe('InvitationController', () => {
   var user, community, invitation, inviter, req, res
@@ -45,7 +45,7 @@ describe('InvitationController', () => {
   })
 
   describe('.create', () => {
-    var community, apiResult
+    var community
 
     before(() => {
       community = factories.community()
@@ -54,10 +54,7 @@ describe('InvitationController', () => {
 
     beforeEach(() => {
       req.session.userId = user.id
-      spyify(Email, 'sendInvitation', function () {
-        const apiPromise = Array.prototype.slice.call(arguments)[2]
-        return apiPromise.then(result => apiResult = result)
-      })
+      mockify(Email, 'sendInvitation', () => new Promise((res, rej) => res()))
     })
 
     afterEach(() => unspyify(Email, 'sendInvitation'))
@@ -83,13 +80,28 @@ describe('InvitationController', () => {
       return InvitationController.create(req, res)
       .then(() => {
         expect(Email.sendInvitation).to.have.been.called.exactly(2)
-        expect(apiResult).to.exist
-        expect(apiResult.success).to.be.true
 
         expect(res.body).to.deep.equal({
           results: [
             {email: 'foo@bar.com', error: null},
             {email: 'bar@baz.com', error: null}
+          ]
+        })
+      })
+    })
+
+    it('returns error message if mail sending fails', function () {
+      mockify(Email, 'sendInvitation', () => new Promise((res, rej) => rej({message: 'failed'})))
+      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
+
+      return InvitationController.create(req, res)
+      .then(() => {
+        expect(Email.sendInvitation).to.have.been.called.exactly(2)
+
+        expect(res.body).to.deep.equal({
+          results: [
+            {email: 'foo@bar.com', error: 'failed'},
+            {email: 'bar@baz.com', error: 'failed'}
           ]
         })
       })
