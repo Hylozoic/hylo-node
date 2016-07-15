@@ -1,6 +1,7 @@
 import request from 'request'
 import cheerio from 'cheerio'
 import { merge } from 'lodash'
+import getImageSize from '../services/GetImageSize'
 
 const httpget = url => new Promise((resolve, reject) =>
   request.get(url, (err, res, body) =>
@@ -33,20 +34,27 @@ const LinkPreview = bookshelf.Model.extend({
   },
 
   populate: ({ id }) => {
-    return LinkPreview.find(id).then(preview => {
-      return httpget(preview.get('url'))
+    return LinkPreview.find(id).then(preview =>
+      httpget(preview.get('url'))
       .then(([ res, body ]) => {
         const attrs = merge(parse(body), {updated_at: new Date(), done: true})
-        return preview.save(attrs, {patch: true})
-      })
-    })
+
+        return (attrs.image_url
+          ? getImageSize(attrs.image_url)
+          : Promise.resolve())
+        .then(size => {
+          if (!size) return
+          attrs.image_width = size.width
+          attrs.image_height = size.height
+        })
+        .then(() => preview.save(attrs, {patch: true}))
+      }))
   },
 
-  find: (idOrUrl, opts) =>
-    isNaN(Number(idOrUrl))
-      ? LinkPreview.where('url', idOrUrl).fetch(opts)
-      : LinkPreview.where('id', idOrUrl).fetch(opts)
-
+  find: (idOrUrl, opts) => {
+    const attr = isNaN(Number(idOrUrl)) ? 'url' : 'id'
+    return LinkPreview.where(attr, idOrUrl).fetch(opts)
+  }
 })
 
 module.exports = LinkPreview
