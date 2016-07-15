@@ -84,9 +84,10 @@ Run migrations with `npm run migrate` and rollback the last one with `npm run ro
 
 ### initializing the database schema
 
-This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance, with nothing in the database, you have to run
+This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
 ```shell
-cat migrations/schema.sql | psql [your-database-name]
+cat migrations/schema.sql | psql hylo          # Recreate DB schema for database named: hylo
+./node_modules/.bin/knex seed:run              # Load seed data
 ```
 
 ### loading database snapshots
