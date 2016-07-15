@@ -13,6 +13,16 @@ You need to install redis locally, then follow the steps to launch it on startup
 brew install redis
 ```
 
+You need to install postgresql locally, then follow the steps to launch it on startup:
+```shell
+brew install postgresql
+```
+
+Then you can create the local database for development
+```shell
+dbcreate hylo 
+```
+
 next install the node modules
 ```shell
 npm install -g forever sails foreman
@@ -60,6 +70,14 @@ SLACK_APP_CLIENT_SECRET=xxxxxxxx
 * `SLACK_APP_CLIENT_ID`: set up an app on Slack and reference its' client id, optional for dev installation
 * `SLACK_APP_CLIENT_SECRET`: reference the client secret from that same app on Slack, optional for dev installation
 
+### initializing the database schema
+
+This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
+```shell
+cat migrations/schema.sql | psql hylo          # Recreate DB schema for database named: hylo
+./node_modules/.bin/knex seed:run              # Load seed data
+```
+
 ### running the dev server
 
 ```shell
@@ -81,14 +99,6 @@ knex migrate:make my_migration_name
 (You can either install knex globally with `npm install -g knex`, or run the version in your `node_modules` with `./node_modules/.bin/knex`.)
 
 Run migrations with `npm run migrate` and rollback the last one with `npm run rollback`.
-
-### initializing the database schema
-
-This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
-```shell
-cat migrations/schema.sql | psql hylo          # Recreate DB schema for database named: hylo
-./node_modules/.bin/knex seed:run              # Load seed data
-```
 
 ### loading database snapshots
 
