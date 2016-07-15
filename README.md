@@ -11,6 +11,9 @@ Thanks for checking out our code. The documentation below may be incomplete or i
 You need to install redis locally, then follow the steps to launch it on startup:
 ```shell
 brew install redis
+brew services start redis
+brew install postgresql
+brew services start postgresql
 ```
 
 You need to install postgresql locally, then follow the steps to launch it on startup:
@@ -29,13 +32,34 @@ npm install -g forever sails foreman
 npm install
 ```
 
+### initializing the database schema
+
+This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance, with nothing in the database, you have to run
+```shell
+createdb hylo
+cat migrations/schema.sql | psql hylo
+```
+
+Create a local postgress user for hylo
+```shell
+psql hylo
+create user hylolocal password 'hylolocalpassword';
+GRANT ALL PRIVILEGES ON DATABASE hylo TO hylolocal;
+\q
+```
+
+Insert test data
+``` 
+cat migrations/test-data.sql | psql hylo
+```
+
 Create a `.env` file in the root of the working copy, with contents like this:
 ```
 ADMIN_GOOGLE_CLIENT_ID=foo
 ADMIN_GOOGLE_CLIENT_SECRET=foo
 ASSET_HOST_URL=http://localhost:1337
 BUNDLE_VERSION=dev
-DATABASE_URL=postgres://postgres:password@localhost:5432/hylo
+DATABASE_URL=postgres://hylolocal:hylolocalpassword@localhost:5432/hylo
 DEBUG_SQL=false
 DOMAIN=localhost:3001
 EMAIL_SENDER=dev+localtester@hylo.com
