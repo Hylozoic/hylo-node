@@ -215,7 +215,7 @@ module.exports = {
       created_by_id: req.session.userId,
       leader_id: req.session.userId,
       welcome_message: welcomeMessage,
-      settings: {sends_email_prompts: true}
+      settings: {sends_email_prompts: true, enable_finance:false}
     }))
 
     return bookshelf.transaction(trx => {
