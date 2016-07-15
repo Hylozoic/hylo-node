@@ -14,7 +14,7 @@ module.exports = {
         return res.ok({status: 'loading'})
       }
 
-      return res.ok(preview.pick('image_url', 'title', 'description'))
+      return res.ok(preview.pick('id', 'image_url', 'title', 'description'))
     })
   }
 }
