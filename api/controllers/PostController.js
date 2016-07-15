@@ -1,7 +1,6 @@
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
-  afterSavingPost, postTypeFromTag, setupNewPostAttrs, updateChildren,
-  updateAllMedia, updateCommunities
+  createPost, postTypeFromTag, updateChildren, updateAllMedia, updateCommunities
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
@@ -142,31 +141,23 @@ const PostController = {
 
   create: function (req, res) {
     const params = req.allParams()
-    return setupNewPostAttrs(req.session.userId, params)
-    .tap(attrs => {
-      if (!attrs.name) throw new Error("title can't be blank")
-      return checkPostTags(attrs, pick(params, 'type', 'tag', 'communities', 'tagDescriptions'))
-    })
-    .then(attrs => bookshelf.transaction(trx =>
-      Post.create(attrs, {transacting: trx})
-      .tap(post => afterSavingPost(post, merge(
-        pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
-        {
-          children: req.param('requests'),
-          transacting: trx
-        }
-      )))))
+
+    if (!params.name) {
+      res.status(422).send("title can't be blank")
+      return Promise.resolve()
+    }
+
+    return checkPostTags(
+      pick(params, 'name', 'description'),
+      pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
+    )
+    .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
-      if (err.message === "title can't be blank") {
-        res.status(422)
-        res.send(err.message)
-      } else {
-        res.serverError(err)
-      }
+      res.serverError(err)
     })
   },
 
@@ -174,34 +165,35 @@ const PostController = {
     try {
       var tokenData = Email.decodePostCreationToken(req.param('token'))
     } catch (e) {
-      return res.serverError(new Error('Invalid token: ' + req.param('To')))
+      return res.serverError(new Error('Invalid token: ' + req.param('token')))
     }
 
-    var attributes = merge(
-      {created_from: 'email_form'},
-      pick(req.allParams(), ['name', 'description', 'type']))
-
-    var namePrefixes = {
-      'offer': 'I\'d like to share',
-      'request': 'I\'m looking for',
-      'intention': 'I\'d like to create'
+    const namePrefixes = {
+      offer: "I'd like to share",
+      request: "I'm looking for",
+      intention: "I'd like to create"
     }
 
-    attributes.name = namePrefixes[attributes.type] + ' ' + attributes.name
+    const type = req.param('type')
+    if (!includes(Object.keys(namePrefixes), type)) {
+      return res.serverError(new Error(`invalid type: ${type}`))
+    }
 
-    return setupNewPostAttrs(tokenData.userId, attributes)
-    .then(attrs => bookshelf.transaction(trx =>
-      new Post(attrs).save(null, {transacting: trx})
-      .tap(post => afterSavingPost(post, {
-        communities: [tokenData.communityId],
-        transacting: trx
-      }))))
-      .tap(post => Community.find(tokenData.communityId)
-        .then(c => Analytics.track({
-          userId: tokenData.userId,
-          event: 'Add Post by Email Form',
-          properties: {community: c.get('name')}
-        })))
+    const attributes = {
+      created_from: 'email_form',
+      name: `${namePrefixes[type]} ${req.param('name')}`,
+      communities: [tokenData.communityId],
+      tag: type,
+      description: req.param('description')
+    }
+
+    return createPost(tokenData.userId, attributes)
+    .tap(post => Community.find(tokenData.communityId)
+      .then(c => Analytics.track({
+        userId: tokenData.userId,
+        event: 'Add Post by Email Form',
+        properties: {community: c.get('name')}
+      })))
     .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
   },
 

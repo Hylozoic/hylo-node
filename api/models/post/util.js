@@ -144,3 +144,12 @@ export const updateCommunities = (post, newIds, trx) => {
     )
   }
 }
+
+export const createPost = (userId, params) =>
+  setupNewPostAttrs(userId, params)
+  .then(attrs => bookshelf.transaction(trx =>
+    Post.create(attrs, {transacting: trx})
+    .tap(post => afterSavingPost(post, merge(
+      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+      {children: params.requests, transacting: trx}
+    )))))
