@@ -1,5 +1,5 @@
 import { includes } from 'lodash'
-import { isNull, isUndefined, pickBy } from 'lodash/fp'
+import { get, isNull, isUndefined, pickBy } from 'lodash/fp'
 
 const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
@@ -11,7 +11,8 @@ var postRelations = (userId, opts = {}) => {
     'media',
     {relatedUsers: userColumns},
     'tags',
-    {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')}
+    {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
+    {linkPreview: q => q.column('id', 'title', 'description', 'image_url')}
   ]
 
   if (opts.withComments) {
@@ -62,7 +63,7 @@ var postAttributes = (post, userId, opts = {}) => {
 
   const {
     user, communities, media, followers, contributions, responders, comments,
-    relatedUsers, tags, votes, children
+    relatedUsers, tags, votes, children, linkPreview
   } = post.relations
   const type = post.get('type')
   const isEvent = type === 'event'
@@ -95,7 +96,8 @@ var postAttributes = (post, userId, opts = {}) => {
       pinned: post.get('pinned') || null,
       tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
         type,
-      type: showValidType(post.get('type'))
+      type: showValidType(post.get('type')),
+      linkPreview: get('id', linkPreview) ? linkPreview : null
     })
   if (opts.withComments) {
     extendedPost.comments = comments.map(c => _.merge(
