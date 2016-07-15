@@ -40,7 +40,7 @@ const LinkPreview = bookshelf.Model.extend({
         const attrs = merge(parse(body), {updated_at: new Date(), done: true})
 
         return (attrs.image_url
-          ? getImageSize(attrs.image_url).catch(err => null)
+          ? getImageSize(attrs.image_url).catch(err => null) // eslint-disable-line handle-callback-err
           : Promise.resolve())
         .then(size => {
           if (!size) return
