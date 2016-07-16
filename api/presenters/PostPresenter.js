@@ -11,8 +11,8 @@ var postRelations = (userId, opts = {}) => {
     'media',
     {relatedUsers: userColumns},
     'tags',
-    {responders: qb => qb.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
-    {linkPreview: q => q.column('id', 'title', 'description', 'image_url')}
+    {responders: q => q.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
+    {linkPreview: q => q.column('id', 'title', 'description', 'url', 'image_url', 'image_width', 'image_height')}
   ]
 
   if (opts.withComments) {

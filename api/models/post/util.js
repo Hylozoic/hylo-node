@@ -1,22 +1,15 @@
 import {
-  difference, flatten, has, includes, isEqual, merge, omit, pick, some, uniq, values
+  difference, flatten, has, includes, isEqual, merge, omit, pick, some, uniq
 } from 'lodash'
-import { filter, map } from 'lodash/fp'
-
-export const postTypeFromTag = tagName => {
-  if (tagName && includes(values(Post.Type), tagName)) {
-    return tagName
-  } else {
-    return Post.Type.CHAT
-  }
-}
+import { filter, get, map } from 'lodash/fp'
 
 export const setupNewPostAttrs = function (userId, params) {
   const attrs = merge(Post.newPostAttrs(), {
     name: RichText.sanitize(params.name),
     description: RichText.sanitize(params.description),
     user_id: userId,
-    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT
+    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
+    link_preview_id: get('id', params.linkPreview)
   }, pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
 
   return Promise.resolve(attrs)
@@ -38,7 +31,7 @@ export const afterSavingPost = function (post, opts) {
 
   return Promise.all(flatten([
     // Attach post to communities
-    opts.communities.map(id => new Community({id: id}).posts().attach(post.id, trxOpts)),
+    opts.communities.map(id => new Community({id}).posts().attach(post.id, trxOpts)),
 
     // Add mentioned users and creator as followers
     post.addFollowers(followerIds, userId, trxOpts),

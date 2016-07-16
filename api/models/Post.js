@@ -177,12 +177,9 @@ module.exports = bookshelf.Model.extend({
 
 }, {
   Type: {
-    REQUEST: 'request',
-    OFFER: 'offer',
-    INTENTION: 'intention',
     WELCOME: 'welcome',
     EVENT: 'event',
-    CHAT: 'chat'
+    PROJECT: 'project'
   },
 
   Visibility: {

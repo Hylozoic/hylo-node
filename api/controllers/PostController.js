@@ -1,6 +1,7 @@
+import { get } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
-  createPost, postTypeFromTag, updateChildren, updateAllMedia, updateCommunities
+  createPost, updateChildren, updateAllMedia, updateCommunities
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
@@ -223,7 +224,7 @@ const PostController = {
       {
         updated_at: new Date(),
         visibility: Post.Visibility[params.public ? 'PUBLIC_READABLE' : 'DEFAULT'],
-        type: params.type || postTypeFromTag(params.tag)
+        link_preview_id: get('id', params.linkPreview)
       }
     )
 

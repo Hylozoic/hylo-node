@@ -2,6 +2,9 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.1
+-- Dumped by pg_dump version 9.5.1
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -444,7 +447,9 @@ CREATE TABLE link_previews (
     description text,
     image_url character varying(255),
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    image_width integer,
+    image_height integer
 );
 
 
@@ -660,7 +665,8 @@ CREATE TABLE post (
     end_time timestamp with time zone,
     location character varying(255),
     created_from character varying(255),
-    parent_post_id bigint
+    parent_post_id bigint,
+    link_preview_id integer
 );
 
 
@@ -2205,6 +2211,14 @@ ALTER TABLE ONLY tag_follows
 
 ALTER TABLE ONLY notifications
     ADD CONSTRAINT notifications_activity_id_foreign FOREIGN KEY (activity_id) REFERENCES activity(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: post_link_preview_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY post
+    ADD CONSTRAINT post_link_preview_id_foreign FOREIGN KEY (link_preview_id) REFERENCES link_previews(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
