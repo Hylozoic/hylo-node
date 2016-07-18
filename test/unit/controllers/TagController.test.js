@@ -266,4 +266,68 @@ describe('TagController', () => {
       })
     })
   })
+
+  describe('#findOneInCommunity', () => {
+    var locals
+    const tagDescription = 'the tag for testing the findOneInCommunity endpoint'
+    const imageUrl = 'http://img.com/img.jpg'
+
+    it.only('returns the relevant data', () => {
+      return Promise.props({
+        tag: new Tag({name: 'onefound'}).save(),
+        u1: factories.user({avatar_url: imageUrl}).save(),
+        u2: factories.user({avatar_url: imageUrl}).save(),
+        u3: factories.user({avatar_url: imageUrl}).save(),
+        u4: factories.user({avatar_url: imageUrl}).save()
+      })
+      .then(props => {
+        locals = props
+      })
+      .then(() => {
+        _.extend(req.params, {
+          communityId: fixtures.c1.get('slug'),
+          tagName: locals.tag.get('name')
+        })
+        res.locals.community = fixtures.c1
+      })
+      .then(() => Promise.join(
+        new CommunityTag({
+          tag_id: locals.tag.id,
+          user_id: locals.u1.id,
+          community_id: fixtures.c1.id,
+          description: tagDescription
+        }).save(),
+        new CommunityTag({
+          tag_id: locals.tag.id,
+          user_id: locals.u2.id,
+          community_id: fixtures.c2.id,
+          description: 'A community tag for the onefound tag in a different community'
+        }).save(),
+        new TagFollow({tag_id: locals.tag.id, user_id: locals.u2.id, community_id: fixtures.c1.id}).save(),
+        new TagFollow({tag_id: locals.tag.id, user_id: locals.u3.id, community_id: fixtures.c1.id}).save(),
+        // this is in a different community so the follower should not be returned
+        new TagFollow({tag_id: locals.tag.id, user_id: locals.u4.id, community_id: fixtures.c2.id}).save()))
+      .then(() => TagController.findOneInCommunity(req, res))
+      .then(() => {
+        const person = userModel => ({
+          name: userModel.get('name'),
+          id: userModel.id,
+          avatar_url: userModel.get('avatar_url')
+        })
+        expect(res.body).to.contain({
+          name: locals.tag.get('name'),
+          id: locals.tag.id,
+          description: locals.tag.get('description'),
+          followed: false,
+          created: false,
+          community_id: fixtures.c1.id
+        })
+        expect(res.body.owner).to.deep.equal(person(locals.u1))
+        expect(res.body.followers).to.deep.equal([
+          person(locals.u2),
+          person(locals.u3)
+        ])
+      })
+    })
+  })
 })
