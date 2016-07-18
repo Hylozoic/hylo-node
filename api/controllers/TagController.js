@@ -4,7 +4,8 @@ import {
   fetchAndPresentForCommunity,
   fetchAndPresentSummary,
   withRelatedSpecialPost,
-  presentWithPost
+  presentWithPost,
+  tagFollowers
 } from '../services/TagPresenter'
 
 module.exports = {
@@ -21,27 +22,30 @@ module.exports = {
     .then(t => {
       if (!t) return
       tag = t
-      return CommunityTag
-      .where({community_id: res.locals.community.id, tag_id: tag.id})
-      .fetch({withRelated: [
-        'owner',
-        {'community.tagFollows': q => q.where({
-          'tag_follows.tag_id': tag.id,
-          'tag_follows.user_id': req.session.userId
-        })}
-      ]})
-    })
-    .then(ct => {
-      if (!ct) return res.notFound()
-      return res.ok(merge(
-        ct.pick('description', 'community_id'),
-        presentWithPost(tag),
-        {
-          owner: ct.relations.owner.pick('id', 'name', 'avatar_url'),
-          followed: ct.relations.community.relations.tagFollows.length > 0,
-          created: ct.relations.owner.id === req.session.userId
-        }
-      ))
+      return Promise.join(
+        tagFollowers(res.locals.community, tag),
+        CommunityTag
+        .where({community_id: res.locals.community.id, tag_id: tag.id})
+        .fetch({withRelated: [
+          'owner',
+          {'community.tagFollows': q => q.where({
+            'tag_follows.tag_id': tag.id,
+            'tag_follows.user_id': req.session.userId
+          })}
+        ]}),
+        (followers, ct) => {
+          if (!ct) return res.notFound()
+          return res.ok(merge(
+            ct.pick('description', 'community_id'),
+            presentWithPost(tag),
+            {
+              owner: ct.relations.owner.pick('id', 'name', 'avatar_url'),
+              followed: ct.relations.community.relations.tagFollows.length > 0,
+              created: ct.relations.owner.id === req.session.userId,
+              followers
+            }
+          ))
+        })
     })
     .catch(res.serverError)
   },
