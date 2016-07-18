@@ -7,9 +7,9 @@ const user2 = factories.mock.model({name: 'Mina Shah'})
 
 describe('Comment', () => {
   describe('cleanEmailText', () => {
-    it('wraps content in <p> tags', () => {
-      const text = 'Ok then\r\rSo it shall be'
-      expect(Comment.cleanEmailText(user, text)).to.equal('<p>Ok then</p>\n<p>So it shall be</p>\n')
+    it('wraps content in <p> tags and handles weird newlines', () => {
+      const text = 'Ok then\r\nAll right\r\rSo it shall be'
+      expect(Comment.cleanEmailText(user, text)).to.equal('<p>Ok then<br>All right</p>\n<p>So it shall be</p>\n')
     })
 
     it("cuts off at the sender's name", () => {

@@ -77,7 +77,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   cleanEmailText: (user, text) => {
-    text = text.replace(/\r/g, '\n')
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
     const name = user.get('name').toLowerCase()
     const lines = text.split('\n')
 
