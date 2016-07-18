@@ -85,7 +85,7 @@ module.exports = bookshelf.Model.extend({
     lines.forEach((line, index) => {
       line = line.trim()
 
-      if (name.startsWith(line.toLowerCase())) {
+      if (line.length > 0 && name.startsWith(line.toLowerCase())) {
         // line contains only the user's name
         cutoff = index
         if (index > 0 && lines[index - 1].match(/^\-\- ?$/)) {
