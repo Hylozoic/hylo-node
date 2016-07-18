@@ -74,7 +74,9 @@ describe('PostController', () => {
       })
     })
 
-    it('creates an image', () => {
+    it('creates an image', function () {
+      this.timeout(5000)
+
       _.extend(req.params, {
         name: 'NewImagePost',
         description: '',
