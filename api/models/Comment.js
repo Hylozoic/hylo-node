@@ -1,4 +1,5 @@
 import { filter } from 'lodash/fp'
+import marked from 'marked'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'comment',
@@ -100,6 +101,7 @@ module.exports = bookshelf.Model.extend({
       }
     })
 
-    return cutoff ? lines.slice(0, cutoff).join('\n') : text
+    const finalText = cutoff ? lines.slice(0, cutoff).join('\n') : text
+    return marked(finalText || '')
   }
 })
