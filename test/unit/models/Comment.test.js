@@ -21,5 +21,10 @@ describe('Comment', () => {
       const text = "Let's do it.\r\r-- \Mina"
       expect(Comment.cleanEmailText(user2, text)).to.equal("Let's do it.")
     })
+
+    it('removes our inserted divider', () => {
+      const text = 'Meow!\n-------- (Only text above the dashed line will be included.)'
+      expect(Comment.cleanEmailText(user2, text)).to.equal('Meow!')
+    })
   })
 })

@@ -93,6 +93,10 @@ module.exports = bookshelf.Model.extend({
       } else if (line.match(/^[-\*]{3,}$/)) {
         // line contains only dashes or asterisks
         cutoff = index
+      } else if (line.match(/^-{8}/)) {
+        // line contains our divider, possibly followed by the text, "(Only text
+        // above the dashed line will be included.)"
+        cutoff = index
       }
     })
 
