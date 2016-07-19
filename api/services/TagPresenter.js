@@ -102,23 +102,6 @@ const mostActiveMembers = (community, tag) => {
   })))
 }
 
-export const tagFollowers = (community, tag) => {
-  const subq = TagFollow.query(q => {
-    q.select('user_id')
-    q.where({community_id: community.id, tag_id: tag.id})
-  }).query()
-  return User.query(q => {
-    q.select(['users.id', 'users.name', 'users.avatar_url'])
-    q.whereIn('users.id', subq)
-  })
-  .fetchAll()
-  .then(users => Promise.map(users.models, user => ({
-    id: user.id,
-    name: user.get('name'),
-    avatar_url: user.get('avatar_url')
-  })))
-}
-
 export const fetchAndPresentSummary = (community, tag) =>
   Promise.join(
     CommunityTag.where({community_id: community.id, tag_id: tag.id})
