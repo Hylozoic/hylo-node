@@ -337,7 +337,7 @@ describe('Notification', function () {
       return note.sendCommentNotificationEmail()
       .then(() => {
         expect(Email.sendNewCommentNotification).to.have.been.called()
-        expect(args.data.post_label).to.equal('the conversation: "hello world"')
+        expect(args.data.post_label).to.equal('"hello world"')
       })
     })
   })
