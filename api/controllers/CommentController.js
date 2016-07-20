@@ -93,7 +93,10 @@ module.exports = {
           community: community && community.get('name')
         }
       })
-      return createComment(replyData.userId, req.param('stripped-text'), post)
+      return User.find(replyData.userId).then(user => {
+        const text = Comment.cleanEmailText(user, req.param('stripped-text'))
+        return createComment(replyData.userId, text, post)
+      })
     })
     .then(() => res.ok({}), res.serverError)
   },

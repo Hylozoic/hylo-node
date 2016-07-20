@@ -144,12 +144,11 @@ module.exports = bookshelf.Model.extend({
 
     const post = comment.relations.post
     const commenter = comment.relations.user
-    const poster = comment.relations.user
     const text = RichText.qualifyLinks(comment.get('text'))
     const replyTo = Email.postReplyAddress(post.id, reader.id)
     const title = decode(post.get('name'))
 
-    var postLabel
+    var postLabel = `"${title}"`
     if (post.get('type') === 'welcome') {
       var relatedUser = post.relations.relatedUsers.first()
       if (relatedUser.id === reader.id) {
@@ -157,8 +156,6 @@ module.exports = bookshelf.Model.extend({
       } else {
         postLabel = format("%s's welcoming post", relatedUser.get('name'))
       }
-    } else {
-      postLabel = `${reader.id === poster.id ? 'your' : 'the'} conversation: "${title}"`
     }
 
     const communityIds = Activity.communityIds(this.relations.activity)

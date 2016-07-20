@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+import { merge, includes } from 'lodash'
 import {
   fetchAndPresentFollowed,
   fetchAndPresentForCommunity,
@@ -26,22 +26,23 @@ module.exports = {
       .fetch({withRelated: [
         'owner',
         {'community.tagFollows': q => q.where({
-          'tag_follows.tag_id': tag.id,
-          'tag_follows.user_id': req.session.userId
-        })}
+          'tag_follows.tag_id': tag.id
+        })},
+        'community.tagFollows.user'
       ]})
-    })
-    .then(ct => {
-      if (!ct) return res.notFound()
-      return res.ok(merge(
-        ct.pick('description', 'community_id'),
-        presentWithPost(tag),
-        {
-          owner: ct.relations.owner.pick('id', 'name', 'avatar_url'),
-          followed: ct.relations.community.relations.tagFollows.length > 0,
-          created: ct.relations.owner.id === req.session.userId
-        }
-      ))
+      .then(ct => {
+        if (!ct) return res.notFound()
+        return res.ok(merge(
+          ct.pick('description', 'community_id'),
+          presentWithPost(tag),
+          {
+            owner: ct.relations.owner.pick('id', 'name', 'avatar_url'),
+            followed: includes(ct.relations.community.relations.tagFollows, tf => tf.user_id === req.session.userId),
+            created: ct.relations.owner.id === req.session.userId,
+            followers: ct.relations.community.relations.tagFollows.models.map(tf => tf.relations.user.pick('id', 'name', 'avatar_url'))
+          }
+        ))
+      })
     })
     .catch(res.serverError)
   },

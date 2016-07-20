@@ -1,3 +1,4 @@
+/* globals LinkPreview */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 
@@ -66,6 +67,10 @@ module.exports = bookshelf.Model.extend({
 
   activities: function () {
     return this.hasMany(Activity)
+  },
+
+  linkPreview: function () {
+    return this.belongsTo(LinkPreview)
   },
 
   addFollowers: function (userIds, addingUserId, opts) {
@@ -172,12 +177,9 @@ module.exports = bookshelf.Model.extend({
 
 }, {
   Type: {
-    REQUEST: 'request',
-    OFFER: 'offer',
-    INTENTION: 'intention',
     WELCOME: 'welcome',
     EVENT: 'event',
-    CHAT: 'chat'
+    PROJECT: 'project'
   },
 
   Visibility: {

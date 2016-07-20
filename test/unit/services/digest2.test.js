@@ -235,7 +235,7 @@ describe('community digest v2', () => {
           form_action_url: Frontend.Route.emailPostForm(),
           form_token: Email.postCreationToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, community: 'foo'}),
-          subject: `foo: New activity from ${u4.name}, ${u3.name}, and 1 other`
+          subject: `New activity from ${u4.name}, ${u3.name}, and 2 others`
         })))
     })
   })
@@ -293,7 +293,7 @@ describe('community digest v2', () => {
           community_avatar_url: community.get('avatar_url'),
           community_url: Frontend.Route.community(community) + '?ctt=digest_email',
           time_period: 'yesterday',
-          subject: `${community.get('name')}: New activity from ${u2.get('name')}`,
+          subject: `New activity from ${u2.get('name')}`,
           requests: [],
           offers: [],
           conversations: [

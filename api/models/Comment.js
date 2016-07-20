@@ -1,4 +1,5 @@
 import { filter } from 'lodash/fp'
+import marked from 'marked'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'comment',
@@ -73,5 +74,34 @@ module.exports = bookshelf.Model.extend({
       qb.whereRaw('comment.created_at between ? and ?', [startTime, endTime])
       qb.where('comment.active', true)
     })
+  },
+
+  cleanEmailText: (user, text) => {
+    text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+    const name = user.get('name').toLowerCase()
+    const lines = text.split('\n')
+
+    var cutoff
+    lines.forEach((line, index) => {
+      line = line.trim()
+
+      if (line.length > 0 && name.startsWith(line.toLowerCase())) {
+        // line contains only the user's name
+        cutoff = index
+        if (index > 0 && lines[index - 1].match(/^\-\- ?$/)) {
+          cutoff = index - 1
+        }
+      } else if (line.match(/^[-\*]{3,}$/)) {
+        // line contains only dashes or asterisks
+        cutoff = index
+      } else if (line.match(/^-{8}/)) {
+        // line contains our divider, possibly followed by the text, "(Only text
+        // above the dashed line will be included.)"
+        cutoff = index
+      }
+    })
+
+    const finalText = cutoff ? lines.slice(0, cutoff).join('\n') : text
+    return marked(finalText || '')
   }
 })

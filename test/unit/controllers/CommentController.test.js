@@ -172,7 +172,7 @@ describe('CommentController', function () {
       .then(function (comments) {
         var comment = comments.find(c => c.get('post_id') === fixtures.p1.id)
         expect(comment).to.exist
-        expect(comment.get('text')).to.equal('foo bar baz')
+        expect(comment.get('text')).to.equal('<p>foo bar baz</p>\n')
         expect(comment.get('user_id')).to.equal(fixtures.u3.id)
       })
     })

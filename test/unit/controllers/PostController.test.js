@@ -30,6 +30,14 @@ describe('PostController', () => {
   })
 
   describe('#create', () => {
+    it('returns an error if the title is missing', () => {
+      return PostController.create(req, res)
+      .then(() => {
+        expect(res.statusCode).to.equal(422)
+        expect(res.body).to.equal("title can't be blank")
+      })
+    })
+
     it('saves mentions', () => {
       _.extend(req.params, {
         name: 'NewPost',
@@ -66,7 +74,9 @@ describe('PostController', () => {
       })
     })
 
-    it('creates an image', () => {
+    it('creates an image', function () {
+      this.timeout(5000)
+
       _.extend(req.params, {
         name: 'NewImagePost',
         description: '',
@@ -297,6 +307,51 @@ describe('PostController', () => {
             expect(tf3.get('new_post_count')).to.equal(0)
           }))
       })
+    })
+  })
+
+  describe('.createFromEmailForm', () => {
+    const params = {
+      type: 'request',
+      name: 'a penguin',
+      description: 'I just love the tuxedo'
+    }
+
+    before(() => {
+      return Tag.forge({name: 'request'}).save()
+    })
+
+    it('works', () => {
+      _.extend(req.params, params, {
+        token: Email.postCreationToken(fixtures.c1.id, fixtures.u1.id)
+      })
+
+      return PostController.createFromEmailForm(req, res)
+      .then(() => {
+        const postId = res.redirected.match(/p\/(\d+)/)[1]
+        return Post.find(postId, {withRelated: ['selectedTags', 'communities']})
+      })
+      .then(post => {
+        expect(post.get('name')).to.equal("I'm looking for a penguin")
+        expect(post.get('description')).to.equal('I just love the tuxedo')
+        expect(post.get('user_id')).to.equal(fixtures.u1.id)
+        expect(post.get('created_from')).to.equal('email_form')
+        const tag = post.relations.selectedTags.first()
+        expect(tag.get('name')).to.equal('request')
+        const community = post.relations.communities.first()
+        expect(community.id).to.equal(fixtures.c1.id)
+      })
+    })
+
+    it('rejects an invalid token', () => {
+      const token = Email.postCreationToken(fixtures.c1.id, fixtures.u1.id) + 'x'
+      _.extend(req.params, params, {token})
+      var error
+      res.serverError = spy(err => { error = err.message })
+
+      PostController.createFromEmailForm(req, res)
+      expect(res.serverError).to.have.been.called()
+      expect(error).to.equal(`Invalid token: ${token}`)
     })
   })
 

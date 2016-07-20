@@ -5,7 +5,7 @@ require('../../setup')
 
 const mockDoc = `<html><head>
   <meta property="og:title" content="wow!">
-  <meta property="og:image" content="http://wow.com/wow.png">
+  <meta property="og:image" content="http://fake.host/wow.png">
   <meta property="og:description" content="it's amazing">
 </head></html>`
 
@@ -14,7 +14,7 @@ describe('LinkPreview', () => {
     it('reads Open Graph tags', () => {
       expect(LinkPreview.parse(mockDoc)).to.deep.equal({
         title: 'wow!',
-        image_url: 'http://wow.com/wow.png',
+        image_url: 'http://fake.host/wow.png',
         description: "it's amazing"
       })
     })

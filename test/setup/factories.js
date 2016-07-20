@@ -74,15 +74,15 @@ module.exports = {
 
     response: function () {
       var self = {
-        ok: chai.spy(function (data) { self.body = data }),
-        serverError: chai.spy(function (err) { throw err }),
-        badRequest: chai.spy(function (data) { self.body = data }),
-        status: chai.spy(function () { return this }),
-        send: chai.spy(function (data) { self.body = data }),
-        redirect: chai.spy(function (url) { self.redirected = url }),
-        view: chai.spy(function (template, attrs) {
-          this.viewTemplate = template
-          this.viewAttrs = attrs
+        ok: chai.spy(data => self.body = data),
+        serverError: chai.spy(err => { throw err }),
+        badRequest: chai.spy(data => self.body = data),
+        status: chai.spy(value => { self.statusCode = value; return self }),
+        send: chai.spy(data => self.body = data),
+        redirect: chai.spy(url => self.redirected = url),
+        view: chai.spy((template, attrs) => {
+          self.viewTemplate = template
+          self.viewAttrs = attrs
         }),
         locals: {}
       }

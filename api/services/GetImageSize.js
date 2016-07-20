@@ -1,6 +1,5 @@
-var imageSize = require('image-size')
-var Promise = require('bluebird')
-var request = require('request')
+import imageSize from 'image-size'
+import request from 'request'
 
 module.exports = function (imageUrl) {
   return new Promise((resolve, reject) => {
