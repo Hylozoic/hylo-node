@@ -278,6 +278,10 @@ module.exports = {
     .catch(res.serverError)
   },
 
+  findForNetworkNav: function (req, res) {
+    return Promise.resolve(res.ok({}))
+  },
+
   updateMembership: function (req, res) {
     var whitelist = ['settings']
     var attributes = _.pick(req.allParams(), whitelist)
