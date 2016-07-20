@@ -20,7 +20,7 @@ brew install postgresql
 
 Then you can create the local database for development
 ```shell
-dbcreate hylo 
+dbcreate hylo
 ```
 
 next install the node modules
@@ -74,8 +74,9 @@ SLACK_APP_CLIENT_SECRET=xxxxxxxx
 
 This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
 ```shell
-cat migrations/schema.sql | psql hylo          # Recreate DB schema for database named: hylo
-./node_modules/.bin/knex seed:run              # Load seed data
+cat migrations/schema.sql | psql hylo                   # Recreate DB schema for database named: hylo
+cat migrations/knex_migrations.sql | psql hylo          # Add data to the migrations table
+./node_modules/.bin/knex seed:run                       # Load seed data
 ```
 
 ### running the dev server
@@ -146,8 +147,8 @@ The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is
 
 ## License
 
-    Hylo is a mobile and web application to help people do more together. 
-    Hylo helps communities better understand who in their community has what skills, 
+    Hylo is a mobile and web application to help people do more together.
+    Hylo helps communities better understand who in their community has what skills,
     and how they can create things together.
     Copyright (C) 2016, Hylozoic, Inc.
 
