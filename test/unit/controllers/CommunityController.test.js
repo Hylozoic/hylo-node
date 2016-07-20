@@ -266,7 +266,7 @@ describe('CommunityController', () => {
     })
   })
 
-  describe.only('.findForNetworkNav', () => {
+  describe('.findForNetworkNav', () => {
     var network, fixtures
     before(() => {
       network = factories.network()
@@ -278,21 +278,20 @@ describe('CommunityController', () => {
           c3: factories.community({}).save()
         })
         .then(props => fixtures = props)
-        .then(() => user.joinCommunity(fixtures.c2))
       })
     })
 
-    it('works with slug, returning the correct ', () => {
+    it('works with slug', () => {
       req.params.networkId = network.get('slug')
       req.login(user.id)
       return CommunityController.findForNetworkNav(req, res)
       .then(() => {
         expect(res.body.length).to.equal(2)
-        expect(res.body[0]).to.deep.equal({
-          name: fixtures.c2.get('name'),
-          slug: fixtures.c2.get('slug')
+        expect(res.body).to.contain({
+          name: fixtures.c1.get('name'),
+          slug: fixtures.c1.get('slug')
         })
-        expect(res.body[1]).to.deep.equal({
+        expect(res.body).to.contain({
           name: fixtures.c1.get('name'),
           slug: fixtures.c1.get('slug')
         })
