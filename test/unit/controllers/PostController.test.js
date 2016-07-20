@@ -3,8 +3,8 @@ const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 const PostController = require(root('api/controllers/PostController'))
 
-const testImageUrl = 'https://www.hylo.com/favicon.png'
-const testImageUrl2 = 'https://www.hylo.com/faviconDev.png'
+const testImageUrl = 'http://cdn.hylo.com/misc/hylo-logo-teal-on-transparent.png'
+const testImageUrl2 = 'http://cdn.hylo.com/misc/hylo-logo-white-on-teal-circle.png'
 const testVideoUrl = 'https://www.youtube.com/watch?v=jsQ7yKwDPZk'
 const testVideoUrl2 = 'https://www.youtube.com/watch?v=gC5-MoDUuRg'
 
