@@ -142,6 +142,14 @@ module.exports = {
     return finishOAuth('google', req, res, next)
   },
 
+  startHitFinOAuth: setSessionFromParams(function (req, res) {
+    passport.authenticate('hit-fin')(req, res)
+  }),
+
+  finishHitFinOAuth: function (req, res, next) {
+    return finishOAuth('hit-fin', req, res, next)
+  },
+
   startFacebookOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('facebook', {
       display: 'popup',

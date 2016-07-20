@@ -41,6 +41,8 @@ DOMAIN=localhost:3001
 EMAIL_SENDER=dev+localtester@hylo.com
 GOOGLE_CLIENT_ID=foo
 GOOGLE_CLIENT_SECRET=foo
+HITFIN_CLIENT_ID=foo
+HITFIN_CLIENT_SECRET=foo
 FACEBOOK_APP_ID=foo
 FACEBOOK_APP_SECRET=foo
 KISS_AUTH_TOKEN=foo
@@ -64,6 +66,8 @@ SLACK_APP_CLIENT_SECRET=xxxxxxxx
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
 * `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 * `DATABASE_URL`: set to your local DB instance
+* `HITFIN_CLIENT_ID`: client ID from HitFin, optional for dev installation
+* `HITFIN_CLIENT_SECRET`: client secret from HitFin, optional for dev installation
 * `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
 * `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in  [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
 * `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
