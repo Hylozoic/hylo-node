@@ -1,5 +1,5 @@
 var passport = require('passport')
-var OAuth2Strategy = require('passport-oauth').OAuth2Strategy
+var HitFinStrategy = require('./passport-hitfin-oauth').Strategy
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
 var GoogleTokenStrategy = require('passport-google-token').Strategy
 var FacebookStrategy = require('passport-facebook').Strategy
@@ -61,14 +61,10 @@ var formatProfile = function (profile, accessToken, refreshToken) {
   })
 }
 
-// TODO: Use HitFin OAuth instead of google
-passport.use('hit-fin', new OAuth2Strategy({
-      authorizationURL: 'https://accounts.google.com/o/oauth2/auth',
-      tokenURL: 'https://accounts.google.com/o/oauth2/token',
+passport.use('hit-fin', new HitFinStrategy({
       clientID: process.env.HITFIN_CLIENT_ID,
       clientSecret: process.env.HITFIN_CLIENT_SECRET,
       callbackURL: url('/noo/login/hit-fin/oauth'),
-      scope: ['email']
     },
     function(accessToken, refreshToken, profile, done) {
       done(null, formatProfile(profile, accessToken, refreshToken))
