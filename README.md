@@ -8,17 +8,12 @@ Thanks for checking out our code. The documentation below may be incomplete or i
 
 ### setup
 
-You need to install redis locally, then follow the steps to launch it on startup:
+You need to install redis and postgress locally, then follow the steps to launch them on startup:
 ```shell
 brew install redis
 brew services start redis
 brew install postgresql
 brew services start postgresql
-```
-
-You need to install postgresql locally, then follow the steps to launch it on startup:
-```shell
-brew install postgresql
 ```
 
 Then you can create the local database for development
@@ -42,14 +37,12 @@ cat migrations/schema.sql | psql hylo
 
 Create a local postgress user for hylo
 ```shell
-psql hylo
-create user hylolocal password 'hylolocalpassword';
-GRANT ALL PRIVILEGES ON DATABASE hylo TO hylolocal;
+cat migrations/local-db-user.sql | psql hylo
 \q
 ```
 
 Insert test data
-``` 
+```shell
 cat migrations/test-data.sql | psql hylo
 ```
 
