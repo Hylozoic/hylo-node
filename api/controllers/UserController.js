@@ -1,5 +1,6 @@
 import { find, flatten, merge, pick } from 'lodash'
 import { map } from 'lodash/fp'
+import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import validator from 'validator'
 
 var setupReputationQuery = function (req, model) {
@@ -50,6 +51,9 @@ module.exports = {
   findSelf: function (req, res) {
     return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
     .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+    .then(attributes => Promise.props(Object.assign(attributes, {
+      left_nav_tags: fetchAndPresentFollowed(null, req.session.userId)
+    })))
     .then(res.ok)
     .catch(err => {
       if (err.message === 'User not found') return res.ok({})
