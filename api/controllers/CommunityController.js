@@ -1,4 +1,4 @@
-import { pick } from 'lodash'
+import { pick, sortBy } from 'lodash'
 const Promise = require('bluebird')
 const request = require('request')
 const post = Promise.promisify(request.post)
@@ -264,7 +264,7 @@ module.exports = {
         .then(communities => communities.map(c => _.extend(c.pick(communityAttributes), {
           memberCount: c.relations.memberships.length
         })))
-        .then(communities => _.sortBy(communities, c => -c.memberCount))
+        .then(communities => sortBy(communities, c => -c.memberCount))
       }
     })
     .then(communities => {
@@ -274,6 +274,16 @@ module.exports = {
         return communities
       }
     })
+    .then(res.ok)
+    .catch(res.serverError)
+  },
+
+  findForNetworkNav: function (req, res) {
+    return Network.find(req.param('networkId'))
+    .then(network => Community.where('network_id', network.get('id'))
+      .fetchAll({withRelated: ['memberships']})
+      .then(communities => sortBy(communities.models, c => -c.relations.memberships.length))
+      .then(communities => communities.map(c => c.pick(['name', 'slug']))))
     .then(res.ok)
     .catch(res.serverError)
   },
