@@ -81,20 +81,6 @@ module.exports = {
     .then(res.ok, res.serverError)
   },
 
-  resetNewPostCount: function (req, res) {
-    return Promise.join(
-      Tag.find(req.param('tagName')),
-      Community.find(req.param('communityId')),
-      (tag, community) =>
-        TagFollow.where({
-          user_id: req.session.userId,
-          tag_id: tag.id,
-          community_id: community.id
-        }).fetch()
-        .then(tf => tf && tf.save({new_post_count: 0})))
-    .then(res.ok)
-  },
-
   findForCommunity: function (req, res) {
     return fetchAndPresentForCommunity(res.locals.community.id, {
       limit: req.param('limit'),
