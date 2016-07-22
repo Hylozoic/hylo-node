@@ -94,8 +94,6 @@ module.exports.routes = {
   'GET    /noo/invitation/:token':                        'InvitationController.findOne',
   'POST   /noo/invitation/:token':                        'InvitationController.use',
 
-  'POST   /noo/waitlist':                                 'MessageController.createWaitlistRequest',
-
   'GET    /noo/admin/login':                              'AdminSessionController.create',
   'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',
   'GET    /noo/admin/logout':                             'AdminSessionController.destroy',
