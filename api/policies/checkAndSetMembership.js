@@ -6,9 +6,10 @@ const dummyMembership = {
 module.exports = function checkAndSetMembership (req, res, next) {
   var communityId = req.param('communityId')
   // if no community id is specified, continue.
-  // this is for Search, which can be limited to a specific community
-  // or performed across all communities a user can access.
-  if (!communityId) {
+  // this is for routes that can be limited to a specific community
+  // or performed across all communities a user can access, e.g. search and
+  // getting a user's list of followed tags.
+  if (!communityId || communityId === 'all') {
     return next()
   }
 

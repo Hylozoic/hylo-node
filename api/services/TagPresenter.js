@@ -1,20 +1,23 @@
-import { get, merge, pick } from 'lodash'
-import { sortBy } from 'lodash/fp'
+import { get, merge, pick, reduce } from 'lodash'
+import { pickBy, sortBy } from 'lodash/fp'
 
-export const fetchAndPresentTagJoins = (joinClass, communityId, userId) =>
-  joinClass.where({community_id: communityId, user_id: userId})
-  .fetchAll({withRelated: 'tag'})
-  .then(joins =>
-    joins.map(join => ({
+export const fetchAndPresentTagJoins = (joinClass, community_id, user_id) => {
+  const whereClause = pickBy(x => x, {community_id, user_id})
+  return joinClass.where(whereClause).fetchAll({withRelated: ['tag', 'community']})
+  .then(joins => reduce(joins.models, (m, join) => {
+    const slug = join.relations.community.get('slug')
+    if (!m[slug]) m[slug] = []
+    const row = {
       name: join.relations.tag.get('name'),
       new_post_count: join.get('new_post_count')
-    })))
+    }
+    m[slug].push(row)
+    return m
+  }, {}))
+}
 
 export const fetchAndPresentFollowed = (communityId, userId) =>
   fetchAndPresentTagJoins(TagFollow, communityId, userId)
-
-export const fetchAndPresentCreated = (communityId, userId) =>
-  fetchAndPresentTagJoins(CommunityTag, communityId, userId)
 
 export const withRelatedSpecialPost = {
   withRelated: [
