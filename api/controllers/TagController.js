@@ -1,4 +1,5 @@
-import { merge, includes } from 'lodash'
+import { merge } from 'lodash'
+import { get, some } from 'lodash/fp'
 import {
   fetchAndPresentFollowed,
   fetchAndPresentForCommunity,
@@ -8,9 +9,12 @@ import {
 } from '../services/TagPresenter'
 
 module.exports = {
-
   findOne: function (req, res) {
     return Tag.find(req.param('tagName'), withRelatedSpecialPost)
+    .tap(tag => tag && TagFollow.where({
+      user_id: req.session.userId,
+      tag_id: tag.id
+    }).query().update({new_post_count: 0}))
     .then(tag => tag ? res.ok(presentWithPost(tag)) : res.notFound())
     .catch(res.serverError)
   },
@@ -25,21 +29,29 @@ module.exports = {
       .where({community_id: res.locals.community.id, tag_id: tag.id})
       .fetch({withRelated: [
         'owner',
-        {'community.tagFollows': q => q.where({
-          'tag_follows.tag_id': tag.id
-        })},
+        {'community.tagFollows': q => q.where({'tag_follows.tag_id': tag.id})},
         'community.tagFollows.user'
       ]})
+      .tap(ct => ct && TagFollow.where({
+        user_id: req.session.userId,
+        tag_id: ct.get('tag_id')
+      }).query().update({new_post_count: 0}))
       .then(ct => {
         if (!ct) return res.notFound()
+        const { owner, community } = ct.relations
+        const { tagFollows } = community.relations
+        const { userId } = req.session
+        const followers = tagFollows.models.map(tf =>
+          tf.relations.user.pick('id', 'name', 'avatar_url'))
+        const followed = some(f => f.id === userId, followers)
         return res.ok(merge(
           ct.pick('description', 'community_id'),
           presentWithPost(tag),
           {
-            owner: ct.relations.owner.pick('id', 'name', 'avatar_url'),
-            followed: includes(ct.relations.community.relations.tagFollows, tf => tf.user_id === req.session.userId),
-            created: ct.relations.owner.id === req.session.userId,
-            followers: ct.relations.community.relations.tagFollows.models.map(tf => tf.relations.user.pick('id', 'name', 'avatar_url'))
+            followed,
+            followers,
+            owner: owner.pick('id', 'name', 'avatar_url'),
+            created: owner.id === userId
           }
         ))
       })
@@ -48,8 +60,10 @@ module.exports = {
   },
 
   findFollowed: function (req, res) {
-    return Community.find(req.param('communityId'))
-    .then(com => fetchAndPresentFollowed(com.id, req.session.userId))
+    return (req.param('communityId') === 'all'
+      ? Promise.resolve()
+      : Community.find(req.param('communityId')))
+    .then(com => fetchAndPresentFollowed(get('id', com), req.session.userId))
     .then(res.ok, res.serverError)
   },
 
