@@ -69,9 +69,8 @@ describe('TagController', () => {
   describe('.findFollowed', () => {
     it('returns followed tags', () => {
       req.session.userId = fixtures.u1.id
-      _.extend(req.params, {
-        communityId: fixtures.c1.get('slug')
-      })
+      const slug = fixtures.c1.get('slug')
+      _.extend(req.params, {communityId: slug})
 
       return new TagFollow({
         community_id: fixtures.c1.id,
@@ -85,8 +84,9 @@ describe('TagController', () => {
       }).save())
       .then(() => TagController.findFollowed(req, res))
       .then(() => {
-        expect(res.body.length).to.equal(2)
-        var tagNames = res.body.map(t => t.name)
+        const communityTags = res.body[slug]
+        expect(communityTags.length).to.equal(2)
+        var tagNames = communityTags.map(t => t.name)
         expect(!!_.includes(tagNames, 'tagone')).to.equal(true)
         expect(!!_.includes(tagNames, 'tagtwo')).to.equal(true)
         expect(!!_.includes(tagNames, 'tagthree')).to.equal(false)
