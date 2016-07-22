@@ -266,6 +266,39 @@ describe('CommunityController', () => {
     })
   })
 
+  describe('.findForNetworkNav', () => {
+    var network, fixtures
+    before(() => {
+      network = factories.network()
+      return network.save()
+      .then(network => {
+        return Promise.props({
+          c1: factories.community({network_id: network.get('id')}).save(),
+          c2: factories.community({network_id: network.get('id')}).save(),
+          c3: factories.community({}).save()
+        })
+        .then(props => fixtures = props)
+      })
+    })
+
+    it('works with slug', () => {
+      req.params.networkId = network.get('slug')
+      req.login(user.id)
+      return CommunityController.findForNetworkNav(req, res)
+      .then(() => {
+        expect(res.body.length).to.equal(2)
+        expect(res.body).to.contain({
+          name: fixtures.c1.get('name'),
+          slug: fixtures.c1.get('slug')
+        })
+        expect(res.body).to.contain({
+          name: fixtures.c1.get('name'),
+          slug: fixtures.c1.get('slug')
+        })
+      })
+    })
+  })
+
   describe('.updateMembership', () => {
     var community
 

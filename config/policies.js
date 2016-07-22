@@ -83,6 +83,7 @@ module.exports.policies = {
     validate:        true,
     create:          ['sessionAuth'],
     findForNetwork:  ['sessionAuth', 'inNetwork'],
+    findForNetworkNav:  ['sessionAuth', 'inNetwork'],    
     joinWithCode:    ['sessionAuth']
   },
 
