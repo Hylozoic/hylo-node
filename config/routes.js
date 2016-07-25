@@ -86,15 +86,12 @@ module.exports.routes = {
   'GET    /noo/tag/:tagName':                               'TagController.findOne',
   'GET    /noo/community/:communityId/tag/:tagName/summary':'TagController.findOneSummary',
   'GET    /noo/tag/:tagName/posts':                         'PostController.findForTagInAllCommunities',
-  'POST   /noo/community/:communityId/tag/:tagName/reset':  'TagController.resetNewPostCount',
 
   'GET    /noo/search/fulltext':                          'SearchController.showFullText',
   'GET    /noo/autocomplete':                             'SearchController.autocomplete',
 
   'GET    /noo/invitation/:token':                        'InvitationController.findOne',
   'POST   /noo/invitation/:token':                        'InvitationController.use',
-
-  'POST   /noo/waitlist':                                 'MessageController.createWaitlistRequest',
 
   'GET    /noo/admin/login':                              'AdminSessionController.create',
   'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',

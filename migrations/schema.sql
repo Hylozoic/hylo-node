@@ -445,7 +445,7 @@ CREATE TABLE link_previews (
     done boolean DEFAULT false,
     title text,
     description text,
-    image_url character varying(255),
+    image_url text,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     image_width integer,
@@ -2296,3 +2296,4 @@ ALTER TABLE ONLY users_community
 --
 -- PostgreSQL database dump complete
 --
+
