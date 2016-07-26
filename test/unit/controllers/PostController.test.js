@@ -606,7 +606,7 @@ describe('PostController', () => {
     })
   })
 
-  describe.only('.findForCommunity', () => {
+  describe('.findForCommunity', () => {
     var p2, p3, c2, n1
 
     before(() => {
