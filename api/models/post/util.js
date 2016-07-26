@@ -28,6 +28,7 @@ export const afterSavingPost = function (post, opts) {
   const followerIds = uniq(mentioned.concat(userId))
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
+  const financialRequestAmount = parseFloat(opts.financialRequestAmount)
 
   return Promise.all(flatten([
     // Attach post to communities
@@ -40,7 +41,7 @@ export const afterSavingPost = function (post, opts) {
     opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, trx),
     opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, trx),
 
-    opts.financialRequestAmount && FinancialRequest.createForPost(post.id, opts.financialRequestAmount, trx),
+    opts.financialRequestAmount && FinancialRequest.createForPost(post.id, financialRequestAmount, trx),
 
     opts.children && updateChildren(post, opts.children, trx),
 
@@ -145,6 +146,6 @@ export const createPost = (userId, params) =>
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
     .tap(post => afterSavingPost(post, merge(
-      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'financialRequestAmount'),
       {children: params.requests, transacting: trx}
     )))))

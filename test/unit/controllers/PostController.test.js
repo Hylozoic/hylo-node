@@ -308,6 +308,22 @@ describe('PostController', () => {
           }))
       })
     })
+
+    it('creates a financial request', () => {
+      _.extend(req.params, {
+        name: 'NewPost',
+        description: '<p>Post Body</p>',
+        type: 'offer',
+        communities: [fixtures.c1.id],
+        financialRequestAmount: 1234.56
+      })
+      return PostController.create(req, res)
+      .then(() => {
+        var data = res.body
+        expect(data).to.exist
+        expect(data.financialRequestAmount).to.equal(1234.56)
+      })
+    })
   })
 
   describe('.createFromEmailForm', () => {
