@@ -34,7 +34,7 @@ describe('PostController', () => {
       return PostController.create(req, res)
       .then(() => {
         expect(res.statusCode).to.equal(422)
-        expect(res.body).to.equal("title can't be blank")
+        expect(res.body).to.eql({errors: ["title can't be blank"]})
       })
     })
 
@@ -309,11 +309,11 @@ describe('PostController', () => {
       })
     })
 
-    it('creates a financial request', () => {
+    it('creates a financialRequestAmountal request', () => {
       _.extend(req.params, {
         name: 'NewPost',
         description: '<p>Post Body</p>',
-        type: 'offer',
+        type: 'project',
         communities: [fixtures.c1.id],
         financialRequestAmount: 1234.56
       })

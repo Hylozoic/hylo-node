@@ -6,6 +6,7 @@ import {
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
+import * as PostValidator from '../services/PostValidator'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -143,8 +144,10 @@ const PostController = {
   create: function (req, res) {
     const params = req.allParams()
 
-    if (!params.name) {
-      res.status(422).send("title can't be blank")
+    const errors = PostValidator.validate(params)
+
+    if (errors.length > 0) {
+      res.status(422).send({errors: errors})
       return Promise.resolve()
     }
 
