@@ -2,11 +2,12 @@ var root = require('root-path')
 require(root('test/setup'))
 var PostValidator = require(root('api/services/PostValidator'))
 
-describe('PostValidator', () => {
+describe.only('PostValidator', () => {
   describe('.validate', () => {
     const defaultPostParams = {
       name: 'some post',
-      type: 'project'
+      type: 'project',
+      end_date: new Date()
     }
 
     it('should show no error for a valid post', () => {
@@ -88,6 +89,19 @@ describe('PostValidator', () => {
       const errors = PostValidator.validate(postParams)
       expect(errors).to.have.lengthOf(1)
       expect(errors).to.contain('financial requests must be between 0 and 5,000')
+    })
+
+    it('should return an error if there is no end_date for a financial request', () => {
+      const postParams = _.merge(_.omit(defaultPostParams, ['end_date']), { financialRequestAmount: 1000 })
+      const errors = PostValidator.validate(postParams)
+      expect(errors).to.have.lengthOf(1)
+      expect(errors).to.contain("deadline can't be blank for financial requests")
+    })
+
+    it('should not return an error if no end_date is provided for non financial requests', () => {
+      const postParams = _.omit(defaultPostParams, ['end_date'])
+      const errors = PostValidator.validate(postParams)
+      expect(errors).to.be.eql([])
     })
   })
 })

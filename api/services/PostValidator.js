@@ -12,6 +12,9 @@ const validations = [
   }, {
     title: 'financial request amount must be a numeric value',
     rule: params => params.financialRequestAmount === undefined || typeof params.financialRequestAmount === 'number'
+  }, {
+    title: "deadline can't be blank for financial requests",
+    rule: params => params.financialRequestAmount === undefined || params.end_date !== undefined
   }
 ]
 
