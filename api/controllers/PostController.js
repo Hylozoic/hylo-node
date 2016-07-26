@@ -46,12 +46,13 @@ const queryForCommunity = function (req, res) {
     if (!RequestValidation.requireTimeRange(req, res)) return
   }
 
-  return queryPosts(req, {
+  return Network.containsUser(res.locals.community.get('network_id'), req.session.userId)
+  .then(contains => queryPosts(req, {
     communities: [res.locals.community.id],
-    visibility: (res.locals.membership ? null : Post.Visibility.PUBLIC_READABLE),
+    visibility: ((res.locals.membership || contains) ? null : Post.Visibility.PUBLIC_READABLE),
     currentUserId: req.session.userId,
     tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
-  })
+  }))
 }
 
 const queryForUser = function (req, res) {
