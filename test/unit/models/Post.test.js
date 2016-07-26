@@ -384,5 +384,22 @@ describe('post/util', () => {
         expect(child.get('description')).to.equal('is your uncle')
       })
     })
+
+    it('should save financial requests', () => {
+      return bookshelf.transaction(trx =>
+        post.save({}, {transacting: trx})
+        .then(() =>
+          afterSavingPost(post, {
+            communities: [],
+            financialRequestAmount: 100.66,
+            transacting: trx
+          })))
+      .then(() => post.load(['financialRequest']))
+      .then(() => {
+        const financialRequest = post.relations.financialRequest
+        expect(financialRequest).to.exist
+        expect(parseFloat(financialRequest.get('amount'))).to.equal(100.66)
+      })
+    })
   })
 })

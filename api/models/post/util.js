@@ -40,6 +40,8 @@ export const afterSavingPost = function (post, opts) {
     opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, trx),
     opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, trx),
 
+    opts.financialRequestAmount && FinancialRequest.createForPost(post.id, opts.financialRequestAmount, trx),
+
     opts.children && updateChildren(post, opts.children, trx),
 
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))

@@ -8,7 +8,6 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   createForPost: function (post_id, amount, trx) {
-    console.log(trx)
     return new FinancialRequest({
       created_at: new Date(),
       post_id,
