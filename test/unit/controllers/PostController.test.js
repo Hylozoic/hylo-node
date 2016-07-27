@@ -315,7 +315,8 @@ describe('PostController', () => {
         description: '<p>Post Body</p>',
         type: 'project',
         communities: [fixtures.c1.id],
-        financialRequestAmount: 1234.56
+        financialRequestAmount: 1234.56,
+        end_time: new Date()
       })
       return PostController.create(req, res)
       .then(() => {
