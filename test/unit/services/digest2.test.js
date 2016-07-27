@@ -191,6 +191,7 @@ describe('community digest v2', () => {
     })
 
     it('adds expected user-specific attributes', () => {
+      const { prefix } = Frontend.Route
       const data = {
         community_id: '77',
         community_name: 'foo',
@@ -205,9 +206,11 @@ describe('community digest v2', () => {
         conversations: [
           {
             id: 2, title: 'Ya', user: u3.attributes,
+            details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
+              `<a href="${prefix}/u/2?ya=1">Person</a></p>`,
             comments: [
               {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
-              {id: 4, user: u2.attributes, text: 'Woa'}
+              {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/u/4">Bob</a>`}
             ],
             url: 'https://www.hylo.com/p/2'
           }
@@ -215,23 +218,25 @@ describe('community digest v2', () => {
       }
 
       return personalizeData(user, data).then(newData => {
-        const clickthroughParams = `?ctt=digest_email&cti=${user.id}&ctcn=foo`
+        const ctParams = `?ctt=digest_email&cti=${user.id}&ctcn=foo`
         expect(newData).to.deep.equal(merge({}, data, {
           offers: [
             {
               id: 1, title: 'Hi', user: u4.attributes,
               reply_url: Email.postReplyAddress(1, user.id),
-              url: 'https://www.hylo.com/p/1' + clickthroughParams
+              url: 'https://www.hylo.com/p/1' + ctParams
             }
           ],
           conversations: [
             {
               id: 2, title: 'Ya', user: u3.attributes,
+              details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
+                `<a href="${prefix}/u/2?ya=1${ctParams.replace('?', '&')}">Person</a></p>`,
               reply_url: Email.postReplyAddress(2, user.id),
-              url: 'https://www.hylo.com/p/2' + clickthroughParams,
+              url: 'https://www.hylo.com/p/2' + ctParams,
               comments: [
                 {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
-                {id: 4, user: u2.attributes, text: 'Woa'}
+                {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/u/4${ctParams}">Bob</a>`}
               ]
             }
           ],
@@ -239,12 +244,12 @@ describe('community digest v2', () => {
             name: user.get('name'),
             avatar_url: user.get('avatar_url')
           },
-          email_settings_url: Frontend.Route.userSettings() + clickthroughParams + '&expand=account',
+          email_settings_url: Frontend.Route.userSettings() + ctParams + '&expand=account',
           form_action_url: Frontend.Route.emailPostForm(),
           form_token: Email.postCreationToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, community: 'foo'}),
           subject: `New activity from ${u4.name}, ${u3.name}, and 2 others`,
-          community_url: 'https://www.hylo.com/c/foo' + clickthroughParams
+          community_url: 'https://www.hylo.com/c/foo' + ctParams
         }))
       })
     })
