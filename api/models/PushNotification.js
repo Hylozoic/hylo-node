@@ -1,6 +1,7 @@
 import decode from 'ent/decode'
-var format = require('util').format
-var rollbar = require('rollbar')
+import rollbar from 'rollbar'
+import truncate from 'html-truncate'
+import striptags from 'striptags'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
@@ -27,45 +28,22 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-  textForComment: function (comment, version, userId) {
-    var post = comment.relations.post
-    var commenter = comment.relations.user
-    var postName, relatedUser
-
-    if (post.isWelcome()) {
-      relatedUser = post.relations.relatedUsers.first()
-      if (relatedUser.id === userId) {
-        postName = 'your welcome post'
-      } else {
-        postName = format("%s's welcome post", relatedUser.get('name'))
-      }
-    } else {
-      postName = format('"%s"', decode(post.get('name')))
-    }
-
-    if (version === 'mention') {
-      return format('%s mentioned you in a comment on %s', commenter.get('name'), postName)
-    }
-
-    return format('%s commented on %s', commenter.get('name'), postName)
+  textForComment: function (comment, version) {
+    const person = comment.relations.user.get('name')
+    const blurb = striptags(truncate(comment.get('text'), 80))
+    const postName = comment.relations.post.get('name')
+    return version === 'mention'
+      ? `${person} mentioned you: "${blurb}" (in "${postName}")`
+      : `${person}: "${blurb}" (in "${postName}")`
   },
 
   textForPost: function (post, community, userId, version) {
-    var relatedUser
-    var poster = post.relations.user
+    const person = post.relations.user.get('name')
+    const postName = decode(post.get('name'))
 
-    if (post.isWelcome()) {
-      relatedUser = post.relations.relatedUsers.first()
-      if (relatedUser.id === userId) {
-        return format('You joined %s!', community.get('name'))
-      } else {
-        return format('%s joined %s', relatedUser.get('name'), community.get('name'))
-      }
-    } else if (version === 'mention') {
-      return format('%s mentioned you in "%s"', poster.get('name'), decode(post.get('name')))
-    } else {
-      return format('%s posted "%s" in %s', poster.get('name'), decode(post.get('name')), community.get('name'))
-    }
+    return version === 'mention'
+      ? `${person} mentioned you in "${postName}"`
+      : `${person} posted "${postName}" in ${community.get('name')}`
   }
 
 })

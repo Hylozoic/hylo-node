@@ -81,7 +81,7 @@ module.exports = bookshelf.Model.extend({
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
-      var alertText = PushNotification.textForComment(comment, version, this.relations.activity.get('reader_id'))
+      var alertText = PushNotification.textForComment(comment, version)
       return this.reader().sendPushNotification(alertText, path)
     })
   },
