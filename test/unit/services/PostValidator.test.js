@@ -48,7 +48,7 @@ describe('PostValidator', () => {
 
       const errors = PostValidator.validate(postParams)
       expect(errors).to.have.lengthOf(1)
-      expect(errors).to.contain('financial requests must be between 0 and 5,000')
+      expect(errors).to.contain('financial requests must be between 0 and 100,000')
     })
 
     it('should return an error if financialRequestAmount is equal to zero', () => {
@@ -56,7 +56,7 @@ describe('PostValidator', () => {
 
       const errors = PostValidator.validate(postParams)
       expect(errors).to.have.lengthOf(1)
-      expect(errors).to.contain('financial requests must be between 0 and 5,000')
+      expect(errors).to.contain('financial requests must be between 0 and 100,000')
     })
 
     it('should return an error if financialRequestAmount is equal to zero', () => {
@@ -64,15 +64,15 @@ describe('PostValidator', () => {
 
       const errors = PostValidator.validate(postParams)
       expect(errors).to.have.lengthOf(1)
-      expect(errors).to.contain('financial requests must be between 0 and 5,000')
+      expect(errors).to.contain('financial requests must be between 0 and 100,000')
     })
 
-    it('should return an error if financialRequestAmount is more than 5,000', () => {
-      const postParams = _.merge({}, defaultPostParams, { financialRequestAmount: 5001 })
+    it('should return an error if financialRequestAmount is more than 100,000', () => {
+      const postParams = _.merge({}, defaultPostParams, { financialRequestAmount: 100001 })
 
       const errors = PostValidator.validate(postParams)
       expect(errors).to.have.lengthOf(1)
-      expect(errors).to.contain('financial requests must be between 0 and 5,000')
+      expect(errors).to.contain('financial requests must be between 0 and 100,000')
     })
 
     it('should return an error if financialRequestAmount is not numeric', () => {
@@ -88,7 +88,7 @@ describe('PostValidator', () => {
 
       const errors = PostValidator.validate(postParams)
       expect(errors).to.have.lengthOf(1)
-      expect(errors).to.contain('financial requests must be between 0 and 5,000')
+      expect(errors).to.contain('financial requests must be between 0 and 100,000')
     })
 
     it('should return an error if there is no end_time for a financial request', () => {

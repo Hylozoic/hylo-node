@@ -309,7 +309,7 @@ describe('PostController', () => {
       })
     })
 
-    it('creates a financialRequestAmountal request', () => {
+    it('creates a financialRequestAmount request', () => {
       _.extend(req.params, {
         name: 'NewPost',
         description: '<p>Post Body</p>',
