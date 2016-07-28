@@ -193,7 +193,8 @@ CREATE TABLE community (
     slack_hook_url text,
     slack_team text,
     slack_configure_url text,
-    active boolean DEFAULT true
+    active boolean DEFAULT true,
+    financial_requests_enabled boolean DEFAULT false
 );
 
 
@@ -2351,4 +2352,3 @@ ALTER TABLE ONLY users_community
 --
 -- PostgreSQL database dump complete
 --
-
