@@ -4,7 +4,7 @@ import { merge } from 'lodash'
 import getImageSize from '../services/GetImageSize'
 
 const httpget = url => new Promise((resolve, reject) =>
-  request.get(url, (err, res, body) =>
+  request.get(url, {gzip: true}, (err, res, body) =>
     err ? reject(err) : resolve([res, body])))
 
 const parse = body => {
