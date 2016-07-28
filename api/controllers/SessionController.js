@@ -1,5 +1,7 @@
 const passport = require('passport')
 const rollbar = require('rollbar')
+const request = require('request')
+const hitfinApi = require('../../lib/hitfin-api');
 
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
@@ -99,9 +101,49 @@ const finishOAuth = function (strategy, req, res, next) {
       .then(() => respond())
       .catch(respond)
     }
-
     passport.authenticate(strategy, authCallback)(req, res, next)
-  })
+  });
+}
+
+function finishHitFinOAuth( req, res, next){
+
+    return new Promise((resolve, reject) => {
+      var respond = (error) => {
+        if (error && error.stack) rollbar.handleError(error, req)
+
+        return resolve(res.view('popupDone', {
+          error,
+          context: req.session.authContext || 'oauth',
+          layout: null,
+          returnDomain: req.session.returnDomain
+        }))
+      }
+      var authCallback = function (err, accessToken) {
+        if(err) return respond(err);
+        if (!accessToken) return respond('unable to authenticate with hitfin');
+        if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
+        //get user profile details using accessToken
+
+        //hitfinApi.getUser().then((profile) =>)
+        hitfinApi.getUserDetails(accessToken).then((details) => {
+          console.log('details returned', details);
+        }).catch((err) => {
+          console.log('there was an error', err);
+        });
+
+        //then link account to existing user
+
+        // upsertLinkedAccount(req, 'hit-fin', {
+        //   accessToken: accessToken
+        // })
+        // .then(() => UserExternalData.store(req.session.userId, service, profile._json))
+        // .then(() => respond())
+        // .catch(respond)
+        respond();
+
+      }
+      passport.authenticate('hit-fin', authCallback)(req, res, next)
+    });
 }
 
 // save params into session variables so that they can be used to return to the
@@ -147,7 +189,8 @@ module.exports = {
   }),
 
   finishHitFinOAuth: function (req, res, next) {
-    return finishOAuth('hit-fin', req, res, next)
+    console.log('hitfin-oauth-complete!')
+    return finishHitFinOAuth(req, res, next)
   },
 
   startFacebookOAuth: setSessionFromParams(function (req, res) {
