@@ -111,7 +111,7 @@ describe('PostController', () => {
       .then(tag => expect(tag).not.to.exist)
     })
 
-    it('creates an event with a custom tag', () => {
+    it('creates an event with a custom tag and creator EventResponse', () => {
       _.extend(req.params, {
         name: 'New Event',
         description: '<p>Post Body</p>',
@@ -129,6 +129,11 @@ describe('PostController', () => {
         expect(post.get('name')).to.equal('New Event')
         expect(post.get('type')).to.equal('event')
         expect(post.pivot.get('selected')).to.be.true
+        return EventResponse.where({post_id: post.id, user_id: fixtures.u1.id}).fetch()
+      })
+      .then(eventResponse => {
+        expect(eventResponse).to.exist
+        expect(eventResponse.get('response')).to.equal('yes')
       })
     })
 
