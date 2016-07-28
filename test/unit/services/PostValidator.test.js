@@ -7,7 +7,7 @@ describe('PostValidator', () => {
     const defaultPostParams = {
       name: 'some post',
       type: 'project',
-      end_time: new Date()
+      end_time: new Date("2017-08-04T14:00:00.000Z")
     }
 
     it('should show no error for a valid post', () => {
@@ -94,8 +94,9 @@ describe('PostValidator', () => {
     it('should return an error if there is no end_time for a financial request', () => {
       const postParams = _.merge(_.omit(defaultPostParams, ['end_time']), { financialRequestAmount: 1000 })
       const errors = PostValidator.validate(postParams)
-      expect(errors).to.have.lengthOf(1)
+      expect(errors).to.have.lengthOf(2)
       expect(errors).to.contain("deadline can't be blank for financial requests")
+      expect(errors).to.contain("deadline can not be in the past")
     })
 
     it('should not return an error if no end_time is provided for non financial requests', () => {

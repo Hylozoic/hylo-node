@@ -316,7 +316,7 @@ describe('PostController', () => {
         type: 'project',
         communities: [fixtures.c1.id],
         financialRequestAmount: 1234.56,
-        end_time: new Date()
+        end_time: new Date("2017-05-02")
       })
       return PostController.create(req, res)
       .then(() => {

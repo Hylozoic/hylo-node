@@ -14,7 +14,11 @@ const validations = [
     rule: params => params.financialRequestAmount === undefined || typeof params.financialRequestAmount === 'number'
   }, {
     title: "deadline can't be blank for financial requests",
+
     rule: params => params.financialRequestAmount === undefined || params.end_time !== undefined
+  }, {
+    title: "deadline can not be in the past",
+    rule: params => params.financialRequestAmount === undefined || (new Date(params.end_time).getTime() > new Date().getTime())
   }
 ]
 
