@@ -59,9 +59,10 @@ const upsertLinkedAccount = (req, service, profile) => {
       if (account.get('user_id') === userId) return
       // linked account belongs to someone else -- change its ownership
       return account.save({user_id: userId}, {patch: true})
-      .then(() => LinkedAccount.updateUser(userId, {type: service, profile}))
+      .then(() => {
+        return LinkedAccount.updateUser(userId, {type: service, profile})
+      });
     }
-
     // we create a new account regardless of whether one exists for the service;
     // this allows the user to continue to log in with the old one
     return LinkedAccount.create(userId, {type: service, profile}, {updateUser: true})
@@ -122,25 +123,18 @@ function finishHitFinOAuth( req, res, next){
         if(err) return respond(err);
         if (!accessToken) return respond('unable to authenticate with hitfin');
         if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
-        //get user profile details using accessToken
 
-        //hitfinApi.getUser().then((profile) =>)
         hitfinApi.getUserDetails(accessToken).then((details) => {
-          console.log('details returned', details);
-        }).catch((err) => {
-          console.log('there was an error', err);
+          return upsertLinkedAccount(req,'hit-fin', details);
+        }).then( () => {
+          return UserExternalData.store(req.session.userId, 'hit-fin', {
+            accessToken: accessToken,
+            refreshToken: null
+          });
+        }).then(() => respond())
+        .catch((err) => {
+          respond(err);
         });
-
-        //then link account to existing user
-
-        // upsertLinkedAccount(req, 'hit-fin', {
-        //   accessToken: accessToken
-        // })
-        // .then(() => UserExternalData.store(req.session.userId, service, profile._json))
-        // .then(() => respond())
-        // .catch(respond)
-        respond();
-
       }
       passport.authenticate('hit-fin', authCallback)(req, res, next)
     });
