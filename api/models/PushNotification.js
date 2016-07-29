@@ -1,7 +1,6 @@
 import decode from 'ent/decode'
 import rollbar from 'rollbar'
-import truncate from 'html-truncate'
-import striptags from 'striptags'
+import truncate from 'trunc-html'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
@@ -30,7 +29,7 @@ module.exports = bookshelf.Model.extend({
 }, {
   textForComment: function (comment, version) {
     const person = comment.relations.user.get('name')
-    const blurb = striptags(truncate(comment.get('text'), 80))
+    const blurb = truncate(comment.get('text'), 80).text
     const postName = comment.relations.post.get('name')
     return version === 'mention'
       ? `${person} mentioned you: "${blurb}" (in "${postName}")`
