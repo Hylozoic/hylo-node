@@ -2,7 +2,7 @@ var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var TagController = require(root('api/controllers/TagController'))
-import { times, zip } from 'lodash'
+import { extend, includes, times, zip } from 'lodash'
 import { sortBy } from 'lodash/fp'
 
 describe('TagController', () => {
@@ -68,28 +68,27 @@ describe('TagController', () => {
 
   describe('.findFollowed', () => {
     it('returns followed tags', () => {
-      req.session.userId = fixtures.u1.id
-      const slug = fixtures.c1.get('slug')
-      _.extend(req.params, {communityId: slug})
+      const { u1, c1, t1, t2, t3 } = fixtures
+      req.session.userId = u1.id
+      const slug = c1.get('slug')
+      extend(req.params, {communityId: slug})
 
-      return new TagFollow({
-        community_id: fixtures.c1.id,
-        tag_id: fixtures.t1.id,
-        user_id: fixtures.u1.id
-      }).save()
-      .then(() => new TagFollow({
-        community_id: fixtures.c1.id,
-        tag_id: fixtures.t2.id,
-        user_id: fixtures.u1.id
-      }).save())
+      return Promise.join(
+        new CommunityTag({community_id: c1.id, tag_id: t1.id}).save(),
+        new CommunityTag({community_id: c1.id, tag_id: t2.id}).save(),
+        new TagFollow({community_id: c1.id, tag_id: t1.id, user_id: u1.id}).save(),
+        new TagFollow({community_id: c1.id, tag_id: t2.id, user_id: u1.id}).save(),
+        new TagFollow({community_id: c1.id, tag_id: t3.id, user_id: u1.id}).save()
+      )
       .then(() => TagController.findFollowed(req, res))
       .then(() => {
         const communityTags = res.body[slug]
+        expect(communityTags).to.exist
         expect(communityTags.length).to.equal(2)
         var tagNames = communityTags.map(t => t.name)
-        expect(!!_.includes(tagNames, 'tagone')).to.equal(true)
-        expect(!!_.includes(tagNames, 'tagtwo')).to.equal(true)
-        expect(!!_.includes(tagNames, 'tagthree')).to.equal(false)
+        expect(includes(tagNames, 'tagone')).to.be.true
+        expect(includes(tagNames, 'tagtwo')).to.be.true
+        expect(includes(tagNames, 'tagthree')).to.be.false
       })
     })
   })

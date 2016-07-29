@@ -625,13 +625,15 @@ describe('PostController', () => {
   })
 
   describe('.findForCommunity', () => {
-    var p2, p3, c2
+    var p2, p3, c2, n1
 
     before(() => {
       c2 = factories.community()
+      n1 = factories.network()
       p2 = factories.post({type: 'offer', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
       p3 = factories.post({type: 'chat', active: true})
-      return Promise.join(p2.save(), p3.save(), c2.save())
+      return Promise.join(p2.save(), p3.save(), n1.save())
+      .then(() => c2.save({network_id: n1.id}))
       .then(() => Promise.join(
         c2.posts().attach(p2),
         c2.posts().attach(p3)
@@ -657,6 +659,22 @@ describe('PostController', () => {
       })
 
       return PostController.findForCommunity(req, res)
+      .then(() => {
+        expect(res.body.posts_total).to.equal(2)
+        var ids = _.map(res.body.posts, 'id')
+        expect(ids).to.contain(p2.id)
+        expect(ids).to.contain(p3.id)
+      })
+    })
+
+    it('shows all content to network members', () => {
+      var user = factories.user()
+      var networkCommunity = factories.community({network_id: n1.id})
+
+      return Promise.join(user.save(), networkCommunity.save())
+      .then(() => user.joinCommunity(networkCommunity))
+      .then(() => req.session.userId = user.id)
+      .then(() => PostController.findForCommunity(req, res))
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
         var ids = _.map(res.body.posts, 'id')

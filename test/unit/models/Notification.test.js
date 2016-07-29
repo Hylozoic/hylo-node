@@ -115,7 +115,7 @@ describe('Notification', function () {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
-        expect(pn.get('alert')).to.equal('Joe commented on "My Post"')
+        expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
       })
     })
 
@@ -137,7 +137,7 @@ describe('Notification', function () {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
-        expect(pn.get('alert')).to.equal('Joe mentioned you in a comment on "My Post"')
+        expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
       })
     })
 

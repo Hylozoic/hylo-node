@@ -81,7 +81,7 @@ module.exports = bookshelf.Model.extend({
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
-      var alertText = PushNotification.textForComment(comment, version, this.relations.activity.get('reader_id'))
+      var alertText = PushNotification.textForComment(comment, version)
       return this.reader().sendPushNotification(alertText, path)
     })
   },
@@ -121,16 +121,16 @@ module.exports = bookshelf.Model.extend({
           community_name: community.get('name'),
           post_user_name: user.get('name'),
           post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
-            user.get('avatar_url') + '?ctt=post_mention_email'),
+            user.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(user) + '?ctt=post_mention_email'),
+            Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
           post_description: description,
           post_title: decode(post.get('name')),
           post_type: 'conversation',
           post_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post) + '?ctt=post_mention_email'),
+            Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email'),
+            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email&cti=' + reader.id),
           tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
         }
       })))
@@ -175,12 +175,12 @@ module.exports = bookshelf.Model.extend({
           commenter_name: commenter.get('name'),
           commenter_avatar_url: commenter.get('avatar_url'),
           commenter_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(commenter) + '?ctt=comment_email'),
+            Frontend.Route.profile(commenter) + '?ctt=comment_email&cti=' + reader.id),
           comment_text: text,
           post_label: postLabel,
           post_title: title,
           comment_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post) + '?ctt=comment_email' + `#comment-${comment.id}`),
+            Frontend.Route.post(post) + '?ctt=comment_email&cti=' + reader.id + `#comment-${comment.id}`),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.unfollow(post, community)),
           tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})

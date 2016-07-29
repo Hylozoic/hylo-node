@@ -57,7 +57,7 @@ var OneSignal = module.exports = {
     }
   },
 
-  notification: function (platform, deviceToken, alert, path, badgeNo) {
+  notification: function (platform, deviceToken, alert, path, badgeNo, appId) {
     var params
 
     if (platform === 'ios_macos') {
@@ -70,13 +70,13 @@ var OneSignal = module.exports = {
       params = OneSignal.androidNotification(deviceToken, alert, path)
     }
 
-    params['app_id'] = process.env.ONESIGNAL_APP_ID
+    params['app_id'] = appId || process.env.ONESIGNAL_APP_ID
     return params
   },
 
-  notify: function (platform, deviceToken, alert, path, badgeNo) {
+  notify: function (platform, deviceToken, alert, path, badgeNo, appId) {
     var url = 'https://onesignal.com/api/v1/notifications'
-    var params = OneSignal.notification(platform, deviceToken, alert, path, badgeNo)
+    var params = OneSignal.notification(platform, deviceToken, alert, path, badgeNo, appId)
 
     var requestOptions = {
       url: url,

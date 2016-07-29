@@ -83,7 +83,7 @@ module.exports.policies = {
     validate:        true,
     create:          ['sessionAuth'],
     findForNetwork:  ['sessionAuth', 'inNetwork'],
-    findForNetworkNav:  ['sessionAuth', 'inNetwork'],    
+    findForNetworkNav:  ['sessionAuth', 'inNetwork'],
     joinWithCode:    ['sessionAuth']
   },
 
@@ -144,7 +144,10 @@ module.exports.policies = {
 
   NexudusController: true,
   MobileAppController: true,
-  LiveStatusController: true,
+
+  LiveStatusController: {
+    show: ['doNotCache']
+  },
 
   TagController: {
     findOne: ['sessionAuth'],
