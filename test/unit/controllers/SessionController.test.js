@@ -2,6 +2,7 @@ const setup = require('../../setup')
 const SessionController = require('../../../api/controllers/SessionController')
 var factories = require('../../setup/factories')
 var passport = require('passport')
+var hitfinApi = require('../../../lib/hitfin-api')
 
 describe('SessionController.findUser', () => {
   var u1, u2
@@ -271,4 +272,84 @@ describe('SessionController', function () {
       })
     })
   })
+
+  describe('.finishHitFinOAuth', () => {
+    var req, res, origPassportAuthenticate
+    var user;
+    var mockProfile = {
+      id: '17',
+    }
+
+    const expectMatchMockProfile = userId => {
+      return User.find(userId, {withRelated: 'linkedAccounts'})
+      .then(user => {
+        var account = user.relations.linkedAccounts.first()
+        expect(account).to.exist
+        expect(account.get('provider_key')).to.equal('hit-fin')
+        return user
+      })
+    }
+
+    before(() => {
+
+      // origPassportAuthenticate = passport.authenticate;
+      // return user = User.create({
+      //   email:'balh@blah.com'
+      // },{}).save().then(() => {return User.find()}).then((users) => {
+      //     console.log('users from db',users);
+      // })
+    })
+
+    beforeEach(() => {
+      req = factories.mock.request()
+      res = factories.mock.response()
+
+      passport.authenticate = spy(function (strategy, callback) {
+        return () => callback(null, mockProfile)
+      })
+      UserSession.isLoggedIn = spy(function(){
+        console.log('userSession');
+        // console.log(User.find());
+        return true;
+      })
+      hitfinApi.getUserDetails = spy(function (token) {
+        return new Promise((resolve,reject) =>{
+          resolve({id:user.id});
+        })
+      })
+
+      return setup.clearDb().then(()=>{
+        user = factories.user();
+        return user.save();
+      }).then( () => {
+        return User.find(user.id)
+      }).then((users) => {
+        console.log('users from db',users);
+      });
+    })
+
+    afterEach(() => {
+      passport.authenticate = origPassportAuthenticate
+    })
+
+    it('adds a linkedaccount', () => {
+      req.session.userId = user.id;
+      return SessionController.finishHitFinOAuth(req, res)
+      .then(() => {
+        expect(res.view).to.have.been.called()
+        expect(res.viewTemplate).to.equal('popupDone')
+        expect(res.viewAttrs.error).not.to.exist
+
+        //linkedaccount.find('the_user_id')
+        //should exist
+      })
+      .then(user => {
+        // expect(user).to.exist
+        // expect(user.get('facebook_url')).to.equal('http://www.facebook.com/100101')
+        // var account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'facebook')
+        // expect(account).to.exist
+      })
+    })
+  });
+
 })

@@ -50,7 +50,7 @@ const upsertUser = (req, service, profile) => {
   })
 }
 
-const upsertLinkedAccount = (req, service, profile) => {
+const upsertLinkedAccount = (req, service, profile, updateUser) => {
   var userId = req.session.userId
   return LinkedAccount.where({provider_key: service, provider_user_id: profile.id}).fetch()
   .then(account => {
@@ -65,7 +65,7 @@ const upsertLinkedAccount = (req, service, profile) => {
     }
     // we create a new account regardless of whether one exists for the service;
     // this allows the user to continue to log in with the old one
-    return LinkedAccount.create(userId, {type: service, profile}, {updateUser: true})
+    return LinkedAccount.create(userId, {type: service, profile}, {updateUser: updateUser })
   })
 }
 
@@ -97,7 +97,7 @@ const finishOAuth = function (strategy, req, res, next) {
 
       return (UserSession.isLoggedIn(req)
         ? upsertLinkedAccount
-        : upsertUser)(req, service, profile)
+        : upsertUser)(req, service, profile, true)
       .then(() => UserExternalData.store(req.session.userId, service, profile._json))
       .then(() => respond())
       .catch(respond)
@@ -125,7 +125,7 @@ function finishHitFinOAuth( req, res, next){
         if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
 
         hitfinApi.getUserDetails(accessToken).then((details) => {
-          return upsertLinkedAccount(req,'hit-fin', details);
+          return upsertLinkedAccount(req,'hit-fin', details, false);
         }).then( () => {
           return UserExternalData.store(req.session.userId, 'hit-fin', {
             accessToken: accessToken,
