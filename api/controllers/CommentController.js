@@ -2,6 +2,7 @@ import { difference, isEmpty, pickBy } from 'lodash'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
+import { sanitize } from 'hylo-utils/text'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
 
@@ -9,7 +10,7 @@ const updateRecentComments = postId =>
   Queue.classMethod('Post', 'setRecentComments', {postId})
 
 const createComment = function (commenterId, text, post, tagDescriptions) {
-  text = RichText.sanitize(text)
+  text = sanitize(text)
   var attrs = {
     text: text,
     created_at: new Date(),

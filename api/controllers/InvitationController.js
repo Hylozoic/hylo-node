@@ -1,4 +1,5 @@
 import validator from 'validator'
+import { markdown } from 'hylo-utils/text'
 
 const parseEmailList = emails =>
   (emails || '').split(/,|\n/).map(email => {
@@ -88,7 +89,7 @@ module.exports = {
           if (tag) {
             opts.tagId = tag.id
           } else {
-            opts.message = RichText.markdown(req.param('message'))
+            opts.message = markdown(req.param('message'))
             opts.moderator = req.param('moderator')
             opts.subject = req.param('subject')
           }

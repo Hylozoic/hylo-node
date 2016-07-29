@@ -2,11 +2,12 @@ import {
   difference, flatten, has, includes, isEqual, merge, omit, pick, some, uniq
 } from 'lodash'
 import { filter, get, map } from 'lodash/fp'
+import { sanitize } from 'hylo-utils/text'
 
 export const setupNewPostAttrs = function (userId, params) {
   const attrs = merge(Post.newPostAttrs(), {
-    name: RichText.sanitize(params.name),
-    description: RichText.sanitize(params.description),
+    name: sanitize(params.name),
+    description: sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
     link_preview_id: get('id', params.linkPreview)
