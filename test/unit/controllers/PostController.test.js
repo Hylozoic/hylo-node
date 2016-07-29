@@ -18,7 +18,7 @@ describe('PostController', () => {
       u2: new User({name: 'U2', email: 'b@b.c', active: true}).save(),
       u3: new User({name: 'U3', email: 'c@b.c'}).save(),
       p1: new Post({name: 'P1'}).save(),
-      c1: new Community({name: 'C1', slug: 'c1'}).save()
+      c1: new Community({name: 'C1', slug: 'c1', 'financial_requests_enabled': true}).save()
     }))
     .then(props => fixtures = props)
     .then(() => fixtures.u2.joinCommunity(fixtures.c1)))
@@ -315,6 +315,7 @@ describe('PostController', () => {
         description: '<p>Post Body</p>',
         type: 'project',
         communities: [fixtures.c1.id],
+        financialRequestsEnabled: true,
         financialRequestAmount: 1234.56,
         end_time: new Date("2017-05-02")
       })
@@ -979,3 +980,5 @@ describe('PostController', () => {
     })
   })
 })
+
+

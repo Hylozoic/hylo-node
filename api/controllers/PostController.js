@@ -4,7 +4,7 @@ import {
   createPost, updateChildren, updateAllMedia, updateCommunities
 } from '../models/post/util'
 import {
-  handleMissingTagDescriptions, throwErrorIfMissingTags
+  handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFinancialRequestsAmountError
 } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 
@@ -128,6 +128,28 @@ const checkPostTags = (attrs, opts) => {
   return throwErrorIfMissingTags(tags, opts.communities)
 }
 
+const checkFinancialRequestsEnabled = (communities, project_financial_enabled, amount) => {
+   const error = new Error('Financial Requests Amount error')
+
+   if( (!project_financial_enabled) && amount > 0){
+     error.invalidFinancialRequestsAmountError = "Not a financial contribution enabled project"
+     throw error
+   }
+
+   if(communities != undefined && communities.length > 1 && project_financial_enabled){
+     error.invalidFinancialRequestsAmountError = "More than 1 communities for financial enabled project"
+     throw error
+   }
+
+   return Community.find(communities[0]).then(community => {
+    if(community != undefined && (!community.get('financial_requests_enabled')) && amount > 0){
+      error.invalidFinancialRequestsAmountError = "Not a financial contribution enabled community"
+      throw error
+    }
+    return
+   })
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -155,12 +177,18 @@ const PostController = {
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
     )
+    .then(() => checkFinancialRequestsEnabled(
+     params.communities,
+     params.financialRequestsEnabled,
+     params.financialRequestAmount)
+    )
     .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
+      if (handleInvalidFinancialRequestsAmountError(err, res)) return
       res.serverError(err)
     })
   },
@@ -246,6 +274,7 @@ const PostController = {
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
+      if (handle)
       res.serverError(err)
     })
   },
