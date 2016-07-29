@@ -1,6 +1,4 @@
-const isSpy = (func) => {
-  return func.__spy
-}
+const isSpy = (func) => !!func.__spy
 
 export const spyify = (object, methodName, callback = () => {}) => {
   if (!isSpy(object[methodName])) object['_original' + methodName] = object[methodName]
