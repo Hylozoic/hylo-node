@@ -18,7 +18,7 @@ describe('PostController', () => {
       u2: new User({name: 'U2', email: 'b@b.c', active: true}).save(),
       u3: new User({name: 'U3', email: 'c@b.c'}).save(),
       p1: new Post({name: 'P1'}).save(),
-      c1: new Community({name: 'C1', slug: 'c1'}).save()
+      c1: new Community({name: 'C1', slug: 'c1', 'financial_requests_enabled': true}).save()
     }))
     .then(props => fixtures = props)
     .then(() => fixtures.u2.joinCommunity(fixtures.c1)))
@@ -34,7 +34,7 @@ describe('PostController', () => {
       return PostController.create(req, res)
       .then(() => {
         expect(res.statusCode).to.equal(422)
-        expect(res.body).to.equal("title can't be blank")
+        expect(res.body).to.eql({errors: ["title can't be blank"]})
       })
     })
 
@@ -311,6 +311,24 @@ describe('PostController', () => {
             expect(tf2.get('new_post_count')).to.equal(1)
             expect(tf3.get('new_post_count')).to.equal(0)
           }))
+      })
+    })
+
+    it('creates a financialRequestAmount request', () => {
+      _.extend(req.params, {
+        name: 'NewPost',
+        description: '<p>Post Body</p>',
+        type: 'project',
+        communities: [fixtures.c1.id],
+        financialRequestsEnabled: true,
+        financialRequestAmount: 1234.56,
+        end_time: new Date("2017-05-02")
+      })
+      return PostController.create(req, res)
+      .then(() => {
+        var data = res.body
+        expect(data).to.exist
+        expect(data.financialRequestAmount).to.equal(1234.56)
       })
     })
   })
@@ -985,3 +1003,5 @@ describe('PostController', () => {
     })
   })
 })
+
+

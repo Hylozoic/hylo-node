@@ -73,6 +73,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(LinkPreview)
   },
 
+  financialRequest: function() {
+    return this.hasOne(FinancialRequest)
+  },
+
   addFollowers: function (userIds, addingUserId, opts) {
     var postId = this.id
     var userId = this.get('user_id')

@@ -341,13 +341,32 @@ describe('post/util', () => {
 
     after(() => unspyify(Queue, 'classMethod'))
 
-    it('works', () => {
+    it('should save videos', () => {
       return bookshelf.transaction(trx =>
         post.save({}, {transacting: trx})
         .then(() =>
           afterSavingPost(post, {
             communities: [],
             videoUrl,
+            transacting: trx
+          })))
+      .then(() => post.load(['media']))
+      .then(() => {
+        const video = post.relations.media.first()
+        expect(video).to.exist
+        expect(video.get('url')).to.equal(videoUrl)
+
+        expect(Queue.classMethod).to.have.been.called
+        .with('Post', 'createActivities', {postId: post.id})
+      })
+    })
+
+    it('should save child posts', () => {
+      return bookshelf.transaction(trx =>
+        post.save({}, {transacting: trx})
+        .then(() =>
+          afterSavingPost(post, {
+            communities: [],
             children: [
               {
                 id: 'new-whatever',
@@ -357,19 +376,29 @@ describe('post/util', () => {
             ],
             transacting: trx
           })))
-      .then(() => post.load(['media', 'children']))
+      .then(() => post.load(['children']))
       .then(() => {
-        const video = post.relations.media.first()
-        expect(video).to.exist
-        expect(video.get('url')).to.equal(videoUrl)
-
         const child = post.relations.children.first()
         expect(child).to.exist
         expect(child.get('name')).to.equal('bob')
         expect(child.get('description')).to.equal('is your uncle')
+      })
+    })
 
-        expect(Queue.classMethod).to.have.been.called
-        .with('Post', 'createActivities', {postId: post.id})
+    it('should save financial requests', () => {
+      return bookshelf.transaction(trx =>
+        post.save({}, {transacting: trx})
+        .then(() =>
+          afterSavingPost(post, {
+            communities: [],
+            financialRequestAmount: 100.66,
+            transacting: trx
+          })))
+      .then(() => post.load(['financialRequest']))
+      .then(() => {
+        const financialRequest = post.relations.financialRequest
+        expect(financialRequest).to.exist
+        expect(parseFloat(financialRequest.get('amount'))).to.equal(100.66)
       })
     })
   })

@@ -105,6 +105,8 @@ module.exports.routes = {
 
   'POST   /noo/login':                                    'SessionController.create',
   'GET    /noo/login/token':                              'SessionController.createWithToken',
+  'GET    /noo/login/hit-fin':                            'SessionController.startHitFinOAuth',
+  'GET    /noo/login/hit-fin/oauth':                      'SessionController.finishHitFinOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',

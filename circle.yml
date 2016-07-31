@@ -5,7 +5,7 @@ deployment:
   production:
     branch: master
     heroku:
-      appname: hylo-node
+      appname: hylo-node-hitfin
 general:
   artifacts:
     - "coverage"

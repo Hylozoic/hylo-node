@@ -55,7 +55,8 @@ module.exports = {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
       'welcome_message', 'leader_id', 'beta_access_code', 'location',
-      'slack_hook_url', 'slack_team', 'slack_configure_url', 'active'
+      'slack_hook_url', 'slack_team', 'slack_configure_url', 'active',
+      'financial_requests_enabled'
     ]
     if (Admin.isSignedIn(req)) {
       whitelist.push('slug')
@@ -215,7 +216,7 @@ module.exports = {
       created_by_id: req.session.userId,
       leader_id: req.session.userId,
       welcome_message: welcomeMessage,
-      settings: {sends_email_prompts: true}
+      settings: {sends_email_prompts: true, enable_finance:false}
     }))
 
     return bookshelf.transaction(trx => {
