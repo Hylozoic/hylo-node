@@ -105,6 +105,14 @@ knex migrate:make my_migration_name
 
 Run migrations with `npm run migrate` and rollback the last one with `npm run rollback`.
 
+### initializing the database schema
+
+This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
+```shell
+cat migrations/schema.sql | psql hylo          # Recreate DB schema for database named: hylo
+./node_modules/.bin/knex seed:run              # Load seed data
+```
+
 ### loading database snapshots
 
 The values of `DB_USERNAME`, `DB_HOST`, `DB_PORT`, and `DB_NAME` below can be obtained from `DATABASE_URL` in `heroku config`.
