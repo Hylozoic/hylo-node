@@ -8,7 +8,7 @@ deployment:
     heroku:
       appname: hylo-node
   hylohitfin:
-    branch: hylo-hitfin
+    branch: hitfin-integration
     owner: jessieweiyi
     heroku:
       appname: hylo-node
