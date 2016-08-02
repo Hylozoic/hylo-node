@@ -69,7 +69,6 @@ var postAttributes = (post, userId, opts = {}) => {
   const type = post.get('type')
   const isEvent = type === 'event'
   const isWelcome = type === 'welcome'
-  const financialRequestAmount = financialRequest && financialRequest.get('amount')
 
   var extendedPost = _.extend(
     _.pick(post.toJSON(), [
@@ -99,7 +98,8 @@ var postAttributes = (post, userId, opts = {}) => {
       tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
         type,
       type: showValidType(post.get('type')),
-      linkPreview: get('id', linkPreview) ? linkPreview : null
+      linkPreview: get('id', linkPreview) ? linkPreview : null,
+      financialRequestAmount: financialRequest && financialRequest.get('amount')
     })
   if (opts.withComments) {
     extendedPost.comments = comments.map(c => _.merge(
@@ -119,9 +119,7 @@ var postAttributes = (post, userId, opts = {}) => {
   if (opts.forCommunity && post.get('pinned')) {
     extendedPost.memberships = {[opts.forCommunity]: {pinned: post.get('pinned')}}
   }
-  if (financialRequestAmount) {
-    extendedPost.financialRequestAmount = parseFloat(financialRequestAmount)
-  }
+
   return pickBy(x => !isNull(x) && !isUndefined(x), extendedPost)
 }
 

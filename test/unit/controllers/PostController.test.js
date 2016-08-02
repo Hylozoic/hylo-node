@@ -316,14 +316,14 @@ describe('PostController', () => {
         type: 'project',
         communities: [fixtures.c1.id],
         financialRequestsEnabled: true,
-        financialRequestAmount: 1234.56,
+        financialRequestAmount: '1234.56',
         end_time: new Date("2017-05-02")
       })
       return PostController.create(req, res)
       .then(() => {
         var data = res.body
         expect(data).to.exist
-        expect(data.financialRequestAmount).to.equal(1234.56)
+        expect(data.financialRequestAmount).to.equal('1234.56')
       })
     })
   })

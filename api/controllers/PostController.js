@@ -167,6 +167,10 @@ const PostController = {
   create: function (req, res) {
     const params = req.allParams()
 
+    if(params.financialRequestAmount) {
+      params.financialRequestAmount = parseFloat(params.financialRequestAmount)
+    }
+
     const errors = PostValidator.validate(params)
 
     if (errors.length > 0) {
