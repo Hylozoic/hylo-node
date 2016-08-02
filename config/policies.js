@@ -117,6 +117,7 @@ module.exports.policies = {
     thank:           ['sessionAuth'],
     findForPost:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     destroy:         ['sessionAuth', 'isCommentOwner'],
+    update:          ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true
   },
 
