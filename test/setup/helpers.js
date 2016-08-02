@@ -1,5 +1,7 @@
-export const spyify = (object, methodName, callback) => {
-  object['_original' + methodName] = object[methodName]
+const isSpy = (func) => !!func.__spy
+
+export const spyify = (object, methodName, callback = () => {}) => {
+  if (!isSpy(object[methodName])) object['_original' + methodName] = object[methodName]
   object[methodName] = spy(function () {
     const ret = object['_original' + methodName](...arguments)
     if (callback) return callback(...arguments, ret)
@@ -7,6 +9,13 @@ export const spyify = (object, methodName, callback) => {
   })
 }
 
+export const mockify = (object, methodName, func) => {
+  if (!isSpy(object[methodName])) object['_original' + methodName] = object[methodName]
+  object[methodName] = spy(func)
+}
+
 export const unspyify = (object, methodName) => {
-  object[methodName] = object['_original' + methodName]
+  if (object['_original' + methodName]) {
+    object[methodName] = object['_original' + methodName]
+  }
 }

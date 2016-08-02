@@ -2,10 +2,17 @@ require(require('root-path')('test/setup'))
 
 var heredoc = require('heredoc')
 var time = require('time')
+var moment = require('moment')
 
 describe('Search', function () {
   describe('.forPosts', function () {
     it('produces the expected SQL for a complex query', function () {
+      var startTime = moment('2015-03-24 19:54:12-07:00')
+      var endTime = moment('2015-03-31 19:54:12-07:00')
+      const ISO8601 = 'YYYY-MM-DDTHH:mm:ss.SSSZ'
+      var startTimeAsString = startTime.format(ISO8601)
+      var endTimeAsString = endTime.format(ISO8601)
+
       var query = Search.forPosts({
         limit: 5,
         offset: 7,
@@ -14,20 +21,10 @@ describe('Search', function () {
         follower: 37,
         term: 'milk toast',
         type: 'request',
-        start_time: new Date(1427252052983), // Tue Mar 24 2015 19:54:12 GMT-0700 (PDT)
-        end_time: new Date(1427856852983), // Tue Mar 31 2015 19:54:12 GMT-0700 (PDT)
+        start_time: startTime.toDate(),
+        end_time: endTime.toDate(),
         sort: 'post.updated_at'
       }).query().toString()
-
-      var tz = new time.Date().getTimezone()
-      var startTime, endTime
-      if (tz === 'America/Los_Angeles') {
-        startTime = '2015-03-24T19:54:12.983-07:00'
-        endTime = '2015-03-31T19:54:12.983-07:00'
-      } else {
-        startTime = '2015-03-25T02:54:12.983+00:00'
-        endTime = '2015-04-01T02:54:12.983+00:00'
-      }
 
       var expected = format(heredoc.strip(function () { /*
         select post.*, count(*) over () as total, "post_community"."pinned"
@@ -49,7 +46,11 @@ describe('Search', function () {
         order by "post"."updated_at" desc
         limit '5'
         offset '7'
-      */}).replace(/(\n\s*)/g, ' ').trim(), startTime, endTime, startTime, endTime)
+      */}).replace(/(\n\s*)/g, ' ').trim(),
+      startTimeAsString,
+      endTimeAsString,
+      startTimeAsString,
+      endTimeAsString)
 
       expect(query).to.equal(expected)
     })

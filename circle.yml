@@ -4,6 +4,12 @@ machine:
 deployment:
   production:
     branch: master
+    owner: Hylozoic
+    heroku:
+      appname: hylo-node
+  hylohitfin:
+    branch: hitfin-integration
+    owner: jessieweiyi
     heroku:
       appname: hylo-node
 general:

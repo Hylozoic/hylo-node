@@ -38,9 +38,9 @@ KISS_AUTH_COMMUNITY_ID=9
 LINKEDIN_API_KEY=foo
 LINKEDIN_API_SECRET=foo
 MAILGUN_DOMAIN=mg.hylo.com
-MAILGUN_EMAIL_SALT=FX988194AD22EE636
+MAILGUN_EMAIL_SALT=FFFFAAAA123456789
 NODE_ENV=development
-PLAY_APP_SECRET=foo
+PLAY_APP_SECRET=quxgrault12345678
 PRETTY_JSON=true
 PROTOCOL=http
 REDIS_URL=redis://localhost:6379
@@ -84,9 +84,10 @@ Run migrations with `npm run migrate` and rollback the last one with `npm run ro
 
 ### initializing the database schema
 
-This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance, with nothing in the database, you have to run
+This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
 ```shell
-cat migrations/schema.sql | psql [your-database-name]
+cat migrations/schema.sql | psql hylo          # Recreate DB schema for database named: hylo
+./node_modules/.bin/knex seed:run              # Load seed data
 ```
 
 ### loading database snapshots
