@@ -18,3 +18,4 @@ general:
   branches:
     only:
       - master
+      - hitfin-integration
