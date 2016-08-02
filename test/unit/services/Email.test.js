@@ -6,8 +6,8 @@ describe('Email', function () {
     // MAILGUN_EMAIL_SALT=FFFFAAAA123456789
     // MAILGUN_DOMAIN=mg.hylo.com
     // PLAY_APP_SECRET=quxgrault12345678
-    const postId = 7823
-    const userId = 5942
+    const postId = '7823'
+    const userId = '5942'
     const email = 'reply-8c26a271fe72895d4e3c20a6893d9c0ee9c9041235c9ce207c0a627196396807@mg.hylo.com'
 
     describe('.postReplyAddress', () => {
@@ -20,7 +20,7 @@ describe('Email', function () {
       it('works with human-readable formats', () => {
         var address = `"${email}" <${email}>`
 
-        expect(Email.decodePostReplyAddress(address)).to.deep.equal({postId: `${postId}`, userId: `${userId}`})
+        expect(Email.decodePostReplyAddress(address)).to.deep.equal({postId, userId})
       })
     })
   })
