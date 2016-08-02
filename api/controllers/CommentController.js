@@ -132,5 +132,17 @@ module.exports = {
         }, {patch: true}).tap(c => updateRecentComments(c.get('post_id')))
     )))
     .then(() => res.ok({}), res.serverError)
+  },
+
+  update: function (req, res) {
+    return Comment.find(req.param('commentId'))
+    .then(comment => {
+      if (!comment) return res.notFound()
+      return bookshelf.transaction(function (trx) {
+        return comment.save({text: req.param('text')}, {transacting: trx})
+        .tap(comment => Tag.updateForComment(comment, req.param('tagDescriptions'), trx))
+      })
+      .then(res.ok, res.serverError)
+    })
   }
 }
