@@ -107,6 +107,7 @@ module.exports.routes = {
   'GET    /noo/login/token':                              'SessionController.createWithToken',
   'GET    /noo/login/hit-fin':                            'SessionController.startHitFinOAuth',
   'GET    /noo/login/hit-fin/oauth':                      'SessionController.finishHitFinOAuth',
+  'DELETE /noo/unlink/hit-fin':                           'SessionController.unlinkHitFinOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
