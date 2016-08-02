@@ -78,7 +78,9 @@ SEGMENT_KEY=foo
 SENDWITHUS_KEY=foo
 SLACK_APP_CLIENT_ID=xxxxxxx
 SLACK_APP_CLIENT_SECRET=xxxxxxxx
-HITFIN_API_URL=http://localhost:3000
+HITFIN_CLIENT_ID=foo
+HITFIN_CLIENT_SECRET=foo
+HITFIN_API_URL=http://hitfin-fake.herokuapp.com
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
