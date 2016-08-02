@@ -38,6 +38,10 @@ export const afterSavingPost = function (post, opts) {
     // Add mentioned users and creator as followers
     post.addFollowers(followerIds, userId, trxOpts),
 
+    // Add creator to RSVPs
+    post.get('type') === 'event' &&
+      EventResponse.create(post.id, {responderId: userId, response: 'yes', transacting: trx}),
+
     // Add media, if any
     opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, trx),
     opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, trx),
