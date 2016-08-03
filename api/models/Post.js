@@ -306,5 +306,30 @@ module.exports = bookshelf.Model.extend({
 
   createActivities: (opts) =>
     Post.find(opts.postId).then(post =>
-      bookshelf.transaction(trx => post.createActivities(trx)))
+      bookshelf.transaction(trx => post.createActivities(trx))),
+
+  fixTypedPosts: () =>
+    bookshelf.transaction(transacting =>
+      Tag.where('name', 'in', ['request', 'offer', 'intention'])
+      .fetchAll({transacting})
+      .then(tags => Post.query(q => {
+        q.where('type', 'in', ['request', 'offer', 'intention'])
+      }).fetchAll({withRelated: ['selectedTags', 'tags'], transacting})
+      .then(posts => Promise.each(posts.models, post => {
+        const untype = () => post.save({type: null}, {patch: true, transacting})
+        if (post.relations.selectedTags.first()) return untype()
+
+        const matches = t => t.get('name') === post.get('type')
+        const existingTag = post.relations.tags.find(matches)
+        if (existingTag) {
+          return PostTag.query()
+          .where({post_id: post.id, tag_id: existingTag.id})
+          .update({selected: true}).transacting(transacting)
+          .then(untype)
+        }
+
+        return post.selectedTags().attach(tags.find(matches).id, {transacting})
+        .then(untype)
+      }))
+      .then(promises => promises.length)))
 })
