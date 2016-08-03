@@ -46,6 +46,7 @@ const upsertUser = (req, service, profile) => {
     })
 
     return User.create(attrs)
+    .tap(user => Analytics.trackSignup(user.id, req))
     .tap(user => UserSession.login(req, user, service))
   })
 }
