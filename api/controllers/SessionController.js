@@ -111,7 +111,7 @@ function finishHitFinOAuth( req, res, next){
     return new Promise((resolve, reject) => {
       var respond = (error) => {
         if (error && error.stack) rollbar.handleError(error, req)
-        console.log('returning to ',req.session.returnDomain)
+
         return resolve(res.view('popupDone', {
           error,
           context: req.session.authContext || 'oauth',
@@ -125,10 +125,8 @@ function finishHitFinOAuth( req, res, next){
         if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
 
         hitfinApi.getUserDetails(accessToken).then((details) => {
-          var result = upsertLinkedAccount(req,'hit-fin', details, false);
-        console.log('success  upsertLinkedAccount ',details);
-        return result;
-      }).then( () => {
+          return upsertLinkedAccount(req,'hit-fin', details, false);
+        }).then( () => {
           return UserExternalData.store(req.session.userId, 'hit-fin', {
             accessToken: accessToken,
             refreshToken: null
