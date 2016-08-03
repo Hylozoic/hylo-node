@@ -42,7 +42,6 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewPost',
         description: '<p>Hey <a data-user-id="' + fixtures.u2.id + '">U2</a>, you\'re mentioned ;)</p>',
-        type: 'intention',
         communities: [fixtures.c1.id]
       })
       return PostController.create(req, res)
@@ -60,7 +59,6 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewMaliciousPost',
         description: "<script>alert('test')</script><p>Hey <a data-user-id='" + fixtures.u2.id + "' data-malicious='alert(blah)'>U2</a>, you're mentioned ;)</p>",
-        type: 'intention',
         communities: [fixtures.c1.id]
       })
 
@@ -80,7 +78,6 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewImagePost',
         description: '',
-        type: 'intention',
         imageUrl: testImageUrl,
         communities: [fixtures.c1.id]
       })
@@ -102,7 +99,6 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewPost',
         description: '<p>Post Body</p>',
-        type: 'offer',
         communities: [fixtures.c1.id]
       })
 
@@ -559,9 +555,9 @@ describe('PostController', () => {
     before(() => {
       c2 = factories.community()
       c3 = factories.community()
-      p2 = factories.post({type: 'offer', active: true, description: '#findtesttag', user_id: fixtures.u2.id})
-      p3 = factories.post({type: 'chat', active: true, description: '#findtesttag', user_id: fixtures.u2.id})
-      p4 = factories.post({type: 'request', active: true, description: '#somedifferenttag', user_id: fixtures.u2.id})
+      p2 = factories.post({active: true, description: '#findtesttag', user_id: fixtures.u2.id})
+      p3 = factories.post({active: true, description: '#findtesttag', user_id: fixtures.u2.id})
+      p4 = factories.post({active: true, description: '#somedifferenttag', user_id: fixtures.u2.id})
       return Promise.join(
         p2.save(),
         p3.save(),
@@ -617,8 +613,8 @@ describe('PostController', () => {
     before(() => {
       c2 = factories.community()
       n1 = factories.network()
-      p2 = factories.post({type: 'offer', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
-      p3 = factories.post({type: 'chat', active: true})
+      p2 = factories.post({active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({active: true})
       return Promise.join(p2.save(), p3.save(), n1.save())
       .then(() => c2.save({network_id: n1.id}))
       .then(() => Promise.join(
@@ -718,8 +714,8 @@ describe('PostController', () => {
 
     before(() => {
       c2 = factories.community()
-      p2 = factories.post({type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
-      p3 = factories.post({type: 'chat', active: true})
+      p2 = factories.post({active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({active: true})
       return Promise.join(p2.save(), p3.save(), c2.save())
       .then(() => Promise.join(
         c2.posts().attach(p2),
@@ -752,7 +748,7 @@ describe('PostController', () => {
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
 
-      var p4 = factories.post({type: 'chat', active: true})
+      var p4 = factories.post({active: true})
       return p4.save()
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForCommunity(req, res))
@@ -767,8 +763,8 @@ describe('PostController', () => {
 
     before(() => {
       c2 = factories.community()
-      p2 = factories.post({user_id: fixtures.u3.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
-      p3 = factories.post({user_id: fixtures.u3.id, type: 'chat', active: true})
+      p2 = factories.post({user_id: fixtures.u3.id, active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({user_id: fixtures.u3.id, active: true})
       return Promise.join(
         p2.save(),
         p3.save(),
@@ -806,9 +802,9 @@ describe('PostController', () => {
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
 
-      return factories.post({type: 'chat', active: true, user_id: fixtures.u3.id}).save()
+      return factories.post({active: true, user_id: fixtures.u3.id}).save()
       .then(post => c2.posts().attach(post))
-      .then(() => factories.post({type: 'chat', active: true, user_id: fixtures.u3.id}).save())
+      .then(() => factories.post({active: true, user_id: fixtures.u3.id}).save())
       .then(post => c2.posts().attach(post))
       .then(() => PostController.checkFreshnessForUser(req, res))
       .then(() => {
@@ -822,8 +818,8 @@ describe('PostController', () => {
 
     before(() => {
       c2 = factories.community()
-      p2 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
-      p3 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true})
+      p2 = factories.post({user_id: fixtures.u2.id, active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({user_id: fixtures.u2.id, active: true})
       return Promise.join(
         p2.save(),
         p3.save(),
@@ -859,7 +855,7 @@ describe('PostController', () => {
     it('returns 1 when a post has been added', () => {
       req.session.userId = fixtures.u1.id
 
-      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      var p4 = factories.post({active: true, user_id: fixtures.u2.id})
       return Post.fetchAll()
       .then(posts => {
         req.params = {
@@ -883,8 +879,8 @@ describe('PostController', () => {
     before(() => {
       n1 = factories.network()
       c2 = factories.community()
-      p2 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
-      p3 = factories.post({user_id: fixtures.u2.id, type: 'chat', active: true})
+      p2 = factories.post({user_id: fixtures.u2.id, active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({user_id: fixtures.u2.id, active: true})
       return Promise.join(
         n1.save(),
         p2.save(),
@@ -924,7 +920,7 @@ describe('PostController', () => {
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
 
-      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      var p4 = factories.post({active: true, user_id: fixtures.u2.id})
       return p4.save()
       .then(() => c2.posts().attach(p4))
       .then(() => PostController.checkFreshnessForNetwork(req, res))
@@ -938,8 +934,8 @@ describe('PostController', () => {
     var p2, p3
 
     before(() => {
-      p2 = factories.post({type: 'chat', active: true, visibility: Post.Visibility.PUBLIC_READABLE})
-      p3 = factories.post({type: 'chat', active: true})
+      p2 = factories.post({active: true, visibility: Post.Visibility.PUBLIC_READABLE})
+      p3 = factories.post({active: true})
       return Promise.join(
         p2.save(),
         p3.save()
@@ -975,7 +971,7 @@ describe('PostController', () => {
         posts: [{id: p2.id, updated_at: null}, {id: p3.id, updated_at: null}]
       }
 
-      var p4 = factories.post({type: 'chat', active: true, user_id: fixtures.u2.id})
+      var p4 = factories.post({active: true, user_id: fixtures.u2.id})
       return p4.save()
       .then(() => Follow.create(fixtures.u1.id, p4.id))
       .then(() => PostController.checkFreshnessForFollowed(req, res))
