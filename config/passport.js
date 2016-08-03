@@ -64,7 +64,7 @@ var formatProfile = function (profile, accessToken, refreshToken) {
 passport.use('hit-fin', new HitFinStrategy({
       clientID: process.env.HITFIN_CLIENT_ID,
       clientSecret: process.env.HITFIN_CLIENT_SECRET,
-      callbackURL: url('/noo/login/hit-fin/oauth'),
+      callbackURL: format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, '/noo/login/hit-fin/oauth'),
     },
     function(accessToken, refreshToken, profile, done) {
       done(null, accessToken);
