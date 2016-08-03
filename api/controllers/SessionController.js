@@ -143,7 +143,6 @@ function finishHitFinOAuth( req, res, next){
 // save params into session variables so that they can be used to return to the
 // right control flow
 const setSessionFromParams = fn => (req, res) => {
-  console.log('saving return domain', req.param('returnDomain'));
   req.session.returnDomain = req.param('returnDomain')
   req.session.authContext = req.param('authContext')
   return fn(req, res)
