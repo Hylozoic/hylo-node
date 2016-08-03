@@ -112,6 +112,8 @@ function finishHitFinOAuth( req, res, next){
       var respond = (error) => {
         if (error && error.stack) rollbar.handleError(error, req)
         console.log('returning to ',req.session.returnDomain)
+        console.log('after finsihHitfinOAiuth session  contains:', req.session)
+
         return resolve(res.view('popupDone', {
           error,
           context: req.session.authContext || 'oauth',
@@ -148,6 +150,8 @@ const setSessionFromParams = fn => (req, res) => {
   console.log('saving return domain', req.param('returnDomain'));
   req.session.returnDomain = req.param('returnDomain')
   req.session.authContext = req.param('authContext')
+  console.log('session now contains:', req.session)
+
   return fn(req, res)
 }
 
