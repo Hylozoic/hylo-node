@@ -257,7 +257,7 @@ module.exports = {
     var userId = req.session.userId
     UserExternalData.remove(userId)
     LinkedAccount.remove(userId)
-    res.status(200).send()
+    res.status(200).send({})
   },
 
   findUser // this is here for testing
