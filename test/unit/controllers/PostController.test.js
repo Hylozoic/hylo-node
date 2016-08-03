@@ -407,6 +407,7 @@ describe('PostController', () => {
       })
 
       it('changes communities', () => {
+        req.params.name = 'a title'
         req.params.communities = cs.slice(2, 5).map(c => c.id)
 
         return PostController.update(req, res)
@@ -427,6 +428,7 @@ describe('PostController', () => {
       beforeEach(() => Media.createDoc(post.id, doc1Data))
 
       it('adds docs', () => {
+        req.params.name = 'a title'
         req.params.docs = [doc1Data, doc2Data]
 
         return PostController.update(req, res)
@@ -443,6 +445,7 @@ describe('PostController', () => {
       })
 
       it('adds and removes docs', () => {
+        req.params.name = 'a title'
         req.params.removedDocs = [doc1Data]
         req.params.docs = [doc2Data]
 
@@ -458,6 +461,7 @@ describe('PostController', () => {
     })
 
     it('saves an image', () => {
+      req.params.name = 'a title'
       req.params.imageUrl = testImageUrl
 
       return PostController.update(req, res)
@@ -472,6 +476,7 @@ describe('PostController', () => {
     })
 
     it('saves a video', () => {
+      req.params.name = 'a title'
       req.params.videoUrl = testVideoUrl
 
       return PostController.update(req, res)
@@ -492,6 +497,7 @@ describe('PostController', () => {
         .tap(image => originalImageId = image.id))
 
       it('removes the image', () => {
+        req.params.name = 'a title'
         req.params.imageRemoved = true
 
         return PostController.update(req, res)
@@ -500,6 +506,7 @@ describe('PostController', () => {
       })
 
       it('updates the image url', () => {
+        req.params.name = 'a title'
         req.params.imageUrl = testImageUrl2
 
         return PostController.update(req, res)
@@ -521,6 +528,7 @@ describe('PostController', () => {
         .tap(video => originalVideoId = video.id))
 
       it('removes the video', () => {
+        req.params.name = 'a title'
         req.params.videoRemoved = true
 
         return PostController.update(req, res)
@@ -529,6 +537,7 @@ describe('PostController', () => {
       })
 
       it('updates the video url', () => {
+        req.params.name = 'a title'
         req.params.videoUrl = testVideoUrl2
 
         return PostController.update(req, res)
@@ -545,6 +554,7 @@ describe('PostController', () => {
 
     describe('with a new tag', () => {
       it('rejects the update if the tag has no description', () => {
+        req.params.name = 'a title'
         req.params.description = 'here is a #newtag! yay'
         req.params.communities = [community.id]
 
@@ -555,6 +565,7 @@ describe('PostController', () => {
       })
 
       it('saves the tag description to the community', () => {
+        req.params.name = 'a title'
         req.params.description = 'here is a #newtag! yay'
         req.params.tagDescriptions = {newtag: 'i am a new tag'}
         req.params.communities = [community.id]

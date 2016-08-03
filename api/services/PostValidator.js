@@ -1,4 +1,5 @@
 const isFinancialRequest = postParams => postParams.financialRequestAmount !== undefined
+const isFinancialRequestOnEdit = postParams => postParams.id !== undefined
 
 const postValidations = [
   {
@@ -23,10 +24,20 @@ const financialRequestValidations = [
     rule: postParams => typeof postParams.financialRequestAmount === 'number'
   }, {
     title: "deadline can't be blank for financial requests",
-    rule: postParams => postParams.end_time !== undefined
+    rule: postParams => postParams.end_time !== undefined && postParams.end_time !== null
   }, {
     title: 'deadline can not be in the past',
-    rule: postParams => (new Date(postParams.end_time).getTime() > new Date().getTime())
+    rule: postParams => (postParams.end_time === undefined || postParams.end_time === null) || (new Date(postParams.end_time).getTime() > new Date().getTime())
+  }
+]
+
+const financialRequestValidationsOnEdit = [
+  {
+    title: 'deadline can not be edited',
+    rule: postParams => postParams.end_time === undefined
+  }, {
+    title: 'financial request amount can not be edited',
+    rule: postParams => postParams.financialRequestAmount === undefined
   }
 ]
 
@@ -34,7 +45,8 @@ module.exports = {
   validate: function (postParams) {
     const validations = [
       ...postValidations,
-      ...(isFinancialRequest(postParams) ? financialRequestValidations : [])
+      ...(isFinancialRequest(postParams) ? financialRequestValidations : []),
+      ...(isFinancialRequestOnEdit(postParams) ? financialRequestValidationsOnEdit : [])
     ]
 
     return _.chain(validations)

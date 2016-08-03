@@ -255,6 +255,13 @@ const PostController = {
     const post = res.locals.post
     const params = req.allParams()
 
+    const errors = PostValidator.validate(params)
+
+    if (errors.length > 0) {
+      res.status(422).send({errors: errors})
+      return Promise.resolve()
+    }
+
     const attrs = merge(
       pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
       {

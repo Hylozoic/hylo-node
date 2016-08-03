@@ -107,5 +107,15 @@ describe('PostValidator', () => {
       const errors = PostValidator.validate(postParams)
       expect(errors).to.contain('financial requests can have no more than 2 decimal places')
     })
+    it('should return an error for edit form if there is an end_time', () => {
+      const postParams = _.merge(defaultPostParams, { id:'145' })
+      const errors = PostValidator.validate(postParams)
+      expect(errors).to.contain("deadline can not be edited")
+    })
+    it('should return an error for edit form if there is a financial request amount', () => {
+      const postParams = _.merge(_.omit(defaultPostParams, ['end_time']), { id:'145', financialRequestAmount: 100.33 })
+      const errors = PostValidator.validate(postParams)
+      expect(errors).to.contain("financial request amount can not be edited")
+    })
   })
 })
