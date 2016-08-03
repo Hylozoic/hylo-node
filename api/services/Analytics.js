@@ -32,13 +32,16 @@ instance.pixelUrl = function (emailName, props) {
 }
 
 instance.trackSignup = function (userId, req) {
-  let event = 'Signup success'
+  let properties = {platform: 'Web'}
   if (req.headers['ios-version']) {
-    event += ' (iOS)'
+    properties.platform = 'ios'
   } else if (req.headers['android-version']) {
-    event += ' (Android)'
+    properties.platform = 'android'
   }
-  this.track({userId, event})
+  this.track({
+    userId,
+    event: 'Signup success',
+    properties})
 }
 
 module.exports = instance
