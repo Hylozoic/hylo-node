@@ -47,6 +47,7 @@ describe('CommunityController', () => {
           avatar_url: null,
           banner_url: null,
           description: null,
+          financial_requests_enabled: false,
           settings: {},
           location: null,
           welcome_message: null,

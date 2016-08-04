@@ -32,7 +32,8 @@ module.exports = {
     .then(() => community.toJSON())
     .then(data => pick(data,
       'id', 'name', 'slug', 'avatar_url', 'banner_url', 'description',
-      'settings', 'location', 'welcome_message', 'leader', 'network'))
+      'settings', 'location', 'welcome_message', 'leader', 'network',
+      'financial_requests_enabled'))
     .tap(() => mship && mship.save({last_viewed_at: new Date()}, {patch: true}))
     .then(res.ok)
     .catch(res.serverError)
@@ -168,7 +169,7 @@ module.exports = {
         })
       })
       .then(ms => _.merge(ms.toJSON(), {preexisting}, {
-        community: community.pick('id', 'name', 'slug', 'avatar_url')
+        community: community.pick('id', 'name', 'slug', 'avatar_url', 'financial_requests_enabled')
       })))
     .then(resp => resp ? res.ok(resp) : res.status(422).send('invalid code'))
     .catch(err => res.serverError(err))
