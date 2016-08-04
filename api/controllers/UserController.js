@@ -29,6 +29,7 @@ module.exports = {
     const { name, email, password } = req.allParams()
 
     return User.create({name, email, account: {type: 'password', password}})
+    .tap(user => Analytics.trackSignup(user.id, req))
     .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
     .then(user => {
       if (req.param('resp') === 'user') {
