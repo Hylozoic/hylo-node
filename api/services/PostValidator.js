@@ -1,5 +1,5 @@
 const isFinancialRequest = postParams => postParams.financialRequestAmount !== undefined
-const isFinancialRequestOnEdit = postParams => postParams.id !== undefined
+const isEdit = postParams => postParams.id !== undefined && postParams.originalPost
 
 const postValidations = [
   {
@@ -31,13 +31,14 @@ const financialRequestValidations = [
   }
 ]
 
+// TODO: Allow users to change a non-financial project into a finacial project
 const financialRequestValidationsOnEdit = [
   {
     title: 'deadline can not be edited',
-    rule: postParams => postParams.end_time === undefined
+    rule: postParams => new Date(postParams.end_time).getTime() === new Date(postParams.originalPost.end_time).getTime()
   }, {
     title: 'financial request amount can not be edited',
-    rule: postParams => postParams.financialRequestAmount === undefined
+    rule: postParams => postParams.financialRequestAmount.toString() === postParams.originalPost.financialRequestAmount
   }
 ]
 
@@ -46,7 +47,7 @@ module.exports = {
     const validations = [
       ...postValidations,
       ...(isFinancialRequest(postParams) ? financialRequestValidations : []),
-      ...(isFinancialRequestOnEdit(postParams) ? financialRequestValidationsOnEdit : [])
+      ...((isEdit(postParams) && isFinancialRequest(postParams)) ? financialRequestValidationsOnEdit : [])
     ]
 
     return _.chain(validations)

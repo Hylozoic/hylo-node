@@ -85,7 +85,7 @@ describe('PostValidator', () => {
     })
 
     it('should return an error if there is no end_time for a financial request', () => {
-      const postParams = _.merge(_.omit(defaultPostParams, ['end_time']), { financialRequestAmount: 1000 })
+      const postParams = _.merge({}, _.omit(defaultPostParams, ['end_time']), { financialRequestAmount: 1000 })
       const errors = PostValidator.validate(postParams)
       expect(errors).to.contain("deadline can't be blank for financial requests")
     })
@@ -107,15 +107,39 @@ describe('PostValidator', () => {
       const errors = PostValidator.validate(postParams)
       expect(errors).to.contain('financial requests can have no more than 2 decimal places')
     })
-    it('should return an error for edit form if there is an end_time', () => {
-      const postParams = _.merge(defaultPostParams, { id:'145' })
-      const errors = PostValidator.validate(postParams)
-      expect(errors).to.contain("deadline can not be edited")
-    })
-    it('should return an error for edit form if there is a financial request amount', () => {
-      const postParams = _.merge(_.omit(defaultPostParams, ['end_time']), { id:'145', financialRequestAmount: 100.33 })
-      const errors = PostValidator.validate(postParams)
-      expect(errors).to.contain("financial request amount can not be edited")
+
+    describe('for edits', () => {
+      const originalFinancialProject = {
+        id: '145',
+        financialRequestAmount: '666.66',
+        end_time: new Date('2017-08-04T14:00:00.000Z')
+      }
+
+      it('should allow financial requests edits if the end_date and amount was not changed', () => {
+        const postParams = _.merge({}, defaultPostParams,
+          { title: 'new title', id: '145', end_time: new Date('2017-08-04T14:00:00.000Z'), financialRequestAmount: 666.66 },
+          {originalPost: originalFinancialProject})
+
+        const errors = PostValidator.validate(postParams)
+        expect(errors).to.be.empty
+      })
+
+      it('should return an error for edit form if there is an end_time', () => {
+        const postParams = _.merge({}, defaultPostParams,
+          { id: '145', end_time: new Date('2017-10-10T12:00:00.000Z'), financialRequestAmount: 666.66 },
+          {originalPost: originalFinancialProject})
+
+        const errors = PostValidator.validate(postParams)
+        expect(errors).to.contain('deadline can not be edited')
+      })
+
+      it('should return an error for edit form if there is a financial request amount', () => {
+        const postParams = _.merge({}, defaultPostParams,
+          { id: '145', financialRequestAmount: 100.33 },
+          {originalPost: originalFinancialProject})
+        const errors = PostValidator.validate(postParams)
+        expect(errors).to.contain('financial request amount can not be edited')
+      })
     })
   })
 })

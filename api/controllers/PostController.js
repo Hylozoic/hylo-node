@@ -4,7 +4,8 @@ import {
   createPost, updateChildren, updateAllMedia, updateCommunities
 } from '../models/post/util'
 import {
-  handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFinancialRequestsAmountError
+  handleMissingTagDescriptions, throwErrorIfMissingTags,
+  handleInvalidFinancialRequestsAmountError, handlePostValidations
 } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 
@@ -167,7 +168,7 @@ const PostController = {
   create: function (req, res) {
     const params = req.allParams()
 
-    if(params.financialRequestAmount) {
+    if (params.financialRequestAmount) {
       params.financialRequestAmount = parseFloat(params.financialRequestAmount)
     }
 
@@ -255,11 +256,8 @@ const PostController = {
     const post = res.locals.post
     const params = req.allParams()
 
-    const errors = PostValidator.validate(params)
-
-    if (errors.length > 0) {
-      res.status(422).send({errors: errors})
-      return Promise.resolve()
+    if (params.financialRequestAmount) {
+      params.financialRequestAmount = parseFloat(params.financialRequestAmount)
     }
 
     const attrs = merge(
@@ -276,17 +274,28 @@ const PostController = {
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
     )
     .then(() => bookshelf.transaction(trx =>
-      post.save(attrs, {patch: true, transacting: trx})
+      Post.find(params.id)
+      .then(originalPost => originalPost.load(PostPresenter.relations(req.session.userId)))
+      .then(PostPresenter.present)
+      .then(originalPost => PostValidator.validate(merge(params, {originalPost})))
+      .then(errors => {
+        if (errors.length > 0) {
+          let error = new Error()
+          error.postValidations = errors
+          throw error
+        }
+      })
+      .then(() => post.save(attrs, {patch: true, transacting: trx})
       .tap(() => updateChildren(post, req.param('requests'), trx))
       .tap(() => updateCommunities(post, req.param('communities'), trx))
       .tap(() => updateAllMedia(post, params, trx))
-      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
+      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx)))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
-      if (handle)
+      if (handlePostValidations(err, res)) return
       res.serverError(err)
     })
   },
