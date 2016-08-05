@@ -255,9 +255,12 @@ module.exports = {
 
   unlinkHitFinOAuth: function (req, res) {
     var userId = req.session.userId
-    UserExternalData.remove(userId)
-    LinkedAccount.remove(userId)
-    res.status(200).send({})
+    return UserExternalData.remove(userId)
+    .then( (result) => {
+      return LinkedAccount.remove(userId)
+    }).then( (result) => {
+      return res.status(200).send({})
+    }).catch(res.serverError)
   },
 
   findUser // this is here for testing
