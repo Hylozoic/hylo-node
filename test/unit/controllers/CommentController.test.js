@@ -177,4 +177,40 @@ describe('CommentController', function () {
       })
     })
   })
+
+  describe('update', () => {
+    it('updates the comment text', () => {
+      var comment
+      req.params.text = 'updated comment text'
+      comment = factories.comment({text: 'original text'})
+      return comment.save()
+      .then(() => req.params.commentId = comment.id)
+      .then(() => CommentController.update(req, res))
+      .then(() => Comment.find(comment.id))
+      .then(comment => {
+        expect(comment).to.exist
+        expect(comment.get('text')).to.equal('updated comment text')
+      })
+    })
+
+    it('saves a new tag with description to the community', () => {
+      var comment
+      req.params.text = 'updated comment text with #anewtag'
+      req.params.tagDescriptions = {anewtag: 'new tag description'}
+      comment = factories.comment({text: 'original text', post_id: fixtures.p1.id})
+      return comment.save()
+      .then(() => req.params.commentId = comment.id)
+      .then(() => CommentController.update(req, res))
+      .then(() => Comment.find(comment.id, {withRelated: ['tags', 'tags.communities']}))
+      .then(comment => {
+        const tag = comment.relations.tags.first()
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('anewtag')
+        const community = tag.relations.communities.first()
+        expect(community).to.exist
+        expect(community.id).to.equal(fixtures.c1.id)
+        expect(community.pivot.get('description')).to.equal('new tag description')
+      })
+    })
+  })
 })

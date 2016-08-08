@@ -61,6 +61,7 @@ module.exports = {
         },
         session: {},
         params: {},
+        headers: {},
         __: sails.__, // this is for i18n
         login: function (userId) {
           extend(this.session, {
