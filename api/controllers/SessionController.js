@@ -184,6 +184,7 @@ module.exports = {
   }),
 
   finishHitFinOAuth: function (req, res, next) {
+    console.log('hitfin-oauth-complete!')
     return finishHitFinOAuth(req, res, next)
   },
 
