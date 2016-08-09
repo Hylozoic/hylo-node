@@ -130,15 +130,10 @@ const checkPostTags = (attrs, opts) => {
   return throwErrorIfMissingTags(tags, opts.communities)
 }
 
-const checkFinancialRequestsEnabled = (communities, project_financial_enabled, amount) => {
+const checkFinancialRequestsEnabled = (communities, amount) => {
    const error = new Error('Financial Requests Amount error')
 
-   if( (!project_financial_enabled) && amount > 0){
-     error.invalidFinancialRequestsAmountError = "Not a financial contribution enabled project"
-     throw error
-   }
-
-   if(communities != undefined && communities.length > 1 && project_financial_enabled){
+   if(amount > 0 && communities != undefined && communities.length > 1){
      error.invalidFinancialRequestsAmountError = "More than 1 communities for financial enabled project"
      throw error
    }
@@ -185,7 +180,6 @@ const PostController = {
     )
     .then(() => checkFinancialRequestsEnabled(
      params.communities,
-     params.financialRequestsEnabled,
      params.financialRequestAmount)
     )
     .then(() => createPost(req.session.userId, params))
