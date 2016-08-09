@@ -161,5 +161,9 @@ module.exports.policies = {
 
   LinkPreviewController: {
     findOne: ['sessionAuth']
+  },
+
+  FinancialController: {
+    getBalance: ['sessionAuth']
   }
 }
