@@ -135,5 +135,7 @@ module.exports.routes = {
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
 
   'GET     /noo/live-status':                             'LiveStatusController.show',
-  'GET     /noo/link-preview':                            'LinkPreviewController.findOne'
+  'GET     /noo/link-preview':                            'LinkPreviewController.findOne',
+
+  'GET     /noo/finance/get-balance':                     'FinancialController.getBalance'
 }
