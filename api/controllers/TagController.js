@@ -29,7 +29,10 @@ module.exports = {
       .where({community_id: res.locals.community.id, tag_id: tag.id})
       .fetch({withRelated: [
         'owner',
-        {'community.tagFollows': q => q.where({'tag_follows.tag_id': tag.id})},
+        {'community.tagFollows': q => {
+          q.where({'tag_follows.tag_id': tag.id})
+          q.limit(20)
+        }},
         'community.tagFollows.user'
       ]})
       .tap(ct => ct && TagFollow.where({
