@@ -8,6 +8,7 @@ import {
   handleInvalidFinancialRequestsAmountError, handlePostValidations
 } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
+import ProjectPledge from '../../lib/hitfin/ProjectPledge'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -182,6 +183,18 @@ const PostController = {
      params.communities,
      params.financialRequestAmount)
     )
+    // .then(() => {
+    //   if(params.financialRequestAmount > 0){
+    //     return ProjectPledge.create(
+    //         params.financialRequestAmount,
+    //         params.end_time,
+    //         'ZWdKw56rdWs3jZUhcDCjg3Fn9rXa8k',
+    //         'ZWdKw56rdWs3jZUhcDCjg3Fn9rXa8k',
+    //         'hylo-integration@hitfin.com')
+    //   } else {
+    //     return
+    //   }
+    // })
     .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
