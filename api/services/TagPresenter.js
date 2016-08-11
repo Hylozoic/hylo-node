@@ -111,14 +111,12 @@ const mostActiveMembers = (community, tag) => {
 
 export const fetchAndPresentSummary = (community, tag) =>
   Promise.join(
-    CommunityTag.where({community_id: community.id, tag_id: tag.id})
-    .fetch(),
-    TagFollow.where({community_id: community.id, tag_id: tag.id})
-    .count(),
+    CommunityTag.where({community_id: community.id, tag_id: tag.id}).fetch(),
+    TagFollow.where({community_id: community.id, tag_id: tag.id}).count(),
     CommunityTag.taggedPostCount(community.id, tag.id),
     mostActiveMembers(community, tag),
-    (communityTag, followerCount, postCount, activeMembers) => ({
-      description: communityTag.get('description'),
+    (ct, followerCount, postCount, activeMembers) => ({
+      description: ct && ct.get('description'),
       follower_count: Number(followerCount),
       post_count: Number(postCount),
       active_members: activeMembers

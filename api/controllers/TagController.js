@@ -24,7 +24,7 @@ module.exports = {
     let tag
     return Tag.find(req.param('tagName'), withRelatedSpecialPost)
     .then(t => {
-      if (!t) return
+      if (!t) return res.notFound()
       tag = t
       return CommunityTag
       .where({community_id: res.locals.community.id, tag_id: tag.id})
