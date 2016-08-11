@@ -7,6 +7,7 @@ import {
   withRelatedSpecialPost,
   presentWithPost
 } from '../services/TagPresenter'
+import { countTotal } from '../../lib/util/knex'
 
 module.exports = {
   findOne: function (req, res) {
@@ -32,6 +33,7 @@ module.exports = {
         {'community.tagFollows': q => {
           q.where({'tag_follows.tag_id': tag.id})
           q.limit(20)
+          countTotal(q, 'tag_follows')
         }},
         'community.tagFollows.user'
       ]})
@@ -47,12 +49,14 @@ module.exports = {
         const followers = tagFollows.models.map(tf =>
           tf.relations.user.pick('id', 'name', 'avatar_url'))
         const followed = some(f => f.id === userId, followers)
+        const followerCount = tagFollows.first().get('total')
         return res.ok(merge(
           ct.pick('description', 'community_id'),
           presentWithPost(tag),
           {
             followed,
             followers,
+            followerCount,
             owner: owner.pick('id', 'name', 'avatar_url'),
             created: owner.id === userId
           }
