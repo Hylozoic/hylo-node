@@ -1,6 +1,6 @@
 require('../../setup')
 const factories = require('../../setup/factories')
-const defaultAvatarUrl = 'http://hsylo-app.s3.amazonaws.com/misc/default_community_avatar.png'
+const defaultAvatarUrl = 'http://hylo-app.s3.amazonaws.com/misc/default_community_avatar.png'
 
 describe('AssetManagement', () => {
   var community, origBucket
