@@ -38,7 +38,7 @@ const financialRequestValidationsOnEdit = [
     rule: postParams => new Date(postParams.end_time).getTime() === new Date(postParams.originalPost.end_time).getTime()
   }, {
     title: 'financial request amount can not be edited',
-    rule: postParams => postParams.financialRequestAmount.toString() === postParams.originalPost.financialRequestAmount
+    rule: postParams => postParams.financialRequestAmount.toString() === postParams.originalPost.financialRequestAmount.toString()
   }
 ]
 
