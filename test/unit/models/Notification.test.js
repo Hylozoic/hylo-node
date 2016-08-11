@@ -1,3 +1,4 @@
+import nock from 'nock'
 const root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
@@ -53,6 +54,11 @@ describe('Notification', function () {
   beforeEach(() => destroyAllPushNotifications())
 
   describe('.send', () => {
+    beforeEach(() => {
+      nock(OneSignal.host).post('/api/v1/notifications')
+      .reply(200, {result: 'success'})
+    })
+
     it('sends a push for a new post', () => {
       return new Activity({
         post_id: post.id,
