@@ -45,6 +45,35 @@ function getUserBalance (req, res, next) {
 
 module.exports = {
     getBalance: function(req, res, next){
+<<<<<<< HEAD
       return getUserBalance(req, res, next)
+=======
+      return getAccessToken(req).then( accessToken => {
+        console.log(accessToken)
+        return new Promise((resolve, reject) => {
+          request({
+            url: process.env.HITFIN_API_URL + '/api/stabletoken/balances',
+            headers: {
+              'Authorization': 'Bearer ' + accessToken
+            }
+          }, function(error, response, body){
+            console.log(body)
+            if(error){
+              reject(error);
+            }
+            else if(response.statusCode >=400){
+              reject();
+            }
+            else{
+              console.log(JSON.parse(body))
+              resolve(JSON.parse(body));
+            }
+          })
+        })
+        }).then( (response) => {
+          console.log(response.latest.amount)
+          res.ok({balance: response.latest.amount})
+      })
+>>>>>>> 1828c1c... DH/EP #10 handle response properly
   }
 }
