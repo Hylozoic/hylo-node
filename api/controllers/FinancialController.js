@@ -45,9 +45,6 @@ function getUserBalance (req, res, next) {
 
 module.exports = {
     getBalance: function(req, res, next){
-<<<<<<< HEAD
-      return getUserBalance(req, res, next)
-=======
       return getAccessToken(req).then( accessToken => {
         return new Promise((resolve, reject) => {
           request({
@@ -70,6 +67,5 @@ module.exports = {
         }).then( (response) => {
           res.ok({balance: response.latest.amount})
       })
->>>>>>> 1828c1c... DH/EP #10 handle response properly
   }
 }
