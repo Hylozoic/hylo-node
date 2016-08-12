@@ -18,7 +18,7 @@ describe('PostController', () => {
       u2: new User({name: 'U2', email: 'b@b.c', active: true}).save(),
       u3: new User({name: 'U3', email: 'c@b.c'}).save(),
       p1: new Post({name: 'P1'}).save(),
-      c1: new Community({name: 'C1', slug: 'c1'}).save()
+      c1: new Community({name: 'C1', slug: 'c1', 'financial_requests_enabled': true}).save()
     }))
     .then(props => fixtures = props)
     .then(() => fixtures.u2.joinCommunity(fixtures.c1)))
@@ -34,7 +34,7 @@ describe('PostController', () => {
       return PostController.create(req, res)
       .then(() => {
         expect(res.statusCode).to.equal(422)
-        expect(res.body).to.equal("title can't be blank")
+        expect(res.body).to.eql({errors: ["title can't be blank"]})
       })
     })
 
@@ -309,6 +309,24 @@ describe('PostController', () => {
           }))
       })
     })
+
+    it('creates a financialRequestAmount request', () => {
+      _.extend(req.params, {
+        name: 'NewPost',
+        description: '<p>Post Body</p>',
+        type: 'project',
+        communities: [fixtures.c1.id],
+        financialRequestsEnabled: true,
+        financialRequestAmount: '1234.56',
+        end_time: new Date('2017-05-02')
+      })
+      return PostController.create(req, res)
+      .then(() => {
+        var data = res.body
+        expect(data).to.exist
+        expect(data.financialRequestAmount).to.equal('1234.56')
+      })
+    })
   })
 
   describe('.createFromEmailForm', () => {
@@ -357,14 +375,16 @@ describe('PostController', () => {
   })
 
   describe('#update', () => {
-    var post, community
+    var post, community, postId
 
     beforeEach(() => {
       post = factories.post()
       community = factories.community()
       req.params.communities = []
       res.locals.post = post
-      return post.save().tap(() => post.load('communities'))
+      return post.save()
+      .tap(post => postId = post.id)
+      .tap(() => post.load('communities'))
       .then(() => community.save())
     })
 
@@ -385,6 +405,8 @@ describe('PostController', () => {
       })
 
       it('changes communities', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.communities = cs.slice(2, 5).map(c => c.id)
 
         return PostController.update(req, res)
@@ -405,6 +427,8 @@ describe('PostController', () => {
       beforeEach(() => Media.createDoc(post.id, doc1Data))
 
       it('adds docs', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.docs = [doc1Data, doc2Data]
 
         return PostController.update(req, res)
@@ -421,6 +445,8 @@ describe('PostController', () => {
       })
 
       it('adds and removes docs', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.removedDocs = [doc1Data]
         req.params.docs = [doc2Data]
 
@@ -436,6 +462,8 @@ describe('PostController', () => {
     })
 
     it('saves an image', () => {
+      req.params.name = 'a title'
+      req.params.id = postId
       req.params.imageUrl = testImageUrl
 
       return PostController.update(req, res)
@@ -450,6 +478,8 @@ describe('PostController', () => {
     })
 
     it('saves a video', () => {
+      req.params.name = 'a title'
+      req.params.id = postId
       req.params.videoUrl = testVideoUrl
 
       return PostController.update(req, res)
@@ -470,6 +500,8 @@ describe('PostController', () => {
         .tap(image => originalImageId = image.id))
 
       it('removes the image', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.imageRemoved = true
 
         return PostController.update(req, res)
@@ -478,6 +510,8 @@ describe('PostController', () => {
       })
 
       it('updates the image url', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.imageUrl = testImageUrl2
 
         return PostController.update(req, res)
@@ -499,6 +533,8 @@ describe('PostController', () => {
         .tap(video => originalVideoId = video.id))
 
       it('removes the video', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.videoRemoved = true
 
         return PostController.update(req, res)
@@ -507,6 +543,8 @@ describe('PostController', () => {
       })
 
       it('updates the video url', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.videoUrl = testVideoUrl2
 
         return PostController.update(req, res)
@@ -523,6 +561,8 @@ describe('PostController', () => {
 
     describe('with a new tag', () => {
       it('rejects the update if the tag has no description', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.description = 'here is a #newtag! yay'
         req.params.communities = [community.id]
 
@@ -533,6 +573,8 @@ describe('PostController', () => {
       })
 
       it('saves the tag description to the community', () => {
+        req.params.name = 'a title'
+        req.params.id = postId
         req.params.description = 'here is a #newtag! yay'
         req.params.tagDescriptions = {newtag: 'i am a new tag'}
         req.params.communities = [community.id]
@@ -546,6 +588,15 @@ describe('PostController', () => {
           expect(tag.pivot.get('description')).to.equal('i am a new tag')
         })
       })
+    })
+
+    it('should reject if fails validation rules', () => {
+      req.params.id = postId
+
+      return PostController.update(req, res)
+      .then(() => expect(res.body).to.deep.equal({
+        postValidations: ["title can't be blank"]
+      }))
     })
   })
 

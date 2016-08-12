@@ -65,5 +65,9 @@ module.exports = bookshelf.Model.extend({
         }
     }
     return {}
+  },
+
+  remove: function (userId) {
+    return this.where({user_id: userId, provider_key: 'hit-fin'}).destroy()
   }
 })

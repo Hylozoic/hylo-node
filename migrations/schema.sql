@@ -193,7 +193,8 @@ CREATE TABLE community (
     slack_hook_url text,
     slack_team text,
     slack_configure_url text,
-    active boolean DEFAULT true
+    active boolean DEFAULT true,
+    financial_requests_enabled boolean DEFAULT false
 );
 
 
@@ -330,6 +331,38 @@ CREATE SEQUENCE event_responses_id_seq
 --
 
 ALTER SEQUENCE event_responses_id_seq OWNED BY event_responses.id;
+
+
+--
+-- Name: financial_request; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE financial_request (
+    id integer NOT NULL,
+    post_id bigint,
+    amount numeric(8,2),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: financial_request_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE financial_request_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: financial_request_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE financial_request_id_seq OWNED BY financial_request.id;
 
 
 --
@@ -1154,6 +1187,13 @@ ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_resp
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY financial_request ALTER COLUMN id SET DEFAULT nextval('financial_request_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('knex_migrations_id_seq'::regclass);
 
 
@@ -1319,6 +1359,14 @@ ALTER TABLE ONLY event_responses
 
 ALTER TABLE ONLY event_responses
     ADD CONSTRAINT event_responses_user_id_post_id_unique UNIQUE (user_id, post_id);
+
+
+--
+-- Name: financial_request_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY financial_request
+    ADD CONSTRAINT financial_request_pkey PRIMARY KEY (id);
 
 
 --
@@ -1950,6 +1998,14 @@ ALTER TABLE ONLY event_responses
 
 
 --
+-- Name: financial_request_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY financial_request
+    ADD CONSTRAINT financial_request_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+
+
+--
 -- Name: fk_comment_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2296,4 +2352,3 @@ ALTER TABLE ONLY users_community
 --
 -- PostgreSQL database dump complete
 --
-

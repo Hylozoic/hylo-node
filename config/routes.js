@@ -106,6 +106,9 @@ module.exports.routes = {
 
   'POST   /noo/login':                                    'SessionController.create',
   'GET    /noo/login/token':                              'SessionController.createWithToken',
+  'GET    /noo/login/hit-fin':                            'SessionController.startHitFinOAuth',
+  'GET    /noo/login/hit-fin/oauth':                      'SessionController.finishHitFinOAuth',
+  'DELETE /noo/unlink/hit-fin':                           'SessionController.unlinkHitFinOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
@@ -132,5 +135,7 @@ module.exports.routes = {
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
 
   'GET     /noo/live-status':                             'LiveStatusController.show',
-  'GET     /noo/link-preview':                            'LinkPreviewController.findOne'
+  'GET     /noo/link-preview':                            'LinkPreviewController.findOne',
+
+  'GET     /noo/finance/get-balance':                     'FinancialController.getBalance'
 }

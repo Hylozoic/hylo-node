@@ -8,9 +8,17 @@ Thanks for checking out our code. The documentation below may be incomplete or i
 
 ### setup
 
-You need to install redis locally, then follow the steps to launch it on startup:
+You need to install redis and postgress locally, then follow the steps to launch them on startup:
 ```shell
 brew install redis
+brew services start redis
+brew install postgresql
+brew services start postgresql
+```
+
+Then you can create the local database for development
+```shell
+dbcreate hylo
 ```
 
 next install the node modules
@@ -19,18 +27,39 @@ npm install -g forever sails foreman
 npm install
 ```
 
+### initializing the database schema
+
+This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance, with nothing in the database, you have to run
+```shell
+createdb hylo
+cat migrations/schema.sql | psql hylo
+```
+
+Create a local postgress user for hylo
+```shell
+cat migrations/local-db-user.sql | psql hylo
+\q
+```
+
+Insert test data
+```shell
+cat migrations/test-data.sql | psql hylo
+```
+
 Create a `.env` file in the root of the working copy, with contents like this:
 ```
 ADMIN_GOOGLE_CLIENT_ID=foo
 ADMIN_GOOGLE_CLIENT_SECRET=foo
 ASSET_HOST_URL=http://localhost:1337
 BUNDLE_VERSION=dev
-DATABASE_URL=postgres://postgres:password@localhost:5432/hylo
+DATABASE_URL=postgres://hylolocal:hylolocalpassword@localhost:5432/hylo
 DEBUG_SQL=false
 DOMAIN=localhost:3001
 EMAIL_SENDER=dev+localtester@hylo.com
 GOOGLE_CLIENT_ID=foo
 GOOGLE_CLIENT_SECRET=foo
+HITFIN_CLIENT_ID=foo
+HITFIN_CLIENT_SECRET=foo
 FACEBOOK_APP_ID=foo
 FACEBOOK_APP_SECRET=foo
 KISS_AUTH_TOKEN=foo
@@ -49,16 +78,30 @@ SEGMENT_KEY=foo
 SENDWITHUS_KEY=foo
 SLACK_APP_CLIENT_ID=xxxxxxx
 SLACK_APP_CLIENT_SECRET=xxxxxxxx
+HITFIN_CLIENT_ID=foo
+HITFIN_CLIENT_SECRET=foo
+HITFIN_API_URL=http://hitfin-fake.herokuapp.com
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
 * `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 * `DATABASE_URL`: set to your local DB instance
+* `HITFIN_CLIENT_ID`: client ID from HitFin, optional for dev installation
+* `HITFIN_CLIENT_SECRET`: client secret from HitFin, optional for dev installation
 * `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
 * `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in  [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
 * `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
 * `SLACK_APP_CLIENT_ID`: set up an app on Slack and reference its' client id, optional for dev installation
 * `SLACK_APP_CLIENT_SECRET`: reference the client secret from that same app on Slack, optional for dev installation
+
+### initializing the database schema
+
+This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
+```shell
+cat migrations/schema.sql | psql hylo                   # Recreate DB schema for database named: hylo
+cat migrations/knex_migrations.sql | psql hylo          # Add data to the migrations table
+./node_modules/.bin/knex seed:run                       # Load seed data
+```
 
 ### running the dev server
 
@@ -136,8 +179,8 @@ The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is
 
 ## License
 
-    Hylo is a mobile and web application to help people do more together. 
-    Hylo helps communities better understand who in their community has what skills, 
+    Hylo is a mobile and web application to help people do more together.
+    Hylo helps communities better understand who in their community has what skills,
     and how they can create things together.
     Copyright (C) 2016, Hylozoic, Inc.
 

@@ -1,5 +1,7 @@
 const passport = require('passport')
 const rollbar = require('rollbar')
+const request = require('request')
+const hitfinApi = require('../../lib/hitfin-api');
 
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
@@ -49,7 +51,7 @@ const upsertUser = (req, service, profile) => {
   })
 }
 
-const upsertLinkedAccount = (req, service, profile) => {
+const upsertLinkedAccount = (req, service, profile, updateUser) => {
   var userId = req.session.userId
   return LinkedAccount.where({provider_key: service, provider_user_id: profile.id}).fetch()
   .then(account => {
@@ -58,12 +60,13 @@ const upsertLinkedAccount = (req, service, profile) => {
       if (account.get('user_id') === userId) return
       // linked account belongs to someone else -- change its ownership
       return account.save({user_id: userId}, {patch: true})
-      .then(() => LinkedAccount.updateUser(userId, {type: service, profile}))
+      .then(() => {
+        return LinkedAccount.updateUser(userId, {type: service, profile})
+      });
     }
-
     // we create a new account regardless of whether one exists for the service;
     // this allows the user to continue to log in with the old one
-    return LinkedAccount.create(userId, {type: service, profile}, {updateUser: true})
+    return LinkedAccount.create(userId, {type: service, profile}, {updateUser: updateUser })
   })
 }
 
@@ -95,14 +98,47 @@ const finishOAuth = function (strategy, req, res, next) {
 
       return (UserSession.isLoggedIn(req)
         ? upsertLinkedAccount
-        : upsertUser)(req, service, profile)
+        : upsertUser)(req, service, profile, true)
       .then(() => UserExternalData.store(req.session.userId, service, profile._json))
       .then(() => respond())
       .catch(respond)
     }
-
     passport.authenticate(strategy, authCallback)(req, res, next)
-  })
+  });
+}
+
+function finishHitFinOAuth( req, res, next){
+
+    return new Promise((resolve, reject) => {
+      var respond = (error) => {
+        if (error && error.stack) rollbar.handleError(error, req)
+
+        return resolve(res.view('popupDone', {
+          error,
+          context: req.session.authContext || 'oauth',
+          layout: null,
+          returnDomain: req.session.returnDomain
+        }))
+      }
+      var authCallback = function (err, accessToken) {
+        if(err) return respond(err);
+        if (!accessToken) return respond('Unable to authenticate with hitfin');
+        if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
+
+        hitfinApi.getUserDetails(accessToken).then((details) => {
+          return upsertLinkedAccount(req,'hit-fin', details, false);
+        }).then( () => {
+          return UserExternalData.store(req.session.userId, 'hit-fin', {
+            accessToken: accessToken,
+            refreshToken: null
+          });
+        }).then(() => respond())
+        .catch((err) => {
+          respond(err);
+        });
+      }
+      passport.authenticate('hit-fin', authCallback)(req, res, next)
+    });
 }
 
 // save params into session variables so that they can be used to return to the
@@ -141,6 +177,15 @@ module.exports = {
 
   finishGoogleOAuth: function (req, res, next) {
     return finishOAuth('google', req, res, next)
+  },
+
+  startHitFinOAuth: setSessionFromParams(function (req, res) {
+    passport.authenticate('hit-fin')(req, res)
+  }),
+
+  finishHitFinOAuth: function (req, res, next) {
+    console.log('hitfin-oauth-complete!')
+    return finishHitFinOAuth(req, res, next)
   },
 
   startFacebookOAuth: setSessionFromParams(function (req, res) {
@@ -207,6 +252,16 @@ module.exports = {
       }
     })
     .catch(res.serverError)
+  },
+
+  unlinkHitFinOAuth: function (req, res) {
+    var userId = req.session.userId
+    return UserExternalData.remove(userId)
+    .then( (result) => {
+      return LinkedAccount.remove(userId)
+    }).then( (result) => {
+      return res.status(200).send({})
+    }).catch(res.serverError)
   },
 
   findUser // this is here for testing

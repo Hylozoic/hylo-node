@@ -4,7 +4,7 @@
 var message = {
   type: 'third party auth',
   context: '<%= context %>',
-  error:   <%- typeof(error) === "undefined" ? 'null' : '"' + error.toString().replace(/"/g, '\\"') + '"' %>,
+  error:   '<%= typeof(error) === "undefined" ? "" : error.toString()%>',
   url:     '<%= typeof(url) === "undefined" ? "" : url %>'
 }
 

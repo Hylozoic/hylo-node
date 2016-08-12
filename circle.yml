@@ -11,10 +11,11 @@ deployment:
     branch: hitfin-integration
     owner: jessieweiyi
     heroku:
-      appname: hylo-node
+      appname: hylo-node-hitfin
 general:
   artifacts:
     - "coverage"
   branches:
     only:
       - master
+      - hitfin-integration

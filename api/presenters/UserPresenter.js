@@ -3,7 +3,7 @@ import { pickBy } from 'lodash/fp'
 
 const relationsForSelf = [
   'memberships',
-  {'memberships.community': qb => qb.column('id', 'name', 'slug', 'avatar_url')},
+  {'memberships.community': qb => qb.column('id', 'name', 'slug', 'avatar_url', 'financial_requests_enabled')},
   'tags',
   'linkedAccounts'
 ]

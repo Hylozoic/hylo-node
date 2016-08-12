@@ -2,6 +2,7 @@ const setup = require('../../setup')
 const SessionController = require('../../../api/controllers/SessionController')
 var factories = require('../../setup/factories')
 var passport = require('passport')
+var hitfinApi = require('../../../lib/hitfin-api')
 
 describe('SessionController.findUser', () => {
   var u1, u2
@@ -271,4 +272,63 @@ describe('SessionController', function () {
       })
     })
   })
+
+  describe('.finishHitFinOAuth', () => {
+    var req, res, origPassportAuthenticate, user
+
+    before(() => {
+      origPassportAuthenticate = passport.authenticate
+    })
+
+    beforeEach(() => {
+      req = factories.mock.request()
+      res = factories.mock.response()
+
+      passport.authenticate = spy(function (strategy, callback) {
+        return () => callback(null, { id: '17'})
+      })
+      UserSession.isLoggedIn = spy(function(){
+        console.log('userSession')
+        // console.log(User.find())
+        return true
+      })
+      hitfinApi.getUserDetails = spy(function (token) {
+        return new Promise((resolve,reject) =>{
+          resolve({id:user.id})
+        })
+      })
+
+      return setup.clearDb().then(()=>{
+        user = factories.user()
+        return user.save()
+      }).then( () => {
+        req.session.userId = user.id
+        return User.find(user.id)
+      })
+    })
+
+    afterEach(() => {
+      passport.authenticate = origPassportAuthenticate
+    })
+
+    it('adds a linked account', () => {
+      return SessionController.finishHitFinOAuth(req, res)
+      .then(() => {
+        expect(res.view).to.have.been.called()
+        expect(res.viewTemplate).to.equal('popupDone')
+        expect(res.viewAttrs.error).not.to.exist
+
+        var externalUserData =  UserExternalData.where({user_id: user.id}).fetch()
+        expect(externalUserData).to.exist
+        expect(externalUserData.get('data')).to.exist
+
+        return User.find(user.id, {withRelated: 'linkedAccounts'}).then( (userWithRelation) =>{
+          var linkedAccount = userWithRelation.relations.linkedAccounts.first()
+          expect(linkedAccount).to.exist
+          expect(linkedAccount.get('provider_key')).to.equal('hit-fin')
+        })
+      })
+    })
+  })
+
 })

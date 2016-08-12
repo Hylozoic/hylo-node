@@ -1,4 +1,5 @@
 var passport = require('passport')
+var HitFinStrategy = require('./passport-hitfin-oauth').Strategy
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy
 var GoogleTokenStrategy = require('passport-google-token').Strategy
 var FacebookStrategy = require('passport-facebook').Strategy
@@ -59,6 +60,16 @@ var formatProfile = function (profile, accessToken, refreshToken) {
     }
   })
 }
+
+passport.use('hit-fin', new HitFinStrategy({
+      clientID: process.env.HITFIN_CLIENT_ID,
+      clientSecret: process.env.HITFIN_CLIENT_SECRET,
+      callbackURL: format('%s://%s%s', process.env.PROTOCOL, process.env.DOMAIN, '/noo/login/hit-fin/oauth'),
+    },
+    function(accessToken, refreshToken, profile, done) {
+      done(null, accessToken);
+    }
+))
 
 var googleStrategy = new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,

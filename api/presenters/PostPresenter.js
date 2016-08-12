@@ -11,6 +11,7 @@ var postRelations = (userId, opts = {}) => {
     'media',
     {relatedUsers: userColumns},
     'tags',
+    'financialRequest',
     {responders: q => q.column('users.id', 'name', 'avatar_url', 'event_responses.response')},
     {linkPreview: q => q.column('id', 'title', 'description', 'url', 'image_url', 'image_width', 'image_height')}
   ]
@@ -63,7 +64,7 @@ var postAttributes = (post, userId, opts = {}) => {
 
   const {
     user, communities, media, followers, contributions, responders, comments,
-    relatedUsers, tags, votes, children, linkPreview
+    relatedUsers, tags, votes, children, linkPreview, financialRequest
   } = post.relations
   const type = post.get('type')
   const isEvent = type === 'event'
@@ -97,7 +98,8 @@ var postAttributes = (post, userId, opts = {}) => {
       tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
         type,
       type: showValidType(post.get('type')),
-      linkPreview: get('id', linkPreview) ? linkPreview : null
+      linkPreview: get('id', linkPreview) ? linkPreview : null,
+      financialRequestAmount: financialRequest && financialRequest.get('amount')
     })
   if (opts.withComments) {
     extendedPost.comments = comments.map(c => _.merge(
@@ -117,6 +119,7 @@ var postAttributes = (post, userId, opts = {}) => {
   if (opts.forCommunity && post.get('pinned')) {
     extendedPost.memberships = {[opts.forCommunity]: {pinned: post.get('pinned')}}
   }
+
   return pickBy(x => !isNull(x) && !isUndefined(x), extendedPost)
 }
 

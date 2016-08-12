@@ -4,8 +4,10 @@ import {
   createPost, updateChildren, updateAllMedia, updateCommunities
 } from '../models/post/util'
 import {
-  handleMissingTagDescriptions, throwErrorIfMissingTags
+  handleMissingTagDescriptions, throwErrorIfMissingTags,
+  handleInvalidFinancialRequestsAmountError, handlePostValidations
 } from '../../lib/util/controllers'
+import * as PostValidator from '../services/PostValidator'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -128,6 +130,23 @@ const checkPostTags = (attrs, opts) => {
   return throwErrorIfMissingTags(tags, opts.communities)
 }
 
+const checkFinancialRequestsEnabled = (communities, amount) => {
+   const error = new Error('Financial Requests Amount error')
+
+   if(amount > 0 && communities != undefined && communities.length > 1){
+     error.invalidFinancialRequestsAmountError = "More than 1 communities for financial enabled project"
+     throw error
+   }
+
+   return Community.find(communities[0]).then(community => {
+    if(community != undefined && (!community.get('financial_requests_enabled')) && amount > 0){
+      error.invalidFinancialRequestsAmountError = "Not a financial contribution enabled community"
+      throw error
+    }
+    return
+   })
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -144,8 +163,14 @@ const PostController = {
   create: function (req, res) {
     const params = req.allParams()
 
-    if (!params.name) {
-      res.status(422).send("title can't be blank")
+    if (params.financialRequestAmount) {
+      params.financialRequestAmount = parseFloat(params.financialRequestAmount)
+    }
+
+    const errors = PostValidator.validate(params)
+
+    if (errors.length > 0) {
+      res.status(422).send({errors: errors})
       return Promise.resolve()
     }
 
@@ -153,12 +178,17 @@ const PostController = {
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
     )
+    .then(() => checkFinancialRequestsEnabled(
+     params.communities,
+     params.financialRequestAmount)
+    )
     .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
+      if (handleInvalidFinancialRequestsAmountError(err, res)) return
       res.serverError(err)
     })
   },
@@ -220,6 +250,10 @@ const PostController = {
     const post = res.locals.post
     const params = req.allParams()
 
+    if (params.financialRequestAmount) {
+      params.financialRequestAmount = parseFloat(params.financialRequestAmount)
+    }
+
     const attrs = merge(
       pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
       {
@@ -234,16 +268,28 @@ const PostController = {
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
     )
     .then(() => bookshelf.transaction(trx =>
-      post.save(attrs, {patch: true, transacting: trx})
+      Post.find(params.id)
+      .then(originalPost => originalPost.load(PostPresenter.relations(req.session.userId)))
+      .then(PostPresenter.present)
+      .then(originalPost => PostValidator.validate(merge(params, {originalPost})))
+      .then(errors => {
+        if (errors.length > 0) {
+          let error = new Error()
+          error.postValidations = errors
+          throw error
+        }
+      })
+      .then(() => post.save(attrs, {patch: true, transacting: trx})
       .tap(() => updateChildren(post, req.param('requests'), trx))
       .tap(() => updateCommunities(post, req.param('communities'), trx))
       .tap(() => updateAllMedia(post, params, trx))
-      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
+      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx)))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
+      if (handlePostValidations(err, res)) return
       res.serverError(err)
     })
   },

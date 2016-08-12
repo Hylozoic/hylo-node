@@ -19,6 +19,10 @@ module.exports = bookshelf.Model.extend({
       storage.set({data: data, updated_at: new Date()})
       return storage.save()
     })
-  }
+  },
+
+  remove: function (userId) {
+    return this.where({user_id: userId, type: 'hit-fin'}).destroy()
+  },
 
 })
