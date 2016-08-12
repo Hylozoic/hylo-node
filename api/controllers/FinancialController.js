@@ -28,14 +28,17 @@ module.exports = {
               reject(error);
             }
             else if(response.statusCode >=400){
-              reject(JSON.parse(body));
+              reject();
             }
             else{
               console.log(JSON.parse(body))
               resolve(JSON.parse(body));
             }
           })
-        }).then( response => respond(response))
+        })
+        }).then( (response) => {
+          console.log(response.latest.amount)
+          res.ok({balance: response.latest.amount})
       })
   }
 }
