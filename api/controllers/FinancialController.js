@@ -15,7 +15,6 @@ const getAccessToken = function (req) {
 module.exports = {
     getBalance: function(req, res, next){
       return getAccessToken(req).then( accessToken => {
-        console.log(accessToken)
         return new Promise((resolve, reject) => {
           request({
             url: process.env.HITFIN_API_URL + '/api/stabletoken/balances',
@@ -23,7 +22,6 @@ module.exports = {
               'Authorization': 'Bearer ' + accessToken
             }
           }, function(error, response, body){
-            console.log(body)
             if(error){
               reject(error);
             }
@@ -31,13 +29,11 @@ module.exports = {
               reject();
             }
             else{
-              console.log(JSON.parse(body))
               resolve(JSON.parse(body));
             }
           })
         })
         }).then( (response) => {
-          console.log(response.latest.amount)
           res.ok({balance: response.latest.amount})
       })
   }
