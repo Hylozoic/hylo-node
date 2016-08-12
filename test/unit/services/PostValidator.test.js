@@ -140,6 +140,17 @@ describe('PostValidator', () => {
         const errors = PostValidator.validate(postParams)
         expect(errors).to.contain('financial request amount can not be edited')
       })
+
+      it('should not return an error for edit form if financial request amount is unchanged', () => {
+        const postParams = _.merge({}, defaultPostParams,
+            { id: '145', financialRequestAmount: 100 },
+            {originalPost: originalFinancialProject})
+
+        postParams.originalPost.financialRequestAmount = '100.00'
+
+        const errors = PostValidator.validate(postParams)
+        expect(errors).not.to.contain('financial request amount can not be edited')
+      })
     })
   })
 })
