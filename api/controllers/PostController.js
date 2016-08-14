@@ -148,6 +148,15 @@ const checkFinancialRequestsEnabled = (communities, amount) => {
    })
 }
 
+const getCurrentUserAccessToken = function (req) {
+  return UserExternalData.find(req.session.userId, 'hit-fin').then( user_data => {
+    if (user_data)
+      return user_data.attributes.data.accessToken
+    else
+      return null
+  })
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -175,6 +184,8 @@ const PostController = {
       return Promise.resolve()
     }
 
+    const userAccessToken = getCurrentUserAccessToken(req)
+
     return checkPostTags(
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
@@ -184,12 +195,12 @@ const PostController = {
      params.financialRequestAmount)
     )
     // .then(() => {
-    //   if(params.financialRequestAmount > 0){
+    //   if(params.financialRequestAmount){
     //     return ProjectPledge.create(
     //         params.financialRequestAmount,
     //         params.end_time,
-    //         'ZWdKw56rdWs3jZUhcDCjg3Fn9rXa8k',
-    //         'ZWdKw56rdWs3jZUhcDCjg3Fn9rXa8k',
+    //         userAccessToken,
+    //         'sJ3cntmyiA74J11jF1shty2hRXkazs',
     //         'hylo-integration@hitfin.com')
     //   } else {
     //     return
