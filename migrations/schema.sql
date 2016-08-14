@@ -341,6 +341,10 @@ CREATE TABLE financial_request (
     id integer NOT NULL,
     post_id bigint,
     amount numeric(8,2),
+    project_issue_id bigint,
+    project_offer_id bigint,
+    syndicate_issue_id bigint,
+    syndicate_offer_id bigint,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
