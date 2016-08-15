@@ -5,10 +5,12 @@ import {
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags,
-  handleInvalidFinancialRequestsAmountError, handlePostValidations
+  handleInvalidFinancialRequestsAmountError, handlePostValidations,
+  handleHitfinProjectSubmissionError
 } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 import ProjectPledge from '../../lib/hitfin/ProjectPledge'
+import HitfinAuthenticate from '../../lib/hitfin/Authenticate'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -157,6 +159,17 @@ const getCurrentUserAccessToken = function (req) {
   })
 }
 
+const throwHitfinProjectSubmissionError = function(err){
+  if(err){
+    const error = new Error('Hitfin Integration error')
+    error.hitfinProjectSubmissionErrorMessage = err
+    error.hitfinProjectSubmissionErrorCode = 500
+    throw err
+  }
+
+  return null
+}
+
 const PostController = {
   findOne: function (req, res) {
     var opts = {
@@ -168,6 +181,26 @@ const PostController = {
     .then(post => PostPresenter.present(post, req.session.userId, opts))
     .then(res.ok)
     .catch(res.serverError)
+  },
+
+  createHitfinProject: function(){
+    return  getCurrentUserAccessToken(req)
+            .then((userAccessToken) => {
+              return [
+                userAccessToken,
+                HitfinAuthenticate.getAccessToken(process.env.HITFIN_CLIENT_ID, process.env.HITFIN_CLIENT_SECRET)]
+              })
+            .spread((userAccessToken, syndicateManagerAccessToken) => {
+              console.log(userAccessToken)
+              console.log(syndicateManagerAccessToken)
+
+              return ProjectPledge.create(
+                params.financialRequestAmount,
+                params.end_time,
+                userAccessToken,
+                syndicateManagerAccessToken,
+                process.env.HITFIN_EMAIL)
+              }).then((projectPledgeState) => {return projectPledgeState}, throwHitfinProjectSubmissionError)
   },
 
   create: function (req, res) {
@@ -184,8 +217,6 @@ const PostController = {
       return Promise.resolve()
     }
 
-    const userAccessToken = getCurrentUserAccessToken(req)
-
     return checkPostTags(
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
@@ -194,25 +225,26 @@ const PostController = {
      params.communities,
      params.financialRequestAmount)
     )
-    // .then(() => {
-    //   if(params.financialRequestAmount){
-    //     return ProjectPledge.create(
-    //         params.financialRequestAmount,
-    //         params.end_time,
-    //         userAccessToken,
-    //         'sJ3cntmyiA74J11jF1shty2hRXkazs',
-    //         'hylo-integration@hitfin.com')
-    //   } else {
-    //     return
-    //   }
-    // })
-    .then(() => createPost(req.session.userId, params))
+    .then( () => {
+      if(params.financialRequestAmount && process.env.HITFIN_ENABLED == "true"){
+        return this.createHitfinProject()
+      } else {
+        return
+      }
+    })
+    .then((projectPledgeState) => merge(params, projectPledgeState))
+    .then(() => {
+      sails.log.debug("==========================================")
+      sails.log.debug(params)
+      return createPost(req.session.userId, params)
+    })
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
       if (handleInvalidFinancialRequestsAmountError(err, res)) return
+      if (handleHitfinProjectSubmissionError(err, res)) return
       res.serverError(err)
     })
   },

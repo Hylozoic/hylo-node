@@ -320,11 +320,26 @@ describe('PostController', () => {
         financialRequestAmount: '1234.56',
         end_time: new Date('2017-05-02')
       })
+
+      PostController.createHitfinProject = spy(() => { return {
+        projectIssueId: 1,
+        projectOfferId: 2,
+        syndicateIssueId: 3,
+        syndicateOfferId: 4
+      } })
+
       return PostController.create(req, res)
       .then(() => {
         var data = res.body
         expect(data).to.exist
         expect(data.financialRequestAmount).to.equal('1234.56')
+
+        if(process.env.HITFIN_ENABLED == 'true'){
+          expect(data.projectIssueId).to.equal('1')
+          expect(data.projectOfferId).to.equal('2')
+          expect(data.syndicateIssueId).to.equal('3')
+          expect(data.syndicateOfferId).to.equal('4')
+        }
       })
     })
   })

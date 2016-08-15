@@ -99,7 +99,11 @@ var postAttributes = (post, userId, opts = {}) => {
         type,
       type: showValidType(post.get('type')),
       linkPreview: get('id', linkPreview) ? linkPreview : null,
-      financialRequestAmount: financialRequest && financialRequest.get('amount')
+      financialRequestAmount: financialRequest && financialRequest.get('amount'),
+      projectIssueId: financialRequest && financialRequest.get('project_issue_id'),
+      projectOfferId: financialRequest && financialRequest.get('project_offer_id'),
+      syndicateIssueId: financialRequest && financialRequest.get('syndicate_issue_id'),
+      syndicateOfferId: financialRequest && financialRequest.get('syndicate_offer_id')
     })
   if (opts.withComments) {
     extendedPost.comments = comments.map(c => _.merge(
