@@ -183,7 +183,7 @@ const PostController = {
     .catch(res.serverError)
   },
 
-  createHitfinProject: function(){
+  createHitfinProject: function(req, financialRequestAmount, endTime){
     return  getCurrentUserAccessToken(req)
             .then((userAccessToken) => {
               return [
@@ -195,8 +195,8 @@ const PostController = {
               console.log(syndicateManagerAccessToken)
 
               return ProjectPledge.create(
-                params.financialRequestAmount,
-                params.end_time,
+                financialRequestAmount,
+                endTime,
                 userAccessToken,
                 syndicateManagerAccessToken,
                 process.env.HITFIN_EMAIL)
@@ -227,7 +227,7 @@ const PostController = {
     )
     .then( () => {
       if(params.financialRequestAmount && process.env.HITFIN_ENABLED == "true"){
-        return this.createHitfinProject()
+        return this.createHitfinProject(req, params.financialRequestAmount, params.end_time)
       } else {
         return
       }
