@@ -1,7 +1,7 @@
 const passport = require('passport')
 const rollbar = require('rollbar')
 const request = require('request')
-const hitfinApi = require('../../lib/hitfin-api');
+const hitfinUser = require('../../lib/hitfin/User');
 
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
@@ -125,7 +125,7 @@ function finishHitFinOAuth( req, res, next){
         if (!accessToken) return respond('Unable to authenticate with hitfin');
         if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
 
-        hitfinApi.getUserDetails(accessToken).then((details) => {
+        hitfinUser.get(accessToken).then((details) => {
           return upsertLinkedAccount(req,'hit-fin', details, false);
         }).then( () => {
           return UserExternalData.store(req.session.userId, 'hit-fin', {

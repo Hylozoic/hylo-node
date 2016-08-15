@@ -2,7 +2,7 @@ const setup = require('../../setup')
 const SessionController = require('../../../api/controllers/SessionController')
 var factories = require('../../setup/factories')
 var passport = require('passport')
-var hitfinApi = require('../../../lib/hitfin-api')
+var hitfinUser = require('../../../lib/hitfin/User')
 
 describe('SessionController.findUser', () => {
   var u1, u2
@@ -292,7 +292,7 @@ describe('SessionController', function () {
         // console.log(User.find())
         return true
       })
-      hitfinApi.getUserDetails = spy(function (token) {
+      hitfinUser.get = spy(function (token) {
         return new Promise((resolve,reject) =>{
           resolve({id:user.id})
         })
