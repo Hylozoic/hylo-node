@@ -4,7 +4,10 @@ const request = require('request')
 
 const getAccessToken = function (req) {
   return UserExternalData.find(req.session.userId, 'hit-fin').then( user_data => {
-    return user_data.attributes.data.accessToken
+    if(user_data)
+      return user_data.attributes.data.accessToken
+    else
+      throw new Error("User is not connected to HitFin")
   })
 }
 
@@ -64,8 +67,18 @@ module.exports = {
             }
           })
         })
-        }).then( (response) => {
-          res.ok({balance: response.latest.amount})
+      })
+      .catch(function (err) {
+        if (err.message.includes(['not connected to HitFin'], err.message)) {
+          res.statusCode = 404
+          res.send(req.__(err.message))
+        } else {
+          res.serverError(err)
+        }
+      })
+      .then( (response) => {
+          if(response)
+            res.ok({balance: response.latest.amount})
       })
   }
 }

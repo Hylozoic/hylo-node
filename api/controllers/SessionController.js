@@ -120,7 +120,7 @@ function finishHitFinOAuth( req, res, next){
           returnDomain: req.session.returnDomain
         }))
       }
-      var authCallback = function (err, accessToken) {
+      var authCallback = function (err, accessToken, refreshToken) {
         if(err) return respond(err);
         if (!accessToken) return respond('Unable to authenticate with hitfin');
         if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
@@ -130,7 +130,7 @@ function finishHitFinOAuth( req, res, next){
         }).then( () => {
           return UserExternalData.store(req.session.userId, 'hit-fin', {
             accessToken: accessToken,
-            refreshToken: null
+            refreshToken: refreshToken
           });
         }).then(() => respond())
         .catch((err) => {
