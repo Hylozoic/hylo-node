@@ -10,7 +10,7 @@ import {
 } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 import ProjectPledge from '../../lib/hitfin/ProjectPledge'
-import HitfinAuthenticate from '../../lib/hitfin/Authenticate'
+import AccessToken from '../services/AccessToken'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -188,7 +188,7 @@ const PostController = {
             .then((userAccessToken) => {
               return [
                 userAccessToken,
-                HitfinAuthenticate.getAccessToken(process.env.HITFIN_CLIENT_ID, process.env.HITFIN_CLIENT_SECRET)]
+                AccessToken.getHitfinManagerAccessToken()]
               })
             .spread((userAccessToken, syndicateManagerAccessToken) => {
               console.log(userAccessToken)
