@@ -89,6 +89,8 @@ module.exports.policies = {
 
   PostController: {
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    getProjectPledgeProgress:             ['sessionAuth', 'checkAndSetPost'],
+    contributeProject:                    ['sessionAuth', 'checkAndSetPost'],
     findForCommunity:                     ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],

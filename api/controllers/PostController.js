@@ -183,6 +183,28 @@ const PostController = {
     .catch(res.serverError)
   },
 
+  getProjectPledgeProgress: function (req, res) {
+    const postId = req.param('postId')
+
+      AccessToken.getHitfinManagerAccessToken()
+      .then((token) => { return [token, 22 ]})//to get the real id
+      .spread((token, syndicateIssueId) => ProjectPledge.getProgress(token, syndicateIssueId))
+      .then((amount) => {return {pledgeAmount: amount}})
+      .then(res.ok, res.serverError)
+  },
+
+  contributeProject: function(req, res){
+    const postId = req.param('postId')
+    const amount = req.param('amount')
+    console.log(postId)
+    console.log(amount)
+
+    getCurrentUserAccessToken(req)
+    .then((token) => { return [token,  17]})//to get the real id
+    .spread((token, syndicateOfferId) => ProjectPledge.contribute(syndicateOfferId, amount, token))
+    .then(res.ok, res.serverError)
+  },
+
   createHitfinProject: function(req, financialRequestAmount, endTime){
     return  getCurrentUserAccessToken(req)
             .then((userAccessToken) => {

@@ -41,6 +41,8 @@ module.exports.routes = {
   'POST   /noo/community/:communityId/post/:postId/pin':    'CommunityController.pinPost',
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
+  'GET    /noo/post/:postId/pledge-progress':             'PostController.getProjectPledgeProgress',
+  'POST   /noo/post/:postId/contribute':                  'PostController.contributeProject',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
   'GET    /noo/post/:postId/comments':                    'CommentController.findForPost',
   'POST   /noo/post/:postId/follow':                      'PostController.follow',
