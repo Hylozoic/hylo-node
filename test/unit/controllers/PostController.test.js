@@ -322,10 +322,10 @@ describe('PostController', () => {
       })
 
       PostController.createHitfinProject = spy(() => { return {
-        projectIssueId: 1,
-        projectOfferId: 2,
-        syndicateIssueId: 3,
-        syndicateOfferId: 4
+        projectOwnerIssueId: 1,
+        projectOwnerOfferId: 2,
+        syndicateManagerIssueId: 3,
+        syndicateManagerOfferId: 4
       } })
 
       return PostController.create(req, res)

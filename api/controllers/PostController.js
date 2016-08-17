@@ -185,9 +185,13 @@ const PostController = {
 
   getProjectPledgeProgress: function (req, res) {
     const postId = req.param('postId')
+    const post = res.locals.post
 
-      AccessToken.getHitfinManagerAccessToken()
-      .then((token) => { return [token, 22 ]})//to get the real id
+    post.load(PostPresenter.relations(req.session.userId))
+      .then(PostPresenter.present)
+      .then((post) =>  {
+        return [AccessToken.getHitfinManagerAccessToken(), post.syndicateIssueId]}
+      )
       .spread((token, syndicateIssueId) => ProjectPledge.getProgress(token, syndicateIssueId))
       .then((amount) => {return {pledgeAmount: amount}})
       .then(res.ok, res.serverError)
@@ -196,11 +200,13 @@ const PostController = {
   contributeProject: function(req, res){
     const postId = req.param('postId')
     const amount = req.param('amount')
+    const post = res.locals.post
     console.log(postId)
     console.log(amount)
 
-    getCurrentUserAccessToken(req)
-    .then((token) => { return [token,  17]})//to get the real id
+    post.load(PostPresenter.relations(req.session.userId))
+    .then(PostPresenter.present)
+    .then((post) =>  { return [getCurrentUserAccessToken(req), post.syndicateOfferId]})
     .spread((token, syndicateOfferId) => ProjectPledge.contribute(syndicateOfferId, amount, token))
     .then(res.ok, res.serverError)
   },

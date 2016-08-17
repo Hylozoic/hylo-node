@@ -30,10 +30,10 @@ export const afterSavingPost = function (post, opts) {
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
   const financialRequestAmount = parseFloat(opts.financialRequestAmount)
-  const projectIssueId =  opts.projectIssueId ? opts.projectIssueId : null
-  const projectOfferId =  opts.projectOfferId ? opts.projectOfferId : null
-  const syndicateIssueId = opts.syndicateIssueId ? opts.syndicateIssueId : null
-  const syndicateOfferId = opts.syndicateOfferId ? opts.syndicateOfferId : null
+  const projectIssueId =  opts.projectOwnerIssueId ? opts.projectOwnerIssueId : null
+  const projectOfferId =  opts.projectOwnerOfferId ? opts.projectOwnerOfferId : null
+  const syndicateIssueId = opts.syndicateManagerIssueId ? opts.syndicateManagerIssueId : null
+  const syndicateOfferId = opts.syndicateManagerOfferId ? opts.syndicateManagerOfferId : null
 
   return Promise.all(flatten([
     // Attach post to communities
@@ -155,6 +155,6 @@ export const createPost = (userId, params) =>
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
     .tap(post => afterSavingPost(post, merge(
-      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'financialRequestAmount', 'projectIssueId', 'projectOfferId', 'syndicateIssueId', 'syndicateOfferId'),
+      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'financialRequestAmount', 'projectOwnerIssueId', 'projectOwnerOfferId', 'syndicateManagerIssueId', 'syndicateManagerOfferId'),
       {children: params.requests, transacting: trx}
     )))))
