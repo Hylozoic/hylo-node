@@ -4,7 +4,7 @@ const HitfinAuthenticate = require('../../lib/hitfin/Authenticate')
 const HitfinUser = require('../../lib/hitfin/User')
 const NAME_HITFIN_ACCESS_TOKEN = 'hitfin_syndicate_manager_access_token'
 
-const getSyndicateManagerAccessTokenFromHitfin = function(){
+const getSyndicateManagerAccessTokenFromHitfin = function(client){
   return HitfinAuthenticate.getAccessToken(process.env.HITFIN_CLIENT_ID, process.env.HITFIN_CLIENT_SECRET).
     then((token) => {
       client.set(NAME_HITFIN_ACCESS_TOKEN, token)
@@ -23,10 +23,10 @@ module.exports = {
         return HitfinUser.get(res).then(() => {
           return res // If the user details is retrieved successfully, it means the token is valid
         },
-        getSyndicateManagerAccessTokenFromHitfin)
+        () => {return getSyndicateManagerAccessTokenFromHitfin(client)})
       }
       else{
-        return getSyndicateManagerAccessTokenFromHitfin()
+        return getSyndicateManagerAccessTokenFromHitfin(client)
       }
     })
   }
