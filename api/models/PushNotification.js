@@ -14,7 +14,14 @@ module.exports = bookshelf.Model.extend({
 
     return this.save({'time_sent': (new Date()).toISOString()}, options)
     .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
-    .catch(e => rollbar.handleErrorWithPayloadData(e, {custom: {server_token: process.env.ONESIGNAL_APP_ID, device_token: deviceToken}}))
+    .catch(e => {
+      if (process.env.NODE_ENV !== 'production') throw e
+      const err = e instanceof Error ? e : new Error(e)
+      rollbar.handleErrorWithPayloadData(err, {custom: {
+        server_token: process.env.ONESIGNAL_APP_ID,
+        device_token: deviceToken
+      }})
+    })
   },
 
   getPlatform: function () {

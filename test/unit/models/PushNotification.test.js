@@ -4,7 +4,7 @@ var nock = require('nock')
 describe('PushNotification', function () {
   var pushNotification
 
-  before(function () {
+  before(() => {
     pushNotification = new PushNotification({
       device_token: 'abcd',
       alert: 'hi',
@@ -13,13 +13,15 @@ describe('PushNotification', function () {
       platform: 'ios_macos'
     })
 
-    nock('https://onesignal.com').post('/api/v1/notifications').reply(200, {result: 'success'})
-
-    return setup.clearDb()
-    .then(() => pushNotification.save())
+    return setup.clearDb().then(() => pushNotification.save())
   })
 
-  describe('.send', function () {
+  describe('.send', () => {
+    beforeEach(() => {
+      nock(OneSignal.host).post('/api/v1/notifications')
+      .reply(200, {result: 'success'})
+    })
+
     it('sets time_sent', function () {
       return pushNotification.send()
       .then(result => {

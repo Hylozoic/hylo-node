@@ -1,10 +1,13 @@
 var Promise = require('bluebird')
 var request = require('request')
 
+const host = 'https://onesignal.com'
+
 var OneSignal = module.exports = {
+  host,
 
   register: function (platform, deviceToken) {
-    var url = 'https://onesignal.com/api/v1/players'
+    var url = `${host}/api/v1/players`
     var appId = process.env.ONESIGNAL_APP_ID
     var deviceType = platform === 'ios_macos' ? 0 : 1
     var params = {app_id: appId, device_type: deviceType, identifier: deviceToken}
@@ -75,7 +78,7 @@ var OneSignal = module.exports = {
   },
 
   notify: function (platform, deviceToken, alert, path, badgeNo, appId) {
-    var url = 'https://onesignal.com/api/v1/notifications'
+    var url = `${host}/api/v1/notifications`
     var params = OneSignal.notification(platform, deviceToken, alert, path, badgeNo, appId)
 
     var requestOptions = {
