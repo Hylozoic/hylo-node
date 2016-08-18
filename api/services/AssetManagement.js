@@ -1,84 +1,75 @@
-var aws = require('aws-sdk'),
-  crypto = require('crypto'),
-  gm = require('gm'),
-  mime = require('mime'),
-  path = require('path'),
-  Promise = require('bluebird'),
-  request = require('request'),
-  s3stream = require('s3-upload-stream')(new aws.S3());
+const aws = require('aws-sdk')
+const crypto = require('crypto')
+const gm = require('gm')
+const mime = require('mime')
+const path = require('path')
+const Promise = require('bluebird')
+const request = require('request')
+const s3stream = require('s3-upload-stream')(new aws.S3())
 
-var promisifyStream = function(stream) {
-  return new Promise((resolve, reject) => {
-    stream.on('end', resolve);
-    stream.on('error', reject);
-  });
-};
+const promisifyStream = stream =>
+  new Promise((resolve, reject) => {
+    stream.on('end', resolve)
+    stream.on('error', err =>
+      err instanceof Error ? reject(err) : reject(new Error(err)))
+  })
 
-var basename = function(url) {
-  var name = path.basename(url).replace(/(\?.*|[ %+])/g, '');
-  return name === '' ? crypto.randomBytes(2).toString('hex') : name;
-};
+const basename = url => {
+  const name = path.basename(url).replace(/(\?.*|[ %+])/g, '')
+  return name === '' ? crypto.randomBytes(2).toString('hex') : name
+}
 
 module.exports = {
+  copyAsset: function (instance, modelName, attr) {
+    const subfolder = attr.replace('_url', '')
+    const url = instance.get(attr)
+    const key = path.join(modelName.toLowerCase(), instance.id, subfolder, basename(url))
+    const newUrl = process.env.AWS_S3_CONTENT_URL + '/' + key
 
-  copyAsset: function(instance, modelName, attr) {
-    var subfolder = attr.replace('_url', ''),
-      url = instance.get(attr),
-      key = path.join(modelName.toLowerCase(), instance.id, subfolder, basename(url)),
-      newUrl = process.env.AWS_S3_CONTENT_URL + '/' + key;
-
-    console.log('from: ' + url);
-    console.log('to:   ' + newUrl);
+    sails.log.info('from: ' + url)
+    sails.log.info('to:   ' + newUrl)
 
     if (url !== newUrl) {
-      var download = request(url);
-      download.pipe(s3stream.upload({
+      const copy = request(url).pipe(s3stream.upload({
         Bucket: process.env.AWS_S3_BUCKET,
         ACL: 'public-read',
         ContentType: mime.lookup(key),
         Key: key
-      }));
+      }))
 
-      var changes = {};
-      changes[attr] = newUrl;
-
-      return promisifyStream(download)
-      .then(() => instance.save(changes, {patch: true}));
+      return promisifyStream(copy)
+      .then(() => instance.save({[attr]: newUrl}, {patch: true}))
     }
   },
 
-  resizeAsset: function(instance, attr, settings) {
-    var s3 = new aws.S3(),
-      getObject = Promise.promisify(s3.getObject, s3),
-      url = instance.get(attr),
-      key = url.replace(process.env.AWS_S3_CONTENT_URL + '/', ''),
-      newKey = key.replace(/(\.\w{2,4})?$/, '-resized$1'),
-      newUrl = process.env.AWS_S3_CONTENT_URL + '/' + newKey;
+  resizeAsset: function (instance, attr, settings) {
+    const s3 = new aws.S3()
+    const getObject = Promise.promisify(s3.getObject, s3)
+    const url = instance.get(attr)
+    const key = url.replace(process.env.AWS_S3_CONTENT_URL + '/', '')
+    const newKey = key.replace(/(\.\w{2,4})?$/, '-resized$1')
+    const newUrl = process.env.AWS_S3_CONTENT_URL + '/' + newKey
 
-    console.log('from: ' + url);
-    console.log('to:   ' + newUrl);
+    sails.log.info('from: ' + url)
+    sails.log.info('to:   ' + newUrl)
 
     return getObject({
       Bucket: process.env.AWS_S3_BUCKET,
       Key: key
     }).then(obj => {
-      var resize = gm(obj.Body)
+      const resize = gm(obj.Body)
       .resize(settings.width, settings.height, '>') // do not resize if already smaller
-      .stream();
-
-      resize.pipe(s3stream.upload({
+      .stream()
+      .pipe(s3stream.upload({
         Bucket: process.env.AWS_S3_BUCKET,
         ACL: 'public-read',
         ContentType: mime.lookup(key),
         Key: newKey
-      }));
-
-      var changes = {};
-      changes[attr] = newUrl;
+      }))
 
       return promisifyStream(resize)
-      .then(() => instance.save(changes, {patch: true}));
-    });
+      .then(() => instance.save({[attr]: newUrl}, {patch: true}))
+    })
   }
 
 }

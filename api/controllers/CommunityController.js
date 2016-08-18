@@ -96,7 +96,7 @@ module.exports = {
         slack_configure_url: parsed.incoming_webhook.configuration_url
       }, {patch: true}))
       .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
-      .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=0'))
+      .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=slack&slackerror=true'))
     })
   },
 
@@ -280,7 +280,8 @@ module.exports = {
 
   findForNetworkNav: function (req, res) {
     return Network.find(req.param('networkId'))
-    .then(network => Community.where('network_id', network.get('id'))
+    .then(network =>
+      Community.where({network_id: network.get('id'), active: true})
       .fetchAll({withRelated: ['memberships']})
       .then(communities => sortBy(communities.models, c => -c.relations.memberships.length))
       .then(communities => communities.map(c => c.pick(['name', 'slug']))))
