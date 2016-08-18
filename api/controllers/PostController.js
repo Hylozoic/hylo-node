@@ -10,7 +10,7 @@ import {
 } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 import ProjectPledge from '../../lib/hitfin/ProjectPledge'
-import AccessToken from '../services/AccessToken'
+import Hitfin from '../services/Hitfin'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -190,7 +190,7 @@ const PostController = {
     post.load(PostPresenter.relations(req.session.userId))
       .then(PostPresenter.present)
       .then((post) =>  {
-        return [AccessToken.getHitfinManagerAccessToken(), post.syndicateIssueId]}
+        return [Hitfin.getHitfinManagerAccessToken(), post.syndicateIssueId]}
       )
       .spread((token, syndicateIssueId) => ProjectPledge.getProgress(token, syndicateIssueId))
       .then((amount) => {return {pledgeAmount: amount}})
@@ -216,7 +216,7 @@ const PostController = {
             .then((userAccessToken) => {
               return [
                 userAccessToken,
-                AccessToken.getHitfinManagerAccessToken()]
+                Hitfin.getHitfinManagerAccessToken()]
               })
             .spread((userAccessToken, syndicateManagerAccessToken) => {
               console.log(userAccessToken)
