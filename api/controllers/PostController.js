@@ -184,7 +184,6 @@ const PostController = {
   },
 
   getProjectPledgeProgress: function (req, res) {
-    const postId = req.param('postId')
     const post = res.locals.post
 
     post.load(PostPresenter.relations(req.session.userId))
@@ -198,11 +197,9 @@ const PostController = {
   },
 
   contributeProject: function(req, res){
-    const postId = req.param('postId')
-    const amount = req.param('amount')
+    const params = req.allParams()
+    const amount = params['amount']
     const post = res.locals.post
-    console.log(postId)
-    console.log(amount)
 
     post.load(PostPresenter.relations(req.session.userId))
     .then(PostPresenter.present)
