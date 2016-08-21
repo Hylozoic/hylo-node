@@ -52,12 +52,15 @@ ADMIN_GOOGLE_CLIENT_ID=foo
 ADMIN_GOOGLE_CLIENT_SECRET=foo
 ASSET_HOST_URL=http://localhost:1337
 BUNDLE_VERSION=dev
-DATABASE_URL=postgres://hylolocal:hylolocalpassword@localhost:5432/hylo
+DATABASE_URL=postgres://postgres:password@localhost:5432/hylo
 DEBUG_SQL=false
-DOMAIN=localhost:3001
+DOMAIN=localhost:9000
 EMAIL_SENDER=dev+localtester@hylo.com
 GOOGLE_CLIENT_ID=foo
 GOOGLE_CLIENT_SECRET=foo
+HITFIN_API_URL=https://sandbox.hitfin.com
+HITFIN_ENABLED=true
+HITFIN_EMAIL=hylo-integration@hitfin.com
 HITFIN_CLIENT_ID=foo
 HITFIN_CLIENT_SECRET=foo
 FACEBOOK_APP_ID=foo
@@ -78,16 +81,17 @@ SEGMENT_KEY=foo
 SENDWITHUS_KEY=foo
 SLACK_APP_CLIENT_ID=xxxxxxx
 SLACK_APP_CLIENT_SECRET=xxxxxxxx
-HITFIN_CLIENT_ID=foo
-HITFIN_CLIENT_SECRET=foo
-HITFIN_API_URL=http://hitfin-fake.herokuapp.com
 ```
+
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
 * `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 * `DATABASE_URL`: set to your local DB instance
-* `HITFIN_CLIENT_ID`: client ID from HitFin, optional for dev installation
-* `HITFIN_CLIENT_SECRET`: client secret from HitFin, optional for dev installation
+* `HITFIN_ENABLED`: set to `true` if you want to integrate with HitFin
+* `HITFIN_API_URL`: set to the HitFin sandbox url
+* `HITFIN_EMAIL`: the email address for the HitFin account
+* `HITFIN_CLIENT_ID`: client ID for the HitFin account
+* `HITFIN_CLIENT_SECRET`: client secret for the HitFin account
 * `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
 * `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in  [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
 * `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)

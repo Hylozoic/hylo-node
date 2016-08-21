@@ -159,11 +159,11 @@ const getCurrentUserAccessToken = function (req) {
   })
 }
 
-const throwHitfinProjectSubmissionError = function(err){
+const throwHitfinIntegrationError = function(err){
   if(err){
     const error = new Error('Hitfin Integration error')
-    error.hitfinProjectSubmissionErrorMessage = err
-    error.hitfinProjectSubmissionErrorCode = 500
+    error.hitfinIntegrationErrorMessage = err
+    error.hitfinIntegrationErrorCode = 500
     throw err
   }
 
@@ -199,6 +199,7 @@ const PostController = {
   contributeProject: function(req, res){
     const params = req.allParams()
     const amount = params['amount']
+
     const post = res.locals.post
 
     post.load(PostPresenter.relations(req.session.userId))
@@ -216,16 +217,13 @@ const PostController = {
                 Hitfin.getHitfinManagerAccessToken()]
               })
             .spread((userAccessToken, syndicateManagerAccessToken) => {
-              console.log(userAccessToken)
-              console.log(syndicateManagerAccessToken)
-
               return ProjectPledge.create(
                 financialRequestAmount,
                 endTime,
                 userAccessToken,
                 syndicateManagerAccessToken,
                 process.env.HITFIN_EMAIL)
-              }).then((projectPledgeState) => {return projectPledgeState}, throwHitfinProjectSubmissionError)
+              }).then((projectPledgeState) => {return projectPledgeState}, throwHitfinIntegrationError)
   },
 
   create: function (req, res) {
@@ -269,7 +267,7 @@ const PostController = {
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
       if (handleInvalidFinancialRequestsAmountError(err, res)) return
-      if (handleHitfinProjectSubmissionError(err, res)) return
+      if (handleHitfinIntegrationError(err, res)) return
       res.serverError(err)
     })
   },
