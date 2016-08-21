@@ -53,10 +53,14 @@ describe('SearchController', () => {
 
     it('works', () => {
       return SearchController.showFullText(req, res)
-      .then(() => p.load([
-        'communities', 'contributions', 'followers', 'responders', 'media',
-        'relatedUsers', 'tags', 'votes', 'user'
-      ]))
+      .then(() => Promise.join(
+        p.load([
+          'communities', 'contributions', 'followers', 'responders', 'media',
+          'relatedUsers', 'tags', 'votes', 'user'
+        ]),
+        u1.load('tags'),
+        u2.load('tags')
+      ))
       .then(() => {
         expect(res.body).to.deep.equal({
           items: [
