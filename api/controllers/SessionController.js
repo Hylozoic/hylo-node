@@ -108,7 +108,7 @@ const finishOAuth = function (strategy, req, res, next) {
 }
 
 function finishHitFinOAuth( req, res, next){
-
+    console.log(res)
     return new Promise((resolve, reject) => {
       var respond = (error) => {
         if (error && error.stack) rollbar.handleError(error, req)
