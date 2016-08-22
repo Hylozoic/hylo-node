@@ -11,7 +11,7 @@ function Strategy(options, verify) {
     options = options || {};
     options.authorizationURL = options.authorizationURL || AUTH_URL;
     options.tokenURL = options.tokenURL || TOKEN_URL;
-    options.scope = options.scope || [ 'user', 'wallet' ];
+    options.scope = options.scope || [ 'email' ];
     options.clientSecret = options.clientSecret;
     options.skipUserProfile = true;
     OAuth2Strategy.call(this, options, verify);
