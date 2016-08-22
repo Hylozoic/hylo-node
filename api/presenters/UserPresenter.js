@@ -1,4 +1,4 @@
-import { find, get, isNull, isUndefined, merge, pick } from 'lodash'
+import { find, get, isNull, isUndefined, map, merge, pick } from 'lodash'
 import { pickBy } from 'lodash/fp'
 
 const relationsForSelf = [
@@ -85,7 +85,7 @@ const UserPresenter = module.exports = {
 
   presentForList: function (user, opts = {}) {
     var moreAttributes = {
-      tags: user.relations.tags ? user.relations.tags.pluck('name') : null
+      tags: map(get(user, 'relations.tags.models'), t => t.pick('id', 'name'))
     }
 
     const getMembership = communityId =>

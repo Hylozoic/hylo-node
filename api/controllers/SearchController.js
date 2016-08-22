@@ -99,9 +99,7 @@ module.exports = {
           ]
         }),
 
-        ids.people && User.where('id', 'in', ids.people).fetchAll({
-          withRelated: 'tags'
-        }),
+        ids.people && User.where('id', 'in', ids.people).fetchAll(),
 
         (posts, comments, people) =>
           items.map(formatResult(posts, comments, people))
