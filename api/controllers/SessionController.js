@@ -121,6 +121,7 @@ function finishHitFinOAuth( req, res, next){
         }))
       }
       var authCallback = function (err, accessToken, refreshToken) {
+        console.log(accessToken)
         if(err) return respond(err);
         if (!accessToken) return respond('Unable to authenticate with hitfin');
         if(!UserSession.isLoggedIn(req)) return respond('unauthenticated user');
