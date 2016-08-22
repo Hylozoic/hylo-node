@@ -1,13 +1,7 @@
 import { get } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
-import {
-  createPost, updateChildren, updateAllMedia, updateCommunities
-} from '../models/post/util'
-import {
-  handleMissingTagDescriptions, throwErrorIfMissingTags,
-  handleInvalidFinancialRequestsAmountError, handlePostValidations,
-  handleHitfinProjectSubmissionError
-} from '../../lib/util/controllers'
+import { createPost, updateChildren, updateAllMedia, updateCommunities} from '../models/post/util'
+import { handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFinancialRequestsAmountError, handlePostValidations, handleHitfinProjectSubmissionError} from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 import ProjectPledge from '../../lib/hitfin/ProjectPledge'
 import Hitfin from '../services/Hitfin'
@@ -22,28 +16,28 @@ const sortColumns = {
 }
 
 const queryPosts = (req, opts) =>
-  // using Promise.props here allows us to pass subqueries, e.g. when looking up
-  // communities in queryForUser
-  Promise.props(merge(
-    {
-      sort: sortColumns[opts.sort || req.param('sort') || 'recent'],
-      forUser: req.session.userId,
-      term: req.param('search')
-    },
-    pick(req.allParams(),
-      'type', 'limit', 'offset', 'start_time', 'end_time', 'filter', 'omit'),
-    omit(opts, 'sort')
-  ))
+// using Promise.props here allows us to pass subqueries, e.g. when looking up
+// communities in queryForUser
+Promise.props(merge(
+  {
+    sort: sortColumns[opts.sort || req.param('sort') || 'recent'],
+    forUser: req.session.userId,
+    term: req.param('search')
+  },
+  pick(req.allParams(),
+    'type', 'limit', 'offset', 'start_time', 'end_time', 'filter', 'omit'),
+  omit(opts, 'sort')
+))
   .then(Search.forPosts)
 
 const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
   })
-  .then(posts => ({
-    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
-    posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
-  }))
+    .then(posts => ({
+      posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
+      posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
+    }))
 }
 
 const queryForCommunity = function (req, res) {
@@ -52,12 +46,12 @@ const queryForCommunity = function (req, res) {
   }
 
   return Network.containsUser(res.locals.community.get('network_id'), req.session.userId)
-  .then(contains => queryPosts(req, {
-    communities: [res.locals.community.id],
-    visibility: ((res.locals.membership || contains) ? null : Post.Visibility.PUBLIC_READABLE),
-    currentUserId: req.session.userId,
-    tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
-  }))
+    .then(contains => queryPosts(req, {
+      communities: [res.locals.community.id],
+      visibility: ((res.locals.membership || contains) ? null : Post.Visibility.PUBLIC_READABLE),
+      currentUserId: req.session.userId,
+      tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
+    }))
 }
 
 const queryForUser = function (req, res) {
@@ -89,37 +83,37 @@ const queryForFollowed = function (req, res) {
 
 const queryForNetwork = function (req, res) {
   return Network.find(req.param('networkId'))
-  .then(network => Community.where({network_id: network.id}).fetchAll())
-  .then(communities => queryPosts(req, {
-    communities: communities.map(c => c.id),
-    visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
-  }))
+    .then(network => Community.where({network_id: network.id}).fetchAll())
+    .then(communities => queryPosts(req, {
+      communities: communities.map(c => c.id),
+      visibility: [Post.Visibility.DEFAULT, Post.Visibility.PUBLIC_READABLE]
+    }))
 }
 
 const queryForTagInAllCommunities = function (req, res) {
   return Tag.find(req.param('tagName'))
-  .then(tag => {
-    if (!tag) {
-      res.notFound()
-      return
-    }
+    .then(tag => {
+      if (!tag) {
+        res.notFound()
+        return
+      }
 
-    return queryPosts(req, {
-      communities: Membership.activeCommunityIds(req.session.userId),
-      tag: tag.id
+      return queryPosts(req, {
+        communities: Membership.activeCommunityIds(req.session.userId),
+        tag: tag.id
+      })
     })
-  })
 }
 
 const createFindAction = (queryFunction) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => query && fetchAndPresentPosts(query, req.session.userId,
-    {
-      withComments: req.param('comments') && 'recent',
-      withVotes: req.param('votes'),
-      forCommunity: req.param('communityId')
-    }))
-  .then(res.ok, res.serverError)
+    .then(query => query && fetchAndPresentPosts(query, req.session.userId,
+        {
+          withComments: req.param('comments') && 'recent',
+          withVotes: req.param('votes'),
+          forCommunity: req.param('communityId')
+        }))
+    .then(res.ok, res.serverError)
 }
 
 // throw an error if a tag is included in the post that does not yet exist in
@@ -134,33 +128,33 @@ const checkPostTags = (attrs, opts) => {
 }
 
 const checkFinancialRequestsEnabled = (communities, amount) => {
-   const error = new Error('Financial Requests Amount error')
+  const error = new Error('Financial Requests Amount error')
 
-   if(amount > 0 && communities != undefined && communities.length > 1){
-     error.invalidFinancialRequestsAmountError = "More than 1 communities for financial enabled project"
-     throw error
-   }
+  if (amount > 0 && communities != undefined && communities.length > 1) {
+    error.invalidFinancialRequestsAmountError = 'More than 1 communities for financial enabled project'
+    throw error
+  }
 
-   return Community.find(communities[0]).then(community => {
-    if(community != undefined && (!community.get('financial_requests_enabled')) && amount > 0){
-      error.invalidFinancialRequestsAmountError = "Not a financial contribution enabled community"
+  return Community.find(communities[0]).then(community => {
+    if (community != undefined && (!community.get('financial_requests_enabled')) && amount > 0) {
+      error.invalidFinancialRequestsAmountError = 'Not a financial contribution enabled community'
       throw error
     }
     return
-   })
+  })
 }
 
 const getCurrentUserAccessToken = function (req) {
-  return UserExternalData.find(req.session.userId, 'hit-fin').then( user_data => {
-    if (user_data)
-      return user_data.attributes.data.accessToken
-    else
-      return null
-  })
+  return UserExternalData.find(req.session.userId, 'hit-fin').then(user_data => {
+    if (user_data)
+      return user_data.attributes.data.accessToken
+    else
+      return null
+  })
 }
 
-const throwHitfinIntegrationError = function(err){
-  if(err){
+const throwHitfinIntegrationError = function (err) {
+  if (err) {
     const error = new Error('Hitfin Integration error')
     error.hitfinIntegrationErrorMessage = err
     error.hitfinIntegrationErrorCode = 500
@@ -178,9 +172,9 @@ const PostController = {
       withChildren: !!req.param('children')
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
-    .then(post => PostPresenter.present(post, req.session.userId, opts))
-    .then(res.ok)
-    .catch(res.serverError)
+      .then(post => PostPresenter.present(post, req.session.userId, opts))
+      .then(res.ok)
+      .catch(res.serverError)
   },
 
   getProjectPledgeProgress: function (req, res) {
@@ -188,42 +182,45 @@ const PostController = {
 
     post.load(PostPresenter.relations(req.session.userId))
       .then(PostPresenter.present)
-      .then((post) =>  {
+      .then((post) => {
         return [Hitfin.getHitfinManagerAccessToken(), post.syndicateIssueId]}
-      )
+    )
       .spread((token, syndicateIssueId) => ProjectPledge.getProgress(token, syndicateIssueId))
-      .then((amount) => {return {pledgeAmount: amount}})
+      .then((amount) => {
+        return {pledgeAmount: amount}})
       .then(res.ok, res.serverError)
   },
 
-  contributeProject: function(req, res){
+  contributeProject: function (req, res) {
     const params = req.allParams()
     const amount = params['amount']
 
     const post = res.locals.post
 
     post.load(PostPresenter.relations(req.session.userId))
-    .then(PostPresenter.present)
-    .then((post) =>  { return [getCurrentUserAccessToken(req), post.syndicateOfferId]})
-    .spread((token, syndicateOfferId) => ProjectPledge.contribute(syndicateOfferId, amount, token))
-    .then(res.ok, res.serverError)
+      .then(PostPresenter.present)
+      .then((post) => {
+        return [getCurrentUserAccessToken(req), post.syndicateOfferId]})
+      .spread((token, syndicateOfferId) => ProjectPledge.contribute(syndicateOfferId, amount, token))
+      .then(res.ok, res.serverError)
   },
 
-  createHitfinProject: function(req, financialRequestAmount, endTime){
-    return  getCurrentUserAccessToken(req)
-            .then((userAccessToken) => {
-              return [
-                userAccessToken,
-                Hitfin.getHitfinManagerAccessToken()]
-              })
-            .spread((userAccessToken, syndicateManagerAccessToken) => {
-              return ProjectPledge.create(
-                financialRequestAmount,
-                endTime,
-                userAccessToken,
-                syndicateManagerAccessToken,
-                process.env.HITFIN_EMAIL)
-              }).then((projectPledgeState) => {return projectPledgeState}, throwHitfinIntegrationError)
+  createHitfinProject: function (req, financialRequestAmount, endTime) {
+    return getCurrentUserAccessToken(req)
+      .then((userAccessToken) => {
+        return [
+          userAccessToken,
+          Hitfin.getHitfinManagerAccessToken()]
+      })
+      .spread((userAccessToken, syndicateManagerAccessToken) => {
+        return ProjectPledge.create(
+          financialRequestAmount,
+          endTime,
+          userAccessToken,
+          syndicateManagerAccessToken,
+          process.env.HITFIN_EMAIL)
+      }).then((projectPledgeState) => {
+      return projectPledgeState}, throwHitfinIntegrationError)
   },
 
   create: function (req, res) {
@@ -244,32 +241,32 @@ const PostController = {
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
     )
-    .then(() => checkFinancialRequestsEnabled(
-     params.communities,
-     params.financialRequestAmount)
+      .then(() => checkFinancialRequestsEnabled(
+        params.communities,
+        params.financialRequestAmount)
     )
-    .then( () => {
-      if(params.financialRequestAmount && process.env.HITFIN_ENABLED == "true"){
-        return this.createHitfinProject(req, params.financialRequestAmount, params.end_time)
-      } else {
-        return
-      }
-    })
-    .then((projectPledgeState) => merge(params, projectPledgeState))
-    .then(() => {
-      sails.log.debug("==========================================")
-      sails.log.debug(params)
-      return createPost(req.session.userId, params)
-    })
-    .then(post => post.load(PostPresenter.relations(req.session.userId)))
-    .then(PostPresenter.present)
-    .then(res.ok)
-    .catch(err => {
-      if (handleMissingTagDescriptions(err, res)) return
-      if (handleInvalidFinancialRequestsAmountError(err, res)) return
-      if (handleHitfinIntegrationError(err, res)) return
-      res.serverError(err)
-    })
+      .then(() => {
+        if (params.financialRequestAmount && process.env.HITFIN_ENABLED == 'true') {
+          return this.createHitfinProject(req, params.financialRequestAmount, params.end_time)
+        } else {
+          return
+        }
+      })
+      .then((projectPledgeState) => merge(params, projectPledgeState))
+      .then(() => {
+        sails.log.debug('==========================================')
+        sails.log.debug(params)
+        return createPost(req.session.userId, params)
+      })
+      .then(post => post.load(PostPresenter.relations(req.session.userId)))
+      .then(PostPresenter.present)
+      .then(res.ok)
+      .catch(err => {
+        if (handleMissingTagDescriptions(err, res)) return
+        if (handleInvalidFinancialRequestsAmountError(err, res)) return
+        if (handleHitfinIntegrationError(err, res)) return
+        res.serverError(err)
+      })
   },
 
   createFromEmailForm: function (req, res) {
@@ -299,30 +296,30 @@ const PostController = {
     }
 
     return createPost(tokenData.userId, attributes)
-    .tap(post => Community.find(tokenData.communityId)
-      .then(c => Analytics.track({
-        userId: tokenData.userId,
-        event: 'Add Post by Email Form',
-        properties: {community: c.get('name')}
-      })))
-    .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
+      .tap(post => Community.find(tokenData.communityId)
+        .then(c => Analytics.track({
+          userId: tokenData.userId,
+          event: 'Add Post by Email Form',
+          properties: {community: c.get('name')}
+        })))
+      .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
   },
 
   follow: function (req, res) {
     var userId = req.session.userId
     var post = res.locals.post
     Follow.query().where({user_id: userId, post_id: post.id}).count()
-    .then(function (rows) {
-      if (Number(rows[0].count) > 0 || req.param('force') === 'unfollow') {
-        return post.removeFollower(userId, {createActivity: true})
-        .then(() => res.ok({}))
-      }
+      .then(function (rows) {
+        if (Number(rows[0].count) > 0 || req.param('force') === 'unfollow') {
+          return post.removeFollower(userId, {createActivity: true})
+            .then(() => res.ok({}))
+        }
 
-      return post.addFollowers([userId], userId, {createActivity: true})
-      .then(() => User.find(req.session.userId))
-      .then(user => res.ok(pick(user.attributes, 'id', 'name', 'avatar_url')))
-    })
-    .catch(res.serverError)
+        return post.addFollowers([userId], userId, {createActivity: true})
+          .then(() => User.find(req.session.userId))
+          .then(user => res.ok(pick(user.attributes, 'id', 'name', 'avatar_url')))
+      })
+      .catch(res.serverError)
   },
 
   update: function (req, res) {
@@ -346,31 +343,30 @@ const PostController = {
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
     )
-    .then(() => bookshelf.transaction(trx =>
-      Post.find(params.id)
-      .then(originalPost => originalPost.load(PostPresenter.relations(req.session.userId)))
-      .then(PostPresenter.present)
-      .then(originalPost => PostValidator.validate(merge(params, {originalPost})))
-      .then(errors => {
-        if (errors.length > 0) {
-          let error = new Error()
-          error.postValidations = errors
-          throw error
-        }
+      .then(() => bookshelf.transaction(trx => Post.find(params.id)
+        .then(originalPost => originalPost.load(PostPresenter.relations(req.session.userId)))
+        .then(PostPresenter.present)
+        .then(originalPost => PostValidator.validate(merge(params, {originalPost})))
+        .then(errors => {
+          if (errors.length > 0) {
+            let error = new Error()
+            error.postValidations = errors
+            throw error
+          }
+        })
+        .then(() => post.save(attrs, {patch: true, transacting: trx})
+          .tap(() => updateChildren(post, req.param('requests'), trx))
+          .tap(() => updateCommunities(post, req.param('communities'), trx))
+          .tap(() => updateAllMedia(post, params, trx))
+          .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx)))))
+      .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
+      .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
+      .then(res.ok)
+      .catch(err => {
+        if (handleMissingTagDescriptions(err, res)) return
+        if (handlePostValidations(err, res)) return
+        res.serverError(err)
       })
-      .then(() => post.save(attrs, {patch: true, transacting: trx})
-      .tap(() => updateChildren(post, req.param('requests'), trx))
-      .tap(() => updateCommunities(post, req.param('communities'), trx))
-      .tap(() => updateAllMedia(post, params, trx))
-      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx)))))
-    .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
-    .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
-    .then(res.ok)
-    .catch(err => {
-      if (handleMissingTagDescriptions(err, res)) return
-      if (handlePostValidations(err, res)) return
-      res.serverError(err)
-    })
   },
 
   fulfill: function (req, res) {
@@ -378,55 +374,55 @@ const PostController = {
       return res.locals.post.save({
         fulfilled_at: new Date()
       }, {patch: true, transacting: trx})
-      .tap(function () {
-        return Promise.map(req.param('contributors'), function (userId) {
-          return new Contribution({
-            post_id: res.locals.post.id,
-            user_id: userId,
-            date_contributed: new Date()
-          }).save(null, {transacting: trx})
+        .tap(function () {
+          return Promise.map(req.param('contributors'), function (userId) {
+            return new Contribution({
+              post_id: res.locals.post.id,
+              user_id: userId,
+              date_contributed: new Date()
+            }).save(null, {transacting: trx})
+          })
         })
-      })
     })
-    .then(() => res.ok({}))
-    .catch(res.serverError)
+      .then(() => res.ok({}))
+      .catch(res.serverError)
   },
 
   vote: function (req, res) {
     var post = res.locals.post
 
     post.votes().query({where: {user_id: req.session.userId}}).fetchOne()
-    .then(vote => bookshelf.transaction(trx => {
-      var inc = delta => () => Post.query().where('id', post.id).increment('num_votes', delta).transacting(trx)
+      .then(vote => bookshelf.transaction(trx => {
+        var inc = delta => () => Post.query().where('id', post.id).increment('num_votes', delta).transacting(trx)
 
-      return (vote
-        ? vote.destroy({transacting: trx}).then(inc(-1))
-        : new Vote({
-          post_id: res.locals.post.id,
-          user_id: req.session.userId
-        }).save().then(inc(1)))
-    }))
-    .then(() => res.ok({}), res.serverError)
+        return (vote
+          ? vote.destroy({transacting: trx}).then(inc(-1))
+          : new Vote({
+            post_id: res.locals.post.id,
+            user_id: req.session.userId
+          }).save().then(inc(1)))
+      }))
+      .then(() => res.ok({}), res.serverError)
   },
 
   destroy: function (req, res) {
     return Post.deactivate(res.locals.post.id)
-    .then(() => res.ok({}), res.serverError)
+      .then(() => res.ok({}), res.serverError)
   },
 
   complain: function (req, res) {
     var post = res.locals.post
 
     User.find(req.session.userId)
-    .then(user => Email.sendRawEmail('hello@hylo.com', {
-      subject: 'Objectionable content report',
-      body: format(
-        '%s &lt;%s&gt; has flagged %s as objectionable',
-        user.get('name'), user.get('email'),
-        Frontend.Route.post(post)
-      )
-    }))
-    .then(() => res.ok({}), res.serverError)
+      .then(user => Email.sendRawEmail('hello@hylo.com', {
+        subject: 'Objectionable content report',
+        body: format(
+          '%s &lt;%s&gt; has flagged %s as objectionable',
+          user.get('name'), user.get('email'),
+          Frontend.Route.post(post)
+        )
+      }))
+      .then(() => res.ok({}), res.serverError)
   },
 
   rsvp: function (req, res) {
@@ -438,18 +434,18 @@ const PostController = {
       qb.where({user_id: userId, post_id: post.id})
       qb.orderBy('created_at', 'desc')
     }).fetch()
-    .then(eventResponse => {
-      if (eventResponse) {
-        if (eventResponse.get('response') === response) {
-          return eventResponse.destroy()
+      .then(eventResponse => {
+        if (eventResponse) {
+          if (eventResponse.get('response') === response) {
+            return eventResponse.destroy()
+          } else {
+            return eventResponse.save({response: response}, {patch: true})
+          }
         } else {
-          return eventResponse.save({response: response}, {patch: true})
+          return EventResponse.create(post.id, {responderId: userId, response: response})
         }
-      } else {
-        return EventResponse.create(post.id, {responderId: userId, response: response})
-      }
-    })
-    .then(() => res.ok({}), res.serverError)
+      })
+      .then(() => res.ok({}), res.serverError)
   }
 }
 
