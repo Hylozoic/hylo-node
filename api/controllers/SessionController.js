@@ -118,7 +118,7 @@ function finishHitFinOAuth( req, res, next){
           context: req.session.authContext || 'oauth',
           layout: null,
           returnDomain: req.session.returnDomain
-        }))
+        })console.log(response))
       }
       var authCallback = function (err, accessToken, refreshToken) {
         console.log(accessToken)
