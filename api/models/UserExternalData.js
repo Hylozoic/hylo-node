@@ -6,18 +6,6 @@ module.exports = bookshelf.Model.extend({
     return this.where({user_id: userId, type: type}).fetch(opts)
   },
 
-  findHitFinaccounts: function (type, opts) {
-    // opts.limit = 100
-    // var client = new Client()
-    // return this.query(q => {
-    //   q.where ({
-    //     'type': type
-    //   })
-    //   q.limit ( 100 )
-    // })
-    return this.where({type: type}).fetchAll()
-  },
-
   store: function (userId, type, data) {
     return this.find(userId, type).then(storage => {
       if (!storage) {

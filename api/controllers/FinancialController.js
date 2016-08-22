@@ -15,6 +15,16 @@ function getUserBalance (req, res, next) {
 
   return getAccessToken(req).then( accessToken => {
     return new Promise((resolve, reject) => {
+      var respond = (error) => {
+        if (error && error.stack) rollbar.handleError(error, req)
+
+        return resolve(res.view('popupDone', {
+          error,
+          context: req.session.authContext || 'oauth',
+          layout: null,
+          returnDomain: req.session.returnDomain
+        }))
+      }
       request({
         url: process.env.HITFIN_API_URL + '/api/stabletoken/balances',
         headers: {
@@ -25,33 +35,50 @@ function getUserBalance (req, res, next) {
           reject(error);
         }
         else if(response.statusCode >=400){
-          reject();
+          reject(JSON.parse(body));
         }
         else{
+          console.log(JSON.parse(body))
           resolve(JSON.parse(body));
         }
       })
     })
   })
-
-  .then( (response) => {
-      if(response)
-        res.ok({balance: response.latest.amount})
-  })
-  .catch((err) => {
-    if(err){
-      if (err.message.includes(['not connected to HitFin'], err.message)) {
-        res.statusCode = 404
-        res.send(req.__(err.message))
-      } else {
-        res.serverError(err)
-      }
-    }
-  })
 }
 
 module.exports = {
     getBalance: function(req, res, next){
-      return getUserBalance(req, res, next)
+      return getAccessToken(req).then( accessToken => {
+        return new Promise((resolve, reject) => {
+          request({
+            url: process.env.HITFIN_API_URL + '/api/stabletoken/balances',
+            headers: {
+              'Authorization': 'Bearer ' + accessToken
+            }
+          }, function(error, response, body){
+            if(error){
+              reject(error);
+            }
+            else if(response.statusCode >=400){
+              reject();
+            }
+            else{
+              resolve(JSON.parse(body));
+            }
+          })
+        })
+      })
+      .catch(function (err) {
+        if (err.message.includes(['not connected to HitFin'], err.message)) {
+          res.statusCode = 404
+          res.send(req.__(err.message))
+        } else {
+          res.serverError(err)
+        }
+      })
+      .then( (response) => {
+          if(response)
+            res.ok({balance: response.latest.amount})
+      })
   }
 }

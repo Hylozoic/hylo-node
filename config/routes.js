@@ -125,7 +125,6 @@ module.exports.routes = {
   'POST   /noo/login/linkedin-token/oauth':               'SessionController.finishLinkedinTokenOAuth',
   'GET    /noo/logout':                                   'SessionController.destroy',
   'DELETE /noo/session':                                  'SessionController.destroySession',
-  'GET    /noo/auth/refresh-hitfin':                       'SessionController.refreshHitFinTokens',
 
   'GET     /noo/nexudus':                                 'NexudusController.create',
 

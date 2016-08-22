@@ -254,7 +254,7 @@ module.exports = {
     .catch(res.serverError)
   },
 
-  unlinkHitFinOAuth: function (req, res, user) {
+  unlinkHitFinOAuth: function (req, res) {
     var userId = req.session.userId
     return UserExternalData.remove(userId)
     .then( (result) => {
@@ -262,41 +262,6 @@ module.exports = {
     }).then( (result) => {
       return res.status(200).send({})
     }).catch(res.serverError)
-  },
-
-  refreshHitFinTokens: function (req, res) {
-    UserExternalData.findHitFinaccounts('hit-fin').then( (hitfinAccounts) => {
-      hitfinAccounts.models.forEach( (account) =>  {
-        return new Promise((reject, resolve) => {
-        request ({
-          method: 'POST',
-          url: process.env.HITFIN_API_URL+ '/oauth/token?client_id='+ process.env.HITFIN_CLIENT_ID + '&client_secret=' + process.env.HITFIN_CLIENT_SECRET
-            + '&grant_type=refresh_token&refresh_token=' + account.attributes.data.refreshToken
-        }, function(error, response, body){
-          if(error){
-            reject(error);
-          }
-          // else if (JSON.parse(body).error === "invalid_grant") {
-          //   dispatch(unlinkHitFinOAuth())
-          //   console.log('invalid')
-          // }
-          else if(response.statusCode >=400){
-            reject();
-          }
-          else{
-            reject(JSON.parse(body));
-          }
-        })
-      })
-      .then( (response) => {
-        if(response)
-          return UserExternalData.store(req.session.userId, 'hit-fin', {
-            accessToken: response.access_token,
-            refreshToken: response.refresh_token
-          });
-        })
-      })
-    })
   },
 
   findUser // this is here for testing
