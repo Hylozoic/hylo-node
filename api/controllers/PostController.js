@@ -180,15 +180,22 @@ const PostController = {
   getProjectPledgeProgress: function (req, res) {
     const post = res.locals.post
 
-    post.load(PostPresenter.relations(req.session.userId))
-      .then(PostPresenter.present)
-      .then((post) => {
-        return [Hitfin.getHitfinManagerAccessToken(), post.syndicateIssueId]}
-    )
-      .spread((token, syndicateIssueId) => ProjectPledge.getProgress(token, syndicateIssueId))
-      .then((amount) => {
-        return {pledgeAmount: amount}})
-      .then(res.ok, res.serverError)
+    if(process.env.HITFIN_ENABLED == 'true'){
+      post.load(PostPresenter.relations(req.session.userId))
+        .then(PostPresenter.present)
+        .then((post) => {
+          return [Hitfin.getHitfinManagerAccessToken(), post.syndicateIssueId]}
+      )
+        .spread((token, syndicateIssueId) => ProjectPledge.getProgress(token, syndicateIssueId))
+        .then((amount) => {
+          return {pledgeAmount: amount}})
+        .then(res.ok, res.serverError)
+    }
+    else
+    {
+      res.status(200).send({pledgeAmount: 0})
+      return Promise.resolve()
+    }
   },
 
   contributeProject: function (req, res) {
