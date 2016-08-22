@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * n.b.: hella copy-pasted from sails/bin/sails-console.js
+ * n.b.: hella copy-pasted from sails/bin/sails-console.js 
  */
 
 require('babel-register')
