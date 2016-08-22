@@ -351,6 +351,18 @@ CREATE TABLE financial_request (
 
 
 --
+-- Name: pending_post_status; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE pending_post_status (
+    id integer NOT NULL,
+    transaction_id character varying(255),
+    status character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+--
 -- Name: financial_request_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
