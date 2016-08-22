@@ -1,4 +1,4 @@
-const redis = require("redis")
+const redis = require('redis')
 const bluebird = require('bluebird')
 const HitfinAuthenticate = require('../../lib/hitfin/Authenticate')
 const HitfinUser = require('../../lib/hitfin/User')
