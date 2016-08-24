@@ -1,7 +1,7 @@
 import { get } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import { createPost, updateChildren, updateAllMedia, updateCommunities } from '../models/post/util'
-import { handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFinancialRequestsAmountError, handlePostValidations, handleHitfinProjectSubmissionError } from '../../lib/util/controllers'
+import { handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFinancialRequestsAmountError, handlePostValidations, handleHitfinIntegrationError } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 import ProjectPledge from '../../lib/hitfin/ProjectPledge'
 import Hitfin from '../services/Hitfin'
