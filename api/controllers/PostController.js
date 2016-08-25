@@ -180,20 +180,21 @@ const PostController = {
   getProjectPledgeProgress: function (req, res) {
     const post = res.locals.post
 
-    if (process.env.HITFIN_ENABLED == 'true') {
-      post.load(PostPresenter.relations(req.session.userId))
-        .then(PostPresenter.present)
-        .then((post) => {
-          return [Hitfin.getHitfinManagerAccessToken(), post.syndicateIssueId]}
-      )
-        .spread((token, syndicateIssueId) => ProjectPledge.getProgress(token, syndicateIssueId))
-        .then((amount) => {
-          return {pledgeAmount: amount}})
-        .then(res.ok, res.serverError)
-    }else {
-      res.status(200).send({pledgeAmount: 0})
-      return Promise.resolve()
-    }
+    post.load(PostPresenter.relations(req.session.userId))
+      .then(PostPresenter.present)
+      .then((post) => {
+        return [Hitfin.getHitfinManagerAccessToken(), post.syndicateIssueId]}
+    )
+      .spread((token, syndicateIssueId) => {
+        if (syndicateIssueId) {
+          return ProjectPledge.getProgress(token, syndicateIssueId)
+        }else {
+          return 0
+        }
+      })
+      .then((amount) => {
+        return {pledgeAmount: amount}})
+      .then(res.ok, res.serverError)
   },
 
   contributeProject: function (req, res) {
@@ -202,18 +203,19 @@ const PostController = {
     const transactionId = params['transactionId']
     const post = res.locals.post
 
-    if (process.env.HITFIN_ENABLED == 'true') {
-      post.load(PostPresenter.relations(req.session.userId))
-        .then(PostPresenter.present)
-        .then((post) => {
-          return [getCurrentUserAccessToken(req), post.syndicateOfferId]})
-        .spread((token, syndicateOfferId) => ProjectPledge.contribute(syndicateOfferId, amount, token))
-        .then(res.ok, res.serverError)
-    }
-    else {
-      res.status(200).send({status: 'pending'})
-      return Promise.resolve()
-    }
+    post.load(PostPresenter.relations(req.session.userId))
+      .then(PostPresenter.present)
+      .then((post) => {
+        return [getCurrentUserAccessToken(req), post.syndicateOfferId]
+      })
+      .spread((token, syndicateOfferId) => {
+        if (syndicateOfferId) {
+          return ProjectPledge.contribute(syndicateOfferId, amount, token)
+        }else {
+          return {status: 'pending'}
+        }
+      })
+      .then(res.ok, res.serverError)
   },
 
   createHitfinProject: function (req, financialRequestAmount, endTime) {
@@ -257,7 +259,7 @@ const PostController = {
         params.financialRequestAmount)
     )
       .then(() => {
-        if (params.financialRequestAmount && process.env.HITFIN_ENABLED == 'true') {
+        if (params.financialRequestAmount) {
           return this.createHitfinProject(req, params.financialRequestAmount, params.end_time)
         } else {
           return
