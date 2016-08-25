@@ -18,7 +18,9 @@ const getSyndicateManagerAccessTokenFromHitfin = function(client){
 
 module.exports = {
   getHitfinManagerAccessToken: function() {
-    const client = redis.createClient()
+    const url = process.env.REDIS_URL || 'redis://localhost:6379'
+    const redisInfo = require('parse-redis-url')(redis).parse(url)
+    const client = redis.createClient(redisInfo)
     bluebird.promisifyAll(redis.RedisClient.prototype)
     bluebird.promisifyAll(redis.Multi.prototype)
     //get the access token from redis. if not exists then get from hitfin and save it inside redis
