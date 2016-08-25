@@ -129,6 +129,15 @@ module.exports = bookshelf.Model.extend({
     return this.get('type') === Post.Type.WELCOME
   },
 
+  pushCommentToSockets: function (comment) {
+    Object.keys(sails.io.sockets.sockets).forEach(function(id) {
+      var socket = sails.io.sockets.sockets[id]
+      // for security reasons, only sockets that passed the checkAndSetPost policy
+      // get subscribed to the comment stream for that post
+      if (socket.rooms[`posts/${post.id}`]) socket.emit('comment_added', comment)
+    })
+  },
+
   copy: function (attrs) {
     var that = this.clone()
     _.merge(that.attributes, Post.newPostAttrs(), attrs)

@@ -99,6 +99,8 @@ module.exports.policies = {
     update:                               ['sessionAuth', 'checkAndSetWritablePost'],
     follow:                               ['sessionAuth', 'checkAndSetPost'],
     rsvp:                                 ['sessionAuth', 'checkAndSetPost'],
+    subscribe:                            ['sessionAuth', 'checkAndSetPost'],
+    unsubscribe:                          ['sessionAuth', 'checkAndSetPost'],
     findForFollowed:                      ['sessionAuth', 'isSelf'],
     checkFreshnessForFollowed:            ['sessionAuth', 'isSelf'],
     findForAllForUser:                    ['sessionAuth', 'isSelf'],

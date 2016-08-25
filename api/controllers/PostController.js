@@ -325,6 +325,34 @@ const PostController = {
       }
     })
     .then(() => res.ok({}), res.serverError)
+  },
+
+  subscribe: function (req, res) {
+    if (!req.isSocket) {
+      return res.badRequest();
+    }
+
+    var post = res.locals.post
+    sails.sockets.join(req, `posts/${post.id}`, function(err) {
+      if (err) {
+        return res.serverError(err)
+      }
+      return res.ok({})
+    })
+  },
+
+  unsubscribe: function (req, res) {
+    if (!req.isSocket) {
+      return res.badRequest();
+    }
+
+    var post = res.locals.post
+    sails.sockets.leave(req, `posts/${post.id}`, function(err) {
+      if (err) {
+        return res.serverError(err)
+      }
+      return res.ok({})
+    })
   }
 }
 

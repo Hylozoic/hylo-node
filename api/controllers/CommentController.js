@@ -32,13 +32,8 @@ const createComment = function (commenterId, text, post, tagDescriptions) {
     })
     .tap(comment => comment.createActivities())
     .tap(comment => post.addFollowers(newFollowers, commenterId))
+    .tap(comment => post.pushCommentToSockets(comment))
     .tap(() => updateRecentComments(post.id))
-    .tap(() => {
-      Object.keys(sails.io.sockets.sockets).forEach(function(k, index) {
-        var socket = sails.io.sockets.sockets[k]
-        socket.emit('p/' + post.id + '/comment_added')
-      })
-    })
   })
 }
 
