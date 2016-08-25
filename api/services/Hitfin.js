@@ -20,6 +20,8 @@ module.exports = {
   getHitfinManagerAccessToken: function() {
     const url = process.env.REDIS_URL || 'redis://localhost:6379'
     const redisInfo = require('parse-redis-url')(redis).parse(url)
+    redisInfo.auth = redisInfo.password
+    redisInfo.db = redisInfo.database
     const client = redis.createClient(redisInfo)
     bluebird.promisifyAll(redis.RedisClient.prototype)
     bluebird.promisifyAll(redis.Multi.prototype)
