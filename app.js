@@ -1,7 +1,7 @@
 /**
  * app.js
  *
- * Use `app.js` to run your app without `sails lift`. 
+ * Use `app.js` to run your app without `sails lift`.
  * To start the server, run: `node app.js`.
  *
  * This is handy in situations where the sails CLI is not relevant or useful.
