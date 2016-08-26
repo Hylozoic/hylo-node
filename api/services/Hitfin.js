@@ -12,6 +12,7 @@ const getSyndicateManagerAccessTokenFromHitfin = function(client){
       var expiredDate = new Date();
       expiredDate.setDate(expiredDate.getDate() + 1);
       client.set(EXPIRED_HITFIN_ACCESS_TOKEN, expiredDate.toISOString())
+      client.quit()
       return token
     })
 }
@@ -38,6 +39,7 @@ module.exports = {
         return client.getAsync(EXPIRED_HITFIN_ACCESS_TOKEN).then(function(expiredDate) {
           if(expiredDate && new Date(expiredDate) >= new Date() )
           {
+            client.quit()
             return token
           }
           else
@@ -49,7 +51,6 @@ module.exports = {
       else{
         return getSyndicateManagerAccessTokenFromHitfin(client)
       }
-      client.quit()
     }, (err) => {
       console.error(err)
       return null
