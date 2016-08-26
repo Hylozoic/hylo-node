@@ -208,7 +208,7 @@ const PostController = {
 
     amount = parseFloat(amount)
 
-    if(isNaN(amount) || amount <= 0){
+    if(isNaN(amount) || amount <= 0 || amount > 5000){
       res.status(422).send({message: 'invalid pledge amount'})
       return Promise.resolve()
     }
