@@ -18,14 +18,20 @@ const getSyndicateManagerAccessTokenFromHitfin = function(client){
 
 module.exports = {
   getHitfinManagerAccessToken: function() {
-    const url = process.env.REDIS_URL || 'redis://localhost:6379'
-    const redisInfo = require('parse-redis-url')(redis).parse(url)
-    redisInfo.auth = redisInfo.password
-    redisInfo.db = redisInfo.database
-    redisInfo.no_ready_check = true
-    const client = redis.createClient(redisInfo)
-    bluebird.promisifyAll(redis.RedisClient.prototype)
-    bluebird.promisifyAll(redis.Multi.prototype)
+    var client
+    try{
+      const url = process.env.REDIS_URL || 'redis://localhost:6379'
+      const redisInfo = require('parse-redis-url')(redis).parse(url)
+      redisInfo.auth = redisInfo.password
+      redisInfo.db = redisInfo.database
+      redisInfo.no_ready_check = true
+      client = redis.createClient(redisInfo)
+      bluebird.promisifyAll(redis.RedisClient.prototype)
+      bluebird.promisifyAll(redis.Multi.prototype)
+    }catch(err){
+      console.error(err)
+      return null
+    }
     //get the access token from redis. if not exists then get from hitfin and save it inside redis
     return client.getAsync(NAME_HITFIN_ACCESS_TOKEN).then(function(token) {
       if(token){
@@ -43,6 +49,10 @@ module.exports = {
       else{
         return getSyndicateManagerAccessTokenFromHitfin(client)
       }
+      client.quit()
+    }, (err) => {
+      console.error(err)
+      return null
     })
   }
 }
