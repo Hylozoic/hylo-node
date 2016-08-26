@@ -199,7 +199,20 @@ const PostController = {
 
   contributeProject: function (req, res) {
     const params = req.allParams()
-    const amount = params['amount']
+    var amount = params['amount']
+
+    if (!amount) {
+      res.status(422).send({message: 'invalid pledge amount'})
+      return Promise.resolve()
+    }
+
+    amount = parseFloat(amount)
+
+    if(isNaN(amount) || amount <= 0){
+      res.status(422).send({message: 'invalid pledge amount'})
+      return Promise.resolve()
+    }
+
     const transactionId = params['transactionId']
     const post = res.locals.post
 
@@ -211,6 +224,7 @@ const PostController = {
       .spread((token, syndicateOfferId) => {
         if (syndicateOfferId) {
           return ProjectPledge.contribute(syndicateOfferId, amount, token)
+            .then(() => { return {} })
         }else {
           return {status: 'pending'}
         }
