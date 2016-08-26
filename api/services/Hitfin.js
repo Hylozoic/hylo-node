@@ -22,6 +22,7 @@ module.exports = {
     const redisInfo = require('parse-redis-url')(redis).parse(url)
     redisInfo.auth = redisInfo.password
     redisInfo.db = redisInfo.database
+    redisInfo.no_ready_check = true
     const client = redis.createClient(redisInfo)
     bluebird.promisifyAll(redis.RedisClient.prototype)
     bluebird.promisifyAll(redis.Multi.prototype)

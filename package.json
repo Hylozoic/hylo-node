@@ -84,7 +84,8 @@
     "striptags": "^2.0.2",
     "tar-stream": "^1.2.1",
     "trunc-html": "^1.1.2",
-    "validator": "^3.22.1"
+    "validator": "^3.22.1",
+    "redis": "^2.6.2"
   },
   "scripts": {
     "start": "node --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 app.js",
