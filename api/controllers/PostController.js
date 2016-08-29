@@ -208,7 +208,7 @@ const PostController = {
 
     amount = parseFloat(amount)
 
-    if(isNaN(amount) || amount <= 0 || amount > 5000){
+    if (isNaN(amount) || amount <= 0 || amount > 5000) {
       res.status(422).send({message: 'invalid pledge amount'})
       return Promise.resolve()
     }
@@ -224,7 +224,8 @@ const PostController = {
       .spread((token, syndicateOfferId) => {
         if (syndicateOfferId) {
           return ProjectPledge.contribute(syndicateOfferId, amount, token)
-            .then(() => { return {} })
+            .then(() => {
+              return {}})
         }else {
           return {status: 'pending'}
         }
@@ -432,8 +433,38 @@ const PostController = {
       .then(() => res.ok({}), res.serverError)
   },
 
+  cancelHitfinProject: function (syndicateOfferId, syndicateManagerAccessToken) {
+    console.log('cancel')
+    return ProjectPledge.cancel(
+      syndicateManagerAccessToken,
+      syndicateOfferId)
+  },
+
   destroy: function (req, res) {
-    return Post.deactivate(res.locals.post.id)
+    return FinancialRequest.find(res.locals.post.id)
+      .then((financialRequest) => {
+        console.log(financialRequest)
+        if (financialRequest) {
+          const syndicateOfferId = financialRequest.get('syndicate_offer_id')
+          if (syndicateOfferId) {
+            return [syndicateOfferId, Hitfin.getHitfinManagerAccessToken()]
+          }
+          else {
+            return [null, null] // for project created before hitfin integration
+          }
+        }
+        else {
+          return [null, null] // for not financial request
+        }
+      }, (err) => console.error(err))
+      .spread((syndicateOfferId, syndicateManagerAccessToken) => {
+        if (syndicateOfferId) {
+          return this.cancelHitfinProject(syndicateOfferId, syndicateManagerAccessToken)
+        }else {
+          return
+        }
+      })
+      .then(() => Post.deactivate(res.locals.post.id))
       .then(() => res.ok({}), res.serverError)
   },
 
