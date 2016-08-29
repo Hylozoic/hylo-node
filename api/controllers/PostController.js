@@ -15,6 +15,9 @@ const sortColumns = {
   'start_time': ['post.start_time', 'asc']
 }
 
+const pledgeProject = (postId, pledgeAmount, userAccessToken, transactionId) =>
+    Queue.classMethod('Post', 'pledgeProject', {postId, pledgeAmount, userAccessToken, transactionId})
+
 const queryPosts = (req, opts) =>
 // using Promise.props here allows us to pass subqueries, e.g. when looking up
 // communities in queryForUser
@@ -197,6 +200,27 @@ const PostController = {
       .then(res.ok, res.serverError)
   },
 
+  queryPostResult: function(req, res){
+    const params = req.allParams()
+    console.log(params)
+    const transactionId = params.transactionId
+    if(!transactionId){
+      res.status(422).send({message: 'invalid transactionId'})
+      return Promise.resolve()
+    }
+
+    return PendingPostStatus.find(transactionId)
+    .then((postStatus) => {
+      if(postStatus){
+        return {status: postStatus.get('status')}
+      }
+      else{
+        return {status: 'unknown'}
+      }
+    })
+    .then(res.ok, res.serverError)
+  },
+
   contributeProject: function (req, res) {
     const params = req.allParams()
     var amount = params['amount']
@@ -214,23 +238,12 @@ const PostController = {
     }
 
     const transactionId = params['transactionId']
-    const post = res.locals.post
 
-    post.load(PostPresenter.relations(req.session.userId))
-      .then(PostPresenter.present)
-      .then((post) => {
-        return [getCurrentUserAccessToken(req), post.syndicateOfferId]
-      })
-      .spread((token, syndicateOfferId) => {
-        if (syndicateOfferId) {
-          return ProjectPledge.contribute(syndicateOfferId, amount, token)
-            .then(() => {
-              return {}})
-        }else {
-          return {status: 'pending'}
-        }
-      })
-      .then(res.ok, res.serverError)
+    PendingPostStatus.addNew(transactionId)
+    .then(() => getCurrentUserAccessToken(req))
+    .tap((currentUserAccessToken) => pledgeProject(res.locals.post.id, amount, currentUserAccessToken, transactionId))
+    .then(() => {return {status: 'pending'}})
+    .then(res.ok, res.serverError)
   },
 
   createHitfinProject: function (req, financialRequestAmount, endTime) {
@@ -282,8 +295,6 @@ const PostController = {
       })
       .then((projectPledgeState) => merge(params, projectPledgeState))
       .then(() => {
-        sails.log.debug('==========================================')
-        sails.log.debug(params)
         return createPost(req.session.userId, params)
       })
       .then(post => post.load(PostPresenter.relations(req.session.userId)))

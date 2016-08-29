@@ -42,6 +42,7 @@ module.exports.routes = {
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'GET    /noo/post/:postId/pledge-progress':             'PostController.getProjectPledgeProgress',
+  'GET    /noo/post/transaction/:transactionId':          'PostController.queryPostResult',
   'POST   /noo/post/:postId/contribute':                  'PostController.contributeProject',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
   'GET    /noo/post/:postId/comments':                    'CommentController.findForPost',

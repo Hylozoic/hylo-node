@@ -91,6 +91,7 @@ module.exports.policies = {
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     getProjectPledgeProgress:             ['sessionAuth', 'checkAndSetPost'],
     contributeProject:                    ['sessionAuth', 'checkAndSetPost'],
+    queryPostResult:                      ['sessionAuth'],
     findForCommunity:                     ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],

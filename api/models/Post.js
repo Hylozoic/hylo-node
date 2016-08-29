@@ -1,6 +1,7 @@
 /* globals LinkPreview */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
+import ProjectPledge from '../../lib/hitfin/ProjectPledge'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
@@ -331,5 +332,25 @@ module.exports = bookshelf.Model.extend({
         return post.selectedTags().attach(tags.find(matches).id, {transacting})
         .then(untype)
       }))
-      .then(promises => promises.length)))
+      .then(promises => promises.length))),
+
+    pledgeProject: (opts) =>
+      FinancialRequest.find(opts.postId)
+        .then((financialRequest) => {
+          console.log(financialRequest)
+          if (financialRequest) {
+            return financialRequest.get('syndicate_offer_id')
+          }
+          else{
+            return null
+          }
+        }, (err) => console.error(err))
+        .then((syndicateOfferId) => {
+          if (syndicateOfferId) {
+            return ProjectPledge.contribute(syndicateOfferId, opts.pledgeAmount, opts.userAccessToken)
+          } else {
+            return
+          }
+        })
+        .then(() => PendingPostStatus.updateStatus(opts.transactionId, "done"))
 })

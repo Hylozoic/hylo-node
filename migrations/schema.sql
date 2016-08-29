@@ -349,19 +349,6 @@ CREATE TABLE financial_request (
     updated_at timestamp with time zone
 );
 
-
---
--- Name: pending_post_status; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE pending_post_status (
-    id integer NOT NULL,
-    transaction_id character varying(255),
-    status character varying(255),
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-
 --
 -- Name: financial_request_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
@@ -380,6 +367,35 @@ CREATE SEQUENCE financial_request_id_seq
 
 ALTER SEQUENCE financial_request_id_seq OWNED BY financial_request.id;
 
+
+--
+-- Name: pending_post_status; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE pending_post_status (
+    id integer NOT NULL,
+    transaction_id character varying(255),
+    status character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+--
+-- Name: pending_post_status_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE pending_post_status_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: pending_post_status_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE pending_post_status_id_seq OWNED BY pending_post_status.id;
 
 --
 -- Name: tag_follows; Type: TABLE; Schema: public; Owner: -
@@ -1205,6 +1221,12 @@ ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_resp
 
 ALTER TABLE ONLY financial_request ALTER COLUMN id SET DEFAULT nextval('financial_request_id_seq'::regclass);
 
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY pending_post_status ALTER COLUMN id SET DEFAULT nextval('pending_post_status_id_seq'::regclass);
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
