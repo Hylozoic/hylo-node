@@ -353,7 +353,7 @@ const PostController = {
 
     User.find(req.session.userId)
     .then(user => {
-      post.pushTypingToSockets(user.get('name'), req.body.isTyping)
+      post.pushTypingToSockets(user.id, user.get('name'), req.body.isTyping, req.socket)
     })
   }
 }
