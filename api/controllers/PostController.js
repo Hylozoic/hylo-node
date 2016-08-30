@@ -147,15 +147,6 @@ const checkFinancialRequestsEnabled = (communities, amount) => {
   })
 }
 
-const getCurrentUserAccessToken = function (req) {
-  return UserExternalData.find(req.session.userId, 'hit-fin').then(user_data => {
-    if (user_data)
-      return user_data.attributes.data.accessToken
-    else
-      return null
-  })
-}
-
 const throwHitfinIntegrationError = function (err) {
   if (err) {
     const error = new Error('Hitfin Integration error')
@@ -240,14 +231,14 @@ const PostController = {
     const transactionId = params['transactionId']
 
     PendingPostStatus.addNew(transactionId)
-    .then(() => getCurrentUserAccessToken(req))
+    .then(() => User.getAccessToken(req.session.userId))
     .tap((currentUserAccessToken) => pledgeProject(res.locals.post.id, amount, currentUserAccessToken, transactionId))
     .then(() => {return {status: 'pending'}})
     .then(res.ok, res.serverError)
   },
 
   createHitfinProject: function (req, financialRequestAmount, endTime) {
-    return getCurrentUserAccessToken(req)
+    return User.getAccessToken(req.session.userId)
       .then((userAccessToken) => {
         return [
           userAccessToken,

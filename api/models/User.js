@@ -305,5 +305,14 @@ module.exports = bookshelf.Model.extend({
   followDefaultTags: function (userId, communityId, trx) {
     return Tag.defaultTags(trx).then(tags => tags.map('id'))
     .then(ids => User.followTags(userId, communityId, ids, trx))
+  },
+
+  getAccessToken: function (userId) {
+    return UserExternalData.find(userId, 'hit-fin').then( user_data => {
+      if(user_data)
+        return user_data.attributes.data.accessToken
+      else
+        throw new Error("User is not connected to HitFin")
+    })
   }
 })
