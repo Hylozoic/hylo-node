@@ -9,7 +9,7 @@ module.exports = {
         return HitfinUser.getWalletBalance(accessToken)
       })
       .catch(function (err) {
-        if (err.message.includes(['not connected to HitFin'], err.message)) {
+        if (err.message && err.message.includes(['not connected to HitFin'], err.message)) {
           res.statusCode = 404
           res.send(req.__(err.message))
         } else {
