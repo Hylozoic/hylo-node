@@ -1,7 +1,7 @@
 const passport = require('passport')
 const rollbar = require('rollbar')
 const request = require('request')
-const User = require('../../lib/Hitfin/User')
+import User from '../../lib/hitfin/User'
 
 const getAccessToken = function (req) {
   return UserExternalData.find(req.session.userId, 'hit-fin').then( user_data => {
