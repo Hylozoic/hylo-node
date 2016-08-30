@@ -1,10 +1,11 @@
 import { get } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import { createPost, updateChildren, updateAllMedia, updateCommunities } from '../models/post/util'
-import { handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFinancialRequestsAmountError, handlePostValidations, handleHitfinIntegrationError } from '../../lib/util/controllers'
+import { handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFinancialRequestsAmountError, handlePostValidations, handleHitfinIntegrationError, handleNotEnoughWalletBalanceError } from '../../lib/util/controllers'
 import * as PostValidator from '../services/PostValidator'
 import ProjectPledge from '../../lib/hitfin/ProjectPledge'
 import Hitfin from '../services/Hitfin'
+import HitfinUser from '../../lib/Hitfin/User'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -152,7 +153,7 @@ const throwHitfinIntegrationError = function (err) {
     const error = new Error('Hitfin Integration error')
     error.hitfinIntegrationErrorMessage = err
     error.hitfinIntegrationErrorCode = 500
-    throw err
+    throw error
   }
 
   return null
@@ -230,11 +231,31 @@ const PostController = {
 
     const transactionId = params['transactionId']
 
-    PendingPostStatus.addNew(transactionId)
-    .then(() => User.getAccessToken(req.session.userId))
-    .tap((currentUserAccessToken) => pledgeProject(res.locals.post.id, amount, currentUserAccessToken, transactionId))
+
+    return User.getAccessToken(req.session.userId)
+    .then((token) =>  {
+      return [token, HitfinUser.getWalletBalance(token)
+      ]})
+    .spread((token, balance) => {
+      const balanceAmount = balance.latest.amount / Math.pow(10, 18)
+      if (balanceAmount < amount){
+        const error = new Error('Not enough funds to make pledge')
+        error.notEnoughWalletBalanceErrorMessage = 'Not enough funds to make pledge'
+        error.notEnoughWalletBalanceErrorCode = 422
+        console.error(error)
+        throw error
+      }
+      else {
+        return [token, PendingPostStatus.addNew(transactionId)]
+      }
+    })
+    .spread((currentUserAccessToken) => pledgeProject(res.locals.post.id, amount, currentUserAccessToken, transactionId))
     .then(() => {return {status: 'pending'}})
-    .then(res.ok, res.serverError)
+    .then(res.ok)
+    .catch(error => {
+      if(handleNotEnoughWalletBalanceError(error, res)) {return}
+      else res.serverError(error)
+    })
   },
 
   createHitfinProject: function (req, financialRequestAmount, endTime) {
