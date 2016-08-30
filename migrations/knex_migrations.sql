@@ -106,6 +106,6 @@ INSERT INTO knex_migrations (name, batch, migration_time) VALUES
 ('20160714191933_link-preview-size.js', 70, '2016-07-15 17:25:52.226-07'),
 ('20160718134001_long-link-preview-image-urls.js', 71, '2016-07-18 13:47:14.913'),
 ('20160722170230_financial-request.js', 72, '2016-07-18 13:47:15.913'),
-('20160728112044_add-financial-request-column-to-community.js', 73, '2016-07-28 11:35:37.274');
-('20160811121710_add-hitfin-columns.js', 74, '2016-08-11 12:17:10.274');
+('20160728112044_add-financial-request-column-to-community.js', 73, '2016-07-28 11:35:37.274'),
+('20160811121710_add-hitfin-columns.js', 74, '2016-08-11 12:17:10.274'),
 ('20160822110147_add-table-pending-post-status', 75, '2016-08-22 00:00:00.000');
