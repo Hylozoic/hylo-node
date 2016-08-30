@@ -5,7 +5,7 @@ import { handleMissingTagDescriptions, throwErrorIfMissingTags, handleInvalidFin
 import * as PostValidator from '../services/PostValidator'
 import ProjectPledge from '../../lib/hitfin/ProjectPledge'
 import Hitfin from '../services/Hitfin'
-import HitfinUser from '../../lib/Hitfin/User'
+import HitfinUser from '../../lib/hitfin/User'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
