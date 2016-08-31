@@ -106,6 +106,14 @@ const queryForTagInAllCommunities = function (req, res) {
   })
 }
 
+const queryForMessages = function (req, res) {
+  return queryPosts(req, {
+    type: 'message',
+    sort: 'recent',
+    follower: req.session.userId
+  })
+}
+
 const createFindAction = (queryFunction) => (req, res) => {
   return queryFunction(req, res)
   .then(query => query && fetchAndPresentPosts(query, req.session.userId,
@@ -129,6 +137,7 @@ const checkPostTags = (attrs, opts) => {
 }
 
 const PostController = {
+  findMessages: createFindAction(queryForMessages),
   findOne: function (req, res) {
     var opts = {
       withComments: req.param('comments') && 'all',
@@ -161,6 +170,23 @@ const PostController = {
       if (handleMissingTagDescriptions(err, res)) return
       res.serverError(err)
     })
+  },
+
+  createMessagePost: function (req, res) {
+    const params = req.allParams()
+
+    if (!params.messageTo) {
+      res.status(422).send("messageTo must be included")
+      return Promise.resolve()
+    }
+
+    params.type = Post.Type.MESSAGE
+
+    return createPost(req.session.userId, params)
+    .then(post => post.load(PostPresenter.relations(req.session.userId)))
+    .then(PostPresenter.present)
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
   createFromEmailForm: function (req, res) {

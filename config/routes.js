@@ -40,6 +40,7 @@ module.exports.routes = {
   'DELETE /noo/community/:communityId/tag/:tagId':          'TagController.removeFromCommunity',
   'POST   /noo/community/:communityId/post/:postId/pin':    'CommunityController.pinPost',
 
+  'GET    /noo/messages':                                 'PostController.findMessages',
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
   'GET    /noo/post/:postId/comments':                    'CommentController.findForPost',
@@ -52,6 +53,7 @@ module.exports.routes = {
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // to comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',
   'POST   /noo/post':                                     'PostController.create',
+  'POST   /noo/message':                                  'PostController.createMessagePost',
   'POST   /noo/post/:postId':                             'PostController.update',
   'DELETE /noo/post/:postId':                             'PostController.destroy',
   // these route names correspond with the different cases for subject in the

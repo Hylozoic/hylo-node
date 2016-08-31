@@ -26,7 +26,7 @@ const updateTagFollows = (post, transacting) =>
 export const afterSavingPost = function (post, opts) {
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.get('description'))
-  const followerIds = uniq(mentioned.concat(userId))
+  const followerIds = uniq([userId].concat((opts.messageTo || mentioned)))
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
 
@@ -148,6 +148,6 @@ export const createPost = (userId, params) =>
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
     .tap(post => afterSavingPost(post, merge(
-      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'messageTo'),
       {children: params.requests, transacting: trx}
     )))))

@@ -55,7 +55,7 @@ var postRelations = (userId, opts = {}) => {
 }
 
 const showValidType = type =>
-  includes(['event', 'project', 'welcome'], type) ? type : null
+  includes(['event', 'project', 'welcome', 'message'], type) ? type : null
 
 var postAttributes = (post, userId, opts = {}) => {
   // userId is only used if opts.withVotes, so there are times when this is

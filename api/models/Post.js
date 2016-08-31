@@ -203,7 +203,8 @@ module.exports = bookshelf.Model.extend({
   Type: {
     WELCOME: 'welcome',
     EVENT: 'event',
-    PROJECT: 'project'
+    PROJECT: 'project',
+    MESSAGE: 'message'
   },
 
   Visibility: {
