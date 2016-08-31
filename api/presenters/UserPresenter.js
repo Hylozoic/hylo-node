@@ -1,4 +1,4 @@
-import { find, get, isNull, isUndefined, map, merge, pick } from 'lodash'
+import { find, get, isNull, isUndefined, merge, pick } from 'lodash'
 import { pickBy } from 'lodash/fp'
 
 const relationsForSelf = [
@@ -52,8 +52,22 @@ const shortAttributes = [
   'facebook_url', 'linkedin_url', 'twitter_name'
 ]
 
+const cleanBasicAttributes = attrs => {
+  attrs.memberships.forEach(m => {
+    delete m.deactivated_at
+    delete m.deactivator_id
+    delete m.user_id
+  })
+  attrs.linkedAccounts.forEach(l => {
+    delete l.id
+    delete l.user_id
+    delete l.provider_user_id
+  })
+  return attrs
+}
+
 const UserPresenter = module.exports = {
-  shortAttributes: shortAttributes,
+  shortAttributes,
 
   fetchForSelf: function (userId, isAdmin) {
     return User.find(userId, {withRelated: relationsForSelf})
@@ -61,7 +75,7 @@ const UserPresenter = module.exports = {
       if (!user || !user.get('active')) throw new Error('User not found')
     })
     .then(user => Promise.join(
-      user.toJSON(),
+      cleanBasicAttributes(user.toJSON()),
       extraAttributes(user, user.id),
       selfOnlyAttributes(user, isAdmin)
     ))
@@ -85,7 +99,7 @@ const UserPresenter = module.exports = {
 
   presentForList: function (user, opts = {}) {
     var moreAttributes = {
-      tags: map(get(user, 'relations.tags.models'), t => t.pick('id', 'name'))
+      tags: user.relations.tags ? user.relations.tags.pluck('name') : null
     }
 
     const getMembership = communityId =>
