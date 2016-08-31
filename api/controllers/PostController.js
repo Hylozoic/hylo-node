@@ -325,6 +325,36 @@ const PostController = {
       }
     })
     .then(() => res.ok({}), res.serverError)
+  },
+
+  subscribe: function (req, res) {
+    var post = res.locals.post
+    sails.sockets.join(req, `posts/${post.id}`, function(err) {
+      if (err) {
+        return res.serverError(err)
+      }
+      return res.ok({})
+    })
+  },
+
+  unsubscribe: function (req, res) {
+    var post = res.locals.post
+    sails.sockets.leave(req, `posts/${post.id}`, function(err) {
+      if (err) {
+        return res.serverError(err)
+      }
+      return res.ok({})
+    })
+  },
+
+  typing: function (req, res) {
+    var post = res.locals.post
+    res.ok({})
+
+    User.find(req.session.userId)
+    .then(user => {
+      post.pushTypingToSockets(user.id, user.get('name'), req.body.isTyping, req.socket)
+    })
   }
 }
 
