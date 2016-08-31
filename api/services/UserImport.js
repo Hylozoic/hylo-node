@@ -10,24 +10,21 @@
 
 */
 
+import { WritableStreamBuffer } from 'stream-buffers'
 const request = require('request')
 const fs = require('fs')
 const csv = require('csv-parser')
 const validator = require('validator')
 const _ = require('lodash')
 
-const promisifyStream = stream => {
-  return new Promise((resolve, reject) => {
+const promisifyStream = stream =>
+  new Promise((resolve, reject) => {
     stream.on('end', resolve)
     stream.on('error', reject)
   })
-}
 
-const getStream = options => {
-  return options.url
-    ? request(options.url)
-    : fs.createReadStream(options.filename)
-}
+const getStream = ({ url, filename }) =>
+  url ? request(url) : fs.createReadStream(filename)
 
 const getConverter = convert => {
   // you can pass a function that maps from arbitrary values
@@ -46,6 +43,16 @@ const runWithCSVStream = function (stream, options, rowAction) {
   return promisifyStream(stream)
 }
 
+const runWithJSONStream = function (stream, options, rowAction) {
+  const buffer = new WritableStreamBuffer()
+  stream.pipe(buffer)
+  return promisifyStream(stream)
+  .then(() => {
+    const data = JSON.parse(buffer.getContentsAsString())
+    return Promise.map(data, rowAction)
+  })
+}
+
 const createUser = function (attrs, options) {
   if (!attrs) return
 
@@ -61,7 +68,10 @@ const createUser = function (attrs, options) {
       return
     }
 
-    if (options.dryRun) return
+    if (options.dryRun) {
+      console.log(`dry run: ${attrs.name} <${attrs.email}>`)
+      return
+    }
 
     return User.create(_.merge(attrs, {
       community: options.community,
@@ -164,11 +174,15 @@ const operations = {
 }
 
 var UserImport = module.exports = {
-  import: options =>
-    runWithCSVStream(getStream(options), options, row => {
+  import: options => {
+    if (!options.community) throw new Error('No community specified')
+
+    const method = options.json ? runWithJSONStream : runWithCSVStream
+    return method(getStream(options), options, row => {
       const convert = getConverter(options.convert)
-      createUser(convert(row, options), options)
-    }),
+      return createUser(convert(row, options), options)
+    })
+  },
 
   run: (options) => {
     var promises = []
@@ -186,17 +200,14 @@ var UserImport = module.exports = {
 if (require.main === module) {
   var skiff = require('../../lib/skiff')
   skiff.lift({
-    log: {
-      level: 'warn'
-    },
-    start: () => {
-      Community.find('sustainablehuman')
-      .then(community => UserImport.run({
-        operation: 'sustainableHumanIntentions',
-        filename: '../sustainablehuman.csv',
+    log: {level: 'warn'},
+    start: () =>
+      Community.find('impact-hub-baltimore')
+      .then(community => UserImport.import({
+        json: true,
+        filename: './nexudus.json',
         community
       }))
-      .then(() => skiff.lower())
-    }
+      .then(skiff.lower)
   })
 }
