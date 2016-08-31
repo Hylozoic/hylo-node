@@ -130,12 +130,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendToSubscribedSockets: function (messageType, payload, socketToExclude) {
+    if (!sails.io) return
     var postId = this.id
-    Object.keys(sails.io.sockets.sockets).forEach(function(id) {
+    Object.keys(sails.io.sockets.sockets).forEach(function (id) {
       var socket = sails.io.sockets.sockets[id]
       // for security reasons, only sockets that passed the checkAndSetPost policy
       // get subscribed to the comment stream for that post
-      if (socket != socketToExclude && socket.rooms[`posts/${postId}`]) socket.emit(messageType, payload)
+      if (socket !== socketToExclude && socket.rooms[`posts/${postId}`]) {
+        socket.emit(messageType, payload)
+      }
     })
     /* this should work but it doesn't
       sails.sockets.broadcast(`posts/${this.id}`, 'comment_added', comment)
