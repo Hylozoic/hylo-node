@@ -29,7 +29,7 @@
     "bcrypt": "^0.8.2",
     "bluebird": "^3.4.4",
     "bookshelf": "0.9.4",
-    "cheerio": "0.19.0",
+    "cheerio": "0.22.0",
     "colors": "^1.0.3",
     "connect-redis": "1.4.5",
     "csv-parser": "^1.7.0",
