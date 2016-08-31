@@ -16,9 +16,13 @@ const formatRecord = record => ({
 
 const logCount = label => ({ length }) => console.log(`${label}: ${length}`)
 
-const API = function (username, password) {
+// spaceId can be found by clicking through to a space's details page from
+// https://spaces.nexudus.com/Sys/Businesses; it is the number at the end of the
+// details page's URL, after "Edit"
+const API = function (username, password, spaceId) {
   this.username = username
   this.password = password
+  this.spaceId = spaceId
 }
 
 API.prototype.getRecords = function (path, query) {
@@ -57,25 +61,26 @@ API.prototype.getActiveContracts = function () {
 }
 
 API.prototype.getActiveCoworkers = function () {
-  return this.getRecords('spaces/coworkers', {Coworker_Active: true})
+  return this.getRecords('spaces/coworkers', {
+    Coworker_Active: true,
+    Coworker_InvoicingBusiness: this.spaceId
+  })
   .tap(logCount('coworkers'))
 }
 
 module.exports = {
   // members are users who are active and have an active contract
-  fetchMembers: function (username, password, verbose) {
-    const api = new API(username, password)
+  fetchMembers: function (username, password, opts = {}) {
+    const api = new API(username, password, opts.spaceId)
     let contracts, coworkers
     const intersects = record =>
       includes(map('CoworkerId', contracts), record.Id)
 
-    return api.getActiveContracts()
-    .then(r1 => contracts = r1)
-    .then(() => api.getActiveCoworkers())
-    .tap(r2 => coworkers = r2)
+    return api.getActiveContracts().tap(r1 => contracts = r1)
+    .then(() => api.getActiveCoworkers().tap(r2 => coworkers = r2))
     .then(filter(intersects))
     .tap(logCount('active members'))
     .then(map(formatRecord))
-    .then(records => verbose ? {contracts, coworkers, records} : records)
+    .then(records => opts.verbose ? {contracts, coworkers, records} : records)
   }
 }
