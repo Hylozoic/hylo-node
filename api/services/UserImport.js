@@ -78,7 +78,9 @@ const createUser = function (attrs, options) {
       settings: {
         digest_frequency: 'weekly',
         receives_email_prompts: true
-      }
+      },
+      created_at: new Date(),
+      updated_at: new Date()
     }))
     // TODO handle skills as tags
   })
