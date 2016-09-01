@@ -3,7 +3,7 @@ var util = require('util')
     , InternalOAuthError = require('passport-oauth').InternalOAuthError;
 
 // TODO: Use HitFin OAuth instead of google (this is pretty much a copy of passport-google-oauth/oauth2.js ATM)
-const AUTH_URL = process.env.HITFIN_API_URL  + '/oauth/authorise'
+const AUTH_URL = process.env.HITFIN_API_URL  + '/oauth/authorize'
 const TOKEN_URL = process.env.HITFIN_API_URL + '/oauth/token'
 const PROVIDER_NAME = 'hit-fin';
 
