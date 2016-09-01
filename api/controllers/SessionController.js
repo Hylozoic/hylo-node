@@ -57,11 +57,17 @@ const upsertLinkedAccount = (req, service, profile, updateUser) => {
   .then(account => {
     if (account) {
       // user has this linked account already
+      if (account.get('user_id') != userId)
+        LinkedAccount.remove(account.get('user_id')).then( () => {
+            return UserExternalData.remove(account.get('user_id'))
+        })
       if (account.get('user_id') === userId) return
+        if (updateUser)
       // linked account belongs to someone else -- change its ownership
-      return account.save({user_id: userId}, {patch: true})
+          return account.save({user_id: userId}, {patch: true})
       .then(() => {
-        return LinkedAccount.updateUser(userId, {type: service, profile})
+        if(updateUser)
+          return LinkedAccount.updateUser(userId, {type: service, profile})
       });
     }
     // we create a new account regardless of whether one exists for the service;
