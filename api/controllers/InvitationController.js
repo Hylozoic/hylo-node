@@ -1,5 +1,6 @@
 import validator from 'validator'
 import { markdown } from 'hylo-utils/text'
+import { map } from 'lodash/fp'
 
 const parseEmailList = emails =>
   (emails || '').split(/,|\n/).map(email => {
@@ -70,10 +71,14 @@ module.exports = {
   create: function (req, res) {
     let tagName = req.param('tagName')
     return Promise.join(
+      User.query(q => {
+        q.whereIn('id', req.param('users'))
+      }).fetchAll(),
       Community.find(req.param('communityId')),
       tagName ? Tag.find(req.param('tagName')) : Promise.resolve(),
-      (community, tag) => {
+      (users, community, tag) => {
         var emails = parseEmailList(req.param('emails'))
+        .concat(map(u => u.get('email'), users.models))
 
         return Promise.map(emails, email => {
           if (!validator.isEmail(email)) {

@@ -4,7 +4,7 @@ var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
 import { mockify, unspyify } from '../../setup/helpers'
 
-describe('InvitationController', () => {
+describe.only('InvitationController', () => {
   var user, community, invitation, inviter, req, res
 
   before(() => {
@@ -44,7 +44,7 @@ describe('InvitationController', () => {
     })
   })
 
-  describe.only('.create', () => {
+  describe('.create', () => {
     var community, u1, u2
 
     before(() => {
@@ -87,7 +87,7 @@ describe('InvitationController', () => {
 
       return InvitationController.create(req, res)
       .then(() => {
-        expect(Email.sendInvitation).to.have.been.called.exactly(2)
+        expect(Email.sendInvitation).to.have.been.called.exactly(4)
 
         expect(res.body).to.deep.equal({
           results: [
@@ -102,7 +102,7 @@ describe('InvitationController', () => {
 
     it('returns error message if mail sending fails', () => {
       mockify(Email, 'sendInvitation', () => new Promise((res, rej) => rej({message: 'failed'})))
-      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
+      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com', users: []})
 
       return InvitationController.create(req, res)
       .then(() => {
