@@ -44,12 +44,17 @@ describe('InvitationController', () => {
     })
   })
 
-  describe('.create', () => {
-    var community
+  describe.only('.create', () => {
+    var community, u1, u2
 
     before(() => {
       community = factories.community()
-      return community.save()
+      u1 = factories.user()
+      u2 = factories.user()
+      return Promise.join(
+        community.save(),
+        u1.save(),
+        u2.save())
     })
 
     beforeEach(() => {
@@ -73,8 +78,12 @@ describe('InvitationController', () => {
       })
     })
 
-    it('sends invitations', () => {
-      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
+    it('sends invitations to emails and users', () => {
+      _.extend(req.params, {
+        communityId: community.id,
+        emails: 'foo@bar.com, bar@baz.com',
+        users: [u1.id, u2.id]
+      })
 
       return InvitationController.create(req, res)
       .then(() => {
@@ -83,7 +92,9 @@ describe('InvitationController', () => {
         expect(res.body).to.deep.equal({
           results: [
             {email: 'foo@bar.com', error: null},
-            {email: 'bar@baz.com', error: null}
+            {email: 'bar@baz.com', error: null},
+            {email: u1.get('email'), error: null},
+            {email: u2.get('email'), error: null}
           ]
         })
       })
