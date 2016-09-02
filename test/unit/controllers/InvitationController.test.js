@@ -3,6 +3,7 @@ require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
 import { mockify, unspyify } from '../../setup/helpers'
+import { sortBy } from 'lodash/fp'
 
 describe('InvitationController', () => {
   var user, community, invitation, inviter, req, res
@@ -45,11 +46,16 @@ describe('InvitationController', () => {
   })
 
   describe('.create', () => {
-    var community
+    var community, u1, u2
 
     before(() => {
       community = factories.community()
-      return community.save()
+      u1 = factories.user()
+      u2 = factories.user()
+      return Promise.join(
+        community.save(),
+        u1.save(),
+        u2.save())
     })
 
     beforeEach(() => {
@@ -73,25 +79,30 @@ describe('InvitationController', () => {
       })
     })
 
-    it('sends invitations', () => {
-      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
+    it('sends invitations to emails and users', () => {
+      _.extend(req.params, {
+        communityId: community.id,
+        emails: 'foo@bar.com, bar@baz.com',
+        users: [u1.id, u2.id]
+      })
 
       return InvitationController.create(req, res)
       .then(() => {
-        expect(Email.sendInvitation).to.have.been.called.exactly(2)
+        expect(Email.sendInvitation).to.have.been.called.exactly(4)
 
-        expect(res.body).to.deep.equal({
-          results: [
+        expect(sortBy('email', res.body.results)).to.deep.equal(
+          sortBy('email', [
             {email: 'foo@bar.com', error: null},
-            {email: 'bar@baz.com', error: null}
-          ]
-        })
+            {email: 'bar@baz.com', error: null},
+            {email: u1.get('email'), error: null},
+            {email: u2.get('email'), error: null}
+          ]))
       })
     })
 
     it('returns error message if mail sending fails', () => {
       mockify(Email, 'sendInvitation', () => new Promise((res, rej) => rej({message: 'failed'})))
-      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com'})
+      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com', users: []})
 
       return InvitationController.create(req, res)
       .then(() => {

@@ -14,6 +14,7 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+
   taggedPostCount (communityId, tagId) {
     return bookshelf.knex('posts_tags')
     .join('post_community', 'post_community.post_id', 'posts_tags.post_id')
@@ -21,4 +22,5 @@ module.exports = bookshelf.Model.extend({
     .count()
     .then(rows => Number(rows[0].count))
   }
+
 })
