@@ -210,30 +210,38 @@ module.exports = {
       'name', 'description', 'slug', 'category',
       'beta_access_code', 'banner_url', 'avatar_url', 'location')
 
-    var community = new Community(_.merge(attrs, {
-      created_at: new Date(),
-      created_by_id: req.session.userId,
-      leader_id: req.session.userId,
-      welcome_message: welcomeMessage,
-      settings: {sends_email_prompts: true}
-    }))
+    var promise = attrs.beta_access_code
+      ? Promise.resolve(attrs.beta_access_code)
+      : Community.getNewBetaAccessCode()
 
-    return bookshelf.transaction(trx => {
-      return community.save(null, {transacting: trx})
-      .tap(community => community.createDefaultTags(req.session.userId, trx))
-      .tap(community => community.createStarterPosts(trx))
-      .then(() => Membership.create(req.session.userId, community.id, {
-        role: Membership.MODERATOR_ROLE,
-        transacting: trx
+    return promise
+    .then(beta_access_code => {
+      var community = new Community(_.merge(attrs, {
+        beta_access_code,
+        created_at: new Date(),
+        created_by_id: req.session.userId,
+        leader_id: req.session.userId,
+        welcome_message: welcomeMessage,
+        settings: {sends_email_prompts: true}
       }))
+
+      return bookshelf.transaction(trx => {
+        return community.save(null, {transacting: trx})
+        .tap(community => community.createDefaultTags(req.session.userId, trx))
+        .tap(community => community.createStarterPosts(trx))
+        .then(() => Membership.create(req.session.userId, community.id, {
+          role: Membership.MODERATOR_ROLE,
+          transacting: trx
+        }))
+      })
+      // Any assets were uploaded to /community/new, since we didn't have an id;
+      // copy them over to /community/:id now
+      .tap(() => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
+      .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
+      .then(membership => _.extend(membership.toJSON(), {community: community}))
+      .then(res.ok)
+      .catch(res.serverError)
     })
-    // Any assets were uploaded to /community/new, since we didn't have an id;
-    // copy them over to /community/:id now
-    .tap(() => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
-    .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
-    .then(membership => _.extend(membership.toJSON(), {community: community}))
-    .then(res.ok)
-    .catch(res.serverError)
   },
 
   findForNetwork: function (req, res) {

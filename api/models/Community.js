@@ -1,4 +1,5 @@
 var Slack = require('../services/Slack')
+const randomstring = require('randomstring')
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
@@ -164,5 +165,19 @@ module.exports = bookshelf.Model.extend({
       var slackMessage = Slack.textForNewPost(post, community)
       return Slack.send(slackMessage, community.get('slack_hook_url'))
     })
+  },
+
+  getNewBetaAccessCode: function () {
+    const test = code => Community.where({beta_access_code: code}).fetch()
+    const loop = code =>
+      test(code)
+      .then(community => {
+        if (community) {
+          return loop(randomstring.generate({length: 6, charset: 'alphanumeric'}))
+        } else {
+          return code
+        }
+      })
+    return loop(randomstring.generate({length: 6, charset: 'alphanumeric'}))
   }
 })
