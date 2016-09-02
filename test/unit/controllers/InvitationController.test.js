@@ -3,6 +3,7 @@ require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
 import { mockify, unspyify } from '../../setup/helpers'
+import { sortBy } from 'lodash/fp'
 
 describe('InvitationController', () => {
   var user, community, invitation, inviter, req, res
@@ -89,14 +90,13 @@ describe('InvitationController', () => {
       .then(() => {
         expect(Email.sendInvitation).to.have.been.called.exactly(4)
 
-        expect(res.body).to.deep.equal({
-          results: [
+        expect(sortBy('email', res.body.results)).to.deep.equal(
+          sortBy('email', [
             {email: 'foo@bar.com', error: null},
             {email: 'bar@baz.com', error: null},
             {email: u1.get('email'), error: null},
             {email: u2.get('email'), error: null}
-          ]
-        })
+          ]))
       })
     })
 
