@@ -1,6 +1,7 @@
 import validator from 'validator'
 import { markdown } from 'hylo-utils/text'
 import { map } from 'lodash/fp'
+import { presentForList } from '../presenters/UserPresenter'
 
 const parseEmailList = emails =>
   (emails || '').split(/,|\n/).map(email => {
@@ -77,31 +78,35 @@ module.exports = {
       Community.find(req.param('communityId')),
       tagName ? Tag.find(req.param('tagName')) : Promise.resolve(),
       (users, community, tag) => {
-        var emails = parseEmailList(req.param('emails'))
-        .concat(map(u => u.get('email'), users.models))
+        return TagFollow.findFollowers(community.id, tag.id, 3)
+        .then(participants => {
+          var emails = parseEmailList(req.param('emails'))
+          .concat(map(u => u.get('email'), users.models))
 
-        return Promise.map(emails, email => {
-          if (!validator.isEmail(email)) {
-            return {email, error: 'not a valid email address'}
-          }
+          return Promise.map(emails, email => {
+            if (!validator.isEmail(email)) {
+              return {email, error: 'not a valid email address'}
+            }
 
-          const opts = {
-            email,
-            userId: req.session.userId,
-            communityId: community.id
-          }
+            const opts = {
+              email,
+              userId: req.session.userId,
+              communityId: community.id
+            }
 
-          if (tag) {
-            opts.tagId = tag.id
-          } else {
-            opts.message = markdown(req.param('message'))
-            opts.moderator = req.param('moderator')
-            opts.subject = req.param('subject')
-          }
+            if (tag) {
+              opts.tagId = tag.id
+              opts.participants = map(u => presentForList(u, {tags: true}), participants)
+            } else {
+              opts.message = markdown(req.param('message'))
+              opts.moderator = req.param('moderator')
+              opts.subject = req.param('subject')
+            }
 
-          return Invitation.createAndSend(opts)
-          .then(() => ({email, error: null}))
-          .catch(err => ({email, error: err.message}))
+            return Invitation.createAndSend(opts)
+            .then(() => ({email, error: null}))
+            .catch(err => ({email, error: err.message}))
+          })
         })
       })
     .then(results => res.ok({results}))

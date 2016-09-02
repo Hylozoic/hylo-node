@@ -20,5 +20,9 @@ module.exports = bookshelf.Model.extend({
     .where({community_id: communityId, tag_id: tagId})
     .count()
     .then(rows => Number(rows[0].count))
+  },
+
+  findParticipants (communityId, tagId, limit) {
+    
   }
 })

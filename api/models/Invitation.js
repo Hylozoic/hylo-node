@@ -75,7 +75,7 @@ module.exports = bookshelf.Model.extend({
       let creator = invitation.relations.creator
       let community = invitation.relations.community
 
-      let data = _.extend(_.pick(opts, 'message', 'subject'), {
+      let data = _.extend(_.pick(opts, 'message', 'subject', 'participants'), {
         inviter_name: creator.get('name'),
         inviter_email: creator.get('email'),
         community_name: community.get('name'),
