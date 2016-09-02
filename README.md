@@ -59,7 +59,6 @@ EMAIL_SENDER=dev+localtester@hylo.com
 GOOGLE_CLIENT_ID=foo
 GOOGLE_CLIENT_SECRET=foo
 HITFIN_API_URL=https://sandbox.hitfin.com
-HITFIN_ENABLED=true
 HITFIN_EMAIL=hylo-integration@hitfin.com
 HITFIN_CLIENT_ID=foo
 HITFIN_CLIENT_SECRET=foo
@@ -87,7 +86,6 @@ SLACK_APP_CLIENT_SECRET=xxxxxxxx
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
 * `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 * `DATABASE_URL`: set to your local DB instance
-* `HITFIN_ENABLED`: set to `true` if you want to integrate with HitFin
 * `HITFIN_API_URL`: set to the HitFin sandbox url
 * `HITFIN_EMAIL`: the email address for the HitFin account
 * `HITFIN_CLIENT_ID`: client ID for the HitFin account
