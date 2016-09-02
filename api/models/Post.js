@@ -134,6 +134,30 @@ module.exports = bookshelf.Model.extend({
     return this.get('type') === Post.Type.WELCOME
   },
 
+  sendToSubscribedSockets: function (messageType, payload, socketToExclude) {
+    if (!sails.io) return
+    var postId = this.id
+    Object.keys(sails.io.sockets.sockets).forEach(function (id) {
+      var socket = sails.io.sockets.sockets[id]
+      // for security reasons, only sockets that passed the checkAndSetPost policy
+      // get subscribed to the comment stream for that post
+      if (socket !== socketToExclude && socket.rooms[`posts/${postId}`]) {
+        socket.emit(messageType, payload)
+      }
+    })
+    /* this should work but it doesn't
+      sails.sockets.broadcast(`posts/${this.id}`, 'comment_added', comment)
+    */
+  },
+
+  pushCommentToSockets: function (comment) {
+    this.sendToSubscribedSockets('commentAdded', comment)
+  },
+
+  pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
+    this.sendToSubscribedSockets('userTyping', { userId, userName, isTyping }, socketToExclude)
+  },
+
   copy: function (attrs) {
     var that = this.clone()
     _.merge(that.attributes, Post.newPostAttrs(), attrs)

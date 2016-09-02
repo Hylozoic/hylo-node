@@ -51,6 +51,9 @@ module.exports.routes = {
   'POST   /noo/post/:postId/vote':                        'PostController.vote',
   'POST   /noo/post/:postId/complain':                    'PostController.complain',
   'POST   /noo/post/:postId/rsvp':                        'PostController.rsvp',
+  'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
+  'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // to comments
+  'POST   /noo/post/:postId/typing':                      'PostController.typing',
   'POST   /noo/post':                                     'PostController.create',
   'POST   /noo/post/:postId':                             'PostController.update',
   'DELETE /noo/post/:postId':                             'PostController.destroy',
