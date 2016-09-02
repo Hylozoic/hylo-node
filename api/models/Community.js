@@ -168,16 +168,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   getNewBetaAccessCode: function () {
-    const test = code => Community.where({beta_access_code: code}).fetch()
-    const loop = code =>
-      test(code)
-      .then(community => {
-        if (community) {
-          return loop(randomstring.generate({length: 6, charset: 'alphanumeric'}))
-        } else {
-          return code
-        }
-      })
-    return loop(randomstring.generate({length: 6, charset: 'alphanumeric'}))
+    const test = code => Community.where({beta_access_code: code}).count().then(Number)
+    const loop = () => {
+      const code = randomstring.generate({length: 6, charset: 'alphanumeric'})
+      return test(code).then(count => count ? loop() : code)
+    }
+    return loop()
   }
 })
