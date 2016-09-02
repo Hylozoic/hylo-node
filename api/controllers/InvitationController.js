@@ -78,7 +78,9 @@ module.exports = {
       Community.find(req.param('communityId')),
       tagName ? Tag.find(req.param('tagName')) : Promise.resolve(),
       (users, community, tag) => {
-        return TagFollow.findFollowers(community.id, tag.id, 3)
+        return tag
+        ? TagFollow.findFollowers(community.id, tag.id, 3)
+        : Promise.resolve([])
         .then(participants => {
           var emails = parseEmailList(req.param('emails'))
           .concat(map(u => u.get('email'), users.models))

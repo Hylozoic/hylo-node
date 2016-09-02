@@ -4,7 +4,7 @@ var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
 import { mockify, unspyify } from '../../setup/helpers'
 
-describe.only('InvitationController', () => {
+describe('InvitationController', () => {
   var user, community, invitation, inviter, req, res
 
   before(() => {
