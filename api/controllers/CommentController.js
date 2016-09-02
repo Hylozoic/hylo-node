@@ -32,6 +32,10 @@ const createComment = function (commenterId, text, post, tagDescriptions) {
     })
     .tap(comment => comment.createActivities())
     .tap(comment => post.addFollowers(newFollowers, commenterId))
+    .tap(comment => {
+      comment.load({user: userColumns})
+      .then((c) => post.pushCommentToSockets(CommentPresenter.present(c, commenterId)))
+    })
     .tap(() => updateRecentComments(post.id))
   })
 }
