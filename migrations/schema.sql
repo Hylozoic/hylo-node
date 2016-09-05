@@ -2,9 +2,6 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.1
--- Dumped by pg_dump version 9.5.1
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -129,7 +126,8 @@ CREATE TABLE communities_tags (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     user_id bigint,
-    description text
+    description text,
+    "default" boolean DEFAULT false
 );
 
 
@@ -523,6 +521,88 @@ CREATE TABLE media (
     width integer,
     height integer
 );
+
+
+--
+-- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE users_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE users (
+    id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
+    email character varying(255) NOT NULL,
+    name character varying(255),
+    avatar_url character varying(255),
+    first_name character varying(255),
+    last_name character varying(255),
+    last_login timestamp without time zone,
+    active boolean,
+    email_validated boolean,
+    created_at timestamp without time zone,
+    date_deactivated timestamp without time zone,
+    send_email_preference boolean,
+    bio text,
+    banner_url character varying(255),
+    twitter_name character varying(255),
+    linkedin_url character varying(255),
+    facebook_url character varying(255),
+    work text,
+    intention text,
+    extra_info text,
+    new_notification_count integer DEFAULT 0,
+    updated_at timestamp with time zone,
+    settings jsonb DEFAULT '{}'::jsonb,
+    push_follow_preference boolean DEFAULT true,
+    push_new_post_preference boolean DEFAULT true,
+    location character varying(255),
+    url character varying(255)
+);
+
+
+--
+-- Name: users_community; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE users_community (
+    user_id bigint NOT NULL,
+    community_id bigint NOT NULL,
+    role smallint,
+    created_at timestamp without time zone,
+    active boolean,
+    deactivated_at timestamp with time zone,
+    deactivator_id bigint,
+    last_viewed_at timestamp with time zone,
+    id integer NOT NULL,
+    new_notification_count integer DEFAULT 0,
+    settings jsonb DEFAULT '{}'::jsonb
+);
+
+
+--
+-- Name: monthly_new_users; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW monthly_new_users AS
+ SELECT count(*) AS count,
+    c.name AS community,
+    (date_trunc('month'::text, u.created_at))::date AS month
+   FROM users u,
+    users_community uc,
+    community c
+  WHERE ((u.id = uc.user_id) AND (uc.community_id = c.id))
+  GROUP BY c.name, (date_trunc('month'::text, u.created_at))::date
+  ORDER BY (date_trunc('month'::text, u.created_at))::date DESC, count(*) DESC;
 
 
 --
@@ -987,72 +1067,6 @@ CREATE TABLE user_post_relevance (
 
 
 --
--- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE users_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: users; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE users (
-    id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
-    email character varying(255) NOT NULL,
-    name character varying(255),
-    avatar_url character varying(255),
-    first_name character varying(255),
-    last_name character varying(255),
-    last_login timestamp without time zone,
-    active boolean,
-    email_validated boolean,
-    created_at timestamp without time zone,
-    date_deactivated timestamp without time zone,
-    send_email_preference boolean,
-    bio text,
-    banner_url character varying(255),
-    twitter_name character varying(255),
-    linkedin_url character varying(255),
-    facebook_url character varying(255),
-    work text,
-    intention text,
-    extra_info text,
-    new_notification_count integer DEFAULT 0,
-    updated_at timestamp with time zone,
-    settings jsonb DEFAULT '{}'::jsonb,
-    push_follow_preference boolean DEFAULT true,
-    push_new_post_preference boolean DEFAULT true,
-    location character varying(255),
-    url character varying(255)
-);
-
-
---
--- Name: users_community; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE users_community (
-    user_id bigint NOT NULL,
-    community_id bigint NOT NULL,
-    role smallint,
-    created_at timestamp without time zone,
-    active boolean,
-    deactivated_at timestamp with time zone,
-    deactivator_id bigint,
-    last_viewed_at timestamp with time zone,
-    id integer NOT NULL,
-    new_notification_count integer DEFAULT 0,
-    settings jsonb DEFAULT '{}'::jsonb
-);
-
-
---
 -- Name: users_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1113,6 +1127,22 @@ CREATE TABLE vote (
     post_id bigint,
     date_voted timestamp without time zone
 );
+
+
+--
+-- Name: weekly_new_users; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW weekly_new_users AS
+ SELECT count(*) AS count,
+    c.name AS community,
+    (date_trunc('week'::text, u.created_at))::date AS week
+   FROM users u,
+    users_community uc,
+    community c
+  WHERE ((u.id = uc.user_id) AND (uc.community_id = c.id))
+  GROUP BY c.name, (date_trunc('week'::text, u.created_at))::date
+  ORDER BY (date_trunc('week'::text, u.created_at))::date DESC, count(*) DESC;
 
 
 --
@@ -1250,7 +1280,7 @@ CREATE MATERIALIZED VIEW search_index AS
  SELECT p.id AS post_id,
     NULL::bigint AS user_id,
     NULL::bigint AS comment_id,
-    ((setweight(to_tsvector('english'::regconfig, p.name), 'B'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(p.description, ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+    ((setweight(to_tsvector('english'::regconfig, p.name), 'A'::"char") || setweight(to_tsvector('english'::regconfig, p.description), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
    FROM (post p
      JOIN users u ON ((u.id = p.user_id)))
   WHERE ((p.active = true) AND (u.active = true))
@@ -1258,15 +1288,17 @@ UNION
  SELECT NULL::bigint AS post_id,
     u.id AS user_id,
     NULL::bigint AS comment_id,
-    (setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
-   FROM users u
+    ((((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, ((((u.bio || ' '::text) || u.intention) || ' '::text) || u.work)), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (s.skill_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (o.org_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, u.extra_info), 'D'::"char")) AS document
+   FROM ((users u
+     LEFT JOIN users_skill s ON ((u.id = s.user_id)))
+     LEFT JOIN users_org o ON ((u.id = o.user_id)))
   WHERE (u.active = true)
   GROUP BY u.id
 UNION
  SELECT NULL::bigint AS post_id,
     NULL::bigint AS user_id,
     c.id AS comment_id,
-    (setweight(to_tsvector('english'::regconfig, c.text), 'C'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+    (setweight(to_tsvector('english'::regconfig, c.text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
    FROM (comment c
      JOIN users u ON ((u.id = c.user_id)))
   WHERE ((c.active = true) AND (u.active = true))
@@ -1686,13 +1718,6 @@ ALTER TABLE ONLY users_community
 --
 
 CREATE INDEX fk_community_created_by_1 ON community USING btree (created_by_id);
-
-
---
--- Name: idx_fts_search; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_fts_search ON search_index USING gin (document);
 
 
 --
