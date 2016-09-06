@@ -1,5 +1,6 @@
 var Slack = require('../services/Slack')
 const randomstring = require('randomstring')
+import { merge, unset } from 'lodash'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
@@ -100,6 +101,14 @@ module.exports = bookshelf.Model.extend({
         created_at: new Date()
       })
       .save({}, {transacting: trx})))
+  },
+
+  addSettings: function (settings) {
+    return merge(this.get('settings'), settings)
+  },
+
+  removeSetting: function (path) {
+    return unset(this.get('settings'), path)
   }
 
 }, {
