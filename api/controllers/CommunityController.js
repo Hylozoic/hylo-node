@@ -95,8 +95,8 @@ module.exports = {
         slack_team: parsed.team_name,
         slack_configure_url: parsed.incoming_webhook.configuration_url
       }, {patch: true}))
-      .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
-      .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=slack&slackerror=true'))
+      .then(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced'))
+      .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced&slackerror=true'))
     })
   },
 
