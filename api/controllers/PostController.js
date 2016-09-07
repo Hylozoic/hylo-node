@@ -149,6 +149,8 @@ const PostController = {
       return Promise.resolve()
     }
 
+    console.log('tagDescriptions', params.tagDescriptions)
+
     return checkPostTags(
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'communities', 'tagDescriptions')

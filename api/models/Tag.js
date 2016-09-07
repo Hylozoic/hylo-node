@@ -40,8 +40,8 @@ const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting
     return taggable.tags().attach(attachment, {transacting})
   })
   .then(tag => Promise.map(communities(taggable), com => {
-    const description = get(tagDescriptions, tag.get('name'))
-    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, transacting)
+    const { description, def } = get(tagDescriptions, tag.get('name')) || {}
+    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, def, transacting)
   }))
 }
 
@@ -49,13 +49,15 @@ const removeFromTaggable = (taggable, tag, transacting) => {
   return taggable.tags().detach(tag.id, {transacting})
 }
 
-const addToCommunity = (community_id, tag_id, user_id, description, transacting) => {
+const addToCommunity = (community_id, tag_id, user_id, description, def, transacting) => {
   const created_at = new Date()
   return CommunityTag.where({community_id, tag_id}).fetch({transacting})
-  .then(comTag => comTag ||
-    new CommunityTag({community_id, tag_id, user_id, description, created_at})
+  .then(comTag => {
+    return comTag ||
+    new CommunityTag({community_id, tag_id, user_id, description, default: def, created_at})
     .save({}, {transacting})
-    .catch(() => {}))
+    .catch(() => {})
+  })
     // this catch is for the case where another user just created the
     // CommunityTag (race condition): the save fails, but we don't care about
     // the result

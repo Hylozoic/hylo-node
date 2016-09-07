@@ -280,7 +280,7 @@ describe('Tag', () => {
         })
         return comment.save()
       })
-      .then(comment => Tag.updateForComment(comment, {commenthashtag: 'lol'}))
+      .then(comment => Tag.updateForComment(comment, {commenthashtag: {description: 'lol'}}))
       .then(() => Tag.find('commenthashtag', {withRelated: ['comments', 'communities']}))
       .then(tag => {
         expect(tag).to.exist
