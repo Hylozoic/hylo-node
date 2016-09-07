@@ -127,7 +127,7 @@ CREATE TABLE communities_tags (
     updated_at timestamp with time zone,
     user_id bigint,
     description text,
-    "default" boolean DEFAULT false
+    def boolean DEFAULT false
 );
 
 
@@ -2307,7 +2307,7 @@ ALTER TABLE ONLY tags_users
 --
 
 ALTER TABLE ONLY user_external_data
-    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
 
 
 --
