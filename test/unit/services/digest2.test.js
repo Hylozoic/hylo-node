@@ -3,7 +3,7 @@ import moment from 'moment-timezone'
 import formatData from '../../../lib/community/digest2/formatData'
 import personalizeData from '../../../lib/community/digest2/personalizeData'
 import { defaultTimezone, shouldSendData } from '../../../lib/community/digest2/util'
-import { sendAllDigests } from '../../../lib/community/digest2'
+import { sendDigest, sendAllDigests } from '../../../lib/community/digest2'
 import factories from '../../setup/factories'
 import { spyify, unspyify } from '../../setup/helpers'
 import { merge } from 'lodash'
@@ -178,6 +178,17 @@ describe('community digest v2', () => {
             ]
           }
         ]
+      })
+    })
+
+    it('sets the no_new_activity key if there is no data', () => {
+      const data = {posts: [], comments: []}
+
+      expect(formatData(community, data)).to.deep.equal({
+        offers: [],
+        requests: [],
+        conversations: [],
+        no_new_activity: true
       })
     })
   })
@@ -357,6 +368,34 @@ describe('community digest v2', () => {
           }),
           email_settings_url: Frontend.Route.userSettings() + clickthroughParams + '&expand=account'
         })
+      })
+    })
+  })
+
+  describe('sendDigest', () => {
+    var community
+
+    beforeEach(() => {
+      community = factories.community()
+      return community.save()
+    })
+
+    describe('when there is no data and post_prompt_day matches', () => {
+      beforeEach(() => {
+        community.addSetting({post_prompt_day: moment.tz(defaultTimezone).day()})
+        return community.save()
+      })
+
+      it('sends', () => {
+        return sendDigest(community.id, 'daily')
+        .then(result => expect(result).to.equal(0))
+      })
+    })
+
+    describe('when there is no data and post_prompt_day does not match', () => {
+      it('does not send', () => {
+        return sendDigest(community.id, 'daily')
+        .then(result => expect(result).to.be.false)
       })
     })
   })
