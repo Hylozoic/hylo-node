@@ -10,6 +10,10 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+  create: (user_id, post_id, transacting) =>
+    new Contribution({post_id, user_id, date_contributed: new Date()})
+    .save(null, {transacting}),
+
   queryForUser: function (userId, communityIds) {
     return Contribution.query(q => {
       q.orderBy('date_contributed')

@@ -249,20 +249,14 @@ const PostController = {
   },
 
   fulfill: function (req, res) {
-    bookshelf.transaction(function (trx) {
-      return res.locals.post.save({
-        fulfilled_at: new Date()
-      }, {patch: true, transacting: trx})
-      .tap(function () {
-        return Promise.map(req.param('contributors'), function (userId) {
-          return new Contribution({
-            post_id: res.locals.post.id,
-            user_id: userId,
-            date_contributed: new Date()
-          }).save(null, {transacting: trx})
-        })
-      })
-    })
+    const { post } = res.locals
+    const contributorIds = req.param('contributors') || []
+    const fulfilled_at = post.get('fulfilled_at') ? null : new Date()
+
+    return bookshelf.transaction(trx =>
+      post.save({fulfilled_at}, {patch: true, transacting: trx})
+      .tap(() => Promise.map(contributorIds, userId =>
+        Contribution.create(userId, post.id, trx))))
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
@@ -329,7 +323,7 @@ const PostController = {
 
   subscribe: function (req, res) {
     var post = res.locals.post
-    sails.sockets.join(req, `posts/${post.id}`, function(err) {
+    sails.sockets.join(req, `posts/${post.id}`, function (err) {
       if (err) {
         return res.serverError(err)
       }
@@ -339,7 +333,7 @@ const PostController = {
 
   unsubscribe: function (req, res) {
     var post = res.locals.post
-    sails.sockets.leave(req, `posts/${post.id}`, function(err) {
+    sails.sockets.leave(req, `posts/${post.id}`, function (err) {
       if (err) {
         return res.serverError(err)
       }

@@ -108,7 +108,7 @@ module.exports.policies = {
     checkFreshnessForAllForUser:          ['sessionAuth', 'isSelf'],
     findForTagInAllCommunities:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForTagInAllCommunities: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    fulfill:                              ['sessionAuth', 'checkAndSetOwnPost'],
+    fulfill:                              ['sessionAuth', 'checkAndSetWritablePost'],
     vote:                                 ['sessionAuth', 'checkAndSetPost'],
     complain:                             ['sessionAuth', 'checkAndSetPost'],
     destroy:                              ['sessionAuth', 'checkAndSetWritablePost'],
