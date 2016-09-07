@@ -258,12 +258,38 @@ describe('community digest v2', () => {
   describe('shouldSendData', () => {
     it('is false if the data is empty', () => {
       const data = {requests: [], offers: [], conversations: []}
-      expect(shouldSendData(data)).to.be.false
+      return shouldSendData(data).then(val => expect(val).to.be.false)
     })
 
     it('is true if there is some data', () => {
       const data = {conversations: [{id: 'foo'}]}
-      expect(shouldSendData(data)).to.be.true
+      return shouldSendData(data).then(val => expect(val).to.be.true)
+    })
+
+    describe("when the community's post_prompt_day is today", () => {
+      var community
+
+      beforeEach(() => {
+        community = factories.community()
+        community.addSetting({post_prompt_day: moment.tz(defaultTimezone).day()})
+        return community.save()
+      })
+
+      it('is true', () =>
+        shouldSendData({}, community.id).then(val => expect(val).to.be.true))
+    })
+
+    describe("when the community's post_prompt_day is not today", () => {
+      var community
+
+      beforeEach(() => {
+        community = factories.community()
+        community.addSetting({post_prompt_day: moment.tz(defaultTimezone).day() + 1})
+        return community.save()
+      })
+
+      it('is false', () =>
+        shouldSendData({}, community.id).then(val => expect(val).to.be.false))
     })
   })
 
