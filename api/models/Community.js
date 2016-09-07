@@ -103,8 +103,11 @@ module.exports = bookshelf.Model.extend({
       .save({}, {transacting: trx})))
   },
 
-  addSettings: function (settings) {
-    return merge(this.get('settings'), settings)
+  addSetting: function (value) {
+    const currentSettings = this.get('settings')
+    return currentSettings
+      ? merge(currentSettings, value)
+      : this.set('settings', value)
   },
 
   removeSetting: function (path) {
