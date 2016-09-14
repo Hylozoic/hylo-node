@@ -65,7 +65,7 @@ module.exports = {
   },
 
   findOne: function (req, res) {
-    UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
+    return UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
     .then(user => {
       const buckets = {communities: [], people: []}
       if (user.recent_request) {
