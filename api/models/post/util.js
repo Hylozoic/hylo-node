@@ -31,8 +31,7 @@ export const afterSavingPost = function (post, opts) {
   const trxOpts = pick(opts, 'transacting')
 
   return Promise.all(flatten([
-    // Attach post to communities
-    opts.communities.map(id => new Community({id}).posts().attach(post.id, trxOpts)),
+    post.communities().attach(opts.community_ids, trxOpts),
 
     // Add mentioned users and creator as followers
     post.addFollowers(followerIds, userId, trxOpts),
@@ -148,6 +147,6 @@ export const createPost = (userId, params) =>
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
     .tap(post => afterSavingPost(post, merge(
-      pick(params, 'communities', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
       {children: params.requests, transacting: trx}
     )))))

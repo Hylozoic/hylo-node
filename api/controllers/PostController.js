@@ -1,4 +1,4 @@
-import { get } from 'lodash/fp'
+import { get, map, uniqBy } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
   createPost, updateChildren, updateAllMedia, updateCommunities
@@ -31,14 +31,47 @@ const queryPosts = (req, opts) =>
   ))
   .then(Search.forPosts)
 
+const normalizePost = post => {
+  const normalizedData = normalizePosts([post])
+  return Object.assign(normalizedData, post)
+}
+
+const normalizePosts = posts => {
+  let communities = []
+  let people = []
+
+  posts.forEach(post => {
+    communities.push.apply(communities, post.communities)
+    post.community_ids = map('id', post.communities)
+    delete post.communities
+
+    people.push.apply(people, post.followers)
+    post.follower_ids = map('id', post.followers)
+    delete post.followers
+
+    people.push(post.user)
+    post.user_id = post.user.id
+    delete post.user
+  })
+
+  communities = uniqBy('id', communities)
+  people = uniqBy('id', people)
+
+  return {communities, people}
+}
+
 const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
   })
-  .then(posts => ({
-    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
-    posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
-  }))
+  .then(posts => {
+    const data = {
+      posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
+      posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
+    }
+    const normalizedData = normalizePosts(data.posts)
+    return Object.assign(data, normalizedData)
+  })
 }
 
 const queryForCommunity = function (req, res) {
@@ -125,7 +158,7 @@ const checkPostTags = (attrs, opts) => {
 
   const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
   tags = difference(tags, describedTags)
-  return throwErrorIfMissingTags(tags, opts.communities)
+  return throwErrorIfMissingTags(tags, opts.community_ids)
 }
 
 const PostController = {
@@ -137,6 +170,7 @@ const PostController = {
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
     .then(post => PostPresenter.present(post, req.session.userId, opts))
+    .then(normalizePost)
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -151,11 +185,12 @@ const PostController = {
 
     return checkPostTags(
       pick(params, 'name', 'description'),
-      pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
+      pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
+    .then(normalizePost)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -184,7 +219,7 @@ const PostController = {
     const attributes = {
       created_from: 'email_form',
       name: `${namePrefixes[type]} ${req.param('name')}`,
-      communities: [tokenData.communityId],
+      community_ids: [tokenData.communityId],
       tag: type,
       description: req.param('description')
     }
@@ -231,16 +266,17 @@ const PostController = {
 
     return checkPostTags(
       pick(params, 'name', 'description'),
-      pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
+      pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => bookshelf.transaction(trx =>
       post.save(attrs, {patch: true, transacting: trx})
       .tap(() => updateChildren(post, req.param('requests'), trx))
-      .tap(() => updateCommunities(post, req.param('communities'), trx))
+      .tap(() => updateCommunities(post, req.param('community_ids'), trx))
       .tap(() => updateAllMedia(post, params, trx))
       .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
+    .then(normalizePost)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
