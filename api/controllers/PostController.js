@@ -45,9 +45,11 @@ const normalizePosts = posts => {
     post.community_ids = map('id', post.communities)
     delete post.communities
 
-    people.push.apply(people, post.followers)
-    post.follower_ids = map('id', post.followers)
-    delete post.followers
+    ;['voter', 'follower'].forEach(attr => {
+      people.push.apply(people, post[attr + 's'])
+      post[attr + '_ids'] = map('id', post[attr + 's'])
+      delete post[attr + 's']
+    })
 
     people.push(post.user)
     post.user_id = post.user.id
