@@ -1,7 +1,8 @@
 import { find, flatten, merge, pick } from 'lodash'
-import { map } from 'lodash/fp'
+import { filter, map } from 'lodash/fp'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import validator from 'validator'
+import { normalizePost, uniqize } from '../../lib/util/normalize'
 
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
@@ -65,6 +66,18 @@ module.exports = {
 
   findOne: function (req, res) {
     UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
+    .then(user => {
+      const buckets = {communities: [], people: []}
+      if (user.recent_request) {
+        normalizePost(user.recent_request, buckets)
+      }
+      if (user.recent_offer) {
+        normalizePost(user.recent_offer, buckets)
+      }
+      uniqize(buckets)
+      buckets.people = filter(p => p.id !== user.id, buckets.people)
+      return Object.assign(buckets, user)
+    })
     .then(res.ok)
     .catch(res.serverError)
   },
