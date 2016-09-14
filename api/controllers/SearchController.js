@@ -1,4 +1,5 @@
 import { get } from 'lodash/fp'
+import { normalizePost, normalizeComment, uniqize } from '../../lib/util/normalize'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
 
@@ -108,6 +109,21 @@ module.exports = {
       )
     })
     .then(results => ({items: results, total: get('0.total', items) || 0}))
+    .then(results => {
+      const buckets = {communities: [], people: []}
+      results.items.forEach(item => {
+        switch (item.type) {
+          case 'post':
+            normalizePost(item.data, buckets)
+            break
+          case 'comment':
+            normalizeComment(item.data, buckets)
+            break
+        }
+      })
+      uniqize(buckets)
+      return Object.assign(buckets, results)
+    })
     .then(res.ok)
   }
 }
