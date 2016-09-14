@@ -48,8 +48,10 @@ describe('CommentController', function () {
         expect(res.ok).to.have.been.called()
         expect(res.serverError).not.to.have.been.called()
         expect(responseData).to.exist
-        expect(responseData.user).to.exist
+        expect(responseData.user_id).to.exist
         expect(responseData.text).to.equal(commentText)
+        expect(responseData.people).to.exist
+        expect(responseData.people[0].name).to.equal(fixtures.u1.get('name'))
         return fixtures.p1.load('comments')
       })
     })
