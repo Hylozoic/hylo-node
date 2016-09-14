@@ -2,6 +2,7 @@ import { difference, isEmpty, pickBy } from 'lodash'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
+import { normalizeComment } from '../../lib/util/normalize'
 import { sanitize } from 'hylo-utils/text'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
@@ -60,6 +61,11 @@ module.exports = {
       {'thanks.thankedBy': userColumns}
     ]})
     .then(cs => cs.map(c => CommentPresenter.present(c, req.session.userId)))
+    .then(comments => {
+      const buckets = {people: []}
+      comments.forEach((c, i) => normalizeComment(c, buckets, i === comments.length - 1))
+      return Object.assign(buckets, {comments})
+    })
     .then(res.ok, res.serverError)
   },
 

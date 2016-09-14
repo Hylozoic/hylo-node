@@ -1,4 +1,4 @@
-import { get, map, uniqBy } from 'lodash/fp'
+import { get } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
   createPost, updateChildren, updateAllMedia, updateCommunities
@@ -6,6 +6,7 @@ import {
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
+import { normalizePost } from '../../lib/util/normalize'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -31,35 +32,10 @@ const queryPosts = (req, opts) =>
   ))
   .then(Search.forPosts)
 
-const normalizePost = post => {
-  const normalizedData = normalizePosts([post])
-  return Object.assign(normalizedData, post)
-}
-
-const normalizePosts = posts => {
-  let communities = []
-  let people = []
-
-  posts.forEach(post => {
-    communities.push.apply(communities, post.communities)
-    post.community_ids = map('id', post.communities)
-    delete post.communities
-
-    ;['voter', 'follower'].forEach(attr => {
-      people.push.apply(people, post[attr + 's'])
-      post[attr + '_ids'] = map('id', post[attr + 's'])
-      delete post[attr + 's']
-    })
-
-    people.push(post.user)
-    post.user_id = post.user.id
-    delete post.user
-  })
-
-  communities = uniqBy('id', communities)
-  people = uniqBy('id', people)
-
-  return {communities, people}
+const normalize = post => {
+  const data = {communities: [], people: []}
+  normalizePost(post, data, true)
+  return Object.assign(data, post)
 }
 
 const fetchAndPresentPosts = function (query, userId, relationsOpts) {
@@ -71,8 +47,9 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
       posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
       posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
     }
-    const normalizedData = normalizePosts(data.posts)
-    return Object.assign(data, normalizedData)
+    const buckets = {communities: [], people: []}
+    data.posts.forEach((post, i) => normalizePost(post, buckets, i === data.posts.length - 1))
+    return Object.assign(data, buckets)
   })
 }
 
@@ -172,7 +149,7 @@ const PostController = {
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
     .then(post => PostPresenter.present(post, req.session.userId, opts))
-    .then(normalizePost)
+    .then(normalize)
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -192,7 +169,7 @@ const PostController = {
     .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
-    .then(normalizePost)
+    .then(normalize)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -278,7 +255,7 @@ const PostController = {
       .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
-    .then(normalizePost)
+    .then(normalize)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
