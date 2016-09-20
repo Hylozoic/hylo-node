@@ -27,6 +27,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
   // simple updates
   ;[
     // table name, user id column
+    ['devices', 'user_id'],
     ['post', 'user_id'],
     ['posts_about_users', 'user_id'],
     ['post', 'deactivated_by_id'],
@@ -98,6 +99,7 @@ const generateRemoveQueries = function (userId, knex) {
   // deletes
   ;[
     // table, user id column
+    ['devices', 'user_id'],
     ['users_community', 'user_id'],
     ['community_invite', 'invited_by_id'],
     ['community_invite', 'used_by_id'],

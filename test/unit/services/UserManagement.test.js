@@ -8,6 +8,7 @@ describe('UserManagement', () => {
   beforeEach(() => {
     user = factories.user()
     return user.save()
+    .then(() => Device.forge({user_id: user.id}).save())
   })
 
   describe('removeUser', () => {
