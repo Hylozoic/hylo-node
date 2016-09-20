@@ -261,6 +261,25 @@ describe('Tag', () => {
         expect(tagFollow).to.exist
       })
     })
+
+    it('handles a selected tag that is also in the description', () => {
+      var post = new Post({
+        name: 'foo',
+        description: 'here are #tags #yay'
+      })
+      var tag = new Tag({name: '#tags'})
+      return Promise.join(post.save(), tag.save())
+      .then(() => Tag.updateForPost(post, 'tags'))
+      .then(() => post.refresh({withRelated: 'tags'}))
+      .then(() => {
+        const { tags } = post.relations
+        expect(tags.length).to.equal(2)
+        const unselected = tags.find(t => !t.pivot.get('selected'))
+        expect(unselected.get('name')).to.equal('yay')
+        const selected = tags.find(t => t.pivot.get('selected'))
+        expect(selected.get('name')).to.equal('tags')
+      })
+    })
   })
 
   describe('updateForComment', () => {

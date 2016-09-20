@@ -1,6 +1,6 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { differenceBy, flatten, get, includes, isEmpty, pick, some, uniq, uniqBy } from 'lodash'
-import { filter, map } from 'lodash/fp'
+import { flatten, includes, isEmpty, uniq } from 'lodash'
+import { differenceBy, filter, find, get, map, pick, some, uniqBy } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w-]+)/g
@@ -40,7 +40,7 @@ const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting
     return taggable.tags().attach(attachment, {transacting})
   })
   .then(tag => Promise.map(communities(taggable), com => {
-    const description = get(tagDescriptions, tag.get('name'))
+    const description = get(tag.get('name'), tagDescriptions)
     return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, transacting)
   }))
 }
@@ -66,11 +66,17 @@ const addToCommunity = (community_id, tag_id, user_id, description, transacting)
 
 const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {
   const lowerName = t => t.name.toLowerCase()
-  const tagDifference = (a, b) =>
-    differenceBy(a, b, t => pick(t, 'name', 'selected'))
+  const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
 
   var newTags = tagsInText(text).map(name => ({name, selected: false}))
-  if (tagParam) newTags.push({name: tagParam, selected: true})
+  if (tagParam) {
+    const dupe = find(t => t.name === tagParam, newTags)
+    if (dupe) {
+      dupe.selected = true
+    } else {
+      newTags.push({name: tagParam, selected: true})
+    }
+  }
   return taggable.load('tags', {transacting: trx})
   .then(() => {
     const oldTags = taggable.relations.tags.map(t => ({
@@ -78,7 +84,7 @@ const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {
       name: t.get('name'),
       selected: t.pivot.get('selected')
     }))
-    const toAdd = uniqBy(tagDifference(newTags, oldTags), lowerName)
+    const toAdd = uniqBy(lowerName, tagDifference(newTags, oldTags))
     const toRemove = tagDifference(oldTags, newTags)
     return Promise.all(flatten([
       toRemove.map(tag => removeFromTaggable(taggable, tag, trx)),
@@ -211,8 +217,8 @@ module.exports = bookshelf.Model.extend({
     const toAdd = differenceBy(newTags, oldTags, lowerName)
 
     return Promise.all([
-      some(toRemove) && user.tags().detach(map('id', toRemove)),
-      some(toAdd) && Tag.addToUser(user, map('name', toAdd))
+      !isEmpty(toRemove) && user.tags().detach(map('id', toRemove)),
+      !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd))
     ])
   },
 
@@ -268,7 +274,7 @@ module.exports = bookshelf.Model.extend({
     .then(rows => {
       return names.reduce((m, n) => {
         const matching = filter(sameTag(n), rows)
-        const missing = filter(id => !some(matching, isCommunity(id)), communityIds)
+        const missing = filter(id => !some(isCommunity(id), matching), communityIds)
         if (missing.length > 0) m[n] = missing
         return m
       }, {})
