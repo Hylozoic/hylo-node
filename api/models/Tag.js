@@ -54,7 +54,7 @@ const addToCommunity = (community_id, tag_id, user_id, description, def, transac
   return CommunityTag.where({community_id, tag_id}).fetch({transacting})
   .then(comTag => {
     return comTag ||
-    new CommunityTag({community_id, tag_id, user_id, description, default: def, created_at})
+    new CommunityTag({community_id, tag_id, user_id, description, def, created_at})
     .save({}, {transacting})
     .catch(() => {})
   })
