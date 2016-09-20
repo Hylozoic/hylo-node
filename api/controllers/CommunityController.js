@@ -1,3 +1,4 @@
+import rollbar from 'rollbar'
 import { pick, sortBy } from 'lodash'
 const Promise = require('bluebird')
 const request = require('request')
@@ -89,14 +90,21 @@ module.exports = {
     Community.find(req.param('communityId')).then(community => {
       if (!community) return res.notFound()
 
-      post(options).spread((resp, body) => JSON.parse(body))
+      post(options).spread((resp, body) => {
+        sails.log.info('slack response:')
+        sails.log.info(body)
+        return JSON.parse(body)
+      })
       .then(parsed => community.save({
         slack_hook_url: parsed.incoming_webhook.url,
         slack_team: parsed.team_name,
         slack_configure_url: parsed.incoming_webhook.configuration_url
       }, {patch: true}))
       .then(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced'))
-      .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced&slackerror=true'))
+      .catch(err => {
+        rollbar.handleError(err, req)
+        res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced&slackerror=true')
+      })
     })
   },
 
