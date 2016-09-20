@@ -54,8 +54,8 @@ describe('UserController', function () {
     var u1, u2
 
     beforeEach(function () {
-      u1 = new User({email: 'foo@bar.com', active: true, settings: {leftNavIsOpen: true, currentCommunityId: '7'}})
-      u2 = new User({email: 'foo2@bar2.com', active: true})
+      u1 = factories.user({settings: {leftNavIsOpen: true, currentCommunityId: '7'}})
+      u2 = factories.user()
       return Promise.join(u1.save(), u2.save())
     })
 
@@ -139,6 +139,30 @@ describe('UserController', function () {
           expect(res.ok).to.have.been.called()
           expect(res.serverError).not.to.have.been.called()
           expect(response.notification_count).to.exist
+        })
+      })
+    })
+
+    describe('.findOne', () => {
+      it('returns a response without private details', () => {
+        var response
+        req.params.userId = u1.id
+        _.extend(res, {
+          ok: spy(data => response = data),
+          serverError: spy(function (err) {
+            console.error(err)
+            console.error(err.stack)
+          })
+        })
+
+        return UserController.findOne(req, res).then(function () {
+          expect(res.ok).to.have.been.called()
+          expect(res.serverError).not.to.have.been.called()
+          expect(response.communities).to.deep.equal([])
+          expect(response.people).to.deep.equal([])
+          expect(response.id).to.equal(u1.id)
+          expect(response.name).to.equal(u1.get('name'))
+          expect(response.notification_count).not.to.exist
         })
       })
     })

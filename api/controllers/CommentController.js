@@ -2,6 +2,7 @@ import { difference, isEmpty, pickBy } from 'lodash'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
+import { normalizeComment } from '../../lib/util/normalize'
 import { sanitize } from 'hylo-utils/text'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
@@ -9,7 +10,16 @@ const userColumns = q => q.column('id', 'name', 'avatar_url')
 const updateRecentComments = postId =>
   Queue.classMethod('Post', 'setRecentComments', {postId})
 
-const createComment = function (commenterId, text, post, tagDescriptions) {
+const presentComment = (comment) =>
+  comment.load({user: userColumns})
+  .then(c => CommentPresenter.present(c, c.get('user_id')))
+  .then(c => {
+    const buckets = {people: []}
+    normalizeComment(c, buckets, true)
+    return Object.assign(buckets, c)
+  })
+
+const createAndPresentComment = function (commenterId, text, post, tagDescriptions) {
   text = sanitize(text)
   var attrs = {
     text: text,
@@ -32,11 +42,9 @@ const createComment = function (commenterId, text, post, tagDescriptions) {
     })
     .tap(comment => comment.createActivities())
     .tap(comment => post.addFollowers(newFollowers, commenterId))
-    .tap(comment => {
-      comment.load({user: userColumns})
-      .then((c) => post.pushCommentToSockets(CommentPresenter.present(c, commenterId)))
-    })
     .tap(() => updateRecentComments(post.id))
+    .then(presentComment)
+    .tap(c => post.pushCommentToSockets(c))
   })
 }
 
@@ -60,6 +68,11 @@ module.exports = {
       {'thanks.thankedBy': userColumns}
     ]})
     .then(cs => cs.map(c => CommentPresenter.present(c, req.session.userId)))
+    .then(comments => {
+      const buckets = {people: []}
+      comments.forEach((c, i) => normalizeComment(c, buckets, i === comments.length - 1))
+      return Object.assign(buckets, {comments})
+    })
     .then(res.ok, res.serverError)
   },
 
@@ -69,9 +82,7 @@ module.exports = {
     const tagDescriptions = req.param('tagDescriptions')
 
     return checkCommentTags(text, post, tagDescriptions)
-    .then(() => createComment(req.session.userId, text, post, tagDescriptions))
-    .then(comment => comment.load({user: userColumns}))
-    .then(c => CommentPresenter.present(c, req.session.userId))
+    .then(() => createAndPresentComment(req.session.userId, text, post, tagDescriptions))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -100,7 +111,7 @@ module.exports = {
       })
       return User.find(replyData.userId).then(user => {
         const text = Comment.cleanEmailText(user, req.param('stripped-text'))
-        return createComment(replyData.userId, text, post)
+        return createAndPresentComment(replyData.userId, text, post)
       })
     })
     .then(() => res.ok({}), res.serverError)

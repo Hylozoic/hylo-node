@@ -223,6 +223,10 @@ module.exports = bookshelf.Model.extend({
   findUnsent: function (options) {
     return Notification.query(q => {
       q.where({sent_at: null})
+      q.where(function () {
+        this.where('failed_at', null)
+        .orWhere(bookshelf.knex.raw("failed_at < now() - interval '1 hour'"))
+      })
       q.limit(200)
     })
     .fetchAll(options)
@@ -244,7 +248,11 @@ module.exports = bookshelf.Model.extend({
       'activity.reader',
       'activity.actor'
     ]})
-    .then(notifications => notifications.map(notification => notification.send()))
+    .then(ns => ns.length > 0 &&
+      Promise.each(ns.models,
+        n => n.send().catch(() =>
+          n.save({failed_at: new Date()}, {patch: true})))
+      .then(() => Notification.sendUnsent()))
   },
 
   priorityReason: function (reasons) {

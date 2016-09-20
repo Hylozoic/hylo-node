@@ -1,13 +1,28 @@
 var request = require('request')
 var Promise = require('bluebird')
 var get = Promise.promisify(request.get, request)
+import { includes } from 'lodash'
+import { filter, map } from 'lodash/fp'
 
 const apiHost = 'https://spaces.nexudus.com/api'
 const pageSize = 500
 
-var API = function (username, password) {
+const formatRecord = record => ({
+  name: record.FullName,
+  email: record.Email,
+  created_at: record.CreatedOn,
+  updated_at: record.UpdatedOn
+})
+
+const logCount = label => ({ length }) => console.log(`${label}: ${length}`)
+
+// spaceId can be found by clicking through to a space's details page from
+// https://spaces.nexudus.com/Sys/Businesses; it is the number at the end of the
+// details page's URL, after "Edit"
+const API = function (username, password, spaceId) {
   this.username = username
   this.password = password
+  this.spaceId = spaceId
 }
 
 API.prototype.getRecords = function (path, query) {
@@ -19,7 +34,7 @@ API.prototype.getRecords = function (path, query) {
       url: url,
       json: true,
       auth: {user: self.username, pass: self.password},
-      qs: _.merge({
+      qs: Object.assign({
         size: pageSize,
         page: pageNum
       }, query)
@@ -40,34 +55,32 @@ API.prototype.getRecords = function (path, query) {
   return getPage(1)
 }
 
+API.prototype.getActiveContracts = function () {
+  return this.getRecords('billing/coworkercontracts', {CoworkerContract_Active: true})
+  .tap(logCount('contracts'))
+}
+
+API.prototype.getActiveCoworkers = function () {
+  return this.getRecords('spaces/coworkers', {
+    Coworker_Active: true,
+    Coworker_InvoicingBusiness: this.spaceId
+  })
+  .tap(logCount('coworkers'))
+}
+
 module.exports = {
   // members are users who are active and have an active contract
-  fetchMembers: function (username, password) {
-    var self = this
-    var api = new API(username, password)
-    var r1, r2
-    return api.getRecords('billing/coworkercontracts', {CoworkerContract_Active: true})
-    .then(records => {
-      console.log(format('got %s coworker contracts', records.length))
-      r1 = records
-      var coworkerIds = records.map(r => r.CoworkerId)
-      return api.getRecords('spaces/coworkers', {Coworker_Active: true})
-      .tap(records => {
-        console.log(format('got %s coworkers', records.length))
-        r2 = records
-      })
-      .then(records => records
-        .filter(r => _.includes(coworkerIds, r.Id))
-        .map(self.formatRecord))
-    })
-    .then(formattedRecords => [r1, r2, formattedRecords])
-  },
+  fetchMembers: function (username, password, opts = {}) {
+    const api = new API(username, password, opts.spaceId)
+    let contracts, coworkers
+    const intersects = record =>
+      includes(map('CoworkerId', contracts), record.Id)
 
-  formatRecord: record => ({
-    name: record.FullName,
-    email: record.Email,
-    created_at: record.CreatedOn,
-    updated_at: record.UpdatedOn
-  })
-
+    return api.getActiveContracts().tap(r1 => contracts = r1)
+    .then(() => api.getActiveCoworkers().tap(r2 => coworkers = r2))
+    .then(filter(intersects))
+    .tap(logCount('active members'))
+    .then(map(formatRecord))
+    .then(records => opts.verbose ? {contracts, coworkers, records} : records)
+  }
 }

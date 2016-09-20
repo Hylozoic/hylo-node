@@ -1,6 +1,7 @@
 require('../../setup')
 import SearchController from '../../../api/controllers/SearchController'
 import factories from '../../setup/factories'
+import { normalizePost } from '../../../lib/util/normalize'
 
 describe('SearchController', () => {
   var req, res, u1, u2, u3, c1
@@ -62,7 +63,7 @@ describe('SearchController', () => {
         u2.load('tags')
       ))
       .then(() => {
-        expect(res.body).to.deep.equal({
+        const data = {
           items: [
             {
               rank: 1,
@@ -81,7 +82,12 @@ describe('SearchController', () => {
             }
           ],
           total: '3'
-        })
+        }
+        const buckets = {people: [], communities: []}
+        normalizePost(data.items[1].data, buckets, true)
+        Object.assign(data, buckets)
+
+        expect(res.body).to.deep.equal(data)
       })
     })
   })

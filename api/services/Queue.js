@@ -25,7 +25,7 @@ module.exports = {
     return this.addJob('classMethod', data, delay)
   },
 
-  removeOldCompletedJobs: function (size, days) {
+  removeOldJobs: function (state, size, days) {
     var now = new Date().getTime()
     if (!days) days = 3
 
@@ -36,7 +36,7 @@ module.exports = {
       return false
     }
 
-    return rangeByState('complete', 0, size - 1, 'asc')
+    return rangeByState(state, 0, size - 1, 'asc')
     .then(jobs => Promise.map(jobs, removeIfOldEnough))
     .then(results => _.filter(results).length)
   }

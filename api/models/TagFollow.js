@@ -13,4 +13,19 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User)
   }
 
+}, {
+
+  findFollowers: function (community_id, tag_id, limit = 3) {
+    return TagFollow.query(q => {
+      q.where({community_id, tag_id})
+      q.limit(limit)
+    })
+    .fetchAll({withRelated: [
+      'user',
+      'user.tags'
+    ]})
+    .then(tagFollows => {
+      return tagFollows.models.map(tf => tf.relations.user)
+    })
+  }
 })

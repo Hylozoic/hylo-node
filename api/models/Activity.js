@@ -74,6 +74,7 @@ module.exports = bookshelf.Model.extend({
     .then(() => Promise.map(Activity.generateNotificationMedia(self), medium =>
       new Notification({
         activity_id: self.id,
+        created_at: new Date(),
         medium
       }).save({}, {transacting: trx})))
   }
