@@ -4,7 +4,7 @@ var factories = require(root('test/setup/factories'))
 var Promise = require('bluebird')
 var checkAndSetMembership = Promise.promisify(require(require('root-path')('api/policies/checkAndSetMembership')))
 var CommunityController = require(root('api/controllers/CommunityController'))
-import { sortBy, times } from 'lodash'
+import { sortBy, times, omit } from 'lodash'
 
 describe('CommunityController', () => {
   var req, res, user
@@ -42,14 +42,13 @@ describe('CommunityController', () => {
       .then(() => CommunityController.findOne(req, res))
       .then(() => {
         expect(res.ok).to.have.been.called()
-        expect(res.body).to.deep.equal({
+        expect(omit(res.body, 'defaultTags')).to.deep.equal({
           id: community.id,
           name: community.get('name'),
           slug: community.get('slug'),
           avatar_url: null,
           banner_url: null,
           description: null,
-          defaultTags: ['offer', 'request', 'intention'],
           settings: {},
           location: null,
           welcome_message: null,
@@ -59,6 +58,7 @@ describe('CommunityController', () => {
             avatar_url: user.get('avatar_url')
           }
         })
+        expect(res.body.defaultTags.sort()).to.deep.equal(['intention', 'offer', 'request'])
       })
     })
   })
