@@ -38,7 +38,7 @@ describe('SearchController', () => {
     })
   })
 
-  describe.skip('showFullText', () => {
+  describe('showFullText', () => {
     var p
 
     beforeEach(() => {

@@ -306,4 +306,38 @@ describe('TagController', () => {
       })
     })
   })
+
+  describe('#updateForCommunity', () => {
+    var tag
+    const newDescription = 'the updated description'
+
+    it('updates the CommunityTag', () => {
+      tag = new Tag({name: 'tobeupdated'})
+
+      console.log('community id', fixtures.c1.id)
+
+      return tag.save()
+      .then(() => _.extend(req.params, {
+        communityId: fixtures.c1.get('slug'),
+        description: newDescription,
+        def: true,
+        tagId: tag.id
+      }))
+      .then(() => new CommunityTag({
+        tag_id: tag.id,
+        community_id: fixtures.c1.id,
+        description: 'A community tag soon to be updated',
+        def: false
+      }).save())
+      .then(() => TagController.updateForCommunity(req, res))
+      .then(() => CommunityTag.where({
+        tag_id: tag.id,
+        community_id: fixtures.c1.id
+      }).fetch())
+      .then(ct => {
+        expect(ct.get('description')).to.equal(newDescription)
+        expect(ct.get('def')).to.equal(true)
+      })
+    })
+  })
 })
