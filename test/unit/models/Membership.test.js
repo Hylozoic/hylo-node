@@ -55,6 +55,7 @@ describe('Membership', function () {
         community.save(),
         user.save(),
         Tag.createStarterTags())
+      .then(() => community.createStarterTags(user.id))
     })
 
     it('creates tag follows for default tags', function () {

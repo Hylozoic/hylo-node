@@ -133,6 +133,7 @@ describe('TagController', () => {
                   community_id: c1.id,
                   description: 'hi',
                   created_at: null,
+                  def: false,
                   follower_count: 1,
                   owner: {
                     id: u1.id,
@@ -150,6 +151,7 @@ describe('TagController', () => {
                   community_id: c1.id,
                   description: null,
                   created_at: null,
+                  def: false,
                   follower_count: 2,
                   owner: {}
                 }
@@ -163,6 +165,7 @@ describe('TagController', () => {
                   community_id: c1.id,
                   description: null,
                   created_at: null,
+                  def: false,
                   follower_count: 0,
                   owner: {}
                 }
