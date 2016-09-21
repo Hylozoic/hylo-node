@@ -1,3 +1,5 @@
+import { some } from 'lodash'
+
 module.exports = function checkAndSetWritablePost (req, res, next) {
   Post.find(req.param('postId'), {withRelated: [
     {communities: q => q.column('community.id')}
@@ -9,10 +11,10 @@ module.exports = function checkAndSetWritablePost (req, res, next) {
       return true
     }
 
-    const communityId = post.relations.communities.first().id
-    return Membership.hasModeratorRole(req.session.userId, communityId)
-    .then(isModerator => {
-      if (!isModerator) throw new Error('not a moderator')
+    return Promise.map(post.relations.communities.pluck('id'), id =>
+      Membership.hasModeratorRole(req.session.userId, id))
+    .then(moderatorChecks => {
+      if (!some(moderatorChecks)) throw new Error('not a moderator')
     })
   })
   .then(function (post) {

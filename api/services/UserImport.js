@@ -76,8 +76,7 @@ const createUser = function (attrs, options) {
     return User.create(_.merge(attrs, {
       community: options.community,
       settings: {
-        digest_frequency: 'weekly',
-        receives_email_prompts: true
+        digest_frequency: 'weekly'
       },
       created_at: new Date(),
       updated_at: new Date()

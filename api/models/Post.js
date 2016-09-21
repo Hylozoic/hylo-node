@@ -351,5 +351,12 @@ module.exports = bookshelf.Model.extend({
         return post.selectedTags().attach(tags.find(matches).id, {transacting})
         .then(untype)
       }))
-      .then(promises => promises.length)))
+      .then(promises => promises.length))),
+
+  notifySlack: ({ postId }) =>
+    Post.find(postId, {withRelated: ['communities', 'user', 'relatedUsers']})
+    .then(post => {
+      const slackCommunities = post.relations.communities.filter(c => c.get('slack_hook_url'))
+      return Promise.map(slackCommunities, c => Community.notifySlack(c.id, post))
+    })
 })

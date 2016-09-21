@@ -1,3 +1,4 @@
+import rollbar from 'rollbar'
 import { pick, sortBy, merge } from 'lodash'
 const Promise = require('bluebird')
 const request = require('request')
@@ -79,29 +80,36 @@ module.exports = {
   },
 
   addSlack: function (req, res) {
-    var code = req.query.code
-    var redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path
+    const { code } = req.query
+    const redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path
     var options = {
       uri: slackAuthAccess,
       form: {
         client_id: process.env.SLACK_APP_CLIENT_ID,
         client_secret: process.env.SLACK_APP_CLIENT_SECRET,
-        code: code,
-        redirect_uri: redirect_uri
+        code,
+        redirect_uri
       }
     }
 
     Community.find(req.param('communityId')).then(community => {
       if (!community) return res.notFound()
 
-      post(options).spread((resp, body) => JSON.parse(body))
+      post(options).spread((resp, body) => {
+        sails.log.info('slack response:')
+        sails.log.info(body)
+        return JSON.parse(body)
+      })
       .then(parsed => community.save({
         slack_hook_url: parsed.incoming_webhook.url,
         slack_team: parsed.team_name,
         slack_configure_url: parsed.incoming_webhook.configuration_url
       }, {patch: true}))
-      .then(() => res.redirect(Frontend.Route.community(community) + '/settings?slack=1'))
-      .catch(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=slack&slackerror=true'))
+      .then(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced'))
+      .catch(err => {
+        rollbar.handleError(err, req)
+        res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced&slackerror=true')
+      })
     })
   },
 
@@ -227,7 +235,7 @@ module.exports = {
         created_by_id: req.session.userId,
         leader_id: req.session.userId,
         welcome_message: welcomeMessage,
-        settings: {sends_email_prompts: true}
+        settings: {post_prompt_day: 0}
       }))
 
       return bookshelf.transaction(trx => {

@@ -6,6 +6,7 @@ import {
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
+import { normalizePost } from '../../lib/util/normalize'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -31,14 +32,25 @@ const queryPosts = (req, opts) =>
   ))
   .then(Search.forPosts)
 
+const normalize = post => {
+  const data = {communities: [], people: []}
+  normalizePost(post, data, true)
+  return Object.assign(data, post)
+}
+
 const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
   })
-  .then(posts => ({
-    posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
-    posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
-  }))
+  .then(posts => {
+    const data = {
+      posts_total: (posts.first() ? Number(posts.first().get('total')) : 0),
+      posts: posts.map(p => PostPresenter.presentForList(p, userId, relationsOpts))
+    }
+    const buckets = {communities: [], people: []}
+    data.posts.forEach((post, i) => normalizePost(post, buckets, i === data.posts.length - 1))
+    return Object.assign(data, buckets)
+  })
 }
 
 const queryForCommunity = function (req, res) {
@@ -125,7 +137,7 @@ const checkPostTags = (attrs, opts) => {
 
   const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
   tags = difference(tags, describedTags)
-  return throwErrorIfMissingTags(tags, opts.communities)
+  return throwErrorIfMissingTags(tags, opts.community_ids)
 }
 
 const PostController = {
@@ -137,6 +149,7 @@ const PostController = {
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
     .then(post => PostPresenter.present(post, req.session.userId, opts))
+    .then(normalize)
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -151,11 +164,12 @@ const PostController = {
     
     return checkPostTags(
       pick(params, 'name', 'description'),
-      pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
+      pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
+    .then(normalize)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -184,7 +198,7 @@ const PostController = {
     const attributes = {
       created_from: 'email_form',
       name: `${namePrefixes[type]} ${req.param('name')}`,
-      communities: [tokenData.communityId],
+      community_ids: [tokenData.communityId],
       tag: type,
       description: req.param('description')
     }
@@ -231,16 +245,17 @@ const PostController = {
 
     return checkPostTags(
       pick(params, 'name', 'description'),
-      pick(params, 'type', 'tag', 'communities', 'tagDescriptions')
+      pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => bookshelf.transaction(trx =>
       post.save(attrs, {patch: true, transacting: trx})
       .tap(() => updateChildren(post, req.param('requests'), trx))
-      .tap(() => updateCommunities(post, req.param('communities'), trx))
+      .tap(() => updateCommunities(post, req.param('community_ids'), trx))
       .tap(() => updateAllMedia(post, params, trx))
       .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
+    .then(normalize)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -249,20 +264,14 @@ const PostController = {
   },
 
   fulfill: function (req, res) {
-    bookshelf.transaction(function (trx) {
-      return res.locals.post.save({
-        fulfilled_at: new Date()
-      }, {patch: true, transacting: trx})
-      .tap(function () {
-        return Promise.map(req.param('contributors'), function (userId) {
-          return new Contribution({
-            post_id: res.locals.post.id,
-            user_id: userId,
-            date_contributed: new Date()
-          }).save(null, {transacting: trx})
-        })
-      })
-    })
+    const { post } = res.locals
+    const contributorIds = req.param('contributors') || []
+    const fulfilled_at = post.get('fulfilled_at') ? null : new Date()
+
+    return bookshelf.transaction(trx =>
+      post.save({fulfilled_at}, {patch: true, transacting: trx})
+      .tap(() => Promise.map(contributorIds, userId =>
+        Contribution.create(userId, post.id, trx))))
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
@@ -329,7 +338,7 @@ const PostController = {
 
   subscribe: function (req, res) {
     var post = res.locals.post
-    sails.sockets.join(req, `posts/${post.id}`, function(err) {
+    sails.sockets.join(req, `posts/${post.id}`, function (err) {
       if (err) {
         return res.serverError(err)
       }
@@ -339,7 +348,7 @@ const PostController = {
 
   unsubscribe: function (req, res) {
     var post = res.locals.post
-    sails.sockets.leave(req, `posts/${post.id}`, function(err) {
+    sails.sockets.leave(req, `posts/${post.id}`, function (err) {
       if (err) {
         return res.serverError(err)
       }

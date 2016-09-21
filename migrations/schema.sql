@@ -674,7 +674,8 @@ CREATE TABLE notifications (
     sent_at timestamp with time zone,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    medium character varying(255)
+    medium character varying(255),
+    failed_at timestamp with time zone
 );
 
 

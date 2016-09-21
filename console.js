@@ -41,9 +41,7 @@ const sails = require('sails')
     var repl = require('repl').start('sails> ')
     try {
       history(repl, require('path').join(sails.config.paths.tmp, '.node_history'))
-    } catch (e) {
-      console.log('Error finding console history:', e)
-    }
+    } catch (e) {}
     repl.on('exit', function () {
       process.exit()
     })

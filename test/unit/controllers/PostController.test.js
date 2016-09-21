@@ -42,14 +42,14 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewPost',
         description: '<p>Hey <a data-user-id="' + fixtures.u2.id + '">U2</a>, you\'re mentioned ;)</p>',
-        communities: [fixtures.c1.id]
+        community_ids: [fixtures.c1.id]
       })
       return PostController.create(req, res)
       .then(() => {
         expect(res.ok).to.have.been.called()
         var data = res.body
         expect(data).to.exist
-        expect(data.followers.length).to.equal(2)
+        expect(data.follower_ids.length).to.equal(2)
         expect(data.name).to.equal('NewPost')
         expect(data.description).to.equal('<p>Hey <a data-user-id="' + fixtures.u2.id + '">U2</a>, you\'re mentioned ;)</p>')
       })
@@ -59,14 +59,14 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewMaliciousPost',
         description: "<script>alert('test')</script><p>Hey <a data-user-id='" + fixtures.u2.id + "' data-malicious='alert(blah)'>U2</a>, you're mentioned ;)</p>",
-        communities: [fixtures.c1.id]
+        community_ids: [fixtures.c1.id]
       })
 
       return PostController.create(req, res)
       .then(() => {
         var data = res.body
         expect(data).to.exist
-        expect(data.followers.length).to.equal(2)
+        expect(data.follower_ids.length).to.equal(2)
         expect(data.name).to.equal('NewMaliciousPost')
         expect(data.description).to.equal('<p>Hey <a data-user-id="' + fixtures.u2.id + '">U2</a>, you\'re mentioned ;)</p>')
       })
@@ -79,7 +79,7 @@ describe('PostController', () => {
         name: 'NewImagePost',
         description: '',
         imageUrl: testImageUrl,
-        communities: [fixtures.c1.id]
+        community_ids: [fixtures.c1.id]
       })
 
       return PostController.create(req, res)
@@ -99,7 +99,7 @@ describe('PostController', () => {
       _.extend(req.params, {
         name: 'NewPost',
         description: '<p>Post Body</p>',
-        communities: [fixtures.c1.id]
+        community_ids: [fixtures.c1.id]
       })
 
       return PostController.create(req, res)
@@ -113,7 +113,7 @@ describe('PostController', () => {
         description: '<p>Post Body</p>',
         type: 'event',
         tag: 'zounds',
-        communities: [fixtures.c1.id]
+        community_ids: [fixtures.c1.id]
       })
 
       return PostController.create(req, res)
@@ -147,7 +147,7 @@ describe('PostController', () => {
           name: 'NewPost',
           description: '<p>Post Body</p>',
           tag: 'awesome',
-          communities: [fixtures.c1.id]
+          community_ids: [fixtures.c1.id]
         })
 
         return PostController.create(req, res)
@@ -162,7 +162,7 @@ describe('PostController', () => {
       it('works with no tag description', () => {
         _.extend(req.params, {
           name: 'New Awesome Post #awesome',
-          communities: [fixtures.c1.id]
+          community_ids: [fixtures.c1.id]
         })
 
         return PostController.create(req, res)
@@ -188,7 +188,7 @@ describe('PostController', () => {
         _.extend(req.params, {
           name: 'NewPostWithoutTagDescriptions1',
           description: '#tobeattached #hello',
-          communities: [fixtures.c1.id]
+          community_ids: [fixtures.c1.id]
         })
 
         return PostController.create(req, res)
@@ -209,7 +209,7 @@ describe('PostController', () => {
         _.extend(req.params, {
           name: 'NewPostWithoutTagDescriptions2',
           description: '#tobeattached #hello #wow #ok',
-          communities: [fixtures.c1.id],
+          community_ids: [fixtures.c1.id],
           tagDescriptions: {
             wow: '',
             ok: 'everything is ok'
@@ -242,7 +242,7 @@ describe('PostController', () => {
               tobeattached: {description: 'This is a test tag.'},
               herewego: {description: 'This is another test tag.'}
             },
-            communities: [fixtures.c1.id, c2.id]
+            community_ids: [fixtures.c1.id, c2.id]
           })
         })
         .then(() => PostController.create(req, res))
@@ -278,7 +278,7 @@ describe('PostController', () => {
             ntfptwo: '1',
             zounds: 'an expression of shock (antiquated)'
           },
-          communities: [fixtures.c1.id]
+          community_ids: [fixtures.c1.id]
         })
 
         var t1, t2, t3
@@ -362,7 +362,7 @@ describe('PostController', () => {
     beforeEach(() => {
       post = factories.post()
       community = factories.community()
-      req.params.communities = []
+      req.params.community_ids = []
       res.locals.post = post
       return post.save().tap(() => post.load('communities'))
       .then(() => community.save())
@@ -385,7 +385,7 @@ describe('PostController', () => {
       })
 
       it('changes communities', () => {
-        req.params.communities = cs.slice(2, 5).map(c => c.id)
+        req.params.community_ids = cs.slice(2, 5).map(c => c.id)
 
         return PostController.update(req, res)
         .tap(() => post.load('communities'))
@@ -524,7 +524,7 @@ describe('PostController', () => {
     describe('with a new tag', () => {
       it('rejects the update if the tag has no description', () => {
         req.params.description = 'here is a #newtag! yay'
-        req.params.communities = [community.id]
+        req.params.community_ids = [community.id]
 
         return PostController.update(req, res)
         .then(() => expect(res.body).to.deep.equal({
@@ -535,8 +535,7 @@ describe('PostController', () => {
       it('saves the tag description to the community', () => {
         req.params.description = 'here is a #newtag! yay'
         req.params.tagDescriptions = {newtag: {description: 'i am a new tag'}}
-        req.params.communities = [community.id]
-
+        req.params.community_ids = [community.id]
         return PostController.update(req, res)
         .then(() => community.load('tags'))
         .then(() => {

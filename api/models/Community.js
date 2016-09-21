@@ -1,5 +1,6 @@
 var Slack = require('../services/Slack')
 const randomstring = require('randomstring')
+import { merge, unset } from 'lodash'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
@@ -101,6 +102,17 @@ module.exports = bookshelf.Model.extend({
         created_at: new Date()
       })
       .save({}, {transacting: trx})))
+  },
+
+  addSetting: function (value) {
+    const currentSettings = this.get('settings')
+    return currentSettings
+      ? merge(currentSettings, value)
+      : this.set('settings', value)
+  },
+
+  removeSetting: function (path) {
+    return unset(this.get('settings'), path)
   }
 
 }, {
@@ -159,7 +171,7 @@ module.exports = bookshelf.Model.extend({
     .then(networkId => networkId && Network.containsUser(networkId, userId))
   },
 
-  sendSlackNotification: function (communityId, post) {
+  notifySlack: function (communityId, post) {
     return Community.find(communityId)
     .then(community => {
       if (!community || !community.get('slack_hook_url')) return

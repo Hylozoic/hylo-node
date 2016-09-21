@@ -34,10 +34,14 @@ const LinkPreview = bookshelf.Model.extend({
   },
 
   populate: ({ id }) => {
+    const doneAttrs = () => ({updated_at: new Date(), done: true})
     return LinkPreview.find(id).then(preview =>
       httpget(preview.get('url'))
-      .then(([ res, body ]) => {
-        const attrs = merge(parse(body), {updated_at: new Date(), done: true})
+      .catch(err => preview.save(doneAttrs()) && null) // eslint-disable-line handle-callback-err
+      .then(resp => {
+        if (!resp) return
+        const body = resp[1]
+        const attrs = merge(parse(body), doneAttrs())
 
         return (attrs.image_url
           ? getImageSize(attrs.image_url).catch(err => null) // eslint-disable-line handle-callback-err
