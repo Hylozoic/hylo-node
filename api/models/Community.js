@@ -170,7 +170,7 @@ module.exports = bookshelf.Model.extend({
     .then(networkId => networkId && Network.containsUser(networkId, userId))
   },
 
-  sendSlackNotification: function (communityId, post) {
+  notifySlack: function (communityId, post) {
     return Community.find(communityId)
     .then(community => {
       if (!community || !community.get('slack_hook_url')) return

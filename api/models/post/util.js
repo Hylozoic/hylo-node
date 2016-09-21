@@ -51,6 +51,7 @@ export const afterSavingPost = function (post, opts) {
   .then(() => Tag.updateForPost(post, opts.tag, opts.tagDescriptions, trx))
   .then(() => updateTagFollows(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
+  .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
 
 export const updateChildren = (post, children, trx) => {
