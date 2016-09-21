@@ -232,7 +232,7 @@ module.exports = {
 
       return bookshelf.transaction(trx => {
         return community.save(null, {transacting: trx})
-        .tap(community => community.createDefaultTags(req.session.userId, trx))
+        .tap(community => community.createStarterTags(req.session.userId, trx))
         .tap(community => community.createStarterPosts(trx))
         .then(() => Membership.create(req.session.userId, community.id, {
           role: Membership.MODERATOR_ROLE,

@@ -253,12 +253,12 @@ describe('User', function () {
     })
   })
 
-  describe('#followDefaultTags', function () {
+  describe('#followStarterTags', function () {
     it('creates TagFollows for the default tags of a community', () => {
       var c1 = factories.community()
-      return Tag.createDefaultTags()
+      return Tag.createStarterTags()
       .then(() => c1.save())
-      .then(() => User.followDefaultTags(cat.id, c1.id))
+      .then(() => User.followStarterTags(cat.id, c1.id))
       .then(() => cat.load('followedTags'))
       .then(() => {
         expect(cat.relations.followedTags.length).to.equal(3)

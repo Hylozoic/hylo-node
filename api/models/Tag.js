@@ -167,7 +167,7 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
 
-  DEFAULT_NAMES: ['offer', 'request', 'intention'],
+  STARTER_NAMES: ['offer', 'request', 'intention'],
 
   isValidTag: function (text) {
     return !!text.match(/^[A-Za-z][\w\-]+$/)
@@ -218,16 +218,16 @@ module.exports = bookshelf.Model.extend({
     ])
   },
 
-  defaultTags: function (trx) {
-    return Tag.where('name', 'in', Tag.DEFAULT_NAMES).fetchAll()
+  starterTags: function (trx) {
+    return Tag.where('name', 'in', Tag.STARTER_NAMES).fetchAll()
   },
 
-  createDefaultTags: function (trx) {
-    return Tag.defaultTags(trx)
-    .then(defaultTags => {
+  createStarterTags: function (trx) {
+    return Tag.starterTags(trx)
+    .then(starterTags => {
       var undefinedTagNames = _.difference(
-        Tag.DEFAULT_NAMES,
-        defaultTags.map(t => t ? t.get('name') : null)
+        Tag.STARTER_NAMES,
+        starterTags.map(t => t ? t.get('name') : null)
       )
       return Promise.map(undefinedTagNames, tagName =>
         new Tag({name: tagName}).save({}, {transacting: trx}))

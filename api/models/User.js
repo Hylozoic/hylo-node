@@ -133,13 +133,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   followDefaultTags: function (communityId, trx) {
-    return Tag.defaultTags(trx)
-    .then(defaultTags => Promise.map(defaultTags, tag =>
-      tag
+    return CommunityTag.defaults(communityId, trx)
+    .then(defaultTags => defaultTags.models.map(communityTag =>
+      communityTag
         ? new TagFollow({
           user_id: this.id,
           community_id: communityId,
-          tag_id: tag.id
+          tag_id: communityTag.get('tag_id')
         })
         .save({}, {transacting: trx})
       : null))
@@ -303,7 +303,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   followDefaultTags: function (userId, communityId, trx) {
-    return Tag.defaultTags(trx).then(tags => tags.map('id'))
+    return CommunityTag.defaults(communityId, trx)
+    .then(defaultTags => defaultTags.models.map(t => t.get('tag_id')))
     .then(ids => User.followTags(userId, communityId, ids, trx))
   }
 })

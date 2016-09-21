@@ -66,7 +66,7 @@ describe('CommunityController', () => {
       p1 = factories.post()
       p2 = factories.post()
       return Promise.join(
-        Tag.createDefaultTags(),
+        Tag.createStarterTags(),
         new Community({name: 'Scoby', slug: 'starter-posts'}).save()
         .then(c => Promise.join(
           p1.save().then(() => p1.communities().attach(c.id))
