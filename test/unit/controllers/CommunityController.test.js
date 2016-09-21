@@ -28,6 +28,8 @@ describe('CommunityController', () => {
         leader_id: user.id
       })
       return community.save()
+      .then(() => Tag.createStarterTags())
+      .then(() => community.createStarterTags(user.id))
       .then(() => user.joinCommunity(community))
       .then(() => {
         req.params.communityId = community.id
@@ -47,6 +49,7 @@ describe('CommunityController', () => {
           avatar_url: null,
           banner_url: null,
           description: null,
+          defaultTags: ['offer', 'request', 'intention'],
           settings: {},
           location: null,
           welcome_message: null,

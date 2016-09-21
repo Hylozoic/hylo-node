@@ -2307,7 +2307,7 @@ ALTER TABLE ONLY tags_users
 --
 
 ALTER TABLE ONLY user_external_data
-    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2321,4 +2321,3 @@ ALTER TABLE ONLY users_community
 --
 -- PostgreSQL database dump complete
 --
-
