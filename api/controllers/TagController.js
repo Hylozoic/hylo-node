@@ -120,16 +120,13 @@ module.exports = {
   },
 
   updateForCommunity: function (req, res) {
-    const params = pick(req.allParams(), ['description', 'isDefault'])
+    const params = pick(req.allParams(), ['description', 'is_default'])
     return Community.find(req.param('communityId'))
     .then(community =>
       CommunityTag.query().where({
         community_id: community.id,
         tag_id: req.param('tagId')
-      }).update({
-        description: params.description,
-        is_default: params.isDefault
-      }))
+      }).update(params))
     .then(() => res.ok({}))
   }
 }

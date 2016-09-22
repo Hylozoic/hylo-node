@@ -40,8 +40,8 @@ const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting
     return taggable.tags().attach(attachment, {transacting})
   })
   .then(tag => Promise.map(communities(taggable), com => {
-    const { description, isDefault } = get(tag.get('name'), tagDescriptions) || {}
-    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, isDefault, transacting)
+    const { description, is_default } = get(tag.get('name'), tagDescriptions) || {}
+    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, is_default, transacting)
   }))
 }
 

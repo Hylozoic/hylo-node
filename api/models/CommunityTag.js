@@ -24,7 +24,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   defaults (communityId, trx) {
-    return CommunityTag.where({community_id: communityId, def: true})
+    return CommunityTag.where({community_id: communityId, is_default: true})
     .fetchAll({withRelated: 'tag', transacting: trx})
   }
 
