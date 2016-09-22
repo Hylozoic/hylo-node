@@ -2,6 +2,9 @@ var Slack = require('../services/Slack')
 const randomstring = require('randomstring')
 import { merge, unset } from 'lodash'
 
+const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
+const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
+
 module.exports = bookshelf.Model.extend({
   tableName: 'community',
 
@@ -104,14 +107,27 @@ module.exports = bookshelf.Model.extend({
   },
 
   addSetting: function (value) {
-    const currentSettings = this.get('settings')
-    return currentSettings
-      ? merge(currentSettings, value)
-      : this.set('settings', value)
+    return this.set('settings', merge({}, this.get('settings'), value))
   },
 
   removeSetting: function (path) {
     return unset(this.get('settings'), path)
+  },
+
+  updateChecklist: function () {
+    this.load(['posts', 'invitations', 'tags', 'leader'])
+    .then(() => {
+      const { invitations, posts, leader } = this.relations
+      this.addSetting({
+        checklist: {
+          logo: this.get('avatar_url') !== defaultAvatar,
+          invite: invitations.length > 0,
+          topics: false, // TODO
+          post: !!posts.find(p => p.get('user_id') === leader.id)
+        }
+      })
+      return this.save()
+    })
   }
 
 }, {
