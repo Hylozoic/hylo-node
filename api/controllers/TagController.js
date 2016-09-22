@@ -51,7 +51,7 @@ module.exports = {
         const followed = some(f => f.id === userId, followers)
         const followerCount = tagFollows.first().get('total')
         return res.ok(merge(
-          ct.pick('description', 'def', 'community_id'),
+          ct.pick('description', 'is_default', 'community_id'),
           presentWithPost(tag),
           {
             followed,
@@ -120,13 +120,16 @@ module.exports = {
   },
 
   updateForCommunity: function (req, res) {
-    const params = pick(req.allParams(), ['description', 'def'])
+    const params = pick(req.allParams(), ['description', 'isDefault'])
     return Community.find(req.param('communityId'))
     .then(community =>
       CommunityTag.query().where({
         community_id: community.id,
         tag_id: req.param('tagId')
-      }).update(params))
+      }).update({
+        description: params.description,
+        is_default: params.isDefault
+      }))
     .then(() => res.ok({}))
   }
 }

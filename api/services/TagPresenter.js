@@ -74,7 +74,7 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
       id: t.id,
       name: t.get('name'),
       memberships: t.relations.memberships.map(m => merge(
-        pick(m.toJSON(), 'community_id', 'description', 'def', 'created_at', 'owner'),
+        pick(m.toJSON(), 'community_id', 'description', 'is_default', 'created_at', 'owner'),
         {follower_count: Number(t.get('followers'))}
       ))
     }

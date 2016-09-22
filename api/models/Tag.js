@@ -40,8 +40,8 @@ const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting
     return taggable.tags().attach(attachment, {transacting})
   })
   .then(tag => Promise.map(communities(taggable), com => {
-    const { description, def } = get(tag.get('name'), tagDescriptions) || {}
-    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, def, transacting)
+    const { description, isDefault } = get(tag.get('name'), tagDescriptions) || {}
+    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, isDefault, transacting)
   }))
 }
 
@@ -49,12 +49,12 @@ const removeFromTaggable = (taggable, tag, transacting) => {
   return taggable.tags().detach(tag.id, {transacting})
 }
 
-const addToCommunity = (community_id, tag_id, user_id, description, def, transacting) => {
+const addToCommunity = (community_id, tag_id, user_id, description, is_default, transacting) => {
   const created_at = new Date()
   return CommunityTag.where({community_id, tag_id}).fetch({transacting})
   .then(comTag => {
     return comTag ||
-    new CommunityTag({community_id, tag_id, user_id, description, def, created_at})
+    new CommunityTag({community_id, tag_id, user_id, description, is_default, created_at})
     .save({}, {transacting})
     .catch(() => {})
   })

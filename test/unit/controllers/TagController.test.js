@@ -336,7 +336,7 @@ describe('TagController', () => {
       }).fetch())
       .then(ct => {
         expect(ct.get('description')).to.equal(newDescription)
-        expect(ct.get('def')).to.equal(true)
+        expect(ct.get('is_default')).to.equal(true)
       })
     })
   })
