@@ -133,6 +133,7 @@ describe('TagController', () => {
                   community_id: c1.id,
                   description: 'hi',
                   created_at: null,
+                  is_default: false,
                   follower_count: 1,
                   owner: {
                     id: u1.id,
@@ -150,6 +151,7 @@ describe('TagController', () => {
                   community_id: c1.id,
                   description: null,
                   created_at: null,
+                  is_default: false,
                   follower_count: 2,
                   owner: {}
                 }
@@ -163,6 +165,7 @@ describe('TagController', () => {
                   community_id: c1.id,
                   description: null,
                   created_at: null,
+                  is_default: false,
                   follower_count: 0,
                   owner: {}
                 }
@@ -300,6 +303,38 @@ describe('TagController', () => {
           person(locals.u2),
           person(locals.u3)
         ])
+      })
+    })
+  })
+
+  describe('#updateForCommunity', () => {
+    var tag
+    const newDescription = 'the updated description'
+
+    it('updates the CommunityTag', () => {
+      tag = new Tag({name: 'tobeupdated'})
+
+      return tag.save()
+      .then(() => _.extend(req.params, {
+        communityId: fixtures.c1.get('slug'),
+        description: newDescription,
+        is_default: true,
+        tagId: tag.id
+      }))
+      .then(() => new CommunityTag({
+        tag_id: tag.id,
+        community_id: fixtures.c1.id,
+        description: 'A community tag soon to be updated',
+        is_default: false
+      }).save())
+      .then(() => TagController.updateForCommunity(req, res))
+      .then(() => CommunityTag.where({
+        tag_id: tag.id,
+        community_id: fixtures.c1.id
+      }).fetch())
+      .then(ct => {
+        expect(ct.get('description')).to.equal(newDescription)
+        expect(ct.get('is_default')).to.equal(true)
       })
     })
   })

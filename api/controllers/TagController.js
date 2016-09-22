@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+import { merge, pick } from 'lodash'
 import { get, some } from 'lodash/fp'
 import {
   fetchAndPresentFollowed,
@@ -51,7 +51,7 @@ module.exports = {
         const followed = some(f => f.id === userId, followers)
         const followerCount = tagFollows.first().get('total')
         return res.ok(merge(
-          ct.pick('description', 'community_id'),
+          ct.pick('description', 'is_default', 'community_id'),
           presentWithPost(tag),
           {
             followed,
@@ -124,5 +124,16 @@ module.exports = {
     console.log('creating tag for community', community)
     console.log('params', req.allParams())
     return res.ok({})
+  },
+
+  updateForCommunity: function (req, res) {
+    const params = pick(req.allParams(), ['description', 'is_default'])
+    return Community.find(req.param('communityId'))
+    .then(community =>
+      CommunityTag.query().where({
+        community_id: community.id,
+        tag_id: req.param('tagId')
+      }).update(params))
+    .then(() => res.ok({}))
   }
 }

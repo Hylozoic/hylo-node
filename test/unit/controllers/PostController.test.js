@@ -239,8 +239,8 @@ describe('PostController', () => {
             name: 'NewPost',
             description: '#tobeattached #herewego',
             tagDescriptions: {
-              tobeattached: 'This is a test tag.',
-              herewego: 'This is another test tag.'
+              tobeattached: {description: 'This is a test tag.'},
+              herewego: {description: 'This is another test tag.'}
             },
             community_ids: [fixtures.c1.id, c2.id]
           })
@@ -534,9 +534,8 @@ describe('PostController', () => {
 
       it('saves the tag description to the community', () => {
         req.params.description = 'here is a #newtag! yay'
-        req.params.tagDescriptions = {newtag: 'i am a new tag'}
+        req.params.tagDescriptions = {newtag: {description: 'i am a new tag'}}
         req.params.community_ids = [community.id]
-
         return PostController.update(req, res)
         .then(() => community.load('tags'))
         .then(() => {

@@ -161,7 +161,7 @@ const PostController = {
       res.status(422).send("title can't be blank")
       return Promise.resolve()
     }
-
+    
     return checkPostTags(
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')

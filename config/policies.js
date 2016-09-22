@@ -161,6 +161,7 @@ module.exports.policies = {
     follow: ['sessionAuth'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     removeFromCommunity: ['sessionAuth', 'isModerator'],
+    updateForCommunity: ['sessionAuth', 'isModerator'],
     findOneSummary: ['sessionAuth', 'checkAndSetMembership'],
     create: ['sessionAuth', 'checkAndSetMembership']
   },

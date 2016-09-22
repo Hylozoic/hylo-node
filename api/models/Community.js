@@ -95,10 +95,11 @@ module.exports = bookshelf.Model.extend({
     }))
   },
 
-  createDefaultTags: function (userId, trx) {
-    return Tag.defaultTags(trx).then(tags =>
+  createStarterTags: function (userId, trx) {
+    return Tag.starterTags(trx).then(tags =>
       Promise.map(tags.models, tag => new CommunityTag({
         community_id: this.id,
+        is_default: true,
         tag_id: tag.id,
         user_id: userId,
         created_at: new Date()
@@ -116,15 +117,15 @@ module.exports = bookshelf.Model.extend({
 
   updateChecklist: function () {
     return this.load(['posts', 'invitations', 'tags', 'leader', 'tags'])
-    .then(() => Tag.defaultTags())
-    .then(defaultTags => {
+    .then(() => Tag.starterTags())
+    .then(starterTags => {
       const { invitations, posts, leader, tags } = this.relations
 
       this.addSetting({
         checklist: {
           logo: this.get('avatar_url') !== defaultAvatar,
           invite: invitations.length > 0,
-          topics: !!differenceBy(tags.models, defaultTags.models, 'id')
+          topics: !!differenceBy(tags.models, starterTags.models, 'id')
             .find(t => t.pivot.get('user_id') === leader.id),
           post: !!posts.find(p => p.get('user_id') === leader.id)
         }

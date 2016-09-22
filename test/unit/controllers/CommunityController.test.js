@@ -4,7 +4,7 @@ var factories = require(root('test/setup/factories'))
 var Promise = require('bluebird')
 var checkAndSetMembership = Promise.promisify(require(require('root-path')('api/policies/checkAndSetMembership')))
 var CommunityController = require(root('api/controllers/CommunityController'))
-import { sortBy, times } from 'lodash'
+import { sortBy, times, omit } from 'lodash'
 
 describe('CommunityController', () => {
   var req, res, user
@@ -28,6 +28,8 @@ describe('CommunityController', () => {
         leader_id: user.id
       })
       return community.save()
+      .then(() => Tag.createStarterTags())
+      .then(() => community.createStarterTags(user.id))
       .then(() => user.joinCommunity(community))
       .then(() => {
         req.params.communityId = community.id
@@ -40,7 +42,7 @@ describe('CommunityController', () => {
       .then(() => CommunityController.findOne(req, res))
       .then(() => {
         expect(res.ok).to.have.been.called()
-        expect(res.body).to.deep.equal({
+        expect(omit(res.body, 'defaultTags')).to.deep.equal({
           id: community.id,
           name: community.get('name'),
           slug: community.get('slug'),
@@ -56,6 +58,7 @@ describe('CommunityController', () => {
             avatar_url: user.get('avatar_url')
           }
         })
+        expect(res.body.defaultTags.sort()).to.deep.equal(['intention', 'offer', 'request'])
       })
     })
   })
@@ -66,7 +69,7 @@ describe('CommunityController', () => {
       p1 = factories.post()
       p2 = factories.post()
       return Promise.join(
-        Tag.createDefaultTags(),
+        Tag.createStarterTags(),
         new Community({name: 'Scoby', slug: 'starter-posts'}).save()
         .then(c => Promise.join(
           p1.save().then(() => p1.communities().attach(c.id))
