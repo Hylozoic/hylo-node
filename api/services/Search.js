@@ -57,9 +57,9 @@ module.exports = {
         })
       }
 
-      if (opts.type === 'message' || opts.follower) {
+      if (opts.type === Post.Type.THREAD || opts.follower) {
         qb.join('follower', 'follower.post_id', '=', 'post.id')
-        if (opts.type === 'message') {
+        if (opts.type === Post.Type.THREAD) {
           qb.where('follower.user_id', opts.follower)
         } else if (opts.follower) {
           qb.where('follower.user_id', opts.follower)
@@ -71,7 +71,7 @@ module.exports = {
         qb.where(function () {
           this.where('post.type', '!=', 'welcome')
           .orWhere('post.type', null)
-        }).andWhere('post.type', '!=', 'message')
+        }).andWhere('post.type', '!=', Post.Type.THREAD)
       } else if (opts.type !== 'all+welcome') {
         qb.where({type: opts.type})
       }
