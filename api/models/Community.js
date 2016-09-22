@@ -115,7 +115,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateChecklist: function () {
-    this.load(['posts', 'invitations', 'tags', 'leader', 'tags'])
+    return this.load(['posts', 'invitations', 'tags', 'leader', 'tags'])
     .then(() => Tag.defaultTags())
     .then(defaultTags => {
       const { invitations, posts, leader, tags } = this.relations

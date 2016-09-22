@@ -117,5 +117,12 @@ module.exports = {
       tag_id: req.param('tagId')
     }).destroy())
     .then(() => res.ok({}))
+  },
+
+  create: function (req, res) {
+    const { community } = res.locals
+    console.log('creating tag for community', community)
+    console.log('params', req.allParams())
+    return res.ok({})
   }
 }

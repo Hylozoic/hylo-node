@@ -84,7 +84,8 @@ module.exports.policies = {
     create:          ['sessionAuth'],
     findForNetwork:  ['sessionAuth', 'inNetwork'],
     findForNetworkNav:  ['sessionAuth', 'inNetwork'],
-    joinWithCode:    ['sessionAuth']
+    joinWithCode:    ['sessionAuth'],
+    updateChecklist: ['sessionAuth', 'isModerator', 'checkAndSetMembership']
   },
 
   PostController: {
@@ -160,7 +161,8 @@ module.exports.policies = {
     follow: ['sessionAuth'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     removeFromCommunity: ['sessionAuth', 'isModerator'],
-    findOneSummary: ['sessionAuth', 'checkAndSetMembership']
+    findOneSummary: ['sessionAuth', 'checkAndSetMembership'],
+    create: ['sessionAuth', 'checkAndSetMembership']
   },
 
   LinkPreviewController: {
