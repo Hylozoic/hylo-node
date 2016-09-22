@@ -223,7 +223,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   defaultTags: function (trx) {
-    return Tag.where('name', 'in', Tag.DEFAULT_NAMES).fetchAll()
+    return Tag.where('name', 'in', Tag.DEFAULT_NAMES).fetchAll({transacting: trx})
   },
 
   createDefaultTags: function (trx) {
