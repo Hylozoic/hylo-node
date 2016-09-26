@@ -1,5 +1,5 @@
 import rollbar from 'rollbar'
-import { pick, sortBy } from 'lodash'
+import { pick, sortBy, merge } from 'lodash'
 const Promise = require('bluebird')
 const request = require('request')
 const post = Promise.promisify(request.post)
@@ -11,7 +11,7 @@ const welcomeMessage = 'Thank you for joining us here at Hylo. ' +
 
 module.exports = {
   find: function (req, res) {
-    Community
+    return Community
     .where('active', true)
     .fetchAll({withRelated: [
       {memberships: q => q.column('community_id')}
@@ -30,10 +30,15 @@ module.exports = {
       {network: q => q.column('networks.id', 'networks.name', 'networks.slug')},
       {leader: q => q.column('users.id', 'users.name', 'users.avatar_url')}
     ])
-    .then(() => community.toJSON())
-    .then(data => pick(data,
-      'id', 'name', 'slug', 'avatar_url', 'banner_url', 'description',
-      'settings', 'location', 'welcome_message', 'leader', 'network'))
+    .then(() => Promise.join(
+      community.toJSON(),
+      CommunityTag.defaults(community.id),
+      (data, defaultTags) => merge(pick(data,
+        'id', 'name', 'slug', 'avatar_url', 'banner_url', 'description',
+        'settings', 'location', 'welcome_message', 'leader', 'network'),
+        {
+          defaultTags: defaultTags.models.map(dt => dt.relations.tag.get('name'))
+        })))
     .tap(() => mship && mship.save({last_viewed_at: new Date()}, {patch: true}))
     .then(res.ok)
     .catch(res.serverError)
@@ -235,7 +240,7 @@ module.exports = {
 
       return bookshelf.transaction(trx => {
         return community.save(null, {transacting: trx})
-        .tap(community => community.createDefaultTags(req.session.userId, trx))
+        .tap(community => community.createStarterTags(req.session.userId, trx))
         .tap(community => community.createStarterPosts(trx))
         .then(() => Membership.create(req.session.userId, community.id, {
           role: Membership.MODERATOR_ROLE,

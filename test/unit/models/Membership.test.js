@@ -54,7 +54,8 @@ describe('Membership', function () {
       return Promise.join(
         community.save(),
         user.save(),
-        Tag.createDefaultTags())
+        Tag.createStarterTags())
+      .then(() => community.createStarterTags(user.id))
     })
 
     it('creates tag follows for default tags', function () {

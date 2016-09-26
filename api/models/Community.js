@@ -95,10 +95,11 @@ module.exports = bookshelf.Model.extend({
     }))
   },
 
-  createDefaultTags: function (userId, trx) {
-    return Tag.defaultTags(trx).then(tags =>
+  createStarterTags: function (userId, trx) {
+    return Tag.starterTags(trx).then(tags =>
       Promise.map(tags.models, tag => new CommunityTag({
         community_id: this.id,
+        is_default: true,
         tag_id: tag.id,
         user_id: userId,
         created_at: new Date()

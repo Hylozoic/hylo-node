@@ -126,6 +126,7 @@ CREATE TABLE communities_tags (
     id integer NOT NULL,
     community_id bigint,
     tag_id bigint,
+    is_default boolean DEFAULT false,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     user_id bigint,

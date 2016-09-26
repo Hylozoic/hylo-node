@@ -131,7 +131,7 @@ describe('CommentController', function () {
     it('saves a new tag with description to the community', () => {
       req.params.text = '<p>Hey #wow</p>'
       res.locals.post = fixtures.p1
-      req.params.tagDescriptions = {wow: 'wow!!1'}
+      req.params.tagDescriptions = {wow: {description: 'wow!!1'}}
 
       return CommentController.create(req, res)
       .then(() => {
@@ -198,7 +198,7 @@ describe('CommentController', function () {
     it('saves a new tag with description to the community', () => {
       var comment
       req.params.text = 'updated comment text with #anewtag'
-      req.params.tagDescriptions = {anewtag: 'new tag description'}
+      req.params.tagDescriptions = {anewtag: {description: 'new tag description'}}
       comment = factories.comment({text: 'original text', post_id: fixtures.p1.id})
       return comment.save()
       .then(() => req.params.commentId = comment.id)

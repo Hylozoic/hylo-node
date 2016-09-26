@@ -40,8 +40,8 @@ const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting
     return taggable.tags().attach(attachment, {transacting})
   })
   .then(tag => Promise.map(communities(taggable), com => {
-    const description = get(tag.get('name'), tagDescriptions)
-    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, transacting)
+    const { description, is_default } = get(tag.get('name'), tagDescriptions) || {}
+    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, is_default, transacting)
   }))
 }
 
@@ -49,13 +49,15 @@ const removeFromTaggable = (taggable, tag, transacting) => {
   return taggable.tags().detach(tag.id, {transacting})
 }
 
-const addToCommunity = (community_id, tag_id, user_id, description, transacting) => {
+const addToCommunity = (community_id, tag_id, user_id, description, is_default, transacting) => {
   const created_at = new Date()
   return CommunityTag.where({community_id, tag_id}).fetch({transacting})
-  .then(comTag => comTag ||
-    new CommunityTag({community_id, tag_id, user_id, description, created_at})
+  .then(comTag => {
+    return comTag ||
+    new CommunityTag({community_id, tag_id, user_id, description, is_default, created_at})
     .save({}, {transacting})
-    .catch(() => {}))
+    .catch(() => {})
+  })
     // this catch is for the case where another user just created the
     // CommunityTag (race condition): the save fails, but we don't care about
     // the result
@@ -171,7 +173,7 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
 
-  DEFAULT_NAMES: ['offer', 'request', 'intention'],
+  STARTER_NAMES: ['offer', 'request', 'intention'],
 
   isValidTag: function (text) {
     return !!text.match(/^[A-Za-z][\w\-]+$/)
@@ -222,16 +224,16 @@ module.exports = bookshelf.Model.extend({
     ])
   },
 
-  defaultTags: function (trx) {
-    return Tag.where('name', 'in', Tag.DEFAULT_NAMES).fetchAll()
+  starterTags: function (trx) {
+    return Tag.where('name', 'in', Tag.STARTER_NAMES).fetchAll()
   },
 
-  createDefaultTags: function (trx) {
-    return Tag.defaultTags(trx)
-    .then(defaultTags => {
+  createStarterTags: function (trx) {
+    return Tag.starterTags(trx)
+    .then(starterTags => {
       var undefinedTagNames = _.difference(
-        Tag.DEFAULT_NAMES,
-        defaultTags.map(t => t ? t.get('name') : null)
+        Tag.STARTER_NAMES,
+        starterTags.map(t => t ? t.get('name') : null)
       )
       return Promise.map(undefinedTagNames, tagName =>
         new Tag({name: tagName}).save({}, {transacting: trx}))

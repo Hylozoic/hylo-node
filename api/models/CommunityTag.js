@@ -21,6 +21,11 @@ module.exports = bookshelf.Model.extend({
     .where({community_id: communityId, tag_id: tagId})
     .count()
     .then(rows => Number(rows[0].count))
+  },
+
+  defaults (communityId, trx) {
+    return CommunityTag.where({community_id: communityId, is_default: true})
+    .fetchAll({withRelated: 'tag', transacting: trx})
   }
 
 })
