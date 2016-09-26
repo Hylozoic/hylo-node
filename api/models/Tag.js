@@ -190,6 +190,14 @@ module.exports = bookshelf.Model.extend({
     return Tag.where({id: id}).fetch(options)
   },
 
+  findOrCreate: function (name, options) {
+    return Tag.find(name, options)
+    .then(tag => {
+      if (tag) return tag
+      return new Tag({name}).save(null, options)
+    })
+  },
+
   updateForPost: function (post, tagParam, tagDescriptions, trx) {
     return updateForTaggable(post, post.get('name') + ' ' + post.get('description'), tagParam, tagDescriptions, trx)
   },

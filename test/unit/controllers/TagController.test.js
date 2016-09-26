@@ -178,7 +178,7 @@ describe('TagController', () => {
     })
   })
 
-  describe('#findOneSummary', () => {
+  describe('.findOneSummary', () => {
     var locals
     const tagDescription = 'the tag for testing the summary api endpoint'
     const imageUrl = 'http://img.com/img.jpg'
@@ -243,7 +243,7 @@ describe('TagController', () => {
     })
   })
 
-  describe('#findOneInCommunity', () => {
+  describe('.findOneInCommunity', () => {
     var locals
     const tagDescription = 'the tag for testing the findOneInCommunity endpoint'
     const imageUrl = 'http://img.com/img.jpg'
@@ -307,7 +307,7 @@ describe('TagController', () => {
     })
   })
 
-  describe('#updateForCommunity', () => {
+  describe('.updateForCommunity', () => {
     var tag
     const newDescription = 'the updated description'
 
@@ -335,6 +335,32 @@ describe('TagController', () => {
       .then(ct => {
         expect(ct.get('description')).to.equal(newDescription)
         expect(ct.get('is_default')).to.equal(true)
+      })
+    })
+  })
+
+  describe('.create', () => {
+    it('creates a new Tag and Community Tag', () => {
+      const description = 'the new tags description'
+      const name = 'newtagcreatedbycreate'
+      res.locals.community = fixtures.c1
+      _.extend(req.params, {
+        description,
+        name,
+        is_default: true
+      })
+
+      return TagController.create(req, res)
+      .then(() => Tag.find(name))
+      .then(tag => {
+        expect(tag).to.exist
+        return CommunityTag.where({community_id: fixtures.c1.id, tag_id: tag.id})
+        .fetch()
+        .then(communityTag => {
+          expect(communityTag).to.exist
+          expect(communityTag.get('description')).to.equal(description)
+          expect(communityTag.get('is_default')).to.equal(true)
+        })
       })
     })
   })
