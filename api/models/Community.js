@@ -1,6 +1,6 @@
 var Slack = require('../services/Slack')
 const randomstring = require('randomstring')
-import { merge, unset } from 'lodash'
+import { merge, unset, differenceBy } from 'lodash'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
@@ -116,14 +116,17 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateChecklist: function () {
-    this.load(['posts', 'invitations', 'tags', 'leader'])
-    .then(() => {
-      const { invitations, posts, leader } = this.relations
+    return this.load(['posts', 'invitations', 'tags', 'leader', 'tags'])
+    .then(() => Tag.starterTags())
+    .then(starterTags => {
+      const { invitations, posts, leader, tags } = this.relations
+
       this.addSetting({
         checklist: {
           logo: this.get('avatar_url') !== defaultAvatar,
           invite: invitations.length > 0,
-          topics: false, // TODO
+          topics: !!differenceBy(tags.models, starterTags.models, 'id')
+            .find(t => t.pivot.get('user_id') === leader.id),
           post: !!posts.find(p => p.get('user_id') === leader.id)
         }
       })

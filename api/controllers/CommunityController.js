@@ -340,5 +340,12 @@ module.exports = {
     })
     .then(() => res.ok({}))
     .catch(res.serverError)
+  },
+
+  updateChecklist: function (req, res) {
+    var community = res.locals.community
+    return community.updateChecklist()
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   }
 }

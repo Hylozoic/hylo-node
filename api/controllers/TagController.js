@@ -119,6 +119,20 @@ module.exports = {
     .then(() => res.ok({}))
   },
 
+  create: function (req, res) {
+    const { community } = res.locals
+    const { name, description, is_default } = pick(req.allParams(), ['name', 'description', 'is_default'])
+    return Tag.findOrCreate(name)
+    .then(tag => new CommunityTag({
+      tag_id: tag.id,
+      community_id: community.id,
+      description,
+      is_default
+    }).save())
+    .then(() => res.ok({}))
+    .catch(res.serverError)
+  },
+
   updateForCommunity: function (req, res) {
     const params = pick(req.allParams(), ['description', 'is_default'])
     return Community.find(req.param('communityId'))
