@@ -347,5 +347,10 @@ module.exports = {
     return community.updateChecklist()
     .then(() => res.ok({}))
     .catch(res.serverError)
+  },
+
+  requestToJoin: function (req, res) {
+    console.log('called requestToJoin with', req.allParams())
+    return res.ok({})
   }
 }

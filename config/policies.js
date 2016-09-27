@@ -85,7 +85,8 @@ module.exports.policies = {
     findForNetwork:  ['sessionAuth', 'inNetwork'],
     findForNetworkNav:  ['sessionAuth', 'inNetwork'],
     joinWithCode:    ['sessionAuth'],
-    updateChecklist: ['sessionAuth', 'isModerator', 'checkAndSetMembership']
+    updateChecklist: ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
+    requestToJoin:   ['sessionAuth']
   },
 
   PostController: {
