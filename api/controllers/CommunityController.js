@@ -350,7 +350,10 @@ module.exports = {
   },
 
   requestToJoin: function (req, res) {
-    console.log('called requestToJoin with', req.allParams())
-    return res.ok({})
+    return new JoinRequest({
+      community_id: req.param('communityId'),
+      user_id: req.session.userId
+    }).save()
+    .then(res.ok, res.serverError)
   }
 }

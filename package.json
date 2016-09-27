@@ -139,6 +139,7 @@
       "Frontend",
       "FullTextSearch",
       "Invitation",
+      "JoinRequest",
       "LinkedAccount",
       "Media",
       "Membership",
