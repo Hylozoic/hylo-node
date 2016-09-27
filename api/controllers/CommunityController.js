@@ -345,7 +345,7 @@ module.exports = {
   updateChecklist: function (req, res) {
     var community = res.locals.community
     return community.updateChecklist()
-    .then(() => res.ok({}))
+    .then(community => res.ok(community.get('settings')))
     .catch(res.serverError)
   }
 }
