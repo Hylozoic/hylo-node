@@ -1288,7 +1288,7 @@ CREATE MATERIALIZED VIEW search_index AS
  SELECT p.id AS post_id,
     NULL::bigint AS user_id,
     NULL::bigint AS comment_id,
-    ((setweight(to_tsvector('english'::regconfig, p.name), 'A'::"char") || setweight(to_tsvector('english'::regconfig, p.description), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+    ((setweight(to_tsvector('english'::regconfig, p.name), 'B'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(p.description, ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
    FROM (post p
      JOIN users u ON ((u.id = p.user_id)))
   WHERE ((p.active = true) AND (u.active = true))
@@ -1296,17 +1296,15 @@ UNION
  SELECT NULL::bigint AS post_id,
     u.id AS user_id,
     NULL::bigint AS comment_id,
-    ((((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, ((((u.bio || ' '::text) || u.intention) || ' '::text) || u.work)), 'B'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (s.skill_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(DISTINCT (o.org_name)::text, ' '::text))), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, u.extra_info), 'D'::"char")) AS document
-   FROM ((users u
-     LEFT JOIN users_skill s ON ((u.id = s.user_id)))
-     LEFT JOIN users_org o ON ((u.id = o.user_id)))
+    (setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
+   FROM users u
   WHERE (u.active = true)
   GROUP BY u.id
 UNION
  SELECT NULL::bigint AS post_id,
     NULL::bigint AS user_id,
     c.id AS comment_id,
-    (setweight(to_tsvector('english'::regconfig, c.text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
+    (setweight(to_tsvector('english'::regconfig, c.text), 'C'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
    FROM (comment c
      JOIN users u ON ((u.id = c.user_id)))
   WHERE ((c.active = true) AND (u.active = true))
@@ -1618,6 +1616,14 @@ ALTER TABLE ONLY users
 
 
 --
+-- Name: unique_join_requests; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY join_requests
+    ADD CONSTRAINT unique_join_requests UNIQUE (user_id, community_id);
+
+
+--
 -- Name: unique_name; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1734,6 +1740,13 @@ ALTER TABLE ONLY users_community
 --
 
 CREATE INDEX fk_community_created_by_1 ON community USING btree (created_by_id);
+
+
+--
+-- Name: idx_fts_search; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_fts_search ON search_index USING gin (document);
 
 
 --

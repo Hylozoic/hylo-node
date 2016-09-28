@@ -350,10 +350,19 @@ module.exports = {
   },
 
   requestToJoin: function (req, res) {
-    return new JoinRequest({
-      community_id: req.param('communityId'),
+    const params = {
+      community_id: res.locals.community.id,
       user_id: req.session.userId
-    }).save()
+    }
+    if (!req.session.userId) return res.serverError(new Error('Unauthorized'))
+    return JoinRequest.where(params).fetch()
+    .then(joinRequest => {
+      if (joinRequest) {
+        return joinRequest.save({updated_at: new Date()})
+      } else {
+        return new JoinRequest(merge(params, {created_at: new Date()})).save()
+      }
+    })
     .then(res.ok, res.serverError)
   }
 }

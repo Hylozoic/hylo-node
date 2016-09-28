@@ -367,7 +367,7 @@ describe('CommunityController', () => {
       var community = factories.community()
       return community.save()
       .then(() => {
-        req.params.communityId = community.id
+        res.locals.community = community
         req.session.userId = user.id
       })
       .then(() => CommunityController.requestToJoin(req, res))
