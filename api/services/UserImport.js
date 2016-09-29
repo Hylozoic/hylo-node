@@ -91,7 +91,8 @@ export function createUser (attrs, options) {
       if (community && community.id === '1126') {
         return Email.sendSimpleEmail(
           user.get('email'), 'tem_GC822hsXScRMV23pddPNZM',
-          {recipient_name: name.split(' ')[0]}
+          {recipient_name: name.split(' ')[0]},
+          {sender: {name: 'Impact Hub Baltimore'}}
         )
       }
     })
