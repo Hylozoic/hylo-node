@@ -1,3 +1,4 @@
+/* globals NexudusAccount */
 var Slack = require('../services/Slack')
 const randomstring = require('randomstring')
 import { merge, unset, differenceBy } from 'lodash'
@@ -65,6 +66,10 @@ module.exports = bookshelf.Model.extend({
       })
       q.join('post_community', 'post_community.post_id', 'comment.post_id')
     })
+  },
+
+  nexudusAccounts: function () {
+    this.hasMany(NexudusAccount)
   },
 
   createStarterPosts: function (transacting) {

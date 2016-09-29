@@ -237,14 +237,9 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  isEmailUnique: function (email, notEmail) {
-    // FIXME there should be a better way to do this
-    var query = bookshelf.knex('users')
-    .where('email', email)
-    .count('*')
-
-    if (notEmail) query = query.andWhere('email', '!=', notEmail)
-
+  isEmailUnique: function (email, excludeEmail) {
+    var query = bookshelf.knex('users').where('email', email).count('*')
+    if (excludeEmail) query = query.andWhere('email', '!=', excludeEmail)
     return query.then(rows => Number(rows[0].count) === 0)
   },
 

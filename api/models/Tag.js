@@ -108,7 +108,7 @@ const createAsNeeded = tagNames => {
   // find existing tags
   return Tag.query().whereRaw(nameMatch(tagNames)).select(['id', 'name'])
   .then(existing => {
-    const toCreate = differenceBy(tagNames, map('name', existing), lower)
+    const toCreate = differenceBy(lower, tagNames, map('name', existing))
     const created_at = new Date()
 
     // create new tags as necessary
@@ -215,7 +215,7 @@ module.exports = bookshelf.Model.extend({
     .then(ids => {
       const created_at = new Date()
       const pivot = id => ({tag_id: id, created_at})
-      user.tags().attach(ids.map(pivot))
+      return user.tags().attach(ids.map(pivot))
     })
   },
 
@@ -223,13 +223,11 @@ module.exports = bookshelf.Model.extend({
     const oldTags = user.relations.tags.map(t => t.pick('id', 'name'))
     const newTags = map(name => ({name}), values)
     const lowerName = t => t.name.toLowerCase()
-    const toRemove = differenceBy(oldTags, newTags, lowerName)
-    const toAdd = differenceBy(newTags, oldTags, lowerName)
+    const toRemove = differenceBy(lowerName, oldTags, newTags)
+    const toAdd = differenceBy(lowerName, newTags, oldTags)
 
-    return Promise.all([
-      !isEmpty(toRemove) && user.tags().detach(map('id', toRemove)),
-      !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd))
-    ])
+    return Promise.resolve(!isEmpty(toRemove) && user.tags().detach(map('id', toRemove)))
+    .then(() => !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd)))
   },
 
   starterTags: function (trx) {

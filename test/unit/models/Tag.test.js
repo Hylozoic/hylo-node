@@ -5,7 +5,7 @@ var factories = require(root('test/setup/factories'))
 describe('Tag', () => {
   var u
 
-  before(() => {
+  beforeEach(() => {
     u = factories.user()
     return setup.clearDb()
     .then(() => u.save())
@@ -317,7 +317,7 @@ describe('Tag', () => {
   describe('.merge', () => {
     var t1, t2, t3, p1, p2, c
 
-    before(() => {
+    beforeEach(() => {
       const k = bookshelf.knex
       t1 = new Tag({name: 't1'})
       t2 = new Tag({name: 't2'})
@@ -407,6 +407,29 @@ describe('Tag', () => {
     it('finds a hashtag inside an anchor tag', () => {
       const text = 'hey <a>#whoa</a> <a>#nah</a>'
       expect(Tag.tagsInText(text)).to.deep.equal(['whoa', 'nah'])
+    })
+  })
+
+  describe('.updateUser', () => {
+    var t1, t2, t3
+
+    beforeEach(() => {
+      t1 = factories.tag()
+      t2 = factories.tag()
+      t3 = factories.tag()
+      return Promise.join(t1.save(), t2.save(), t3.save())
+      .then(() => u.tags().attach([t1.id, t2.id]))
+    })
+
+    it('works', () => {
+      return u.load('tags')
+      .then(() => Tag.updateUser(u, [t2.get('name'), t3.get('name')]))
+      .then(() => u.load('tags'))
+      .then(() => {
+        expect(u.relations.tags.map(t => t.get('name'))).to.deep.equal([
+          t2.get('name'), t3.get('name')
+        ])
+      })
     })
   })
 })
