@@ -58,33 +58,43 @@ const runWithJSONStream = function (stream, options, rowAction) {
 
 export function createUser (attrs, options) {
   if (!attrs) return
+  const { verbose, community, dryRun } = options
+  const { name, email } = attrs
 
-  if (!validator.isEmail(attrs.email)) {
-    console.error('invalid email for ' + attrs.name)
+  if (!validator.isEmail(email)) {
+    console.error('invalid email for ' + name)
     return
   }
 
-  return User.isEmailUnique(attrs.email)
+  return User.isEmailUnique(email)
   .then(unique => {
     if (!unique) {
-      if (options.verbose) console.error('email already exists: ' + attrs.email)
+      if (verbose) console.error('email already exists: ' + email)
       return
     }
 
-    if (options.dryRun) {
-      console.log(`dry run: ${attrs.name} <${attrs.email}>`)
+    if (dryRun) {
+      console.log(`dry run: ${name} <${email}>`)
       return
     }
 
+    // TODO handle skills as tags
     return User.create(_.merge(attrs, {
-      community: options.community,
+      community: community,
       settings: {
         digest_frequency: 'weekly'
       },
       created_at: new Date(),
       updated_at: new Date()
     }))
-    // TODO handle skills as tags
+    .tap(user => {
+      if (community && community.id === '1126') {
+        return Email.sendSimpleEmail(
+          user.get('email'), 'tem_GC822hsXScRMV23pddPNZM',
+          {recipient_name: name.split(' ')[0]}
+        )
+      }
+    })
   })
 }
 
