@@ -127,6 +127,7 @@ module.exports = {
       tag_id: tag.id,
       community_id: community.id,
       description,
+      user_id: req.session.userId,
       is_default
     }).save())
     .then(() => res.ok({}))

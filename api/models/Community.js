@@ -121,6 +121,12 @@ module.exports = bookshelf.Model.extend({
     .then(starterTags => {
       const { invitations, posts, leader, tags } = this.relations
 
+      console.log('tags.models', tags.models)
+      console.log('starterTags.models', starterTags.models)
+      console.log('difference', differenceBy(tags.models, starterTags.models, 'id'))
+      console.log('leader', leader)
+      console.log('find', differenceBy(tags.models, starterTags.models, 'id').find(t => t.pivot.get('user_id') === leader.id))
+
       this.addSetting({
         checklist: {
           logo: this.get('avatar_url') !== defaultAvatar,
