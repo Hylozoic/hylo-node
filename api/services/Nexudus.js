@@ -95,7 +95,10 @@ module.exports = {
     return NexudusAccount.where('autoupdate', true)
     .fetchAll({withRelated: 'community'})
     .then(accounts => Promise.map(accounts.models, a => {
-      const opts = Object.assign({spaceId: a.get('space_id')}, options)
+      const opts = Object.assign({
+        spaceId: a.get('space_id'),
+        community: a.relations.community
+      }, options)
       return this.updateMembers(a.get('username'), a.decryptedPassword(), opts)
       .then(count => [a.get('community_id'), count])
     }))
