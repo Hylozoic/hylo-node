@@ -1,7 +1,8 @@
-var request = require('request')
+/* globals UserImport, NexudusAccount */
+import request from 'request'
 var Promise = require('bluebird')
 var get = Promise.promisify(request.get, request)
-import { includes } from 'lodash'
+import { compact, includes } from 'lodash'
 import { filter, map } from 'lodash/fp'
 
 const apiHost = 'https://spaces.nexudus.com/api'
@@ -82,5 +83,21 @@ module.exports = {
     .tap(logCount('active members'))
     .then(map(formatRecord))
     .then(records => opts.verbose ? {contracts, coworkers, records} : records)
+  },
+
+  updateMembers: function (username, password, opts = {}) {
+    return this.fetchMembers(username, password, opts)
+    .then(records => Promise.map(records, r => UserImport.createUser(r, opts)))
+    .then(users => compact(users).length)
+  },
+
+  updateAllCommunities: function (options) {
+    return NexudusAccount.where('autoupdate', true)
+    .fetchAll({withRelated: 'community'})
+    .then(accounts => Promise.map(accounts.models, a => {
+      const opts = Object.assign({spaceId: a.get('space_id')}, options)
+      return this.updateMembers(a.get('username'), a.decryptedPassword(), opts)
+      .then(count => [a.get('community_id'), count])
+    }))
   }
 }

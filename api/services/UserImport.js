@@ -23,8 +23,11 @@ const promisifyStream = stream =>
     stream.on('error', reject)
   })
 
-const getStream = ({ url, filename }) =>
-  url ? request(url) : fs.createReadStream(filename)
+const getStream = ({ url, filename, stream }) => {
+  if (stream) return stream
+  if (url) return request(url)
+  return fs.createReadStream(filename)
+}
 
 const getConverter = convert => {
   // you can pass a function that maps from arbitrary values
@@ -32,7 +35,7 @@ const getConverter = convert => {
   if (!convert) {
     return row => row
   } else if (typeof convert === 'string') {
-    return UserImport.converters[convert]
+    return converters[convert]
   } else {
     return convert
   }
@@ -45,15 +48,15 @@ const runWithCSVStream = function (stream, options, rowAction) {
 
 const runWithJSONStream = function (stream, options, rowAction) {
   const buffer = new WritableStreamBuffer()
+  const promise = promisifyStream(stream)
   stream.pipe(buffer)
-  return promisifyStream(stream)
-  .then(() => {
+  return promise.then(() => {
     const data = JSON.parse(buffer.getContentsAsString())
     return Promise.map(data, rowAction)
   })
 }
 
-const createUser = function (attrs, options) {
+export function createUser (attrs, options) {
   if (!attrs) return
 
   if (!validator.isEmail(attrs.email)) {
@@ -64,7 +67,7 @@ const createUser = function (attrs, options) {
   return User.isEmailUnique(attrs.email)
   .then(unique => {
     if (!unique) {
-      console.error('email already exists: ' + attrs.email)
+      if (options.verbose) console.error('email already exists: ' + attrs.email)
       return
     }
 
@@ -85,7 +88,7 @@ const createUser = function (attrs, options) {
   })
 }
 
-const converters = {
+export const converters = {
   idin: function (row) {
     return {
       name: format('%s %s', row['First Name'], row['Last Name']),
@@ -128,7 +131,7 @@ const converters = {
   }
 }
 
-const operations = {
+export const operations = {
   sustainableHumanIntentions: function (row, options) {
     var intention = row['Intention'].trim()
     if (!intention) return false
@@ -174,28 +177,23 @@ const operations = {
   }
 }
 
-var UserImport = module.exports = {
-  import: options => {
-    if (!options.community) throw new Error('No community specified')
+export const runImport = options => {
+  if (!options.community) throw new Error('No community specified')
 
-    const method = options.json ? runWithJSONStream : runWithCSVStream
-    return method(getStream(options), options, row => {
-      const convert = getConverter(options.convert)
-      return createUser(convert(row, options), options)
-    })
-  },
+  const method = options.json ? runWithJSONStream : runWithCSVStream
+  return method(getStream(options), options, row => {
+    const convert = getConverter(options.convert)
+    return createUser(convert(row, options), options)
+  })
+}
 
-  run: (options) => {
-    var promises = []
-    return runWithCSVStream(getStream(options), options, row => {
-      var op = operations[options.operation]
-      promises.push(op(row, options))
-    })
-    .then(() => Promise.all(promises))
-  },
-
-  converters,
-  operations
+export const run = (options) => {
+  var promises = []
+  return runWithCSVStream(getStream(options), options, row => {
+    var op = operations[options.operation]
+    promises.push(op(row, options))
+  })
+  .then(() => Promise.all(promises))
 }
 
 if (require.main === module) {
@@ -204,7 +202,7 @@ if (require.main === module) {
     log: {level: 'warn'},
     start: () =>
       Community.find('impact-hub-baltimore')
-      .then(community => UserImport.import({
+      .then(community => runImport({
         json: true,
         filename: './nexudus.json',
         community
