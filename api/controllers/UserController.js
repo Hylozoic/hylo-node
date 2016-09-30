@@ -117,7 +117,8 @@ module.exports = {
       'push_follow_preference', 'push_new_post_preference', 'settings'
     ])
 
-    return User.find(req.param('userId'), {withRelated: 'tags'})
+    const userId = req.param('userId') || req.session.userId
+    return User.find(userId, {withRelated: 'tags'})
     .tap(user => {
       const newEmail = attrs.email
       const oldEmail = user.get('email')
