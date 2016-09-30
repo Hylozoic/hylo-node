@@ -25,7 +25,7 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
   .then(post => post && PostPresenter.present(post, viewingUserId, opts))
 }
 
-const extraAttributes = (user, viewingUserId) =>
+const extraAttributes = (user, viewingUserId, forSelf) =>
   Promise.props({
     public_email: user.encryptedEmail(),
     post_count: Post.countForUser(user), // TODO remove after hylo-frontend is gone
@@ -37,7 +37,8 @@ const extraAttributes = (user, viewingUserId) =>
     tags: user.relations.tags.pluck('name'),
     recent_request: recentTaggedPost(user.id, 'request', viewingUserId),
     recent_offer: recentTaggedPost(user.id, 'offer', viewingUserId),
-    shared_communities: Membership.sharedCommunityIds([user.id, viewingUserId])
+    shared_communities: forSelf ? null
+      : Membership.sharedCommunityIds([user.id, viewingUserId])
   })
 
 const selfOnlyAttributes = (user, isAdmin) =>
@@ -76,7 +77,7 @@ const UserPresenter = module.exports = {
     })
     .then(user => Promise.join(
       cleanBasicAttributes(user.toJSON()),
-      extraAttributes(user, user.id),
+      extraAttributes(user, user.id, true),
       selfOnlyAttributes(user, isAdmin)
     ))
     .then(attributes => _.extend.apply(_, attributes))

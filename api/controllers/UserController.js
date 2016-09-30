@@ -2,7 +2,7 @@ import { find, flatten, merge, pick } from 'lodash'
 import { filter, map } from 'lodash/fp'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import validator from 'validator'
-import { normalizePost, uniqize } from '../../lib/util/normalize'
+import { normalizeMemberships, normalizePost, uniqize } from '../../lib/util/normalize'
 
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
@@ -24,6 +24,16 @@ const countTaggedPosts = (userIds, tagId) =>
   .where('posts_tags.tag_id', tagId)
   .groupBy('user_id')
   .select(bookshelf.knex.raw('count(*), user_id'))
+
+const normalizeUser = user => {
+  const buckets = {people: [], communities: []}
+  normalizePost(user.recent_request, buckets)
+  normalizePost(user.recent_offer, buckets)
+  normalizeMemberships(user.memberships, buckets)
+  uniqize(buckets)
+  buckets.people = filter(u => u.id !== user.id, buckets.people)
+  return Object.assign(buckets, user)
+}
 
 module.exports = {
   create: function (req, res) {
@@ -56,6 +66,7 @@ module.exports = {
     .then(attributes => Promise.props(Object.assign(attributes, {
       left_nav_tags: fetchAndPresentFollowed(null, req.session.userId)
     })))
+    .then(normalizeUser)
     .then(res.ok)
     .catch(err => {
       if (err.message === 'User not found') return res.ok({})
@@ -66,18 +77,7 @@ module.exports = {
 
   findOne: function (req, res) {
     return UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
-    .then(user => {
-      const buckets = {communities: [], people: []}
-      if (user.recent_request) {
-        normalizePost(user.recent_request, buckets)
-      }
-      if (user.recent_offer) {
-        normalizePost(user.recent_offer, buckets)
-      }
-      uniqize(buckets)
-      buckets.people = filter(p => p.id !== user.id, buckets.people)
-      return Object.assign(buckets, user)
-    })
+    .then(normalizeUser)
     .then(res.ok)
     .catch(res.serverError)
   },
