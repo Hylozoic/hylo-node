@@ -129,6 +129,7 @@ module.exports = bookshelf.Model.extend({
       this.addSetting({
         checklist: {
           logo: this.get('avatar_url') !== defaultAvatar,
+          banner: this.get('banner_url') !== defaultBanner,
           invite: invitations.length > 0,
           topics: !!differenceBy(tags.models, starterTags.models, 'id')
             .find(t => t.pivot.get('user_id') === leader.id),
