@@ -1,5 +1,7 @@
 import { find, get, isNull, isUndefined, merge, pick } from 'lodash'
-import { pickBy } from 'lodash/fp'
+import { filter, pickBy } from 'lodash/fp'
+import { normalizeMemberships, normalizePost, uniqize } from '../../lib/util/normalize'
+import { fetchAndPresentFollowed } from '../services/TagPresenter'
 
 const relationsForSelf = [
   'memberships',
@@ -67,8 +69,19 @@ const cleanBasicAttributes = attrs => {
   return attrs
 }
 
+const normalizeUser = user => {
+  const buckets = {people: [], communities: []}
+  normalizePost(user.recent_request, buckets)
+  normalizePost(user.recent_offer, buckets)
+  normalizeMemberships(user.memberships, buckets)
+  uniqize(buckets)
+  buckets.people = filter(u => u.id !== user.id, buckets.people)
+  return Object.assign(buckets, user)
+}
+
 const UserPresenter = module.exports = {
   shortAttributes,
+  normalizeUser,
 
   fetchForSelf: function (userId, isAdmin) {
     return User.find(userId, {withRelated: relationsForSelf})
@@ -129,6 +142,15 @@ const UserPresenter = module.exports = {
       pick(user.attributes, UserPresenter.shortAttributes),
       moreAttributes
     ))
+  },
+
+  fetchAndPresentForSelf: function (userId, session, isAdmin) {
+    return UserPresenter.fetchForSelf(userId, isAdmin)
+    .then(attributes => UserPresenter.presentForSelf(attributes, session))
+    .then(attributes => Promise.props(Object.assign(attributes, {
+      left_nav_tags: fetchAndPresentFollowed(null, userId)
+    })))
+    .then(normalizeUser)
   }
 
 }

@@ -1,8 +1,6 @@
 import { find, flatten, merge, pick } from 'lodash'
-import { filter, map } from 'lodash/fp'
-import { fetchAndPresentFollowed } from '../services/TagPresenter'
+import { map } from 'lodash/fp'
 import validator from 'validator'
-import { normalizeMemberships, normalizePost, uniqize } from '../../lib/util/normalize'
 
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
@@ -25,16 +23,6 @@ const countTaggedPosts = (userIds, tagId) =>
   .groupBy('user_id')
   .select(bookshelf.knex.raw('count(*), user_id'))
 
-const normalizeUser = user => {
-  const buckets = {people: [], communities: []}
-  normalizePost(user.recent_request, buckets)
-  normalizePost(user.recent_offer, buckets)
-  normalizeMemberships(user.memberships, buckets)
-  uniqize(buckets)
-  buckets.people = filter(u => u.id !== user.id, buckets.people)
-  return Object.assign(buckets, user)
-}
-
 module.exports = {
   create: function (req, res) {
     const { name, email, password } = req.allParams()
@@ -44,8 +32,7 @@ module.exports = {
     .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
     .then(user => {
       if (req.param('resp') === 'user') {
-        return UserPresenter.fetchForSelf(user.id, Admin.isSignedIn(req))
-        .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+        return UserPresenter.fetchAndPresentForSelf(user.id, req.session, Admin.isSignedIn(req))
         .then(res.ok)
       } else {
         return res.ok({})
@@ -61,12 +48,8 @@ module.exports = {
   },
 
   findSelf: function (req, res) {
-    return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
-    .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
-    .then(attributes => Promise.props(Object.assign(attributes, {
-      left_nav_tags: fetchAndPresentFollowed(null, req.session.userId)
-    })))
-    .then(normalizeUser)
+    const { userId } = req.session
+    return UserPresenter.fetchAndPresentForSelf(userId, req.session, Admin.isSignedIn(req))
     .then(res.ok)
     .catch(err => {
       if (err.message === 'User not found') return res.ok({})
@@ -77,7 +60,7 @@ module.exports = {
 
   findOne: function (req, res) {
     return UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
-    .then(normalizeUser)
+    .then(UserPresenter.normalizeUser)
     .then(res.ok)
     .catch(res.serverError)
   },
