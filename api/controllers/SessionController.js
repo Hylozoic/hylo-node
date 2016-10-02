@@ -123,8 +123,7 @@ module.exports = {
     .tap(user => user.save({last_login: new Date()}, {patch: true}))
     .tap(user => {
       if (req.param('resp') === 'user') {
-        return UserPresenter.fetchForSelf(user.id, Admin.isSignedIn(req))
-        .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+        return UserPresenter.fetchAndPresentForSelf(user.id, req.session, Admin.isSignedIn(req))
         .then(res.ok)
       } else {
         return res.ok({})

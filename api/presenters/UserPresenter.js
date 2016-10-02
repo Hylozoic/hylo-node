@@ -1,5 +1,7 @@
 import { find, get, isNull, isUndefined, merge, pick } from 'lodash'
-import { pickBy } from 'lodash/fp'
+import { filter, pickBy } from 'lodash/fp'
+import { normalizeMemberships, normalizePost, uniqize } from '../../lib/util/normalize'
+import { fetchAndPresentFollowed } from '../services/TagPresenter'
 
 const relationsForSelf = [
   'memberships',
@@ -25,7 +27,7 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
   .then(post => post && PostPresenter.present(post, viewingUserId, opts))
 }
 
-const extraAttributes = (user, viewingUserId) =>
+const extraAttributes = (user, viewingUserId, forSelf) =>
   Promise.props({
     public_email: user.encryptedEmail(),
     post_count: Post.countForUser(user), // TODO remove after hylo-frontend is gone
@@ -37,7 +39,8 @@ const extraAttributes = (user, viewingUserId) =>
     tags: user.relations.tags.pluck('name'),
     recent_request: recentTaggedPost(user.id, 'request', viewingUserId),
     recent_offer: recentTaggedPost(user.id, 'offer', viewingUserId),
-    shared_communities: Membership.sharedCommunityIds([user.id, viewingUserId])
+    shared_communities: forSelf ? null
+      : Membership.sharedCommunityIds([user.id, viewingUserId])
   })
 
 const selfOnlyAttributes = (user, isAdmin) =>
@@ -66,8 +69,19 @@ const cleanBasicAttributes = attrs => {
   return attrs
 }
 
+const normalizeUser = user => {
+  const buckets = {people: [], communities: []}
+  normalizePost(user.recent_request, buckets)
+  normalizePost(user.recent_offer, buckets)
+  normalizeMemberships(user.memberships, buckets)
+  uniqize(buckets)
+  buckets.people = filter(u => u.id !== user.id, buckets.people)
+  return Object.assign(buckets, user)
+}
+
 const UserPresenter = module.exports = {
   shortAttributes,
+  normalizeUser,
 
   fetchForSelf: function (userId, isAdmin) {
     return User.find(userId, {withRelated: relationsForSelf})
@@ -76,7 +90,7 @@ const UserPresenter = module.exports = {
     })
     .then(user => Promise.join(
       cleanBasicAttributes(user.toJSON()),
-      extraAttributes(user, user.id),
+      extraAttributes(user, user.id, true),
       selfOnlyAttributes(user, isAdmin)
     ))
     .then(attributes => _.extend.apply(_, attributes))
@@ -128,6 +142,15 @@ const UserPresenter = module.exports = {
       pick(user.attributes, UserPresenter.shortAttributes),
       moreAttributes
     ))
+  },
+
+  fetchAndPresentForSelf: function (userId, session, isAdmin) {
+    return UserPresenter.fetchForSelf(userId, isAdmin)
+    .then(attributes => UserPresenter.presentForSelf(attributes, session))
+    .then(attributes => Promise.props(Object.assign(attributes, {
+      left_nav_tags: fetchAndPresentFollowed(null, userId)
+    })))
+    .then(normalizeUser)
   }
 
 }
