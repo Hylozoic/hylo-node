@@ -366,5 +366,26 @@ module.exports = {
       }
     })
     .then(res.ok, res.serverError)
+  },
+
+  joinRequests: function (req, res) {
+    const { community } = res.locals
+    return JoinRequest.query(qb => {
+      qb.limit(req.param('limit') || 20)
+      qb.offset(req.param('offset') || 0)
+      qb.where('community_id', community.get('id'))
+      qb.select(bookshelf.knex.raw('join_requests.*, count(*) over () as total'))
+      qb.orderByRaw('updated_at desc, created_at desc')
+    }).fetchAll({withRelated: 'user'})
+    .then(joinRequests => ({
+      total: joinRequests.length > 0 ? Number(joinRequests.first().get('total')) : 0,
+      items: joinRequests.map(jR => {
+        var user = jR.relations.user.pick('id', 'name', 'avatar_url')
+        return _.merge(jR.pick('id', 'email', 'created'), {
+          user: !_.isEmpty(user) ? user : null
+        })
+      })
+    }))
+    .then(res.ok)
   }
 }

@@ -44,6 +44,7 @@ module.exports.routes = {
   'POST   /noo/community/:communityId/post/:postId/pin':    'CommunityController.pinPost',
   'POST   /noo/community/:communityId/update-checklist':    'CommunityController.updateChecklist',
   'POST   /noo/community/:communityId/request-join':        'CommunityController.requestToJoin',
+  'GET    /noo/community/:communityId/joinRequests':        'CommunityController.joinRequests',
 
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
