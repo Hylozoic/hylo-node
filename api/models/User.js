@@ -301,5 +301,14 @@ module.exports = bookshelf.Model.extend({
     return CommunityTag.defaults(communityId, trx)
     .then(defaultTags => defaultTags.models.map(t => t.get('tag_id')))
     .then(ids => User.followTags(userId, communityId, ids, trx))
+  },
+
+  resetTooltips: function (userId) {
+    return User.find(userId)
+    .then(user => {
+      const settings = user.get('settings')
+      settings.viewedTooltips = {}
+      return user.save({settings})
+    })
   }
 })
