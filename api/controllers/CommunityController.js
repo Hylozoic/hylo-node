@@ -1,4 +1,5 @@
 import rollbar from 'rollbar'
+import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { pick, sortBy, merge } from 'lodash'
 const Promise = require('bluebird')
 const request = require('request')
@@ -220,6 +221,7 @@ module.exports = {
   },
 
   create: function (req, res) {
+    const { userId } = req.session
     var attrs = _.pick(req.allParams(),
       'name', 'description', 'slug', 'category',
       'beta_access_code', 'banner_url', 'avatar_url', 'location')
@@ -233,18 +235,18 @@ module.exports = {
       var community = new Community(_.merge(attrs, {
         beta_access_code,
         created_at: new Date(),
-        created_by_id: req.session.userId,
-        leader_id: req.session.userId,
+        created_by_id: userId,
+        leader_id: userId,
         welcome_message: welcomeMessage,
         settings: {post_prompt_day: 0}
       }))
 
       return bookshelf.transaction(trx => {
         return community.save(null, {transacting: trx})
-        .tap(() => User.resetTooltips(req.session.userId))
-        .tap(community => community.createStarterTags(req.session.userId, trx))
+        .tap(() => User.resetTooltips(userId))
+        .tap(community => community.createStarterTags(userId, trx))
         .tap(community => community.createStarterPosts(trx))
-        .then(() => Membership.create(req.session.userId, community.id, {
+        .then(() => Membership.create(userId, community.id, {
           role: Membership.MODERATOR_ROLE,
           transacting: trx
         }))
@@ -253,7 +255,11 @@ module.exports = {
       // copy them over to /community/:id now
       .tap(() => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
       .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
-      .then(membership => _.extend(membership.toJSON(), {community: community}))
+      .then(membership => Promise.props(_.extend(
+        membership.toJSON(), {
+          community,
+          left_nav_tags: fetchAndPresentFollowed(community.id, userId)
+        })))
       .then(res.ok)
       .catch(res.serverError)
     })
