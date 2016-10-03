@@ -64,12 +64,13 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
 
     q.limit(opts.limit || 20)
     q.offset(opts.offset || 0)
+    q.orderBy('is_default', 'desc')
     q.orderBy('name', 'asc')
-    q.groupBy('tags.id')
+    q.groupBy(['tags.id', 'is_default'])
   })
   .fetchAll({withRelated})
   .tap(tags => total = tags.first() ? Number(tags.first().get('total')) : 0)
-  .then(tags => sortBy('name', tags.map(t => {
+  .then(tags => tags.map(t => {
     const attrs = {
       id: t.id,
       name: t.get('name'),
@@ -81,7 +82,7 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
     const post_type = get(t.relations.posts.first(), 'attributes.type')
     if (post_type) attrs.post_type = post_type
     return attrs
-  })))
+  }))
   .then(items => ({items, total}))
 }
 
