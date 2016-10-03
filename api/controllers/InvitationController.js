@@ -1,6 +1,6 @@
 import validator from 'validator'
 import { markdown } from 'hylo-utils/text'
-import { map } from 'lodash/fp'
+import { isEmpty, map } from 'lodash/fp'
 import { presentForList } from '../presenters/UserPresenter'
 
 const parseEmailList = emails =>
@@ -54,15 +54,29 @@ module.exports = {
       qb.limit(req.param('limit') || 20)
       qb.offset(req.param('offset') || 0)
       qb.where('community_id', community.get('id'))
-      qb.select(bookshelf.knex.raw('community_invite.*, count(*) over () as total'))
+      qb.leftJoin('users', 'users.email', 'community_invite.email')
+      qb.select(bookshelf.knex.raw(`
+        community_invite.*,
+        count(*) over () as total,
+        users.id as joined_user_id,
+        users.name as joined_user_name,
+        users.avatar_url as joined_user_avatar_url
+      `))
       qb.orderBy('created', 'desc')
     }).fetchAll({withRelated: 'user'}))
     .then(invitations => ({
       total: invitations.length > 0 ? Number(invitations.first().get('total')) : 0,
       items: invitations.map(i => {
         var user = i.relations.user.pick('id', 'name', 'avatar_url')
+        if (isEmpty(user) && i.get('joined_user_id')) {
+          user = {
+            id: i.get('joined_user_id'),
+            name: i.get('joined_user_name'),
+            avatar_url: i.get('joined_user_avatar_url')
+          }
+        }
         return _.merge(i.pick('id', 'email', 'created'), {
-          user: !_.isEmpty(user) ? user : null
+          user: !isEmpty(user) ? user : null
         })
       })
     }))
