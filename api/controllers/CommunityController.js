@@ -9,6 +9,34 @@ const welcomeMessage = 'Thank you for joining us here at Hylo. ' +
   'with each other the unique gifts and intentions we each have, we can ' +
   "create extraordinary things. Let's get started!"
 
+const afterCreatingMembership = (req, res, ms, community, preexisting) => {
+  return Promise.join(
+    User.resetTooltips(req.session.userId),
+    ms && !ms.get('active') && ms.save({active: true}, {patch: true})
+  ).tap(() => {
+    if (!req.param('tagName')) return
+    return Tag.find(req.param('tagName'))
+    .then(tag => {
+      if (!tag) return res.notFound()
+      return new TagFollow({
+        community_id: community.id,
+        tag_id: tag.id,
+        user_id: req.session.userId
+      }).save()
+    })
+    .catch(err => {
+      if (err.message && err.message.includes('duplicate key value')) {
+        return true
+      } else {
+        throw err
+      }
+    })
+  })
+  .then(() => _.merge(ms.toJSON(), {preexisting}, {
+    community: community.pick('id', 'name', 'slug', 'avatar_url')
+  }))
+}
+
 module.exports = {
   find: function (req, res) {
     return Community
@@ -159,30 +187,7 @@ module.exports = {
     })
     // we get here if the membership was created successfully, or if it already existed
     .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
-      .tap(() => User.resetTooltips(req.session.userId))
-      .tap(ms => ms && !ms.get('active') && ms.save({active: true}, {patch: true}))
-      .tap(ms => {
-        if (!req.param('tagName')) return
-        return Tag.find(req.param('tagName'))
-        .then(tag => {
-          if (!tag) return res.notFound()
-          return new TagFollow({
-            community_id: community.id,
-            tag_id: tag.id,
-            user_id: req.session.userId
-          }).save()
-        })
-        .catch(err => {
-          if (err.message && err.message.includes('duplicate key value')) {
-            return true
-          } else {
-            throw err
-          }
-        })
-      })
-      .then(ms => _.merge(ms.toJSON(), {preexisting}, {
-        community: community.pick('id', 'name', 'slug', 'avatar_url')
-      })))
+      .then(ms => afterCreatingMembership(req, res, ms, community, preexisting)))
     .then(resp => resp ? res.ok(resp) : res.status(422).send('invalid code'))
     .catch(err => res.serverError(err))
   },
@@ -386,6 +391,21 @@ module.exports = {
         })
       })
     }))
+    .then(res.ok)
+  },
+
+  approveJoinRequest: function (req, res) {
+    const { community } = res.locals
+
+    return JoinRequest.where({
+      user_id: req.param('userId'),
+      community_id: community.id
+    }).fetch()
+    .then(joinRequest => {
+      return Membership.create(req.param('userId'), community.id)
+      .then(ms => afterCreatingMembership(req, res, ms, community))
+      .tap(() => joinRequest.destroy())
+    })
     .then(res.ok)
   }
 }
