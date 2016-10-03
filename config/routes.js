@@ -7,6 +7,7 @@
 module.exports.routes = {
   'GET    /noo/user/status':                              'UserController.status',
   'GET    /noo/user/me':                                  'UserController.findSelf',
+  'POST   /noo/user/me':                                  'UserController.update',
   'POST   /noo/user/password':                            'UserController.sendPasswordReset',
   'GET    /noo/user/:userId':                             'UserController.findOne',
   'GET    /noo/user':                                     'UserController.findAll',

@@ -1,3 +1,4 @@
+/* globals NexudusAccount */
 var Slack = require('../services/Slack')
 const randomstring = require('randomstring')
 import { merge, unset, differenceBy } from 'lodash'
@@ -67,6 +68,10 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  nexudusAccounts: function () {
+    this.hasMany(NexudusAccount)
+  },
+
   createStarterPosts: function (transacting) {
     var now = new Date()
     var timeShift = {null: 0, intention: 1, offer: 2, request: 3}
@@ -124,6 +129,7 @@ module.exports = bookshelf.Model.extend({
       this.addSetting({
         checklist: {
           logo: this.get('avatar_url') !== defaultAvatar,
+          banner: this.get('banner_url') !== defaultBanner,
           invite: invitations.length > 0,
           topics: !!differenceBy(tags.models, starterTags.models, 'id')
             .find(t => t.pivot.get('user_id') === leader.id),

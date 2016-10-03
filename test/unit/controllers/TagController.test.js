@@ -344,6 +344,8 @@ describe('TagController', () => {
       const description = 'the new tags description'
       const name = 'newtagcreatedbycreate'
       res.locals.community = fixtures.c1
+      req.session.userId = fixtures.u1.id
+
       _.extend(req.params, {
         description,
         name,
@@ -360,6 +362,7 @@ describe('TagController', () => {
           expect(communityTag).to.exist
           expect(communityTag.get('description')).to.equal(description)
           expect(communityTag.get('is_default')).to.equal(true)
+          expect(communityTag.get('user_id')).to.equal(fixtures.u1.id)
         })
       })
     })

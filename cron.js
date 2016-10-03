@@ -1,3 +1,4 @@
+/* globals Nexudus */
 require('babel-register')
 var skiff = require('./lib/skiff') // this must be required first
 var moment = require('moment-timezone')
@@ -11,6 +12,10 @@ require('colors')
 const sendAndLogDigests = type =>
   digest2.sendAllDigests(type)
   .tap(results => sails.log.debug(`Sent digests to: ${results}`))
+
+const updateFromNexudus = opts =>
+  Nexudus.updateAllCommunities(opts)
+  .then(report => sails.log.debug(report))
 
 var jobs = {
   daily: function () {
@@ -34,11 +39,13 @@ var jobs = {
     var tasks = []
 
     switch (now.hour()) {
-      case 12:
+      case 12: // eslint-disable-line no-fallthrough
         sails.log.debug('Sending daily digests')
         tasks.push(sendAndLogDigests('daily'))
-        break
       default:
+        sails.log.debug('Updating users from Nexudus')
+        tasks.push(updateFromNexudus({dryRun: false}))
+
         if (process.env.SERENDIPITY_ENABLED) {
           tasks.push(Relevance.cron(1, 'hour'))
         }

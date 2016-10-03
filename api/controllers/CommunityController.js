@@ -159,6 +159,7 @@ module.exports = {
     })
     // we get here if the membership was created successfully, or if it already existed
     .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
+      .tap(() => User.resetTooltips(req.session.userId))
       .tap(ms => ms && !ms.get('active') && ms.save({active: true}, {patch: true}))
       .tap(ms => {
         if (!req.param('tagName')) return
@@ -240,6 +241,7 @@ module.exports = {
 
       return bookshelf.transaction(trx => {
         return community.save(null, {transacting: trx})
+        .tap(() => User.resetTooltips(req.session.userId))
         .tap(community => community.createStarterTags(req.session.userId, trx))
         .tap(community => community.createStarterPosts(trx))
         .then(() => Membership.create(req.session.userId, community.id, {
@@ -345,7 +347,7 @@ module.exports = {
   updateChecklist: function (req, res) {
     var community = res.locals.community
     return community.updateChecklist()
-    .then(() => res.ok({}))
+    .then(community => res.ok(community.get('settings')))
     .catch(res.serverError)
   },
 

@@ -1,8 +1,6 @@
 import { find, flatten, merge, pick } from 'lodash'
-import { filter, map } from 'lodash/fp'
-import { fetchAndPresentFollowed } from '../services/TagPresenter'
+import { map } from 'lodash/fp'
 import validator from 'validator'
-import { normalizePost, uniqize } from '../../lib/util/normalize'
 
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
@@ -34,8 +32,7 @@ module.exports = {
     .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
     .then(user => {
       if (req.param('resp') === 'user') {
-        return UserPresenter.fetchForSelf(user.id, Admin.isSignedIn(req))
-        .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
+        return UserPresenter.fetchAndPresentForSelf(user.id, req.session, Admin.isSignedIn(req))
         .then(res.ok)
       } else {
         return res.ok({})
@@ -51,11 +48,8 @@ module.exports = {
   },
 
   findSelf: function (req, res) {
-    return UserPresenter.fetchForSelf(req.session.userId, Admin.isSignedIn(req))
-    .then(attributes => UserPresenter.presentForSelf(attributes, req.session))
-    .then(attributes => Promise.props(Object.assign(attributes, {
-      left_nav_tags: fetchAndPresentFollowed(null, req.session.userId)
-    })))
+    const { userId } = req.session
+    return UserPresenter.fetchAndPresentForSelf(userId, req.session, Admin.isSignedIn(req))
     .then(res.ok)
     .catch(err => {
       if (err.message === 'User not found') return res.ok({})
@@ -66,18 +60,7 @@ module.exports = {
 
   findOne: function (req, res) {
     return UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
-    .then(user => {
-      const buckets = {communities: [], people: []}
-      if (user.recent_request) {
-        normalizePost(user.recent_request, buckets)
-      }
-      if (user.recent_offer) {
-        normalizePost(user.recent_offer, buckets)
-      }
-      uniqize(buckets)
-      buckets.people = filter(p => p.id !== user.id, buckets.people)
-      return Object.assign(buckets, user)
-    })
+    .then(UserPresenter.normalizeUser)
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -117,7 +100,8 @@ module.exports = {
       'push_follow_preference', 'push_new_post_preference', 'settings'
     ])
 
-    return User.find(req.param('userId'), {withRelated: 'tags'})
+    const userId = req.param('userId') || req.session.userId
+    return User.find(userId, {withRelated: 'tags'})
     .tap(user => {
       const newEmail = attrs.email
       const oldEmail = user.get('email')
