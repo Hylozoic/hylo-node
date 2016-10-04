@@ -1,4 +1,4 @@
-/* globals LinkPreview */
+/* globals LinkPreview, LastRead */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 

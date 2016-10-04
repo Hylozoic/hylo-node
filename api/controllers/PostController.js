@@ -1,3 +1,4 @@
+/* globals LastRead */
 import { get } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
@@ -170,7 +171,7 @@ const PostController = {
       res.status(422).send("title can't be blank")
       return Promise.resolve()
     }
-    
+
     return checkPostTags(
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
@@ -188,23 +189,23 @@ const PostController = {
 
   findOrCreateThread: function (req, res) {
     const params = req.allParams()
-    const currentUserId = 1 //req.session.userId
+    const currentUserId = req.session.userId
     const otherUserId = params.messageTo
 
     if (!otherUserId) {
-      res.status(422).send("messageTo must be included")
+      res.status(422).send('messageTo must be included')
       return Promise.resolve()
     }
 
     params.type = Post.Type.THREAD
 
-    return Post.query(q => { 
+    return Post.query(q => {
       q.join('follower', 'follower.post_id', 'post.id')
       q.where('post.type', Post.Type.THREAD)
       q.where('post.id', 'in', Follow.query().where('user_id', currentUserId).select('post_id'))
       q.where('post_id', 'in', Follow.query().where('user_id', otherUserId).select('post_id'))
       q.where('post_id', 'not in', Follow.query().where('user_id', 'not in', [currentUserId, otherUserId]).select('post_id'))
-      q.groupBy('post.id') 
+      q.groupBy('post.id')
     }).fetch()
     .then(post => {
       if (post) {

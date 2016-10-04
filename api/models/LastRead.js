@@ -15,13 +15,12 @@ module.exports = bookshelf.Model.extend({
     }, { patch: true, transacting: trx })
   }
 }, {
-  findOrCreate: function (userId, postId, opts) {
-    if (!opts) opts = {}
-    return LastRead.query({ where: {user_id: userId, post_id: postId}})
+  findOrCreate: function (userId, postId, opts = {}) {
+    return this.query({where: {user_id: userId, post_id: postId}})
       .fetch()
       .then(lastRead => {
         if (lastRead) return Promise.resolve(lastRead)
-        return new LastRead({
+        return new this({
           post_id: postId,
           last_read_at: new Date(),
           user_id: userId
