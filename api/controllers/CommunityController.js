@@ -228,7 +228,7 @@ module.exports = {
 
     var promise = attrs.beta_access_code
       ? Promise.resolve(attrs.beta_access_code)
-      : Community.getNewBetaAccessCode()
+      : Community.getNewAccessCode()
 
     return promise
     .then(beta_access_code => {
