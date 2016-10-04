@@ -309,9 +309,9 @@ const PostController = {
     const { post } = res.locals
     const userId = req.session.userId
     return LastRead.findOrCreate(userId, post.id)
-      .tap(lastRead => lastRead.now())
-      .then(() => res.ok({}))
-      .catch(res.serverError)
+    .tap(lastRead => lastRead.setToNow())
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   },
 
   fulfill: function (req, res) {

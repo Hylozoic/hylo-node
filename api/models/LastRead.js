@@ -9,7 +9,7 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User).query({where: {active: true}})
   },
 
-  now: function (trx) {
+  setToNow: function (trx) {
     return this.save({
       last_read_at: new Date()
     }, { patch: true, transacting: trx })
