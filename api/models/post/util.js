@@ -1,5 +1,5 @@
 import {
-  difference, flatten, has, includes, isEqual, merge, omit, pick, some, uniq
+  difference, flatten, flattenDeep, has, includes, isEqual, merge, omit, pick, some, uniq
 } from 'lodash'
 import { filter, get, map } from 'lodash/fp'
 import { sanitize } from 'hylo-utils/text'
@@ -23,10 +23,22 @@ const updateTagFollows = (post, transacting) =>
     q.whereIn('community_id', post.relations.communities.map('id'))
   }).query().increment('new_post_count').transacting(transacting))
 
+export const afterSavingThread = function (post, opts) {
+  const userId = post.get('user_id')
+  const followerIds = [userId].concat(opts.messageTo)
+  const trx = opts.transacting
+  const trxOpts = pick(opts, 'transacting')
+
+  return Promise.all(flattenDeep([
+    map(id => LastRead.findOrCreate(id, post.id, { trx }), followerIds),
+    post.addFollowers(followerIds, userId, trxOpts)
+  ]))
+}
+
 export const afterSavingPost = function (post, opts) {
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.get('description'))
-  const followerIds = uniq(mentioned.concat(userId))
+  const followerIds = uniq([userId].concat((opts.messageTo || mentioned)))
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
 
@@ -148,6 +160,15 @@ export const createPost = (userId, params) =>
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
     .tap(post => afterSavingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'messageTo'),
+      {children: params.requests, transacting: trx}
+    )))))
+
+export const createThread = (userId, params) =>
+  setupNewPostAttrs(userId, params)
+  .then(attrs => bookshelf.transaction(trx =>
+    Post.create(attrs, {transacting: trx})
+    .tap(post => afterSavingThread(post, merge(
+      pick(params, 'messageTo'),
       {children: params.requests, transacting: trx}
     )))))

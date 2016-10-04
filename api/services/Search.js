@@ -57,17 +57,21 @@ module.exports = {
         })
       }
 
-      if (opts.follower) {
+      if (opts.type === Post.Type.THREAD || opts.follower) {
         qb.join('follower', 'follower.post_id', '=', 'post.id')
-        qb.where('follower.user_id', opts.follower)
-        qb.whereRaw('(post.user_id != ? or post.user_id is null)', opts.follower)
+        if (opts.type === Post.Type.THREAD) {
+          qb.where('follower.user_id', opts.follower)
+        } else if (opts.follower) {
+          qb.where('follower.user_id', opts.follower)
+          qb.whereRaw('(post.user_id != ? or post.user_id is null)', opts.follower)
+        }
       }
 
       if (!opts.type || opts.type === 'all') {
         qb.where(function () {
           this.where('post.type', '!=', 'welcome')
           .orWhere('post.type', null)
-        })
+        }).andWhere('post.type', '!=', Post.Type.THREAD)
       } else if (opts.type !== 'all+welcome') {
         qb.where({type: opts.type})
       }

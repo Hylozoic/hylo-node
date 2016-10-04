@@ -1,7 +1,7 @@
 import { get } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
-  createPost, updateChildren, updateAllMedia, updateCommunities
+  createPost, createThread, updateChildren, updateAllMedia, updateCommunities
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
@@ -118,6 +118,14 @@ const queryForTagInAllCommunities = function (req, res) {
   })
 }
 
+const queryForThreads = function (req, res) {
+  return queryPosts(req, {
+    type: 'thread',
+    sort: 'recent',
+    follower: req.session.userId
+  })
+}
+
 const createFindAction = (queryFunction) => (req, res) => {
   return queryFunction(req, res)
   .then(query => query && fetchAndPresentPosts(query, req.session.userId,
@@ -141,6 +149,7 @@ const checkPostTags = (attrs, opts) => {
 }
 
 const PostController = {
+  findThreads: createFindAction(queryForThreads),
   findOne: function (req, res) {
     var opts = {
       withComments: req.param('comments') && 'all',
@@ -175,6 +184,38 @@ const PostController = {
       if (handleMissingTagDescriptions(err, res)) return
       res.serverError(err)
     })
+  },
+
+  findOrCreateThread: function (req, res) {
+    const params = req.allParams()
+    const currentUserId = 1 //req.session.userId
+    const otherUserId = params.messageTo
+
+    if (!otherUserId) {
+      res.status(422).send("messageTo must be included")
+      return Promise.resolve()
+    }
+
+    params.type = Post.Type.THREAD
+
+    return Post.query(q => { 
+      q.join('follower', 'follower.post_id', 'post.id')
+      q.where('post.type', Post.Type.THREAD)
+      q.where('post.id', 'in', Follow.query().where('user_id', currentUserId).select('post_id'))
+      q.where('post_id', 'in', Follow.query().where('user_id', otherUserId).select('post_id'))
+      q.where('post_id', 'not in', Follow.query().where('user_id', 'not in', [currentUserId, otherUserId]).select('post_id'))
+      q.groupBy('post.id') 
+    }).fetch()
+    .then(post => {
+      if (post) {
+        return Promise.resolve(post)
+      }
+      return createThread(currentUserId, params)
+    })
+    .then(post => post.load(PostPresenter.relations(currentUserId)))
+    .then(PostPresenter.present)
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
   createFromEmailForm: function (req, res) {
@@ -261,6 +302,15 @@ const PostController = {
       if (handleMissingTagDescriptions(err, res)) return
       res.serverError(err)
     })
+  },
+
+  updateLastRead: function (req, res) {
+    const { post } = res.locals
+    const userId = req.session.userId
+    return LastRead.findOrCreate(userId, post.id)
+      .tap(lastRead => lastRead.now())
+      .then(() => res.ok({}))
+      .catch(res.serverError)
   },
 
   fulfill: function (req, res) {
