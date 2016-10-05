@@ -397,7 +397,7 @@ module.exports = {
       total: joinRequests.length > 0 ? Number(joinRequests.first().get('total')) : 0,
       items: joinRequests.map(jR => {
         var user = jR.relations.user.pick('id', 'name', 'avatar_url')
-        return _.merge(jR.pick('id', 'email', 'created'), {
+        return _.merge(jR.pick('id', 'created_at', 'updated_at'), {
           user: !_.isEmpty(user) ? user : null
         })
       })
