@@ -126,11 +126,11 @@ CREATE TABLE communities_tags (
     id integer NOT NULL,
     community_id bigint,
     tag_id bigint,
-    is_default boolean DEFAULT false,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     user_id bigint,
-    description text
+    description text,
+    is_default boolean DEFAULT false
 );
 
 
@@ -559,6 +559,39 @@ CREATE SEQUENCE networks_id_seq
 --
 
 ALTER SEQUENCE networks_id_seq OWNED BY networks.id;
+
+
+--
+-- Name: nexudus_accounts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE nexudus_accounts (
+    id integer NOT NULL,
+    community_id bigint,
+    space_id character varying(255),
+    username character varying(255),
+    password character varying(255),
+    autoupdate boolean
+);
+
+
+--
+-- Name: nexudus_accounts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE nexudus_accounts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: nexudus_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE nexudus_accounts_id_seq OWNED BY nexudus_accounts.id;
 
 
 --
@@ -1177,6 +1210,13 @@ ALTER TABLE ONLY networks ALTER COLUMN id SET DEFAULT nextval('networks_id_seq':
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY nexudus_accounts ALTER COLUMN id SET DEFAULT nextval('nexudus_accounts_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY notifications ALTER COLUMN id SET DEFAULT nextval('notifications_id_seq'::regclass);
 
 
@@ -1377,6 +1417,14 @@ ALTER TABLE ONLY networks
 
 ALTER TABLE ONLY networks
     ADD CONSTRAINT networks_slug_unique UNIQUE (slug);
+
+
+--
+-- Name: nexudus_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY nexudus_accounts
+    ADD CONSTRAINT nexudus_accounts_pkey PRIMARY KEY (id);
 
 
 --
@@ -2205,6 +2253,14 @@ ALTER TABLE ONLY tag_follows
 
 ALTER TABLE ONLY tag_follows
     ADD CONSTRAINT followed_tags_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: nexudus_accounts_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY nexudus_accounts
+    ADD CONSTRAINT nexudus_accounts_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
 
 
 --
