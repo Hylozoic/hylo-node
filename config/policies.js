@@ -89,6 +89,7 @@ module.exports.policies = {
   },
 
   PostController: {
+    findThreads:                          ['sessionAuth'],
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity:                     ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
@@ -97,9 +98,11 @@ module.exports.policies = {
     findForNetwork:                       ['sessionAuth', 'inNetwork'],
     checkFreshnessForNetwork:             ['sessionAuth', 'inNetwork'],
     create:                               ['sessionAuth', 'inCommunities'],
+    findOrCreateThread:                   ['sessionAuth'],
     update:                               ['sessionAuth', 'checkAndSetWritablePost'],
     follow:                               ['sessionAuth', 'checkAndSetPost'],
     rsvp:                                 ['sessionAuth', 'checkAndSetPost'],
+    updateLastRead:                       ['sessionAuth', 'checkAndSetPost'],
     subscribe:                            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     unsubscribe:                          ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     typing:                               ['isSocket', 'sessionAuth', 'checkAndSetPost'],

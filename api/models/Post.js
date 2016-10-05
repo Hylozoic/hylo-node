@@ -1,4 +1,4 @@
-/* globals LinkPreview */
+/* globals LinkPreview, LastRead */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 
@@ -24,6 +24,10 @@ module.exports = bookshelf.Model.extend({
 
   comments: function () {
     return this.hasMany(Comment, 'post_id').query({where: {active: true}})
+  },
+
+  lastReads: function () {
+    return this.hasMany(LastRead)
   },
 
   media: function () {
@@ -203,7 +207,8 @@ module.exports = bookshelf.Model.extend({
   Type: {
     WELCOME: 'welcome',
     EVENT: 'event',
-    PROJECT: 'project'
+    PROJECT: 'project',
+    THREAD: 'thread'
   },
 
   Visibility: {
@@ -265,6 +270,10 @@ module.exports = bookshelf.Model.extend({
 
   find: function (id, options) {
     return Post.where({id: id, active: true}).fetch(options).catch(() => null)
+  },
+
+  findThread: function (currentUserId, otherUserId, options) {
+    return Post.where({active: true, type: Post.Type.THREAD}).fetch(options).catch(() => null)
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {
