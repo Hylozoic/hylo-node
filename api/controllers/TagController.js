@@ -57,8 +57,8 @@ module.exports = {
             followed,
             followers,
             followerCount,
-            owner: owner.pick('id', 'name', 'avatar_url'),
-            created: owner.id === userId
+            owner: owner ? owner.pick('id', 'name', 'avatar_url') : null,
+            created: get('id', owner) === userId
           }
         ))
       })
