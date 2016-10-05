@@ -240,8 +240,32 @@ module.exports = bookshelf.Model.extend({
           requester_avatar_url: actor.get('avatar_url'),
           requester_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
-          settings_link: Frontend.Route.tokenLogin(reader, token,
+          settings_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.communitySettings(community) + '?expand=access')
+        }
+      })))
+  },
+
+  sendApprovedJoinRequestEmail: function () {
+    const actor = this.actor()
+    const reader = this.reader()
+    const communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => reader.generateToken()
+      .then(token => Email.sendApprovedJoinRequestNotification({
+        email: reader.get('email'),
+        sender: {
+          name: format('%s (via Hylo)', actor.get('name'))
+        },
+        data: {
+          community_name: community.get('name'),
+          approver_name: actor.get('name'),
+          approver_avatar_url: actor.get('avatar_url'),
+          approver_profile_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+          community_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.community(community))
         }
       })))
   },

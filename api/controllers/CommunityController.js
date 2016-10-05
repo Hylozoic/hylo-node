@@ -416,12 +416,13 @@ module.exports = {
       return Membership.create(userId, community.id)
       .then(ms => afterCreatingMembership(req, res, ms, community))
       .tap(() => joinRequest.destroy())
-      .tap(() => Queue.classMethod('Activity', 'saveForReasons', [{
-        reader_id: userId,
-        community_id: community.id,
-        actor_id: req.session.userId,
-        reason: 'approvedJoinRequest'
-      }]))
+      .tap(() => Queue.classMethod('Activity', 'saveForReasonsOpts', {
+        activities: [{
+          reader_id: userId,
+          community_id: community.id,
+          actor_id: req.session.userId,
+          reason: 'approvedJoinRequest'
+        }]}))
     })
     .then(res.ok)
   }
