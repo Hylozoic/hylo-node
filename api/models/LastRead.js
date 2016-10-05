@@ -16,6 +16,7 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
   findOrCreate: function (userId, postId, opts = {}) {
+    const { transacting } = opts
     return this.query({where: {user_id: userId, post_id: postId}})
       .fetch()
       .then(lastRead => {
@@ -24,7 +25,7 @@ module.exports = bookshelf.Model.extend({
           post_id: postId,
           last_read_at: new Date(),
           user_id: userId
-        }).save(null, { transacting: opts.trx })
+        }).save(null, {transacting})
       })
   }
 })

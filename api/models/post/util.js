@@ -1,3 +1,4 @@
+/* globals LastRead */
 import {
   difference, flatten, flattenDeep, has, includes, isEqual, merge, omit, pick, some, uniq
 } from 'lodash'
@@ -26,11 +27,10 @@ const updateTagFollows = (post, transacting) =>
 export const afterSavingThread = function (post, opts) {
   const userId = post.get('user_id')
   const followerIds = [userId].concat(opts.messageTo)
-  const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
 
   return Promise.all(flattenDeep([
-    map(id => LastRead.findOrCreate(id, post.id, { trx }), followerIds),
+    map(id => LastRead.findOrCreate(id, post.id, trxOpts), followerIds),
     post.addFollowers(followerIds, userId, trxOpts)
   ]))
 }
