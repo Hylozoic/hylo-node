@@ -123,7 +123,7 @@ describe('TagController', () => {
       return TagController.findForCommunity(req, res)
       .then(() => {
         expect(res.body).to.deep.equal({
-          items: sortBy('name', [
+          items: sortBy(t => t.name.toLowerCase(), [
             {
               id: t1.id,
               name: t1.get('name'),

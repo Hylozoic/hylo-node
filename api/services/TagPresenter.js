@@ -43,6 +43,7 @@ export const presentWithPost = tag => {
 
 export const fetchAndPresentForCommunity = (communityId, opts) => {
   var total
+  const { raw } = bookshelf.knex
   const withRelated = withRelatedSpecialPost.withRelated
   Array.prototype.push.apply(withRelated, [
     {memberships: q => q.where('community_id', communityId)},
@@ -50,7 +51,7 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
   ])
 
   return Tag.query(q => {
-    q.select(bookshelf.knex.raw(`tags.*, count(*) over () as total,
+    q.select(raw(`tags.*, count(*) over () as total,
       count(tag_follows.id) as followers`))
 
     q.join('communities_tags', 'communities_tags.tag_id', 'tags.id')
@@ -65,7 +66,7 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
     q.limit(opts.limit || 20)
     q.offset(opts.offset || 0)
     q.orderBy('is_default', 'desc')
-    q.orderBy('name', 'asc')
+    q.orderBy(raw('lower(name)'), 'asc')
     q.groupBy(['tags.id', 'is_default'])
   })
   .fetchAll({withRelated})
