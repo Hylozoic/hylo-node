@@ -47,6 +47,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/joinRequests':         'CommunityController.joinRequests',
   'POST   /noo/community/:communityId/approve-join-request': 'CommunityController.approveJoinRequest',
 
+  'GET    /noo/threads':                                  'PostController.findThreads',
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
   'GET    /noo/post/:postId/comments':                    'CommentController.findForPost',
@@ -55,10 +56,12 @@ module.exports.routes = {
   'POST   /noo/post/:postId/vote':                        'PostController.vote',
   'POST   /noo/post/:postId/complain':                    'PostController.complain',
   'POST   /noo/post/:postId/rsvp':                        'PostController.rsvp',
+  'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
   'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // to comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',
   'POST   /noo/post':                                     'PostController.create',
+  'POST   /noo/thread':                                   'PostController.findOrCreateThread',
   'POST   /noo/post/:postId':                             'PostController.update',
   'DELETE /noo/post/:postId':                             'PostController.destroy',
   // these route names correspond with the different cases for subject in the

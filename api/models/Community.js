@@ -1,6 +1,6 @@
 /* globals NexudusAccount */
 var Slack = require('../services/Slack')
-const randomstring = require('randomstring')
+import randomWords from 'random-words'
 import { merge, unset, differenceBy } from 'lodash'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
@@ -205,10 +205,10 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  getNewBetaAccessCode: function () {
+  getNewAccessCode: function () {
     const test = code => Community.where({beta_access_code: code}).count().then(Number)
     const loop = () => {
-      const code = randomstring.generate({length: 6, charset: 'alphanumeric'})
+      const code = randomWords(5).join('-')
       return test(code).then(count => count ? loop() : code)
     }
     return loop()
