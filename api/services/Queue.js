@@ -25,11 +25,9 @@ module.exports = {
     return this.addJob('classMethod', data, delay)
   },
 
-  removeOldJobs: function (state, size, days) {
-    var now = new Date().getTime()
-    if (!days) days = 3
-
-    var removeIfOldEnough = job => {
+  removeOldJobs: function (state, size, days = 3) {
+    const now = new Date().getTime()
+    const removeIfOldEnough = job => {
       if (now - Number(job.created_at) > days * 86400000) {
         return promisify(job.remove, job)().then(() => true)
       }
