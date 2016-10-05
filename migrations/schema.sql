@@ -792,6 +792,39 @@ ALTER SEQUENCE posts_tags_id_seq OWNED BY posts_tags.id;
 
 
 --
+-- Name: posts_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE posts_users (
+    id integer NOT NULL,
+    user_id bigint,
+    post_id bigint,
+    last_read_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: posts_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE posts_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: posts_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE posts_users_id_seq OWNED BY posts_users.id;
+
+
+--
 -- Name: push_notifications; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1238,6 +1271,13 @@ ALTER TABLE ONLY posts_tags ALTER COLUMN id SET DEFAULT nextval('posts_tags_id_s
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY posts_users ALTER COLUMN id SET DEFAULT nextval('posts_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('queued_pushes_id_seq'::regclass);
 
 
@@ -1561,6 +1601,14 @@ ALTER TABLE ONLY post_community
 
 ALTER TABLE ONLY posts_tags
     ADD CONSTRAINT posts_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: posts_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY posts_users
+    ADD CONSTRAINT posts_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -2317,6 +2365,22 @@ ALTER TABLE ONLY posts_tags
 
 ALTER TABLE ONLY posts_tags
     ADD CONSTRAINT posts_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: posts_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY posts_users
+    ADD CONSTRAINT posts_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+
+
+--
+-- Name: posts_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY posts_users
+    ADD CONSTRAINT posts_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
 
 
 --
