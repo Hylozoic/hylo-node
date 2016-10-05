@@ -207,12 +207,7 @@ const PostController = {
       q.where('post_id', 'not in', Follow.query().where('user_id', 'not in', [currentUserId, otherUserId]).select('post_id'))
       q.groupBy('post.id')
     }).fetch()
-    .then(post => {
-      if (post) {
-        return Promise.resolve(post)
-      }
-      return createThread(currentUserId, params)
-    })
+    .then(post => post || createThread(currentUserId, params))
     .then(post => post.load(PostPresenter.relations(currentUserId)))
     .then(PostPresenter.present)
     .then(res.ok)
