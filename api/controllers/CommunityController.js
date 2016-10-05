@@ -357,8 +357,9 @@ module.exports = {
   },
 
   requestToJoin: function (req, res) {
+    const { community } = res.locals
     const params = {
-      community_id: res.locals.community.id,
+      community_id: community.id,
       user_id: req.session.userId
     }
     if (!req.session.userId) return res.serverError(new Error('Unauthorized'))
@@ -370,6 +371,16 @@ module.exports = {
         return new JoinRequest(merge(params, {created_at: new Date()})).save()
       }
     })
+    .tap(joinRequest =>
+      community.moderators().fetch()
+      .then(moderators => Queue.classMethod('Activity', 'saveForReasonsOpts', {
+        activities: moderators.models.map(moderator => ({
+          reader_id: moderator.id,
+          community_id: community.id,
+          actor_id: req.session.userId,
+          reason: 'joinRequest'
+        }))
+      })))
     .then(res.ok, res.serverError)
   },
 
@@ -396,15 +407,21 @@ module.exports = {
 
   approveJoinRequest: function (req, res) {
     const { community } = res.locals
-
+    const userId = req.param('userId')
     return JoinRequest.where({
-      user_id: req.param('userId'),
+      user_id: userId,
       community_id: community.id
     }).fetch()
     .then(joinRequest => {
-      return Membership.create(req.param('userId'), community.id)
+      return Membership.create(userId, community.id)
       .then(ms => afterCreatingMembership(req, res, ms, community))
       .tap(() => joinRequest.destroy())
+      .tap(() => Queue.classMethod('Activity', 'saveForReasons', [{
+        reader_id: userId,
+        community_id: community.id,
+        actor_id: req.session.userId,
+        reason: 'approvedJoinRequest'
+      }]))
     })
     .then(res.ok)
   }

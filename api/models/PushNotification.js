@@ -50,6 +50,13 @@ module.exports = bookshelf.Model.extend({
     return version === 'mention'
       ? `${person} mentioned you in "${postName}"`
       : `${person} posted "${postName}" in ${community.get('name')}`
-  }
+  },
 
+  textForJoinRequest: function (community, actor) {
+    return `${actor.get('name')} asked to join ${community.get('name')}`
+  },
+
+  textForApprovedJoinRequest: function (community, actor) {
+    return `${actor.get('name')} approved your request to join ${community.get('name')}`
+  }
 })

@@ -80,6 +80,16 @@ module.exports = {
     }))
   },
 
+  sendJoinRequestNotification: function (opts) {
+    return sendEmail(_.merge({}, defaultOptions, {
+      email_id: 'tem_9sW4aBxaLi5ve57bp7FGXZ',
+      recipient: {address: opts.email},
+      email_data: opts.data,
+      version_name: opts.version,
+      sender: opts.sender
+    }))
+  },
+
   postReplyAddress: function (postId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId)
     return format('reply-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN)

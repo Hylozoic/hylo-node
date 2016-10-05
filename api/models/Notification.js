@@ -24,6 +24,10 @@ module.exports = bookshelf.Model.extend({
     return this.relations.activity.relations.reader
   },
 
+  actor: function () {
+    return this.relations.activity.relations.actor
+  },
+
   send: function () {
     var action
     switch (this.get('medium')) {
@@ -57,6 +61,10 @@ module.exports = bookshelf.Model.extend({
         return Promise.resolve()
       case 'newPost':
         return this.sendPostPush()
+      case 'joinRequest':
+        return this.sendJoinRequestPush()
+      case 'approvedJoinRequest':
+        return this.sendApprovedJoinRequestPush()
       default:
         return Promise.resolve()
     }
@@ -86,6 +94,28 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  sendJoinRequestPush: function () {
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => {
+      var path = url.parse(Frontend.Route.communitySettings(community) + '?expand=access').path
+      var alertText = PushNotification.textForJoinRequest(community, this.actor())
+      return this.reader().sendPushNotification(alertText, path)
+    })
+  },
+
+  sendApprovedJoinRequestPush: function () {
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => {
+      var path = url.parse(Frontend.Route.community(community)).path
+      var alertText = PushNotification.textForApprovedJoinRequest(community, this.actor())
+      return this.reader().sendPushNotification(alertText, path)
+    })
+  },
+
   sendEmail: function () {
     switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
       case 'mention':
@@ -94,6 +124,10 @@ module.exports = bookshelf.Model.extend({
         return this.sendCommentNotificationEmail('mention')
       case 'newComment':
         return this.sendCommentNotificationEmail()
+      case 'joinRequest':
+        return this.sendJoinRequestEmail()
+      case 'approvedJoinRequest':
+        return this.sendApprovedJoinRequestEmail()
       default:
         return Promise.resolve()
     }
@@ -188,6 +222,30 @@ module.exports = bookshelf.Model.extend({
       })))
   },
 
+  sendJoinRequestEmail: function () {
+    const actor = this.actor()
+    const reader = this.reader()
+    const communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) return Promise.resolve()
+    return Community.find(communityIds[0])
+    .then(community => reader.generateToken()
+      .then(token => Email.sendJoinRequestNotification({
+        email: reader.get('email'),
+        sender: {
+          name: format('%s (via Hylo)', actor.get('name'))
+        },
+        data: {
+          community_name: community.get('name'),
+          requester_name: actor.get('name'),
+          requester_avatar_url: actor.get('avatar_url'),
+          requester_profile_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+          settings_link: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.communitySettings(community) + '?expand=access')
+        }
+      })))
+  },
+
   incUserNewNotificationCount: function () {
     var reader = this.reader()
     var communityIds = Activity.communityIds(this.relations.activity)
@@ -212,7 +270,9 @@ module.exports = bookshelf.Model.extend({
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow', // someone leaves your post
-    Welcome: 'welcome' // a welcome post
+    Welcome: 'welcome', // a welcome post
+    JoinRequest: 'joinRequest',
+    ApprovedJoinRequest: 'approvedJoinRequest'
   },
 
   find: function (id, options) {
@@ -272,6 +332,10 @@ module.exports = bookshelf.Model.extend({
       return 'followAdd'
     } else if (hasReason(/^unfollow/, reasons)) {
       return 'unfollow'
+    } else if (hasReason(/^joinRequest/, reasons)) {
+      return 'joinRequest'
+    } else if (hasReason(/^approvedJoinRequest/, reasons)) {
+      return 'approvedJoinRequest'
     } else {
       return ''
     }
