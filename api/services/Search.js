@@ -69,9 +69,9 @@ module.exports = {
 
       if (!opts.type || opts.type === 'all') {
         qb.where(function () {
-          this.where('post.type', '!=', 'welcome')
+          this.where('post.type', 'not in', ['welcome', Post.Type.THREAD])
           .orWhere('post.type', null)
-        }).andWhere('post.type', '!=', Post.Type.THREAD)
+        })
       } else if (opts.type !== 'all+welcome') {
         qb.where({type: opts.type})
       }
