@@ -43,12 +43,6 @@ const extraAttributes = (user, viewingUserId, forSelf) =>
       : Membership.sharedCommunityIds([user.id, viewingUserId])
   })
 
-const selfOnlyAttributes = (user, isAdmin) =>
-  Promise.props({
-    notification_count: Activity.unreadCountForUser(user),
-    is_admin: isAdmin
-  })
-
 const shortAttributes = [
   'id', 'name', 'avatar_url',
   'bio', 'intention', 'work',
@@ -91,7 +85,7 @@ const UserPresenter = module.exports = {
     .then(user => Promise.join(
       cleanBasicAttributes(user.toJSON()),
       extraAttributes(user, user.id, true),
-      selfOnlyAttributes(user, isAdmin)
+      {is_admin: isAdmin}
     ))
     .then(attributes => _.extend.apply(_, attributes))
   },
