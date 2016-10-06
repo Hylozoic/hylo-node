@@ -73,7 +73,7 @@ module.exports = bookshelf.Model.extend({
   sendPostPush: function (version) {
     var post = this.post()
     var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(post, community)).path
@@ -85,7 +85,7 @@ module.exports = bookshelf.Model.extend({
   sendCommentPush: function (version) {
     var comment = this.comment()
     var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
@@ -96,7 +96,7 @@ module.exports = bookshelf.Model.extend({
 
   sendJoinRequestPush: function () {
     var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.communitySettings(community) + '?expand=access').path
@@ -107,7 +107,7 @@ module.exports = bookshelf.Model.extend({
 
   sendApprovedJoinRequestPush: function () {
     var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => {
       var path = url.parse(Frontend.Route.community(community)).path
@@ -141,7 +141,7 @@ module.exports = bookshelf.Model.extend({
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
     var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => reader.generateToken()
       .then(token => Email.sendPostMentionNotification({
@@ -193,7 +193,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     const communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => reader.generateToken()
       .then(token => Email.sendNewCommentNotification({
@@ -226,7 +226,7 @@ module.exports = bookshelf.Model.extend({
     const actor = this.actor()
     const reader = this.reader()
     const communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => reader.generateToken()
       .then(token => Email.sendJoinRequestNotification({
@@ -250,7 +250,7 @@ module.exports = bookshelf.Model.extend({
     const actor = this.actor()
     const reader = this.reader()
     const communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => reader.generateToken()
       .then(token => Email.sendApprovedJoinRequestNotification({

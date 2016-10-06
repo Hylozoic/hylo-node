@@ -368,7 +368,6 @@ module.exports = {
       community_id: community.id,
       user_id: req.session.userId
     }
-    if (!req.session.userId) return res.serverError(new Error('Unauthorized'))
     return JoinRequest.where(params).fetch()
     .then(joinRequest => {
       if (joinRequest) {
