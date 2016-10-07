@@ -40,7 +40,7 @@ const createAndPresentComment = function (commenterId, text, post, tagDescriptio
       .tap(comment => Tag.updateForComment(comment, tagDescriptions, trx))
       .tap(() => post.updateCommentCount(trx))
     })
-    .tap(comment => comment.createActivities())
+    .tap(comment => post.get('type') !== Post.Type.THREAD && comment.createActivities())
     .tap(comment => post.addFollowers(newFollowers, commenterId))
     .tap(() => updateRecentComments(post.id))
     .then(presentComment)
