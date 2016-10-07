@@ -2,6 +2,7 @@ var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var UserController = require(root('api/controllers/UserController'))
+import { spyify, unspyify } from '../../setup/helpers'
 
 describe('UserController', function () {
   var noop = () => () => this
@@ -124,6 +125,9 @@ describe('UserController', function () {
     })
 
     describe('.findSelf', function () {
+      beforeEach(() => spyify(Admin, 'isSignedIn', () => true))
+      afterEach(() => unspyify(Admin, 'isSignedIn'))
+
       it('returns a response with private details', function () {
         var response
         req.session.userId = u1.id
@@ -138,12 +142,15 @@ describe('UserController', function () {
         return UserController.findSelf(req, res).then(function () {
           expect(res.ok).to.have.been.called()
           expect(res.serverError).not.to.have.been.called()
-          expect(response.notification_count).to.exist
+          expect(response.is_admin).to.exist
         })
       })
     })
 
     describe('.findOne', () => {
+      beforeEach(() => spyify(Admin, 'isSignedIn', () => true))
+      afterEach(() => unspyify(Admin, 'isSignedIn'))
+
       it('returns a response without private details', () => {
         var response
         req.params.userId = u1.id
@@ -162,7 +169,7 @@ describe('UserController', function () {
           expect(response.people).to.deep.equal([])
           expect(response.id).to.equal(u1.id)
           expect(response.name).to.equal(u1.get('name'))
-          expect(response.notification_count).not.to.exist
+          expect(response.is_admin).not.to.exist
         })
       })
     })

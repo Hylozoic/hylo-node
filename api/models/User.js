@@ -248,19 +248,9 @@ module.exports = bookshelf.Model.extend({
   },
 
   incNewNotificationCount: function (userId, communityIds, txn) {
-    const communityQuery = Membership.query()
-    .where('user_id', userId)
-    .where('community_id', 'in', communityIds)
+    const userQuery = User.query().where({id: userId})
     .increment('new_notification_count', 1)
-
-    const userQuery = User.query()
-    .where({id: userId})
-    .increment('new_notification_count', 1)
-
-    return Promise.all([
-      (txn ? communityQuery.transacting(txn) : communityQuery),
-      (txn ? userQuery.transacting(txn) : userQuery)
-    ])
+    return txn ? userQuery.transacting(txn) : userQuery
   },
 
   gravatar: function (email) {

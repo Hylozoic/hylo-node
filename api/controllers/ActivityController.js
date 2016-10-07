@@ -71,10 +71,6 @@ module.exports = {
         {memberships: q => q.where({user_id: req.session.userId})}
       ]
     })
-    .tap(community => req.param('resetCount') &&
-      community.relations.memberships.length > 0 &&
-      community.relations.memberships.first()
-      .save({new_notification_count: 0}, {patch: true}))
     .then(community => fetchAndPresentNotification(req, community))
     .then(res.ok, res.serverError)
   },

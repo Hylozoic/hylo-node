@@ -1115,7 +1115,6 @@ CREATE TABLE users_community (
     deactivator_id bigint,
     last_viewed_at timestamp with time zone,
     id integer NOT NULL,
-    new_notification_count integer DEFAULT 0,
     settings jsonb DEFAULT '{}'::jsonb
 );
 
