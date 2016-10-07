@@ -44,7 +44,7 @@ const extraAttributes = (user, viewingUserId, forSelf) =>
   })
 
 const shortAttributes = [
-  'id', 'name', 'avatar_url',
+  'id', 'name', 'avatar_url', 'created_at',
   'bio', 'intention', 'work',
   'facebook_url', 'linkedin_url', 'twitter_name'
 ]
@@ -74,7 +74,6 @@ const normalizeUser = user => {
 }
 
 const UserPresenter = module.exports = {
-  shortAttributes,
   normalizeUser,
 
   fetchForSelf: function (userId, isAdmin) {
@@ -102,7 +101,7 @@ const UserPresenter = module.exports = {
     })
     .tap(u => user = u)
     .then(user => extraAttributes(user, viewingUserId))
-    .then(extra => _.extend(user.attributes, extra))
+    .then(extra => _.extend(user.pick(shortAttributes), extra))
   },
 
   presentForList: function (user, opts = {}) {
@@ -133,7 +132,7 @@ const UserPresenter = module.exports = {
     }
 
     return pickBy(x => !isNull(x) && !isUndefined(x), merge(
-      pick(user.attributes, UserPresenter.shortAttributes),
+      pick(user.attributes, shortAttributes),
       moreAttributes
     ))
   },

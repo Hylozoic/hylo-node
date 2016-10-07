@@ -143,6 +143,7 @@ describe('UserController', function () {
           expect(res.ok).to.have.been.called()
           expect(res.serverError).not.to.have.been.called()
           expect(response.is_admin).to.exist
+          expect(response.email).to.exist
         })
       })
     })
@@ -170,6 +171,7 @@ describe('UserController', function () {
           expect(response.id).to.equal(u1.id)
           expect(response.name).to.equal(u1.get('name'))
           expect(response.is_admin).not.to.exist
+          expect(response.email).not.to.exist
         })
       })
     })
