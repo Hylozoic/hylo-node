@@ -1,3 +1,4 @@
+/* globals LastRead */
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
@@ -304,5 +305,19 @@ module.exports = bookshelf.Model.extend({
       settings.viewedTooltips = {}
       return user.save({settings})
     })
+  },
+
+  unreadThreadCount: function (userId) {
+    return Post.query(q => {
+      q.join('follower', 'post.id', 'follower.post_id')
+      q.where('follower.user_id', userId)
+      q.leftJoin('posts_users', 'post.id', 'posts_users.post_id')
+      q.where('posts_users.user_id', userId)
+      q.where(function () {
+        this.where('posts_users.last_read_at', '<', bookshelf.knex.raw('post.updated_at'))
+        .orWhere('posts_users.id', null)
+      })
+      q.count()
+    }).query().then(rows => Number(rows[0].count))
   }
 })

@@ -84,7 +84,10 @@ const UserPresenter = module.exports = {
     .then(user => Promise.join(
       cleanBasicAttributes(user.toJSON()),
       extraAttributes(user, user.id, true),
-      {is_admin: isAdmin}
+      Promise.props({
+        is_admin: isAdmin,
+        new_message_count: User.unreadThreadCount(user.id)
+      })
     ))
     .then(attributes => _.extend.apply(_, attributes))
   },
