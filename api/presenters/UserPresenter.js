@@ -73,39 +73,26 @@ const normalizeUser = user => {
   return Object.assign(buckets, user)
 }
 
-const UserPresenter = module.exports = {
+const fetchActiveUser = (id, options) =>
+  User.find(id, options).tap(user => {
+    if (!user || !user.get('active')) throw new Error('User not found')
+  })
+
+const fetchForSelf = (userId, isAdmin) =>
+  fetchActiveUser(userId, {withRelated: relationsForSelf})
+  .then(user => Promise.join(
+    cleanBasicAttributes(user.toJSON()),
+    extraAttributes(user, user.id, true)
+  ))
+  .then(attributes => _.extend.apply(_, attributes))
+
+module.exports = {
   normalizeUser,
 
-  fetchForSelf: function (userId, isAdmin) {
-    return User.find(userId, {withRelated: relationsForSelf})
-    .tap(user => {
-      if (!user || !user.get('active')) throw new Error('User not found')
-    })
-    .then(user => Promise.join(
-      cleanBasicAttributes(user.toJSON()),
-      extraAttributes(user, user.id, true),
-      Promise.props({
-        is_admin: isAdmin,
-        new_message_count: User.unreadThreadCount(user.id)
-      })
-    ))
-    .then(attributes => _.extend.apply(_, attributes))
-  },
-
-  presentForSelf: function (attributes, session) {
-    return _.extend(attributes, {provider_key: session.userProvider})
-  },
-
-  fetchForOther: function (id, viewingUserId) {
-    var user
-    return User.find(id, {withRelated: 'tags'})
-    .tap(user => {
-      if (!user || !user.get('active')) throw new Error('User not found')
-    })
-    .tap(u => user = u)
-    .then(user => extraAttributes(user, viewingUserId))
-    .then(extra => _.extend(user.pick(shortAttributes), extra))
-  },
+  fetchForOther: (id, viewingUserId) =>
+    fetchActiveUser(id, {withRelated: 'tags'})
+    .then(user => extraAttributes(user, viewingUserId)
+      .then(extra => Object.assign(user.pick(shortAttributes), extra))),
 
   presentForList: function (user, opts = {}) {
     var moreAttributes = {
@@ -140,13 +127,13 @@ const UserPresenter = module.exports = {
     ))
   },
 
-  fetchAndPresentForSelf: function (userId, session, isAdmin) {
-    return UserPresenter.fetchForSelf(userId, isAdmin)
-    .then(attributes => UserPresenter.presentForSelf(attributes, session))
+  fetchAndPresentForSelf: (userId, session, isAdmin) =>
+    fetchForSelf(userId, isAdmin)
     .then(attributes => Promise.props(Object.assign(attributes, {
+      is_admin: isAdmin,
+      new_message_count: User.unreadThreadCount(userId),
+      provider_key: session.userProvider,
       left_nav_tags: fetchAndPresentFollowed(null, userId)
     })))
     .then(normalizeUser)
-  }
-
 }
