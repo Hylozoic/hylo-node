@@ -10,6 +10,34 @@ const welcomeMessage = 'Thank you for joining us here at Hylo. ' +
   'with each other the unique gifts and intentions we each have, we can ' +
   "create extraordinary things. Let's get started!"
 
+const afterCreatingMembership = (req, res, ms, community, preexisting) => {
+  return Promise.join(
+    User.resetTooltips(req.session.userId),
+    ms && !ms.get('active') && ms.save({active: true}, {patch: true})
+  ).tap(() => {
+    if (!req.param('tagName')) return
+    return Tag.find(req.param('tagName'))
+    .then(tag => {
+      if (!tag) return res.notFound()
+      return new TagFollow({
+        community_id: community.id,
+        tag_id: tag.id,
+        user_id: req.session.userId
+      }).save()
+    })
+    .catch(err => {
+      if (err.message && err.message.includes('duplicate key value')) {
+        return true
+      } else {
+        throw err
+      }
+    })
+  })
+  .then(() => _.merge(ms.toJSON(), {preexisting}, {
+    community: community.pick('id', 'name', 'slug', 'avatar_url')
+  }))
+}
+
 module.exports = {
   find: function (req, res) {
     return Community
@@ -160,30 +188,7 @@ module.exports = {
     })
     // we get here if the membership was created successfully, or if it already existed
     .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
-      .tap(() => User.resetTooltips(req.session.userId))
-      .tap(ms => ms && !ms.get('active') && ms.save({active: true}, {patch: true}))
-      .tap(ms => {
-        if (!req.param('tagName')) return
-        return Tag.find(req.param('tagName'))
-        .then(tag => {
-          if (!tag) return res.notFound()
-          return new TagFollow({
-            community_id: community.id,
-            tag_id: tag.id,
-            user_id: req.session.userId
-          }).save()
-        })
-        .catch(err => {
-          if (err.message && err.message.includes('duplicate key value')) {
-            return true
-          } else {
-            throw err
-          }
-        })
-      })
-      .then(ms => _.merge(ms.toJSON(), {preexisting}, {
-        community: community.pick('id', 'name', 'slug', 'avatar_url')
-      })))
+      .then(ms => afterCreatingMembership(req, res, ms, community, preexisting)))
     .then(resp => resp ? res.ok(resp) : res.status(422).send('invalid code'))
     .catch(err => res.serverError(err))
   },
@@ -355,5 +360,75 @@ module.exports = {
     return community.updateChecklist()
     .then(community => res.ok(community.get('settings')))
     .catch(res.serverError)
+  },
+
+  requestToJoin: function (req, res) {
+    const { community } = res.locals
+    const params = {
+      community_id: community.id,
+      user_id: req.session.userId
+    }
+    return JoinRequest.where(params).fetch()
+    .then(joinRequest => {
+      if (joinRequest) {
+        return joinRequest.save({updated_at: new Date()})
+      } else {
+        return new JoinRequest(merge(params, {created_at: new Date()})).save()
+      }
+    })
+    .tap(joinRequest =>
+      community.moderators().fetch()
+      .then(moderators => Queue.classMethod('Activity', 'saveForReasonsOpts', {
+        activities: moderators.models.map(moderator => ({
+          reader_id: moderator.id,
+          community_id: community.id,
+          actor_id: req.session.userId,
+          reason: 'joinRequest'
+        }))
+      })))
+    .then(res.ok, res.serverError)
+  },
+
+  joinRequests: function (req, res) {
+    const { community } = res.locals
+    return JoinRequest.query(qb => {
+      qb.limit(req.param('limit') || 20)
+      qb.offset(req.param('offset') || 0)
+      qb.where('community_id', community.get('id'))
+      qb.select(bookshelf.knex.raw('join_requests.*, count(*) over () as total'))
+      qb.orderByRaw('updated_at desc, created_at desc')
+    }).fetchAll({withRelated: 'user'})
+    .then(joinRequests => ({
+      total: joinRequests.length > 0 ? Number(joinRequests.first().get('total')) : 0,
+      items: joinRequests.map(jR => {
+        var user = jR.relations.user.pick('id', 'name', 'avatar_url')
+        return _.merge(jR.pick('id', 'created_at', 'updated_at'), {
+          user: !_.isEmpty(user) ? user : null
+        })
+      })
+    }))
+    .then(res.ok)
+  },
+
+  approveJoinRequest: function (req, res) {
+    const { community } = res.locals
+    const userId = req.param('userId')
+    return JoinRequest.where({
+      user_id: userId,
+      community_id: community.id
+    }).fetch()
+    .then(joinRequest => {
+      return Membership.create(userId, community.id)
+      .then(ms => afterCreatingMembership(req, res, ms, community))
+      .tap(() => joinRequest.destroy())
+      .tap(() => Queue.classMethod('Activity', 'saveForReasonsOpts', {
+        activities: [{
+          reader_id: userId,
+          community_id: community.id,
+          actor_id: req.session.userId,
+          reason: 'approvedJoinRequest'
+        }]}))
+    })
+    .then(res.ok)
   }
 }

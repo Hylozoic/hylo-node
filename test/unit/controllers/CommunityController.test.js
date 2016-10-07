@@ -361,4 +361,20 @@ describe('CommunityController', () => {
       })
     })
   })
+
+  describe('.requestToJoin', () => {
+    it('creates a join request', () => {
+      var community = factories.community()
+      return community.save()
+      .then(() => {
+        res.locals.community = community
+        req.session.userId = user.id
+      })
+      .then(() => CommunityController.requestToJoin(req, res))
+      .then(() => JoinRequest.where({user_id: user.id, community_id: community.id}).fetch())
+      .then(joinRequest => {
+        expect(joinRequest).to.exist
+      })
+    })
+  })
 })

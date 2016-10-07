@@ -22,6 +22,10 @@ module.exports = {
       return url('/c/%s', community.get('slug'))
     },
 
+    communitySettings: function (community) {
+      return this.community(community) + '/settings'
+    },
+
     profile: function (user) {
       return url('/u/%s', user.id)
     },

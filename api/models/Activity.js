@@ -174,6 +174,10 @@ module.exports = bookshelf.Model.extend({
     .then(rows => rows[0].count)
   },
 
+  saveForReasonsOpts: function ({ activities }) {
+    return this.saveForReasons(activities)
+  },
+
   saveForReasons: function (activities, trx) {
     return Promise.map(mergeByReader(activities), activity =>
       Activity.createWithNotifications(

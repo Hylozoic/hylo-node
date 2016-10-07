@@ -147,6 +147,50 @@ describe('Notification', function () {
       })
     })
 
+    it('sends a push for a join request', () => {
+      return new Activity({
+        meta: {reasons: ['joinRequest']},
+        reader_id: reader.id,
+        actor_id: actor.id,
+        community_id: community.id
+      }).save()
+      .then(activity => new Notification({
+        activity_id: activity.id,
+        medium: Notification.MEDIUM.Push
+      }).save())
+      .then(notification => notification.load(relations))
+      .then(notification => notification.send())
+      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+      .then(pns => {
+        expect(pns).to.exist
+        expect(pns.length).to.equal(1)
+        var pn = pns.first()
+        expect(pn.get('alert')).to.equal('Joe asked to join My Community')
+      })
+    })
+
+    it('sends a push for an approved join request', () => {
+      return new Activity({
+        meta: {reasons: ['approvedJoinRequest']},
+        reader_id: reader.id,
+        actor_id: actor.id,
+        community_id: community.id
+      }).save()
+      .then(activity => new Notification({
+        activity_id: activity.id,
+        medium: Notification.MEDIUM.Push
+      }).save())
+      .then(notification => notification.load(relations))
+      .then(notification => notification.send())
+      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+      .then(pns => {
+        expect(pns).to.exist
+        expect(pns.length).to.equal(1)
+        var pn = pns.first()
+        expect(pn.get('alert')).to.equal('Joe approved your request to join My Community')
+      })
+    })
+
     it('sends an email for a mention in a post', () => {
       var originalMethod = Email.sendPostMentionNotification
 
@@ -263,6 +307,82 @@ describe('Notification', function () {
       })
       .then(() => {
         Email.sendNewCommentNotification = originalMethod
+      })
+    })
+
+    it('sends an email for a joinRequest', () => {
+      var originalMethod = Email.sendJoinRequestNotification
+
+      Email.sendJoinRequestNotification = spy(opts => {
+        expect(opts).to.contain({
+          email: 'readersemail@hylo.com'
+        })
+
+        expect(opts.sender).to.contain({
+          name: 'Joe (via Hylo)'
+        })
+
+        expect(opts.data).to.contain({
+          community_name: 'My Community',
+          requester_name: 'Joe'
+        })
+      })
+
+      return new Activity({
+        community_id: community.id,
+        meta: {reasons: ['joinRequest']},
+        reader_id: reader.id,
+        actor_id: actor.id
+      }).save()
+      .then(activity => new Notification({
+        activity_id: activity.id,
+        medium: Notification.MEDIUM.Email
+      }).save())
+      .then(notification => notification.load(relations))
+      .then(notification => notification.send())
+      .then(() => {
+        expect(Email.sendJoinRequestNotification).to.have.been.called()
+      })
+      .then(() => {
+        Email.sendJoinRequestNotification = originalMethod
+      })
+    })
+
+    it('sends an email for an approvedJoinRequest', () => {
+      var originalMethod = Email.sendApprovedJoinRequestNotification
+
+      Email.sendApprovedJoinRequestNotification = spy(opts => {
+        expect(opts).to.contain({
+          email: 'readersemail@hylo.com'
+        })
+
+        expect(opts.sender).to.contain({
+          name: 'Joe (via Hylo)'
+        })
+
+        expect(opts.data).to.contain({
+          community_name: 'My Community',
+          approver_name: 'Joe'
+        })
+      })
+
+      return new Activity({
+        community_id: community.id,
+        meta: {reasons: ['approvedJoinRequest']},
+        reader_id: reader.id,
+        actor_id: actor.id
+      }).save()
+      .then(activity => new Notification({
+        activity_id: activity.id,
+        medium: Notification.MEDIUM.Email
+      }).save())
+      .then(notification => notification.load(relations))
+      .then(notification => notification.send())
+      .then(() => {
+        expect(Email.sendApprovedJoinRequestNotification).to.have.been.called()
+      })
+      .then(() => {
+        Email.sendApprovedJoinRequestNotification = originalMethod
       })
     })
   })

@@ -2,9 +2,6 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.1
--- Dumped by pg_dump version 9.5.1
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -403,6 +400,38 @@ CREATE SEQUENCE invite_request_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+
+
+--
+-- Name: join_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE join_requests (
+    id integer NOT NULL,
+    user_id bigint,
+    community_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: join_requests_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE join_requests_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: join_requests_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE join_requests_id_seq OWNED BY join_requests.id;
 
 
 --
@@ -1221,6 +1250,13 @@ ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_resp
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY join_requests ALTER COLUMN id SET DEFAULT nextval('join_requests_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('knex_migrations_id_seq'::regclass);
 
 
@@ -1416,6 +1452,14 @@ ALTER TABLE ONLY tag_follows
 
 ALTER TABLE ONLY tag_follows
     ADD CONSTRAINT followed_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: join_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY join_requests
+    ADD CONSTRAINT join_requests_pkey PRIMARY KEY (id);
 
 
 --
@@ -1664,6 +1708,14 @@ ALTER TABLE ONLY communities_tags
 
 ALTER TABLE ONLY users
     ADD CONSTRAINT unique_email UNIQUE (email);
+
+
+--
+-- Name: unique_join_requests; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY join_requests
+    ADD CONSTRAINT unique_join_requests UNIQUE (user_id, community_id);
 
 
 --
@@ -2303,12 +2355,25 @@ ALTER TABLE ONLY tag_follows
 
 
 --
+-- Name: join_requests_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY join_requests
+    ADD CONSTRAINT join_requests_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+
+--
+-- Name: join_requests_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY join_requests
+    ADD CONSTRAINT join_requests_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+--
 -- Name: nexudus_accounts_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY nexudus_accounts
     ADD CONSTRAINT nexudus_accounts_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
-
 
 --
 -- Name: notifications_activity_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
