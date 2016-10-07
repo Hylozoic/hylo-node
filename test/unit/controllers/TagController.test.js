@@ -303,10 +303,10 @@ describe('TagController', () => {
           community_id: fixtures.c1.id
         })
         expect(res.body.owner).to.deep.equal(person(locals.u1))
-        expect(res.body.followers).to.deep.equal([
+        expect(sortBy('name', res.body.followers)).to.deep.equal(sortBy('name', [
           person(locals.u2),
           person(locals.u3)
-        ])
+        ]))
       })
     })
   })
