@@ -24,7 +24,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   containsUser: function (networkId, userId) {
-    if (!networkId) return Promise.resolve(false)
+    if (!networkId || !userId) return Promise.resolve(false)
     return this.idsForUser(userId)
       .then(ids => _.includes(ids, networkId.toString()))
   },

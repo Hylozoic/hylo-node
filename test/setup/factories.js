@@ -78,6 +78,7 @@ module.exports = {
         ok: chai.spy(data => self.body = data),
         serverError: chai.spy(err => { throw err }),
         badRequest: chai.spy(data => self.body = data),
+        forbidden: chai.spy(data => self.body = data),
         status: chai.spy(value => { self.statusCode = value; return self }),
         send: chai.spy(data => self.body = data),
         redirect: chai.spy(url => self.redirected = url),
