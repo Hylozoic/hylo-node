@@ -37,7 +37,7 @@ const fetchAndPresentNotification = (req, community) => {
     community
   }).fetchAll({withRelated: [
     {'activity.actor': userColumns},
-    {'activity.comment': q => q.column('id', 'text', 'created_at', 'post_id')},
+    {'activity.comment': q => q.column('id', 'text', 'created_at', 'post_id', 'user_id')},
     'activity.comment.thanks',
     {'activity.comment.thanks.thankedBy': userColumns},
     {'activity.comment.user': userColumns},
