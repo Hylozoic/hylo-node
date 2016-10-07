@@ -237,7 +237,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   isVisibleToUser: function (postId, userId) {
-    if (!postId) return false
+    if (!postId || !userId) return Promise.resolve(false)
     var pcids
 
     return Post.find(postId)
