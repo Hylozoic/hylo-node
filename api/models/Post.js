@@ -202,7 +202,6 @@ module.exports = bookshelf.Model.extend({
       return Activity.saveForReasons(readers, trx)
     })
   }
-
 }, {
   Type: {
     WELCOME: 'welcome',
@@ -269,7 +268,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function (id, options) {
-    return Post.where({id: id, active: true}).fetch(options).catch(() => null)
+    return Post.where({id, active: true}).fetch(options)
   },
 
   findThread: function (currentUserId, otherUserId, options) {

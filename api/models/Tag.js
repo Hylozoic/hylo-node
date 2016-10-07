@@ -57,13 +57,13 @@ const addToCommunity = (community_id, tag_id, user_id, description, is_default, 
     new CommunityTag({community_id, tag_id, user_id, description, is_default, created_at})
     .save({}, {transacting})
     .catch(() => {})
-  })
     // this catch is for the case where another user just created the
     // CommunityTag (race condition): the save fails, but we don't care about
     // the result
-  .then(() => TagFollow.where({community_id, tag_id, user_id}).fetch({transacting}))
-  .then(follow => follow ||
-    new TagFollow({community_id, tag_id, user_id, created_at}).save({}, {transacting}))
+  })
+  .then(() => user_id && TagFollow.where({community_id, tag_id, user_id}).fetch({transacting})
+    .then(follow => follow ||
+      new TagFollow({community_id, tag_id, user_id, created_at}).save({}, {transacting})))
 }
 
 const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {

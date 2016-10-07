@@ -66,12 +66,8 @@ module.exports = bookshelf.Model.extend({
 
   createAndSend: function (opts) {
     return Invitation.create(opts)
-    .then(invitation => Promise.join(
-      invitation.load('creator'),
-      invitation.load('community'),
-      invitation.load('tag')
-    ))
-    .spread(invitation => {
+    .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
+    .then(invitation => {
       let creator = invitation.relations.creator
       let community = invitation.relations.community
 

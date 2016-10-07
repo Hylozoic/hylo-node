@@ -1,6 +1,6 @@
 import validator from 'validator'
 import { markdown } from 'hylo-utils/text'
-import { isEmpty, map } from 'lodash/fp'
+import { get, isEmpty, map } from 'lodash/fp'
 import { presentForList } from '../presenters/UserPresenter'
 
 const parseEmailList = emails =>
@@ -85,19 +85,18 @@ module.exports = {
 
   create: function (req, res) {
     let tagName = req.param('tagName')
+    const userIds = req.param('users')
     return Promise.join(
-      User.query(q => {
-        q.whereIn('id', req.param('users'))
-      }).fetchAll(),
+      userIds && User.where('id', 'in', userIds).fetchAll(),
       Community.find(req.param('communityId')),
-      tagName ? Tag.find(req.param('tagName')) : Promise.resolve(),
+      tagName && Tag.find(tagName),
       (users, community, tag) => {
         return tag
         ? TagFollow.findFollowers(community.id, tag.id, 3)
         : Promise.resolve([])
         .then(participants => {
           var emails = parseEmailList(req.param('emails'))
-          .concat(map(u => u.get('email'), users.models))
+          .concat(map(u => u.get('email'), get('models', users)))
 
           return Promise.map(emails, email => {
             if (!validator.isEmail(email)) {

@@ -1,16 +1,15 @@
 require(require('root-path')('test/setup'))
-
 var heredoc = require('heredoc')
-var moment = require('moment')
+var moment = require('moment-timezone')
 
 describe('Search', function () {
   describe('.forPosts', function () {
     it('produces the expected SQL for a complex query', function () {
-      var startTime = moment('2015-03-24 19:54:12-07:00')
-      var endTime = moment('2015-03-31 19:54:12-07:00')
-      const ISO8601 = 'YYYY-MM-DDTHH:mm:ss.SSSZ'
-      var startTimeAsString = startTime.format(ISO8601)
-      var endTimeAsString = endTime.format(ISO8601)
+      var startTime = moment('2015-03-24 19:54:12-04:00')
+      var endTime = moment('2015-03-31 19:54:12-04:00')
+      var tz = moment.tz.guess()
+      var startTimeAsString = startTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
+      var endTimeAsString = endTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
 
       var query = Search.forPosts({
         limit: 5,
@@ -30,21 +29,21 @@ describe('Search', function () {
         from "post"
         inner join "follower" on "follower"."post_id" = "post"."id"
         inner join "post_community" on "post_community"."post_id" = "post"."id"
-        where "post"."active" = 'true'
-        and "post"."user_id" in ('42', '41')
+        where "post"."active" = true
+        and "post"."user_id" in (42, 41)
         and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
           or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
-        and "follower"."user_id" = '37'
-        and (post.user_id != '37' or post.user_id is null)
+        and "follower"."user_id" = 37
+        and (post.user_id != 37 or post.user_id is null)
         and "type" = 'request'
         and ((post.created_at between '%s' and '%s')
           or (post.updated_at between '%s' and '%s'))
-        and "post_community"."community_id" in ('9', '12')
+        and "post_community"."community_id" in (9, 12)
         and "parent_post_id" is null
         group by "post"."id", "post_community"."post_id", "post_community"."pinned"
         order by "post"."updated_at" desc
-        limit '5'
-        offset '7'
+        limit 5
+        offset 7
       */}).replace(/(\n\s*)/g, ' ').trim(),
       startTimeAsString,
       endTimeAsString,

@@ -141,18 +141,17 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-  find: function (id_or_slug, options) {
-    if (isNaN(Number(id_or_slug))) {
-      return Community.where({slug: id_or_slug}).fetch(options)
-    }
-    return Community.where({id: id_or_slug}).fetch(options)
+  find: function (id_or_slug, opts = {}) {
+    if (!id_or_slug) return Promise.resolve(null)
+
+    let where = isNaN(Number(id_or_slug))
+      ? (opts.active ? {slug: id_or_slug, active: true} : {slug: id_or_slug})
+      : (opts.active ? {id: id_or_slug, active: true} : {id: id_or_slug})
+    return this.where(where).fetch(opts)
   },
 
-  findActive: function (id_or_slug, options) {
-    if (isNaN(Number(id_or_slug))) {
-      return Community.where({slug: id_or_slug, active: true}).fetch(options)
-    }
-    return Community.where({id: id_or_slug, active: true}).fetch(options)
+  findActive: function (id_or_slug, opts = {}) {
+    return this.find(id_or_slug, merge({active: true}, opts))
   },
 
   canInvite: function (userId, communityId) {

@@ -2,7 +2,7 @@
 import {
   difference, flatten, flattenDeep, has, includes, isEqual, merge, omit, pick, some, uniq
 } from 'lodash'
-import { filter, get, map } from 'lodash/fp'
+import { filter, getOr, map } from 'lodash/fp'
 import { sanitize } from 'hylo-utils/text'
 
 export const setupNewPostAttrs = function (userId, params) {
@@ -11,7 +11,7 @@ export const setupNewPostAttrs = function (userId, params) {
     description: sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
-    link_preview_id: get('id', params.linkPreview)
+    link_preview_id: getOr(null, 'id', params.linkPreview)
   }, pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
 
   return Promise.resolve(attrs)

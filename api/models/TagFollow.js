@@ -20,10 +20,7 @@ module.exports = bookshelf.Model.extend({
       q.where({community_id, tag_id})
       q.limit(limit)
     })
-    .fetchAll({withRelated: [
-      'user',
-      'user.tags'
-    ]})
+    .fetchAll({withRelated: ['user', 'user.tags']})
     .then(tagFollows => {
       return tagFollows.models.map(tf => tf.relations.user)
     })

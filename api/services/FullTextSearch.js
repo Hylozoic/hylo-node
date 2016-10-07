@@ -62,8 +62,8 @@ const search = (opts) => {
   .from(tableName)
   .where(raw(`${columnName} @@ ${tsquery}`))
   .orderBy('rank', 'desc')
-  .limit(opts.limit)
-  .offset(opts.offset)
+  .limit(opts.limit || 20)
+  .offset(opts.offset || 0)
   .where(raw({
     person: 'user_id is not null',
     post: 'post_id is not null',
@@ -90,8 +90,8 @@ const searchInCommunities = (communityIds, opts) => {
   })
   .groupBy(columns.concat('total'))
   .orderBy('rank', 'desc')
-  .limit(opts.limit)
-  .offset(opts.offset)
+  .limit(opts.limit || 20)
+  .offset(opts.offset || 0)
 }
 
 module.exports = {

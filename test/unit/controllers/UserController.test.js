@@ -154,6 +154,7 @@ describe('UserController', function () {
 
       it('returns a response without private details', () => {
         var response
+        req.session.userId = u1.id
         req.params.userId = u1.id
         _.extend(res, {
           ok: spy(data => response = data),

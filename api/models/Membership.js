@@ -22,6 +22,8 @@ module.exports = bookshelf.Model.extend({
   MODERATOR_ROLE: 1,
 
   find: function (user_id, community_id_or_slug, options) {
+    if (!user_id || !community_id_or_slug) return Promise.resolve(null)
+
     var fetch = function (community_id) {
       var attrs = {user_id, community_id}
       if (!options || !options.includeInactive) attrs.active = true

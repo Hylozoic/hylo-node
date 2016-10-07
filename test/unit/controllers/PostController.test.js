@@ -30,6 +30,10 @@ describe('PostController', () => {
   })
 
   describe('#create', () => {
+    beforeEach(() => {
+      req.session.userId = fixtures.u1.id
+    })
+
     it('returns an error if the title is missing', () => {
       return PostController.create(req, res)
       .then(() => {
@@ -360,7 +364,7 @@ describe('PostController', () => {
     var post, community
 
     beforeEach(() => {
-      post = factories.post()
+      post = factories.post({user_id: fixtures.u1.id})
       community = factories.community()
       req.params.community_ids = []
       res.locals.post = post

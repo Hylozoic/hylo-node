@@ -295,7 +295,8 @@ describe('Tag', () => {
       .then(() => {
         comment = new Comment({
           text: 'here is a #commenthashtag test',
-          post_id: post.id
+          post_id: post.id,
+          user_id: u.id
         })
         return comment.save()
       })

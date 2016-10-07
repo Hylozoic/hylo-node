@@ -248,6 +248,10 @@ describe('TagController', () => {
     const tagDescription = 'the tag for testing the findOneInCommunity endpoint'
     const imageUrl = 'http://img.com/img.jpg'
 
+    beforeEach(() =>
+      factories.user().save()
+      .then(user => req.session.userId = user.id))
+
     it('returns the relevant data', () => {
       return Promise.props({
         tag: new Tag({name: 'onefound'}).save(),

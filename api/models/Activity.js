@@ -60,23 +60,20 @@ module.exports = bookshelf.Model.extend({
   },
 
   createNotifications: function (trx) {
-    var self = this
-    return self.load([
-      'reader',
-      'reader.memberships',
-      'post',
-      'post.communities',
-      'comment',
-      'comment.post',
-      'comment.post.communities',
-      'community'
-    ], {transacting: trx})
-    .then(() => Promise.map(Activity.generateNotificationMedia(self), medium =>
-      new Notification({
-        activity_id: self.id,
-        created_at: new Date(),
-        medium
-      }).save({}, {transacting: trx})))
+    const relations = ['reader', 'reader.memberships']
+    if (this.get('post_id')) {
+      relations.splice(0, 0, 'post', 'post.communities')
+    }
+    if (this.get('comment_id')) {
+      relations.splice(0, 0, 'comment', 'comment.post', 'comment.post.communities')
+    }
+    if (this.get('community_id')) {
+      relations.push('community')
+    }
+    return this.load(relations, {transacting: trx})
+    .then(() => Promise.map(Activity.generateNotificationMedia(this), medium =>
+      new Notification({activity_id: this.id, created_at: new Date(), medium})
+      .save({}, {transacting: trx})))
   }
 
 }, {

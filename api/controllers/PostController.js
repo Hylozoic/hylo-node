@@ -1,5 +1,5 @@
 /* globals LastRead */
-import { get } from 'lodash/fp'
+import { getOr } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
   createPost, createThread, updateChildren, updateAllMedia, updateCommunities
@@ -276,7 +276,7 @@ const PostController = {
       {
         updated_at: new Date(),
         visibility: Post.Visibility[params.public ? 'PUBLIC_READABLE' : 'DEFAULT'],
-        link_preview_id: get('id', params.linkPreview)
+        link_preview_id: getOr(null, 'id', params.linkPreview)
       }
     )
 

@@ -34,7 +34,7 @@ var postRelations = (userId, opts = {}) => {
       }},
       {'votes.user': userColumns}
     )
-  } else {
+  } else if (userId) {
     relations.push(
       {votes: qb => { // only the user's own vote
         qb.column('id', 'post_id')

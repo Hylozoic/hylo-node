@@ -11,12 +11,12 @@ describe('InvitationController', () => {
   before(() => {
     req = factories.mock.request()
     res = factories.mock.response()
+    user = factories.user()
+    inviter = factories.user()
   })
 
   describe('.use', () => {
     before(() => {
-      user = factories.user()
-      inviter = factories.user()
       community = factories.community()
       return Promise.join(inviter.save(), user.save(), community.save())
       .then(() => {
@@ -59,7 +59,7 @@ describe('InvitationController', () => {
     })
 
     beforeEach(() => {
-      req.session.userId = user.id
+      req.session.userId = inviter.id
       mockify(Email, 'sendInvitation', () => new Promise((res, rej) => res()))
     })
 
@@ -88,8 +88,6 @@ describe('InvitationController', () => {
 
       return InvitationController.create(req, res)
       .then(() => {
-        expect(Email.sendInvitation).to.have.been.called.exactly(4)
-
         expect(sortBy('email', res.body.results)).to.deep.equal(
           sortBy('email', [
             {email: 'foo@bar.com', error: null},
@@ -97,6 +95,8 @@ describe('InvitationController', () => {
             {email: u1.get('email'), error: null},
             {email: u2.get('email'), error: null}
           ]))
+
+        expect(Email.sendInvitation).to.have.been.called.exactly(4)
       })
     })
 
@@ -106,14 +106,14 @@ describe('InvitationController', () => {
 
       return InvitationController.create(req, res)
       .then(() => {
-        expect(Email.sendInvitation).to.have.been.called.exactly(2)
-
         expect(res.body).to.deep.equal({
           results: [
             {email: 'foo@bar.com', error: 'failed'},
             {email: 'bar@baz.com', error: 'failed'}
           ]
         })
+
+        expect(Email.sendInvitation).to.have.been.called.exactly(2)
       })
     })
   })
