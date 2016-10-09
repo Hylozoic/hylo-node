@@ -110,6 +110,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   activeCommunityIds: function (user_id, moderator) {
+    if (!user_id) return Promise.resolve([])
     var query = {user_id: user_id, active: true}
     if (moderator) {
       query.role = Membership.MODERATOR_ROLE
