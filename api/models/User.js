@@ -148,6 +148,10 @@ module.exports = bookshelf.Model.extend({
         })
         .save({}, {transacting: trx})
       : null))
+  },
+
+  hasNoAvatar: function () {
+    return this.get('avatar_url') === User.gravatar(this.get('email'))
   }
 
 }, {
@@ -256,7 +260,7 @@ module.exports = bookshelf.Model.extend({
 
   gravatar: function (email) {
     var emailHash = crypto.createHash('md5').update(email).digest('hex')
-    return format('https://www.gravatar.com/avatar/%s?d=mm&s=140', emailHash)
+    return `https://www.gravatar.com/avatar/${emailHash}?d=mm&s=140`
   },
 
   encryptEmail: function (email) {

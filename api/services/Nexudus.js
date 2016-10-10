@@ -8,11 +8,15 @@ import { filter, map } from 'lodash/fp'
 const apiHost = 'https://spaces.nexudus.com/api'
 const pageSize = 500
 
-const formatRecord = record => ({
+const avatarUrl = (id, subdomain) =>
+  `https://${subdomain}.spaces.nexudus.com/en/coworker/getavatar/${id}?h=150&w=150`
+
+const formatRecord = subdomain => record => ({
   name: record.FullName,
   email: record.Email.trim(),
   created_at: record.CreatedOn,
-  updated_at: record.UpdatedOn
+  updated_at: record.UpdatedOn,
+  avatar_url: avatarUrl(record.Id, subdomain)
 })
 
 const logCount = label => ({ length }) => console.log(`${label}: ${length}`)
@@ -20,50 +24,49 @@ const logCount = label => ({ length }) => console.log(`${label}: ${length}`)
 // spaceId can be found by clicking through to a space's details page from
 // https://spaces.nexudus.com/Sys/Businesses; it is the number at the end of the
 // details page's URL, after "Edit"
-const API = function (username, password, options = {}) {
+const API = function (username, password, spaceId, options = {}) {
   this.username = username
   this.password = password
+  this.spaceId = spaceId
   this.options = options
 }
 
-API.prototype.getRecords = function (path, query) {
-  var self = this
-  var getPage = function (pageNum) {
-    var url = format('%s/%s', apiHost, path)
-    return get({
-      url: url,
-      json: true,
-      auth: {user: self.username, pass: self.password},
-      qs: Object.assign({
-        size: pageSize,
-        page: pageNum
-      }, query)
-    })
-    .spread((res2, body) => {
-      if (res2.statusCode !== 200) {
-        throw new Error(res2.statusCode)
-      }
+API.prototype.get = function (path, qs) {
+  return get({
+    url: apiHost + '/' + path,
+    json: true,
+    auth: {user: this.username, pass: this.password},
+    qs
+  }).then(([res, body]) => {
+    if (res.statusCode !== 200) {
+      throw new Error(res.statusCode)
+    }
+    return body
+  })
+}
 
-      if (body.CurrentPage < body.TotalPages) {
-        return body.Records.concat(getPage(pageNum + 1))
-      } else {
-        return body.Records
-      }
-    })
-  }
+API.prototype.getAllRecords = function (path, query) {
+  const getPage = page =>
+    this.get(path, Object.assign({size: pageSize, page}, query))
+    .then(({ CurrentPage, TotalPages, Records }) =>
+      CurrentPage < TotalPages ? Records.concat(getPage(page + 1)) : Records)
 
   return getPage(1)
 }
 
+API.prototype.getSpaceInfo = function () {
+  return this.get(`sys/businesses/${this.spaceId}`)
+}
+
 API.prototype.getActiveContracts = function () {
-  return this.getRecords('billing/coworkercontracts', {CoworkerContract_Active: true})
+  return this.getAllRecords('billing/coworkercontracts', {CoworkerContract_Active: true})
   .tap(logCount('contracts'))
 }
 
 API.prototype.getActiveCoworkers = function () {
-  return this.getRecords('spaces/coworkers', {
+  return this.getAllRecords('spaces/coworkers', {
     Coworker_Active: true,
-    Coworker_InvoicingBusiness: this.options.spaceId
+    Coworker_InvoicingBusiness: this.spaceId
   })
   .tap(logCount('coworkers'))
 }
@@ -74,11 +77,12 @@ API.prototype.fetchMembers = function () {
   const intersects = record =>
     includes(map('CoworkerId', contracts), record.Id)
 
-  return this.getActiveContracts().tap(r1 => contracts = r1)
+  return this.getSpaceInfo().tap(info => this.subdomain = info.WebAddress)
+  .then(() => this.getActiveContracts().tap(r1 => contracts = r1))
   .then(() => this.getActiveCoworkers().tap(r2 => coworkers = r2))
   .then(filter(intersects))
   .tap(logCount('active members'))
-  .then(map(formatRecord))
+  .then(map(formatRecord(this.subdomain)))
   .then(records => this.options.verbose ? {contracts, coworkers, records} : records)
 }
 
@@ -88,12 +92,29 @@ API.prototype.updateMembers = function () {
   .then(users => compact(users).length)
 }
 
+API.prototype.updateMemberImages = function () {
+  this.options.verbose = true
+  return this.fetchMembers()
+  .then(({ contracts, coworkers, records }) =>
+    Promise.map(records, r => {
+      const coworker = coworkers.find(c => c.Email.trim() === r.email)
+      return User.find(r.email)
+      .then(user => {
+        if (!user || user.hasNoAvatar()) return
+        const avatar_url = avatarUrl(coworker.Id, this.subdomain)
+        console.log(`${user.id}: ${avatar_url}`)
+        return user.save({avatar_url}, {patch: true})
+      })
+    }))
+  .then(users => compact(users).length)
+}
+
 module.exports = {
   forAccount: function (nexudusAccount, opts = {}) {
     const username = nexudusAccount.get('username')
     const password = nexudusAccount.decryptedPassword()
     const spaceId = nexudusAccount.get('space_id')
-    return new API(username, password, Object.assign({spaceId}, opts))
+    return new API(username, password, spaceId, opts)
   },
 
   forCommunity: function (community_id, opts) {
