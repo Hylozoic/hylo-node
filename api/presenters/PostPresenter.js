@@ -51,6 +51,10 @@ var postRelations = (userId, opts = {}) => {
     )
   }
 
+  if (opts.withReadTimes) {
+    relations.push({lastReads: q => q.where('user_id', userId)})
+  }
+
   return relations
 }
 
@@ -63,7 +67,7 @@ var postAttributes = (post, userId, opts = {}) => {
 
   const {
     user, communities, media, followers, contributions, responders, comments,
-    relatedUsers, tags, votes, children, linkPreview
+    relatedUsers, tags, votes, children, linkPreview, lastReads
   } = post.relations
   const type = post.get('type')
   const isEvent = type === 'event'
@@ -97,7 +101,8 @@ var postAttributes = (post, userId, opts = {}) => {
       tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
         type,
       type: showValidType(post.get('type')),
-      linkPreview: get('id', linkPreview) ? linkPreview : null
+      linkPreview: get('id', linkPreview) ? linkPreview : null,
+      last_read_at: lastReads && lastReads.first() ? lastReads.first().get('last_read_at') : null
     })
   if (opts.withComments) {
     extendedPost.comments = comments.map(c => _.merge(

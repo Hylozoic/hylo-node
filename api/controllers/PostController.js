@@ -136,6 +136,7 @@ const createFindAction = (queryFunction) => (req, res) => {
     {
       withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes'),
+      withReadTimes: req.param('reads'),
       forCommunity: req.param('communityId')
     }))
   .then(res.ok, res.serverError)
