@@ -17,7 +17,14 @@ module.exports = function checkAndSetPost (req, res, next) {
 
     return (ok ? Promise.resolve(true)
       : Post.isVisibleToUser(post.id, req.session.userId))
-    .then(allowed => allowed ? next() : fail('not allowed'))
+    .then(allowed => {
+      if (allowed) {
+        next()
+      } else {
+        fail('not allowed')
+      }
+      return null
+    })
   })
   .catch(err => fail(err.message, 'serverError'))
 }
