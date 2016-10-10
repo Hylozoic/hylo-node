@@ -100,7 +100,7 @@ API.prototype.updateMemberImages = function () {
       const coworker = coworkers.find(c => c.Email.trim() === r.email)
       return User.find(r.email)
       .then(user => {
-        if (!user || user.hasNoAvatar()) return
+        if (!user || !user.hasNoAvatar()) return
         const avatar_url = avatarUrl(coworker.Id, this.subdomain)
         console.log(`${user.id}: ${avatar_url}`)
         return user.save({avatar_url}, {patch: true})
