@@ -62,7 +62,12 @@ module.exports = {
     return UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
     .then(UserPresenter.normalizeUser)
     .then(res.ok)
-    .catch(res.serverError)
+    .catch(err => {
+      if (err.message === 'User not found') {
+        return res.notFound()
+      }
+      res.serverError(err)
+    })
   },
 
   contributions: function (req, res) {

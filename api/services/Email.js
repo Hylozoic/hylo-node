@@ -1,13 +1,10 @@
 const api = require('sendwithus')(process.env.SENDWITHUS_KEY)
 const Promise = require('bluebird')
+import { curry } from 'lodash'
 
-const sendEmail = function (opts) {
-  return new Promise((resolve, reject) => {
-    api.send(opts, (err, resp) => {
-      err ? reject(resp) : resolve(resp)
-    })
-  })
-}
+const sendEmail = opts =>
+  new Promise((resolve, reject) =>
+    api.send(opts, (err, resp) => err ? reject(resp) : resolve(resp)))
 
 const defaultOptions = {
   sender: {
@@ -24,81 +21,46 @@ const sendSimpleEmail = function (address, templateId, data, extraOptions) {
   }, extraOptions))
 }
 
+const sendEmailWithOptions = curry(templateId => opts =>
+  sendEmail(_.merge({}, defaultOptions, {
+    email_id: templateId,
+    recipient: {address: opts.email},
+    email_data: opts.data,
+    version_name: opts.version,
+    sender: opts.sender
+  })))
+
 module.exports = {
   sendSimpleEmail,
 
-  sendRawEmail: function (email, data, extraOptions) {
-    return sendSimpleEmail(email, 'tem_nt4RmzAfN4KyPZYxFJWpFE', data, extraOptions)
-  },
+  sendRawEmail: (email, data, extraOptions) =>
+    sendSimpleEmail(email, 'tem_nt4RmzAfN4KyPZYxFJWpFE', data, extraOptions),
 
-  sendPasswordReset: function (opts) {
-    return sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData)
-  },
+  sendPasswordReset: opts =>
+    sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData),
 
-  sendInvitation: function (email, data) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_ZXZuvouDYKKhCrdEWYbEp9',
-      recipient: {address: email},
-      email_data: data,
-      version_name: 'user-edited text',
+  sendInvitation: (email, data) =>
+    sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
+      email, data, version: 'user-edited text',
       sender: {
-        name: format('%s (via Hylo)', data.inviter_name),
+        name: `${data.inviter_name} (via Hylo)`,
         reply_to: data.inviter_email
       }
-    }))
-  },
+    }),
 
-  sendTagInvitation: function (email, data) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_tmEEpPvtQ69wGkmf9njCx8',
-      recipient: {address: email},
-      email_data: data,
-      version_name: 'default',
+  sendTagInvitation: (email, data) =>
+    sendEmailWithOptions('tem_tmEEpPvtQ69wGkmf9njCx8', {
+      email, data, version: 'default',
       sender: {
-        name: format('%s (via Hylo)', data.inviter_name),
+        name: `${data.inviter_name} (via Hylo)`,
         reply_to: data.inviter_email
       }
-    }))
-  },
+    }),
 
-  sendNewCommentNotification: function (opts) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_tP6JzrYzvvDXhgTNmtkxuW',
-      recipient: {address: opts.email},
-      email_data: opts.data,
-      version_name: opts.version,
-      sender: opts.sender
-    }))
-  },
-
-  sendPostMentionNotification: function (opts) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_wXiqtyNzAr8EF4fqBna5WQ',
-      recipient: {address: opts.email},
-      email_data: opts.data,
-      sender: opts.sender
-    }))
-  },
-
-  sendJoinRequestNotification: function (opts) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_9sW4aBxaLi5ve57bp7FGXZ',
-      recipient: {address: opts.email},
-      email_data: opts.data,
-      version_name: opts.version,
-      sender: opts.sender
-    }))
-  },
-
-  sendApprovedJoinRequestNotification: function (opts) {
-    return sendEmail(_.merge({}, defaultOptions, {
-      email_id: 'tem_eMJADwteU3zPyjmuCAAYVK',
-      recipient: {address: opts.email},
-      email_data: opts.data,
-      version_name: opts.version,
-      sender: opts.sender
-    }))
-  },
+  sendNewCommentNotification: sendEmailWithOptions('tem_tP6JzrYzvvDXhgTNmtkxuW'),
+  sendPostMentionNotification: sendEmailWithOptions('tem_wXiqtyNzAr8EF4fqBna5WQ'),
+  sendJoinRequestNotification: sendEmailWithOptions('tem_9sW4aBxaLi5ve57bp7FGXZ'),
+  sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
 
   postReplyAddress: function (postId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId)

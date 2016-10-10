@@ -54,6 +54,9 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   })
 }
 
+const findTagId = req =>
+  req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
+
 const queryForCommunity = function (req, res) {
   if (TokenAuth.isAuthenticated(res)) {
     if (!RequestValidation.requireTimeRange(req, res)) return
@@ -64,13 +67,13 @@ const queryForCommunity = function (req, res) {
     communities: [res.locals.community.id],
     visibility: ((res.locals.membership || contains) ? null : Post.Visibility.PUBLIC_READABLE),
     currentUserId: req.session.userId,
-    tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
+    tag: findTagId(req)
   }))
 }
 
 const queryForUser = function (req, res) {
   return queryPosts(req, {
-    tag: req.param('tag') && Tag.find(req.param('tag')).then(t => t.id),
+    tag: findTagId(req),
     users: [req.param('userId')],
     communities: Membership.activeCommunityIds(req.session.userId),
     visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
