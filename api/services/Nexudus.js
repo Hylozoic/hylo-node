@@ -10,7 +10,7 @@ const pageSize = 500
 
 const formatRecord = record => ({
   name: record.FullName,
-  email: record.Email,
+  email: record.Email.trim(),
   created_at: record.CreatedOn,
   updated_at: record.UpdatedOn
 })
