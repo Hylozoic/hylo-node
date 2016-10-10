@@ -20,17 +20,16 @@ const logCount = label => ({ length }) => console.log(`${label}: ${length}`)
 // spaceId can be found by clicking through to a space's details page from
 // https://spaces.nexudus.com/Sys/Businesses; it is the number at the end of the
 // details page's URL, after "Edit"
-const API = function (username, password, spaceId) {
+const API = function (username, password, options = {}) {
   this.username = username
   this.password = password
-  this.spaceId = spaceId
+  this.options = options
 }
 
 API.prototype.getRecords = function (path, query) {
   var self = this
   var getPage = function (pageNum) {
     var url = format('%s/%s', apiHost, path)
-    console.log(url)
     return get({
       url: url,
       json: true,
@@ -64,43 +63,52 @@ API.prototype.getActiveContracts = function () {
 API.prototype.getActiveCoworkers = function () {
   return this.getRecords('spaces/coworkers', {
     Coworker_Active: true,
-    Coworker_InvoicingBusiness: this.spaceId
+    Coworker_InvoicingBusiness: this.options.spaceId
   })
   .tap(logCount('coworkers'))
 }
 
-module.exports = {
-  // members are users who are active and have an active contract
-  fetchMembers: function (username, password, opts = {}) {
-    const api = new API(username, password, opts.spaceId)
-    let contracts, coworkers
-    const intersects = record =>
-      includes(map('CoworkerId', contracts), record.Id)
+// members are users who are active and have an active contract
+API.prototype.fetchMembers = function () {
+  let contracts, coworkers
+  const intersects = record =>
+    includes(map('CoworkerId', contracts), record.Id)
 
-    return api.getActiveContracts().tap(r1 => contracts = r1)
-    .then(() => api.getActiveCoworkers().tap(r2 => coworkers = r2))
-    .then(filter(intersects))
-    .tap(logCount('active members'))
-    .then(map(formatRecord))
-    .then(records => opts.verbose ? {contracts, coworkers, records} : records)
+  return this.getActiveContracts().tap(r1 => contracts = r1)
+  .then(() => this.getActiveCoworkers().tap(r2 => coworkers = r2))
+  .then(filter(intersects))
+  .tap(logCount('active members'))
+  .then(map(formatRecord))
+  .then(records => this.options.verbose ? {contracts, coworkers, records} : records)
+}
+
+API.prototype.updateMembers = function () {
+  return this.fetchMembers()
+  .then(records => Promise.map(records, r => UserImport.createUser(r, this.options)))
+  .then(users => compact(users).length)
+}
+
+module.exports = {
+  forAccount: function (nexudusAccount, opts = {}) {
+    const username = nexudusAccount.get('username')
+    const password = nexudusAccount.decryptedPassword()
+    const spaceId = nexudusAccount.get('space_id')
+    return new API(username, password, Object.assign({spaceId}, opts))
   },
 
-  updateMembers: function (username, password, opts = {}) {
-    return this.fetchMembers(username, password, opts)
-    .then(records => Promise.map(records, r => UserImport.createUser(r, opts)))
-    .then(users => compact(users).length)
+  forCommunity: function (community_id, opts) {
+    return NexudusAccount.where({community_id}).fetch()
+    .then(a => this.forAccount(a, opts))
   },
 
   updateAllCommunities: function (options) {
     return NexudusAccount.where('autoupdate', true)
     .fetchAll({withRelated: 'community'})
-    .then(accounts => Promise.map(accounts.models, a => {
-      const opts = Object.assign({
-        spaceId: a.get('space_id'),
-        community: a.relations.community
-      }, options)
-      return this.updateMembers(a.get('username'), a.decryptedPassword(), opts)
-      .then(count => [a.get('community_id'), count])
+    .then(accounts => Promise.map(accounts.models, account => {
+      const { community } = account.relations
+      const api = this.forAccount(account, Object.assign({community}, options))
+      return api.updateMembers()
+      .then(count => [account.get('community_id'), count])
     }))
   }
 }
