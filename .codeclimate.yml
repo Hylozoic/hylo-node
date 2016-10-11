@@ -1,2 +1,3 @@
+JavaScript: true
 exclude_paths:
 - "migrations/"
