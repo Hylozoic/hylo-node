@@ -14,4 +14,4 @@ import error from './error'
  * automatically.
  */
 
-module.exports = error({statusCode: 500, statusText: 'Server Error'})
+module.exports = error({statusCode: 500, statusText: 'Server Error', logData: true})

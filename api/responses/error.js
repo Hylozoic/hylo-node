@@ -1,6 +1,6 @@
 import rollbar from 'rollbar'
 
-module.exports = ({ statusCode, statusText }) => function (data, options) {
+module.exports = ({ statusCode, statusText, logData }) => function (data, options) {
   // Get access to `req`, `res`, & `sails`
   var req = this.req
   var res = this.res
@@ -22,6 +22,8 @@ module.exports = ({ statusCode, statusText }) => function (data, options) {
   if (sails.config.environment === 'production') {
     if (statusCode === 500) rollbar.handleError(data, req)
     data = undefined
+  } else if (logData) {
+    sails.log.error(data.stack.split('\n').slice(0, 8).join('\n'))
   }
 
   // If the user-agent wants JSON, always respond with JSON
