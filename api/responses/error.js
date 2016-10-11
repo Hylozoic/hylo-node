@@ -1,3 +1,5 @@
+import rollbar from 'rollbar'
+
 module.exports = ({ statusCode, statusText }) => function (data, options) {
   // Get access to `req`, `res`, & `sails`
   var req = this.req
@@ -18,6 +20,7 @@ module.exports = ({ statusCode, statusText }) => function (data, options) {
   // is not set to 'production'.  In production, we shouldn't
   // send back any identifying information about errors.
   if (sails.config.environment === 'production') {
+    if (statusCode === 500) rollbar.handleError(data, req)
     data = undefined
   }
 
