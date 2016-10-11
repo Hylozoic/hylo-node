@@ -467,4 +467,16 @@ describe('Notification', function () {
       })
     })
   })
+
+  describe('.priorityReason', () => {
+    it('picks higher-priority reasons', () => {
+      expect(Notification.priorityReason([
+        'approvedJoinRequest: yay', 'followAdd: your face', 'newPost: yes'
+      ])).to.equal('newPost')
+    })
+
+    it('returns the empty string as a fallthrough', () => {
+      expect(Notification.priorityReason(['wat', 'lol'])).to.equal('')
+    })
+  })
 })

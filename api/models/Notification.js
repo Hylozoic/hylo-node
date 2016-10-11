@@ -2,10 +2,7 @@ var url = require('url')
 import { isEmpty } from 'lodash'
 import decode from 'ent/decode'
 
-const hasReason = (regex, reasons) => reasons.some(reason => reason.match(regex))
-
 module.exports = bookshelf.Model.extend({
-
   tableName: 'notifications',
 
   activity: function () {
@@ -340,29 +337,12 @@ module.exports = bookshelf.Model.extend({
   },
 
   priorityReason: function (reasons) {
-    if (hasReason(/^mention/, reasons)) {
-      return 'mention'
-    } else if (hasReason(/^commentMention/, reasons)) {
-      return 'commentMention'
-    } else if (hasReason(/^newComment/, reasons)) {
-      return 'newComment'
-    } else if (hasReason(/^tag/, reasons)) {
-      return 'tag'
-    } else if (hasReason(/^newPost/, reasons)) {
-      return 'newPost'
-    } else if (hasReason(/^follow/, reasons)) {
-      return 'follow'
-    } else if (hasReason(/^followAdd/, reasons)) {
-      return 'followAdd'
-    } else if (hasReason(/^unfollow/, reasons)) {
-      return 'unfollow'
-    } else if (hasReason(/^joinRequest/, reasons)) {
-      return 'joinRequest'
-    } else if (hasReason(/^approvedJoinRequest/, reasons)) {
-      return 'approvedJoinRequest'
-    } else {
-      return ''
-    }
-  }
+    const orderedLabels = [
+      'mention', 'commentMention', 'newComment', 'tag', 'newPost', 'follow',
+      'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
+    ]
 
+    const match = label => reasons.some(r => r.match(new RegExp('^' + label)))
+    return orderedLabels.find(match) || ''
+  }
 })
