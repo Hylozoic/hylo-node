@@ -2,6 +2,9 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.1
+-- Dumped by pg_dump version 9.5.1
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -463,6 +466,15 @@ CREATE SEQUENCE knex_migrations_id_seq
 --
 
 ALTER SEQUENCE knex_migrations_id_seq OWNED BY knex_migrations.id;
+
+
+--
+-- Name: knex_migrations_lock; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE knex_migrations_lock (
+    is_locked integer
+);
 
 
 --
@@ -2361,6 +2373,7 @@ ALTER TABLE ONLY tag_follows
 ALTER TABLE ONLY join_requests
     ADD CONSTRAINT join_requests_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
 
+
 --
 -- Name: join_requests_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -2368,12 +2381,14 @@ ALTER TABLE ONLY join_requests
 ALTER TABLE ONLY join_requests
     ADD CONSTRAINT join_requests_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
+
 --
 -- Name: nexudus_accounts_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY nexudus_accounts
     ADD CONSTRAINT nexudus_accounts_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
+
 
 --
 -- Name: notifications_activity_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
@@ -2436,7 +2451,7 @@ ALTER TABLE ONLY posts_tags
 --
 
 ALTER TABLE ONLY posts_users
-    ADD CONSTRAINT posts_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+    ADD CONSTRAINT posts_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2444,7 +2459,7 @@ ALTER TABLE ONLY posts_users
 --
 
 ALTER TABLE ONLY posts_users
-    ADD CONSTRAINT posts_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT posts_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
