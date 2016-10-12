@@ -35,7 +35,7 @@ module.exports = bookshelf.Model.extend({
         action = this.sendEmail()
         break
       case Notification.MEDIUM.InApp:
-        action = this.incUserNewNotificationCount()
+        action = User.incNewNotificationCount(this.reader().id)
         break
     }
     if (action) {
@@ -265,14 +265,6 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.community(community))
         }
       })))
-  },
-
-  incUserNewNotificationCount: function () {
-    var reader = this.reader()
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) return Promise.resolve()
-
-    return User.incNewNotificationCount(reader.id, communityIds)
   }
 
 }, {

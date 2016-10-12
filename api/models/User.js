@@ -252,10 +252,8 @@ module.exports = bookshelf.Model.extend({
     return query.then(rows => Number(rows[0].count) === 0)
   },
 
-  incNewNotificationCount: function (userId, communityIds, txn) {
-    const userQuery = User.query().where({id: userId})
-    .increment('new_notification_count', 1)
-    return txn ? userQuery.transacting(txn) : userQuery
+  incNewNotificationCount: function (id) {
+    return User.query().where({id}).increment('new_notification_count', 1)
   },
 
   gravatar: function (email) {
