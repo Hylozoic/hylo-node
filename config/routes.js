@@ -57,9 +57,6 @@ module.exports.routes = {
   'POST   /noo/post/:postId/complain':                    'PostController.complain',
   'POST   /noo/post/:postId/rsvp':                        'PostController.rsvp',
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
-  'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
-  'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // to comments
-  'POST   /noo/post/:postId/typing':                      'PostController.typing',
   'POST   /noo/post':                                     'PostController.create',
   'POST   /noo/thread':                                   'PostController.findOrCreateThread',
   'POST   /noo/post/:postId':                             'PostController.update',
@@ -145,5 +142,13 @@ module.exports.routes = {
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
 
   'GET     /noo/live-status':                             'LiveStatusController.show',
-  'GET     /noo/link-preview':                            'LinkPreviewController.findOne'
+  'GET     /noo/link-preview':                            'LinkPreviewController.findOne',
+
+  // websockets routes
+  'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
+  'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // from comments
+  'POST   /noo/post/:postId/typing':                      'PostController.typing',
+  'POST   /noo/threads/subscribe':                        'PostController.subscribeToThreads',
+  'POST   /noo/threads/unsubscribe':                      'PostController.unsubscribeFromThreads'
+
 }
