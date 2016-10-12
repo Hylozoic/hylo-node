@@ -122,19 +122,22 @@ module.exports = {
   create: function (req, res) {
     const { community } = res.locals
     const { name, description, is_default } = pick(req.allParams(), ['name', 'description', 'is_default'])
-    return Tag.findOrCreate(name)
-    .tap(tag => new TagFollow({
-      community_id: community.id,
-      tag_id: tag.id,
-      user_id: req.session.userId
-    }).save())
-    .then(tag => new CommunityTag({
-      tag_id: tag.id,
-      community_id: community.id,
-      description,
-      user_id: req.session.userId,
-      is_default
-    }).save())
+    return bookshelf.transaction(trx => {
+      const trxOpts = {transacting: trx}
+      return Tag.findOrCreate(name, trxOpts)
+      .tap(tag => new TagFollow({
+        community_id: community.id,
+        tag_id: tag.id,
+        user_id: req.session.userId
+      }).save(null, trxOpts))
+      .then(tag => new CommunityTag({
+        tag_id: tag.id,
+        community_id: community.id,
+        description,
+        user_id: req.session.userId,
+        is_default
+      }).save(null, trxOpts))
+    })
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
