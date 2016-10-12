@@ -1,5 +1,4 @@
 import { get, merge, pick, reduce } from 'lodash'
-import { sortBy } from 'lodash/fp'
 
 export const fetchAndPresentFollowed = (communityId, userId) => {
   return TagFollow.query(q => {
@@ -8,6 +7,7 @@ export const fetchAndPresentFollowed = (communityId, userId) => {
     q.whereRaw('tag_follows.community_id = communities_tags.community_id')
     if (communityId) {
       q.where({'tag_follows.community_id': communityId})
+      q.select(bookshelf.knex.raw('tag_follows.*, is_default'))
     }
   })
   .fetchAll({withRelated: ['tag', 'community']})
@@ -16,7 +16,8 @@ export const fetchAndPresentFollowed = (communityId, userId) => {
     if (!m[slug]) m[slug] = []
     const row = {
       name: join.relations.tag.get('name'),
-      new_post_count: join.get('new_post_count')
+      new_post_count: join.get('new_post_count'),
+      is_default: join.get('is_default')
     }
     m[slug].push(row)
     return m
