@@ -160,15 +160,13 @@ module.exports = bookshelf.Model.extend({
     this.sendToSubscribedSockets(`posts/${postId}`, 'commentAdded', comment)
   },
 
-  pushMessageToSockets: function (message, users) {
+  pushMessageToSockets: function (message, userIds) {
     var postId = this.id
-    console.log(this.numComments, this.type, users)
-    if (this.numComments === 1) {
-      // if no existing comments, send post and comment
-      users.forEach(user => this.pushSelfToSocket(user.id)) 
+    const excludingSender = userIds.filter(id => id !== message.user_id.toString())
+    if (this.get('num_comments') === 1) {
+      excludingSender.forEach(id => this.pushSelfToSocket(id)) 
     } else {
-      // if existing comments, just send comment
-      users.forEach(user => this.sendToSubscribedSockets(`users/${user.id}`, 'messageAdded', comment)) 
+      excludingSender.forEach(id => this.sendToSubscribedSockets(`users/${id}`, 'messageAdded', { postId, message })) 
     }
   },
 
@@ -178,7 +176,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   pushSelfToSocket: function (userId) {
-console.log('is pushing new post to socket')
     var that = this
     const opts = { withComments: 'all' }
     this.load(PostPresenter.relations(userId, opts))
