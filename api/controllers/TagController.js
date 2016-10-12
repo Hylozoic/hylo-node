@@ -123,6 +123,11 @@ module.exports = {
     const { community } = res.locals
     const { name, description, is_default } = pick(req.allParams(), ['name', 'description', 'is_default'])
     return Tag.findOrCreate(name)
+    .tap(tag => new TagFollow({
+      community_id: community.id,
+      tag_id: tag.id,
+      user_id: req.session.userId
+    }).save())
     .then(tag => new CommunityTag({
       tag_id: tag.id,
       community_id: community.id,
