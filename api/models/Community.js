@@ -1,12 +1,13 @@
 /* globals NexudusAccount */
 var Slack = require('../services/Slack')
 import randomWords from 'random-words'
-import { merge, unset, differenceBy } from 'lodash'
+import HasSettings from './mixins/HasSettings'
+import { merge, differenceBy } from 'lodash'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(merge({
   tableName: 'community',
 
   creator: function () {
@@ -112,14 +113,6 @@ module.exports = bookshelf.Model.extend({
       .save({}, {transacting: trx})))
   },
 
-  addSetting: function (value) {
-    return this.set('settings', merge({}, this.get('settings'), value))
-  },
-
-  removeSetting: function (path) {
-    return unset(this.get('settings'), path)
-  },
-
   updateChecklist: function () {
     return this.load(['posts', 'invitations', 'tags', 'leader', 'tags'])
     .then(() => Tag.starterTags())
@@ -140,7 +133,7 @@ module.exports = bookshelf.Model.extend({
     })
   }
 
-}, {
+}, HasSettings), {
   find: function (id_or_slug, opts = {}) {
     if (!id_or_slug) return Promise.resolve(null)
 

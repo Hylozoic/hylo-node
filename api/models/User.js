@@ -2,9 +2,11 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
+import { merge } from 'lodash'
 import { get } from 'lodash/fp'
+import HasSettings from './mixins/HasSettings'
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
 
   activity: function () {
@@ -155,7 +157,7 @@ module.exports = bookshelf.Model.extend({
     return this.get('avatar_url') === User.gravatar(this.get('email'))
   }
 
-}, {
+}, HasSettings), {
   authenticate: Promise.method(function (email, password) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt)
 
