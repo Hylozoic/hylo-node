@@ -2,6 +2,7 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
+import { get } from 'lodash/fp'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'users',
@@ -310,7 +311,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   unreadThreadCount: function (userId) {
-    return Post.query(q => {
+    return User.where('id', userId).query().select('settings')
+    .then(rows => get('settings.last_viewed_messages_at', rows[0]))
+    .then(lastViewed => Post.query(q => {
+      if (lastViewed) q.where('post.updated_at', '>', new Date(lastViewed))
       q.join('follower', 'post.id', 'follower.post_id')
       q.where('follower.user_id', userId)
       q.leftJoin('posts_users', 'post.id', 'posts_users.post_id')
@@ -320,6 +324,7 @@ module.exports = bookshelf.Model.extend({
         .orWhere('posts_users.id', null)
       })
       q.count()
-    }).query().then(rows => Number(rows[0].count))
+    }).query())
+    .then(rows => Number(rows[0].count))
   }
 })
