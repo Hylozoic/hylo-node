@@ -40,7 +40,7 @@ module.exports = {
     sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData),
 
   sendInvitation: (email, data) =>
-    sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9')({
+    sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
       email, data, version: 'user-edited text',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
@@ -49,7 +49,7 @@ module.exports = {
     }),
 
   sendTagInvitation: (email, data) =>
-    sendEmailWithOptions('tem_tmEEpPvtQ69wGkmf9njCx8')({
+    sendEmailWithOptions('tem_tmEEpPvtQ69wGkmf9njCx8', {
       email, data, version: 'default',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
