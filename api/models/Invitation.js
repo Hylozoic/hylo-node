@@ -75,7 +75,7 @@ module.exports = bookshelf.Model.extend({
         inviter_name: creator.get('name'),
         inviter_email: creator.get('email'),
         community_name: community.get('name'),
-        invite_link: Frontend.Route.useInvitation(invitation.get('token')),
+        invite_link: Frontend.Route.useInvitation(invitation.get('token'), opts.email),
         tracking_pixel_url: Analytics.pixelUrl('Invitation', {
           recipient: opts.email,
           community: community.get('name')
