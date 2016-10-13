@@ -51,8 +51,8 @@ module.exports = {
       return url('/error?key=' + encodeURIComponent(key))
     },
 
-    useInvitation: function (token) {
-      return url('/h/use-invitation?token=%s', token)
+    useInvitation: function (token, email) {
+      return url('/h/use-invitation?token=%s&email=%s', token, email)
     },
 
     emailPostForm: function () {
