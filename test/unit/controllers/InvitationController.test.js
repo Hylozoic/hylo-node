@@ -2,8 +2,8 @@ var root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
-import { mockify, unspyify } from '../../setup/helpers'
-import { sortBy } from 'lodash/fp'
+import { mockify, spyify, unspyify } from '../../setup/helpers'
+import { map, sortBy } from 'lodash/fp'
 
 describe('InvitationController', () => {
   var user, community, invitation, inviter, req, res
@@ -46,7 +46,7 @@ describe('InvitationController', () => {
   })
 
   describe('.create', () => {
-    var community, u1, u2
+    var community, u1, u2, sendInvitationResults
 
     before(() => {
       community = factories.community()
@@ -60,7 +60,9 @@ describe('InvitationController', () => {
 
     beforeEach(() => {
       req.session.userId = inviter.id
-      mockify(Email, 'sendInvitation', () => new Promise((res, rej) => res()))
+      sendInvitationResults = []
+      spyify(Email, 'sendInvitation', (...args) =>
+        sendInvitationResults.push(args.slice(-1)[0]))
     })
 
     afterEach(() => unspyify(Email, 'sendInvitation'))
@@ -79,7 +81,8 @@ describe('InvitationController', () => {
       })
     })
 
-    it('sends invitations to emails and users', () => {
+    it('sends invitations to emails and users', function () {
+      this.timeout(5000)
       _.extend(req.params, {
         communityId: community.id,
         emails: 'foo@bar.com, bar@baz.com',
@@ -97,6 +100,8 @@ describe('InvitationController', () => {
           ]))
 
         expect(Email.sendInvitation).to.have.been.called.exactly(4)
+        return expect(Promise.all(sendInvitationResults).then(map('success')))
+        .to.eventually.deep.equal([true, true, true, true])
       })
     })
 

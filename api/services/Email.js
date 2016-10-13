@@ -21,7 +21,7 @@ const sendSimpleEmail = function (address, templateId, data, extraOptions) {
   }, extraOptions))
 }
 
-const sendEmailWithOptions = curry(templateId => opts =>
+const sendEmailWithOptions = curry((templateId, opts) =>
   sendEmail(_.merge({}, defaultOptions, {
     email_id: templateId,
     recipient: {address: opts.email},
