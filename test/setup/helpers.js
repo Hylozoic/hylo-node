@@ -19,3 +19,7 @@ export const unspyify = (object, methodName) => {
     object[methodName] = object['_original' + methodName]
   }
 }
+
+export const wait = (millis, callback) =>
+  new Promise((resolve, _) => setTimeout(() =>
+    resolve(callback ? callback() : null), millis))

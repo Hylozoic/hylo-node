@@ -18,14 +18,11 @@ module.exports = bookshelf.Model.extend({
   findOrCreate: function (userId, postId, opts = {}) {
     const { transacting } = opts
     return this.query({where: {user_id: userId, post_id: postId}})
-      .fetch()
-      .then(lastRead => {
-        if (lastRead) return Promise.resolve(lastRead)
-        return new this({
-          post_id: postId,
-          last_read_at: new Date(),
-          user_id: userId
-        }).save(null, {transacting})
-      })
+    .fetch()
+    .then(lastRead => lastRead || new this({
+      post_id: postId,
+      last_read_at: new Date(),
+      user_id: userId
+    }).save(null, {transacting}))
   }
 })

@@ -3,7 +3,6 @@ var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
 import { merge } from 'lodash'
-import { get } from 'lodash/fp'
 import HasSettings from './mixins/HasSettings'
 
 module.exports = bookshelf.Model.extend(merge({
@@ -313,19 +312,29 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   unreadThreadCount: function (userId) {
-    return User.where('id', userId).query().select('settings')
-    .then(rows => get('settings.last_viewed_messages_at', rows[0]))
+    const { raw } = bookshelf.knex
+    return User.where('id', userId).query()
+    .select(raw("settings->'last_viewed_messages_at' as time"))
+    .then(rows => rows[0].time)
     .then(lastViewed => Post.query(q => {
       if (lastViewed) q.where('post.updated_at', '>', new Date(lastViewed))
       q.join('follower', 'post.id', 'follower.post_id')
-      q.where('follower.user_id', userId)
-      q.leftJoin('posts_users', 'post.id', 'posts_users.post_id')
-      q.where('posts_users.user_id', userId)
-      q.where(function () {
-        this.where('posts_users.last_read_at', '<', bookshelf.knex.raw('post.updated_at'))
-        .orWhere('posts_users.id', null)
+      q.where({
+        'follower.user_id': userId,
+        type: Post.Type.THREAD
       })
+      q.where('num_comments', '>', 0)
       q.count()
+
+      q.leftJoin('posts_users', function () {
+        this.on('posts_users.post_id', 'post.id')
+        .andOn('posts_users.user_id', raw(userId))
+      })
+
+      q.where(function () {
+        this.where('posts_users.id', null)
+        .orWhere('posts_users.last_read_at', '<', bookshelf.knex.raw('post.updated_at'))
+      })
     }).query())
     .then(rows => Number(rows[0].count))
   }

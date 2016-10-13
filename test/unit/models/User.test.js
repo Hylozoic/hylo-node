@@ -1,7 +1,9 @@
-var bcrypt = require('bcrypt')
-var root = require('root-path')
-require(root('test/setup'))
-var factories = require(root('test/setup/factories'))
+/* globals LastRead */
+require('../../setup')
+import bcrypt from 'bcrypt'
+import factories from '../../setup/factories'
+import { wait } from '../../setup/helpers'
+import { times } from 'lodash'
 
 describe('User', function () {
   var cat
@@ -268,6 +270,65 @@ describe('User', function () {
         expect(_.includes(tagNames, 'request')).to.deep.equal(true)
         expect(_.includes(tagNames, 'intention')).to.deep.equal(true)
       })
+    })
+  })
+
+  describe('.unreadThreadCount', () => {
+    var doge, post, post2
+
+    before(() => {
+      doge = factories.user()
+      ;[ post, post2 ] = times(2, () => factories.post({type: Post.Type.THREAD}))
+
+      return doge.save()
+      .then(() => Promise.map([post, post2], p =>
+        p.save()
+        .then(() => Follow.create(cat.id, p.id))
+        .then(() => Follow.create(doge.id, p.id))))
+    })
+
+    it('works as expected', function () {
+      this.timeout(5000)
+
+      const addMessages = (p, num = 1) =>
+        wait(100)
+        .then(() => Promise.all(times(num, () =>
+          Comment.forge({
+            post_id: p.id,
+            user_id: doge.id,
+            text: 'arf',
+            active: true
+          }).save())))
+        .then(() => p.updateCommentCount())
+
+      return User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(0))
+
+      // four messages but two threads
+      .then(() => addMessages(post, 2))
+      .then(() => addMessages(post2, 2))
+      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(2)))
+      .then(() => User.unreadThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+
+      // mark one thread as read
+      .then(() => LastRead.findOrCreate(cat.id, post.id))
+      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(1)))
+      .then(() => User.unreadThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+
+      // another new message
+      .then(() => addMessages(post))
+      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(2)))
+
+      // dropdown was opened
+      .then(() => {
+        cat.addSetting({last_viewed_messages_at: new Date()})
+        return cat.save()
+      })
+      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(0)))
+
+      // new message after dropdown was opened
+      .then(() => addMessages(post2))
+      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(1)))
+      .then(() => User.unreadThreadCount(doge.id).then(n => expect(n).to.equal(2)))
     })
   })
 })
