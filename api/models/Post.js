@@ -160,13 +160,13 @@ module.exports = bookshelf.Model.extend({
     this.sendToSubscribedSockets(`posts/${postId}`, 'commentAdded', comment)
   },
 
-  pushMessageToSockets: function (message, userIds) {
+  pushMessageToSockets: function (message, userIds, oldUpdatedAt) {
     var postId = this.id
     const excludingSender = userIds.filter(id => id !== message.user_id.toString())
     if (this.get('num_comments') === 1) {
       excludingSender.forEach(id => this.pushSelfToSocket(id)) 
     } else {
-      excludingSender.forEach(id => this.sendToSubscribedSockets(`users/${id}`, 'messageAdded', { postId, message })) 
+      excludingSender.forEach(id => this.sendToSubscribedSockets(`users/${id}`, 'messageAdded', { postId, message, oldUpdatedAt })) 
     }
   },
 
