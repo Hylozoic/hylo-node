@@ -105,15 +105,11 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  removeFollower: function (userId, opts) {
-    var self = this
-    return Follow.where({user_id: userId, post_id: this.id}).destroy()
-      .tap(function () {
-        if (!opts.createActivity) return
-        return Activity.forUnfollow(self, userId)
-        .save()
-        .then(activity => activity.createNotifications())
-      })
+  removeFollower: function (user_id, opts = {}) {
+    return Follow.where({user_id, post_id: this.id}).destroy()
+    .tap(opts.createActivity &&
+      Activity.forUnfollow(this, user_id).save()
+      .then(activity => activity.createNotifications()))
   },
 
   isPublic: function () {

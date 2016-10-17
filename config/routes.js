@@ -52,6 +52,7 @@ module.exports.routes = {
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
   'GET    /noo/post/:postId/comments':                    'CommentController.findForPost',
   'POST   /noo/post/:postId/follow':                      'PostController.follow',
+  'DELETE /noo/post/:postId/follow':                      'PostController.unfollow',
   'POST   /noo/post/:postId/fulfill':                     'PostController.fulfill',
   'POST   /noo/post/:postId/vote':                        'PostController.vote',
   'POST   /noo/post/:postId/complain':                    'PostController.complain',

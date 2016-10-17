@@ -271,6 +271,12 @@ const PostController = {
     .catch(res.serverError)
   },
 
+  unfollow: function (req, res) {
+    return res.locals.post.removeFollower(req.session.userId)
+    .then(() => res.ok({}))
+    .catch(res.serverError)
+  },
+
   update: function (req, res) {
     const post = res.locals.post
     const params = req.allParams()

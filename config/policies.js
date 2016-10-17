@@ -104,6 +104,7 @@ module.exports.policies = {
     findOrCreateThread:                   ['sessionAuth'],
     update:                               ['sessionAuth', 'checkAndSetWritablePost'],
     follow:                               ['sessionAuth', 'checkAndSetPost'],
+    unfollow:                             ['sessionAuth', 'checkAndSetPost'],
     rsvp:                                 ['sessionAuth', 'checkAndSetPost'],
     updateLastRead:                       ['sessionAuth', 'checkAndSetPost'],
     subscribe:                            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
