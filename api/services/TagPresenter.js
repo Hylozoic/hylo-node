@@ -42,7 +42,7 @@ export const presentWithPost = tag => {
   }
 }
 
-export const fetchAndPresentForCommunity = (communityId, opts) => {
+export const fetchAndPresentForCommunity = (communityId, opts = {}) => {
   var total
   const { raw } = bookshelf.knex
   const withRelated = withRelatedSpecialPost.withRelated
@@ -52,7 +52,7 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
   ])
 
   return Tag.query(q => {
-    q.select(raw(`tags.*, count(*) over () as total,
+    q.select(raw(`tags.*, communities_tags.created_at, count(*) over () as total,
       count(tag_follows.id) as followers`))
 
     q.join('communities_tags', 'communities_tags.tag_id', 'tags.id')
@@ -66,9 +66,14 @@ export const fetchAndPresentForCommunity = (communityId, opts) => {
 
     q.limit(opts.limit || 20)
     q.offset(opts.offset || 0)
-    q.orderBy('is_default', 'desc')
-    q.orderBy(raw('lower(name)'), 'asc')
-    q.groupBy(['tags.id', 'is_default'])
+    if (opts.sort === 'popularity') {
+      q.orderBy('followers', 'desc')
+      q.orderBy('communities_tags.created_at', 'desc')
+    } else {
+      q.orderBy('is_default', 'desc')
+      q.orderBy(raw('lower(name)'), 'asc')
+    }
+    q.groupBy(['tags.id', 'is_default', 'communities_tags.created_at'])
   })
   .fetchAll({withRelated})
   .tap(tags => total = tags.first() ? Number(tags.first().get('total')) : 0)
