@@ -2,6 +2,7 @@
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
+const pushToSockets = require('../services/Websockets')
 
 const normalize = post => {
   const data = {communities: [], people: []}
@@ -140,24 +141,10 @@ module.exports = bookshelf.Model.extend({
     return this.get('type') === Post.Type.WELCOME
   },
 
-  sendToSubscribedSockets: function (room, messageType, payload, socketToExclude) {
-    if (!sails.io) return
-    Object.keys(sails.io.sockets.sockets).forEach(function (id) {
-      var socket = sails.io.sockets.sockets[id]
-      // for security reasons, only sockets that passed the checkAndSetPost policy
-      // get subscribed to the comment stream for that post
-      if (socket !== socketToExclude && socket.rooms[room]) {
-        socket.emit(messageType, payload)
-      }
-    })
-    /* this should work but it doesn't
-      sails.sockets.broadcast(`posts/${this.id}`, 'comment_added', comment)
-    */
-  },
-
+  
   pushCommentToSockets: function (comment) {
     var postId = this.id
-    this.sendToSubscribedSockets(`posts/${postId}`, 'commentAdded', comment)
+    pushToSockets(`posts/${postId}`, 'commentAdded', comment)
   },
 
   pushMessageToSockets: function (message, userIds, oldUpdatedAt) {
@@ -166,22 +153,21 @@ module.exports = bookshelf.Model.extend({
     if (this.get('num_comments') === 1) {
       excludingSender.forEach(id => this.pushSelfToSocket(id)) 
     } else {
-      excludingSender.forEach(id => this.sendToSubscribedSockets(`users/${id}`, 'messageAdded', { postId, message, oldUpdatedAt })) 
+      excludingSender.forEach(id => pushToSockets(`users/${id}`, 'messageAdded', { postId, message, oldUpdatedAt })) 
     }
   },
 
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
     var postId = this.id
-    this.sendToSubscribedSockets(`posts/${postId}`, 'userTyping', { userId, userName, isTyping }, socketToExclude)
+    pushToSockets(`posts/${postId}`, 'userTyping', { userId, userName, isTyping }, socketToExclude)
   },
 
   pushSelfToSocket: function (userId) {
-    var that = this
-    const opts = { withComments: 'all' }
+    const opts = {withComments: 'all'}
     this.load(PostPresenter.relations(userId, opts))
     .then(post => PostPresenter.present(post, userId, opts))
     .then(normalize)
-    .then(post => that.sendToSubscribedSockets(`users/${userId}`, 'newThread', post))
+    .then(post => pushToSockets(`users/${userId}`, 'newThread', post))
   },
 
   copy: function (attrs) {
