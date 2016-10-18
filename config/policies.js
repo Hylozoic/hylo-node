@@ -28,7 +28,8 @@ module.exports.policies = {
     findOne: true,
     use: ['sessionAuth'],
     find: ['sessionAuth', 'canInvite'],
-    create: ['sessionAuth', 'canInvite']
+    create: ['sessionAuth', 'canInvite'],
+    reInviteAll: ['sessionAuth', 'canInvite', 'checkAndSetMembership']
   },
 
   AdminSessionController: {

@@ -42,6 +42,28 @@ module.exports = bookshelf.Model.extend({
       tag_id: this.get('tag_id'),
       community_id: this.get('community_id')
     }).save())
+  },
+
+  send: function (opts) {
+    let creator = this.relations.creator
+    let community = this.relations.community
+
+    let data = _.extend(_.pick(opts, 'message', 'subject', 'participants'), {
+      inviter_name: creator.get('name'),
+      inviter_email: creator.get('email'),
+      community_name: community.get('name'),
+      invite_link: Frontend.Route.useInvitation(this.get('token'), opts.email),
+      tracking_pixel_url: Analytics.pixelUrl('Invitation', {
+        recipient: opts.email,
+        community: community.get('name')
+      })
+    })
+    if (this.get('tag_id')) {
+      data.tag_name = this.relations.tag.get('name')
+      return Email.sendTagInvitation(opts.email, data)
+    } else {
+      return Email.sendInvitation(opts.email, data)
+    }
   }
 
 }, {
@@ -67,26 +89,6 @@ module.exports = bookshelf.Model.extend({
   createAndSend: function (opts) {
     return Invitation.create(opts)
     .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
-    .then(invitation => {
-      let creator = invitation.relations.creator
-      let community = invitation.relations.community
-
-      let data = _.extend(_.pick(opts, 'message', 'subject', 'participants'), {
-        inviter_name: creator.get('name'),
-        inviter_email: creator.get('email'),
-        community_name: community.get('name'),
-        invite_link: Frontend.Route.useInvitation(invitation.get('token'), opts.email),
-        tracking_pixel_url: Analytics.pixelUrl('Invitation', {
-          recipient: opts.email,
-          community: community.get('name')
-        })
-      })
-      if (invitation.get('tag_id')) {
-        data.tag_name = invitation.relations.tag.get('name')
-        return Email.sendTagInvitation(opts.email, data)
-      } else {
-        return Email.sendInvitation(opts.email, data)
-      }
-    })
+    .then(invitation => invitation.send(opts))
   }
 })
