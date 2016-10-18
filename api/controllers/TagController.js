@@ -105,7 +105,8 @@ module.exports = {
   findForCommunity: function (req, res) {
     return fetchAndPresentForCommunity(res.locals.community.id, {
       limit: req.param('limit'),
-      offset: req.param('offset')
+      offset: req.param('offset'),
+      sort: req.param('sort')
     })
     .then(res.ok)
   },
