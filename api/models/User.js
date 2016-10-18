@@ -311,7 +311,7 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
-  unreadThreadCount: function (userId) {
+  unseenThreadCount: function (userId) {
     const { raw } = bookshelf.knex
     return User.where('id', userId).query()
     .select(raw("settings->'last_viewed_messages_at' as time"))

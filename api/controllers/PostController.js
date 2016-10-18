@@ -153,6 +153,8 @@ const checkPostTags = (attrs, opts) => {
   return throwErrorIfMissingTags(tags, opts.community_ids)
 }
 
+const emptyResponse = res => err => err ? res.serverError(err) : res.ok({})
+
 const PostController = {
   findThreads: createFindAction(queryForThreads),
   findOne: function (req, res) {
@@ -404,12 +406,7 @@ const PostController = {
 
   unsubscribe: function (req, res) {
     var post = res.locals.post
-    sails.sockets.leave(req, `posts/${post.id}`, function (err) {
-      if (err) {
-        return res.serverError(err)
-      }
-      return res.ok({})
-    })
+    sails.sockets.leave(req, `posts/${post.id}`, emptyResponse(res))
   },
 
   typing: function (req, res) {
@@ -420,6 +417,14 @@ const PostController = {
     .then(user => {
       post.pushTypingToSockets(user.id, user.get('name'), req.body.isTyping, req.socket)
     })
+  },
+
+  subscribeToThreads: function (req, res) {
+    sails.sockets.join(req, `users/${req.session.userId}`, emptyResponse(res))
+  },
+
+  unsubscribeFromThreads: function (req, res) {
+    sails.sockets.leave(req, `users/${req.session.userId}`, emptyResponse(res))
   }
 }
 

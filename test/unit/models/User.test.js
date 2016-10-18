@@ -273,7 +273,7 @@ describe('User', function () {
     })
   })
 
-  describe('.unreadThreadCount', () => {
+  describe('.unseenThreadCount', () => {
     var doge, post, post2
 
     before(() => {
@@ -301,34 +301,34 @@ describe('User', function () {
           }).save())))
         .then(() => p.updateCommentCount())
 
-      return User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(0))
+      return User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
 
       // four messages but two threads
       .then(() => addMessages(post, 2))
       .then(() => addMessages(post2, 2))
-      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(2)))
-      .then(() => User.unreadThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2)))
+      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
 
       // mark one thread as read
       .then(() => LastRead.findOrCreate(cat.id, post.id))
-      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(1)))
-      .then(() => User.unreadThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1)))
+      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
 
       // another new message
       .then(() => addMessages(post))
-      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(2)))
+      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2)))
 
       // dropdown was opened
       .then(() => {
         cat.addSetting({last_viewed_messages_at: new Date()})
         return cat.save()
       })
-      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(0)))
+      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0)))
 
       // new message after dropdown was opened
       .then(() => addMessages(post2))
-      .then(() => User.unreadThreadCount(cat.id).then(n => expect(n).to.equal(1)))
-      .then(() => User.unreadThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1)))
+      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
     })
   })
 })

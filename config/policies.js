@@ -107,9 +107,6 @@ module.exports.policies = {
     unfollow:                             ['sessionAuth', 'checkAndSetPost'],
     rsvp:                                 ['sessionAuth', 'checkAndSetPost'],
     updateLastRead:                       ['sessionAuth', 'checkAndSetPost'],
-    subscribe:                            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    unsubscribe:                          ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    typing:                               ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     findForFollowed:                      ['sessionAuth', 'isSelf'],
     checkFreshnessForFollowed:            ['sessionAuth', 'isSelf'],
     findForAllForUser:                    ['sessionAuth', 'isSelf'],
@@ -120,6 +117,11 @@ module.exports.policies = {
     vote:                                 ['sessionAuth', 'checkAndSetPost'],
     complain:                             ['sessionAuth', 'checkAndSetPost'],
     destroy:                              ['sessionAuth', 'checkAndSetWritablePost'],
+    subscribe:                            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
+    unsubscribe:                          ['isSocket', 'sessionAuth', 'checkAndSetPost'],
+    typing:                               ['isSocket', 'sessionAuth', 'checkAndSetPost'],
+    subscribeToThreads:                   ['isSocket', 'sessionAuth'],
+    unsubscribeFromThreads:               ['isSocket', 'sessionAuth'],
     createFromEmailForm: true
   },
 

@@ -1,6 +1,14 @@
 /* globals LinkPreview, LastRead */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
+import { normalizePost } from '../../lib/util/normalize'
+const pushToSockets = require('../services/Websockets')
+
+const normalize = post => {
+  const data = {communities: [], people: []}
+  normalizePost(post, data, true)
+  return Object.assign(data, post)
+}
 
 module.exports = bookshelf.Model.extend({
   tableName: 'post',
@@ -129,28 +137,33 @@ module.exports = bookshelf.Model.extend({
     return this.get('type') === Post.Type.WELCOME
   },
 
-  sendToSubscribedSockets: function (messageType, payload, socketToExclude) {
-    if (!sails.io) return
+  
+  pushCommentToSockets: function (comment) {
     var postId = this.id
-    Object.keys(sails.io.sockets.sockets).forEach(function (id) {
-      var socket = sails.io.sockets.sockets[id]
-      // for security reasons, only sockets that passed the checkAndSetPost policy
-      // get subscribed to the comment stream for that post
-      if (socket !== socketToExclude && socket.rooms[`posts/${postId}`]) {
-        socket.emit(messageType, payload)
-      }
-    })
-    /* this should work but it doesn't
-      sails.sockets.broadcast(`posts/${this.id}`, 'comment_added', comment)
-    */
+    pushToSockets(`posts/${postId}`, 'commentAdded', comment)
   },
 
-  pushCommentToSockets: function (comment) {
-    this.sendToSubscribedSockets('commentAdded', comment)
+  pushMessageToSockets: function (message, userIds, oldUpdatedAt) {
+    var postId = this.id
+    const excludingSender = userIds.filter(id => id !== message.user_id.toString())
+    if (this.get('num_comments') === 1) {
+      excludingSender.forEach(id => this.pushSelfToSocket(id)) 
+    } else {
+      excludingSender.forEach(id => pushToSockets(`users/${id}`, 'messageAdded', { postId, message, oldUpdatedAt })) 
+    }
   },
 
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
-    this.sendToSubscribedSockets('userTyping', { userId, userName, isTyping }, socketToExclude)
+    var postId = this.id
+    pushToSockets(`posts/${postId}`, 'userTyping', { userId, userName, isTyping }, socketToExclude)
+  },
+
+  pushSelfToSocket: function (userId) {
+    const opts = {withComments: 'all'}
+    this.load(PostPresenter.relations(userId, opts))
+    .then(post => PostPresenter.present(post, userId, opts))
+    .then(normalize)
+    .then(post => pushToSockets(`users/${userId}`, 'newThread', post))
   },
 
   copy: function (attrs) {
