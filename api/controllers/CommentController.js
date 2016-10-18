@@ -20,7 +20,6 @@ const presentComment = (comment) =>
   })
 
 const createAndPresentComment = function (commenterId, text, post, tagDescriptions) {
-  const oldUpdatedAt = post.get('updated_at')
   text = sanitize(text)
   var attrs = {
     text: text,
@@ -45,7 +44,7 @@ const createAndPresentComment = function (commenterId, text, post, tagDescriptio
     .tap(comment => post.addFollowers(newFollowers, commenterId))
     .tap(() => updateRecentComments(post.id))
     .then(presentComment)
-    .tap(c => post.get('type') === Post.Type.THREAD ? post.pushMessageToSockets(c, existingFollowers, oldUpdatedAt) : post.pushCommentToSockets(c))
+    .tap(c => post.get('type') === Post.Type.THREAD ? post.pushMessageToSockets(c, existingFollowers) : post.pushCommentToSockets(c))
   })
 }
 
