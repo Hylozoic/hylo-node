@@ -78,7 +78,7 @@ module.exports = {
         ok: spy(data => self.body = data),
         serverError: spy(err => { throw err }),
         badRequest: spy(data => self.body = data),
-        notFound: spy(function notFound (data) { this.body = data }),
+        notFound: spy(data => self.body = data),
         forbidden: spy(data => self.body = data),
         status: spy(value => { self.statusCode = value; return self }),
         send: spy(data => self.body = data),
