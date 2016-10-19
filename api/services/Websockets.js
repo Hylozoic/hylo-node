@@ -1,4 +1,4 @@
-module.exports = function (room, messageType, payload, socketToExclude) {
+export function pushToSockets (room, messageType, payload, socketToExclude) {
   if (!sails.io) return
   Object.keys(sails.io.sockets.sockets).forEach(function (id) {
     var socket = sails.io.sockets.sockets[id]

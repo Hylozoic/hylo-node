@@ -2,7 +2,7 @@
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
-const pushToSockets = require('../services/Websockets')
+import { pushToSockets } from '../services/Websockets'
 
 const normalize = post => {
   const data = {communities: [], people: []}
@@ -137,7 +137,6 @@ module.exports = bookshelf.Model.extend({
     return this.get('type') === Post.Type.WELCOME
   },
 
-  
   pushCommentToSockets: function (comment) {
     var postId = this.id
     pushToSockets(`posts/${postId}`, 'commentAdded', comment)
@@ -147,15 +146,15 @@ module.exports = bookshelf.Model.extend({
     var postId = this.id
     const excludingSender = userIds.filter(id => id !== message.user_id.toString())
     if (this.get('num_comments') === 1) {
-      excludingSender.forEach(id => this.pushSelfToSocket(id)) 
+      excludingSender.forEach(id => this.pushSelfToSocket(id))
     } else {
-      excludingSender.forEach(id => pushToSockets(`users/${id}`, 'messageAdded', { postId, message, oldUpdatedAt })) 
+      excludingSender.forEach(id => pushToSockets(`users/${id}`, 'messageAdded', {postId, message, oldUpdatedAt}))
     }
   },
 
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
     var postId = this.id
-    pushToSockets(`posts/${postId}`, 'userTyping', { userId, userName, isTyping }, socketToExclude)
+    pushToSockets(`posts/${postId}`, 'userTyping', {userId, userName, isTyping}, socketToExclude)
   },
 
   pushSelfToSocket: function (userId) {
