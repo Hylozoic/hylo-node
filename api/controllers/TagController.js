@@ -22,6 +22,8 @@ module.exports = {
 
   findOneInCommunity: function (req, res) {
     let tag
+    const { userId } = req.session
+
     return Tag.find(req.param('tagName'), withRelatedSpecialPost)
     .then(t => {
       if (!t) return res.notFound()
@@ -37,19 +39,17 @@ module.exports = {
         }},
         'community.tagFollows.user'
       ]})
-      .tap(ct => ct && TagFollow.where({
-        user_id: req.session.userId,
-        tag_id: ct.get('tag_id')
+      .tap(ct => ct && userId && TagFollow.where({
+        user_id: userId, tag_id: ct.get('tag_id')
       }).query().update({new_post_count: 0}))
       .then(ct => {
         if (!ct) return res.notFound()
         const { owner, community } = ct.relations
         const { tagFollows } = community.relations
-        const { userId } = req.session
         const followers = tagFollows.models.map(tf =>
           tf.relations.user.pick('id', 'name', 'avatar_url'))
         const followed = some(f => f.id === userId, followers)
-        const followerCount = tagFollows.first().get('total')
+        const followerCount = tagFollows.first() ? tagFollows.first().get('total') : 0
         return res.ok(merge(
           ct.pick('description', 'is_default', 'community_id'),
           presentWithPost(tag),

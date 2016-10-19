@@ -1,6 +1,6 @@
 import { extend, merge, pick } from 'lodash'
 const randomstring = require('randomstring')
-const chai = require('chai')
+import { spy } from 'chai'
 const sails = require('sails')
 
 var text = function (length) {
@@ -75,14 +75,15 @@ module.exports = {
 
     response: function () {
       var self = {
-        ok: chai.spy(data => self.body = data),
-        serverError: chai.spy(err => { throw err }),
-        badRequest: chai.spy(data => self.body = data),
-        forbidden: chai.spy(data => self.body = data),
-        status: chai.spy(value => { self.statusCode = value; return self }),
-        send: chai.spy(data => self.body = data),
-        redirect: chai.spy(url => self.redirected = url),
-        view: chai.spy((template, attrs) => {
+        ok: spy(data => self.body = data),
+        serverError: spy(err => { throw err }),
+        badRequest: spy(data => self.body = data),
+        notFound: spy(function notFound (data) { this.body = data }),
+        forbidden: spy(data => self.body = data),
+        status: spy(value => { self.statusCode = value; return self }),
+        send: spy(data => self.body = data),
+        redirect: spy(url => self.redirected = url),
+        view: spy((template, attrs) => {
           self.viewTemplate = template
           self.viewAttrs = attrs
         }),
