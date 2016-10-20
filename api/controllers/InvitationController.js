@@ -18,7 +18,7 @@ const present = membership => Object.assign(membership.toJSON(), {
 
 module.exports = {
   findOne: function (req, res) {
-    return Invitation.where({token: req.param('token')}).fetch({withRelated: 'community'})
+    return Invitation.find(req.param('token'), {withRelated: 'community'})
     .then(invitation => {
       if (!invitation) {
         return res.status(422).send('bad token')
@@ -30,7 +30,7 @@ module.exports = {
 
   use: function (req, res) {
     const { userId } = req.session
-    return Invitation.where({token: req.param('token')}).fetch({withRelated: 'tag'})
+    return Invitation.find(req.param('token'), {withRelated: 'tag'})
     .then(invitation => {
       if (!invitation) {
         return res.status(422).send('bad token')

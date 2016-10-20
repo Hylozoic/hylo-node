@@ -46,8 +46,10 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
-  find: function (id, opts) {
-    return Invitation.where({id: id}).fetch(opts)
+  find: (idOrToken, opts) => {
+    if (!idOrToken) return Promise.resolve(null)
+    const attr = isNaN(Number(idOrToken)) ? 'token' : 'id'
+    return Invitation.where(attr, idOrToken).fetch(opts)
   },
 
   create: function (opts) {
