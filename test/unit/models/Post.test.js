@@ -334,7 +334,7 @@ describe('post/util', () => {
     var post
     const videoUrl = 'https://www.youtube.com/watch?v=jsQ7yKwDPZk'
 
-    before(() => {
+    beforeEach(() => {
       post = factories.post({description: 'wow!'})
       spyify(Queue, 'classMethod')
     })
@@ -370,6 +370,18 @@ describe('post/util', () => {
 
         expect(Queue.classMethod).to.have.been.called
         .with('Post', 'createActivities', {postId: post.id})
+      })
+    })
+
+    it('ignores duplicate community ids', () => {
+      const c = factories.community()
+      return c.save()
+      .then(() => post.save())
+      .then(() => afterSavingPost(post, {community_ids: [c.id, c.id]}))
+      .then(() => post.load('communities'))
+      .then(() => expect(post.relations.communities.length).to.equal(1))
+      .catch(err => {
+        throw err
       })
     })
   })

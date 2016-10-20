@@ -43,7 +43,7 @@ export const afterSavingPost = function (post, opts) {
   const trxOpts = pick(opts, 'transacting')
 
   return Promise.all(flatten([
-    post.communities().attach(opts.community_ids, trxOpts),
+    opts.community_ids && post.communities().attach(uniq(opts.community_ids), trxOpts),
 
     // Add mentioned users and creator as followers
     post.addFollowers(followerIds, userId, trxOpts),
