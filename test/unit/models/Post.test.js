@@ -285,7 +285,7 @@ describe('Post', function () {
 })
 
 describe('post/util', () => {
-  before(() => Tag.forge({name: 'request'}).save())
+  before(() => setup.clearDb().then(() => Tag.forge({name: 'request'}).save()))
 
   describe('updateChildren', () => {
     var post, children
