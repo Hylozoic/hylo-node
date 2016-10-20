@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 import Promise from 'bluebird'
-import { get } from 'lodash'
+import { get, isEmpty } from 'lodash'
 const hash = Promise.promisify(bcrypt.hash, bcrypt)
 
 module.exports = bookshelf.Model.extend({
@@ -45,7 +45,7 @@ module.exports = bookshelf.Model.extend({
       if (avatar_url && !avatar_url.match(/gravatar/)) {
         attributes.avatar_url = avatar_url
       }
-      return User.query().where('id', userId)
+      return !isEmpty(attributes) && User.query().where('id', userId)
       .update(attributes)
       .transacting(options.transacting)
     })
