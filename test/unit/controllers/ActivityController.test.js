@@ -4,11 +4,6 @@ var factories = require(root('test/setup/factories'))
 var ActivityController = require(root('api/controllers/ActivityController'))
 import { merge, omit, times } from 'lodash'
 
-const destroyAllActivities = () => {
-  return Activity.fetchAll()
-  .then(activities => activities.map(activity => activity.destroy()))
-}
-
 const createPostWithActivity = (userId, attrs = {}) =>
   factories.post(merge({
     description: `<p>Hey <a data-user-id="${userId}">you</a></p>`
@@ -41,7 +36,7 @@ describe('ActivityController', () => {
   })
 
   describe('#find', () => {
-    beforeEach(() => destroyAllActivities())
+    beforeEach(() => Activity.query().del())
 
     it('returns an activity for a mention', () => {
       var post
@@ -85,21 +80,21 @@ describe('ActivityController', () => {
   })
 
   describe('#findForCommunity', () => {
-    it('returns activities for the given community only', () => {
-      var names
+    var names
+
+    beforeEach(() => {
       req.params.communityId = fixtures.c1.id
       req.session.userId = fixtures.u1.id
-      return Promise.map(
-        times(2, () => createPostWithActivity(fixtures.u1.id, {
-          communities: [fixtures.c1.id]
-        })),
-        x => x
-      )
+      return Promise.all(times(2, () =>
+        createPostWithActivity(fixtures.u1.id, {communities: [fixtures.c1.id]})))
       .tap(posts => names = posts.map(p => p.get('name')))
       .then(() => createPostWithActivity(fixtures.u1.id, {
         communities: [fixtures.c2.id]
       }))
-      .then(() => ActivityController.findForCommunity(req, res))
+    })
+
+    it('returns activities for the given community only', () => {
+      return ActivityController.findForCommunity(req, res)
       .then(() => {
         expect(res.body).to.exist
         expect(res.body.length).to.equal(2)
@@ -134,7 +129,7 @@ describe('ActivityController', () => {
   })
 
   describe('#markAllRead', () => {
-    beforeEach(() => destroyAllActivities())
+    beforeEach(() => Activity.query().del())
 
     it('marks logged in users activities as read', () => {
       req.session.userId = fixtures.u1.id
