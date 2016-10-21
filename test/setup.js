@@ -6,6 +6,7 @@ var fs = require('fs')
 var path = require('path')
 var Promise = require('bluebird')
 var root = require('root-path')
+import nock from 'nock'
 
 chai.use(require('chai-spies'))
 chai.use(require('chai-as-promised'))
@@ -47,6 +48,8 @@ before(function (done) {
     }
   })
 })
+
+afterEach(() => nock.cleanAll())
 
 TestSetup.prototype.createSchema = function () {
   return bookshelf.transaction(trx => {
