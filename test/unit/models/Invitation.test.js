@@ -3,6 +3,12 @@ var setup = require(require('root-path')('test/setup'))
 describe('Invitation', function () {
   before(() => setup.clearDb())
 
+  describe('.find', () => {
+    it('ignores a blank id', () => {
+      return Invitation.find(null).then(i => expect(i).to.be.null)
+    })
+  })
+
   describe('#use', function () {
     var user, community, tag, invitation1, invitation2, inviter
 
