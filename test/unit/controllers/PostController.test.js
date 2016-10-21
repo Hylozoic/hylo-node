@@ -2,6 +2,8 @@ const root = require('root-path')
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 const PostController = require(root('api/controllers/PostController'))
+import { stubGetImageSize } from '../../setup/helpers'
+import nock from 'nock'
 
 const testImageUrl = 'http://cdn.hylo.com/misc/hylo-logo-teal-on-transparent.png'
 const testImageUrl2 = 'http://cdn.hylo.com/misc/hylo-logo-white-on-teal-circle.png'
@@ -24,10 +26,15 @@ describe('PostController', () => {
     .then(() => fixtures.u2.joinCommunity(fixtures.c1)))
 
   beforeEach(() => {
+    stubGetImageSize(testImageUrl)
+    stubGetImageSize(testImageUrl2)
     req = factories.mock.request()
     res = factories.mock.response()
     req.login(fixtures.u1.id)
   })
+
+  before(() => nock.disableNetConnect())
+  after(() => nock.enableNetConnect())
 
   describe('#create', () => {
     beforeEach(() => {
@@ -77,8 +84,6 @@ describe('PostController', () => {
     })
 
     it('creates an image', function () {
-      this.timeout(5000)
-
       _.extend(req.params, {
         name: 'NewImagePost',
         description: '',
@@ -456,7 +461,9 @@ describe('PostController', () => {
     it('saves a video', () => {
       req.params.videoUrl = testVideoUrl
 
-      return PostController.update(req, res)
+      return Media.generateThumbnailUrl(testVideoUrl)
+      .then(url => stubGetImageSize(url))
+      .then(() => PostController.update(req, res))
       .tap(() => post.load('media'))
       .then(() => {
         var media = post.relations.media
@@ -498,9 +505,13 @@ describe('PostController', () => {
 
     describe('with an existing video', () => {
       var originalVideoId
-      beforeEach(() =>
-        Media.createForPost(post.id, 'video', testVideoUrl)
-        .tap(video => originalVideoId = video.id))
+
+      beforeEach(() => {
+        return Media.generateThumbnailUrl(testVideoUrl)
+        .then(url => stubGetImageSize(url))
+        .then(() => Media.createForPost(post.id, 'video', testVideoUrl))
+        .tap(video => originalVideoId = video.id)
+      })
 
       it('removes the video', () => {
         req.params.videoRemoved = true
@@ -510,10 +521,16 @@ describe('PostController', () => {
         .then(() => expect(post.relations.media.length).to.equal(0))
       })
 
-      it('updates the video url', () => {
+      it('updates the video url and thumbnail', () => {
         req.params.videoUrl = testVideoUrl2
+        var newThumbnailUrl
 
-        return PostController.update(req, res)
+        return Media.generateThumbnailUrl(testVideoUrl2)
+        .then(url => {
+          newThumbnailUrl = url
+          stubGetImageSize(url)
+        })
+        .then(() => PostController.update(req, res))
         .tap(() => post.load('media'))
         .then(() => {
           var media = post.relations.media
@@ -521,6 +538,7 @@ describe('PostController', () => {
           var video = media.first()
           expect(video.get('url')).to.equal(testVideoUrl2)
           expect(video.id).to.equal(originalVideoId)
+          expect(video.get('thumbnail_url')).to.equal(newThumbnailUrl)
         })
       })
     })
