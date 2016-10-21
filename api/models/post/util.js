@@ -101,19 +101,19 @@ export const updateChildren = (post, children, trx) => {
   })
 }
 
-const updateMedia = (post, type, url, remove, trx) => {
+const updateMedia = (post, type, url, remove, transacting) => {
   if (!url && !remove) return
   var media = post.relations.media.find(m => m.get('type') === type)
 
   if (media && remove) { // remove media
-    return media.destroy({transacting: trx})
+    return media.destroy({transacting})
   } else if (media) { // replace url in existing media
     if (media.get('url') !== url) {
-      return media.save({url: url}, {patch: true, transacting: trx})
-      .then(media => media.updateDimensions({patch: true, transacting: trx}))
+      return media.save({url}, {patch: true, transacting})
+      .then(media => media.updateMetadata({transacting}))
     }
   } else if (url) { // create new media
-    return Media.createForPost(post.id, type, url, trx)
+    return Media.createForPost(post.id, type, url, transacting)
   }
 }
 

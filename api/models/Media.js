@@ -10,21 +10,19 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Post)
   },
 
-  updateDimensions: function (opts) {
-    var image_url
-    if (this.get('type') === 'image') {
-      image_url = this.get('url')
-    } else if (this.get('type') === 'video') {
-      image_url = this.get('thumbnail_url')
-    }
-    var media = this
-    if (image_url) {
-      return GetImageSize(image_url)
-      .then(dimensions => {
-        var attrs = {width: dimensions.width, height: dimensions.height}
-        return media.save(attrs, opts)
-      })
-    }
+  updateMetadata: function (opts) {
+    const isVideo = this.get('type') === 'video'
+    var thumbnail_url = this.get('thumbnail_url')
+
+    return Promise.resolve(isVideo && Media.generateThumbnailUrl(this.get('url')))
+    .then(url => {
+      if (url) thumbnail_url = url
+
+      const urlToMeasure = isVideo ? url : this.get('url')
+      return GetImageSize(urlToMeasure)
+      .then(({ width, height }) =>
+        this.save({width, height, thumbnail_url}, Object.assign({patch: true}, opts)))
+    })
   }
 
 }, {
