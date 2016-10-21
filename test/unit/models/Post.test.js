@@ -4,7 +4,7 @@ import { times } from 'lodash'
 const { afterSavingPost, updateChildren } = require(root('api/models/post/util'))
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
-import { spyify, unspyify } from '../../setup/helpers'
+import { spyify, stubGetImageSize, unspyify } from '../../setup/helpers'
 
 describe('Post', function () {
   describe('#addFollowers', function () {
@@ -342,7 +342,9 @@ describe('post/util', () => {
     after(() => unspyify(Queue, 'classMethod'))
 
     it('works', () => {
-      return bookshelf.transaction(trx =>
+      return Media.generateThumbnailUrl(videoUrl)
+      .then(url => stubGetImageSize(url))
+      .then(() => bookshelf.transaction(trx =>
         post.save({}, {transacting: trx})
         .then(() =>
           afterSavingPost(post, {
@@ -356,7 +358,7 @@ describe('post/util', () => {
               }
             ],
             transacting: trx
-          })))
+          }))))
       .then(() => post.load(['media', 'children']))
       .then(() => {
         const video = post.relations.media.first()
