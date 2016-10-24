@@ -96,7 +96,7 @@ module.exports = bookshelf.Model.extend({
     if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
     .then(community => {
-      var path = url.parse(Frontend.Route.communitySettings(community) + '?expand=join_requests').path
+      var path = url.parse(Frontend.Route.communityJoinRequests(community)).path
       var alertText = PushNotification.textForJoinRequest(community, this.actor())
       return this.reader().sendPushNotification(alertText, path)
     })
@@ -238,7 +238,7 @@ module.exports = bookshelf.Model.extend({
           requester_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
           settings_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.communitySettings(community) + '?expand=join_requests')
+            Frontend.Route.communityJoinRequests(community))
         }
       })))
   },

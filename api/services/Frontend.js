@@ -26,6 +26,10 @@ module.exports = {
       return this.community(community) + '/settings'
     },
 
+    communityJoinRequests: function (community) {
+      return this.community(community) + '/invite#join_requests'
+    },
+
     profile: function (user) {
       return url('/u/%s', user.id)
     },
