@@ -38,6 +38,21 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
   }))
 }
 
+const approveAJoinRequest = (req, res, joinRequest, community) => {
+  const communityId = community.id
+  const userId = joinRequest.get('user_id')
+  return Membership.create(userId, communityId)
+  .then(ms => afterCreatingMembership(req, res, ms, community))
+  .tap(() => joinRequest.destroy())
+  .tap(() => Queue.classMethod('Activity', 'saveForReasonsOpts', {
+    activities: [{
+      reader_id: userId,
+      community_id: communityId,
+      actor_id: req.session.userId,
+      reason: 'approvedJoinRequest'
+    }]}))
+}
+
 module.exports = {
   find: function (req, res) {
     return Community
@@ -417,18 +432,15 @@ module.exports = {
       user_id: userId,
       community_id: community.id
     }).fetch()
-    .then(joinRequest => {
-      return Membership.create(userId, community.id)
-      .then(ms => afterCreatingMembership(req, res, ms, community))
-      .tap(() => joinRequest.destroy())
-      .tap(() => Queue.classMethod('Activity', 'saveForReasonsOpts', {
-        activities: [{
-          reader_id: userId,
-          community_id: community.id,
-          actor_id: req.session.userId,
-          reason: 'approvedJoinRequest'
-        }]}))
-    })
+    .then(joinRequest => approveAJoinRequest(req, res, joinRequest, community))
     .then(res.ok)
+  },
+
+  approveAllJoinRequests: function (req, res) {
+    const { community } = res.locals
+    return JoinRequest.where({community_id: community.id}).fetchAll()
+    .then(joinRequests => Promise.map(joinRequests.models, joinRequest =>
+      approveAJoinRequest(req, res, joinRequest, community)
+    ))
   }
 }
