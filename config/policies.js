@@ -28,7 +28,8 @@ module.exports.policies = {
     findOne: true,
     use: ['sessionAuth'],
     find: ['sessionAuth', 'canInvite'],
-    create: ['sessionAuth', 'canInvite']
+    create: ['sessionAuth', 'canInvite'],
+    reinviteAll: ['sessionAuth', 'canInvite', 'checkAndSetMembership']
   },
 
   AdminSessionController: {
@@ -68,27 +69,28 @@ module.exports.policies = {
   },
 
   CommunityController: {
-    find:            ['sessionAuth', 'isAdmin'],
-    findOne:         ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
-    findSettings:    ['sessionAuth', 'canInvite'],
-    update:          ['sessionAuth', 'isModerator'],
-    addSlack:        ['sessionAuth', 'isModerator'],
-    findModerators:  ['sessionAuth', 'isModerator'], // FIXME move to UserController
-    addModerator:    ['sessionAuth', 'isModerator'],
-    removeModerator: ['sessionAuth', 'isModerator'],
-    removeMember:    ['sessionAuth', 'isModerator'],
-    pinPost:         ['sessionAuth', 'isModerator'],
-    leave:           ['sessionAuth', 'checkAndSetMembership'],
-    updateMembership:['sessionAuth', 'checkAndSetMembership'],
-    validate:        true,
-    create:          ['sessionAuth'],
-    findForNetwork:  ['sessionAuth', 'inNetwork'],
-    findForNetworkNav:  ['sessionAuth', 'inNetwork'],
-    joinWithCode:    ['sessionAuth'],
-    updateChecklist: ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
-    requestToJoin:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    joinRequests:    ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
-    approveJoinRequest: ['sessionAuth', 'isModerator', 'checkAndSetMembership']
+    find:                   ['sessionAuth', 'isAdmin'],
+    findOne:                ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findSettings:           ['sessionAuth', 'canInvite'],
+    update:                 ['sessionAuth', 'isModerator'],
+    addSlack:               ['sessionAuth', 'isModerator'],
+    findModerators:         ['sessionAuth', 'isModerator'], // FIXME move to UserController
+    addModerator:           ['sessionAuth', 'isModerator'],
+    removeModerator:        ['sessionAuth', 'isModerator'],
+    removeMember:           ['sessionAuth', 'isModerator'],
+    pinPost:                ['sessionAuth', 'isModerator'],
+    leave:                  ['sessionAuth', 'checkAndSetMembership'],
+    updateMembership:       ['sessionAuth', 'checkAndSetMembership'],
+    validate:               true,
+    create:                 ['sessionAuth'],
+    findForNetwork:         ['sessionAuth', 'inNetwork'],
+    findForNetworkNav:      ['sessionAuth', 'inNetwork'],
+    joinWithCode:           ['sessionAuth'],
+    updateChecklist:        ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
+    requestToJoin:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
+    joinRequests:           ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
+    approveJoinRequest:     ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
+    approveAllJoinRequests: ['sessionAuth', 'isModerator', 'checkAndSetMembership']
   },
 
   PostController: {

@@ -36,6 +36,7 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/invitations':          'InvitationController.find',
   'POST   /noo/community/:communityId/invite':               'InvitationController.create',
   'POST   /noo/community/:communityId/invite/tag/:tagName':  'InvitationController.create',
+  'POST   /noo/community/:communityId/re-invite-all':        'InvitationController.reinviteAll',
   'GET    /noo/community/:communityId/activity':             'ActivityController.findForCommunity',
   'GET    /noo/community/:communityId/tags':                 'TagController.findForCommunity',
   'POST   /noo/community/:communityId/tag/:tagId':           'TagController.updateForCommunity',
@@ -46,6 +47,7 @@ module.exports.routes = {
   'POST   /noo/community/:communityId/request-join':         'CommunityController.requestToJoin',
   'GET    /noo/community/:communityId/joinRequests':         'CommunityController.joinRequests',
   'POST   /noo/community/:communityId/approve-join-request': 'CommunityController.approveJoinRequest',
+  'POST   /noo/community/:communityId/approve-all-join-requests': 'CommunityController.approveAllJoinRequests',
 
   'GET    /noo/threads':                                  'PostController.findThreads',
   'GET    /noo/post/:postId':                             'PostController.findOne',

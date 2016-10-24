@@ -125,5 +125,17 @@ module.exports = {
         })
       })
     .then(results => res.ok({results}))
+  },
+
+  reinviteAll: function (req, res) {
+    return Queue.classMethod('Invitation', 'reinviteAll', {
+      communityId: res.locals.community.id,
+      subject: req.param('subject'),
+      message: req.param('message'),
+      moderator: req.param('moderator'),
+      userId: req.session.userId
+    })
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   }
 }

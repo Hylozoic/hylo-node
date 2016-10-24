@@ -377,4 +377,32 @@ describe('CommunityController', () => {
       })
     })
   })
+
+  describe('.approveAllJoinRequests', () => {
+    var community, u1, u2
+
+    before(() => {
+      community = factories.community()
+      u1 = factories.user()
+      u2 = factories.user()
+      return Promise.join(community.save(), u1.save(), u2.save())
+      .then(() => Promise.join(
+        new JoinRequest({community_id: community.id, user_id: u1.id}).save(),
+        new JoinRequest({community_id: community.id, user_id: u2.id}).save()
+      ))
+    })
+
+    it('approves all join requests', () => {
+      res.locals.community = community
+      req.session.userId = user.id
+      return CommunityController.approveAllJoinRequests(req, res)
+      .then(() => JoinRequest.where({community_id: community.id}).fetchAll())
+      .then(jrs => expect(jrs.length).to.equal(0))
+      .then(() => Membership.where({community_id: community.id}).fetchAll())
+      .then(memberships => {
+        expect(memberships.length).to.equal(2)
+        expect(memberships.pluck('user_id').sort).to.deep.equal([u1.id, u2.id].sort)
+      })
+    })
+  })
 })

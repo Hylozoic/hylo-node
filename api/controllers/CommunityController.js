@@ -1,6 +1,7 @@
 import rollbar from 'rollbar'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { pick, sortBy, merge } from 'lodash'
+import { curry } from 'lodash/fp'
 const Promise = require('bluebird')
 const request = require('request')
 const post = Promise.promisify(request.post)
@@ -37,6 +38,21 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
     community: community.pick('id', 'name', 'slug', 'avatar_url')
   }))
 }
+
+const approveJoinRequest = curry((req, res, community, joinRequest) => {
+  const communityId = community.id
+  const userId = joinRequest.get('user_id')
+  return Membership.create(userId, communityId)
+  .then(ms => afterCreatingMembership(req, res, ms, community))
+  .tap(() => joinRequest.destroy())
+  .tap(() => Queue.classMethod('Activity', 'saveForReasonsOpts', {
+    activities: [{
+      reader_id: userId,
+      community_id: communityId,
+      actor_id: req.session.userId,
+      reason: 'approvedJoinRequest'
+    }]}))
+})
 
 module.exports = {
   find: function (req, res) {
@@ -417,18 +433,14 @@ module.exports = {
       user_id: userId,
       community_id: community.id
     }).fetch()
-    .then(joinRequest => {
-      return Membership.create(userId, community.id)
-      .then(ms => afterCreatingMembership(req, res, ms, community))
-      .tap(() => joinRequest.destroy())
-      .tap(() => Queue.classMethod('Activity', 'saveForReasonsOpts', {
-        activities: [{
-          reader_id: userId,
-          community_id: community.id,
-          actor_id: req.session.userId,
-          reason: 'approvedJoinRequest'
-        }]}))
-    })
+    .then(approveJoinRequest(req, res, community))
     .then(res.ok)
+  },
+
+  approveAllJoinRequests: function (req, res) {
+    const { community } = res.locals
+    return JoinRequest.where({community_id: community.id}).fetchAll()
+    .then(joinRequests =>
+      Promise.map(joinRequests.models, approveJoinRequest(req, res, community)))
   }
 }
