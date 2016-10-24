@@ -157,10 +157,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.get('avatar_url') === User.gravatar(this.get('email'))
   },
 
-  markInvitationsUsed: function (communityId) {
+  markInvitationsUsed: function (communityId, trx) {
     return Invitation.query()
     .where({email: this.get('email'), community_id: communityId})
-    .update({used_by_id: this.id})
+    .update({used_by_id: this.id}).transacting(trx)
   }
 
 }, HasSettings), {
@@ -228,7 +228,7 @@ module.exports = bookshelf.Model.extend(merge({
     .tap(user => Promise.join(
       account && LinkedAccount.create(user.id, account, {transacting: trx}),
       community && Membership.create(user.id, community.id, {transacting: trx}),
-      community && user.markInvitationsUsed(community.id)
+      community && user.markInvitationsUsed(community.id, trx)
     ))
   },
 
