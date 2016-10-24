@@ -128,22 +128,13 @@ module.exports = {
   },
 
   reinviteAll: function (req, res) {
-    const communityId = res.locals.community.id
-    return Invitation.where({community_id: communityId, used_by_id: null})
-    .fetchAll({withRelated: ['creator', 'community', 'tag']})
-    .then(invitations =>
-      Promise.map(invitations.models, invitation => {
-        const opts = {
-          email: invitation.get('email'),
-          userId: req.session.userId,
-          communityId: communityId,
-          message: markdown(req.param('message')),
-          moderator: req.param('moderator'),
-          subject: req.param('subject')
-        }
-        return invitation.send(opts)
-        .then(() => invitation.save({created: new Date()}, {patch: true}))
-      }))
+    return Queue.classMethod('Invitation', 'reinviteAll', {
+      communityId: res.locals.community.id,
+      subject: req.param('subject'),
+      message: req.param('message'),
+      moderator: req.param('moderator'),
+      userId: req.session.userId
+    })
     .then(() => res.ok({}))
     .catch(res.serverError)
   }

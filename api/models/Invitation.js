@@ -1,4 +1,5 @@
 var uuid = require('node-uuid')
+import { markdown } from 'hylo-utils/text'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community_invite',
@@ -90,5 +91,24 @@ module.exports = bookshelf.Model.extend({
     return Invitation.create(opts)
     .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
     .then(invitation => invitation.send(opts))
+  },
+
+  reinviteAll: function (opts) {
+    const { communityId, userId, moderator, message, subject } = opts
+    return Invitation.where({community_id: communityId, used_by_id: null})
+    .fetchAll({withRelated: ['creator', 'community', 'tag']})
+    .then(invitations =>
+      Promise.map(invitations.models, invitation => {
+        const opts = {
+          email: invitation.get('email'),
+          userId,
+          communityId,
+          message: markdown(message),
+          moderator,
+          subject
+        }
+        return invitation.send(opts)
+        .then(() => invitation.save({created: new Date()}, {patch: true}))
+      }))
   }
 })

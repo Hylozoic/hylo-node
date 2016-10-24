@@ -86,6 +86,7 @@ module.exports = bookshelf.Model.extend(merge({
   joinCommunity: function (community) {
     var communityId = (typeof community === 'object' ? community.id : community)
     return Membership.create(this.id, communityId, {role: Membership.DEFAULT_ROLE})
+    .tap(() => this.markInvitationsUsed(communityId))
   },
 
   // sanitize certain values before storing them
@@ -154,6 +155,12 @@ module.exports = bookshelf.Model.extend(merge({
 
   hasNoAvatar: function () {
     return this.get('avatar_url') === User.gravatar(this.get('email'))
+  },
+
+  markInvitationsUsed: function (communityId) {
+    return Invitation.query()
+    .where({email: this.get('email'), community_id: communityId})
+    .update({used_by_id: this.id})
   }
 
 }, HasSettings), {
@@ -220,7 +227,8 @@ module.exports = bookshelf.Model.extend(merge({
     return new User(attributes).save({}, {transacting: trx})
     .tap(user => Promise.join(
       account && LinkedAccount.create(user.id, account, {transacting: trx}),
-      community && Membership.create(user.id, community.id, {transacting: trx})
+      community && Membership.create(user.id, community.id, {transacting: trx}),
+      community && user.markInvitationsUsed(community.id)
     ))
   },
 
