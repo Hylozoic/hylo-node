@@ -29,7 +29,7 @@ module.exports.policies = {
     use: ['sessionAuth'],
     find: ['sessionAuth', 'canInvite'],
     create: ['sessionAuth', 'canInvite'],
-    reInviteAll: ['sessionAuth', 'canInvite', 'checkAndSetMembership']
+    reinviteAll: ['sessionAuth', 'canInvite', 'checkAndSetMembership']
   },
 
   AdminSessionController: {

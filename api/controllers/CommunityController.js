@@ -1,6 +1,7 @@
 import rollbar from 'rollbar'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { pick, sortBy, merge } from 'lodash'
+import { curry } from 'lodash/fp'
 const Promise = require('bluebird')
 const request = require('request')
 const post = Promise.promisify(request.post)
@@ -38,7 +39,7 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
   }))
 }
 
-const approveAJoinRequest = (req, res, joinRequest, community) => {
+const approveJoinRequest = curry((req, res, community, joinRequest) => {
   const communityId = community.id
   const userId = joinRequest.get('user_id')
   return Membership.create(userId, communityId)
@@ -51,7 +52,7 @@ const approveAJoinRequest = (req, res, joinRequest, community) => {
       actor_id: req.session.userId,
       reason: 'approvedJoinRequest'
     }]}))
-}
+})
 
 module.exports = {
   find: function (req, res) {
@@ -432,15 +433,14 @@ module.exports = {
       user_id: userId,
       community_id: community.id
     }).fetch()
-    .then(joinRequest => approveAJoinRequest(req, res, joinRequest, community))
+    .then(approveJoinRequest(req, res, community))
     .then(res.ok)
   },
 
   approveAllJoinRequests: function (req, res) {
     const { community } = res.locals
     return JoinRequest.where({community_id: community.id}).fetchAll()
-    .then(joinRequests => Promise.map(joinRequests.models, joinRequest =>
-      approveAJoinRequest(req, res, joinRequest, community)
-    ))
+    .then(joinRequests =>
+      Promise.map(joinRequests.models, approveJoinRequest(req, res, community)))
   }
 }

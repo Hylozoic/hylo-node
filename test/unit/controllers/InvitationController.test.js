@@ -123,7 +123,7 @@ describe('InvitationController', () => {
     })
   })
 
-  describe('.reInviteAll', () => {
+  describe('.reinviteAll', () => {
     var c2
     before(() => {
       community = factories.community()
@@ -157,7 +157,7 @@ describe('InvitationController', () => {
     after(() => unspyify(Email, 'sendInvitation'))
 
     it('calls Email.sendInvitation twice', () => {
-      return InvitationController.reInviteAll(req, res)
+      return InvitationController.reinviteAll(req, res)
       .then(() => {
         expect(Email.sendInvitation).to.have.been.called.exactly(2)
       })

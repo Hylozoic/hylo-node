@@ -127,7 +127,7 @@ module.exports = {
     .then(results => res.ok({results}))
   },
 
-  reInviteAll: function (req, res) {
+  reinviteAll: function (req, res) {
     const communityId = res.locals.community.id
     return Invitation.where({community_id: communityId, used_by_id: null})
     .fetchAll({withRelated: ['creator', 'community', 'tag']})
