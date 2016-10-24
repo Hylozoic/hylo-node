@@ -1,4 +1,7 @@
-var setup = require(require('root-path')('test/setup'))
+var root = require('root-path')
+var setup = require(root('test/setup'))
+var factories = require(root('test/setup/factories'))
+import { spyify, unspyify } from '../../setup/helpers'
 
 describe('Invitation', function () {
   before(() => setup.clearDb())
@@ -53,6 +56,49 @@ describe('Invitation', function () {
         tag_id: tag.id
       }).fetch())
       .then(tagFollow => expect(tagFollow).to.exist)
+    })
+  })
+
+  describe('.reinviteAll', () => {
+    var community, c2, user, inviter
+    before(() => {
+      community = factories.community()
+      c2 = factories.community()
+      user = factories.user()
+      inviter = factories.user()
+      spyify(Email, 'sendInvitation', () => Promise.resolve({}))
+      return Promise.join(inviter.save(), user.save(), community.save(), c2.save())
+      .then(() => {
+        return Promise.join(
+          Invitation.create({
+            communityId: community.id,
+            userId: inviter.id,
+            email: 'foo@bar.com'
+          }),
+          Invitation.create({
+            communityId: community.id,
+            userId: inviter.id,
+            email: 'bar@baz.com'
+          }),
+          Invitation.create({
+            communityId: c2.id,
+            userId: inviter.id,
+            email: 'baz@foo.com'
+          })
+        )
+      })
+    })
+
+    after(() => unspyify(Email, 'sendInvitation'))
+
+    it('calls Email.sendInvitation twice', () => {
+      return Invitation.reinviteAll({
+        userId: inviter.id,
+        communityId: community.id
+      })
+      .then(() => {
+        expect(Email.sendInvitation).to.have.been.called.exactly(2)
+      })
     })
   })
 })

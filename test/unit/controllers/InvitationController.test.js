@@ -122,45 +122,4 @@ describe('InvitationController', () => {
       })
     })
   })
-
-  describe('.reinviteAll', () => {
-    var c2
-    before(() => {
-      community = factories.community()
-      c2 = factories.community()
-      spyify(Email, 'sendInvitation', () => Promise.resolve({}))
-      return Promise.join(inviter.save(), user.save(), community.save(), c2.save())
-      .then(() => {
-        req.login(user.id)
-        res.locals.community = community
-
-        return Promise.join(
-          Invitation.create({
-            communityId: community.id,
-            userId: inviter.id,
-            email: 'foo@bar.com'
-          }),
-          Invitation.create({
-            communityId: community.id,
-            userId: inviter.id,
-            email: 'bar@baz.com'
-          }),
-          Invitation.create({
-            communityId: c2.id,
-            userId: inviter.id,
-            email: 'baz@foo.com'
-          })
-        )
-      })
-    })
-
-    after(() => unspyify(Email, 'sendInvitation'))
-
-    it('calls Email.sendInvitation twice', () => {
-      return InvitationController.reinviteAll(req, res)
-      .then(() => {
-        expect(Email.sendInvitation).to.have.been.called.exactly(2)
-      })
-    })
-  })
 })
