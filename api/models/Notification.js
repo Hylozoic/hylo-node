@@ -228,9 +228,7 @@ module.exports = bookshelf.Model.extend({
     .then(community => reader.generateToken()
       .then(token => Email.sendJoinRequestNotification({
         email: reader.get('email'),
-        sender: {
-          name: format('%s (via Hylo)', actor.get('name'))
-        },
+        sender: {name: community.get('name')},
         data: {
           community_name: community.get('name'),
           requester_name: actor.get('name'),
@@ -252,11 +250,10 @@ module.exports = bookshelf.Model.extend({
     .then(community => reader.generateToken()
       .then(token => Email.sendApprovedJoinRequestNotification({
         email: reader.get('email'),
-        sender: {
-          name: format('%s (via Hylo)', actor.get('name'))
-        },
+        sender: {name: community.get('name')},
         data: {
           community_name: community.get('name'),
+          community_avatar_url: community.get('avatar_url'),
           approver_name: actor.get('name'),
           approver_avatar_url: actor.get('avatar_url'),
           approver_profile_url: Frontend.Route.tokenLogin(reader, token,
