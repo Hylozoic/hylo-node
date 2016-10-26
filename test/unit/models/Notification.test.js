@@ -319,7 +319,7 @@ describe('Notification', function () {
         })
 
         expect(opts.sender).to.contain({
-          name: 'Joe (via Hylo)'
+          name: 'My Community'
         })
 
         expect(opts.data).to.contain({
@@ -357,7 +357,7 @@ describe('Notification', function () {
         })
 
         expect(opts.sender).to.contain({
-          name: 'Joe (via Hylo)'
+          name: 'My Community'
         })
 
         expect(opts.data).to.contain({
