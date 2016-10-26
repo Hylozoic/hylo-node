@@ -111,15 +111,16 @@ module.exports = {
     if (Admin.isSignedIn(req)) {
       whitelist.push('slug')
     }
-    var attributes = _.pick(req.allParams(), whitelist)
-    var saneAttrs = _.clone(attributes)
-    var community = new Community({id: req.param('communityId')})
+    const attributes = _.pick(req.allParams(), whitelist)
+    const saneAttrs = _.clone(attributes)
 
-    if (attributes.settings) {
-      saneAttrs.settings = _.merge({}, community.get('settings'), attributes.settings)
-    }
-
-    community.save(saneAttrs, {patch: true})
+    return Community.find(req.param('communityId'))
+    .then(community => {
+      if (attributes.settings) {
+        saneAttrs.settings = _.merge({}, community.get('settings'), attributes.settings)
+      }
+      return community.save(saneAttrs, {patch: true})
+    })
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
