@@ -405,4 +405,32 @@ describe('CommunityController', () => {
       })
     })
   })
+
+  describe('.update', () => {
+    var community
+
+    before(() => {
+      community = factories.community({settings: {
+        checklist: {logo: true},
+        events: {enabled: true},
+        projects: {enabled: true}
+      }})
+      return community.save()
+    })
+
+    it('merges with existing settings', () => {
+      req.params.communityId = community.id
+      req.params.settings = {projects: {enabled: false}}
+
+      return CommunityController.update(req, res)
+      .then(() => community.refresh())
+      .then(() => {
+        expect(community.get('settings')).to.deep.equal({
+          checklist: {logo: true},
+          events: {enabled: true},
+          projects: {enabled: false}
+        })
+      })
+    })
+  })
 })
