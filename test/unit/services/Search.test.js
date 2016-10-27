@@ -1,5 +1,4 @@
 require(require('root-path')('test/setup'))
-var heredoc = require('heredoc')
 var moment = require('moment-timezone')
 
 describe('Search', function () {
@@ -24,7 +23,7 @@ describe('Search', function () {
         sort: 'post.updated_at'
       }).query().toString()
 
-      var expected = format(heredoc.strip(function () { /*
+      var expected = format(`
         select post.*, count(*) over () as total, "post_community"."pinned"
         from "post"
         inner join "follower" on "follower"."post_id" = "post"."id"
@@ -44,7 +43,7 @@ describe('Search', function () {
         order by "post"."updated_at" desc
         limit 5
         offset 7
-      */}).replace(/(\n\s*)/g, ' ').trim(),
+      `.replace(/(\n\s*)/g, ' ').trim(),
       startTimeAsString,
       endTimeAsString,
       startTimeAsString,
