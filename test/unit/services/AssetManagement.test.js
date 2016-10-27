@@ -18,7 +18,7 @@ describe('AssetManagement', () => {
 
   describe('copyAsset', () => {
     it('throws an error if misconfigured', function () {
-      this.timeout(5000)
+      this.timeout(10000)
       const promise = AssetManagement.copyAsset(community, 'community', 'avatar_url')
       return expect(promise).to.eventually.be.rejected
     })
