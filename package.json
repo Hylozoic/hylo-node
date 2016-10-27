@@ -101,8 +101,8 @@
     "migrate-make": "node ./node_modules/.bin/knex migrate:make",
     "debug": "node-debug app.js",
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
-    "test": "./node_modules/.bin/babel-node ./node_modules/.bin/_mocha",
-    "cover": "./node_modules/.bin/babel-node ./node_modules/.bin/isparta cover ./node_modules/.bin/_mocha"
+    "test": "./node_modules/.bin/mocha --compilers js:babel-register",
+    "cover": "./node_modules/.bin/nyc --reporter=lcov ./node_modules/.bin/_mocha --compilers js:babel-register -R dot"
   },
   "main": "app.js",
   "repository": {
