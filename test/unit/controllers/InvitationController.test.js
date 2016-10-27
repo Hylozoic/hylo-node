@@ -123,7 +123,7 @@ describe('InvitationController', () => {
     })
   })
 
-  describe.only('.find', () => {
+  describe('.find', () => {
     var u1, u2
     before(() => {
       community = factories.community()
