@@ -23,3 +23,4 @@ nbproject
 latest.dump
 .env.swp
 *.swp
+.nyc_output/
