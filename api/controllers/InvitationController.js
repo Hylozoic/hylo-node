@@ -49,12 +49,12 @@ module.exports = {
   },
 
   find: function (req, res) {
-    Community.find(req.param('communityId'))
+    return Community.find(req.param('communityId'))
     .then(community => Invitation.query(qb => {
       qb.limit(req.param('limit') || 20)
       qb.offset(req.param('offset') || 0)
       qb.where('community_id', community.get('id'))
-      qb.leftJoin('users', 'users.email', 'community_invite.email')
+      qb.leftJoin('users', 'users.id', 'community_invite.used_by_id')
       qb.select(bookshelf.knex.raw(`
         community_invite.*,
         count(*) over () as total,

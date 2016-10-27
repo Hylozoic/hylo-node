@@ -3,7 +3,7 @@ require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
 import { mockify, spyify, unspyify } from '../../setup/helpers'
-import { map, sortBy } from 'lodash/fp'
+import { map, sortBy, find } from 'lodash/fp'
 
 describe('InvitationController', () => {
   var user, community, invitation, inviter, req, res
@@ -119,6 +119,43 @@ describe('InvitationController', () => {
         })
 
         expect(Email.sendInvitation).to.have.been.called.exactly(2)
+      })
+    })
+  })
+
+  describe.only('.find', () => {
+    var u1, u2
+    before(() => {
+      community = factories.community()
+      const c2 = factories.community()
+      u1 = factories.user()
+      u2 = factories.user()
+      const u3 = factories.user()
+      return Promise.map([community, c2, u1, u2, u3, inviter], x => x.save())
+      .then(() => Promise.map([[u1, community], [u2, community], [u2, c2], [u3, c2]], ([u, c]) =>
+        Invitation.create({
+          communityId: c.id,
+          userId: inviter.id,
+          email: u.get('email')
+        })))
+      .then(() => Promise.map([[u1, community], [u2, c2], [u3, c2]], ([u, c]) =>
+        u.joinCommunity(c)))
+      .then(() => {
+        req.params.communityId = community.id
+      })
+    })
+
+    it('returns invitations for the community, returning only users that are in this community', () => {
+      return InvitationController.find(req, res)
+      .then(() => {
+        expect(res.ok).to.have.been.called()
+        expect(res.body.total).to.equal(2)
+        const u1Invite = find(i => i.email === u1.get('email'), res.body.items)
+        expect(u1Invite).to.exist
+        expect(u1Invite.user).to.exist
+        const u2Invite = find(i => i.email === u2.get('email'), res.body.items)
+        expect(u2Invite).to.exist
+        expect(u2Invite.user).to.not.exist
       })
     })
   })
