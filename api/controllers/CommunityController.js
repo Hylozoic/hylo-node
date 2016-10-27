@@ -265,7 +265,6 @@ module.exports = {
 
       return bookshelf.transaction(trx => {
         return community.save(null, {transacting: trx})
-        .tap(() => User.resetTooltips(userId))
         .tap(community => community.createStarterTags(userId, trx))
         .tap(community => community.createStarterPosts(trx))
         .then(() => Membership.create(userId, community.id, {
