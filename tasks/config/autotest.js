@@ -8,9 +8,8 @@ module.exports = function (grunt) {
     this.async()
 
     const argv = minimist(process.argv)
-    const file = argv.file || argv.f
-    const run = './node_modules/.bin/babel-node ./node_modules/.bin/_mocha -R min'
-    const cmd = run + (file ? ' -- ' + file : '')
+    const file = argv.file || argv.f || ''
+    const cmd = `./node_modules/.bin/mocha --compilers js:babel-register -R min ${file}`
 
     gaze(['api/**/*', 'lib/**/*', 'test/**/*'], function (_, watcher) {
       this.on('all', debounce(() => {
