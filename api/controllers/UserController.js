@@ -205,7 +205,15 @@ module.exports = {
     .then(ids => fetchAndPresentForCommunityIds(ids, opts))
     .then(res.ok)
     .catch(res.serverError)
+  },
+
+  resetTooltips: function (req, res) {
+    const userId = req.param('userId') || req.session.userId
+    return User.resetTooltips(userId)
+    .then(() => res.ok({}))
+    .catch(res.serverError)
   }
+
 }
 
 const fetchAndPresentForCommunityIds = (communityIds, opts) => {

@@ -58,7 +58,8 @@ module.exports.policies = {
     sendPasswordReset:   true,
     findForCommunity:    ['sessionAuth', 'checkAndSetMembership'],
     findForNetwork:      ['sessionAuth', 'inNetwork'],
-    findAll:             ['sessionAuth']
+    findAll:             ['sessionAuth'],
+    resetTooltips:       ['sessionAuth', 'isSelf']
   },
 
   ActivityController: {
