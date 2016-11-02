@@ -65,8 +65,6 @@ const search = (opts) => {
   .from(tableName)
   .where(raw(`${columnName} @@ ${tsquery}`))
   .orderBy('rank', 'desc')
-  .limit(opts.limit || 20)
-  .offset(opts.offset || 0)
   .where(raw({
     person: 'user_id is not null',
     post: 'post_id is not null',
@@ -75,11 +73,11 @@ const search = (opts) => {
 }
 
 const searchInCommunities = (communityIds, opts) => {
-  var alias = 'search'
-  var columns = [`${alias}.post_id`, 'comment_id', `${alias}.user_id`, 'rank']
+  const alias = 'search'
+  const columns = [`${alias}.post_id`, 'comment_id', `${alias}.user_id`, 'rank', 'total']
 
   return bookshelf.knex
-  .select(raw(columns.concat('count(*) over () as total').join(', ')))
+  .select(columns)
   .from(search(omit(opts, 'limit', 'offset')).as(alias))
   .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
   .leftJoin('comment', 'comment.id', `${alias}.comment_id`)
@@ -91,7 +89,7 @@ const searchInCommunities = (communityIds, opts) => {
     this.where('users_community.community_id', 'in', communityIds)
     .orWhere('post_community.community_id', 'in', communityIds)
   })
-  .groupBy(columns.concat('total'))
+  .groupBy(columns)
   .orderBy('rank', 'desc')
   .limit(opts.limit || 20)
   .offset(opts.offset || 0)
@@ -101,6 +99,5 @@ module.exports = {
   createView,
   dropView,
   refreshView,
-  search,
   searchInCommunities
 }
