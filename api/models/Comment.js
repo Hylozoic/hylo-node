@@ -2,6 +2,7 @@ import { filter } from 'lodash/fp'
 import { markdown } from 'hylo-utils/text'
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
+import { parse } from 'url'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'comment',
@@ -114,8 +115,8 @@ module.exports = bookshelf.Model.extend({
       const { followers } = comment.relations.post.relations
       const recipients = followers.filter(u => u.id !== user_id)
       const user = followers.find(u => u.id === user_id)
-      const alert = `${user.name}: ${decode(truncate(text, 140).text)}`
-      const path = Frontend.Route.thread({id: post_id})
+      const alert = `${user.get('name')}: ${decode(truncate(text, 140).text)}`
+      const path = parse(Frontend.Route.thread({id: post_id})).path
 
       return Promise.map(recipients, user => user.sendPushNotification(alert, path))
     })
