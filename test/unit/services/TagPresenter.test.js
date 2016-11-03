@@ -20,8 +20,7 @@ describe('fetchAndPresentForCommunity', () => {
       Promise.map([[u1.id, t1.id], [u1.id, t2.id], [u1.id, t3.id]], uIdtId =>
         new CommunityTag({
           user_id: uIdtId[0], tag_id: uIdtId[1], community_id: c1.id
-        }).save()
-      ),
+        }).save()),
       Promise.map([
         [u1.id, t1.id],
         [u2.id, t1.id],
@@ -29,21 +28,17 @@ describe('fetchAndPresentForCommunity', () => {
         [u2.id, t2.id],
         [u3.id, t2.id],
         [u4.id, t2.id]
-      ], uIdtId =>
-        new TagFollow({
-          user_id: uIdtId[0], tag_id: uIdtId[1], community_id: c1.id
-        }).save()
-      )))
+      ], uIdtId => new TagFollow({
+        user_id: uIdtId[0], tag_id: uIdtId[1], community_id: c1.id
+      }).save())))
     .then(() => {
       t5 = new Tag({name: 'tagFive'})
       return t5.save()
     })
-    .then(() => {
-      new CommunityTag({
-        user_id: u1.id, tag_id: t5.id, community_id: c1.id,
-        created_at: moment().add(1, 'day')
-      }).save()
-    })
+    .then(() => new CommunityTag({
+      user_id: u1.id, tag_id: t5.id, community_id: c1.id,
+      created_at: moment().add(1, 'day')
+    }).save())
   })
 
   it('fetches and presents, for Community', () => {
