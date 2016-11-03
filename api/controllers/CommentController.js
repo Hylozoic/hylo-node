@@ -43,6 +43,7 @@ const createAndPresentComment = function (commenterId, text, post, tagDescriptio
     .tap(comment => post.get('type') !== Post.Type.THREAD && comment.createActivities())
     .tap(comment => post.addFollowers(newFollowers, commenterId))
     .tap(() => updateRecentComments(post.id))
+    .tap(() => LastRead.findOrCreate(commenterId, post.id).tap(lastRead => lastRead.setToNow()))
     .then(presentComment)
     .tap(c => post.get('type') === Post.Type.THREAD ? post.pushMessageToSockets(c, existingFollowers) : post.pushCommentToSockets(c))
   })
