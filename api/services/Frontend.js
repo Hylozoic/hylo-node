@@ -38,6 +38,10 @@ module.exports = {
       return url(`/p/${post.id}`)
     },
 
+    thread: function (post) {
+      return url(`/t/${post.id}`)
+    },
+
     unfollow: function (post, community) {
       return this.post(post, community) + '?action=unfollow'
     },

@@ -39,7 +39,7 @@ module.exports = bookshelf.Model.extend({
 }, {
   textForComment: function (comment, version) {
     const person = comment.relations.user.get('name')
-    const blurb = decode(truncate(comment.get('text'), 80).text)
+    const blurb = decode(truncate(comment.get('text'), 140).text)
     const postName = comment.relations.post.get('name')
     return version === 'mention'
       ? `${person} mentioned you: "${blurb}" (in "${postName}")`
