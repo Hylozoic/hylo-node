@@ -1,3 +1,6 @@
+// FIXME: this table duplicates the "device_token" value in Device, which is
+// probably not necessary
+
 import decode from 'ent/decode'
 import rollbar from 'rollbar'
 import truncate from 'trunc-html'
@@ -15,8 +18,8 @@ module.exports = bookshelf.Model.extend({
     return this.save({'time_sent': (new Date()).toISOString()}, options)
     .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
     .catch(e => {
-      if (process.env.NODE_ENV !== 'production') throw e
       const err = e instanceof Error ? e : new Error(e)
+      if (process.env.NODE_ENV !== 'production') throw err
       rollbar.handleErrorWithPayloadData(err, {custom: {
         server_token: process.env.ONESIGNAL_APP_ID,
         device_token: deviceToken

@@ -132,12 +132,14 @@ module.exports = bookshelf.Model.extend(merge({
 
   sendPushNotification: function (alert, url) {
     return this.devices().fetch()
-    .then(devices => Promise.map(devices.models, device => device.sendPushNotification(alert, url)))
+    .then(devices => Promise.map(devices.models, device =>
+      device.sendPushNotification(alert, url)))
   },
 
   resetNotificationCount: function () {
     return this.devices().fetch()
-    .then(devices => Promise.map(devices.models, device => device.resetNotificationCount()))
+    .then(devices => Promise.map(devices.models, device =>
+      device.resetNotificationCount()))
   },
 
   followDefaultTags: function (communityId, trx) {
@@ -287,8 +289,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   sendPushNotification: function (userId, alert, url) {
-    return User.find(userId).fetch()
-    .sendPushNotification(alert, url)
+    return User.find(userId).fetch().sendPushNotification(alert, url)
   },
 
   followTags: function (userId, communityId, tagIds, trx) {
