@@ -228,13 +228,13 @@ arrify@^1.0.0, arrify@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/arrify/-/arrify-1.0.1.tgz#898508da2226f380df904728456849c1501a4b0d"
 
-asap@^2.0.0, asap@~2.0.3:
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/asap/-/asap-2.0.5.tgz#522765b50c3510490e52d7dcfe085ef9ba96958f"
-
 asap@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/asap/-/asap-1.0.0.tgz#b2a45da5fdfa20b0496fc3768cc27c12fa916a7d"
+
+asap@~2.0.3:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/asap/-/asap-2.0.5.tgz#522765b50c3510490e52d7dcfe085ef9ba96958f"
 
 asn1@~0.2.3:
   version "0.2.3"
@@ -1160,10 +1160,6 @@ character-parser@^2.1.1:
   dependencies:
     is-regex "^1.0.3"
 
-character-parser@1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/character-parser/-/character-parser-1.2.0.tgz#94134d6e5d870a39be359f7d22460935184ddef6"
-
 character-parser@1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/character-parser/-/character-parser-1.2.1.tgz#c0dde4ab182713b919b970959a123ecc1a30fcd6"
@@ -1275,10 +1271,6 @@ commander@~2.6.0, commander@2.6.0:
 commander@0.6.1:
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/commander/-/commander-0.6.1.tgz#fa68a14f6a945d54dbbe50d8cdb3320e9e3b1a06"
-
-commander@2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/commander/-/commander-2.1.0.tgz#d121bbae860d9992a3d517ba96f56588e47c6781"
 
 commander@2.3.0:
   version "2.3.0"
@@ -1457,12 +1449,6 @@ constantinople@^3.0.1:
   dependencies:
     acorn "^3.1.0"
     is-expression "^2.0.1"
-
-constantinople@~1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/constantinople/-/constantinople-1.0.2.tgz#0e64747dc836644d3f659247efd95231b48c3e71"
-  dependencies:
-    uglify-js "~2.4.0"
 
 constantinople@~3.0.1:
   version "3.0.2"
@@ -2591,7 +2577,7 @@ glob@~7.0.0, glob@7.0.x:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@3.2.11, glob@3.2.x:
+glob@3.2.11:
   version "3.2.11"
   resolved "https://registry.yarnpkg.com/glob/-/glob-3.2.11.tgz#4a973f635b9190f715d10987d5c00fd2815ebe3d"
   dependencies:
@@ -3357,18 +3343,6 @@ jade@0.26.3:
     commander "0.6.1"
     mkdirp "0.3.0"
 
-jade@1.1.5:
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/jade/-/jade-1.1.5.tgz#e884d3d3565807e280f5ba760f68addb176627a3"
-  dependencies:
-    character-parser "1.2.0"
-    commander "2.1.0"
-    constantinople "~1.0.2"
-    mkdirp "~0.3.5"
-    monocle "1.1.51"
-    transformers "2.1.0"
-    with "~2.0.0"
-
 jmespath@0.15.0:
   version "0.15.0"
   resolved "https://registry.yarnpkg.com/jmespath/-/jmespath-0.15.0.tgz#a3f222a9aae9f966f5d27c796510e28091764217"
@@ -3530,7 +3504,7 @@ kue-ui@^0.1.0:
     express "^3.1.1"
     jade "^1.8.1"
 
-kue@*:
+kue@^0.11.0:
   version "0.11.4"
   resolved "https://registry.yarnpkg.com/kue/-/kue-0.11.4.tgz#2ee00b903b9a1ad03fcbf272411ace8d068afa69"
   dependencies:
@@ -3545,21 +3519,6 @@ kue@*:
     yargs "^4.0.0"
   optionalDependencies:
     reds "^0.2.5"
-
-kue@^0.9.0:
-  version "0.9.6"
-  resolved "https://registry.yarnpkg.com/kue/-/kue-0.9.6.tgz#0507b9d37c533ea19d8efbf7ee16c8f28bc19701"
-  dependencies:
-    body-parser "^1.12.2"
-    express "^4.12.2"
-    jade "1.1.5"
-    lodash "^2.4.1"
-    lodash-deep "^1.1.0"
-    nib "0.5.0"
-    node-redis-warlock "^0.1.2"
-    redis "~0.12.0"
-    reds "~0.2.5"
-    stylus "0.42.2"
 
 lazy-cache@^1.0.3:
   version "1.0.4"
@@ -3615,12 +3574,6 @@ load-json-file@^1.0.0:
     pinkie-promise "^2.0.0"
     strip-bom "^2.0.0"
 
-lodash-deep@^1.1.0:
-  version "1.6.0"
-  resolved "https://registry.yarnpkg.com/lodash-deep/-/lodash-deep-1.6.0.tgz#a7ce672759472b91d12b193c69d8a24a02d8428d"
-  dependencies:
-    lodash ">=2.4.1"
-
 lodash.assign@^4.0.3, lodash.assign@^4.0.6:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/lodash.assign/-/lodash.assign-4.2.0.tgz#0d99f3ccd7a6d261d19bdaeb9245005d285808e7"
@@ -3665,7 +3618,7 @@ lodash@^3.1.0, lodash@^3.10.1, lodash@^3.2.0, lodash@^3.8.0, lodash@~3.10.1, lod
   version "3.10.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
 
-lodash@^4.0.0, lodash@^4.0.1, lodash@^4.13.1, lodash@^4.2.0, lodash@^4.6.0, lodash@^4.8.2, lodash@>=2.4.1, lodash@>=2.4.x, lodash@~4.16.4:
+lodash@^4.0.0, lodash@^4.0.1, lodash@^4.13.1, lodash@^4.2.0, lodash@^4.6.0, lodash@^4.8.2, lodash@>=2.4.x, lodash@~4.16.4:
   version "4.16.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.16.4.tgz#01ce306b9bad1319f2a5528674f88297aeb70127"
 
@@ -3958,7 +3911,7 @@ minimatch@^2.0.1:
   dependencies:
     brace-expansion "^1.0.0"
 
-minimatch@^3.0.0, minimatch@^3.0.2, minimatch@>=0.2.4, minimatch@~3.0.0, minimatch@~3.0.2, "minimatch@2 || 3":
+minimatch@^3.0.0, minimatch@^3.0.2, minimatch@~3.0.0, minimatch@~3.0.2, "minimatch@2 || 3":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.3.tgz#2a4e4090b96b2db06a9d7df01055a62a77c9b774"
   dependencies:
@@ -3997,13 +3950,13 @@ mkdirp@^0.5.0, mkdirp@^0.5.1, "mkdirp@>=0.5 0", mkdirp@~0.5.0, mkdirp@~0.5.1, mk
   dependencies:
     minimist "0.0.8"
 
-mkdirp@~0.3.5, mkdirp@0.3.x:
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.3.5.tgz#de3e5f8961c88c787ee1368df849ac4413eca8d7"
-
 mkdirp@0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.3.0.tgz#1bbf5ab1ba827af23575143490426455f481fe1e"
+
+mkdirp@0.3.x:
+  version "0.3.5"
+  resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-0.3.5.tgz#de3e5f8961c88c787ee1368df849ac4413eca8d7"
 
 mocha@^2.2.4:
   version "2.5.3"
@@ -4019,13 +3972,6 @@ mocha@^2.2.4:
     mkdirp "0.5.1"
     supports-color "1.2.0"
     to-iso-string "0.0.2"
-
-mock-kue@schinkowitch/mock-kue:
-  version "0.0.8"
-  resolved "https://codeload.github.com/schinkowitch/mock-kue/tar.gz/3e80f2975f6fa42398eae99c897655402e42cd16"
-  dependencies:
-    kue "*"
-    q "*"
 
 mock-req@0.2.0:
   version "0.2.0"
@@ -4044,12 +3990,6 @@ moment-timezone@^0.5.0:
 moment@^2.9.0, "moment@>= 2.6.0":
   version "2.15.2"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.15.2.tgz#1bfdedf6a6e345f322fe956d5df5bd08a8ce84dc"
-
-monocle@1.1.51:
-  version "1.1.51"
-  resolved "https://registry.yarnpkg.com/monocle/-/monocle-1.1.51.tgz#22ed16e112e9b056769c5ccac920e375249d89c0"
-  dependencies:
-    readdirp "~0.2.3"
 
 morgan@~1.6.1:
   version "1.6.1"
@@ -4166,10 +4106,6 @@ nib@~1.1.2:
   dependencies:
     stylus "0.54.5"
 
-nib@0.5.0:
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/nib/-/nib-0.5.0.tgz#ad0a7dfa2bca8680c8cb8adaa6ab68c80e5221e5"
-
 nock@^7.0.2:
   version "7.7.3"
   resolved "https://registry.yarnpkg.com/nock/-/nock-7.7.3.tgz#d0600980a4443edf6e50b5ed3314602cb7ccc489"
@@ -4207,13 +4143,6 @@ node-redis-scripty@0.0.5:
   dependencies:
     extend "^1.2.1"
     lru-cache "^2.5.0"
-
-node-redis-warlock@^0.1.2:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/node-redis-warlock/-/node-redis-warlock-0.1.4.tgz#a9050d0d257ff3498b6e51a097f15ed5e297479e"
-  dependencies:
-    node-redis-scripty "0.0.5"
-    uuid "^2.0.1"
 
 node-redis-warlock@~0.2.0:
   version "0.2.0"
@@ -4722,10 +4651,6 @@ pool2@^1.1.0:
     hashmap "^2.0.1"
     simple-backoff "^1.0.0"
 
-pop-iterate@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/pop-iterate/-/pop-iterate-1.0.1.tgz#ceacfdab4abf353d7a0f2aaa2c1fc7b3f9413ba3"
-
 postgres-array@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/postgres-array/-/postgres-array-1.0.0.tgz#48c2e82935b178bf805e0dff689d137eec2bfe6b"
@@ -4944,14 +4869,6 @@ punycode@1.3.2:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.3.2.tgz#9653a036fb7c1ee42342f2325cceefea3926c48d"
 
-q@*:
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/q/-/q-2.0.3.tgz#75b8db0255a1a5af82f58c3f3aaa1efec7d0d134"
-  dependencies:
-    asap "^2.0.0"
-    pop-iterate "^1.0.1"
-    weak-map "^1.0.5"
-
 q@^1.1.0, q@^1.1.2:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/q/-/q-1.4.1.tgz#55705bcd93c5f3673530c2c2cbc0c2b3addc286e"
@@ -5157,12 +5074,6 @@ readdirp@^2.0.0:
     readable-stream "^2.0.2"
     set-immediate-shim "^1.0.1"
 
-readdirp@~0.2.3:
-  version "0.2.5"
-  resolved "https://registry.yarnpkg.com/readdirp/-/readdirp-0.2.5.tgz#c4c276e52977ae25db5191fe51d008550f15d9bb"
-  dependencies:
-    minimatch ">=0.2.4"
-
 recast@^0.10.0:
   version "0.10.43"
   resolved "https://registry.yarnpkg.com/recast/-/recast-0.10.43.tgz#b95d50f6d60761a5f6252e15d80678168491ce7f"
@@ -5202,7 +5113,7 @@ redis-parser@^2.0.0:
   version "2.0.4"
   resolved "https://registry.yarnpkg.com/redis-parser/-/redis-parser-2.0.4.tgz#70cbbb3cef8bf41a315388afe14904a65a7a1028"
 
-redis@^0.12.1, redis@~0.12.0:
+redis@^0.12.1:
   version "0.12.1"
   resolved "https://registry.yarnpkg.com/redis/-/redis-0.12.1.tgz#64df76ad0fc8acebaebd2a0645e8a48fac49185e"
 
@@ -5222,7 +5133,7 @@ redis@0.7.x:
   version "0.7.3"
   resolved "https://registry.yarnpkg.com/redis/-/redis-0.7.3.tgz#ee57b7a44d25ec1594e44365d8165fa7d1d4811a"
 
-reds@^0.2.5, reds@~0.2.5:
+reds@^0.2.5:
   version "0.2.5"
   resolved "https://registry.yarnpkg.com/reds/-/reds-0.2.5.tgz#38a767f7663cd749036848697d82c74fd29bc01f"
   dependencies:
@@ -6060,12 +5971,6 @@ source-map@~0.2.0:
   dependencies:
     amdefine ">=0.0.4"
 
-source-map@0.1.34:
-  version "0.1.34"
-  resolved "https://registry.yarnpkg.com/source-map/-/source-map-0.1.34.tgz#a7cfe89aec7b1682c3b198d0acfb47d7d090566b"
-  dependencies:
-    amdefine ">=0.0.4"
-
 spawn-wrap@^1.2.4:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/spawn-wrap/-/spawn-wrap-1.2.4.tgz#920eb211a769c093eebfbd5b0e7a5d2e68ab2e40"
@@ -6234,16 +6139,6 @@ stylus@~0.54.5, stylus@0.54.5:
     mkdirp "0.5.x"
     sax "0.5.x"
     source-map "0.1.x"
-
-stylus@0.42.2:
-  version "0.42.2"
-  resolved "https://registry.yarnpkg.com/stylus/-/stylus-0.42.2.tgz#bed29107803129bed1983efc4c7e33f4fd34fee7"
-  dependencies:
-    css-parse "1.7.x"
-    debug "*"
-    glob "3.2.x"
-    mkdirp "0.3.x"
-    sax "0.5.x"
 
 superagent-proxy@~0.3.1:
   version "0.3.2"
@@ -6518,15 +6413,6 @@ uglify-js@~2.2.5:
     optimist "~0.3.5"
     source-map "~0.1.7"
 
-uglify-js@~2.4.0:
-  version "2.4.24"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-2.4.24.tgz#fad5755c1e1577658bb06ff9ab6e548c95bebd6e"
-  dependencies:
-    async "~0.2.6"
-    source-map "0.1.34"
-    uglify-to-browserify "~1.0.0"
-    yargs "~3.5.4"
-
 uglify-js@~2.6.2:
   version "2.6.4"
   resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-2.6.4.tgz#65ea2fb3059c9394692f15fed87c2b36c16b9adf"
@@ -6535,15 +6421,6 @@ uglify-js@~2.6.2:
     source-map "~0.5.1"
     uglify-to-browserify "~1.0.0"
     yargs "~3.10.0"
-
-uglify-js@2.4.0:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-2.4.0.tgz#a5f2b6b1b817fb34c16a04234328c89ba1e77137"
-  dependencies:
-    async "~0.2.6"
-    optimist "~0.3.5"
-    source-map "~0.1.7"
-    uglify-to-browserify "~1.0.0"
 
 uglify-to-browserify@~1.0.0:
   version "1.0.2"
@@ -6762,10 +6639,6 @@ waterline@~0.11.0:
     waterline-criteria "~0.11.2"
     waterline-schema "0.2.0"
 
-weak-map@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/weak-map/-/weak-map-1.0.5.tgz#79691584d98607f5070bd3b70a40e6bb22e401eb"
-
 websocket-driver@>=0.5.1:
   version "0.6.5"
   resolved "https://registry.yarnpkg.com/websocket-driver/-/websocket-driver-0.6.5.tgz#5cb2556ceb85f4373c6d8238aa691c8454e13a36"
@@ -6822,12 +6695,6 @@ with@^5.0.0:
   dependencies:
     acorn "^3.1.0"
     acorn-globals "^3.0.0"
-
-with@~2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/with/-/with-2.0.0.tgz#ec01ff021db9df05639047147ede012f5e6d0afd"
-  dependencies:
-    uglify-js "2.4.0"
 
 with@~4.0.0:
   version "4.0.3"
@@ -7002,15 +6869,6 @@ yargs@~3.27.0:
     os-locale "^1.4.0"
     window-size "^0.1.2"
     y18n "^3.2.0"
-
-yargs@~3.5.4:
-  version "3.5.4"
-  resolved "https://registry.yarnpkg.com/yargs/-/yargs-3.5.4.tgz#d8aff8f665e94c34bd259bdebd1bfaf0ddd35361"
-  dependencies:
-    camelcase "^1.0.2"
-    decamelize "^1.0.0"
-    window-size "0.1.0"
-    wordwrap "0.0.2"
 
 yeast@0.1.2:
   version "0.1.2"

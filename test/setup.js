@@ -14,8 +14,6 @@ chai.use(require('chai-as-promised'))
 global.spy = chai.spy
 global.expect = chai.expect
 
-require('mock-kue')
-
 var TestSetup = function () {
   this.tables = []
 }

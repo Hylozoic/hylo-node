@@ -18,7 +18,6 @@
     "chai-spies": "^0.5.1",
     "i18n": "^0.8.3",
     "mocha": "^2.2.4",
-    "mock-kue": "schinkowitch/mock-kue",
     "nock": "^7.0.2",
     "nyc": "^8.3.2",
     "time": "^0.11.2"
@@ -48,7 +47,7 @@
     "hylo-utils": "Hylozoic/hylo-utils",
     "image-size": "^0.3.5",
     "knex": "0.12.1",
-    "kue": "^0.9.0",
+    "kue": "^0.11.0",
     "kue-ui": "^0.1.0",
     "lodash": "4.13.1",
     "mailcomposer": "^0.2.12",

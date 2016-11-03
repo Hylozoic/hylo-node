@@ -37,5 +37,10 @@ module.exports = {
     return rangeByState(state, 0, size - 1, 'asc')
     .then(jobs => Promise.map(jobs, removeIfOldEnough))
     .then(results => _.filter(results).length)
-  }
+  },
+
+  // just for development use
+  clearAllPendingJobs: () =>
+    Promise.map(['active', 'inactive', 'failed', 'delayed'], state =>
+      Queue.removeOldJobs(state, 10000, 0))
 }
