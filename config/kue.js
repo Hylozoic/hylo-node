@@ -9,5 +9,6 @@ redisInfo.auth = redisInfo.password;
 redisInfo.db = redisInfo.database;
 
 kue.createQueue({
-  redis: redisInfo
+  redis: redisInfo,
+  prefix: process.env.KUE_NAMESPACE || 'q'
 });
