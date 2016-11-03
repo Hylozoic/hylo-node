@@ -26,7 +26,7 @@ describe('AssetManagement', () => {
 
   describe('resizeAsset', () => {
     it('throws an error if misconfigured', function () {
-      this.timeout(5000)
+      this.timeout(10000)
       const promise = AssetManagement.resizeAsset(community, 'avatar_url', {width: 200, height: 200})
       return expect(promise).to.eventually.be.rejected
     })
