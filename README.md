@@ -69,6 +69,21 @@ This reads the `.env` file you created above, using [dotenv](http://www.npmjs.or
 
 Now visit [localhost:3001](http://localhost:3001).
 
+### running tests
+
+Run `npm test` or `npm run cover`. The tests should use a different database (see below), because it creates and drops the database schema on each run.
+
+Create a file called `.env.test` to set environment variables for the test environment.
+
+```
+DATABASE_URL=postgres://localhost/hylo_test # run tests against a different database
+DOMAIN=testdomain
+KUE_NAMESPACE=qtest # this prevents jobs that were queued during testing from being run in development
+PROTOCOL=http
+ROLLBAR_SERVER_TOKEN= # don't log errors to Rollbar
+SENDWITHUS_KEY=test_... # you can set up a SendWithUs API key to return valid responses but send no email
+```
+
 ### creating and running database migrations
 
 Migrations are managed by the [knex](http://knexjs.org) library. Create a new migration with this command:
@@ -103,6 +118,8 @@ createdb $LOCAL_DB_NAME -h localhost
 cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 ```
 
+
+
 ### design guidelines
 
 * GET methods on `FooController` should return instances of `Foo`. (See policies.js for some related FIXME's)
@@ -114,7 +131,7 @@ We're gradually migrating to [Javascript Standard Style](https://github.com/fero
 The [standard-formatter Atom package](https://atom.io/packages/standard-formatter) helps out a lot. We deviate from its default behavior only in not indenting a multi-line method chain:
 
 ```javascript
-# yes
+// yes
 return Do(() => {
   amaze()
   very()
@@ -122,7 +139,7 @@ return Do(() => {
 .then(such)
 .tap(wow)
 
-# no
+// no
 return Do(() => {
   amaze()
   very()
