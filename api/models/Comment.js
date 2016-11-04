@@ -109,15 +109,23 @@ module.exports = bookshelf.Model.extend({
   },
 
   notifyAboutMessage: ({commentId}) =>
-    Comment.find(commentId, {withRelated: ['post.followers']})
+    Comment.find(commentId, {withRelated: [
+      'post.followers', 'post.lastReads'
+    ]})
     .then(comment => {
       const { user_id, post_id, text } = comment.attributes
-      const { followers } = comment.relations.post.relations
+      const { followers, lastReads } = comment.relations.post.relations
       const recipients = followers.filter(u => u.id !== user_id)
       const user = followers.find(u => u.id === user_id)
       const alert = `${user.get('name')}: ${decode(truncate(text, 140).text)}`
       const path = parse(Frontend.Route.thread({id: post_id})).path
 
-      return Promise.map(recipients, user => user.sendPushNotification(alert, path))
+      return Promise.map(recipients, user => {
+        // don't notify if the user has read the thread recently.
+        const lr = lastReads.find(r => r.get('user_id') === user.id)
+        if (!lr || comment.get('created_at') > lr.get('last_read_at')) {
+          return user.sendPushNotification(alert, path)
+        }
+      })
     })
 })
