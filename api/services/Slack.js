@@ -20,7 +20,7 @@ module.exports = {
     }
   },
   send: (message, uri) =>
-    post({
+    !process.env.DISABLE_SLACK_INTEGRATION && post({
       uri,
       body: {text: message},
       json: true // Automatically stringifies the body to JSON
