@@ -4,7 +4,7 @@ var promisify = Promise.promisify
 var rangeByState = promisify(kue.Job.rangeByState, kue.Job)
 
 module.exports = {
-  addJob: function (name, data, delay = 5000) {
+  addJob: function (name, data, delay = 2000) {
     var queue = require('kue').createQueue()
 
     // there's a delay here because the job could be queued while an object it
@@ -17,7 +17,7 @@ module.exports = {
     return promisify(job.save, job)()
   },
 
-  classMethod: function (className, methodName, data, delay = 5000) {
+  classMethod: function (className, methodName, data, delay = 2000) {
     data = _.merge({
       className: className,
       methodName: methodName
