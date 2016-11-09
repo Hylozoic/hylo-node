@@ -142,14 +142,14 @@ module.exports = bookshelf.Model.extend({
     return pushToSockets(`posts/${postId}`, 'commentAdded', comment)
   },
 
-  pushMessageToSockets: function (message, userIds, oldUpdatedAt) {
+  pushMessageToSockets: function (message, userIds) {
     var postId = this.id
     const excludingSender = userIds.filter(id => id !== message.user_id.toString())
     if (this.get('num_comments') === 1) {
       return Promise.map(excludingSender, id => this.pushSelfToSocket(id))
     } else {
       return Promise.map(excludingSender, id =>
-        pushToSockets(`users/${id}`, 'messageAdded', {postId, message, oldUpdatedAt}))
+        pushToSockets(`users/${id}`, 'messageAdded', {postId, message}))
     }
   },
 
