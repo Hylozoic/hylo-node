@@ -139,16 +139,17 @@ module.exports = bookshelf.Model.extend({
 
   pushCommentToSockets: function (comment) {
     var postId = this.id
-    pushToSockets(`posts/${postId}`, 'commentAdded', comment)
+    return pushToSockets(`posts/${postId}`, 'commentAdded', comment)
   },
 
   pushMessageToSockets: function (message, userIds, oldUpdatedAt) {
     var postId = this.id
     const excludingSender = userIds.filter(id => id !== message.user_id.toString())
     if (this.get('num_comments') === 1) {
-      excludingSender.forEach(id => this.pushSelfToSocket(id))
+      return Promise.map(excludingSender, id => this.pushSelfToSocket(id))
     } else {
-      excludingSender.forEach(id => pushToSockets(`users/${id}`, 'messageAdded', {postId, message, oldUpdatedAt}))
+      return Promise.map(excludingSender, id =>
+        pushToSockets(`users/${id}`, 'messageAdded', {postId, message, oldUpdatedAt}))
     }
   },
 
@@ -159,7 +160,7 @@ module.exports = bookshelf.Model.extend({
 
   pushSelfToSocket: function (userId) {
     const opts = {withComments: 'all'}
-    this.load(PostPresenter.relations(userId, opts))
+    return this.load(PostPresenter.relations(userId, opts))
     .then(post => PostPresenter.present(post, userId, opts))
     .then(normalize)
     .then(post => pushToSockets(`users/${userId}`, 'newThread', post))

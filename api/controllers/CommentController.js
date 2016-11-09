@@ -34,19 +34,26 @@ const createAndPresentComment = function (commenterId, text, post, tagDescriptio
     const mentioned = RichText.getUserMentions(text)
     const existingFollowers = post.relations.followers.pluck('id')
     const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
+    const isThread = post.get('type') === Post.Type.THREAD
 
-    return bookshelf.transaction(function (trx) {
-      return new Comment(attrs).save(null, {transacting: trx})
+    return bookshelf.transaction(trx =>
+      new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, tagDescriptions, trx))
-      .tap(() => post.updateCommentCount(trx))
-    })
-    .tap(comment => post.get('type') === Post.Type.THREAD
-      ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
-      : comment.createActivities())
-    .tap(comment => post.addFollowers(newFollowers, commenterId))
-    .tap(() => updateRecentComments(post.id))
-    .then(presentComment)
-    .tap(c => post.get('type') === Post.Type.THREAD ? post.pushMessageToSockets(c, existingFollowers) : post.pushCommentToSockets(c))
+      .tap(() => post.updateCommentCount(trx)))
+    .then(comment => Promise.all([
+      presentComment(comment)
+      .tap(c => isThread
+        ? post.pushMessageToSockets(c, existingFollowers)
+        : post.pushCommentToSockets(c)),
+
+      (isThread
+        ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
+        : comment.createActivities()),
+
+      post.addFollowers(newFollowers, commenterId),
+      updateRecentComments(post.id)
+    ]))
+    .then(promises => promises[0])
   })
 }
 
