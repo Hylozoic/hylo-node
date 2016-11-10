@@ -19,14 +19,15 @@ const presentComment = (comment) =>
     return Object.assign(buckets, c)
   })
 
-const createAndPresentComment = function (commenterId, text, post, tagDescriptions) {
+const createAndPresentComment = function (commenterId, text, post, opts = {}) {
   text = sanitize(text)
   var attrs = {
     text: text,
     created_at: new Date(),
     post_id: post.id,
     user_id: commenterId,
-    active: true
+    active: true,
+    created_from: opts.created_from || null
   }
 
   return post.load('followers')
@@ -38,7 +39,7 @@ const createAndPresentComment = function (commenterId, text, post, tagDescriptio
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
-      .tap(comment => Tag.updateForComment(comment, tagDescriptions, trx))
+      .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, trx))
       .tap(() => post.updateCommentCount(trx)))
     .then(comment => Promise.all([
       presentComment(comment)
@@ -91,7 +92,7 @@ module.exports = {
     const tagDescriptions = req.param('tagDescriptions')
 
     return checkCommentTags(text, post, tagDescriptions)
-    .then(() => createAndPresentComment(req.session.userId, text, post, tagDescriptions))
+    .then(() => createAndPresentComment(req.session.userId, text, post, {tagDescriptions}))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -120,7 +121,7 @@ module.exports = {
       })
       return User.find(replyData.userId).then(user => {
         const text = Comment.cleanEmailText(user, req.param('stripped-text'))
-        return createAndPresentComment(replyData.userId, text, post)
+        return createAndPresentComment(replyData.userId, text, post, {created_from: 'email'})
       })
     })
     .then(() => res.ok({}), res.serverError)

@@ -11,6 +11,7 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 SET search_path = public, pg_catalog;
 
@@ -82,7 +83,8 @@ CREATE TABLE comment (
     deactivated_reason character varying(255),
     deactivated_by_id bigint,
     deactivated_on timestamp without time zone,
-    recent boolean
+    recent boolean,
+    created_from character varying(255)
 );
 
 
@@ -1387,8 +1389,10 @@ UNION
  SELECT NULL::bigint AS post_id,
     u.id AS user_id,
     NULL::bigint AS comment_id,
-    (setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
-   FROM users u
+    ((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(replace((t.name)::text, '-'::text, ' '::text), ' '::text), ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
+   FROM ((users u
+     LEFT JOIN tags_users tu ON ((u.id = tu.user_id)))
+     LEFT JOIN tags t ON ((tu.tag_id = t.id)))
   WHERE (u.active = true)
   GROUP BY u.id
 UNION
@@ -2497,3 +2501,4 @@ ALTER TABLE ONLY users_community
 --
 -- PostgreSQL database dump complete
 --
+

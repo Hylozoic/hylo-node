@@ -161,7 +161,7 @@ describe('CommentController', function () {
       expect(res.serverError).to.have.been.called()
     })
 
-    it('creates a comment', function () {
+    it('creates a comment with created_from=email', function () {
       Analytics.track = spy(Analytics.track)
       req.params.To = Email.postReplyAddress(fixtures.p1.id, fixtures.u3.id)
 
@@ -176,6 +176,7 @@ describe('CommentController', function () {
         expect(comment).to.exist
         expect(comment.get('text')).to.equal('<p>foo bar baz</p>\n')
         expect(comment.get('user_id')).to.equal(fixtures.u3.id)
+        expect(comment.get('created_from')).to.equal('email')
       })
     })
   })
