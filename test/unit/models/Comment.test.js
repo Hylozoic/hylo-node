@@ -17,9 +17,9 @@ describe('Comment', () => {
       expect(Comment.cleanEmailText(user, text)).to.equal('<p>Wow!<br>That&#39;s great!</p>\n')
     })
 
-    it('strips text after a divider', () => {
-      const text = 'Amazing!\r*****\rJoe'
-      expect(Comment.cleanEmailText(user, text)).to.equal('<p>Amazing!</p>\n')
+    it("cuts off at the sender's name preceded by dashes", () => {
+      const text = "Wow!\rThat's great!\r--Bob A"
+      expect(Comment.cleanEmailText(user, text)).to.equal('<p>Wow!<br>That&#39;s great!</p>\n')
     })
 
     it('removes a common signature pattern with two dashes', () => {
@@ -28,8 +28,13 @@ describe('Comment', () => {
     })
 
     it('removes our inserted divider', () => {
-      const text = 'Meow!\n-------- (Only text above the dashed line will be included.)'
+      const text = 'Meow!\n-------- Only text above the dashed line will be included --------\nwhatever'
       expect(Comment.cleanEmailText(user2, text)).to.equal('<p>Meow!</p>\n')
+    })
+
+    it('removes even a mangled divider', () => {
+      const text = 'yoyo\nMeow!-----+Only+text+above+the+dashed+line+will+be+included lol\nok'
+      expect(Comment.cleanEmailText(user2, text)).to.equal('<p>yoyo<br>Meow!</p>\n')
     })
   })
 })
