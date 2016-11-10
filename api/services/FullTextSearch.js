@@ -32,7 +32,7 @@ const createView = lang => {
       u.id as user_id,
       null as comment_id,
       ${wv('u.name', 'A')} ||
-      ${wv("string_agg(replace(t.name, '-', ' '), ' ')", 'C')} ||
+      ${wv("coalesce(string_agg(replace(t.name, '-', ' '), ' '), '')", 'C')} ||
       ${wv("coalesce(u.bio, '')", 'C')} as ${columnName}
     from users u
     left join tags_users tu on u.id = tu.user_id
