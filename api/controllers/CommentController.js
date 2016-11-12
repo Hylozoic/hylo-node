@@ -69,9 +69,12 @@ const checkCommentTags = (text, post, descriptions) => {
 
 module.exports = {
   findForPost: function (req, res) {
-    Comment.query(function (qb) {
-      qb.where({post_id: res.locals.post.id, active: true})
-      qb.orderBy('id', 'asc')
+    const { beforeId, limit, newest } = req.allParams()
+    Comment.query(q => {
+      q.where({post_id: res.locals.post.id, active: true})
+      if (beforeId) q.where('id', '<', beforeId)
+      if (limit) q.limit(limit)
+      q.orderBy('id', newest ? 'desc' : 'asc')
     }).fetchAll({withRelated: [
       {user: userColumns},
       'thanks',
