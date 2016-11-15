@@ -85,38 +85,46 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(LinkPreview)
   },
 
-  addFollowers: function (userIds, addingUserId, opts) {
+  addFollowers: function (userIds, addedById, opts = {}) {
     var postId = this.id
     var userId = this.get('user_id')
-    if (!opts) opts = {}
+    const { transacting, createActivity } = opts
 
-    return this.load('communities')
-    .then(() => {
-      return Promise.map(userIds, followerId =>
-        Follow.create(followerId, postId, {
-          addedById: addingUserId,
-          transacting: opts.transacting
-        })
-        .tap(follow => {
-          if (!opts.createActivity) return
+    return this.load(['communities'])
+    .then(() => this.isProject() && this.load('selectedTags')
+      .then(() => {
+        const tag = this.relations.selectedTags.first()
+        if (!tag) return
+        return Promise.each(this.relations.communities.models, community =>
+          Promise.each(userIds, id => TagFollow.add(tag, id, community)))
+      }))
+    .then(() => Promise.map(userIds, followerId =>
+      Follow.create(followerId, postId, {addedById, transacting})
+      .tap(follow => {
+        if (!createActivity) return
 
-          var updates = []
-          const addActivity = (recipientId, method) => {
-            updates.push(Activity[method](follow, recipientId)
-            .save({}, _.pick(opts, 'transacting'))
-            .then(activity => activity.createNotifications(opts.transacting)))
-          }
-          if (followerId !== addingUserId) addActivity(followerId, 'forFollowAdd')
-          if (userId !== addingUserId) addActivity(userId, 'forFollow')
-          return Promise.all(updates)
-        }))
-    })
+        var updates = []
+        const addActivity = (recipientId, method) => {
+          updates.push(Activity[method](follow, recipientId)
+          .save({}, _.pick(opts, 'transacting'))
+          .then(activity => activity.createNotifications(transacting)))
+        }
+        if (followerId !== addedById) addActivity(followerId, 'forFollowAdd')
+        if (userId !== addedById) addActivity(userId, 'forFollow')
+        return Promise.all(updates)
+      })))
   },
 
   removeFollower: function (user_id, opts = {}) {
     return Follow.where({user_id, post_id: this.id}).destroy()
-    .tap(opts.createActivity &&
-      Activity.forUnfollow(this, user_id).save()
+    .tap(() => this.isProject() && this.load(['selectedTags', 'communities'])
+      .then(() => {
+        const tag = this.relations.selectedTags.first()
+        if (!tag) return
+        return Promise.each(this.relations.communities.models, community =>
+          TagFollow.remove(tag, user_id, community))
+      }))
+    .tap(() => opts.createActivity && Activity.forUnfollow(this, user_id).save()
       .then(activity => activity.createNotifications()))
   },
 
@@ -135,6 +143,10 @@ module.exports = bookshelf.Model.extend({
 
   isWelcome: function () {
     return this.get('type') === Post.Type.WELCOME
+  },
+
+  isProject: function () {
+    return this.get('type') === Post.Type.PROJECT
   },
 
   pushCommentToSockets: function (comment) {

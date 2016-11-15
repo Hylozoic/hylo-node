@@ -84,22 +84,11 @@ module.exports = {
   },
 
   follow: function (req, res) {
-    return Promise.join(
-      Tag.find(req.param('tagName')),
-      Community.find(req.param('communityId')),
-      (tag, community) => {
-        if (!tag) return res.notFound()
-
-        const attrs = {
-          community_id: community.id,
-          tag_id: tag.id,
-          user_id: req.session.userId
-        }
-
-        return TagFollow.where(attrs).fetch()
-        .then(tf => tf ? tf.destroy() : new TagFollow(attrs).save())
-      })
-    .then(res.ok, res.serverError)
+    return TagFollow.toggle(
+      req.param('tagName'),
+      req.session.userId,
+      req.param('communityId')
+    ).then(res.ok, res.serverError)
   },
 
   findForCommunity: function (req, res) {
