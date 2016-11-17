@@ -1,14 +1,14 @@
 import { get } from 'lodash/fp'
 
-const getTag = idOrInstance =>
-  get('attributes', idOrInstance)
-    ? Promise.resolve(idOrInstance)
-    : Tag.find(idOrInstance)
+const isBookshelfInstance = obj => !!get('attributes', obj)
 
-const getCommunity = idOrInstance =>
-  get('attributes', idOrInstance)
+const flexibleFind = model => idOrInstance =>
+  isBookshelfInstance(idOrInstance)
     ? Promise.resolve(idOrInstance)
-    : Community.find(idOrInstance)
+    : model.find(idOrInstance)
+
+const getTag = flexibleFind(Tag)
+const getCommunity = flexibleFind(Community)
 
 const lookup = (tagIdOrInstance, user_id, communityIdOrInstance) =>
   Promise.join(
