@@ -31,7 +31,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['post', 'user_id'],
     ['posts_about_users', 'user_id'],
     ['post', 'deactivated_by_id'],
-    ['activity', 'actor_id'],
+    ['activities', 'actor_id'],
     ['comment', 'user_id'],
     ['comment', 'deactivated_by_id'],
     ['follower', 'added_by_id'],
@@ -92,9 +92,9 @@ const generateRemoveQueries = function (userId, knex) {
   push('delete from thank_you where comment_id in ' +
     '(select id from comment where user_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
-    '(select id from activity where reader_id = ?)', userId)
+    '(select id from activities where reader_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
-    '(select id from activity where actor_id = ?)', userId)
+    '(select id from activities where actor_id = ?)', userId)
 
   // deletes
   ;[
@@ -109,8 +109,8 @@ const generateRemoveQueries = function (userId, knex) {
     ['users_skill', 'user_id'],
     ['users_org', 'user_id'],
     ['user_post_relevance', 'user_id'],
-    ['activity', 'reader_id'],
-    ['activity', 'actor_id'],
+    ['activities', 'reader_id'],
+    ['activities', 'actor_id'],
     ['vote', 'user_id'],
     ['comment', 'user_id'],
     ['user_external_data', 'user_id'],

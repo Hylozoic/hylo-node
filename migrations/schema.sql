@@ -2,9 +2,6 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.1
--- Dumped by pg_dump version 9.5.1
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -19,10 +16,10 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: activity; Type: TABLE; Schema: public; Owner: -
+-- Name: activities; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE activity (
+CREATE TABLE activities (
     id integer NOT NULL,
     actor_id bigint,
     reader_id bigint,
@@ -53,7 +50,7 @@ CREATE SEQUENCE activity_id_seq
 -- Name: activity_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE activity_id_seq OWNED BY activity.id;
+ALTER SEQUENCE activity_id_seq OWNED BY activities.id;
 
 
 --
@@ -1228,7 +1225,7 @@ CREATE TABLE vote (
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activity ALTER COLUMN id SET DEFAULT nextval('activity_id_seq'::regclass);
+ALTER TABLE ONLY activities ALTER COLUMN id SET DEFAULT nextval('activity_id_seq'::regclass);
 
 
 --
@@ -1388,10 +1385,8 @@ UNION
  SELECT NULL::bigint AS post_id,
     u.id AS user_id,
     NULL::bigint AS comment_id,
-    ((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(replace((t.name)::text, '-'::text, ' '::text), ' '::text), ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
-   FROM ((users u
-     LEFT JOIN tags_users tu ON ((u.id = tu.user_id)))
-     LEFT JOIN tags t ON ((tu.tag_id = t.id)))
+    (setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
+   FROM users u
   WHERE (u.active = true)
   GROUP BY u.id
 UNION
@@ -1409,7 +1404,7 @@ UNION
 -- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activity
+ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_pkey PRIMARY KEY (id);
 
 
@@ -1989,7 +1984,7 @@ CREATE INDEX ix_vote_user_13 ON vote USING btree (user_id);
 -- Name: activity_actor_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activity
+ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_actor_id_foreign FOREIGN KEY (actor_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -1997,7 +1992,7 @@ ALTER TABLE ONLY activity
 -- Name: activity_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activity
+ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comment(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2005,7 +2000,7 @@ ALTER TABLE ONLY activity
 -- Name: activity_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activity
+ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
 
 
@@ -2013,7 +2008,7 @@ ALTER TABLE ONLY activity
 -- Name: activity_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activity
+ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2021,7 +2016,7 @@ ALTER TABLE ONLY activity
 -- Name: activity_reader_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activity
+ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_reader_id_foreign FOREIGN KEY (reader_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2398,7 +2393,7 @@ ALTER TABLE ONLY nexudus_accounts
 --
 
 ALTER TABLE ONLY notifications
-    ADD CONSTRAINT notifications_activity_id_foreign FOREIGN KEY (activity_id) REFERENCES activity(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT notifications_activity_id_foreign FOREIGN KEY (activity_id) REFERENCES activities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2500,3 +2495,4 @@ ALTER TABLE ONLY users_community
 --
 -- PostgreSQL database dump complete
 --
+

@@ -33,7 +33,7 @@ const removeForRelation = (model) => (id, trx) => {
 }
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'activity',
+  tableName: 'activities',
 
   actor: function () {
     return this.belongsTo(User, 'actor_id')
@@ -92,12 +92,12 @@ module.exports = bookshelf.Model.extend({
   filterInactiveContent: q => {
     q.whereRaw('(comment.active = true or comment.id is null)')
     .leftJoin('comment', function () {
-      this.on('comment.id', '=', 'activity.comment_id')
+      this.on('comment.id', '=', 'activities.comment_id')
     })
 
     q.whereRaw('(post.active = true or post.id is null)')
     .leftJoin('post', function () {
-      this.on('post.id', '=', 'activity.post_id')
+      this.on('post.id', '=', 'activities.post_id')
     })
   },
 
