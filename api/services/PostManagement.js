@@ -1,9 +1,9 @@
 const removeComments = (postId, knex) => {
-  return knex('comment').where('post_id', postId).pluck('id')
+  return knex('comments').where('post_id', postId).pluck('id')
   .then(ids => {
     if (ids.length === 0) return
     return knex('comments_tags').where('comment_id', 'in', ids).del()
-    .then(() => knex('comment').where('id', 'in', ids).del())
+    .then(() => knex('comments').where('id', 'in', ids).del())
   })
 }
 

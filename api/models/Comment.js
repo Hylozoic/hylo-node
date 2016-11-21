@@ -5,7 +5,7 @@ import truncate from 'trunc-html'
 import { parse } from 'url'
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'comment',
+  tableName: 'comments',
 
   user: function () {
     return this.belongsTo(User)
@@ -74,8 +74,8 @@ module.exports = bookshelf.Model.extend({
     }
 
     return collection.query(function (qb) {
-      qb.whereRaw('comment.created_at between ? and ?', [startTime, endTime])
-      qb.where('comment.active', true)
+      qb.whereRaw('comments.created_at between ? and ?', [startTime, endTime])
+      qb.where('comments.active', true)
     })
   },
 

@@ -17,12 +17,12 @@ module.exports = bookshelf.Model.extend({
   queryForUser: function (userId, communityIds) {
     return Thank.query(q => {
       q.orderBy('date_thanked')
-      q.join('comment', 'comment.id', '=', 'thank_you.comment_id')
-      q.join('post', 'post.id', '=', 'comment.post_id')
+      q.join('comments', 'comments.id', '=', 'thank_you.comment_id')
+      q.join('post', 'post.id', '=', 'comments.post_id')
 
       q.where({
-        'comment.user_id': userId,
-        'comment.active': true,
+        'comments.user_id': userId,
+        'comments.active': true,
         'post.active': true
       })
 
@@ -38,10 +38,10 @@ module.exports = bookshelf.Model.extend({
     return this.query().count()
     .where({
       'thank_you.user_id': user.id,
-      'comment.active': true
+      'comments.active': true
     })
-    .join('comment', function () {
-      this.on('comment.id', '=', 'thank_you.comment_id')
+    .join('comments', function () {
+      this.on('comments.id', '=', 'thank_you.comment_id')
     })
     .then(function (rows) {
       return rows[0].count

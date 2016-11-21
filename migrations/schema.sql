@@ -66,10 +66,10 @@ CREATE SEQUENCE comment_seq
 
 
 --
--- Name: comment; Type: TABLE; Schema: public; Owner: -
+-- Name: comments; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE comment (
+CREATE TABLE comments (
     id bigint DEFAULT nextval('comment_seq'::regclass) NOT NULL,
     user_id bigint,
     post_id bigint,
@@ -1394,7 +1394,7 @@ UNION
     NULL::bigint AS user_id,
     c.id AS comment_id,
     (setweight(to_tsvector('english'::regconfig, c.text), 'C'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
-   FROM (comment c
+   FROM (comments c
      JOIN users u ON ((u.id = c.user_id)))
   WHERE ((c.active = true) AND (u.active = true))
   WITH NO DATA;
@@ -1532,7 +1532,7 @@ ALTER TABLE ONLY notifications
 -- Name: pk_comment; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY comment
+ALTER TABLE ONLY comments
     ADD CONSTRAINT pk_comment PRIMARY KEY (id);
 
 
@@ -1858,14 +1858,14 @@ CREATE INDEX idx_fts_search ON search_index USING gin (document);
 -- Name: ix_comment_post_2; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_comment_post_2 ON comment USING btree (post_id);
+CREATE INDEX ix_comment_post_2 ON comments USING btree (post_id);
 
 
 --
 -- Name: ix_comment_user_1; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_comment_user_1 ON comment USING btree (user_id);
+CREATE INDEX ix_comment_user_1 ON comments USING btree (user_id);
 
 
 --
@@ -1993,7 +1993,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY activities
-    ADD CONSTRAINT activity_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comment(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT activity_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2025,7 +2025,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY comments_tags
-    ADD CONSTRAINT comments_tags_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comment(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT comments_tags_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2112,7 +2112,7 @@ ALTER TABLE ONLY event_responses
 -- Name: fk_comment_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY comment
+ALTER TABLE ONLY comments
     ADD CONSTRAINT fk_comment_deactivated_by_01 FOREIGN KEY (deactivated_by_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2120,7 +2120,7 @@ ALTER TABLE ONLY comment
 -- Name: fk_comment_post_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY comment
+ALTER TABLE ONLY comments
     ADD CONSTRAINT fk_comment_post_2 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2128,7 +2128,7 @@ ALTER TABLE ONLY comment
 -- Name: fk_comment_user_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY comment
+ALTER TABLE ONLY comments
     ADD CONSTRAINT fk_comment_user_1 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2257,7 +2257,7 @@ ALTER TABLE ONLY post
 --
 
 ALTER TABLE ONLY thank_you
-    ADD CONSTRAINT fk_thank_you_comment_1 FOREIGN KEY (comment_id) REFERENCES comment(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_thank_you_comment_1 FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

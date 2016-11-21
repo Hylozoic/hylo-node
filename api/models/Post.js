@@ -335,7 +335,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   setRecentComments: opts => {
-    const comments = () => bookshelf.knex('comment')
+    const comments = () => bookshelf.knex('comments')
     return comments()
     .where({post_id: opts.postId, active: true})
     .orderBy('created_at', 'desc')

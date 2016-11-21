@@ -24,9 +24,9 @@ var rawMetricsQuery = startTime => Promise.props({
   }).query(),
 
   comment: Comment.query(q => {
-    q.where('comment.created_at', '>', startTime)
-    q.join('post_community', 'comment.post_id', 'post_community.post_id')
-    q.select(['comment.id', 'comment.created_at', 'post_community.community_id', 'comment.user_id'])
+    q.where('comments.created_at', '>', startTime)
+    q.join('post_community', 'comments.post_id', 'post_community.post_id')
+    q.select(['comments.id', 'comments.created_at', 'post_community.community_id', 'comments.user_id'])
   }).query()
 })
 

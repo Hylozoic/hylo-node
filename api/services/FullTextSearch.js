@@ -46,7 +46,7 @@ const createView = lang => {
       c.id as comment_id,
       ${wv('c.text', 'C')} ||
       ${wv('u.name', 'D')} as ${columnName}
-    from comment c
+    from comments c
     join users u on u.id = c.user_id
     where c.active = true and u.active = true
   )`)
@@ -80,10 +80,10 @@ const searchInCommunities = (communityIds, opts) => {
   .select(columns)
   .from(search(omit(opts, 'limit', 'offset')).as(alias))
   .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
-  .leftJoin('comment', 'comment.id', `${alias}.comment_id`)
+  .leftJoin('comments', 'comments.id', `${alias}.comment_id`)
   .leftJoin('post_community', function () {
     this.on('post_community.post_id', `${alias}.post_id`)
-    .orOn('post_community.post_id', 'comment.post_id')
+    .orOn('post_community.post_id', 'comments.post_id')
   })
   .where(function () {
     this.where('users_community.community_id', 'in', communityIds)

@@ -32,8 +32,8 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['posts_about_users', 'user_id'],
     ['post', 'deactivated_by_id'],
     ['activities', 'actor_id'],
-    ['comment', 'user_id'],
-    ['comment', 'deactivated_by_id'],
+    ['comments', 'user_id'],
+    ['comments', 'deactivated_by_id'],
     ['follower', 'added_by_id'],
     ['thank_you', 'user_id'],
     ['thank_you', 'thanked_by_id'],
@@ -78,7 +78,7 @@ const generateRemoveQueries = function (userId, knex) {
 
   // clear columns without deleting rows
   ;[
-    ['comment', 'deactivated_by_id'],
+    ['comments', 'deactivated_by_id'],
     ['community', 'created_by_id'],
     ['follower', 'added_by_id'],
     ['communities_tags', 'user_id']
@@ -90,7 +90,7 @@ const generateRemoveQueries = function (userId, knex) {
 
   // cascading deletes
   push('delete from thank_you where comment_id in ' +
-    '(select id from comment where user_id = ?)', userId)
+    '(select id from comments where user_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
     '(select id from activities where reader_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
@@ -112,7 +112,7 @@ const generateRemoveQueries = function (userId, knex) {
     ['activities', 'reader_id'],
     ['activities', 'actor_id'],
     ['vote', 'user_id'],
-    ['comment', 'user_id'],
+    ['comments', 'user_id'],
     ['user_external_data', 'user_id'],
     ['tags_users', 'user_id'],
     ['tag_follows', 'user_id'],
