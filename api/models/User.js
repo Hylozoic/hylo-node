@@ -327,7 +327,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(rows => rows[0].time)
     .then(lastViewed => Post.query(q => {
       if (lastViewed) q.where('post.updated_at', '>', new Date(lastViewed))
-      q.join('follows', 'post.id', 'follows.post_id')
+      q.join('follows', 'posts.id', 'follows.post_id')
       q.where({
         'follows.user_id': userId,
         type: Post.Type.THREAD
@@ -336,13 +336,13 @@ module.exports = bookshelf.Model.extend(merge({
       q.count()
 
       q.leftJoin('posts_users', function () {
-        this.on('posts_users.post_id', 'post.id')
+        this.on('posts_users.post_id', 'posts.id')
         .andOn('posts_users.user_id', raw(userId))
       })
 
       q.where(function () {
         this.where('posts_users.id', null)
-        .orWhere('posts_users.last_read_at', '<', bookshelf.knex.raw('post.updated_at'))
+        .orWhere('posts_users.last_read_at', '<', bookshelf.knex.raw('posts.updated_at'))
       })
     }).query())
     .then(rows => Number(rows[0].count))

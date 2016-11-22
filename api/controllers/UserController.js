@@ -16,9 +16,9 @@ var setupReputationQuery = function (req, model) {
 }
 
 const countTaggedPosts = (userIds, tagId) =>
-  bookshelf.knex('post')
-  .join('posts_tags', 'post.id', 'posts_tags.post_id')
-  .where('post.user_id', 'in', userIds)
+  bookshelf.knex('posts')
+  .join('posts_tags', 'posts.id', 'posts_tags.post_id')
+  .where('posts.user_id', 'in', userIds)
   .where('posts_tags.tag_id', tagId)
   .groupBy('user_id')
   .select(bookshelf.knex.raw('count(*), user_id'))

@@ -13,7 +13,7 @@ const relationsForSelf = [
 const recentTaggedPost = (userId, tag, viewingUserId) => {
   const opts = {withComments: true, withVotes: true}
   return Post.query(q => {
-    q.join('posts_tags', 'post.id', 'posts_tags.post_id')
+    q.join('posts_tags', 'posts.id', 'posts_tags.post_id')
     q.join('tags', 'tags.id', 'posts_tags.tag_id')
     q.where({
       'tags.name': tag,

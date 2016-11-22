@@ -95,9 +95,9 @@ module.exports = bookshelf.Model.extend({
       this.on('comments.id', '=', 'activities.comment_id')
     })
 
-    q.whereRaw('(post.active = true or post.id is null)')
-    .leftJoin('post', function () {
-      this.on('post.id', '=', 'activities.post_id')
+    q.whereRaw('(posts.active = true or posts.id is null)')
+    .leftJoin('posts', function () {
+      this.on('posts.id', '=', 'activities.post_id')
     })
   },
 
@@ -105,7 +105,7 @@ module.exports = bookshelf.Model.extend({
     q.where('post_community.community_id', communityId)
     .join('post_community', function () {
       this.on('comments.post_id', 'post_community.post_id')
-      .orOn('post.id', 'post_community.post_id')
+      .orOn('posts.id', 'post_community.post_id')
     })
   },
 

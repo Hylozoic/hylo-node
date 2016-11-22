@@ -18,16 +18,16 @@ module.exports = bookshelf.Model.extend({
     return Thank.query(q => {
       q.orderBy('date_thanked')
       q.join('comments', 'comments.id', '=', 'thank_you.comment_id')
-      q.join('post', 'post.id', '=', 'comments.post_id')
+      q.join('posts', 'posts.id', '=', 'comments.post_id')
 
       q.where({
         'comments.user_id': userId,
         'comments.active': true,
-        'post.active': true
+        'posts.active': true
       })
 
       if (communityIds) {
-        q.join('post_community', 'post_community.post_id', '=', 'post.id')
+        q.join('post_community', 'post_community.post_id', '=', 'posts.id')
         q.join('communities', 'communities.id', '=', 'post_community.community_id')
         q.whereIn('communities.id', communityIds)
       }

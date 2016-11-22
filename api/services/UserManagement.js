@@ -28,9 +28,9 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
   ;[
     // table name, user id column
     ['devices', 'user_id'],
-    ['post', 'user_id'],
+    ['posts', 'user_id'],
     ['posts_about_users', 'user_id'],
-    ['post', 'deactivated_by_id'],
+    ['posts', 'deactivated_by_id'],
     ['activities', 'actor_id'],
     ['comments', 'user_id'],
     ['comments', 'deactivated_by_id'],

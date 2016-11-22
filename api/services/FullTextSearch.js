@@ -23,7 +23,7 @@ const createView = lang => {
       ${wv('p.name', 'B')} ||
       ${wv("coalesce(p.description, '')", 'C')} ||
       ${wv('u.name', 'D')} as ${columnName}
-    from post p
+    from posts p
     join users u on u.id = p.user_id
     where p.active = true and u.active = true
   ) union (

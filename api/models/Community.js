@@ -51,7 +51,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   posts: function () {
     return this.belongsToMany(Post).through(PostMembership)
-      .query({where: {'post.active': true}})
+      .query({where: {'posts.active': true}})
   },
 
   tags: function () {

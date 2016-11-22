@@ -704,47 +704,6 @@ CREATE SEQUENCE org_seq
 
 
 --
--- Name: post_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE post_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: post; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE post (
-    id bigint DEFAULT nextval('post_seq'::regclass) NOT NULL,
-    name text,
-    description text,
-    type character varying(255),
-    created_at timestamp without time zone,
-    user_id bigint,
-    num_votes integer,
-    num_comments integer,
-    active boolean,
-    deactivated_by_id bigint,
-    deactivated_on timestamp without time zone,
-    deactivated_reason character varying(255),
-    fulfilled_at timestamp without time zone,
-    updated_at timestamp without time zone,
-    visibility integer DEFAULT 0,
-    start_time timestamp with time zone,
-    end_time timestamp with time zone,
-    location character varying(255),
-    created_from character varying(255),
-    parent_post_id bigint,
-    link_preview_id integer
-);
-
-
---
 -- Name: post_community; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -776,6 +735,18 @@ ALTER SEQUENCE post_community_id_seq OWNED BY post_community.id;
 
 
 --
+-- Name: post_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE post_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
 -- Name: post_view_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -785,6 +756,35 @@ CREATE SEQUENCE post_view_seq
     NO MINVALUE
     NO MAXVALUE
     CACHE 1;
+
+
+--
+-- Name: posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE posts (
+    id bigint DEFAULT nextval('post_seq'::regclass) NOT NULL,
+    name text,
+    description text,
+    type character varying(255),
+    created_at timestamp without time zone,
+    user_id bigint,
+    num_votes integer,
+    num_comments integer,
+    active boolean,
+    deactivated_by_id bigint,
+    deactivated_on timestamp without time zone,
+    deactivated_reason character varying(255),
+    fulfilled_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    visibility integer DEFAULT 0,
+    start_time timestamp with time zone,
+    end_time timestamp with time zone,
+    location character varying(255),
+    created_from character varying(255),
+    parent_post_id bigint,
+    link_preview_id integer
+);
 
 
 --
@@ -1378,7 +1378,7 @@ CREATE MATERIALIZED VIEW search_index AS
     NULL::bigint AS user_id,
     NULL::bigint AS comment_id,
     ((setweight(to_tsvector('english'::regconfig, p.name), 'B'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(p.description, ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
-   FROM (post p
+   FROM (posts p
      JOIN users u ON ((u.id = p.user_id)))
   WHERE ((p.active = true) AND (u.active = true))
 UNION
@@ -1588,7 +1588,7 @@ ALTER TABLE ONLY media
 -- Name: pk_post; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post
+ALTER TABLE ONLY posts
     ADD CONSTRAINT pk_post PRIMARY KEY (id);
 
 
@@ -1942,7 +1942,7 @@ CREATE INDEX ix_media_post_1 ON media USING btree (post_id);
 -- Name: ix_post_creator_11; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_post_creator_11 ON post USING btree (user_id);
+CREATE INDEX ix_post_creator_11 ON posts USING btree (user_id);
 
 
 --
@@ -2009,7 +2009,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY activities
-    ADD CONSTRAINT activity_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT activity_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2097,7 +2097,7 @@ ALTER TABLE ONLY devices
 --
 
 ALTER TABLE ONLY event_responses
-    ADD CONSTRAINT event_responses_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id);
+    ADD CONSTRAINT event_responses_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id);
 
 
 --
@@ -2121,7 +2121,7 @@ ALTER TABLE ONLY comments
 --
 
 ALTER TABLE ONLY comments
-    ADD CONSTRAINT fk_comment_post_2 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_comment_post_2 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2169,7 +2169,7 @@ ALTER TABLE ONLY community_invite
 --
 
 ALTER TABLE ONLY contributions
-    ADD CONSTRAINT fk_contributor_post_1 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_contributor_post_1 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2193,7 +2193,7 @@ ALTER TABLE ONLY follows
 --
 
 ALTER TABLE ONLY follows
-    ADD CONSTRAINT fk_follower_post_1 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_follower_post_1 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2217,7 +2217,7 @@ ALTER TABLE ONLY linked_account
 --
 
 ALTER TABLE ONLY media
-    ADD CONSTRAINT fk_media_post_1 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_media_post_1 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2233,14 +2233,14 @@ ALTER TABLE ONLY post_community
 --
 
 ALTER TABLE ONLY post_community
-    ADD CONSTRAINT fk_post_community_post_01 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_post_community_post_01 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
 -- Name: fk_post_creator_11; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post
+ALTER TABLE ONLY posts
     ADD CONSTRAINT fk_post_creator_11 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2248,7 +2248,7 @@ ALTER TABLE ONLY post
 -- Name: fk_post_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post
+ALTER TABLE ONLY posts
     ADD CONSTRAINT fk_post_deactivated_by_01 FOREIGN KEY (deactivated_by_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2281,7 +2281,7 @@ ALTER TABLE ONLY thank_you
 --
 
 ALTER TABLE ONLY user_post_relevance
-    ADD CONSTRAINT fk_upr_post_1 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_upr_post_1 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2329,7 +2329,7 @@ ALTER TABLE ONLY users_skill
 --
 
 ALTER TABLE ONLY vote
-    ADD CONSTRAINT fk_vote_post_14 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_vote_post_14 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2400,7 +2400,7 @@ ALTER TABLE ONLY notifications
 -- Name: post_link_preview_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post
+ALTER TABLE ONLY posts
     ADD CONSTRAINT post_link_preview_id_foreign FOREIGN KEY (link_preview_id) REFERENCES link_previews(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2408,8 +2408,8 @@ ALTER TABLE ONLY post
 -- Name: post_parent_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post
-    ADD CONSTRAINT post_parent_post_id_foreign FOREIGN KEY (parent_post_id) REFERENCES post(id);
+ALTER TABLE ONLY posts
+    ADD CONSTRAINT post_parent_post_id_foreign FOREIGN KEY (parent_post_id) REFERENCES posts(id);
 
 
 --
@@ -2417,7 +2417,7 @@ ALTER TABLE ONLY post
 --
 
 ALTER TABLE ONLY posts_about_users
-    ADD CONSTRAINT posts_about_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT posts_about_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2433,7 +2433,7 @@ ALTER TABLE ONLY posts_about_users
 --
 
 ALTER TABLE ONLY posts_tags
-    ADD CONSTRAINT posts_tags_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT posts_tags_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2449,7 +2449,7 @@ ALTER TABLE ONLY posts_tags
 --
 
 ALTER TABLE ONLY posts_users
-    ADD CONSTRAINT posts_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT posts_users_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

@@ -11,7 +11,7 @@ const normalize = post => {
 }
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'post',
+  tableName: 'posts',
 
   user: function () {
     return this.belongsTo(User)
@@ -244,7 +244,7 @@ module.exports = bookshelf.Model.extend({
 
   groupedCountForUser: function (user) {
     return this.query(q => {
-      q.join('posts_tags', 'post.id', 'posts_tags.post_id')
+      q.join('posts_tags', 'posts.id', 'posts_tags.post_id')
       q.join('tags', 'tags.id', 'posts_tags.tag_id')
       q.whereIn('tags.name', ['request', 'offer'])
       q.groupBy('tags.name')
@@ -303,8 +303,8 @@ module.exports = bookshelf.Model.extend({
       collection = Post
     }
     return collection.query(function (qb) {
-      qb.whereRaw('post.created_at between ? and ?', [startTime, endTime])
-      qb.where('post.active', true)
+      qb.whereRaw('posts.created_at between ? and ?', [startTime, endTime])
+      qb.where('posts.active', true)
     })
   },
 
