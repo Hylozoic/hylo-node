@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'vote',
+  tableName: 'votes',
 
   post: function() {
     return this.belongsTo(Post, 'post_id');
@@ -17,7 +17,7 @@ module.exports = bookshelf.Model.extend({
    * @returns a list of Vote's.
    */
   forUserInPosts: function(userId, postIds) {
-    return bookshelf.knex("vote").where({
+    return bookshelf.knex("votes").where({
       user_id: userId
     }).whereIn("post_id", postIds);
   }

@@ -56,7 +56,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['linked_account', 'user_id', 'provider_user_id'],
     ['users_skill', 'user_id', 'skill_name'],
     ['users_org', 'user_id', 'org_name'],
-    ['vote', 'user_id', 'post_id'],
+    ['votes', 'user_id', 'post_id'],
     ['tag_follows', 'user_id', 'tag_id'],
     ['communities_tags', 'user_id', 'tag_id'],
     ['tags_users', 'user_id', 'tag_id']
@@ -111,7 +111,7 @@ const generateRemoveQueries = function (userId, knex) {
     ['user_post_relevance', 'user_id'],
     ['activities', 'reader_id'],
     ['activities', 'actor_id'],
-    ['vote', 'user_id'],
+    ['votes', 'user_id'],
     ['comments', 'user_id'],
     ['user_external_data', 'user_id'],
     ['tags_users', 'user_id'],

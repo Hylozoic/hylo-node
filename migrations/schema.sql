@@ -1210,10 +1210,10 @@ CREATE SEQUENCE vote_seq
 
 
 --
--- Name: vote; Type: TABLE; Schema: public; Owner: -
+-- Name: votes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE vote (
+CREATE TABLE votes (
     id bigint DEFAULT nextval('vote_seq'::regclass) NOT NULL,
     user_id bigint,
     post_id bigint,
@@ -1628,7 +1628,7 @@ ALTER TABLE ONLY users_skill
 -- Name: pk_vote; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY vote
+ALTER TABLE ONLY votes
     ADD CONSTRAINT pk_vote PRIMARY KEY (id);
 
 
@@ -1804,7 +1804,7 @@ ALTER TABLE ONLY community_invite
 -- Name: uq_vote_1; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY vote
+ALTER TABLE ONLY votes
     ADD CONSTRAINT uq_vote_1 UNIQUE (user_id, post_id);
 
 
@@ -1970,14 +1970,14 @@ CREATE INDEX ix_thank_you_user_2 ON thanks USING btree (user_id);
 -- Name: ix_vote_post_14; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_vote_post_14 ON vote USING btree (post_id);
+CREATE INDEX ix_vote_post_14 ON votes USING btree (post_id);
 
 
 --
 -- Name: ix_vote_user_13; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_vote_user_13 ON vote USING btree (user_id);
+CREATE INDEX ix_vote_user_13 ON votes USING btree (user_id);
 
 
 --
@@ -2328,7 +2328,7 @@ ALTER TABLE ONLY users_skill
 -- Name: fk_vote_post_14; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY vote
+ALTER TABLE ONLY votes
     ADD CONSTRAINT fk_vote_post_14 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2336,7 +2336,7 @@ ALTER TABLE ONLY vote
 -- Name: fk_vote_user_13; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY vote
+ALTER TABLE ONLY votes
     ADD CONSTRAINT fk_vote_user_13 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
