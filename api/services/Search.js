@@ -4,27 +4,27 @@ module.exports = {
   forCommunities: function (opts) {
     return Community.query(qb => {
       if (opts.communities) {
-        qb.whereIn('community.id', opts.communities)
+        qb.whereIn('communities.id', opts.communities)
       }
 
       if (opts.autocomplete) {
-        qb.whereRaw('community.name ilike ?', opts.autocomplete + '%')
+        qb.whereRaw('communities.name ilike ?', opts.autocomplete + '%')
       }
 
       if (opts.term) {
         Search.addTermToQueryBuilder(opts.term, qb, {
-          columns: ['community.name']
+          columns: ['communities.name']
         })
       }
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      qb.select(bookshelf.knex.raw('community.*, count(*) over () as total'))
+      qb.select(bookshelf.knex.raw('communities.*, count(*) over () as total'))
 
       qb.limit(opts.limit)
       qb.offset(opts.offset)
-      qb.groupBy('community.id')
-      qb.orderBy('community.name', 'asc')
+      qb.groupBy('communities.id')
+      qb.orderBy('communities.name', 'asc')
     })
   },
 

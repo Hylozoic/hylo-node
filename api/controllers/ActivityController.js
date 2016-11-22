@@ -43,7 +43,7 @@ const fetchAndPresentNotification = (req, community) => {
     {'activity.comment.user': userColumns},
     {'activity.community': q => q.column('id', 'slug', 'name', 'avatar_url')},
     {'activity.post': q => q.column('id', 'name', 'user_id', 'type', 'description')},
-    {'activity.post.communities': q => q.column('community.id', 'slug')},
+    {'activity.post.communities': q => q.column('communities.id', 'slug')},
     {'activity.post.relatedUsers': userColumns}
   ]})
   .tap(nots => total = (nots.length > 0 ? nots.first().get('total') : 0))

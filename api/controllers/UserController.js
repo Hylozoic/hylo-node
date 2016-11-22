@@ -76,7 +76,7 @@ module.exports = {
       withRelated: [
         {post: q => q.column('id', 'name', 'user_id', 'type')},
         {'post.user': q => q.column('id', 'name', 'avatar_url')},
-        {'post.communities': q => q.column('community.id', 'name')}
+        {'post.communities': q => q.column('communities.id', 'name')}
       ]
     }))
     .then(res.ok, res.serverError)
@@ -90,7 +90,7 @@ module.exports = {
         {comment: q => q.column('id', 'text', 'post_id', 'created_at')},
         {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
         {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
-        {'comment.post.communities': q => q.column('community.id', 'name')}
+        {'comment.post.communities': q => q.column('communities.id', 'name')}
       ]
     }))
     .then(res.ok, res.serverError)

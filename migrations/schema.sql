@@ -117,6 +117,51 @@ ALTER SEQUENCE comments_tags_id_seq OWNED BY comments_tags.id;
 
 
 --
+-- Name: community_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE community_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: communities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE communities (
+    id bigint DEFAULT nextval('community_seq'::regclass) NOT NULL,
+    name character varying(255) NOT NULL,
+    avatar_url character varying(255),
+    background_url character varying(255),
+    beta_access_code character varying(255),
+    description text,
+    slug character varying(255) NOT NULL,
+    daily_digest boolean DEFAULT true,
+    membership_fee bigint,
+    plan_guid character varying(63),
+    banner_url text,
+    category character varying(64),
+    created_at timestamp without time zone,
+    created_by_id bigint,
+    banner_pos character varying(32),
+    leader_id bigint,
+    welcome_message text,
+    settings jsonb DEFAULT '{}'::jsonb,
+    default_public_content boolean DEFAULT false,
+    network_id bigint,
+    location character varying(255),
+    slack_hook_url text,
+    slack_team text,
+    slack_configure_url text,
+    active boolean DEFAULT true
+);
+
+
+--
 -- Name: communities_tags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -149,51 +194,6 @@ CREATE SEQUENCE communities_tags_id_seq
 --
 
 ALTER SEQUENCE communities_tags_id_seq OWNED BY communities_tags.id;
-
-
---
--- Name: community_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE community_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: community; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE community (
-    id bigint DEFAULT nextval('community_seq'::regclass) NOT NULL,
-    name character varying(255) NOT NULL,
-    avatar_url character varying(255),
-    background_url character varying(255),
-    beta_access_code character varying(255),
-    description text,
-    slug character varying(255) NOT NULL,
-    daily_digest boolean DEFAULT true,
-    membership_fee bigint,
-    plan_guid character varying(63),
-    banner_url text,
-    category character varying(64),
-    created_at timestamp without time zone,
-    created_by_id bigint,
-    banner_pos character varying(32),
-    leader_id bigint,
-    welcome_message text,
-    settings jsonb DEFAULT '{}'::jsonb,
-    default_public_content boolean DEFAULT false,
-    network_id bigint,
-    location character varying(255),
-    slack_hook_url text,
-    slack_team text,
-    slack_configure_url text,
-    active boolean DEFAULT true
-);
 
 
 --
@@ -1540,7 +1540,7 @@ ALTER TABLE ONLY comments
 -- Name: pk_community; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community
+ALTER TABLE ONLY communities
     ADD CONSTRAINT pk_community PRIMARY KEY (id);
 
 
@@ -1692,7 +1692,7 @@ ALTER TABLE ONLY tags_users
 -- Name: unique_beta_access_code; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community
+ALTER TABLE ONLY communities
     ADD CONSTRAINT unique_beta_access_code UNIQUE (beta_access_code);
 
 
@@ -1756,7 +1756,7 @@ ALTER TABLE ONLY tags_users
 -- Name: uq_community_1; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community
+ALTER TABLE ONLY communities
     ADD CONSTRAINT uq_community_1 UNIQUE (name);
 
 
@@ -1764,7 +1764,7 @@ ALTER TABLE ONLY community
 -- Name: uq_community_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community
+ALTER TABLE ONLY communities
     ADD CONSTRAINT uq_community_2 UNIQUE (slug);
 
 
@@ -1844,7 +1844,7 @@ ALTER TABLE ONLY users_community
 -- Name: fk_community_created_by_1; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX fk_community_created_by_1 ON community USING btree (created_by_id);
+CREATE INDEX fk_community_created_by_1 ON communities USING btree (created_by_id);
 
 
 --
@@ -2001,7 +2001,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY activities
-    ADD CONSTRAINT activity_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
+    ADD CONSTRAINT activity_community_id_foreign FOREIGN KEY (community_id) REFERENCES communities(id);
 
 
 --
@@ -2041,7 +2041,7 @@ ALTER TABLE ONLY comments_tags
 --
 
 ALTER TABLE ONLY communities_tags
-    ADD CONSTRAINT communities_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT communities_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2072,7 +2072,7 @@ ALTER TABLE ONLY community_invite
 -- Name: community_leader_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community
+ALTER TABLE ONLY communities
     ADD CONSTRAINT community_leader_id_foreign FOREIGN KEY (leader_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2080,7 +2080,7 @@ ALTER TABLE ONLY community
 -- Name: community_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community
+ALTER TABLE ONLY communities
     ADD CONSTRAINT community_network_id_foreign FOREIGN KEY (network_id) REFERENCES networks(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2136,7 +2136,7 @@ ALTER TABLE ONLY comments
 -- Name: fk_community_created_by_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community
+ALTER TABLE ONLY communities
     ADD CONSTRAINT fk_community_created_by_1 FOREIGN KEY (created_by_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2145,7 +2145,7 @@ ALTER TABLE ONLY community
 --
 
 ALTER TABLE ONLY community_invite
-    ADD CONSTRAINT fk_community_invite_community_1 FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_community_invite_community_1 FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2225,7 +2225,7 @@ ALTER TABLE ONLY media
 --
 
 ALTER TABLE ONLY post_community
-    ADD CONSTRAINT fk_post_community_community_02 FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_post_community_community_02 FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2297,7 +2297,7 @@ ALTER TABLE ONLY user_post_relevance
 --
 
 ALTER TABLE ONLY users_community
-    ADD CONSTRAINT fk_users_community_community_02 FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT fk_users_community_community_02 FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2345,7 +2345,7 @@ ALTER TABLE ONLY vote
 --
 
 ALTER TABLE ONLY tag_follows
-    ADD CONSTRAINT followed_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT followed_tags_community_id_foreign FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2369,7 +2369,7 @@ ALTER TABLE ONLY tag_follows
 --
 
 ALTER TABLE ONLY join_requests
-    ADD CONSTRAINT join_requests_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT join_requests_community_id_foreign FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2385,7 +2385,7 @@ ALTER TABLE ONLY join_requests
 --
 
 ALTER TABLE ONLY nexudus_accounts
-    ADD CONSTRAINT nexudus_accounts_community_id_foreign FOREIGN KEY (community_id) REFERENCES community(id);
+    ADD CONSTRAINT nexudus_accounts_community_id_foreign FOREIGN KEY (community_id) REFERENCES communities(id);
 
 
 --

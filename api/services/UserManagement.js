@@ -40,7 +40,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['community_invite', 'invited_by_id'],
     ['community_invite', 'used_by_id'],
     ['user_external_data', 'user_id'],
-    ['community', 'leader_id']
+    ['communities', 'leader_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -79,7 +79,7 @@ const generateRemoveQueries = function (userId, knex) {
   // clear columns without deleting rows
   ;[
     ['comments', 'deactivated_by_id'],
-    ['community', 'created_by_id'],
+    ['communities', 'created_by_id'],
     ['follower', 'added_by_id'],
     ['communities_tags', 'user_id']
   ].forEach(args => {

@@ -19,7 +19,7 @@ module.exports = bookshelf.Model.extend({
 
   communities: function () {
     return this.belongsToMany(Community).through(PostMembership)
-    .query({where: {'community.active': true}})
+    .query({where: {'communities.active': true}})
   },
 
   followers: function () {
