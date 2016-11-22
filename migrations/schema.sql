@@ -1178,26 +1178,6 @@ ALTER SEQUENCE users_community_id_seq OWNED BY communities_users.id;
 
 
 --
--- Name: users_org; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE users_org (
-    user_id bigint NOT NULL,
-    org_name character varying(255) NOT NULL
-);
-
-
---
--- Name: users_skill; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE users_skill (
-    user_id bigint NOT NULL,
-    skill_name character varying(255) NOT NULL
-);
-
-
---
 -- Name: vote_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1606,22 +1586,6 @@ ALTER TABLE ONLY thanks
 
 ALTER TABLE ONLY user_post_relevance
     ADD CONSTRAINT pk_user_post_relevance PRIMARY KEY (id);
-
-
---
--- Name: pk_users_org; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_org
-    ADD CONSTRAINT pk_users_org PRIMARY KEY (user_id, org_name);
-
-
---
--- Name: pk_users_skill; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_skill
-    ADD CONSTRAINT pk_users_skill PRIMARY KEY (user_id, skill_name);
 
 
 --
@@ -2306,22 +2270,6 @@ ALTER TABLE ONLY communities_users
 
 ALTER TABLE ONLY communities_users
     ADD CONSTRAINT fk_users_community_users_01 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_users_org_users_01; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_org
-    ADD CONSTRAINT fk_users_org_users_01 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: fk_users_skill_users_01; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_skill
-    ADD CONSTRAINT fk_users_skill_users_01 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
