@@ -35,8 +35,8 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['comments', 'user_id'],
     ['comments', 'deactivated_by_id'],
     ['follows', 'added_by_id'],
-    ['thank_you', 'user_id'],
-    ['thank_you', 'thanked_by_id'],
+    ['thanks', 'user_id'],
+    ['thanks', 'thanked_by_id'],
     ['community_invite', 'invited_by_id'],
     ['community_invite', 'used_by_id'],
     ['user_external_data', 'user_id'],
@@ -89,7 +89,7 @@ const generateRemoveQueries = function (userId, knex) {
   })
 
   // cascading deletes
-  push('delete from thank_you where comment_id in ' +
+  push('delete from thanks where comment_id in ' +
     '(select id from comments where user_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
     '(select id from activities where reader_id = ?)', userId)

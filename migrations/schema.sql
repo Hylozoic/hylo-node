@@ -998,10 +998,10 @@ CREATE SEQUENCE thank_you_seq
 
 
 --
--- Name: thank_you; Type: TABLE; Schema: public; Owner: -
+-- Name: thanks; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE thank_you (
+CREATE TABLE thanks (
     id bigint DEFAULT nextval('thank_you_seq'::regclass) NOT NULL,
     comment_id bigint NOT NULL,
     date_thanked timestamp without time zone NOT NULL,
@@ -1596,7 +1596,7 @@ ALTER TABLE ONLY posts
 -- Name: pk_thank_you; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY thank_you
+ALTER TABLE ONLY thanks
     ADD CONSTRAINT pk_thank_you PRIMARY KEY (id);
 
 
@@ -1788,7 +1788,7 @@ ALTER TABLE ONLY follows
 -- Name: uq_no_multiple_thankyous_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY thank_you
+ALTER TABLE ONLY thanks
     ADD CONSTRAINT uq_no_multiple_thankyous_2 UNIQUE (comment_id, user_id, thanked_by_id);
 
 
@@ -1949,21 +1949,21 @@ CREATE INDEX ix_post_creator_11 ON posts USING btree (user_id);
 -- Name: ix_thank_you_comment_1; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_thank_you_comment_1 ON thank_you USING btree (comment_id);
+CREATE INDEX ix_thank_you_comment_1 ON thanks USING btree (comment_id);
 
 
 --
 -- Name: ix_thank_you_thanked_by_3; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_thank_you_thanked_by_3 ON thank_you USING btree (thanked_by_id);
+CREATE INDEX ix_thank_you_thanked_by_3 ON thanks USING btree (thanked_by_id);
 
 
 --
 -- Name: ix_thank_you_user_2; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_thank_you_user_2 ON thank_you USING btree (user_id);
+CREATE INDEX ix_thank_you_user_2 ON thanks USING btree (user_id);
 
 
 --
@@ -2256,7 +2256,7 @@ ALTER TABLE ONLY posts
 -- Name: fk_thank_you_comment_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY thank_you
+ALTER TABLE ONLY thanks
     ADD CONSTRAINT fk_thank_you_comment_1 FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2264,7 +2264,7 @@ ALTER TABLE ONLY thank_you
 -- Name: fk_thank_you_thanked_by_3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY thank_you
+ALTER TABLE ONLY thanks
     ADD CONSTRAINT fk_thank_you_thanked_by_3 FOREIGN KEY (thanked_by_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2272,7 +2272,7 @@ ALTER TABLE ONLY thank_you
 -- Name: fk_thank_you_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY thank_you
+ALTER TABLE ONLY thanks
     ADD CONSTRAINT fk_thank_you_user_2 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
