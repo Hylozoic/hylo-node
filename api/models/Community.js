@@ -62,10 +62,10 @@ module.exports = bookshelf.Model.extend(merge({
     var communityId = this.id
     return Comment.collection().query(q => {
       q.where({
-        'post_community.community_id': communityId,
+        'communities_posts.community_id': communityId,
         'comments.active': true
       })
-      q.join('post_community', 'post_community.post_id', 'comments.post_id')
+      q.join('communities_posts', 'communities_posts.post_id', 'comments.post_id')
     })
   },
 

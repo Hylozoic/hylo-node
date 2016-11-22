@@ -102,10 +102,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   joinWithCommunity: (communityId, q) => {
-    q.where('post_community.community_id', communityId)
-    .join('post_community', function () {
-      this.on('comments.post_id', 'post_community.post_id')
-      .orOn('posts.id', 'post_community.post_id')
+    q.where('communities_posts.community_id', communityId)
+    .join('communities_posts', function () {
+      this.on('comments.post_id', 'communities_posts.post_id')
+      .orOn('posts.id', 'communities_posts.post_id')
     })
   },
 

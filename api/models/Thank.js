@@ -27,8 +27,8 @@ module.exports = bookshelf.Model.extend({
       })
 
       if (communityIds) {
-        q.join('post_community', 'post_community.post_id', '=', 'posts.id')
-        q.join('communities', 'communities.id', '=', 'post_community.community_id')
+        q.join('communities_posts', 'communities_posts.post_id', '=', 'posts.id')
+        q.join('communities', 'communities.id', '=', 'communities_posts.community_id')
         q.whereIn('communities.id', communityIds)
       }
     })

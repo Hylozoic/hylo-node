@@ -19,14 +19,14 @@ var rawMetricsQuery = startTime => Promise.props({
     q.where('posts.created_at', '>', startTime)
     q.where('posts.type', '!=', 'welcome')
     q.where('posts.user_id', '!=', axolotlId)
-    q.join('post_community', 'posts.id', 'post_community.post_id')
-    q.select(['posts.id', 'posts.created_at', 'post_community.community_id', 'posts.user_id'])
+    q.join('communities_posts', 'posts.id', 'communities_posts.post_id')
+    q.select(['posts.id', 'posts.created_at', 'communities_posts.community_id', 'posts.user_id'])
   }).query(),
 
   comment: Comment.query(q => {
     q.where('comments.created_at', '>', startTime)
-    q.join('post_community', 'comments.post_id', 'post_community.post_id')
-    q.select(['comments.id', 'comments.created_at', 'post_community.community_id', 'comments.user_id'])
+    q.join('communities_posts', 'comments.post_id', 'communities_posts.post_id')
+    q.select(['comments.id', 'comments.created_at', 'communities_posts.community_id', 'comments.user_id'])
   }).query()
 })
 

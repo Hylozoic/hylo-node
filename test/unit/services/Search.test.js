@@ -24,10 +24,10 @@ describe('Search', function () {
       }).query().toString()
 
       var expected = format(`
-        select posts.*, count(*) over () as total, "post_community"."pinned"
+        select posts.*, count(*) over () as total, "communities_posts"."pinned"
         from "posts"
         inner join "follows" on "follows"."post_id" = "posts"."id"
-        inner join "post_community" on "post_community"."post_id" = "posts"."id"
+        inner join "communities_posts" on "communities_posts"."post_id" = "posts"."id"
         where "posts"."active" = true
         and "posts"."user_id" in (42, 41)
         and (((to_tsvector('english', posts.name) @@ to_tsquery('milk:* & toast:*'))
@@ -37,9 +37,9 @@ describe('Search', function () {
         and "type" = 'request'
         and ((posts.created_at between '%s' and '%s')
           or (posts.updated_at between '%s' and '%s'))
-        and "post_community"."community_id" in (9, 12)
+        and "communities_posts"."community_id" in (9, 12)
         and "parent_post_id" is null
-        group by "posts"."id", "post_community"."post_id", "post_community"."pinned"
+        group by "posts"."id", "communities_posts"."post_id", "communities_posts"."pinned"
         order by "posts"."updated_at" desc
         limit 5
         offset 7

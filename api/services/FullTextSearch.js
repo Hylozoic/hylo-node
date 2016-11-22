@@ -81,13 +81,13 @@ const searchInCommunities = (communityIds, opts) => {
   .from(search(omit(opts, 'limit', 'offset')).as(alias))
   .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
   .leftJoin('comments', 'comments.id', `${alias}.comment_id`)
-  .leftJoin('post_community', function () {
-    this.on('post_community.post_id', `${alias}.post_id`)
-    .orOn('post_community.post_id', 'comments.post_id')
+  .leftJoin('communities_posts', function () {
+    this.on('communities_posts.post_id', `${alias}.post_id`)
+    .orOn('communities_posts.post_id', 'comments.post_id')
   })
   .where(function () {
     this.where('users_community.community_id', 'in', communityIds)
-    .orWhere('post_community.community_id', 'in', communityIds)
+    .orWhere('communities_posts.community_id', 'in', communityIds)
   })
   .groupBy(columns)
   .orderBy('rank', 'desc')

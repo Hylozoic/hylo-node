@@ -26,11 +26,11 @@ describe('FullTextSearch', () => {
           order by "rank" desc) as "search"
         left join "users_community" on "users_community"."user_id" = "search"."user_id"
         left join "comments" on "comments"."id" = "search"."comment_id"
-        left join "post_community" on
-          "post_community"."post_id" = "search"."post_id"
-          or "post_community"."post_id" = "comments"."post_id"
+        left join "communities_posts" on
+          "communities_posts"."post_id" = "search"."post_id"
+          or "communities_posts"."post_id" = "comments"."post_id"
         where ("users_community"."community_id" in (3, 5)
-          or "post_community"."community_id" in (3, 5))
+          or "communities_posts"."community_id" in (3, 5))
         group by "search"."post_id", "comment_id", "search"."user_id", "rank", "total"
         order by "rank" desc
         limit 10

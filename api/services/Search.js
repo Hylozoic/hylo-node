@@ -107,7 +107,7 @@ module.exports = {
       } else if (Array.isArray(opts.sort)) {
         qb.orderBy(opts.sort[0], opts.sort[1])
       } else if (opts.sort === 'posts.updated_at' && get(opts.communities, 'length') === 1) {
-        qb.orderByRaw('post_community.pinned desc, posts.updated_at desc')
+        qb.orderByRaw('communities_posts.pinned desc, posts.updated_at desc')
       } else if (opts.sort) {
         qb.orderBy(opts.sort, 'desc')
       }
@@ -117,10 +117,10 @@ module.exports = {
       }
 
       if (opts.communities) {
-        qb.select('post_community.pinned')
-        qb.join('post_community', 'post_community.post_id', '=', 'posts.id')
-        qb.whereIn('post_community.community_id', opts.communities)
-        qb.groupBy(['posts.id', 'post_community.post_id', 'post_community.pinned'])
+        qb.select('communities_posts.pinned')
+        qb.join('communities_posts', 'communities_posts.post_id', '=', 'posts.id')
+        qb.whereIn('communities_posts.community_id', opts.communities)
+        qb.groupBy(['posts.id', 'communities_posts.post_id', 'communities_posts.pinned'])
       }
 
       if (!opts.includeChildren) {

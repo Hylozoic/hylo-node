@@ -162,6 +162,18 @@ CREATE TABLE communities (
 
 
 --
+-- Name: communities_posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE communities_posts (
+    post_id bigint NOT NULL,
+    community_id bigint NOT NULL,
+    id integer NOT NULL,
+    pinned boolean DEFAULT false
+);
+
+
+--
 -- Name: communities_tags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -704,18 +716,6 @@ CREATE SEQUENCE org_seq
 
 
 --
--- Name: post_community; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE post_community (
-    post_id bigint NOT NULL,
-    community_id bigint NOT NULL,
-    id integer NOT NULL,
-    pinned boolean DEFAULT false
-);
-
-
---
 -- Name: post_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -731,7 +731,7 @@ CREATE SEQUENCE post_community_id_seq
 -- Name: post_community_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE post_community_id_seq OWNED BY post_community.id;
+ALTER SEQUENCE post_community_id_seq OWNED BY communities_posts.id;
 
 
 --
@@ -1239,6 +1239,13 @@ ALTER TABLE ONLY comments_tags ALTER COLUMN id SET DEFAULT nextval('comments_tag
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY communities_posts ALTER COLUMN id SET DEFAULT nextval('post_community_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('communities_tags_id_seq'::regclass);
 
 
@@ -1296,13 +1303,6 @@ ALTER TABLE ONLY nexudus_accounts ALTER COLUMN id SET DEFAULT nextval('nexudus_a
 --
 
 ALTER TABLE ONLY notifications ALTER COLUMN id SET DEFAULT nextval('notifications_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY post_community ALTER COLUMN id SET DEFAULT nextval('post_community_id_seq'::regclass);
 
 
 --
@@ -1636,7 +1636,7 @@ ALTER TABLE ONLY votes
 -- Name: post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post_community
+ALTER TABLE ONLY communities_posts
     ADD CONSTRAINT post_community_pkey PRIMARY KEY (id);
 
 
@@ -1644,7 +1644,7 @@ ALTER TABLE ONLY post_community
 -- Name: post_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post_community
+ALTER TABLE ONLY communities_posts
     ADD CONSTRAINT post_community_unique UNIQUE (post_id, community_id);
 
 
@@ -2224,7 +2224,7 @@ ALTER TABLE ONLY media
 -- Name: fk_post_community_community_02; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post_community
+ALTER TABLE ONLY communities_posts
     ADD CONSTRAINT fk_post_community_community_02 FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2232,7 +2232,7 @@ ALTER TABLE ONLY post_community
 -- Name: fk_post_community_post_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY post_community
+ALTER TABLE ONLY communities_posts
     ADD CONSTRAINT fk_post_community_post_01 FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
