@@ -206,7 +206,7 @@ const PostController = {
     params.type = Post.Type.THREAD
 
     return Post.query(q => {
-      q.join('follower', 'follower.post_id', 'post.id')
+      q.join('follows', 'follows.post_id', 'post.id')
       q.where('post.type', Post.Type.THREAD)
       q.where('post.id', 'in', Follow.query().where('user_id', currentUserId).select('post_id'))
       q.where('post_id', 'in', Follow.query().where('user_id', otherUserId).select('post_id'))

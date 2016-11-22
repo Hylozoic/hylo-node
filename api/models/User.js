@@ -327,9 +327,9 @@ module.exports = bookshelf.Model.extend(merge({
     .then(rows => rows[0].time)
     .then(lastViewed => Post.query(q => {
       if (lastViewed) q.where('post.updated_at', '>', new Date(lastViewed))
-      q.join('follower', 'post.id', 'follower.post_id')
+      q.join('follows', 'post.id', 'follows.post_id')
       q.where({
-        'follower.user_id': userId,
+        'follows.user_id': userId,
         type: Post.Type.THREAD
       })
       q.where('num_comments', '>', 0)

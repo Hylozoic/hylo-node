@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'follower',
+  tableName: 'follows',
 
   post: function () {
     return this.belongsTo(Post)

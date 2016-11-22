@@ -378,10 +378,10 @@ CREATE SEQUENCE follower_seq
 
 
 --
--- Name: follower; Type: TABLE; Schema: public; Owner: -
+-- Name: follows; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE follower (
+CREATE TABLE follows (
     id bigint DEFAULT nextval('follower_seq'::regclass) NOT NULL,
     post_id bigint,
     date_added timestamp without time zone,
@@ -1564,7 +1564,7 @@ ALTER TABLE ONLY contributions
 -- Name: pk_follower; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY follower
+ALTER TABLE ONLY follows
     ADD CONSTRAINT pk_follower PRIMARY KEY (id);
 
 
@@ -1780,7 +1780,7 @@ ALTER TABLE ONLY contributions
 -- Name: uq_no_multiple_followers_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY follower
+ALTER TABLE ONLY follows
     ADD CONSTRAINT uq_no_multiple_followers_2 UNIQUE (post_id, user_id);
 
 
@@ -1907,21 +1907,21 @@ CREATE INDEX ix_contributor_user_2 ON contributions USING btree (user_id);
 -- Name: ix_follower_addedby_3; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_follower_addedby_3 ON follower USING btree (added_by_id);
+CREATE INDEX ix_follower_addedby_3 ON follows USING btree (added_by_id);
 
 
 --
 -- Name: ix_follower_post_1; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_follower_post_1 ON follower USING btree (post_id);
+CREATE INDEX ix_follower_post_1 ON follows USING btree (post_id);
 
 
 --
 -- Name: ix_follower_user_2; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_follower_user_2 ON follower USING btree (user_id);
+CREATE INDEX ix_follower_user_2 ON follows USING btree (user_id);
 
 
 --
@@ -2184,7 +2184,7 @@ ALTER TABLE ONLY contributions
 -- Name: fk_follower_addedby_3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY follower
+ALTER TABLE ONLY follows
     ADD CONSTRAINT fk_follower_addedby_3 FOREIGN KEY (added_by_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2192,7 +2192,7 @@ ALTER TABLE ONLY follower
 -- Name: fk_follower_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY follower
+ALTER TABLE ONLY follows
     ADD CONSTRAINT fk_follower_post_1 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2200,7 +2200,7 @@ ALTER TABLE ONLY follower
 -- Name: fk_follower_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY follower
+ALTER TABLE ONLY follows
     ADD CONSTRAINT fk_follower_user_2 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 

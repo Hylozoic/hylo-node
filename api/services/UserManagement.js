@@ -34,7 +34,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['activities', 'actor_id'],
     ['comments', 'user_id'],
     ['comments', 'deactivated_by_id'],
-    ['follower', 'added_by_id'],
+    ['follows', 'added_by_id'],
     ['thank_you', 'user_id'],
     ['thank_you', 'thanked_by_id'],
     ['community_invite', 'invited_by_id'],
@@ -52,7 +52,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     // table name, user id column, column with unique value
     ['users_community', 'user_id', 'community_id'],
     ['contributions', 'user_id', 'post_id'],
-    ['follower', 'user_id', 'post_id'],
+    ['follows', 'user_id', 'post_id'],
     ['linked_account', 'user_id', 'provider_user_id'],
     ['users_skill', 'user_id', 'skill_name'],
     ['users_org', 'user_id', 'org_name'],
@@ -80,7 +80,7 @@ const generateRemoveQueries = function (userId, knex) {
   ;[
     ['comments', 'deactivated_by_id'],
     ['communities', 'created_by_id'],
-    ['follower', 'added_by_id'],
+    ['follows', 'added_by_id'],
     ['communities_tags', 'user_id']
   ].forEach(args => {
     var table = args[0]
@@ -104,7 +104,7 @@ const generateRemoveQueries = function (userId, knex) {
     ['community_invite', 'invited_by_id'],
     ['community_invite', 'used_by_id'],
     ['contributions', 'user_id'],
-    ['follower', 'user_id'],
+    ['follows', 'user_id'],
     ['linked_account', 'user_id'],
     ['users_skill', 'user_id'],
     ['users_org', 'user_id'],

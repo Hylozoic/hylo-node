@@ -26,13 +26,13 @@ describe('Search', function () {
       var expected = format(`
         select post.*, count(*) over () as total, "post_community"."pinned"
         from "post"
-        inner join "follower" on "follower"."post_id" = "post"."id"
+        inner join "follows" on "follows"."post_id" = "post"."id"
         inner join "post_community" on "post_community"."post_id" = "post"."id"
         where "post"."active" = true
         and "post"."user_id" in (42, 41)
         and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
           or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
-        and "follower"."user_id" = 37
+        and "follows"."user_id" = 37
         and (post.user_id != 37 or post.user_id is null)
         and "type" = 'request'
         and ((post.created_at between '%s' and '%s')

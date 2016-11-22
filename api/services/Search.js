@@ -58,11 +58,11 @@ module.exports = {
       }
 
       if (opts.type === Post.Type.THREAD || opts.follower) {
-        qb.join('follower', 'follower.post_id', '=', 'post.id')
+        qb.join('follows', 'follows.post_id', '=', 'post.id')
         if (opts.type === Post.Type.THREAD) {
-          qb.where('follower.user_id', opts.follower)
+          qb.where('follows.user_id', opts.follower)
         } else if (opts.follower) {
-          qb.where('follower.user_id', opts.follower)
+          qb.where('follows.user_id', opts.follower)
           qb.whereRaw('(post.user_id != ? or post.user_id is null)', opts.follower)
         }
       }
@@ -81,10 +81,10 @@ module.exports = {
       }
 
       if (opts.type === 'project' && opts.filter === 'mine') {
-        qb.leftJoin('follower', 'post.id', 'follower.post_id')
+        qb.leftJoin('follows', 'post.id', 'follows.post_id')
         qb.where(function () {
           this.where('post.user_id', opts.currentUserId)
-          .orWhere('follower.user_id', opts.currentUserId)
+          .orWhere('follows.user_id', opts.currentUserId)
         })
       }
 

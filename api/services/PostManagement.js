@@ -17,7 +17,7 @@ export const removePost = postId => {
 
     return Promise.all([
       removeComments(postId, trx),
-      remove('follower'),
+      remove('follows'),
       remove('user_post_relevance'),
       remove('posts_tags'),
       remove('post_community'),
