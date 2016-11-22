@@ -144,9 +144,9 @@ module.exports = {
       qb.select(bookshelf.knex.raw('users.*, count(users.*) over () as total'))
 
       if (opts.communities) {
-        qb.join('users_community', 'users_community.user_id', 'users.id')
-        qb.whereIn('users_community.community_id', opts.communities)
-        qb.where('users_community.active', true)
+        qb.join('communities_users', 'communities_users.user_id', 'users.id')
+        qb.whereIn('communities_users.community_id', opts.communities)
+        qb.where('communities_users.active', true)
       }
 
       if (opts.autocomplete) {

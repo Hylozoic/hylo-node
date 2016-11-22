@@ -50,7 +50,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
   // updates where we have to avoid duplicate records
   ;[
     // table name, user id column, column with unique value
-    ['users_community', 'user_id', 'community_id'],
+    ['communities_users', 'user_id', 'community_id'],
     ['contributions', 'user_id', 'post_id'],
     ['follows', 'user_id', 'post_id'],
     ['linked_account', 'user_id', 'provider_user_id'],
@@ -100,7 +100,7 @@ const generateRemoveQueries = function (userId, knex) {
   ;[
     // table, user id column
     ['devices', 'user_id'],
-    ['users_community', 'user_id'],
+    ['communities_users', 'user_id'],
     ['community_invite', 'invited_by_id'],
     ['community_invite', 'used_by_id'],
     ['contributions', 'user_id'],

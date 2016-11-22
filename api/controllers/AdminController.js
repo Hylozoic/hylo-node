@@ -11,8 +11,8 @@ var rawMetricsQuery = startTime => Promise.props({
 
   user: User.query(q => {
     q.where('users.created_at', '>', startTime)
-    q.leftJoin('users_community', 'users.id', 'users_community.user_id')
-    q.select(['users.id', 'users.created_at', 'users_community.community_id'])
+    q.leftJoin('communities_users', 'users.id', 'communities_users.user_id')
+    q.select(['users.id', 'users.created_at', 'communities_users.community_id'])
   }).query(),
 
   post: Post.query(q => {

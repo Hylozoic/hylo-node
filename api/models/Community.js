@@ -15,8 +15,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   inactiveUsers: function () {
-    return this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
-      .query({where: {'users_community.active': false}})
+    return this.belongsToMany(User, 'communities_users', 'community_id', 'user_id')
+      .query({where: {'communities_users.active': false}})
   },
 
   invitations: function () {
@@ -32,11 +32,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships: function () {
-    return this.hasMany(Membership).query({where: {'users_community.active': true}})
+    return this.hasMany(Membership).query({where: {'communities_users.active': true}})
   },
 
   moderators: function () {
-    return this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
+    return this.belongsToMany(User, 'communities_users', 'community_id', 'user_id')
       .query({where: {role: Membership.MODERATOR_ROLE}})
   },
 
@@ -46,7 +46,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   users: function () {
     return this.belongsToMany(User).through(Membership)
-      .query({where: {'users_community.active': true, 'users.active': true}}).withPivot('role')
+      .query({where: {'communities_users.active': true, 'users.active': true}}).withPivot('role')
   },
 
   posts: function () {

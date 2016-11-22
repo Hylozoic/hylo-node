@@ -209,6 +209,24 @@ ALTER SEQUENCE communities_tags_id_seq OWNED BY communities_tags.id;
 
 
 --
+-- Name: communities_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE communities_users (
+    user_id bigint NOT NULL,
+    community_id bigint NOT NULL,
+    role smallint,
+    created_at timestamp without time zone,
+    active boolean,
+    deactivated_at timestamp with time zone,
+    deactivator_id bigint,
+    last_viewed_at timestamp with time zone,
+    id integer NOT NULL,
+    settings jsonb DEFAULT '{}'::jsonb
+);
+
+
+--
 -- Name: community_invite_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1141,24 +1159,6 @@ CREATE TABLE users (
 
 
 --
--- Name: users_community; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE users_community (
-    user_id bigint NOT NULL,
-    community_id bigint NOT NULL,
-    role smallint,
-    created_at timestamp without time zone,
-    active boolean,
-    deactivated_at timestamp with time zone,
-    deactivator_id bigint,
-    last_viewed_at timestamp with time zone,
-    id integer NOT NULL,
-    settings jsonb DEFAULT '{}'::jsonb
-);
-
-
---
 -- Name: users_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1174,7 +1174,7 @@ CREATE SEQUENCE users_community_id_seq
 -- Name: users_community_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE users_community_id_seq OWNED BY users_community.id;
+ALTER SEQUENCE users_community_id_seq OWNED BY communities_users.id;
 
 
 --
@@ -1247,6 +1247,13 @@ ALTER TABLE ONLY communities_posts ALTER COLUMN id SET DEFAULT nextval('post_com
 --
 
 ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('communities_tags_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY communities_users ALTER COLUMN id SET DEFAULT nextval('users_community_id_seq'::regclass);
 
 
 --
@@ -1352,13 +1359,6 @@ ALTER TABLE ONLY tags_users ALTER COLUMN id SET DEFAULT nextval('tags_users_id_s
 --
 
 ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('user_external_data_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY users_community ALTER COLUMN id SET DEFAULT nextval('users_community_id_seq'::regclass);
 
 
 --
@@ -1812,7 +1812,7 @@ ALTER TABLE ONLY votes
 -- Name: user_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY users_community
+ALTER TABLE ONLY communities_users
     ADD CONSTRAINT user_community_unique UNIQUE (user_id, community_id);
 
 
@@ -1836,7 +1836,7 @@ ALTER TABLE ONLY user_post_relevance
 -- Name: users_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY users_community
+ALTER TABLE ONLY communities_users
     ADD CONSTRAINT users_community_pkey PRIMARY KEY (id);
 
 
@@ -2296,7 +2296,7 @@ ALTER TABLE ONLY user_post_relevance
 -- Name: fk_users_community_community_02; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY users_community
+ALTER TABLE ONLY communities_users
     ADD CONSTRAINT fk_users_community_community_02 FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2304,7 +2304,7 @@ ALTER TABLE ONLY users_community
 -- Name: fk_users_community_users_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY users_community
+ALTER TABLE ONLY communities_users
     ADD CONSTRAINT fk_users_community_users_01 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2488,7 +2488,7 @@ ALTER TABLE ONLY user_external_data
 -- Name: users_community_deactivator_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY users_community
+ALTER TABLE ONLY communities_users
     ADD CONSTRAINT users_community_deactivator_id_foreign FOREIGN KEY (deactivator_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 

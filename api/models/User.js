@@ -17,8 +17,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   communities: function () {
-    return this.belongsToMany(Community, 'users_community').through(Membership)
-      .query({where: {'users_community.active': true, 'communities.active': true}}).withPivot('role')
+    return this.belongsToMany(Community, 'communities_users').through(Membership)
+      .query({where: {'communities_users.active': true, 'communities.active': true}}).withPivot('role')
   },
 
   contributions: function () {
@@ -47,9 +47,9 @@ module.exports = bookshelf.Model.extend(merge({
 
   memberships: function () {
     return this.hasMany(Membership).query(qb => {
-      qb.where('users_community.active', true)
+      qb.where('communities_users.active', true)
       qb.leftJoin('communities', function () {
-        this.on('communities.id', '=', 'users_community.community_id')
+        this.on('communities.id', '=', 'communities_users.community_id')
       })
       qb.where('communities.active', true)
     })

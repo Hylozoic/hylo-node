@@ -79,14 +79,14 @@ const searchInCommunities = (communityIds, opts) => {
   return bookshelf.knex
   .select(columns)
   .from(search(omit(opts, 'limit', 'offset')).as(alias))
-  .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
+  .leftJoin('communities_users', 'communities_users.user_id', `${alias}.user_id`)
   .leftJoin('comments', 'comments.id', `${alias}.comment_id`)
   .leftJoin('communities_posts', function () {
     this.on('communities_posts.post_id', `${alias}.post_id`)
     .orOn('communities_posts.post_id', 'comments.post_id')
   })
   .where(function () {
-    this.where('users_community.community_id', 'in', communityIds)
+    this.where('communities_users.community_id', 'in', communityIds)
     .orWhere('communities_posts.community_id', 'in', communityIds)
   })
   .groupBy(columns)
