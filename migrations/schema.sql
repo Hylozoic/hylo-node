@@ -239,10 +239,10 @@ CREATE SEQUENCE contributor_seq
 
 
 --
--- Name: contributor; Type: TABLE; Schema: public; Owner: -
+-- Name: contributions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE contributor (
+CREATE TABLE contributions (
     id bigint DEFAULT nextval('contributor_seq'::regclass) NOT NULL,
     post_id bigint NOT NULL,
     user_id bigint NOT NULL,
@@ -1556,7 +1556,7 @@ ALTER TABLE ONLY community_invite
 -- Name: pk_contributor; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY contributor
+ALTER TABLE ONLY contributions
     ADD CONSTRAINT pk_contributor PRIMARY KEY (id);
 
 
@@ -1772,7 +1772,7 @@ ALTER TABLE ONLY communities
 -- Name: uq_no_multiple_contributor_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY contributor
+ALTER TABLE ONLY contributions
     ADD CONSTRAINT uq_no_multiple_contributor_2 UNIQUE (post_id, user_id);
 
 
@@ -1893,14 +1893,14 @@ CREATE INDEX ix_community_invite_used_by_2 ON community_invite USING btree (used
 -- Name: ix_contributor_post_1; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_contributor_post_1 ON contributor USING btree (post_id);
+CREATE INDEX ix_contributor_post_1 ON contributions USING btree (post_id);
 
 
 --
 -- Name: ix_contributor_user_2; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_contributor_user_2 ON contributor USING btree (user_id);
+CREATE INDEX ix_contributor_user_2 ON contributions USING btree (user_id);
 
 
 --
@@ -2168,7 +2168,7 @@ ALTER TABLE ONLY community_invite
 -- Name: fk_contributor_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY contributor
+ALTER TABLE ONLY contributions
     ADD CONSTRAINT fk_contributor_post_1 FOREIGN KEY (post_id) REFERENCES post(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2176,7 +2176,7 @@ ALTER TABLE ONLY contributor
 -- Name: fk_contributor_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY contributor
+ALTER TABLE ONLY contributions
     ADD CONSTRAINT fk_contributor_user_2 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 

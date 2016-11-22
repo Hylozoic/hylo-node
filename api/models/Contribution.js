@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'contributor',
+  tableName: 'contributions',
 
   post: function () {
     return this.belongsTo(Post, 'post_id')
@@ -17,9 +17,9 @@ module.exports = bookshelf.Model.extend({
   queryForUser: function (userId, communityIds) {
     return Contribution.query(q => {
       q.orderBy('date_contributed')
-      q.join('post', 'post.id', '=', 'contributor.post_id')
+      q.join('post', 'post.id', '=', 'contributions.post_id')
 
-      q.where({'contributor.user_id': userId, 'post.active': true})
+      q.where({'contributions.user_id': userId, 'post.active': true})
 
       if (communityIds) {
         q.join('post_community', 'post_community.post_id', '=', 'post.id')
@@ -32,11 +32,11 @@ module.exports = bookshelf.Model.extend({
   countForUser: function (user) {
     return this.query().count()
     .where({
-      'contributor.user_id': user.id,
+      'contributions.user_id': user.id,
       'post.active': true
     })
     .join('post', function () {
-      this.on('post.id', '=', 'contributor.post_id')
+      this.on('post.id', '=', 'contributions.post_id')
     })
     .then(function (rows) {
       return rows[0].count
