@@ -12,7 +12,7 @@ export const setupNewPostAttrs = function (userId, params) {
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
     link_preview_id: getOr(null, 'id', params.linkPreview)
-  }, pick(params, 'type', 'start_time', 'end_time', 'location', 'created_from'))
+  }, pick(params, 'type', 'starts_at', 'ends_at', 'location', 'created_from'))
 
   return Promise.resolve(attrs)
 }

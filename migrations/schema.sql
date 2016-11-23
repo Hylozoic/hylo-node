@@ -78,7 +78,7 @@ CREATE TABLE comments (
     active boolean,
     deactivated_reason character varying(255),
     deactivated_by_id bigint,
-    deactivated_on timestamp without time zone,
+    deactivated_at timestamp without time zone,
     recent boolean,
     created_from character varying(255)
 );
@@ -245,11 +245,11 @@ CREATE SEQUENCE community_invite_seq
 CREATE TABLE community_invites (
     id bigint DEFAULT nextval('community_invite_seq'::regclass) NOT NULL,
     community_id bigint NOT NULL,
-    created timestamp without time zone NOT NULL,
+    created_at timestamp without time zone NOT NULL,
     invited_by_id bigint NOT NULL,
     used_by_id bigint,
     token text NOT NULL,
-    used_on timestamp without time zone,
+    used_at timestamp without time zone,
     email text NOT NULL,
     role smallint DEFAULT 0,
     tag_id bigint
@@ -276,7 +276,7 @@ CREATE TABLE contributions (
     id bigint DEFAULT nextval('contributor_seq'::regclass) NOT NULL,
     post_id bigint NOT NULL,
     user_id bigint NOT NULL,
-    date_contributed timestamp without time zone NOT NULL
+    contributed_at timestamp without time zone NOT NULL
 );
 
 
@@ -414,7 +414,7 @@ CREATE SEQUENCE follower_seq
 CREATE TABLE follows (
     id bigint DEFAULT nextval('follower_seq'::regclass) NOT NULL,
     post_id bigint,
-    date_added timestamp without time zone,
+    added_at timestamp without time zone,
     user_id bigint,
     added_by_id bigint,
     role integer
@@ -791,13 +791,13 @@ CREATE TABLE posts (
     num_comments integer,
     active boolean,
     deactivated_by_id bigint,
-    deactivated_on timestamp without time zone,
+    deactivated_at timestamp without time zone,
     deactivated_reason character varying(255),
     fulfilled_at timestamp without time zone,
     updated_at timestamp without time zone,
     visibility integer DEFAULT 0,
-    start_time timestamp with time zone,
-    end_time timestamp with time zone,
+    starts_at timestamp with time zone,
+    ends_at timestamp with time zone,
     location character varying(255),
     created_from character varying(255),
     parent_post_id bigint,
@@ -888,8 +888,8 @@ ALTER SEQUENCE posts_users_id_seq OWNED BY posts_users.id;
 CREATE TABLE push_notifications (
     id integer NOT NULL,
     device_token character varying(255),
-    time_queued timestamp with time zone,
-    time_sent timestamp with time zone,
+    queued_at timestamp with time zone,
+    sent_at timestamp with time zone,
     alert character varying(255) DEFAULT ''::character varying,
     badge_no integer DEFAULT 0,
     platform character varying(255),

@@ -36,7 +36,7 @@ module.exports = bookshelf.Model.extend({
         this.get('community_id'),
         {role: Number(this.get('role')), transacting})
     })
-    .tap(() => this.save({used_by_id: userId, used_on: new Date()},
+    .tap(() => this.save({used_by_id: userId, used_at: new Date()},
       {patch: true, transacting}))
     .tap(() => this.get('tag_id') && new TagFollow({
       user_id: userId,
@@ -85,7 +85,7 @@ module.exports = bookshelf.Model.extend({
       tag_id: opts.tagId,
       role: role,
       token: uuid.v4(),
-      created: new Date()
+      created_at: new Date()
     }).save()
   },
 
@@ -110,7 +110,7 @@ module.exports = bookshelf.Model.extend({
           subject
         }
         return invitation.send(opts)
-        .then(() => invitation.save({created: new Date()}, {patch: true}))
+        .then(() => invitation.save({created_at: new Date()}, {patch: true}))
       }))
   }
 })

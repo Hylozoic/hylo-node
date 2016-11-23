@@ -77,7 +77,7 @@ module.exports = {
       }
 
       if (opts.type === 'event' && opts.filter === 'future') {
-        qb.whereRaw('(posts.start_time > now())')
+        qb.whereRaw('(posts.starts_at > now())')
       }
 
       if (opts.type === 'project' && opts.filter === 'mine') {

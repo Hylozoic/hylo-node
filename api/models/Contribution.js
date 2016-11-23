@@ -11,12 +11,12 @@ module.exports = bookshelf.Model.extend({
 
 }, {
   create: (user_id, post_id, transacting) =>
-    new Contribution({post_id, user_id, date_contributed: new Date()})
+    new Contribution({post_id, user_id, contributed_at: new Date()})
     .save(null, {transacting}),
 
   queryForUser: function (userId, communityIds) {
     return Contribution.query(q => {
-      q.orderBy('date_contributed')
+      q.orderBy('contributed_at')
       q.join('posts', 'posts.id', '=', 'contributions.post_id')
 
       q.where({'contributions.user_id': userId, 'posts.active': true})

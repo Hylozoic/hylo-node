@@ -82,8 +82,8 @@ var postAttributes = (post, userId, opts = {}) => {
       'created_at',
       'updated_at',
       'similarity',
-      'start_time',
-      'end_time',
+      'starts_at',
+      'ends_at',
       'location',
       'parent_post_id'
     ]),

@@ -47,7 +47,7 @@ describe('Invitation', function () {
       return bookshelf.transaction(trx => invitation1.use(user.id, {transacting: trx}))
       .then(() => {
         expect(invitation1.get('used_by_id')).to.equal(user.id)
-        expect(invitation1.get('used_on').getTime()).to.be.closeTo(new Date().getTime(), 2000)
+        expect(invitation1.get('used_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
 
         return Membership.hasModeratorRole(user.id, community.id)
       })

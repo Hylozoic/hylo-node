@@ -142,7 +142,7 @@ module.exports = bookshelf.Model.extend({
       actor_id: follow.get('added_by_id'),
       post_id: follow.get('post_id'),
       meta: {reasons: [this.Reason.FollowAdd]},
-      created_at: follow.get('date_added')
+      created_at: follow.get('added_at')
     })
   },
 
@@ -152,7 +152,7 @@ module.exports = bookshelf.Model.extend({
       actor_id: follow.get('user_id'),
       post_id: follow.get('post_id'),
       meta: {reasons: [this.Reason.Follow]},
-      created_at: follow.get('date_added')
+      created_at: follow.get('added_at')
     })
   },
 

@@ -5,7 +5,7 @@ module.exports = {
   requireTimeRange: function(req, res) {
     var valid = true;
 
-    _.each(['start_time', 'end_time'], function(attr) {
+    _.each(['start_time', 'end_time'], function (attr) {
       var value = req.param(attr);
 
       if (!value) {

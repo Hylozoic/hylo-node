@@ -28,9 +28,9 @@ describe('Device', () => {
       .then(() => PushNotification.where({device_token: 'foo'}).fetch())
       .then(push => {
         expect(push).to.exist
-        const timeQueued = push.get('time_queued')
-        expect(timeQueued).to.exist
-        expect(new Date() - new Date(timeQueued)).to.be.below(2000)
+        const queuedAt = push.get('queued_at')
+        expect(queuedAt).to.exist
+        expect(new Date() - new Date(queuedAt)).to.be.below(2000)
         expect(push.get('badge_no')).to.equal(7)
       })
     })

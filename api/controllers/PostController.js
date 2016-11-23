@@ -15,7 +15,7 @@ const sortColumns = {
   'top': 'posts.num_votes',
   'recent': 'posts.updated_at',
   'suggested': 'suggested',
-  'start_time': ['posts.start_time', 'asc']
+  'starts_at': ['posts.starts_at', 'asc']
 }
 
 const queryPosts = (req, opts) =>
@@ -28,7 +28,7 @@ const queryPosts = (req, opts) =>
       term: req.param('search')
     },
     pick(req.allParams(),
-      'type', 'limit', 'offset', 'start_time', 'end_time', 'filter', 'omit'),
+      'type', 'limit', 'offset', 'starts_at', 'ends_at', 'filter', 'omit'),
     omit(opts, 'sort')
   ))
   .then(Search.forPosts)
@@ -284,7 +284,7 @@ const PostController = {
     const params = req.allParams()
 
     const attrs = merge(
-      pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
+      pick(params, 'name', 'description', 'type', 'starts_at', 'ends_at', 'location'),
       {
         updated_at: new Date(),
         visibility: Post.Visibility[params.public ? 'PUBLIC_READABLE' : 'DEFAULT'],

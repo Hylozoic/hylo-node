@@ -62,7 +62,7 @@ module.exports = {
         users.name as joined_user_name,
         users.avatar_url as joined_user_avatar_url
       `))
-      qb.orderBy('created', 'desc')
+      qb.orderBy('created_at', 'desc')
     }).fetchAll({withRelated: 'user'}))
     .then(invitations => ({
       total: invitations.length > 0 ? Number(invitations.first().get('total')) : 0,
@@ -75,7 +75,7 @@ module.exports = {
             avatar_url: i.get('joined_user_avatar_url')
           }
         }
-        return _.merge(i.pick('id', 'email', 'created'), {
+        return _.merge(i.pick('id', 'email', 'created_at'), {
           user: !isEmpty(user) ? user : null
         })
       })
