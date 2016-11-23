@@ -21,7 +21,7 @@ module.exports = bookshelf.Model.extend({
     .fetch()
     .then(lastRead => lastRead || new this({
       post_id: postId,
-      last_read_at: new Date(),
+      last_read_at: opts.date || new Date(),
       user_id: userId
     }).save(null, {transacting}))
   }

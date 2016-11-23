@@ -1,4 +1,4 @@
-import { filter } from 'lodash/fp'
+import { compact, filter, sum } from 'lodash/fp'
 import { markdown } from 'hylo-utils/text'
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
@@ -130,5 +130,56 @@ module.exports = bookshelf.Model.extend({
           return user.sendPushNotification(alert, path)
         }
       })
-    })
+    }),
+
+  sendMessageDigests: (minutes = 10) => {
+    const time = new Date(new Date() - minutes * 60000)
+
+    return Post.where('type', Post.Type.THREAD)
+    .where('updated_at', '>', time)
+    .fetchAll({withRelated: [
+      'followers',
+      'followers.devices',
+      'lastReads',
+      {comments: q => {
+        q.where('created_at', '>', time)
+        q.orderBy('created_at', 'asc')
+      }},
+      'comments.user'
+    ]})
+    .then(posts => Promise.all(posts.map(post => {
+      const { comments, followers, lastReads } = post.relations
+      if (comments.length === 0) return
+
+      return Promise.map(followers.models, user => {
+        // don't send to users that have devices (they receive push
+        // notifications instead)
+        if (user.relations.devices.length > 0) return
+
+        // select comments not written by this user and newer than user's last
+        // read time
+        const r = lastReads.find(l => l.get('user_id') === user.id)
+        const filtered = comments.filter(c =>
+          c.get('created_at') > (r ? r.get('last_read_at') : 0) &&
+          c.get('user_id') !== user.id)
+        if (filtered.length === 0) return
+
+        // here, we assume that all of the messages were sent by 1 other person,
+        // so this will have to change when we support group messaging
+        const other = filtered[0].relations.user
+
+        return Email.sendMessageDigest({
+          email: user.get('email'),
+          data: {
+            other_person_avatar_url: other.get('avatar_url'),
+            other_person_name: other.get('name'),
+            thread_url: Frontend.Route.thread(post),
+            messages: filtered.map(c => c.get('text'))
+          }
+        })
+      })
+      .then(sends => compact(sends).length)
+    })))
+    .then(postSendCounts => sum(postSendCounts))
+  }
 })

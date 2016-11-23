@@ -56,7 +56,11 @@ var jobs = {
 
   every10minutes: function () {
     sails.log.debug('Refreshing full-text search index')
-    return FullTextSearch.refreshView()
+    return Promise.all([
+      FullTextSearch.refreshView(),
+      Comment.sendMessageDigests()
+      .then(count => sails.log.debug(`Sent ${count} message digests`))
+    ])
   }
 }
 
