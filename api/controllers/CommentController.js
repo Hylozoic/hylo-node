@@ -1,4 +1,5 @@
 import { difference, isEmpty, pickBy } from 'lodash'
+import { flow, filter, toPairs, map, includes } from 'lodash/fp'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
@@ -172,5 +173,45 @@ module.exports = {
       })
       .then(res.ok, res.serverError)
     })
+  },
+
+  createBatchFromEmailForm: function (req, res) {
+    try {
+      var tokenData = Email.decodeFormToken(req.param('token'))
+    } catch (e) {
+      return Promise.resolve(res.serverError(new Error('Invalid token: ' + req.param('token'))))
+    }
+
+    const { communityId, userId } = tokenData
+
+    const replyText = postId => req.param(`post-${postId}`)
+
+    const postIds = flow(
+      toPairs,
+      filter(([k, v]) => k.match(/^post-(\d)+$/)),
+      map(([k, v]) => k.replace(/^post-/, ''))
+    )(req.allParams())
+
+    var failures = false
+
+    return Community.find(communityId)
+    .then(community => Promise.map(postIds, id =>
+      Post.find(id, {withRelated: ['communities']})
+      .then(post => {
+        if (!post || !includes(communityId, post.relations.communities.pluck('id'))) {
+          failures = true
+          return Promise.resolve()
+        }
+        return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
+      }))
+    .then(post => {
+      var notification
+      if (failures) {
+        notification = 'Some of your comments could not be added.'
+      } else {
+        notification = 'Your comments have been added.'
+      }
+      return res.redirect(Frontend.Route.community(community) + `?notification=${notification}&error=${failures}`)
+    }, res.serverError))
   }
 }

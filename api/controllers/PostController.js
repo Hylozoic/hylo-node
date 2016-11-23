@@ -222,7 +222,7 @@ const PostController = {
 
   createFromEmailForm: function (req, res) {
     try {
-      var tokenData = Email.decodePostCreationToken(req.param('token'))
+      var tokenData = Email.decodeFormToken(req.param('token'))
     } catch (e) {
       return res.serverError(new Error('Invalid token: ' + req.param('token')))
     }

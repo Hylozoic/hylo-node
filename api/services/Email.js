@@ -91,12 +91,12 @@ module.exports = {
     return {communityId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
   },
 
-  postCreationToken: function (communityId, userId) {
+  formToken: function (communityId, userId) {
     var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, communityId, userId)
     return PlayCrypto.encrypt(plaintext)
   },
 
-  decodePostCreationToken: function (token) {
+  decodeFormToken: function (token) {
     var salt = new RegExp(format('^%s', process.env.MAILGUN_EMAIL_SALT))
     var plaintext = PlayCrypto.decrypt(token).replace(salt, '')
     var decodedData = plaintext.split('|')

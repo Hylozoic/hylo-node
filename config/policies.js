@@ -134,7 +134,8 @@ module.exports.policies = {
     findForPost:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     destroy:         ['sessionAuth', 'isCommentOwner'],
     update:          ['sessionAuth', 'isCommentOwner'],
-    createFromEmail: true
+    createFromEmail: true,
+    createBatchFromEmailForm: true
   },
 
   MessageController: {
