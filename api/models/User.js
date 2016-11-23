@@ -326,7 +326,7 @@ module.exports = bookshelf.Model.extend(merge({
     .select(raw("settings->'last_viewed_messages_at' as time"))
     .then(rows => rows[0].time)
     .then(lastViewed => Post.query(q => {
-      if (lastViewed) q.where('post.updated_at', '>', new Date(lastViewed))
+      if (lastViewed) q.where('posts.updated_at', '>', new Date(lastViewed))
       q.join('follows', 'posts.id', 'follows.post_id')
       q.where({
         'follows.user_id': userId,
