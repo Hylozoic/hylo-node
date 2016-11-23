@@ -2,7 +2,7 @@ var uuid = require('node-uuid')
 import { markdown } from 'hylo-utils/text'
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'community_invite',
+  tableName: 'community_invites',
 
   community: function () {
     return this.belongsTo(Community)

@@ -54,9 +54,9 @@ module.exports = {
       qb.limit(req.param('limit') || 20)
       qb.offset(req.param('offset') || 0)
       qb.where('community_id', community.get('id'))
-      qb.leftJoin('users', 'users.id', 'community_invite.used_by_id')
+      qb.leftJoin('users', 'users.id', 'community_invites.used_by_id')
       qb.select(bookshelf.knex.raw(`
-        community_invite.*,
+        community_invites.*,
         count(*) over () as total,
         users.id as joined_user_id,
         users.name as joined_user_name,

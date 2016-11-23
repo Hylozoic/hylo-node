@@ -239,10 +239,10 @@ CREATE SEQUENCE community_invite_seq
 
 
 --
--- Name: community_invite; Type: TABLE; Schema: public; Owner: -
+-- Name: community_invites; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE community_invite (
+CREATE TABLE community_invites (
     id bigint DEFAULT nextval('community_invite_seq'::regclass) NOT NULL,
     community_id bigint NOT NULL,
     created timestamp without time zone NOT NULL,
@@ -1528,7 +1528,7 @@ ALTER TABLE ONLY communities
 -- Name: pk_community_invite; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community_invite
+ALTER TABLE ONLY community_invites
     ADD CONSTRAINT pk_community_invite PRIMARY KEY (id);
 
 
@@ -1760,7 +1760,7 @@ ALTER TABLE ONLY thanks
 -- Name: uq_no_multiple_tokens; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community_invite
+ALTER TABLE ONLY community_invites
     ADD CONSTRAINT uq_no_multiple_tokens UNIQUE (token);
 
 
@@ -1836,21 +1836,21 @@ CREATE INDEX ix_comment_user_1 ON comments USING btree (user_id);
 -- Name: ix_community_invite_community_1; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_community_invite_community_1 ON community_invite USING btree (community_id);
+CREATE INDEX ix_community_invite_community_1 ON community_invites USING btree (community_id);
 
 
 --
 -- Name: ix_community_invite_invited_by_3; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_community_invite_invited_by_3 ON community_invite USING btree (invited_by_id);
+CREATE INDEX ix_community_invite_invited_by_3 ON community_invites USING btree (invited_by_id);
 
 
 --
 -- Name: ix_community_invite_used_by_2; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_community_invite_used_by_2 ON community_invite USING btree (used_by_id);
+CREATE INDEX ix_community_invite_used_by_2 ON community_invites USING btree (used_by_id);
 
 
 --
@@ -2028,7 +2028,7 @@ ALTER TABLE ONLY communities_tags
 -- Name: community_invite_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community_invite
+ALTER TABLE ONLY community_invites
     ADD CONSTRAINT community_invite_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
 
 
@@ -2108,7 +2108,7 @@ ALTER TABLE ONLY communities
 -- Name: fk_community_invite_community_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community_invite
+ALTER TABLE ONLY community_invites
     ADD CONSTRAINT fk_community_invite_community_1 FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2116,7 +2116,7 @@ ALTER TABLE ONLY community_invite
 -- Name: fk_community_invite_invited_by_3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community_invite
+ALTER TABLE ONLY community_invites
     ADD CONSTRAINT fk_community_invite_invited_by_3 FOREIGN KEY (invited_by_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
@@ -2124,7 +2124,7 @@ ALTER TABLE ONLY community_invite
 -- Name: fk_community_invite_used_by_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY community_invite
+ALTER TABLE ONLY community_invites
     ADD CONSTRAINT fk_community_invite_used_by_2 FOREIGN KEY (used_by_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 

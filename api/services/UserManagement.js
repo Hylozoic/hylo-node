@@ -37,8 +37,8 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['follows', 'added_by_id'],
     ['thanks', 'user_id'],
     ['thanks', 'thanked_by_id'],
-    ['community_invite', 'invited_by_id'],
-    ['community_invite', 'used_by_id'],
+    ['community_invites', 'invited_by_id'],
+    ['community_invites', 'used_by_id'],
     ['user_external_data', 'user_id'],
     ['communities', 'leader_id']
   ].forEach(args => {
@@ -99,8 +99,8 @@ const generateRemoveQueries = function (userId, knex) {
     // table, user id column
     ['devices', 'user_id'],
     ['communities_users', 'user_id'],
-    ['community_invite', 'invited_by_id'],
-    ['community_invite', 'used_by_id'],
+    ['community_invites', 'invited_by_id'],
+    ['community_invites', 'used_by_id'],
     ['contributions', 'user_id'],
     ['follows', 'user_id'],
     ['linked_account', 'user_id'],
