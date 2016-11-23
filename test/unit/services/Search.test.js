@@ -20,27 +20,27 @@ describe('Search', function () {
         type: 'request',
         start_time: startTime.toDate(),
         end_time: endTime.toDate(),
-        sort: 'post.updated_at'
+        sort: 'posts.updated_at'
       }).query().toString()
 
       var expected = format(`
-        select post.*, count(*) over () as total, "post_community"."pinned"
-        from "post"
-        inner join "follower" on "follower"."post_id" = "post"."id"
-        inner join "post_community" on "post_community"."post_id" = "post"."id"
-        where "post"."active" = true
-        and "post"."user_id" in (42, 41)
-        and (((to_tsvector('english', post.name) @@ to_tsquery('milk:* & toast:*'))
-          or (to_tsvector('english', post.description) @@ to_tsquery('milk:* & toast:*'))))
-        and "follower"."user_id" = 37
-        and (post.user_id != 37 or post.user_id is null)
+        select posts.*, count(*) over () as total, "communities_posts"."pinned"
+        from "posts"
+        inner join "follows" on "follows"."post_id" = "posts"."id"
+        inner join "communities_posts" on "communities_posts"."post_id" = "posts"."id"
+        where "posts"."active" = true
+        and "posts"."user_id" in (42, 41)
+        and (((to_tsvector('english', posts.name) @@ to_tsquery('milk:* & toast:*'))
+          or (to_tsvector('english', posts.description) @@ to_tsquery('milk:* & toast:*'))))
+        and "follows"."user_id" = 37
+        and (posts.user_id != 37 or posts.user_id is null)
         and "type" = 'request'
-        and ((post.created_at between '%s' and '%s')
-          or (post.updated_at between '%s' and '%s'))
-        and "post_community"."community_id" in (9, 12)
+        and ((posts.created_at between '%s' and '%s')
+          or (posts.updated_at between '%s' and '%s'))
+        and "communities_posts"."community_id" in (9, 12)
         and "parent_post_id" is null
-        group by "post"."id", "post_community"."post_id", "post_community"."pinned"
-        order by "post"."updated_at" desc
+        group by "posts"."id", "communities_posts"."post_id", "communities_posts"."pinned"
+        order by "posts"."updated_at" desc
         limit 5
         offset 7
       `.replace(/(\n\s*)/g, ' ').trim(),
@@ -54,12 +54,12 @@ describe('Search', function () {
 
     it('excludes welcome and thread posts by default', () => {
       var query = Search.forPosts({communities: 9}).query().toString()
-      expect(query).to.contain('("post"."type" not in (\'welcome\', \'thread\') or "post"."type" is null)')
+      expect(query).to.contain('("posts"."type" not in (\'welcome\', \'thread\') or "posts"."type" is null)')
     })
 
     it('excludes welcome and thread posts when type is "all"', () => {
       var query = Search.forPosts({communities: 9, type: 'all'}).query().toString()
-      expect(query).to.contain('("post"."type" not in (\'welcome\', \'thread\') or "post"."type" is null)')
+      expect(query).to.contain('("posts"."type" not in (\'welcome\', \'thread\') or "posts"."type" is null)')
     })
   })
 

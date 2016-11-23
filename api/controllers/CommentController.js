@@ -154,7 +154,7 @@ module.exports = {
 
         comment.save({
           deactivated_by_id: req.session.userId,
-          deactivated_on: new Date(),
+          deactivated_at: new Date(),
           active: false,
           recent: false
         }, {patch: true}).tap(c => updateRecentComments(c.get('post_id')))

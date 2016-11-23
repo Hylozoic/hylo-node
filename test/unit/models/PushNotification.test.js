@@ -22,13 +22,13 @@ describe('PushNotification', function () {
       .reply(200, {result: 'success'})
     })
 
-    it('sets time_sent', function () {
+    it('sets sent_at', function () {
       return pushNotification.send()
       .then(result => {
         expect(result.body).to.deep.equal({result: 'success'})
         return pushNotification.fetch()
         .then(pn => {
-          expect(pn.get('time_sent')).to.not.equal(null)
+          expect(pn.get('sent_at')).to.not.equal(null)
         })
       })
     })

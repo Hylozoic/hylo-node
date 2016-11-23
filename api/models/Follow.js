@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'follower',
+  tableName: 'follows',
 
   post: function () {
     return this.belongsTo(Post)
@@ -18,7 +18,7 @@ module.exports = bookshelf.Model.extend({
     if (!options) options = {}
     return new Follow({
       post_id: postId,
-      date_added: new Date(),
+      added_at: new Date(),
       user_id: userId,
       added_by_id: options.addedById
     }).save(null, _.pick(options, 'transacting'))

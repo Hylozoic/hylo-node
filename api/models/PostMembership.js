@@ -1,12 +1,12 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'post_community',
+  tableName: 'communities_posts',
 
-  post: function() {
-    return this.belongsTo(Post);
+  post: function () {
+    return this.belongsTo(Post)
   },
 
-  community: function() {
-    return this.belongsTo(Community);
+  community: function () {
+    return this.belongsTo(Community)
   }
 
 }, {

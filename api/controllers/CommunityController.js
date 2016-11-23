@@ -295,13 +295,13 @@ module.exports = {
       if (req.param('paginate')) {
         return Community.query(qb => {
           qb.where('network_id', network.get('id'))
-          qb.where('community.active', true)
-          qb.select(bookshelf.knex.raw('count(users_community.user_id) as "memberCount", count(community.id) over () as total'))
-          qb.select('community.id', 'slug', 'name', 'avatar_url', 'banner_url')
-          qb.leftJoin('users_community', function () {
-            this.on('community.id', '=', 'users_community.community_id')
+          qb.where('communities.active', true)
+          qb.select(bookshelf.knex.raw('count(communities_users.user_id) as "memberCount", count(communities.id) over () as total'))
+          qb.select('communities.id', 'slug', 'name', 'avatar_url', 'banner_url')
+          qb.leftJoin('communities_users', function () {
+            this.on('communities.id', '=', 'communities_users.community_id')
           })
-          qb.groupBy('community.id')
+          qb.groupBy('communities.id')
           qb.orderBy('memberCount', 'desc')
           qb.orderBy('slug', 'asc')
           qb.limit(req.param('limit') || 20)

@@ -19,7 +19,7 @@ module.exports = bookshelf.Model.extend({
         badge_no: user.get('new_notification_count') + count,
         device_token: this.get('token'),
         platform: this.get('platform'),
-        time_queued: new Date().toISOString()
+        queued_at: new Date().toISOString()
       }).save().then(push => push.send())))
   },
 
@@ -34,7 +34,7 @@ module.exports = bookshelf.Model.extend({
       path: '',
       badge_no: 0,
       platform: device.get('platform'),
-      time_queued: (new Date()).toISOString()
+      queued_at: (new Date()).toISOString()
     })
     .save({})
     .then(pushNotification => pushNotification.send())

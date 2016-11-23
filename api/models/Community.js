@@ -8,15 +8,15 @@ const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_commun
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
 
 module.exports = bookshelf.Model.extend(merge({
-  tableName: 'community',
+  tableName: 'communities',
 
   creator: function () {
     return this.belongsTo(User, 'created_by_id')
   },
 
   inactiveUsers: function () {
-    return this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
-      .query({where: {'users_community.active': false}})
+    return this.belongsToMany(User, 'communities_users', 'community_id', 'user_id')
+      .query({where: {'communities_users.active': false}})
   },
 
   invitations: function () {
@@ -32,11 +32,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships: function () {
-    return this.hasMany(Membership).query({where: {'users_community.active': true}})
+    return this.hasMany(Membership).query({where: {'communities_users.active': true}})
   },
 
   moderators: function () {
-    return this.belongsToMany(User, 'users_community', 'community_id', 'user_id')
+    return this.belongsToMany(User, 'communities_users', 'community_id', 'user_id')
       .query({where: {role: Membership.MODERATOR_ROLE}})
   },
 
@@ -46,12 +46,12 @@ module.exports = bookshelf.Model.extend(merge({
 
   users: function () {
     return this.belongsToMany(User).through(Membership)
-      .query({where: {'users_community.active': true, 'users.active': true}}).withPivot('role')
+      .query({where: {'communities_users.active': true, 'users.active': true}}).withPivot('role')
   },
 
   posts: function () {
     return this.belongsToMany(Post).through(PostMembership)
-      .query({where: {'post.active': true}})
+      .query({where: {'posts.active': true}})
   },
 
   tags: function () {
@@ -62,10 +62,10 @@ module.exports = bookshelf.Model.extend(merge({
     var communityId = this.id
     return Comment.collection().query(q => {
       q.where({
-        'post_community.community_id': communityId,
-        'comment.active': true
+        'communities_posts.community_id': communityId,
+        'comments.active': true
       })
-      q.join('post_community', 'post_community.post_id', 'comment.post_id')
+      q.join('communities_posts', 'communities_posts.post_id', 'comments.post_id')
     })
   },
 

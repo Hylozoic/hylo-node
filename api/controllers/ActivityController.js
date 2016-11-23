@@ -15,14 +15,14 @@ const actionFromReason = reason => {
 const queryNotification = opts =>
   Notification.query(q => {
     q.where('reader_id', opts.userId)
-    .leftJoin('activity', function () {
-      this.on('activity.id', '=', 'notifications.activity_id')
+    .leftJoin('activities', function () {
+      this.on('activities.id', '=', 'notifications.activity_id')
     })
     q.where('medium', Notification.MEDIUM.InApp)
     q.limit(opts.limit)
     q.offset(opts.offset)
     q.select(bookshelf.knex.raw('notifications.*, count(*) over () as total'))
-    q.orderBy('activity.created_at', 'desc')
+    q.orderBy('activities.created_at', 'desc')
 
     Activity.filterInactiveContent(q)
     if (opts.community) Activity.joinWithCommunity(opts.community.id, q)
@@ -43,7 +43,7 @@ const fetchAndPresentNotification = (req, community) => {
     {'activity.comment.user': userColumns},
     {'activity.community': q => q.column('id', 'slug', 'name', 'avatar_url')},
     {'activity.post': q => q.column('id', 'name', 'user_id', 'type', 'description')},
-    {'activity.post.communities': q => q.column('community.id', 'slug')},
+    {'activity.post.communities': q => q.column('communities.id', 'slug')},
     {'activity.post.relatedUsers': userColumns}
   ]})
   .tap(nots => total = (nots.length > 0 ? nots.first().get('total') : 0))
@@ -93,7 +93,7 @@ module.exports = {
         q.where({reader_id: req.session.userId, unread: true})
         Activity.filterInactiveContent(q)
         if (community) Activity.joinWithCommunity(community.id, q)
-        q.select('activity.id')
+        q.select('activities.id')
       }).query()
       return Activity.query().whereIn('id', subq).update({unread: false})
     })

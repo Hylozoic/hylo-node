@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'thank_you',
+  tableName: 'thanks',
 
   comment: function () {
     return this.belongsTo(Comment)
@@ -17,19 +17,19 @@ module.exports = bookshelf.Model.extend({
   queryForUser: function (userId, communityIds) {
     return Thank.query(q => {
       q.orderBy('date_thanked')
-      q.join('comment', 'comment.id', '=', 'thank_you.comment_id')
-      q.join('post', 'post.id', '=', 'comment.post_id')
+      q.join('comments', 'comments.id', '=', 'thanks.comment_id')
+      q.join('posts', 'posts.id', '=', 'comments.post_id')
 
       q.where({
-        'comment.user_id': userId,
-        'comment.active': true,
-        'post.active': true
+        'comments.user_id': userId,
+        'comments.active': true,
+        'posts.active': true
       })
 
       if (communityIds) {
-        q.join('post_community', 'post_community.post_id', '=', 'post.id')
-        q.join('community', 'community.id', '=', 'post_community.community_id')
-        q.whereIn('community.id', communityIds)
+        q.join('communities_posts', 'communities_posts.post_id', '=', 'posts.id')
+        q.join('communities', 'communities.id', '=', 'communities_posts.community_id')
+        q.whereIn('communities.id', communityIds)
       }
     })
   },
@@ -37,11 +37,11 @@ module.exports = bookshelf.Model.extend({
   countForUser: function (user) {
     return this.query().count()
     .where({
-      'thank_you.user_id': user.id,
-      'comment.active': true
+      'thanks.user_id': user.id,
+      'comments.active': true
     })
-    .join('comment', function () {
-      this.on('comment.id', '=', 'thank_you.comment_id')
+    .join('comments', function () {
+      this.on('comments.id', '=', 'thanks.comment_id')
     })
     .then(function (rows) {
       return rows[0].count

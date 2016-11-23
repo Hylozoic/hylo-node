@@ -1,10 +1,10 @@
 var knex = bookshelf.knex
 
 var networkIdsQuery = function (userId) {
-  var communityIdsQuery = knex.select('community_id').from('users_community')
+  var communityIdsQuery = knex.select('community_id').from('communities_users')
     .where({user_id: userId, active: true})
 
-  return knex.select().distinct('network_id').from('community')
+  return knex.select().distinct('network_id').from('communities')
     .whereIn('id', communityIdsQuery).whereRaw('network_id is not null')
 }
 
@@ -12,7 +12,7 @@ module.exports = bookshelf.Model.extend({
   tableName: 'networks',
 
   communities: function () {
-    return this.hasMany(Community).query({where: {'community.active': true}})
+    return this.hasMany(Community).query({where: {'communities.active': true}})
   }
 
 }, {
@@ -30,7 +30,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   activeCommunityIds: function (userId, rawQuery) {
-    var query = knex.select('id').from('community')
+    var query = knex.select('id').from('communities')
       .whereIn('network_id', networkIdsQuery(userId))
 
     if (rawQuery) return query

@@ -12,10 +12,10 @@ import { normalizePost } from '../../lib/util/normalize'
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
   'fulfilled-last': 'fulfilled_at',
-  'top': 'post.num_votes',
-  'recent': 'post.updated_at',
+  'top': 'posts.num_votes',
+  'recent': 'posts.updated_at',
   'suggested': 'suggested',
-  'start_time': ['post.start_time', 'asc']
+  'starts_at': ['posts.starts_at', 'asc']
 }
 
 const queryPosts = (req, opts) =>
@@ -28,7 +28,7 @@ const queryPosts = (req, opts) =>
       term: req.param('search')
     },
     pick(req.allParams(),
-      'type', 'limit', 'offset', 'start_time', 'end_time', 'filter', 'omit'),
+      'type', 'limit', 'offset', 'starts_at', 'ends_at', 'filter', 'omit'),
     omit(opts, 'sort')
   ))
   .then(Search.forPosts)
@@ -92,7 +92,7 @@ const queryForFollowed = function (req, res) {
     follower: req.session.userId,
     limit: req.param('limit') || 10,
     offset: req.param('offset'),
-    sort: 'post.updated_at',
+    sort: 'posts.updated_at',
     type: 'all+welcome',
     term: req.param('search')
   }))
@@ -206,12 +206,12 @@ const PostController = {
     params.type = Post.Type.THREAD
 
     return Post.query(q => {
-      q.join('follower', 'follower.post_id', 'post.id')
-      q.where('post.type', Post.Type.THREAD)
-      q.where('post.id', 'in', Follow.query().where('user_id', currentUserId).select('post_id'))
+      q.join('follows', 'follows.post_id', 'posts.id')
+      q.where('posts.type', Post.Type.THREAD)
+      q.where('posts.id', 'in', Follow.query().where('user_id', currentUserId).select('post_id'))
       q.where('post_id', 'in', Follow.query().where('user_id', otherUserId).select('post_id'))
       q.where('post_id', 'not in', Follow.query().where('user_id', 'not in', [currentUserId, otherUserId]).select('post_id'))
-      q.groupBy('post.id')
+      q.groupBy('posts.id')
     }).fetch()
     .then(post => post || createThread(currentUserId, params))
     .then(post => post.load(PostPresenter.relations(currentUserId)))
@@ -284,7 +284,7 @@ const PostController = {
     const params = req.allParams()
 
     const attrs = merge(
-      pick(params, 'name', 'description', 'type', 'start_time', 'end_time', 'location'),
+      pick(params, 'name', 'description', 'type', 'starts_at', 'ends_at', 'location'),
       {
         updated_at: new Date(),
         visibility: Post.Visibility[params.public ? 'PUBLIC_READABLE' : 'DEFAULT'],

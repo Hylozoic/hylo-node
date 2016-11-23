@@ -23,7 +23,7 @@ const createView = lang => {
       ${wv('p.name', 'B')} ||
       ${wv("coalesce(p.description, '')", 'C')} ||
       ${wv('u.name', 'D')} as ${columnName}
-    from post p
+    from posts p
     join users u on u.id = p.user_id
     where p.active = true and u.active = true
   ) union (
@@ -46,7 +46,7 @@ const createView = lang => {
       c.id as comment_id,
       ${wv('c.text', 'C')} ||
       ${wv('u.name', 'D')} as ${columnName}
-    from comment c
+    from comments c
     join users u on u.id = c.user_id
     where c.active = true and u.active = true
   )`)
@@ -79,15 +79,15 @@ const searchInCommunities = (communityIds, opts) => {
   return bookshelf.knex
   .select(columns)
   .from(search(omit(opts, 'limit', 'offset')).as(alias))
-  .leftJoin('users_community', 'users_community.user_id', `${alias}.user_id`)
-  .leftJoin('comment', 'comment.id', `${alias}.comment_id`)
-  .leftJoin('post_community', function () {
-    this.on('post_community.post_id', `${alias}.post_id`)
-    .orOn('post_community.post_id', 'comment.post_id')
+  .leftJoin('communities_users', 'communities_users.user_id', `${alias}.user_id`)
+  .leftJoin('comments', 'comments.id', `${alias}.comment_id`)
+  .leftJoin('communities_posts', function () {
+    this.on('communities_posts.post_id', `${alias}.post_id`)
+    .orOn('communities_posts.post_id', 'comments.post_id')
   })
   .where(function () {
-    this.where('users_community.community_id', 'in', communityIds)
-    .orWhere('post_community.community_id', 'in', communityIds)
+    this.where('communities_users.community_id', 'in', communityIds)
+    .orWhere('communities_posts.community_id', 'in', communityIds)
   })
   .groupBy(columns)
   .orderBy('rank', 'desc')
