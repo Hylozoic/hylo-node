@@ -339,10 +339,13 @@ module.exports = bookshelf.Model.extend({
     return comments()
     .where({post_id: opts.postId, active: true})
     .orderBy('created_at', 'desc')
+    .limit(3)
     .pluck('id')
     .then(ids => Promise.all([
-      comments().where('id', 'in', ids.slice(0, 3)).update('recent', true),
-      ids.length > 3 && comments().where('id', 'in', ids.slice(3)).update('recent', false)
+      comments().where('id', 'in', ids).update('recent', true),
+      comments().where('id', 'not in', ids)
+      .where({recent: true, post_id: opts.postId})
+      .update('recent', false)
     ]))
   },
 
