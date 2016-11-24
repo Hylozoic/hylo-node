@@ -257,7 +257,7 @@ describe('community digest v2', () => {
           },
           email_settings_url: Frontend.Route.userSettings() + ctParams + '&expand=account',
           post_creation_action_url: Frontend.Route.emailPostForm(),
-          reply_action_url: Frontend.Route.emailReplyForm(),
+          reply_action_url: Frontend.Route.emailBatchCommentForm(),
           form_token: Email.formToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, community: 'foo'}),
           subject: `New activity from ${u4.name}, ${u3.name}, and 2 others`,
@@ -362,7 +362,7 @@ describe('community digest v2', () => {
           ],
           recipient: u1.pick('avatar_url', 'name'),
           post_creation_action_url: Frontend.Route.emailPostForm(),
-          reply_action_url: Frontend.Route.emailReplyForm(),
+          reply_action_url: Frontend.Route.emailBatchCommentForm(),
           form_token: Email.formToken(community.id, u1.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {
             userId: u1.id,

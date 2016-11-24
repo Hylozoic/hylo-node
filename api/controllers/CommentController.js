@@ -1,5 +1,5 @@
 import { difference, isEmpty, pickBy } from 'lodash'
-import { flow, filter, toPairs, map, includes } from 'lodash/fp'
+import { flow, filter, map, includes } from 'lodash/fp'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
@@ -181,9 +181,9 @@ module.exports = {
     const replyText = postId => markdown(req.param(`post-${postId}`))
 
     const postIds = flow(
-      toPairs,
-      filter(([k, v]) => k.match(/^post-(\d)+$/)),
-      map(([k, v]) => k.replace(/^post-/, ''))
+      Object.keys,
+      filter(k => k.match(/^post-(\d)+$/)),
+      map(k => k.replace(/^post-/, ''))
     )(req.allParams())
 
     var failures = false
@@ -198,7 +198,7 @@ module.exports = {
         }
         return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
       }))
-    .then(post => {
+    .then(() => {
       var notification
       if (failures) {
         notification = 'Some of your comments could not be added.'
