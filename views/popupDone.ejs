@@ -3,9 +3,9 @@
 <script type="text/javascript">
 var message = {
   type: 'third party auth',
+  provider: '<%= provider %>',
   context: '<%= context %>',
-  error:   <%- typeof(error) === "undefined" ? 'null' : '"' + error.toString().replace(/"/g, '\\"') + '"' %>,
-  url:     '<%= typeof(url) === "undefined" ? "" : url %>'
+  error:   <%- typeof(error) === "undefined" ? 'null' : '"' + error.toString().replace(/"/g, '\\"') + '"' %>
 }
 
 var postMessage = function () {
