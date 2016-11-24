@@ -217,7 +217,7 @@ describe('CommentController', function () {
     })
   })
 
-  describe.only('createBatchFromEmailForm', () => {
+  describe('createBatchFromEmailForm', () => {
     var token, p1, p2, p3
 
     beforeEach(() => {
