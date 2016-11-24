@@ -17,8 +17,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   communities: function () {
-    return this.belongsToMany(Community, 'users_community').through(Membership)
-      .query({where: {'users_community.active': true, 'community.active': true}}).withPivot('role')
+    return this.belongsToMany(Community, 'communities_users').through(Membership)
+      .query({where: {'communities_users.active': true, 'communities.active': true}}).withPivot('role')
   },
 
   contributions: function () {
@@ -47,11 +47,11 @@ module.exports = bookshelf.Model.extend(merge({
 
   memberships: function () {
     return this.hasMany(Membership).query(qb => {
-      qb.where('users_community.active', true)
-      qb.leftJoin('community', function () {
-        this.on('community.id', '=', 'users_community.community_id')
+      qb.where('communities_users.active', true)
+      qb.leftJoin('communities', function () {
+        this.on('communities.id', '=', 'communities_users.community_id')
       })
-      qb.where('community.active', true)
+      qb.where('communities.active', true)
     })
   },
 
@@ -326,23 +326,23 @@ module.exports = bookshelf.Model.extend(merge({
     .select(raw("settings->'last_viewed_messages_at' as time"))
     .then(rows => rows[0].time)
     .then(lastViewed => Post.query(q => {
-      if (lastViewed) q.where('post.updated_at', '>', new Date(lastViewed))
-      q.join('follower', 'post.id', 'follower.post_id')
+      if (lastViewed) q.where('posts.updated_at', '>', new Date(lastViewed))
+      q.join('follows', 'posts.id', 'follows.post_id')
       q.where({
-        'follower.user_id': userId,
+        'follows.user_id': userId,
         type: Post.Type.THREAD
       })
       q.where('num_comments', '>', 0)
       q.count()
 
       q.leftJoin('posts_users', function () {
-        this.on('posts_users.post_id', 'post.id')
+        this.on('posts_users.post_id', 'posts.id')
         .andOn('posts_users.user_id', raw(userId))
       })
 
       q.where(function () {
         this.where('posts_users.id', null)
-        .orWhere('posts_users.last_read_at', '<', bookshelf.knex.raw('post.updated_at'))
+        .orWhere('posts_users.last_read_at', '<', bookshelf.knex.raw('posts.updated_at'))
       })
     }).query())
     .then(rows => Number(rows[0].count))

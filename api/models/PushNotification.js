@@ -15,7 +15,7 @@ module.exports = bookshelf.Model.extend({
     var path = this.get('path')
     var badgeNo = this.get('badge_no')
 
-    return this.save({'time_sent': (new Date()).toISOString()}, options)
+    return this.save({'sent_at': (new Date()).toISOString()}, options)
     .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
     .catch(e => {
       const err = e instanceof Error ? e : new Error(e)

@@ -28,7 +28,7 @@ export const withRelatedSpecialPost = {
   withRelated: [
     {posts: q => {
       q.where('posts_tags.selected', true)
-      q.where('post.type', 'in', ['event', 'project'])
+      q.where('posts.type', 'in', ['event', 'project'])
     }}
   ]
 }
@@ -100,10 +100,10 @@ const mostActiveMembers = (community, tag) => {
   }).query()
   return User.query(q => {
     q.select(bookshelf.knex.raw('users.name, users.id, users.avatar_url, count(*)'))
-    q.join('post', 'post.user_id', '=', 'users.id')
-    q.join('posts_tags', 'posts_tags.post_id', '=', 'post.id')
+    q.join('posts', 'posts.user_id', '=', 'users.id')
+    q.join('posts_tags', 'posts_tags.post_id', '=', 'posts.id')
     q.where('tag_id', '=', tag.id)
-    q.whereIn('post.id', subq)
+    q.whereIn('posts.id', subq)
     q.groupBy('users.id')
     q.orderBy('count', 'desc')
     q.limit(3)

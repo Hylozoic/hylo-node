@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'users_community',
+  tableName: 'communities_users',
 
   user: function () {
     return this.belongsTo(User)
@@ -63,14 +63,14 @@ module.exports = bookshelf.Model.extend({
   },
 
   setModeratorRole: function (user_id, community_id) {
-    return bookshelf.knex('users_community').where({
+    return bookshelf.knex('communities_users').where({
       user_id: user_id,
       community_id: community_id
     }).update({role: Membership.MODERATOR_ROLE})
   },
 
   removeModeratorRole: function (user_id, community_id) {
-    return bookshelf.knex('users_community').where({
+    return bookshelf.knex('communities_users').where({
       user_id: user_id,
       community_id: community_id
     }).update({role: Membership.DEFAULT_ROLE})
@@ -92,7 +92,7 @@ module.exports = bookshelf.Model.extend({
     return bookshelf.knex
     .select('community_id')
     .count('*')
-    .from('users_community')
+    .from('communities_users')
     .whereIn('user_id', userIds)
     .groupBy('community_id')
     .havingRaw('count(*) = ?', [userIds.length])

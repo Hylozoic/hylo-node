@@ -29,7 +29,7 @@ module.exports = {
     switch (resultType) {
       case 'posts':
         method = Search.forPosts
-        sort = 'post.created_at'
+        sort = 'posts.created_at'
         break
       case 'communities':
         method = Search.forCommunities

@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'contributor',
+  tableName: 'contributions',
 
   post: function () {
     return this.belongsTo(Post, 'post_id')
@@ -11,20 +11,20 @@ module.exports = bookshelf.Model.extend({
 
 }, {
   create: (user_id, post_id, transacting) =>
-    new Contribution({post_id, user_id, date_contributed: new Date()})
+    new Contribution({post_id, user_id, contributed_at: new Date()})
     .save(null, {transacting}),
 
   queryForUser: function (userId, communityIds) {
     return Contribution.query(q => {
-      q.orderBy('date_contributed')
-      q.join('post', 'post.id', '=', 'contributor.post_id')
+      q.orderBy('contributed_at')
+      q.join('posts', 'posts.id', '=', 'contributions.post_id')
 
-      q.where({'contributor.user_id': userId, 'post.active': true})
+      q.where({'contributions.user_id': userId, 'posts.active': true})
 
       if (communityIds) {
-        q.join('post_community', 'post_community.post_id', '=', 'post.id')
-        q.join('community', 'community.id', '=', 'post_community.community_id')
-        q.whereIn('community.id', communityIds)
+        q.join('communities_posts', 'communities_posts.post_id', '=', 'posts.id')
+        q.join('communities', 'communities.id', '=', 'communities_posts.community_id')
+        q.whereIn('communities.id', communityIds)
       }
     })
   },
@@ -32,11 +32,11 @@ module.exports = bookshelf.Model.extend({
   countForUser: function (user) {
     return this.query().count()
     .where({
-      'contributor.user_id': user.id,
-      'post.active': true
+      'contributions.user_id': user.id,
+      'posts.active': true
     })
-    .join('post', function () {
-      this.on('post.id', '=', 'contributor.post_id')
+    .join('posts', function () {
+      this.on('posts.id', '=', 'contributions.post_id')
     })
     .then(function (rows) {
       return rows[0].count

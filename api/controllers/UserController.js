@@ -16,9 +16,9 @@ var setupReputationQuery = function (req, model) {
 }
 
 const countTaggedPosts = (userIds, tagId) =>
-  bookshelf.knex('post')
-  .join('posts_tags', 'post.id', 'posts_tags.post_id')
-  .where('post.user_id', 'in', userIds)
+  bookshelf.knex('posts')
+  .join('posts_tags', 'posts.id', 'posts_tags.post_id')
+  .where('posts.user_id', 'in', userIds)
   .where('posts_tags.tag_id', tagId)
   .groupBy('user_id')
   .select(bookshelf.knex.raw('count(*), user_id'))
@@ -76,7 +76,7 @@ module.exports = {
       withRelated: [
         {post: q => q.column('id', 'name', 'user_id', 'type')},
         {'post.user': q => q.column('id', 'name', 'avatar_url')},
-        {'post.communities': q => q.column('community.id', 'name')}
+        {'post.communities': q => q.column('communities.id', 'name')}
       ]
     }))
     .then(res.ok, res.serverError)
@@ -90,7 +90,7 @@ module.exports = {
         {comment: q => q.column('id', 'text', 'post_id', 'created_at')},
         {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
         {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
-        {'comment.post.communities': q => q.column('community.id', 'name')}
+        {'comment.post.communities': q => q.column('communities.id', 'name')}
       ]
     }))
     .then(res.ok, res.serverError)

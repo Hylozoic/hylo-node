@@ -2,7 +2,7 @@ import { some } from 'lodash'
 
 module.exports = function checkAndSetWritablePost (req, res, next) {
   Post.find(req.param('postId'), {withRelated: [
-    {communities: q => q.column('community.id')}
+    {communities: q => q.column('communities.id')}
   ]})
   .tap(post => {
     if (!post) throw new Error(format('post %s not found', req.param('postId')))

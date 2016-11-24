@@ -33,7 +33,7 @@ const removeForRelation = (model) => (id, trx) => {
 }
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'activity',
+  tableName: 'activities',
 
   actor: function () {
     return this.belongsTo(User, 'actor_id')
@@ -90,22 +90,22 @@ module.exports = bookshelf.Model.extend({
   },
 
   filterInactiveContent: q => {
-    q.whereRaw('(comment.active = true or comment.id is null)')
-    .leftJoin('comment', function () {
-      this.on('comment.id', '=', 'activity.comment_id')
+    q.whereRaw('(comments.active = true or comments.id is null)')
+    .leftJoin('comments', function () {
+      this.on('comments.id', '=', 'activities.comment_id')
     })
 
-    q.whereRaw('(post.active = true or post.id is null)')
-    .leftJoin('post', function () {
-      this.on('post.id', '=', 'activity.post_id')
+    q.whereRaw('(posts.active = true or posts.id is null)')
+    .leftJoin('posts', function () {
+      this.on('posts.id', '=', 'activities.post_id')
     })
   },
 
   joinWithCommunity: (communityId, q) => {
-    q.where('post_community.community_id', communityId)
-    .join('post_community', function () {
-      this.on('comment.post_id', 'post_community.post_id')
-      .orOn('post.id', 'post_community.post_id')
+    q.where('communities_posts.community_id', communityId)
+    .join('communities_posts', function () {
+      this.on('comments.post_id', 'communities_posts.post_id')
+      .orOn('posts.id', 'communities_posts.post_id')
     })
   },
 
@@ -142,7 +142,7 @@ module.exports = bookshelf.Model.extend({
       actor_id: follow.get('added_by_id'),
       post_id: follow.get('post_id'),
       meta: {reasons: [this.Reason.FollowAdd]},
-      created_at: follow.get('date_added')
+      created_at: follow.get('added_at')
     })
   },
 
@@ -152,7 +152,7 @@ module.exports = bookshelf.Model.extend({
       actor_id: follow.get('user_id'),
       post_id: follow.get('post_id'),
       meta: {reasons: [this.Reason.Follow]},
-      created_at: follow.get('date_added')
+      created_at: follow.get('added_at')
     })
   },
 

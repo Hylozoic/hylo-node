@@ -54,15 +54,15 @@ module.exports = {
       qb.limit(req.param('limit') || 20)
       qb.offset(req.param('offset') || 0)
       qb.where('community_id', community.get('id'))
-      qb.leftJoin('users', 'users.id', 'community_invite.used_by_id')
+      qb.leftJoin('users', 'users.id', 'community_invites.used_by_id')
       qb.select(bookshelf.knex.raw(`
-        community_invite.*,
+        community_invites.*,
         count(*) over () as total,
         users.id as joined_user_id,
         users.name as joined_user_name,
         users.avatar_url as joined_user_avatar_url
       `))
-      qb.orderBy('created', 'desc')
+      qb.orderBy('created_at', 'desc')
     }).fetchAll({withRelated: 'user'}))
     .then(invitations => ({
       total: invitations.length > 0 ? Number(invitations.first().get('total')) : 0,
@@ -75,7 +75,7 @@ module.exports = {
             avatar_url: i.get('joined_user_avatar_url')
           }
         }
-        return _.merge(i.pick('id', 'email', 'created'), {
+        return _.merge(i.pick('id', 'email', 'created_at'), {
           user: !isEmpty(user) ? user : null
         })
       })

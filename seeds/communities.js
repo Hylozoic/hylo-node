@@ -1,10 +1,10 @@
 'use strict'
 
 exports.seed = function (knex, Promise) {
-  return knex('post_community').del()
-    .then(() => knex('users_community').del())
-    .then(() => knex('community').del())   // Deletes ALL existing entries
-    .then(() => knex('community')
+  return knex('communities_posts').del()
+    .then(() => knex('communities_users').del())
+    .then(() => knex('communities').del())   // Deletes ALL existing entries
+    .then(() => knex('communities')
                     .insert({id: 1, name: 'starter-posts', slug: 'starter-posts'})
   )
 }

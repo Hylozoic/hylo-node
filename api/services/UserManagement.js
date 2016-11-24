@@ -28,19 +28,19 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
   ;[
     // table name, user id column
     ['devices', 'user_id'],
-    ['post', 'user_id'],
+    ['posts', 'user_id'],
     ['posts_about_users', 'user_id'],
-    ['post', 'deactivated_by_id'],
-    ['activity', 'actor_id'],
-    ['comment', 'user_id'],
-    ['comment', 'deactivated_by_id'],
-    ['follower', 'added_by_id'],
-    ['thank_you', 'user_id'],
-    ['thank_you', 'thanked_by_id'],
-    ['community_invite', 'invited_by_id'],
-    ['community_invite', 'used_by_id'],
+    ['posts', 'deactivated_by_id'],
+    ['activities', 'actor_id'],
+    ['comments', 'user_id'],
+    ['comments', 'deactivated_by_id'],
+    ['follows', 'added_by_id'],
+    ['thanks', 'user_id'],
+    ['thanks', 'thanked_by_id'],
+    ['community_invites', 'invited_by_id'],
+    ['community_invites', 'used_by_id'],
     ['user_external_data', 'user_id'],
-    ['community', 'leader_id']
+    ['communities', 'leader_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -50,13 +50,11 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
   // updates where we have to avoid duplicate records
   ;[
     // table name, user id column, column with unique value
-    ['users_community', 'user_id', 'community_id'],
-    ['contributor', 'user_id', 'post_id'],
-    ['follower', 'user_id', 'post_id'],
+    ['communities_users', 'user_id', 'community_id'],
+    ['contributions', 'user_id', 'post_id'],
+    ['follows', 'user_id', 'post_id'],
     ['linked_account', 'user_id', 'provider_user_id'],
-    ['users_skill', 'user_id', 'skill_name'],
-    ['users_org', 'user_id', 'org_name'],
-    ['vote', 'user_id', 'post_id'],
+    ['votes', 'user_id', 'post_id'],
     ['tag_follows', 'user_id', 'tag_id'],
     ['communities_tags', 'user_id', 'tag_id'],
     ['tags_users', 'user_id', 'tag_id']
@@ -78,9 +76,9 @@ const generateRemoveQueries = function (userId, knex) {
 
   // clear columns without deleting rows
   ;[
-    ['comment', 'deactivated_by_id'],
-    ['community', 'created_by_id'],
-    ['follower', 'added_by_id'],
+    ['comments', 'deactivated_by_id'],
+    ['communities', 'created_by_id'],
+    ['follows', 'added_by_id'],
     ['communities_tags', 'user_id']
   ].forEach(args => {
     var table = args[0]
@@ -89,30 +87,28 @@ const generateRemoveQueries = function (userId, knex) {
   })
 
   // cascading deletes
-  push('delete from thank_you where comment_id in ' +
-    '(select id from comment where user_id = ?)', userId)
+  push('delete from thanks where comment_id in ' +
+    '(select id from comments where user_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
-    '(select id from activity where reader_id = ?)', userId)
+    '(select id from activities where reader_id = ?)', userId)
   push('delete from notifications where activity_id in ' +
-    '(select id from activity where actor_id = ?)', userId)
+    '(select id from activities where actor_id = ?)', userId)
 
   // deletes
   ;[
     // table, user id column
     ['devices', 'user_id'],
-    ['users_community', 'user_id'],
-    ['community_invite', 'invited_by_id'],
-    ['community_invite', 'used_by_id'],
-    ['contributor', 'user_id'],
-    ['follower', 'user_id'],
+    ['communities_users', 'user_id'],
+    ['community_invites', 'invited_by_id'],
+    ['community_invites', 'used_by_id'],
+    ['contributions', 'user_id'],
+    ['follows', 'user_id'],
     ['linked_account', 'user_id'],
-    ['users_skill', 'user_id'],
-    ['users_org', 'user_id'],
     ['user_post_relevance', 'user_id'],
-    ['activity', 'reader_id'],
-    ['activity', 'actor_id'],
-    ['vote', 'user_id'],
-    ['comment', 'user_id'],
+    ['activities', 'reader_id'],
+    ['activities', 'actor_id'],
+    ['votes', 'user_id'],
+    ['comments', 'user_id'],
     ['user_external_data', 'user_id'],
     ['tags_users', 'user_id'],
     ['tag_follows', 'user_id'],
