@@ -68,13 +68,13 @@ const upsertLinkedAccount = (req, service, profile) => {
 }
 
 const finishOAuth = function (strategy, req, res, next) {
-  var service = strategy
+  var provider = strategy
   if (strategy === 'facebook-token') {
-    service = 'facebook'
+    provider = 'facebook'
   } else if (strategy === 'google-token') {
-    service = 'google'
+    provider = 'google'
   } else if (strategy === 'linkedin-token') {
-    service = 'linkedin'
+    provider = 'linkedin'
   }
 
   return new Promise((resolve, reject) => {
@@ -83,6 +83,7 @@ const finishOAuth = function (strategy, req, res, next) {
 
       return resolve(res.view('popupDone', {
         error,
+        provider,
         context: req.session.authContext || 'oauth',
         layout: null,
         returnDomain: req.session.returnDomain
@@ -95,8 +96,8 @@ const finishOAuth = function (strategy, req, res, next) {
 
       return (UserSession.isLoggedIn(req)
         ? upsertLinkedAccount
-        : upsertUser)(req, service, profile)
-      .then(() => UserExternalData.store(req.session.userId, service, profile._json))
+        : upsertUser)(req, provider, profile)
+      .then(() => UserExternalData.store(req.session.userId, provider, profile._json))
       .then(() => respond())
       .catch(respond)
     }

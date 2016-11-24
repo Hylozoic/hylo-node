@@ -290,12 +290,16 @@ module.exports = bookshelf.Model.extend({
     return Notification.where({id: id}).fetch(options)
   },
 
-  findUnsent: function (options) {
+  findUnsent: function (options = {}) {
+    const { raw } = bookshelf.knex
     return Notification.query(q => {
       q.where({sent_at: null})
+      if (!options.includeOld) {
+        q.where('created_at', '>', raw("now() - interval '6 hour'"))
+      }
       q.where(function () {
         this.where('failed_at', null)
-        .orWhere(bookshelf.knex.raw("failed_at < now() - interval '1 hour'"))
+        .orWhere('failed_at', '<', raw("now() - interval '1 hour'"))
       })
       q.limit(200)
     })

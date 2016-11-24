@@ -393,15 +393,18 @@ describe('Notification', function () {
         new Notification({
           activity_id: activity.id,
           medium: Notification.MEDIUM.Email,
-          sent_at: (new Date()).toISOString()
+          sent_at: (new Date()).toISOString(),
+          created_at: new Date()
         }).save(),
         new Notification({
           activity_id: activity.id,
-          medium: Notification.MEDIUM.Push
+          medium: Notification.MEDIUM.Push,
+          created_at: new Date()
         }).save(),
         new Notification({
           activity_id: activity.id,
-          medium: Notification.MEDIUM.InApp
+          medium: Notification.MEDIUM.InApp,
+          created_at: new Date()
         }).save())
       .then(() => Notification.findUnsent())
       .then(notifications => {
