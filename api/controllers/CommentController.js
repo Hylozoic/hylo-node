@@ -4,7 +4,7 @@ import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
 import { normalizeComment } from '../../lib/util/normalize'
-import { sanitize } from 'hylo-utils/text'
+import { sanitize, markdown } from 'hylo-utils/text'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
 
@@ -176,15 +176,9 @@ module.exports = {
   },
 
   createBatchFromEmailForm: function (req, res) {
-    try {
-      var tokenData = Email.decodeFormToken(req.param('token'))
-    } catch (e) {
-      return Promise.resolve(res.serverError(new Error('Invalid token: ' + req.param('token'))))
-    }
+    const { communityId, userId } = res.locals.tokenData
 
-    const { communityId, userId } = tokenData
-
-    const replyText = postId => req.param(`post-${postId}`)
+    const replyText = postId => markdown(req.param(`post-${postId}`))
 
     const postIds = flow(
       toPairs,

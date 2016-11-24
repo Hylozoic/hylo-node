@@ -125,7 +125,7 @@ module.exports.policies = {
     typing:                               ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     subscribeToThreads:                   ['isSocket', 'sessionAuth'],
     unsubscribeFromThreads:               ['isSocket', 'sessionAuth'],
-    createFromEmailForm: true
+    createFromEmailForm: ['checkAndDecodeToken']
   },
 
   CommentController: {
@@ -135,7 +135,7 @@ module.exports.policies = {
     destroy:         ['sessionAuth', 'isCommentOwner'],
     update:          ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true,
-    createBatchFromEmailForm: true
+    createBatchFromEmailForm: ['checkAndDecodeToken']
   },
 
   MessageController: {

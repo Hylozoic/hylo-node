@@ -221,12 +221,7 @@ const PostController = {
   },
 
   createFromEmailForm: function (req, res) {
-    try {
-      var tokenData = Email.decodeFormToken(req.param('token'))
-    } catch (e) {
-      return res.serverError(new Error('Invalid token: ' + req.param('token')))
-    }
-
+    const { tokenData } = res.locals
     const namePrefixes = {
       offer: "I'd like to share",
       request: "I'm looking for",

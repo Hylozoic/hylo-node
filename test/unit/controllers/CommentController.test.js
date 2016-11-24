@@ -218,14 +218,17 @@ describe('CommentController', function () {
   })
 
   describe('createBatchFromEmailForm', () => {
-    var token, p1, p2, p3
+    var p1, p2, p3
 
     beforeEach(() => {
       p1 = factories.post({user_id: fixtures.u1.id})
       p2 = factories.post({user_id: fixtures.u2.id})
       p3 = factories.post({user_id: fixtures.u1.id})
-      token = Email.formToken(fixtures.c1.id, fixtures.u1.id)
       res.serverError = spy()
+      res.locals.tokenData = {
+        communityId: fixtures.c1.id,
+        userId: fixtures.u1.id
+      }
       return Promise.join(p1.save(), p2.save(), p3.save())
       .then(() => Promise.join(
         p1.communities().attach(fixtures.c1),
@@ -233,23 +236,16 @@ describe('CommentController', function () {
         p3.communities().attach(fixtures.c1)))
     })
 
-    it('throws an error with a bad token', () => {
-      req.params.token = 'abadtoken'
-      return CommentController.createBatchFromEmailForm(req, res)
-      .then(() => expect(res.serverError).to.have.been.called)
-    })
-
     it('creates comments', () => {
-      req.params.token = token
       req.params[`post-${p1.id}`] = 'Reply to first post'
       req.params[`post-${p2.id}`] = 'Reply to second post'
       return CommentController.createBatchFromEmailForm(req, res)
       .then(() => Promise.join(p1.load('comments'), p2.load('comments'), p3.load('comments')))
       .then(() => {
         expect(p1.relations.comments.length).to.equal(1)
-        expect(p1.relations.comments.first().get('text')).to.equal('Reply to first post')
+        expect(p1.relations.comments.first().get('text')).to.equal('<p>Reply to first post</p>\n')
         expect(p2.relations.comments.length).to.equal(1)
-        expect(p2.relations.comments.first().get('text')).to.equal('Reply to second post')
+        expect(p2.relations.comments.first().get('text')).to.equal('<p>Reply to second post</p>\n')
         expect(p3.relations.comments.length).to.equal(0)
       })
     })
