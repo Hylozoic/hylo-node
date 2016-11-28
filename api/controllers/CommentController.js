@@ -196,6 +196,14 @@ module.exports = {
           failures = true
           return Promise.resolve()
         }
+        Analytics.track({
+          userId,
+          event: 'Post: Comment: Add by Email Form',
+          properties: {
+            post_id: post.id,
+            community: community && community.get('name')
+          }
+        })
         return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
       }))
     .then(() => {
