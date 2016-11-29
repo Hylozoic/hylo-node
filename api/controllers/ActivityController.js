@@ -31,7 +31,7 @@ const queryNotification = opts =>
 const fetchAndPresentNotification = (req, community) => {
   var total
   return queryNotification({
-    userId: req.session.userId,
+    userId: req.getUserId(),
     limit: req.param('limit') || 10,
     offset: req.param('offset') || 0,
     community
@@ -59,7 +59,7 @@ const fetchAndPresentNotification = (req, community) => {
       attrs.post.tag = post.get('type')
     }
     if (comment) {
-      attrs.comment = CommentPresenter.present(comment, req.session.userId)
+      attrs.comment = CommentPresenter.present(comment, req.getUserId())
     }
     return attrs
   }))
@@ -70,7 +70,7 @@ module.exports = {
   findForCommunity: function (req, res) {
     return Community.find(req.param('communityId'), {
       withRelated: [
-        {memberships: q => q.where({user_id: req.session.userId})}
+        {memberships: q => q.where({user_id: req.getUserId()})}
       ]
     })
     .then(community => fetchAndPresentNotification(req, community))
@@ -80,7 +80,7 @@ module.exports = {
   find: function (req, res) {
     return fetchAndPresentNotification(req)
     .tap(() => req.param('resetCount') && User.query()
-      .where('id', req.session.userId)
+      .where('id', req.getUserId())
       .update({new_notification_count: 0}))
     .then(res.ok, res.serverError)
   },
@@ -91,7 +91,7 @@ module.exports = {
       : Promise.resolve())
     .then(community => {
       const subq = Activity.query(q => {
-        q.where({reader_id: req.session.userId, unread: true})
+        q.where({reader_id: req.getUserId(), unread: true})
         Activity.filterInactiveContent(q)
         if (community) Activity.joinWithCommunity(community.id, q)
         q.select('activities.id')

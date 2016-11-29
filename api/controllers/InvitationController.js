@@ -29,7 +29,7 @@ module.exports = {
   },
 
   use: function (req, res) {
-    const { userId } = req.session
+    const userId = req.getUserId()
     return Invitation.find(req.param('token'), {withRelated: 'tag'})
     .then(invitation => {
       if (!invitation) {
@@ -105,7 +105,7 @@ module.exports = {
 
             const opts = {
               email,
-              userId: req.session.userId,
+              userId: req.getUserId(),
               communityId: community.id
             }
 
@@ -133,7 +133,7 @@ module.exports = {
       subject: req.param('subject'),
       message: req.param('message'),
       moderator: req.param('moderator'),
-      userId: req.session.userId
+      userId: req.getUserId()
     })
     .then(() => res.ok({}))
     .catch(res.serverError)

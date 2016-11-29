@@ -53,7 +53,7 @@ const upsertUser = (req, service, profile) => {
 }
 
 const upsertLinkedAccount = (req, service, profile) => {
-  var userId = req.session.userId
+  var userId = req.getUserId()
   return LinkedAccount.where({provider_key: service, provider_user_id: profile.id}).fetch()
   .then(account => {
     if (account) {
@@ -100,7 +100,7 @@ const finishOAuth = function (strategy, req, res, next) {
       return (UserSession.isLoggedIn(req)
         ? upsertLinkedAccount
         : upsertUser)(req, provider, profile)
-      .then(() => UserExternalData.store(req.session.userId, provider, profile._json))
+      .then(() => UserExternalData.store(req.getUserId(), provider, profile._json))
       .then(() => respond())
       .catch(respond)
     }

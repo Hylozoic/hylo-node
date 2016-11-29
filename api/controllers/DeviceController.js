@@ -34,14 +34,14 @@ module.exports = {
     .then(device => {
       if (device) {
         return device
-        .save({version, enabled: true, user_id: req.session.userId})
+        .save({version, enabled: true, user_id: req.getUserId()})
         .then(device => res.ok({result: 'Updated'}))
       } else {
         return Device.forge({
           token: req.param('token'),
           platform: platform,
           version: version,
-          user_id: req.session.userId
+          user_id: req.getUserId()
         })
         .save()
         .tap(device => version && OneSignal.register(platform, req.param('token')))
@@ -60,7 +60,7 @@ module.exports = {
     return Device.query()
     .where({
       token: token,
-      user_id: req.session.userId
+      user_id: req.getUserId()
     })
     .update({enabled: false})
     .then(() => res.ok({result: 'Updated'}))
@@ -76,7 +76,7 @@ module.exports = {
     return Device.query()
     .where({
       token: token,
-      user_id: req.session.userId
+      user_id: req.getUserId()
     })
     .update({badge_no: req.param('badgeNo') || 0})
     .then(() => res.ok({result: 'Updated'}))

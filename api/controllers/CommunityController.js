@@ -13,7 +13,7 @@ const welcomeMessage = 'Thank you for joining us here at Hylo. ' +
 
 const afterCreatingMembership = (req, res, ms, community, preexisting) => {
   return Promise.join(
-    User.resetTooltips(req.session.userId),
+    User.resetTooltips(req.getUserId()),
     ms && !ms.get('active') && ms.save({active: true}, {patch: true})
   ).tap(() => {
     if (!req.param('tagName')) return
@@ -23,7 +23,7 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
       return new TagFollow({
         community_id: community.id,
         tag_id: tag.id,
-        user_id: req.session.userId
+        user_id: req.getUserId()
       }).save()
     })
     .catch(err => {
@@ -49,7 +49,7 @@ const approveJoinRequest = curry((req, res, community, joinRequest) => {
     activities: [{
       reader_id: userId,
       community_id: communityId,
-      actor_id: req.session.userId,
+      actor_id: req.getUserId(),
       reason: 'approvedJoinRequest'
     }]}))
 })
@@ -196,7 +196,7 @@ module.exports = {
     })
     .fetch()
     .tap(c => community = c)
-    .then(() => !!community && Membership.create(req.session.userId, community.id))
+    .then(() => !!community && Membership.create(req.getUserId(), community.id))
     .catch(err => {
       if (err.message && err.message.includes('duplicate key value')) {
         preexisting = true
@@ -207,7 +207,7 @@ module.exports = {
       }
     })
     // we get here if the membership was created successfully, or if it already existed
-    .then(ok => ok && Membership.find(req.session.userId, community.id, {includeInactive: true})
+    .then(ok => ok && Membership.find(req.getUserId(), community.id, {includeInactive: true})
       .then(ms => afterCreatingMembership(req, res, ms, community, preexisting)))
     .then(resp => resp ? res.ok(resp) : res.status(422).send('invalid code'))
     .catch(err => res.serverError(err))
@@ -226,7 +226,7 @@ module.exports = {
     }).update({
       active: false,
       deactivated_at: new Date(),
-      deactivator_id: req.session.userId
+      deactivator_id: req.getUserId()
     })
     .then(() => res.ok({}))
     .catch(res.serverError)
@@ -246,7 +246,7 @@ module.exports = {
   },
 
   create: function (req, res) {
-    const { userId } = req.session
+    const userId = req.getUserId()
     var attrs = _.pick(req.allParams(),
       'name', 'description', 'slug', 'category',
       'beta_access_code', 'banner_url', 'avatar_url', 'location')
@@ -347,7 +347,7 @@ module.exports = {
     var attributes = _.pick(req.allParams(), whitelist)
 
     return Membership.where({
-      user_id: req.session.userId,
+      user_id: req.getUserId(),
       community_id: req.param('communityId')
     })
     .fetch()
@@ -385,7 +385,7 @@ module.exports = {
     const { community } = res.locals
     const params = {
       community_id: community.id,
-      user_id: req.session.userId
+      user_id: req.getUserId()
     }
     return JoinRequest.where(params).fetch()
     .then(joinRequest => {
@@ -401,7 +401,7 @@ module.exports = {
         activities: moderators.models.map(moderator => ({
           reader_id: moderator.id,
           community_id: community.id,
-          actor_id: req.session.userId,
+          actor_id: req.getUserId(),
           reason: 'joinRequest'
         }))
       })))

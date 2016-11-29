@@ -9,19 +9,19 @@ module.exports = function checkAndSetOwnPost(req, res, next) {
     // Perform any checks against viewing this post
     return Promise.all([
       Admin.isSignedIn(req),
-      post.get('user_id') == req.session.userId
+      post.get('user_id') == req.getUserId()
     ]);
   })
   .then(function(allowed) {
     if (_.some(allowed, Boolean)) {
       next();
     } else {
-      sails.log.debug(format("Fail checkAndSetOwnPost policy: uId:%s postId:%s", req.session.userId, req.param('postId')));
+      sails.log.debug(format("Fail checkAndSetOwnPost policy: uId:%s postId:%s", req.getUserId(), req.param('postId')));
       res.forbidden();
     }
   })
   .catch(function(err) {
-    sails.log.debug(format("Fail checkAndSetOwnPost policy %s %s: %s", req.session.userId, req.param('postId'), err.message));
+    sails.log.debug(format("Fail checkAndSetOwnPost policy %s %s: %s", req.getUserId(), req.param('postId'), err.message));
     res.forbidden();
   });
 };

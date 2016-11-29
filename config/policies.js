@@ -50,8 +50,8 @@ module.exports.policies = {
   UserController: {
     status:              true,
     create:              true,
-    findSelf:            ['allowPublicAccess', 'sessionAuth'],
-    findOne:             ['sessionAuth', 'inSameCommunityOrNetwork'],
+    findSelf:            ['allowPublicAccess', 'tokenAuth', 'sessionAuth'],
+    findOne:             ['tokenAuth', 'sessionAuth', 'inSameCommunityOrNetwork'],
     update:              ['sessionAuth', 'isSelf'],
     contributions:       ['sessionAuth', 'inSameCommunityOrNetwork'],
     thanks:              ['sessionAuth', 'inSameCommunityOrNetwork'],
@@ -71,7 +71,7 @@ module.exports.policies = {
 
   CommunityController: {
     find:                   ['sessionAuth', 'isAdmin'],
-    findOne:                ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findOne:                ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     findSettings:           ['sessionAuth', 'canInvite'],
     update:                 ['sessionAuth', 'isModerator'],
     addSlack:               ['sessionAuth', 'isModerator'],
@@ -97,13 +97,13 @@ module.exports.policies = {
   PostController: {
     findThreads:                          ['sessionAuth'],
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
-    findForCommunity:                     ['allowPublicAccess', 'allowTokenAuth', 'sessionAuth', 'checkAndSetMembership'],
+    findForCommunity:                     ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],
     checkFreshnessForUser:                ['sessionAuth', 'inSameCommunityOrNetwork'],
     findForNetwork:                       ['sessionAuth', 'inNetwork'],
     checkFreshnessForNetwork:             ['sessionAuth', 'inNetwork'],
-    create:                               ['sessionAuth', 'inCommunities'],
+    create:                               ['tokenAuth', 'sessionAuth', 'inCommunities'],
     findOrCreateThread:                   ['sessionAuth'],
     update:                               ['sessionAuth', 'checkAndSetWritablePost'],
     follow:                               ['sessionAuth', 'checkAndSetPost'],
@@ -181,5 +181,10 @@ module.exports.policies = {
 
   LinkPreviewController: {
     findOne: ['sessionAuth']
+  },
+
+  TokenController: {
+    create: ['sessionAuth'],
+    destroy: ['sessionAuth']
   }
 }

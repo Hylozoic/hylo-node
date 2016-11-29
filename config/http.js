@@ -38,6 +38,11 @@ module.exports.http = {
       next()
     },
 
+    setUserIdGetter: function (req, res, next) {
+      req.getUserId = () => req.token ? req.token.userId : req.session ? req.session.userId : undefined
+      next()
+    },
+
   /***************************************************************************
   *                                                                          *
   * The order in which middleware should be run for HTTP request. (the Sails *
@@ -48,6 +53,7 @@ module.exports.http = {
     order: [
       'startRequestTimer',
       'cookieParser',
+      'setUserIdGetter',
       'session',
       'passportInit',
       'passportSession',

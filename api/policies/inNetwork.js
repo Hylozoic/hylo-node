@@ -6,7 +6,7 @@ module.exports = function(req, res, next) {
 
     if (Admin.isSignedIn(req)) return next();
 
-    return Network.containsUser(network.id, req.session.userId)
+    return Network.containsUser(network.id, req.getUserId())
     .then(contains => contains ? next() : res.forbidden());
   });
 

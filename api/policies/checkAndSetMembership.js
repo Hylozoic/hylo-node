@@ -32,7 +32,7 @@ module.exports = function checkAndSetMembership (req, res, next) {
     // but still look up the actual membership if available, so that things
     // still behave as expected (e.g. in the case of an admin removing their own
     // membership)
-    return Membership.find(req.session.userId, community.id)
+    return Membership.find(req.getUserId(), community.id)
     .then(function (membership) {
       if (membership || allowed) {
         res.locals.membership = membership || dummyMembership
@@ -41,12 +41,12 @@ module.exports = function checkAndSetMembership (req, res, next) {
         // if public access is allowed we don't set membership; controllers use
         // its absence to determine that they should only show public content
         return next()
-      } else if (community.get('network_id') && req.session.userId) {
-        Network.containsUser(community.get('network_id'), req.session.userId)
+      } else if (community.get('network_id') && req.getUserId()) {
+        Network.containsUser(community.get('network_id'), req.getUserId())
           .then(contains => contains ? next() : res.forbidden())
       } else {
         sails.log.debug(format('policy: checkAndSetMembership: fail. user %s, community %s',
-          req.session.userId, community.id))
+          req.getUserId(), community.id))
         res.forbidden()
       }
     })

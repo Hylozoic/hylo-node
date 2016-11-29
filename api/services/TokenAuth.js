@@ -1,21 +1,29 @@
+const crypto = require('crypto')
+const Promise = require('bluebird')
+
 var TokenAuth = module.exports = {
 
-  isValid: function(token) {
-    if (!process.env.KISS_AUTH_TOKEN) return false;
-    return token == process.env.KISS_AUTH_TOKEN;
+  generateToken: function() {
+    const randomBytes = Promise.promisify(crypto.randomBytes)
+    return randomBytes(24).then(buffer => buffer.toString('hex'))
   },
 
-  setAuthenticated: function(res) {
-    res.locals.tokenAuthenticated = true;
+  checkAndSetAuthenticated: function(req) {
+    req.body = req.body || {}
+    const token = req.body.token || req.query.token || req.headers['x-access-token']
+    if (!token) return Promise.resolve()
+    return User.query(function (qb) {
+       qb.leftJoin('tokens', 'users.id', 'tokens.user_id')
+       qb.where('tokens.token', '=', token)
+    })
+    .fetch()
+    .then(user => {
+      if (user) req.token = {userId: user.id}
+    })
   },
 
-  isAuthenticated: function(res) {
-    return !!res.locals.tokenAuthenticated;
-  },
-
-  isPermitted: function(res, communityId) {
-    return TokenAuth.isAuthenticated(res) &&
-      communityId === process.env.KISS_AUTH_COMMUNITY_ID;
+  isAuthenticated: function(req) {
+    return !!req.token
   }
 
-};
+}

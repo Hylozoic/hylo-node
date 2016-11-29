@@ -105,7 +105,7 @@ module.exports = {
       'thanks',
       {'thanks.thankedBy': userColumns}
     ]})
-    .then(cs => cs.map(c => CommentPresenter.present(c, req.session.userId)))
+    .then(cs => cs.map(c => CommentPresenter.present(c, req.getUserId())))
     .then(comments => {
       const buckets = {people: []}
       comments.forEach((c, i) => normalizeComment(c, buckets, i === comments.length - 1))
@@ -160,13 +160,13 @@ module.exports = {
 
   thank: function (req, res) {
     Comment.find(req.param('commentId'), {withRelated: [
-      {thanks: q => q.where('thanked_by_id', req.session.userId)}
+      {thanks: q => q.where('thanked_by_id', req.getUserId())}
     ]})
     .then(comment => {
       const thank = comment.relations.thanks.first()
       return thank
         ? thank.destroy()
-        : Thank.create(comment, req.session.userId)
+        : Thank.create(comment, req.getUserId())
     })
     .then(() => res.ok({}), res.serverError)
   },
@@ -181,7 +181,7 @@ module.exports = {
         .decrement('num_comments', 1).transacting(trx),
 
         comment.save({
-          deactivated_by_id: req.session.userId,
+          deactivated_by_id: req.getUserId(),
           deactivated_at: new Date(),
           active: false,
           recent: false
