@@ -1,6 +1,6 @@
 const api = require('sendwithus')(process.env.SENDWITHUS_KEY)
 const Promise = require('bluebird')
-import { curry } from 'lodash'
+import { curry, merge } from 'lodash'
 
 const sendEmail = opts =>
   new Promise((resolve, reject) =>
@@ -14,7 +14,7 @@ const defaultOptions = {
 }
 
 const sendSimpleEmail = function (address, templateId, data, extraOptions) {
-  return sendEmail(_.merge({}, defaultOptions, {
+  return sendEmail(merge({}, defaultOptions, {
     email_id: templateId,
     recipient: {address},
     email_data: data
@@ -22,7 +22,7 @@ const sendSimpleEmail = function (address, templateId, data, extraOptions) {
 }
 
 const sendEmailWithOptions = curry((templateId, opts) =>
-  sendEmail(_.merge({}, defaultOptions, {
+  sendEmail(merge({}, defaultOptions, {
     email_id: templateId,
     recipient: {address: opts.email},
     email_data: opts.data,
