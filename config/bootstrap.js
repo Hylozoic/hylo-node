@@ -9,12 +9,12 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.bootstrap.html
  */
 
+import fs from 'fs'
+import path from 'path'
+import root from 'root-path'
+import util from 'util'
+import models from '../api/models'
 require('dotenv').load()
-
-var fs = require('fs')
-var path = require('path')
-var root = require('root-path')
-var util = require('util')
 
 // very handy, these
 global.format = util.format
@@ -22,6 +22,8 @@ global.Promise = require('bluebird')
 global._ = require('lodash') // override Sails' old version of lodash
 
 module.exports.bootstrap = function (done) {
+  models.init()
+
   var knex = require('knex')(require('../knexfile')[process.env.NODE_ENV])
 
   if (process.env.DEBUG_MEMORY) {
@@ -71,15 +73,6 @@ module.exports.bootstrap = function (done) {
       }
     })
   }
-
-  // add bookshelf and each model to global namespace
-  global.bookshelf = require('bookshelf')(knex)
-  _.each(fs.readdirSync(root('api/models')), function (filename) {
-    if (path.extname(filename) === '.js') {
-      var modelName = path.basename(filename, '.js')
-      global[modelName] = require(root('api/models/' + modelName))
-    }
-  })
 
   // add presenters to global namespace
   _.each(fs.readdirSync(root('api/presenters')), function (filename) {
