@@ -25,6 +25,9 @@ const findUser = function (service, email, id) {
   })
 }
 
+// FIXME: this doesn't check that the profile_user_id we just got matches the
+// stored one. we should update any existing row to match the new
+// profile_user_id as necessary.
 const hasLinkedAccount = function (user, service) {
   return !!user.relations.linkedAccounts.where({provider_key: service})[0]
 }
