@@ -281,39 +281,37 @@ describe('TagController', () => {
     })
 
     it('returns the relevant data', () => {
-      req.session.userId = user.id
       return Promise.props({
         u2: factories.user({avatar_url: 'http://foo.com/bar.png'}).save(),
         u3: factories.user().save(),
         u4: factories.user().save()
       })
       .then(props => locals = props)
-      .then(() => Promise.join(
-        new CommunityTag({
-          tag_id: tag.id,
-          user_id: locals.u2.id,
-          community_id: fixtures.c2.id,
-          description: 'A community tag for the onefound tag in a different community'
-        }).save(),
-        new TagFollow({tag_id: tag.id, user_id: locals.u2.id, community_id: fixtures.c1.id}).save(),
-        new TagFollow({tag_id: tag.id, user_id: locals.u3.id, community_id: fixtures.c1.id}).save(),
-        // this is in a different community so the follower should not be returned
-        new TagFollow({tag_id: tag.id, user_id: locals.u4.id, community_id: fixtures.c2.id}).save()))
+      .then(() => req.session.userId = locals.u3.id)
+      .then(() => new CommunityTag({
+        tag_id: tag.id,
+        user_id: locals.u2.id,
+        community_id: fixtures.c2.id,
+        description: 'A community tag for the onefound tag in a different community'
+      }).save())
+      .then(() => new TagFollow({tag_id: tag.id, user_id: locals.u2.id, community_id: fixtures.c1.id}).save())
+      .then(() => new TagFollow({tag_id: tag.id, user_id: locals.u3.id, community_id: fixtures.c1.id}).save())
+      // this is in a different community so the follower should not be returned
+      .then(() => new TagFollow({tag_id: tag.id, user_id: locals.u4.id, community_id: fixtures.c2.id}).save())
       .then(() => TagController.findOneInCommunity(req, res))
       .then(() => {
         expect(res.body).to.contain({
           name: tag.get('name'),
           id: tag.id,
           description: tag.get('description'),
-          followed: false,
+          followed: true,
           created: false,
           community_id: fixtures.c1.id
         })
         expect(res.body.owner).to.deep.equal(person(u1))
-        expect(sortBy('name', res.body.followers)).to.deep.equal(sortBy('name', [
-          person(locals.u2),
-          person(locals.u3)
-        ]))
+        expect(res.body.followers).to.deep.equal([
+          person(locals.u3), person(locals.u2)
+        ])
       })
     })
   })

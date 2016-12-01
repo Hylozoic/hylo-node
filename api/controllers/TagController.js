@@ -36,6 +36,14 @@ module.exports = {
           q.where({'tag_follows.tag_id': tag.id})
           q.limit(20)
           countTotal(q, 'tag_follows')
+
+          // make sure the current user's follow, if it exists, doesn't get cut
+          // off by the limit, so we know if the user is following the tag
+          if (userId) {
+            q.orderBy(bookshelf.knex.raw(`case
+              when tag_follows.user_id = ${userId} then 0
+              else id end`))
+          }
         }},
         'community.tagFollows.user'
       ]})
