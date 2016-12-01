@@ -29,8 +29,7 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
 
 const extraAttributes = (user, viewingUserId, forSelf) =>
   Promise.props({
-    public_email: user.encryptedEmail(),
-    post_count: Post.countForUser(user), // TODO remove after hylo-frontend is gone
+    post_count: Post.countForUser(user),
     event_count: Post.countForUser(user, 'event'),
     grouped_post_count: Post.groupedCountForUser(user),
     contribution_count: Contribution.countForUser(user),
