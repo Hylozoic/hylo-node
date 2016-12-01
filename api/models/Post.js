@@ -292,10 +292,6 @@ module.exports = bookshelf.Model.extend({
     return Post.where({id, active: true}).fetch(options)
   },
 
-  findThread: function (currentUserId, otherUserId, options) {
-    return Post.where({active: true, type: Post.Type.THREAD}).fetch(options).catch(() => null)
-  },
-
   createdInTimeRange: function (collection, startTime, endTime) {
     if (endTime === undefined) {
       endTime = startTime
