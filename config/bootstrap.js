@@ -24,8 +24,6 @@ global._ = require('lodash') // override Sails' old version of lodash
 module.exports.bootstrap = function (done) {
   models.init()
 
-  var knex = require('knex')(require('../knexfile')[process.env.NODE_ENV])
-
   if (process.env.DEBUG_MEMORY) {
     require('colors')
     sails.log.info('memwatch: starting'.red)
@@ -41,7 +39,7 @@ module.exports.bootstrap = function (done) {
   // log SQL queries
   if (process.env.DEBUG_SQL) {
     require('colors')
-    knex.on('query', function (data) {
+    bookshelf.knex.on('query', function (data) {
       var args = (_.clone(data.bindings) || []).map(function (s) {
         if (s === null) return 'null'.blue
         if (s === undefined) return 'undefined'.red
@@ -64,7 +62,7 @@ module.exports.bootstrap = function (done) {
   if (sails.config.environment === 'production') {
     var rollbar = require('rollbar')
 
-    knex.on('query', function (data) {
+    bookshelf.knex.on('query', function (data) {
       if (_.includes(data.bindings, 'undefined')) {
         const err = new Error('undefined value in SQL query')
         rollbar.handleErrorWithPayloadData(err, {
