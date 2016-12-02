@@ -189,8 +189,9 @@ module.exports = {
     var failures = false
 
     return Community.find(communityId)
-    .then(community => Promise.map(postIds, id =>
-      Post.find(id, {withRelated: ['communities']})
+    .then(community => Promise.map(postIds, id => {
+      if (isEmpty(replyText(id))) return
+      return Post.find(id, {withRelated: ['communities']})
       .then(post => {
         if (!post || !includes(communityId, post.relations.communities.pluck('id'))) {
           failures = true
@@ -205,7 +206,8 @@ module.exports = {
           }
         })
         return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
-      }))
+      })
+    })
     .then(() => {
       var notification
       if (failures) {
