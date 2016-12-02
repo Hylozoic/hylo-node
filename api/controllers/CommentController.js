@@ -206,6 +206,7 @@ module.exports = {
           }
         })
         return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
+        .then(() => Post.setRecentComments({postId: post.id}))
       })
     })
     .then(() => {
