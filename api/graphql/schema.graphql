@@ -1,0 +1,33 @@
+type CurrentUser {
+  id: ID
+  name: String
+  avatar_url: String
+  memberships: [Membership]
+}
+
+type Person {
+  id: ID
+  name: String
+  avatar_url: String
+}
+
+type Membership {
+  id: ID
+  role: Int
+  created_at: String
+  last_viewed_at: String
+  community: Community
+}
+
+type Community {
+  id: ID
+  name: String
+  slug: String
+  members(first: Int, cursor: ID, order: String): [Person]
+}
+
+type Query {
+  me: CurrentUser
+  person(id: ID): Person
+  community(id: ID, slug: String): Community
+}
