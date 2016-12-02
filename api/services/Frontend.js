@@ -65,6 +65,10 @@ module.exports = {
 
     emailPostForm: function () {
       return url('/noo/hook/postForm')
+    },
+
+    emailBatchCommentForm: function () {
+      return url('/noo/hook/batchCommentForm')
     }
   }
 }

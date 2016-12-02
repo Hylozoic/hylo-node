@@ -1,9 +1,10 @@
 import { difference, isEmpty, pickBy } from 'lodash'
+import { flow, filter, map, includes } from 'lodash/fp'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
 import { normalizeComment } from '../../lib/util/normalize'
-import { sanitize } from 'hylo-utils/text'
+import { sanitize, markdown } from 'hylo-utils/text'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
 
@@ -172,5 +173,47 @@ module.exports = {
       })
       .then(res.ok, res.serverError)
     })
+  },
+
+  createBatchFromEmailForm: function (req, res) {
+    const { communityId, userId } = res.locals.tokenData
+
+    const replyText = postId => markdown(req.param(`post-${postId}`))
+
+    const postIds = flow(
+      Object.keys,
+      filter(k => k.match(/^post-(\d)+$/)),
+      map(k => k.replace(/^post-/, ''))
+    )(req.allParams())
+
+    var failures = false
+
+    return Community.find(communityId)
+    .then(community => Promise.map(postIds, id =>
+      Post.find(id, {withRelated: ['communities']})
+      .then(post => {
+        if (!post || !includes(communityId, post.relations.communities.pluck('id'))) {
+          failures = true
+          return Promise.resolve()
+        }
+        Analytics.track({
+          userId,
+          event: 'Post: Comment: Add by Email Form',
+          properties: {
+            post_id: post.id,
+            community: community && community.get('name')
+          }
+        })
+        return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
+      }))
+    .then(() => {
+      var notification
+      if (failures) {
+        notification = 'Some of your comments could not be added.'
+      } else {
+        notification = 'Your comments have been added.'
+      }
+      return res.redirect(Frontend.Route.community(community) + `?notification=${notification}&error=${failures}`)
+    }, res.serverError))
   }
 }

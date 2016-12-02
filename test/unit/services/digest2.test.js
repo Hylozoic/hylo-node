@@ -256,8 +256,9 @@ describe('community digest v2', () => {
             avatar_url: user.get('avatar_url')
           },
           email_settings_url: Frontend.Route.userSettings() + ctParams + '&expand=account',
-          form_action_url: Frontend.Route.emailPostForm(),
-          form_token: Email.postCreationToken(77, user.id),
+          post_creation_action_url: Frontend.Route.emailPostForm(),
+          reply_action_url: Frontend.Route.emailBatchCommentForm(),
+          form_token: Email.formToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, community: 'foo'}),
           subject: `New activity from ${u4.name}, ${u3.name}, and 2 others`,
           community_url: 'https://www.hylo.com/c/foo' + ctParams
@@ -360,11 +361,13 @@ describe('community digest v2', () => {
             }
           ],
           recipient: u1.pick('avatar_url', 'name'),
-          form_action_url: Frontend.Route.emailPostForm(),
-          form_token: Email.postCreationToken(community.id, u1.id),
+          post_creation_action_url: Frontend.Route.emailPostForm(),
+          reply_action_url: Frontend.Route.emailBatchCommentForm(),
+          form_token: Email.formToken(community.id, u1.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {
             userId: u1.id,
-            community: community.get('name')
+            community: community.get('name'),
+            'Email Version': u1.id % 2 === 0 ? 'multi-reply-form' : 'default'
           }),
           email_settings_url: Frontend.Route.userSettings() + clickthroughParams + '&expand=account'
         })

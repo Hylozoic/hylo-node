@@ -332,9 +332,12 @@ describe('PostController', () => {
     })
 
     it('works', () => {
-      _.extend(req.params, params, {
-        token: Email.postCreationToken(fixtures.c1.id, fixtures.u1.id)
-      })
+      _.extend(req.params, params)
+
+      res.locals.tokenData = {
+        communityId: fixtures.c1.id,
+        userId: fixtures.u1.id
+      }
 
       return PostController.createFromEmailForm(req, res)
       .then(() => {
@@ -351,17 +354,6 @@ describe('PostController', () => {
         const community = post.relations.communities.first()
         expect(community.id).to.equal(fixtures.c1.id)
       })
-    })
-
-    it('rejects an invalid token', () => {
-      const token = Email.postCreationToken(fixtures.c1.id, fixtures.u1.id) + 'x'
-      _.extend(req.params, params, {token})
-      var error
-      res.serverError = spy(err => { error = err.message })
-
-      PostController.createFromEmailForm(req, res)
-      expect(res.serverError).to.have.been.called()
-      expect(error).to.equal(`Invalid token: ${token}`)
     })
   })
 
