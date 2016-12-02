@@ -1,3 +1,4 @@
+import { merge } from 'lodash'
 require('dotenv').load()
 
 if (!process.env.DATABASE_URL) {
@@ -19,7 +20,7 @@ const defaults = {
     port: url.port,
     user: user,
     password: password,
-    database: url.path.substring(1)
+    database: url.pathname.substring(1)
   },
   migrations: {
     tableName: 'knex_migrations'
@@ -30,5 +31,5 @@ module.exports = {
   test: defaults,
   development: defaults,
   staging: defaults,
-  production: defaults
+  production: merge({connection: {ssl: true}}, defaults)
 }
