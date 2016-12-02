@@ -97,7 +97,6 @@ var postAttributes = (post, userId, opts = {}) => {
       numComments: post.get('num_comments'),
       relatedUsers: isWelcome ? relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')) : null,
       public: (post.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
-      pinned: post.get('pinned') || null,
       tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
         type,
       type: showValidType(post.get('type')),
