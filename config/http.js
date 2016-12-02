@@ -12,9 +12,26 @@
  */
 
 require('colors')
-var util = require('util')
+import util from 'util'
+import kue from 'kue'
+import kueUI from 'kue-ui'
+import isAdmin from '../api/policies/isAdmin'
+import { createRequestHandler } from '../api/graphql'
+
+function customMiddleware (app) {
+  kueUI.setup({
+    apiURL: '/admin/kue/api',
+    baseURL: '/admin/kue'
+  })
+
+  app.use('/admin/kue', isAdmin)
+  app.use('/admin/kue/api', kue.app)
+  app.use('/admin/kue', kueUI.app)
+  app.use('/noo/graphql', createRequestHandler())
+}
 
 module.exports.http = {
+  customMiddleware,
 
   /****************************************************************************
   *                                                                           *
@@ -25,9 +42,7 @@ module.exports.http = {
   * `customMiddleware` config option.                                         *
   *                                                                           *
   ****************************************************************************/
-
   middleware: {
-
     passportInit: require('passport').initialize(),
     passportSession: require('passport').session(),
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
@@ -43,7 +58,6 @@ module.exports.http = {
   * router is invoked by the "router" middleware below.)                     *
   *                                                                          *
   ***************************************************************************/
-
     order: [
       'startRequestTimer',
       'cookieParser',
@@ -73,24 +87,8 @@ module.exports.http = {
   * http://www.senchalabs.org/connect/multipart.html for other options.      *
   *                                                                          *
   ***************************************************************************/
-
     // bodyParser: require('skipper')
 
-  },
-
-  customMiddleware: function (app) {
-    var kue = require('kue')
-    var kueUI = require('kue-ui')
-    var isAdmin = require('../api/policies/isAdmin')
-
-    kueUI.setup({
-      apiURL: '/admin/kue/api',
-      baseURL: '/admin/kue'
-    })
-
-    app.use('/admin/kue', isAdmin)
-    app.use('/admin/kue/api', kue.app)
-    app.use('/admin/kue', kueUI.app)
   }
 
   /***************************************************************************
@@ -102,6 +100,5 @@ module.exports.http = {
   * since that's the only time Express will cache flat-files.                *
   *                                                                          *
   ***************************************************************************/
-
   // cache: 31557600000
 }
