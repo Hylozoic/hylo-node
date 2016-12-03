@@ -216,7 +216,8 @@ module.exports = {
       } else {
         notification = 'Your comments have been added.'
       }
-      return res.redirect(Frontend.Route.community(community) + `?notification=${notification}&error=${failures}`)
+      return res.redirect(Frontend.Route.community(community) +
+        `?notification=${notification}${failures ? '&error=true' : ''}`)
     }, res.serverError))
   }
 }
