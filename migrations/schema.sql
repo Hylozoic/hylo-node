@@ -80,7 +80,8 @@ CREATE TABLE comments (
     deactivated_by_id bigint,
     deactivated_at timestamp without time zone,
     recent boolean,
-    created_from character varying(255)
+    created_from character varying(255),
+    comment_id bigint
 );
 
 
@@ -1365,10 +1366,8 @@ UNION
  SELECT NULL::bigint AS post_id,
     u.id AS user_id,
     NULL::bigint AS comment_id,
-    ((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(replace((t.name)::text, '-'::text, ' '::text), ' '::text), ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
-   FROM ((users u
-     LEFT JOIN tags_users tu ON ((u.id = tu.user_id)))
-     LEFT JOIN tags t ON ((tu.tag_id = t.id)))
+    (setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
+   FROM users u
   WHERE (u.active = true)
   GROUP BY u.id
 UNION
@@ -1987,6 +1986,14 @@ ALTER TABLE ONLY activities
 
 
 --
+-- Name: comments_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY comments
+    ADD CONSTRAINT comments_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id);
+
+
+--
 -- Name: comments_tags_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2445,3 +2452,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+
