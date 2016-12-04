@@ -119,4 +119,35 @@ describe('Comment', () => {
       })
     })
   })
+
+  describe('parentPost', () => {
+    var p, c1, c2
+
+    before(() => {
+      p = factories.post()
+      return p.save()
+      .then(() => {
+        c1 = factories.comment({post_id: p.id})
+        return c1.save()
+      })
+      .then(() => {
+        c2 = factories.comment({comment_id: c1.id})
+        return c2.save()
+      })
+    })
+
+    it('returns the post of a comment', () => {
+      return c1.parentPost()
+      .then(post => {
+        expect(post.id).to.equal(p.id)
+      })
+    })
+
+    it('returns the parent post of a nested comment', () => {
+      return c2.parentPost()
+      .then(post => {
+        expect(post.id).to.equal(p.id)
+      })
+    })
+  })
 })

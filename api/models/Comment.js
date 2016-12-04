@@ -39,6 +39,26 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Activity)
   },
 
+  comment: function () {
+    return this.belongsTo(Comment)
+  },
+
+  comments: function () {
+    return this.hasMany(Comment, 'comment_id').query({where: {active: true}})
+  },
+
+  parentPost: function () {
+    if (this.get('post_id')) {
+      return this.load('post')
+      .then(() => this.relations.post)
+    } else if (this.get('comment_id')) {
+      return this.load('comment')
+      .then(() => this.relations.comment.parentPost())
+    } else {
+      return Promise.resolve()
+    }
+  },
+
   createActivities: function (trx) {
     return this.load(['post', 'post.followers'])
     .then(() => {
