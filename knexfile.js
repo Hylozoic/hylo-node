@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+const merge = require('lodash').merge
 require('dotenv').load()
 
 if (!process.env.DATABASE_URL) {
