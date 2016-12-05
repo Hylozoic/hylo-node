@@ -24,8 +24,7 @@ module.exports = function checkAndSetMembership (req, res, next) {
     // because controllers will use its existence to distinguish between someone
     // who should see all community content and someone who should see only
     // public content
-    if (Admin.isSignedIn(req) ||
-      TokenAuth.isPermitted(res, community.id)) {
+    if (Admin.isSignedIn(req)) {
       allowed = true
     }
 
