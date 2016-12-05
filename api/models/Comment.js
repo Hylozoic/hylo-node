@@ -59,7 +59,7 @@ module.exports = bookshelf.Model.extend({
     }
   },
 
-  createActivities: function (trx) {
+  createActivities: function (trx) {    
     return this.load(['post', 'post.followers'])
     .then(() => {
       const followers = this.relations.post.relations.followers.map(follower => ({

@@ -20,40 +20,54 @@ const presentComment = (comment) =>
     return Object.assign(buckets, c)
   })
 
-const createAndPresentComment = function (commenterId, text, post, opts = {}) {
+const createAndPresentComment = function (commenterId, text, post, comment, opts = {}) {
   text = sanitize(text)
+
+  const isReplyToPost = !comment
+
   var attrs = {
     text: text,
     created_at: new Date(),
-    post_id: post.id,
     user_id: commenterId,
+    post_id: post.id,
     active: true,
     created_from: opts.created_from || null
   }
 
-  return post.load('followers')
+  if (!isReplyToPost) {
+    attrs.comment_id = comment.id
+  }
+
+  return (isReplyToPost ? post.load('followers') : Promise.resolve())
   .then(() => {
-    const mentioned = RichText.getUserMentions(text)
-    const existingFollowers = post.relations.followers.pluck('id')
-    const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
-    const isThread = post.get('type') === Post.Type.THREAD
+    var mentioned, existingFollowers, newFollowers, isThread
+    if (isReplyToPost) {
+      mentioned = RichText.getUserMentions(text)
+      existingFollowers = post.relations.followers.pluck('id')
+      newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
+      isThread = post.get('type') === Post.Type.THREAD
+    } else {
+      isThread = false
+    }
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, trx))
-      .tap(() => post.updateCommentCount(trx)))
+      .tap(() => isReplyToPost && post.updateCommentCount(trx)))
     .then(comment => Promise.all([
       presentComment(comment)
-      .tap(c => isThread
+      .tap(c => isReplyToPost &&
+        (isThread
         ? post.pushMessageToSockets(c, existingFollowers)
-        : post.pushCommentToSockets(c)),
+        : post.pushCommentToSockets(c))),
 
       (isThread
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
         : comment.createActivities()),
 
-      post.addFollowers(newFollowers, commenterId),
-      updateRecentComments(post.id)
+      isReplyToPost && post.addFollowers(newFollowers, commenterId),
+
+      isReplyToPost && updateRecentComments(post.id)
     ]))
     .then(promises => promises[0])
   })
@@ -92,11 +106,11 @@ module.exports = {
 
   create: function (req, res) {
     const text = req.param('text')
-    const commentable = res.locals.commentable
+    const { post, comment } = res.locals
     const tagDescriptions = req.param('tagDescriptions')
 
-    return checkCommentTags(text, commentable, tagDescriptions)
-    .then(() => createAndPresentComment(req.session.userId, text, commentable, {tagDescriptions}))
+    return checkCommentTags(text, post, tagDescriptions)
+    .then(() => createAndPresentComment(req.session.userId, text, post, comment, {tagDescriptions}))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -125,7 +139,7 @@ module.exports = {
       })
       return User.find(replyData.userId).then(user => {
         const text = Comment.cleanEmailText(user, req.param('stripped-text'))
-        return createAndPresentComment(replyData.userId, text, post, {created_from: 'email'})
+        return createAndPresentComment(replyData.userId, text, post, null, {created_from: 'email'})
       })
     })
     .then(() => res.ok({}), res.serverError)
@@ -205,7 +219,7 @@ module.exports = {
             community: community && community.get('name')
           }
         })
-        return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
+        return createAndPresentComment(userId, replyText(post.id), post, null, {created_from: 'email batch form'})
         .then(() => Post.setRecentComments({postId: post.id}))
       })
     })

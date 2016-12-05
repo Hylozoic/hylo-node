@@ -13,10 +13,14 @@ describe('CommentController', function () {
       u3: factories.user().save(),
       p1: factories.post().save(),
       p2: factories.post().save(),
-      c1: factories.community().save()
+      c1: factories.community().save(),
+      cm1: factories.comment().save()
     }))
     .then(props => fixtures = props)
-    .then(() => fixtures.p1.communities().attach(fixtures.c1.id)))
+    .then(() => Promise.join(
+      fixtures.p1.communities().attach(fixtures.c1.id),
+      fixtures.p1.comments().create(fixtures.cm1)
+    )))
 
   beforeEach(() => {
     req = factories.mock.request()
@@ -57,8 +61,7 @@ describe('CommentController', function () {
     })
 
     it('creates a comment when replying to a comment', function () {
-      var commentText = format('<p>Hey <a data-user-id="%s">U2</a> and <a data-user-id="%s">U3</a>! )</p>',
-          fixtures.u2.id, fixtures.u3.id)
+      var commentText = format('<p>Hey, nice comment!</p>')
       var responseData
 
       req.param = function (name) {
@@ -66,21 +69,26 @@ describe('CommentController', function () {
       }
 
       res = {
-        locals: {post: fixtures.p1},
+        locals: {
+          post: fixtures.p1,
+          comment: fixtures.cm1
+        },
         serverError: spy(console.error),
         ok: spy(function (x) { responseData = x })
       }
 
       return CommentController.create(req, res)
-      .then(function () {
+      .then(() => {
         expect(res.ok).to.have.been.called()
         expect(res.serverError).not.to.have.been.called()
         expect(responseData).to.exist
         expect(responseData.user_id).to.exist
         expect(responseData.text).to.equal(commentText)
-        expect(responseData.people).to.exist
-        expect(responseData.people[0].name).to.equal(fixtures.u1.get('name'))
-        return fixtures.p1.load('comments')
+        return fixtures.cm1.load('comments')
+      })
+      .then(() => {
+        expect(fixtures.cm1.relations.comments.length).to.equal(1)
+        expect(fixtures.cm1.relations.comments.first().get('text')).to.equal(commentText)
       })
     })
 
