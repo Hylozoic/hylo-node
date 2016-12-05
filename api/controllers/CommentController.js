@@ -92,11 +92,11 @@ module.exports = {
 
   create: function (req, res) {
     const text = req.param('text')
-    const post = res.locals.post
+    const commentable = res.locals.commentable
     const tagDescriptions = req.param('tagDescriptions')
 
-    return checkCommentTags(text, post, tagDescriptions)
-    .then(() => createAndPresentComment(req.session.userId, text, post, {tagDescriptions}))
+    return checkCommentTags(text, commentable, tagDescriptions)
+    .then(() => createAndPresentComment(req.session.userId, text, commentable, {tagDescriptions}))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return

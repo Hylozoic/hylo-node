@@ -74,7 +74,7 @@ const search = (opts) => {
 
 const searchInCommunities = (communityIds, opts) => {
   const alias = 'search'
-  const columns = [`${alias}.post_id`, 'comment_id', `${alias}.user_id`, 'rank', 'total']
+  const columns = [`${alias}.post_id`, `${alias}.comment_id`, `${alias}.user_id`, 'rank', 'total']
 
   return bookshelf.knex
   .select(columns)

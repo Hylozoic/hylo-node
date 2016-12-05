@@ -28,7 +28,35 @@ describe('CommentController', function () {
       req.session.userId = fixtures.u1.id
     })
 
-    it('creates a comment', function () {
+    it('creates a comment when replying to a post', function () {
+      var commentText = format('<p>Hey <a data-user-id="%s">U2</a> and <a data-user-id="%s">U3</a>! )</p>',
+          fixtures.u2.id, fixtures.u3.id)
+      var responseData
+
+      req.param = function (name) {
+        if (name === 'text') return commentText
+      }
+
+      res = {
+        locals: {post: fixtures.p1},
+        serverError: spy(console.error),
+        ok: spy(function (x) { responseData = x })
+      }
+
+      return CommentController.create(req, res)
+      .then(function () {
+        expect(res.ok).to.have.been.called()
+        expect(res.serverError).not.to.have.been.called()
+        expect(responseData).to.exist
+        expect(responseData.user_id).to.exist
+        expect(responseData.text).to.equal(commentText)
+        expect(responseData.people).to.exist
+        expect(responseData.people[0].name).to.equal(fixtures.u1.get('name'))
+        return fixtures.p1.load('comments')
+      })
+    })
+
+    it('creates a comment when replying to a comment', function () {
       var commentText = format('<p>Hey <a data-user-id="%s">U2</a> and <a data-user-id="%s">U3</a>! )</p>',
           fixtures.u2.id, fixtures.u3.id)
       var responseData
