@@ -418,7 +418,8 @@ CREATE TABLE follows (
     added_at timestamp without time zone,
     user_id bigint,
     added_by_id bigint,
-    role integer
+    role integer,
+    comment_id bigint
 );
 
 
@@ -2319,6 +2320,14 @@ ALTER TABLE ONLY tag_follows
 
 ALTER TABLE ONLY tag_follows
     ADD CONSTRAINT followed_tags_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: follows_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY follows
+    ADD CONSTRAINT follows_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id);
 
 
 --
