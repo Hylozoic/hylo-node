@@ -12,7 +12,7 @@
  */
 
 require('colors')
-var util = require('util')
+const util = require('util')
 
 module.exports.http = {
 
@@ -30,6 +30,7 @@ module.exports.http = {
 
     passportInit: require('passport').initialize(),
     passportSession: require('passport').session(),
+    opbeat: require('opbeat').middleware.express(),
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
     requestLogger: function (req, res, next) {
@@ -61,6 +62,7 @@ module.exports.http = {
       'www',
       'favicon',
       '404',
+      'opbeat',
       'rollbar',
       '500'
     ]

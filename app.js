@@ -18,8 +18,11 @@
  * `node app.js --silent --port=80 --prod`
  */
 
-require('babel-register')
 require('dotenv').load()
+if (process.env.NODE_ENV === 'production') {
+  require('opbeat').start()
+}
+require('babel-register')
 
 if (process.env.NEW_RELIC_LICENSE_KEY) {
   require('newrelic')
