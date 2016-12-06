@@ -50,7 +50,6 @@ type Post {
 
 type Query {
   me: Me
-  me2: Me
   person(id: ID): Person
   community(id: ID, slug: String): Community
 }
