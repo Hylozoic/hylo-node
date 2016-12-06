@@ -3,6 +3,7 @@ import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
+import { addFollowers } from './post/util'
 
 const normalize = post => {
   const data = {communities: [], people: []}
@@ -86,33 +87,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   addFollowers: function (userIds, addedById, opts = {}) {
-    var postId = this.id
-    var userId = this.get('user_id')
-    const { transacting, createActivity } = opts
-
-    return this.load(['communities'])
-    .then(() => this.isProject() && this.load('selectedTags')
-      .then(() => {
-        const tag = this.relations.selectedTags.first()
-        if (!tag) return
-        return Promise.each(this.relations.communities.models, community =>
-          Promise.each(userIds, id => TagFollow.add(tag, id, community)))
-      }))
-    .then(() => Promise.map(userIds, followerId =>
-      Follow.create(followerId, postId, {addedById, transacting})
-      .tap(follow => {
-        if (!createActivity) return
-
-        var updates = []
-        const addActivity = (recipientId, method) => {
-          updates.push(Activity[method](follow, recipientId)
-          .save({}, _.pick(opts, 'transacting'))
-          .then(activity => activity.createNotifications(transacting)))
-        }
-        if (followerId !== addedById) addActivity(followerId, 'forFollowAdd')
-        if (userId !== addedById) addActivity(userId, 'forFollow')
-        return Promise.all(updates)
-      })))
+    return addFollowers(this, null, userIds, addedById, opts)
   },
 
   removeFollower: function (user_id, opts = {}) {
@@ -313,7 +288,7 @@ module.exports = bookshelf.Model.extend({
     .tap(post => Promise.join(
       post.relatedUsers().attach(userId, {transacting: trx}),
       post.communities().attach(communityId, {transacting: trx}),
-      Follow.create(userId, post.id, {transacting: trx})
+      Follow.create(userId, post.id, null, {transacting: trx})
     ))
   },
 

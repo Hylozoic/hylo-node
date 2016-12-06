@@ -60,8 +60,9 @@ describe('CommentController', function () {
       })
     })
 
-    it('creates a comment when replying to a comment', function () {
-      var commentText = format('<p>Hey, nice comment!</p>')
+    it('creates a comment and adds followers when replying to a comment', function () {
+      var commentText = format('<p>Hey <a data-user-id="%s">U2</a> and <a data-user-id="%s">U3</a>! )</p>',
+          fixtures.u2.id, fixtures.u3.id)
       var responseData
 
       req.param = function (name) {
@@ -84,11 +85,21 @@ describe('CommentController', function () {
         expect(responseData).to.exist
         expect(responseData.user_id).to.exist
         expect(responseData.text).to.equal(commentText)
-        return fixtures.cm1.load('comments')
+        return fixtures.cm1.load(['comments', 'comments.followers', 'followers'])
       })
       .then(() => {
+        const followerIds = [
+          fixtures.u1.id,
+          fixtures.u2.id,
+          fixtures.u3.id
+        ].sort()
         expect(fixtures.cm1.relations.comments.length).to.equal(1)
         expect(fixtures.cm1.relations.comments.first().get('text')).to.equal(commentText)
+        expect(fixtures.cm1.relations.comments.first().relations.followers.length).to.equal(3)
+        expect(fixtures.cm1.relations.comments.first().relations.followers.pluck('id').sort())
+        .to.deep.equal(followerIds)
+        expect(fixtures.cm1.relations.followers.length).to.equal(3)
+        expect(fixtures.cm1.relations.followers.pluck('id').sort()).to.deep.equal(followerIds)
       })
     })
 

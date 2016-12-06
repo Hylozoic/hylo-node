@@ -20,10 +20,10 @@ const presentComment = (comment) =>
     return Object.assign(buckets, c)
   })
 
-const createAndPresentComment = function (commenterId, text, post, comment, opts = {}) {
+const createAndPresentComment = function (commenterId, text, post, parentComment, opts = {}) {
   text = sanitize(text)
 
-  const isReplyToPost = !comment
+  const isReplyToPost = !parentComment
 
   var attrs = {
     text: text,
@@ -35,20 +35,23 @@ const createAndPresentComment = function (commenterId, text, post, comment, opts
   }
 
   if (!isReplyToPost) {
-    attrs.comment_id = comment.id
+    attrs.comment_id = parentComment.id
   }
 
-  return (isReplyToPost ? post.load('followers') : Promise.resolve())
+  return (isReplyToPost ? post.load('followers') : parentComment.load('followers'))
   .then(() => {
-    var mentioned, existingFollowers, newFollowers, isThread
+    var existingFollowers, isThread
+    const mentioned = RichText.getUserMentions(text)
+
     if (isReplyToPost) {
-      mentioned = RichText.getUserMentions(text)
       existingFollowers = post.relations.followers.pluck('id')
-      newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
       isThread = post.get('type') === Post.Type.THREAD
     } else {
+      existingFollowers = parentComment.relations.followers.pluck('id')
       isThread = false
     }
+
+    const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
@@ -65,7 +68,10 @@ const createAndPresentComment = function (commenterId, text, post, comment, opts
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
         : comment.createActivities()),
 
-      isReplyToPost && post.addFollowers(newFollowers, commenterId),
+      (isReplyToPost
+        ? post.addFollowers(newFollowers, commenterId)
+        : Promise.join(comment.addFollowers(newFollowers, commenterId),
+            parentComment.addFollowers(newFollowers, commenterId))),
 
       isReplyToPost && updateRecentComments(post.id)
     ]))

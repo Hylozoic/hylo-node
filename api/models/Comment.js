@@ -3,6 +3,7 @@ import { markdown } from 'hylo-utils/text'
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
 import { parse } from 'url'
+import { addFollowers } from './post/util'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'comments',
@@ -47,22 +48,19 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Comment, 'comment_id').query({where: {active: true}})
   },
 
-  parentPost: function () {
-    if (this.get('post_id')) {
-      return this.load('post')
-      .then(() => this.relations.post)
-    } else if (this.get('comment_id')) {
-      return this.load('comment')
-      .then(() => this.relations.comment.parentPost())
-    } else {
-      return Promise.resolve()
-    }
+  followers: function () {
+    return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
   },
 
-  createActivities: function (trx) {    
+  createActivities: function (trx) {
+
+    const isReplyToPost = !this.get('comment_id')
+
     return this.load(['post', 'post.followers'])
     .then(() => {
-      const followers = this.relations.post.relations.followers.map(follower => ({
+      const followers = (isReplyToPost
+      ? this.relations.post.relations.followers
+      : []).map(follower => ({
         reader_id: follower.id,
         comment_id: this.id,
         post_id: this.relations.post.id,
@@ -79,6 +77,11 @@ module.exports = bookshelf.Model.extend({
       const readers = filter(r => r.reader_id !== this.get('user_id'), followers.concat(mentioned))
       return Activity.saveForReasons(readers, trx)
     })
+  },
+
+  addFollowers: function (userIds, addedById, opts = {}) {
+    return this.load('post')
+    .then(() => addFollowers(this.relations.post, this, userIds, addedById, opts))
   }
 }, {
 
