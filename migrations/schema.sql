@@ -1687,6 +1687,14 @@ ALTER TABLE ONLY users
 
 
 --
+-- Name: unique_follows; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY follows
+    ADD CONSTRAINT unique_follows UNIQUE (post_id, comment_id, user_id);
+
+
+--
 -- Name: unique_join_requests; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1740,14 +1748,6 @@ ALTER TABLE ONLY communities
 
 ALTER TABLE ONLY contributions
     ADD CONSTRAINT uq_no_multiple_contributor_2 UNIQUE (post_id, user_id);
-
-
---
--- Name: uq_no_multiple_followers_2; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY follows
-    ADD CONSTRAINT uq_no_multiple_followers_2 UNIQUE (post_id, user_id);
 
 
 --
