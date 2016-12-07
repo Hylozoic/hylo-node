@@ -1,4 +1,5 @@
 /* globals LastRead */
+import moment from 'moment'
 import { getOr } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
@@ -221,7 +222,7 @@ const PostController = {
   },
 
   createFromEmailForm: function (req, res) {
-    const { tokenData } = res.locals
+    const { tokenData: { userId, communityId } } = res.locals
     const namePrefixes = {
       offer: "I'd like to share",
       request: "I'm looking for",
@@ -236,19 +237,23 @@ const PostController = {
     const attributes = {
       created_from: 'email_form',
       name: `${namePrefixes[type]} ${req.param('name')}`,
-      community_ids: [tokenData.communityId],
+      community_ids: [communityId],
       tag: type,
       description: req.param('description')
     }
 
-    return createPost(tokenData.userId, attributes)
-    .tap(post => Community.find(tokenData.communityId)
-      .then(c => Analytics.track({
-        userId: tokenData.userId,
-        event: 'Add Post by Email Form',
-        properties: {community: c.get('name')}
-      })))
-    .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
+    return Post.where({name: attributes.name, user_id: userId}).fetch()
+    .then(post => {
+      if (post && post.get('created_at') > moment().subtract(5, 'minutes').toDate()) return res.redirect(Frontend.Route.post(post))
+      return createPost(userId, attributes)
+      .tap(post => Community.find(communityId)
+        .then(c => Analytics.track({
+          userId,
+          event: 'Add Post by Email Form',
+          properties: {community: c.get('name')}
+        })))
+      .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
+    })
   },
 
   follow: function (req, res) {

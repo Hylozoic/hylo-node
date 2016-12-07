@@ -116,6 +116,7 @@ module.exports.routes = {
 
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
   'POST   /noo/hook/message':                             'MessageController.relayFromEmail',
+  'GET   /noo/hook/postForm':                            'PostController.createFromEmailForm',
   'POST   /noo/hook/postForm':                            'PostController.createFromEmailForm',
   'POST   /noo/hook/batchCommentForm':                    'CommentController.createBatchFromEmailForm',
 
