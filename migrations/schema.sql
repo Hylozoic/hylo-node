@@ -2327,7 +2327,7 @@ ALTER TABLE ONLY tag_follows
 --
 
 ALTER TABLE ONLY follows
-    ADD CONSTRAINT follows_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id);
+    ADD CONSTRAINT follows_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
