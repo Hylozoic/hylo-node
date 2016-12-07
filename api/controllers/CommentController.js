@@ -1,3 +1,4 @@
+import moment from 'moment'
 import { difference, isEmpty, pickBy } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import {
@@ -197,16 +198,21 @@ module.exports = {
           failures = true
           return Promise.resolve()
         }
-        Analytics.track({
-          userId,
-          event: 'Post: Comment: Add by Email Form',
-          properties: {
-            post_id: post.id,
-            community: community && community.get('name')
-          }
+        return Comment.where({user_id: userId, post_id: post.id, text: replyText(post.id)}).fetch()
+        .then(comment => {
+          if (comment && comment.get('created_at') > moment().subtract(1, 'minutes').toDate()) return
+
+          Analytics.track({
+            userId,
+            event: 'Post: Comment: Add by Email Form',
+            properties: {
+              post_id: post.id,
+              community: community && community.get('name')
+            }
+          })
+          return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
+          .then(() => Post.setRecentComments({postId: post.id}))
         })
-        return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
-        .then(() => Post.setRecentComments({postId: post.id}))
       })
     })
     .then(() => {
