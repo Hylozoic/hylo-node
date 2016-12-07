@@ -1,5 +1,4 @@
 /* globals LastRead */
-import moment from 'moment'
 import { getOr } from 'lodash/fp'
 import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
 import {
@@ -244,7 +243,7 @@ const PostController = {
 
     return Post.where({name: attributes.name, user_id: userId}).fetch()
     .then(post => {
-      if (post && post.get('created_at') > moment().subtract(5, 'minutes').toDate()) return res.redirect(Frontend.Route.post(post))
+      if (post && (new Date() - post.get('created_at') < 5 * 60000)) return res.redirect(Frontend.Route.post(post))
       return createPost(userId, attributes)
       .tap(post => Community.find(communityId)
         .then(c => Analytics.track({

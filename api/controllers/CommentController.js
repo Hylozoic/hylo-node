@@ -1,4 +1,3 @@
-import moment from 'moment'
 import { difference, isEmpty, pickBy } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import {
@@ -200,7 +199,7 @@ module.exports = {
         }
         return Comment.where({user_id: userId, post_id: post.id, text: replyText(post.id)}).fetch()
         .then(comment => {
-          if (comment && comment.get('created_at') > moment().subtract(1, 'minutes').toDate()) return
+          if (post && (new Date() - post.get('created_at') < 5 * 60000)) return
 
           Analytics.track({
             userId,
