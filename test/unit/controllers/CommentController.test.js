@@ -27,6 +27,49 @@ describe('CommentController', function () {
     res = factories.mock.response()
   })
 
+  describe('findForParent', () => {
+    it('works for a post', () => {
+      var responseData
+      res = {
+        locals: {
+          post: fixtures.p1
+        },
+        serverError: spy(console.error),
+        ok: spy(function (x) { responseData = x })
+      }
+      return CommentController.findForParent(req, res)
+      .then(() => {
+        expect(responseData).to.exist
+        expect(responseData.comments.length).to.equal(1)
+        expect(responseData.comments[0].text).to.equal(fixtures.cm1.get('text'))
+      })
+    })
+
+    it('works for a comment', () => {
+      var responseData
+      res = {
+        locals: {
+          post: fixtures.p1,
+          comment: fixtures.cm1
+        },
+        serverError: spy(console.error),
+        ok: spy(function (x) { responseData = x })
+      }
+
+      const text = 'text of the child comment'
+
+      return factories.comment({post_id: fixtures.p1.id, comment_id: fixtures.cm1.id, text}).save()
+      .then(() => CommentController.findForParent(req, res))
+      .then(() => {
+        expect(responseData).to.exist
+        expect(responseData.comments.length).to.equal(1)
+        expect(responseData.comments[0].text).to.equal(text)
+        return Comment.find(responseData.comments[0].id)
+        .then(c => c.destroy())
+      })
+    })
+  })
+
   describe('#create', function () {
     beforeEach(() => {
       req.session.userId = fixtures.u1.id
