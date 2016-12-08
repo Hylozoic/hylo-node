@@ -2,6 +2,7 @@ import DataLoader from 'dataloader'
 import { forIn, pick, toPairs, transform } from 'lodash'
 import { map, omitBy } from 'lodash/fp'
 import { inspect } from 'util'
+import { randomBytes } from 'crypto'
 
 // a means of identifying duplicate Bookshelf queries. ideally we would compare
 // the final SQL query text, but this is surprisingly difficult to find for some
@@ -12,6 +13,9 @@ const uniqueQueryID = query => {
     'joinTableName', 'foreignKey', 'otherKey',
     'targetTableName', 'type'
   ]))
+  if (!query._knex) { // query is invalid, don't cache
+    return randomBytes(4).toString('hex')
+  }
   return inspect(signature) + inspect(pick(query._knex.toSQL(), 'sql', 'bindings'))
 }
 
@@ -19,38 +23,56 @@ const uniqueQueryID = query => {
 // should be exposed through GraphQL.
 //
 // keys here are table names (except for "me")
-const makeSpecs = () => ({
-  me: {
-    model: User,
-    attributes: ['id', 'name', 'avatar_url'],
-    relations: ['communities', 'posts']
-  },
+const makeSpecs = (userId) => {
+  // TODO: cache this?
+  const myCommunityIds = () =>
+    Membership.query().select('community_id')
+    .where({user_id: userId, active: true})
 
-  users: {
-    model: User,
-    attributes: ['id', 'name', 'avatar_url'],
-    relations: ['posts']
-  },
-
-  posts: {
-    model: Post,
-    attributes: ['id'],
-    getters: {
-      title: p => p.get('name'),
-      details: p => p.get('description')
+  return {
+    me: { // the root of the graph
+      model: User,
+      attributes: ['id', 'name', 'avatar_url'],
+      relations: ['communities', 'posts']
     },
-    relations: ['communities', 'followers']
-  },
 
-  communities: {
-    model: Community,
-    attributes: ['id', 'name'],
-    relations: [{members: 'users'}]
+    users: {
+      model: User,
+      attributes: ['id', 'name', 'avatar_url'],
+      relations: ['posts'],
+      filter: relation => relation.query(q => {
+        q.where('users.id', 'in', Membership.query().select('user_id')
+          .where('community_id', 'in', myCommunityIds()))
+      })
+    },
+
+    posts: {
+      model: Post,
+      attributes: ['id'],
+      getters: {
+        title: p => p.get('name'),
+        details: p => p.get('description')
+      },
+      relations: ['communities', 'followers'],
+      filter: relation => relation.query(q => {
+        q.where('posts.id', 'in', PostMembership.query().select('post_id')
+          .where('community_id', 'in', myCommunityIds()))
+      })
+    },
+
+    communities: {
+      model: Community,
+      attributes: ['id', 'name'],
+      relations: [{members: 'users'}],
+      filter: relation => relation.query(q => {
+        q.where('communities.id', 'in', myCommunityIds())
+      })
+    }
   }
-})
+}
 
 export function createModels (schema, userId) {
-  const specs = makeSpecs()
+  const specs = makeSpecs(userId)
   const loaders = {}
 
   forIn(specs, ({ model, attributes, getters, relations }, name) => {
@@ -72,9 +94,7 @@ export function createModels (schema, userId) {
         const loader = loaders[targetTableName]
         instances.each(x => loader.prime(x.id, x))
       })),
-    {
-      cacheKeyFn: uniqueQueryID
-    }
+    {cacheKeyFn: uniqueQueryID}
   )
 
   const fetchRelation = (relation, paginationOpts) => {
@@ -84,6 +104,9 @@ export function createModels (schema, userId) {
     if (type === 'belongsTo') {
       return loader.load(parentFk)
     }
+
+    const relationSpec = specs[targetTableName]
+    if (relationSpec.filter) relation = relationSpec.filter(relation)
 
     return queryLoader.load(relation.query(q => {
       applyPagination(q, paginationOpts)
@@ -114,12 +137,9 @@ export function createModels (schema, userId) {
       }, {}),
 
       transform(relations, (result, attr) => {
-        let graphqlName, bookshelfName
-        if (typeof attr === 'string') {
-          ;[ graphqlName, bookshelfName ] = [attr, attr]
-        } else {
-          ;[ graphqlName, bookshelfName ] = toPairs(attr)[0]
-        }
+        const [ graphqlName, bookshelfName ] = typeof attr === 'string'
+          ? [attr, attr] : toPairs(attr)[0]
+
         result[graphqlName] = ({ first, cursor, order }) => {
           const relation = instance[bookshelfName]()
           return fetchRelation(relation, {first, cursor, order})
@@ -130,14 +150,8 @@ export function createModels (schema, userId) {
     return formatted
   }
 
-  const restrictions = {
-    // TODO: restrict based on policies for userId
-  }
-
   return {
-    fetchMe: () =>
-      loaders.users.load(userId)
-      .then(format('me'))
+    fetchMe: () => loaders.users.load(userId).then(format('me'))
   }
 }
 
