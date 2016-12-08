@@ -1,23 +1,7 @@
 import DataLoader from 'dataloader'
-import { forIn, pick, toPairs, transform } from 'lodash'
-import { map, omitBy } from 'lodash/fp'
-import { inspect } from 'util'
-import { randomBytes } from 'crypto'
-
-// a means of identifying duplicate Bookshelf queries. ideally we would compare
-// the final SQL query text, but this is surprisingly difficult to find for some
-// types of Bookshelf relations. so this is a hacked-together workaround.
-const uniqueQueryID = query => {
-  const signature = omitBy(x => !x, pick(query.relatedData, [
-    'parentTableName', 'parentId', 'parentFk',
-    'joinTableName', 'foreignKey', 'otherKey',
-    'targetTableName', 'type'
-  ]))
-  if (!query._knex) { // query is invalid, don't cache
-    return randomBytes(4).toString('hex')
-  }
-  return inspect(signature) + inspect(pick(query._knex.toSQL(), 'sql', 'bindings'))
-}
+import { forIn, toPairs, transform } from 'lodash'
+import { map } from 'lodash/fp'
+import uniqueQueryId from './util/uniqueQueryId'
 
 // this defines what subset of attributes and relations in each bookshelf model
 // should be exposed through GraphQL.
@@ -94,7 +78,7 @@ export function createModels (schema, userId) {
         const loader = loaders[targetTableName]
         instances.each(x => loader.prime(x.id, x))
       })),
-    {cacheKeyFn: uniqueQueryID}
+    {cacheKeyFn: uniqueQueryId}
   )
 
   const fetchRelation = (relation, paginationOpts) => {
