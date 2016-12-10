@@ -322,7 +322,7 @@ const PostController = {
 
   fulfill: function (req, res) {
     const { post } = res.locals
-    const contributorIds = req.param('contributors') || []
+    const contributorIds = req.param('contributorIds') || []
     const fulfilled_at = post.get('fulfilled_at') ? null : new Date()
 
     return bookshelf.transaction(trx =>
