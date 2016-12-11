@@ -327,8 +327,15 @@ const PostController = {
 
     return bookshelf.transaction(trx =>
       post.save({fulfilled_at}, {patch: true, transacting: trx})
-      .tap(() => Promise.map(contributorIds, userId =>
-        Contribution.create(userId, post.id, trx))))
+      .tap(() => {
+        if(fulfilled_at) {
+          return Promise.map(contributorIds, userId =>
+            Contribution.create(userId, post.id, trx))
+        } else {
+          return Contribution.where({post_id: post.id})
+            .destroy({transacting: trx})
+        }
+      }))
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
