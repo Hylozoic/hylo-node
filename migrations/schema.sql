@@ -30,7 +30,8 @@ CREATE TABLE activities (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     community_id bigint,
-    meta jsonb DEFAULT '{}'::jsonb
+    meta jsonb DEFAULT '{}'::jsonb,
+    parent_comment_id bigint
 );
 
 
@@ -1944,6 +1945,14 @@ CREATE INDEX ix_vote_post_14 ON votes USING btree (post_id);
 --
 
 CREATE INDEX ix_vote_user_13 ON votes USING btree (user_id);
+
+
+--
+-- Name: activities_parent_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY activities
+    ADD CONSTRAINT activities_parent_comment_id_foreign FOREIGN KEY (parent_comment_id) REFERENCES comments(id);
 
 
 --
