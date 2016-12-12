@@ -16,7 +16,9 @@ describe('CommentController', function () {
       c1: factories.community().save(),
       cm1: factories.comment().save()
     }))
-    .then(props => fixtures = props)
+    .then(props => {
+      fixtures = props
+    })
     .then(() => Promise.join(
       fixtures.p1.communities().attach(fixtures.c1.id),
       fixtures.p1.comments().create(fixtures.cm1)
@@ -207,6 +209,37 @@ describe('CommentController', function () {
       })
     })
 
+    it('creates an activity for comment follower', function () {
+      var commentText = 'Text of the nested comment'
+      var responseData
+
+      req.param = function (name) {
+        if (name === 'text') return commentText
+      }
+
+      res = {
+        locals: {post: fixtures.p1, comment: fixtures.cm1},
+        serverError: spy(console.error),
+        ok: spy(function (x) { responseData = x })
+      }
+
+      return Follow.query().del()
+      .then(() => Follow.create(fixtures.u2.id, fixtures.p1.id, fixtures.cm1.id))
+      .then(() => CommentController.create(req, res))
+      .then(() => Activity.where({comment_id: responseData.id}).fetchAll())
+      .then(activities => {
+        expect(activities.length).to.equal(1)
+        const activity = activities.first()
+        expect(activity).to.exist
+        expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
+        expect(activity.get('reader_id')).to.equal(fixtures.u2.id)
+        expect(activity.get('post_id')).to.equal(fixtures.p1.id)
+        expect(activity.get('parent_comment_id')).to.equal(fixtures.cm1.id)
+        expect(activity.get('meta')).to.deep.equal({reasons: ['newComment']})
+        expect(activity.get('unread')).to.equal(true)
+      })
+    })
+
     it('rejects a tag with no description', function () {
       const commentText = '<p>Hey #commenttag</p>'
       req.params.text = commentText
@@ -277,7 +310,9 @@ describe('CommentController', function () {
       req.params.text = 'updated comment text'
       comment = factories.comment({text: 'original text'})
       return comment.save()
-      .then(() => req.params.commentId = comment.id)
+      .then(() => {
+        req.params.commentId = comment.id
+      })
       .then(() => CommentController.update(req, res))
       .then(() => Comment.find(comment.id))
       .then(comment => {
@@ -292,7 +327,9 @@ describe('CommentController', function () {
       req.params.tagDescriptions = {anewtag: {description: 'new tag description'}}
       comment = factories.comment({text: 'original text', post_id: fixtures.p1.id})
       return comment.save()
-      .then(() => req.params.commentId = comment.id)
+      .then(() => {
+        req.params.commentId = comment.id
+      })
       .then(() => CommentController.update(req, res))
       .then(() => Comment.find(comment.id, {withRelated: ['tags', 'tags.communities']}))
       .then(comment => {

@@ -51,6 +51,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Post)
   },
 
+  parentComment: function () {
+    return this.belongsTo(Comment, 'parent_comment_id')
+  },
+
   community: function () {
     return this.belongsTo(Community)
   },
@@ -178,7 +182,9 @@ module.exports = bookshelf.Model.extend({
   saveForReasons: function (activities, trx) {
     return Promise.map(mergeByReader(activities), activity =>
       Activity.createWithNotifications(
-        merge(pick(activity, ['post_id', 'community_id', 'comment_id', 'actor_id', 'reader_id']),
+        merge(
+          pick(activity,
+            ['post_id', 'community_id', 'comment_id', 'parent_comment_id', 'actor_id', 'reader_id']),
           {meta: {reasons: activity.reasons}}),
         trx))
     .tap(() => Queue.classMethod('Notification', 'sendUnsent'))

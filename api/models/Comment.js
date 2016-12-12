@@ -53,16 +53,20 @@ module.exports = bookshelf.Model.extend({
   },
 
   createActivities: function (trx) {
-
     const isReplyToPost = !this.get('comment_id')
 
-    return this.load(['post', 'post.followers'])
+    var toLoad = ['post', 'post.followers']
+    if (!isReplyToPost) toLoad = toLoad.concat(['comment', 'comment.followers'])
+
+    return this.load(toLoad)
     .then(() => {
       const followers = (isReplyToPost
       ? this.relations.post.relations.followers
-      : []).map(follower => ({
+      : this.relations.comment.relations.followers)
+      const followerActivities = followers.map(follower => ({
         reader_id: follower.id,
         comment_id: this.id,
+        parent_comment_id: this.get('comment_id') || null,
         post_id: this.relations.post.id,
         actor_id: this.get('user_id'),
         reason: 'newComment'
@@ -74,7 +78,7 @@ module.exports = bookshelf.Model.extend({
         actor_id: this.get('user_id'),
         reason: 'commentMention'
       }))
-      const readers = filter(r => r.reader_id !== this.get('user_id'), followers.concat(mentioned))
+      const readers = filter(r => r.reader_id !== this.get('user_id'), followerActivities.concat(mentioned))
       return Activity.saveForReasons(readers, trx)
     })
   },
