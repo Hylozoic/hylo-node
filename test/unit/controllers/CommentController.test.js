@@ -16,9 +16,7 @@ describe('CommentController', function () {
       c1: factories.community().save(),
       cm1: factories.comment().save()
     }))
-    .then(props => {
-      fixtures = props
-    })
+    .then(props => fixtures = props)
     .then(() => Promise.join(
       fixtures.p1.communities().attach(fixtures.c1.id),
       fixtures.p1.comments().create(fixtures.cm1)
