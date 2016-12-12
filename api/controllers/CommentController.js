@@ -90,11 +90,12 @@ const checkCommentTags = (text, post, descriptions) => {
 
 module.exports = {
   findForParent: function (req, res) {
-    const { beforeId, limit, newest } = req.allParams()
+    const { beforeId, afterId, limit, newest } = req.allParams()
     const comment_id = res.locals.comment ? res.locals.comment.id : null
     return Comment.query(q => {
       q.where({post_id: res.locals.post.id, comment_id, active: true})
       if (beforeId) q.where('id', '<', beforeId)
+      if (afterId) q.where('id', '>', afterId)
       if (limit) q.limit(limit)
       q.orderBy('id', newest ? 'desc' : 'asc')
     }).fetchAll({withRelated: [
@@ -218,16 +219,21 @@ module.exports = {
           failures = true
           return Promise.resolve()
         }
-        Analytics.track({
-          userId,
-          event: 'Post: Comment: Add by Email Form',
-          properties: {
-            post_id: post.id,
-            community: community && community.get('name')
-          }
+        return Comment.where({user_id: userId, post_id: post.id, text: replyText(post.id)}).fetch()
+        .then(comment => {
+          if (post && (new Date() - post.get('created_at') < 5 * 60000)) return
+
+          Analytics.track({
+            userId,
+            event: 'Post: Comment: Add by Email Form',
+            properties: {
+              post_id: post.id,
+              community: community && community.get('name')
+            }
+          })
+          return createAndPresentComment(userId, replyText(post.id), post, null, {created_from: 'email batch form'})
+          .then(() => Post.setRecentComments({postId: post.id}))
         })
-        return createAndPresentComment(userId, replyText(post.id), post, null, {created_from: 'email batch form'})
-        .then(() => Post.setRecentComments({postId: post.id}))
       })
     })
     .then(() => {

@@ -56,7 +56,9 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   posts: function () {
-    return this.hasMany(Post)
+    return this.hasMany(Post).query(q => q.where(function () {
+      this.where('type', null).orWhere('type', '!=', Post.Type.THREAD)
+    }))
   },
 
   eventsRespondedTo: function () {
