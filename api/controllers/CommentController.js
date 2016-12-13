@@ -20,8 +20,10 @@ const presentComment = (comment) =>
     return Object.assign(buckets, c)
   })
 
-const createAndPresentComment = function (commenterId, text, post, parentComment, opts = {}) {
+const createAndPresentComment = function (commenterId, text, post, opts = {}) {
   text = sanitize(text)
+
+  const { parentComment } = opts
 
   const isReplyToPost = !parentComment
 
@@ -118,7 +120,10 @@ module.exports = {
     const tagDescriptions = req.param('tagDescriptions')
 
     return checkCommentTags(text, post, tagDescriptions)
-    .then(() => createAndPresentComment(req.session.userId, text, post, comment, {tagDescriptions}))
+    .then(() => createAndPresentComment(req.session.userId, text, post, {
+      parentComment: comment,
+      tagDescriptions
+    }))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -147,7 +152,7 @@ module.exports = {
       })
       return User.find(replyData.userId).then(user => {
         const text = Comment.cleanEmailText(user, req.param('stripped-text'))
-        return createAndPresentComment(replyData.userId, text, post, null, {created_from: 'email'})
+        return createAndPresentComment(replyData.userId, text, post, {created_from: 'email'})
       })
     })
     .then(() => res.ok({}), res.serverError)
@@ -231,7 +236,7 @@ module.exports = {
               community: community && community.get('name')
             }
           })
-          return createAndPresentComment(userId, replyText(post.id), post, null, {created_from: 'email batch form'})
+          return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
           .then(() => Post.setRecentComments({postId: post.id}))
         })
       })

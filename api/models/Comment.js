@@ -60,9 +60,7 @@ module.exports = bookshelf.Model.extend({
 
     return this.load(toLoad)
     .then(() => {
-      const followers = (isReplyToPost
-      ? this.relations.post.relations.followers
-      : this.relations.comment.relations.followers)
+      const followers = this.relations[isReplyToPost ? 'post' : 'comment'].relations.followers
       const followerActivities = followers.map(follower => ({
         reader_id: follower.id,
         comment_id: this.id,
