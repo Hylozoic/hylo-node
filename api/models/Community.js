@@ -96,7 +96,7 @@ module.exports = bookshelf.Model.extend(merge({
         tagName && Tag.find(tagName).then(tag =>
           newPost.tags().attach({tag_id: tag.id, selected: true}, {transacting})),
         post.relations.followers.map(u =>
-          Follow.create(u.id, newPost.id, {transacting}))
+          Follow.create(u.id, newPost.id, null, {transacting}))
       ])))
     }))
   },
