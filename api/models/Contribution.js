@@ -7,12 +7,33 @@ module.exports = bookshelf.Model.extend({
 
   user: function () {
     return this.belongsTo(User, 'user_id').query({where: {active: true}})
-  }
+  },
 
+  createActivities: function (trx) {
+    return this.load(['post'])
+    .then(() => {
+      const contribution = {
+        reader_id: this.get('user_id'),
+        contribution_id: this.id,
+        post_id: this.relations.post.id,
+        actor_id: this.get('user_id'),
+        reason: 'newContribution'
+      }
+      return Activity.saveForReasons(contribution, trx)
+    })
+  }
 }, {
-  create: (user_id, post_id, transacting) =>
-    new Contribution({post_id, user_id, contributed_at: new Date()})
-    .save(null, {transacting}),
+  find: (id, options) => Contribution.where({id}).fetch(options),
+
+  create: function(user_id, post_id, trx) {
+    return new Contribution({post_id, user_id, contributed_at: new Date()})
+    .save(null, {transacting: trx})
+    .then((contribution) => {
+      Queue.classMethod('Contribution', 'createActivities',  {
+        contributionId: contribution.id
+      })
+    })
+  },
 
   queryForUser: function (userId, communityIds) {
     return Contribution.query(q => {
@@ -41,6 +62,10 @@ module.exports = bookshelf.Model.extend({
     .then(function (rows) {
       return rows[0].count
     })
-  }
+  },
+
+  createActivities: (opts) =>
+    Contribution.find(opts.contributionId).then(contribution =>
+      bookshelf.transaction(trx => contribution.createActivities(trx)))
 
 })

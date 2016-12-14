@@ -54,6 +54,8 @@ module.exports = bookshelf.Model.extend({
         return this.sendCommentPush('mention')
       case 'newComment':
         return this.sendCommentPush()
+      // case 'newContribution':
+      //   return this.sendContributionPush()
       case 'tag':
         return Promise.resolve()
       case 'newPost':
@@ -121,6 +123,8 @@ module.exports = bookshelf.Model.extend({
         return this.sendCommentNotificationEmail('mention')
       case 'newComment':
         return this.sendCommentNotificationEmail()
+      // case 'newContribution':
+        // return this.sendCommentNotificationEmail()
       case 'joinRequest':
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
@@ -277,6 +281,7 @@ module.exports = bookshelf.Model.extend({
     TagFollow: 'TagFollow',
     NewPost: 'newPost',
     Comment: 'comment', // someone makes a comment on a post you follow
+    Contribution: 'contribution', // someone makes a comment on a post you follow
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow', // someone leaves your post
@@ -331,7 +336,7 @@ module.exports = bookshelf.Model.extend({
 
   priorityReason: function (reasons) {
     const orderedLabels = [
-      'mention', 'commentMention', 'newComment', 'tag', 'newPost', 'follow',
+      'mention', 'commentMention', 'newComment', 'newContribution', 'tag', 'newPost', 'follow',
       'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
     ]
 

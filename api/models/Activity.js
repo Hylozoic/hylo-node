@@ -47,6 +47,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Comment)
   },
 
+  contribution: function () {
+    return this.belongsTo(User, 'contribution_id')
+  },
+
   post: function () {
     return this.belongsTo(Post)
   },
@@ -68,6 +72,9 @@ module.exports = bookshelf.Model.extend({
     if (this.get('post_id')) {
       relations.splice(0, 0, 'post', 'post.communities')
     }
+    if (this.get('contribution_id')) {
+      relations.splice(0, 0, 'contribution', 'contribution.post', 'contribution.user')
+    }
     if (this.get('comment_id')) {
       relations.splice(0, 0, 'comment', 'comment.post', 'comment.post.communities')
     }
@@ -84,6 +91,7 @@ module.exports = bookshelf.Model.extend({
   Reason: {
     Mention: 'mention', // you are mentioned in a post or comment
     Comment: 'comment', // someone makes a comment on a post you follow
+    Contribution: 'contribution', // someone add you as a contributor to a #request
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow' // someone leaves your post
@@ -184,7 +192,7 @@ module.exports = bookshelf.Model.extend({
       Activity.createWithNotifications(
         merge(
           pick(activity,
-            ['post_id', 'community_id', 'comment_id', 'parent_comment_id', 'actor_id', 'reader_id']),
+            ['post_id', 'community_id', 'contribution_id', 'comment_id', 'parent_comment_id', 'actor_id', 'reader_id']),
           {meta: {reasons: activity.reasons}}),
         trx))
     .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
@@ -224,11 +232,11 @@ module.exports = bookshelf.Model.extend({
     if (!isJustNewPost(activity)) {
       notifications.push(Notification.MEDIUM.InApp)
     }
-
     return notifications
   },
 
   createWithNotifications: function (attributes, trx) {
+    console.log("!!! here")
     return new Activity(_.merge(attributes, {created_at: new Date()}))
     .save({}, {transacting: trx})
     .tap(activity => activity.createNotifications(trx))

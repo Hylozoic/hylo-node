@@ -170,8 +170,16 @@ module.exports = bookshelf.Model.extend({
         qb.whereIn('tag_id', this.relations.tags.map('id'))
         qb.whereIn('community_id', this.relations.communities.map('id'))
       })
-      .fetchAll({withRelated: ['tag'], transacting: trx}))
+      .fetchAll({withRelated: ['tag'], transacting: trx})
+    )
     .then(tagFollows => {
+      const tagFollowers = tagFollows.map(tagFollow => ({
+        reader_id: tagFollow.get('user_id'),
+        post_id: this.id,
+        actor_id: this.get('user_id'),
+        community_id: tagFollow.get('community_id'),
+        reason: `tag: ${tagFollow.relations.tag.get('name')}`
+      }))
       const mentioned = RichText.getUserMentions(this.get('description')).map(userId => ({
         reader_id: userId,
         post_id: this.id,
@@ -186,13 +194,6 @@ module.exports = bookshelf.Model.extend({
           community_id: community.id,
           reason: `newPost: ${community.id}`
         }))))
-      const tagFollowers = tagFollows.map(tagFollow => ({
-        reader_id: tagFollow.get('user_id'),
-        post_id: this.id,
-        actor_id: this.get('user_id'),
-        community_id: tagFollow.get('community_id'),
-        reason: `tag: ${tagFollow.relations.tag.get('name')}`
-      }))
       const readers = filter(r => r.reader_id !== this.get('user_id'),
         mentioned.concat(members).concat(tagFollowers))
       return Activity.saveForReasons(readers, trx)
