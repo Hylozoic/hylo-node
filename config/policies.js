@@ -129,9 +129,9 @@ module.exports.policies = {
   },
 
   CommentController: {
-    create:          ['sessionAuth', 'checkAndSetPost'],
+    create:          ['sessionAuth', 'checkAndSetPost', 'setComment'],
     thank:           ['sessionAuth'],
-    findForPost:     ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    findForParent:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost', 'setComment'],
     destroy:         ['sessionAuth', 'isCommentOwner'],
     update:          ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true,

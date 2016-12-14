@@ -1,12 +1,5 @@
+const merge = require('lodash/merge')
 require('dotenv').load()
-
-// LEJ: ES6 import not working for a commandline run of knex, 
-//      replacing with require
-// (e.g. knex seed:run)
-//
-// import { merge } from 'lodash'
-const _ = require('lodash')
-const merge = _.merge
 
 if (!process.env.DATABASE_URL) {
   throw new Error('process.env.DATABASE_URL must be set')

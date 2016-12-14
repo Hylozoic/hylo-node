@@ -53,7 +53,7 @@ module.exports.routes = {
   'GET    /noo/threads':                                  'PostController.findThreads',
   'GET    /noo/post/:postId':                             'PostController.findOne',
   'POST   /noo/post/:postId/comment':                     'CommentController.create',
-  'GET    /noo/post/:postId/comments':                    'CommentController.findForPost',
+  'GET    /noo/post/:postId/comments':                    'CommentController.findForParent',
   'POST   /noo/post/:postId/follow':                      'PostController.follow',
   'DELETE /noo/post/:postId/follow':                      'PostController.unfollow',
   'POST   /noo/post/:postId/fulfill':                     'PostController.fulfill',
@@ -77,6 +77,7 @@ module.exports.routes = {
   'POST   /noo/comment/:commentId/thank':                 'CommentController.thank',
   'DELETE /noo/comment/:commentId':                       'CommentController.destroy',
   'POST   /noo/comment/:commentId':                       'CommentController.update',
+  'GET    /noo/post/:commentId/comments':                 'CommentController.findForParent',
 
   'DELETE /noo/membership/:communityId':                  'CommunityController.leave',
   'POST /noo/membership/:communityId':                    'CommunityController.updateMembership',
