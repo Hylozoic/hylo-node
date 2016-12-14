@@ -14,12 +14,12 @@ module.exports = bookshelf.Model.extend({
     MODERATOR: 1
   },
 
-  create: function (userId, postId, options) {
-    if (!options) options = {}
+  create: function (user_id, post_id, comment_id, options = {}) {
     return new Follow({
-      post_id: postId,
+      post_id,
+      comment_id,
       added_at: new Date(),
-      user_id: userId,
+      user_id: user_id,
       added_by_id: options.addedById
     }).save(null, _.pick(options, 'transacting'))
   },

@@ -6,7 +6,7 @@ module.exports = function checkAndSetPost (req, res, next) {
     res[responseType || 'forbidden']()
   }
 
-  return Post.find(req.param('postId'), {withRelated: 'communities'})
+  return Post.find(postId, {withRelated: 'communities'})
   .then(post => {
     if (!post) return fail(`post ${postId} not found`, 'notFound')
 

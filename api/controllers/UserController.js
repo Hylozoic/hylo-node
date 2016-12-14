@@ -89,7 +89,7 @@ module.exports = {
         {thankedBy: q => q.column('id', 'name', 'avatar_url')},
         {comment: q => q.column('id', 'text', 'post_id', 'created_at')},
         {'comment.post.user': q => q.column('id', 'name', 'avatar_url')},
-        {'comment.post': q => q.column('post.id', 'name', 'user_id', 'type')},
+        {'comment.post': q => q.column('posts.id', 'name', 'user_id', 'type')},
         {'comment.post.communities': q => q.column('communities.id', 'name')}
       ]
     }))
@@ -216,19 +216,19 @@ module.exports = {
 
 }
 
-const fetchAndPresentForCommunityIds = (communityIds, opts) => {
-  var total
-  return Search.forUsers({
+const fetchAndPresentForCommunityIds = (communityIds, opts) =>
+  Search.forUsers({
     communities: communityIds,
     limit: opts.limit || 20,
     offset: opts.offset || 0,
     term: opts.search
   }).fetchAll({withRelated: ['memberships', 'tags']})
-  .tap(users => total = (users.length > 0 ? users.first().get('total') : 0))
-  .then(users => users.map(u => UserPresenter.presentForList(u, {communityIds})))
-  .tap(addOfferCounts)
-  .then(items => ({items, total}))
-}
+  .then(users => {
+    const total = (users.length > 0 ? users.first().get('total') : 0)
+    return users.map(u => UserPresenter.presentForList(u, {communityIds}))
+    .tap(addOfferCounts)
+    .then(items => ({items, total}))
+  })
 
 const addOfferCounts = users =>
   Tag.find('offer')

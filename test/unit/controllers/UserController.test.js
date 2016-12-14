@@ -211,33 +211,76 @@ describe('UserController', function () {
   })
 
   describe('.thanks', () => {
-    var u1, u2, c
+    var u1, u2, c, cm, p
 
-    before(() => {
+    beforeEach(() => {
       u1 = factories.user()
       u2 = factories.user()
       c = factories.community()
-      return Promise.join(u1.save(), u2.save(), c.save())
-      .then(() => Promise.join(u1.joinCommunity(c), u2.joinCommunity(c)))
+      p = factories.post()
+      cm = factories.comment()
+      return Promise.join(u1.save(), u2.save(), c.save(), p.save(), cm.save())
+      .then(() => cm.save({post_id: p.id, user_id: u2.id}))
+      .then(() => Promise.join(
+        u1.joinCommunity(c), u2.joinCommunity(c), p.communities().attach(c)
+      ))
     })
 
     it('works for other users', () => {
       req.session.userId = u1.id
       req.params.userId = u2.id
-      return UserController.thanks(req, res)
+
+      return new Thank({
+        comment_id: cm.id,
+        user_id: u2.id,
+        thanked_by_id: u1.id,
+        date_thanked: new Date()
+      }).save()
+      .then(() => UserController.thanks(req, res))
       .then(() => {
         expect(res.ok).to.have.been.called()
-        expect(res.body.toJSON()).to.deep.equal([])
+        const response = res.body.toJSON()
+        expect(response.length).to.equal(1)
+        expect(response[0].comment).to.contain({
+          id: cm.id,
+          text: cm.get('text'),
+          post_id: p.id
+        })
+        expect(response[0].thankedBy).to.contain({
+          id: u1.id,
+          name: u1.get('name'),
+          avatar_url: u1.get('avatar_url')
+        })
+        expect(response[0].user_id).to.equal(u2.id)
       })
     })
 
     it('works for oneself', () => {
-      req.session.userId = u1.id
-      req.params.userId = u1.id
-      return UserController.thanks(req, res)
+      req.session.userId = u2.id
+      req.params.userId = u2.id
+
+      return new Thank({
+        comment_id: cm.id,
+        user_id: u2.id,
+        thanked_by_id: u1.id,
+        date_thanked: new Date()
+      }).save()
+      .then(() => UserController.thanks(req, res))
       .then(() => {
         expect(res.ok).to.have.been.called()
-        expect(res.body.toJSON()).to.deep.equal([])
+        const response = res.body.toJSON()
+        expect(response.length).to.equal(1)
+        expect(response[0].comment).to.contain({
+          id: cm.id,
+          text: cm.get('text'),
+          post_id: p.id
+        })
+        expect(response[0].thankedBy).to.contain({
+          id: u1.id,
+          name: u1.get('name'),
+          avatar_url: u1.get('avatar_url')
+        })
+        expect(response[0].user_id).to.equal(u2.id)
       })
     })
   })

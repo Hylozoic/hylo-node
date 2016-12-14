@@ -3,6 +3,7 @@ import { markdown } from 'hylo-utils/text'
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
 import { parse } from 'url'
+import { addFollowers } from './post/util'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'comments',
@@ -39,12 +40,31 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Activity)
   },
 
+  comment: function () {
+    return this.belongsTo(Comment)
+  },
+
+  comments: function () {
+    return this.hasMany(Comment, 'comment_id').query({where: {active: true}})
+  },
+
+  followers: function () {
+    return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
+  },
+
   createActivities: function (trx) {
-    return this.load(['post', 'post.followers'])
+    const isReplyToPost = !this.get('comment_id')
+
+    var toLoad = ['post', 'post.followers']
+    if (!isReplyToPost) toLoad = toLoad.concat(['comment', 'comment.followers'])
+
+    return this.load(toLoad)
     .then(() => {
-      const followers = this.relations.post.relations.followers.map(follower => ({
+      const followers = this.relations[isReplyToPost ? 'post' : 'comment'].relations.followers
+      const followerActivities = followers.map(follower => ({
         reader_id: follower.id,
         comment_id: this.id,
+        parent_comment_id: this.get('comment_id') || null,
         post_id: this.relations.post.id,
         actor_id: this.get('user_id'),
         reason: 'newComment'
@@ -56,9 +76,14 @@ module.exports = bookshelf.Model.extend({
         actor_id: this.get('user_id'),
         reason: 'commentMention'
       }))
-      const readers = filter(r => r.reader_id !== this.get('user_id'), followers.concat(mentioned))
+      const readers = filter(r => r.reader_id !== this.get('user_id'), followerActivities.concat(mentioned))
       return Activity.saveForReasons(readers, trx)
     })
+  },
+
+  addFollowers: function (userIds, addedById, opts = {}) {
+    return this.load('post')
+    .then(() => addFollowers(this.relations.post, this, userIds, addedById, opts))
   }
 }, {
 

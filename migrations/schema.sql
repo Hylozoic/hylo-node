@@ -30,7 +30,8 @@ CREATE TABLE activities (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     community_id bigint,
-    meta jsonb DEFAULT '{}'::jsonb
+    meta jsonb DEFAULT '{}'::jsonb,
+    parent_comment_id bigint
 );
 
 
@@ -80,7 +81,8 @@ CREATE TABLE comments (
     deactivated_by_id bigint,
     deactivated_at timestamp without time zone,
     recent boolean,
-    created_from character varying(255)
+    created_from character varying(255),
+    comment_id bigint
 );
 
 
@@ -417,7 +419,8 @@ CREATE TABLE follows (
     added_at timestamp without time zone,
     user_id bigint,
     added_by_id bigint,
-    role integer
+    role integer,
+    comment_id bigint
 );
 
 
@@ -1687,6 +1690,14 @@ ALTER TABLE ONLY users
 
 
 --
+-- Name: unique_follows; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY follows
+    ADD CONSTRAINT unique_follows UNIQUE (post_id, comment_id, user_id);
+
+
+--
 -- Name: unique_join_requests; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1740,14 +1751,6 @@ ALTER TABLE ONLY communities
 
 ALTER TABLE ONLY contributions
     ADD CONSTRAINT uq_no_multiple_contributor_2 UNIQUE (post_id, user_id);
-
-
---
--- Name: uq_no_multiple_followers_2; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY follows
-    ADD CONSTRAINT uq_no_multiple_followers_2 UNIQUE (post_id, user_id);
 
 
 --
@@ -1947,6 +1950,14 @@ CREATE INDEX ix_vote_user_13 ON votes USING btree (user_id);
 
 
 --
+-- Name: activities_parent_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY activities
+    ADD CONSTRAINT activities_parent_comment_id_foreign FOREIGN KEY (parent_comment_id) REFERENCES comments(id);
+
+
+--
 -- Name: activity_actor_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1984,6 +1995,14 @@ ALTER TABLE ONLY activities
 
 ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_reader_id_foreign FOREIGN KEY (reader_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: comments_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY comments
+    ADD CONSTRAINT comments_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id);
 
 
 --
@@ -2315,6 +2334,14 @@ ALTER TABLE ONLY tag_follows
 
 
 --
+-- Name: follows_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY follows
+    ADD CONSTRAINT follows_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: join_requests_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2445,3 +2472,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+

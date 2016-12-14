@@ -22,38 +22,60 @@ const presentComment = (comment) =>
 
 const createAndPresentComment = function (commenterId, text, post, opts = {}) {
   text = sanitize(text)
+
+  const { parentComment } = opts
+
+  const isReplyToPost = !parentComment
+
   var attrs = {
     text: text,
     created_at: new Date(),
-    post_id: post.id,
     user_id: commenterId,
+    post_id: post.id,
     active: true,
     created_from: opts.created_from || null
   }
 
-  return post.load('followers')
+  if (!isReplyToPost) {
+    attrs.comment_id = parentComment.id
+  }
+
+  return (isReplyToPost ? post.load('followers') : parentComment.load('followers'))
   .then(() => {
+    var existingFollowers, isThread
     const mentioned = RichText.getUserMentions(text)
-    const existingFollowers = post.relations.followers.pluck('id')
+
+    if (isReplyToPost) {
+      existingFollowers = post.relations.followers.pluck('id')
+      isThread = post.get('type') === Post.Type.THREAD
+    } else {
+      existingFollowers = parentComment.relations.followers.pluck('id')
+      isThread = false
+    }
+
     const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
-    const isThread = post.get('type') === Post.Type.THREAD
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, trx))
-      .tap(() => post.updateCommentCount(trx)))
+      .tap(() => isReplyToPost && post.updateCommentCount(trx)))
     .then(comment => Promise.all([
       presentComment(comment)
-      .tap(c => isThread
+      .tap(c => isReplyToPost &&
+        (isThread
         ? post.pushMessageToSockets(c, existingFollowers)
-        : post.pushCommentToSockets(c)),
+        : post.pushCommentToSockets(c))),
 
       (isThread
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
         : comment.createActivities()),
 
-      post.addFollowers(newFollowers, commenterId),
-      updateRecentComments(post.id)
+      (isReplyToPost
+        ? post.addFollowers(newFollowers, commenterId)
+        : Promise.join(comment.addFollowers(newFollowers, commenterId),
+            parentComment.addFollowers(newFollowers, commenterId))),
+
+      isReplyToPost && updateRecentComments(post.id)
     ]))
     .then(promises => promises[0])
   })
@@ -69,11 +91,13 @@ const checkCommentTags = (text, post, descriptions) => {
 }
 
 module.exports = {
-  findForPost: function (req, res) {
-    const { beforeId, limit, newest } = req.allParams()
-    Comment.query(q => {
-      q.where({post_id: res.locals.post.id, active: true})
+  findForParent: function (req, res) {
+    const { beforeId, afterId, limit, newest } = req.allParams()
+    const comment_id = res.locals.comment ? res.locals.comment.id : null
+    return Comment.query(q => {
+      q.where({post_id: res.locals.post.id, comment_id, active: true})
       if (beforeId) q.where('id', '<', beforeId)
+      if (afterId) q.where('id', '>', afterId)
       if (limit) q.limit(limit)
       q.orderBy('id', newest ? 'desc' : 'asc')
     }).fetchAll({withRelated: [
@@ -92,11 +116,14 @@ module.exports = {
 
   create: function (req, res) {
     const text = req.param('text')
-    const post = res.locals.post
+    const { post, comment } = res.locals
     const tagDescriptions = req.param('tagDescriptions')
 
     return checkCommentTags(text, post, tagDescriptions)
-    .then(() => createAndPresentComment(req.session.userId, text, post, {tagDescriptions}))
+    .then(() => createAndPresentComment(req.session.userId, text, post, {
+      parentComment: comment,
+      tagDescriptions
+    }))
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -197,16 +224,21 @@ module.exports = {
           failures = true
           return Promise.resolve()
         }
-        Analytics.track({
-          userId,
-          event: 'Post: Comment: Add by Email Form',
-          properties: {
-            post_id: post.id,
-            community: community && community.get('name')
-          }
+        return Comment.where({user_id: userId, post_id: post.id, text: replyText(post.id)}).fetch()
+        .then(comment => {
+          if (post && (new Date() - post.get('created_at') < 5 * 60000)) return
+
+          Analytics.track({
+            userId,
+            event: 'Post: Comment: Add by Email Form',
+            properties: {
+              post_id: post.id,
+              community: community && community.get('name')
+            }
+          })
+          return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
+          .then(() => Post.setRecentComments({postId: post.id}))
         })
-        return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
-        .then(() => Post.setRecentComments({postId: post.id}))
       })
     })
     .then(() => {
