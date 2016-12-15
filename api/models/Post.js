@@ -12,7 +12,6 @@ const normalize = post => {
   return Object.assign(data, post)
 }
 
-const instanceMethods =
 module.exports = bookshelf.Model.extend({
   // Instance Methods
 

@@ -26,7 +26,6 @@ module.exports = bookshelf.Model.extend({
   find: (id, options) => Contribution.where({id}).fetch(options),
 
   create: function(user_id, post_id, trx) {
-    console.log("!!! calling Contribution.create with: ", user_id)
     return new Contribution({post_id, user_id, contributed_at: new Date()})
     .save(null, {transacting: trx})
     .then((contribution) => {

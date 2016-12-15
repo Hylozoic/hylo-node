@@ -236,7 +236,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   createWithNotifications: function (attributes, trx) {
-    console.log("!!! here")
     return new Activity(_.merge(attributes, {created_at: new Date()}))
     .save({}, {transacting: trx})
     .tap(activity => activity.createNotifications(trx))
