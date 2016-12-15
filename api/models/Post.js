@@ -4,6 +4,7 @@ import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
+import { fulfillRequest, unfulfillRequest } from './post/request'
 
 const normalize = post => {
   const data = {communities: [], people: []}
@@ -11,7 +12,10 @@ const normalize = post => {
   return Object.assign(data, post)
 }
 
+const instanceMethods =
 module.exports = bookshelf.Model.extend({
+  // Instance Methods
+
   tableName: 'posts',
 
   user: function () {
@@ -198,8 +202,15 @@ module.exports = bookshelf.Model.extend({
         mentioned.concat(members).concat(tagFollowers))
       return Activity.saveForReasons(readers, trx)
     })
-  }
+  },
+
+  fulfillRequest,
+
+  unfulfillRequest
+
 }, {
+  // Class Methods
+
   Type: {
     WELCOME: 'welcome',
     EVENT: 'event',

@@ -243,5 +243,9 @@ module.exports = bookshelf.Model.extend({
   },
 
   removeForComment: removeForRelation('comment'),
-  removeForPost: removeForRelation('post')
+
+  removeForPost: removeForRelation('post'),
+
+  removeForContribution: removeForRelation('contribution')
+
 })

@@ -16,16 +16,17 @@ module.exports = bookshelf.Model.extend({
         reader_id: this.get('user_id'),
         contribution_id: this.id,
         post_id: this.relations.post.id,
-        actor_id: this.get('user_id'),
+        actor_id: this.relations.post.get('user_id'),
         reason: 'newContribution'
       }
-      return Activity.saveForReasons(contribution, trx)
+      return Activity.saveForReasons([contribution], trx)
     })
   }
 }, {
   find: (id, options) => Contribution.where({id}).fetch(options),
 
   create: function(user_id, post_id, trx) {
+    console.log("!!! calling Contribution.create with: ", user_id)
     return new Contribution({post_id, user_id, contributed_at: new Date()})
     .save(null, {transacting: trx})
     .then((contribution) => {
