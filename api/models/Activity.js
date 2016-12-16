@@ -29,7 +29,7 @@ const removeForRelation = (model) => (id, trx) => {
   .pluck('id').transacting(trx)
   .then(ids => {
     // TODO: New Activity count needs to be decremented
-    // if inApp medium is used on, see User#decNewNotificationCount
+    // if inApp medium is used-- see User#decNewNotificationCount
     return Notification.where('activity_id', 'in', ids).destroy(trxOpt)
     .then(() => Activity.where('id', 'in', ids).destroy(trxOpt))
   })
@@ -51,7 +51,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   contribution: function () {
-    return this.belongsTo(User, 'contribution_id')
+    return this.belongsTo(Contribution, 'contribution_id')
   },
 
   post: function () {

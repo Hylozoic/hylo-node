@@ -13,6 +13,10 @@ module.exports = bookshelf.Model.extend({
     return this.relations.activity.relations.post
   },
 
+  contribution: function () {
+    return this.relations.activity.relations.contribution
+  },
+
   comment: function () {
     return this.relations.activity.relations.comment
   },
@@ -54,8 +58,8 @@ module.exports = bookshelf.Model.extend({
         return this.sendCommentPush('mention')
       case 'newComment':
         return this.sendCommentPush()
-      // case 'newContribution':
-      //   return this.sendContributionPush()
+      case 'newContribution':
+        return this.sendContributionPush()
       case 'tag':
         return Promise.resolve()
       case 'newPost':
@@ -77,6 +81,19 @@ module.exports = bookshelf.Model.extend({
     .then(community => {
       var path = url.parse(Frontend.Route.post(post, community)).path
       var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
+      return this.reader().sendPushNotification(alertText, path)
+    })
+  },
+
+  sendContributionPush: function (version) {
+    var post = this.post()
+    var contribution = this.contribution()
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
+    return Community.find(communityIds[0])
+    .then(community => {
+      var path = url.parse(Frontend.Route.post(contribution.relations.post, community)).path
+      var alertText = PushNotification.textForContribution(contribution, version)
       return this.reader().sendPushNotification(alertText, path)
     })
   },
@@ -123,8 +140,6 @@ module.exports = bookshelf.Model.extend({
         return this.sendCommentNotificationEmail('mention')
       case 'newComment':
         return this.sendCommentNotificationEmail()
-      // case 'newContribution':
-        // return this.sendCommentNotificationEmail()
       case 'joinRequest':
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':

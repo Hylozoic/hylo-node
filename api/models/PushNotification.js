@@ -37,6 +37,14 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+  textForContribution: function (contribution, version) {
+    const post = contribution.relations.post
+    const requester = post.get('name')
+    const contributor = contribution.relations.user.get('name')
+    const postName = comment.relations.post.get('name')
+    return `${requester} has tagged you as a contributor to their request "${postName}"`
+  },
+
   textForComment: function (comment, version) {
     const person = comment.relations.user.get('name')
     const blurb = decode(truncate(comment.get('text'), 140).text).trim()
