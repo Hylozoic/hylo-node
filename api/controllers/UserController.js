@@ -225,7 +225,7 @@ const fetchAndPresentForCommunityIds = (communityIds, opts) =>
   }).fetchAll({withRelated: ['memberships', 'tags']})
   .then(users => {
     const total = (users.length > 0 ? users.first().get('total') : 0)
-    return users.map(u => UserPresenter.presentForList(u, {communityIds}))
+    return Promise.map(users.models, u => UserPresenter.presentForList(u, {communityIds}))
     .tap(addOfferCounts)
     .then(items => ({items, total}))
   })
