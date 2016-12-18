@@ -10,6 +10,7 @@ import nock from 'nock'
 
 chai.use(require('chai-spies'))
 chai.use(require('chai-as-promised'))
+chai.use(require('chai-datetime'));
 
 global.spy = chai.spy
 global.expect = chai.expect

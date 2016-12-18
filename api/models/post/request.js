@@ -1,4 +1,4 @@
-export const fulfillRequest = function(opts) {
+export function fulfillRequest(opts = {}) {
   const { fulfilledAt, contributorIds } = opts
   return bookshelf.transaction(transacting => {
     const fulfill = (post) =>
@@ -8,14 +8,14 @@ export const fulfillRequest = function(opts) {
       )
     const addContributors = (post) =>
       Promise.map(
-        contributorIds,
+        contributorIds || [],
         userId => Contribution.create(userId, this.id, transacting)
       )
     return fulfill(this).tap(addContributors)
   })
 }
 
-export const unfulfillRequest = function() {
+export function unfulfillRequest() {
   return bookshelf.transaction(transacting => {
     const unfulfill = (post) =>
       post.save({fulfilled_at: null}, {patch: true, transacting})
