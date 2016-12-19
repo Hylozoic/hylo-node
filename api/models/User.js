@@ -77,10 +77,6 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Thank)
   },
 
-  token: function () {
-    return this.hasOne(Token)
-  },
-
   setModeratorRole: function (community) {
     return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community))
   },

@@ -130,7 +130,6 @@ module.exports = {
     fetchForSelf(userId, isAdmin)
     .then(attributes => Promise.props(Object.assign(attributes, {
       is_admin: isAdmin,
-      token: Token.findForUser(userId).then(token => !!token),
       new_message_count: User.unseenThreadCount(userId),
       provider_key: session.userProvider,
       left_nav_tags: fetchAndPresentFollowed(null, userId)
