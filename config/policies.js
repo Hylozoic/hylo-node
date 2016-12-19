@@ -183,7 +183,7 @@ module.exports.policies = {
     findOne: ['sessionAuth']
   },
 
-  TokenController: {
+  AccessTokenController: {
     create: ['sessionAuth'],
     destroy: ['sessionAuth']
   }
