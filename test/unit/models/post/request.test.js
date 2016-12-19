@@ -1,6 +1,7 @@
 import root from 'root-path'
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
+import { spyify, unspyify } from '../../../setup/helpers'
 
 describe('post/request', () => {
   let author, contributor1, contributor2, post, community, fulfilledAt
@@ -9,13 +10,15 @@ describe('post/request', () => {
     fulfilledAt = new Date()
     return setup.clearDb().then(() => Promise.props({
       author: factories.user().save(),
-      contributor1: factories.user().save(),
-      contributor2: factories.user().save(),
+      community: factories.community().save(),
       post: factories.post().save(),
-      community: factories.community().save()
+      contributor1: factories.user().save(),
+      contributor2: factories.user().save()
     }))
-    .tap(fixtures =>
-      fixtures.post.communities().attach(fixtures.community)
+    .tap(fixtures => Promise.all([
+        fixtures.post.save('user_id', fixtures.author.get('id')),
+        fixtures.post.communities().attach(fixtures.community)
+      ])
     )
     .then(fixtures => {
       return { author, contributor1, contributor2, post, community } = fixtures
@@ -23,13 +26,16 @@ describe('post/request', () => {
   })
 
   describe('#fulfillRequest', () => {
-    beforeEach(() =>
-      post.fulfillRequest({
+    beforeEach(() => {
+      // spyify(Queue, 'classMethod')
+      return post.fulfillRequest({
         fulfilledAt,
         contributorIds: [contributor1.id, contributor2.id]
       })
       .then(post => post.fetch({withRelated: 'contributions'}))
-    )
+    })
+
+    // after(() => unspyify(Queue, 'classMethod'))
 
     it('should add fulfilled time', () => {
       expect(post.get('fulfilled_at')).to.equalDate(fulfilledAt)
@@ -37,10 +43,16 @@ describe('post/request', () => {
 
     it('should add contributors', () => {
       expect(post.relations.contributions).to.be.length(2)
-      expect(
-        post.relations.contributions.map((c) => c.get('user_id'))
-      ).to.include.members([contributor1.id, contributor2.id])
+      expect(post.relations.contributions.map((c) => c.get('user_id')))
+        .to.include.members([contributor1.id, contributor2.id])
     })
+
+    // it('should add activities and notifications to contributors', () => {
+    //   expect(Queue.classMethod).to.have.been.called
+    //     .with('Contribution', 'createActivities', {contributionId: contributor1.id})
+    //   expect(Queue.classMethod).to.have.been.called
+    //     .with('Contribution', 'createActivities', {contributionId: contributor2.id})
+    // })
   })
 
   describe('#unfulfillRequest', () => {
@@ -62,17 +74,8 @@ describe('post/request', () => {
     it('should remove contributors', () => {
       expect(post.relations.contributions).to.be.length(2)
       return post.unfulfillRequest().then(() =>
-        expect(post.relations.contributors).to.equal([])
+        expect(post.relations.contributors).to.be.undefined
       )
     })
-
-    // it('should remove related activities and notifications', () => {
-    //   return Promise.map([Activity, Notification], model =>
-    //     model.fetch().then(() =>
-    //       expect(model.length).to.be(0)
-    //     )
-    //   )
-    // })
-
-  })
+    })
 })
