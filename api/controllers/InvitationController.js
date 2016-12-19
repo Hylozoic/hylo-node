@@ -29,7 +29,7 @@ module.exports = {
   },
 
   use: function (req, res) {
-    const userId = req.session.userId
+    const { userId } = req.session
     return Invitation.find(req.param('token'), {withRelated: 'tag'})
     .then(invitation => {
       if (!invitation) {

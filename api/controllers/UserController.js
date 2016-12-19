@@ -48,7 +48,7 @@ module.exports = {
   },
 
   findSelf: function (req, res) {
-    const userId = req.session.userId
+    const { userId } = req.session
     return UserPresenter.fetchAndPresentForSelf(userId, req.session, Admin.isSignedIn(req))
     .then(res.ok)
     .catch(err => {

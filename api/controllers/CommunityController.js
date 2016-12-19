@@ -246,7 +246,7 @@ module.exports = {
   },
 
   create: function (req, res) {
-    const userId = req.session.userId
+    const { userId } = req.session
     var attrs = _.pick(req.allParams(),
       'name', 'description', 'slug', 'category',
       'beta_access_code', 'banner_url', 'avatar_url', 'location')

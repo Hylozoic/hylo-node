@@ -22,7 +22,7 @@ module.exports = {
 
   findOneInCommunity: function (req, res) {
     let tag
-    const userId = req.session.userId
+    const { userId } = req.session
 
     return Tag.find(req.param('tagName'), withRelatedSpecialPost)
     .then(t => {
