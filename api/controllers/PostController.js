@@ -24,7 +24,7 @@ const queryPosts = (req, opts) =>
   Promise.props(merge(
     {
       sort: sortColumns[opts.sort || req.param('sort') || 'recent'],
-      forUser: req.getUserId(),
+      forUser: req.session.userId,
       term: req.param('search')
     },
     pick(req.allParams(),
@@ -62,11 +62,11 @@ const queryForCommunity = function (req, res) {
     if (!RequestValidation.requireTimeRange(req, res)) return
   }
 
-  return Network.containsUser(res.locals.community.get('network_id'), req.getUserId())
+  return Network.containsUser(res.locals.community.get('network_id'), req.session.userId)
   .then(contains => queryPosts(req, {
     communities: [res.locals.community.id],
     visibility: ((res.locals.membership || contains) ? null : Post.Visibility.PUBLIC_READABLE),
-    currentUserId: req.getUserId(),
+    currentUserId: req.session.userId,
     tag: findTagId(req)
   }))
 }
@@ -75,21 +75,21 @@ const queryForUser = function (req, res) {
   return queryPosts(req, {
     tag: findTagId(req),
     users: [req.param('userId')],
-    communities: Membership.activeCommunityIds(req.getUserId()),
-    visibility: (req.getUserId() ? null : Post.Visibility.PUBLIC_READABLE)
+    communities: Membership.activeCommunityIds(req.session.userId),
+    visibility: (req.session.userId ? null : Post.Visibility.PUBLIC_READABLE)
   })
 }
 
 const queryForAllForUser = function (req, res) {
   return queryPosts(req, {
-    communities: Membership.activeCommunityIds(req.getUserId()),
-    currentUserId: req.getUserId()
+    communities: Membership.activeCommunityIds(req.session.userId),
+    currentUserId: req.session.userId
   })
 }
 
 const queryForFollowed = function (req, res) {
   return Promise.resolve(Search.forPosts({
-    follower: req.getUserId(),
+    follower: req.session.userId,
     limit: req.param('limit') || 10,
     offset: req.param('offset'),
     sort: 'posts.updated_at',
@@ -116,7 +116,7 @@ const queryForTagInAllCommunities = function (req, res) {
     }
 
     return queryPosts(req, {
-      communities: Membership.activeCommunityIds(req.getUserId()),
+      communities: Membership.activeCommunityIds(req.session.userId),
       tag: tag.id
     })
   })
@@ -126,13 +126,13 @@ const queryForThreads = function (req, res) {
   return queryPosts(req, {
     type: 'thread',
     sort: 'recent',
-    follower: req.getUserId()
+    follower: req.session.userId
   })
 }
 
 const createFindAction = (queryFunction) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => query && fetchAndPresentPosts(query, req.getUserId(),
+  .then(query => query && fetchAndPresentPosts(query, req.session.userId,
     {
       withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes'),
@@ -163,8 +163,8 @@ const PostController = {
       withVotes: !!req.param('votes'),
       withChildren: !!req.param('children')
     }
-    res.locals.post.load(PostPresenter.relations(req.getUserId(), opts))
-    .then(post => PostPresenter.present(post, req.getUserId(), opts))
+    res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
+    .then(post => PostPresenter.present(post, req.session.userId, opts))
     .then(normalize)
     .then(res.ok)
     .catch(res.serverError)
@@ -182,8 +182,8 @@ const PostController = {
       pick(params, 'name', 'description'),
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
-    .then(() => createPost(req.getUserId(), params))
-    .then(post => post.load(PostPresenter.relations(req.getUserId())))
+    .then(() => createPost(req.session.userId, params))
+    .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(normalize)
     .then(res.ok)
@@ -195,7 +195,7 @@ const PostController = {
 
   findOrCreateThread: function (req, res) {
     const params = req.allParams()
-    const currentUserId = req.getUserId()
+    const currentUserId = req.session.userId
     const otherUserId = params.messageTo
 
     if (!otherUserId) {
@@ -256,7 +256,7 @@ const PostController = {
   },
 
   follow: function (req, res) {
-    var userId = req.getUserId()
+    var userId = req.session.userId
     var post = res.locals.post
     Follow.query().where({user_id: userId, post_id: post.id}).count()
     .then(function (rows) {
@@ -266,14 +266,14 @@ const PostController = {
       }
 
       return post.addFollowers([userId], userId, {createActivity: true})
-      .then(() => User.find(req.getUserId()))
+      .then(() => User.find(req.session.userId))
       .then(user => res.ok(pick(user.attributes, 'id', 'name', 'avatar_url')))
     })
     .catch(res.serverError)
   },
 
   unfollow: function (req, res) {
-    return res.locals.post.removeFollower(req.getUserId())
+    return res.locals.post.removeFollower(req.session.userId)
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
@@ -301,8 +301,8 @@ const PostController = {
       .tap(() => updateCommunities(post, req.param('community_ids'), trx))
       .tap(() => updateAllMedia(post, params, trx))
       .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
-    .then(() => post.load(PostPresenter.relations(req.getUserId(), {withChildren: true})))
-    .then(post => PostPresenter.present(post, req.getUserId(), {withChildren: true}))
+    .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
+    .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
     .then(normalize)
     .then(res.ok)
     .catch(err => {
@@ -313,7 +313,7 @@ const PostController = {
 
   updateLastRead: function (req, res) {
     const { post } = res.locals
-    const userId = req.getUserId()
+    const userId = req.session.userId
     return LastRead.findOrCreate(userId, post.id)
     .tap(lastRead => lastRead.setToNow())
     .then(() => res.ok({}))
@@ -336,7 +336,7 @@ const PostController = {
   vote: function (req, res) {
     var post = res.locals.post
 
-    post.votes().query({where: {user_id: req.getUserId()}}).fetchOne()
+    post.votes().query({where: {user_id: req.session.userId}}).fetchOne()
     .then(vote => bookshelf.transaction(trx => {
       var inc = delta => () => Post.query().where('id', post.id).increment('num_votes', delta).transacting(trx)
 
@@ -344,7 +344,7 @@ const PostController = {
         ? vote.destroy({transacting: trx}).then(inc(-1))
         : new Vote({
           post_id: res.locals.post.id,
-          user_id: req.getUserId()
+          user_id: req.session.userId
         }).save().then(inc(1)))
     }))
     .then(() => res.ok({}), res.serverError)
@@ -358,7 +358,7 @@ const PostController = {
   complain: function (req, res) {
     var post = res.locals.post
 
-    User.find(req.getUserId())
+    User.find(req.session.userId)
     .then(user => Email.sendRawEmail('hello@hylo.com', {
       subject: 'Objectionable content report',
       body: format(
@@ -371,7 +371,7 @@ const PostController = {
   },
 
   rsvp: function (req, res) {
-    var userId = req.getUserId()
+    var userId = req.session.userId
     var post = res.locals.post
     var response = req.param('response')
 
@@ -412,18 +412,18 @@ const PostController = {
     var post = res.locals.post
     res.ok({})
 
-    User.find(req.getUserId())
+    User.find(req.session.userId)
     .then(user => {
       post.pushTypingToSockets(user.id, user.get('name'), req.body.isTyping, req.socket)
     })
   },
 
   subscribeToThreads: function (req, res) {
-    sails.sockets.join(req, `users/${req.getUserId()}`, emptyResponse(res))
+    sails.sockets.join(req, `users/${req.session.userId}`, emptyResponse(res))
   },
 
   unsubscribeFromThreads: function (req, res) {
-    sails.sockets.leave(req, `users/${req.getUserId()}`, emptyResponse(res))
+    sails.sockets.leave(req, `users/${req.session.userId}`, emptyResponse(res))
   }
 }
 

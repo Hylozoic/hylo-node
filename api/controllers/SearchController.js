@@ -10,12 +10,12 @@ const findCommunityIds = req => {
     if (Admin.isSignedIn(req)) {
       return Community.query().pluck('id')
     } else {
-      return Membership.activeCommunityIds(req.getUserId(), true)
+      return Membership.activeCommunityIds(req.session.userId, true)
     }
   } else {
     return Promise.join(
-      Network.activeCommunityIds(req.getUserId()),
-      Membership.activeCommunityIds(req.getUserId())
+      Network.activeCommunityIds(req.session.userId),
+      Membership.activeCommunityIds(req.session.userId)
     ).then(ids => _(ids).flatten().uniq().value())
   }
 }
@@ -67,7 +67,7 @@ module.exports = {
     var type = req.param('type')
     var limit = req.param('limit')
     var offset = req.param('offset')
-    var userId = req.getUserId()
+    var userId = req.session.userId
     var items
 
     return Membership.activeCommunityIds(userId)

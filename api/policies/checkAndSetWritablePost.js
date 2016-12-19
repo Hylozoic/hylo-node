@@ -7,12 +7,12 @@ module.exports = function checkAndSetWritablePost (req, res, next) {
   .tap(post => {
     if (!post) throw new Error(format('post %s not found', req.param('postId')))
 
-    if (Admin.isSignedIn(req) || post.get('user_id') === req.getUserId()) {
+    if (Admin.isSignedIn(req) || post.get('user_id') === req.session.userId) {
       return true
     }
 
     return Promise.map(post.relations.communities.pluck('id'), id =>
-      Membership.hasModeratorRole(req.getUserId(), id))
+      Membership.hasModeratorRole(req.session.userId, id))
     .then(moderatorChecks => {
       if (!some(moderatorChecks)) throw new Error('not a moderator')
     })
@@ -23,7 +23,7 @@ module.exports = function checkAndSetWritablePost (req, res, next) {
   })
   .catch(function (err) {
     sails.log.debug(format('Fail checkAndSetWritablePost policy %s %s: %s',
-      req.getUserId(), req.param('postId'), err.message))
+      req.session.userId, req.param('postId'), err.message))
     res.forbidden()
   })
 }

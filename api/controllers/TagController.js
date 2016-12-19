@@ -13,7 +13,7 @@ module.exports = {
   findOne: function (req, res) {
     return Tag.find(req.param('tagName'), withRelatedSpecialPost)
     .tap(tag => tag && TagFollow.where({
-      user_id: req.getUserId(),
+      user_id: req.session.userId,
       tag_id: tag.id
     }).query().update({new_post_count: 0}))
     .then(tag => tag ? res.ok(presentWithPost(tag)) : res.notFound())
@@ -22,7 +22,7 @@ module.exports = {
 
   findOneInCommunity: function (req, res) {
     let tag
-    const userId = req.getUserId()
+    const userId = req.session.userId
 
     return Tag.find(req.param('tagName'), withRelatedSpecialPost)
     .then(t => {
@@ -78,7 +78,7 @@ module.exports = {
     return (req.param('communityId') === 'all'
       ? Promise.resolve()
       : Community.find(req.param('communityId')))
-    .then(com => fetchAndPresentFollowed(get('id', com), req.getUserId()))
+    .then(com => fetchAndPresentFollowed(get('id', com), req.session.userId))
     .then(res.ok, res.serverError)
   },
 
@@ -94,7 +94,7 @@ module.exports = {
   follow: function (req, res) {
     return TagFollow.toggle(
       req.param('tagName'),
-      req.getUserId(),
+      req.session.userId,
       req.param('communityId')
     ).then(res.ok, res.serverError)
   },
@@ -126,13 +126,13 @@ module.exports = {
       .tap(tag => new TagFollow({
         community_id: community.id,
         tag_id: tag.id,
-        user_id: req.getUserId()
+        user_id: req.session.userId
       }).save(null, trxOpts))
       .then(tag => new CommunityTag({
         tag_id: tag.id,
         community_id: community.id,
         description,
-        user_id: req.getUserId(),
+        user_id: req.session.userId,
         is_default
       }).save(null, trxOpts))
     })

@@ -5,9 +5,9 @@ import validator from 'validator'
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
 
-  return (req.getUserId() === userId
+  return (req.session.userId === userId
     ? Promise.resolve()
-    : Membership.activeCommunityIds(req.getUserId()))
+    : Membership.activeCommunityIds(req.session.userId))
   .then(communityIds =>
     model.queryForUser(userId, communityIds).query(q => {
       q.limit(limit || 15)
@@ -48,7 +48,7 @@ module.exports = {
   },
 
   findSelf: function (req, res) {
-    const userId = req.getUserId()
+    const userId = req.session.userId
     return UserPresenter.fetchAndPresentForSelf(userId, req.session, Admin.isSignedIn(req))
     .then(res.ok)
     .catch(err => {
@@ -59,7 +59,7 @@ module.exports = {
   },
 
   findOne: function (req, res) {
-    return UserPresenter.fetchForOther(req.param('userId'), req.getUserId())
+    return UserPresenter.fetchForOther(req.param('userId'), req.session.userId)
     .then(UserPresenter.normalizeUser)
     .then(res.ok)
     .catch(err => {
@@ -105,7 +105,7 @@ module.exports = {
       'push_follow_preference', 'push_new_post_preference', 'settings'
     ])
 
-    const userId = req.param('userId') || req.getUserId()
+    const userId = req.param('userId') || req.session.userId
     return User.find(userId, {withRelated: 'tags'})
     .tap(user => {
       const newEmail = attrs.email
@@ -201,14 +201,14 @@ module.exports = {
 
   findAll: function (req, res) {
     const opts = pick(req.allParams(), 'limit', 'offset', 'search')
-    Membership.activeCommunityIds(req.getUserId())
+    Membership.activeCommunityIds(req.session.userId)
     .then(ids => fetchAndPresentForCommunityIds(ids, opts))
     .then(res.ok)
     .catch(res.serverError)
   },
 
   resetTooltips: function (req, res) {
-    const userId = req.param('userId') || req.getUserId()
+    const userId = req.param('userId') || req.session.userId
     return User.resetTooltips(userId)
     .then(() => res.ok({}))
     .catch(res.serverError)

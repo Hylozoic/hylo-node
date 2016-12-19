@@ -7,10 +7,10 @@ module.exports = function isActivityOwner(req, res, next) {
     return forbidden();
 
   Activity.find(req.param('activityId')).then(function(activity) {
-    if (activity.get('reader_id') === req.getUserId()) {
+    if (activity.get('reader_id') === req.session.userId) {
       next();
     } else {
-      sails.log.debug("policy: isOwner: fail for user " + req.getUserId());
+      sails.log.debug("policy: isOwner: fail for user " + req.session.userId);
       res.forbidden();
     }
   });

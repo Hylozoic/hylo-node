@@ -2,7 +2,7 @@ module.exports = function (req, res, next) {
   if (Admin.isSignedIn(req)) return next()
 
   var communityIds = req.param('community_ids')
-  var userId = req.getUserId()
+  var userId = req.session.userId
 
   return Membership.query(q => {
     q.whereIn('community_id', communityIds)

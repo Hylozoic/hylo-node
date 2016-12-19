@@ -16,7 +16,7 @@ module.exports = function checkAndSetPost (req, res, next) {
       (res.locals.publicAccessAllowed && post.isPublic())
 
     return (ok ? Promise.resolve(true)
-      : Post.isVisibleToUser(post.id, req.getUserId()))
+      : Post.isVisibleToUser(post.id, req.session.userId))
     .then(allowed => {
       if (allowed) {
         next()

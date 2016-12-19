@@ -10,7 +10,7 @@ var TokenAuth = module.exports = {
 
   checkAndSetAuthenticated: function(req) {
     req.body = req.body || {}
-    const token = req.body.token || req.query.token || req.headers['x-access-token']
+    const token = req.body.access_token || req.query.access_token || req.headers['x-access-token']
     if (!token) return Promise.resolve()
     return User.query(function (qb) {
        qb.leftJoin('tokens', 'users.id', 'tokens.user_id')
@@ -18,12 +18,16 @@ var TokenAuth = module.exports = {
     })
     .fetch()
     .then(user => {
-      if (user) req.token = {userId: user.id}
+      if (user) {
+        req.session = req.session || {}
+        req.session.authenticated = true
+        req.session.userId = user.id
+      }
     })
   },
 
   isAuthenticated: function(req) {
-    return !!req.token
+    return req.session && req.session.authenticated
   }
 
 }

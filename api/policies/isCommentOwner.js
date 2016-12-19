@@ -6,13 +6,13 @@ module.exports = function isCommentOwner (req, res, next) {
   Comment.find(req.param('commentId'), {withRelated: [
     {'post.communities': q => q.column('communities.id')}
   ]}).then(comment => {
-    if (comment.get('user_id') === req.getUserId()) return next()
+    if (comment.get('user_id') === req.session.userId) return next()
 
-    Membership.hasModeratorRole(req.getUserId(), comment.community().id).then(function (isModerator) {
+    Membership.hasModeratorRole(req.session.userId, comment.community().id).then(function (isModerator) {
       if (isModerator) {
         next()
       } else {
-        sails.log.debug('policy: isCommentOwner: fail for user ' + req.getUserId())
+        sails.log.debug('policy: isCommentOwner: fail for user ' + req.session.userId)
         res.forbidden()
       }
     })
