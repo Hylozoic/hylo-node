@@ -23,12 +23,13 @@ var AccessTokenAuth = module.exports = {
         req.session = req.session || {}
         req.session.authenticated = true
         req.session.userId = user.id
+        req.session.tokenAuthenticaed = true
       }
     })
   },
 
   isAuthenticated: function(req) {
-    return req.session && req.session.authenticated
+    return req.session && req.session.tokenAuthenticated
   }
 
 }
