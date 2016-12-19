@@ -58,10 +58,6 @@ const findTagId = req =>
   req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
 
 const queryForCommunity = function (req, res) {
-  if (AccessTokenAuth.isAuthenticated(res)) {
-    if (!RequestValidation.requireTimeRange(req, res)) return
-  }
-
   return Network.containsUser(res.locals.community.get('network_id'), req.session.userId)
   .then(contains => queryPosts(req, {
     communities: [res.locals.community.id],
