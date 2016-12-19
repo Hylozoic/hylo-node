@@ -1,3 +1,3 @@
 module.exports = function(req, res, next) {
-  TokenAuth.checkAndSetAuthenticated(req).then(() => next())
+  AccessTokenAuth.checkAndSetAuthenticated(req).then(() => next())
 }

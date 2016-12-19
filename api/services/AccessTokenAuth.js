@@ -1,7 +1,7 @@
 const crypto = require('crypto')
 const Promise = require('bluebird')
 
-var TokenAuth = module.exports = {
+var AccessTokenAuth = module.exports = {
 
   generateToken: function() {
     const randomBytes = Promise.promisify(crypto.randomBytes)

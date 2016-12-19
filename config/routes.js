@@ -139,8 +139,8 @@ module.exports.routes = {
   'GET    /noo/logout':                                   'SessionController.destroy',
   'DELETE /noo/session':                                  'SessionController.destroySession',
 
-  'POST   /noo/token':                                    'TokenController.create',
-  'DELETE /noo/token/revoke':                             'TokenController.destroy',
+  'POST   /noo/access-token':                             'AccessTokenController.create',
+  'DELETE /noo/access-token/revoke':                      'AccessTokenController.destroy',
 
   'GET     /noo/nexudus':                                 'NexudusController.create',
 

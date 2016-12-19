@@ -58,7 +58,7 @@ const findTagId = req =>
   req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
 
 const queryForCommunity = function (req, res) {
-  if (TokenAuth.isAuthenticated(res)) {
+  if (AccessTokenAuth.isAuthenticated(res)) {
     if (!RequestValidation.requireTimeRange(req, res)) return
   }
 
