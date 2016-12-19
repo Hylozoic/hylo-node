@@ -19,17 +19,8 @@ var AccessTokenAuth = module.exports = {
     })
     .fetch()
     .then(user => {
-      if (user) {
-        req.session = req.session || {}
-        req.session.authenticated = true
-        req.session.userId = user.id
-        req.session.tokenAuthenticaed = true
-      }
+      if (user) UserSession.login(req, user, 'token')
     })
-  },
-
-  isAuthenticated: function(req) {
-    return req.session && req.session.tokenAuthenticated
   }
 
 }

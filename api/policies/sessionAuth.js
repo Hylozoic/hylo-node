@@ -8,11 +8,6 @@ var fail = function (res) {
 }
 
 module.exports = function (req, res, next) {
-  if (AccessTokenAuth.isAuthenticated(req)) {
-    sails.log.debug('policy: sessionAuth: validated by token')
-    return next()
-  }
-
   if (UserSession.isLoggedIn(req)) {
     return next()
   }
