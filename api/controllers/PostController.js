@@ -326,7 +326,7 @@ const PostController = {
     const fulfilledAt = post.get('fulfilled_at')
     const result = fulfilledAt ?
       post.unfulfillRequest() :
-      post.fulfillRequest({ contributorIds })
+      post.fulfillRequest({contributorIds})
     result.then(() => res.ok({}))
     .catch(res.serverError)
   },

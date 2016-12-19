@@ -28,11 +28,10 @@ module.exports = bookshelf.Model.extend({
   create: function(user_id, post_id, trx) {
     return new Contribution({post_id, user_id, contributed_at: new Date()})
     .save(null, {transacting: trx})
-    .then((contribution) => {
+    .then((contribution) =>
       Queue.classMethod('Contribution', 'createActivities',  {
         contributionId: contribution.id
-      })
-    })
+      }))
   },
 
   queryForUser: function (userId, communityIds) {
