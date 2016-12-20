@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader'
-import { forIn, toPairs, transform } from 'lodash'
+import { camelCase, curry, forIn, toPairs, transform } from 'lodash'
 import { map } from 'lodash/fp'
 import uniqueQueryId from './util/uniqueQueryId'
 
@@ -32,7 +32,7 @@ const makeSpecs = (userId) => {
 
     posts: {
       model: Post,
-      attributes: ['id'],
+      attributes: ['id', 'created_at'],
       getters: {
         title: p => p.get('name'),
         details: p => p.get('description')
@@ -46,7 +46,7 @@ const makeSpecs = (userId) => {
 
     communities: {
       model: Community,
-      attributes: ['id', 'name'],
+      attributes: ['id', 'name', 'created_at'],
       relations: [{members: 'users'}],
       filter: relation => relation.query(q => {
         q.where('communities.id', 'in', myCommunityIds())
@@ -110,10 +110,8 @@ export function createModels (schema, userId) {
     }
 
     const formatted = Object.assign(
-      attributes ? instance.pick(attributes) : {},
-
       transform(attributes, (result, attr) => {
-        result[attr] = instance.get(attr)
+        result[camelCase(attr)] = instance.get(attr)
       }, {}),
 
       transform(getters, (result, fn, attr) => {

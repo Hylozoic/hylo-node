@@ -2,7 +2,7 @@
 type Me {
   id: ID
   name: String
-  avatar_url: String
+  avatarUrl: String
   memberships(first: Int, cursor: ID, order: String): [Membership]
   posts(first: Int, cursor: ID, order: String): [Post]
 }
@@ -10,15 +10,15 @@ type Me {
 type Person {
   id: ID
   name: String
-  avatar_url: String
+  avatarUrl: String
   posts(first: Int, cursor: ID, order: String): [Post]
 }
 
 type Membership {
   id: ID
   role: Int
-  created_at: String
-  last_viewed_at: String
+  createdAt: String
+  lastViewedAt: String
   community: Community
 }
 
@@ -26,6 +26,7 @@ type Community {
   id: ID
   name: String
   slug: String
+  createdAt: String
   memberships(first: Int, cursor: ID, order: String): [Membership]
   members(first: Int, cursor: ID, order: String): [Person]
 }
@@ -34,7 +35,7 @@ type Post {
   id: ID
   title: String
   details: String
-  created_at: String
+  createdAt: String
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   communities(first: Int, cursor: ID, order: String): [Community]
