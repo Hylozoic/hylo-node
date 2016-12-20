@@ -68,7 +68,11 @@ process.chdir(__dirname)
   sails.lift(_.merge(rc('sails'), {
     log: {noShip: true}
   }), function (err) {
-    sails.log.info('Aloft.'.blue)
+    if (err) {
+      sails.log.error(err.stack)
+    } else {
+      sails.log.info('Aloft.'.blue)
+    }
   })
 
   module.exports = sails
