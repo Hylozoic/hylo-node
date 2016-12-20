@@ -30,20 +30,12 @@ type Community {
   members(first: Int, cursor: ID, order: String): [Person]
 }
 
-type Follow {
-  id: ID
-  created_at: String
-  post: Post
-  person: Person
-}
-
 type Post {
   id: ID
   title: String
   details: String
   created_at: String
   creator: Person
-  follows(first: Int, cursor: ID, order: String): [Follow]
   followers(first: Int, cursor: ID, order: String): [Person]
   communities(first: Int, cursor: ID, order: String): [Community]
 }

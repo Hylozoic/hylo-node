@@ -59,7 +59,7 @@ export function createModels (schema, userId) {
   const specs = makeSpecs(userId)
   const loaders = {}
 
-  forIn(specs, ({ model, attributes, getters, relations }, name) => {
+  forIn(specs, ({ model }, name) => {
     loaders[name] = new DataLoader(ids => {
       return model.where('id', 'in', ids).fetchAll()
       .then(objects =>

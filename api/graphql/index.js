@@ -2,12 +2,13 @@ import { buildSchema } from 'graphql'
 import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { createModels } from './models'
+import { join } from 'path'
 
 const rootValue = {
   me: (args, { req, models }) => models.fetchMe()
 }
 
-const schemaText = readFileSync(__dirname + '/schema.graphql').toString()
+const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 const schema = buildSchema(schemaText)
 
 export const createRequestHandler = () =>
