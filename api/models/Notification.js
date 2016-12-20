@@ -13,6 +13,10 @@ module.exports = bookshelf.Model.extend({
     return this.relations.activity.relations.post
   },
 
+  contribution: function () {
+    return this.relations.activity.relations.contribution
+  },
+
   comment: function () {
     return this.relations.activity.relations.comment
   },
@@ -54,6 +58,8 @@ module.exports = bookshelf.Model.extend({
         return this.sendCommentPush('mention')
       case 'newComment':
         return this.sendCommentPush()
+      case 'newContribution':
+        return this.sendContributionPush()
       case 'tag':
         return Promise.resolve()
       case 'newPost':
@@ -75,6 +81,19 @@ module.exports = bookshelf.Model.extend({
     .then(community => {
       var path = url.parse(Frontend.Route.post(post, community)).path
       var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
+      return this.reader().sendPushNotification(alertText, path)
+    })
+  },
+
+  sendContributionPush: function (version) {
+    var post = this.post()
+    var contribution = this.contribution()
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
+    return Community.find(communityIds[0])
+    .then(community => {
+      var path = url.parse(Frontend.Route.post(contribution.relations.post, community)).path
+      var alertText = PushNotification.textForContribution(contribution, version)
       return this.reader().sendPushNotification(alertText, path)
     })
   },
@@ -277,6 +296,7 @@ module.exports = bookshelf.Model.extend({
     TagFollow: 'TagFollow',
     NewPost: 'newPost',
     Comment: 'comment', // someone makes a comment on a post you follow
+    Contribution: 'contribution', // someone makes a comment on a post you follow
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow', // someone leaves your post
@@ -331,7 +351,7 @@ module.exports = bookshelf.Model.extend({
 
   priorityReason: function (reasons) {
     const orderedLabels = [
-      'mention', 'commentMention', 'newComment', 'tag', 'newPost', 'follow',
+      'mention', 'commentMention', 'newComment', 'newContribution', 'tag', 'newPost', 'follow',
       'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
     ]
 

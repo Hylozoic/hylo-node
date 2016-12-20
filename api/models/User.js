@@ -270,6 +270,10 @@ module.exports = bookshelf.Model.extend(merge({
     return User.query().where({id}).increment('new_notification_count', 1)
   },
 
+  decNewNotificationCount: function (id) {
+    return User.query().where({id}).decrement('new_notification_count', 1)
+  },
+
   gravatar: function (email) {
     var emailHash = crypto.createHash('md5').update(email).digest('hex')
     return `https://www.gravatar.com/avatar/${emailHash}?d=mm&s=140`

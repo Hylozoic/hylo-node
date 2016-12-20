@@ -7,6 +7,8 @@ const actionFromReason = reason => {
       return 'comment'
     case 'commentMention':
       return 'mention'
+    case 'newContribution':
+      return 'contribution'
     default:
       return reason
   }
