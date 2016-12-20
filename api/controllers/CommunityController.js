@@ -78,12 +78,15 @@ module.exports = {
     .then(() => Promise.join(
       community.toJSON(),
       CommunityTag.defaults(community.id),
-      (data, defaultTags) => merge(pick(data,
+      community.popularSkills(),
+      (data, defaultTags, popularSkills) => merge(pick(data,
         'id', 'name', 'slug', 'avatar_url', 'banner_url', 'description',
         'settings', 'location', 'welcome_message', 'leader', 'network'),
         {
-          defaultTags: defaultTags.models.map(dt => dt.relations.tag.get('name'))
-        })))
+          defaultTags: defaultTags.models.map(dt => dt.relations.tag.get('name')),
+          popularSkills
+        }
+      )))
     .tap(() => mship && mship.save({last_viewed_at: new Date()}, {patch: true}))
     .then(res.ok)
     .catch(res.serverError)

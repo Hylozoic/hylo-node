@@ -4177,15 +4177,15 @@ netmask@~1.0.4:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/netmask/-/netmask-1.0.6.tgz#20297e89d86f6f6400f250d9f4f6b4c1945fcd35"
 
-newrelic@^1.17.3:
-  version "1.32.0"
-  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-1.32.0.tgz#ba7e17170a52de0efc35ba588b8538e36673589b"
+newrelic@^1.35.1:
+  version "1.35.1"
+  resolved "https://registry.yarnpkg.com/newrelic/-/newrelic-1.35.1.tgz#97bd0b7788bf6d7cf228c2e01e84fba5ff2d0f21"
   dependencies:
     concat-stream "^1.5.0"
     https-proxy-agent "^0.3.5"
     json-stringify-safe "^5.0.0"
     readable-stream "^1.1.13"
-    semver "^4.2.0"
+    semver "^5.3.0"
     yakaa "^1.0.1"
 
 nib@~1.1.2:
@@ -5756,7 +5756,7 @@ scandirectory@^2.5.0:
     safefs "^3.1.2"
     taskgroup "^4.0.5"
 
-semver@^4.1.0, semver@^4.2.0, semver@^4.3.4:
+semver@^4.1.0, semver@^4.3.4:
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/semver/-/semver-4.3.6.tgz#300bc6e0e86374f7ba61068b5b1ecd57fc6532da"
 
