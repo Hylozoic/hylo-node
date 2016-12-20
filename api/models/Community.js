@@ -133,7 +133,7 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
-  popularSkills: function () {
+  popularSkills: function (limit = 15) {
     return Tag.query(q => {
       q.select(bookshelf.knex.raw('tags.name, count(*)'))
       q.join('tags_users', 'tags.id', 'tags_users.tag_id')
@@ -142,7 +142,7 @@ module.exports = bookshelf.Model.extend(merge({
       q.where('communities_users.active', true)
       q.groupBy('tags.name')
       q.orderBy('count', 'desc')
-      q.limit('15')
+      q.limit(limit)
     })
     .fetchAll()
     .then(skills => skills.pluck('name'))

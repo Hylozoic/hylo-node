@@ -48,7 +48,7 @@ const makeSpecs = (userId) => {
       model: Community,
       attributes: ['id', 'name', 'created_at'],
       getters: {
-        popularSkills: c => c.popularSkills()
+        popularSkills: (c, { first }) => c.popularSkills(first)
       },
       relations: [{members: 'users'}],
       filter: relation => relation.query(q => {
@@ -123,7 +123,7 @@ export function createModels (schema, userId) {
       }, {}),
 
       transform(getters, (result, fn, attr) => {
-        result[attr] = () => fn(instance)
+        result[attr] = args => fn(instance, args)
       }, {}),
 
       transform(relations, (result, attr) => {

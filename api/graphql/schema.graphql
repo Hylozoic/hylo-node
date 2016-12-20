@@ -29,7 +29,7 @@ type Community {
   createdAt: String
   memberships(first: Int, cursor: ID, order: String): [Membership]
   members(first: Int, cursor: ID, order: String): [Person]
-  popularSkills: [String]
+  popularSkills(first: Int): [String]
 }
 
 type Post {
