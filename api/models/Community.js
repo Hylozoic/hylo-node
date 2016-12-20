@@ -131,6 +131,21 @@ module.exports = bookshelf.Model.extend(merge({
       })
       return this.save()
     })
+  },
+
+  popularSkills: function () {
+    return Tag.query(q => {
+      q.select(bookshelf.knex.raw('tags.name, count(*)'))
+      q.join('tags_users', 'tags.id', 'tags_users.tag_id')
+      q.join('communities_users', 'tags_users.user_id', 'communities_users.user_id')
+      q.where('communities_users.community_id', this.id)
+      q.where('communities_users.active', true)
+      q.groupBy('tags.name')
+      q.orderBy('count', 'desc')
+      q.limit('15')
+    })
+    .fetchAll()
+    .then(skills => skills.pluck('name'))
   }
 
 }, HasSettings), {
