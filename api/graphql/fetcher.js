@@ -31,9 +31,9 @@ export default class Fetcher {
     })
   }
 
-  fetchOne (tableName, id) {
+  fetchOne (tableName, id, idColumn = 'id') {
     const { model, filter } = this.models[tableName]
-    const query = filter(model.where('id', id))
+    const query = filter(model.where(idColumn, id))
     return this.loaders.queries.load(query).then(instance => {
       if (!instance) return
       this.loaders[tableName].prime(instance.id, instance)
