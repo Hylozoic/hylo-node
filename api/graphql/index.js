@@ -5,7 +5,8 @@ import { createModels } from './models'
 import { join } from 'path'
 
 const rootValue = {
-  me: (args, { req, models }) => models.fetchMe()
+  me: (args, { req, models }) => models.me(),
+  community: (args, { req, models }) => models.community(args.id)
 }
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()

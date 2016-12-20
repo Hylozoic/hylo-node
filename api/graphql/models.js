@@ -47,6 +47,9 @@ const makeSpecs = (userId) => {
     communities: {
       model: Community,
       attributes: ['id', 'name', 'created_at'],
+      getters: {
+        popularSkills: c => c.popularSkills()
+      },
       relations: [{members: 'users'}],
       filter: relation => relation.query(q => {
         q.where('communities.id', 'in', myCommunityIds())
@@ -71,13 +74,7 @@ export function createModels (schema, userId) {
   // general-purpose query cache, for relational SQL queries that aren't just
   // fetching objects by ID.
   const queryLoader = new DataLoader(
-    queries => Promise.map(queries, q =>
-      q.fetch().tap(instances => {
-        // N.B. this caching doesn't take into account data added by withPivot
-        const { targetTableName } = q.relatedData
-        const loader = loaders[targetTableName]
-        instances.each(x => loader.prime(x.id, x))
-      })),
+    queries => Promise.map(queries, q => q.fetch()),
     {cacheKeyFn: uniqueQueryId}
   )
 
@@ -96,13 +93,24 @@ export function createModels (schema, userId) {
       applyPagination(q, paginationOpts)
     }))
     .then(instances => {
+      // N.B. this caching doesn't take into account data added by withPivot
       instances.each(x => loader.prime(x.id, x))
       return loader.loadMany(instances.map('id'))
       .then(map(format(targetTableName)))
     })
   }
 
-  const format = name => instance => {
+  const fetchOne = (tableName, id) => {
+    const { model, filter } = specs[tableName]
+    const query = filter(model.where('id', id))
+    return queryLoader.load(query).then(instance => {
+      if (!instance) return
+      loaders[tableName].prime(instance.id, instance)
+      return format(tableName, instance)
+    })
+  }
+
+  const format = curry((name, instance) => {
     const { model, attributes, getters, relations } = specs[name]
     const tableName = model.collection().tableName()
     if (instance.tableName !== tableName) {
@@ -130,13 +138,15 @@ export function createModels (schema, userId) {
     )
 
     return formatted
-  }
+  })
 
   return {
-    fetchMe: () => {
+    me: () => {
       if (!userId) return {id: 'Not logged in', name: 'Not logged in'}
       return loaders.users.load(userId).then(format('me'))
-    }
+    },
+
+    community: id => fetchOne('communities', id)
   }
 }
 
