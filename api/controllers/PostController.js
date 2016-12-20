@@ -322,14 +322,12 @@ const PostController = {
 
   fulfill: function (req, res) {
     const { post } = res.locals
-    const contributorIds = req.param('contributors') || []
-    const fulfilled_at = post.get('fulfilled_at') ? null : new Date()
-
-    return bookshelf.transaction(trx =>
-      post.save({fulfilled_at}, {patch: true, transacting: trx})
-      .tap(() => Promise.map(contributorIds, userId =>
-        Contribution.create(userId, post.id, trx))))
-    .then(() => res.ok({}))
+    const contributorIds = req.param('contributorIds') || []
+    const fulfilledAt = post.get('fulfilled_at')
+    const result = fulfilledAt ?
+      post.unfulfillRequest() :
+      post.fulfillRequest({contributorIds})
+    result.then(() => res.ok({}))
     .catch(res.serverError)
   },
 

@@ -27,9 +27,12 @@ const removeForRelation = (model) => (id, trx) => {
   const trxOpt = {transacting: trx}
   return Activity.where(`${model}_id`, id).query()
   .pluck('id').transacting(trx)
-  .then(ids =>
-    Notification.where('activity_id', 'in', ids).destroy(trxOpt)
-    .then(() => Activity.where('id', 'in', ids).destroy(trxOpt)))
+  .then(ids => {
+    // TODO: New Activity count needs to be decremented
+    // if inApp medium is used-- see User#decNewNotificationCount
+    return Notification.where('activity_id', 'in', ids).destroy(trxOpt)
+    .then(() => Activity.where('id', 'in', ids).destroy(trxOpt))
+  })
 }
 
 module.exports = bookshelf.Model.extend({
@@ -45,6 +48,10 @@ module.exports = bookshelf.Model.extend({
 
   comment: function () {
     return this.belongsTo(Comment)
+  },
+
+  contribution: function () {
+    return this.belongsTo(Contribution, 'contribution_id')
   },
 
   post: function () {
@@ -68,6 +75,9 @@ module.exports = bookshelf.Model.extend({
     if (this.get('post_id')) {
       relations.splice(0, 0, 'post', 'post.communities')
     }
+    if (this.get('contribution_id')) {
+      relations.splice(0, 0, 'contribution', 'contribution.post', 'contribution.user')
+    }
     if (this.get('comment_id')) {
       relations.splice(0, 0, 'comment', 'comment.post', 'comment.post.communities')
     }
@@ -84,6 +94,7 @@ module.exports = bookshelf.Model.extend({
   Reason: {
     Mention: 'mention', // you are mentioned in a post or comment
     Comment: 'comment', // someone makes a comment on a post you follow
+    Contribution: 'contribution', // someone add you as a contributor to a #request
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow' // someone leaves your post
@@ -184,7 +195,7 @@ module.exports = bookshelf.Model.extend({
       Activity.createWithNotifications(
         merge(
           pick(activity,
-            ['post_id', 'community_id', 'comment_id', 'parent_comment_id', 'actor_id', 'reader_id']),
+            ['post_id', 'community_id', 'contribution_id', 'comment_id', 'parent_comment_id', 'actor_id', 'reader_id']),
           {meta: {reasons: activity.reasons}}),
         trx))
     .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
@@ -224,7 +235,6 @@ module.exports = bookshelf.Model.extend({
     if (!isJustNewPost(activity)) {
       notifications.push(Notification.MEDIUM.InApp)
     }
-
     return notifications
   },
 
@@ -235,5 +245,9 @@ module.exports = bookshelf.Model.extend({
   },
 
   removeForComment: removeForRelation('comment'),
-  removeForPost: removeForRelation('post')
+
+  removeForPost: removeForRelation('post'),
+
+  removeForContribution: removeForRelation('contribution')
+
 })
