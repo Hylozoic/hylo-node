@@ -27,7 +27,7 @@ describe('post/request', () => {
 
   describe('#fulfillRequest', () => {
     beforeEach(() => {
-      // spyify(Queue, 'classMethod')
+      spyify(Queue, 'classMethod')
       return post.fulfillRequest({
         fulfilledAt,
         contributorIds: [contributor1.id, contributor2.id]
@@ -35,7 +35,7 @@ describe('post/request', () => {
       .then(post => post.fetch({withRelated: 'contributions'}))
     })
 
-    // after(() => unspyify(Queue, 'classMethod'))
+    after(() => unspyify(Queue, 'classMethod'))
 
     it('should add fulfilled time', () => {
       expect(post.get('fulfilled_at')).to.equalDate(fulfilledAt)
@@ -47,12 +47,11 @@ describe('post/request', () => {
         .to.include.members([contributor1.id, contributor2.id])
     })
 
-    // it('should add activities and notifications to contributors', () => {
-    //   expect(Queue.classMethod).to.have.been.called
-    //     .with('Contribution', 'createActivities', {contributionId: contributor1.id})
-    //   expect(Queue.classMethod).to.have.been.called
-    //     .with('Contribution', 'createActivities', {contributionId: contributor2.id})
-    // })
+    it('should add activities and notifications to contributors', () => {
+      post.relations.contributions.each((c) =>
+        expect(Queue.classMethod).to.have.been.called
+          .with('Contribution', 'createActivities', {contributionId: c.id}))
+    })
   })
 
   describe('#unfulfillRequest', () => {
