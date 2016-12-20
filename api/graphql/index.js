@@ -1,16 +1,22 @@
 import { buildSchema } from 'graphql'
 import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
-import { createModels } from './models'
 import { join } from 'path'
-
-const rootValue = {
-  me: (args, { req, models }) => models.me(),
-  community: (args, { req, models }) => models.community(args.id)
-}
+import Fetcher from './fetcher'
+import models from './models'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 const schema = buildSchema(schemaText)
+
+const createRootValue = userId => {
+  const fetcher = new Fetcher(models(userId))
+
+  return {
+    me: () => fetcher.fetchOne('me', userId),
+    community: ({ id }) => fetcher.fetchOne('communities', id),
+    person: ({ id }) => fetcher.fetchOne('users', id)
+  }
+}
 
 export const createRequestHandler = () =>
   graphqlHTTP((req, res) => {
@@ -24,8 +30,7 @@ export const createRequestHandler = () =>
     // or deny access to those paths
     return {
       schema,
-      rootValue,
-      graphiql: true,
-      context: {req, models: createModels(schema, req.session.userId)}
+      rootValue: createRootValue(req.session.userId),
+      graphiql: true
     }
   })
