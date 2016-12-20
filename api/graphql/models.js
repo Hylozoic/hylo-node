@@ -135,7 +135,10 @@ export function createModels (schema, userId) {
   }
 
   return {
-    fetchMe: () => loaders.users.load(userId).then(format('me'))
+    fetchMe: () => {
+      if (!userId) return {id: 'Not logged in', name: 'Not logged in'}
+      return loaders.users.load(userId).then(format('me'))
+    }
   }
 }
 
