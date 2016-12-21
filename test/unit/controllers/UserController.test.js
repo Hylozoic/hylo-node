@@ -178,6 +178,37 @@ describe('UserController', function () {
     })
   })
 
+  describe('.findForCommunity', () => {
+    var c1, c2, u1, u2, u3
+
+    beforeEach(() => {
+      c1 = factories.community()
+      c2 = factories.community()
+      u1 = factories.user()
+      u2 = factories.user()
+      u3 = factories.user()
+      return Promise.join(c1.save(), c2.save(), u1.save(), u2.save(), u3.save(), Tag.findOrCreate('offer'))
+      .then(() => Promise.join(
+        u1.joinCommunity(c1),
+        u2.joinCommunity(c1),
+        u2.joinCommunity(c2),
+        u3.joinCommunity(c2)))
+    })
+
+    it('returns the users in a community', () => {
+      req.session.userId = u1.id
+      res.locals.community = c1
+      return UserController.findForCommunity(req, res)
+      .then(() => {
+        expect(res.ok).to.have.been.called()
+        expect(res.body.items.length).to.equal(2)
+        expect(res.body.items.map(u => u.name).sort()).to.deep.equal(
+          [u1.get('name'), u2.get('name')].sort()
+        )
+      })
+    })
+  })
+
   describe('.contributions', () => {
     var u1, u2, c
 

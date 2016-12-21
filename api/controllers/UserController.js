@@ -185,7 +185,7 @@ module.exports = {
 
   findForCommunity: function (req, res) {
     const opts = pick(req.allParams(), 'limit', 'offset', 'search')
-    fetchAndPresentForCommunityIds([res.locals.community.id], opts)
+    return fetchAndPresentForCommunityIds([res.locals.community.id], opts)
     .then(res.ok)
     .catch(res.serverError)
   },
