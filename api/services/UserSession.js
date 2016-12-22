@@ -9,7 +9,7 @@ module.exports = {
     req.rollbar_person = user.pick('id', 'name', 'email')
     req.session.version = this.version
 
-    if (providerKey === 'admin') return
+    if (providerKey === 'admin' || providerKey === 'token') return
 
     if (req.headers['ios-version'] || req.headers['android-version']) {
       const properties = omitBy(isNil, {
