@@ -31,10 +31,17 @@ module.exports = bookshelf.Model.extend({
         : Promise.resolve(null))()
     .then(hashed => new LinkedAccount({
       provider_key: type,
-      provider_user_id: hashed || profile.id,
+      provider_user_id: hashed || data.token || profile.id,
       user_id: userId
     }).save({}, _.pick(options, 'transacting')))
     .tap(() => options.updateUser && this.updateUser(userId, _.merge({}, data, options)))
+  },
+
+  tokenForUser: function (userId) {
+    return LinkedAccount.where({
+      provider_key: 'token',
+      user_id: userId
+    }).fetch()
   },
 
   updateUser: function (userId, options) {

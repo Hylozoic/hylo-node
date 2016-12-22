@@ -7,7 +7,7 @@ module.exports = {
     req.rollbar_person = user.pick('id', 'name', 'email')
     req.session.version = this.version
 
-    if (providerKey === 'admin') return
+    if (providerKey === 'admin' || providerKey === 'token') return
     return user.save({last_login: new Date()}, {patch: true})
   },
 

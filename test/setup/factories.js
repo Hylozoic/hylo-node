@@ -60,6 +60,8 @@ module.exports = {
           return this.params[name]
         },
         session: {},
+        query: {},
+        body: {},
         params: {},
         headers: {},
         __: sails.__, // this is for i18n
