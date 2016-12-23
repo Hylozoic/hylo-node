@@ -52,7 +52,6 @@ describe('CommunityController', () => {
           settings: {},
           location: null,
           welcome_message: null,
-          popularSkills: [],
           leader: {
             id: user.id,
             name: user.get('name'),
