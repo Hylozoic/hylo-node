@@ -1,0 +1,49 @@
+# The currently logged-in person.
+type Me {
+  id: ID
+  name: String
+  avatarUrl: String
+  memberships(first: Int, cursor: ID, order: String): [Membership]
+  posts(first: Int, cursor: ID, order: String): [Post]
+}
+
+type Person {
+  id: ID
+  name: String
+  avatarUrl: String
+  posts(first: Int, cursor: ID, order: String): [Post]
+}
+
+type Membership {
+  id: ID
+  role: Int
+  createdAt: String
+  lastViewedAt: String
+  community: Community
+}
+
+type Community {
+  id: ID
+  name: String
+  slug: String
+  createdAt: String
+  memberships(first: Int, cursor: ID, order: String): [Membership]
+  members(first: Int, cursor: ID, order: String): [Person]
+  popularSkills(first: Int): [String]
+}
+
+type Post {
+  id: ID
+  title: String
+  details: String
+  createdAt: String
+  creator: Person
+  followers(first: Int, cursor: ID, order: String): [Person]
+  communities(first: Int, cursor: ID, order: String): [Community]
+}
+
+type Query {
+  me: Me
+  person(id: ID): Person
+  community(id: ID, slug: String): Community
+}

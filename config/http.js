@@ -11,6 +11,7 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.http.html
  */
 
+import { createRequestHandler } from '../api/graphql'
 require('colors')
 const util = require('util')
 
@@ -93,6 +94,7 @@ module.exports.http = {
     app.use('/admin/kue', isAdmin)
     app.use('/admin/kue/api', kue.app)
     app.use('/admin/kue', kueUI.app)
+    app.use('/noo/graphql', createRequestHandler())
   }
 
   /***************************************************************************
