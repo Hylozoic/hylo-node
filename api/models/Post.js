@@ -127,6 +127,10 @@ module.exports = bookshelf.Model.extend({
     return this.get('type') === Post.Type.PROJECT
   },
 
+  isThread: function () {
+    return this.get('type') === Post.Type.THREAD
+  },
+
   pushCommentToSockets: function (comment) {
     var postId = this.id
     return pushToSockets(`posts/${postId}`, 'commentAdded', comment)

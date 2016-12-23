@@ -104,7 +104,7 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  cleanEmailText: (user, text) => {
+  cleanEmailText: (user, text, opts = { useMarkdown: true }) => {
     text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
     const name = user.get('name').toLowerCase()
     const lines = text.split('\n')
@@ -133,7 +133,7 @@ module.exports = bookshelf.Model.extend({
     })
 
     const finalText = cutoff ? lines.slice(0, cutoff).join('\n') : text
-    return markdown(finalText || '')
+    return opts.useMarkdown ? markdown(finalText || '') : finalText
   },
 
   notifyAboutMessage: ({commentId}) =>
@@ -200,6 +200,9 @@ module.exports = bookshelf.Model.extend({
             other_person_name: other.get('name'),
             thread_url: Frontend.Route.thread(post),
             messages: filtered.map(c => c.get('text'))
+          },
+          sender: {
+            reply_to: Email.postReplyAddress(post.id, user.id)
           }
         })
       })
