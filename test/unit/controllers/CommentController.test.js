@@ -300,6 +300,18 @@ describe('CommentController', function () {
         expect(comment.get('created_from')).to.equal('email')
       })
     })
+
+    it("doesn't use markdown when the comment is for a thread", () => {
+      req.params.To = Email.postReplyAddress(fixtures.p1.id, fixtures.u3.id)
+      return fixtures.p1.save({type: Post.Type.THREAD}, {patch: true})
+      .then(() => CommentController.createFromEmail(req, res))
+      .then(() => fixtures.p1.comments().fetch())
+      .then(comments => {
+        var comment = comments.find(c => c.get('post_id') === fixtures.p1.id)
+        expect(comment).to.exist
+        expect(comment.get('text')).to.equal('foo bar baz')
+      })
+    })
   })
 
   describe('update', () => {

@@ -39,10 +39,10 @@ var jobs = {
     var tasks = []
 
     switch (now.hour()) {
-      case 12: // eslint-disable-line no-fallthrough
+      case 12:
         sails.log.debug('Sending daily digests')
         tasks.push(sendAndLogDigests('daily'))
-      default:
+      default: // eslint-disable-line no-fallthrough
         sails.log.debug('Updating users from Nexudus')
         tasks.push(updateFromNexudus({dryRun: false}))
 

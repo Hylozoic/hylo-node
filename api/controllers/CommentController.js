@@ -151,7 +151,9 @@ module.exports = {
         }
       })
       return User.find(replyData.userId).then(user => {
-        const text = Comment.cleanEmailText(user, req.param('stripped-text'))
+        const text = Comment.cleanEmailText(user, req.param('stripped-text'), {
+          useMarkdown: !post.isThread()
+        })
         return createAndPresentComment(replyData.userId, text, post, {created_from: 'email'})
       })
     })
