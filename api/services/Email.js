@@ -27,7 +27,7 @@ const sendEmailWithOptions = curry((templateId, opts) =>
     recipient: {address: opts.email},
     email_data: opts.data,
     version_name: opts.version,
-    sender: opts.sender
+    sender: opts.sender // expects {name, address}
   })))
 
 module.exports = {
@@ -41,7 +41,9 @@ module.exports = {
 
   sendInvitation: (email, data) =>
     sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
-      email, data, version: 'user-edited text',
+      email,
+      data,
+      version: 'user-edited text',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
         reply_to: data.inviter_email
@@ -50,7 +52,9 @@ module.exports = {
 
   sendTagInvitation: (email, data) =>
     sendEmailWithOptions('tem_tmEEpPvtQ69wGkmf9njCx8', {
-      email, data, version: 'default',
+      email,
+      data,
+      version: 'default',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
         reply_to: data.inviter_email

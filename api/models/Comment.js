@@ -114,11 +114,11 @@ module.exports = bookshelf.Model.extend({
       if (cutoff) return
       line = line.trim()
 
-      if (line.length > 0 && name.startsWith(line.toLowerCase().replace(/^[\- ]*/, ''))) {
+      if (line.length > 0 && name.startsWith(line.toLowerCase().replace(/^[- ]*/, ''))) {
         // line contains only the user's name
         cutoff = index
         // also remove the common pattern of two dashes above the name
-        if (index > 0 && lines[index - 1].match(/^\-\- ?$/)) {
+        if (index > 0 && lines[index - 1].match(/^-- ?$/)) {
           cutoff = index - 1
         }
       } else if (line.match(/^-{8}/)) {
