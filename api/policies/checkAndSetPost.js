@@ -1,9 +1,9 @@
 module.exports = function checkAndSetPost (req, res, next) {
   var postId = req.param('postId')
 
-  var fail = function (log, responseType) {
+  var fail = function (log, responseType, err) {
     sails.log.debug(`policy: checkAndSetPost: ${log}`)
-    res[responseType || 'forbidden']()
+    res[responseType || 'forbidden'](err)
   }
 
   return Post.find(postId, {withRelated: 'communities'})
@@ -26,5 +26,5 @@ module.exports = function checkAndSetPost (req, res, next) {
       return null
     })
   })
-  .catch(err => fail(err.message, 'serverError'))
+  .catch(err => fail(err.message, 'serverError', err))
 }
