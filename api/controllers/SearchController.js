@@ -1,4 +1,5 @@
 import { flatten, flow, get, uniq } from 'lodash/fp'
+import { transform } from 'lodash'
 import { normalizePost, normalizeComment, uniqize } from '../../lib/util/normalize'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
@@ -79,7 +80,7 @@ module.exports = {
     .then(items_ => {
       items = items_
 
-      var ids = _.transform(items, (ids, item) => {
+      var ids = transform(items, (ids, item) => {
         var type = item.post_id ? 'posts'
           : item.comment_id ? 'comments' : 'people'
 

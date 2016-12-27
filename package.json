@@ -117,7 +117,6 @@
   "license": "",
   "standard": {
     "global": [
-      "_",
       "after",
       "afterEach",
       "before",

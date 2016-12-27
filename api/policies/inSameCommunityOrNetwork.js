@@ -1,12 +1,14 @@
 module.exports = function (req, res, next) {
   if (Admin.isSignedIn(req)) return next()
+  const myUserId = req.session.userId
+  const theirUserId = req.param('userId')
 
-  if (req.session.userId === req.param('userId')) return next()
-  if (isNaN(Number(req.param('userId')))) return res.notFound()
+  if (myUserId === theirUserId) return next()
+  if (isNaN(Number(theirUserId))) return res.notFound()
 
-  Membership.inSameCommunity([req.session.userId, req.param('userId')])
+  Membership.inSameCommunity([myUserId, theirUserId])
   .then(same => same ? next()
-    : Membership.inSameNetwork(req.session.userId, req.param('userId'))
+    : Membership.inSameNetwork(myUserId, theirUserId)
       .then(same => same ? next() : res.forbidden()))
   .catch(res.serverError)
 }
