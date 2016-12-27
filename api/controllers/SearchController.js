@@ -1,7 +1,13 @@
-import { get } from 'lodash/fp'
+import { flatten, flow, get, uniq } from 'lodash/fp'
 import { normalizePost, normalizeComment, uniqize } from '../../lib/util/normalize'
 
 const userColumns = q => q.column('id', 'name', 'avatar_url')
+
+const fetchAllCommunityIds = userId =>
+  Promise.join(
+    Network.activeCommunityIds(userId),
+    Membership.activeCommunityIds(userId)
+  ).then(flow(flatten, uniq))
 
 const findCommunityIds = req => {
   if (req.param('communityId')) {
@@ -13,10 +19,7 @@ const findCommunityIds = req => {
       return Membership.activeCommunityIds(req.session.userId, true)
     }
   } else {
-    return Promise.join(
-      Network.activeCommunityIds(req.session.userId),
-      Membership.activeCommunityIds(req.session.userId)
-    ).then(ids => _(ids).flatten().uniq().value())
+    return fetchAllCommunityIds(req.session.userId)
   }
 }
 
@@ -70,7 +73,7 @@ module.exports = {
     var userId = req.session.userId
     var items
 
-    return Membership.activeCommunityIds(userId)
+    return fetchAllCommunityIds(userId)
     .then(communityIds =>
       FullTextSearch.searchInCommunities(communityIds, {term, type, limit, offset}))
     .then(items_ => {
