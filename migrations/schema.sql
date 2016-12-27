@@ -1138,7 +1138,7 @@ CREATE TABLE users (
     avatar_url character varying(255),
     first_name character varying(255),
     last_name character varying(255),
-    last_login timestamp without time zone,
+    last_login_at timestamp without time zone,
     active boolean,
     email_validated boolean,
     created_at timestamp without time zone,

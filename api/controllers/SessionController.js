@@ -124,7 +124,7 @@ module.exports = {
 
     return User.authenticate(email, password)
     .tap(user => UserSession.login(req, user, 'password'))
-    .tap(user => user.save({last_login: new Date()}, {patch: true}))
+    .tap(user => user.save({last_login_at: new Date()}, {patch: true}))
     .tap(user => {
       if (req.param('resp') === 'user') {
         return UserPresenter.fetchAndPresentForSelf(user.id, req.session, Admin.isSignedIn(req))

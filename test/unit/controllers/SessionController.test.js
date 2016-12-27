@@ -73,7 +73,7 @@ describe('SessionController', function () {
         expect(res.status).not.to.have.been.called()
         expect(res.ok).to.have.been.called()
         expect(req.session.userId).to.equal(cat.id)
-        expect(user.get('last_login').getTime()).to.be.closeTo(new Date().getTime(), 2000)
+        expect(user.get('last_login_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
       })
     })
   })

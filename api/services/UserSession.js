@@ -24,7 +24,7 @@ module.exports = {
       })
     }
 
-    return user.save({last_login: new Date()}, {patch: true})
+    return user.save({last_login_at: new Date()}, {patch: true})
   },
 
   isLoggedIn: function (req) {

@@ -46,7 +46,7 @@ describe('UserController', function () {
         return User.where({email: 'foo@bar.com'}).fetch()
       })
       .then(user => {
-        expect(user.get('last_login').getTime()).to.be.closeTo(new Date().getTime(), 2000)
+        expect(user.get('last_login_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
       })
     })
   })

@@ -7,7 +7,7 @@ const userFieldsToCopy = [
   'extra_info',
   'facebook_url',
   'first_name',
-  'last_login',
+  'last_login_at',
   'last_name',
   'name',
   'intention',
