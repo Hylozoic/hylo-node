@@ -1,5 +1,7 @@
 var uuid = require('node-uuid')
 import { markdown } from 'hylo-utils/text'
+import { map } from 'lodash/fp'
+import { presentForList } from '../presenters/UserPresenter'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community_invites',
@@ -45,25 +47,32 @@ module.exports = bookshelf.Model.extend({
     }).save())
   },
 
-  send: function (opts) {
-    let creator = this.relations.creator
-    let community = this.relations.community
+  send: function () {
+    const creator = this.relations.creator
+    const community = this.relations.community
+    const email = this.get('email')
 
-    let data = _.extend(_.pick(opts, 'message', 'subject', 'participants'), {
+    const data = {
+      subject: this.get('subject'),
+      message: this.get('message'),
       inviter_name: creator.get('name'),
       inviter_email: creator.get('email'),
       community_name: community.get('name'),
-      invite_link: Frontend.Route.useInvitation(this.get('token'), opts.email),
+      invite_link: Frontend.Route.useInvitation(this.get('token'), email),
       tracking_pixel_url: Analytics.pixelUrl('Invitation', {
-        recipient: opts.email,
+        recipient: email,
         community: community.get('name')
       })
-    })
+    }
     if (this.get('tag_id')) {
-      data.tag_name = this.relations.tag.get('name')
-      return Email.sendTagInvitation(opts.email, data)
+      return TagFollow.findFollowers(community.id, this.get('tag_id'), 3)
+      .then(followers => {
+        data.participants = map(u => presentForList(u, {tags: true}), followers)
+        data.tag_name = this.relations.tag.get('name')
+        return Email.sendTagInvitation(email, data)
+      })
     } else {
-      return Email.sendInvitation(opts.email, data)
+      return Email.sendInvitation(email, data)
     }
   }
 
@@ -85,14 +94,16 @@ module.exports = bookshelf.Model.extend({
       tag_id: opts.tagId,
       role: role,
       token: uuid.v4(),
-      created_at: new Date()
+      created_at: new Date(),
+      subject: opts.subject,
+      message: opts.message
     }).save()
   },
 
   createAndSend: function (opts) {
     return Invitation.create(opts)
     .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
-    .then(invitation => invitation.send(opts))
+    .then(invitation => invitation.send())
   },
 
   reinviteAll: function (opts) {

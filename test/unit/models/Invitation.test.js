@@ -32,7 +32,9 @@ describe('Invitation', function () {
         email: 'foo@comcom.com',
         moderator: true
       }))
-      .tap(i => invitation1 = i)
+      .tap(i => {
+        invitation1 = i
+      })
       .then(() => Invitation.create({
         userId: inviter.id,
         communityId: community.id,
@@ -40,7 +42,9 @@ describe('Invitation', function () {
         moderator: true,
         tag_id: tag.id
       }))
-      .tap(i => invitation2 = i)
+      .tap(i => {
+        invitation2 = i
+      })
     })
 
     it('creates a membership and marks itself used', function () {
@@ -104,6 +108,54 @@ describe('Invitation', function () {
       })
       .then(() => {
         expect(Email.sendInvitation).to.have.been.called.exactly(2)
+      })
+    })
+  })
+
+  describe('createAndSend', () => {
+    var community, user, inviter, invEmail, invData
+    before(() => {
+      community = factories.community()
+      user = factories.user()
+      inviter = factories.user()
+      spyify(Email, 'sendInvitation', (email, data) => {
+        invEmail = email
+        invData = data
+        return Promise.resolve({})
+      })
+      return Promise.join(inviter.save(), user.save(), community.save())
+    })
+
+    after(() => unspyify(Email, 'sendInvitation'))
+
+    it('creates an invite and calls Email.sendInvitation', () => {
+      const subject = 'The invite subject'
+      const message = 'The invite message'
+
+      const opts = {
+        userId: inviter.id,
+        communityId: community.id,
+        email: user.get('email'),
+        subject,
+        message
+      }
+      return Invitation.createAndSend(opts)
+      .then(() => Invitation.where({email: user.get('email'), community_id: community.id}).fetch())
+      .then(invitation => {
+        expect(invitation).to.exist
+        expect(invitation.get('subject')).to.equal(subject)
+        expect(invitation.get('message')).to.equal(message)
+      })
+      .then(() => {
+        expect(Email.sendInvitation).to.have.been.called.exactly(1)
+        expect(invEmail).to.equal(user.get('email'))
+        expect(invData).to.contain({
+          subject,
+          message,
+          inviter_name: inviter.get('name'),
+          inviter_email: inviter.get('email'),
+          community_name: community.get('name')
+        })
       })
     })
   })
