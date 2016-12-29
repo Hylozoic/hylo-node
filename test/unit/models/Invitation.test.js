@@ -2,6 +2,7 @@ var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 import { spyify, unspyify } from '../../setup/helpers'
+import { sortBy } from 'lodash/fp'
 
 describe('Invitation', function () {
   before(() => setup.clearDb())
@@ -156,6 +157,115 @@ describe('Invitation', function () {
           inviter_email: inviter.get('email'),
           community_name: community.get('name')
         })
+      })
+    })
+  })
+
+  describe('.resendAllReady', () => {
+    var community, c2, inviter
+    before(() => {
+      community = factories.community()
+      c2 = factories.community()
+      inviter = factories.user()
+      const day = 1000 * 60 * 60 * 24
+      return Promise.join(inviter.save(), community.save(), c2.save())
+      .then(() => {
+        const attributes = [
+          {
+            email: 'a@a.com',
+            sent_count: 1,
+            last_sent_at: new Date((Date.now() + 1) - day)
+          },
+          {
+            email: 'b@a.com',
+            sent_count: 2,
+            last_sent_at: new Date((Date.now() + 1) - day)
+          },
+          {
+            email: 'c@a.com',
+            sent_count: 3,
+            last_sent_at: new Date((Date.now() + 1) - (4 * day))
+          },
+          {
+            email: 'd@a.com',
+            sent_count: 4,
+            last_sent_at: new Date((Date.now() + 1) - (9 * day))
+          },
+          {
+            email: 'a@b.com',
+            sent_count: 1,
+            last_sent_at: new Date(Date.now() + 1)
+          },
+          {
+            email: 'b@b.com',
+            sent_count: 2,
+            last_sent_at: new Date(Date.now() + 1)
+          },
+          {
+            email: 'c@b.com',
+            sent_count: 3,
+            last_sent_at: new Date((Date.now() + 1) - (3 * day))
+          },
+          {
+            email: 'd@b.com',
+            sent_count: 4,
+            last_sent_at: new Date((Date.now() + 1) - (8 * day))
+          }
+        ]
+
+        return Promise.map(attributes, ({ email, sent_count, last_sent_at }) =>
+          Invitation.create({
+            communityId: community.id,
+            userId: inviter.id,
+            email
+          })
+          .then(i => i.save({sent_count, last_sent_at}, {patch: true})))
+      })
+    })
+
+    it('sends the invitations that are ready', () => {
+      return Invitation.resendAllReady()
+      .then(() => Invitation.where({community_id: community.id}).fetchAll())
+      .then(invitations => {
+        const expected = sortBy('email', [
+          {
+            email: 'a@a.com',
+            sent_count: 2
+          },
+          {
+            email: 'b@a.com',
+            sent_count: 3
+          },
+          {
+            email: 'c@a.com',
+            sent_count: 4
+          },
+          {
+            email: 'd@a.com',
+            sent_count: 5
+          },
+          {
+            email: 'a@b.com',
+            sent_count: 1
+          },
+          {
+            email: 'b@b.com',
+            sent_count: 2
+          },
+          {
+            email: 'c@b.com',
+            sent_count: 3
+          },
+          {
+            email: 'd@b.com',
+            sent_count: 4
+          }
+        ])
+
+        expect(sortBy('email', invitations.map(i => ({
+          email: i.get('email'),
+          sent_count: i.get('sent_count')
+        })))).to.deep.equal(expected)
       })
     })
   })

@@ -13,6 +13,10 @@ const sendAndLogDigests = type =>
   digest2.sendAllDigests(type)
   .tap(results => sails.log.debug(`Sent digests to: ${results}`))
 
+const resendInvites = () =>
+  Invitation.resendAllReady()
+  .tap(results => sails.log.debug(`Resent the following invites: ${results}`))
+
 const updateFromNexudus = opts =>
   Nexudus.updateAllCommunities(opts)
   .then(report => sails.log.debug(report))
@@ -42,6 +46,9 @@ var jobs = {
       case 12:
         sails.log.debug('Sending daily digests')
         tasks.push(sendAndLogDigests('daily'))
+      case 13:
+        sails.log.debug('Resending invites')
+        tasks.push(resendInvites())
       default: // eslint-disable-line no-fallthrough
         sails.log.debug('Updating users from Nexudus')
         tasks.push(updateFromNexudus({dryRun: false}))
