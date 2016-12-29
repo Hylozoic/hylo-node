@@ -129,6 +129,7 @@ module.exports = bookshelf.Model.extend({
         "(sent_count=3 and last_sent_at < now() - interval '4 day') or " +
         "(sent_count=4 and last_sent_at < now() - interval '9 day')"
       q.whereRaw(whereClause)
+      q.whereNull('used_by_id')
     })
     .fetchAll({withRelated: ['creator', 'community']})
     .tap(invitations => Promise.map(invitations.models, i => i.send()))
