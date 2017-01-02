@@ -45,7 +45,9 @@ export default function models (userId) {
       model: Community,
       attributes: ['id', 'name', 'created_at'],
       getters: {
-        popularSkills: (c, { first }) => c.popularSkills(first)
+        popularSkills: (c, { first }) => c.popularSkills(first),
+        memberCount: (c) => c.memberCount(),
+        postCount: (c) => c.postCount()
       },
       relations: [{members: 'users'}],
       filter: relation => relation.query(q => {
