@@ -9,6 +9,12 @@ const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 const schema = buildSchema(schemaText)
 
 const createRootValue = userId => {
+  if (!userId) {
+    return {
+      me: null
+    }
+  }
+
   const fetcher = new Fetcher(models(userId))
 
   return {
