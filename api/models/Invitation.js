@@ -117,9 +117,7 @@ module.exports = bookshelf.Model.extend({
     return Invitation.where({community_id: communityId, used_by_id: null})
     .fetchAll({withRelated: ['creator', 'community', 'tag']})
     .then(invitations =>
-      Promise.map(invitations.models, invitation =>
-        invitation.send()
-        .then(() => invitation.save({created_at: new Date()}, {patch: true}))))
+      Promise.map(invitations.models, invitation => invitation.send()))
   },
 
   resendAllReady () {

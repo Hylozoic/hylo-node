@@ -266,6 +266,12 @@ describe('Invitation', function () {
           email: i.get('email'),
           sent_count: i.get('sent_count')
         })))).to.deep.equal(expected)
+
+        invitations.forEach(i => {
+          if (i.get('email').match('@a.com')) {
+            expect(i.get('last_sent_at').getTime()).to.be.closeTo(new Date().getTime(), 1000)
+          }
+        })
       })
     })
   })
