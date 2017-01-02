@@ -152,8 +152,7 @@ module.exports = bookshelf.Model.extend(merge({
     return User.query(q => {
       q.select(bookshelf.knex.raw('count(*)'))
       q.join('communities_users', 'users.id', 'communities_users.user_id')
-      q.where('communities_users.community_id', this.id)
-      q.where('communities_users.active', true)
+      q.where({'communities_users.community_id': this.id, 'communities_users.active': true})
     })
     .fetch()
     .then(result => result.get('count'))
@@ -163,8 +162,7 @@ module.exports = bookshelf.Model.extend(merge({
     return Post.query(q => {
       q.select(bookshelf.knex.raw('count(*)'))
       q.join('communities_posts', 'posts.id', 'communities_posts.post_id')
-      q.where('communities_posts.community_id', this.id)
-      q.where('active', true)
+      q.where({'communities_posts.community_id': this.id, 'active': true})
     })
     .fetch()
     .then(result => result.get('count'))
