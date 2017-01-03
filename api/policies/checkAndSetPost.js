@@ -6,6 +6,10 @@ module.exports = function checkAndSetPost (req, res, next) {
     res[responseType || 'forbidden'](err)
   }
 
+  if (isNaN(Number(postId))) {
+    return fail(`post id "${postId}" is invalid`, 'badRequest')
+  }
+
   return Post.find(postId, {withRelated: 'communities'})
   .then(post => {
     if (!post) return fail(`post ${postId} not found`, 'notFound')
