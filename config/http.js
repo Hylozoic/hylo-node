@@ -85,6 +85,7 @@ module.exports.http = {
     var kue = require('kue')
     var kueUI = require('kue-ui')
     var isAdmin = require('../api/policies/isAdmin')
+    var accessTokenAuth = require('../api/policies/accessTokenAuth')
 
     kueUI.setup({
       apiURL: '/admin/kue/api',
@@ -94,6 +95,8 @@ module.exports.http = {
     app.use('/admin/kue', isAdmin)
     app.use('/admin/kue/api', kue.app)
     app.use('/admin/kue', kueUI.app)
+
+    app.use('/noo/graphql', accessTokenAuth)
     app.use('/noo/graphql', createRequestHandler())
   }
 
