@@ -255,7 +255,11 @@ CREATE TABLE community_invites (
     used_at timestamp without time zone,
     email text NOT NULL,
     role smallint DEFAULT 0,
-    tag_id bigint
+    tag_id bigint,
+    last_sent_at timestamp with time zone,
+    sent_count integer DEFAULT 0,
+    subject character varying(255),
+    message text
 );
 
 

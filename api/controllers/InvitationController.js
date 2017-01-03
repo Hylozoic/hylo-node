@@ -1,7 +1,6 @@
 import validator from 'validator'
 import { markdown } from 'hylo-utils/text'
-import { get, isEmpty, map } from 'lodash/fp'
-import { presentForList } from '../presenters/UserPresenter'
+import { get, isEmpty, map, merge } from 'lodash/fp'
 
 const parseEmailList = emails =>
   (emails || '').split(/,|\n/).map(email => {
@@ -75,7 +74,7 @@ module.exports = {
             avatar_url: i.get('joined_user_avatar_url')
           }
         }
-        return _.merge(i.pick('id', 'email', 'created_at'), {
+        return merge(i.pick('id', 'email', 'created_at'), {
           user: !isEmpty(user) ? user : null
         })
       })
@@ -91,37 +90,31 @@ module.exports = {
       Community.find(req.param('communityId')),
       tagName && Tag.find(tagName),
       (users, community, tag) => {
-        return tag
-        ? TagFollow.findFollowers(community.id, tag.id, 3)
-        : Promise.resolve([])
-        .then(participants => {
-          var emails = parseEmailList(req.param('emails'))
-          .concat(map(u => u.get('email'), get('models', users)))
+        var emails = parseEmailList(req.param('emails'))
+        .concat(map(u => u.get('email'), get('models', users)))
 
-          return Promise.map(emails, email => {
-            if (!validator.isEmail(email)) {
-              return {email, error: 'not a valid email address'}
-            }
+        return Promise.map(emails, email => {
+          if (!validator.isEmail(email)) {
+            return {email, error: 'not a valid email address'}
+          }
 
-            const opts = {
-              email,
-              userId: req.session.userId,
-              communityId: community.id
-            }
+          const opts = {
+            email,
+            userId: req.session.userId,
+            communityId: community.id
+          }
 
-            if (tag) {
-              opts.tagId = tag.id
-              opts.participants = map(u => presentForList(u, {tags: true}), participants)
-            } else {
-              opts.message = markdown(req.param('message'))
-              opts.moderator = req.param('moderator')
-              opts.subject = req.param('subject')
-            }
+          if (tag) {
+            opts.tagId = tag.id
+          } else {
+            opts.message = markdown(req.param('message'))
+            opts.moderator = req.param('moderator')
+            opts.subject = req.param('subject')
+          }
 
-            return Invitation.createAndSend(opts)
-            .then(() => ({email, error: null}))
-            .catch(err => ({email, error: err.message}))
-          })
+          return Invitation.createAndSend(opts)
+          .then(() => ({email, error: null}))
+          .catch(err => ({email, error: err.message}))
         })
       })
     .then(results => res.ok({results}))

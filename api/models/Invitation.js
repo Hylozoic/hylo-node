@@ -1,5 +1,6 @@
 var uuid = require('node-uuid')
-import { markdown } from 'hylo-utils/text'
+import { map } from 'lodash/fp'
+import { presentForList } from '../presenters/UserPresenter'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'community_invites',
@@ -45,26 +46,40 @@ module.exports = bookshelf.Model.extend({
     }).save())
   },
 
-  send: function (opts) {
-    let creator = this.relations.creator
-    let community = this.relations.community
+  send: function () {
+    const creator = this.relations.creator
+    const community = this.relations.community
+    const email = this.get('email')
 
-    let data = _.extend(_.pick(opts, 'message', 'subject', 'participants'), {
+    const data = {
+      subject: this.get('subject'),
+      message: this.get('message'),
       inviter_name: creator.get('name'),
       inviter_email: creator.get('email'),
       community_name: community.get('name'),
-      invite_link: Frontend.Route.useInvitation(this.get('token'), opts.email),
+      invite_link: Frontend.Route.useInvitation(this.get('token'), email),
       tracking_pixel_url: Analytics.pixelUrl('Invitation', {
-        recipient: opts.email,
+        recipient: email,
         community: community.get('name')
       })
-    })
-    if (this.get('tag_id')) {
-      data.tag_name = this.relations.tag.get('name')
-      return Email.sendTagInvitation(opts.email, data)
-    } else {
-      return Email.sendInvitation(opts.email, data)
     }
+
+    return this.save({
+      sent_count: this.get('sent_count') + 1,
+      last_sent_at: new Date()
+    })
+    .then(() => {
+      if (this.get('tag_id')) {
+        return TagFollow.findFollowers(community.id, this.get('tag_id'), 3)
+        .then(followers => {
+          data.participants = map(u => presentForList(u, {tags: true}), followers)
+          data.tag_name = this.relations.tag.get('name')
+          return Email.sendTagInvitation(email, data)
+        })
+      } else {
+        return Email.sendInvitation(email, data)
+      }
+    })
   }
 
 }, {
@@ -85,32 +100,38 @@ module.exports = bookshelf.Model.extend({
       tag_id: opts.tagId,
       role: role,
       token: uuid.v4(),
-      created_at: new Date()
+      created_at: new Date(),
+      subject: opts.subject,
+      message: opts.message
     }).save()
   },
 
   createAndSend: function (opts) {
     return Invitation.create(opts)
     .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
-    .then(invitation => invitation.send(opts))
+    .tap(invitation => invitation.send())
   },
 
   reinviteAll: function (opts) {
-    const { communityId, userId, moderator, message, subject } = opts
+    const { communityId } = opts
     return Invitation.where({community_id: communityId, used_by_id: null})
     .fetchAll({withRelated: ['creator', 'community', 'tag']})
     .then(invitations =>
-      Promise.map(invitations.models, invitation => {
-        const opts = {
-          email: invitation.get('email'),
-          userId,
-          communityId,
-          message: markdown(message),
-          moderator,
-          subject
-        }
-        return invitation.send(opts)
-        .then(() => invitation.save({created_at: new Date()}, {patch: true}))
-      }))
+      Promise.map(invitations.models, invitation => invitation.send()))
+  },
+
+  resendAllReady () {
+    return Invitation.query(q => {
+      const whereClause = "(sent_count=1 and last_sent_at < now() - interval '1 day') or " +
+        "(sent_count=2 and last_sent_at < now() - interval '1 day') or " +
+        "(sent_count=3 and last_sent_at < now() - interval '4 day') or " +
+        "(sent_count=4 and last_sent_at < now() - interval '9 day')"
+      q.whereRaw(whereClause)
+      q.whereNull('used_by_id')
+    })
+    .fetchAll({withRelated: ['creator', 'community']})
+    .tap(invitations => Promise.map(invitations.models, i => i.send()))
+    .then(invitations => invitations.pluck('id'))
   }
+
 })
