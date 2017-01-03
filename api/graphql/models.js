@@ -43,7 +43,7 @@ export default function models (userId) {
 
     communities: {
       model: Community,
-      attributes: ['id', 'name', 'created_at'],
+      attributes: ['id', 'name', 'slug', 'created_at'],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         memberCount: (c) => c.memberCount(),
