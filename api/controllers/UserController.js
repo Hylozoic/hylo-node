@@ -1,4 +1,6 @@
-import { find, flatten, merge, pick } from 'lodash'
+import {
+  extend, find, flatten, has, includes, isEmpty, merge, pick
+} from 'lodash'
 import { map } from 'lodash/fp'
 import validator from 'validator'
 
@@ -97,11 +99,10 @@ module.exports = {
   },
 
   update: function (req, res) {
-    var attrs = _.pick(req.allParams(), [
+    var attrs = pick(req.allParams(), [
       'name', 'bio', 'avatar_url', 'banner_url', 'location',
       'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
       'send_email_preference', 'work', 'intention', 'extra_info',
-      'new_notification_count',
       'push_follow_preference', 'push_new_post_preference', 'settings'
     ])
 
@@ -110,7 +111,7 @@ module.exports = {
     .tap(user => {
       const newEmail = attrs.email
       const oldEmail = user.get('email')
-      if (_.has(attrs, 'email') && newEmail !== oldEmail) {
+      if (has(attrs, 'email') && newEmail !== oldEmail) {
         if (!validator.isEmail(newEmail)) {
           throw new Error('invalid-email')
         }
@@ -128,15 +129,11 @@ module.exports = {
       const tags = req.param('tags')
       if (tags) promises.push(Tag.updateUser(user, req.param('tags')))
 
-      if (!_.isEmpty(user.changed) || changed) {
+      if (!isEmpty(user.changed) || changed) {
         promises.push(user.save(
-          _.extend({updated_at: new Date()}, user.changed),
+          extend({updated_at: new Date()}, user.changed),
           {patch: true}
         ))
-      }
-
-      if (attrs.new_notification_count === 0) {
-        promises.push(user.resetNotificationCount())
       }
 
       const password = req.param('password')
@@ -154,7 +151,7 @@ module.exports = {
     })
     .then(() => res.ok({}))
     .catch(function (err) {
-      if (_.includes(['invalid-email', 'duplicate-email'], err.message)) {
+      if (includes(['invalid-email', 'duplicate-email'], err.message)) {
         res.statusCode = 422
         res.send(req.__(err.message))
       } else {
