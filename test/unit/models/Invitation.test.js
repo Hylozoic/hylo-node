@@ -223,7 +223,8 @@ describe('Invitation', function () {
       })
     })
 
-    it('sends the invitations that are ready', () => {
+    it('sends the invitations that are ready', function () {
+      this.timeout(5000)
       return Invitation.resendAllReady()
       .then(() => Invitation.where({community_id: community.id}).fetchAll())
       .then(invitations => {
