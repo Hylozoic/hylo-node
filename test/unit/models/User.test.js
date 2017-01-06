@@ -117,7 +117,7 @@ describe('User', function () {
         name: 'foo bar'
       })
       .then(user => expect.fail())
-      .catch(err => expect(err.message).to.equal('invalid email'))
+      .catch(err => expect(err.message).to.equal('invalid-email'))
     })
 
     it('works with a password', function () {

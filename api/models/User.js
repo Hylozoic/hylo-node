@@ -2,8 +2,23 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { clone, merge, omit } from 'lodash'
+import { clone, has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
+
+const validateUserAttributes = (attrs, {existingUser} = {}) => {
+  // for an existing user, the email field can be omitted.
+  if (existingUser && !has(attrs, 'email')) return Promise.resolve()
+
+  const { email } = attrs
+  const oldEmail = existingUser ? existingUser.get('email') : null
+
+  if (!validator.isEmail(email)) {
+    return Promise.reject(new Error('invalid-email'))
+  }
+
+  return User.isEmailUnique(email, oldEmail)
+  .then(unique => unique || Promise.reject(new Error('duplicate-email')))
+}
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
@@ -172,6 +187,27 @@ module.exports = bookshelf.Model.extend(merge({
     .fetch({transacting}).then(account => account
       ? account.updatePassword(password, {transacting})
       : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
+  },
+
+  validateAndSave: function (changes) {
+    // TODO throw an error if a non-whitelisted field is supplied (besides tags
+    // and password, which are used later)
+    var whitelist = pick(changes, [
+      'name', 'bio', 'avatar_url', 'banner_url', 'location',
+      'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
+      'work', 'intention', 'extra_info', 'settings'
+    ])
+
+    return validateUserAttributes(whitelist, {existingUser: this})
+    .then(() => this.setSanely(whitelist))
+    .then(() => bookshelf.transaction(transacting => Promise.all([
+      changes.tags && Tag.updateUser(this, changes.tags, {transacting}),
+      changes.password && this.setPassword(changes.password, {transacting}),
+      !isEmpty(this.changed) && this.save(
+        Object.assign({updated_at: new Date()}, this.changed),
+        {patch: true, transacting}
+      )
+    ])))
   }
 
 }, HasSettings), {
@@ -200,10 +236,6 @@ module.exports = bookshelf.Model.extend(merge({
     })
   }),
 
-  validate: attrs => {
-    if (!validator.isEmail(attrs.email)) return 'invalid email'
-  },
-
   create: function (attributes, options) {
     if (!options) options = {}
     var trx = options.transacting
@@ -229,10 +261,8 @@ module.exports = bookshelf.Model.extend(merge({
       attributes.name = attributes.email.split('@')[0].replace(/[._]/g, ' ')
     }
 
-    var validationError = User.validate(attributes)
-    if (validationError) return Promise.reject(new Error(validationError))
-
-    return new User(attributes).save({}, {transacting: trx})
+    return validateUserAttributes(attributes)
+    .then(() => new User(attributes).save({}, {transacting: trx}))
     .tap(user => Promise.join(
       account && LinkedAccount.create(user.id, account, {transacting: trx}),
       community && Membership.create(user.id, community.id, {transacting: trx}),
