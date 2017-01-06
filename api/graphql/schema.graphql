@@ -3,6 +3,7 @@ type Me {
   id: ID
   name: String
   avatarUrl: String
+  hasDevice: Boolean
   memberships(first: Int, cursor: ID, order: String): [Membership]
   posts(first: Int, cursor: ID, order: String): [Post]
 }

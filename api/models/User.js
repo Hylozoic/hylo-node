@@ -172,6 +172,11 @@ module.exports = bookshelf.Model.extend(merge({
     .fetch({transacting}).then(account => account
       ? account.updatePassword(password, {transacting})
       : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
+  },
+
+  hasDevice: function () {
+    return this.load('devices')
+    .then(() => this.relations.devices.length > 0)
   }
 
 }, HasSettings), {
