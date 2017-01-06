@@ -190,8 +190,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   validateAndSave: function (changes) {
-    // TODO throw an error if a non-whitelisted field is supplied (besides tags
-    // and password, which are used later)
+    // TODO maybe throw an error if a non-whitelisted field is supplied (besides
+    // tags and password, which are used later)
     var whitelist = pick(changes, [
       'name', 'bio', 'avatar_url', 'banner_url', 'location',
       'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
