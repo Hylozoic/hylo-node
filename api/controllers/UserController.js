@@ -1,6 +1,5 @@
-import { find, has, includes, isEmpty, merge, pick } from 'lodash'
+import { find, includes, merge, pick } from 'lodash'
 import { map } from 'lodash/fp'
-import validator from 'validator'
 
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
@@ -97,37 +96,8 @@ module.exports = {
   },
 
   update: function (req, res) {
-    const params = req.allParams()
-    var attrs = pick(params, [
-      'name', 'bio', 'avatar_url', 'banner_url', 'location',
-      'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
-      'work', 'intention', 'extra_info', 'settings'
-    ])
-
-    const userId = req.param('userId') || req.session.userId
-    return User.find(userId, {withRelated: 'tags'})
-    .tap(user => {
-      const newEmail = attrs.email
-      const oldEmail = user.get('email')
-      if (has(attrs, 'email') && newEmail !== oldEmail) {
-        if (!validator.isEmail(newEmail)) {
-          throw new Error('invalid-email')
-        }
-        return User.isEmailUnique(newEmail, oldEmail).then(isUnique => {
-          if (!isUnique) throw new Error('duplicate-email')
-        })
-      }
-    })
-    .tap(user => user.setSanely(attrs))
-    .then(user => bookshelf.transaction(transacting =>
-      Promise.all([
-        params.tags && Tag.updateUser(user, params.tags, {transacting}),
-        params.password && user.setPassword(params.password, {transacting}),
-        !isEmpty(user.changed) && user.save(
-          Object.assign({updated_at: new Date()}, user.changed),
-          {patch: true, transacting}
-        )
-      ])))
+    return User.find(req.param('userId') || req.session.userId)
+    .then(user => user.validateAndSave(req.allParams()))
     .then(() => res.ok({}))
     .catch(function (err) {
       if (includes(['invalid-email', 'duplicate-email'], err.message)) {

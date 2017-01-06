@@ -21,7 +21,13 @@ const createRootValue = userId => {
     me: () => fetcher.fetchOne('me', userId),
     community: ({ id, slug }) => // you can specify id or slug, but not both
       fetcher.fetchOne('communities', slug || id, slug ? 'slug' : 'id'),
-    person: ({ id }) => fetcher.fetchOne('users', id)
+    person: ({ id }) => fetcher.fetchOne('users', id),
+
+    updateMe: ({ changes }) => {
+      return User.find(userId)
+      .then(user => user.validateAndSave(changes))
+      .then(() => fetcher.fetchOne('me', userId))
+    }
   }
 }
 

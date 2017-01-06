@@ -2,7 +2,11 @@
 type Me {
   id: ID
   name: String
+  email: String
   avatarUrl: String
+  bannerUrl: String
+  bio: String
+  url: String
   memberships(first: Int, cursor: ID, order: String): [Membership]
   posts(first: Int, cursor: ID, order: String): [Post]
 }
@@ -48,4 +52,17 @@ type Query {
   me: Me
   person(id: ID): Person
   community(id: ID, slug: String): Community
+}
+
+input MeInput {
+  name: String
+  email: String
+  avatarUrl: String
+  bannerUrl: String
+  bio: String
+  url: String
+}
+
+type Mutation {
+  updateMe(changes: MeInput): Me
 }
