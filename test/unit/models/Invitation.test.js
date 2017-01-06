@@ -225,6 +225,8 @@ describe('Invitation', function () {
 
     it('sends the invitations that are ready', function () {
       this.timeout(5000)
+      const now = new Date().getTime()
+
       return Invitation.resendAllReady()
       .then(() => Invitation.where({community_id: community.id}).fetchAll())
       .then(invitations => {
@@ -270,10 +272,11 @@ describe('Invitation', function () {
 
         invitations.forEach(i => {
           const email = i.get('email')
+          const lastSentAt = i.get('last_sent_at').getTime()
           if (email.match('@a.com') || email.match('a@b.com') || email.match('b@b.com')) {
-            expect(i.get('last_sent_at').getTime()).to.be.closeTo(new Date().getTime(), 1000)
+            expect(lastSentAt).to.be.closeTo(now, 2000)
           } else {
-            expect(i.get('last_sent_at').getTime()).not.to.be.closeTo(new Date().getTime(), 1000)
+            expect(lastSentAt).not.to.be.closeTo(now, 2000)
           }
         })
       })
