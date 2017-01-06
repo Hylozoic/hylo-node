@@ -28,7 +28,7 @@ export const withRelatedSpecialPost = {
   withRelated: [
     {posts: q => {
       q.where('posts_tags.selected', true)
-      q.where('posts.type', 'in', ['event', 'project'])
+      q.where('posts.type', 'project')
     }}
   ]
 }
