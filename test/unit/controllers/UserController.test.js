@@ -3,6 +3,7 @@ var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var UserController = require(root('api/controllers/UserController'))
 import { spyify, unspyify } from '../../setup/helpers'
+import { omit } from 'lodash'
 
 describe('UserController', function () {
   var noop = () => () => this
@@ -18,7 +19,7 @@ describe('UserController', function () {
     var community
 
     beforeEach(function () {
-      _.extend(res, {
+      Object.assign(res, {
         send: console.error
       })
 
@@ -30,7 +31,7 @@ describe('UserController', function () {
     })
 
     it('works with a username and password', function () {
-      _.extend(req.params, {
+      Object.assign(req.params, {
         email: 'foo@bar.com',
         password: 'password!',
         code: 'foo',
@@ -62,7 +63,7 @@ describe('UserController', function () {
 
     describe('.update', function () {
       it('halts on invalid email', function () {
-        _.extend(req.params, {userId: u1.id, email: 'lol'})
+        Object.assign(req.params, {userId: u1.id, email: 'lol'})
 
         return UserController.update(req, res)
         .then(() => {
@@ -72,7 +73,7 @@ describe('UserController', function () {
       })
 
       it('halts on duplicate email', function () {
-        _.extend(req.params, {userId: u1.id, email: u2.get('email')})
+        Object.assign(req.params, {userId: u1.id, email: u2.get('email')})
 
         return UserController.update(req, res)
         .then(() => {
@@ -83,7 +84,7 @@ describe('UserController', function () {
 
       it('only updates changed fields', function () {
         var fields, options
-        _.extend(req.params, {userId: u1.id, twitter_name: 'ev'})
+        Object.assign(req.params, {userId: u1.id, twitter_name: 'ev'})
 
         res = {
           ok: spy(noop()),
@@ -105,8 +106,8 @@ describe('UserController', function () {
 
         return UserController.update(req, res).then(function () {
           expect(u1.save).to.have.been.called()
-          expect(_.omit(fields, 'updated_at')).to.eql({twitter_name: 'ev'})
-          expect(options).to.eql({patch: true})
+          expect(omit(fields, 'updated_at')).to.eql({twitter_name: 'ev'})
+          expect(options).to.include.keys('patch')
         })
         .finally(function () {
           User.find = User.trueFind
@@ -114,7 +115,7 @@ describe('UserController', function () {
       })
 
       it('only updates changed fields in settings', function () {
-        _.extend(req.params, {userId: u1.id, settings: {currentCommunityId: 'all'}})
+        Object.assign(req.params, {userId: u1.id, settings: {currentCommunityId: 'all'}})
 
         return UserController.update(req, res)
         .then(() => User.find(u1.id))
@@ -131,7 +132,7 @@ describe('UserController', function () {
       it('returns a response with private details', function () {
         var response
         req.session.userId = u1.id
-        _.extend(res, {
+        Object.assign(res, {
           ok: spy(data => response = data),
           serverError: spy(function (err) {
             console.error(err)
@@ -156,7 +157,7 @@ describe('UserController', function () {
         var response
         req.session.userId = u1.id
         req.params.userId = u1.id
-        _.extend(res, {
+        Object.assign(res, {
           ok: spy(data => response = data),
           serverError: spy(function (err) {
             console.error(err)

@@ -2,7 +2,7 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { merge } from 'lodash'
+import { clone, merge, omit } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 
 module.exports = bookshelf.Model.extend(merge({
@@ -93,7 +93,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   // sanitize certain values before storing them
   setSanely: function (attrs) {
-    var saneAttrs = _.clone(attrs)
+    var saneAttrs = clone(attrs)
 
     if (saneAttrs.twitter_name) {
       if (saneAttrs.twitter_name.match(/^\s*$/)) {
@@ -104,7 +104,7 @@ module.exports = bookshelf.Model.extend(merge({
     }
 
     if (attrs.settings) {
-      saneAttrs.settings = _.merge({}, this.get('settings'), attrs.settings)
+      saneAttrs.settings = merge({}, this.get('settings'), attrs.settings)
     }
 
     return this.set(saneAttrs)
@@ -165,6 +165,13 @@ module.exports = bookshelf.Model.extend(merge({
     return Invitation.query()
     .where({email: this.get('email'), community_id: communityId})
     .update({used_by_id: this.id}).transacting(trx)
+  },
+
+  setPassword: function (password, { transacting } = {}) {
+    return LinkedAccount.where({user_id: this.id, provider_key: 'password'})
+    .fetch({transacting}).then(account => account
+      ? account.updatePassword(password, {transacting})
+      : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
   }
 
 }, HasSettings), {
@@ -203,7 +210,7 @@ module.exports = bookshelf.Model.extend(merge({
     var account = attributes.account
     var community = attributes.community
 
-    attributes = _.merge({
+    attributes = merge({
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
       updated_at: new Date(),
@@ -212,17 +219,17 @@ module.exports = bookshelf.Model.extend(merge({
       push_new_post_preference: true,
       settings: {digest_frequency: 'daily'},
       active: true
-    }, _.omit(attributes, 'account', 'community'))
+    }, omit(attributes, 'account', 'community'))
 
     if (account) {
-      _.merge(
+      merge(
         attributes,
         LinkedAccount.socialMediaAttributes(account.type, account.profile)
       )
     }
 
     if (!attributes.name) {
-      attributes.name = attributes.email.split('@')[0].replace(/[\._]/g, ' ')
+      attributes.name = attributes.email.split('@')[0].replace(/[._]/g, ' ')
     }
 
     var validationError = User.validate(attributes)

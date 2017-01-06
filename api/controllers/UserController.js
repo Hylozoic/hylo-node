@@ -1,6 +1,4 @@
-import {
-  extend, find, flatten, has, includes, isEmpty, merge, pick
-} from 'lodash'
+import { find, has, includes, isEmpty, merge, pick } from 'lodash'
 import { map } from 'lodash/fp'
 import validator from 'validator'
 
@@ -99,7 +97,8 @@ module.exports = {
   },
 
   update: function (req, res) {
-    var attrs = pick(req.allParams(), [
+    const params = req.allParams()
+    var attrs = pick(params, [
       'name', 'bio', 'avatar_url', 'banner_url', 'location',
       'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
       'send_email_preference', 'work', 'intention', 'extra_info',
@@ -120,35 +119,16 @@ module.exports = {
         })
       }
     })
-    .then(user => {
-      // FIXME this should be in a transaction
-      user.setSanely(attrs)
-      var promises = []
-      var changed = false
-
-      const tags = req.param('tags')
-      if (tags) promises.push(Tag.updateUser(user, req.param('tags')))
-
-      if (!isEmpty(user.changed) || changed) {
-        promises.push(user.save(
-          extend({updated_at: new Date()}, user.changed),
-          {patch: true}
-        ))
-      }
-
-      const password = req.param('password')
-      if (password) {
-        const setPassword = LinkedAccount.where({
-          user_id: user.id, provider_key: 'password'
-        }).fetch()
-        .then(account => account
-          ? account.updatePassword(password)
-          : LinkedAccount.create(user.id, {type: 'password', password}))
-        promises.push(setPassword)
-      }
-
-      return Promise.all(flatten(promises))
-    })
+    .tap(user => user.setSanely(attrs))
+    .then(user => bookshelf.transaction(transacting =>
+      Promise.all([
+        params.tags && Tag.updateUser(user, params.tags, {transacting}),
+        params.password && user.setPassword(params.password, {transacting}),
+        !isEmpty(user.changed) && user.save(
+          Object.assign({updated_at: new Date()}, user.changed),
+          {patch: true, transacting}
+        )
+      ])))
     .then(() => res.ok({}))
     .catch(function (err) {
       if (includes(['invalid-email', 'duplicate-email'], err.message)) {

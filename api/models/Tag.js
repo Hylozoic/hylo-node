@@ -1,5 +1,5 @@
 import { updateOrRemove } from '../../lib/util/knex'
-import { flatten, includes, isEmpty, uniq } from 'lodash'
+import { difference, flatten, includes, isEmpty, uniq } from 'lodash'
 import { differenceBy, filter, find, get, map, pick, some, uniqBy } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -95,18 +95,20 @@ const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {
   })
 }
 
-const invalidCharacterRegex = /[^\w\-]/
+const invalidCharacterRegex = /[^\w-]/
 const sanitize = tag => tag.replace(/ /g, '-').replace(invalidCharacterRegex, '')
 
-const createAsNeeded = tagNames => {
+const createAsNeeded = (tagNames, { transacting } = {}) => {
   const lower = t => t.toLowerCase()
+  const knex = transacting || bookshelf.knex
+  const TagQuery = transacting ? Tag.query().transacting(transacting) : Tag.query()
 
   // sure wish knex handled this for me automatically
   const sqlize = arr => arr.map(x => `'${x}'`).join(', ')
   const nameMatch = arr => `lower(name) in (${sqlize(map(lower, arr))})`
 
   // find existing tags
-  return Tag.query().whereRaw(nameMatch(tagNames)).select(['id', 'name'])
+  return TagQuery.whereRaw(nameMatch(tagNames)).select(['id', 'name'])
   .then(existing => {
     const toCreate = differenceBy(lower, tagNames, map('name', existing))
     const created_at = new Date()
@@ -114,9 +116,9 @@ const createAsNeeded = tagNames => {
     // create new tags as necessary
     return (isEmpty(toCreate)
       ? Promise.resolve([])
-      : bookshelf.knex('tags')
+      : knex('tags')
         .insert(toCreate.map(name => ({name, created_at})))
-        .then(() => Tag.query().whereRaw(nameMatch(toCreate)).select('id')))
+        .then(() => TagQuery.whereRaw(nameMatch(toCreate)).select('id')))
     // return the ids of existing and created tags together
     .then(created => map('id', existing.concat(created)))
   })
@@ -176,7 +178,7 @@ module.exports = bookshelf.Model.extend({
   STARTER_NAMES: ['offer', 'request', 'intention'],
 
   isValidTag: function (text) {
-    return !!text.match(/^[A-Za-z][\w\-]+$/)
+    return !!text.match(/^[A-Za-z][\w-]+$/)
   },
 
   tagsInText,
@@ -206,28 +208,24 @@ module.exports = bookshelf.Model.extend({
     return updateForTaggable(comment, comment.get('text'), null, tagDescriptions, trx)
   },
 
-  addToUser: function (user, values, reset) {
-    return (reset
-      ? bookshelf.knex('tags_users').where('user_id', user.id).del()
-      : Promise.resolve()
-    )
-    .then(() => createAsNeeded(uniq(map(sanitize, values))))
+  addToUser: function (user, values, { transacting } = {}) {
+    return createAsNeeded(uniq(map(sanitize, values)), {transacting})
     .then(ids => {
-      const created_at = new Date()
-      const pivot = id => ({tag_id: id, created_at})
-      return user.tags().attach(ids.map(pivot))
+      const now = new Date()
+      const pivot = id => ({tag_id: id, created_at: now})
+      return user.tags().attach(ids.map(pivot), {transacting})
     })
   },
 
-  updateUser: function (user, values) {
+  updateUser: function (user, values, opts = {}) {
     const oldTags = user.relations.tags.map(t => t.pick('id', 'name'))
     const newTags = map(name => ({name}), values)
     const lowerName = t => t.name.toLowerCase()
     const toRemove = differenceBy(lowerName, oldTags, newTags)
     const toAdd = differenceBy(lowerName, newTags, oldTags)
 
-    return Promise.resolve(!isEmpty(toRemove) && user.tags().detach(map('id', toRemove)))
-    .then(() => !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd)))
+    return Promise.resolve(!isEmpty(toRemove) && user.tags().detach(map('id', toRemove), opts))
+    .then(() => !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd), false, opts))
   },
 
   starterTags: function (trx) {
@@ -237,7 +235,7 @@ module.exports = bookshelf.Model.extend({
   createStarterTags: function (trx) {
     return Tag.starterTags(trx)
     .then(starterTags => {
-      var undefinedTagNames = _.difference(
+      var undefinedTagNames = difference(
         Tag.STARTER_NAMES,
         starterTags.map(t => t ? t.get('name') : null)
       )

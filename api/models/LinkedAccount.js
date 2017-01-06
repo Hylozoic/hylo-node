@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 import Promise from 'bluebird'
-import { get, isEmpty } from 'lodash'
+import { get, isEmpty, merge, pick } from 'lodash'
 const hash = Promise.promisify(bcrypt.hash, bcrypt)
 
 module.exports = bookshelf.Model.extend({
@@ -14,27 +14,25 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User).query({where: {active: true}})
   },
 
-  updatePassword: function (password) {
+  updatePassword: function (password, { transacting } = {}) {
     return hash(password, 10)
-    .then(provider_user_id => this.save({provider_user_id}, {patch: true}))
+    .then(provider_user_id =>
+      this.save({provider_user_id}, {patch: true, transacting}))
   }
 
 }, {
-  create: function (userId, data, options) {
-    if (!options) options = {}
-    var type = data.type
-    var profile = data.profile
-
+  create: function (userId, { type, profile, password, token }, { transacting, updateUser } = {}) {
     return (() =>
       type === 'password'
-        ? hash(data.password, 10)
+        ? hash(password, 10)
         : Promise.resolve(null))()
     .then(hashed => new LinkedAccount({
       provider_key: type,
-      provider_user_id: hashed || data.token || profile.id,
+      provider_user_id: hashed || token || profile.id,
       user_id: userId
-    }).save({}, _.pick(options, 'transacting')))
-    .tap(() => options.updateUser && this.updateUser(userId, _.merge({}, data, options)))
+    }).save({}, {transacting}))
+    .tap(() => updateUser &&
+      this.updateUser(userId, {type, profile, transacting}))
   },
 
   tokenForUser: function (userId) {
@@ -44,17 +42,17 @@ module.exports = bookshelf.Model.extend({
     }).fetch()
   },
 
-  updateUser: function (userId, options) {
-    return User.find(userId, _.pick(options, 'transacting'))
+  updateUser: function (userId, { type, profile, transacting } = {}) {
+    return User.find(userId, {transacting})
     .then(user => {
-      var avatar_url = user.get('avatar_url')
-      var attributes = this.socialMediaAttributes(options.type, options.profile)
-      if (avatar_url && !avatar_url.match(/gravatar/)) {
-        attributes.avatar_url = avatar_url
+      var avatarUrl = user.get('avatar_url')
+      var attributes = this.socialMediaAttributes(type, profile)
+      if (avatarUrl && !avatarUrl.match(/gravatar/)) {
+        attributes.avatar_url = avatarUrl
       }
       return !isEmpty(attributes) && User.query().where('id', userId)
       .update(attributes)
-      .transacting(options.transacting)
+      .transacting(transacting)
     })
   },
 
