@@ -136,7 +136,6 @@ describe('User', function () {
         expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'))
         expect(user.get('created_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
         expect(user.get('settings').digest_frequency).to.equal('daily')
-        expect(user.get('send_email_preference')).to.be.true
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
@@ -164,7 +163,6 @@ describe('User', function () {
         expect(user.get('active')).to.be.true
         expect(user.get('name')).to.equal('foo2 moo2 wow')
         expect(user.get('settings').digest_frequency).to.equal('daily')
-        expect(user.get('send_email_preference')).to.be.true
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
@@ -200,7 +198,6 @@ describe('User', function () {
         expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo')
         expect(user.get('avatar_url')).to.equal('https://graph.facebook.com/foo/picture?type=large')
         expect(user.get('settings').digest_frequency).to.equal('daily')
-        expect(user.get('send_email_preference')).to.be.true
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
@@ -239,7 +236,6 @@ describe('User', function () {
         expect(user.get('linkedin_url')).to.equal('https://www.linkedin.com/in/foobar')
         expect(user.get('avatar_url')).to.equal(catPic)
         expect(user.get('settings').digest_frequency).to.equal('daily')
-        expect(user.get('send_email_preference')).to.be.true
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {

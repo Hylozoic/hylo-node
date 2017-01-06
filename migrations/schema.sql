@@ -1147,7 +1147,6 @@ CREATE TABLE users (
     email_validated boolean,
     created_at timestamp without time zone,
     date_deactivated timestamp without time zone,
-    send_email_preference boolean,
     bio text,
     banner_url character varying(255),
     twitter_name character varying(255),
@@ -1159,8 +1158,6 @@ CREATE TABLE users (
     new_notification_count integer DEFAULT 0,
     updated_at timestamp with time zone,
     settings jsonb DEFAULT '{}'::jsonb,
-    push_follow_preference boolean DEFAULT true,
-    push_new_post_preference boolean DEFAULT true,
     location character varying(255),
     url character varying(255)
 );
@@ -2485,4 +2482,3 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
-

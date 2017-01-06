@@ -101,8 +101,7 @@ module.exports = {
     var attrs = pick(params, [
       'name', 'bio', 'avatar_url', 'banner_url', 'location',
       'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
-      'send_email_preference', 'work', 'intention', 'extra_info',
-      'push_follow_preference', 'push_new_post_preference', 'settings'
+      'work', 'intention', 'extra_info', 'settings'
     ])
 
     const userId = req.param('userId') || req.session.userId
