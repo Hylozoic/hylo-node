@@ -72,10 +72,28 @@ describe('User', function () {
     })
 
     it('preserves existing settings keys', () => {
-      var user = new User({settings: {a: 'eh', b: 'bee', c: {sea: true}}})
+      var user = new User({
+        settings: {
+          a: 'eh',
+          b: 'bee',
+          c: {sea: true}
+        }
+      })
 
-      user.setSanely({settings: {b: 'buh'}})
-      expect(user.get('settings')).to.deep.equal({a: 'eh', b: 'buh', c: {sea: true}})
+      user.setSanely({
+        settings: {
+          b: 'buh',
+          c: {see: true}
+        }
+      })
+      expect(user.get('settings')).to.deep.equal({
+        a: 'eh',
+        b: 'buh',
+        c: {
+          sea: true,
+          see: true
+        }
+      })
     })
   })
 

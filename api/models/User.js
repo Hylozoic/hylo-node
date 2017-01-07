@@ -2,10 +2,10 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { clone, has, isEmpty, merge, omit, pick } from 'lodash'
+import { has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 
-const validateUserAttributes = (attrs, {existingUser} = {}) => {
+const validateUserAttributes = (attrs, { existingUser, transacting } = {}) => {
   // for an existing user, the email field can be omitted.
   if (existingUser && !has(attrs, 'email')) return Promise.resolve()
 
@@ -16,7 +16,7 @@ const validateUserAttributes = (attrs, {existingUser} = {}) => {
     return Promise.reject(new Error('invalid-email'))
   }
 
-  return User.isEmailUnique(email, oldEmail)
+  return User.isEmailUnique(email, oldEmail, {transacting})
   .then(unique => unique || Promise.reject(new Error('duplicate-email')))
 }
 
@@ -108,7 +108,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   // sanitize certain values before storing them
   setSanely: function (attrs) {
-    var saneAttrs = clone(attrs)
+    const saneAttrs = omit(attrs, 'settings')
 
     if (saneAttrs.twitter_name) {
       if (saneAttrs.twitter_name.match(/^\s*$/)) {
@@ -118,9 +118,7 @@ module.exports = bookshelf.Model.extend(merge({
       }
     }
 
-    if (attrs.settings) {
-      saneAttrs.settings = merge({}, this.get('settings'), attrs.settings)
-    }
+    if (attrs.settings) this.addSetting(attrs.settings)
 
     return this.set(saneAttrs)
   },
@@ -198,16 +196,21 @@ module.exports = bookshelf.Model.extend(merge({
       'work', 'intention', 'extra_info', 'settings'
     ])
 
-    return validateUserAttributes(whitelist, {existingUser: this})
-    .then(() => this.setSanely(whitelist))
-    .then(() => bookshelf.transaction(transacting => Promise.all([
-      changes.tags && Tag.updateUser(this, changes.tags, {transacting}),
-      changes.password && this.setPassword(changes.password, {transacting}),
-      !isEmpty(this.changed) && this.save(
-        Object.assign({updated_at: new Date()}, this.changed),
-        {patch: true, transacting}
-      )
-    ])))
+    return bookshelf.transaction(transacting =>
+      validateUserAttributes(whitelist, {existingUser: this, transacting})
+      // we refresh the user's data inside the transaction to avoid a race
+      // condition between two updates on the same user that depend upon
+      // existing data, e.g. when updating settings
+      .then(() => this.refresh({transacting}))
+      .then(() => this.setSanely(whitelist))
+      .then(() => Promise.all([
+        changes.tags && Tag.updateUser(this, changes.tags, {transacting}),
+        changes.password && this.setPassword(changes.password, {transacting}),
+        !isEmpty(this.changed) && this.save(
+          Object.assign({updated_at: new Date()}, this.changed),
+          {patch: true, transacting}
+        )
+      ])))
   }
 
 }, HasSettings), {
@@ -294,8 +297,10 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
-  isEmailUnique: function (email, excludeEmail) {
-    var query = bookshelf.knex('users').where('email', email).count('*')
+  isEmailUnique: function (email, excludeEmail, { transacting } = {}) {
+    var query = bookshelf.knex('users')
+    .where('email', email).count('*')
+    .transacting(transacting)
     if (excludeEmail) query = query.andWhere('email', '!=', excludeEmail)
     return query.then(rows => Number(rows[0].count) === 0)
   },
@@ -353,11 +358,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   resetTooltips: function (userId) {
     return User.find(userId)
-    .then(user => {
-      const settings = user.get('settings')
-      settings.viewedTooltips = {}
-      return user.save({settings})
-    })
+    .then(user => user.removeSetting('viewedTooltips', true))
   },
 
   unseenThreadCount: function (userId) {
