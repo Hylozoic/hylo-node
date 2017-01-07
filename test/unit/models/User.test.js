@@ -3,7 +3,7 @@ require('../../setup')
 import bcrypt from 'bcrypt'
 import factories from '../../setup/factories'
 import { wait } from '../../setup/helpers'
-import { times } from 'lodash'
+import { includes, times } from 'lodash'
 
 describe('User', function () {
   var cat
@@ -72,10 +72,28 @@ describe('User', function () {
     })
 
     it('preserves existing settings keys', () => {
-      var user = new User({settings: {a: 'eh', b: 'bee', c: 'sea'}})
+      var user = new User({
+        settings: {
+          a: 'eh',
+          b: 'bee',
+          c: {sea: true}
+        }
+      })
 
-      user.setSanely({settings: {b: 'buh'}})
-      expect(user.get('settings')).to.deep.equal({a: 'eh', b: 'buh', c: 'sea'})
+      user.setSanely({
+        settings: {
+          b: 'buh',
+          c: {see: true}
+        }
+      })
+      expect(user.get('settings')).to.deep.equal({
+        a: 'eh',
+        b: 'buh',
+        c: {
+          sea: true,
+          see: true
+        }
+      })
     })
   })
 
@@ -117,7 +135,7 @@ describe('User', function () {
         name: 'foo bar'
       })
       .then(user => expect.fail())
-      .catch(err => expect(err.message).to.equal('invalid email'))
+      .catch(err => expect(err.message).to.equal('invalid-email'))
     })
 
     it('works with a password', function () {
@@ -262,9 +280,9 @@ describe('User', function () {
       .then(() => {
         expect(cat.relations.followedTags.length).to.equal(3)
         var tagNames = cat.relations.followedTags.map(t => t.get('name'))
-        expect(_.includes(tagNames, 'offer')).to.deep.equal(true)
-        expect(_.includes(tagNames, 'request')).to.deep.equal(true)
-        expect(_.includes(tagNames, 'intention')).to.deep.equal(true)
+        expect(includes(tagNames, 'offer')).to.deep.equal(true)
+        expect(includes(tagNames, 'request')).to.deep.equal(true)
+        expect(includes(tagNames, 'intention')).to.deep.equal(true)
       })
     })
   })

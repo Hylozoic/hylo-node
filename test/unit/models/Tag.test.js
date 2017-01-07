@@ -1,6 +1,7 @@
 var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
+import { sortBy } from 'lodash'
 
 describe('Tag', () => {
   var u
@@ -203,7 +204,7 @@ describe('Tag', () => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagnine')
         expect(tag.relations.communities.length).to.equal(2)
-        var communities = _.sortBy(tag.relations.communities.models, c => c.get('name'))
+        var communities = sortBy(tag.relations.communities.models, c => c.get('name'))
         expect(communities[0].get('name')).to.equal('Community One')
         expect(communities[0].pivot.get('user_id')).to.equal(user.id)
         expect(communities[1].get('name')).to.equal('Community Two')
@@ -235,7 +236,7 @@ describe('Tag', () => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagten')
         expect(tag.relations.communities.length).to.equal(2)
-        var communities = _.sortBy(tag.relations.communities.models, 'id')
+        var communities = sortBy(tag.relations.communities.models, 'id')
         expect(communities[0].get('name')).to.equal('Community Three')
         expect(communities[0].pivot.get('user_id')).to.equal(owner.id)
         expect(communities[1].get('name')).to.equal('Community Four')
@@ -423,8 +424,7 @@ describe('Tag', () => {
     })
 
     it('works', () => {
-      return u.load('tags')
-      .then(() => Tag.updateUser(u, [t2.get('name'), t3.get('name')]))
+      return Tag.updateUser(u, [t2.get('name'), t3.get('name')])
       .then(() => u.load('tags'))
       .then(() => {
         expect(u.relations.tags.map(t => t.get('name'))).to.deep.equal([

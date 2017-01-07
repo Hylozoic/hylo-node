@@ -208,8 +208,8 @@ module.exports = bookshelf.Model.extend({
     return updateForTaggable(comment, comment.get('text'), null, tagDescriptions, trx)
   },
 
-  addToUser: function (user, values, { transacting } = {}) {
-    return createAsNeeded(uniq(map(sanitize, values)), {transacting})
+  addToUser: function (user, tagNames, { transacting } = {}) {
+    return createAsNeeded(uniq(map(sanitize, tagNames)), {transacting})
     .then(ids => {
       const now = new Date()
       const pivot = id => ({tag_id: id, created_at: now})
@@ -217,15 +217,23 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  updateUser: function (user, values, opts = {}) {
-    const oldTags = user.relations.tags.map(t => t.pick('id', 'name'))
-    const newTags = map(name => ({name}), values)
-    const lowerName = t => t.name.toLowerCase()
-    const toRemove = differenceBy(lowerName, oldTags, newTags)
-    const toAdd = differenceBy(lowerName, newTags, oldTags)
+  // allTagNames is the exact list of tag names that the user should end up with
+  // after this operation completes. Tags will be added and removed as necessary
+  // for that to be the case.
+  updateUser: function (user, allTagNames, opts = {}) {
+    return user.load('tags')
+    .then(() => {
+      const oldTags = user.relations.tags.map(t => t.pick('id', 'name'))
+      const newTags = map(name => ({name}), allTagNames)
+      const lowerName = t => t.name.toLowerCase()
+      const toRemove = differenceBy(lowerName, oldTags, newTags)
+      const toAdd = differenceBy(lowerName, newTags, oldTags)
 
-    return Promise.resolve(!isEmpty(toRemove) && user.tags().detach(map('id', toRemove), opts))
-    .then(() => !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd), false, opts))
+      return Promise.all([
+        !isEmpty(toRemove) && user.tags().detach(map('id', toRemove), opts),
+        !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd), opts)
+      ])
+    })
   },
 
   starterTags: function (trx) {

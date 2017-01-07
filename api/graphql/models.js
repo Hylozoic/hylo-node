@@ -12,7 +12,16 @@ export default function models (userId) {
   return {
     me: { // the root of the graph
       model: User,
-      attributes: ['id', 'name', 'avatar_url'],
+      attributes: [
+        'id',
+        'name',
+        'email',
+        'avatar_url',
+        'banner_url',
+        'url',
+        'bio',
+        'updated_at'
+      ],
       relations: ['communities', 'posts'],
       getters: {
         hasDevice: u => u.hasDevice()

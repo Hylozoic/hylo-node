@@ -5,7 +5,10 @@ export default {
     return this.set('settings', merge({}, this.get('settings'), value))
   },
 
-  removeSetting: function (path) {
-    return unset(this.get('settings'), path)
+  removeSetting: function (path, save = false) {
+    unset(this.get('settings'), path)
+    if (save) {
+      return this.save({settings: this.get('settings')}, {patch: true})
+    }
   }
 }
