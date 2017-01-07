@@ -125,7 +125,7 @@ describe('PostController', () => {
       })
 
       return PostController.create(req, res)
-      .then(() => EventResponse.where({post_id: post.id, user_id: fixtures.u1.id}).fetch())
+      .then(response => EventResponse.where({post_id: response.id, user_id: fixtures.u1.id}).fetch())
       .then(eventResponse => {
         expect(eventResponse).to.exist
         expect(eventResponse.get('response')).to.equal('yes')
