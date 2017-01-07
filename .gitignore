@@ -24,4 +24,3 @@ latest.dump
 .env.swp
 *.swp
 .nyc_output/
-resetdb.sh
