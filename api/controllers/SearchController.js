@@ -6,6 +6,8 @@ const userColumns = q => q.column('id', 'name', 'avatar_url')
 const findCommunityIds = req => {
   if (req.param('communityId')) {
     return Promise.resolve([req.param('communityId')])
+  } else if (req.param('communityIds')) {
+    return Promise.resolve(req.param('communityIds'))
   } else if (req.param('type') === 'communities' && req.param('moderated')) {
     if (Admin.isSignedIn(req)) {
       return Community.query().pluck('id')
