@@ -116,26 +116,16 @@ describe('PostController', () => {
       .then(tag => expect(tag).not.to.exist)
     })
 
-    it('creates an event with a custom tag and creator EventResponse', () => {
+    it('creates an event and a creator EventResponse', () => {
       _.extend(req.params, {
         name: 'New Event',
         description: '<p>Post Body</p>',
         type: 'event',
-        tag: 'zounds',
         community_ids: [fixtures.c1.id]
       })
 
       return PostController.create(req, res)
-      .then(() => Tag.find('zounds', {withRelated: ['posts']}))
-      .then(tag => {
-        expect(tag).to.exist
-        const post = tag.relations.posts.first()
-        expect(post).to.exist
-        expect(post.get('name')).to.equal('New Event')
-        expect(post.get('type')).to.equal('event')
-        expect(post.pivot.get('selected')).to.be.true
-        return EventResponse.where({post_id: post.id, user_id: fixtures.u1.id}).fetch()
-      })
+      .then(response => EventResponse.where({post_id: response.id, user_id: fixtures.u1.id}).fetch())
       .then(eventResponse => {
         expect(eventResponse).to.exist
         expect(eventResponse.get('response')).to.equal('yes')
