@@ -152,7 +152,7 @@ module.exports = bookshelf.Model.extend({
       return Promise.map(recipients, user => {
         // don't notify if the user has read the thread recently and respect the
         // dm_notifications setting.
-        if (!includes(user.get('settings').ations, ['push', 'both'])) return
+        if (!includes(user.get('settings').dm_notifications, ['push', 'both'])) return
 
         const lr = lastReads.find(r => r.get('user_id') === user.id)
         if (!lr || comment.get('created_at') > lr.get('last_read_at')) {
