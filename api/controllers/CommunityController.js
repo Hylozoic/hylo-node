@@ -12,12 +12,11 @@ const welcomeMessage = 'Thank you for joining us here at Hylo. ' +
   "create extraordinary things. Let's get started!"
 
 const afterCreatingMembership = (req, res, ms, community, preexisting) => {
-  return Promise.join(
-    User.resetTooltips(req.session.userId),
-    ms && !ms.get('active') && ms.save({active: true}, {patch: true})
-  ).tap(() => {
-    if (!req.param('tagName')) return
-    return Tag.find(req.param('tagName'))
+  const tagName = req.param('tagName')
+  return Promise.resolve(ms && !ms.get('active') &&
+    ms.save({active: true}, {patch: true}))
+  .tap(() =>
+    tagName && Tag.find(tagName)
     .then(tag => {
       if (!tag) return res.notFound()
       return new TagFollow({
@@ -32,8 +31,7 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
       } else {
         throw err
       }
-    })
-  })
+    }))
   .then(() => _.merge(ms.toJSON(), {preexisting}, {
     community: community.pick('id', 'name', 'slug', 'avatar_url')
   }))
