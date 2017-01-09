@@ -142,7 +142,7 @@ const createFindAction = (queryFunction) => (req, res) => {
 // one of the specified communities, but no description is supplied
 const checkPostTags = (attrs, opts) => {
   var tags = Tag.tagsInText(attrs.name + ' ' + attrs.description)
-  if (opts.tag && opts.type !== 'project') tags.push(opts.tag)
+  if (opts.tag) tags.push(opts.tag)
 
   const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
   tags = difference(tags, describedTags)
