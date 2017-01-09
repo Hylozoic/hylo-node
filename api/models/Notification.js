@@ -60,8 +60,6 @@ module.exports = bookshelf.Model.extend({
         return this.sendCommentPush()
       case 'newContribution':
         return this.sendContributionPush()
-      case 'tag':
-        return Promise.resolve()
       case 'newPost':
         return this.sendPostPush()
       case 'joinRequest':
@@ -86,7 +84,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendContributionPush: function (version) {
-    var post = this.post()
     var contribution = this.contribution()
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) throw new Error('no community ids in activity')

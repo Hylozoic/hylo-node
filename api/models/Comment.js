@@ -1,4 +1,5 @@
-import { compact, filter, sum } from 'lodash/fp'
+/* eslint-disable camelcase */
+import { compact, filter, sum, includes } from 'lodash/fp'
 import { markdown } from 'hylo-utils/text'
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
@@ -149,7 +150,10 @@ module.exports = bookshelf.Model.extend({
       const path = parse(Frontend.Route.thread({id: post_id})).path
 
       return Promise.map(recipients, user => {
-        // don't notify if the user has read the thread recently.
+        // don't notify if the user has read the thread recently and respect the
+        // dm_notifications setting.
+        if (!includes(user.get('settings').dm_notifications, ['push', 'both'])) return
+
         const lr = lastReads.find(r => r.get('user_id') === user.id)
         if (!lr || comment.get('created_at') > lr.get('last_read_at')) {
           return user.sendPushNotification(alert, path)
@@ -164,7 +168,6 @@ module.exports = bookshelf.Model.extend({
     .where('updated_at', '>', time)
     .fetchAll({withRelated: [
       'followers',
-      'followers.devices',
       'lastReads',
       {comments: q => {
         q.where('created_at', '>', time)
@@ -177,12 +180,10 @@ module.exports = bookshelf.Model.extend({
       if (comments.length === 0) return
 
       return Promise.map(followers.models, user => {
-        // don't send to users that have devices (they receive push
-        // notifications instead)
-        if (user.relations.devices.length > 0) return
+        if (!includes(user.get('settings').dm_notifications, ['email', 'both'])) return
 
         // select comments not written by this user and newer than user's last
-        // read time
+        // read time.
         const r = lastReads.find(l => l.get('user_id') === user.id)
         const filtered = comments.filter(c =>
           c.get('created_at') > (r ? r.get('last_read_at') : 0) &&
