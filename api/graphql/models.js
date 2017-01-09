@@ -23,6 +23,9 @@ export default function models (userId) {
         'updated_at'
       ],
       relations: ['communities', 'posts'],
+      getters: {
+        hasDevice: u => u.hasDevice()
+      },
       filter: relation => relation
     },
 

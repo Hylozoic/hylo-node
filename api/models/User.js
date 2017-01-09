@@ -187,6 +187,11 @@ module.exports = bookshelf.Model.extend(merge({
       : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
   },
 
+  hasDevice: function () {
+    return this.load('devices')
+    .then(() => this.relations.devices.length > 0)
+  },
+
   validateAndSave: function (changes) {
     // TODO maybe throw an error if a non-whitelisted field is supplied (besides
     // tags and password, which are used later)

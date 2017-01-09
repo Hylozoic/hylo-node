@@ -49,8 +49,8 @@ describe('Comment', () => {
       comments = []
       mockify(Email, 'sendMessageDigest', args => log.push(args))
 
-      u1 = factories.user()
-      u2 = factories.user()
+      u1 = factories.user({settings: {dm_notifications: 'both'}})
+      u2 = factories.user({settings: {dm_notifications: 'both'}})
       post = factories.post({type: Post.Type.THREAD, updated_at: now})
 
       return Promise.join(u1.save(), u2.save(), post.save())
@@ -106,8 +106,8 @@ describe('Comment', () => {
       })
     })
 
-    it('skips users with devices', () => {
-      return Device.forge({user_id: u1.id}).save()
+    it('respects dm_notifications setting', () => {
+      return u1.save({settings: {dm_notifications: 'push'}})
       .then(() => Comment.sendMessageDigests())
       .then(count => {
         expect(count).to.equal(1)
