@@ -44,11 +44,7 @@ var postRelations = (userId, opts = {}) => {
   }
 
   if (opts.withChildren) {
-    relations.push(
-      {children: q => {
-        q.column('id', 'parent_post_id', 'name', 'description', 'num_comments')
-      }}
-    )
+    relations.push('children')
   }
 
   if (opts.withReadTimes) {

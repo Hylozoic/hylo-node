@@ -28,7 +28,7 @@ const queryPosts = (req, opts) =>
       term: req.param('search')
     },
     pick(req.allParams(),
-      'type', 'limit', 'offset', 'starts_at', 'ends_at', 'filter', 'omit'),
+      'type', 'limit', 'offset', 'starts_at', 'ends_at', 'filter', 'omit', 'parent_post_id'),
     omit(opts, 'sort')
   ))
   .then(Search.forPosts)
@@ -135,6 +135,8 @@ const createFindAction = (queryFunction) => (req, res) => {
       withReadTimes: req.param('reads'),
       forCommunity: req.param('communityId')
     }))
+
+    // .then() fetch children here
   .then(res.ok, res.serverError)
 }
 
@@ -317,12 +319,10 @@ const PostController = {
   },
 
   fulfill: function (req, res) {
-    const { post } = res.locals
+    const { post, fulfillRequest, unfulfillRequest } = res.locals
     const contributorIds = req.param('contributorIds') || []
     const fulfilledAt = post.get('fulfilled_at')
-    const result = fulfilledAt ?
-      post.unfulfillRequest() :
-      post.fulfillRequest({contributorIds})
+    const result = fulfilledAt ? unfulfillRequest() : fulfillRequest({contributorIds})
     result.then(() => res.ok({}))
     .catch(res.serverError)
   },

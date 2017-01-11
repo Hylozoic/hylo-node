@@ -123,7 +123,11 @@ module.exports = {
         qb.groupBy(['posts.id', 'communities_posts.post_id', 'communities_posts.pinned'])
       }
 
-      if (!opts.includeChildren) {
+      if (opts.parent_post_id) {
+        qb.where('parent_post_id', opts.parent_post_id)
+      }
+
+      if (!opts.parent_post_id && !opts.includeChildren) {
         qb.where('parent_post_id', null)
       }
     })
