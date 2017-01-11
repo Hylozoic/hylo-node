@@ -379,20 +379,19 @@ module.exports = {
 
   requestToJoin: function (req, res) {
     const { community } = res.locals
-    const params = {
-      community_id: community.id,
-      user_id: req.session.userId
-    }
+    const params = {community_id: community.id, user_id: req.session.userId}
+    var redundant = false
     return JoinRequest.where(params).fetch()
     .then(joinRequest => {
+      const now = new Date()
       if (joinRequest) {
-        return joinRequest.save({updated_at: new Date()})
+        redundant = now - joinRequest.get('updated_at') < 240 * 60 * 1000
+        return joinRequest.save({updated_at: now})
       } else {
-        return new JoinRequest(merge(params, {created_at: new Date()})).save()
+        return new JoinRequest(merge(params, {created_at: now})).save()
       }
     })
-    .tap(joinRequest =>
-      community.moderators().fetch()
+    .tap(joinRequest => !redundant && community.moderators().fetch()
       .then(moderators => Queue.classMethod('Activity', 'saveForReasonsOpts', {
         activities: moderators.models.map(moderator => ({
           reader_id: moderator.id,
