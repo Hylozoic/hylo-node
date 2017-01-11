@@ -1,4 +1,5 @@
 /* globals LinkPreview, LastRead */
+/* eslint-disable camelcase */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
@@ -133,7 +134,8 @@ module.exports = bookshelf.Model.extend({
 
   pushCommentToSockets: function (comment) {
     var postId = this.id
-    return pushToSockets(`posts/${postId}`, 'commentAdded', comment)
+    const parent_post_id = this.get('parent_post_id')
+    return pushToSockets(`posts/${postId}`, 'commentAdded', {comment, parent_post_id})
   },
 
   pushMessageToSockets: function (message, userIds) {
