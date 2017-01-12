@@ -135,6 +135,12 @@ const createFindAction = (queryFunction) => (req, res) => {
       withReadTimes: req.param('reads'),
       forCommunity: req.param('communityId')
     }))
+  .then(result => {
+    result.posts = [mockProjectPost].concat(result.posts)
+    result.people = mockPeople.concat(result.people)
+    return result
+  })
+  .tap(r => console.log('posts', r.posts[0], r.posts[1]))
   .then(res.ok, res.serverError)
 }
 
@@ -436,5 +442,55 @@ queries.forEach(tuple => {
   PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(fn, 'posts')
   PostController['findFor' + key] = createFindAction(fn)
 })
+
+const mockProjectPost = {
+  id: '123',
+  name: 'What about food?',
+  description: '<p>Need hampers</p>',
+  created_at: '2016-01-11T23:04:28.503Z',
+  updated_at: '2017-01-11T23:04:28.503Z',
+  numComments: 3,
+  tag: 'request',
+  type: 'project-activity',
+  project: {
+    id: '56789',
+    name: 'Picnic at the beach',
+    created_at: '2017-01-11T23:04:28.503Z',
+    updated_at: '2017-01-11T23:04:28.503Z',
+    media: [{
+      name: null,
+      type: 'image',
+      url: 'http://hylo-dev.s3.amazonaws.com/user/11204/seeds/1484262498619_c23e729f31dd8849749734ed121ef3eb.jpg',
+      thumbnail_url: null,
+      width: 440,
+      height: 518
+    }]
+  },
+  community_ids: [
+    '29'
+  ],
+  voter_ids: [],
+  follower_ids: [
+    '11204'
+  ],
+  user_id: '21',
+  comments: [{
+    id: '876',
+    text: 'I can bring organic grapes from my garden',
+    user_id: '982'
+  }]
+}
+
+const mockPeople = [
+  {
+    id: '982',
+    name: 'Connor Turland',
+    avatar_url: 'https://lh6.googleusercontent.com/-Yykp9BrS5pM/AAAAAAAAAAI/AAAAAAAAGFQ/45VGI9GhQCQ/photo.jpg'
+  },
+  {
+    id: '21',
+    name: 'Edward West',
+    avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/user/21/avatar/1466554313506_EdwardHeadshot2016Square.jpg'
+  }]
 
 module.exports = PostController
