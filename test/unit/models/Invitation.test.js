@@ -168,62 +168,61 @@ describe('Invitation', function () {
       c2 = factories.community()
       inviter = factories.user()
       const day = 1000 * 60 * 60 * 24
+      const now = new Date()
       return Promise.join(inviter.save(), community.save(), c2.save())
       .then(() => {
         const attributes = [
           {
-            email: 'a@a.com',
+            email: 'a@sendme.com',
             sent_count: 1,
-            last_sent_at: new Date((Date.now() + 1) - day)
+            last_sent_at: new Date(now - day)
           },
           {
-            email: 'b@a.com',
+            email: 'b@sendme.com',
             sent_count: 2,
-            last_sent_at: new Date((Date.now() + 1) - day)
+            last_sent_at: new Date(now - day)
           },
           {
-            email: 'c@a.com',
+            email: 'c@sendme.com',
             sent_count: 3,
-            last_sent_at: new Date((Date.now() + 1) - (4 * day))
+            last_sent_at: new Date(now - 4 * day)
           },
           {
-            email: 'd@a.com',
+            email: 'd@sendme.com',
             sent_count: 4,
-            last_sent_at: new Date((Date.now() + 1) - (9 * day))
+            last_sent_at: new Date(now - 9 * day)
           },
           {
-            email: 'a@b.com',
+            email: 'a@used.com',
             sent_count: 1,
-            last_sent_at: new Date(Date.now() + 1)
+            last_sent_at: new Date(now - day),
+            used_by_id: 5
           },
           {
-            email: 'b@b.com',
+            email: 'a@notyet.com',
             sent_count: 2,
-            last_sent_at: new Date(Date.now() + 1)
+            last_sent_at: new Date(now - 60000)
           },
           {
-            email: 'c@b.com',
+            email: 'b@notyet.com',
             sent_count: 3,
-            last_sent_at: new Date((Date.now() + 1) - (3 * day))
+            last_sent_at: new Date(now - 3 * day)
           },
           {
-            email: 'd@b.com',
+            email: 'c@notyet.com',
             sent_count: 4,
-            last_sent_at: new Date((Date.now() + 1) - (8 * day))
+            last_sent_at: new Date(now - 8 * day)
           }
         ]
 
-        return Promise.map(attributes, ({ email, sent_count, last_sent_at }) =>
-          Invitation.create({
-            communityId: community.id,
-            userId: inviter.id,
-            email
-          })
-          .then(i => i.save({sent_count, last_sent_at}, {patch: true})))
+        const userId = inviter.id
+        return Promise.map(attributes, ({ email, sent_count, last_sent_at, used_by_id }) =>
+          Invitation.create({communityId: community.id, userId, email})
+          .then(i => i.save({sent_count, last_sent_at, used_by_id}, {patch: true})))
       })
     })
 
-    it('sends the invitations that are ready', function () {
+    it('sends the invitations that are ready and unused', function () {
       this.timeout(5000)
       const now = new Date().getTime()
 
@@ -232,35 +231,35 @@ describe('Invitation', function () {
       .then(invitations => {
         const expected = sortBy('email', [
           {
-            email: 'a@a.com',
+            email: 'a@sendme.com',
             sent_count: 2
           },
           {
-            email: 'b@a.com',
+            email: 'b@sendme.com',
             sent_count: 3
           },
           {
-            email: 'c@a.com',
+            email: 'c@sendme.com',
             sent_count: 4
           },
           {
-            email: 'd@a.com',
+            email: 'd@sendme.com',
             sent_count: 5
           },
           {
-            email: 'a@b.com',
+            email: 'a@used.com',
             sent_count: 1
           },
           {
-            email: 'b@b.com',
+            email: 'a@notyet.com',
             sent_count: 2
           },
           {
-            email: 'c@b.com',
+            email: 'b@notyet.com',
             sent_count: 3
           },
           {
-            email: 'd@b.com',
+            email: 'c@notyet.com',
             sent_count: 4
           }
         ])
@@ -273,7 +272,7 @@ describe('Invitation', function () {
         invitations.forEach(i => {
           const email = i.get('email')
           const lastSentAt = i.get('last_sent_at').getTime()
-          if (email.match('@a.com') || email.match('a@b.com') || email.match('b@b.com')) {
+          if (email.match('@sendme.com')) {
             expect(lastSentAt).to.be.closeTo(now, 2000)
           } else {
             expect(lastSentAt).not.to.be.closeTo(now, 2000)
