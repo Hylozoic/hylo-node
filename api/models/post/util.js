@@ -92,7 +92,8 @@ export const updateChildren = (post, children, trx) => {
         return Promise.map(created, child => {
           const attrs = merge(omit(child, 'id'), {
             parent_post_id: post.id,
-            user_id: post.get('user_id')
+            user_id: post.get('user_id'),
+            is_project_request: true
           })
           return Post.create(attrs, {transacting: trx})
           .then(post => post.tags().attach(attachment, {transacting: trx}))

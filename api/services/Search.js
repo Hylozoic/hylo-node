@@ -125,6 +125,7 @@ module.exports = {
 
       if (opts.parent_post_id) {
         qb.where('parent_post_id', opts.parent_post_id)
+        qb.where('is_project_request', false)
       }
 
       if (!opts.parent_post_id && !opts.includeChildren) {

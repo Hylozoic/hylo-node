@@ -96,7 +96,7 @@ const queryForFollowed = function (req, res) {
 
 const queryForPost = function (req, res) {
   return queryPosts(req, {
-    parent_post_id: req.param('postId'),
+    parent_post_id: res.locals.post.id,
     // visibility: ((res.locals.membership) ? null : Post.Visibility.PUBLIC_READABLE),
     currentUserId: req.session.userId
   })
