@@ -95,11 +95,9 @@ const queryForFollowed = function (req, res) {
 }
 
 const queryForPost = function (req, res) {
-  // return Network.containsUser(res.locals.community.get('network_id'), req.session.userId)
-  // .then(contains =>
   return queryPosts(req, {
-    parentPostId: res.locals.parentPostId,
-    visibility: ((res.locals.membership) ? null : Post.Visibility.PUBLIC_READABLE),
+    parent_post_id: req.param('postId'),
+    // visibility: ((res.locals.membership) ? null : Post.Visibility.PUBLIC_READABLE),
     currentUserId: req.session.userId
   })
 }
