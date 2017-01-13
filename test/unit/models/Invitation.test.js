@@ -162,14 +162,15 @@ describe('Invitation', function () {
   })
 
   describe('.resendAllReady', () => {
-    var community, c2, inviter
+    var community, c2, inviter, user
     before(() => {
       community = factories.community()
       c2 = factories.community()
       inviter = factories.user()
+      user = factories.user()
       const day = 1000 * 60 * 60 * 24
       const now = new Date()
-      return Promise.join(inviter.save(), community.save(), c2.save())
+      return Promise.join(inviter.save(), community.save(), c2.save(), user.save())
       .then(() => {
         const attributes = [
           {
@@ -196,7 +197,7 @@ describe('Invitation', function () {
             email: 'a@used.com',
             sent_count: 1,
             last_sent_at: new Date(now - day),
-            used_by_id: 5
+            used_by_id: user.id
           },
           {
             email: 'a@notyet.com',
