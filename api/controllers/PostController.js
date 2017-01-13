@@ -94,6 +94,16 @@ const queryForFollowed = function (req, res) {
   }))
 }
 
+const queryForPost = function (req, res) {
+  // return Network.containsUser(res.locals.community.get('network_id'), req.session.userId)
+  // .then(contains =>
+  return queryPosts(req, {
+    parentPostId: res.locals.parentPostId,
+    visibility: ((res.locals.membership) ? null : Post.Visibility.PUBLIC_READABLE),
+    currentUserId: req.session.userId
+  })
+}
+
 const queryForNetwork = function (req, res) {
   return Network.find(req.param('networkId'))
   .then(network => Community.where({network_id: network.id}).fetchAll())
@@ -134,9 +144,8 @@ const createFindAction = (queryFunction) => (req, res) => {
       withVotes: req.param('votes'),
       withReadTimes: req.param('reads'),
       forCommunity: req.param('communityId')
-    }))
-
-    // .then() fetch children here
+    }
+  ))
   .then(res.ok, res.serverError)
 }
 
@@ -426,6 +435,7 @@ const queries = [
   ['User', queryForUser],
   ['AllForUser', queryForAllForUser],
   ['Followed', queryForFollowed],
+  ['Post', queryForPost],
   ['Network', queryForNetwork],
   ['TagInAllCommunities', queryForTagInAllCommunities]
 ]
