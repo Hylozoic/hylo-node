@@ -6,9 +6,12 @@ module.exports = function (req, res, next) {
   if (myUserId === theirUserId) return next()
   if (isNaN(Number(theirUserId))) return res.notFound()
 
-  Membership.inSameCommunity([myUserId, theirUserId])
-  .then(same => same ? next()
-    : Membership.inSameNetwork(myUserId, theirUserId)
-      .then(same => same ? next() : res.forbidden()))
+  Promise.reduce([
+    () => req.param('check-join-requests') &&
+      JoinRequest.isRequesterVisible(myUserId, theirUserId),
+    () => Membership.inSameCommunity([myUserId, theirUserId]),
+    () => Membership.inSameNetwork(myUserId, theirUserId)
+  ], (ok, fn) => ok || fn(), false)
+  .then(ok => ok ? next() : res.forbidden())
   .catch(res.serverError)
 }
