@@ -320,9 +320,9 @@ const PostController = {
     const { post } = res.locals
     const contributorIds = req.param('contributorIds') || []
     const fulfilledAt = post.get('fulfilled_at')
-    const result = fulfilledAt ?
-      post.unfulfillRequest() :
-      post.fulfillRequest({contributorIds})
+    const result = fulfilledAt
+      ? post.unfulfillRequest()
+      : post.fulfillRequest({contributorIds})
     result.then(() => res.ok({}))
     .catch(res.serverError)
   },
