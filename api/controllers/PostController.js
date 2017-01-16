@@ -177,7 +177,7 @@ const PostController = {
 
   create: function (req, res) {
     const params = req.allParams()
-
+console.log(req.session.userId, 'userId')
     if (!params.name) {
       res.status(422).send("title can't be blank")
       return Promise.resolve()
@@ -188,7 +188,7 @@ const PostController = {
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => createPost(req.session.userId, params))
-    .then(post => post.load(PostPresenter.relations(req.session.userId)))
+    .then(post => post.load(PostPresenter.relations(req.session.userId, {communities: params.community_ids})))
     .then(PostPresenter.present)
     .then(normalize)
     .then(res.ok)

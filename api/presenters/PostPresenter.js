@@ -85,7 +85,7 @@ var postAttributes = (post, userId, opts = {}) => {
     ]),
     {
       user: user ? user.pick('id', 'name', 'avatar_url', 'bio') : null,
-      communities: communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
+      communities: (communities || []).map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
       contributors: contributions.length > 0 ? contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')) : null,
       followers: followers.map(u => u.pick('id', 'name', 'avatar_url')),
       responders: isEvent ? responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')) : null,
@@ -121,10 +121,13 @@ var postAttributes = (post, userId, opts = {}) => {
 }
 
 const postDetailRelations = (userId, opts = {}) => {
-  return postRelations(userId, opts).concat([
-    {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')},
-    {communities: qb => qb.column('communities.id', 'name', 'slug', 'avatar_url', 'banner_url')}
-  ])
+  let relations = [
+    {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')}
+  ]
+  if (opts.communities) {
+    relations.push({communities: qb => qb.column('communities.id', 'name', 'slug', 'avatar_url', 'banner_url')})
+  }
+  return postRelations(userId, opts).concat(relations)
 }
 
 const postListRelations = (userId, opts = {}) => {

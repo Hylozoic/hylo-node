@@ -4,6 +4,8 @@ module.exports = function (req, res, next) {
   var communityIds = req.param('community_ids')
   var userId = req.session.userId
 
+  if (!communityIds) return next()
+
   return Membership.query(q => {
     q.whereIn('community_id', communityIds)
     q.where('user_id', userId)
