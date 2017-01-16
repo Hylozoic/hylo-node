@@ -24,20 +24,10 @@ export const fetchAndPresentFollowed = (communityId, userId) => {
   }, {}))
 }
 
-export const withRelatedSpecialPost = {
-  withRelated: [
-    {posts: q => {
-      q.where('posts_tags.selected', true)
-    }}
-  ]
-}
-
-export const presentWithPost = tag => {
-  const post = tag.relations.posts.first()
+export const presentTag = tag => {
   return {
     id: tag.id,
-    name: tag.get('name'),
-    post: post ? {id: post.id} : null
+    name: tag.get('name')
   }
 }
 

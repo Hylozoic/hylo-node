@@ -4,19 +4,18 @@ import {
   fetchAndPresentFollowed,
   fetchAndPresentForCommunity,
   fetchAndPresentSummary,
-  withRelatedSpecialPost,
-  presentWithPost
+  presentTag
 } from '../services/TagPresenter'
 import { countTotal } from '../../lib/util/knex'
 
 module.exports = {
   findOne: function (req, res) {
-    return Tag.find(req.param('tagName'), withRelatedSpecialPost)
+    return Tag.find(req.param('tagName'))
     .tap(tag => tag && TagFollow.where({
       user_id: req.session.userId,
       tag_id: tag.id
     }).query().update({new_post_count: 0}))
-    .then(tag => tag ? res.ok(presentWithPost(tag)) : res.notFound())
+    .then(tag => tag ? res.ok(presentTag(tag)) : res.notFound())
     .catch(res.serverError)
   },
 
@@ -24,7 +23,7 @@ module.exports = {
     let tag
     const { userId } = req.session
 
-    return Tag.find(req.param('tagName'), withRelatedSpecialPost)
+    return Tag.find(req.param('tagName'))
     .then(t => {
       if (!t) return res.notFound()
       tag = t
@@ -60,7 +59,7 @@ module.exports = {
         const followerCount = tagFollows.first() ? tagFollows.first().get('total') : 0
         return res.ok(merge(
           ct.pick('description', 'is_default', 'community_id'),
-          presentWithPost(tag),
+          presentTag(tag),
           {
             followed,
             followers,
