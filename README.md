@@ -155,7 +155,7 @@ The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is
     Hylo is a mobile and web application to help people do more together.
     Hylo helps communities better understand who in their community has what skills,
     and how they can create things together.
-    Copyright (C) 2016, Hylozoic, Inc.
+    Copyright (C) 2017, Hylozoic, Inc.
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
