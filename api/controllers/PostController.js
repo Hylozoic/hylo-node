@@ -177,7 +177,6 @@ const PostController = {
 
   create: function (req, res) {
     const params = req.allParams()
-console.log(req.session.userId, 'userId')
     if (!params.name) {
       res.status(422).send("title can't be blank")
       return Promise.resolve()
