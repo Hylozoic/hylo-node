@@ -39,6 +39,24 @@ const normalize = post => {
   return Object.assign(data, post)
 }
 
+const presentProjectActivity = function (post, data, userId, relationsOpts) {
+  if (post.type !== 'project') return post
+  return Post.query(q => {
+    q.where({parent_post_id: post.id})
+    q.orderBy('updated_at', 'desc')
+    q.limit(1)
+  })
+  .fetch({withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})})
+  .then(child => {
+    if (Math.abs(post.updated_at - child.updated_at) > 1000) return post
+    child = PostPresenter.presentForList(child, userId, relationsOpts)
+    child.project = post
+    child.type = 'project-activity'
+    normalizePost(child, data, true)
+    return child
+  })
+}
+
 const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
@@ -52,6 +70,12 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
     data.posts.forEach((post, i) => normalizePost(post, buckets, i === data.posts.length - 1))
     return Object.assign(data, buckets)
   })
+  .then(data =>
+    Promise.map(data.posts, p => presentProjectActivity(p, data, userId, relationsOpts))
+    .then(posts => {
+      data.posts = posts
+      return data
+    }))
 }
 
 const findTagId = req =>
@@ -135,12 +159,6 @@ const createFindAction = (queryFunction) => (req, res) => {
       withReadTimes: req.param('reads'),
       forCommunity: req.param('communityId')
     }))
-  .then(result => {
-    result.posts = [mockProjectPost].concat(result.posts)
-    result.people = mockPeople.concat(result.people)
-    return result
-  })
-  .tap(r => console.log('posts', r.posts[0], r.posts[1]))
   .then(res.ok, res.serverError)
 }
 
@@ -326,9 +344,9 @@ const PostController = {
     const { post } = res.locals
     const contributorIds = req.param('contributorIds') || []
     const fulfilledAt = post.get('fulfilled_at')
-    const result = fulfilledAt ?
-      post.unfulfillRequest() :
-      post.fulfillRequest({contributorIds})
+    const result = fulfilledAt
+      ? post.unfulfillRequest()
+      : post.fulfillRequest({contributorIds})
     result.then(() => res.ok({}))
     .catch(res.serverError)
   },
@@ -442,55 +460,5 @@ queries.forEach(tuple => {
   PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(fn, 'posts')
   PostController['findFor' + key] = createFindAction(fn)
 })
-
-const mockProjectPost = {
-  id: '123',
-  name: 'What about food?',
-  description: '<p>Need hampers</p>',
-  created_at: '2016-01-11T23:04:28.503Z',
-  updated_at: '2017-01-11T23:04:28.503Z',
-  numComments: 3,
-  tag: 'request',
-  type: 'project-activity',
-  project: {
-    id: '56789',
-    name: 'Picnic at the beach',
-    created_at: '2017-01-11T23:04:28.503Z',
-    updated_at: '2017-01-11T23:04:28.503Z',
-    media: [{
-      name: null,
-      type: 'image',
-      url: 'http://hylo-dev.s3.amazonaws.com/user/11204/seeds/1484262498619_c23e729f31dd8849749734ed121ef3eb.jpg',
-      thumbnail_url: null,
-      width: 440,
-      height: 518
-    }]
-  },
-  community_ids: [
-    '29'
-  ],
-  voter_ids: [],
-  follower_ids: [
-    '11204'
-  ],
-  user_id: '21',
-  comments: [{
-    id: '876',
-    text: 'I can bring organic grapes from my garden',
-    user_id: '982'
-  }]
-}
-
-const mockPeople = [
-  {
-    id: '982',
-    name: 'Connor Turland',
-    avatar_url: 'https://lh6.googleusercontent.com/-Yykp9BrS5pM/AAAAAAAAAAI/AAAAAAAAGFQ/45VGI9GhQCQ/photo.jpg'
-  },
-  {
-    id: '21',
-    name: 'Edward West',
-    avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/user/21/avatar/1466554313506_EdwardHeadshot2016Square.jpg'
-  }]
 
 module.exports = PostController
