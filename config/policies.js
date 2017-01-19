@@ -138,11 +138,6 @@ module.exports.policies = {
     createBatchFromEmailForm: ['checkAndDecodeToken']
   },
 
-  MessageController: {
-    relayFromEmail: true,
-    createWaitlistRequest: true
-  },
-
   DeviceController: {
     create:           ['sessionAuth'],
     destroy:          ['sessionAuth'],
