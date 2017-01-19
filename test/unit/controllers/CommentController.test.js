@@ -19,7 +19,8 @@ describe('CommentController', function () {
     .then(props => fixtures = props)
     .then(() => Promise.join(
       fixtures.p1.communities().attach(fixtures.c1.id),
-      fixtures.p1.comments().create(fixtures.cm1)
+      fixtures.p1.comments().create(fixtures.cm1),
+      fixtures.c1.users().attach({user_id: fixtures.u1.id, active: true})
     )))
 
   beforeEach(() => {

@@ -4,6 +4,7 @@ const factories = require(root('test/setup/factories'))
 const PostController = require(root('api/controllers/PostController'))
 import { stubGetImageSize } from '../../setup/helpers'
 import nock from 'nock'
+import { map, pick, sortBy } from 'lodash'
 
 const testImageUrl = 'http://cdn.hylo.com/misc/hylo-logo-teal-on-transparent.png'
 const testImageUrl2 = 'http://cdn.hylo.com/misc/hylo-logo-white-on-teal-circle.png'
@@ -23,7 +24,8 @@ describe('PostController', () => {
       c1: new Community({name: 'C1', slug: 'c1'}).save()
     }))
     .then(props => fixtures = props)
-    .then(() => fixtures.u2.joinCommunity(fixtures.c1)))
+    .then(() => fixtures.u2.joinCommunity(fixtures.c1))
+    .then(() => fixtures.u1.joinCommunity(fixtures.c1)))
 
   beforeEach(() => {
     stubGetImageSize(testImageUrl)
@@ -50,7 +52,7 @@ describe('PostController', () => {
     })
 
     it('saves mentions', () => {
-      _.extend(req.params, {
+      Object.assign(req.params, {
         name: 'NewPost',
         description: '<p>Hey <a data-user-id="' + fixtures.u2.id + '">U2</a>, you\'re mentioned ;)</p>',
         community_ids: [fixtures.c1.id]
@@ -67,7 +69,7 @@ describe('PostController', () => {
     })
 
     it('sanitizes the description', () => {
-      _.extend(req.params, {
+      Object.assign(req.params, {
         name: 'NewMaliciousPost',
         description: "<script>alert('test')</script><p>Hey <a data-user-id='" + fixtures.u2.id + "' data-malicious='alert(blah)'>U2</a>, you're mentioned ;)</p>",
         community_ids: [fixtures.c1.id]
@@ -84,7 +86,7 @@ describe('PostController', () => {
     })
 
     it('creates an image', function () {
-      _.extend(req.params, {
+      Object.assign(req.params, {
         name: 'NewImagePost',
         description: '',
         imageUrl: testImageUrl,
@@ -105,7 +107,7 @@ describe('PostController', () => {
     })
 
     it('does not create a tag from the type param', () => {
-      _.extend(req.params, {
+      Object.assign(req.params, {
         name: 'NewPost',
         description: '<p>Post Body</p>',
         community_ids: [fixtures.c1.id]
@@ -117,7 +119,7 @@ describe('PostController', () => {
     })
 
     it('creates an event and a creator EventResponse', () => {
-      _.extend(req.params, {
+      Object.assign(req.params, {
         name: 'New Event',
         description: '<p>Post Body</p>',
         type: 'event',
@@ -142,7 +144,7 @@ describe('PostController', () => {
       })
 
       it('does not set post type from tag', () => {
-        _.extend(req.params, {
+        Object.assign(req.params, {
           name: 'NewPost',
           description: '<p>Post Body</p>',
           tag: 'awesome',
@@ -159,7 +161,7 @@ describe('PostController', () => {
       })
 
       it('works with no tag description', () => {
-        _.extend(req.params, {
+        Object.assign(req.params, {
           name: 'New Awesome Post #awesome',
           community_ids: [fixtures.c1.id]
         })
@@ -184,7 +186,7 @@ describe('PostController', () => {
       })
 
       it('returns an error when no descriptions are provided', () => {
-        _.extend(req.params, {
+        Object.assign(req.params, {
           name: 'NewPostWithoutTagDescriptions1',
           description: '#tobeattached #hello',
           community_ids: [fixtures.c1.id]
@@ -205,7 +207,7 @@ describe('PostController', () => {
       })
 
       it('returns an error when at least one description is missing or blank', () => {
-        _.extend(req.params, {
+        Object.assign(req.params, {
           name: 'NewPostWithoutTagDescriptions2',
           description: '#tobeattached #hello #wow #ok',
           community_ids: [fixtures.c1.id],
@@ -234,7 +236,7 @@ describe('PostController', () => {
         var c2 = factories.community()
         return c2.save()
         .then(() => {
-          _.extend(req.params, {
+          Object.assign(req.params, {
             name: 'NewPost',
             description: '#tobeattached #herewego',
             tagDescriptions: {
@@ -268,7 +270,7 @@ describe('PostController', () => {
       })
 
       it('increments the new_post_count of tag_follows', () => {
-        _.extend(req.params, {
+        Object.assign(req.params, {
           name: 'New Tag Followed Post',
           description: '<p>this is relevant to #ntfpone and #ntfptwo</p>',
           tag: 'zounds',
@@ -322,7 +324,7 @@ describe('PostController', () => {
     })
 
     it('works', () => {
-      _.extend(req.params, params)
+      Object.assign(req.params, params)
 
       res.locals.tokenData = {
         communityId: fixtures.c1.id,
@@ -357,6 +359,7 @@ describe('PostController', () => {
       res.locals.post = post
       return post.save().tap(() => post.load('communities'))
       .then(() => community.save())
+      .then(() => fixtures.u1.joinCommunity(community))
     })
 
     describe('with communities', () => {
@@ -404,7 +407,7 @@ describe('PostController', () => {
           var media = post.relations.media
           expect(media.length).to.equal(2)
           expect(media.map(m => m.get('type'))).to.deep.equal(['gdoc', 'gdoc'])
-          expect(_.sortBy(media.models, m => m.get('name')).map(m => ({
+          expect(sortBy(media.models, m => m.get('name')).map(m => ({
             url: m.get('url'),
             name: m.get('name')
           }))).to.deep.equal([doc2Data, doc1Data])
@@ -596,14 +599,14 @@ describe('PostController', () => {
     it('shows tagged content to members', () => {
       req.session.userId = fixtures.u1.id
 
-      _.extend(req.params, {
+      Object.assign(req.params, {
         tagName: 'findtesttag'
       })
 
       return PostController.findForTagInAllCommunities(req, res)
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
-        var ids = _.map(res.body.posts, 'id')
+        var ids = map(res.body.posts, 'id')
         expect(ids).to.contain(p2.id)
         expect(ids).to.contain(p3.id)
       })
@@ -647,7 +650,7 @@ describe('PostController', () => {
       return PostController.findForCommunity(req, res)
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
-        var ids = _.map(res.body.posts, 'id')
+        var ids = map(res.body.posts, 'id')
         expect(ids).to.contain(p2.id)
         expect(ids).to.contain(p3.id)
       })
@@ -663,7 +666,7 @@ describe('PostController', () => {
       .then(() => PostController.findForCommunity(req, res))
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
-        var ids = _.map(res.body.posts, 'id')
+        var ids = map(res.body.posts, 'id')
         expect(ids).to.contain(p2.id)
         expect(ids).to.contain(p3.id)
       })
@@ -846,7 +849,7 @@ describe('PostController', () => {
         req.params = {
           userId: fixtures.u1.id,
           query: '',
-          posts: posts.map(p => _.pick(p, ['id', 'updated_at']))
+          posts: posts.map(p => pick(p, ['id', 'updated_at']))
         }
       })
       .then(() => PostController.checkFreshnessForAllForUser(req, res))
@@ -864,7 +867,7 @@ describe('PostController', () => {
         req.params = {
           userId: fixtures.u1.id,
           query: '',
-          posts: posts.map(p => _.pick(p, ['id', 'updated_at']))
+          posts: posts.map(p => pick(p, ['id', 'updated_at']))
         }
       })
       .then(() => p4.save())

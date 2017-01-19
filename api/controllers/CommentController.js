@@ -1,4 +1,4 @@
-import { difference, isEmpty, pickBy } from 'lodash'
+import { difference, intersection, isEmpty, pickBy, uniq } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
@@ -53,7 +53,7 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
       isThread = false
     }
 
-    const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
+    const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
@@ -81,13 +81,18 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
   })
 }
 
-const checkCommentTags = (text, post, descriptions) => {
+const checkCommentTags = (text, post, descriptions, userId) => {
   const tags = Tag.tagsInText(text)
   const describedTags = Object.keys(pickBy(descriptions, (v, k) => !!v))
   return isEmpty(difference(tags, describedTags))
     ? Promise.resolve()
-    : post.load('communities').then(() =>
-        throwErrorIfMissingTags(tags, post.relations.communities.pluck('id')))
+    : Promise.join(
+        post.load('communities'),
+        Membership.where({active: true, user_id: userId})
+        .query().pluck('community_id'),
+        (post, communityIds) =>
+          throwErrorIfMissingTags(tags, intersection(
+            communityIds, post.relations.communities.pluck('id'))))
 }
 
 module.exports = {
@@ -119,7 +124,7 @@ module.exports = {
     const { post, comment } = res.locals
     const tagDescriptions = req.param('tagDescriptions')
 
-    return checkCommentTags(text, post, tagDescriptions)
+    return checkCommentTags(text, post, tagDescriptions, req.session.userId)
     .then(() => createAndPresentComment(req.session.userId, text, post, {
       parentComment: comment,
       tagDescriptions

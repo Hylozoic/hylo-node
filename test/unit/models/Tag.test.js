@@ -385,7 +385,7 @@ describe('Tag', () => {
       ))
     })
 
-    it('returns a map of names to the communities they are missing from', () => {
+    it("returns a map of names to the communities they are missing from, filtered by a user's memberships", () => {
       return Tag.nonexistent(['tag1', 'tag2', 'tag3'], [c1.id, c2.id])
       .then(results => {
         expect(results).to.deep.equal({

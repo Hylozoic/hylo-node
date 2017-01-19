@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 import { updateOrRemove } from '../../lib/util/knex'
 import { difference, flatten, includes, isEmpty, uniq } from 'lodash'
 import { differenceBy, filter, find, get, map, pick, some, uniqBy } from 'lodash/fp'
