@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 import { updateOrRemove } from '../../lib/util/knex'
-import { difference, flatten, includes, isEmpty, uniq } from 'lodash'
+import { difference, flatten, isEmpty, uniq } from 'lodash'
 import { differenceBy, filter, find, get, map, pick, some, uniqBy } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
@@ -103,14 +103,14 @@ const sanitize = tag => tag.replace(/ /g, '-').replace(invalidCharacterRegex, ''
 const createAsNeeded = (tagNames, { transacting } = {}) => {
   const lower = t => t.toLowerCase()
   const knex = transacting || bookshelf.knex
-  const TagQuery = transacting ? Tag.query().transacting(transacting) : Tag.query()
+  const tagQuery = transacting ? Tag.query().transacting(transacting) : Tag.query()
 
   // sure wish knex handled this for me automatically
   const sqlize = arr => arr.map(x => `'${x}'`).join(', ')
   const nameMatch = arr => `lower(name) in (${sqlize(map(lower, arr))})`
 
   // find existing tags
-  return TagQuery.whereRaw(nameMatch(tagNames)).select(['id', 'name'])
+  return tagQuery.whereRaw(nameMatch(tagNames)).select(['id', 'name'])
   .then(existing => {
     const toCreate = differenceBy(lower, tagNames, map('name', existing))
     const created_at = new Date()
@@ -120,17 +120,10 @@ const createAsNeeded = (tagNames, { transacting } = {}) => {
       ? Promise.resolve([])
       : knex('tags')
         .insert(toCreate.map(name => ({name, created_at})))
-        .then(() => TagQuery.whereRaw(nameMatch(toCreate)).select('id')))
+        .then(() => tagQuery.whereRaw(nameMatch(toCreate)).select('id')))
     // return the ids of existing and created tags together
     .then(created => map('id', existing.concat(created)))
   })
-}
-
-const incrementName = name => {
-  const regex = /\d*$/
-  const word = name.replace(regex, '')
-  const number = Number(name.match(regex)[0] || 1) + 1
-  return `${word}${number}`
 }
 
 module.exports = bookshelf.Model.extend({
@@ -159,22 +152,8 @@ module.exports = bookshelf.Model.extend({
 
   follows: function () {
     return this.hasMany(TagFollow)
-  },
-
-  saveWithValidName: function (opts) {
-    let name = this.get('name')
-    const word = name.match(/^(.+)(\d*)$/)[1]
-    return Tag.query().where('name', 'ilike', `${word}%`)
-    .transacting(opts.transacting)
-    .pluck('name')
-    .then(names => {
-      const lowerNames = map(n => n.toLowerCase(), names)
-      while (includes(lowerNames, name.toLowerCase())) {
-        name = incrementName(name)
-      }
-      return this.save({name}, opts)
-    })
   }
+
 }, {
 
   STARTER_NAMES: ['offer', 'request', 'intention'],
