@@ -36,6 +36,10 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+  create (attrs, { transacting } = {}) {
+    return this.forge(Object.assign({created_at: new Date()}, attrs))
+    .save({}, {transacting})
+  },
 
   toggle: function (tagIdOrName, userId, communityId) {
     return lookup(tagIdOrName, userId, communityId)

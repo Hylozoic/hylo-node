@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 
 import { updateOrRemove } from '../../lib/util/knex'
-import { difference, flatten, isEmpty, uniq } from 'lodash'
-import { differenceBy, filter, find, get, map, pick, some, uniqBy } from 'lodash/fp'
+import { difference, flatten, isEmpty, isUndefined, uniq } from 'lodash'
+import { differenceBy, filter, find, get, map, omitBy, pick, some, uniqBy } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w-]+)/g
@@ -14,71 +14,68 @@ const tagsInText = (text = '') => {
   return tags
 }
 
-const addToTaggable = (taggable, tagName, selected, tagDescriptions, transacting) => {
+const addToCommunity = ({ community_id, tag_id, user_id, description, is_default }, opts) =>
+  CommunityTag.where({community_id, tag_id}).fetch(opts)
+  .then(comTag => comTag ||
+    CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
+    .catch(() => {}))
+    // the catch above is for the case where another user just created the
+    // CommunityTag (race condition): the save fails, but we don't care about
+    // the result
+  .then(() => user_id &&
+    TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
+    .then(follow => follow ||
+      TagFollow.create({community_id, tag_id, user_id}, opts)))
+
+const addToTaggable = (taggable, name, selected, tagDescriptions = {}, opts) => {
   var association, communities
-  var isPost = !taggable.post
+  var isPost = taggable.tableName === 'posts'
   if (isPost) {
     // taggable is a post
     association = 'communities'
-    communities = post => post.relations.communities.models
+    communities = post => post.relations.communities
   } else {
     // taggable is a comment
     association = 'post.communities'
-    communities = comment => comment.relations.post.relations.communities.models
+    communities = comment => comment.relations.post.relations.communities
   }
-  return taggable.load(association, {transacting})
-  .then(() => Tag.find(tagName, {transacting}))
-  .then(tag => {
-    if (tag) return tag
-    return new Tag({
-      name: tagName,
-      created_at: new Date()
-    }).save({}, {transacting})
-    .catch(() => Tag.find(tagName, {transacting}))
-  })
-  .tap(tag => {
-    var attachment = {tag_id: tag.id, created_at: new Date()}
-    if (isPost) attachment.selected = selected
-    return taggable.tags().attach(attachment, {transacting})
-  })
-  .then(tag => Promise.map(communities(taggable), com => {
-    const { description, is_default } = get(tag.get('name'), tagDescriptions) || {}
-    return addToCommunity(com.id, tag.id, taggable.get('user_id'), description, is_default, transacting)
-  }))
+  const created_at = new Date()
+  const findTag = () => Tag.find(name, opts)
+  return taggable.load(association, opts).then(findTag)
+  // create the tag -- if creation fails, find the existing one
+  .then(tag => tag ||
+    new Tag({name, created_at}).save({}, opts).catch(findTag))
+  .tap(tag =>
+    taggable.tags().attach(omitBy(isUndefined, {
+      tag_id: tag.id,
+      created_at,
+      selected: isPost ? selected : undefined
+    }), opts))
+  .then(tag => Promise.map(communities(taggable).models, com =>
+    addToCommunity({
+      community_id: com.id,
+      tag_id: tag.id,
+      user_id: taggable.get('user_id'),
+      description: get('description', tagDescriptions[tag.get('name')]),
+      is_default: get('is_default', tagDescriptions[tag.get('name')])
+    }, opts)))
 }
 
 const removeFromTaggable = (taggable, tag, transacting) => {
   return taggable.tags().detach(tag.id, {transacting})
 }
 
-const addToCommunity = (community_id, tag_id, user_id, description, is_default, transacting) => {
-  const created_at = new Date()
-  return CommunityTag.where({community_id, tag_id}).fetch({transacting})
-  .then(comTag => {
-    return comTag ||
-    new CommunityTag({community_id, tag_id, user_id, description, is_default, created_at})
-    .save({}, {transacting})
-    .catch(() => {})
-    // this catch is for the case where another user just created the
-    // CommunityTag (race condition): the save fails, but we don't care about
-    // the result
-  })
-  .then(() => user_id && TagFollow.where({community_id, tag_id, user_id}).fetch({transacting})
-    .then(follow => follow ||
-      new TagFollow({community_id, tag_id, user_id, created_at}).save({}, {transacting})))
-}
-
-const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {
+const updateForTaggable = (taggable, text, selectedTagName, tagDescriptions, trx) => {
   const lowerName = t => t.name.toLowerCase()
   const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
 
   var newTags = tagsInText(text).map(name => ({name, selected: false}))
-  if (tagParam) {
-    const dupe = find(t => t.name === tagParam, newTags)
+  if (selectedTagName) {
+    const dupe = find(t => t.name === selectedTagName, newTags)
     if (dupe) {
       dupe.selected = true
     } else {
-      newTags.push({name: tagParam, selected: true})
+      newTags.push({name: selectedTagName, selected: true})
     }
   }
   return taggable.load('tags', {transacting: trx})
@@ -92,7 +89,7 @@ const updateForTaggable = (taggable, text, tagParam, tagDescriptions, trx) => {
     const toRemove = tagDifference(oldTags, newTags)
     return Promise.all(flatten([
       toRemove.map(tag => removeFromTaggable(taggable, tag, trx)),
-      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions, trx))
+      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions, {transacting: trx}))
     ]))
   })
 }
@@ -181,8 +178,9 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  updateForPost: function (post, tagParam, tagDescriptions, trx) {
-    return updateForTaggable(post, post.get('name') + ' ' + post.get('description'), tagParam, tagDescriptions, trx)
+  updateForPost: function (post, selectedTagName, tagDescriptions, trx) {
+    const text = post.get('name') + ' ' + post.get('description')
+    return updateForTaggable(post, text, selectedTagName, tagDescriptions, trx)
   },
 
   updateForComment: function (comment, tagDescriptions, trx) {
