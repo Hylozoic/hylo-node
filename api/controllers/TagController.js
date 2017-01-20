@@ -70,14 +70,6 @@ module.exports = {
     .catch(res.serverError)
   },
 
-  findFollowed: function (req, res) {
-    return (req.param('communityId') === 'all'
-      ? Promise.resolve()
-      : Community.find(req.param('communityId')))
-    .then(com => fetchAndPresentFollowed(get('id', com), req.session.userId))
-    .then(res.ok, res.serverError)
-  },
-
   findOneSummary: function (req, res) {
     return Promise.join(
       Community.find(req.param('communityId')),
