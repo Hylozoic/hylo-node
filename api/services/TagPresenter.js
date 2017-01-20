@@ -2,9 +2,10 @@ import { get, merge, pick, reduce } from 'lodash'
 
 export const fetchAndPresentFollowed = (communityId, userId) => {
   return TagFollow.query(q => {
-    q.join('communities_tags', 'communities_tags.tag_id', 'tag_follows.tag_id')
+    q.leftJoin('communities_tags', 'communities_tags.tag_id', 'tag_follows.tag_id')
     q.where({'tag_follows.user_id': userId})
-    q.whereRaw('tag_follows.community_id = communities_tags.community_id')
+    q.whereRaw(`(tag_follows.community_id = communities_tags.community_id
+      or communities_tags.community_id is null)`)
     if (communityId) {
       q.where({'tag_follows.community_id': communityId})
       q.select(bookshelf.knex.raw('tag_follows.*, is_default'))

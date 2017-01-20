@@ -84,11 +84,11 @@ describe('TagController', () => {
       .then(() => {
         const communityTags = res.body[slug]
         expect(communityTags).to.exist
-        expect(communityTags.length).to.equal(2)
+        expect(communityTags.length).to.equal(3)
         var tagNames = communityTags.map(t => t.name)
         expect(includes(tagNames, 'tagone')).to.be.true
         expect(includes(tagNames, 'tagtwo')).to.be.true
-        expect(includes(tagNames, 'tagthree')).to.be.false
+        expect(includes(tagNames, 'tagthree')).to.be.true
       })
     })
   })
