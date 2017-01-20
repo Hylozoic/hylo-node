@@ -1,4 +1,5 @@
-import { difference, isEmpty, pickBy } from 'lodash'
+/* eslint-disable camelcase */
+import { difference, isEmpty, pickBy, uniq } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
@@ -53,7 +54,7 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
       isThread = false
     }
 
-    const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
+    const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
