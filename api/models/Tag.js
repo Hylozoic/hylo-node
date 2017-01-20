@@ -1,8 +1,10 @@
 /* eslint-disable camelcase */
 
 import { updateOrRemove } from '../../lib/util/knex'
-import { difference, flatten, isEmpty, isUndefined, uniq } from 'lodash'
-import { differenceBy, filter, find, get, map, omitBy, pick, some, uniqBy } from 'lodash/fp'
+import { difference, flatten, includes, isEmpty, isUndefined, uniq } from 'lodash'
+import {
+  differenceBy, filter, find, get, map, omitBy, pick, some, uniqBy
+} from 'lodash/fp'
 
 const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w-]+)/g
@@ -27,17 +29,17 @@ const addToCommunity = ({ community_id, tag_id, user_id, description, is_default
     .then(follow => follow ||
       TagFollow.create({community_id, tag_id, user_id}, opts)))
 
-const addToTaggable = (taggable, name, selected, tagDescriptions = {}, opts) => {
-  var association, communities
+const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) => {
+  var association, getCommunities
   var isPost = taggable.tableName === 'posts'
   if (isPost) {
     // taggable is a post
     association = 'communities'
-    communities = post => post.relations.communities
+    getCommunities = post => post.relations.communities
   } else {
     // taggable is a comment
     association = 'post.communities'
-    communities = comment => comment.relations.post.relations.communities
+    getCommunities = comment => comment.relations.post.relations.communities
   }
   const created_at = new Date()
   const findTag = () => Tag.find(name, opts)
@@ -50,22 +52,31 @@ const addToTaggable = (taggable, name, selected, tagDescriptions = {}, opts) => 
       tag_id: tag.id,
       created_at,
       selected: isPost ? selected : undefined
-    }), opts))
-  .then(tag => Promise.map(communities(taggable).models, com =>
-    addToCommunity({
-      community_id: com.id,
-      tag_id: tag.id,
-      user_id: taggable.get('user_id'),
-      description: get('description', tagDescriptions[tag.get('name')]),
-      is_default: get('is_default', tagDescriptions[tag.get('name')])
-    }, opts)))
+    }), opts)
+    // userId here is the id of the user making the edit, which is not always
+    // the same as the user who created the taggable. we add the tag only to
+    // those communities of which the user making the edit is a member.
+    .then(() => userId && Membership.where({active: true, user_id: userId})
+      .query().pluck('community_id'))
+    .then(communityIds => {
+      if (!communityIds) return
+      const communities = filter(c => includes(communityIds, c.id),
+        getCommunities(taggable).models)
+      return Promise.map(communities, com => addToCommunity({
+        community_id: com.id,
+        tag_id: tag.id,
+        user_id: taggable.get('user_id'),
+        description: get('description', tagDescriptions[tag.get('name')]),
+        is_default: get('is_default', tagDescriptions[tag.get('name')])
+      }, opts))
+    }))
 }
 
-const removeFromTaggable = (taggable, tag, transacting) => {
-  return taggable.tags().detach(tag.id, {transacting})
+const removeFromTaggable = (taggable, tag, opts) => {
+  return taggable.tags().detach(tag.id, opts)
 }
 
-const updateForTaggable = (taggable, text, selectedTagName, tagDescriptions, trx) => {
+const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, userId, transacting }) => {
   const lowerName = t => t.name.toLowerCase()
   const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
 
@@ -78,7 +89,7 @@ const updateForTaggable = (taggable, text, selectedTagName, tagDescriptions, trx
       newTags.push({name: selectedTagName, selected: true})
     }
   }
-  return taggable.load('tags', {transacting: trx})
+  return taggable.load('tags', {transacting})
   .then(() => {
     const oldTags = taggable.relations.tags.map(t => ({
       id: t.id,
@@ -88,8 +99,8 @@ const updateForTaggable = (taggable, text, selectedTagName, tagDescriptions, trx
     const toAdd = uniqBy(lowerName, tagDifference(newTags, oldTags))
     const toRemove = tagDifference(oldTags, newTags)
     return Promise.all(flatten([
-      toRemove.map(tag => removeFromTaggable(taggable, tag, trx)),
-      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions, {transacting: trx}))
+      toRemove.map(tag => removeFromTaggable(taggable, tag, {transacting})),
+      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions || {}, userId, {transacting}))
     ]))
   })
 }
@@ -178,13 +189,26 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  updateForPost: function (post, selectedTagName, tagDescriptions, trx) {
+  updateForPost: function (post, selectedTagName, tagDescriptions, userId, trx) {
     const text = post.get('name') + ' ' + post.get('description')
-    return updateForTaggable(post, text, selectedTagName, tagDescriptions, trx)
+    return updateForTaggable({
+      taggable: post,
+      text,
+      selectedTagName,
+      tagDescriptions,
+      userId,
+      transacting: trx
+    })
   },
 
-  updateForComment: function (comment, tagDescriptions, trx) {
-    return updateForTaggable(comment, comment.get('text'), null, tagDescriptions, trx)
+  updateForComment: function (comment, tagDescriptions, userId, trx) {
+    return updateForTaggable({
+      taggable: comment,
+      text: comment.get('text'),
+      tagDescriptions,
+      userId,
+      transacting: trx
+    })
   },
 
   addToUser: function (user, tagNames, { transacting } = {}) {

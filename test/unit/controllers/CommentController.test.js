@@ -336,6 +336,7 @@ describe('CommentController', function () {
       var comment
       req.params.text = 'updated comment text with #anewtag'
       req.params.tagDescriptions = {anewtag: {description: 'new tag description'}}
+      req.session.userId = fixtures.u1.id
       comment = factories.comment({text: 'original text', post_id: fixtures.p1.id})
       return comment.save()
       .then(() => {

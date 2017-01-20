@@ -57,7 +57,7 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
-      .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, trx))
+      .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
       .tap(() => isReplyToPost && post.updateCommentCount(trx)))
     .then(comment => Promise.all([
       presentComment(comment)
@@ -203,7 +203,7 @@ module.exports = {
       if (!comment) return res.notFound()
       return bookshelf.transaction(function (trx) {
         return comment.save({text: req.param('text')}, {transacting: trx})
-        .tap(comment => Tag.updateForComment(comment, req.param('tagDescriptions'), trx))
+        .tap(comment => Tag.updateForComment(comment, req.param('tagDescriptions'), req.session.userId, trx))
       })
       .then(res.ok, res.serverError)
     })

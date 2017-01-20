@@ -2,7 +2,7 @@ const root = require('root-path')
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 const PostController = require(root('api/controllers/PostController'))
-import { stubGetImageSize } from '../../setup/helpers'
+import { mockify, stubGetImageSize, unspyify } from '../../setup/helpers'
 import nock from 'nock'
 import { map, pick, sortBy } from 'lodash'
 
@@ -232,10 +232,16 @@ describe('PostController', () => {
         .then(post => expect(post).not.to.exist)
       })
 
-      it('attaches the tag, with description, to new communities', () => {
-        var c2 = factories.community()
-        return c2.save()
-        .then(() => {
+      describe('with tag descriptions', () => {
+        let args
+
+        beforeEach(() => mockify(Tag, 'updateForPost', function () {
+          args = Array.prototype.slice.call(arguments)
+        }))
+
+        afterEach(() => unspyify(Tag, 'updateForPost'))
+
+        it('calls Tag.updateForPost', () => {
           Object.assign(req.params, {
             name: 'NewPost',
             description: '#tobeattached #herewego',
@@ -243,31 +249,21 @@ describe('PostController', () => {
               tobeattached: {description: 'This is a test tag.'},
               herewego: {description: 'This is another test tag.'}
             },
-            community_ids: [fixtures.c1.id, c2.id]
+            community_ids: [fixtures.c1.id]
+          })
+
+          return PostController.create(req, res)
+          .then(() => {
+            expect(args).to.exist
+            expect(args).to.be.lengthOf(5)
+            expect(args[0].get('name')).to.equal('NewPost')
+            expect(args.slice(1, 4)).to.deep.equal([
+              undefined, req.params.tagDescriptions, req.session.userId
+            ])
           })
         })
-        .then(() => PostController.create(req, res))
-        .then(() => Tag.find('tobeattached', {withRelated: ['communities']}))
-        .then(tag => {
-          expect(tag).to.exist
-          const communities = tag.relations.communities
-          expect(communities.length).to.equal(2)
-          expect(communities.pluck('id').sort()).to.deep.equal([fixtures.c1.id, c2.id])
-          expect(communities.map(c => c.pivot.get('description')).sort()).to.deep.equal([
-            'First description.', 'This is a test tag.'
-          ])
-        })
-        .then(() => Tag.find('herewego', {withRelated: ['communities']}))
-        .then(tag => {
-          expect(tag).to.exist
-          const communities = tag.relations.communities
-          expect(communities.length).to.equal(2)
-          expect(communities.pluck('id').sort()).to.deep.equal([fixtures.c1.id, c2.id])
-          expect(communities.map(c => c.pivot.get('description'))).to.deep.equal([
-            'This is another test tag.', 'This is another test tag.'
-          ])
-        })
       })
+
 
       it('increments the new_post_count of tag_follows', () => {
         Object.assign(req.params, {

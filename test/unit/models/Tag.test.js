@@ -4,12 +4,14 @@ var factories = require(root('test/setup/factories'))
 import { sortBy } from 'lodash'
 
 describe('Tag', () => {
-  var u
+  var u, c1
 
   beforeEach(() => {
     u = factories.user()
+    c1 = factories.community()
     return setup.clearDb()
-    .then(() => u.save())
+    .then(() => Promise.join(u.save(), c1.save()))
+    .then(() => u.joinCommunity(c1))
   })
 
   describe('updateForPost', () => {
@@ -184,31 +186,25 @@ describe('Tag', () => {
         }))
     })
 
-    it('associates tags and owners with communities', () => {
-      var user = factories.user()
+    it('associates tags with communities of which the user is a member', () => {
       var post = new Post({
         name: 'New Tagged Post',
-        description: 'no tags in the body'
+        description: 'no tags in the body',
+        user_id: u.id
       })
-      var c1 = factories.community({name: 'Community One'})
-      var c2 = factories.community({name: 'Community Two'})
-      var c3 = factories.community({name: 'Community X'})
-      return user.save()
-      .then(user => post.save({user_id: user.id}))
-      .then(() => Promise.join(post.save(), c1.save(), c2.save(), c3.save()))
+      var c2 = factories.community()
+      return Promise.join(post.save(), c2.save())
       .then(() => post.communities().attach(c1.id))
       .then(() => post.communities().attach(c2.id))
-      .then(() => Tag.updateForPost(post, 'newtagnine'))
+      .then(() => Tag.updateForPost(post, 'newtagnine', null, u.id))
       .then(() => Tag.find('newtagnine', {withRelated: ['communities']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagnine')
-        expect(tag.relations.communities.length).to.equal(2)
+        expect(tag.relations.communities.length).to.equal(1)
         var communities = sortBy(tag.relations.communities.models, c => c.get('name'))
-        expect(communities[0].get('name')).to.equal('Community One')
-        expect(communities[0].pivot.get('user_id')).to.equal(user.id)
-        expect(communities[1].get('name')).to.equal('Community Two')
-        expect(communities[1].pivot.get('user_id')).to.equal(user.id)
+        expect(communities[0].get('name')).to.equal(c1.get('name'))
+        expect(communities[0].pivot.get('user_id')).to.equal(u.id)
       })
     })
 
@@ -220,47 +216,40 @@ describe('Tag', () => {
         description: 'no tags in the body'
       })
       var tag = new Tag({name: 'newtagten'})
-      var c1 = factories.community({name: 'Community Three'})
       var c2 = factories.community({name: 'Community Four'})
       return user.save()
       .then(user => post.save({user_id: user.id}))
-      .then(() => Promise.join(post.save(), c1.save(), tag.save()))
+      .then(() => Promise.join(post.save(), tag.save()))
       .then(() => c2.save())
       .then(() => owner.save())
       .then(owner => new CommunityTag({community_id: c1.id, tag_id: tag.id, user_id: owner.id}).save())
       .then(() => post.communities().attach(c1.id))
       .then(() => post.communities().attach(c2.id))
-      .then(() => Tag.updateForPost(post, 'newtagten'))
+      .then(() => Tag.updateForPost(post, 'newtagten', null, user.id))
       .then(() => Tag.find('newtagten', {withRelated: ['communities']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagten')
-        expect(tag.relations.communities.length).to.equal(2)
+        expect(tag.relations.communities.length).to.equal(1)
         var communities = sortBy(tag.relations.communities.models, 'id')
-        expect(communities[0].get('name')).to.equal('Community Three')
+        expect(communities[0].get('name')).to.equal(c1.get('name'))
         expect(communities[0].pivot.get('user_id')).to.equal(owner.id)
-        expect(communities[1].get('name')).to.equal('Community Four')
-        expect(communities[1].pivot.get('user_id')).to.equal(user.id)
       })
     })
 
     it('creates TagFollow for tag creator', () => {
-      var user = factories.user()
-      var post = new Post({
+      var post = factories.post({
         name: 'New Tagged Post',
-        description: 'no tags in the body'
+        description: 'no tags in the body',
+        user_id: u.id
       })
-      var c1 = factories.community()
-      return user.save()
-      .then(user => post.save({user_id: user.id}))
-      .then(() => Promise.join(post.save(), c1.save()))
+      return post.save()
+      .then(() => post.save())
       .then(() => post.communities().attach(c1.id))
-      .then(() => Tag.updateForPost(post, 'newtageleven'))
+      .then(() => Tag.updateForPost(post, 'newtageleven', null, u.id))
       .then(() => Tag.find('newtageleven'))
-      .then(tag => TagFollow.where({tag_id: tag.id, user_id: user.id, community_id: c1.id}).fetch())
-      .then(tagFollow => {
-        expect(tagFollow).to.exist
-      })
+      .then(tag => TagFollow.where({tag_id: tag.id, user_id: u.id, community_id: c1.id}).fetch())
+      .then(tagFollow => expect(tagFollow).to.exist)
     })
 
     it('handles a selected tag that is also in the description', () => {
@@ -290,8 +279,7 @@ describe('Tag', () => {
         description: 'no tags in post'
       })
       var comment
-      var c1 = factories.community()
-      return Promise.join(post.save(), c1.save())
+      return post.save()
       .then(() => post.communities().attach(c1.id))
       .then(() => {
         comment = new Comment({
@@ -301,7 +289,7 @@ describe('Tag', () => {
         })
         return comment.save()
       })
-      .then(comment => Tag.updateForComment(comment, {commenthashtag: {description: 'lol'}}))
+      .then(comment => Tag.updateForComment(comment, {commenthashtag: {description: 'lol'}}, u.id))
       .then(() => Tag.find('commenthashtag', {withRelated: ['comments', 'communities']}))
       .then(tag => {
         expect(tag).to.exist
@@ -367,30 +355,30 @@ describe('Tag', () => {
   })
 
   describe('.nonexistent', () => {
-    var c1, c2, t1, t2, t3
+    var cx, cy, t1, t2, t3
     beforeEach(() => {
-      c1 = factories.community()
-      c2 = factories.community()
+      cx = factories.community()
+      cy = factories.community()
       t1 = Tag.forge({name: 'tag1'})
       t2 = Tag.forge({name: 'tag2'})
       t3 = Tag.forge({name: 'tag3'})
-      return Promise.join(c1.save(), c2.save(), t1.save(), t2.save(), t3.save())
+      return Promise.join(cx.save(), cy.save(), t1.save(), t2.save(), t3.save())
       .then(() => Promise.join(
-        t1.communities().attach({user_id: u.id, community_id: c2.id}),
-        t2.communities().attach({user_id: u.id, community_id: c1.id}),
+        t1.communities().attach({user_id: u.id, community_id: cy.id}),
+        t2.communities().attach({user_id: u.id, community_id: cx.id}),
         t3.communities().attach([
-          {user_id: u.id, community_id: c1.id},
-          {user_id: u.id, community_id: c2.id}
+          {user_id: u.id, community_id: cx.id},
+          {user_id: u.id, community_id: cy.id}
         ])
       ))
     })
 
     it("returns a map of names to the communities they are missing from, filtered by a user's memberships", () => {
-      return Tag.nonexistent(['tag1', 'tag2', 'tag3'], [c1.id, c2.id])
+      return Tag.nonexistent(['tag1', 'tag2', 'tag3'], [cx.id, cy.id])
       .then(results => {
         expect(results).to.deep.equal({
-          tag1: [c1.id],
-          tag2: [c2.id]
+          tag1: [cx.id],
+          tag2: [cy.id]
         })
       })
     })
