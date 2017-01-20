@@ -324,7 +324,8 @@ const PostController = {
   },
 
   fulfill: function (req, res) {
-    const { post, fulfillRequest, unfulfillRequest } = res.locals
+    const { post } = res.locals
+    const { fulfillRequest, unfulfillRequest } = post
     const contributorIds = req.param('contributorIds') || []
     const fulfilledAt = post.get('fulfilled_at')
     const result = fulfilledAt ? unfulfillRequest() : fulfillRequest({contributorIds})
