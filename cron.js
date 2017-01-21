@@ -19,12 +19,12 @@ const resendInvites = () =>
 
 const updateFromNexudus = opts =>
   Nexudus.updateAllCommunities(opts)
-  .then(report => sails.log.debug(report))
+  .then(report => sails.log.debug('Updated users from Nexudus:', report))
 
 var jobs = {
   daily: function () {
-    var now = moment.tz('America/Los_Angeles')
-    var tasks = []
+    const now = moment.tz('America/Los_Angeles')
+    const tasks = []
 
     sails.log.debug('Removing old kue jobs')
     tasks.push(Queue.removeOldJobs('complete', 20000))
@@ -39,23 +39,22 @@ var jobs = {
   },
 
   hourly: function () {
-    var now = moment.tz('America/Los_Angeles')
-    var tasks = []
+    const now = moment.tz('America/Los_Angeles')
+
+    const tasks = [
+      updateFromNexudus({dryRun: false}),
+      process.env.SERENDIPITY_ENABLED && Relevance.cron(1, 'hour')
+    ]
 
     switch (now.hour()) {
       case 12:
         sails.log.debug('Sending daily digests')
         tasks.push(sendAndLogDigests('daily'))
+        break
       case 13:
         sails.log.debug('Resending invites')
         tasks.push(resendInvites())
-      default: // eslint-disable-line no-fallthrough
-        sails.log.debug('Updating users from Nexudus')
-        tasks.push(updateFromNexudus({dryRun: false}))
-
-        if (process.env.SERENDIPITY_ENABLED) {
-          tasks.push(Relevance.cron(1, 'hour'))
-        }
+        break
     }
 
     return Promise.all(tasks)
