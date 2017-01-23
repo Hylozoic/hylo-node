@@ -152,7 +152,7 @@ const presentProjectActivity = function (post, data, userId, relationsOpts) {
     child = postAttributes(child, userId, relationsOpts)
     child.project = post
     child.type = 'project-activity'
-    normalizePost(child, data, true)
+    normalizePost(child, data)
     return child
   })
 }

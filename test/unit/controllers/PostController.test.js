@@ -740,7 +740,7 @@ describe('PostController', () => {
       })
       .then(() => {
         childPost1 = factories.post({parent_post_id: project1.id, updated_at: now})
-        childPost2 = factories.post({parent_post_id: project2.id, updated_at: new Date(Date.now() - 10000)})
+        childPost2 = factories.post({parent_post_id: project2.id, updated_at: new Date(Date.now() - 20000)})
         return Promise.join(childPost1.save(), childPost2.save())
       })
       .then(() => {
@@ -749,7 +749,7 @@ describe('PostController', () => {
         return Promise.join(comment1.save(), comment2.save())
       })
       .then(() => PostController.findForCommunity(req, res))
-      .then(results => {
+      .then(() => {
         var projectActivity = find(p => p.id === childPost1.id, res.body.posts)
         var project = find(p => p.id === project2.id, res.body.posts)
         expect(projectActivity.name).to.equal(childPost1.get('name'))
