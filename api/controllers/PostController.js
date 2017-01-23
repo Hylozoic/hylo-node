@@ -39,24 +39,6 @@ const normalize = post => {
   return Object.assign(data, post)
 }
 
-const presentProjectActivity = function (post, data, userId, relationsOpts) {
-  if (post.type !== 'project') return post
-  return Post.query(q => {
-    q.where({parent_post_id: post.id})
-    q.orderBy('updated_at', 'desc')
-    q.limit(1)
-  })
-  .fetch({withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})})
-  .then(child => {
-    if (Math.abs(post.updated_at - child.updated_at) > 1000) return post
-    child = PostPresenter.presentForList(child, userId, relationsOpts)
-    child.project = post
-    child.type = 'project-activity'
-    normalizePost(child, data, true)
-    return child
-  })
-}
-
 const fetchAndPresentPosts = function (query, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
@@ -71,7 +53,7 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
     return Object.assign(data, buckets)
   })
   .then(data =>
-    Promise.map(data.posts, p => presentProjectActivity(p, data, userId, relationsOpts))
+    Promise.map(data.posts, p => PostPresenter.presentProjectActivity(p, data, userId, relationsOpts))
     .then(posts => {
       data.posts = posts
       return data

@@ -1,8 +1,10 @@
+/* globals _ */
 const root = require('root-path')
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 const PostController = require(root('api/controllers/PostController'))
 import { stubGetImageSize } from '../../setup/helpers'
+import { find } from 'lodash/fp'
 import nock from 'nock'
 
 const testImageUrl = 'http://cdn.hylo.com/misc/hylo-logo-teal-on-transparent.png'
@@ -22,7 +24,9 @@ describe('PostController', () => {
       p1: new Post({name: 'P1'}).save(),
       c1: new Community({name: 'C1', slug: 'c1'}).save()
     }))
-    .then(props => fixtures = props)
+    .then(props => {
+      fixtures = props
+    })
     .then(() => fixtures.u2.joinCommunity(fixtures.c1)))
 
   beforeEach(() => {
@@ -460,7 +464,9 @@ describe('PostController', () => {
       var originalImageId
       beforeEach(() =>
         Media.createForPost(post.id, 'image', testImageUrl)
-        .tap(image => originalImageId = image.id))
+        .tap(image => {
+          originalImageId = image.id
+        }))
 
       it('removes the image', () => {
         req.params.imageRemoved = true
@@ -492,7 +498,9 @@ describe('PostController', () => {
         return Media.generateThumbnailUrl(testVideoUrl)
         .then(url => stubGetImageSize(url))
         .then(() => Media.createForPost(post.id, 'video', testVideoUrl))
-        .tap(video => originalVideoId = video.id)
+        .tap(video => {
+          originalVideoId = video.id
+        })
       })
 
       it('removes the video', () => {
@@ -659,7 +667,9 @@ describe('PostController', () => {
 
       return Promise.join(user.save(), networkCommunity.save())
       .then(() => user.joinCommunity(networkCommunity))
-      .then(() => req.session.userId = user.id)
+      .then(() => {
+        req.session.userId = user.id
+      })
       .then(() => PostController.findForCommunity(req, res))
       .then(() => {
         expect(res.body.posts_total).to.equal(2)
@@ -708,6 +718,52 @@ describe('PostController', () => {
         expect(res.body.posts_total).to.equal(2)
         expect(res.body.posts[0].id).to.equal(p4.id)
         expect(res.body.posts[0].memberships).to.deep.equal({[c3.id]: {pinned: true}})
+      })
+    })
+
+    it('presents projects and project activity correctly', () => {
+      var c4, project1, project2, childPost1, childPost2, comment1, comment2
+      const now = new Date()
+      c4 = factories.community()
+      // project1 has the same updated_at as it's child post, so it should be
+      // presented as a project activity, while project2 is presented as a project
+      project1 = factories.post({type: 'project', updated_at: now})
+      project2 = factories.post({type: 'project', updated_at: now})
+      return Promise.join(c4.save(), project1.save(), project2.save())
+      .then(() => c4.posts().attach({post_id: project1.id}))
+      .then(() => c4.posts().attach({post_id: project2.id}))
+      .then(() => {
+        req.params.communityId = c4.id
+        req.params.comments = true
+        res.locals.community = c4
+        res.locals.membership = new Membership({
+          user_id: fixtures.u1.id,
+          community_id: c4.id
+        })
+      })
+      .then(() => {
+        childPost1 = factories.post({parent_post_id: project1.id, updated_at: now})
+        childPost2 = factories.post({parent_post_id: project2.id, updated_at: new Date(Date.now() - 10000)})
+        return Promise.join(childPost1.save(), childPost2.save())
+      })
+      .then(() => {
+        comment1 = factories.comment({post_id: childPost1.id, recent: true})
+        comment2 = factories.comment({post_id: childPost2.id, recent: true})
+        return Promise.join(comment1.save(), comment2.save())
+      })
+      .then(() => PostController.findForCommunity(req, res))
+      .then(results => {
+        var projectActivity = find(p => p.id === childPost1.id, res.body.posts)
+        var project = find(p => p.id === project2.id, res.body.posts)
+        expect(projectActivity.name).to.equal(childPost1.get('name'))
+        expect(projectActivity.type).to.equal('project-activity')
+        expect(projectActivity.project).to.contain({
+          id: project1.id,
+          name: project1.get('name')
+        })
+        expect(project.name).to.equal(project2.get('name'))
+        expect(project.type).to.equal('project')
+        expect(project.project).to.not.exist
       })
     })
   })
