@@ -98,7 +98,6 @@ module.exports.routes = {
 
   'GET    /noo/community/:communityId/tag/:tagName':        'TagController.findOneInCommunity',
   'POST   /noo/community/:communityId/tag/:tagName/follow': 'TagController.follow',
-  'GET    /noo/community/:communityId/tags/followed':       'TagController.findFollowed',
   'GET    /noo/tag/:tagName':                               'TagController.findOne',
   'GET    /noo/community/:communityId/tag/:tagName/summary':'TagController.findOneSummary',
   'GET    /noo/tag/:tagName/posts':                         'PostController.findForTagInAllCommunities',
@@ -116,10 +115,9 @@ module.exports.routes = {
   'GET    /noo/admin/login-as/:userId':                   'AdminController.loginAsUser',
 
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
-  'POST   /noo/hook/message':                             'MessageController.relayFromEmail',
-  'GET   /noo/hook/postForm':                            'PostController.createFromEmailForm',
+  'GET    /noo/hook/postForm':                            'PostController.createFromEmailForm',
   'POST   /noo/hook/postForm':                            'PostController.createFromEmailForm',
-  'GET   /noo/hook/batchCommentForm':                    'CommentController.createBatchFromEmailForm',
+  'GET    /noo/hook/batchCommentForm':                    'CommentController.createBatchFromEmailForm',
   'POST   /noo/hook/batchCommentForm':                    'CommentController.createBatchFromEmailForm',
 
   'POST   /noo/login':                                    'SessionController.create',

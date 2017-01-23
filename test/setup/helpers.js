@@ -23,7 +23,7 @@ export const unspyify = (object, methodName) => {
 }
 
 export const wait = (millis, callback) =>
-  new Promise((resolve, _) => setTimeout(() =>
+  new Promise(resolve => setTimeout(() =>
     resolve(callback ? callback() : null), millis))
 
 // this is data for a 1x1 png

@@ -15,6 +15,11 @@ module.exports = bookshelf.Model.extend({
 
 }, {
 
+  create (attrs, { transacting } = {}) {
+    return this.forge(Object.assign({created_at: new Date()}, attrs))
+    .save({}, {transacting})
+  },
+
   taggedPostCount (communityId, tagId) {
     return bookshelf.knex('posts_tags')
     .join('communities_posts', 'communities_posts.post_id', 'posts_tags.post_id')

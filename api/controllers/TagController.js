@@ -1,4 +1,4 @@
-import { merge, pick } from 'lodash'
+import { pick } from 'lodash'
 import { get, some } from 'lodash/fp'
 import {
   fetchAndPresentFollowed,
@@ -21,7 +21,7 @@ module.exports = {
   },
 
   findOneInCommunity: function (req, res) {
-    let tag
+    let tag, communityTag, follows
     const { userId } = req.session
 
     return Tag.find(req.param('tagName'), withRelatedSpecialPost)
@@ -30,56 +30,44 @@ module.exports = {
       tag = t
       return CommunityTag
       .where({community_id: res.locals.community.id, tag_id: tag.id})
-      .fetch({withRelated: [
-        'owner',
-        {'community.tagFollows': q => {
-          q.where({'tag_follows.tag_id': tag.id})
-          q.limit(20)
-          countTotal(q, 'tag_follows')
+      .fetch({withRelated: 'owner'}).then(ct => { communityTag = ct })
+      .tap(() => TagFollow.query(q => {
+        q.where({
+          community_id: res.locals.community.id,
+          tag_id: tag.id
+        })
+        q.limit(20)
+        countTotal(q, 'tag_follows')
 
-          // make sure the current user's follow, if it exists, doesn't get cut
-          // off by the limit, so we know if the user is following the tag
-          if (userId) {
-            q.orderBy(bookshelf.knex.raw(`case
-              when tag_follows.user_id = ${userId} then 0
-              else id end`))
-          }
-        }},
-        'community.tagFollows.user'
-      ]})
-      .tap(ct => ct && userId && TagFollow.where({
-        user_id: userId, tag_id: ct.get('tag_id')
-      }).query().update({new_post_count: 0}))
-      .then(ct => {
-        if (!ct) return res.notFound()
-        const { owner, community } = ct.relations
-        const { tagFollows } = community.relations
-        const followers = tagFollows.models.map(tf =>
+        // make sure the current user's follow, if it exists, doesn't get cut
+        // off by the limit, so we know if the user is following the tag
+        if (userId) {
+          q.orderBy(bookshelf.knex.raw(`case
+            when tag_follows.user_id = ${userId} then 0
+            else id end`))
+        }
+      }).fetchAll({withRelated: 'user'}).then(tf => { follows = tf }))
+      .tap(() => userId &&
+        TagFollow.where({user_id: userId, tag_id: t.id})
+        .query().update({new_post_count: 0}))
+      .then(() => {
+        const { owner } = get('relations', communityTag) || {}
+        const followers = follows.models.map(tf =>
           tf.relations.user.pick('id', 'name', 'avatar_url'))
-        const followed = some(f => f.id === userId, followers)
-        const followerCount = tagFollows.first() ? tagFollows.first().get('total') : 0
-        return res.ok(merge(
-          ct.pick('description', 'is_default', 'community_id'),
-          presentWithPost(tag),
+        return res.ok(Object.assign(
           {
-            followed,
             followers,
-            followerCount,
+            followed: some(f => f.id === userId, followers),
+            followerCount: follows.first() ? follows.first().get('total') : 0,
             owner: owner ? owner.pick('id', 'name', 'avatar_url') : null,
             created: get('id', owner) === userId
-          }
+          },
+          presentWithPost(tag),
+          communityTag ? communityTag.pick('description', 'is_default', 'community_id') : null
         ))
       })
     })
     .catch(res.serverError)
-  },
-
-  findFollowed: function (req, res) {
-    return (req.param('communityId') === 'all'
-      ? Promise.resolve()
-      : Community.find(req.param('communityId')))
-    .then(com => fetchAndPresentFollowed(get('id', com), req.session.userId))
-    .then(res.ok, res.serverError)
   },
 
   findOneSummary: function (req, res) {

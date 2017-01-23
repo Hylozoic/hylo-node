@@ -6,6 +6,7 @@ import { merge, differenceBy } from 'lodash'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
+const axolotlId = '13986'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'communities',
@@ -114,19 +115,18 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   updateChecklist: function () {
-    return this.load(['posts', 'invitations', 'tags', 'leader', 'tags'])
+    return this.load(['posts', 'invitations', 'tags'])
     .then(() => Tag.starterTags())
     .then(starterTags => {
-      const { invitations, posts, leader, tags } = this.relations
+      const { invitations, posts, tags } = this.relations
 
       this.addSetting({
         checklist: {
           logo: this.get('avatar_url') !== defaultAvatar,
           banner: this.get('banner_url') !== defaultBanner,
           invite: invitations.length > 0,
-          topics: !!differenceBy(tags.models, starterTags.models, 'id')
-            .find(t => t.pivot.get('user_id') === leader.id),
-          post: !!posts.find(p => p.get('user_id') === leader.id)
+          topics: differenceBy(tags.models, starterTags.models, 'id').length > 0,
+          post: !!posts.find(p => p.get('user_id') !== axolotlId)
         }
       })
       return this.save()

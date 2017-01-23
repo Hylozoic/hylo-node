@@ -138,11 +138,6 @@ module.exports.policies = {
     createBatchFromEmailForm: ['checkAndDecodeToken']
   },
 
-  MessageController: {
-    relayFromEmail: true,
-    createWaitlistRequest: true
-  },
-
   DeviceController: {
     create:           ['sessionAuth'],
     destroy:          ['sessionAuth'],
@@ -170,7 +165,6 @@ module.exports.policies = {
   TagController: {
     findOne: ['sessionAuth'],
     findOneInCommunity: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    findFollowed: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     follow: ['sessionAuth'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     removeFromCommunity: ['sessionAuth', 'isModerator'],
