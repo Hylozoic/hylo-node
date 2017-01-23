@@ -1,5 +1,6 @@
 import moment from 'moment'
 import root from 'root-path'
+import { find } from 'lodash'
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
@@ -40,11 +41,11 @@ describe('Post', function () {
         expect(follower.pivot.get('added_by_id')).to.equal(u3.id)
 
         expect(activity.length).to.equal(2)
-        var a1 = _.find(activity.models, function (a) { return a.get('reader_id') === u1.id })
+        var a1 = find(activity.models, function (a) { return a.get('reader_id') === u1.id })
         expect(a1).to.exist
         expect(a1.get('meta')).to.deep.equal({reasons: ['follow']})
 
-        var a2 = _.find(activity.models, function (a) { return a.get('reader_id') === u2.id })
+        var a2 = find(activity.models, function (a) { return a.get('reader_id') === u2.id })
         expect(a2).to.exist
         expect(a2.get('meta')).to.deep.equal({reasons: ['followAdd']})
       })
@@ -276,6 +277,27 @@ describe('Post', function () {
         expect(activity.get('actor_id')).to.equal(u.id)
         expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${c.id}`, 'tag: FollowThisTag']})
         expect(activity.get('unread')).to.equal(true)
+      })
+    })
+  })
+
+  describe('#updateFromNewComment', () => {
+    it('updates parent project updated_at', () => {
+      var project, childPost
+      project = factories.post({
+        type: 'project',
+        updated_at: new Date(Date.now() - 1000000)
+      })
+      return project.save()
+      .then(() => {
+        childPost = factories.post({parent_post_id: project.id})
+        return childPost.save()
+      })
+      .then(() => factories.comment({post_id: childPost.id, created_at: new Date()}).save())
+      .then(() => Post.updateFromNewComment({postId: childPost.id}))
+      .then(() => Promise.join(project.refresh(), childPost.refresh()))
+      .then(() => {
+        expect(project.get('updated_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
       })
     })
   })

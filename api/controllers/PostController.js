@@ -9,7 +9,7 @@ import {
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
-import { normalizePost } from '../../lib/util/normalize'
+import { normalizePost, uniqize } from '../../lib/util/normalize'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -54,6 +54,12 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
     data.posts.forEach((post, i) => normalizePost(post, buckets, i === data.posts.length - 1))
     return Object.assign(data, buckets)
   })
+  .tap(data =>
+    Promise.map(data.posts, p => PostPresenter.presentProjectActivity(p, data, userId, relationsOpts))
+    .tap(posts => {
+      data.posts = posts
+      uniqize(data)
+    }))
 }
 
 const findTagId = req =>

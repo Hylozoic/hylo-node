@@ -2,6 +2,7 @@ const rootPath = require('root-path')
 const setup = require(rootPath('test/setup'))
 const factories = require(rootPath('test/setup/factories'))
 const CommentController = require(rootPath('api/controllers/CommentController'))
+import { spyify, unspyify } from '../../setup/helpers'
 
 describe('CommentController', function () {
   var fixtures, req, res
@@ -16,7 +17,9 @@ describe('CommentController', function () {
       c1: factories.community().save(),
       cm1: factories.comment().save()
     }))
-    .then(props => fixtures = props)
+    .then(props => {
+      fixtures = props
+    })
     .then(() => Promise.join(
       fixtures.p1.communities().attach(fixtures.c1.id),
       fixtures.p1.comments().create(fixtures.cm1),
@@ -74,7 +77,10 @@ describe('CommentController', function () {
   describe('#create', function () {
     beforeEach(() => {
       req.session.userId = fixtures.u1.id
+      spyify(Queue, 'classMethod')
     })
+
+    afterEach(() => unspyify(Queue, 'classMethod'))
 
     it('creates a comment when replying to a post', function () {
       var commentText = format('<p>Hey <a data-user-id="%s">U2</a> and <a data-user-id="%s">U3</a>! )</p>',
@@ -268,6 +274,29 @@ describe('CommentController', function () {
         expect(community).to.exist
         expect(community.id).to.equal(fixtures.c1.id)
         expect(community.pivot.get('description')).to.equal('wow!!1')
+      })
+    })
+
+    it('queues updateFromNewComment', () => {
+      var project, childPost
+      project = factories.post({
+        type: 'project'
+      })
+      return project.save()
+      .then(() => {
+        childPost = factories.post({
+          parent_post_id: project.id
+        })
+        return childPost.save()
+      })
+      .then(() => {
+        req.params.text = '<p>Good stuff</p>'
+        res.locals.post = childPost
+        return CommentController.create(req, res)
+      })
+      .then(() => {
+        expect(Queue.classMethod).to.have.been.called
+        .with('Post', 'updateFromNewComment', {postId: childPost.id})
       })
     })
   })

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { difference, intersection, isEmpty, pickBy, uniq } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import {
@@ -9,7 +10,7 @@ import { sanitize, markdown } from 'hylo-utils/text'
 const userColumns = q => q.column('id', 'name', 'avatar_url')
 
 const updateRecentComments = postId =>
-  Queue.classMethod('Post', 'setRecentComments', {postId})
+  Queue.classMethod('Post', 'updateFromNewComment', {postId})
 
 const presentComment = (comment) =>
   comment.load({user: userColumns})
@@ -244,7 +245,7 @@ module.exports = {
             }
           })
           return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
-          .then(() => Post.setRecentComments({postId: post.id}))
+          .then(() => Post.updateFromNewComment({postId: post.id}))
         })
       })
     })

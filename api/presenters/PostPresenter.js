@@ -1,5 +1,6 @@
 import { includes } from 'lodash'
 import { get, isNull, isUndefined, pickBy } from 'lodash/fp'
+import { normalizePost } from '../../lib/util/normalize'
 
 const userColumns = q => q.column('users.id', 'users.name', 'users.avatar_url')
 
@@ -138,9 +139,28 @@ const postListRelations = (userId, opts = {}) => {
   ])
 }
 
+const presentProjectActivity = function (post, data, userId, relationsOpts) {
+  if (post.type !== 'project') return post
+  return Post.query(q => {
+    q.where({parent_post_id: post.id})
+    q.orderBy('updated_at', 'desc')
+    q.limit(1)
+  })
+  .fetch({withRelated: postListRelations(userId, relationsOpts || {})})
+  .then(child => {
+    if (!child || Math.abs(post.updated_at.getTime() - child.get('updated_at').getTime()) > 10000) return post
+    child = postAttributes(child, userId, relationsOpts)
+    child.project = post
+    child.type = 'project-activity'
+    normalizePost(child, data)
+    return child
+  })
+}
+
 module.exports = {
   relations: postDetailRelations,
   present: postAttributes,
   relationsForList: postListRelations,
-  presentForList: postAttributes
+  presentForList: postAttributes,
+  presentProjectActivity
 }
