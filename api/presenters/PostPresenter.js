@@ -148,7 +148,7 @@ const presentProjectActivity = function (post, data, userId, relationsOpts) {
   })
   .fetch({withRelated: postListRelations(userId, relationsOpts || {})})
   .then(child => {
-    if (!child || Math.abs(post.updated_at.getTime() - child.get('updated_at').getTime()) > 1000) return post
+    if (!child || Math.abs(post.updated_at.getTime() - child.get('updated_at').getTime()) > 10000) return post
     child = postAttributes(child, userId, relationsOpts)
     child.project = post
     child.type = 'project-activity'
