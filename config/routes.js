@@ -70,7 +70,7 @@ module.exports.routes = {
   // frontend fetchPosts action
   'POST   /noo/freshness/posts/community/:communityId':   'PostController.checkFreshnessForCommunity',
   'POST   /noo/freshness/posts/person/:userId':           'PostController.checkFreshnessForUser',
-  'POST   /noo/freshness/posts/post/:postId':             'PostController.checkFreshnessForUser',
+  'POST   /noo/freshness/posts/post/:postId':             'PostController.checkFreshnessForPost',
   'POST   /noo/freshness/posts/all-posts/:userId':        'PostController.checkFreshnessForAllForUser',
   'POST   /noo/freshness/posts/followed-posts/:userId':   'PostController.checkFreshnessForFollowed',
   'POST   /noo/freshness/posts/network/:networkId':       'PostController.checkFreshnessForNetwork',
@@ -100,7 +100,6 @@ module.exports.routes = {
 
   'GET    /noo/community/:communityId/tag/:tagName':        'TagController.findOneInCommunity',
   'POST   /noo/community/:communityId/tag/:tagName/follow': 'TagController.follow',
-  'GET    /noo/community/:communityId/tags/followed':       'TagController.findFollowed',
   'GET    /noo/tag/:tagName':                               'TagController.findOne',
   'GET    /noo/community/:communityId/tag/:tagName/summary':'TagController.findOneSummary',
   'GET    /noo/tag/:tagName/posts':                         'PostController.findForTagInAllCommunities',
@@ -118,10 +117,9 @@ module.exports.routes = {
   'GET    /noo/admin/login-as/:userId':                   'AdminController.loginAsUser',
 
   'POST   /noo/hook/comment':                             'CommentController.createFromEmail',
-  'POST   /noo/hook/message':                             'MessageController.relayFromEmail',
-  'GET   /noo/hook/postForm':                            'PostController.createFromEmailForm',
+  'GET    /noo/hook/postForm':                            'PostController.createFromEmailForm',
   'POST   /noo/hook/postForm':                            'PostController.createFromEmailForm',
-  'GET   /noo/hook/batchCommentForm':                    'CommentController.createBatchFromEmailForm',
+  'GET    /noo/hook/batchCommentForm':                    'CommentController.createBatchFromEmailForm',
   'POST   /noo/hook/batchCommentForm':                    'CommentController.createBatchFromEmailForm',
 
   'POST   /noo/login':                                    'SessionController.create',

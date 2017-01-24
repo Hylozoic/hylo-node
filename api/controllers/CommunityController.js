@@ -12,12 +12,11 @@ const welcomeMessage = 'Thank you for joining us here at Hylo. ' +
   "create extraordinary things. Let's get started!"
 
 const afterCreatingMembership = (req, res, ms, community, preexisting) => {
-  return Promise.join(
-    User.resetTooltips(req.session.userId),
-    ms && !ms.get('active') && ms.save({active: true}, {patch: true})
-  ).tap(() => {
-    if (!req.param('tagName')) return
-    return Tag.find(req.param('tagName'))
+  const tagName = req.param('tagName')
+  return Promise.resolve(ms && !ms.get('active') &&
+    ms.save({active: true}, {patch: true}))
+  .tap(() =>
+    tagName && Tag.find(tagName)
     .then(tag => {
       if (!tag) return res.notFound()
       return new TagFollow({
@@ -32,8 +31,7 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
       } else {
         throw err
       }
-    })
-  })
+    }))
   .then(() => _.merge(ms.toJSON(), {preexisting}, {
     community: community.pick('id', 'name', 'slug', 'avatar_url')
   }))
@@ -381,20 +379,19 @@ module.exports = {
 
   requestToJoin: function (req, res) {
     const { community } = res.locals
-    const params = {
-      community_id: community.id,
-      user_id: req.session.userId
-    }
+    const params = {community_id: community.id, user_id: req.session.userId}
+    var redundant = false
     return JoinRequest.where(params).fetch()
     .then(joinRequest => {
+      const now = new Date()
       if (joinRequest) {
-        return joinRequest.save({updated_at: new Date()})
+        redundant = now - joinRequest.get('updated_at') < 240 * 60 * 1000
+        return joinRequest.save({updated_at: now})
       } else {
-        return new JoinRequest(merge(params, {created_at: new Date()})).save()
+        return new JoinRequest(merge(params, {created_at: now})).save()
       }
     })
-    .tap(joinRequest =>
-      community.moderators().fetch()
+    .tap(joinRequest => !redundant && community.moderators().fetch()
       .then(moderators => Queue.classMethod('Activity', 'saveForReasonsOpts', {
         activities: moderators.models.map(moderator => ({
           reader_id: moderator.id,

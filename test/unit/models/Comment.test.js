@@ -1,4 +1,4 @@
-/* globals LastRead */
+/* globals LastRead, RedisClient */
 import { times } from 'lodash'
 import setup from '../../setup'
 import factories from '../../setup/factories'
@@ -67,6 +67,8 @@ describe('Comment', () => {
           }))))
         return Promise.map(comments, c => c.save())
       })
+      .then(() => RedisClient.create()
+        .delAsync(Comment.sendMessageDigests.REDIS_TIMESTAMP_KEY))
     })
 
     afterEach(() => {

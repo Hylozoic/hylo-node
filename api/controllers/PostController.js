@@ -1,13 +1,15 @@
 /* globals LastRead */
-import { getOr } from 'lodash/fp'
-import { difference, includes, merge, omit, pick, pickBy } from 'lodash'
+import { get, getOr } from 'lodash/fp'
+import {
+  difference, includes, intersection, isEmpty, merge, omit, pick, pickBy
+} from 'lodash'
 import {
   createPost, createThread, updateChildren, updateAllMedia, updateCommunities
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
-import { normalizePost } from '../../lib/util/normalize'
+import { normalizePost, uniqize } from '../../lib/util/normalize'
 
 const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
@@ -52,10 +54,16 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
     data.posts.forEach((post, i) => normalizePost(post, buckets, i === data.posts.length - 1))
     return Object.assign(data, buckets)
   })
+  .tap(data =>
+    Promise.map(data.posts, p => PostPresenter.presentProjectActivity(p, data, userId, relationsOpts))
+    .tap(posts => {
+      data.posts = posts
+      uniqize(data)
+    }))
 }
 
 const findTagId = req =>
-  req.param('tag') && Tag.find(req.param('tag')).then(t => t.id)
+  req.param('tag') && Tag.find(req.param('tag')).then(get('id'))
 
 const queryForCommunity = function (req, res) {
   return Network.containsUser(res.locals.community.get('network_id'), req.session.userId)
@@ -97,7 +105,6 @@ const queryForFollowed = function (req, res) {
 const queryForPost = function (req, res) {
   return queryPosts(req, {
     parent_post_id: res.locals.post.id,
-    // visibility: ((res.locals.membership) ? null : Post.Visibility.PUBLIC_READABLE),
     currentUserId: req.session.userId
   })
 }
@@ -149,13 +156,18 @@ const createFindAction = (queryFunction) => (req, res) => {
 
 // throw an error if a tag is included in the post that does not yet exist in
 // one of the specified communities, but no description is supplied
-const checkPostTags = (attrs, opts) => {
+const checkPostTags = (attrs, userId, opts) => {
   var tags = Tag.tagsInText(attrs.name + ' ' + attrs.description)
   if (opts.tag) tags.push(opts.tag)
 
   const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
   tags = difference(tags, describedTags)
-  return throwErrorIfMissingTags(tags, opts.community_ids)
+  if (isEmpty(tags)) return Promise.resolve()
+
+  return Membership.where({active: true, user_id: userId})
+  .query().pluck('community_id')
+  .then(communityIds =>
+    throwErrorIfMissingTags(tags, intersection(communityIds, opts.community_ids)))
 }
 
 const emptyResponse = res => err => err ? res.serverError(err) : res.ok({})
@@ -177,7 +189,6 @@ const PostController = {
 
   create: function (req, res) {
     const params = req.allParams()
-
     if (!params.name) {
       res.status(422).send("title can't be blank")
       return Promise.resolve()
@@ -185,10 +196,11 @@ const PostController = {
 
     return checkPostTags(
       pick(params, 'name', 'description'),
+      req.session.userId,
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => createPost(req.session.userId, params))
-    .then(post => post.load(PostPresenter.relations(req.session.userId)))
+    .then(post => post.load(PostPresenter.relations(req.session.userId, {communities: params.community_ids})))
     .then(PostPresenter.present)
     .then(normalize)
     .then(res.ok)
@@ -298,6 +310,7 @@ const PostController = {
 
     return checkPostTags(
       pick(params, 'name', 'description'),
+      req.session.userId,
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => bookshelf.transaction(trx =>
@@ -305,7 +318,7 @@ const PostController = {
       .tap(() => updateChildren(post, req.param('requests'), trx))
       .tap(() => updateCommunities(post, req.param('community_ids'), trx))
       .tap(() => updateAllMedia(post, params, trx))
-      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), trx))))
+      .tap(() => Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), req.session.userId, trx))))
     .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
     .then(normalize)
@@ -326,10 +339,12 @@ const PostController = {
   },
 
   fulfill: function (req, res) {
-    const { post, fulfillRequest, unfulfillRequest } = res.locals
+    const { post } = res.locals
     const contributorIds = req.param('contributorIds') || []
     const fulfilledAt = post.get('fulfilled_at')
-    const result = fulfilledAt ? unfulfillRequest() : fulfillRequest({contributorIds})
+    const result = fulfilledAt
+      ? post.unfulfillRequest()
+      : post.fulfillRequest({contributorIds})
     result.then(() => res.ok({}))
     .catch(res.serverError)
   },

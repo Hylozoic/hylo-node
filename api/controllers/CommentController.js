@@ -1,4 +1,5 @@
-import { difference, isEmpty, pickBy } from 'lodash'
+/* eslint-disable camelcase */
+import { difference, intersection, isEmpty, pickBy, uniq } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
@@ -9,7 +10,7 @@ import { sanitize, markdown } from 'hylo-utils/text'
 const userColumns = q => q.column('id', 'name', 'avatar_url')
 
 const updateRecentComments = postId =>
-  Queue.classMethod('Post', 'setRecentComments', {postId})
+  Queue.classMethod('Post', 'updateFromNewComment', {postId})
 
 const presentComment = (comment) =>
   comment.load({user: userColumns})
@@ -53,11 +54,11 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
       isThread = false
     }
 
-    const newFollowers = _.difference(_.uniq(mentioned.concat(commenterId)), existingFollowers)
+    const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
 
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
-      .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, trx))
+      .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
       .tap(() => isReplyToPost && post.updateCommentCount(trx)))
     .then(comment => Promise.all([
       presentComment(comment)
@@ -81,13 +82,18 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
   })
 }
 
-const checkCommentTags = (text, post, descriptions) => {
+const checkCommentTags = (text, post, descriptions, userId) => {
   const tags = Tag.tagsInText(text)
   const describedTags = Object.keys(pickBy(descriptions, (v, k) => !!v))
   return isEmpty(difference(tags, describedTags))
     ? Promise.resolve()
-    : post.load('communities').then(() =>
-        throwErrorIfMissingTags(tags, post.relations.communities.pluck('id')))
+    : Promise.join(
+        post.load('communities'),
+        Membership.where({active: true, user_id: userId})
+        .query().pluck('community_id'),
+        (post, communityIds) =>
+          throwErrorIfMissingTags(tags, intersection(
+            communityIds, post.relations.communities.pluck('id'))))
 }
 
 module.exports = {
@@ -119,7 +125,7 @@ module.exports = {
     const { post, comment } = res.locals
     const tagDescriptions = req.param('tagDescriptions')
 
-    return checkCommentTags(text, post, tagDescriptions)
+    return checkCommentTags(text, post, tagDescriptions, req.session.userId)
     .then(() => createAndPresentComment(req.session.userId, text, post, {
       parentComment: comment,
       tagDescriptions
@@ -198,7 +204,7 @@ module.exports = {
       if (!comment) return res.notFound()
       return bookshelf.transaction(function (trx) {
         return comment.save({text: req.param('text')}, {transacting: trx})
-        .tap(comment => Tag.updateForComment(comment, req.param('tagDescriptions'), trx))
+        .tap(comment => Tag.updateForComment(comment, req.param('tagDescriptions'), req.session.userId, trx))
       })
       .then(res.ok, res.serverError)
     })
@@ -239,7 +245,7 @@ module.exports = {
             }
           })
           return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
-          .then(() => Post.setRecentComments({postId: post.id}))
+          .then(() => Post.updateFromNewComment({postId: post.id}))
         })
       })
     })

@@ -98,6 +98,7 @@ module.exports.policies = {
     findThreads:                          ['sessionAuth'],
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForPost:                          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    checkFreshnessForPost:                ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity:                     ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],
@@ -139,11 +140,6 @@ module.exports.policies = {
     createBatchFromEmailForm: ['checkAndDecodeToken']
   },
 
-  MessageController: {
-    relayFromEmail: true,
-    createWaitlistRequest: true
-  },
-
   DeviceController: {
     create:           ['sessionAuth'],
     destroy:          ['sessionAuth'],
@@ -171,7 +167,6 @@ module.exports.policies = {
   TagController: {
     findOne: ['sessionAuth'],
     findOneInCommunity: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    findFollowed: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     follow: ['sessionAuth'],
     findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
     removeFromCommunity: ['sessionAuth', 'isModerator'],
