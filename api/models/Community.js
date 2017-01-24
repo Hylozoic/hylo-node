@@ -1,6 +1,6 @@
 /* globals NexudusAccount */
 var Slack = require('../services/Slack')
-import randomWords from 'random-words'
+import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import { merge, differenceBy } from 'lodash'
 
@@ -235,7 +235,7 @@ module.exports = bookshelf.Model.extend(merge({
   getNewAccessCode: function () {
     const test = code => Community.where({beta_access_code: code}).count().then(Number)
     const loop = () => {
-      const code = randomWords(5).join('-')
+      const code = randomstring.generate({length: 20, charset: 'alphanumeric'})
       return test(code).then(count => count ? loop() : code)
     }
     return loop()
