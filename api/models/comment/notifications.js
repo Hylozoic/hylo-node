@@ -29,17 +29,16 @@ export const notifyAboutMessage = ({commentId}) =>
     })
   })
 
-export const sendMessageDigests = () => {
+export const sendDigests = () => {
   const redis = RedisClient.create()
   const now = new Date()
   const fallbackTime = () => new Date(now - 10 * 60000)
 
-  return redis.getAsync(sendMessageDigests.REDIS_TIMESTAMP_KEY)
+  return redis.getAsync(sendDigests.REDIS_TIMESTAMP_KEY)
   .then(i => i ? new Date(Number(i)) : fallbackTime())
   .catch(() => fallbackTime())
   .then(time =>
-    Post.where('type', Post.Type.THREAD)
-    .where('updated_at', '>', time)
+    Post.where('updated_at', '>', time)
     .fetchAll({withRelated: [
       'followers',
       'lastReads',
@@ -54,8 +53,6 @@ export const sendMessageDigests = () => {
     if (comments.length === 0) return []
 
     return Promise.map(followers.models, user => {
-      if (!includes(user.get('settings').dm_notifications, ['email', 'both'])) return
-
       // select comments not written by this user and newer than user's last
       // read time.
       const r = lastReads.find(l => l.get('user_id') === user.id)
@@ -64,27 +61,46 @@ export const sendMessageDigests = () => {
         c.get('user_id') !== user.id)
       if (filtered.length === 0) return
 
-      // here, we assume that all of the messages were sent by 1 other person,
-      // so this will have to change when we support group messaging
-      const other = filtered[0].relations.user
+      if (post.get('type') === Post.Type.THREAD) {
+        if (!includes(user.get('settings').dm_notifications, ['email', 'both'])) return
 
-      return Email.sendMessageDigest({
-        email: user.get('email'),
-        data: {
-          other_person_avatar_url: other.get('avatar_url'),
-          other_person_name: other.get('name'),
-          thread_url: Frontend.Route.thread(post),
-          messages: filtered.map(c => c.get('text'))
-        },
-        sender: {
-          reply_to: Email.postReplyAddress(post.id, user.id)
-        }
-      })
+        // here, we assume that all of the messages were sent by 1 other person,
+        // so this will have to change when we support group messaging
+        const other = filtered[0].relations.user
+        return Email.sendMessageDigest({
+          email: user.get('email'),
+          data: {
+            other_person_avatar_url: other.get('avatar_url'),
+            other_person_name: other.get('name'),
+            thread_url: Frontend.Route.thread(post),
+            messages: filtered.map(c => c.get('text'))
+          },
+          sender: {
+            reply_to: Email.postReplyAddress(post.id, user.id)
+          }
+        })
+      } else {
+        return Email.sendCommentDigest({
+          email: user.get('email'),
+          data: {
+            post_title: truncate(post.get('name'), 140).text,
+            post_url: Frontend.Route.post(post),
+            comments: comments.map(c => ({
+              text: c.get('text'),
+              user: c.relations.user.pick('name', 'avatar_url'),
+              url: Frontend.Route.post(post) + `#comment-${c.id}`
+            }))
+          },
+          sender: {
+            reply_to: Email.postReplyAddress(post.id, user.id)
+          }
+        })
+      }
     })
     .then(sends => compact(sends).length)
   })))
-  .tap(() => redis.setAsync(sendMessageDigests.REDIS_TIMESTAMP_KEY, now.getTime()))
+  .tap(() => redis.setAsync(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime()))
   .then(sum)
 }
 
-sendMessageDigests.REDIS_TIMESTAMP_KEY = 'sendMessageDigests.lastSentAt'
+sendDigests.REDIS_TIMESTAMP_KEY = 'Comment.sendDigests.lastSentAt'

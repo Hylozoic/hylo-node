@@ -1,6 +1,7 @@
 const api = require('sendwithus')(process.env.SENDWITHUS_KEY)
 const Promise = require('bluebird')
 import { curry, merge } from 'lodash'
+import { format } from 'util'
 
 const sendEmail = opts =>
   new Promise((resolve, reject) =>
@@ -66,6 +67,10 @@ module.exports = {
   sendJoinRequestNotification: sendEmailWithOptions('tem_9sW4aBxaLi5ve57bp7FGXZ'),
   sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
   sendMessageDigest: sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK'),
+
+  sendCommentDigest: opts =>
+    sendEmailWithOptions('tem_tP6JzrYzvvDXhgTNmtkxuW',
+      Object.assign({version: 'multiple'}, opts)),
 
   postReplyAddress: function (postId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId)

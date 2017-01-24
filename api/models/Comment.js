@@ -2,7 +2,7 @@
 import { filter } from 'lodash/fp'
 import { markdown } from 'hylo-utils/text'
 import { addFollowers } from './post/util'
-import { notifyAboutMessage, sendMessageDigests } from './comment/notifications'
+import { notifyAboutMessage, sendDigests } from './comment/notifications'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'comments',
@@ -136,5 +136,5 @@ module.exports = bookshelf.Model.extend({
   },
 
   notifyAboutMessage,
-  sendMessageDigests
+  sendDigests
 })

@@ -135,8 +135,6 @@ module.exports = bookshelf.Model.extend({
         return this.sendPostMentionEmail()
       case 'commentMention':
         return this.sendCommentNotificationEmail('mention')
-      case 'newComment':
-        return this.sendCommentNotificationEmail()
       case 'joinRequest':
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
@@ -162,7 +160,7 @@ module.exports = bookshelf.Model.extend({
         sender: {
           address: replyTo,
           reply_to: replyTo,
-          name: format('%s (via Hylo)', user.get('name'))
+          name: `${user.get('name')} (via Hylo)`
         },
         data: {
           community_name: community.get('name'),
@@ -201,7 +199,7 @@ module.exports = bookshelf.Model.extend({
       if (relatedUser.id === reader.id) {
         postLabel = 'your welcoming post'
       } else {
-        postLabel = format("%s's welcoming post", relatedUser.get('name'))
+        postLabel = `${relatedUser.get('name')}'s welcoming post`
       }
     }
 
@@ -215,7 +213,7 @@ module.exports = bookshelf.Model.extend({
         sender: {
           address: replyTo,
           reply_to: replyTo,
-          name: format('%s (via Hylo)', commenter.get('name'))
+          name: `${commenter.get('name')} (via Hylo)`
         },
         data: {
           community_name: community.get('name'),

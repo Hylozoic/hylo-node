@@ -68,7 +68,7 @@ describe('Comment', () => {
         return Promise.map(comments, c => c.save())
       })
       .then(() => RedisClient.create()
-        .delAsync(Comment.sendMessageDigests.REDIS_TIMESTAMP_KEY))
+        .delAsync(Comment.sendDigests.REDIS_TIMESTAMP_KEY))
     })
 
     afterEach(() => {
@@ -77,7 +77,7 @@ describe('Comment', () => {
     })
 
     it('sends a digest of recent messages', () => {
-      return Comment.sendMessageDigests()
+      return Comment.sendDigests()
       .then(count => {
         expect(count).to.equal(2)
         expect(Email.sendMessageDigest).to.have.been.called.exactly(2)
@@ -97,7 +97,7 @@ describe('Comment', () => {
         LastRead.findOrCreate(u1.id, post.id, {date: new Date(now - 4.5 * 60000)}),
         LastRead.findOrCreate(u2.id, post.id)
       )
-      .then(() => Comment.sendMessageDigests())
+      .then(() => Comment.sendDigests())
       .then(count => {
         expect(count).to.equal(1)
         expect(Email.sendMessageDigest).to.have.been.called.exactly(1)
@@ -110,7 +110,7 @@ describe('Comment', () => {
 
     it('respects dm_notifications setting', () => {
       return u1.save({settings: {dm_notifications: 'push'}})
-      .then(() => Comment.sendMessageDigests())
+      .then(() => Comment.sendDigests())
       .then(count => {
         expect(count).to.equal(1)
         expect(Email.sendMessageDigest).to.have.been.called.exactly(1)
