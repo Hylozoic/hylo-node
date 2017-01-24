@@ -3,7 +3,6 @@ const userFieldsToCopy = [
   'banner_url',
   'bio',
   'email',
-  'email_validated',
   'extra_info',
   'facebook_url',
   'first_name',
@@ -36,7 +35,6 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['comments', 'deactivated_by_id'],
     ['follows', 'added_by_id'],
     ['thanks', 'user_id'],
-    ['thanks', 'thanked_by_id'],
     ['community_invites', 'invited_by_id'],
     ['community_invites', 'used_by_id'],
     ['user_external_data', 'user_id'],
@@ -57,7 +55,8 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['votes', 'user_id', 'post_id'],
     ['tag_follows', 'user_id', 'tag_id'],
     ['communities_tags', 'user_id', 'tag_id'],
-    ['tags_users', 'user_id', 'tag_id']
+    ['tags_users', 'user_id', 'tag_id'],
+    ['thanks', 'thanked_by_id', 'comment_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -113,6 +112,7 @@ const generateRemoveQueries = function (userId, knex) {
     ['tags_users', 'user_id'],
     ['tag_follows', 'user_id'],
     ['posts_about_users', 'user_id'],
+    ['thanks', 'thanked_by_id'],
     ['users', 'id']
   ].forEach(args => {
     var table = args[0]

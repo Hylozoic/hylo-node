@@ -66,33 +66,6 @@ describe('TagController', () => {
     })
   })
 
-  describe('.findFollowed', () => {
-    it('returns followed tags', () => {
-      const { u1, c1, t1, t2, t3 } = fixtures
-      req.session.userId = u1.id
-      const slug = c1.get('slug')
-      extend(req.params, {communityId: slug})
-
-      return Promise.join(
-        new CommunityTag({community_id: c1.id, tag_id: t1.id}).save(),
-        new CommunityTag({community_id: c1.id, tag_id: t2.id}).save(),
-        new TagFollow({community_id: c1.id, tag_id: t1.id, user_id: u1.id}).save(),
-        new TagFollow({community_id: c1.id, tag_id: t2.id, user_id: u1.id}).save(),
-        new TagFollow({community_id: c1.id, tag_id: t3.id, user_id: u1.id}).save()
-      )
-      .then(() => TagController.findFollowed(req, res))
-      .then(() => {
-        const communityTags = res.body[slug]
-        expect(communityTags).to.exist
-        expect(communityTags.length).to.equal(2)
-        var tagNames = communityTags.map(t => t.name)
-        expect(includes(tagNames, 'tagone')).to.be.true
-        expect(includes(tagNames, 'tagtwo')).to.be.true
-        expect(includes(tagNames, 'tagthree')).to.be.false
-      })
-    })
-  })
-
   describe('.findForCommunity', () => {
     var t1, t2, t3, t4, u1, u2, c1, c2, p
     beforeEach(() => {

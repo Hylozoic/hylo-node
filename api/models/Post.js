@@ -1,4 +1,5 @@
 /* globals LinkPreview, LastRead */
+/* eslint-disable camelcase */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
@@ -133,7 +134,8 @@ module.exports = bookshelf.Model.extend({
 
   pushCommentToSockets: function (comment) {
     var postId = this.id
-    return pushToSockets(`posts/${postId}`, 'commentAdded', comment)
+    const parent_post_id = this.get('parent_post_id')
+    return pushToSockets(`posts/${postId}`, 'commentAdded', {comment, parent_post_id})
   },
 
   pushMessageToSockets: function (message, userIds) {
@@ -320,10 +322,11 @@ module.exports = bookshelf.Model.extend({
     .save(null, _.pick(opts, 'transacting'))
   },
 
-  setRecentComments: opts => {
+  updateFromNewComment: opts => {
     const comments = () => bookshelf.knex('comments')
+    const { postId } = opts
     return comments()
-    .where({post_id: opts.postId, active: true})
+    .where({post_id: postId, active: true})
     .orderBy('created_at', 'desc')
     .limit(3)
     .pluck('id')
@@ -331,7 +334,10 @@ module.exports = bookshelf.Model.extend({
       comments().where('id', 'in', ids).update('recent', true),
       comments().where('id', 'not in', ids)
       .where({recent: true, post_id: opts.postId})
-      .update('recent', false)
+      .update('recent', false),
+      // update 'updated_at' in the parent project of a commented request
+      Post.query().whereIn('id', bookshelf.knex('posts').where({id: postId}).select('parent_post_id'))
+      .update({updated_at: new Date()})
     ]))
   },
 

@@ -250,7 +250,8 @@ module.exports = bookshelf.Model.extend({
           requester_name: actor.get('name'),
           requester_avatar_url: actor.get('avatar_url'),
           requester_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+            Frontend.Route.profile(actor) +
+            `?ctt=comment_email&cti=${reader.id}&check-join-requests=1`),
           settings_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.communityJoinRequests(community))
         }

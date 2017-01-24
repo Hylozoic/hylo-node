@@ -27,16 +27,16 @@ module.exports.session = {
 
   /***************************************************************************
   *                                                                          *
-  * Set the session cookie expire time The maxAge is set by milliseconds,    *
-  * the example below is for 24 hours                                        *
+  * Set the session cookie expire time                                       *
+  * The maxAge is set by milliseconds                                        *
   *                                                                          *
   ***************************************************************************/
 
   key: 'hylo.sid.1', // cookie name, instead of sails.sid
 
   cookie: {
-    domain: process.env.COOKIE_DOMAIN
-    // maxAge: 24 * 60 * 60 * 1000
+    domain: process.env.COOKIE_DOMAIN,
+    maxAge: 60 * 86400000 // 60 days
   },
 
   /***************************************************************************
