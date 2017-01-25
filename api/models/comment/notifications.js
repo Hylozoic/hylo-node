@@ -86,7 +86,7 @@ export const sendDigests = () => {
             post_title: truncate(post.get('name'), 140).text,
             post_url: Frontend.Route.post(post),
             comments: comments.map(c => ({
-              text: c.get('text'),
+              text: RichText.qualifyLinks(c.get('text')),
               user: c.relations.user.pick('name', 'avatar_url'),
               url: Frontend.Route.post(post) + `#comment-${c.id}`
             }))
