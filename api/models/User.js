@@ -176,7 +176,8 @@ module.exports = bookshelf.Model.extend(merge({
 
   markInvitationsUsed: function (communityId, trx) {
     return Invitation.query()
-    .where({email: this.get('email'), community_id: communityId})
+    .where('community_id', communityId)
+    .whereRaw('lower(email) = lower(?)', this.get('email'))
     .update({used_by_id: this.id}).transacting(trx)
   },
 
