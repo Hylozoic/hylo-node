@@ -103,47 +103,71 @@ describe('Notification', function () {
       })
     })
 
-    it('sends a push for a comment', () => {
-      return new Activity({
-        comment_id: comment.id,
-        meta: {reasons: ['newComment']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
-      .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
-      .then(pns => {
-        expect(pns).to.exist
-        expect(pns.length).to.equal(1)
-        var pn = pns.first()
-        expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
+    describe('with a user with push notifications for comments enabled', () => {
+      it('sends no push for a comment', () => {
+        return new Activity({
+          comment_id: comment.id,
+          meta: {reasons: ['newComment']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        }).save()
+        .then(activity => new Notification({
+          activity_id: activity.id,
+          medium: Notification.MEDIUM.Push
+        }).save())
+        .then(notification => notification.load(relations))
+        .then(notification => notification.send())
+        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(pns => expect(pns.length).to.equal(0))
       })
     })
 
-    it('sends a push for a mention in a comment', () => {
-      return new Activity({
-        comment_id: comment.id,
-        meta: {reasons: ['commentMention']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
-      .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
-      .then(pns => {
-        expect(pns).to.exist
-        expect(pns.length).to.equal(1)
-        var pn = pns.first()
-        expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
+    describe('to a user with push notifications for comments enabled', () => {
+      beforeEach(() => reader.addSetting({comment_notifications: 'push'}, true))
+      afterEach(() => reader.removeSetting('comment_notifications', true))
+
+      it('sends a push for a comment', () => {
+        return new Activity({
+          comment_id: comment.id,
+          meta: {reasons: ['newComment']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        }).save()
+        .then(activity => new Notification({
+          activity_id: activity.id,
+          medium: Notification.MEDIUM.Push
+        }).save())
+        .then(notification => notification.load(relations))
+        .then(notification => notification.send())
+        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(pns => {
+          expect(pns).to.exist
+          expect(pns.length).to.equal(1)
+          var pn = pns.first()
+          expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
+        })
+      })
+
+      it('sends a push for a mention in a comment', () => {
+        return new Activity({
+          comment_id: comment.id,
+          meta: {reasons: ['commentMention']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        }).save()
+        .then(activity => new Notification({
+          activity_id: activity.id,
+          medium: Notification.MEDIUM.Push
+        }).save())
+        .then(notification => notification.load(relations))
+        .then(notification => notification.send())
+        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(pns => {
+          expect(pns).to.exist
+          expect(pns.length).to.equal(1)
+          var pn = pns.first()
+          expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
+        })
       })
     })
 

@@ -128,7 +128,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   generateTokenContents: function () {
-    return format('crumbly:%s:%s:%s', this.id, this.get('email'), this.get('created_at'))
+    return `crumbly:${this.id}:${this.get('email')}:${this.get('created_at')}`
   },
 
   generateToken: function () {
@@ -216,6 +216,24 @@ module.exports = bookshelf.Model.extend(merge({
           {patch: true, transacting}
         )
       ])))
+  },
+
+  enabledNotification (type, medium) {
+    let setting
+    switch (type) {
+      case Notification.TYPE.Message:
+        setting = this.getSetting('dm_notifications')
+        return setting === 'both' ||
+          (setting === 'email' && medium === Notification.MEDIUM.Email) ||
+          (setting === 'push' && medium === Notification.MEDIUM.Push)
+      case Notification.TYPE.Comment:
+        setting = this.getSetting('comment_notifications')
+        return setting === 'both' ||
+          (setting === 'email' && medium === Notification.MEDIUM.Email) ||
+          (setting === 'push' && medium === Notification.MEDIUM.Push)
+      default:
+        throw new Error(`unknown notification type: ${type}`)
+    }
   }
 
 }, HasSettings), {
@@ -233,7 +251,7 @@ module.exports = bookshelf.Model.extend(merge({
       var account = user.relations.linkedAccounts.where({provider_key: 'password'})[0]
       if (!account) {
         var keys = user.relations.linkedAccounts.pluck('provider_key')
-        throw new Error(format('password account not found. available: [%s]', keys.join(',')))
+        throw new Error(`password account not found. available: [${keys.join(',')}]`)
       }
 
       return compare(password, account.get('provider_user_id')).then(function (match) {
@@ -324,12 +342,12 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   encryptEmail: function (email) {
-    var plaintext = format('%s%s', process.env.MAILGUN_EMAIL_SALT, email)
-    return format('u=%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN)
+    var plaintext = process.env.MAILGUN_EMAIL_SALT + email
+    return `u=${PlayCrypto.encrypt(plaintext)}@${process.env.MAILGUN_DOMAIN}`
   },
 
   decryptEmail: function (email) {
-    var pattern = new RegExp(format('u=(\\w+)@%s', process.env.MAILGUN_DOMAIN))
+    var pattern = new RegExp(`u=(\\w+)@${process.env.MAILGUN_DOMAIN}`)
     var match = email.match(pattern)
     var hash = match[1]
     var decrypted = PlayCrypto.decrypt(hash)

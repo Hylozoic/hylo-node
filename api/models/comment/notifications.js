@@ -3,7 +3,7 @@
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
 import { parse } from 'url'
-import { compact, includes, sum } from 'lodash/fp'
+import { compact, sum } from 'lodash/fp'
 
 export const notifyAboutMessage = ({commentId}) =>
   Comment.find(commentId, {withRelated: [
@@ -20,7 +20,7 @@ export const notifyAboutMessage = ({commentId}) =>
     return Promise.map(recipients, user => {
       // don't notify if the user has read the thread recently and respect the
       // dm_notifications setting.
-      if (!includes(user.get('settings').dm_notifications, ['push', 'both'])) return
+      if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Push)) return
 
       const lr = lastReads.find(r => r.get('user_id') === user.id)
       if (!lr || comment.get('created_at') > lr.get('last_read_at')) {
@@ -62,7 +62,7 @@ export const sendDigests = () => {
       if (filtered.length === 0) return
 
       if (post.get('type') === Post.Type.THREAD) {
-        if (!includes(user.get('settings').dm_notifications, ['email', 'both'])) return
+        if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Email)) return
 
         // here, we assume that all of the messages were sent by 1 other person,
         // so this will have to change when we support group messaging
@@ -80,6 +80,8 @@ export const sendDigests = () => {
           }
         })
       } else {
+        if (!user.enabledNotification(Notification.TYPE.Comment, Notification.MEDIUM.Email)) return
+
         return Email.sendCommentDigest({
           email: user.get('email'),
           data: {
