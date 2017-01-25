@@ -13,10 +13,6 @@ module.exports = bookshelf.Model.extend({
     return this.relations.activity.relations.post
   },
 
-  contribution: function () {
-    return this.relations.activity.relations.contribution
-  },
-
   comment: function () {
     return this.relations.activity.relations.comment
   },
@@ -84,11 +80,12 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendContributionPush: function (version) {
-    var contribution = this.contribution()
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
+    return this.load(['contribution', 'contribution.post'])
+    .then(() => Community.find(communityIds[0]))
     .then(community => {
+      const { contribution } = this.relations.activity.relations
       var path = url.parse(Frontend.Route.post(contribution.relations.post, community)).path
       var alertText = PushNotification.textForContribution(contribution, version)
       return this.reader().sendPushNotification(alertText, path)
@@ -292,7 +289,7 @@ module.exports = bookshelf.Model.extend({
     TagFollow: 'TagFollow',
     NewPost: 'newPost',
     Comment: 'comment', // someone makes a comment on a post you follow
-    Contribution: 'contribution', // someone makes a comment on a post you follow
+    Contribution: 'contribution', // you are added as a contributor
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow', // someone leaves your post
@@ -323,6 +320,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendUnsent: function () {
+    // FIXME empty out this withRelated list and just load things on demand when
+    // creating push notifications / emails
     return Notification.findUnsent({withRelated: [
       'activity',
       'activity.post',
