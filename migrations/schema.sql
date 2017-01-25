@@ -599,7 +599,8 @@ CREATE TABLE media (
     post_id bigint,
     name character varying(255),
     width integer,
-    height integer
+    height integer,
+    comment_id bigint
 );
 
 
@@ -2368,6 +2369,14 @@ ALTER TABLE ONLY join_requests
 
 
 --
+-- Name: media_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY media
+    ADD CONSTRAINT media_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: nexudus_accounts_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2482,3 +2491,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+

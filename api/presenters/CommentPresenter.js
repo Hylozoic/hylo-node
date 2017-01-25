@@ -1,7 +1,13 @@
+import { pick } from 'lodash'
+
 module.exports = {
-  present: (comment, userId) => {
-    const attrs = _.pick(comment.toJSON(), 'id', 'text', 'created_at', 'user')
+  present: (comment) => {
+    const attrs = pick(comment.toJSON(), 'id', 'text', 'created_at', 'user')
     const thanks = (comment.relations.thanks || []).map(t => t.relations.thankedBy)
-    return _.extend(attrs, {thanks})
+    const image = comment.relations.media.first()
+    if (image) {
+      attrs.image = pick(image.toJSON(), 'url', 'thumbnail_url')
+    }
+    return Object.assign(attrs, {thanks})
   }
 }

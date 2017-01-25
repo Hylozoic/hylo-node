@@ -30,7 +30,8 @@ module.exports = bookshelf.Model.extend({
   create: function (opts) {
     return new Media(_.merge({
       created_at: new Date()
-    }, _.pick(opts, 'post_id', 'url', 'type', 'name', 'thumbnail_url', 'width', 'height')))
+    }, _.pick(opts, 'post_id', 'url', 'type', 'name', 'thumbnail_url', 'width',
+      'height', 'comment_id')))
     .save(null, _.pick(opts, 'transacting'))
   },
 

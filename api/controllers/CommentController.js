@@ -13,8 +13,8 @@ const updateRecentComments = postId =>
   Queue.classMethod('Post', 'updateFromNewComment', {postId})
 
 const presentComment = (comment) =>
-  comment.load({user: userColumns})
-  .then(c => CommentPresenter.present(c, c.get('user_id')))
+  comment.load([{user: userColumns}, 'media'])
+  .then(c => CommentPresenter.present(c))
   .then(c => {
     const buckets = {people: []}
     normalizeComment(c, buckets, true)
@@ -59,7 +59,12 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
-      .tap(() => isReplyToPost && post.updateCommentCount(trx)))
+      .tap(() => isReplyToPost && post.updateCommentCount(trx))
+      .tap(comment => opts.imageUrl && Media.create({
+        comment_id: comment.id,
+        url: opts.imageUrl,
+        transacting: trx
+      })))
     .then(comment => Promise.all([
       presentComment(comment)
       .tap(c => isReplyToPost &&
@@ -109,9 +114,10 @@ module.exports = {
     }).fetchAll({withRelated: [
       {user: userColumns},
       'thanks',
-      {'thanks.thankedBy': userColumns}
+      {'thanks.thankedBy': userColumns},
+      'media'
     ]})
-    .then(cs => cs.map(c => CommentPresenter.present(c, req.session.userId)))
+    .then(cs => cs.map(c => CommentPresenter.present(c)))
     .then(comments => {
       const buckets = {people: []}
       comments.forEach((c, i) => normalizeComment(c, buckets, i === comments.length - 1))
@@ -128,7 +134,8 @@ module.exports = {
     return checkCommentTags(text, post, tagDescriptions, req.session.userId)
     .then(() => createAndPresentComment(req.session.userId, text, post, {
       parentComment: comment,
-      tagDescriptions
+      tagDescriptions,
+      imageUrl: req.param('imageUrl')
     }))
     .then(res.ok)
     .catch(err => {
