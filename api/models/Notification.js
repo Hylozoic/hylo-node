@@ -80,13 +80,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendContributionPush: function (version) {
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return this.load(['contribution', 'contribution.post'])
-    .then(() => Community.find(communityIds[0]))
-    .then(community => {
+    .then(() => {
       const { contribution } = this.relations.activity.relations
-      var path = url.parse(Frontend.Route.post(contribution.relations.post, community)).path
+      var path = url.parse(Frontend.Route.post(contribution.relations.post)).path
       var alertText = PushNotification.textForContribution(contribution, version)
       return this.reader().sendPushNotification(alertText, path)
     })
@@ -94,14 +91,9 @@ module.exports = bookshelf.Model.extend({
 
   sendCommentPush: function (version) {
     var comment = this.comment()
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => {
-      var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
-      var alertText = PushNotification.textForComment(comment, version)
-      return this.reader().sendPushNotification(alertText, path)
-    })
+    var path = url.parse(Frontend.Route.post(comment.relations.post)).path
+    var alertText = PushNotification.textForComment(comment, version)
+    return this.reader().sendPushNotification(alertText, path)
   },
 
   sendJoinRequestPush: function () {
