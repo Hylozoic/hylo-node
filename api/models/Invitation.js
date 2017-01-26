@@ -25,25 +25,26 @@ module.exports = bookshelf.Model.extend({
     return !!this.get('used_by_id')
   },
 
+  // this should always return the membership, regardless of whether the
+  // invitation is unused, whether the membership already exists, and whether
+  // the tag follow already exists
   use: function (userId, opts = {}) {
     const { transacting } = opts
     return Membership.where({
       user_id: userId, community_id: this.get('community_id')
     }).fetch()
-    .then(membership => {
-      if (membership) return membership
-      return Membership.create(
-        userId,
-        this.get('community_id'),
-        {role: Number(this.get('role')), transacting})
-    })
-    .tap(() => this.save({used_by_id: userId, used_at: new Date()},
-      {patch: true, transacting}))
-    .tap(() => this.get('tag_id') && new TagFollow({
-      user_id: userId,
-      tag_id: this.get('tag_id'),
-      community_id: this.get('community_id')
-    }).save())
+    .then(membership => membership ||
+      Membership.create(userId, this.get('community_id'),
+        {role: Number(this.get('role')), transacting}))
+    .tap(() => !this.isUsed() && this.get('tag_id') &&
+      new TagFollow({
+        user_id: userId,
+        tag_id: this.get('tag_id'),
+        community_id: this.get('community_id')
+      }).save())
+    .tap(() => !this.isUsed() &&
+      this.save({used_by_id: userId, used_at: new Date()},
+        {patch: true, transacting}))
   },
 
   send: function () {
