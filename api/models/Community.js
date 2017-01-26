@@ -197,17 +197,25 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   notifyAboutCreate: function (opts) {
-    return Community.find(opts.communityId, {withRelated: ['creator']}).then(c => {
+    return Community.find(opts.communityId, {withRelated: ['creator']})
+    .then(c => {
       var creator = c.relations.creator
       var recipient = process.env.ASANA_NEW_COMMUNITIES_EMAIL
-      Email.sendRawEmail(recipient, {
+      return Email.sendRawEmail(recipient, {
         subject: c.get('name'),
-        body: format(
-          '%s<br/>created by %s<br/>%s<br/>%s',
-          Frontend.Route.community(c),
-          creator.get('name'),
-          creator.get('email'),
-          Frontend.Route.profile(creator))
+        body: `Community
+          ${c.get('name')}
+          Email
+          ${creator.get('email')}
+          First Name
+          ${creator.get('name').split(' ')[0]}
+          Last Name
+          ${creator.get('name').split(' ').slice(1).join(' ')}
+          Community URL
+          ${Frontend.Route.community(c)}
+          Creator URL
+          ${Frontend.Route.profile(creator)}
+        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
       }, {
         sender: {
           name: 'Hylobot',
