@@ -66,8 +66,8 @@ module.exports = {
   },
 
   findOne: function (req, res) {
-    var community = res.locals.community
-    var mship = res.locals.membership
+    const { community, membership } = res.locals
+    if (!community) return res.notFound()
 
     return community.load([
       {network: q => q.column('networks.id', 'networks.name', 'networks.slug')},
@@ -83,7 +83,8 @@ module.exports = {
           defaultTags: defaultTags.models.map(dt => dt.relations.tag.get('name'))
         }
       )))
-    .tap(() => mship && mship.save({last_viewed_at: new Date()}, {patch: true}))
+    .tap(() => membership &&
+      membership.save({last_viewed_at: new Date()}, {patch: true}))
     .then(res.ok)
     .catch(res.serverError)
   },
