@@ -63,7 +63,6 @@
     "newrelic": "^1.35.1",
     "node-uuid": "^1.4.7",
     "nzero-push": "^2.1.2",
-    "opbeat": "^4.0.0",
     "parse-redis-url": "0.0.1",
     "passport": "^0.2.1",
     "passport-facebook": "2.1.1",
