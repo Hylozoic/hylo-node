@@ -11,9 +11,12 @@ const parseEmailList = emails =>
   })
 
 // this should match how UserPresenter shows the user's memberships (TODO: DRY)
-const present = membership => Object.assign(membership.toJSON(), {
-  community: membership.relations.community.pick('id', 'slug', 'name', 'avatar_url')
-})
+const present = (membership, invitation, preexisting) =>
+  Promise.props(Object.assign(membership.toJSON(), {
+    community: membership.relations.community.pick('id', 'slug', 'name', 'avatar_url'),
+    tagName: invitation.tagName(),
+    preexisting
+  }))
 
 module.exports = {
   findOne: function (req, res) {
@@ -39,9 +42,10 @@ module.exports = {
         return res.status(422).send('used token')
       }
 
+      const preexisting = invitation.isUsed()
       return invitation.use(userId)
-      .then(membership => membership.load('community'))
-      .then(present)
+      .then(mship => mship.load('community'))
+      .then(mship => present(mship, invitation, preexisting))
       .then(res.ok)
       .catch(res.serverError)
     })

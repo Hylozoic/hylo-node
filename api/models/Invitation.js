@@ -25,6 +25,12 @@ module.exports = bookshelf.Model.extend({
     return !!this.get('used_by_id')
   },
 
+  tagName: function () {
+    return this.get('tag_id')
+      ? Tag.find(this.get('tag_id')).then(t => t.get('name'))
+      : Promise.resolve()
+  },
+
   // this should always return the membership, regardless of whether the
   // invitation is unused, whether the membership already exists, and whether
   // the tag follow already exists
