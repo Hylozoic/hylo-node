@@ -18,6 +18,8 @@ module.exports = {
   Route: {
     prefix,
 
+    root: () => url('/app'),
+
     community: function (community) {
       return url('/c/%s', community.get('slug'))
     },

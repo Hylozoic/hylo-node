@@ -251,18 +251,31 @@ const PostController = {
       description: req.param('description')
     }
 
+    let community
     return Post.where({name: attributes.name, user_id: userId}).fetch()
     .then(post => {
-      if (post && (new Date() - post.get('created_at') < 5 * 60000)) return res.redirect(Frontend.Route.post(post))
-      return createPost(userId, attributes)
-      .tap(post => Community.find(communityId)
-        .then(c => Analytics.track({
-          userId,
-          event: 'Add Post by Email Form',
-          properties: {community: c.get('name')}
-        })))
-      .then(post => res.redirect(Frontend.Route.post(post)), res.serverError)
+      if (post && (new Date() - post.get('created_at') < 5 * 60000)) {
+        res.redirect(Frontend.Route.post(post))
+        return true
+      }
     })
+    .then(stop => stop || Community.find(communityId)
+      .then(c => {
+        community = c
+        if (!c.get('active')) {
+          const message = 'Your post was not created. That community no longer exists.'
+          res.redirect(Frontend.Route.root() + `?notification=${encodeURIComponent(message)}&error=1`)
+          return true
+        }
+      }))
+    .then(stop => stop || createPost(userId, attributes)
+      .then(() => Analytics.track({
+        userId,
+        event: 'Add Post by Email Form',
+        properties: {community: community.get('name')}
+      }))
+      .then(post => res.redirect(Frontend.Route.post(post))))
+    .catch(res.serverError)
   },
 
   follow: function (req, res) {
