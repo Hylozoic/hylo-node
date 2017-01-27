@@ -89,12 +89,13 @@ module.exports = {
   create: function (req, res) {
     let tagName = req.param('tagName')
     const userIds = req.param('users')
+    const rawEmails = req.param('emails')
     return Promise.join(
       userIds && User.where('id', 'in', userIds).fetchAll(),
       Community.find(req.param('communityId')),
       tagName && Tag.find(tagName),
       (users, community, tag) => {
-        var emails = parseEmailList(req.param('emails'))
+        var emails = (rawEmails ? parseEmailList(rawEmails) : [])
         .concat(map(u => u.get('email'), get('models', users)))
 
         return Promise.map(emails, email => {
