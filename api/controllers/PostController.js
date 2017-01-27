@@ -269,7 +269,7 @@ const PostController = {
         }
       }))
     .then(stop => stop || createPost(userId, attributes)
-      .then(() => Analytics.track({
+      .tap(() => Analytics.track({
         userId,
         event: 'Add Post by Email Form',
         properties: {community: community.get('name')}

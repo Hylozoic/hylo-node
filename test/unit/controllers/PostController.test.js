@@ -311,18 +311,14 @@ describe('PostController', () => {
   })
 
   describe('.createFromEmailForm', () => {
-    const params = {
-      type: 'request',
-      name: 'a penguin',
-      description: 'I just love the tuxedo'
-    }
-
-    before(() => {
-      return Tag.forge({name: 'request'}).save()
-    })
+    before(() => Tag.forge({name: 'request'}).save())
 
     it('works', () => {
-      Object.assign(req.params, params)
+      Object.assign(req.params, {
+        type: 'request',
+        name: 'a penguin',
+        description: 'I just love the tuxedo'
+      })
 
       res.locals.tokenData = {
         communityId: fixtures.c1.id,
@@ -343,6 +339,38 @@ describe('PostController', () => {
         expect(tag.get('name')).to.equal('request')
         const community = post.relations.communities.first()
         expect(community.id).to.equal(fixtures.c1.id)
+      })
+    })
+
+    describe('for an inactive community', () => {
+      let c2
+
+      beforeEach(() => {
+        Object.assign(req.params, {
+          type: 'request',
+          name: 'a zebra',
+          description: 'I just love the stripes'
+        })
+        c2 = factories.community()
+        c2.set('active', false)
+        return c2.save()
+      })
+
+      it('does not work', () => {
+        res.locals.tokenData = {
+          communityId: c2.id,
+          userId: fixtures.u1.id
+        }
+
+        return PostController.createFromEmailForm(req, res)
+        .then(() => {
+          expect(res.redirected).to.exist
+          const url = require('url').parse(res.redirected, true)
+          expect(url.query).to.deep.equal({
+            notification: 'Your post was not created. That community no longer exists.',
+            error: '1'
+          })
+        })
       })
     })
   })
