@@ -1,8 +1,8 @@
 import nock from 'nock'
-const root = require('root-path')
-require(root('test/setup'))
-var factories = require(root('test/setup/factories'))
+import '../../setup'
+import factories from '../../setup/factories'
 const model = factories.mock.model
+import { spyify, unspyify } from '../../setup/helpers'
 
 const destroyAllPushNotifications = () => {
   return PushNotification.fetchAll()
@@ -28,27 +28,27 @@ describe('Notification', function () {
 
   before(() => {
     return factories.user({name: 'Joe'}).save()
-    .then(u => actor = u)
+    .then(u => { actor = u })
     .then(() => factories.post({name: 'My Post', user_id: actor.id, description: 'The body of the post'}).save())
-    .then(p => post = p)
+    .then(p => { post = p })
     .then(() => new Comment({text: 'hi', user_id: actor.id, post_id: post.id}).save())
-    .then(c => comment = c)
+    .then(c => { comment = c })
     .then(() => factories.community({name: 'My Community'}).save())
-    .then(c => community = c)
+    .then(c => { community = c })
     .then(() => community.posts().attach(post))
     .then(() => factories.user({email: 'readersemail@hylo.com'}).save())
-    .then(u => reader = u)
+    .then(u => { reader = u })
     .then(() => new Device({
       user_id: reader.id,
       token: 'eieio',
       version: 20,
       enabled: true
     }).save())
-    .then(d => device = d)
+    .then(d => { device = d })
     .then(() => new Activity({
       post_id: post.id
     }).save())
-    .then(a => activity = a)
+    .then(a => { activity = a })
   })
 
   beforeEach(() => destroyAllPushNotifications())
@@ -103,47 +103,71 @@ describe('Notification', function () {
       })
     })
 
-    it('sends a push for a comment', () => {
-      return new Activity({
-        comment_id: comment.id,
-        meta: {reasons: ['newComment']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
-      .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
-      .then(pns => {
-        expect(pns).to.exist
-        expect(pns.length).to.equal(1)
-        var pn = pns.first()
-        expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
+    describe('with a user with push notifications for comments enabled', () => {
+      it('sends no push for a comment', () => {
+        return new Activity({
+          comment_id: comment.id,
+          meta: {reasons: ['newComment']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        }).save()
+        .then(activity => new Notification({
+          activity_id: activity.id,
+          medium: Notification.MEDIUM.Push
+        }).save())
+        .then(notification => notification.load(relations))
+        .then(notification => notification.send())
+        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(pns => expect(pns.length).to.equal(0))
       })
     })
 
-    it('sends a push for a mention in a comment', () => {
-      return new Activity({
-        comment_id: comment.id,
-        meta: {reasons: ['commentMention']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
-      .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
-      .then(pns => {
-        expect(pns).to.exist
-        expect(pns.length).to.equal(1)
-        var pn = pns.first()
-        expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
+    describe('to a user with push notifications for comments enabled', () => {
+      beforeEach(() => reader.addSetting({comment_notifications: 'push'}, true))
+      afterEach(() => reader.removeSetting('comment_notifications', true))
+
+      it('sends a push for a comment', () => {
+        return new Activity({
+          comment_id: comment.id,
+          meta: {reasons: ['newComment']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        }).save()
+        .then(activity => new Notification({
+          activity_id: activity.id,
+          medium: Notification.MEDIUM.Push
+        }).save())
+        .then(notification => notification.load(relations))
+        .then(notification => notification.send())
+        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(pns => {
+          expect(pns).to.exist
+          expect(pns.length).to.equal(1)
+          var pn = pns.first()
+          expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
+        })
+      })
+
+      it('sends a push for a mention in a comment', () => {
+        return new Activity({
+          comment_id: comment.id,
+          meta: {reasons: ['commentMention']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        }).save()
+        .then(activity => new Notification({
+          activity_id: activity.id,
+          medium: Notification.MEDIUM.Push
+        }).save())
+        .then(notification => notification.load(relations))
+        .then(notification => notification.send())
+        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(pns => {
+          expect(pns).to.exist
+          expect(pns.length).to.equal(1)
+          var pn = pns.first()
+          expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
+        })
       })
     })
 
@@ -192,9 +216,7 @@ describe('Notification', function () {
     })
 
     it('sends an email for a mention in a post', () => {
-      var originalMethod = Email.sendPostMentionNotification
-
-      Email.sendPostMentionNotification = spy(opts => {
+      spyify(Email, 'sendPostMentionNotification', opts => {
         expect(opts).to.contain({
           email: 'readersemail@hylo.com'
         })
@@ -226,29 +248,11 @@ describe('Notification', function () {
       .then(() => {
         expect(Email.sendPostMentionNotification).to.have.been.called()
       })
-      .then(() => {
-        Email.sendPostMentionNotification = originalMethod
-      })
+      .then(() => unspyify(Email, 'sendPostMentionNotification'))
     })
 
-    it('sends an email for a comment', () => {
-      var originalMethod = Email.sendNewCommentNotification
-
-      Email.sendNewCommentNotification = spy(opts => {
-        expect(opts).to.contain({
-          email: 'readersemail@hylo.com'
-        })
-
-        expect(opts.sender).to.contain({
-          name: 'Joe (via Hylo)'
-        })
-
-        expect(opts.data).to.contain({
-          community_name: 'My Community',
-          commenter_name: 'Joe',
-          post_title: 'My Post'
-        })
-      })
+    it('sends no email for a comment', () => {
+      spyify(Email, 'sendNewCommentNotification')
 
       return new Activity({
         comment_id: comment.id,
@@ -263,17 +267,13 @@ describe('Notification', function () {
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
       .then(() => {
-        expect(Email.sendNewCommentNotification).to.have.been.called()
+        expect(Email.sendNewCommentNotification).not.to.have.been.called()
       })
-      .then(() => {
-        Email.sendNewCommentNotification = originalMethod
-      })
+      .finally(() => unspyify(Email, 'sendNewCommentNotification'))
     })
 
     it('sends an email for a mention in a comment', () => {
-      var originalMethod = Email.sendNewCommentNotification
-
-      Email.sendNewCommentNotification = spy(opts => {
+      spyify(Email, 'sendNewCommentNotification', opts => {
         expect(opts).to.contain({
           email: 'readersemail@hylo.com',
           version: 'mention'
@@ -305,15 +305,11 @@ describe('Notification', function () {
       .then(() => {
         expect(Email.sendNewCommentNotification).to.have.been.called()
       })
-      .then(() => {
-        Email.sendNewCommentNotification = originalMethod
-      })
+      .then(() => unspyify(Email, 'sendNewCommentNotification'))
     })
 
     it('sends an email for a joinRequest', () => {
-      var originalMethod = Email.sendJoinRequestNotification
-
-      Email.sendJoinRequestNotification = spy(opts => {
+      spyify(Email, 'sendJoinRequestNotification', opts => {
         expect(opts).to.contain({
           email: 'readersemail@hylo.com'
         })
@@ -343,15 +339,11 @@ describe('Notification', function () {
       .then(() => {
         expect(Email.sendJoinRequestNotification).to.have.been.called()
       })
-      .then(() => {
-        Email.sendJoinRequestNotification = originalMethod
-      })
+      .then(() => unspyify(Email, 'sendJoinRequestNotification'))
     })
 
     it('sends an email for an approvedJoinRequest', () => {
-      var originalMethod = Email.sendApprovedJoinRequestNotification
-
-      Email.sendApprovedJoinRequestNotification = spy(opts => {
+      spyify(Email, 'sendApprovedJoinRequestNotification', opts => {
         expect(opts).to.contain({
           email: 'readersemail@hylo.com'
         })
@@ -381,9 +373,7 @@ describe('Notification', function () {
       .then(() => {
         expect(Email.sendApprovedJoinRequestNotification).to.have.been.called()
       })
-      .then(() => {
-        Email.sendApprovedJoinRequestNotification = originalMethod
-      })
+      .then(() => unspyify(Email, 'sendApprovedJoinRequestNotification'))
     })
   })
 
@@ -418,17 +408,14 @@ describe('Notification', function () {
   })
 
   describe('sendCommentNotificationEmail', () => {
-    var original, args, community
+    var args, community
     beforeEach(() => {
-      original = Email.sendNewCommentNotification
-      Email.sendNewCommentNotification = spy(x => args = x)
+      spyify(Email, 'sendNewCommentNotification', x => { args = x })
       community = factories.community()
       return community.save()
     })
 
-    afterEach(() => {
-      Email.sendNewCommentNotification = original
-    })
+    afterEach(() => unspyify(Email, 'sendNewCommentNotification'))
 
     it('sets the correct email attributes', () => {
       const note = new Notification()

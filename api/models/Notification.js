@@ -2,6 +2,27 @@ var url = require('url')
 import { isEmpty } from 'lodash'
 import decode from 'ent/decode'
 
+const TYPE = {
+  Mention: 'mention', // you are mentioned in a post or comment
+  TagFollow: 'TagFollow',
+  NewPost: 'newPost',
+  Comment: 'comment', // someone makes a comment on a post you follow
+  Contribution: 'contribution', // you are added as a contributor
+  FollowAdd: 'followAdd', // you are added as a follower
+  Follow: 'follow', // someone follows your post
+  Unfollow: 'unfollow', // someone leaves your post
+  Welcome: 'welcome', // a welcome post
+  JoinRequest: 'joinRequest',
+  ApprovedJoinRequest: 'approvedJoinRequest',
+  Message: 'message'
+}
+
+const MEDIUM = {
+  InApp: 'in-app',
+  Push: 'push',
+  Email: 'email'
+}
+
 module.exports = bookshelf.Model.extend({
   tableName: 'notifications',
 
@@ -11,10 +32,6 @@ module.exports = bookshelf.Model.extend({
 
   post: function () {
     return this.relations.activity.relations.post
-  },
-
-  contribution: function () {
-    return this.relations.activity.relations.contribution
   },
 
   comment: function () {
@@ -32,13 +49,13 @@ module.exports = bookshelf.Model.extend({
   send: function () {
     var action
     switch (this.get('medium')) {
-      case Notification.MEDIUM.Push:
+      case MEDIUM.Push:
         action = this.sendPush()
         break
-      case Notification.MEDIUM.Email:
+      case MEDIUM.Email:
         action = this.sendEmail()
         break
-      case Notification.MEDIUM.InApp:
+      case MEDIUM.InApp:
         action = User.incNewNotificationCount(this.reader().id)
         break
     }
@@ -84,12 +101,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendContributionPush: function (version) {
-    var contribution = this.contribution()
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => {
-      var path = url.parse(Frontend.Route.post(contribution.relations.post, community)).path
+    return this.load(['contribution', 'contribution.post'])
+    .then(() => {
+      const { contribution } = this.relations.activity.relations
+      var path = url.parse(Frontend.Route.post(contribution.relations.post)).path
       var alertText = PushNotification.textForContribution(contribution, version)
       return this.reader().sendPushNotification(alertText, path)
     })
@@ -97,14 +112,12 @@ module.exports = bookshelf.Model.extend({
 
   sendCommentPush: function (version) {
     var comment = this.comment()
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => {
-      var path = url.parse(Frontend.Route.post(comment.relations.post, community)).path
-      var alertText = PushNotification.textForComment(comment, version)
-      return this.reader().sendPushNotification(alertText, path)
-    })
+    var path = url.parse(Frontend.Route.post(comment.relations.post)).path
+    var alertText = PushNotification.textForComment(comment, version)
+    if (!this.reader().enabledNotification(TYPE.Comment, MEDIUM.Push)) {
+      return Promise.resolve()
+    }
+    return this.reader().sendPushNotification(alertText, path)
   },
 
   sendJoinRequestPush: function () {
@@ -135,8 +148,6 @@ module.exports = bookshelf.Model.extend({
         return this.sendPostMentionEmail()
       case 'commentMention':
         return this.sendCommentNotificationEmail('mention')
-      case 'newComment':
-        return this.sendCommentNotificationEmail()
       case 'joinRequest':
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
@@ -162,7 +173,7 @@ module.exports = bookshelf.Model.extend({
         sender: {
           address: replyTo,
           reply_to: replyTo,
-          name: format('%s (via Hylo)', user.get('name'))
+          name: `${user.get('name')} (via Hylo)`
         },
         data: {
           community_name: community.get('name'),
@@ -201,7 +212,7 @@ module.exports = bookshelf.Model.extend({
       if (relatedUser.id === reader.id) {
         postLabel = 'your welcoming post'
       } else {
-        postLabel = format("%s's welcoming post", relatedUser.get('name'))
+        postLabel = `${relatedUser.get('name')}'s welcoming post`
       }
     }
 
@@ -215,7 +226,7 @@ module.exports = bookshelf.Model.extend({
         sender: {
           address: replyTo,
           reply_to: replyTo,
-          name: format('%s (via Hylo)', commenter.get('name'))
+          name: `${commenter.get('name')} (via Hylo)`
         },
         data: {
           community_name: community.get('name'),
@@ -282,26 +293,8 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-
-  MEDIUM: {
-    InApp: 'in-app',
-    Push: 'push',
-    Email: 'email'
-  },
-
-  TYPE: {
-    Mention: 'mention', // you are mentioned in a post or comment
-    TagFollow: 'TagFollow',
-    NewPost: 'newPost',
-    Comment: 'comment', // someone makes a comment on a post you follow
-    Contribution: 'contribution', // someone makes a comment on a post you follow
-    FollowAdd: 'followAdd', // you are added as a follower
-    Follow: 'follow', // someone follows your post
-    Unfollow: 'unfollow', // someone leaves your post
-    Welcome: 'welcome', // a welcome post
-    JoinRequest: 'joinRequest',
-    ApprovedJoinRequest: 'approvedJoinRequest'
-  },
+  MEDIUM,
+  TYPE,
 
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
@@ -325,6 +318,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendUnsent: function () {
+    // FIXME empty out this withRelated list and just load things on demand when
+    // creating push notifications / emails
     return Notification.findUnsent({withRelated: [
       'activity',
       'activity.post',

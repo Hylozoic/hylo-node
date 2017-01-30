@@ -60,7 +60,7 @@ const every10minutes = now => {
   sails.log.debug('Refreshing full-text search index')
   return [
     FullTextSearch.refreshView(),
-    Comment.sendMessageDigests()
+    Comment.sendDigests()
     .then(count => sails.log.debug(`Sent ${count} message digests`))
   ]
 }
