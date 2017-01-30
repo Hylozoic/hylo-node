@@ -200,7 +200,7 @@ const PostController = {
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
     .then(() => createPost(req.session.userId, params))
-    .then(post => post.load(PostPresenter.relations(req.session.userId, {communities: params.community_ids})))
+    .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
     .then(normalize)
     .then(res.ok)

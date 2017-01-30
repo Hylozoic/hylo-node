@@ -122,13 +122,10 @@ var postAttributes = (post, userId, opts = {}) => {
 }
 
 const postDetailRelations = (userId, opts = {}) => {
-  let relations = [
-    {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')}
-  ]
-  if (opts.communities) {
-    relations.push({communities: qb => qb.column('communities.id', 'name', 'slug', 'avatar_url', 'banner_url')})
-  }
-  return postRelations(userId, opts).concat(relations)
+  return postRelations(userId, opts).concat([
+    {user: q => q.column('users.id', 'users.name', 'users.avatar_url', 'bio')},
+    {communities: qb => qb.column('communities.id', 'name', 'slug', 'avatar_url', 'banner_url')}
+  ])
 }
 
 const postListRelations = (userId, opts = {}) => {
