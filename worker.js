@@ -1,12 +1,13 @@
-require('babel-register')
-var skiff = require('./lib/skiff') // this must be first
-require('./config/kue') // this must be second
+require('babel-register') // this must be first
+const skiff = require('./lib/skiff') // this must be second
+require('./config/kue') // this must be third
 
-var _ = require('lodash')
-var Promise = require('bluebird')
-var queue = require('kue').createQueue()
-var rollbar = skiff.rollbar
-var sails = skiff.sails
+const Promise = require('bluebird')
+const queue = require('kue').createQueue()
+const rollbar = skiff.rollbar
+const sails = skiff.sails
+const lodash = require('lodash')
+const { forIn, omit } = lodash
 
 // define new jobs here.
 // each job should return a promise.
@@ -21,14 +22,21 @@ var jobDefinitions = {
   }),
 
   classMethod: function (job) {
-    sails.log.debug(format('Job %s: %s.%s', job.id, job.data.className, job.data.methodName))
-    return global[job.data.className][job.data.methodName](_.omit(job.data, 'className', 'methodName'))
+    const { id, data, data: { className, methodName } } = job
+    sails.log.debug(`Job ${id}: ${className}.${methodName}`)
+    const fn = global[className][methodName]
+
+    // we wrap the method call in a promise so that if it throws an error
+    // immediately, e.g. if the method is not a function, the catch below will
+    // handle it
+    return Promise.resolve()
+    .then(() => fn(omit(data, 'className', 'methodName')))
   }
 }
 
 var processJobs = function () {
   // load jobs
-  _.forIn(jobDefinitions, function (promise, name) {
+  forIn(jobDefinitions, function (promise, name) {
     queue.process(name, 10, function (job, ctx, done) {
       // put common behavior for all jobs here
 
@@ -39,18 +47,14 @@ var processJobs = function () {
         sails.log.debug(label + 'done')
         done()
       })
-      .catch(function (err) {
-        const error = typeof err === 'string' ? new Error(err) : err
-        if (error) {
-          sails.log.error(label + error.message.red)
-          rollbar.handleError(error)
-          done(error)
-        } else {
-          const newError = new Error('kue job failed without error')
-          const data = {custom: {jobData: job.data}}
-          rollbar.handleErrorWithPayloadData(newError, data)
-          done(newError)
-        }
+      .catch(err => {
+        const data = {custom: {jobData: job.data}}
+        const error = typeof err === 'string'
+          ? new Error(err)
+          : (err || new Error('kue job failed without error'))
+        sails.log.error(label + error.message.red)
+        rollbar.handleErrorWithPayloadData(error, data)
+        done(error)
       })
     })
   })
