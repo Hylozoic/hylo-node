@@ -35,11 +35,6 @@ export const presentTag = tag => {
 export const fetchAndPresentForCommunity = (communityId, opts = {}) => {
   var total
   const { raw } = bookshelf.knex
-  const withRelated = withRelatedSpecialPost.withRelated
-  Array.prototype.push.apply(withRelated, [
-    {memberships: q => q.where('community_id', communityId)},
-    {'memberships.owner': q => q.column('users.id', 'name', 'avatar_url')}
-  ])
 
   return Tag.query(q => {
     q.select(raw(`tags.*, communities_tags.created_at, count(*) over () as total,
@@ -65,7 +60,12 @@ export const fetchAndPresentForCommunity = (communityId, opts = {}) => {
     }
     q.groupBy(['tags.id', 'is_default', 'communities_tags.created_at'])
   })
-  .fetchAll({withRelated})
+  .fetchAll({
+    withRelated: [
+      {memberships: q => q.where('community_id', communityId)},
+      {'memberships.owner': q => q.column('users.id', 'name', 'avatar_url')}
+    ]
+  })
   .tap(tags => total = tags.first() ? Number(tags.first().get('total')) : 0)
   .then(tags => tags.map(t => {
     const attrs = {
@@ -76,8 +76,6 @@ export const fetchAndPresentForCommunity = (communityId, opts = {}) => {
         {follower_count: Number(t.get('followers'))}
       ))
     }
-    const post_type = get(t.relations.posts.first(), 'attributes.type')
-    if (post_type) attrs.post_type = post_type
     return attrs
   }))
   .then(items => ({items, total}))
