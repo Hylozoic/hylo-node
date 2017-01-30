@@ -30,7 +30,7 @@ const queryPosts = (req, opts) =>
       term: req.param('search')
     },
     pick(req.allParams(),
-      'type', 'limit', 'offset', 'starts_at', 'ends_at', 'filter', 'omit', 'parent_post_id'),
+      'type', 'limit', 'offset', 'starts_at', 'ends_at', 'filter', 'omit'),
     omit(opts, 'sort')
   ))
   .then(Search.forPosts)
