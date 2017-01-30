@@ -146,10 +146,9 @@ const presentProjectActivity = function (post, data, userId, relationsOpts) {
   .then(child => {
     if (!child || Math.abs(post.updated_at.getTime() - child.get('updated_at').getTime()) > 10000) return post
     child = postAttributes(child, userId, relationsOpts)
-    child.project = post
-    child.type = 'project-activity'
+    post.child = child
     normalizePost(child, data)
-    return child
+    return post
   })
 }
 

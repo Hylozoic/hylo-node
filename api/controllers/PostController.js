@@ -41,7 +41,7 @@ const normalize = post => {
   return Object.assign(data, post)
 }
 
-const fetchAndPresentPosts = function (query, userId, relationsOpts) {
+const fetchAndPresentPosts = function (query, opts, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
   })
@@ -55,7 +55,9 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
     return Object.assign(data, buckets)
   })
   .tap(data =>
-    Promise.map(data.posts, p => PostPresenter.presentProjectActivity(p, data, userId, relationsOpts))
+    Promise.map(data.posts, p => {
+      return opts.presentProjectActivity ? PostPresenter.presentProjectActivity(p, data, userId, relationsOpts) : p
+    })
     .tap(posts => {
       data.posts = posts
       uniqize(data)
@@ -141,9 +143,9 @@ const queryForThreads = function (req, res) {
   })
 }
 
-const createFindAction = (queryFunction) => (req, res) => {
+const createFindAction = (queryFunction, opts) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => query && fetchAndPresentPosts(query, req.session.userId,
+  .then(query => query && fetchAndPresentPosts(query, opts, req.session.userId,
     {
       withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes'),
@@ -457,20 +459,21 @@ const PostController = {
 }
 
 const queries = [
-  ['Community', queryForCommunity],
-  ['User', queryForUser],
-  ['AllForUser', queryForAllForUser],
-  ['Followed', queryForFollowed],
-  ['Post', queryForPost],
-  ['Network', queryForNetwork],
-  ['TagInAllCommunities', queryForTagInAllCommunities]
+  ['Community', queryForCommunity, {presentProjectActivity: true}],
+  ['User', queryForUser, {presentProjectActivity: false}],
+  ['AllForUser', queryForAllForUser, {presentProjectActivity: false}],
+  ['Followed', queryForFollowed, {presentProjectActivity: true}],
+  ['Post', queryForPost, {presentProjectActivity: false}],
+  ['Network', queryForNetwork, {presentProjectActivity: true}],
+  ['TagInAllCommunities', queryForTagInAllCommunities, {presentProjectActivity: true}]
 ]
 
 queries.forEach(tuple => {
   const key = tuple[0]
   const fn = tuple[1]
+  const opts = tuple[2]
   PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(fn, 'posts')
-  PostController['findFor' + key] = createFindAction(fn)
+  PostController['findFor' + key] = createFindAction(fn, opts)
 })
 
 module.exports = PostController
