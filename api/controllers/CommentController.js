@@ -63,6 +63,7 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
       .tap(comment => opts.imageUrl && Media.create({
         comment_id: comment.id,
         url: opts.imageUrl,
+        thumbnailSize: 128,
         transacting: trx
       })))
     .then(comment => Promise.all([

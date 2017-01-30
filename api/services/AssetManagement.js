@@ -5,14 +5,6 @@ const mime = require('mime')
 const path = require('path')
 const Promise = require('bluebird')
 const request = require('request')
-const s3stream = require('s3-upload-stream')(new aws.S3())
-
-const promisifyStream = stream =>
-  new Promise((resolve, reject) => {
-    stream.on('end', resolve)
-    stream.on('error', err =>
-      err instanceof Error ? reject(err) : reject(new Error(err)))
-  })
 
 const basename = url => {
   const name = path.basename(url).replace(/(\?.*|[ %+])/g, '')
@@ -25,51 +17,52 @@ module.exports = {
     const url = instance.get(attr)
     const key = path.join(modelName.toLowerCase(), instance.id, subfolder, basename(url))
     const newUrl = process.env.AWS_S3_CONTENT_URL + '/' + key
+    const s3 = new aws.S3()
+    const httpget = Promise.promisify(request.get, request, {multiArgs: true})
 
     sails.log.info('from: ' + url)
     sails.log.info('to:   ' + newUrl)
 
     if (url !== newUrl) {
-      const copy = request(url).pipe(s3stream.upload({
+      return httpget({url, encoding: null})
+      .then(([ resp, body ]) => s3.upload({
         Bucket: process.env.AWS_S3_BUCKET,
         ACL: 'public-read',
         ContentType: mime.lookup(key),
-        Key: key
-      }))
-
-      return promisifyStream(copy)
+        Key: key,
+        Body: body
+      }).promise())
       .then(() => instance.save({[attr]: newUrl}, {patch: true}))
     }
   },
 
-  resizeAsset: function (instance, attr, settings) {
+  resizeAsset: function (instance, fromAttr, toAttr, settings) {
+    const { width, height, transacting } = settings
     const s3 = new aws.S3()
-    const getObject = Promise.promisify(s3.getObject, s3)
-    const url = instance.get(attr)
+    const url = instance.get(fromAttr)
     const key = url.replace(process.env.AWS_S3_CONTENT_URL + '/', '')
-    const newKey = key.replace(/(\.\w{2,4})?$/, '-resized$1')
+    const newKey = key.replace(/(\.\w{2,4})?$/, `-resized${width}x${height}$1`)
     const newUrl = process.env.AWS_S3_CONTENT_URL + '/' + newKey
 
     sails.log.info('from: ' + url)
     sails.log.info('to:   ' + newUrl)
 
-    return getObject({
-      Bucket: process.env.AWS_S3_BUCKET,
-      Key: key
-    }).then(obj => {
-      const resize = gm(obj.Body)
-      .resize(settings.width, settings.height, '>') // do not resize if already smaller
+    const httpget = Promise.promisify(request.get, request, {multiArgs: true})
+
+    return httpget({url, encoding: null})
+    .then(([ resp, body ]) => {
+      const resize = gm(body)
+      .resize(width, height, '>') // do not resize if already smaller
       .stream()
-      .pipe(s3stream.upload({
+
+      return s3.upload({
         Bucket: process.env.AWS_S3_BUCKET,
         ACL: 'public-read',
         ContentType: mime.lookup(key),
-        Key: newKey
-      }))
-
-      return promisifyStream(resize)
-      .then(() => instance.save({[attr]: newUrl}, {patch: true}))
+        Key: newKey,
+        Body: resize
+      }).promise()
+      .then(() => instance.save({[toAttr]: newUrl}, {patch: true, transacting}))
     })
   }
-
 }
