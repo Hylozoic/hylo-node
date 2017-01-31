@@ -7,14 +7,16 @@ import { compact, sum } from 'lodash/fp'
 
 export const notifyAboutMessage = ({commentId}) =>
   Comment.find(commentId, {withRelated: [
-    'post.followers', 'post.lastReads'
+    'post.followers', 'post.lastReads', 'media'
   ]})
   .then(comment => {
     const { user_id, post_id, text } = comment.attributes
     const { followers, lastReads } = comment.relations.post.relations
     const recipients = followers.filter(u => u.id !== user_id)
     const user = followers.find(u => u.id === user_id)
-    const alert = `${user.get('name')}: ${decode(truncate(text, 140).text).trim()}`
+    const alert = comment.relations.media.length !== 0
+      ? `${user.get('name')} sent an image`
+      : `${user.get('name')}: ${decode(truncate(text, 140).text).trim()}`
     const path = parse(Frontend.Route.thread({id: post_id})).path
 
     return Promise.map(recipients, user => {
