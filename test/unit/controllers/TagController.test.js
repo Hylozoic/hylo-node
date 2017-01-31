@@ -100,7 +100,6 @@ describe('TagController', () => {
             {
               id: t1.id,
               name: t1.get('name'),
-              post_type: 'project',
               memberships: [
                 {
                   community_id: c1.id,
