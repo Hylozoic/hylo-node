@@ -7,7 +7,7 @@ import {
 } from 'lodash/fp'
 
 const tagsInText = (text = '') => {
-  const re = /(?:^| |>)#([A-Za-z][\w-]+)/g
+  const re = /(?:^| |>)#([A-Za-z][\w_-]+)/g
   var match
   var tags = []
   while ((match = re.exec(text)) != null) {
