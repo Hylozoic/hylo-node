@@ -48,7 +48,8 @@ export const sendDigests = () => {
         q.where('created_at', '>', time)
         q.orderBy('created_at', 'asc')
       }},
-      'comments.user'
+      'comments.user',
+      'comments.media'
     ]}))
   .then(posts => Promise.all(posts.map(post => {
     const { comments, followers, lastReads } = post.relations
@@ -61,6 +62,7 @@ export const sendDigests = () => {
       const filtered = comments.filter(c =>
         c.get('created_at') > (r ? r.get('last_read_at') : 0) &&
         c.get('user_id') !== user.id)
+
       if (filtered.length === 0) return
 
       if (post.get('type') === Post.Type.THREAD) {
@@ -69,13 +71,19 @@ export const sendDigests = () => {
         // here, we assume that all of the messages were sent by 1 other person,
         // so this will have to change when we support group messaging
         const other = filtered[0].relations.user
+
+        const presentMessage = comment =>
+          comment.relations.media.length !== 0
+          ? {image: comment.relations.media.first().pick('url', 'thumbnail_url')}
+          : comment.get('text')
+
         return Email.sendMessageDigest({
           email: user.get('email'),
           data: {
             other_person_avatar_url: other.get('avatar_url'),
             other_person_name: other.get('name'),
             thread_url: Frontend.Route.thread(post),
-            messages: filtered.map(c => c.get('text'))
+            messages: filtered.map(presentMessage)
           },
           sender: {
             reply_to: Email.postReplyAddress(post.id, user.id)
@@ -84,16 +92,24 @@ export const sendDigests = () => {
       } else {
         if (!user.enabledNotification(Notification.TYPE.Comment, Notification.MEDIUM.Email)) return
 
+        const presentComment = comment => {
+          const attrs = {
+            text: RichText.qualifyLinks(comment.get('text')),
+            user: comment.relations.user.pick('name', 'avatar_url'),
+            url: Frontend.Route.post(post) + `#comment-${comment.id}`
+          }
+          if (comment.relations.media.length !== 0) {
+            attrs.image = comment.relations.media.first().pick('url', 'thumbnail_url')
+          }
+          return attrs
+        }
+
         return Email.sendCommentDigest({
           email: user.get('email'),
           data: {
             post_title: truncate(post.get('name'), 140).text,
             post_url: Frontend.Route.post(post),
-            comments: comments.map(c => ({
-              text: RichText.qualifyLinks(c.get('text')),
-              user: c.relations.user.pick('name', 'avatar_url'),
-              url: Frontend.Route.post(post) + `#comment-${c.id}`
-            }))
+            comments: comments.map(presentComment)
           },
           sender: {
             reply_to: Email.postReplyAddress(post.id, user.id)
