@@ -2,6 +2,9 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.5.1
+-- Dumped by pg_dump version 9.5.1
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -809,7 +812,8 @@ CREATE TABLE posts (
     location character varying(255),
     created_from character varying(255),
     parent_post_id bigint,
-    link_preview_id integer
+    link_preview_id integer,
+    is_project_request boolean DEFAULT false
 );
 
 
@@ -2482,3 +2486,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+
