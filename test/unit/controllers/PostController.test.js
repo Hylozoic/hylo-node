@@ -778,17 +778,17 @@ describe('PostController', () => {
       })
       .then(() => PostController.findForCommunity(req, res))
       .then(() => {
-        var projectActivity = find(p => p.id === childPost1.id, res.body.posts)
+        var projectActivity = find(p => p.id === project1.id, res.body.posts)
         var project = find(p => p.id === project2.id, res.body.posts)
-        expect(projectActivity.name).to.equal(childPost1.get('name'))
-        expect(projectActivity.type).to.equal('project-activity')
-        expect(projectActivity.project).to.contain({
-          id: project1.id,
-          name: project1.get('name')
+        expect(projectActivity.name).to.equal(project1.get('name'))
+        expect(projectActivity.type).to.equal('project')
+        expect(projectActivity.child).to.contain({
+          id: childPost1.id,
+          name: childPost1.get('name')
         })
         expect(project.name).to.equal(project2.get('name'))
         expect(project.type).to.equal('project')
-        expect(project.project).to.not.exist
+        expect(project.child).to.not.exist
       })
     })
   })

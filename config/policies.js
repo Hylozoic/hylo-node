@@ -97,6 +97,8 @@ module.exports.policies = {
   PostController: {
     findThreads:                          ['sessionAuth'],
     findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    findForPost:                          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
+    checkFreshnessForPost:                ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
     findForCommunity:                     ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],

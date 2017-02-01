@@ -279,7 +279,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   nonexistent: (names, communityIds) => {
-    if (names.length === 0 || communityIds.length === 0) return Promise.resolve({})
+    if (names.length === 0 || !communityIds || communityIds.length === 0) return Promise.resolve({})
 
     const isCommunity = id => row => Number(row.community_id) === Number(id)
     const sameTag = name => row => row.name.toLowerCase() === name.toLowerCase()

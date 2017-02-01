@@ -41,7 +41,7 @@ const normalize = post => {
   return Object.assign(data, post)
 }
 
-const fetchAndPresentPosts = function (query, userId, relationsOpts) {
+const fetchAndPresentPosts = function (query, opts, userId, relationsOpts) {
   return query.fetchAll({
     withRelated: PostPresenter.relationsForList(userId, relationsOpts || {})
   })
@@ -55,7 +55,9 @@ const fetchAndPresentPosts = function (query, userId, relationsOpts) {
     return Object.assign(data, buckets)
   })
   .tap(data =>
-    Promise.map(data.posts, p => PostPresenter.presentProjectActivity(p, data, userId, relationsOpts))
+    Promise.map(data.posts, p => {
+      return opts.presentProjectActivity ? PostPresenter.presentProjectActivity(p, data, userId, relationsOpts) : p
+    })
     .tap(posts => {
       data.posts = posts
       uniqize(data)
@@ -102,6 +104,13 @@ const queryForFollowed = function (req, res) {
   }))
 }
 
+const queryForPost = function (req, res) {
+  return queryPosts(req, {
+    parent_post_id: res.locals.post.id,
+    currentUserId: req.session.userId
+  })
+}
+
 const queryForNetwork = function (req, res) {
   return Network.find(req.param('networkId'))
   .then(network => Community.where({network_id: network.id}).fetchAll())
@@ -134,15 +143,16 @@ const queryForThreads = function (req, res) {
   })
 }
 
-const createFindAction = (queryFunction) => (req, res) => {
+const createFindAction = (queryFunction, opts) => (req, res) => {
   return queryFunction(req, res)
-  .then(query => query && fetchAndPresentPosts(query, req.session.userId,
+  .then(query => query && fetchAndPresentPosts(query, opts, req.session.userId,
     {
       withComments: req.param('comments') && 'recent',
       withVotes: req.param('votes'),
       withReadTimes: req.param('reads'),
       forCommunity: req.param('communityId')
-    }))
+    }
+  ))
   .then(res.ok, res.serverError)
 }
 
@@ -150,7 +160,7 @@ const createFindAction = (queryFunction) => (req, res) => {
 // one of the specified communities, but no description is supplied
 const checkPostTags = (attrs, userId, opts) => {
   var tags = Tag.tagsInText(attrs.name + ' ' + attrs.description)
-  if (opts.tag && opts.type !== 'project') tags.push(opts.tag)
+  if (opts.tag) tags.push(opts.tag)
 
   const describedTags = Object.keys(pickBy(opts.tagDescriptions, (v, k) => !!v))
   tags = difference(tags, describedTags)
@@ -181,7 +191,6 @@ const PostController = {
 
   create: function (req, res) {
     const params = req.allParams()
-
     if (!params.name) {
       res.status(422).send("title can't be blank")
       return Promise.resolve()
@@ -450,19 +459,21 @@ const PostController = {
 }
 
 const queries = [
-  ['Community', queryForCommunity],
-  ['User', queryForUser],
-  ['AllForUser', queryForAllForUser],
-  ['Followed', queryForFollowed],
-  ['Network', queryForNetwork],
-  ['TagInAllCommunities', queryForTagInAllCommunities]
+  ['Community', queryForCommunity, {presentProjectActivity: true}],
+  ['User', queryForUser, {presentProjectActivity: false}],
+  ['AllForUser', queryForAllForUser, {presentProjectActivity: false}],
+  ['Followed', queryForFollowed, {presentProjectActivity: true}],
+  ['Post', queryForPost, {presentProjectActivity: false}],
+  ['Network', queryForNetwork, {presentProjectActivity: true}],
+  ['TagInAllCommunities', queryForTagInAllCommunities, {presentProjectActivity: true}]
 ]
 
 queries.forEach(tuple => {
   const key = tuple[0]
   const fn = tuple[1]
+  const opts = tuple[2]
   PostController['checkFreshnessFor' + key] = createCheckFreshnessAction(fn, 'posts')
-  PostController['findFor' + key] = createFindAction(fn)
+  PostController['findFor' + key] = createFindAction(fn, opts)
 })
 
 module.exports = PostController

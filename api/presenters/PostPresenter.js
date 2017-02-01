@@ -45,11 +45,11 @@ var postRelations = (userId, opts = {}) => {
   }
 
   if (opts.withChildren) {
-    relations.push(
-      {children: q => {
-        q.column('id', 'parent_post_id', 'name', 'description', 'num_comments')
-      }}
-    )
+    relations.push({
+      children: q => {
+        q.column('id', 'parent_post_id', 'name', 'description', 'num_comments', 'is_project_request')
+      }
+    })
   }
 
   if (opts.withReadTimes) {
@@ -90,7 +90,7 @@ var postAttributes = (post, userId, opts = {}) => {
     ]),
     {
       user: user ? user.pick('id', 'name', 'avatar_url', 'bio') : null,
-      communities: communities.map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
+      communities: (communities || []).map(c => c.pick('id', 'name', 'slug', 'avatar_url', 'banner_url')),
       contributors: contributions.length > 0 ? contributions.map(c => c.relations.user.pick('id', 'name', 'avatar_url')) : null,
       followers: followers.map(u => u.pick('id', 'name', 'avatar_url')),
       responders: isEvent ? responders.map(u => u.pick('id', 'name', 'avatar_url', 'response')) : null,
@@ -150,10 +150,9 @@ const presentProjectActivity = function (post, data, userId, relationsOpts) {
   .then(child => {
     if (!child || Math.abs(post.updated_at.getTime() - child.get('updated_at').getTime()) > 10000) return post
     child = postAttributes(child, userId, relationsOpts)
-    child.project = post
-    child.type = 'project-activity'
+    post.child = child
     normalizePost(child, data)
-    return child
+    return post
   })
 }
 

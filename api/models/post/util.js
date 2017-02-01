@@ -11,7 +11,8 @@ export const setupNewPostAttrs = function (userId, params) {
     description: sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
-    link_preview_id: getOr(null, 'id', params.linkPreview)
+    link_preview_id: getOr(null, 'id', params.linkPreview),
+    parent_post_id: params.parent_post_id
   }, pick(params, 'type', 'starts_at', 'ends_at', 'location', 'created_from'))
 
   return Promise.resolve(attrs)
@@ -91,7 +92,8 @@ export const updateChildren = (post, children, trx) => {
         return Promise.map(created, child => {
           const attrs = merge(omit(child, 'id'), {
             parent_post_id: post.id,
-            user_id: post.get('user_id')
+            user_id: post.get('user_id'),
+            is_project_request: true
           })
           return Post.create(attrs, {transacting: trx})
           .then(post => post.tags().attach(attachment, {transacting: trx}))
