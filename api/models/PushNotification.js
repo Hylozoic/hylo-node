@@ -44,7 +44,8 @@ module.exports = bookshelf.Model.extend({
 
   textForComment: function (comment, version) {
     const person = comment.relations.user.get('name')
-    if (comment.relations.media.length !== 0) {
+    const { media } = comment.relations
+    if (media && media.length !== 0) {
       return `${person} sent an image`
     }
     const blurb = decode(truncate(comment.get('text'), 140).text).trim()

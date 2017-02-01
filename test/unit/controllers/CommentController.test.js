@@ -2,7 +2,7 @@ const rootPath = require('root-path')
 const setup = require(rootPath('test/setup'))
 const factories = require(rootPath('test/setup/factories'))
 const CommentController = require(rootPath('api/controllers/CommentController'))
-import { spyify, unspyify } from '../../setup/helpers'
+import { spyify, unspyify, mockify } from '../../setup/helpers'
 
 describe('CommentController', function () {
   var fixtures, req, res
@@ -107,6 +107,29 @@ describe('CommentController', function () {
         expect(responseData.people).to.exist
         expect(responseData.people[0].name).to.equal(fixtures.u1.get('name'))
         return fixtures.p1.load('comments')
+      })
+    })
+
+    it('calls AssetManagement.resizeAsset when passed an image url', function () {
+      mockify(AssetManagement, 'resizeAsset', () => Promise.resolve())
+
+      req.param = function (name) {
+        if (name === 'text') return ''
+        if (name === 'imageUrl') return 'image.png'
+      }
+
+      res = {
+        locals: {post: fixtures.p1},
+        serverError: spy(console.error),
+        ok: spy(function () {})
+      }
+
+      return CommentController.create(req, res)
+      .then(function () {
+        expect(res.ok).to.have.been.called()
+        expect(res.serverError).not.to.have.been.called()
+        expect(AssetManagement.resizeAsset).to.have.been.called()
+        unspyify(AssetManagement, 'resizeAsset')
       })
     })
 

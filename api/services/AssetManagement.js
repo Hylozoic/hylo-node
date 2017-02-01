@@ -36,7 +36,7 @@ module.exports = {
     }
   },
 
-  resizeAsset: function (instance, fromAttr, toAttr, settings) {
+  resizeAsset: function (instance, fromAttr, toAttr, settings = {}) {
     const { width, height, transacting } = settings
     const s3 = new aws.S3()
     const url = instance.get(fromAttr)

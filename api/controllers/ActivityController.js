@@ -61,7 +61,7 @@ const fetchAndPresentNotification = (req, community) => {
     if (post) {
       attrs.post.tag = post.get('type')
     }
-    if (comment) {
+    if (comment.id) {
       attrs.comment = CommentPresenter.present(comment)
     }
     return attrs
