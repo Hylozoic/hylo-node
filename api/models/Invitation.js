@@ -1,8 +1,9 @@
 var uuid = require('node-uuid')
 import { map } from 'lodash/fp'
 import { presentForList } from '../presenters/UserPresenter'
+import EnsureLoad from './mixins/EnsureLoad'
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'community_invites',
 
   community: function () {
@@ -54,42 +55,44 @@ module.exports = bookshelf.Model.extend({
   },
 
   send: function () {
-    const creator = this.relations.creator
-    const community = this.relations.community
-    const email = this.get('email')
-
-    const data = {
-      subject: this.get('subject'),
-      message: this.get('message'),
-      inviter_name: creator.get('name'),
-      inviter_email: creator.get('email'),
-      community_name: community.get('name'),
-      invite_link: Frontend.Route.useInvitation(this.get('token'), email),
-      tracking_pixel_url: Analytics.pixelUrl('Invitation', {
-        recipient: email,
-        community: community.get('name')
-      })
-    }
-
-    return this.save({
-      sent_count: this.get('sent_count') + 1,
-      last_sent_at: new Date()
-    })
+    return this.ensureLoad(['creator', 'community', 'tag'])
     .then(() => {
-      if (this.get('tag_id')) {
-        return TagFollow.findFollowers(community.id, this.get('tag_id'), 3)
-        .then(followers => {
-          data.participants = map(u => presentForList(u, {tags: true}), followers)
-          data.tag_name = this.relations.tag.get('name')
-          return Email.sendTagInvitation(email, data)
+      const { creator, community, tag } = this.relations
+      const email = this.get('email')
+
+      const data = {
+        subject: this.get('subject'),
+        message: this.get('message'),
+        inviter_name: creator.get('name'),
+        inviter_email: creator.get('email'),
+        community_name: community.get('name'),
+        invite_link: Frontend.Route.useInvitation(this.get('token'), email),
+        tracking_pixel_url: Analytics.pixelUrl('Invitation', {
+          recipient: email,
+          community: community.get('name')
         })
-      } else {
-        return Email.sendInvitation(email, data)
       }
+
+      return this.save({
+        sent_count: this.get('sent_count') + 1,
+        last_sent_at: new Date()
+      })
+      .then(() => {
+        if (this.get('tag_id')) {
+          return TagFollow.findFollowers(community.id, this.get('tag_id'), 3)
+          .then(followers => {
+            data.participants = map(u => presentForList(u, {tags: true}), followers)
+            data.tag_name = tag.get('name')
+            return Email.sendTagInvitation(email, data)
+          })
+        } else {
+          return Email.sendInvitation(email, data)
+        }
+      })
     })
   }
 
-}, {
+}, EnsureLoad), {
 
   find: (idOrToken, opts) => {
     if (!idOrToken) return Promise.resolve(null)
@@ -136,7 +139,7 @@ module.exports = bookshelf.Model.extend({
       q.whereRaw(whereClause)
       q.whereNull('used_by_id')
     })
-    .fetchAll({withRelated: ['creator', 'community']})
+    .fetchAll({withRelated: ['creator', 'community', 'tag']})
     .tap(invitations => Promise.map(invitations.models, i => i.send()))
     .then(invitations => invitations.pluck('id'))
   }
