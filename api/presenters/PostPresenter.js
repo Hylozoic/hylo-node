@@ -99,8 +99,7 @@ var postAttributes = (post, userId, opts = {}) => {
       numComments: post.get('num_comments'),
       relatedUsers: isWelcome ? relatedUsers.map(u => u.pick('id', 'name', 'avatar_url')) : null,
       public: (post.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
-      tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] ||
-        type,
+      tag: tags.filter(tag => tag.pivot.get('selected')).map(tag => tag.get('name'))[0] || null,
       type: showValidType(post.get('type')),
       linkPreview: get('id', linkPreview) ? linkPreview : null,
       last_read_at: lastReads && lastReads.first() ? lastReads.first().get('last_read_at') : null
