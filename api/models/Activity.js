@@ -187,7 +187,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   saveForReasonsOpts: function ({ activities }) {
-    return this.saveForReasons(activities)
+    return Activity.saveForReasons(activities)
   },
 
   saveForReasons: function (activities, trx) {
