@@ -43,6 +43,7 @@ const fetchAndPresentNotification = (req, community) => {
     'activity.comment.thanks',
     {'activity.comment.thanks.thankedBy': userColumns},
     {'activity.comment.user': userColumns},
+    'activity.comment.media',
     {'activity.community': q => q.column('id', 'slug', 'name', 'avatar_url')},
     {'activity.post': q => q.column('id', 'name', 'user_id', 'type', 'description')},
     {'activity.parentComment': q => q.column('id', 'text', 'created_at', 'post_id', 'user_id')},
@@ -60,8 +61,8 @@ const fetchAndPresentNotification = (req, community) => {
     if (post) {
       attrs.post.tag = post.get('type')
     }
-    if (comment) {
-      attrs.comment = CommentPresenter.present(comment, req.session.userId)
+    if (comment.id) {
+      attrs.comment = CommentPresenter.present(comment)
     }
     return attrs
   }))

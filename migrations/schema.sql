@@ -602,7 +602,8 @@ CREATE TABLE media (
     post_id bigint,
     name character varying(255),
     width integer,
-    height integer
+    height integer,
+    comment_id bigint
 );
 
 
@@ -2369,6 +2370,14 @@ ALTER TABLE ONLY join_requests
 
 ALTER TABLE ONLY join_requests
     ADD CONSTRAINT join_requests_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: media_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY media
+    ADD CONSTRAINT media_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

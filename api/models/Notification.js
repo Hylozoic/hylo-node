@@ -326,6 +326,7 @@ module.exports = bookshelf.Model.extend({
       'activity.post.communities',
       'activity.post.user',
       'activity.comment',
+      'activity.comment.media',
       'activity.comment.user',
       'activity.comment.post',
       'activity.comment.post.user',

@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 var GetImageSize = require('../services/GetImageSize')
 import request from 'request'
 import { merge } from 'lodash'
@@ -23,15 +24,24 @@ module.exports = bookshelf.Model.extend({
       .then(({ width, height }) =>
         this.save({width, height, thumbnail_url}, Object.assign({patch: true}, opts)))
     })
-  }
+  },
 
+  createThumbnail: function ({thumbnailSize, transacting}) {
+    return AssetManagement.resizeAsset(this, 'url', 'thumbnail_url', {
+      width: thumbnailSize,
+      height: thumbnailSize,
+      transacting
+    })
+  }
 }, {
 
   create: function (opts) {
     return new Media(_.merge({
       created_at: new Date()
-    }, _.pick(opts, 'post_id', 'url', 'type', 'name', 'thumbnail_url', 'width', 'height')))
+    }, _.pick(opts, 'post_id', 'url', 'type', 'name', 'thumbnail_url', 'width',
+      'height', 'comment_id')))
     .save(null, _.pick(opts, 'transacting'))
+    .tap(media => opts.thumbnailSize && media.createThumbnail(opts))
   },
 
   createForPost: function (postId, type, url, trx) {
@@ -49,7 +59,9 @@ module.exports = bookshelf.Model.extend({
           createAndAddSize({
             post_id: postId,
             transacting: trx,
-            url, thumbnail_url, type
+            url,
+            thumbnail_url,
+            type
           }))
     }
   },

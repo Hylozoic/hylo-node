@@ -1,4 +1,4 @@
-import { extend, merge, pick } from 'lodash'
+import { extend, merge, pick, reduce } from 'lodash'
 const randomstring = require('randomstring')
 import { spy } from 'chai'
 const sails = require('sails')
@@ -98,13 +98,20 @@ module.exports = {
       return merge({
         get: function (name) { return this[name] },
         pick: function () { return pick(this, arguments) },
+        toJSON: () => {
+          return Object.assign(reduce(attrs.relations, (m, v, k) => {
+            m[k] = v.toJSON()
+            return m
+          }, {}), attrs)
+        },
         attributes: attrs
       }, attrs)
     },
 
     collection: list => {
       return {
-        first: () => list[0]
+        first: () => list[0],
+        toJSON: () => list.map(model => model.toJSON())
       }
     }
   }

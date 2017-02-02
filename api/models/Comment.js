@@ -51,6 +51,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
   },
 
+  media: function () {
+    return this.hasMany(Media)
+  },
+
   createActivities: function (trx) {
     const isReplyToPost = !this.get('comment_id')
 
