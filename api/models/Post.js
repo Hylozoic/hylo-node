@@ -111,6 +111,7 @@ module.exports = bookshelf.Model.extend({
     return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
   },
 
+  // FIXME -- this and updateFromNewComment should be combined
   updateCommentCount: function (trx) {
     var self = this
     return Aggregate.count(this.comments(), {transacting: trx})
@@ -328,7 +329,7 @@ module.exports = bookshelf.Model.extend({
     return comments()
     .where({post_id: postId, active: true})
     .orderBy('created_at', 'desc')
-    .limit(3)
+    .limit(2)
     .pluck('id')
     .then(ids => Promise.all([
       comments().where('id', 'in', ids).update('recent', true),
