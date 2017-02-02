@@ -47,6 +47,14 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
   // create the tag -- if creation fails, find the existing one
   .then(tag => tag ||
     new Tag({name, created_at}).save({}, opts).catch(findTag))
+  .tap(tag => {
+    if (isPost) return
+    taggable.relations.post.tags().attach(omitBy(isUndefined, {
+      tag_id: tag.id,
+      created_at,
+      selected: isPost ? selected : undefined
+    }), opts)
+  })
   .tap(tag =>
     taggable.tags().attach(omitBy(isUndefined, {
       tag_id: tag.id,
