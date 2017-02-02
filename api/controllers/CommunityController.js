@@ -186,7 +186,9 @@ module.exports = {
   },
 
   joinWithCode: function (req, res) {
+    if (!req.param('code')) return res.badRequest()
     var community, preexisting
+
     return Community.query(qb => {
       qb.whereRaw('lower(beta_access_code) = lower(?)', req.param('code'))
       qb.where('active', true)
