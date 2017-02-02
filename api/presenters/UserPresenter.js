@@ -15,11 +15,14 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
   return Post.query(q => {
     q.join('posts_tags', 'posts.id', 'posts_tags.post_id')
     q.join('tags', 'tags.id', 'posts_tags.tag_id')
+    q.join('communities_posts', 'communities_posts.post_id', 'posts.id')
     q.where({
       'tags.name': tag,
       user_id: userId,
       parent_post_id: null
     })
+    q.where('communities_posts.community_id', 'in',
+      Membership.activeCommunityIds(viewingUserId))
     q.orderBy('id', 'desc')
     q.limit(1)
   })
