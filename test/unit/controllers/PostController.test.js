@@ -704,14 +704,6 @@ describe('PostController', () => {
       })
     })
 
-    it('returns post type as tag as well', () => {
-      return PostController.findForCommunity(req, res)
-      .then(() => {
-        expect(res.body.posts_total).to.equal(1)
-        expect(res.body.posts[0].tag).to.equal(p2.get('type'))
-      })
-    })
-
     it('returns selected tag if present', () => {
       return Tag.updateForPost(p2, 'findforcommunitytag')
       .then(() => PostController.findForCommunity(req, res))
