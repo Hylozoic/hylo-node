@@ -14,6 +14,7 @@ import path from 'path'
 import root from 'root-path'
 import util from 'util'
 import models from '../api/models'
+import { clone } from 'lodash'
 require('dotenv').load()
 
 // very handy, these
@@ -40,7 +41,7 @@ module.exports.bootstrap = function (done) {
   if (process.env.DEBUG_SQL) {
     require('colors')
     bookshelf.knex.on('query', function (data) {
-      var args = (_.clone(data.bindings) || []).map(function (s) {
+      var args = (clone(data.bindings) || []).map(function (s) {
         if (s === null) return 'null'.blue
         if (s === undefined) return 'undefined'.red
         if (typeof (s) === 'object') return JSON.stringify(s).blue
@@ -59,21 +60,8 @@ module.exports.bootstrap = function (done) {
     })
   }
 
-  if (sails.config.environment === 'production') {
-    var rollbar = require('rollbar')
-
-    bookshelf.knex.on('query', function (data) {
-      if (_.includes(data.bindings, 'undefined')) {
-        const err = new Error('undefined value in SQL query')
-        rollbar.handleErrorWithPayloadData(err, {
-          custom: {sql: data.sql, bindings: data.bindings}
-        })
-      }
-    })
-  }
-
   // add presenters to global namespace
-  _.each(fs.readdirSync(root('api/presenters')), function (filename) {
+  fs.readdirSync(root('api/presenters')).forEach(filename => {
     if (path.extname(filename) === '.js') {
       var modelName = path.basename(filename, '.js')
       global[modelName] = require(root('api/presenters/' + modelName))
