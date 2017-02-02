@@ -301,6 +301,12 @@ describe('Tag', () => {
         expect(community.get('name')).to.equal(c1.get('name'))
         expect(community.pivot.get('description')).to.equal('lol')
       })
+      .then(() => post.load('tags'))
+      .then(() => {
+        const tag = post.relations.tags.first()
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('commenthashtag')
+      })
     })
   })
 

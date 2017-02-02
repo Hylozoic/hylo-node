@@ -279,7 +279,7 @@ describe('CommentController', function () {
       }))
     })
 
-    it('saves a new tag with description to the community', () => {
+    it('saves a new tag with description to the community and adds it to the parent post', () => {
       req.params.text = '<p>Hey #wow</p>'
       res.locals.post = fixtures.p1
       req.params.tagDescriptions = {wow: {description: 'wow!!1'}}
