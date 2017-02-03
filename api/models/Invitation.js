@@ -48,7 +48,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
         user_id: userId,
         tag_id: this.get('tag_id'),
         community_id: this.get('community_id')
-      }).save())
+      }).save()
+      .catch(err => {
+        // do nothing if the tag follow already exists
+        if (!err.message || !err.message.includes('duplicate key value')) {
+          throw err
+        }
+      }))
     .tap(() => !this.isUsed() &&
       this.save({used_by_id: userId, used_at: new Date()},
         {patch: true, transacting}))
