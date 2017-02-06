@@ -297,7 +297,7 @@ describe('Tag', () => {
 
   describe('updateForComment', () => {
     it('creates a tag from comment text and associates with the correct communities', () => {
-      var post = new Post({
+      var post = factories.post({
         name: 'Commented Post One',
         description: 'no tags in post'
       })
@@ -305,13 +305,14 @@ describe('Tag', () => {
       return post.save()
       .then(() => post.communities().attach(c1.id))
       .then(() => {
-        comment = new Comment({
+        comment = factories.comment({
           text: 'here is a #commenthashtag test',
           post_id: post.id,
           user_id: u.id
         })
         return comment.save()
       })
+
       .then(comment => Tag.updateForComment(comment, {commenthashtag: {description: 'lol'}}, u.id))
       .then(() => Tag.find('commenthashtag', {withRelated: ['comments', 'communities']}))
       .then(tag => {

@@ -47,14 +47,6 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
   // create the tag -- if creation fails, find the existing one
   .then(tag => tag ||
     new Tag({name, created_at}).save({}, opts).catch(findTag))
-  .tap(tag => {
-    if (isPost) return
-    taggable.relations.post.tags().attach(omitBy(isUndefined, {
-      tag_id: tag.id,
-      created_at,
-      selected: isPost ? selected : undefined
-    }), opts)
-  })
   .tap(tag =>
     taggable.tags().attach(omitBy(isUndefined, {
       tag_id: tag.id,
@@ -214,13 +206,16 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateForComment: function (comment, tagDescriptions, userId, trx) {
-    return updateForTaggable({
+    return Post.find(comment.get('post_id'))
+    .then(() => updateForTaggable({
       taggable: comment,
       text: comment.get('text'),
       tagDescriptions,
       userId,
       transacting: trx
-    })
+    }))
+    .then(() => Post.find(comment.get('post_id')))
+    .then(post => post && Tag.updateForPost(post, null, null, null, trx))
   },
 
   addToUser: function (user, tagNames, { transacting } = {}) {
