@@ -1,4 +1,4 @@
-/* globals LinkPreview, LastRead */
+/* globals LinkPreview, LastRead, _ */
 /* eslint-disable camelcase */
 import { filter } from 'lodash/fp'
 import { flatten } from 'lodash'
@@ -88,6 +88,18 @@ module.exports = bookshelf.Model.extend({
 
   linkPreview: function () {
     return this.belongsTo(LinkPreview)
+  },
+
+  childTags: function (opts) {
+    // this is part of the 'taggable' interface, shared with Comment
+    return this.load(['comments', 'comments.tags'], opts)
+    .then(() => {
+      var tags = []
+      this.relations.comments.forEach(c => {
+        tags = tags.concat(c.relations.tags.models)
+      })
+      return tags
+    })
   },
 
   addFollowers: function (userIds, addedById, opts = {}) {
