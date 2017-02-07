@@ -1,6 +1,6 @@
-/* globals LinkPreview, LastRead */
+/* globals LinkPreview, LastRead, _ */
 /* eslint-disable camelcase */
-import { filter } from 'lodash/fp'
+import { filter, uniqBy } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
@@ -88,6 +88,13 @@ module.exports = bookshelf.Model.extend({
 
   linkPreview: function () {
     return this.belongsTo(LinkPreview)
+  },
+
+  getTagsInComments: function (opts) {
+    // this is part of the 'taggable' interface, shared with Comment
+    return this.load('comments.tags', opts)
+    .then(() =>
+      uniqBy('id', flatten(this.relations.comments.map(c => c.relations.tags.models))))
   },
 
   addFollowers: function (userIds, addedById, opts = {}) {

@@ -55,6 +55,11 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Media)
   },
 
+  getTagsInComments: function (opts) {
+    // this is part of the 'taggable' interface, shared with Post
+    return Promise.resolve([])
+  },
+
   createActivities: function (trx) {
     const isReplyToPost = !this.get('comment_id')
 

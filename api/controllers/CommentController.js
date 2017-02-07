@@ -196,6 +196,9 @@ module.exports = {
         Post.query().where('id', comment.get('post_id'))
         .decrement('num_comments', 1).transacting(trx),
 
+        Post.find(comment.get('post_id'))
+        .then(post => Tag.updateForPost(post, null, null, null, trx)),
+
         comment.save({
           deactivated_by_id: req.session.userId,
           deactivated_at: new Date(),
@@ -212,7 +215,8 @@ module.exports = {
       if (!comment) return res.notFound()
       return bookshelf.transaction(function (trx) {
         return comment.save({text: req.param('text')}, {transacting: trx})
-        .tap(comment => Tag.updateForComment(comment, req.param('tagDescriptions'), req.session.userId, trx))
+        .tap(comment =>
+          Tag.updateForComment(comment, req.param('tagDescriptions'), req.session.userId, trx))
       })
       .then(res.ok, res.serverError)
     })
