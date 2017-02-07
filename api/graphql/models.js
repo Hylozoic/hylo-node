@@ -3,11 +3,14 @@
 // based on the current user's access rights.
 //
 // keys here are table names (except for "me")
-export default function models (userId) {
+export default function models (userId, isAdmin) {
   // TODO: cache this?
   const myCommunityIds = () =>
     Membership.query().select('community_id')
     .where({user_id: userId, active: true})
+
+  const nonAdminFilter = queryFn => relation =>
+    isAdmin ? relation : relation.query(queryFn)
 
   return {
     me: { // the root of the graph
@@ -33,7 +36,7 @@ export default function models (userId) {
       model: User,
       attributes: ['id', 'name', 'avatar_url'],
       relations: ['posts'],
-      filter: relation => relation.query(q => {
+      filter: nonAdminFilter(q => {
         q.where('users.id', 'in', Membership.query().select('user_id')
           .where('community_id', 'in', myCommunityIds()))
       })
@@ -47,7 +50,7 @@ export default function models (userId) {
         details: p => p.get('description')
       },
       relations: ['communities', 'followers'],
-      filter: relation => relation.query(q => {
+      filter: nonAdminFilter(q => {
         q.where('posts.id', 'in', PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
       })
@@ -62,7 +65,7 @@ export default function models (userId) {
         postCount: (c) => c.postCount()
       },
       relations: [{members: 'users'}],
-      filter: relation => relation.query(q => {
+      filter: nonAdminFilter(q => {
         q.where('communities.id', 'in', myCommunityIds())
       })
     }

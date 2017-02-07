@@ -6,7 +6,7 @@ import {
   differenceBy, filter, find, get, map, omitBy, pick, some, uniqBy
 } from 'lodash/fp'
 
-const tagsInText = (text = '') => {
+export const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w_-]+)/g
   var match
   var tags = []
@@ -80,28 +80,32 @@ const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, u
   const lowerName = t => t.name.toLowerCase()
   const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
 
-  var newTags = tagsInText(text).map(name => ({name, selected: false}))
-  if (selectedTagName) {
-    const dupe = find(t => t.name === selectedTagName, newTags)
-    if (dupe) {
-      dupe.selected = true
-    } else {
-      newTags.push({name: selectedTagName, selected: true})
+  return taggable.getTagsInComments({transacting})
+  .then(childTags => {
+    var newTags = tagsInText(text).map(name => ({name, selected: false}))
+    newTags = newTags.concat(childTags.map(ct => ({name: ct.get('name'), selected: false})))
+    if (selectedTagName) {
+      const dupe = find(t => t.name === selectedTagName, newTags)
+      if (dupe) {
+        dupe.selected = true
+      } else {
+        newTags.push({name: selectedTagName, selected: true})
+      }
     }
-  }
-  return taggable.load('tags', {transacting})
-  .then(() => {
-    const oldTags = taggable.relations.tags.map(t => ({
-      id: t.id,
-      name: t.get('name'),
-      selected: t.pivot.get('selected')
-    }))
-    const toAdd = uniqBy(lowerName, tagDifference(newTags, oldTags))
-    const toRemove = tagDifference(oldTags, newTags)
-    return Promise.all(flatten([
-      toRemove.map(tag => removeFromTaggable(taggable, tag, {transacting})),
-      toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions || {}, userId, {transacting}))
-    ]))
+    return taggable.load('tags', {transacting})
+    .then(() => {
+      const oldTags = taggable.relations.tags.map(t => ({
+        id: t.id,
+        name: t.get('name'),
+        selected: t.pivot.get('selected')
+      }))
+      const toAdd = uniqBy(lowerName, tagDifference(newTags, oldTags))
+      const toRemove = tagDifference(oldTags, newTags)
+      return Promise.all(flatten([
+        toRemove.map(tag => removeFromTaggable(taggable, tag, {transacting})),
+        toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions || {}, userId, {transacting}))
+      ]))
+    })
   })
 }
 
@@ -202,13 +206,16 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateForComment: function (comment, tagDescriptions, userId, trx) {
-    return updateForTaggable({
+    return Post.find(comment.get('post_id'))
+    .then(() => updateForTaggable({
       taggable: comment,
       text: comment.get('text'),
       tagDescriptions,
       userId,
       transacting: trx
-    })
+    }))
+    .then(() => Post.find(comment.get('post_id')))
+    .then(post => post && Tag.updateForPost(post, null, null, null, trx))
   },
 
   addToUser: function (user, tagNames, { transacting } = {}) {

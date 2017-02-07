@@ -270,11 +270,32 @@ describe('Tag', () => {
         expect(selected.get('name')).to.equal('tags')
       })
     })
+
+    it('preserves a tag from a comment, and removes a tag not in any of the comments', () => {
+      const post = factories.post({description: '<p>#preexisting</p>'})
+      const tag1 = factories.tag({name: 'preexisting'})
+      const tag2 = factories.tag({name: 'commenttag'})
+      const tag3 = factories.tag({name: 'unexpected'})
+      const comment = factories.comment()
+      return Promise.join(post.save(), tag1.save(), tag2.save(), tag3.save(), comment.save())
+      .then(() => Promise.join(
+        post.tags().attach([tag1, tag2, tag3]),
+        comment.tags().attach(tag2),
+        post.comments().create(comment)
+      ))
+      .then(() => Tag.updateForPost(post))
+      .then(() => post.load('tags'))
+      .then(() => {
+        const tagNames = post.relations.tags.map(t => t.get('name'))
+        expect(tagNames.length).to.equal(2)
+        expect(tagNames.sort()).to.deep.equal(['commenttag', 'preexisting'])
+      })
+    })
   })
 
   describe('updateForComment', () => {
     it('creates a tag from comment text and associates with the correct communities', () => {
-      var post = new Post({
+      var post = factories.post({
         name: 'Commented Post One',
         description: 'no tags in post'
       })
@@ -282,13 +303,14 @@ describe('Tag', () => {
       return post.save()
       .then(() => post.communities().attach(c1.id))
       .then(() => {
-        comment = new Comment({
+        comment = factories.comment({
           text: 'here is a #commenthashtag test',
           post_id: post.id,
           user_id: u.id
         })
         return comment.save()
       })
+
       .then(comment => Tag.updateForComment(comment, {commenthashtag: {description: 'lol'}}, u.id))
       .then(() => Tag.find('commenthashtag', {withRelated: ['comments', 'communities']}))
       .then(tag => {
@@ -300,6 +322,12 @@ describe('Tag', () => {
         expect(community).to.exist
         expect(community.get('name')).to.equal(c1.get('name'))
         expect(community.pivot.get('description')).to.equal('lol')
+      })
+      .then(() => post.load('tags'))
+      .then(() => {
+        const tag = post.relations.tags.first()
+        expect(tag).to.exist
+        expect(tag.get('name')).to.equal('commenthashtag')
       })
     })
   })

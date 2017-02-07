@@ -8,14 +8,14 @@ import models from './models'
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 const schema = buildSchema(schemaText)
 
-const createRootValue = userId => {
+const createRootValue = (userId, isAdmin) => {
   if (!userId) {
     return {
       me: null
     }
   }
 
-  const fetcher = new Fetcher(models(userId))
+  const fetcher = new Fetcher(models(userId, isAdmin))
 
   return {
     me: () => fetcher.fetchOne('me', userId),
@@ -43,7 +43,7 @@ export const createRequestHandler = () =>
     // or deny access to those paths
     return {
       schema,
-      rootValue: createRootValue(req.session.userId),
+      rootValue: createRootValue(req.session.userId, Admin.isSignedIn(req)),
       graphiql: true
     }
   })
