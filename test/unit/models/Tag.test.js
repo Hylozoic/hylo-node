@@ -279,9 +279,7 @@ describe('Tag', () => {
       const comment = factories.comment()
       return Promise.join(post.save(), tag1.save(), tag2.save(), tag3.save(), comment.save())
       .then(() => Promise.join(
-        post.tags().attach(tag1),
-        post.tags().attach(tag2),
-        post.tags().attach(tag3),
+        post.tags().attach([tag1, tag2, tag3]),
         comment.tags().attach(tag2),
         post.comments().create(comment)
       ))

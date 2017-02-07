@@ -80,7 +80,7 @@ const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, u
   const lowerName = t => t.name.toLowerCase()
   const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
 
-  return taggable.childTags({transacting})
+  return taggable.getTagsInComments({transacting})
   .then(childTags => {
     var newTags = tagsInText(text).map(name => ({name, selected: false}))
     newTags = newTags.concat(childTags.map(ct => ({name: ct.get('name'), selected: false})))
@@ -92,7 +92,7 @@ const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, u
         newTags.push({name: selectedTagName, selected: true})
       }
     }
-    return taggable.load('tags')
+    return taggable.load('tags', {transacting})
     .then(() => {
       const oldTags = taggable.relations.tags.map(t => ({
         id: t.id,

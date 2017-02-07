@@ -55,7 +55,7 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Media)
   },
 
-  childTags: function (opts) {
+  getTagsInComments: function (opts) {
     // this is part of the 'taggable' interface, shared with Post
     return Promise.resolve([])
   },
