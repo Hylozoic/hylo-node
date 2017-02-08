@@ -195,14 +195,23 @@ module.exports = bookshelf.Model.extend({
 
   updateForPost: function (post, selectedTagName, tagDescriptions, userId, trx) {
     const text = post.get('name') + ' ' + post.get('description')
-    return updateForTaggable({
+
+    const getSelectedTagName = () =>
+      post.load('selectedTags')
+      .then(() => {
+        const selectedTag = post.relations.selectedTags.first()
+        return selectedTag ? selectedTag.get('name') : null
+      })
+
+    return (selectedTagName ? Promise.resolve(selectedTagName) : getSelectedTagName())
+    .then(selectedTagName => updateForTaggable({
       taggable: post,
       text,
       selectedTagName,
       tagDescriptions,
       userId,
       transacting: trx
-    })
+    }))
   },
 
   updateForComment: function (comment, tagDescriptions, userId, trx) {

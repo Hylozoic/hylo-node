@@ -271,15 +271,17 @@ describe('Tag', () => {
       })
     })
 
-    it('preserves a tag from a comment, and removes a tag not in any of the comments', () => {
+    it('preserves a tag from a comment and the selected tag and removes a tag not in any of the comments', () => {
       const post = factories.post({description: '<p>#preexisting</p>'})
       const tag1 = factories.tag({name: 'preexisting'})
       const tag2 = factories.tag({name: 'commenttag'})
       const tag3 = factories.tag({name: 'unexpected'})
+      const tag4 = factories.tag({name: 'selected'})
       const comment = factories.comment()
-      return Promise.join(post.save(), tag1.save(), tag2.save(), tag3.save(), comment.save())
+      return Promise.join(post.save(), tag1.save(), tag2.save(), tag3.save(), tag4.save(), comment.save())
       .then(() => Promise.join(
         post.tags().attach([tag1, tag2, tag3]),
+        post.tags().attach({tag_id: tag4.id, selected: true}),
         comment.tags().attach(tag2),
         post.comments().create(comment)
       ))
@@ -287,8 +289,8 @@ describe('Tag', () => {
       .then(() => post.load('tags'))
       .then(() => {
         const tagNames = post.relations.tags.map(t => t.get('name'))
-        expect(tagNames.length).to.equal(2)
-        expect(tagNames.sort()).to.deep.equal(['commenttag', 'preexisting'])
+        expect(tagNames.length).to.equal(3)
+        expect(tagNames.sort()).to.deep.equal(['commenttag', 'preexisting', 'selected'])
       })
     })
   })
