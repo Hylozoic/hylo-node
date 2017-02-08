@@ -77,7 +77,6 @@ const removeFromTaggable = (taggable, tag, opts) => {
 }
 
 const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, userId, transacting }) => {
-  console.log('entering uFT with sTN', selectedTagName)
   const lowerName = t => t.name.toLowerCase()
   const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
 
@@ -201,7 +200,6 @@ module.exports = bookshelf.Model.extend({
       post.load('selectedTags')
       .then(() => {
         const selectedTag = post.relations.selectedTags.first()
-        console.log('getted selected tag', selectedTag)
         return selectedTag ? selectedTag.get('name') : null
       })
 
