@@ -64,23 +64,46 @@ describe('Search', function () {
   })
 
   describe('.forUsers', () => {
-    var cat, dog, house
+    var cat, dog, catdog, house
 
     before(() => {
       cat = new User({name: 'Mister Cat', email: 'iam@cat.org', active: true})
       dog = new User({name: 'Mister Dog', email: 'iam@dog.org', active: true})
+      catdog = new User({name: 'Cat Dog', email: 'iam@catdog.org', active: true})
       house = new Community({name: 'House', slug: 'House'})
-
       return cat.save()
       .then(() => dog.save())
+      .then(() => catdog.save())
       .then(() => house.save())
       .then(() => cat.joinCommunity(house))
     })
 
-    it('finds members based on name', () => {
-      return Search.forUsers({term: 'mister'}).fetchAll().then(users => {
-        expect(users.length).to.equal(2)
+    function userSearchTests (key) {
+      it('finds members based on name', () => {
+        return Search.forUsers({[key]: 'mister'}).fetchAll().then(users => {
+          expect(users.length).to.equal(2)
+        })
       })
+
+      it('doesn\'t find members by letters in the middle or end of their name', () => {
+        return Search.forUsers({[key]: 'ister'}).fetchAll().then(users => {
+          expect(users.length).to.equal(0)
+        })
+      })
+
+      it('finds members by the beginning letters of their first or last name', () => {
+        return Search.forUsers({[key]: 'Cat'}).fetchAll().then(users => {
+          expect(users.length).to.equal(2)
+        })
+      })
+    }
+
+    describe('for autocomplete', () => {
+      userSearchTests('autocomplete')
+    })
+
+    describe('with a term', () => {
+      userSearchTests('term')
     })
 
     describe('for a community', () => {
