@@ -133,7 +133,7 @@ describe('UserController', function () {
         var response
         req.session.userId = u1.id
         Object.assign(res, {
-          ok: spy(data => response = data),
+          ok: spy(data => { response = data }),
           serverError: spy(function (err) {
             console.error(err)
             console.error(err.stack)
@@ -158,7 +158,7 @@ describe('UserController', function () {
         req.session.userId = u1.id
         req.params.userId = u1.id
         Object.assign(res, {
-          ok: spy(data => response = data),
+          ok: spy(data => { response = data }),
           serverError: spy(function (err) {
             console.error(err)
             console.error(err.stack)
@@ -227,7 +227,7 @@ describe('UserController', function () {
       return UserController.contributions(req, res)
       .then(() => {
         expect(res.ok).to.have.been.called()
-        expect(res.body.toJSON()).to.deep.equal([])
+        expect(res.body).to.deep.equal([])
       })
     })
 
@@ -237,7 +237,7 @@ describe('UserController', function () {
       return UserController.contributions(req, res)
       .then(() => {
         expect(res.ok).to.have.been.called()
-        expect(res.body.toJSON()).to.deep.equal([])
+        expect(res.body).to.deep.equal([])
       })
     })
   })
