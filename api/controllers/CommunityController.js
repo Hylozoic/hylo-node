@@ -1,6 +1,6 @@
 import rollbar from 'rollbar'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
-import { pick, sortBy, merge } from 'lodash'
+import { clone, isEmpty, merge, pick, sortBy } from 'lodash'
 import { curry } from 'lodash/fp'
 const Promise = require('bluebird')
 const request = require('request')
@@ -32,7 +32,7 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
         throw err
       }
     }))
-  .then(() => _.merge(ms.toJSON(), {preexisting}, {
+  .then(() => Object.assign(ms.toJSON(), {preexisting}, {
     community: community.pick('id', 'name', 'slug', 'avatar_url')
   }))
 }
@@ -59,7 +59,7 @@ module.exports = {
     .fetchAll({withRelated: [
       {memberships: q => q.column('community_id')}
     ]})
-    .then(communities => communities.map(c => _.extend(c.toJSON(), {
+    .then(communities => communities.map(c => Object.assign(c.toJSON(), {
       memberships: c.relations.memberships.length
     })))
     .then(res.ok, res.serverError)
@@ -92,8 +92,8 @@ module.exports = {
   findSettings: function (req, res) {
     var leader
     Community.find(req.param('communityId'), {withRelated: ['leader']})
-    .tap(community => leader = community.relations.leader)
-    .then(community => _.merge(community.pick(
+    .tap(community => { leader = community.relations.leader })
+    .then(community => merge(community.pick(
       'welcome_message', 'beta_access_code', 'slack_hook_url', 'slack_team', 'slack_configure_url', 'settings'
     ), {
       leader: leader ? leader.pick('id', 'name', 'avatar_url') : null
@@ -111,13 +111,13 @@ module.exports = {
     if (Admin.isSignedIn(req)) {
       whitelist.push('slug')
     }
-    const attributes = _.pick(req.allParams(), whitelist)
-    const saneAttrs = _.clone(attributes)
+    const attributes = pick(req.allParams(), whitelist)
+    const saneAttrs = clone(attributes)
 
     return Community.find(req.param('communityId'))
     .then(community => {
       if (attributes.settings) {
-        saneAttrs.settings = _.merge({}, community.get('settings'), attributes.settings)
+        saneAttrs.settings = merge({}, community.get('settings'), attributes.settings)
       }
       return community.save(saneAttrs, {patch: true})
     })
@@ -127,14 +127,16 @@ module.exports = {
 
   addSlack: function (req, res) {
     const { code } = req.query
-    const redirect_uri = process.env.PROTOCOL + '://' + process.env.DOMAIN + req.path
-    var options = {
+    const {
+      PROTOCOL, DOMAIN, SLACK_APP_CLIENT_ID, SLACK_APP_CLIENT_SECRET
+    } = process.env
+    const options = {
       uri: slackAuthAccess,
       form: {
-        client_id: process.env.SLACK_APP_CLIENT_ID,
-        client_secret: process.env.SLACK_APP_CLIENT_SECRET,
+        client_id: SLACK_APP_CLIENT_ID,
+        client_secret: SLACK_APP_CLIENT_SECRET,
         code,
-        redirect_uri
+        redirect_uri: `${PROTOCOL}://${DOMAIN}${req.path}`
       }
     }
 
@@ -194,7 +196,7 @@ module.exports = {
       qb.where('active', true)
     })
     .fetch()
-    .tap(c => community = c)
+    .tap(c => { community = c })
     .then(() => !!community && Membership.create(req.session.userId, community.id))
     .catch(err => {
       if (err.message && err.message.includes('duplicate key value')) {
@@ -232,7 +234,7 @@ module.exports = {
   },
 
   validate: function (req, res) {
-    return Validation.validate(_.pick(req.allParams(), 'constraint', 'column', 'value'),
+    return Validation.validate(pick(req.allParams(), 'constraint', 'column', 'value'),
       Community, ['name', 'slug', 'beta_access_code'], ['exists', 'unique'])
     .then(validation => {
       if (validation.badRequest) {
@@ -246,7 +248,7 @@ module.exports = {
 
   create: function (req, res) {
     const { userId } = req.session
-    var attrs = _.pick(req.allParams(),
+    var attrs = pick(req.allParams(),
       'name', 'description', 'slug', 'category',
       'beta_access_code', 'banner_url', 'avatar_url', 'location')
 
@@ -255,8 +257,8 @@ module.exports = {
       : Community.getNewAccessCode()
 
     return promise
-    .then(beta_access_code => {
-      var community = new Community(_.merge(attrs, {
+    .then(beta_access_code => { // eslint-disable-line
+      var community = new Community(merge(attrs, {
         beta_access_code,
         created_at: new Date(),
         created_by_id: userId,
@@ -278,7 +280,7 @@ module.exports = {
       // copy them over to /community/:id now
       .tap(() => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
       .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
-      .then(membership => Promise.props(_.extend(
+      .then(membership => Promise.props(Object.assign(
         membership.toJSON(), {
           community,
           left_nav_tags: fetchAndPresentFollowed(community.id, userId)
@@ -309,13 +311,18 @@ module.exports = {
           qb.limit(req.param('limit') || 20)
           qb.offset(req.param('offset') || 0)
         }).fetchAll()
-        .tap(communities => total = (communities.length > 0 ? communities.first().get('total') : 0))
+        .tap(communities => {
+          total = communities.length > 0
+            ? communities.first().get('total')
+            : 0
+        })
       } else {
         return Community.where('network_id', network.get('id'))
         .fetchAll({withRelated: ['memberships']})
-        .then(communities => communities.map(c => _.extend(c.pick(communityAttributes), {
-          memberCount: c.relations.memberships.length
-        })))
+        .then(communities => communities.map(c =>
+          Object.assign(c.pick(communityAttributes), {
+            memberCount: c.relations.memberships.length
+          })))
         .then(communities => sortBy(communities, c => -c.memberCount))
       }
     })
@@ -343,7 +350,7 @@ module.exports = {
 
   updateMembership: function (req, res) {
     var whitelist = ['settings']
-    var attributes = _.pick(req.allParams(), whitelist)
+    var attributes = pick(req.allParams(), whitelist)
 
     return Membership.where({
       user_id: req.session.userId,
@@ -354,7 +361,7 @@ module.exports = {
       if (!membership) return res.notFound()
 
       if (attributes.settings) {
-        attributes.settings = _.merge({}, membership.get('settings'), attributes.settings)
+        attributes.settings = merge({}, membership.get('settings'), attributes.settings)
       }
       return membership.save(attributes, {patch: true})
     })
@@ -419,8 +426,8 @@ module.exports = {
       total: joinRequests.length > 0 ? Number(joinRequests.first().get('total')) : 0,
       items: joinRequests.map(jR => {
         var user = jR.relations.user.pick('id', 'name', 'avatar_url')
-        return _.merge(jR.pick('id', 'created_at', 'updated_at'), {
-          user: !_.isEmpty(user) ? user : null
+        return merge(jR.pick('id', 'created_at', 'updated_at'), {
+          user: !isEmpty(user) ? user : null
         })
       })
     }))
