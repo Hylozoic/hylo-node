@@ -1,6 +1,5 @@
 import { find, includes, merge, pick } from 'lodash'
 import { map } from 'lodash/fp'
-import { uniqize, normalizePost } from '../../lib/util/normalize'
 
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
