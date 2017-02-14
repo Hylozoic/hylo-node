@@ -1,5 +1,6 @@
 import { find, includes, merge, pick } from 'lodash'
 import { map } from 'lodash/fp'
+import { uniqize, normalizePost } from '../../lib/util/normalize'
 
 var setupReputationQuery = function (req, model) {
   const { userId, limit, start, offset } = req.allParams()
@@ -73,12 +74,15 @@ module.exports = {
     return setupReputationQuery(req, Contribution)
     .then(q => q.fetchAll({
       withRelated: [
-        {post: q => q.column('id', 'name', 'user_id', 'type')},
-        {'post.user': q => q.column('id', 'name', 'avatar_url')},
-        {'post.communities': q => q.column('communities.id', 'name')}
+        {post: q => q.column('id', 'name', 'user_id')},
+        {'post.user': q => q.column('id', 'name', 'avatar_url')}
       ]
     }))
-    .then(res.ok, res.serverError)
+    .then(contributions => res.ok(contributions.map(c => ({
+      contributed_at: c.get('contributed_at'),
+      post: c.relations.post
+    }))))
+    .catch(res.serverError)
   },
 
   thanks: function (req, res) {
