@@ -155,7 +155,9 @@ module.exports = {
       }
 
       if (opts.autocomplete) {
-        qb.whereRaw('users.name ilike ?', opts.autocomplete + '%')
+        Search.addTermToQueryBuilder(opts.autocomplete, qb, {
+          columns: ['users.name']
+        })
       }
 
       if (opts.term) {
