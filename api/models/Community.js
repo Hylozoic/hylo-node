@@ -2,7 +2,7 @@
 var Slack = require('../services/Slack')
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
-import { merge, differenceBy } from 'lodash'
+import { flatten, isEqual, merge, differenceBy } from 'lodash'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
@@ -92,7 +92,7 @@ module.exports = bookshelf.Model.extend(merge({
       var newPost = post.copy()
       var time = new Date(now - timeShift[tagName] * 1000)
       return newPost.save({created_at: time, updated_at: time}, {transacting})
-      .then(() => Promise.all(_.flatten([
+      .then(() => Promise.all(flatten([
         this.posts().attach(newPost, {transacting}),
         tagName && Tag.find(tagName).then(tag =>
           newPost.tags().attach({tag_id: tag.id, selected: true}, {transacting})),
@@ -115,21 +115,32 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   updateChecklist: function () {
-    return this.load(['posts', 'invitations', 'tags'])
+    const { checklist } = this.get('settings') || {}
+    const completed = {
+      logo: true, banner: true, invite: true, topics: true, post: true
+    }
+    if (isEqual(checklist, completed)) return Promise.resolve(this)
+
+    return this.load([
+      {posts: q => q.limit(2)},
+      {tags: q => q.limit(4)},
+      {invitations: q => q.limit(1)}
+    ])
     .then(() => Tag.starterTags())
     .then(starterTags => {
       const { invitations, posts, tags } = this.relations
 
-      this.addSetting({
-        checklist: {
-          logo: this.get('avatar_url') !== defaultAvatar,
-          banner: this.get('banner_url') !== defaultBanner,
-          invite: invitations.length > 0,
-          topics: differenceBy(tags.models, starterTags.models, 'id').length > 0,
-          post: !!posts.find(p => p.get('user_id') !== axolotlId)
-        }
-      })
-      return this.save()
+      const updatedChecklist = {
+        logo: this.get('avatar_url') !== defaultAvatar,
+        banner: this.get('banner_url') !== defaultBanner,
+        invite: invitations.length > 0,
+        topics: differenceBy(tags.models, starterTags.models, 'id').length > 0,
+        post: !!posts.find(p => p.get('user_id') !== axolotlId)
+      }
+
+      return isEqual(checklist, updatedChecklist)
+        ? Promise.resolve(this)
+        : this.addSetting({checklist: updatedChecklist}, true)
     })
   },
 
@@ -169,17 +180,17 @@ module.exports = bookshelf.Model.extend(merge({
   }
 
 }, HasSettings), {
-  find: function (id_or_slug, opts = {}) {
-    if (!id_or_slug) return Promise.resolve(null)
+  find: function (key, opts = {}) {
+    if (!key) return Promise.resolve(null)
 
-    let where = isNaN(Number(id_or_slug))
-      ? (opts.active ? {slug: id_or_slug, active: true} : {slug: id_or_slug})
-      : (opts.active ? {id: id_or_slug, active: true} : {id: id_or_slug})
+    let where = isNaN(Number(key))
+      ? (opts.active ? {slug: key, active: true} : {slug: key})
+      : (opts.active ? {id: key, active: true} : {id: key})
     return this.where(where).fetch(opts)
   },
 
-  findActive: function (id_or_slug, opts = {}) {
-    return this.find(id_or_slug, merge({active: true}, opts))
+  findActive: function (key, opts = {}) {
+    return this.find(key, merge({active: true}, opts))
   },
 
   canInvite: function (userId, communityId) {
