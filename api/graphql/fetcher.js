@@ -59,7 +59,6 @@ export default class Fetcher {
 
     const formatted = Object.assign(
       transform(attributes, (result, attr) => {
-        console.log(`${tableName} ${instance.id} ${attr} => ${camelCase(attr)} => ${instance.get(attr)}`)
         result[camelCase(attr)] = instance.get(attr)
       }, {}),
 
