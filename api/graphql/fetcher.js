@@ -14,7 +14,7 @@ export default class Fetcher {
     const loader = this.loaders[targetTableName]
 
     if (type === 'belongsTo') {
-      return loader.load(parentFk)
+      return loader.load(parentFk).then(x => this.format(targetTableName, x))
     }
 
     const relationSpec = this.models[targetTableName]
