@@ -5,21 +5,6 @@ var validator = require('validator')
 import { has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 
-const validateUserAttributes = (attrs, { existingUser, transacting } = {}) => {
-  // for an existing user, the email field can be omitted.
-  if (existingUser && !has(attrs, 'email')) return Promise.resolve()
-
-  const { email } = attrs
-  const oldEmail = existingUser ? existingUser.get('email') : null
-
-  if (!validator.isEmail(email)) {
-    return Promise.reject(new Error('invalid-email'))
-  }
-
-  return User.isEmailUnique(email, oldEmail, {transacting})
-  .then(unique => unique || Promise.reject(new Error('duplicate-email')))
-}
-
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
 
@@ -413,3 +398,18 @@ module.exports = bookshelf.Model.extend(merge({
     .then(rows => Number(rows[0].count))
   }
 })
+
+function validateUserAttributes (attrs, { existingUser, transacting } = {}) {
+  // for an existing user, the email field can be omitted.
+  if (existingUser && !has(attrs, 'email')) return Promise.resolve()
+
+  const { email } = attrs
+  const oldEmail = existingUser ? existingUser.get('email') : null
+
+  if (!validator.isEmail(email)) {
+    return Promise.reject(new Error('invalid-email'))
+  }
+
+  return User.isEmailUnique(email, oldEmail, {transacting})
+  .then(unique => unique || Promise.reject(new Error('duplicate-email')))
+}
