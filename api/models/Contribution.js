@@ -65,6 +65,7 @@ module.exports = bookshelf.Model.extend({
 
   createActivities: (opts) =>
     Contribution.find(opts.contributionId).then(contribution =>
-      bookshelf.transaction(trx => contribution.createActivities(trx)))
+      contribution && bookshelf.transaction(trx =>
+        contribution.createActivities(trx)))
 
 })
