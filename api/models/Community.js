@@ -38,7 +38,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   moderators: function () {
     return this.belongsToMany(User, 'communities_users', 'community_id', 'user_id')
-      .query({where: {role: Membership.MODERATOR_ROLE}})
+      .query({where: {role: Membership.MODERATOR_ROLE, 'communities_users.active': true}})
   },
 
   network: function () {
