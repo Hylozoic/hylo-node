@@ -114,7 +114,7 @@ module.exports = {
         tag_id: tag.id,
         user_id: req.session.userId
       }).save(null, trxOpts))
-      .then(tag => new CommunityTag({
+      .tap(tag => new CommunityTag({
         tag_id: tag.id,
         community_id: community.id,
         description,
@@ -122,7 +122,7 @@ module.exports = {
         is_default
       }).save(null, trxOpts))
     })
-    .then(() => res.ok({}))
+    .then(tag => res.ok({id: tag.id}))
     .catch(res.serverError)
   },
 
