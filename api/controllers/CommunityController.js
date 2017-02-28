@@ -41,7 +41,11 @@ const approveJoinRequest = curry((req, res, community, joinRequest) => {
   const communityId = community.id
   const userId = joinRequest.get('user_id')
   return Membership.create(userId, communityId)
-  .then(ms => afterCreatingMembership(req, res, ms, community))
+  .catch(err => {
+    if (err && err.message.match(/duplicate key value/)) return {}
+    throw err
+  })
+  .then(ms => ms && afterCreatingMembership(req, res, ms, community))
   .tap(() => joinRequest.destroy())
   .tap(() => Queue.classMethod('Activity', 'saveForReasonsOpts', {
     activities: [{
