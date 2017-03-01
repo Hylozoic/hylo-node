@@ -19,7 +19,8 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
     q.where({
       'tags.name': tag,
       user_id: userId,
-      parent_post_id: null
+      parent_post_id: null,
+      active: true
     })
     q.where('communities_posts.community_id', 'in',
       Membership.activeCommunityIds(viewingUserId))
