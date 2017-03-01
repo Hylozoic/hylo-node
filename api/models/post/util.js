@@ -77,22 +77,6 @@ export function afterCreatingPost (post, opts) {
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
 
-export function afterUpdatingPost (post, opts) {
-  const {
-    params,
-    params: { requests, community_ids, tag, tagDescriptions },
-    userId,
-    transacting
-  } = opts
-
-  return Promise.all([
-    updateChildren(post, requests, transacting),
-    updateCommunities(post, community_ids, transacting),
-    updateAllMedia(post, params, transacting),
-    Tag.updateForPost(post, tag, tagDescriptions, userId, transacting),
-  ])
-}
-
 export const updateChildren = (post, children, trx) => {
   const isNew = child => child.id.startsWith('new')
   const created = filter(c => isNew(c) && !!c.name, children)
@@ -220,4 +204,42 @@ export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
       if (userId !== addedById) addActivity(userId, 'forFollow')
       return Promise.all(updates)
     }))
+}
+
+export function afterUpdatingPost (post, opts) {
+  const {
+    params,
+    params: { requests, community_ids, tag, tagDescriptions },
+    userId,
+    transacting
+  } = opts
+
+  return post.ensureLoad(['communities'])
+  .then(() => Promise.all([
+    updateChildren(post, requests, transacting),
+    updateCommunities(post, community_ids, transacting),
+    updateAllMedia(post, params, transacting),
+    Tag.updateForPost(post, tag, tagDescriptions, userId, transacting),
+    updateFollowers(post, transacting)
+  ]))
+}
+
+function updateFollowers (post, transacting) {
+  return post.load('followers')
+  .then(() => {
+    const followerIds = post.relations.followers.pluck('id')
+    const newMentionedIds = RichText.getUserMentions(post.get('description'))
+    .filter(id => !followerIds.includes(id))
+
+    return addFollowers(post, null, newMentionedIds, null, {transacting})
+    .then(() => {
+      const reasons = newMentionedIds.map(id => ({
+        reader_id: id,
+        post_id: post.id,
+        actor_id: post.get('user_id'),
+        reason: 'mention'
+      }))
+      return Activity.saveForReasons(reasons, transacting)
+    })
+  })
 }

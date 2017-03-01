@@ -1,8 +1,7 @@
 import { times } from 'lodash'
-import root from 'root-path'
-const { afterCreatingPost, updateChildren } = require(root('api/models/post/util'))
-const setup = require(root('test/setup'))
-const factories = require(root('test/setup/factories'))
+import { afterCreatingPost, afterUpdatingPost, updateChildren } from '../../../../api/models/post/util'
+import setup from '../../../setup'
+import factories from '../../../setup/factories'
 import { spyify, stubGetImageSize, unspyify } from '../../../setup/helpers'
 
 describe('post/util', () => {
@@ -105,6 +104,30 @@ describe('post/util', () => {
       .then(() => expect(post.relations.communities.length).to.equal(1))
       .catch(err => {
         throw err
+      })
+    })
+  })
+
+  describe('afterUpdatingPost', () => {
+    var u1, u2, post
+
+    before(() => {
+      u1 = factories.user()
+      u2 = factories.user()
+      post = factories.post()
+      return Promise.join(u1.save(), u2.save())
+      .then(() => post.save())
+      .then(() => post.addFollowers([u1.id]))
+    })
+
+    it('adds new followers if there are new mentions', () => {
+      const description = `hello <a data-user-id="${u2.id}">person</a>`
+      return post.save({description}, {patch: true})
+      .then(() => afterUpdatingPost(post, {params: {}}))
+      .then(() => post.load('followers'))
+      .then(() => {
+        expect(post.relations.followers.pluck('id'))
+        .to.deep.equal([u1.id, u2.id])
       })
     })
   })

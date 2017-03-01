@@ -6,6 +6,7 @@ import { normalizePost } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
+import EnsureLoad from './mixins/EnsureLoad'
 
 const normalize = post => {
   const data = {communities: [], people: []}
@@ -13,7 +14,7 @@ const normalize = post => {
   return Object.assign(data, post)
 }
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(Object.assign({
   // Instance Methods
 
   tableName: 'posts',
@@ -221,7 +222,7 @@ module.exports = bookshelf.Model.extend({
 
   unfulfillRequest
 
-}, {
+}, EnsureLoad), {
   // Class Methods
 
   Type: {
