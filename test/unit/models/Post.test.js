@@ -259,32 +259,38 @@ describe('Post', function () {
   })
 
   describe('#updateFromNewComment', () => {
-    it('updates several attributes', () => {
-      var parent, child
-      parent = factories.post({
-        updated_at: new Date(Date.now() - 1000000)
-      })
+    var parent, post, user, lastRead
+
+    before(() => {
+      const earlier = new Date(0)
+      user = factories.user()
+      parent = factories.post({updated_at: earlier})
       return parent.save()
       .then(() => {
-        child = factories.post({parent_post_id: parent.id})
-        return child.save()
+        post = factories.post({parent_post_id: parent.id})
+        return Promise.join(post.save(), user.save())
       })
-      .then(() =>
-        factories.comment({
-          post_id: child.id,
-          created_at: new Date()
-        }).save())
+      .then(() => LastRead.findOrCreate(user.id, post.id, {date: earlier}))
+      .then(lr => { lastRead = lr })
+    })
+
+    it('updates several attributes', () => {
+      const comment = factories.comment({
+        post_id: post.id,
+        created_at: new Date(),
+        user_id: user.id
+      })
+
+      return comment.save()
       .then(comment =>
-        Post.updateFromNewComment({
-          postId: child.id,
-          commentId: comment.id
-        }))
-      .then(() => Promise.join(parent.refresh(), child.refresh()))
+        Post.updateFromNewComment({postId: post.id, commentId: comment.id}))
+      .then(() => Promise.map([parent, post, lastRead], x => x.refresh()))
       .then(() => {
         const now = new Date().getTime()
         expect(parent.get('updated_at').getTime()).to.be.closeTo(now, 2000)
-        expect(child.get('updated_at').getTime()).to.be.closeTo(now, 2000)
-        expect(child.get('num_comments')).to.equal(1)
+        expect(post.get('updated_at').getTime()).to.be.closeTo(now, 2000)
+        expect(lastRead.get('last_read_at').getTime()).to.be.closeTo(now, 2000)
+        expect(post.get('num_comments')).to.equal(1)
       })
     })
   })

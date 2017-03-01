@@ -323,6 +323,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   updateFromNewComment: ({ postId, commentId }) => {
     const where = {post_id: postId, active: true}
+    const now = new Date()
+    const select = (model, id, column) =>
+      model.where('id', id).query().select(column)
+
     return Comment.query()
     .where(where)
     .orderBy('created_at', 'desc')
@@ -334,21 +338,26 @@ module.exports = bookshelf.Model.extend(Object.assign({
       .where({recent: true, post_id: postId})
       .update('recent', false),
 
-      // update updated_at in the parent post when creating a comment
-      commentId && Post.query().whereIn('id',
-        bookshelf.knex('posts').where({id: postId})
-        .select('parent_post_id'))
-      .update({updated_at: new Date()}),
-
       // update num_comments and updated_at (only update the latter when
       // creating a comment, not deleting one)
-      Aggregate.count(Comment.where(where))
-      .tap(count => Post.query().where('id', postId).update(omitBy(isNull, {
-        num_comments: count,
-        updated_at: commentId ? new Date() : null
-      }))),
+      Aggregate.count(Comment.where(where)).then(count =>
+        Post.query().where('id', postId).update(omitBy(isNull, {
+          num_comments: count,
+          updated_at: commentId ? now : null
+        }))),
 
-      // TODO update last_read_at for commenter
+      // when creating a comment, set updated_at in parent post if it exists,
+      // and set last_read_at for the commenter
+      commentId && Promise.join(
+        Post.query().whereIn('id', select(Post, postId, 'parent_post_id'))
+        .update({updated_at: now}),
+
+        LastRead.query().where({
+          post_id: postId,
+          user_id: select(Comment, commentId, 'user_id')
+        })
+        .update({last_read_at: now})
+      )
     ]))
   },
 
