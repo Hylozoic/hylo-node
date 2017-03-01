@@ -67,9 +67,7 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
         transacting: trx
       })))
     .then(comment => Promise.all([
-      presentComment(comment)
-      .tap(c => isReplyToPost &&
-        (isThread
+      presentComment(comment).tap(c => isReplyToPost && (isThread
         ? post.pushMessageToSockets(c, existingFollowers)
         : post.pushCommentToSockets(c))),
 
@@ -79,8 +77,10 @@ const createAndPresentComment = function (commenterId, text, post, opts = {}) {
 
       (isReplyToPost
         ? post.addFollowers(newFollowers, commenterId)
-        : Promise.join(comment.addFollowers(newFollowers, commenterId),
-            parentComment.addFollowers(newFollowers, commenterId))),
+        : Promise.join(
+            comment.addFollowers(newFollowers, commenterId),
+            parentComment.addFollowers(newFollowers, commenterId))
+          ),
 
       isReplyToPost && updateRecentComments(post.id)
     ]))

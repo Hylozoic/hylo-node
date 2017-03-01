@@ -232,7 +232,7 @@ describe('CommentController', function () {
         expect(activity).to.exist
         expect(activity.get('actor_id')).to.equal(fixtures.u1.id)
         expect(activity.get('post_id')).to.equal(fixtures.p2.id)
-        expect(activity.get('meta')).to.deep.equal({reasons: ['commentMention']})
+        expect(activity.get('meta')).to.deep.equal({reasons: ['newComment', 'commentMention']})
         expect(activity.get('unread')).to.equal(true)
       })
     })

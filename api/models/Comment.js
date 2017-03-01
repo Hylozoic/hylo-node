@@ -68,24 +68,30 @@ module.exports = bookshelf.Model.extend({
 
     return this.load(toLoad)
     .then(() => {
+      const actorId = this.get('user_id')
       const followers = this.relations[isReplyToPost ? 'post' : 'comment'].relations.followers
-      const followerActivities = followers.map(follower => ({
-        reader_id: follower.id,
+      const mentionedIds = RichText.getUserMentions(this.get('text'))
+
+      const createActivity = reason => id => ({
+        reader_id: id,
         comment_id: this.id,
         parent_comment_id: this.get('comment_id') || null,
         post_id: this.relations.post.id,
-        actor_id: this.get('user_id'),
-        reason: 'newComment'
-      }))
-      const mentioned = RichText.getUserMentions(this.get('text')).map(mentionedId => ({
-        reader_id: mentionedId,
-        comment_id: this.id,
-        post_id: this.relations.post.id,
-        actor_id: this.get('user_id'),
-        reason: 'commentMention'
-      }))
-      const readers = filter(r => r.reader_id !== this.get('user_id'), followerActivities.concat(mentioned))
-      return Activity.saveForReasons(readers, trx)
+        actor_id: actorId,
+        reason
+      })
+
+      const newCommentActivities = followers
+      .filter(u => u.id !== actorId)
+      .map(u => u.id)
+      .map(createActivity('newComment'))
+
+      const mentionActivities = mentionedIds
+      .filter(u => u.id !== actorId)
+      .map(createActivity('commentMention'))
+
+      return Activity.saveForReasons(
+        newCommentActivities.concat(mentionActivities), trx)
     })
   },
 

@@ -1,4 +1,4 @@
-import { values, merge, pick, filter, includes, isEmpty, get } from 'lodash'
+import { values, omit, filter, includes, isEmpty, get } from 'lodash'
 
 const isJustNewPost = activity => {
   const reasons = activity.get('meta').reasons
@@ -15,8 +15,8 @@ const mergeByReader = activities => {
       })
       current.reasons.push(activity.reason)
     } else {
-      activity.reasons = [activity.reason]
-      acc[activity.reader_id] = activity
+      acc[activity.reader_id] = Object.assign(
+        {reasons: [activity.reason]}, omit(activity, 'reason'))
     }
     return acc
   }, {})
@@ -126,7 +126,7 @@ module.exports = bookshelf.Model.extend({
 
   forComment: function (comment, userId, action) {
     if (!action) {
-      action = _.includes(comment.mentions(), userId.toString())
+      action = includes(comment.mentions(), userId.toString())
         ? this.Reason.Mention
         : this.Reason.Comment
     }
@@ -191,13 +191,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   saveForReasons: function (activities, trx) {
-    return Promise.map(mergeByReader(activities), activity =>
-      Activity.createWithNotifications(
-        merge(
-          pick(activity,
-            ['post_id', 'community_id', 'contribution_id', 'comment_id', 'parent_comment_id', 'actor_id', 'reader_id']),
-          {meta: {reasons: activity.reasons}}),
-        trx))
+    return Promise.map(mergeByReader(activities), activity => {
+      const attrs = Object.assign(
+        {},
+        omit(activity, 'reasons'),
+        {meta: {reasons: activity.reasons}}
+      )
+
+      return Activity.createWithNotifications(attrs, trx)
+    })
     .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
   },
 
@@ -217,7 +219,8 @@ module.exports = bookshelf.Model.extend({
     var communities = Activity.communityIds(activity)
     var user = activity.relations.reader
 
-    const relevantMemberships = filter(user.relations.memberships.models, mem => includes(communities, mem.get('community_id')))
+    const relevantMemberships = filter(user.relations.memberships.models, mem =>
+      includes(communities, mem.get('community_id')))
     const membershipsPermitting = (setting) =>
       filter(relevantMemberships, mem => mem.get('settings')[setting])
 
@@ -239,7 +242,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   createWithNotifications: function (attributes, trx) {
-    return new Activity(_.merge(attributes, {created_at: new Date()}))
+    return new Activity(Object.assign({created_at: new Date()}, attributes))
     .save({}, {transacting: trx})
     .tap(activity => activity.createNotifications(trx))
   },
