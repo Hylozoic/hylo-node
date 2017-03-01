@@ -126,8 +126,8 @@ describe('post/util', () => {
       .then(() => afterUpdatingPost(post, {params: {}}))
       .then(() => post.load('followers'))
       .then(() => {
-        expect(post.relations.followers.pluck('id'))
-        .to.deep.equal([u1.id, u2.id])
+        expect(post.relations.followers.pluck('id').sort())
+        .to.deep.equal([u1.id, u2.id].sort())
       })
     })
   })
