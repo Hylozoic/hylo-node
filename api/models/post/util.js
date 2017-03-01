@@ -46,7 +46,7 @@ export const afterSavingThread = function (post, opts) {
   ]))
 }
 
-export const afterSavingPost = function (post, opts) {
+export function afterCreatingPost (post, opts) {
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.get('description'))
   const followerIds = uniq(mentioned.concat(userId))
@@ -171,7 +171,7 @@ export const createPost = (userId, params) =>
   setupNewPostAttrs(userId, params)
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
-    .tap(post => afterSavingPost(post, merge(
+    .tap(post => afterCreatingPost(post, merge(
       pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
       {children: params.requests, transacting: trx}
     )))))

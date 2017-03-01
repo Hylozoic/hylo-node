@@ -1,6 +1,6 @@
 import { times } from 'lodash'
 import root from 'root-path'
-const { afterSavingPost, updateChildren } = require(root('api/models/post/util'))
+const { afterCreatingPost, updateChildren } = require(root('api/models/post/util'))
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 import { spyify, stubGetImageSize, unspyify } from '../../../setup/helpers'
@@ -51,7 +51,7 @@ describe('post/util', () => {
     })
   })
 
-  describe('afterSavingPost', () => {
+  describe('afterCreatingPost', () => {
     var post
     const videoUrl = 'https://www.youtube.com/watch?v=jsQ7yKwDPZk'
 
@@ -68,7 +68,7 @@ describe('post/util', () => {
       .then(() => bookshelf.transaction(trx =>
         post.save({}, {transacting: trx})
         .then(() =>
-          afterSavingPost(post, {
+          afterCreatingPost(post, {
             communities: [],
             videoUrl,
             children: [
@@ -100,7 +100,7 @@ describe('post/util', () => {
       const c = factories.community()
       return c.save()
       .then(() => post.save())
-      .then(() => afterSavingPost(post, {community_ids: [c.id, c.id]}))
+      .then(() => afterCreatingPost(post, {community_ids: [c.id, c.id]}))
       .then(() => post.load('communities'))
       .then(() => expect(post.relations.communities.length).to.equal(1))
       .catch(err => {
