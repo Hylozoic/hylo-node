@@ -167,7 +167,11 @@ module.exports = {
           failures = true
           return Promise.resolve()
         }
-        return Comment.where({user_id: userId, post_id: post.id, text: replyText(post.id)}).fetch()
+        return Comment.where({
+          user_id: userId,
+          post_id: post.id,
+          text: replyText(post.id)
+        }).fetch()
         .then(comment => {
           if (post && (new Date() - post.get('created_at') < 5 * 60000)) return
 
@@ -179,8 +183,12 @@ module.exports = {
               community: community && community.get('name')
             }
           })
-          return createAndPresentComment(userId, replyText(post.id), post, {created_from: 'email batch form'})
-          .then(() => Post.updateFromNewComment({postId: post.id}))
+          return createAndPresentComment(userId, replyText(post.id), post,
+            {created_from: 'email batch form'})
+          .then(() => Post.updateFromNewComment({
+            postId: post.id,
+            commentId: comment.id
+          }))
         })
       })
     })

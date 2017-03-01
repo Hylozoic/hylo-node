@@ -1,4 +1,3 @@
-import moment from 'moment'
 import root from 'root-path'
 import { find } from 'lodash'
 const setup = require(root('test/setup'))
@@ -106,28 +105,6 @@ describe('Post', function () {
       return Follow.create(user.id, post.id)
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
-    })
-  })
-
-  describe('#updateCommentCount', () => {
-    var post
-
-    before(() => {
-      post = new Post({updated_at: moment().subtract(1, 'month').toDate()})
-      return post.save()
-      .then(post => Promise.join(
-        new Comment({post_id: post.id, active: true}).save(),
-        new Comment({post_id: post.id, active: true}).save()
-      ))
-    })
-
-    it('updates the count and updated_at', () => {
-      return post.updateCommentCount()
-      .then(count => {
-        expect(count).to.equal(2)
-        expect(post.get('num_comments')).to.equal(2)
-        expect(post.get('updated_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
-      })
     })
   })
 
@@ -282,22 +259,32 @@ describe('Post', function () {
   })
 
   describe('#updateFromNewComment', () => {
-    it('updates parent project updated_at', () => {
-      var project, childPost
-      project = factories.post({
-        type: 'project',
+    it('updates several attributes', () => {
+      var parent, child
+      parent = factories.post({
         updated_at: new Date(Date.now() - 1000000)
       })
-      return project.save()
+      return parent.save()
       .then(() => {
-        childPost = factories.post({parent_post_id: project.id})
-        return childPost.save()
+        child = factories.post({parent_post_id: parent.id})
+        return child.save()
       })
-      .then(() => factories.comment({post_id: childPost.id, created_at: new Date()}).save())
-      .then(() => Post.updateFromNewComment({postId: childPost.id}))
-      .then(() => Promise.join(project.refresh(), childPost.refresh()))
+      .then(() =>
+        factories.comment({
+          post_id: child.id,
+          created_at: new Date()
+        }).save())
+      .then(comment =>
+        Post.updateFromNewComment({
+          postId: child.id,
+          commentId: comment.id
+        }))
+      .then(() => Promise.join(parent.refresh(), child.refresh()))
       .then(() => {
-        expect(project.get('updated_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
+        const now = new Date().getTime()
+        expect(parent.get('updated_at').getTime()).to.be.closeTo(now, 2000)
+        expect(child.get('updated_at').getTime()).to.be.closeTo(now, 2000)
+        expect(child.get('num_comments')).to.equal(1)
       })
     })
   })

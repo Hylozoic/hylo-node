@@ -313,7 +313,10 @@ describe('User', function () {
             text: 'arf',
             active: true
           }).save())))
-        .then(() => p.updateCommentCount())
+        .then(comments => Post.updateFromNewComment({
+          postId: p.id,
+          commentId: comments.slice(-1)[0].id
+        }))
 
       return User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
 

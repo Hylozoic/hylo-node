@@ -39,34 +39,39 @@ export default function createAndPresentComment (commenterId, text, post, opts =
     return bookshelf.transaction(trx =>
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
-      .tap(() => isReplyToPost && post.updateCommentCount(trx))
-      .tap(comment => opts.imageUrl && Media.create({
-        comment_id: comment.id,
-        url: opts.imageUrl,
-        thumbnailSize: 128,
-        transacting: trx
-      })))
+      .tap(createMedia(opts.imageUrl, trx)))
     .then(comment => Promise.all([
-      presentComment(comment)
-      .tap(c => isReplyToPost && notifySockets(c, post)),
+      presentComment(comment).tap(c => isReplyToPost && notifySockets(c, post)),
 
       (isThread
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
         : comment.createActivities()),
 
-      (isReplyToPost
-        ? post.addFollowers(newFollowers, commenterId)
+      isReplyToPost
+        ? Promise.join(
+            post.addFollowers(newFollowers, commenterId),
+          )
         : Promise.join(
             comment.addFollowers(newFollowers, commenterId),
-            parentComment.addFollowers(newFollowers, commenterId))
+            parentComment.addFollowers(newFollowers, commenterId)
           ),
 
-      isReplyToPost &&
-        Queue.classMethod('Post', 'updateFromNewComment', {postId: post.id})
+      Queue.classMethod('Post', 'updateFromNewComment', {
+        postId: post.id,
+        commentId: comment.id
+      })
     ]))
     .then(promises => promises[0])
   })
 }
+
+const createMedia = (url, transacting) => comment =>
+  url && Media.create({
+    comment_id: comment.id,
+    url,
+    thumbnailSize: 128,
+    transacting
+  })
 
 const presentComment = comment =>
   comment.load([{user: simpleUserColumns}, 'media'])

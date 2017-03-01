@@ -75,9 +75,12 @@ describe('CommentController', function () {
   })
 
   describe('#create', function () {
+    var queueClassMethodLog
     beforeEach(() => {
       req.session.userId = fixtures.u1.id
-      spyify(Queue, 'classMethod')
+      queueClassMethodLog = []
+      mockify(Queue, 'classMethod', (className, methodName, data) =>
+        queueClassMethodLog.push({className, methodName, data}))
     })
 
     afterEach(() => unspyify(Queue, 'classMethod'))
@@ -319,7 +322,10 @@ describe('CommentController', function () {
       })
       .then(() => {
         expect(Queue.classMethod).to.have.been.called
-        .with('Post', 'updateFromNewComment', {postId: childPost.id})
+        const call = queueClassMethodLog[0]
+        expect(call).to.exist
+        expect(call.data.postId).to.equal(childPost.id)
+        expect(call.data.commentId).to.exist
       })
     })
   })

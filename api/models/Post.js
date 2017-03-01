@@ -1,6 +1,6 @@
 /* globals LinkPreview, LastRead, _ */
 /* eslint-disable camelcase */
-import { filter, uniqBy } from 'lodash/fp'
+import { filter, isNull, omitBy, uniqBy } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
@@ -117,16 +117,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   isPublic: function () {
     return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
-  },
-
-  // FIXME -- this and updateFromNewComment should be combined
-  updateCommentCount: function (trx) {
-    var self = this
-    return Aggregate.count(this.comments(), {transacting: trx})
-    .tap(count => self.save({
-      num_comments: count,
-      updated_at: new Date()
-    }, {patch: true, transacting: trx}))
   },
 
   isWelcome: function () {
@@ -331,22 +321,34 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .save(null, _.pick(opts, 'transacting'))
   },
 
-  updateFromNewComment: opts => {
-    const comments = () => bookshelf.knex('comments')
-    const { postId } = opts
-    return comments()
-    .where({post_id: postId, active: true})
+  updateFromNewComment: ({ postId, commentId }) => {
+    const where = {post_id: postId, active: true}
+    return Comment.query()
+    .where(where)
     .orderBy('created_at', 'desc')
     .limit(2)
     .pluck('id')
     .then(ids => Promise.all([
-      comments().where('id', 'in', ids).update('recent', true),
-      comments().where('id', 'not in', ids)
-      .where({recent: true, post_id: opts.postId})
+      Comment.query().where('id', 'in', ids).update('recent', true),
+      Comment.query().where('id', 'not in', ids)
+      .where({recent: true, post_id: postId})
       .update('recent', false),
-      // update 'updated_at' in the parent project of a commented request
-      Post.query().whereIn('id', bookshelf.knex('posts').where({id: postId}).select('parent_post_id'))
-      .update({updated_at: new Date()})
+
+      // update updated_at in the parent post when creating a comment
+      commentId && Post.query().whereIn('id',
+        bookshelf.knex('posts').where({id: postId})
+        .select('parent_post_id'))
+      .update({updated_at: new Date()}),
+
+      // update num_comments and updated_at (only update the latter when
+      // creating a comment, not deleting one)
+      Aggregate.count(Comment.where(where))
+      .tap(count => Post.query().where('id', postId).update(omitBy(isNull, {
+        num_comments: count,
+        updated_at: commentId ? new Date() : null
+      }))),
+
+      // TODO update last_read_at for commenter
     ]))
   },
 
