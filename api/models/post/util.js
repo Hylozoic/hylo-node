@@ -1,6 +1,16 @@
 /* globals LastRead */
 import {
-  difference, flatten, flattenDeep, has, includes, isEqual, merge, omit, pick, some, uniq
+  difference,
+  flatten,
+  flattenDeep,
+  has,
+  includes,
+  isEqual,
+  merge,
+  omit,
+  pick,
+  some,
+  uniq
 } from 'lodash'
 import { filter, getOr, map } from 'lodash/fp'
 import { sanitize } from 'hylo-utils/text'
@@ -179,15 +189,7 @@ export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
   var userId = (comment || post).get('user_id')
   const { transacting, createActivity } = opts
 
-  return post.load(['communities'])
-  .then(() => post.isProject() && post.load('selectedTags')
-    .then(() => {
-      const tag = post.relations.selectedTags.first()
-      if (!tag) return
-      return Promise.each(post.relations.communities.models, community =>
-        Promise.each(userIds, id => TagFollow.add(tag, id, community)))
-    }))
-  .then(() => Promise.map(userIds, followerId =>
+  return Promise.map(userIds, followerId =>
     Follow.create(followerId, post.id, (comment || {}).id, {addedById, transacting})
     .tap(follow => {
       if (!createActivity) return
@@ -195,11 +197,11 @@ export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
       var updates = []
       const addActivity = (recipientId, method) => {
         updates.push(Activity[method](follow, recipientId)
-        .save({}, _.pick(opts, 'transacting'))
+        .save({}, pick(opts, 'transacting'))
         .then(activity => activity.createNotifications(transacting)))
       }
       if (followerId !== addedById) addActivity(followerId, 'forFollowAdd')
       if (userId !== addedById) addActivity(userId, 'forFollow')
       return Promise.all(updates)
-    })))
+    }))
 }
