@@ -272,23 +272,8 @@ describe('Notification', function () {
       .finally(() => unspyify(Email, 'sendNewCommentNotification'))
     })
 
-    it('sends an email for a mention in a comment', () => {
-      spyify(Email, 'sendNewCommentNotification', opts => {
-        expect(opts).to.contain({
-          email: 'readersemail@hylo.com',
-          version: 'mention'
-        })
-
-        expect(opts.sender).to.contain({
-          name: 'Joe (via Hylo)'
-        })
-
-        expect(opts.data).to.contain({
-          community_name: 'My Community',
-          commenter_name: 'Joe',
-          post_title: 'My Post'
-        })
-      })
+    it('sends no email for a mention in a comment', () => {
+      spyify(Email, 'sendNewCommentNotification')
 
       return new Activity({
         comment_id: comment.id,
@@ -303,7 +288,7 @@ describe('Notification', function () {
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
       .then(() => {
-        expect(Email.sendNewCommentNotification).to.have.been.called()
+        expect(Email.sendNewCommentNotification).not.to.have.been.called()
       })
       .then(() => unspyify(Email, 'sendNewCommentNotification'))
     })

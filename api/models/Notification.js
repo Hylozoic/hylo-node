@@ -146,8 +146,6 @@ module.exports = bookshelf.Model.extend({
     switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
       case 'mention':
         return this.sendPostMentionEmail()
-      case 'commentMention':
-        return this.sendCommentNotificationEmail('mention')
       case 'joinRequest':
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
