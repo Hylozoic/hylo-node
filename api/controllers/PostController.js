@@ -6,10 +6,7 @@ import {
 import {
   afterUpdatingPost,
   createPost,
-  createThread,
-  updateChildren,
-  updateAllMedia,
-  updateCommunities
+  createThread
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags

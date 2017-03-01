@@ -2,6 +2,7 @@ import { find, get, isNull, isUndefined, merge, pick } from 'lodash'
 import { filter, pickBy } from 'lodash/fp'
 import { normalizeMemberships, normalizePost, uniqize } from '../../lib/util/normalize'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
+const { assign } = Object
 
 const relationsForSelf = [
   'memberships',
@@ -31,20 +32,18 @@ const recentTaggedPost = (userId, tag, viewingUserId) => {
   .then(post => post && PostPresenter.present(post, viewingUserId, opts))
 }
 
-const extraAttributes = (user, viewingUserId, forSelf) =>
-  Promise.props({
-    post_count: Post.countForUser(user),
-    event_count: Post.countForUser(user, 'event'),
-    grouped_post_count: Post.groupedCountForUser(user),
-    contribution_count: Contribution.countForUser(user),
-    thank_count: Thank.countForUser(user),
-    extra_info: user.get('extra_info'),
-    tags: user.relations.tags.pluck('name'),
-    recent_request: recentTaggedPost(user.id, 'request', viewingUserId),
-    recent_offer: recentTaggedPost(user.id, 'offer', viewingUserId),
-    shared_communities: forSelf ? null
-      : Membership.sharedCommunityIds([user.id, viewingUserId])
-  })
+// this must be passed to Promise.props
+const extraAttributes = (user, viewingUserId) => ({
+  post_count: Post.countForUser(user),
+  event_count: Post.countForUser(user, 'event'),
+  grouped_post_count: Post.groupedCountForUser(user),
+  contribution_count: Contribution.countForUser(user),
+  thank_count: Thank.countForUser(user),
+  extra_info: user.get('extra_info'),
+  tags: user.relations.tags.pluck('name'),
+  recent_request: recentTaggedPost(user.id, 'request', viewingUserId),
+  recent_offer: recentTaggedPost(user.id, 'offer', viewingUserId)
+})
 
 const shortAttributes = [
   'id', 'name', 'avatar_url', 'created_at',
@@ -81,21 +80,20 @@ const fetchActiveUser = (id, options) =>
     if (!user || !user.get('active')) throw new Error('User not found')
   })
 
-const fetchForSelf = (userId, isAdmin) =>
-  fetchActiveUser(userId, {withRelated: relationsForSelf})
-  .then(user => Promise.join(
-    cleanBasicAttributes(user.toJSON()),
-    extraAttributes(user, user.id, true)
-  ))
-  .then(attributes => _.extend.apply(_, attributes))
-
 module.exports = {
+  simpleUserColumns: q => q.column('id', 'name', 'avatar_url'),
+
   normalizeUser,
 
   fetchForOther: (id, viewingUserId) =>
     fetchActiveUser(id, {withRelated: 'tags'})
-    .then(user => extraAttributes(user, viewingUserId)
-      .then(extra => Object.assign(user.pick(shortAttributes), extra))),
+    .then(user => Promise.props(assign(
+      user.pick(shortAttributes),
+      extraAttributes(user, viewingUserId),
+      {
+        shared_communities: Membership.sharedCommunityIds([id, viewingUserId])
+      }
+    ))),
 
   presentForList: function (user, opts = {}) {
     var moreAttributes = {
@@ -131,12 +129,16 @@ module.exports = {
   },
 
   fetchAndPresentForSelf: (userId, session, isAdmin) =>
-    fetchForSelf(userId, isAdmin)
-    .then(attributes => Promise.props(Object.assign(attributes, {
-      is_admin: isAdmin,
-      new_message_count: User.unseenThreadCount(userId),
-      provider_key: session.userProvider,
-      left_nav_tags: fetchAndPresentFollowed(null, userId)
-    })))
+    fetchActiveUser(userId, {withRelated: relationsForSelf})
+    .then(user => Promise.props(assign(
+      cleanBasicAttributes(user.toJSON()),
+      extraAttributes(user, user.id),
+      {
+        is_admin: isAdmin,
+        new_message_count: User.unseenThreadCount(userId),
+        provider_key: session.userProvider,
+        left_nav_tags: fetchAndPresentFollowed(null, userId)
+      }
+    )))
     .then(normalizeUser)
 }
