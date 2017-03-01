@@ -77,6 +77,22 @@ export function afterCreatingPost (post, opts) {
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
 
+export function afterUpdatingPost (post, opts) {
+  const {
+    params,
+    params: { requests, community_ids, tag, tagDescriptions },
+    userId,
+    transacting
+  } = opts
+
+  return Promise.all([
+    updateChildren(post, requests, transacting),
+    updateCommunities(post, community_ids, transacting),
+    updateAllMedia(post, params, transacting),
+    Tag.updateForPost(post, tag, tagDescriptions, userId, transacting),
+  ])
+}
+
 export const updateChildren = (post, children, trx) => {
   const isNew = child => child.id.startsWith('new')
   const created = filter(c => isNew(c) && !!c.name, children)

@@ -4,14 +4,19 @@ import {
   difference, includes, intersection, isEmpty, merge, omit, pick, pickBy
 } from 'lodash'
 import {
-  createPost, createThread, updateChildren, updateAllMedia, updateCommunities
+  afterUpdatingPost,
+  createPost,
+  createThread,
+  updateChildren,
+  updateAllMedia,
+  updateCommunities
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
 import { normalizePost, uniqize } from '../../lib/util/normalize'
+import { createCheckFreshnessAction } from '../../lib/freshness'
 
-const createCheckFreshnessAction = require('../../lib/freshness').createCheckFreshnessAction
 const sortColumns = {
   'fulfilled-last': 'fulfilled_at',
   'top': 'posts.num_votes',
@@ -313,6 +318,7 @@ const PostController = {
   update: function (req, res) {
     const post = res.locals.post
     const params = req.allParams()
+    const { userId } = req.session
 
     const attrs = merge(
       pick(params, 'name', 'description', 'type', 'starts_at', 'ends_at', 'location'),
@@ -325,18 +331,14 @@ const PostController = {
 
     return checkPostTags(
       pick(params, 'name', 'description'),
-      req.session.userId,
+      userId,
       pick(params, 'type', 'tag', 'community_ids', 'tagDescriptions')
     )
-    .then(() => bookshelf.transaction(trx =>
-      post.save(attrs, {patch: true, transacting: trx})
-      .tap(() => updateChildren(post, req.param('requests'), trx))
-      .tap(() => updateCommunities(post, req.param('community_ids'), trx))
-      .tap(() => updateAllMedia(post, params, trx))
-      .tap(() =>
-        Tag.updateForPost(post, req.param('tag'), req.param('tagDescriptions'), req.session.userId, trx))))
-    .then(() => post.load(PostPresenter.relations(req.session.userId, {withChildren: true})))
-    .then(post => PostPresenter.present(post, req.session.userId, {withChildren: true}))
+    .then(() => bookshelf.transaction(transacting =>
+      post.save(attrs, {patch: true, transacting})
+      .tap(() => afterUpdatingPost(post, {params, userId, transacting}))))
+    .then(() => post.load(PostPresenter.relations(userId, {withChildren: true})))
+    .then(post => PostPresenter.present(post, userId, {withChildren: true}))
     .then(normalize)
     .then(res.ok)
     .catch(err => {
@@ -393,11 +395,7 @@ const PostController = {
     User.find(req.session.userId)
     .then(user => Email.sendRawEmail('hello@hylo.com', {
       subject: 'Objectionable content report',
-      body: format(
-        '%s &lt;%s&gt; has flagged %s as objectionable',
-        user.get('name'), user.get('email'),
-        Frontend.Route.post(post)
-      )
+      body: `${user.get('name')} &lt;${user.get('email')}&gt; flagged ${Frontend.Route.post(post)} as objectionable.`
     }))
     .then(() => res.ok({}), res.serverError)
   },
