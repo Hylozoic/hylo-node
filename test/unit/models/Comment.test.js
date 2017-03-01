@@ -40,14 +40,13 @@ describe('Comment', () => {
     })
   })
 
-  describe('sendMessageDigest', () => {
+  describe('sendDigests', () => {
     var u1, u2, post, comments, log, now
 
     beforeEach(() => {
       now = new Date()
       log = []
       comments = []
-      mockify(Email, 'sendMessageDigest', args => log.push(args))
 
       u1 = factories.user({settings: {dm_notifications: 'both'}})
       u2 = factories.user({settings: {dm_notifications: 'both'}})
@@ -71,53 +70,86 @@ describe('Comment', () => {
         .delAsync(Comment.sendDigests.REDIS_TIMESTAMP_KEY))
     })
 
-    afterEach(() => {
-      unspyify(Email, 'sendMessageDigest')
-      return setup.clearDb()
-    })
+    afterEach(() => setup.clearDb())
 
-    it('sends a digest of recent messages', () => {
-      return Comment.sendDigests()
-      .then(count => {
-        expect(count).to.equal(2)
-        expect(Email.sendMessageDigest).to.have.been.called.exactly(2)
+    describe('with a message thread', () => {
+      beforeEach(() =>
+        mockify(Email, 'sendMessageDigest', args => log.push(args)))
 
-        const send1 = log.find(l => l.email === u1.get('email'))
-        expect(send1.data.messages)
-        .to.deep.equal([comments[2].get('text'), comments[3].get('text')])
+      afterEach(() => unspyify(Email, 'sendMessageDigest'))
 
-        const send2 = log.find(l => l.email === u2.get('email'))
-        expect(send2.data.messages)
-        .to.deep.equal([comments[0].get('text'), comments[1].get('text')])
+      it('sends a digest of recent messages', () => {
+        return Comment.sendDigests()
+        .then(count => {
+          expect(count).to.equal(2)
+          expect(Email.sendMessageDigest).to.have.been.called.exactly(2)
+
+          const send1 = log.find(l => l.email === u1.get('email'))
+          expect(send1.data.messages)
+          .to.deep.equal([comments[2].get('text'), comments[3].get('text')])
+
+          const send2 = log.find(l => l.email === u2.get('email'))
+          expect(send2.data.messages)
+          .to.deep.equal([comments[0].get('text'), comments[1].get('text')])
+        })
+      })
+
+      it('respects last_read_at', () => {
+        return Promise.join(
+          LastRead.findOrCreate(u1.id, post.id, {date: new Date(now - 4.5 * 60000)}),
+          LastRead.findOrCreate(u2.id, post.id)
+        )
+        .then(() => Comment.sendDigests())
+        .then(count => {
+          expect(count).to.equal(1)
+          expect(Email.sendMessageDigest).to.have.been.called.exactly(1)
+
+          expect(log[0].email).to.equal(u1.get('email'))
+          expect(log[0].data.messages)
+          .to.deep.equal([comments[3].get('text')])
+        })
+      })
+
+      it('respects dm_notifications setting', () => {
+        return u1.save({settings: {dm_notifications: 'push'}})
+        .then(() => Comment.sendDigests())
+        .then(count => {
+          expect(count).to.equal(1)
+          expect(Email.sendMessageDigest).to.have.been.called.exactly(1)
+
+          expect(log[0].email).to.equal(u2.get('email'))
+          expect(log[0].data.messages)
+          .to.deep.equal([comments[0].get('text'), comments[1].get('text')])
+        })
       })
     })
 
-    it('respects last_read_at', () => {
-      return Promise.join(
-        LastRead.findOrCreate(u1.id, post.id, {date: new Date(now - 4.5 * 60000)}),
-        LastRead.findOrCreate(u2.id, post.id)
-      )
-      .then(() => Comment.sendDigests())
-      .then(count => {
-        expect(count).to.equal(1)
-        expect(Email.sendMessageDigest).to.have.been.called.exactly(1)
-
-        expect(log[0].email).to.equal(u1.get('email'))
-        expect(log[0].data.messages)
-        .to.deep.equal([comments[3].get('text')])
+    describe('with post comments', () => {
+      beforeEach(() => {
+        mockify(Email, 'sendCommentDigest', args => log.push(args))
+        return Promise.all([
+          post.save({type: null}, {patch: true}),
+          u1.addSetting({comment_notifications: 'email'}, true),
+          u2.addSetting({comment_notifications: 'email'}, true)
+        ])
       })
-    })
 
-    it('respects dm_notifications setting', () => {
-      return u1.save({settings: {dm_notifications: 'push'}})
-      .then(() => Comment.sendDigests())
-      .then(count => {
-        expect(count).to.equal(1)
-        expect(Email.sendMessageDigest).to.have.been.called.exactly(1)
+      afterEach(() => unspyify(Email, 'sendCommentDigest'))
 
-        expect(log[0].email).to.equal(u2.get('email'))
-        expect(log[0].data.messages)
-        .to.deep.equal([comments[0].get('text'), comments[1].get('text')])
+      it('changes the subject if the digest contains a mention', () => {
+        const text = `hello <a data-user-id="${u2.get('id')}">buddy</a>!`
+        return comments[1].save({text}, {patch: true})
+        .then(() => Comment.sendDigests())
+        .then(count => {
+          expect(count).to.equal(2)
+          expect(Email.sendCommentDigest).to.have.been.called.exactly(2)
+
+          const send1 = log.find(l => l.email === u1.get('email'))
+          expect(send1.data.subject_prefix).to.match(/New comments/)
+
+          const send2 = log.find(l => l.email === u2.get('email'))
+          expect(send2.data.subject_prefix).to.match(/You were mentioned/)
+        })
       })
     })
   })

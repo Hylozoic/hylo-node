@@ -3,7 +3,7 @@
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
 import { parse } from 'url'
-import { compact, sum } from 'lodash/fp'
+import { compact, some, sum } from 'lodash/fp'
 
 export const notifyAboutMessage = ({commentId}) =>
   Comment.find(commentId, {withRelated: [
@@ -104,12 +104,19 @@ export const sendDigests = () => {
           return attrs
         }
 
+        const commentData = comments.map(presentComment)
+        const hasMention = ({ text }) =>
+          RichText.getUserMentions(text).includes(user.id)
+
         return Email.sendCommentDigest({
           email: user.get('email'),
           data: {
             post_title: truncate(post.get('name'), 140).text,
             post_url: Frontend.Route.post(post),
-            comments: comments.map(presentComment)
+            comments: commentData,
+            subject_prefix: some(hasMention, commentData)
+              ? 'You were mentioned in'
+              : 'New comments on'
           },
           sender: {
             reply_to: Email.postReplyAddress(post.id, user.id)
