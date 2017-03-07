@@ -36,7 +36,7 @@ const u4 = model({
 
 const community = model({slug: 'foo'})
 
-describe('community digest v2', () => {
+describe.only('community digest v2', () => {
   describe('formatData', () => {
     it('organizes new posts and comments', () => {
       const data = {
@@ -45,7 +45,10 @@ describe('community digest v2', () => {
             id: 12,
             text: 'I have two!',
             post_id: 5,
-            relations: {user: u3}
+            relations: {
+              user: u3,
+              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
+            }
           }),
           model({
             id: 13,
@@ -53,7 +56,7 @@ describe('community digest v2', () => {
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'I am right', relations: {user: u4}})
+              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
             }
           })
         ],
@@ -95,10 +98,7 @@ describe('community digest v2', () => {
             id: 5,
             title: 'Do you have a dollar?',
             user: u1.attributes,
-            url: Frontend.Route.post({id: 5}),
-            comments: [
-              {id: 12, text: 'I have two!', user: u3.attributes}
-            ]
+            url: Frontend.Route.post({id: 5})
           }
         ],
         offers: [
@@ -106,26 +106,21 @@ describe('community digest v2', () => {
             id: 6,
             title: 'I have cookies!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 6}),
-            comments: []
+            url: Frontend.Route.post({id: 6})
           }
         ],
         conversations: [
           {
-            id: 8,
-            title: 'I am right',
-            user: u4.attributes,
-            url: Frontend.Route.post({id: 8}),
-            comments: [
-              {id: 13, text: 'No, you are wrong', user: u3.attributes}
-            ]
-          },
-          {
             id: 7,
             title: 'Kapow!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 7}),
-            comments: []
+            url: Frontend.Route.post({id: 7})
+          }
+        ],
+        new_comments: [
+          {
+            title: 'Old Post, New Comments',
+            no_comments: 2
           }
         ]
       })
@@ -133,32 +128,29 @@ describe('community digest v2', () => {
 
     it('makes sure links are fully qualified', () => {
       const data = {
-        comments: [
+        posts: [
           model({
-            id: 11,
-            post_id: 1,
-            text: '<p><a href="/u/42">Lawrence Wang</a> & ' +
-              '<a href="/u/5942">Minda Myers</a> <a>#berkeley</a></p>',
+            id: 1,
+            name: 'Foo!',
+            description: '<p><a href="/u/21">Edward West</a> & ' +
+              '<a href="/u/16325">Julia Pope</a> <a>#oakland</a></p>',
             relations: {
-              user: u1,
-              post: model({
-                id: 1,
-                name: 'Foo!',
-                description: '<p><a href="/u/21">Edward West</a> & ' +
-                  '<a href="/u/16325">Julia Pope</a> <a>#oakland</a></p>',
-                relations: {user: u1}
-              })
+              selectedTags: collection([
+                model({name: 'request'})
+              ]),
+              user: u1
             }
           })
-        ]
+        ],
+        comments: []
       }
 
       const prefix = Frontend.Route.prefix
 
       expect(formatData(community, data)).to.deep.equal({
         offers: [],
-        requests: [],
-        conversations: [
+        conversations: [],
+        requests: [
           {
             id: 1,
             title: 'Foo!',
@@ -166,18 +158,10 @@ describe('community digest v2', () => {
               `<a href="${prefix}/u/16325">Julia Pope</a> ` +
               `<a href="${prefix}/c/foo/tag/oakland">#oakland</a></p>`,
             user: u1.attributes,
-            url: Frontend.Route.post({id: 1}),
-            comments: [
-              {
-                id: 11,
-                text: `<p><a href="${prefix}/u/42">Lawrence Wang</a> &amp; ` +
-                `<a href="${prefix}/u/5942">Minda Myers</a> ` +
-                `<a href="${prefix}/c/foo/tag/berkeley">#berkeley</a></p>`,
-                user: u1.attributes
-              }
-            ]
+            url: Frontend.Route.post({id: 1})
           }
-        ]
+        ],
+        new_comments: []
       })
     })
 
@@ -188,6 +172,7 @@ describe('community digest v2', () => {
         offers: [],
         requests: [],
         conversations: [],
+        new_comments: [],
         no_new_activity: true
       })
     })
