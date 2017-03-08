@@ -36,7 +36,7 @@ const u4 = model({
 
 const community = model({slug: 'foo'})
 
-describe.only('community digest v2', () => {
+describe('community digest v2', () => {
   describe('formatData', () => {
     it('organizes new posts and comments', () => {
       const data = {
@@ -47,7 +47,7 @@ describe.only('community digest v2', () => {
             post_id: 5,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
+              post: model({id: 5, name: 'Old Post, New Comments', relations: {user: u4}})
             }
           }),
           model({
@@ -58,7 +58,17 @@ describe.only('community digest v2', () => {
               user: u3,
               post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
             }
+          }),
+          model({
+            id: 13,
+            text: 'No, you are still wrong',
+            post_id: 8,
+            relations: {
+              user: u3,
+              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
+            }
           })
+
         ],
         posts: [
           model({
@@ -88,17 +98,57 @@ describe.only('community digest v2', () => {
               ]),
               user: u2
             }
+          }),
+          model({
+            id: 76,
+            name: 'An event',
+            type: 'event',
+            location: 'Home',
+            starts_at: new Date('December 17, 1995 18:30:00'),
+            relations: {
+              selectedTags: collection([
+                model({name: 'other'})
+              ]),
+              user: u2
+            }
+          }),
+          model({
+            id: 77,
+            name: 'A project with requests',
+            type: 'project',
+            relations: {
+              selectedTags: collection([
+                model({name: 'other'})
+              ]),
+              user: u2,
+              children: collection([
+                model({name: 'I need things'}),
+                model({name: 'and love'}),
+                model({name: 'and more things'})
+              ])
+            }
           })
         ]
       }
 
-      expect(formatData(community, data)).to.deep.equal({
+      const expected = {
         requests: [
           {
             id: 5,
             title: 'Do you have a dollar?',
             user: u1.attributes,
-            url: Frontend.Route.post({id: 5})
+            url: Frontend.Route.post({id: 5}),
+            comments: [
+              {
+                id: 12,
+                text: 'I have two!',
+                user: {
+                  avatar_url: 'http://apple.com/baz.png',
+                  id: 3,
+                  name: 'Baz'
+                }
+              }
+            ]
           }
         ],
         offers: [
@@ -106,7 +156,8 @@ describe.only('community digest v2', () => {
             id: 6,
             title: 'I have cookies!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 6})
+            url: Frontend.Route.post({id: 6}),
+            comments: []
           }
         ],
         conversations: [
@@ -114,16 +165,71 @@ describe.only('community digest v2', () => {
             id: 7,
             title: 'Kapow!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 7})
+            url: Frontend.Route.post({id: 7}),
+            comments: []
           }
         ],
-        new_comments: [
+        postsWithNewComments: [
           {
+            id: 8,
             title: 'Old Post, New Comments',
-            no_comments: 2
+            url: Frontend.Route.post({id: 8}),
+            comments: [
+              {
+                id: 13,
+                text: 'No, you are wrong',
+                user: {
+                  avatar_url: 'http://apple.com/baz.png',
+                  id: 3,
+                  name: 'Baz'
+                }
+              },
+              {
+                id: 13,
+                text: 'No, you are still wrong',
+                user: {
+                  avatar_url: 'http://apple.com/baz.png',
+                  id: 3,
+                  name: 'Baz'
+                }
+              }
+            ],
+            comment_count: 2,
+            user: {
+              avatar_url: 'http://cnn.com/man.png',
+              id: 4,
+              name: 'Mr. Man'
+            }
+          }
+        ],
+        events: [
+          {
+            id: 76,
+            title: 'An event',
+            location: 'Home',
+            when: '6pm - December 17, 1995',
+            user: u2.attributes,
+            url: Frontend.Route.post({id: 76}),
+            comments: []
+          }
+        ],
+        projects: [
+          {
+            id: 77,
+            title: 'A project with requests',
+            user: u2.attributes,
+            url: Frontend.Route.post({id: 77}),
+            comments: [],
+            requests: [
+              'I need things',
+              'and love',
+              'and more things'
+            ]
           }
         ]
-      })
+      }
+
+      expect(formatData(community, data)).to.deep.equal(expected)
     })
 
     it('makes sure links are fully qualified', () => {
@@ -158,10 +264,13 @@ describe.only('community digest v2', () => {
               `<a href="${prefix}/u/16325">Julia Pope</a> ` +
               `<a href="${prefix}/c/foo/tag/oakland">#oakland</a></p>`,
             user: u1.attributes,
-            url: Frontend.Route.post({id: 1})
+            url: Frontend.Route.post({id: 1}),
+            comments: []
           }
         ],
-        new_comments: []
+        postsWithNewComments: [],
+        projects: [],
+        events: []
       })
     })
 
@@ -172,7 +281,9 @@ describe.only('community digest v2', () => {
         offers: [],
         requests: [],
         conversations: [],
-        new_comments: [],
+        postsWithNewComments: [],
+        projects: [],
+        events: [],
         no_new_activity: true
       })
     })
@@ -195,13 +306,18 @@ describe.only('community digest v2', () => {
         requests: [],
         offers: [
           {
-            id: 1, title: 'Hi', user: u4.attributes, comments: [],
+            id: 1,
+            title: 'Hi',
+            user: u4.attributes,
+            comments: [],
             url: 'https://www.hylo.com/p/1'
           }
         ],
         conversations: [
           {
-            id: 2, title: 'Ya', user: u3.attributes,
+            id: 2,
+            title: 'Ya',
+            user: u3.attributes,
             details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
               `<a href="${prefix}/u/2?ya=1">Person</a></p>`,
             comments: [
@@ -218,14 +334,18 @@ describe.only('community digest v2', () => {
         expect(newData).to.deep.equal(merge({}, data, {
           offers: [
             {
-              id: 1, title: 'Hi', user: u4.attributes,
+              id: 1,
+              title: 'Hi',
+              user: u4.attributes,
               reply_url: Email.postReplyAddress(1, user.id),
               url: 'https://www.hylo.com/p/1' + ctParams
             }
           ],
           conversations: [
             {
-              id: 2, title: 'Ya', user: u3.attributes,
+              id: 2,
+              title: 'Ya',
+              user: u3.attributes,
               details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
                 `<a href="${prefix}/u/2?ya=1${ctParams.replace('?', '&')}">Person</a></p>`,
               reply_url: Email.postReplyAddress(2, user.id),
@@ -335,6 +455,9 @@ describe.only('community digest v2', () => {
           subject: `New activity from ${u2.get('name')}`,
           requests: [],
           offers: [],
+          postsWithNewComments: [],
+          events: [],
+          projects: [],
           conversations: [
             {
               id: post.id,
@@ -342,7 +465,8 @@ describe.only('community digest v2', () => {
               reply_url: Email.postReplyAddress(post.id, u1.id),
               url: Frontend.Route.post(post) + clickthroughParams,
               user: u2.pick('id', 'avatar_url', 'name'),
-              comments: []
+              comments: [],
+              requests: []
             }
           ],
           recipient: u1.pick('avatar_url', 'name'),
@@ -352,7 +476,7 @@ describe.only('community digest v2', () => {
           tracking_pixel_url: Analytics.pixelUrl('Digest', {
             userId: u1.id,
             community: community.get('name'),
-            'Email Version': 'default'
+            'Email Version': 'v3'
           }),
           email_settings_url: Frontend.Route.userSettings() + clickthroughParams + '&expand=account'
         })

@@ -111,7 +111,8 @@ module.exports = {
     collection: list => {
       return {
         first: () => list[0],
-        toJSON: () => list.map(model => model.toJSON())
+        toJSON: () => list.map(model => model.toJSON()),
+        map: fn => list.map(model => fn(model))
       }
     }
   }
