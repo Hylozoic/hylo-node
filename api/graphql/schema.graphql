@@ -9,7 +9,9 @@ type Me {
   url: String
   hasDevice: Boolean
   memberships(first: Int, cursor: ID, order: String): [Membership]
+  membershipsTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
+  postsTotal: Int
 }
 
 type Person {
@@ -17,6 +19,7 @@ type Person {
   name: String
   avatarUrl: String
   posts(first: Int, cursor: ID, order: String): [Post]
+  postsTotal: Int
 }
 
 type Membership {
@@ -32,8 +35,8 @@ type Community {
   name: String
   slug: String
   createdAt: String
-  memberships(first: Int, cursor: ID, order: String): [Membership]
   members(first: Int, cursor: ID, order: String): [Person]
+  membersTotal: Int
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
@@ -46,7 +49,9 @@ type Post {
   createdAt: String
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
+  followersTotal: Int
   communities(first: Int, cursor: ID, order: String): [Community]
+  communitiesTotal: Int
 }
 
 type Query {

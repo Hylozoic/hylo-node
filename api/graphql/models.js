@@ -25,11 +25,16 @@ export default function models (userId, isAdmin) {
         'bio',
         'updated_at'
       ],
-      relations: ['communities', 'posts'],
+      relations: ['communities', 'posts', 'memberships'],
       getters: {
         hasDevice: u => u.hasDevice()
-      },
-      filter: relation => relation
+      }
+    },
+
+    communities_users: {
+      model: Membership,
+      attributes: ['created_at', 'role', 'last_viewed_at'],
+      relations: ['community']
     },
 
     users: {
