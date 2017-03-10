@@ -1,4 +1,4 @@
-import { includes } from 'lodash'
+import { includes, omit } from 'lodash'
 import { get, isNull, isUndefined, pickBy } from 'lodash/fp'
 import { normalizePost } from '../../lib/util/normalize'
 
@@ -46,11 +46,12 @@ var postRelations = (userId, opts = {}) => {
   }
 
   if (opts.withChildren) {
-    relations.push({
-      children: q => {
-        q.column('id', 'parent_post_id', 'name', 'description', 'num_comments', 'is_project_request')
-      }
-    })
+    relations.push(
+      {children: q => {
+        q.column('id', 'parent_post_id', 'name', 'description', 'num_comments', 'is_project_request', 'fulfilled_at')
+      }},
+      {'children.contributions.user': userColumns}
+    )
   }
 
   if (opts.withReadTimes) {
@@ -112,6 +113,11 @@ var postAttributes = (post, userId, opts = {}) => {
   }
   if (opts.withChildren) {
     extendedPost.children = children
+    extendedPost.children = extendedPost.children.map(c => {
+      const contributors = c.relations.contributions.length > 0
+        ? c.relations.contributions.map(con => con.relations.user.pick('id', 'name', 'avatar_url')) : null
+      return omit(Object.assign(c.attributes, {contributors}), 'contributions')
+    })
   }
   if (opts.forCommunity && post.get('pinned')) {
     extendedPost.memberships = {[opts.forCommunity]: {pinned: post.get('pinned')}}
