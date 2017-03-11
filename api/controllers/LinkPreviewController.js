@@ -18,5 +18,6 @@ module.exports = {
         'id', 'url', 'image_url', 'title', 'description', 'image_width', 'image_height'
       ))
     })
+    .catch(res.serverError)
   }
 }
