@@ -522,7 +522,7 @@ CREATE TABLE knex_migrations_lock (
 
 CREATE TABLE link_previews (
     id integer NOT NULL,
-    url character varying(255),
+    url text,
     done boolean DEFAULT false,
     title text,
     description text,
@@ -2495,4 +2495,3 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
-
