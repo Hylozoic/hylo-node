@@ -42,7 +42,7 @@ const approveJoinRequest = curry((req, res, community, joinRequest) => {
   const userId = joinRequest.get('user_id')
   return Membership.create(userId, communityId)
   .catch(err => {
-    if (err && err.message.match(/duplicate key value/)) return {}
+    if (err && err.message.match(/duplicate key value/)) return
     throw err
   })
   .then(ms => ms && afterCreatingMembership(req, res, ms, community))
@@ -446,7 +446,7 @@ module.exports = {
       community_id: community.id
     }).fetch()
     .then(approveJoinRequest(req, res, community))
-    .then(res.ok)
+    .then(result => res.ok(result || {}))
   },
 
   approveAllJoinRequests: function (req, res) {
