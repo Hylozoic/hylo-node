@@ -8,46 +8,59 @@ Thanks for checking out our code. The documentation below may be incomplete or i
 
 ### setup
 
-You need to install redis locally, then follow the steps to launch it on startup:
+You need to install redis locally, then follow the steps to launch it on startup (on the default port of 6379). For OSX/MacOS:
+
 ```shell
 brew install redis
 ```
 
-next install the node modules
+Arch Linux:
+
 ```shell
-npm install -g forever sails foreman
-npm install
+pacman -S redis
+systemctl enable redis.service
+systemctl start redis.service
 ```
 
-Create a `.env` file in the root of the working copy, with contents like this:
+Next install the node modules (and Yarn, if you don't already have it available):
+
+```shell
+npm install -g forever sails foreman yarn
+yarn install
 ```
-ADMIN_GOOGLE_CLIENT_ID=foo
-ADMIN_GOOGLE_CLIENT_SECRET=foo
-ASSET_HOST_URL=http://localhost:1337
-DATABASE_URL=postgres://postgres:password@localhost:5432/hylo
-DEBUG_SQL=false
-DOMAIN=localhost:3001
-EMAIL_SENDER=dev+localtester@hylo.com
-GOOGLE_CLIENT_ID=foo
-GOOGLE_CLIENT_SECRET=foo
-FACEBOOK_APP_ID=foo
-FACEBOOK_APP_SECRET=foo
-KISS_AUTH_TOKEN=foo
-KISS_AUTH_COMMUNITY_ID=9
-LINKEDIN_API_KEY=foo
-LINKEDIN_API_SECRET=foo
-MAILGUN_DOMAIN=mg.hylo.com
-MAILGUN_EMAIL_SALT=FFFFAAAA123456789
+
+Create a `.env` file in the root directory. Values in square brackets are team specific and should be supplied:
+
+```
+DEBUG_SQL=true
+DOMAIN=http://localhost:3001
+EMAIL_SENDER=[ email ]
+ROLLBAR_SERVER_TOKEN=[ token ]
+FACEBOOK_APP_ID=[ app id ]
+FACEBOOK_APP_SECRET=[ app secret ]
+GOOGLE_CLIENT_ID=[ client id ]
+GOOGLE_CLIENT_SECRET=[ client secret ]
+LINKEDIN_API_KEY=[ api key ]
+LINKEDIN_API_SECRET=[ api secret ]
+MAILGUN_DOMAIN=[ domain ]
+MAILGUN_EMAIL_SALT=[ salt ]
+NEW_RELIC_LICENSE_KEY_DISABLED=[ key ]
 NODE_ENV=development
-PLAY_APP_SECRET=quxgrault12345678
+PLAY_APP_SECRET=[ app secret ]
+AWS_S3_BUCKET=[ bucket name ]
+AWS_SECRET_ACCESS_KEY=[ secret access key ]
+AWS_ACCESS_KEY_ID=[ access key id ]
+AWS_S3_CONTENT_URL=[ content url ]
 PRETTY_JSON=true
-PROTOCOL=http
-REDIS_URL=redis://localhost:6379
-ROLLBAR_SERVER_TOKEN=foo
-SEGMENT_KEY=foo
-SENDWITHUS_KEY=foo
-SLACK_APP_CLIENT_ID=xxxxxxx
-SLACK_APP_CLIENT_SECRET=xxxxxxxx
+PROTOCOL=https
+REDIS_URL=redis://0.0.0.0:6379
+SEGMENT_KEY=[ key ]
+SENDWITHUS_KEY=[ key ]
+DATABASE_URL=postgres://localhost:5432/hylo
+SLACK_APP_CLIENT_ID=[ client id ]
+SLACK_APP_CLIENT_SECRET=[ client secret ]
+ADMIN_GOOGLE_CLIENT_ID=[ client id ]
+ADMIN_GOOGLE_CLIENT_SECRET=[ client secret ]
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
@@ -58,6 +71,20 @@ SLACK_APP_CLIENT_SECRET=xxxxxxxx
 * `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
 * `SLACK_APP_CLIENT_ID`: set up an app on Slack and reference its' client id, optional for dev installation
 * `SLACK_APP_CLIENT_SECRET`: reference the client secret from that same app on Slack, optional for dev installation
+
+### populating the database
+
+If a local Postgres server is running and your user has create database privileges, you should be able to:
+
+```shell
+createdb hylo -h localhost
+createdb hylo_test -h localhost
+cat migrations/schema.sql | psql hylo
+./node_modules/.bin/knex seed:run
+```
+
+This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). The test database does not require seeding or migration.
+
 
 ### running the dev server
 
@@ -84,6 +111,8 @@ ROLLBAR_SERVER_TOKEN= # don't log errors to Rollbar
 SENDWITHUS_KEY=test_... # you can set up a SendWithUs API key to return valid responses but send no email
 ```
 
+Since the test database was created above, `npm test` should work at this point.
+
 ### creating and running database migrations
 
 Migrations are managed by the [knex](http://knexjs.org) library. Create a new migration with this command:
@@ -95,14 +124,6 @@ knex migrate:make my_migration_name
 (You can either install knex globally with `npm install -g knex`, or run the version in your `node_modules` with `./node_modules/.bin/knex`.)
 
 Run migrations with `npm run migrate` and rollback the last one with `npm run rollback`.
-
-### initializing the database schema
-
-This is only necessary if you aren't going to be loading a database snapshot. If you just want to set up a fresh instance (with only seed data) run:
-```shell
-cat migrations/schema.sql | psql hylo          # Recreate DB schema for database named: hylo
-./node_modules/.bin/knex seed:run              # Load seed data
-```
 
 ### loading database snapshots
 
