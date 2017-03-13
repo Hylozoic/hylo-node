@@ -3,6 +3,7 @@ module.exports = function (req, res, next) {
   const myUserId = req.session.userId
   const theirUserId = req.param('userId')
 
+  if (theirUserId === process.env.AXOLOTL_ID) return next()
   if (myUserId === theirUserId) return next()
   if (isNaN(Number(theirUserId))) return res.notFound()
 
