@@ -365,7 +365,7 @@ describe('community digest v2', () => {
           reply_action_url: Frontend.Route.emailBatchCommentForm(),
           form_token: Email.formToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, community: 'foo'}),
-          subject: `New activity from ${u4.name}, ${u3.name}, and 2 others`,
+          subject: `New activity from ${u4.name} and ${u3.name}`,
           community_url: 'https://www.hylo.com/c/foo' + ctParams
         }))
       })
