@@ -133,8 +133,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   pushCommentToSockets: function (comment) {
     var postId = this.id
-    const parent_post_id = this.get('parent_post_id')
-    return pushToSockets(`posts/${postId}`, 'commentAdded', {comment, parent_post_id})
+    return pushToSockets(`posts/${postId}`, 'commentAdded', {comment})
   },
 
   pushMessageToSockets: function (message, userIds) {
