@@ -11,6 +11,7 @@ export default function createAndPresentComment (commenterId, text, post, opts =
   var attrs = {
     text: text,
     created_at: new Date(),
+    recent: true,
     user_id: commenterId,
     post_id: post.id,
     active: true,
