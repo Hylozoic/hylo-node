@@ -49,6 +49,7 @@ export default function models (userId, isAdmin) {
 
     posts: {
       model: Post,
+      typename: 'Post',
       attributes: ['id', 'created_at'],
       getters: {
         title: p => p.get('name'),
@@ -67,7 +68,8 @@ export default function models (userId, isAdmin) {
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         memberCount: (c) => c.memberCount(),
-        postCount: (c) => c.postCount()
+        postCount: (c) => c.postCount(),
+        feedItems: (c, args) => c.feedItems(args)
       },
       relations: [{members: 'users'}],
       filter: nonAdminFilter(q => {

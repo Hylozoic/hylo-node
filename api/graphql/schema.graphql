@@ -40,6 +40,19 @@ type Community {
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
+  feedItems(first: Int, cursor: ID, order: String): [FeedItem]
+  feedItemsTotal: Int
+}
+
+type FeedItem {
+  type: String
+  content: FeedItemContent
+}
+
+union FeedItemContent = Post | Interstitial
+
+type Interstitial {
+  text: String
 }
 
 type Post {

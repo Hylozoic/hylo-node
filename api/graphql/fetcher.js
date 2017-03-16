@@ -1,4 +1,4 @@
-import { camelCase, toPairs, transform } from 'lodash'
+import { camelCase, isArray, mapValues, toPairs, transform } from 'lodash'
 import { map } from 'lodash/fp'
 import applyPagination, { PAGINATION_TOTAL_COLUMN_NAME } from './util/applyPagination'
 import initDataLoaders from './util/initDataLoaders'
@@ -51,19 +51,34 @@ export default class Fetcher {
   // will not run any additional database queries unless the current GraphQL
   // query specifically asks for them.
   format (name, instance) {
-    const { model, attributes, getters, relations } = this.models[name]
+    const { typename, model, attributes, getters, relations } = this.models[name]
     const tableName = model.collection().tableName()
     if (instance.tableName !== tableName) {
       throw new Error(`table names don't match: "${instance.tableName}", "${tableName}"`)
     }
 
+    const formatModel = x =>
+      x instanceof bookshelf.Model
+        ? this.format(x.tableName, x)
+        : x //(typeof x === 'object' ? mapValues(x, formatModel) : x)
+
     const formatted = Object.assign(
+      {
+        __typename: typename
+      },
+
       transform(attributes, (result, attr) => {
-        result[camelCase(attr)] = instance.get(attr)
+        result[camelCase(attr)] = formatModel(instance[attr] || instance.get(attr))
       }, {}),
 
       transform(getters, (result, fn, attr) => {
-        result[attr] = args => fn(instance, args)
+        result[attr] = args => {
+          const val = fn(instance, args)
+          // notice that return value is a certain type
+          // be smart about formatting its contents if they are bookshelf model
+          // instances
+          return isArray(val) ? val.map(formatModel) : formatModel(val)
+        }
       }, {}),
 
       transform(relations, (result, attr) => {

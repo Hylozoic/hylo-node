@@ -3,6 +3,7 @@ var Slack = require('../services/Slack')
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import { flatten, isEqual, merge, differenceBy } from 'lodash'
+import applyPagination from '../graphql/util/applyPagination'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
@@ -177,6 +178,13 @@ module.exports = bookshelf.Model.extend(merge({
     })
     .fetch()
     .then(result => result.get('count'))
+  },
+
+  feedItems: function ({ first, cursor, order }) {
+    return this.posts().query(q => {
+      applyPagination(q, 'posts', { first, cursor, order })
+    }).fetch().then(posts =>
+      posts.map(p => createFeedItem({post: p})))
   }
 
 }, HasSettings), {
@@ -260,3 +268,17 @@ module.exports = bookshelf.Model.extend(merge({
     return loop()
   }
 })
+
+function createFeedItem ({ post }) {
+  return {
+    type: 'post',
+    content: {
+      __typename: 'Post',
+      __resolveType: () => {
+        console.log('called __resolveType')
+        return 'Post'
+      },
+      id: 'fake'
+    }
+  }
+}
