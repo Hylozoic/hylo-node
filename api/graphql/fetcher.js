@@ -1,5 +1,5 @@
 import { camelCase, isArray, mapValues, toPairs, transform } from 'lodash'
-import { map } from 'lodash/fp'
+import { map, some, values } from 'lodash/fp'
 import applyPagination, { PAGINATION_TOTAL_COLUMN_NAME } from './util/applyPagination'
 import initDataLoaders from './util/initDataLoaders'
 import EventEmitter from 'events'
@@ -15,7 +15,8 @@ export default class Fetcher {
     const loader = this.loaders[targetTableName]
 
     if (type === 'belongsTo') {
-      return loader.load(parentFk).then(x => this.format(targetTableName, x))
+      return loader.load(parentFk).then(x =>
+        this._formatBookshelfInstance(targetTableName, x))
     }
 
     const relationSpec = this._getModel(targetTableName)
@@ -29,7 +30,7 @@ export default class Fetcher {
       // N.B. this caching doesn't take into account data added by withPivot
       instances.each(x => loader.prime(x.id, x))
       return loader.loadMany(instances.map('id'))
-      .then(map(x => this.format(targetTableName, x)))
+      .then(map(x => this._formatBookshelfInstance(targetTableName, x)))
     })
   }
 
@@ -40,7 +41,7 @@ export default class Fetcher {
     return this.loaders.queries.load(query).then(instance => {
       if (!instance) return
       this.loaders[tableName].prime(instance.id, instance)
-      return this.format(tableName, instance)
+      return this._formatBookshelfInstance(tableName, instance)
     })
   }
 
@@ -50,17 +51,12 @@ export default class Fetcher {
   // been retrieved at this point; but we set up relations as functions, so they
   // will not run any additional database queries unless the current GraphQL
   // query specifically asks for them.
-  format (name, instance) {
+  _formatBookshelfInstance (name, instance) {
     const { typename, model, attributes, getters, relations } = this.models[name]
     const tableName = model.collection().tableName()
     if (instance.tableName !== tableName) {
       throw new Error(`table names don't match: "${instance.tableName}", "${tableName}"`)
     }
-
-    const formatModel = x =>
-      x instanceof bookshelf.Model
-        ? this.format(x.tableName, x)
-        : x //(typeof x === 'object' ? mapValues(x, formatModel) : x)
 
     const formatted = Object.assign(
       {
@@ -68,7 +64,8 @@ export default class Fetcher {
       },
 
       transform(attributes, (result, attr) => {
-        result[camelCase(attr)] = formatModel(instance[attr] || instance.get(attr))
+        const value = instance[attr] || instance.get(attr)
+        result[camelCase(attr)] = this._formatValue(value)
       }, {}),
 
       transform(getters, (result, fn, attr) => {
@@ -77,7 +74,9 @@ export default class Fetcher {
           // notice that return value is a certain type
           // be smart about formatting its contents if they are bookshelf model
           // instances
-          return isArray(val) ? val.map(formatModel) : formatModel(val)
+          return isArray(val)
+            ? val.map(this._formatValue.bind(this))
+            : this._formatValue(val)
         }
       }, {}),
 
@@ -114,4 +113,18 @@ export default class Fetcher {
     }
     return this.models[tableName]
   }
+
+  // attributes of plain JS objects and return values from getter methods could
+  // be Bookshelf instances; in this case, we must format them appropriately
+  _formatValue (value) {
+    return isBookshelfInstance(value)
+      ? this.formatInstance(value.tableName, value)
+      : some(isBookshelfInstance, values(value))
+        ? mapValues(value, this._formatValue.bind(this))
+        : value
+  }
+}
+
+function isBookshelfInstance (x) {
+  return x instanceof bookshelf.Model
 }
