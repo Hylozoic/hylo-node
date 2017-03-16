@@ -53,7 +53,6 @@ export default function models (userId, isAdmin) {
         'id',
         'created_at',
         'type',
-        'public',
         'fulfilled_at',
         'starts_at',
         'ends_at',
