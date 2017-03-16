@@ -14,6 +14,7 @@ export default function models (userId, isAdmin) {
 
   return {
     me: { // the root of the graph
+      typename: 'Me',
       model: User,
       attributes: [
         'id',
@@ -32,12 +33,14 @@ export default function models (userId, isAdmin) {
     },
 
     communities_users: {
+      typename: 'Membership',
       model: Membership,
       attributes: ['created_at', 'role', 'last_viewed_at'],
       relations: ['community']
     },
 
     users: {
+      typename: 'Person',
       model: User,
       attributes: ['id', 'name', 'avatar_url'],
       relations: ['posts'],
@@ -48,8 +51,8 @@ export default function models (userId, isAdmin) {
     },
 
     posts: {
-      model: Post,
       typename: 'Post',
+      model: Post,
       attributes: ['id', 'created_at'],
       getters: {
         title: p => p.get('name'),
@@ -63,6 +66,7 @@ export default function models (userId, isAdmin) {
     },
 
     communities: {
+      typename: 'Community',
       model: Community,
       attributes: ['id', 'name', 'slug', 'created_at'],
       getters: {

@@ -10,8 +10,11 @@ type Me {
   hasDevice: Boolean
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
+  communities(first: Int, cursor: ID, order: String): [Membership]
+  communitiesTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
+  updatedAt: String
 }
 
 type Person {

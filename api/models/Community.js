@@ -272,13 +272,6 @@ module.exports = bookshelf.Model.extend(merge({
 function createFeedItem ({ post }) {
   return {
     type: 'post',
-    content: {
-      __typename: 'Post',
-      __resolveType: () => {
-        console.log('called __resolveType')
-        return 'Post'
-      },
-      id: 'fake'
-    }
+    content: post
   }
 }
