@@ -46,7 +46,13 @@ type Post {
   id: ID
   title: String
   details: String
+  type: String
   createdAt: String
+  public: Boolean
+  fulfilledAt: String
+  startsAt: String
+  endsAt: String
+  location: String
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
@@ -71,4 +77,20 @@ input MeInput {
 
 type Mutation {
   updateMe(changes: MeInput): Me
+}
+
+input PostInput {
+  title: String
+  details: String
+  type: String
+  communityIds: [String]
+  tag: String
+  public: Boolean
+  startsAt: String
+  endsAt: String
+  location: String
+}
+
+type Mutation {
+  createPost(data: PostInput): Post
 }

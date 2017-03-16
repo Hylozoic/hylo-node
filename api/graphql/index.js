@@ -4,6 +4,7 @@ import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import Fetcher from './fetcher'
 import models from './models'
+import { updateMe, createPost } from './mutations'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 const schema = buildSchema(schemaText)
@@ -23,11 +24,10 @@ const createRootValue = (userId, isAdmin) => {
       fetcher.fetchOne('communities', slug || id, slug ? 'slug' : 'id'),
     person: ({ id }) => fetcher.fetchOne('users', id),
 
-    updateMe: ({ changes }) => {
-      return User.find(userId)
-      .then(user => user.validateAndSave(changes))
-      .then(() => fetcher.fetchOne('me', userId))
-    }
+    updateMe: ({ changes }) =>
+      updateMe(userId, changes).then(() => fetcher.fetchOne('me', userId)),
+    createPost: ({ data }) =>
+      createPost(userId, data).then(post => fetcher.fetchOne('posts', post.id))
   }
 }
 
