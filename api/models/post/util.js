@@ -16,8 +16,8 @@ import {
 import { filter, getOr, map } from 'lodash/fp'
 import { sanitize } from 'hylo-utils/text'
 
-export const validateGraphqlCreateData = data => {
-  if (!data.title) {
+export function validatePostCreateData (data) {
+  if (!data.name) {
     throw new Error('title can\'t be blank')
   }
   if (data.type && !includes(values(Post.Type), data.type)) {
@@ -25,16 +25,6 @@ export const validateGraphqlCreateData = data => {
   }
   return Promise.resolve()
 }
-
-export const convertGraphqlCreateData = data =>
-  Promise.resolve(merge({
-    name: data.title,
-    description: data.details,
-    community_ids: data.communityIds,
-    starts_at: data.startsAt,
-    ends_at: data.endsAt,
-    parent_post_id: data.parentPostId
-  }, data))
 
 export const setupNewPostAttrs = function (userId, params) {
   const attrs = merge(Post.newPostAttrs(), {

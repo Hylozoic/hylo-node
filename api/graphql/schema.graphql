@@ -84,7 +84,6 @@ input PostInput {
   details: String
   type: String
   communityIds: [String]
-  tag: String
   public: Boolean
   startsAt: String
   endsAt: String
