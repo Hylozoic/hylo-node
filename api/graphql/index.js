@@ -32,7 +32,7 @@ function createSchema (userId, isAdmin) {
         if (data instanceof bookshelf.Model) {
           return info.schema.getType('Post')
         }
-        throw new Error("couldn't resolve type for FeedItemContent")
+        throw new Error('Post is the only implemented FeedItemContent type')
       }
     }
   }, fetcher.getResolvers())
