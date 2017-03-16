@@ -16,6 +16,7 @@
     "chai": "~2.3",
     "chai-as-promised": "5.0.0",
     "chai-spies": "^0.5.1",
+    "faker": "^4.1.0",
     "i18n": "^0.8.3",
     "mocha": "^2.2.4",
     "nock": "^7.0.2",
@@ -104,7 +105,8 @@
     "debug": "node-debug app.js",
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
     "test": "./node_modules/.bin/mocha --compilers js:babel-register",
-    "cover": "./node_modules/.bin/nyc --reporter=lcov ./node_modules/.bin/_mocha --compilers js:babel-register -R dot"
+    "cover": "./node_modules/.bin/nyc --reporter=lcov ./node_modules/.bin/_mocha --compilers js:babel-register -R dot",
+    "knex": "knex"
   },
   "main": "app.js",
   "repository": {
