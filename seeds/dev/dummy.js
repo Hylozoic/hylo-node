@@ -10,6 +10,11 @@ const n = {
 
 exports.seed = (knex, Promise) => delAll(knex)
   .then(() => seed('users', knex, Promise))
+  .then(() => knex('tags').insert([
+    {name: 'offer'},
+    {name: 'request'},
+    {name: 'intention'}
+  ]))
   .then(() => seed('tags', knex, Promise))
   .then(() => seed('networks', knex, Promise))
   .then(() => knex('communities').insert({ name: 'starter-posts', slug: 'starter-posts' }))
