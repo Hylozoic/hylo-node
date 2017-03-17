@@ -142,7 +142,6 @@ function fakePost (knex, Promise) {
     .then(([ user ]) => ({
       name: faker.lorem.sentence(),
       description: faker.lorem.paragraph(),
-      type: '',
       created_at: faker.date.past(),
       user_id: user.id,
       active: true
