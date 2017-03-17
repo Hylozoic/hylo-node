@@ -91,8 +91,6 @@ function sample (entity, knex, limit = 1) {
     .limit(limit)
 }
 
-// Needs foreign keys:
-//  - network_id
 function fakeCommunity (knex) {
   const name = faker.random.words()
 
