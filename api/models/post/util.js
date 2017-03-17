@@ -28,10 +28,7 @@ export function validatePostCreateData (userId, data) {
     throw new Error('no communities specified')
   }
   return Membership.inAllCommunities(userId, data.community_ids)
-  .then(ok => {
-    if (!ok) throw new Error('unable to post to all those communities')
-    return Promise.resolve()
-  })
+  .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
 }
 
 export const setupNewPostAttrs = function (userId, params) {
