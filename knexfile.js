@@ -29,7 +29,7 @@ const defaults = {
 
 module.exports = {
   test: defaults,
-  development: Object.assign({}, defaults, { seeds: { directory: './seeds/dev' } })
+  development: Object.assign({}, defaults, { seeds: { directory: './seeds/dev' } }),
   staging: defaults,
   production: merge({connection: {ssl: true}}, defaults)
 }
