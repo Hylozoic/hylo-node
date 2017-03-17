@@ -3,7 +3,7 @@
 // based on the current user's access rights.
 //
 // keys here are table names (except for "me")
-export default function models (userId, isAdmin) {
+export default function makeModels (userId, isAdmin) {
   // TODO: cache this?
   const myCommunityIds = () =>
     Membership.query().select('community_id')
@@ -14,6 +14,7 @@ export default function models (userId, isAdmin) {
 
   return {
     me: { // the root of the graph
+      typename: 'Me',
       model: User,
       attributes: [
         'id',
@@ -32,12 +33,14 @@ export default function models (userId, isAdmin) {
     },
 
     communities_users: {
+      typename: 'Membership',
       model: Membership,
       attributes: ['created_at', 'role', 'last_viewed_at'],
       relations: ['community']
     },
 
     users: {
+      typename: 'Person',
       model: User,
       attributes: ['id', 'name', 'avatar_url'],
       relations: ['posts'],
@@ -48,6 +51,7 @@ export default function models (userId, isAdmin) {
     },
 
     posts: {
+      typename: 'Post',
       model: Post,
       attributes: [
         'id',
@@ -71,12 +75,14 @@ export default function models (userId, isAdmin) {
     },
 
     communities: {
+      typename: 'Community',
       model: Community,
       attributes: ['id', 'name', 'slug', 'created_at'],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         memberCount: (c) => c.memberCount(),
-        postCount: (c) => c.postCount()
+        postCount: (c) => c.postCount(),
+        feedItems: (c, args) => c.feedItems(args)
       },
       relations: [{members: 'users'}],
       filter: nonAdminFilter(q => {
