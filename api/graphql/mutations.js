@@ -6,7 +6,7 @@ import {
 
 export function updateMe (userId, changes) {
   return User.find(userId)
-    .then(user => user.validateAndSave(changes))
+  .then(user => user.validateAndSave(changes))
 }
 
 function convertGraphqlCreateData (data) {
@@ -22,6 +22,6 @@ function convertGraphqlCreateData (data) {
 
 export function createPost (userId, data) {
   return convertGraphqlCreateData(data)
-    .tap(convertedData => validatePostCreateData(userId, convertedData))
-    .then(convertedData => underlyingCreatePost(userId, convertedData))
+  .tap(convertedData => validatePostCreateData(userId, convertedData))
+  .then(convertedData => underlyingCreatePost(userId, convertedData))
 }

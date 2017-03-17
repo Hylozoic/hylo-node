@@ -91,10 +91,6 @@ input MeInput {
   url: String
 }
 
-type Mutation {
-  updateMe(changes: MeInput): Me
-}
-
 input PostInput {
   title: String
   details: String
@@ -107,5 +103,6 @@ input PostInput {
 }
 
 type Mutation {
+  updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
 }
