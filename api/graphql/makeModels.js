@@ -3,7 +3,7 @@
 // based on the current user's access rights.
 //
 // keys here are table names (except for "me")
-export default function models (userId, isAdmin) {
+export default function makeModels (userId, isAdmin) {
   // TODO: cache this?
   const myCommunityIds = () =>
     Membership.query().select('community_id')

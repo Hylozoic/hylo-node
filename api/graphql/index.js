@@ -1,16 +1,16 @@
-// import { buildSchema } from 'graphql'
 import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import Fetcher from './fetcher'
-import models from './models'
+import makeModels from './makeModels'
+import makeResolvers from './makeResolvers'
 import { makeExecutableSchema } from 'graphql-tools'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
-// const schema = buildSchema(schemaText)
 
 function createSchema (userId, isAdmin) {
-  const fetcher = new Fetcher(models(userId, isAdmin))
+  const models = makeModels(userId, isAdmin)
+  const fetcher = new Fetcher(models)
 
   const resolvers = Object.assign({
     Query: {
@@ -35,7 +35,7 @@ function createSchema (userId, isAdmin) {
         throw new Error('Post is the only implemented FeedItemContent type')
       }
     }
-  }, fetcher.getResolvers())
+  }, makeResolvers(models, fetcher))
 
   return makeExecutableSchema({typeDefs: [schemaText], resolvers})
 }
