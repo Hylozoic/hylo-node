@@ -10,8 +10,11 @@ type Me {
   hasDevice: Boolean
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
+  communities(first: Int, cursor: ID, order: String): [Membership]
+  communitiesTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
+  updatedAt: String
 }
 
 type Person {
@@ -40,6 +43,19 @@ type Community {
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
+  feedItems(first: Int, cursor: ID, order: String): [FeedItem]
+  feedItemsTotal: Int
+}
+
+type FeedItem {
+  type: String
+  content: FeedItemContent
+}
+
+union FeedItemContent = Post | Interstitial
+
+type Interstitial {
+  text: String
 }
 
 type Post {

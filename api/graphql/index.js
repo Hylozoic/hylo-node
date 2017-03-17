@@ -1,34 +1,43 @@
-import { buildSchema } from 'graphql'
 import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import Fetcher from './fetcher'
-import models from './models'
+import makeModels from './makeModels'
+import makeResolvers from './makeResolvers'
+import { makeExecutableSchema } from 'graphql-tools'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
-const schema = buildSchema(schemaText)
 
-const createRootValue = (userId, isAdmin) => {
-  if (!userId) {
-    return {
-      me: null
+function createSchema (userId, isAdmin) {
+  const models = makeModels(userId, isAdmin)
+  const fetcher = new Fetcher(models)
+
+  const resolvers = Object.assign({
+    Query: {
+      me: () => fetcher.fetchOne('me', userId),
+      community: (root, { id, slug }) => // you can specify id or slug, but not both
+        fetcher.fetchOne('communities', slug || id, slug ? 'slug' : 'id'),
+      person: (root, { id }) => fetcher.fetchOne('users', id)
+    },
+    Mutation: {
+      updateMe: (root, { changes }) => {
+        return User.find(userId)
+        .then(user => user.validateAndSave(changes))
+        .then(() => fetcher.fetchOne('me', userId))
+      }
+    },
+
+    FeedItemContent: {
+      __resolveType (data, context, info) {
+        if (data instanceof bookshelf.Model) {
+          return info.schema.getType('Post')
+        }
+        throw new Error('Post is the only implemented FeedItemContent type')
+      }
     }
-  }
+  }, makeResolvers(models, fetcher))
 
-  const fetcher = new Fetcher(models(userId, isAdmin))
-
-  return {
-    me: () => fetcher.fetchOne('me', userId),
-    community: ({ id, slug }) => // you can specify id or slug, but not both
-      fetcher.fetchOne('communities', slug || id, slug ? 'slug' : 'id'),
-    person: ({ id }) => fetcher.fetchOne('users', id),
-
-    updateMe: ({ changes }) => {
-      return User.find(userId)
-      .then(user => user.validateAndSave(changes))
-      .then(() => fetcher.fetchOne('me', userId))
-    }
-  }
+  return makeExecutableSchema({typeDefs: [schemaText], resolvers})
 }
 
 export const createRequestHandler = () =>
@@ -42,8 +51,7 @@ export const createRequestHandler = () =>
     // query to find the policies which should be tested, and run them to allow
     // or deny access to those paths
     return {
-      schema,
-      rootValue: createRootValue(req.session.userId, Admin.isSignedIn(req)),
+      schema: createSchema(req.session.userId, Admin.isSignedIn(req)),
       graphiql: true
     }
   })

@@ -1,8 +1,5 @@
-import { camelCase, toPairs, transform } from 'lodash'
-import { map } from 'lodash/fp'
-import applyPagination, { PAGINATION_TOTAL_COLUMN_NAME } from './util/applyPagination'
+import applyPagination from './util/applyPagination'
 import initDataLoaders from './util/initDataLoaders'
-import EventEmitter from 'events'
 
 export default class Fetcher {
   constructor (models) {
@@ -15,7 +12,7 @@ export default class Fetcher {
     const loader = this.loaders[targetTableName]
 
     if (type === 'belongsTo') {
-      return loader.load(parentFk).then(x => this.format(targetTableName, x))
+      return loader.load(parentFk)
     }
 
     const relationSpec = this._getModel(targetTableName)
@@ -29,7 +26,6 @@ export default class Fetcher {
       // N.B. this caching doesn't take into account data added by withPivot
       instances.each(x => loader.prime(x.id, x))
       return loader.loadMany(instances.map('id'))
-      .then(map(x => this.format(targetTableName, x)))
     })
   }
 
@@ -40,57 +36,8 @@ export default class Fetcher {
     return this.loaders.queries.load(query).then(instance => {
       if (!instance) return
       this.loaders[tableName].prime(instance.id, instance)
-      return this.format(tableName, instance)
+      return instance
     })
-  }
-
-  // once we have an instance, we format it; that means we look at the model
-  // definition and prepare a result object with attributes that match that
-  // definition. we set basic attributes directly, because they have already
-  // been retrieved at this point; but we set up relations as functions, so they
-  // will not run any additional database queries unless the current GraphQL
-  // query specifically asks for them.
-  format (name, instance) {
-    const { model, attributes, getters, relations } = this.models[name]
-    const tableName = model.collection().tableName()
-    if (instance.tableName !== tableName) {
-      throw new Error(`table names don't match: "${instance.tableName}", "${tableName}"`)
-    }
-
-    const formatted = Object.assign(
-      transform(attributes, (result, attr) => {
-        result[camelCase(attr)] = instance.get(attr)
-      }, {}),
-
-      transform(getters, (result, fn, attr) => {
-        result[attr] = args => fn(instance, args)
-      }, {}),
-
-      transform(relations, (result, attr) => {
-        const [ graphqlName, bookshelfName ] = typeof attr === 'string'
-          ? [attr, attr] : toPairs(attr)[0]
-
-        const emitter = new EventEmitter()
-
-        result[graphqlName] = ({ first, cursor, order }) => {
-          const relation = instance[bookshelfName]()
-          return this.fetchRelation(relation, {first, cursor, order}, instances => {
-            const total = instances.length > 0
-              ? instances.first().get(PAGINATION_TOTAL_COLUMN_NAME)
-              : null
-            emitter.emit('hasTotal', total)
-          })
-        }
-
-        result[graphqlName + 'Total'] = () =>
-          new Promise((resolve, reject) => {
-            emitter.on('hasTotal', resolve)
-            setTimeout(() => reject(new Error('timeout')), 6000)
-          })
-      }, {})
-    )
-
-    return formatted
   }
 
   _getModel (tableName) {
