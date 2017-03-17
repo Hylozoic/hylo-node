@@ -1,3 +1,5 @@
+import { includes, map } from 'lodash'
+
 var knex = bookshelf.knex
 
 var networkIdsQuery = function (userId) {
@@ -26,20 +28,20 @@ module.exports = bookshelf.Model.extend({
   containsUser: function (networkId, userId) {
     if (!networkId || !userId) return Promise.resolve(false)
     return this.idsForUser(userId)
-      .then(ids => _.includes(ids, networkId.toString()))
+    .then(ids => includes(ids, networkId.toString()))
   },
 
   activeCommunityIds: function (userId, rawQuery) {
     var query = knex.select('id').from('communities')
-      .whereIn('network_id', networkIdsQuery(userId))
+    .whereIn('network_id', networkIdsQuery(userId))
 
     if (rawQuery) return query
-    return query.then(rows => _.map(rows, 'id'))
+    return query.then(rows => map(rows, 'id'))
   },
 
   idsForUser: function (userId) {
     return networkIdsQuery(userId)
-      .then(rows => _.map(rows, 'network_id'))
+    .then(rows => map(rows, 'network_id'))
   }
 
 })

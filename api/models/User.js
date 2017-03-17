@@ -396,17 +396,6 @@ module.exports = bookshelf.Model.extend(merge({
       })
     }).query())
     .then(rows => Number(rows[0].count))
-  },
-
-  validateMembershipInCommunities: function (communityIds, userId) {
-    return Membership.query(q => {
-      q.whereIn('community_id', communityIds)
-      q.where('user_id', userId)
-    }).fetchAll()
-    .then(mships => Promise.map(communityIds, id =>
-      mships.find(m =>
-        m.get('community_id') === id || Community.inNetworkWithUser(id, userId))))
-    .then(oks => every(oks))
   }
 })
 

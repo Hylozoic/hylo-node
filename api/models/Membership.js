@@ -1,3 +1,5 @@
+import { difference, every } from 'lodash'
+
 module.exports = bookshelf.Model.extend({
   tableName: 'communities_users',
 
@@ -118,6 +120,14 @@ module.exports = bookshelf.Model.extend({
     return Membership.query()
     .where(query)
     .pluck('community_id')
+  },
+
+  inAllCommunities: function (userId, communityIds) {
+    return this.activeCommunityIds(userId)
+    .then(ids => difference(communityIds, ids))
+    .then(remainingIds => remainingIds.length === 0 ||
+      Promise.map(remainingIds, id => Community.inNetworkWithUser(id, userId))
+      .then(every))
   },
 
   lastViewed: userId =>

@@ -6,6 +6,6 @@ module.exports = function (req, res, next) {
 
   if (!communityIds) return next()
 
-  return User.validateMembershipInCommunities(communityIds, userId)
-    .then(ok => ok ? next() : res.forbidden())
+  return Membership.inAllCommunities(userId, communityIds)
+  .then(ok => ok ? next() : res.forbidden())
 }
