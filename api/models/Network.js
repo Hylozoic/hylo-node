@@ -1,4 +1,4 @@
-import { includes, map } from 'lodash'
+import { includes } from 'lodash'
 
 var knex = bookshelf.knex
 
@@ -35,13 +35,11 @@ module.exports = bookshelf.Model.extend({
     var query = knex.select('id').from('communities')
     .whereIn('network_id', networkIdsQuery(userId))
 
-    if (rawQuery) return query
-    return query.then(rows => map(rows, 'id'))
+    return rawQuery ? query : query.pluck('id')
   },
 
   idsForUser: function (userId) {
-    return networkIdsQuery(userId)
-    .then(rows => map(rows, 'network_id'))
+    return networkIdsQuery(userId).pluck('network_id')
   }
 
 })

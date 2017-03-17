@@ -1,4 +1,5 @@
-import { difference, every } from 'lodash'
+/* eslint-disable camelcase */
+import { difference, every, intersection, isEmpty, map, uniq } from 'lodash'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'communities_users',
@@ -90,7 +91,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   sharedCommunityIds: function (userIds) {
-    userIds = _.uniq(userIds)
+    userIds = uniq(userIds)
     return bookshelf.knex
     .select('community_id')
     .count('*')
@@ -98,16 +99,16 @@ module.exports = bookshelf.Model.extend({
     .whereIn('user_id', userIds)
     .groupBy('community_id')
     .havingRaw('count(*) = ?', [userIds.length])
-    .then(rows => _.map(rows, 'community_id'))
+    .then(rows => map(rows, 'community_id'))
   },
 
   inSameNetwork: function (userId, otherUserId) {
     return Network.idsForUser(userId)
     .then(ids => {
-      if (_.isEmpty(ids)) return false
+      if (isEmpty(ids)) return false
 
       return Network.idsForUser(otherUserId)
-      .then(otherIds => !_.isEmpty(_.intersection(ids, otherIds)))
+      .then(otherIds => !isEmpty(intersection(ids, otherIds)))
     })
   },
 
