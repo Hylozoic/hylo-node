@@ -22,6 +22,6 @@ function convertGraphqlCreateData (data) {
 
 export function createPost (userId, data) {
   return convertGraphqlCreateData(data)
-    .tap(convertedData => validatePostCreateData(convertedData))
+    .tap(convertedData => validatePostCreateData(userId, convertedData))
     .then(convertedData => underlyingCreatePost(userId, convertedData))
 }

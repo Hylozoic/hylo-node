@@ -16,14 +16,18 @@ import {
 import { filter, getOr, map } from 'lodash/fp'
 import { sanitize } from 'hylo-utils/text'
 
-export function validatePostCreateData (data) {
+export function validatePostCreateData (userId, data) {
   if (!data.name) {
     throw new Error('title can\'t be blank')
   }
   if (data.type && !includes(values(Post.Type), data.type)) {
     throw new Error('not a valid type')
   }
-  return Promise.resolve()
+  return User.validateMembershipInCommunities(data.community_ids, userId)
+    .then(ok => {
+      if (!ok) throw new Error('unable to post to all those communities')
+      return Promise.resolve()
+    })
 }
 
 export const setupNewPostAttrs = function (userId, params) {

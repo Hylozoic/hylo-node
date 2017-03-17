@@ -2,7 +2,7 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { has, isEmpty, merge, omit, pick } from 'lodash'
+import { every, has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 
 module.exports = bookshelf.Model.extend(merge({
@@ -396,6 +396,17 @@ module.exports = bookshelf.Model.extend(merge({
       })
     }).query())
     .then(rows => Number(rows[0].count))
+  },
+
+  validateMembershipInCommunities: function (communityIds, userId) {
+    return Membership.query(q => {
+      q.whereIn('community_id', communityIds)
+      q.where('user_id', userId)
+    }).fetchAll()
+    .then(mships => Promise.map(communityIds, id =>
+      mships.find(m =>
+        m.get('community_id') === id || Community.inNetworkWithUser(id, userId))))
+    .then(oks => every(oks))
   }
 })
 
