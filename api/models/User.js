@@ -2,7 +2,7 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { has, isEmpty, merge, omit, pick } from 'lodash'
+import { every, has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 
 module.exports = bookshelf.Model.extend(merge({

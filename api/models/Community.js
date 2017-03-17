@@ -245,9 +245,9 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   inNetworkWithUser: function (communityId, userId) {
-    return Community.find(communityId)
-    .then(community => community && community.get('network_id'))
-    .then(networkId => networkId && Network.containsUser(networkId, userId))
+    return Community.query().where('id', communityId).pluck('network_id')
+    .then(([ networkId ]) =>
+      networkId && Network.containsUser(networkId, userId))
   },
 
   notifySlack: function (communityId, post) {

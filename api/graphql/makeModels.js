@@ -53,10 +53,19 @@ export default function makeModels (userId, isAdmin) {
     posts: {
       typename: 'Post',
       model: Post,
-      attributes: ['id', 'created_at'],
+      attributes: [
+        'id',
+        'created_at',
+        'type',
+        'fulfilled_at',
+        'starts_at',
+        'ends_at',
+        'location'
+      ],
       getters: {
         title: p => p.get('name'),
-        details: p => p.get('description')
+        details: p => p.get('description'),
+        public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null
       },
       relations: ['communities', 'followers'],
       filter: nonAdminFilter(q => {

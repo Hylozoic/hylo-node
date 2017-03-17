@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import Fetcher from './fetcher'
+import { updateMe, createPost } from './mutations'
 import makeModels from './makeModels'
 import makeResolvers from './makeResolvers'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -20,11 +21,10 @@ function createSchema (userId, isAdmin) {
       person: (root, { id }) => fetcher.fetchOne('users', id)
     },
     Mutation: {
-      updateMe: (root, { changes }) => {
-        return User.find(userId)
-        .then(user => user.validateAndSave(changes))
-        .then(() => fetcher.fetchOne('me', userId))
-      }
+      updateMe: (root, { changes }) =>
+        updateMe(userId, changes).then(() => fetcher.fetchOne('me', userId)),
+      createPost: (root, { data }) =>
+        createPost(userId, data).then(post => fetcher.fetchOne('posts', post.id))
     },
 
     FeedItemContent: {

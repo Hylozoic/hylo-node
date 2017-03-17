@@ -1,11 +1,56 @@
 import { times } from 'lodash'
-import { afterCreatingPost, afterUpdatingPost, updateChildren } from '../../../../api/models/post/util'
+import { validatePostCreateData, afterCreatingPost, afterUpdatingPost, updateChildren } from '../../../../api/models/post/util'
 import setup from '../../../setup'
 import factories from '../../../setup/factories'
 import { spyify, stubGetImageSize, unspyify } from '../../../setup/helpers'
 
 describe('post/util', () => {
   before(() => setup.clearDb().then(() => Tag.forge({name: 'request'}).save()))
+
+  describe('validatePostCreateData', () => {
+    var user, inCommunity, notInCommunity
+
+    before(function () {
+      inCommunity = new Community({slug: 'foo', name: 'Foo'})
+      notInCommunity = new Community({slug: 'bar', name: 'Bar'})
+      user = new User({name: 'Cat', email: 'a@b.c'})
+      return Promise.join(
+        inCommunity.save(),
+        notInCommunity.save(),
+        user.save()
+      ).then(function () {
+        return user.joinCommunity(inCommunity)
+      })
+    })
+
+    it('fails if no name is provided', () => {
+      const fn = () => validatePostCreateData(null, {})
+      expect(fn).to.throw(/title can't be blank/)
+    })
+    it('fails if invalid type is provided', () => {
+      const fn = () => validatePostCreateData(null, {name: 't', type: 'tweet'})
+      expect(fn).to.throw(/not a valid type/)
+    })
+    it('fails if no community_ids are provided', () => {
+      const fn = () => validatePostCreateData(null, {name: 't'})
+      expect(fn).to.throw(/no communities specified/)
+    })
+    it('fails if there is a community_id for a community user is not a member of', () => {
+      const data = {name: 't', community_ids: [inCommunity.id, notInCommunity.id]}
+      return validatePostCreateData(user.id, data)
+      .catch(function (e) {
+        expect(e.message).to.match(/unable to post to all those communities/)
+      })
+    })
+    it('continue the promise chain if name is provided and user is member of communities', () => {
+      const data = {name: 't', community_ids: [inCommunity.id]}
+      expect(validatePostCreateData(user.id, data)).to.respondTo('then')
+    })
+    it('continue the promise chain if valid type is provided', () => {
+      const data = {name: 't', type: 'request', community_ids: [inCommunity.id]}
+      expect(validatePostCreateData(user.id, data)).to.respondTo('then')
+    })
+  })
 
   describe('updateChildren', () => {
     var post, children
