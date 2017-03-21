@@ -452,7 +452,8 @@ module.exports = {
   approveAllJoinRequests: function (req, res) {
     const { community } = res.locals
     return JoinRequest.where({community_id: community.id}).fetchAll()
-    .then(joinRequests =>
-      Promise.map(joinRequests.models, approveJoinRequest(req, res, community)))
+    .then(({ models }) =>
+      Promise.map(models, approveJoinRequest(req, res, community)))
+    .then(() => res.ok({}))
   }
 }

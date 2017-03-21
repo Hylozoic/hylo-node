@@ -203,6 +203,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   canInvite: function (userId, communityId) {
     return Community.find(communityId).then(function (community) {
+      if (!community) return false
       if (community.get('settings').all_can_invite) return true
       return Membership.hasModeratorRole(userId, communityId)
     })
