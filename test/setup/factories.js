@@ -1,7 +1,7 @@
 import { extend, merge, pick, reduce } from 'lodash'
 const randomstring = require('randomstring')
 import { spy } from 'chai'
-const sails = require('sails')
+import i18n from 'i18n'
 
 var text = function (length) {
   return randomstring.generate({length: length || 10, charset: 'alphabetic'})
@@ -33,7 +33,7 @@ module.exports = {
     return new User(merge({
       name: text(),
       active: true,
-      email: format('%s@example.com', text())
+      email: `${text()}@example.com`
     }, attrs))
   },
 
@@ -64,7 +64,10 @@ module.exports = {
         body: {},
         params: {},
         headers: {},
-        __: sails.__, // this is for i18n
+        __: function (key) {
+          i18n.init(this)
+          return i18n.__(key)
+        },
         login: function (userId) {
           extend(this.session, {
             authenticated: true,

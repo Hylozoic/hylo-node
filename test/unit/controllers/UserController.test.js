@@ -68,7 +68,7 @@ describe('UserController', function () {
         return UserController.update(req, res)
         .then(() => {
           expect(res.statusCode).to.equal(422)
-          expect(res.body).to.equal(sails.__('invalid-email'))
+          expect(res.body).to.equal(req.__('invalid-email'))
         })
       })
 
@@ -78,7 +78,7 @@ describe('UserController', function () {
         return UserController.update(req, res)
         .then(() => {
           expect(res.statusCode).to.equal(422)
-          expect(res.body).to.equal(sails.__('duplicate-email'))
+          expect(res.body).to.equal(req.__('duplicate-email'))
         })
       })
 
