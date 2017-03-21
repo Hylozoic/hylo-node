@@ -84,6 +84,11 @@ const finishOAuth = function (strategy, req, res, next) {
     var respond = error => {
       if (error && error.stack) rollbar.handleError(error, req)
 
+      if (req.headers.accept === 'application/json') {
+        res.ok({})
+        return resolve()
+      }
+
       return resolve(res.view('popupDone', {
         error,
         provider,
