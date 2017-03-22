@@ -83,7 +83,7 @@ cat migrations/schema.sql | psql hylo
 ./node_modules/.bin/knex seed:run
 ```
 
-This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). The test database does not require seeding or migration.
+This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). The test database does not require seeding or migration. Note that running the seed in a development `$NODE_ENV` will delete rows from all tables and populate core tables with some fake data.
 
 
 ### running the dev server
