@@ -171,6 +171,75 @@ return Do(() => {
 
 The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is also very helpful.
 
+## GraphQL API
+
+Many queries can also be issued using the newer GraphQL API. Types available:
+
+```
+Comment
+Community
+FeedItem
+Follower
+Me
+Membership
+Person
+Post
+```
+
+Queries:
+
+```
+type Query {
+  me: Me
+  person(id: ID): Person
+  community(id: ID, slug: String): Community
+}
+```
+
+where `Me` is the currently logged-in user. For example, to load all posts:
+
+```
+{
+  me {
+    posts {
+      id,
+      title,
+      type,
+      details,
+      creator {
+        id,
+        name,
+        avatarUrl
+      }
+      followers {
+        id,
+        name,
+        avatarUrl
+      }
+      followersTotal,
+      communities {
+        id,
+        name
+      },
+      communitiesTotal,
+      comments {
+        id,
+        createdAt,
+        text,
+        creator {
+          id
+        }
+      },
+      commentsTotal,
+      createdAt,
+      startsAt,
+      endsAt,
+      fulfilledAt
+    }
+  }
+}
+```
+
 ## License
 
     Hylo is a mobile and web application to help people do more together.
