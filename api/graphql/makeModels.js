@@ -67,7 +67,7 @@ export default function makeModels (userId, isAdmin) {
         details: p => p.get('description'),
         public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null
       },
-      relations: ['communities', 'followers'],
+      relations: ['comments', 'communities', 'followers'],
       filter: nonAdminFilter(q => {
         q.where('posts.id', 'in', PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
@@ -87,6 +87,23 @@ export default function makeModels (userId, isAdmin) {
       relations: [{members: 'users'}],
       filter: nonAdminFilter(q => {
         q.where('communities.id', 'in', myCommunityIds())
+      })
+    },
+
+    comments: {
+      typename: 'Comment',
+      model: Comment,
+      attributes: [
+        'id',
+        'created_at'
+      ],
+      getters: {
+        //creator: c => c.get('user_id')
+      },
+      relations: [],
+      filter: nonAdminFilter(q => {
+        q.where('comments.post_id', 'in', PostMembership.query().select('post_id')
+          .where('community_id', 'in', myCommunityIds()))
       })
     }
   }
