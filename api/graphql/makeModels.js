@@ -95,10 +95,11 @@ export default function makeModels (userId, isAdmin) {
       model: Comment,
       attributes: [
         'id',
-        'created_at'
+        'created_at',
       ],
       getters: {
-        //creator: c => c.get('user_id')
+        creator: c => c.user(),
+        text: c => c.text()
       },
       relations: [],
       filter: nonAdminFilter(q => {
