@@ -109,9 +109,12 @@ KUE_NAMESPACE=qtest # this prevents jobs that were queued during testing from be
 PROTOCOL=http
 ROLLBAR_SERVER_TOKEN= # don't log errors to Rollbar
 SENDWITHUS_KEY=test_... # you can set up a SendWithUs API key to return valid responses but send no email
+MAILGUN_EMAIL_SALT=FFFFAAAA123456789
+MAILGUN_DOMAIN=mg.hylo.com
+PLAY_APP_SECRET=quxgrault12345678
 ```
 
-Since the test database was created above, `npm test` should work at this point.
+(Without the above Mailgun values, you'll see a failing test in the suite.) Since the test database was created above, `npm test` should work at this point.
 
 ### creating and running database migrations
 
