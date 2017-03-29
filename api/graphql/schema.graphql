@@ -74,6 +74,20 @@ type Post {
   followersTotal: Int
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
+  comments(first: Int, cursor: ID, order: String): [Comment]
+  commentsTotal: Int
+}
+
+type Comment {
+  id: ID
+  text: String
+  creator: Person
+  createdAt: String
+  createdFrom: String
+  active: Boolean
+  deactivatedReason: String
+  deactivatedBy: Person
+  deactivatedAt: String
 }
 
 type Query {

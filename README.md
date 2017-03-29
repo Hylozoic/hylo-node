@@ -109,9 +109,12 @@ KUE_NAMESPACE=qtest # this prevents jobs that were queued during testing from be
 PROTOCOL=http
 ROLLBAR_SERVER_TOKEN= # don't log errors to Rollbar
 SENDWITHUS_KEY=test_... # you can set up a SendWithUs API key to return valid responses but send no email
+MAILGUN_EMAIL_SALT=FFFFAAAA123456789
+MAILGUN_DOMAIN=mg.hylo.com
+PLAY_APP_SECRET=quxgrault12345678
 ```
 
-Since the test database was created above, `npm test` should work at this point.
+(Without the above Mailgun values, you'll see a failing test in the suite.) Since the test database was created above, `npm test` should work at this point.
 
 ### creating and running database migrations
 
@@ -170,6 +173,75 @@ return Do(() => {
 ```
 
 The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is also very helpful.
+
+## GraphQL API
+
+Many queries can also be issued using the newer GraphQL API. Types available:
+
+```
+Comment
+Community
+FeedItem
+Follower
+Me
+Membership
+Person
+Post
+```
+
+Queries:
+
+```
+type Query {
+  me: Me
+  person(id: ID): Person
+  community(id: ID, slug: String): Community
+}
+```
+
+where `Me` is the currently logged-in user. For example, to load all posts:
+
+```
+{
+  me {
+    posts {
+      id,
+      title,
+      type,
+      details,
+      creator {
+        id,
+        name,
+        avatarUrl
+      }
+      followers {
+        id,
+        name,
+        avatarUrl
+      }
+      followersTotal,
+      communities {
+        id,
+        name
+      },
+      communitiesTotal,
+      comments {
+        id,
+        createdAt,
+        text,
+        creator {
+          id
+        }
+      },
+      commentsTotal,
+      createdAt,
+      startsAt,
+      endsAt,
+      fulfilledAt
+    }
+  }
+}
+```
 
 ## License
 
