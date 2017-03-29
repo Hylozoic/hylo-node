@@ -273,6 +273,6 @@ module.exports = bookshelf.Model.extend(merge({
 function createFeedItem ({ post }) {
   return {
     type: 'post',
-    content: post
+    post: post
   }
 }

@@ -49,13 +49,7 @@ type Community {
 
 type FeedItem {
   type: String
-  content: FeedItemContent
-}
-
-union FeedItemContent = Post | Interstitial
-
-type Interstitial {
-  text: String
+  post: Post
 }
 
 type Post {

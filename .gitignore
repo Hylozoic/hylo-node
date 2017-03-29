@@ -1,3 +1,5 @@
+.floo
+.flooignore
 .env
 .env.test
 config/local.js
