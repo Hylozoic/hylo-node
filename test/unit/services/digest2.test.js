@@ -36,6 +36,13 @@ const u4 = model({
 
 const community = model({slug: 'foo'})
 
+const linkPreview = model({
+  title: 'Funny explosion video',
+  url: 'http://youtube.com/kapow',
+  image_url: 'http://img.youtube.com/vi/kapow/hqdefault.jpg',
+  description: "You'll never guess what happens next."
+})
+
 describe('community digest v2', () => {
   describe('formatData', () => {
     it('organizes new posts and comments', () => {
@@ -86,6 +93,7 @@ describe('community digest v2', () => {
             name: 'Kapow!',
             relations: {
               selectedTags: collection([]),
+              linkPreview,
               user: u2
             }
           }),
@@ -166,7 +174,8 @@ describe('community digest v2', () => {
             title: 'Kapow!',
             user: u2.attributes,
             url: Frontend.Route.post({id: 7}),
-            comments: []
+            comments: [],
+            link_preview: linkPreview.attributes
           }
         ],
         postsWithNewComments: [
