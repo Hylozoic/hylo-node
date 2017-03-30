@@ -6,7 +6,7 @@ import { defaultTimezone, shouldSendData } from '../../../lib/community/digest2/
 import { sendDigest, sendAllDigests } from '../../../lib/community/digest2'
 import factories from '../../setup/factories'
 import { spyify, unspyify } from '../../setup/helpers'
-import { merge } from 'lodash'
+import { merge, omit } from 'lodash'
 const model = factories.mock.model
 const collection = factories.mock.collection
 
@@ -37,6 +37,7 @@ const u4 = model({
 const community = model({slug: 'foo'})
 
 const linkPreview = model({
+  id: '1',
   title: 'Funny explosion video',
   url: 'http://youtube.com/kapow',
   image_url: 'http://img.youtube.com/vi/kapow/hqdefault.jpg',
@@ -175,7 +176,7 @@ describe('community digest v2', () => {
             user: u2.attributes,
             url: Frontend.Route.post({id: 7}),
             comments: [],
-            link_preview: linkPreview.attributes
+            link_preview: omit(linkPreview.attributes, 'id')
           }
         ],
         postsWithNewComments: [
