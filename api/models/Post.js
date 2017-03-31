@@ -32,6 +32,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
   },
 
+  commenters: function () {
+    return this.belongsToMany(User).through(Comment)
+  },
+
   contributions: function () {
     return this.hasMany(Contribution, 'post_id')
   },

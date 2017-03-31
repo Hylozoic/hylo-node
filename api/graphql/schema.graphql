@@ -77,6 +77,8 @@ type Post {
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): [Comment]
   commentsTotal: Int
+  commenters(first: Int, cursor: ID, order: String): [Person]
+  commentersTotal: Int
   linkPreview: LinkPreview
 }
 
