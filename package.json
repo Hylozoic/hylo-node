@@ -149,6 +149,7 @@
       "Invitation",
       "JoinRequest",
       "LinkedAccount",
+      "LinkPreview",
       "Media",
       "Membership",
       "Network",

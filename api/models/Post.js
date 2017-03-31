@@ -1,4 +1,4 @@
-/* globals LinkPreview, LastRead, _ */
+/* globals LastRead, _ */
 /* eslint-disable camelcase */
 import { filter, isNull, omitBy, uniqBy } from 'lodash/fp'
 import { flatten } from 'lodash'
