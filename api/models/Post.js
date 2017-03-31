@@ -1,17 +1,26 @@
 /* globals LastRead, _ */
 /* eslint-disable camelcase */
-import { filter, isNull, omitBy, uniqBy } from 'lodash/fp'
+import { filter, isNull, omitBy, uniqBy, isEmpty } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
+import { countTotal } from '../../lib/util/knex'
 
 const normalize = post => {
   const data = {communities: [], people: []}
   normalizePost(post, data, true)
   return Object.assign(data, post)
+}
+
+const commentersQuery = (limit, post) => q => {
+  q.select('users.*', 'comments.user_id')
+  q.join('comments', 'comments.user_id', 'users.id')
+  q.where('comments.post_id', '=', post.id)
+  q.groupBy('users.id', 'comments.user_id')
+  if (limit) q.limit(limit)
 }
 
 module.exports = bookshelf.Model.extend(Object.assign({
@@ -30,10 +39,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   followers: function () {
     return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
-  },
-
-  commenters: function () {
-    return this.belongsToMany(User).through(Comment)
   },
 
   contributions: function () {
@@ -100,6 +105,22 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.load('comments.tags', opts)
     .then(() =>
       uniqBy('id', flatten(this.relations.comments.map(c => c.relations.tags.models))))
+  },
+
+  getCommenters: function (first) {
+    return User.query(commentersQuery(first, this))
+    .fetchAll()
+  },
+
+  getCommentersTotal: function () {
+    return countTotal(User.query(commentersQuery(null, this)).query(), 'users')
+    .then(result => {
+      if (isEmpty(result)) {
+        return 0
+      } else {
+        return result[0].total
+      }
+    })
   },
 
   addFollowers: function (userIds, addedById, opts = {}) {
