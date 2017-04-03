@@ -36,7 +36,7 @@ export default function makeModels (userId, isAdmin) {
       typename: 'Membership',
       model: Membership,
       attributes: ['created_at', 'role', 'last_viewed_at'],
-      relations: ['community']
+      relations: ['community', {person: 'user'}]
     },
 
     users: {
@@ -81,7 +81,7 @@ export default function makeModels (userId, isAdmin) {
     communities: {
       typename: 'Community',
       model: Community,
-      attributes: ['id', 'name', 'slug', 'created_at'],
+      attributes: ['id', 'name', 'slug', 'created_at', 'avatar_url'],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         memberCount: (c) => c.memberCount(),

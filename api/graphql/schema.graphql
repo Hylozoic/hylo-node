@@ -31,6 +31,7 @@ type Membership {
   createdAt: String
   lastViewedAt: String
   community: Community
+  person: Person
 }
 
 type Community {
@@ -38,6 +39,7 @@ type Community {
   name: String
   slug: String
   createdAt: String
+  avatarUrl: String
   members(first: Int, cursor: ID, order: String): [Person]
   membersTotal: Int
   popularSkills(first: Int): [String]
