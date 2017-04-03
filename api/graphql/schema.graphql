@@ -80,6 +80,7 @@ type Post {
   commenters(first: Int): [Person]
   commentersTotal: Int
   linkPreview: LinkPreview
+  votesTotal: Int
 }
 
 type Comment {
