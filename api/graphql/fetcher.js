@@ -12,6 +12,7 @@ export default class Fetcher {
     const loader = this.loaders[targetTableName]
 
     if (type === 'belongsTo') {
+      if (!parentFk) return Promise.resolve()
       return loader.load(parentFk)
     }
 

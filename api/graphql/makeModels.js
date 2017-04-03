@@ -56,6 +56,7 @@ export default function makeModels (userId, isAdmin) {
       attributes: [
         'id',
         'created_at',
+        'updated_at',
         'type',
         'fulfilled_at',
         'starts_at',
@@ -65,9 +66,12 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         title: p => p.get('name'),
         details: p => p.get('description'),
-        public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null
+        public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
+        commenters: (p, { first }) => p.getCommenters(first),
+        commentersTotal: p => p.getCommentersTotal(),
+        votesTotal: p => p.get('num_votes')
       },
-      relations: ['comments', 'communities', { creator: 'user' }, 'followers'],
+      relations: ['comments', 'communities', { creator: 'user' }, 'followers', 'linkPreview'],
       filter: nonAdminFilter(q => {
         q.where('posts.id', 'in', PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
@@ -95,7 +99,7 @@ export default function makeModels (userId, isAdmin) {
       model: Comment,
       attributes: [
         'id',
-        'created_at',
+        'created_at'
       ],
       getters: {
         text: c => c.get('text')
@@ -105,6 +109,27 @@ export default function makeModels (userId, isAdmin) {
         q.where('comments.post_id', 'in', PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
       })
+    },
+
+    link_previews: {
+      typename: 'LinkPreview',
+      model: LinkPreview,
+      attributes: [
+        'id',
+        'title',
+        'url',
+        'image_url'
+      ],
+      getters: {
+        title: c => c.get('title'),
+        url: c => c.get('url'),
+        imageUrl: c => c.get('image_url')
+      }
+      // TODO: filter for linkPreviews
+      // filter: nonAdminFilter(q => {
+      //   q.where('comments.post_id', 'in', PostMembership.query().select('post_id')
+      //     .where('community_id', 'in', myCommunityIds()))
+      // })
     }
   }
 }

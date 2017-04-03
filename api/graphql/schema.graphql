@@ -64,6 +64,7 @@ type Post {
   details: String
   type: String
   createdAt: String
+  updatedAt: String
   public: Boolean
   fulfilledAt: String
   startsAt: String
@@ -76,6 +77,10 @@ type Post {
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): [Comment]
   commentsTotal: Int
+  commenters(first: Int): [Person]
+  commentersTotal: Int
+  linkPreview: LinkPreview
+  votesTotal: Int
 }
 
 type Comment {
@@ -84,10 +89,6 @@ type Comment {
   creator: Person
   createdAt: String
   createdFrom: String
-  active: Boolean
-  deactivatedReason: String
-  deactivatedBy: Person
-  deactivatedAt: String
 }
 
 type Query {
@@ -119,4 +120,11 @@ input PostInput {
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
+}
+
+type LinkPreview {
+  id: ID
+  title: String
+  url: String
+  imageUrl: String
 }
