@@ -36,7 +36,7 @@ export default function makeModels (userId, isAdmin) {
       typename: 'Membership',
       model: Membership,
       attributes: ['created_at', 'role', 'last_viewed_at'],
-      relations: ['community', {person: 'user'}]
+      relations: ['community']
     },
 
     users: {

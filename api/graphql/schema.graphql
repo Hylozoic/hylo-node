@@ -31,7 +31,6 @@ type Membership {
   createdAt: String
   lastViewedAt: String
   community: Community
-  person: Person
 }
 
 type Community {
