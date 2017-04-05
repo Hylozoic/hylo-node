@@ -2,7 +2,7 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { every, has, isEmpty, merge, omit, pick } from 'lodash'
+import { has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 
 module.exports = bookshelf.Model.extend(merge({
@@ -293,7 +293,10 @@ module.exports = bookshelf.Model.extend(merge({
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
     if (isNaN(Number(id))) {
-      return User.query(q => q.where({email: id}).orWhere({name: id})).fetch(options)
+      return User.query(q =>
+        q.whereRaw('lower(email) = lower(?)', id)
+        .orWhere({name: id}))
+      .fetch(options)
     }
     return User.where({id: id}).fetch(options)
   },

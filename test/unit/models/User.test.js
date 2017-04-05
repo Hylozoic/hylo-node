@@ -9,12 +9,26 @@ describe('User', function () {
   var cat
 
   before(function () {
-    cat = new User({name: 'Cat', email: 'iam@cat.org'})
+    cat = new User({name: 'Cat', email: 'Iam@cat.org'})
     return cat.save()
   })
 
   it('can be found', function () {
-    return User.where({name: 'Cat'}).fetch().then(function (user) {
+    return User.find('Cat').then(function (user) {
+      expect(user).to.exist
+      expect(user.get('name')).to.equal('Cat')
+    })
+  })
+
+  it('can be found with case-insensitive email match', function () {
+    return User.find('iAm@cAt.org').then(user => {
+      expect(user).to.exist
+      expect(user.get('name')).to.equal('Cat')
+    })
+  })
+
+  it('can be found with ID', function () {
+    return User.find(cat.id).then(user => {
       expect(user).to.exist
       expect(user.get('name')).to.equal('Cat')
     })
