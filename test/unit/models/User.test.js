@@ -62,7 +62,7 @@ describe('User', function () {
 
     return street.save()
     .then(() => cat.joinCommunity(street))
-    .then(() => cat.setModeratorRole(street))
+    .then(() => Membership.setModeratorRole(cat.id, street.id))
     .then(() => cat.memberships().query({where: {community_id: street.id}}).fetchOne())
     .then(membership => {
       expect(membership).to.exist

@@ -335,7 +335,7 @@ describe('CommunityController', () => {
       return Promise.join(community.save(), post.save())
       .then(() => post.communities().attach(community))
       .then(() => user.joinCommunity(community))
-      .then(() => user.setModeratorRole(community))
+      .then(() => Membership.setModeratorRole(user.id, community.id))
       .then(() => {
         req.params.communityId = community.id
         req.params.postId = post.id

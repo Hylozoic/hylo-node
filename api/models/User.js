@@ -77,14 +77,6 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Thank)
   },
 
-  setModeratorRole: function (community) {
-    return Membership.setModeratorRole(this.id, (typeof community === 'object' ? community.id : community))
-  },
-
-  removeModeratorRole: function (community) {
-    return Membership.removeModeratorRole(this.id, (typeof community === 'object' ? community.id : community))
-  },
-
   joinCommunity: function (community) {
     var communityId = (typeof community === 'object' ? community.id : community)
     return Membership.create(this.id, communityId, {role: Membership.DEFAULT_ROLE})
@@ -206,20 +198,21 @@ module.exports = bookshelf.Model.extend(merge({
 
   enabledNotification (type, medium) {
     let setting
+
     switch (type) {
       case Notification.TYPE.Message:
         setting = this.getSetting('dm_notifications')
-        return setting === 'both' ||
-          (setting === 'email' && medium === Notification.MEDIUM.Email) ||
-          (setting === 'push' && medium === Notification.MEDIUM.Push)
+        break
       case Notification.TYPE.Comment:
         setting = this.getSetting('comment_notifications')
-        return setting === 'both' ||
-          (setting === 'email' && medium === Notification.MEDIUM.Email) ||
-          (setting === 'push' && medium === Notification.MEDIUM.Push)
+        break
       default:
         throw new Error(`unknown notification type: ${type}`)
     }
+
+    return setting === 'both' ||
+      (setting === 'email' && medium === Notification.MEDIUM.Email) ||
+      (setting === 'push' && medium === Notification.MEDIUM.Push)
   },
 
   disableAllNotifications () {
@@ -327,10 +320,6 @@ module.exports = bookshelf.Model.extend(merge({
 
   incNewNotificationCount: function (id) {
     return User.query().where({id}).increment('new_notification_count', 1)
-  },
-
-  decNewNotificationCount: function (id) {
-    return User.query().where({id}).decrement('new_notification_count', 1)
   },
 
   gravatar: function (email) {
