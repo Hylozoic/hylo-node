@@ -44,6 +44,8 @@ type Community {
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
+  posts(first: Int, cursor: ID, order: String): [Post]
+  postsTotal: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
 }
