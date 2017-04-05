@@ -1,6 +1,6 @@
 /* globals LastRead, _ */
 /* eslint-disable camelcase */
-import { filter, isNull, omitBy, uniqBy, isEmpty } from 'lodash/fp'
+import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizePost } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
@@ -119,6 +119,21 @@ module.exports = bookshelf.Model.extend(Object.assign({
         return 0
       } else {
         return result[0].total
+      }
+    })
+  },
+
+  getType: function () {
+    return this.load('tags')
+    .then(() => {
+      var type = this.get('type')
+      if (type) return type
+      const tagNames = this.relations.tags.map(t => t.get('name'))
+      const typeNames = intersection(tagNames, ['request', 'offer'])
+      if (!isEmpty(typeNames)) {
+        return typeNames[0]
+      } else {
+        return 'discussion'
       }
     })
   },

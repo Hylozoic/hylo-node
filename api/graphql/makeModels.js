@@ -57,7 +57,6 @@ export default function makeModels (userId, isAdmin) {
         'id',
         'created_at',
         'updated_at',
-        'type',
         'fulfilled_at',
         'starts_at',
         'ends_at',
@@ -69,7 +68,8 @@ export default function makeModels (userId, isAdmin) {
         public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
         commenters: (p, { first }) => p.getCommenters(first),
         commentersTotal: p => p.getCommentersTotal(),
-        votesTotal: p => p.get('num_votes')
+        votesTotal: p => p.get('num_votes'),
+        type: p => p.getType()
       },
       relations: ['comments', 'communities', { creator: 'user' }, 'followers', 'linkPreview'],
       filter: nonAdminFilter(q => {
@@ -125,11 +125,6 @@ export default function makeModels (userId, isAdmin) {
         url: c => c.get('url'),
         imageUrl: c => c.get('image_url')
       }
-      // TODO: filter for linkPreviews
-      // filter: nonAdminFilter(q => {
-      //   q.where('comments.post_id', 'in', PostMembership.query().select('post_id')
-      //     .where('community_id', 'in', myCommunityIds()))
-      // })
     }
   }
 }
