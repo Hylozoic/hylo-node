@@ -88,7 +88,7 @@ export default function makeModels (userId, isAdmin) {
         postCount: (c) => c.postCount(),
         feedItems: (c, args) => c.feedItems(args)
       },
-      relations: [{members: 'users'}],
+      relations: [{members: 'users'}, 'posts'],
       filter: nonAdminFilter(q => {
         q.where('communities.id', 'in', myCommunityIds())
       })
