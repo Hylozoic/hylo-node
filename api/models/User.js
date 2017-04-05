@@ -220,6 +220,14 @@ module.exports = bookshelf.Model.extend(merge({
       default:
         throw new Error(`unknown notification type: ${type}`)
     }
+  },
+
+  disableAllNotifications () {
+    return this.addSetting({
+      digest_frequency: 'never',
+      comment_notifications: 'none',
+      dm_notifications: 'none'
+    }, true)
   }
 
 }, HasSettings), {
