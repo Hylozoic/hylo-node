@@ -25,15 +25,6 @@ function createSchema (userId, isAdmin) {
         updateMe(userId, changes).then(() => fetcher.fetchOne('me', userId)),
       createPost: (root, { data }) =>
         createPost(userId, data).then(post => fetcher.fetchOne('posts', post.id))
-    },
-
-    FeedItemContent: {
-      __resolveType (data, context, info) {
-        if (data instanceof bookshelf.Model) {
-          return info.schema.getType('Post')
-        }
-        throw new Error('Post is the only implemented FeedItemContent type')
-      }
     }
   }, makeResolvers(models, fetcher))
 
