@@ -39,6 +39,7 @@ type Community {
   slug: String
   createdAt: String
   avatarUrl: String
+  bannerUrl: String  
   members(first: Int, cursor: ID, order: String): [Person]
   membersTotal: Int
   popularSkills(first: Int): [String]
