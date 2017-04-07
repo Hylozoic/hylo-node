@@ -21,6 +21,7 @@ type Person {
   id: ID
   name: String
   avatarUrl: String
+  bannerUrl: String
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
 }
