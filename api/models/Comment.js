@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-import { filter } from 'lodash/fp'
 import { markdown } from 'hylo-utils/text'
 import { addFollowers } from './post/util'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'

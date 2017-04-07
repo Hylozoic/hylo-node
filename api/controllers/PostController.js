@@ -11,7 +11,11 @@ import {
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
-import { normalizePost, uniqize } from '../../lib/util/normalize'
+import {
+  normalizePost,
+  normalizedSinglePostResponse,
+  uniqize
+} from '../../lib/util/normalize'
 import { createCheckFreshnessAction } from '../../lib/freshness'
 
 const sortColumns = {
@@ -36,12 +40,6 @@ const queryPosts = (req, opts) =>
     omit(opts, 'sort')
   ))
   .then(Search.forPosts)
-
-const normalize = post => {
-  const data = {communities: [], people: []}
-  normalizePost(post, data, true)
-  return Object.assign(data, post)
-}
 
 const fetchAndPresentPosts = function (query, opts = {}, userId, relationsOpts) {
   return query.fetchAll({
@@ -186,7 +184,7 @@ const PostController = {
     }
     res.locals.post.load(PostPresenter.relations(req.session.userId, opts))
     .then(post => PostPresenter.present(post, req.session.userId, opts))
-    .then(normalize)
+    .then(normalizedSinglePostResponse)
     .then(res.ok)
     .catch(res.serverError)
   },
@@ -206,7 +204,7 @@ const PostController = {
     .then(() => createPost(req.session.userId, params))
     .then(post => post.load(PostPresenter.relations(req.session.userId)))
     .then(PostPresenter.present)
-    .then(normalize)
+    .then(normalizedSinglePostResponse)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return
@@ -336,7 +334,7 @@ const PostController = {
       .tap(() => afterUpdatingPost(post, {params, userId, transacting}))))
     .then(() => post.load(PostPresenter.relations(userId, {withChildren: true})))
     .then(post => PostPresenter.present(post, userId, {withChildren: true}))
-    .then(normalize)
+    .then(normalizedSinglePostResponse)
     .then(res.ok)
     .catch(err => {
       if (handleMissingTagDescriptions(err, res)) return

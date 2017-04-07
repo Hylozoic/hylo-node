@@ -24,6 +24,8 @@ like this:
     }
   }, EnsureLoad))
 
+TODO: support multi-level loading, e.g. this.ensureLoad('person.jobs')
+
 */
 
 import { castArray } from 'lodash'

@@ -2,18 +2,12 @@
 /* eslint-disable camelcase */
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
-import { normalizePost } from '../../lib/util/normalize'
+import { normalizedSinglePostResponse } from '../../lib/util/normalize'
 import { pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
 import { countTotal } from '../../lib/util/knex'
-
-const normalize = post => {
-  const data = {communities: [], people: []}
-  normalizePost(post, data, true)
-  return Object.assign(data, post)
-}
 
 const commentersQuery = (limit, post) => q => {
   q.select('users.*', 'comments.user_id')
@@ -196,7 +190,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const opts = {withComments: 'all'}
     return this.load(PostPresenter.relations(userId, opts))
     .then(post => PostPresenter.present(post, userId, opts))
-    .then(normalize)
+    .then(normalizedSinglePostResponse)
     .then(post => pushToSockets(`users/${userId}`, 'newThread', post))
   },
 
