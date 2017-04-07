@@ -1,6 +1,6 @@
 process.env.NODE_ENV = 'test'
 
-var skiff = require('../lib/skiff')
+var skiff = require('../../lib/skiff')
 var chai = require('chai')
 var fs = require('fs')
 var path = require('path')
@@ -34,7 +34,7 @@ before(function (done) {
     start: function () {
       // add controllers to the global namespace; they would otherwise be excluded
       // since the sails "http" module is not being loaded in the test env
-      _.each(fs.readdirSync(root('api/controllers')), function (filename) {
+      fs.readdirSync(root('api/controllers')).forEach(function (filename) {
         if (path.extname(filename) === '.js') {
           var modelName = path.basename(filename, '.js')
           global[modelName] = require(root('api/controllers/' + modelName))
