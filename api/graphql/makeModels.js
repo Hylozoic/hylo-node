@@ -42,7 +42,18 @@ export default function makeModels (userId, isAdmin) {
     users: {
       typename: 'Person',
       model: User,
-      attributes: ['id', 'name', 'avatar_url', 'banner_url'],
+      attributes: [
+        'id',
+        'name',
+        'avatar_url',
+        'banner_url',
+        'bio',
+        'twitter_name',
+        'linkedin_url',
+        'facebook_url',
+        'url',
+        'location'
+      ],
       relations: ['posts'],
       filter: nonAdminFilter(q => {
         q.where('users.id', 'in', Membership.query().select('user_id')
