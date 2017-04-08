@@ -79,20 +79,33 @@ module.exports = {
     },
 
     response: function () {
-      var self = {
-        ok: spy(data => self.body = data),
+      var self
+
+      const setBody = () => spy(data => { self.body = data })
+
+      self = {
+        ok: setBody(),
         serverError: spy(err => { throw err }),
-        badRequest: spy(data => self.body = data),
-        notFound: spy(data => self.body = data),
-        forbidden: spy(data => self.body = data),
-        status: spy(value => { self.statusCode = value; return self }),
-        send: spy(data => self.body = data),
-        redirect: spy(url => self.redirected = url),
+        badRequest: setBody(),
+        notFound: setBody(),
+        forbidden: setBody(),
+        status: spy(value => {
+          self.statusCode = value
+          return self
+        }),
+        send: setBody(),
+        redirect: spy(url => {
+          self.redirected = url
+        }),
         view: spy((template, attrs) => {
           self.viewTemplate = template
           self.viewAttrs = attrs
         }),
-        locals: {}
+        locals: {},
+        headers: {},
+        setHeader: spy((key, val) => {
+          self.headers[key] = val
+        })
       }
       return self
     },
