@@ -14,6 +14,8 @@ type Me {
   communitiesTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
+  messageThreads(first: Int, cursor: ID, order: String): [MessageThread]
+  messageThreadsTotal: Int
   updatedAt: String
 }
 
@@ -40,7 +42,7 @@ type Community {
   slug: String
   createdAt: String
   avatarUrl: String
-  bannerUrl: String  
+  bannerUrl: String
   members(first: Int, cursor: ID, order: String): [Person]
   membersTotal: Int
   popularSkills(first: Int): [String]
@@ -94,6 +96,23 @@ type Comment {
   creator: Person
   createdAt: String
   createdFrom: String
+}
+
+type MessageThread {
+  id: ID
+  createdAt: String
+  updatedAt: String
+  followers(first: Int, cursor: ID, order: String): [Person]
+  followersTotal: Int
+  messages(first: Int, cursor: ID, order: String): [Message]
+  messagesTotal: Int
+}
+
+type Message {
+  id: ID
+  text: String
+  creator: Person
+  createdAt: String
 }
 
 type Query {

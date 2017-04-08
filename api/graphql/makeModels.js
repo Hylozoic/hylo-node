@@ -2,7 +2,8 @@
 // should be exposed through GraphQL, and what query filters should be applied
 // based on the current user's access rights.
 //
-// keys here are table names (except for "me")
+// keys in the returned object are GraphQL schema type names
+//
 export default function makeModels (userId, isAdmin) {
   // TODO: cache this?
   const myCommunityIds = () =>
@@ -13,8 +14,7 @@ export default function makeModels (userId, isAdmin) {
     isAdmin ? relation : relation.query(queryFn)
 
   return {
-    me: { // the root of the graph
-      typename: 'Me',
+    Me: { // the root of the graph
       model: User,
       attributes: [
         'id',
@@ -26,32 +26,35 @@ export default function makeModels (userId, isAdmin) {
         'bio',
         'updated_at'
       ],
-      relations: ['communities', 'posts', 'memberships'],
+      relations: [
+        'communities',
+        'memberships',
+        'posts',
+        {messageThreads: {typename: 'MessageThread'}}
+      ],
       getters: {
         hasDevice: u => u.hasDevice()
       }
     },
 
-    communities_users: {
-      typename: 'Membership',
+    Membership: {
       model: Membership,
       attributes: ['created_at', 'role', 'last_viewed_at'],
       relations: ['community']
     },
 
-    users: {
-      typename: 'Person',
+    Person: {
       model: User,
       attributes: ['id', 'name', 'avatar_url', 'banner_url'],
       relations: ['posts'],
       filter: nonAdminFilter(q => {
         q.where('users.id', 'in', Membership.query().select('user_id')
           .where('community_id', 'in', myCommunityIds()))
-      })
+      }),
+      isDefaultTypeForTable: true
     },
 
-    posts: {
-      typename: 'Post',
+    Post: {
       model: Post,
       attributes: [
         'id',
@@ -71,15 +74,21 @@ export default function makeModels (userId, isAdmin) {
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType()
       },
-      relations: ['comments', 'communities', { creator: 'user' }, 'followers', 'linkPreview'],
+      relations: [
+        'comments',
+        'communities',
+        {user: {alias: 'creator'}},
+        'followers',
+        'linkPreview'
+      ],
       filter: nonAdminFilter(q => {
         q.where('posts.id', 'in', PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
-      })
+      }),
+      isDefaultTypeForTable: true
     },
 
-    communities: {
-      typename: 'Community',
+    Community: {
       model: Community,
       attributes: ['id', 'name', 'slug', 'created_at', 'avatar_url', 'banner_url'],
       getters: {
@@ -88,14 +97,16 @@ export default function makeModels (userId, isAdmin) {
         postCount: (c) => c.postCount(),
         feedItems: (c, args) => c.feedItems(args)
       },
-      relations: [{members: 'users'}, 'posts'],
+      relations: [
+        {users: {alias: 'members'}},
+        'posts'
+      ],
       filter: nonAdminFilter(q => {
         q.where('communities.id', 'in', myCommunityIds())
       })
     },
 
-    comments: {
-      typename: 'Comment',
+    Comment: {
       model: Comment,
       attributes: [
         'id',
@@ -104,15 +115,18 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         text: c => c.get('text')
       },
-      relations: [{ creator: 'user' }],
+      relations: [
+        {user: {alias: 'creator'}}
+      ],
       filter: nonAdminFilter(q => {
-        q.where('comments.post_id', 'in', PostMembership.query().select('post_id')
+        q.where('comments.post_id', 'in',
+          PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
-      })
+      }),
+      isDefaultTypeForTable: true
     },
 
-    link_previews: {
-      typename: 'LinkPreview',
+    LinkPreview: {
       model: LinkPreview,
       attributes: [
         'id',
@@ -125,6 +139,25 @@ export default function makeModels (userId, isAdmin) {
         url: c => c.get('url'),
         imageUrl: c => c.get('image_url')
       }
+    },
+
+    MessageThread: {
+      model: Post,
+      attributes: ['id', 'created_at', 'updated_at'],
+      relations: [
+        'followers',
+        {comments: {alias: 'messages', typename: 'Message'}}
+      ],
+      filter: nonAdminFilter(q => {
+        q.where('posts.id', 'in',
+          Follow.query().select('post_id').where('user_id', userId))
+      })
+    },
+
+    Message: {
+      model: Comment,
+      attributes: ['id', 'created_at'],
+      relations: [{user: {alias: 'creator'}}]
     }
   }
 }
