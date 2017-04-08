@@ -28,6 +28,8 @@ type Person {
   facebookUrl: String
   url: String
   location: String
+  communities(first: Int, cursor: ID, order: String): [Membership]
+  communitiesTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
 }
