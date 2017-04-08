@@ -3,7 +3,7 @@ var Slack = require('../services/Slack')
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import { flatten, isEqual, merge, differenceBy } from 'lodash'
-import applyPagination from '../graphql/util/applyPagination'
+import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'

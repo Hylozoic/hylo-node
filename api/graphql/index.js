@@ -1,30 +1,29 @@
 import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
-import Fetcher from './fetcher'
+import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { updateMe, createPost } from './mutations'
 import makeModels from './makeModels'
-import makeResolvers from './makeResolvers'
 import { makeExecutableSchema } from 'graphql-tools'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
 function createSchema (userId, isAdmin) {
   const models = makeModels(userId, isAdmin)
-  const fetcher = new Fetcher(models)
+  const { resolvers, fetchOne } = setupBridge(models)
 
-  const resolvers = Object.assign({
+  const allResolvers = Object.assign({
     Query: {
-      me: () => fetcher.fetchOne('me', userId),
+      me: () => fetchOne('me', userId),
       community: (root, { id, slug }) => // you can specify id or slug, but not both
-        fetcher.fetchOne('communities', slug || id, slug ? 'slug' : 'id'),
-      person: (root, { id }) => fetcher.fetchOne('users', id)
+        fetchOne('communities', slug || id, slug ? 'slug' : 'id'),
+      person: (root, { id }) => fetchOne('users', id)
     },
     Mutation: {
       updateMe: (root, { changes }) =>
-        updateMe(userId, changes).then(() => fetcher.fetchOne('me', userId)),
+        updateMe(userId, changes).then(() => fetchOne('me', userId)),
       createPost: (root, { data }) =>
-        createPost(userId, data).then(post => fetcher.fetchOne('posts', post.id))
+        createPost(userId, data).then(post => fetchOne('posts', post.id))
     },
 
     FeedItemContent: {
@@ -35,9 +34,12 @@ function createSchema (userId, isAdmin) {
         throw new Error('Post is the only implemented FeedItemContent type')
       }
     }
-  }, makeResolvers(models, fetcher))
+  }, resolvers)
 
-  return makeExecutableSchema({typeDefs: [schemaText], resolvers})
+  return makeExecutableSchema({
+    typeDefs: [schemaText],
+    resolvers: allResolvers
+  })
 }
 
 export const createRequestHandler = () =>
