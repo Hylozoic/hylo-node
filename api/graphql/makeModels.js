@@ -145,7 +145,7 @@ export default function makeModels (userId, isAdmin) {
       model: Post,
       attributes: ['id', 'created_at', 'updated_at'],
       relations: [
-        'followers',
+        {followers: {alias: 'participants'}},
         {comments: {alias: 'messages', typename: 'Message'}}
       ]
     },

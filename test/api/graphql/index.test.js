@@ -122,9 +122,11 @@ describe('graphql request handler', () => {
                   name
                 }
               }
+              commentsTotal
               followers {
                 name
               }
+              followersTotal
             }
             messageThreads {
               id
@@ -134,9 +136,11 @@ describe('graphql request handler', () => {
                   name
                 }
               }
-              followers {
+              messagesTotal
+              participants {
                 name
               }
+              participantsTotal
             }
           }
         }`
@@ -173,11 +177,13 @@ describe('graphql request handler', () => {
                       }
                     }
                   ],
+                  commentsTotal: 1,
                   followers: [
                     {
                       name: user2.get('name')
                     }
-                  ]
+                  ],
+                  followersTotal: 1
                 }
               ],
               messageThreads: [
@@ -191,14 +197,16 @@ describe('graphql request handler', () => {
                       }
                     }
                   ],
-                  followers: [
+                  messagesTotal: 1,
+                  participants: [
                     {
                       name: user.get('name')
                     },
                     {
                       name: user2.get('name')
                     }
-                  ]
+                  ],
+                  participantsTotal: 2
                 }
               ]
             }

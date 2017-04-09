@@ -102,8 +102,8 @@ type MessageThread {
   id: ID
   createdAt: String
   updatedAt: String
-  followers(first: Int, cursor: ID, order: String): [Person]
-  followersTotal: Int
+  participants(first: Int, cursor: ID, order: String): [Person]
+  participantsTotal: Int
   messages(first: Int, cursor: ID, order: String): [Message]
   messagesTotal: Int
 }
