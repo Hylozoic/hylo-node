@@ -14,16 +14,16 @@ function createSchema (userId, isAdmin) {
 
   const allResolvers = Object.assign({
     Query: {
-      me: () => fetchOne('me', userId),
+      me: () => fetchOne('Me', userId),
       community: (root, { id, slug }) => // you can specify id or slug, but not both
-        fetchOne('communities', slug || id, slug ? 'slug' : 'id'),
-      person: (root, { id }) => fetchOne('users', id)
+        fetchOne('Community', slug || id, slug ? 'slug' : 'id'),
+      person: (root, { id }) => fetchOne('User', id)
     },
     Mutation: {
       updateMe: (root, { changes }) =>
-        updateMe(userId, changes).then(() => fetchOne('me', userId)),
+        updateMe(userId, changes).then(() => fetchOne('Me', userId)),
       createPost: (root, { data }) =>
-        createPost(userId, data).then(post => fetchOne('posts', post.id))
+        createPost(userId, data).then(post => fetchOne('Post', post.id))
     },
 
     FeedItemContent: {
