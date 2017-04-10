@@ -2,7 +2,7 @@ import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
-import { updateMe, createPost } from './mutations'
+import { updateMe, createPost, findOrCreateThread } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 
@@ -23,7 +23,9 @@ function createSchema (userId, isAdmin) {
       updateMe: (root, { changes }) =>
         updateMe(userId, changes).then(() => fetchOne('Me', userId)),
       createPost: (root, { data }) =>
-        createPost(userId, data).then(post => fetchOne('Post', post.id))
+        createPost(userId, data).then(post => fetchOne('Post', post.id)),
+      findOrCreateThread: (root, { data }) =>
+        findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id))
     },
 
     FeedItemContent: {

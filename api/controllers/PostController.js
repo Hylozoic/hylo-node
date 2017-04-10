@@ -6,7 +6,7 @@ import {
 import {
   afterUpdatingPost,
   createPost,
-  createThread
+  findOrCreateThread
 } from '../models/post/util'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
@@ -222,17 +222,7 @@ const PostController = {
       return Promise.resolve()
     }
 
-    params.type = Post.Type.THREAD
-
-    return Post.query(q => {
-      q.join('follows', 'follows.post_id', 'posts.id')
-      q.where('posts.type', Post.Type.THREAD)
-      q.where('posts.id', 'in', Follow.query().where('user_id', currentUserId).select('post_id'))
-      q.where('post_id', 'in', Follow.query().where('user_id', otherUserId).select('post_id'))
-      q.where('post_id', 'not in', Follow.query().where('user_id', 'not in', [currentUserId, otherUserId]).select('post_id'))
-      q.groupBy('posts.id')
-    }).fetch()
-    .then(post => post || createThread(currentUserId, params))
+    return findOrCreateThread(currentUserId, [otherUserId])
     .then(post => post.load(PostPresenter.relations(currentUserId)))
     .then(PostPresenter.present)
     .then(res.ok)

@@ -31,6 +31,13 @@ export function validatePostCreateData (userId, data) {
   .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
 }
 
+export function validateThreadData (data) {
+  if (!(data.participantIds && data.participantIds.length)) {
+    throw new Error('participipantIds can\'t be empty')
+  }
+  return Promise.resolve()
+}
+
 export const setupNewPostAttrs = function (userId, params) {
   const attrs = merge(Post.newPostAttrs(), {
     name: sanitize(params.name),
@@ -44,6 +51,14 @@ export const setupNewPostAttrs = function (userId, params) {
   return Promise.resolve(attrs)
 }
 
+export const setupNewThreadAttrs = function (userId) {
+  return Promise.resolve({
+    type: Post.Type.THREAD,
+    visibility: Post.Visibility.DEFAULT,
+    user_id: userId
+  })
+}
+
 const updateTagFollows = (post, transacting) =>
   post.load(['tags', 'communities'], {transacting})
   .then(() => TagFollow.query(q => {
@@ -51,14 +66,14 @@ const updateTagFollows = (post, transacting) =>
     q.whereIn('community_id', post.relations.communities.map('id'))
   }).query().increment('new_post_count').transacting(transacting))
 
-export const afterSavingThread = function (post, opts) {
-  const userId = post.get('user_id')
-  const followerIds = [userId].concat(opts.messageTo)
+export const afterSavingThread = function (thread, opts) {
+  const userId = thread.get('user_id')
+  const participantIds = [userId].concat(opts.participantIds)
   const trxOpts = pick(opts, 'transacting')
 
   return Promise.all(flattenDeep([
-    map(id => LastRead.findOrCreate(id, post.id, trxOpts), followerIds),
-    post.addFollowers(followerIds, userId, trxOpts)
+    map(id => LastRead.findOrCreate(id, thread.id, trxOpts), participantIds),
+    thread.addFollowers(participantIds, userId, trxOpts)
   ]))
 }
 
@@ -192,14 +207,22 @@ export const createPost = (userId, params) =>
       {children: params.requests, transacting: trx}
     )))))
 
-export const createThread = (userId, params) =>
-  setupNewPostAttrs(userId, params)
+export const findOrCreateThread = (userId, participantIds) =>
+  Post.query(q => {
+    q.join('follows', 'follows.post_id', 'posts.id')
+    q.where('posts.type', Post.Type.THREAD)
+    q.where('posts.id', 'in', Follow.query().where('user_id', userId).select('post_id'))
+    participantIds.forEach(id => q.where('post_id', 'in', Follow.query().where('user_id', id).select('post_id')))
+    q.where('post_id', 'not in', Follow.query().where('user_id', 'not in', [userId].concat(participantIds)).select('post_id'))
+    q.groupBy('posts.id')
+  }).fetch()
+  .then(post => post || createThread(userId, participantIds))
+
+export const createThread = (userId, participantIds) =>
+  setupNewThreadAttrs(userId)
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
-    .tap(post => afterSavingThread(post, merge(
-      pick(params, 'messageTo'),
-      {transacting: trx}
-    )))))
+    .tap(thread => afterSavingThread(thread, {participantIds, transacting: trx}))))
 
 export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
   var userId = (comment || post).get('user_id')

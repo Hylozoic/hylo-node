@@ -1,7 +1,9 @@
 import { merge } from 'lodash'
 import {
   createPost as underlyingCreatePost,
-  validatePostCreateData
+  findOrCreateThread as underlyingFindOrCreateThread,
+  validatePostCreateData,
+  validateThreadData
 } from '../models/post/util'
 
 export function updateMe (userId, changes) {
@@ -24,4 +26,9 @@ export function createPost (userId, data) {
   return convertGraphqlCreateData(data)
   .tap(convertedData => validatePostCreateData(userId, convertedData))
   .then(convertedData => underlyingCreatePost(userId, convertedData))
+}
+
+export function findOrCreateThread (userId, data) {
+  return validateThreadData(data)
+  .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
 }
