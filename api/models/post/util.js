@@ -33,7 +33,7 @@ export function validatePostCreateData (userId, data) {
 
 export function validateThreadData (data) {
   if (!(data.participantIds && data.participantIds.length)) {
-    throw new Error('participipantIds can\'t be empty')
+    throw new Error('participantIds can\'t be empty')
   }
   return Promise.resolve()
 }
