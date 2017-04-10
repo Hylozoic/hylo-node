@@ -24,6 +24,14 @@ type Person {
   name: String
   avatarUrl: String
   bannerUrl: String
+  bio: String
+  twitterName: String
+  linkedinUrl: String
+  facebookUrl: String
+  url: String
+  location: String
+  memberships(first: Int, cursor: ID, order: String): [Membership]
+  membershipsTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
 }

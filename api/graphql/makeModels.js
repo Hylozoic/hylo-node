@@ -40,13 +40,27 @@ export default function makeModels (userId, isAdmin) {
     Membership: {
       model: Membership,
       attributes: ['created_at', 'role', 'last_viewed_at'],
-      relations: ['community']
+      relations: ['community'],
+      filter: nonAdminFilter(q => {
+        q.where('communities_users.community_id', 'in', myCommunityIds())
+      })
     },
 
     Person: {
       model: User,
-      attributes: ['id', 'name', 'avatar_url', 'banner_url'],
-      relations: ['posts'],
+      attributes: [
+        'id',
+        'name',
+        'avatar_url',
+        'banner_url',
+        'bio',
+        'twitter_name',
+        'linkedin_url',
+        'facebook_url',
+        'url',
+        'location'
+      ],
+      relations: ['memberships', 'posts'],
       filter: nonAdminFilter(q => {
         q.where('users.id', 'in', Membership.query().select('user_id')
           .where('community_id', 'in', myCommunityIds()))
