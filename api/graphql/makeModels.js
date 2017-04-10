@@ -37,6 +37,9 @@ export default function makeModels (userId, isAdmin) {
       model: Membership,
       attributes: ['created_at', 'role', 'last_viewed_at'],
       relations: ['community']
+      filter: nonAdminFilter(q => {
+        q.where('communities_users.community_id', 'in', myCommunityIds())
+      })
     },
 
     users: {
@@ -58,7 +61,6 @@ export default function makeModels (userId, isAdmin) {
       filter: nonAdminFilter(q => {
         q.where('users.id', 'in', Membership.query().select('user_id')
           .where('community_id', 'in', myCommunityIds()))
-          .where('communities_users.community_id', 'in', myCommunityIds())
       })
     },
 
