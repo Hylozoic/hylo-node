@@ -119,6 +119,7 @@ type Query {
   me: Me
   person(id: ID): Person
   community(id: ID, slug: String): Community
+  messageThread(id: ID): MessageThread
 }
 
 input MeInput {
