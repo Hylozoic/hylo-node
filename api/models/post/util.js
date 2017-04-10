@@ -198,7 +198,7 @@ export const createThread = (userId, params) =>
     Post.create(attrs, {transacting: trx})
     .tap(post => afterSavingThread(post, merge(
       pick(params, 'messageTo'),
-      {children: params.requests, transacting: trx}
+      {transacting: trx}
     )))))
 
 export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
