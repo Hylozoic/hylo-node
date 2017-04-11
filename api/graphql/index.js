@@ -17,7 +17,8 @@ function createSchema (userId, isAdmin) {
       me: () => fetchOne('Me', userId),
       community: (root, { id, slug }) => // you can specify id or slug, but not both
         fetchOne('Community', slug || id, slug ? 'slug' : 'id'),
-      person: (root, { id }) => fetchOne('User', id)
+      person: (root, { id }) => fetchOne('User', id),
+      messageThread: (root, { id }) => fetchOne('MessageThread', id)
     },
     Mutation: {
       updateMe: (root, { changes }) =>

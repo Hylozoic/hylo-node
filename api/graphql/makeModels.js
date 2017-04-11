@@ -161,7 +161,12 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         {followers: {alias: 'participants'}},
         {comments: {alias: 'messages', typename: 'Message'}}
-      ]
+      ],
+      filter: nonAdminFilter(q => {
+        q.where('posts.id', 'in',
+          Follow.query().select('post_id')
+          .where('user_id', userId))
+      })
     },
 
     Message: {
