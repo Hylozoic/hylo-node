@@ -29,6 +29,6 @@ export function createPost (userId, data) {
 }
 
 export function findOrCreateThread (userId, data) {
-  return validateThreadData(data)
+  return validateThreadData(userId, data)
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
 }

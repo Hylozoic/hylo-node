@@ -31,11 +31,21 @@ export function validatePostCreateData (userId, data) {
   .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
 }
 
-export function validateThreadData (data) {
-  if (!(data.participantIds && data.participantIds.length)) {
-    throw new Error('participantIds can\'t be empty')
+export function validateThreadData (userId, data) {
+  const { participantIds } = data
+  if (!(participantIds && participantIds.length)) {
+    throw new Error("participantIds can't be empty")
   }
-  return Promise.resolve()
+  const checkForSharedCommunity = (id) =>
+    Membership.inSameCommunity([userId, id])
+    .then(doesShare => {
+      if (doesShare) {
+        return Promise.resolve()
+      } else {
+        throw new Error(`no shared communities with user ${id}`)
+      }
+    })
+  return Promise.all(map(checkForSharedCommunity, participantIds))
 }
 
 export const setupNewPostAttrs = function (userId, params) {
@@ -209,11 +219,10 @@ export const createPost = (userId, params) =>
 
 export const findOrCreateThread = (userId, participantIds) =>
   Post.query(q => {
-    q.join('follows', 'follows.post_id', 'posts.id')
     q.where('posts.type', Post.Type.THREAD)
     q.where('posts.id', 'in', Follow.query().where('user_id', userId).select('post_id'))
-    participantIds.forEach(id => q.where('post_id', 'in', Follow.query().where('user_id', id).select('post_id')))
-    q.where('post_id', 'not in', Follow.query().where('user_id', 'not in', [userId].concat(participantIds)).select('post_id'))
+    participantIds.forEach(id => q.where('posts.id', 'in', Follow.query().where('user_id', id).select('post_id')))
+    q.where('posts.id', 'not in', Follow.query().where('user_id', 'not in', [userId].concat(participantIds)).select('post_id'))
     q.groupBy('posts.id')
   }).fetch()
   .then(post => post || createThread(userId, participantIds))
