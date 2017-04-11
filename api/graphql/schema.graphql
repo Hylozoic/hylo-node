@@ -150,9 +150,14 @@ input PostInput {
   location: String
 }
 
+input MessageThreadInput {
+  participantIds: [String]
+}
+
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
+  findOrCreateThread(data: MessageThreadInput): MessageThread
 }
 
 type LinkPreview {
