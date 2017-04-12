@@ -1,5 +1,9 @@
 import { merge } from 'lodash'
 import {
+  createComment as underlyingCreateComment,
+  validateCommentCreateData
+} from '../models/comment/createAndPresentComment'
+import {
   createPost as underlyingCreatePost,
   findOrCreateThread as underlyingFindOrCreateThread,
   validatePostCreateData,
@@ -26,6 +30,15 @@ export function createPost (userId, data) {
   return convertGraphqlCreateData(data)
   .tap(convertedData => validatePostCreateData(userId, convertedData))
   .then(convertedData => underlyingCreatePost(userId, convertedData))
+}
+
+export function createComment (userId, data) {
+  return validateCommentCreateData(userId, data)
+  .then(() => Promise.props({
+    post: Post.find(data.postId),
+    parentComment: data.parentCommentId ? Comment.find(data.parentCommentId) : null
+  }))
+  .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
 export function findOrCreateThread (userId, data) {
