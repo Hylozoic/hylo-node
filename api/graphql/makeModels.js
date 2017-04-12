@@ -104,11 +104,18 @@ export default function makeModels (userId, isAdmin) {
 
     Community: {
       model: Community,
-      attributes: ['id', 'name', 'slug', 'created_at', 'avatar_url', 'banner_url'],
+      attributes: [
+        'id', 
+        'name', 
+        'slug', 
+        'created_at', 
+        'avatar_url', 
+        'banner_url',
+        'memberCount',
+        'postCount'
+      ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
-        memberCount: (c) => c.memberCount(),
-        postCount: (c) => c.postCount(),
         feedItems: (c, args) => c.feedItems(args)
       },
       relations: [
@@ -126,9 +133,6 @@ export default function makeModels (userId, isAdmin) {
         'id',
         'created_at'
       ],
-      getters: {
-        text: c => c.get('text')
-      },
       relations: [
         {user: {alias: 'creator'}}
       ],
@@ -153,12 +157,7 @@ export default function makeModels (userId, isAdmin) {
         'title',
         'url',
         'image_url'
-      ],
-      getters: {
-        title: c => c.get('title'),
-        url: c => c.get('url'),
-        imageUrl: c => c.get('image_url')
-      }
+      ]
     },
 
     MessageThread: {
