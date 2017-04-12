@@ -3,6 +3,21 @@ import { difference, uniq } from 'lodash'
 import { simpleUserColumns } from '../../presenters/UserPresenter'
 import { normalizeComment } from '../../../lib/util/normalize'
 
+export function validateCommentCreateData (userId, data) {
+  return Post.isVisibleToUser(data.postId, userId)
+  .then(isVisible => {
+    if (isVisible) {
+      return Promise.resolve()
+    } else {
+      throw new Error('post not found')
+    }
+  })
+}
+
+export function createComment (userId, data) {
+  return createAndPresentComment(userId, data.text, data.post, data)
+}
+
 export default function createAndPresentComment (commenterId, text, post, opts = {}) {
   text = sanitize(text)
   const { parentComment } = opts

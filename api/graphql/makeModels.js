@@ -133,9 +133,15 @@ export default function makeModels (userId, isAdmin) {
         {user: {alias: 'creator'}}
       ],
       filter: nonAdminFilter(q => {
-        q.where('comments.post_id', 'in',
-          PostMembership.query().select('post_id')
-          .where('community_id', 'in', myCommunityIds()))
+        // this should technically just be equal to Post.isVisibleToUser
+        q.where(function () {
+          this.where('comments.post_id', 'in',
+            PostMembership.query().select('post_id')
+            .where('community_id', 'in', myCommunityIds()))
+          .orWhere('comments.post_id', 'in',
+            Follow.query().select('post_id')
+            .where('user_id', userId))
+        })
       }),
       isDefaultTypeForTable: true
     },

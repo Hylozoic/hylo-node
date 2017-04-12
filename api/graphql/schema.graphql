@@ -151,6 +151,18 @@ input PostInput {
   location: String
 }
 
+input CommentInput {
+  text: String
+  imageUrl: String
+  postId: String
+  parentCommentId: String
+}
+
+input MessageInput {
+  text: String
+  messageThreadId: String
+}
+
 input MessageThreadInput {
   participantIds: [String]
 }
@@ -159,6 +171,8 @@ type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
   findOrCreateThread(data: MessageThreadInput): MessageThread
+  createComment(data: CommentInput): Comment
+  createMessage(data: MessageInput): Message
 }
 
 type LinkPreview {
