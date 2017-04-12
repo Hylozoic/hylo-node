@@ -39,6 +39,7 @@ type Person {
 type Membership {
   id: ID
   role: Int
+  hasModeratorRole: Boolean
   createdAt: String
   lastViewedAt: String
   community: Community
