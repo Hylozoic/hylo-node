@@ -144,6 +144,7 @@ export default function makeModels (userId, isAdmin) {
         'created_at'
       ],
       relations: [
+        {post: {alias: 'post'}},
         {user: {alias: 'creator'}}
       ],
       filter: nonAdminFilter(q => {
