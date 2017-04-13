@@ -124,7 +124,10 @@ export default function makeModels (userId, isAdmin) {
             limit: args.first,
             offset: args.offset,
             sort: args.sortBy
-          }).query().then(items => ({total: items[0].total, items}))
+          }).fetchAll().then(results => ({
+            total: results.length > 0 ? results.first().get('total') : 0,
+            items: results.models
+          }))
       },
       relations: [
         'posts'
