@@ -117,17 +117,22 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
-        members: (c, args) =>
+        members: (c, { search, first, offset = 0, sortBy }) =>
           Search.forUsers({
-            term: args.search,
+            term: search,
             communities: [c.id],
-            limit: args.first,
-            offset: args.offset,
-            sort: args.sortBy
-          }).fetchAll().then(results => ({
-            total: results.length > 0 ? results.first().get('total') : 0,
-            items: results.models
-          }))
+            limit: first,
+            offset,
+            sort: sortBy
+          }).fetchAll().then(({ length, models }) => {
+            const items = models
+            const total = models.length > 0 ? models[0].get('total') : 0
+            return {
+              total,
+              items,
+              hasMore: offset + first < total
+            }
+          })
       },
       relations: [
         'posts'

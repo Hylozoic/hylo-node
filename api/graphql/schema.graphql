@@ -67,6 +67,7 @@ type Community {
 
 type PersonQuerySet {
   total: Int
+  hasMore: Boolean
   items: [Person]
 }
 
