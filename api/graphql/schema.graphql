@@ -115,6 +115,8 @@ type MessageThread {
   participantsTotal: Int
   messages(first: Int, cursor: ID, order: String): [Message]
   messagesTotal: Int
+  unreadCount: Int
+  lastReadAt: String
 }
 
 type Message {

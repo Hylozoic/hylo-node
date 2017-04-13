@@ -164,6 +164,10 @@ export default function makeModels (userId, isAdmin) {
     MessageThread: {
       model: Post,
       attributes: ['id', 'created_at', 'updated_at'],
+      getters: {
+        unreadCount: t => t.unreadCountForUser(userId),
+        lastReadAt: t => t.lastReadAtForUser(userId)
+      },
       relations: [
         {followers: {alias: 'participants'}},
         {comments: {alias: 'messages', typename: 'Message'}}
