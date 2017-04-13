@@ -105,11 +105,11 @@ export default function makeModels (userId, isAdmin) {
     Community: {
       model: Community,
       attributes: [
-        'id', 
-        'name', 
-        'slug', 
-        'created_at', 
-        'avatar_url', 
+        'id',
+        'name',
+        'slug',
+        'created_at',
+        'avatar_url',
         'banner_url',
         'memberCount',
         'postCount'
