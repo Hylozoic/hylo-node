@@ -104,15 +104,32 @@ export default function makeModels (userId, isAdmin) {
 
     Community: {
       model: Community,
-      attributes: ['id', 'name', 'slug', 'created_at', 'avatar_url', 'banner_url'],
+      attributes: [
+        'id',
+        'name',
+        'slug',
+        'created_at',
+        'avatar_url',
+        'banner_url',
+        'memberCount',
+        'postCount'
+      ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
-        memberCount: (c) => c.memberCount(),
-        postCount: (c) => c.postCount(),
-        feedItems: (c, args) => c.feedItems(args)
+        feedItems: (c, args) => c.feedItems(args),
+        members: (c, args) =>
+          Search.forUsers({
+            term: args.search,
+            communities: [c.id],
+            limit: args.first,
+            offset: args.offset,
+            sort: args.sortBy
+          }).fetchAll().then(results => ({
+            total: results.length > 0 ? results.first().get('total') : 0,
+            items: results.models
+          }))
       },
       relations: [
-        {users: {alias: 'members'}},
         'posts'
       ],
       filter: nonAdminFilter(q => {
@@ -126,16 +143,19 @@ export default function makeModels (userId, isAdmin) {
         'id',
         'created_at'
       ],
-      getters: {
-        text: c => c.get('text')
-      },
       relations: [
         {user: {alias: 'creator'}}
       ],
       filter: nonAdminFilter(q => {
-        q.where('comments.post_id', 'in',
-          PostMembership.query().select('post_id')
-          .where('community_id', 'in', myCommunityIds()))
+        // this should technically just be equal to Post.isVisibleToUser
+        q.where(function () {
+          this.where('comments.post_id', 'in',
+            PostMembership.query().select('post_id')
+            .where('community_id', 'in', myCommunityIds()))
+          .orWhere('comments.post_id', 'in',
+            Follow.query().select('post_id')
+            .where('user_id', userId))
+        })
       }),
       isDefaultTypeForTable: true
     },
@@ -147,12 +167,7 @@ export default function makeModels (userId, isAdmin) {
         'title',
         'url',
         'image_url'
-      ],
-      getters: {
-        title: c => c.get('title'),
-        url: c => c.get('url'),
-        imageUrl: c => c.get('image_url')
-      }
+      ]
     },
 
     MessageThread: {

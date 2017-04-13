@@ -30,6 +30,7 @@ type Person {
   facebookUrl: String
   url: String
   location: String
+  tagline: String
   comments: [Comment]
   commentsTotal: Int
   memberships(first: Int, cursor: ID, order: String): [Membership]
@@ -54,8 +55,7 @@ type Community {
   createdAt: String
   avatarUrl: String
   bannerUrl: String
-  members(first: Int, cursor: ID, order: String): [Person]
-  membersTotal: Int
+  members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
@@ -63,6 +63,11 @@ type Community {
   postsTotal: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
+}
+
+type PersonQuerySet {
+  total: Int
+  items: [Person]
 }
 
 type FeedItem {
@@ -153,6 +158,18 @@ input PostInput {
   location: String
 }
 
+input CommentInput {
+  text: String
+  imageUrl: String
+  postId: String
+  parentCommentId: String
+}
+
+input MessageInput {
+  text: String
+  messageThreadId: String
+}
+
 input MessageThreadInput {
   participantIds: [String]
 }
@@ -161,6 +178,8 @@ type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
   findOrCreateThread(data: MessageThreadInput): MessageThread
+  createComment(data: CommentInput): Comment
+  createMessage(data: MessageInput): Message
 }
 
 type LinkPreview {
