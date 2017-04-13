@@ -53,8 +53,7 @@ type Community {
   createdAt: String
   avatarUrl: String
   bannerUrl: String
-  members(first: Int, cursor: ID, order: String, sortBy: String, offset: Int): [Person]
-  membersTotal: Int
+  members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
@@ -62,6 +61,11 @@ type Community {
   postsTotal: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
+}
+
+type PersonQuerySet {
+  total: Int
+  items: [Person]
 }
 
 type FeedItem {

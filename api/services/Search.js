@@ -1,4 +1,5 @@
 import { get } from 'lodash'
+import { countTotal } from '../../lib/util/knex'
 
 module.exports = {
   forCommunities: function (opts) {
@@ -140,13 +141,8 @@ module.exports = {
       qb.offset(opts.offset || 0)
       qb.where('users.active', '=', true)
 
-      // this is not necessarily what any consumer desires, but
-      // some ordering must be specified for pagination
-      qb.orderBy('name', 'asc')
-
-      // this counts total rows matching the criteria, disregarding limit,
-      // which is useful for pagination
-      qb.select(bookshelf.knex.raw('users.*, count(users.*) over () as total'))
+      qb.orderBy(opts.sort || 'name', 'asc')
+      countTotal(qb, 'users')
 
       if (opts.communities) {
         qb.join('communities_users', 'communities_users.user_id', 'users.id')

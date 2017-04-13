@@ -116,10 +116,17 @@ export default function makeModels (userId, isAdmin) {
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
-        feedItems: (c, args) => c.feedItems(args)
+        feedItems: (c, args) => c.feedItems(args),
+        members: (c, args) =>
+          Search.forUsers({
+            term: args.search,
+            communities: [c.id],
+            limit: args.first,
+            offset: args.offset,
+            sort: args.sortBy
+          }).query().then(items => ({total: items[0].total, items}))
       },
       relations: [
-        {users: {alias: 'members'}},
         'posts'
       ],
       filter: nonAdminFilter(q => {
