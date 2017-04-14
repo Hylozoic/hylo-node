@@ -165,6 +165,20 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('type') === Post.Type.THREAD
   },
 
+  unreadCountForUser: function (userId) {
+    return this.lastReadAtForUser(userId)
+    .then(date => {
+      if (date > this.get('updated_at')) return 0
+      return Aggregate.count(this.comments().query(q =>
+        q.where('created_at', '>', date)))
+    })
+  },
+
+  lastReadAtForUser: function (userId) {
+    return this.lastReads().query(q => q.where('user_id', userId)).fetchOne()
+    .then(x => x ? x.get('last_read_at') : new Date(0))
+  },
+
   pushCommentToSockets: function (comment) {
     var postId = this.id
     return pushToSockets(`posts/${postId}`, 'commentAdded', {comment})
