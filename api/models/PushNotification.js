@@ -9,8 +9,6 @@ module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
 
   send: function (options) {
-    if (process.env.DISABLE_PUSH_NOTIFICATIONS) return Promise.resolve()
-
     var deviceToken = this.get('device_token')
     var platform = this.getPlatform()
     var alert = this.get('alert')
