@@ -6,6 +6,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPushNotification: function (alert, path) {
+    if (process.env.DISABLE_PUSH_NOTIFICATIONS) return
+
     if (!this.get('enabled')) return
 
     // this will be replaced to a call to an alternative push api for old versions of the app
