@@ -8,13 +8,17 @@ export default function (opts) {
     qb.offset(opts.offset || 0)
     qb.where('users.active', '=', true)
 
-    if (opts.sort === 'joinDate') {
+    if (opts.sort === 'join') {
       if (!communities || communities.length !== 1) {
-        throw new Error("When sorting by join date, you must specify exactly one community.")
+        throw new Error('When sorting by join date, you must specify exactly one community.')
       }
-      // TODO
+      qb.orderBy('communities_users.created_at', 'desc')
+      qb.groupBy(['users.id', 'communities_users.created_at'])
     } else {
       qb.orderBy(opts.sort || 'name', 'asc')
+      
+      // prevent duplicates due to the joins
+      qb.groupBy('users.id')
     }
 
     countTotal(qb, 'users')
@@ -38,9 +42,6 @@ export default function (opts) {
         columns: ['users.name', 'users.bio', 'tags.name']
       })
     }
-
-    // prevent duplicates due to the joins
-    qb.groupBy('users.id')
 
     if (opts.start_time && opts.end_time) {
       qb.whereRaw('users.created_at between ? and ?', [opts.start_time, opts.end_time])
