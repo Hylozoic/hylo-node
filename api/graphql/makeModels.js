@@ -126,7 +126,7 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy
           }).fetchAll().then(({ length, models }) => {
             const items = models
-            const total = models.length > 0 ? models[0].get('total') : 0
+            const total = models.length > 0 ? Number(models[0].get('total')) : 0
             return {
               total,
               items,
