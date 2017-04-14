@@ -54,8 +54,8 @@ function createSchema (userId, isAdmin) {
 
 export const createRequestHandler = () =>
   graphqlHTTP((req, res) => {
-    // console.log(req.body.query)
-    // console.log(req.body.variables)
+    console.log(req.body.query)
+    console.log(req.body.variables)
     // TODO: this function can return a promise -- maybe run through some
     // policies based on the current user here and assign them to context, so
     // that the resolvers can use them to deny or restrict access?
