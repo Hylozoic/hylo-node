@@ -1,4 +1,6 @@
 import { get } from 'lodash'
+import forUsers from './Search/forUsers'
+import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
 
 module.exports = {
   forCommunities: function (opts) {
@@ -12,7 +14,7 @@ module.exports = {
       }
 
       if (opts.term) {
-        Search.addTermToQueryBuilder(opts.term, qb, {
+        addTermToQueryBuilder(opts.term, qb, {
           columns: ['communities.name']
         })
       }
@@ -52,7 +54,7 @@ module.exports = {
       }
 
       if (opts.term) {
-        Search.addTermToQueryBuilder(opts.term, qb, {
+        addTermToQueryBuilder(opts.term, qb, {
           columns: ['posts.name', 'posts.description']
         })
       }
@@ -134,52 +136,7 @@ module.exports = {
     })
   },
 
-  forUsers: function (opts) {
-    return User.query(function (qb) {
-      qb.limit(opts.limit || 1000)
-      qb.offset(opts.offset || 0)
-      qb.where('users.active', '=', true)
-
-      // this is not necessarily what any consumer desires, but
-      // some ordering must be specified for pagination
-      qb.orderBy('name', 'asc')
-
-      // this counts total rows matching the criteria, disregarding limit,
-      // which is useful for pagination
-      qb.select(bookshelf.knex.raw('users.*, count(users.*) over () as total'))
-
-      if (opts.communities) {
-        qb.join('communities_users', 'communities_users.user_id', 'users.id')
-        qb.whereIn('communities_users.community_id', opts.communities)
-        qb.where('communities_users.active', true)
-      }
-
-      if (opts.autocomplete) {
-        Search.addTermToQueryBuilder(opts.autocomplete, qb, {
-          columns: ['users.name']
-        })
-      }
-
-      if (opts.term) {
-        qb.leftJoin('tags_users', 'tags_users.user_id', 'users.id')
-        qb.leftJoin('tags', 'tags.id', 'tags_users.tag_id')
-        Search.addTermToQueryBuilder(opts.term, qb, {
-          columns: ['users.name', 'users.bio', 'tags.name']
-        })
-      }
-
-      // prevent duplicates due to the joins
-      qb.groupBy('users.id')
-
-      if (opts.start_time && opts.end_time) {
-        qb.whereRaw('users.created_at between ? and ?', [opts.start_time, opts.end_time])
-      }
-
-      if (opts.exclude) {
-        qb.whereNotIn('id', opts.exclude)
-      }
-    })
-  },
+  forUsers,
 
   forTags: function (opts) {
     return Tag.query(q => {
@@ -193,29 +150,6 @@ module.exports = {
 
       q.groupBy('tags.id')
       q.limit(opts.limit)
-    })
-  },
-
-  addTermToQueryBuilder: function (term, qb, opts) {
-    var query = _.chain(term.split(/\s*\s/)) // split on whitespace
-    .map(word => word.replace(/[,;|:&()!\\]+/, ''))
-    .reject(_.isEmpty)
-    .map(word => word + ':*') // add prefix matching
-    .reduce((result, word) => {
-      // build the tsquery string using logical AND operands
-      result += ' & ' + word
-      return result
-    }).value()
-
-    var statement = format('(%s)',
-      opts.columns
-      .map(col => format("(to_tsvector('english', %s) @@ to_tsquery(?))", col))
-      .join(' or '))
-
-    var values = _.times(opts.columns.length, () => query)
-
-    qb.where(function () {
-      this.whereRaw(statement, values)
     })
   }
 }

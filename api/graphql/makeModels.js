@@ -60,7 +60,7 @@ export default function makeModels (userId, isAdmin) {
         'url',
         'location'
       ],
-      relations: ['memberships', 'posts'],
+      relations: ['comments', 'memberships', 'posts'],
       filter: nonAdminFilter(q => {
         q.where('users.id', 'in', Membership.query().select('user_id')
           .where('community_id', 'in', myCommunityIds()))
@@ -104,15 +104,37 @@ export default function makeModels (userId, isAdmin) {
 
     Community: {
       model: Community,
-      attributes: ['id', 'name', 'slug', 'created_at', 'avatar_url', 'banner_url'],
+      attributes: [
+        'id',
+        'name',
+        'slug',
+        'created_at',
+        'avatar_url',
+        'banner_url',
+        'memberCount',
+        'postCount'
+      ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
-        memberCount: (c) => c.memberCount(),
-        postCount: (c) => c.postCount(),
-        feedItems: (c, args) => c.feedItems(args)
+        feedItems: (c, args) => c.feedItems(args),
+        members: (c, { search, first, offset = 0, sortBy }) =>
+          Search.forUsers({
+            term: search,
+            communities: [c.id],
+            limit: first,
+            offset,
+            sort: sortBy
+          }).fetchAll().then(({ length, models }) => {
+            const items = models
+            const total = models.length > 0 ? Number(models[0].get('total')) : 0
+            return {
+              total,
+              items,
+              hasMore: offset + first < total
+            }
+          })
       },
       relations: [
-        {users: {alias: 'members'}},
         'posts'
       ],
       filter: nonAdminFilter(q => {
@@ -126,10 +148,8 @@ export default function makeModels (userId, isAdmin) {
         'id',
         'created_at'
       ],
-      getters: {
-        text: c => c.get('text')
-      },
       relations: [
+        'post',
         {user: {alias: 'creator'}}
       ],
       filter: nonAdminFilter(q => {
@@ -153,17 +173,16 @@ export default function makeModels (userId, isAdmin) {
         'title',
         'url',
         'image_url'
-      ],
-      getters: {
-        title: c => c.get('title'),
-        url: c => c.get('url'),
-        imageUrl: c => c.get('image_url')
-      }
+      ]
     },
 
     MessageThread: {
       model: Post,
       attributes: ['id', 'created_at', 'updated_at'],
+      getters: {
+        unreadCount: t => t.unreadCountForUser(userId),
+        lastReadAt: t => t.lastReadAtForUser(userId)
+      },
       relations: [
         {followers: {alias: 'participants'}},
         {comments: {alias: 'messages', typename: 'Message'}}

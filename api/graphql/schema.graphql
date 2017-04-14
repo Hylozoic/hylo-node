@@ -30,6 +30,9 @@ type Person {
   facebookUrl: String
   url: String
   location: String
+  tagline: String
+  comments: [Comment]
+  commentsTotal: Int
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
@@ -52,8 +55,7 @@ type Community {
   createdAt: String
   avatarUrl: String
   bannerUrl: String
-  members(first: Int, cursor: ID, order: String): [Person]
-  membersTotal: Int
+  members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
@@ -61,6 +63,12 @@ type Community {
   postsTotal: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
+}
+
+type PersonQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Person]
 }
 
 type FeedItem {
@@ -103,6 +111,7 @@ type Comment {
   id: ID
   text: String
   creator: Person
+  post: Post
   createdAt: String
   createdFrom: String
 }
@@ -115,6 +124,8 @@ type MessageThread {
   participantsTotal: Int
   messages(first: Int, cursor: ID, order: String): [Message]
   messagesTotal: Int
+  unreadCount: Int
+  lastReadAt: String
 }
 
 type Message {

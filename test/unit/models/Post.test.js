@@ -294,4 +294,41 @@ describe('Post', function () {
       })
     })
   })
+
+  describe('#unreadCountForUser', () => {
+    var post, user, user2, c1, c2, c3
+
+    before(() => {
+      post = factories.post()
+      user = factories.user()
+      user2 = factories.user()
+      return Promise.join(post.save(), user.save(), user2.save())
+      .then(() => {
+        const lastReadDate = new Date()
+        const earlier = new Date(lastReadDate.getTime() - 60000)
+        const later = new Date(lastReadDate.getTime() + 60000)
+        c1 = factories.comment({post_id: post.id, created_at: earlier})
+        c2 = factories.comment({post_id: post.id, created_at: later})
+        c3 = factories.comment({post_id: post.id, created_at: later})
+
+        return Promise.all([
+          LastRead.findOrCreate(user.id, post.id, {date: lastReadDate}),
+          c1.save(),
+          c2.save(),
+          c3.save(),
+          post.save({updated_at: later}, {patch: true})
+        ])
+      })
+    })
+
+    it('returns the number of unread messages (comments)', () => {
+      return post.unreadCountForUser(user.id)
+      .then(count => expect(count).to.equal(2))
+    })
+
+    it('returns the total number of messages (comments) if no last_read_at value', () => {
+      return post.unreadCountForUser(user2.id)
+      .then(count => expect(count).to.equal(3))
+    })
+  })
 })
