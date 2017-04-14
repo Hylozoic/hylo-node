@@ -111,6 +111,7 @@ type Comment {
   id: ID
   text: String
   creator: Person
+  post: Post
   createdAt: String
   createdFrom: String
 }
