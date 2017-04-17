@@ -213,7 +213,7 @@ export default function makeModels (userId, isAdmin) {
       model: Vote,
       attributes: [
         'id',
-        'created_at'
+        'date_voted'
       ],
       relations: [
         'post',
