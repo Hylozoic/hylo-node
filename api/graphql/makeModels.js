@@ -62,7 +62,12 @@ export default function makeModels (userId, isAdmin) {
         'url',
         'location'
       ],
-      relations: ['comments', 'memberships', 'posts'],
+      relations: [
+        'comments',
+        'memberships',
+        'posts',
+        'votes'
+      ],
       filter: nonAdminFilter(q => {
         q.where('users.id', 'in', Membership.query().select('user_id')
           .where('community_id', 'in', myCommunityIds()))
@@ -202,6 +207,23 @@ export default function makeModels (userId, isAdmin) {
       model: Comment,
       attributes: ['id', 'created_at'],
       relations: [{user: {alias: 'creator'}}]
+    },
+
+    Vote: {
+      model: Vote,
+      attributes: [
+        'id',
+        'created_at'
+      ],
+      relations: [
+        'post',
+        { user: { alias: 'voter' } }
+      ],
+      filter: nonAdminFilter(q => {
+        q.where('votes.post_id', 'in', PostMembership.query().select('post_id')
+          .where('community_id', 'in', myCommunityIds()))
+      }),
+      isDefaultTypeForTable: true
     }
   }
 }
