@@ -134,7 +134,7 @@ export default function makeModels (userId, isAdmin) {
           }).fetchAll().then(({ length, models }) => {
             const items = models
             const total = models.length > 0
-              ? Number(models[0].get(PAGINATION_TOTAL_COLUMN_NAME))
+              ? Number(models[0].get('total'))
               : 0
             return {
               total,
