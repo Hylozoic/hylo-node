@@ -37,6 +37,8 @@ type Person {
   membershipsTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
+  votes(first: Int, cursor: ID, order: String): [Vote]
+  votesTotal: Int
 }
 
 type Membership {
@@ -137,6 +139,13 @@ type Message {
   id: ID
   text: String
   creator: Person
+  createdAt: String
+}
+
+type Vote {
+  id: ID
+  post: Post
+  voter: Person
   createdAt: String
 }
 

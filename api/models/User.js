@@ -61,6 +61,10 @@ module.exports = bookshelf.Model.extend(merge({
     }))
   },
 
+  votes: function () {
+    return this.hasMany(Vote)
+  },
+
   messageThreads: function () {
     return this.belongsToMany(Post).through(Follow)
     .query(q => q.where({type: Post.Type.THREAD, active: true}))
