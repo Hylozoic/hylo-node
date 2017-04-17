@@ -99,12 +99,17 @@ type Post {
   followersTotal: Int
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
-  comments(first: Int, cursor: ID, order: String): [Comment]
-  commentsTotal: Int
+  comments(first: Int, cursor: ID, order: String): CommentQuerySet
   commenters(first: Int): [Person]
   commentersTotal: Int
   linkPreview: LinkPreview
   votesTotal: Int
+}
+
+type CommentQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Comment]
 }
 
 type Comment {
@@ -140,6 +145,7 @@ type Query {
   person(id: ID): Person
   community(id: ID, slug: String): Community
   messageThread(id: ID): MessageThread
+  post(id: ID): Post
 }
 
 input MeInput {
