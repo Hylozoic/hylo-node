@@ -31,7 +31,7 @@ type Person {
   url: String
   location: String
   tagline: String
-  comments: [Comment]
+  comments(first: Int, cursor: ID, order: String): [Comment]
   commentsTotal: Int
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
