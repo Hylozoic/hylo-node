@@ -211,10 +211,10 @@ export default function makeModels (userId, isAdmin) {
 
     Vote: {
       model: Vote,
-      attributes: [
-        'id',
-        'date_voted'
-      ],
+      attributes: [ 'id' ],
+      getters: {
+        createdAt: v => v.get('date_voted')
+      },
       relations: [
         'post',
         { user: { alias: 'voter' } }
@@ -222,8 +222,7 @@ export default function makeModels (userId, isAdmin) {
       filter: nonAdminFilter(q => {
         q.where('votes.post_id', 'in', PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
-      }),
-      isDefaultTypeForTable: true
+      })
     }
   }
 }

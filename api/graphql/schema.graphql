@@ -146,7 +146,7 @@ type Vote {
   id: ID
   post: Post
   voter: Person
-  dateVoted: String
+  createdAt: String
 }
 
 type Query {
