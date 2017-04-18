@@ -61,6 +61,18 @@ describe('UserController', function () {
       return Promise.join(u1.save(), u2.save())
     })
 
+    describe('.create', () => {
+      it('halts on duplicate email', function () {
+        Object.assign(req.params, {email: u2.get('email')})
+
+        return UserController.create(req, res)
+        .then(() => {
+          expect(res.statusCode).to.equal(422)
+          expect(res.body).to.equal(req.__('duplicate-email'))
+        })
+      })
+    })
+
     describe('.update', function () {
       it('halts on invalid email', function () {
         Object.assign(req.params, {userId: u1.id, email: 'lol'})

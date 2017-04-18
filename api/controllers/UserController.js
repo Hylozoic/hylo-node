@@ -38,7 +38,7 @@ module.exports = {
       }
     })
     .catch(function (err) {
-      res.status(422).send(err.detail ? err.detail : err)
+      res.status(422).send(req.__(err.message ? err.message : err))
     })
   },
 
