@@ -12,7 +12,7 @@ import {
 
 export function updateMe (userId, changes) {
   return User.find(userId)
-  .then(user => user.validateAndSave(changes))
+  .then(user => user.validateAndSave(convertGraphqlUserSettingsData(changes)))
 }
 
 function convertGraphqlCreateData (data) {
@@ -24,6 +24,16 @@ function convertGraphqlCreateData (data) {
     ends_at: data.endsAt,
     parent_post_id: data.parentPostId
   }, data))
+}
+
+function convertGraphqlUserSettingsData (data) {
+  return merge({
+    avatar_url: data.avatarUrl,
+    banner_url: data.bannerUrl,
+    twitter_name: data.twitter_name,
+    linkedin_url: data.linkedInUrl,
+    facebook_url: data.facebookUrl
+  }, data)
 }
 
 export function createPost (userId, data) {
