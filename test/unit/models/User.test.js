@@ -362,4 +362,24 @@ describe('User', function () {
       .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
     })
   })
+
+  describe('.comments', () => {
+    beforeEach(() => {
+      return factories.post({type: Post.Type.THREAD}).save()
+      .then(post => factories.comment({
+        post_id: post.id,
+        user_id: cat.id
+      }).save())
+      .then(() => factories.post().save())
+      .then(post => factories.comment({
+        post_id: post.id,
+        user_id: cat.id
+      }).save())
+    })
+
+    it('does not include messages', () => {
+      return cat.comments().fetch()
+      .then(comments => expect(comments.length).to.equal(1))
+    })
+  })
 })
