@@ -24,7 +24,11 @@ export default function makeModels (userId, isAdmin) {
         'email',
         'avatar_url',
         'banner_url',
+        'twitter_name',
+        'linkedin_url',
+        'facebook_url',
         'url',
+        'location',
         'bio',
         'updated_at'
       ],
@@ -35,7 +39,8 @@ export default function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread'}}
       ],
       getters: {
-        hasDevice: u => u.hasDevice()
+        hasDevice: u => u.hasDevice(),
+        tagline: u => 'Tagline'
       }
     },
 

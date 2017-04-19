@@ -6,7 +6,12 @@ type Me {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  twitterName: String
+  linkedinUrl: String
+  facebookUrl: String
   url: String
+  location: String
+  tagline: String
   hasDevice: Boolean
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
