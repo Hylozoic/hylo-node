@@ -139,6 +139,7 @@ type Message {
   id: ID
   text: String
   creator: Person
+  messageThread: MessageThread
   createdAt: String
 }
 
