@@ -58,11 +58,10 @@ type Community {
   avatarUrl: String
   bannerUrl: String
   members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
+  posts(first: Int, order: String, sortBy: String, offset: Int, search: String): PostQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
-  posts(first: Int, cursor: ID, order: String): [Post]
-  postsTotal: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
 }
@@ -71,6 +70,12 @@ type PersonQuerySet {
   total: Int
   hasMore: Boolean
   items: [Person]
+}
+
+type PostQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Post]
 }
 
 type FeedItem {

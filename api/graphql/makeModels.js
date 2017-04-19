@@ -1,4 +1,4 @@
-import { PAGINATION_TOTAL_COLUMN_NAME } from '../../lib/graphql-bookshelf-bridge/util/applyPagination'
+import searchQuerySet from './searchQuerySet'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -125,27 +125,23 @@ export default function makeModels (userId, isAdmin) {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
         members: (c, { search, first, offset = 0, sortBy }) =>
-          Search.forUsers({
+          searchQuerySet('forUsers', {
             term: search,
             communities: [c.id],
             limit: first,
             offset,
-            sort: sortBy
-          }).fetchAll().then(({ length, models }) => {
-            const items = models
-            const total = models.length > 0
-              ? Number(models[0].get('total'))
-              : 0
-            return {
-              total,
-              items,
-              hasMore: offset + first < total
-            }
+            sort: sortBy || 'name'
+          }),
+
+        posts: (c, { search, first, offset = 0, sortBy }) =>
+          searchQuerySet('forPosts', {
+            term: search,
+            communities: [c.id],
+            limit: first,
+            offset,
+            sort: sortBy || 'id'
           })
       },
-      relations: [
-        'posts'
-      ],
       filter: nonAdminFilter(q => {
         q.where('communities.id', 'in', myCommunityIds())
       })
