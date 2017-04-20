@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+import { merge, transform, snakeCase } from 'lodash'
 import {
   createComment as underlyingCreateComment,
   validateCommentCreateData
@@ -9,6 +9,12 @@ import {
   validatePostCreateData,
   validateThreadData
 } from '../models/post/util'
+
+function convertGraphqlUserSettingsData (data) {
+  return transform(data, (result, value, key) => {
+    result[snakeCase(key)] = value
+  }, {})
+}
 
 export function updateMe (userId, changes) {
   return User.find(userId)
@@ -24,16 +30,6 @@ function convertGraphqlCreateData (data) {
     ends_at: data.endsAt,
     parent_post_id: data.parentPostId
   }, data))
-}
-
-function convertGraphqlUserSettingsData (data) {
-  return merge({
-    avatar_url: data.avatarUrl,
-    banner_url: data.bannerUrl,
-    twitter_name: data.twitter_name,
-    linkedin_url: data.linkedInUrl,
-    facebook_url: data.facebookUrl
-  }, data)
 }
 
 export function createPost (userId, data) {
