@@ -99,6 +99,12 @@ module.exports = bookshelf.Model.extend(merge({
     .tap(() => this.markInvitationsUsed(communityId))
   },
 
+  leaveCommunity: function (community) {
+    var communityId = (typeof community === 'object' ? community.id : community)
+    return Membership.find(this.id, communityId)
+    .then(m => m && m.destroy().then(m => m.id))
+  },
+
   // sanitize certain values before storing them
   setSanely: function (attrs) {
     const saneAttrs = omit(attrs, 'settings')

@@ -214,6 +214,7 @@ type Mutation {
   findOrCreateThread(data: MessageThreadInput): MessageThread
   createComment(data: CommentInput): Comment
   createMessage(data: MessageInput): Message
+  leaveCommunity(id: ID): ID
 }
 
 type LinkPreview {

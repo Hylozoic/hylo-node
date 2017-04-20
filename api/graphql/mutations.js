@@ -21,6 +21,11 @@ export function updateMe (userId, changes) {
   .then(user => user.validateAndSave(convertGraphqlUserSettingsData(changes)))
 }
 
+export function leaveCommunity (userId, communityId) {
+  return User.find(userId)
+  .then(user => user.leaveCommunity(communityId))
+}
+
 function convertGraphqlCreateData (data) {
   return Promise.resolve(merge({
     name: data.title,
