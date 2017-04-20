@@ -140,7 +140,7 @@ export default function makeModels (userId, isAdmin) {
             limit: first,
             offset,
             type: filter,
-            sort: sortBy || 'id'
+            sort: sortBy || 'updated'
           })
       },
       filter: nonAdminFilter(q => {
