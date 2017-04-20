@@ -203,7 +203,10 @@ export default function makeModels (userId, isAdmin) {
     Message: {
       model: Comment,
       attributes: ['id', 'created_at'],
-      relations: [{user: {alias: 'creator'}}]
+      relations: [
+        {post: {alias: 'messageThread'}},
+        {user: {alias: 'creator'}}
+      ]
     },
 
     Vote: {
