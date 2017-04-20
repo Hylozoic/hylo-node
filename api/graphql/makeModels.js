@@ -133,12 +133,13 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy || 'name'
           }),
 
-        posts: (c, { search, first, offset = 0, sortBy }) =>
+        posts: (c, { search, first, offset = 0, sortBy, filter }) =>
           searchQuerySet('forPosts', {
             term: search,
             communities: [c.id],
             limit: first,
             offset,
+            type: filter,
             sort: sortBy || 'id'
           })
       },

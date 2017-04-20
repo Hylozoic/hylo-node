@@ -58,7 +58,14 @@ type Community {
   avatarUrl: String
   bannerUrl: String
   members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
-  posts(first: Int, order: String, sortBy: String, offset: Int, search: String): PostQuerySet
+  posts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String
+  ): PostQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
