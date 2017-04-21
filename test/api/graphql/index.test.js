@@ -131,12 +131,13 @@ describe('graphql request handler', () => {
             messageThreads {
               id
               messages {
-                text
-                creator {
-                  name
+                items {
+                  text
+                  creator {
+                    name
+                  }
                 }
               }
-              messagesTotal
               participants {
                 name
               }
@@ -189,15 +190,16 @@ describe('graphql request handler', () => {
               messageThreads: [
                 {
                   id: thread.id,
-                  messages: [
-                    {
-                      text: message.get('text'),
-                      creator: {
-                        name: user2.get('name')
+                  messages: {
+                    items: [
+                      {
+                        text: message.get('text'),
+                        creator: {
+                          name: user2.get('name')
+                        }
                       }
-                    }
-                  ],
-                  messagesTotal: 1,
+                    ]
+                  },
                   participants: [
                     {
                       name: user.get('name')

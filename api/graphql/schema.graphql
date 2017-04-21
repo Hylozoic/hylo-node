@@ -141,10 +141,15 @@ type MessageThread {
   updatedAt: String
   participants(first: Int, cursor: ID, order: String): [Person]
   participantsTotal: Int
-  messages(first: Int, cursor: ID, order: String): [Message]
-  messagesTotal: Int
+  messages(first: Int, cursor: ID, order: String): MessageQuerySet
   unreadCount: Int
   lastReadAt: String
+}
+
+type MessageQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Message]
 }
 
 type Message {
