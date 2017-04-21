@@ -20,6 +20,7 @@ exports.seed = (knex, Promise) => delAll(knex)
   .then(() => knex('communities').insert({ name: 'starter-posts', slug: 'starter-posts' }))
   .then(() => seed('communities', knex, Promise))
   .then(() => seed('posts', knex, Promise))
+  .then(() => addUsersToCommunities(knex, Promise))
   .catch(err => {
     let report = err.message
     if (err.message.includes('unique constraint')) {
@@ -78,6 +79,28 @@ const fake = {
   posts: fakePost,
   tags: fakeTag,
   users: fakeUser
+}
+
+function randomIndex (length) {
+  return Math.floor(Math.random() * length)
+}
+
+function moderatorOrMember () {
+  // Role 1 is moderator
+  return Math.random() > 0.9 ? 1 : 0
+}
+
+function addUsersToCommunities (knex, Promise) {
+  return knex('users').select('id')
+    .then(users => knex('communities').select('id').then(communities => ({ users, communities })))
+    .then(({ users, communities }) => Promise.all(
+      users.map(user => knex('communities_users').insert({
+        user_id: user.id,
+        community_id: communities[randomIndex(communities.length)].id,
+        role: moderatorOrMember(),
+        settings: '{ "send_email": true, "send_push_notifications": true }' 
+      }))
+    ))
 }
 
 function seed (entity, knex, Promise) {
