@@ -1,15 +1,43 @@
+const bcrypt = require('bcrypt')
 const faker = require('faker')
+const promisify = require('bluebird').promisify
+const hash = promisify(bcrypt.hash, bcrypt)
 
 const n = {
   communities: 50,
   networks: 5,
   posts: 3000,
   tags: 20,
-  users: 1000
+  users: 1000,
+  threads: 2000
 }
+
+// Add your test account details here. You'll be randomly assigned to a community.
+// (You can create your own later if you want).
+const name = 'Rich Churcher'
+const email = 'rich@hylo.com'
+const password = 'hylo'
+let provider_user_id = ''
 
 exports.seed = (knex, Promise) => delAll(knex)
   .then(() => seed('users', knex, Promise))
+  .then(() => hash(password, 10))
+  .then(hash => { provider_user_id = hash })
+  .then(() => knex('users')
+    .insert({
+      name,
+      email,
+      active: true,
+      email_validated: true,
+      created_at: knex.fn.now()
+    })
+    .returning('id'))
+  .then(([ user_id ]) => knex('linked_account')
+    .insert({
+      user_id,
+      provider_user_id, 
+      provider_key: 'password'
+    }))
   .then(() => knex('tags').insert([
     {name: 'offer'},
     {name: 'request'},
@@ -20,6 +48,8 @@ exports.seed = (knex, Promise) => delAll(knex)
   .then(() => knex('communities').insert({ name: 'starter-posts', slug: 'starter-posts' }))
   .then(() => seed('communities', knex, Promise))
   .then(() => seed('posts', knex, Promise))
+  .then(() => createThreads(knex, Promise))
+  .then(() => seedMessages(knex, Promise))
   .then(() => addUsersToCommunities(knex, Promise))
   .catch(err => {
     let report = err.message
@@ -91,24 +121,44 @@ function moderatorOrMember () {
 }
 
 function addUsersToCommunities (knex, Promise) {
+  console.info('  --> communities_users')
   return knex('users').select('id')
-    .then(users => knex('communities').select('id').then(communities => ({ users, communities })))
-    .then(({ users, communities }) => Promise.all(
-      users.map(user => knex('communities_users').insert({
-        user_id: user.id,
-        community_id: communities[randomIndex(communities.length)].id,
-        role: moderatorOrMember(),
-        settings: '{ "send_email": true, "send_push_notifications": true }' 
-      }))
-    ))
+    .then(users => Promise.all(users.map(({ id }) => fakeMembership(id, knex))))
 }
 
 function seed (entity, knex, Promise) {
   console.info(`  --> ${entity}`)
   return Promise.all(
-    [...new Array(n[entity])]
+    [ ...new Array(n[entity]) ]
       .map(() => fake[entity](knex, Promise).then(row => knex(entity).insert(row)))
   )
+}
+
+function createThreads (knex, Promise) {
+  console.info('  --> threads')
+  return Promise.all(
+    [ ...new Array(n.threads) ].map(() => fakeThread(knex, Promise))
+  )
+}
+
+function seedMessages (knex, Promise) {
+  console.info('  --> messages')
+  return knex('follows')
+    .join('posts', 'posts.id', 'follows.post_id')
+    .select('follows.post_id as post', 'follows.user_id as user')
+    .where('posts.type', 'thread')
+    .then(follows => Promise.all(
+      // Add a message to each followed thread
+      follows.map(follow => knex('comments')
+        .insert({
+          text: faker.lorem.paragraph(),
+          created_at: faker.date.past(),
+          post_id: follow.post,
+          user_id: follow.user,
+          active: true
+        }))
+      )
+    )
 }
 
 // Grab random row or rows from table
@@ -117,6 +167,31 @@ function sample (entity, knex, limit = 1) {
     .select()
     .orderByRaw('random()')
     .limit(limit)
+}
+
+function fakeThread (knex, Promise) {
+  return sample('users', knex)
+    .then(([ user ]) => Promise.all([
+      knex('posts')
+        .insert({
+          created_at: faker.date.past(),
+          type: 'thread',
+          user_id: user.id,
+          active: true
+        })
+        .returning(['id', 'user_id']),
+      sample('users', knex, randomIndex(5) + 2)
+    ]))
+    .then(([ [ post ], users ]) => Promise.all(
+      // The thread creator follows the thread too
+      [ ...users, { id: post.user_id } ]
+        .map(user => knex('follows').insert({
+          post_id: post.id,
+          user_id: user.id,
+          added_at: faker.date.past()
+        })
+        .returning('user_id'))
+    ))
 }
 
 function fakeCommunity (knex) {
@@ -148,6 +223,19 @@ function fakeCommunity (knex) {
       slack_team: faker.internet.url(),
       slack_configure_url: faker.internet.url()
     }))
+}
+
+function fakeMembership (user_id, knex) {
+  return sample('communities', knex)
+    .then(([ community ]) => knex('communities_users')
+      .insert({
+        active: true,
+        community_id: community.id,
+        created_at: knex.fn.now(),
+        role: moderatorOrMember(),
+        settings: '{ "send_email": true, "send_push_notifications": true }',
+        user_id
+      }))
 }
 
 function fakeNetwork (_, Promise) {
@@ -189,7 +277,7 @@ function fakeTag (_, Promise) {
 function fakeUser (_, Promise) {
   return Promise.resolve({
     email: faker.internet.email(),
-    name: faker.internet.userName(),
+    name: `${faker.name.firstName()} ${faker.name.lastName()}`,
     avatar_url: faker.internet.avatar(),
     first_name: faker.name.firstName(),
     last_name: faker.name.lastName(),
@@ -210,4 +298,3 @@ function fakeUser (_, Promise) {
     url: faker.internet.url()
   })
 }
-
