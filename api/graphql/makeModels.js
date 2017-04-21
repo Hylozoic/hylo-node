@@ -30,7 +30,8 @@ export default function makeModels (userId, isAdmin) {
         'url',
         'location',
         'bio',
-        'updated_at'
+        'updated_at',
+        'tagline'
       ],
       relations: [
         'communities',
@@ -39,8 +40,7 @@ export default function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread'}}
       ],
       getters: {
-        hasDevice: u => u.hasDevice(),
-        tagline: u => 'Tagline'
+        hasDevice: u => u.hasDevice()
       }
     },
 
@@ -65,7 +65,8 @@ export default function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
-        'location'
+        'location',
+        'tagline'
       ],
       relations: [
         'comments',

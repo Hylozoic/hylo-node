@@ -198,7 +198,7 @@ module.exports = bookshelf.Model.extend(merge({
     var whitelist = pick(changes, [
       'name', 'bio', 'avatar_url', 'banner_url', 'location',
       'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
-      'work', 'intention', 'extra_info', 'settings'
+      'work', 'intention', 'extra_info', 'settings', 'tagline'
     ])
 
     return bookshelf.transaction(transacting =>

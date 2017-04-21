@@ -12,6 +12,7 @@ const userFieldsToCopy = [
   'intention',
   'linkedin_url',
   'twitter_name',
+  'tagline',
   'work'
 ]
 
