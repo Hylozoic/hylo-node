@@ -139,13 +139,14 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy || 'name'
           }),
 
-        posts: (c, { search, first, offset = 0, sortBy }) =>
+        posts: (c, { search, first, offset = 0, sortBy, filter }) =>
           searchQuerySet('forPosts', {
             term: search,
             communities: [c.id],
             limit: first,
             offset,
-            sort: sortBy || 'id'
+            type: filter,
+            sort: sortBy || 'updated'
           })
       },
       filter: nonAdminFilter(q => {
@@ -208,7 +209,10 @@ export default function makeModels (userId, isAdmin) {
     Message: {
       model: Comment,
       attributes: ['id', 'created_at'],
-      relations: [{user: {alias: 'creator'}}]
+      relations: [
+        {post: {alias: 'messageThread'}},
+        {user: {alias: 'creator'}}
+      ]
     },
 
     Vote: {

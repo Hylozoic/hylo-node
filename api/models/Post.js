@@ -266,6 +266,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     WELCOME: 'welcome',
     REQUEST: 'request',
     OFFER: 'offer',
+    DISCUSSION: 'discussion',
     EVENT: 'event',
     PROJECT: 'project',
     THREAD: 'thread'
