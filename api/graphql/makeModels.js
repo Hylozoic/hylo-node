@@ -24,9 +24,14 @@ export default function makeModels (userId, isAdmin) {
         'email',
         'avatar_url',
         'banner_url',
+        'twitter_name',
+        'linkedin_url',
+        'facebook_url',
         'url',
+        'location',
         'bio',
-        'updated_at'
+        'updated_at',
+        'tagline'
       ],
       relations: [
         'communities',
@@ -60,7 +65,8 @@ export default function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
-        'location'
+        'location',
+        'tagline'
       ],
       relations: [
         'comments',
