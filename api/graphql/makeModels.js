@@ -106,7 +106,12 @@ export default function makeModels (userId, isAdmin) {
         q.where('posts.id', 'in', PostMembership.query().select('post_id')
           .where('community_id', 'in', myCommunityIds()))
       }),
-      isDefaultTypeForTable: true
+      isDefaultTypeForTable: true,
+      fetchMany: ({ first, offset, search }) => {
+        return Search.forPosts({
+
+        }).query()
+      }
     },
 
     Community: {

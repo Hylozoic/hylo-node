@@ -168,6 +168,7 @@ type Query {
   community(id: ID, slug: String): Community
   messageThread(id: ID): MessageThread
   post(id: ID): Post
+  posts(search: String, first: Int, offset: Int): PostQuerySet
 }
 
 input MeInput {
