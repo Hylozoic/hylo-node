@@ -1,4 +1,4 @@
-import searchQuerySet from './searchQuerySet'
+import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -107,11 +107,14 @@ export default function makeModels (userId, isAdmin) {
           .where('community_id', 'in', myCommunityIds()))
       }),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, offset, search }) => {
-        return Search.forPosts({
-
-        }).query()
-      }
+      fetchMany: ({ first, order, sortBy, offset, search, filter }) =>
+        searchQuerySet('forPosts', {
+          term: search,
+          limit: first,
+          offset,
+          type: filter,
+          sort: sortBy
+        })
     },
 
     Community: {
@@ -130,7 +133,7 @@ export default function makeModels (userId, isAdmin) {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
         members: (c, { search, first, offset = 0, sortBy }) =>
-          searchQuerySet('forUsers', {
+          fetchSearchQuerySet('forUsers', {
             term: search,
             communities: [c.id],
             limit: first,
@@ -139,13 +142,13 @@ export default function makeModels (userId, isAdmin) {
           }),
 
         posts: (c, { search, first, offset = 0, sortBy, filter }) =>
-          searchQuerySet('forPosts', {
+          fetchSearchQuerySet('forPosts', {
             term: search,
             communities: [c.id],
             limit: first,
             offset,
             type: filter,
-            sort: sortBy || 'updated'
+            sort: sortBy
           })
       },
       filter: nonAdminFilter(q => {

@@ -61,6 +61,11 @@ describe('Search', function () {
       var query = Search.forPosts({communities: 9, type: 'all'}).query().toString()
       expect(query).to.contain('("posts"."type" not in (\'welcome\', \'thread\') or "posts"."type" is null)')
     })
+
+    it('accepts an option to change the name of the total column', () => {
+      const query = Search.forPosts({totalColumnName: 'wowee'}).query().toString()
+      expect(query).to.contain('count(*) over () as wowee')
+    })
   })
 
   describe('.forUsers', () => {

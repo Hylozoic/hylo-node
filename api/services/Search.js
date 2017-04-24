@@ -1,5 +1,6 @@
 import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
+import { countTotal } from '../../lib/util/knex'
 import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
 
 module.exports = {
@@ -24,7 +25,7 @@ module.exports = {
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      qb.select(bookshelf.knex.raw('communities.*, count(*) over () as total'))
+      countTotal(qb, 'communities', opts.totalColumnName)
 
       qb.limit(opts.limit)
       qb.offset(opts.offset)
