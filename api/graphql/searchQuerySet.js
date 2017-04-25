@@ -39,6 +39,7 @@ const optionShims = {
 
   forUsers: options => {
     // TODO
+    return options
   }
 }
 
