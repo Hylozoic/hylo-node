@@ -176,6 +176,15 @@ type Query {
     search: String,
     filter: String
   ): PostQuerySet
+  people(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String,
+    filter: String
+  ): PersonQuerySet
 }
 
 input MeInput {

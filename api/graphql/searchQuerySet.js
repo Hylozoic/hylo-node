@@ -60,6 +60,6 @@ const shims = {
   },
 
   forUsers: options => {
-    // TODO
+    return options
   }
 }

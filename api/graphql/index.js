@@ -20,7 +20,8 @@ function createSchema (userId, isAdmin) {
       person: (root, { id }) => fetchOne('Person', id),
       messageThread: (root, { id }) => fetchOne('MessageThread', id),
       post: (root, { id }) => fetchOne('Post', id),
-      posts: (root, args) => fetchMany('Post', args)
+      posts: (root, args) => fetchMany('Post', args),
+      people: (root, args) => fetchMany('Person', args)
     },
     Mutation: {
       updateMe: (root, { changes }) =>

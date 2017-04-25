@@ -72,7 +72,16 @@ export default function makeModels (userId, isAdmin) {
         q.where('users.id', 'in', Membership.query().select('user_id')
           .where('community_id', 'in', myCommunityIds()))
       }),
-      isDefaultTypeForTable: true
+      isDefaultTypeForTable: true,
+      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
+        searchQuerySet('forUsers', {
+          term: search,
+          limit: first,
+          offset,
+          type: filter,
+          autocomplete,
+          sort: sortBy
+        })
     },
 
     Post: {
