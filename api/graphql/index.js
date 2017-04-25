@@ -2,7 +2,9 @@ import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
-import { updateMe, createComment, createPost, findOrCreateThread } from './mutations'
+import {
+  updateMe, createComment, createPost, findOrCreateThread, leaveCommunity
+} from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 
@@ -35,7 +37,8 @@ function createSchema (userId, isAdmin) {
         return createComment(userId, data).then(message => fetchOne('Message', message.id))
       },
       findOrCreateThread: (root, { data }) =>
-        findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id))
+        findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
+      leaveCommunity: (root, { id }) => leaveCommunity(userId, id)
     },
 
     FeedItemContent: {

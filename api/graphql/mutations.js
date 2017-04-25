@@ -1,4 +1,4 @@
-import { merge } from 'lodash'
+import { merge, transform, snakeCase } from 'lodash'
 import {
   createComment as underlyingCreateComment,
   validateCommentCreateData
@@ -10,9 +10,20 @@ import {
   validateThreadData
 } from '../models/post/util'
 
+function convertGraphqlUserSettingsData (data) {
+  return transform(data, (result, value, key) => {
+    result[snakeCase(key)] = value
+  }, {})
+}
+
 export function updateMe (userId, changes) {
   return User.find(userId)
-  .then(user => user.validateAndSave(changes))
+  .then(user => user.validateAndSave(convertGraphqlUserSettingsData(changes)))
+}
+
+export function leaveCommunity (userId, communityId) {
+  return User.find(userId)
+  .then(user => user.leaveCommunity(communityId))
 }
 
 function convertGraphqlCreateData (data) {

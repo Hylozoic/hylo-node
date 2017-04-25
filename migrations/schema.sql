@@ -2,9 +2,6 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.1
--- Dumped by pg_dump version 9.5.1
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -1164,7 +1161,8 @@ CREATE TABLE users (
     updated_at timestamp with time zone,
     settings jsonb DEFAULT '{}'::jsonb,
     location character varying(255),
-    url character varying(255)
+    url character varying(255),
+    tagline character varying(255)
 );
 
 
@@ -2495,3 +2493,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+

@@ -6,7 +6,12 @@ type Me {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  twitterName: String
+  linkedinUrl: String
+  facebookUrl: String
   url: String
+  location: String
+  tagline: String
   hasDevice: Boolean
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
@@ -141,10 +146,15 @@ type MessageThread {
   updatedAt: String
   participants(first: Int, cursor: ID, order: String): [Person]
   participantsTotal: Int
-  messages(first: Int, cursor: ID, order: String): [Message]
-  messagesTotal: Int
+  messages(first: Int, cursor: ID, order: String): MessageQuerySet
   unreadCount: Int
   lastReadAt: String
+}
+
+type MessageQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Message]
 }
 
 type Message {
@@ -194,6 +204,11 @@ input MeInput {
   bannerUrl: String
   bio: String
   url: String
+  twitterName: String
+  linkedinUrl: String
+  facebookUrl: String
+  location: String
+  tagline: String
 }
 
 input PostInput {
@@ -229,6 +244,7 @@ type Mutation {
   findOrCreateThread(data: MessageThreadInput): MessageThread
   createComment(data: CommentInput): Comment
   createMessage(data: MessageInput): Message
+  leaveCommunity(id: ID): ID
 }
 
 type LinkPreview {
