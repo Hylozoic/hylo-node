@@ -178,6 +178,23 @@ type Query {
   community(id: ID, slug: String): Community
   messageThread(id: ID): MessageThread
   post(id: ID): Post
+  posts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String
+  ): PostQuerySet
+  people(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String,
+    filter: String
+  ): PersonQuerySet
 }
 
 input MeInput {

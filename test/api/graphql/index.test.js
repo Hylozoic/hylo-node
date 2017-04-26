@@ -117,12 +117,13 @@ describe('graphql request handler', () => {
                 name
               }
               comments {
-                text
-                creator {
-                  name
+                items {
+                  text
+                  creator {
+                    name
+                  }
                 }
               }
-              commentsTotal
               followers {
                 name
               }
@@ -170,15 +171,16 @@ describe('graphql request handler', () => {
                       name: community.get('name')
                     }
                   ],
-                  comments: [
-                    {
-                      text: comment.get('text'),
-                      creator: {
-                        name: user2.get('name')
+                  comments: {
+                    items: [
+                      {
+                        text: comment.get('text'),
+                        creator: {
+                          name: user2.get('name')
+                        }
                       }
-                    }
-                  ],
-                  commentsTotal: 1,
+                    ]
+                  },
                   followers: [
                     {
                       name: user2.get('name')

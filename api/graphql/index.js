@@ -12,7 +12,7 @@ const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
 function createSchema (userId, isAdmin) {
   const models = makeModels(userId, isAdmin)
-  const { resolvers, fetchOne } = setupBridge(models)
+  const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   const allResolvers = Object.assign({
     Query: {
@@ -21,7 +21,9 @@ function createSchema (userId, isAdmin) {
         fetchOne('Community', slug || id, slug ? 'slug' : 'id'),
       person: (root, { id }) => fetchOne('Person', id),
       messageThread: (root, { id }) => fetchOne('MessageThread', id),
-      post: (root, { id }) => fetchOne('Post', id)
+      post: (root, { id }) => fetchOne('Post', id),
+      posts: (root, args) => fetchMany('Post', args),
+      people: (root, args) => fetchMany('Person', args)
     },
     Mutation: {
       updateMe: (root, { changes }) =>

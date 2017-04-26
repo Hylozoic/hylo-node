@@ -1,4 +1,10 @@
-import searchQuerySet from './searchQuerySet'
+import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
+import {
+  makeFilterToggle,
+  myCommunityIds,
+  sharedMembership,
+  sharedPostMembership
+} from './filters'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -7,13 +13,7 @@ import searchQuerySet from './searchQuerySet'
 // keys in the returned object are GraphQL schema type names
 //
 export default function makeModels (userId, isAdmin) {
-  // TODO: cache this?
-  const myCommunityIds = () =>
-    Membership.query().select('community_id')
-    .where({user_id: userId, active: true})
-
-  const nonAdminFilter = queryFn => relation =>
-    isAdmin ? relation : relation.query(queryFn)
+  const nonAdminFilter = makeFilterToggle(!isAdmin)
 
   return {
     Me: { // the root of the graph
@@ -48,9 +48,7 @@ export default function makeModels (userId, isAdmin) {
       model: Membership,
       attributes: ['created_at', 'hasModeratorRole', 'role', 'last_viewed_at'],
       relations: ['community'],
-      filter: nonAdminFilter(q => {
-        q.where('communities_users.community_id', 'in', myCommunityIds())
-      })
+      filter: nonAdminFilter(sharedMembership('communities_users', userId))
     },
 
     Person: {
@@ -74,11 +72,17 @@ export default function makeModels (userId, isAdmin) {
         'posts',
         'votes'
       ],
-      filter: nonAdminFilter(q => {
-        q.where('users.id', 'in', Membership.query().select('user_id')
-          .where('community_id', 'in', myCommunityIds()))
-      }),
-      isDefaultTypeForTable: true
+      filter: nonAdminFilter(sharedMembership('users', userId)),
+      isDefaultTypeForTable: true,
+      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
+        searchQuerySet('forUsers', {
+          term: search,
+          limit: first,
+          offset,
+          type: filter,
+          autocomplete,
+          sort: sortBy
+        })
     },
 
     Post: {
@@ -108,11 +112,16 @@ export default function makeModels (userId, isAdmin) {
         'followers',
         'linkPreview'
       ],
-      filter: nonAdminFilter(q => {
-        q.where('posts.id', 'in', PostMembership.query().select('post_id')
-          .where('community_id', 'in', myCommunityIds()))
-      }),
-      isDefaultTypeForTable: true
+      filter: nonAdminFilter(sharedPostMembership('posts', userId)),
+      isDefaultTypeForTable: true,
+      fetchMany: ({ first, order, sortBy, offset, search, filter }) =>
+        searchQuerySet('forPosts', {
+          term: search,
+          limit: first,
+          offset,
+          type: filter,
+          sort: sortBy
+        })
     },
 
     Community: {
@@ -131,7 +140,7 @@ export default function makeModels (userId, isAdmin) {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
         members: (c, { search, first, offset = 0, sortBy }) =>
-          searchQuerySet('forUsers', {
+          fetchSearchQuerySet('forUsers', {
             term: search,
             communities: [c.id],
             limit: first,
@@ -140,17 +149,17 @@ export default function makeModels (userId, isAdmin) {
           }),
 
         posts: (c, { search, first, offset = 0, sortBy, filter }) =>
-          searchQuerySet('forPosts', {
+          fetchSearchQuerySet('forPosts', {
             term: search,
             communities: [c.id],
             limit: first,
             offset,
             type: filter,
-            sort: sortBy || 'updated'
+            sort: sortBy
           })
       },
       filter: nonAdminFilter(q => {
-        q.where('communities.id', 'in', myCommunityIds())
+        q.where('communities.id', 'in', myCommunityIds(userId))
       })
     },
 
@@ -167,12 +176,9 @@ export default function makeModels (userId, isAdmin) {
       filter: nonAdminFilter(q => {
         // this should technically just be equal to Post.isVisibleToUser
         q.where(function () {
-          this.where('comments.post_id', 'in',
-            PostMembership.query().select('post_id')
-            .where('community_id', 'in', myCommunityIds()))
+          sharedPostMembership('comments', userId, this)
           .orWhere('comments.post_id', 'in',
-            Follow.query().select('post_id')
-            .where('user_id', userId))
+            Follow.query().select('post_id').where('user_id', userId))
         })
       }),
       isDefaultTypeForTable: true
@@ -225,10 +231,7 @@ export default function makeModels (userId, isAdmin) {
         'post',
         { user: { alias: 'voter' } }
       ],
-      filter: nonAdminFilter(q => {
-        q.where('votes.post_id', 'in', PostMembership.query().select('post_id')
-          .where('community_id', 'in', myCommunityIds()))
-      })
+      filter: nonAdminFilter(sharedPostMembership('votes', userId))
     }
   }
 }
