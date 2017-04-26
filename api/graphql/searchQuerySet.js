@@ -1,4 +1,5 @@
 import { mapValues } from 'lodash'
+import { isNull, isUndefined, omitBy } from 'lodash/fp'
 import { PAGINATION_TOTAL_COLUMN_NAME } from '../../lib/graphql-bookshelf-bridge/util/applyPagination'
 
 export default function searchQuerySet (searchName, options) {
@@ -24,7 +25,7 @@ export function sanitizeOptions (name, options) {
   if (!shim) throw new Error(`no option shim for ${name}`)
 
   const withDefaults = Object.assign({}, defaultOptions.all,
-    defaultOptions[name], options)
+    defaultOptions[name], omitBy(x => isNull(x) || isUndefined(x), options))
   return shim(withDefaults)
 }
 
