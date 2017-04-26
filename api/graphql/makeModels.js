@@ -121,11 +121,15 @@ export default function makeModels (userId, isAdmin) {
         'id',
         'name',
         'slug',
+        'description',
         'created_at',
         'avatar_url',
         'banner_url',
         'memberCount',
         'postCount'
+      ],
+      relations: [
+        'moderators'
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),

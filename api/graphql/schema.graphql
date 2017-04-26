@@ -59,6 +59,7 @@ type Community {
   id: ID
   name: String
   slug: String
+  description: String
   createdAt: String
   avatarUrl: String
   bannerUrl: String
@@ -76,6 +77,8 @@ type Community {
   postCount: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
+  moderators(first: Int, cursor: ID, order: String): [Person]
+  moderatorsTotal: Int
 }
 
 type PersonQuerySet {
