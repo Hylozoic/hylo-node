@@ -129,7 +129,7 @@ export default function makeModels (userId, isAdmin) {
         'postCount'
       ],
       relations: [
-        'moderators'
+        {moderators: {querySet: true}}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),

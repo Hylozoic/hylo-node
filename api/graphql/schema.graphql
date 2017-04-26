@@ -77,8 +77,7 @@ type Community {
   postCount: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
-  moderators(first: Int, cursor: ID, order: String): [Person]
-  moderatorsTotal: Int
+  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
 }
 
 type PersonQuerySet {
