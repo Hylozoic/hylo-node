@@ -125,6 +125,7 @@ type Post {
   commentersTotal: Int
   linkPreview: LinkPreview
   votesTotal: Int
+  myVote: Boolean
 }
 
 type CommentQuerySet {
