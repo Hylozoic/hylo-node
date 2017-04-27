@@ -1,6 +1,7 @@
 import { mapValues } from 'lodash'
 import { isNull, isUndefined, omitBy } from 'lodash/fp'
 import { PAGINATION_TOTAL_COLUMN_NAME } from '../../lib/graphql-bookshelf-bridge/util/applyPagination'
+import presentQuerySet from '../../lib/graphql-bookshelf-bridge/util/presentQuerySet'
 
 export default function searchQuerySet (searchName, options) {
   return Search[searchName](sanitizeOptions(searchName, options))
@@ -8,16 +9,7 @@ export default function searchQuerySet (searchName, options) {
 
 export function fetchSearchQuerySet (searchName, options) {
   return searchQuerySet(searchName, options).fetchAll()
-  .then(({ length, models }) => {
-    const total = models.length > 0
-      ? Number(models[0].get(PAGINATION_TOTAL_COLUMN_NAME))
-      : 0
-    return {
-      total,
-      items: models,
-      hasMore: options.offset + options.limit < total
-    }
-  })
+  .then(({ models }) => presentQuerySet(models, options))
 }
 
 export function sanitizeOptions (name, options) {

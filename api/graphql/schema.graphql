@@ -22,7 +22,24 @@ type Me {
   messageThreads(first: Int, cursor: ID, order: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
-  subscribedTopics(communityId: ID): [Tag]
+  topicSubscriptions(first: Int, order: String, offset: Int, communityId: ID): TopicSubscriptionQuerySet
+}
+
+type TopicSubscriptionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [TopicSubscription]
+}
+
+type TopicSubscription {
+  id: ID
+  topic: Topic
+  newPostCount: Int
+}
+
+type Topic {
+  id: ID
+  name: String
 }
 
 type Person {

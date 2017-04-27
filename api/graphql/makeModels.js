@@ -5,6 +5,7 @@ import {
   sharedMembership,
   sharedPostMembership
 } from './filters'
+import { applyPagination, presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -41,7 +42,12 @@ export default function makeModels (userId, isAdmin) {
       ],
       getters: {
         hasDevice: u => u.hasDevice(),
-        subscribedTopics: (u, { communityId }) => u.getFollowedTags(communityId)
+        topicSubscriptions: (u, args) =>
+          u.tagFollows().query(q => {
+            q.where('tag_follows.community_id', args.communityId)
+            applyPagination(q, 'tag_follows', args)
+          }).fetch()
+          .then(({ models }) => presentQuerySet(models, args))
       }
     },
 
@@ -228,15 +234,28 @@ export default function makeModels (userId, isAdmin) {
 
     Vote: {
       model: Vote,
-      attributes: [ 'id' ],
+      attributes: ['id'],
       getters: {
         createdAt: v => v.get('date_voted')
       },
       relations: [
         'post',
-        { user: { alias: 'voter' } }
+        {user: {alias: 'voter'}}
       ],
       filter: nonAdminFilter(sharedPostMembership('votes', userId))
+    },
+
+    TopicSubscription: {
+      model: TagFollow,
+      attributes: ['id', 'new_post_count'],
+      relations: [
+        {tag: {alias: 'topic'}}
+      ]
+    },
+
+    Topic: {
+      model: Tag,
+      attributes: ['id', 'name']
     }
   }
 }

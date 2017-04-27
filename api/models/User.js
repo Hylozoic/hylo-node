@@ -49,6 +49,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Tag).through(TagFollow)
   },
 
+  tagFollows: function () {
+    return this.hasMany(TagFollow)
+  },
+
   linkedAccounts: function () {
     return this.hasMany(LinkedAccount)
   },
