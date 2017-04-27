@@ -56,3 +56,8 @@ export function findOrCreateThread (userId, data) {
   return validateThreadData(userId, data)
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
 }
+
+export function vote (userId, postId) {
+  return Post.find(postId)
+  .then(post => post.vote(userId))
+}

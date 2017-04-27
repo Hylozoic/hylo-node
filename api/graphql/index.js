@@ -3,7 +3,7 @@ import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import {
-  updateMe, createComment, createPost, findOrCreateThread, leaveCommunity
+  updateMe, createComment, createPost, findOrCreateThread, leaveCommunity, vote
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -38,7 +38,8 @@ function createSchema (userId, isAdmin) {
       },
       findOrCreateThread: (root, { data }) =>
         findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
-      leaveCommunity: (root, { id }) => leaveCommunity(userId, id)
+      leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
+      vote: (root, { postId }) => vote(userId, postId)
     },
 
     FeedItemContent: {

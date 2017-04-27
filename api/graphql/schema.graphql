@@ -247,6 +247,7 @@ type Mutation {
   createComment(data: CommentInput): Comment
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
+  vote(postId: ID): Post
 }
 
 type LinkPreview {

@@ -257,7 +257,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   fulfillRequest,
 
-  unfulfillRequest
+  unfulfillRequest,
+
+  vote: function (userId) {
+    return this.votes().query({where: {user_id: userId}}).fetchOne()
+    .then(vote => bookshelf.transaction(trx => {
+      var inc = delta => () =>
+        this.save({num_votes: this.get('num_votes') + delta}, {transacting: trx})
+
+      return (vote
+        ? vote.destroy({transacting: trx}).then(inc(-1))
+        : new Vote({
+          post_id: this.id,
+          user_id: userId
+        }).save().then(inc(1)))
+    }))
+    .then(() => this)
+  }
 
 }, EnsureLoad), {
   // Class Methods
