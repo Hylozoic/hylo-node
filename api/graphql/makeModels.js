@@ -249,7 +249,8 @@ export default function makeModels (userId, isAdmin) {
       model: TagFollow,
       attributes: ['id', 'new_post_count'],
       relations: [
-        {tag: {alias: 'topic'}}
+        {tag: {alias: 'topic'}},
+        'community'
       ]
     },
 

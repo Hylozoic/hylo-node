@@ -22,7 +22,12 @@ type Me {
   messageThreads(first: Int, cursor: ID, order: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
-  topicSubscriptions(first: Int, order: String, offset: Int, communityId: ID): TopicSubscriptionQuerySet
+  topicSubscriptions(
+    communityId: ID,
+    first: Int,
+    order: String,
+    offset: Int
+  ): TopicSubscriptionQuerySet
 }
 
 type TopicSubscriptionQuerySet {
@@ -34,6 +39,7 @@ type TopicSubscriptionQuerySet {
 type TopicSubscription {
   id: ID
   topic: Topic
+  community: Community
   newPostCount: Int
 }
 
@@ -272,10 +278,4 @@ type LinkPreview {
   title: String
   url: String
   imageUrl: String
-}
-
-type Tag {
-  id: ID
-  name: String
-  newPostCount: Int
 }
