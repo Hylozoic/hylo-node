@@ -22,6 +22,7 @@ type Me {
   messageThreads(first: Int, cursor: ID, order: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
+  subscribedTopics(communityId: ID): [Tag]
 }
 
 type Person {
@@ -254,4 +255,10 @@ type LinkPreview {
   title: String
   url: String
   imageUrl: String
+}
+
+type Tag {
+  id: ID
+  name: String
+  newPostCount: Int
 }

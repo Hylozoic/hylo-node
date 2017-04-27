@@ -40,7 +40,8 @@ export default function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread'}}
       ],
       getters: {
-        hasDevice: u => u.hasDevice()
+        hasDevice: u => u.hasDevice(),
+        subscribedTopics: (u, { communityId }) => u.getFollowedTags(communityId)
       }
     },
 

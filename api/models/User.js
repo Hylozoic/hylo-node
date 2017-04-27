@@ -4,6 +4,7 @@ var crypto = require('crypto')
 var validator = require('validator')
 import { has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
+import { fetchAndPresentFollowed } from '../services/TagPresenter'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
@@ -243,6 +244,10 @@ module.exports = bookshelf.Model.extend(merge({
       comment_notifications: 'none',
       dm_notifications: 'none'
     }, true)
+  },
+
+  getFollowedTags (communityId) {
+    return fetchAndPresentFollowed(communityId, this.id)
   }
 
 }, HasSettings), {
