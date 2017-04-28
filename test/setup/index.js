@@ -1,7 +1,7 @@
 process.env.NODE_ENV = 'test'
 
 import nock from 'nock'
-import './basic'
+import './core'
 var skiff = require('../../lib/skiff')
 var fs = require('fs')
 var path = require('path')
