@@ -1,5 +1,5 @@
-import { makeFilterToggle } from '../../../api/graphql/filters'
-import makeModels from '../../../api/graphql/makeModels'
+import { makeFilterToggle } from './filters'
+import makeModels from './makeModels'
 
 describe('makeFilterToggle', () => {
   var relation, queryFn

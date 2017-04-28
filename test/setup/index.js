@@ -1,19 +1,12 @@
 process.env.NODE_ENV = 'test'
 
+import nock from 'nock'
+import './basic'
 var skiff = require('../../lib/skiff')
-var chai = require('chai')
 var fs = require('fs')
 var path = require('path')
 var Promise = require('bluebird')
 var root = require('root-path')
-import nock from 'nock'
-
-chai.use(require('chai-spies'))
-chai.use(require('chai-as-promised'))
-chai.use(require('chai-datetime'))
-
-global.spy = chai.spy
-global.expect = chai.expect
 
 var TestSetup = function () {
   this.tables = []

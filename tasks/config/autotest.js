@@ -9,7 +9,7 @@ module.exports = function (grunt) {
 
     const argv = minimist(process.argv)
     const file = argv.file || argv.f || ''
-    const cmd = `./node_modules/.bin/mocha --compilers js:babel-register -R min ${file}`
+    const cmd = `npm test -s -- -R min ${file}`
 
     gaze(['api/**/*', 'lib/**/*', 'test/**/*'], function (_, watcher) {
       this.on('all', debounce(() => {
