@@ -15,6 +15,7 @@ import { applyPagination, presentQuerySet } from '../../lib/graphql-bookshelf-br
 //
 export default function makeModels (userId, isAdmin) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
+  const allPassFilter = makeFilterToggle(false)
 
   return {
     Me: { // the root of the graph
@@ -41,13 +42,7 @@ export default function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread'}}
       ],
       getters: {
-        hasDevice: u => u.hasDevice(),
-        topicSubscriptions: (u, args) =>
-          u.tagFollows().query(q => {
-            q.where('tag_follows.community_id', args.communityId)
-            applyPagination(q, 'tag_follows', args)
-          }).fetch()
-          .then(({ models }) => presentQuerySet(models, args))
+        hasDevice: u => u.hasDevice()
       }
     },
 
@@ -145,7 +140,8 @@ export default function makeModels (userId, isAdmin) {
         'postCount'
       ],
       relations: [
-        {moderators: {querySet: true}}
+        {moderators: {querySet: true}},
+        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
@@ -251,7 +247,10 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         {tag: {alias: 'topic'}},
         'community'
-      ]
+      ],
+      filter: relation => relation.query(q => {
+        q.where('tag_follows.user_id', userId)
+      })
     },
 
     Topic: {

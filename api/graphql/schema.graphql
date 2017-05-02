@@ -22,12 +22,6 @@ type Me {
   messageThreads(first: Int, cursor: ID, order: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
-  topicSubscriptions(
-    communityId: ID,
-    first: Int,
-    order: String,
-    offset: Int
-  ): TopicSubscriptionQuerySet
 }
 
 type TopicSubscriptionQuerySet {
@@ -102,6 +96,11 @@ type Community {
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  topicSubscriptions(
+    first: Int,
+    order: String,
+    offset: Int
+  ): TopicSubscriptionQuerySet
 }
 
 type PersonQuerySet {
