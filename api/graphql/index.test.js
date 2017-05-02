@@ -1,6 +1,6 @@
-import { createRequestHandler } from '../../../api/graphql'
-import '../../setup'
-import factories from '../../setup/factories'
+import { createRequestHandler } from './index'
+import '../../test/setup'
+import factories from '../../test/setup/factories'
 
 describe('graphql request handler', () => {
   var handler, req, res, user, community, post

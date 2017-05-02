@@ -24,6 +24,24 @@ type Me {
   updatedAt: String
 }
 
+type TopicSubscriptionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [TopicSubscription]
+}
+
+type TopicSubscription {
+  id: ID
+  topic: Topic
+  community: Community
+  newPostCount: Int
+}
+
+type Topic {
+  id: ID
+  name: String
+}
+
 type Person {
   id: ID
   name: String
@@ -78,6 +96,11 @@ type Community {
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  topicSubscriptions(
+    first: Int,
+    order: String,
+    offset: Int
+  ): TopicSubscriptionQuerySet
 }
 
 type PersonQuerySet {

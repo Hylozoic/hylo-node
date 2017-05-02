@@ -1,4 +1,4 @@
-import { sanitizeOptions } from '../../../api/graphql/searchQuerySet'
+import { sanitizeOptions } from './searchQuerySet'
 
 describe('sanitizeOptions', () => {
   it('sets default options', () => {

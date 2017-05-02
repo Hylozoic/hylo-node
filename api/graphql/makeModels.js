@@ -5,6 +5,7 @@ import {
   sharedMembership,
   sharedPostMembership
 } from './filters'
+import { applyPagination, presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -14,6 +15,7 @@ import {
 //
 export default function makeModels (userId, isAdmin) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
+  const allPassFilter = makeFilterToggle(false)
 
   return {
     Me: { // the root of the graph
@@ -139,7 +141,8 @@ export default function makeModels (userId, isAdmin) {
         'postCount'
       ],
       relations: [
-        {moderators: {querySet: true}}
+        {moderators: {querySet: true}},
+        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
@@ -228,15 +231,32 @@ export default function makeModels (userId, isAdmin) {
 
     Vote: {
       model: Vote,
-      attributes: [ 'id' ],
+      attributes: ['id'],
       getters: {
         createdAt: v => v.get('date_voted')
       },
       relations: [
         'post',
-        { user: { alias: 'voter' } }
+        {user: {alias: 'voter'}}
       ],
       filter: nonAdminFilter(sharedPostMembership('votes', userId))
+    },
+
+    TopicSubscription: {
+      model: TagFollow,
+      attributes: ['id', 'new_post_count'],
+      relations: [
+        {tag: {alias: 'topic'}},
+        'community'
+      ],
+      filter: relation => relation.query(q => {
+        q.where('tag_follows.user_id', userId)
+      })
+    },
+
+    Topic: {
+      model: Tag,
+      attributes: ['id', 'name']
     }
   }
 }
