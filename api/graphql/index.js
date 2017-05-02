@@ -39,7 +39,7 @@ function createSchema (userId, isAdmin) {
       findOrCreateThread: (root, { data }) =>
         findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
       leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
-      vote: (root, { postId }) => vote(userId, postId)
+      vote: (root, { postId, didVote }) => vote(userId, postId, didVote)
     },
 
     FeedItemContent: {
