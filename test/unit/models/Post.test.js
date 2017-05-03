@@ -347,16 +347,16 @@ describe('Post', function () {
           })
           return post.save()
         })
-        .then(done)
+        .then(() => done())
       })
     })
 
     describe('without an existing vote', () => {
-      it('does nothing if didVote is false', () => {
+      it('does nothing if isUpvote is false', () => {
 
       })
 
-      it('creates a vote and increments vote count if didVote is true', () => {
+      it('creates a vote and increments vote count if isUpvote is true', () => {
 
       })
     })

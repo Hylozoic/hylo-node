@@ -57,7 +57,7 @@ export function findOrCreateThread (userId, data) {
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
 }
 
-export function vote (userId, postId, didVote) {
+export function vote (userId, postId, isUpvote) {
   return Post.find(postId)
-  .then(post => post.vote(userId, didVote))
+  .then(post => post.vote(userId, isUpvote))
 }

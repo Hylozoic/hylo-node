@@ -259,15 +259,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   unfulfillRequest,
 
-  vote: function (userId, didVote) {
+  vote: function (userId, isUpvote) {
     return this.votes().query({where: {user_id: userId}}).fetchOne()
     .then(vote => bookshelf.transaction(trx => {
       var inc = delta => () =>
         this.save({num_votes: this.get('num_votes') + delta}, {transacting: trx})
 
-      return (vote && !didVote
+      return (vote && !isUpvote
         ? vote.destroy({transacting: trx}).then(inc(-1))
-        : didVote && new Vote({
+        : isUpvote && new Vote({
           post_id: this.id,
           user_id: userId
         }).save().then(inc(1)))
