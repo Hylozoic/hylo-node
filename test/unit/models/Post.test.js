@@ -331,4 +331,38 @@ describe('Post', function () {
       .then(count => expect(count).to.equal(3))
     })
   })
+
+  describe('#vote', () => {
+    var user, post
+    beforeEach(function (done) {
+      return setup.clearDb()
+      .then(() => {
+        user = new User({email: 'a@post.c'})
+
+        return user.save()
+        .then(() => {
+          post = factories.post({
+            user_id: user.id,
+            num_votes: 5
+          })
+          return post.save()
+        })
+        .then(() => done())
+      })
+    })
+
+    describe('without an existing vote', () => {
+      it('does nothing if isUpvote is false', () => {
+
+      })
+
+      it('creates a vote and increments vote count if isUpvote is true', () => {
+
+      })
+    })
+
+    describe('with an existing vote', () => {
+
+    })
+  })
 })

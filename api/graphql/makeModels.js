@@ -105,7 +105,8 @@ export default function makeModels (userId, isAdmin) {
         commenters: (p, { first }) => p.getCommenters(first),
         commentersTotal: p => p.getCommentersTotal(),
         votesTotal: p => p.get('num_votes'),
-        type: p => p.getType()
+        type: p => p.getType(),
+        myVote: p => p.userVote(userId).then(v => !!v)
       },
       relations: [
         {comments: {querySet: true}},

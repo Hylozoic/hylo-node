@@ -148,6 +148,7 @@ type Post {
   commentersTotal: Int
   linkPreview: LinkPreview
   votesTotal: Int
+  myVote: Boolean
 }
 
 type CommentQuerySet {
@@ -270,6 +271,7 @@ type Mutation {
   createComment(data: CommentInput): Comment
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
+  vote(postId: ID, isUpvote: Boolean): Post
 }
 
 type LinkPreview {
