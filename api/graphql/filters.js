@@ -18,6 +18,8 @@ export const sharedMembership = curry((tableName, userId, q) => {
     Membership.query(clauses).query().select('user_id'))
 })
 
+// for determining if a post (either directly or through a foreign key) is in
+// the same community as a user.
 export const sharedPostMembership = curry((tableName, userId, q) => {
   const columnName = tableName === 'posts' ? 'posts.id' : `${tableName}.post_id`
   return q.where(columnName, 'in',

@@ -5,7 +5,6 @@ import {
   sharedMembership,
   sharedPostMembership
 } from './filters'
-import { applyPagination, presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -15,7 +14,6 @@ import { applyPagination, presentQuerySet } from '../../lib/graphql-bookshelf-br
 //
 export default function makeModels (userId, isAdmin) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
-  const allPassFilter = makeFilterToggle(false)
 
   return {
     Me: { // the root of the graph
@@ -48,7 +46,13 @@ export default function makeModels (userId, isAdmin) {
 
     Membership: {
       model: Membership,
-      attributes: ['created_at', 'hasModeratorRole', 'role', 'last_viewed_at'],
+      attributes: [
+        'created_at',
+        'hasModeratorRole',
+        'role',
+        'last_viewed_at',
+        'new_post_count'
+      ],
       relations: ['community'],
       filter: nonAdminFilter(sharedMembership('communities_users', userId))
     },

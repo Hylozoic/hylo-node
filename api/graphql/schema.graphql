@@ -70,6 +70,7 @@ type Membership {
   hasModeratorRole: Boolean
   createdAt: String
   lastViewedAt: String
+  newPostCount: Int
   community: Community
 }
 
