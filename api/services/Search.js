@@ -7,6 +7,22 @@ module.exports = {
   forPosts,
   forUsers,
 
+  forCommunityTopics: function (opts) {
+    return CommunityTag.query(qb => {
+      qb.join('tags', 'tags.id', 'communities_tags.tag_id')
+      qb.join('communities', 'communities.id', 'communities_tags.community_id')
+      if (opts.communitySlug) qb.where('communities.slug', opts.communitySlug)
+      if (opts.tagName) qb.where('tags.name', opts.tagName)
+      if (opts.autocomplete) {
+        qb.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
+      }
+      qb.limit(opts.limit)
+      qb.offset(opts.offset)
+      countTotal(qb, 'communities_tags', opts.totalColumnName)
+      qb.groupBy('communities_tags.id')
+    })
+  },
+
   forCommunities: function (opts) {
     return Community.query(qb => {
       if (opts.communities) {
@@ -40,9 +56,14 @@ module.exports = {
         q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
         q.whereIn('communities_tags.community_id', opts.communities)
       }
+      if (opts.name) {
+        q.where('tags.name', opts.name)
+      }
       if (opts.autocomplete) {
         q.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
       }
+
+      countTotal(q, 'tags', opts.totalColumnName)
 
       q.groupBy('tags.id')
       q.limit(opts.limit)

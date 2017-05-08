@@ -271,7 +271,9 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         'community',
         {tag: {alias: 'topic'}}
-      ]
+      ],
+      fetchMany: ({ first, offset = 0, topicName, communitySlug, autocomplete }) =>
+        searchQuerySet('forCommunityTopics', { limit: first, offset, topicName, communitySlug, autocomplete })
     },
 
     Topic: {
@@ -280,7 +282,13 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         postsTotal: t => Tag.taggedPostCount(t.id),
         followersTotal: t => Tag.followersCount(t.id)
-      }
+      },
+      relations: [
+        {communityTags: {alias: 'communityTopics', querySet: true}},
+        {follows: {alias: 'topicSubscriptions', querySet: true}}
+      ],
+      fetchMany: ({ first, offset = 0, name, autocomplete }) =>
+        searchQuerySet('forTags', {limit: first, offset, name, autocomplete})
     }
   }
 }

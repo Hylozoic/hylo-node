@@ -51,11 +51,27 @@ type CommunityTopic {
   followersTotal: Int
 }
 
+type TopicQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Topic]
+}
+
 type Topic {
   id: ID
   name: String
   postsTotal: Int
   followersTotal: Int
+  communityTopics(
+    first: Int,
+    order: String,
+    offset: Int
+  ): CommunityTopicQuerySet
+  topicSubscriptions(
+    first: Int,
+    order: String,
+    offset: Int
+  ): TopicSubscriptionQuerySet
 }
 
 type Person {
@@ -245,6 +261,19 @@ type Query {
     autocomplete: String,
     filter: String
   ): PersonQuerySet
+  communityTopics(
+    first: Int,
+    offset: Int
+    autocomplete: String,
+    topicName: String,
+    communitySlug: String
+  ): CommunityTopicQuerySet
+  topics(
+    first: Int,
+    offset: Int,
+    autocomplete: String,
+    name: String
+  ): TopicQuerySet
 }
 
 input MeInput {

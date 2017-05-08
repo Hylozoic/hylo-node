@@ -154,6 +154,10 @@ module.exports = bookshelf.Model.extend({
     .withPivot(['user_id', 'description'])
   },
 
+  communityTags: function () {
+    return this.hasMany(CommunityTag)
+  },
+
   posts: function () {
     return this.belongsToMany(Post).through(PostTag).withPivot('selected')
   },

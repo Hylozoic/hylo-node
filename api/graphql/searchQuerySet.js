@@ -64,5 +64,13 @@ const shims = {
   forUsers: options => {
     // TODO
     return options
-  }
+  },
+
+  forCommunityTopics: options => {
+    options.tagName = options.topicName
+    delete options.topicName
+    return options
+  },
+
+  forTags: options => options
 }
