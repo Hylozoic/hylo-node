@@ -233,7 +233,7 @@ type Query {
     offset: Int,
     search: String,
     filter: String,
-    topic: Int
+    topic: ID
   ): PostQuerySet
   people(
     first: Int,
