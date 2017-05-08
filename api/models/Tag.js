@@ -294,6 +294,24 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  taggedPostCount: tagId => {
+    return bookshelf.knex('posts_tags')
+    .where({tag_id: tagId})
+    .count()
+    .then(rows => Number(rows[0].count))
+  },
+
+  followersCount: (tagId, communityId) => {
+    const query = communityId ? {
+      community_id: communityId,
+      tag_id: tagId
+    } : {tag_id: tagId}
+    return bookshelf.knex('tag_follows')
+    .where(query)
+    .count()
+    .then(rows => Number(rows[0].count))
+  },
+
   nonexistent: (names, communityIds) => {
     if (names.length === 0 || !communityIds || communityIds.length === 0) return Promise.resolve({})
 
