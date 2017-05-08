@@ -89,7 +89,8 @@ type Community {
     sortBy: String,
     offset: Int,
     search: String,
-    filter: String
+    filter: String,
+    topic: Int
   ): PostQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
@@ -211,7 +212,8 @@ type Query {
     sortBy: String,
     offset: Int,
     search: String,
-    filter: String
+    filter: String,
+    topic: ID
   ): PostQuerySet
   people(
     first: Int,

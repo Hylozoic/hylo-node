@@ -46,6 +46,15 @@ const shims = {
       throw new Error(`invalid value for sort: ${options.sort}`)
     }
 
+    if (options.topic) {
+      const onlyNumbers = /^\d+$/
+      if (!onlyNumbers.test(options.topic)) {
+        throw new Error(`invalid value for topic: ${options.sort}. should be an ID`)
+      }
+      options.tag = options.topic
+      delete options.topic
+    }
+
     return mapValues(options, (val, key) => {
       if (key === 'sort') return sortOptionShim[val]
       return val
