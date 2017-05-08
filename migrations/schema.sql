@@ -225,7 +225,8 @@ CREATE TABLE communities_users (
     deactivator_id bigint,
     last_viewed_at timestamp with time zone,
     id integer NOT NULL,
-    settings jsonb DEFAULT '{}'::jsonb
+    settings jsonb DEFAULT '{}'::jsonb,
+    new_post_count integer DEFAULT 0
 );
 
 
