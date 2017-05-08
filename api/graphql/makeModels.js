@@ -143,7 +143,8 @@ export default function makeModels (userId, isAdmin) {
       ],
       relations: [
         {moderators: {querySet: true}},
-        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}}
+        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}},
+        {communityTags: {querySet: true, alias: 'communityTopics'}}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
@@ -256,9 +257,26 @@ export default function makeModels (userId, isAdmin) {
       })
     },
 
+    CommunityTopic: {
+      model: CommunityTag,
+      attributes: ['id'],
+      getters: {
+        postsTotal: ct => CommunityTag.taggedPostCount(ct.get('community_id'), ct.get('tag_id')),
+        followersTotal: ct => Tag.followersCount(ct.get('tag_id'), ct.get('community_id'))
+      },
+      relations: [
+        'community',
+        {tag: {alias: 'topic'}}
+      ]
+    },
+
     Topic: {
       model: Tag,
-      attributes: ['id', 'name']
+      attributes: ['id', 'name'],
+      getters: {
+        postsTotal: t => Tag.taggedPostCount(t.id),
+        followersTotal: t => Tag.followersCount(t.id)
+      }
     }
   }
 }

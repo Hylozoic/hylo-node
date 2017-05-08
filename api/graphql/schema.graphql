@@ -37,9 +37,25 @@ type TopicSubscription {
   newPostCount: Int
 }
 
+type CommunityTopicQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CommunityTopic]
+}
+
+type CommunityTopic {
+  id: ID
+  topic: Topic
+  community: Community
+  postsTotal: Int
+  followersTotal: Int
+}
+
 type Topic {
   id: ID
   name: String
+  postsTotal: Int
+  followersTotal: Int
 }
 
 type Person {
@@ -102,6 +118,11 @@ type Community {
     order: String,
     offset: Int
   ): TopicSubscriptionQuerySet
+  communityTopics(
+    first: Int,
+    order: String,
+    offset: Int
+  ): CommunityTopicQuerySet
 }
 
 type PersonQuerySet {
