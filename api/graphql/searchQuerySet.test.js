@@ -22,4 +22,10 @@ describe('sanitizeOptions', () => {
       totalColumnName: '__total'
     })
   })
+
+  it('throws an error when value of topic isn\'t an ID', () => {
+    expect(() => {
+      sanitizeOptions('forPosts', {topic: '123four'})
+    }).to.throw(/invalid value for topic/)
+  })
 })

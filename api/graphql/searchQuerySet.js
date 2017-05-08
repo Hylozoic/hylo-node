@@ -47,6 +47,10 @@ const shims = {
     }
 
     if (options.topic) {
+      const onlyNumbers = /^\d+$/
+      if (!onlyNumbers.test(options.topic)) {
+        throw new Error(`invalid value for topic: ${options.sort}. should be an ID`)
+      }
       options.tag = options.topic
       delete options.topic
     }
