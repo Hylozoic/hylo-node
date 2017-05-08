@@ -117,13 +117,14 @@ export default function makeModels (userId, isAdmin) {
       ],
       filter: nonAdminFilter(sharedPostMembership('posts', userId)),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
         searchQuerySet('forPosts', {
           term: search,
           limit: first,
           offset,
           type: filter,
-          sort: sortBy
+          sort: sortBy,
+          topic
         })
     },
 
@@ -156,14 +157,15 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy || 'name'
           }),
 
-        posts: (c, { search, first, offset = 0, sortBy, filter }) =>
+        posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
             communities: [c.id],
             limit: first,
             offset,
             type: filter,
-            sort: sortBy
+            sort: sortBy,
+            topic
           })
       },
       filter: nonAdminFilter(q => {

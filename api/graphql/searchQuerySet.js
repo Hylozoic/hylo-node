@@ -46,6 +46,11 @@ const shims = {
       throw new Error(`invalid value for sort: ${options.sort}`)
     }
 
+    if (options.topic) {
+      options.tag = options.topic
+      delete options.topic
+    }
+
     return mapValues(options, (val, key) => {
       if (key === 'sort') return sortOptionShim[val]
       return val
