@@ -147,8 +147,7 @@ export default function makeModels (userId, isAdmin) {
       ],
       relations: [
         {moderators: {querySet: true}},
-        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}},
-        {communityTags: {querySet: true, alias: 'communityTopics'}}
+        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
