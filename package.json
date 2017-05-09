@@ -109,7 +109,8 @@
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
     "test": "./node_modules/.bin/mocha -r test/setup/core --compilers js:babel-register",
     "cover": "./node_modules/.bin/nyc --reporter=lcov ./node_modules/.bin/_mocha --compilers js:babel-register -R dot",
-    "knex": "knex"
+    "knex": "knex",
+    "update-migrations": "node ./migrations/scripts/updateMigrationsTable"
   },
   "main": "app.js",
   "repository": {
