@@ -18,6 +18,7 @@ function addMigrations (knex, Promise, migrations) {
       name,
       batch: 1,
       migration_time: knex.fn.now()
-    })
+    }),
+    []
   )
 }
