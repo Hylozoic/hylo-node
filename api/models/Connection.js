@@ -14,11 +14,6 @@ module.exports = bookshelf.Model.extend({
     MESSAGE: 'message'
   },
 
-  find: function (id, options) {
-    if (!id) return Promise.resolve(null)
-    return Connection.where({ id }).fetch(options)
-  },
-
   isMessage: function () {
     return this.get('type') === Post.Type.MESSAGE
   }
