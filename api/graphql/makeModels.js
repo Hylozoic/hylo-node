@@ -171,6 +171,15 @@ export default function makeModels (userId, isAdmin) {
             type: filter,
             sort: sortBy,
             topic
+          }),
+
+        communityTopics: (c, { first, offset = 0, name, autocomplete }) =>
+          fetchSearchQuerySet('forCommunityTopics', {
+            limit: first,
+            offset,
+            name,
+            autocomplete,
+            communityId: c.id
           })
       },
       filter: nonAdminFilter(q => {
@@ -280,7 +289,13 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         postsTotal: t => Tag.taggedPostCount(t.id),
         followersTotal: t => Tag.followersCount(t.id)
-      }
+      },
+      relations: [
+        {communityTags: {alias: 'communityTopics', querySet: true}},
+        {follows: {alias: 'topicSubscriptions', querySet: true}}
+      ],
+      fetchMany: ({ first, offset = 0, name, autocomplete }) =>
+        searchQuerySet('forTags', {limit: first, offset, name, autocomplete})
     }
   }
 }
