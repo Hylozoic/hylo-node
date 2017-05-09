@@ -299,7 +299,12 @@ export default function makeModels (userId, isAdmin) {
 
     Connection: {
       model: Connection,
-      attributes: [ 'id', 'type' ],
+      attributes: [
+        'id',
+        'type',
+        'created_at',
+        'updated_at'
+      ],
       relations: [ 'with' ],
       fetchMany: ({ first, offset = 0, name }) =>
         searchQuerySet('forConnections', {limit: first, offset, name }),
