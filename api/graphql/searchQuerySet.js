@@ -73,5 +73,7 @@ const shims = {
     return options
   },
 
-  forTags: options => options
+  forTags: options => options,
+
+  forConnections: options => options
 }

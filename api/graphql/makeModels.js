@@ -295,6 +295,15 @@ export default function makeModels (userId, isAdmin) {
       ],
       fetchMany: ({ first, offset = 0, name, autocomplete }) =>
         searchQuerySet('forTags', {limit: first, offset, name, autocomplete})
+    },
+
+    Connection: {
+      model: Connection,
+      attributes: [ 'id', 'type' ],
+      relations: [ 'with' ],
+      fetchMany: ({ first, offset = 0, name }) =>
+        searchQuerySet('forConnections', {limit: first, offset, name }),
+      filter: nonAdminFilter(sharedMembership('users', userId))
     }
   }
 }

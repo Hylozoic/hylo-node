@@ -24,7 +24,8 @@ function createSchema (userId, isAdmin) {
       post: (root, { id }) => fetchOne('Post', id),
       posts: (root, args) => fetchMany('Post', args),
       people: (root, args) => fetchMany('Person', args),
-      topics: (root, args) => fetchMany('Topic', args)
+      topics: (root, args) => fetchMany('Topic', args),
+      connections: (root, args) => fetchMany('Connection', args)
     },
     Mutation: {
       updateMe: (root, { changes }) =>

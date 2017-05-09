@@ -190,6 +190,20 @@ type Post {
   myVote: Boolean
 }
 
+type Connection {
+  id: ID
+  with: Person
+  type: String
+  createdAt: String
+  updatedAt: String
+}
+
+type ConnectionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Connection]
+}
+
 type CommentQuerySet {
   total: Int
   hasMore: Boolean
@@ -267,6 +281,11 @@ type Query {
     autocomplete: String,
     name: String
   ): TopicQuerySet
+  connections(
+    first: Int,
+    offset: Int,
+    name: String
+  ): ConnectionQuerySet
 }
 
 input MeInput {
