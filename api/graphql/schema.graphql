@@ -137,8 +137,9 @@ type Community {
   ): TopicSubscriptionQuerySet
   communityTopics(
     first: Int,
-    order: String,
     offset: Int
+    autocomplete: String,
+    name: String
   ): CommunityTopicQuerySet
 }
 
@@ -261,13 +262,6 @@ type Query {
     autocomplete: String,
     filter: String
   ): PersonQuerySet
-  communityTopics(
-    first: Int,
-    offset: Int
-    autocomplete: String,
-    topicName: String,
-    communitySlug: String
-  ): CommunityTopicQuerySet
   topics(
     first: Int,
     offset: Int,

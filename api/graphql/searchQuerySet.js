@@ -67,8 +67,9 @@ const shims = {
   },
 
   forCommunityTopics: options => {
-    options.tagName = options.topicName
-    delete options.topicName
+    if (!options.communityId) {
+      throw new Error('communityId must be provided')
+    }
     return options
   },
 

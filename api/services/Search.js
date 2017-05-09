@@ -11,8 +11,8 @@ module.exports = {
     return CommunityTag.query(qb => {
       qb.join('tags', 'tags.id', 'communities_tags.tag_id')
       qb.join('communities', 'communities.id', 'communities_tags.community_id')
-      if (opts.communitySlug) qb.where('communities.slug', opts.communitySlug)
-      if (opts.tagName) qb.where('tags.name', opts.tagName)
+      qb.where('communities.id', opts.communityId)
+      if (opts.name) qb.where('tags.name', opts.name)
       if (opts.autocomplete) {
         qb.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
       }

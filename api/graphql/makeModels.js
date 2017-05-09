@@ -147,8 +147,7 @@ export default function makeModels (userId, isAdmin) {
       ],
       relations: [
         {moderators: {querySet: true}},
-        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}},
-        {communityTags: {querySet: true, alias: 'communityTopics'}}
+        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
@@ -171,6 +170,15 @@ export default function makeModels (userId, isAdmin) {
             type: filter,
             sort: sortBy,
             topic
+          }),
+
+        communityTopics: (c, { first, offset = 0, name, autocomplete }) =>
+          fetchSearchQuerySet('forCommunityTopics', {
+            limit: first,
+            offset,
+            name,
+            autocomplete,
+            communityId: c.id
           })
       },
       filter: nonAdminFilter(q => {
@@ -271,9 +279,7 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         'community',
         {tag: {alias: 'topic'}}
-      ],
-      fetchMany: ({ first, offset = 0, topicName, communitySlug, autocomplete }) =>
-        searchQuerySet('forCommunityTopics', { limit: first, offset, topicName, communitySlug, autocomplete })
+      ]
     },
 
     Topic: {
