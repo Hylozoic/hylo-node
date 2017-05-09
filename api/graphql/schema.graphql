@@ -283,8 +283,7 @@ type Query {
   ): TopicQuerySet
   connections(
     first: Int,
-    offset: Int,
-    name: String
+    offset: Int
   ): ConnectionQuerySet
 }
 
