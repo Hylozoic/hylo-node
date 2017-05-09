@@ -69,12 +69,24 @@ export const setupNewThreadAttrs = function (userId) {
   })
 }
 
-const updateTagFollows = (post, transacting) =>
-  post.load(['tags', 'communities'], {transacting})
-  .then(() => TagFollow.query(q => {
-    q.whereIn('tag_id', post.relations.tags.map('id'))
-    q.whereIn('community_id', post.relations.communities.map('id'))
-  }).query().increment('new_post_count').transacting(transacting))
+export function bumpNewPostCounts (post, trx) {
+  return post.load(['tags', 'communities'], {transacting: trx})
+  .then(() => {
+    const { tags, communities } = post.relations
+    const counterGroups = [
+      TagFollow.query(q => {
+        q.whereIn('tag_id', tags.map('id'))
+        q.whereIn('community_id', communities.map('id'))
+      }),
+      Membership.query(q => {
+        q.whereIn('community_id', communities.map('id'))
+        q.where('active', true)
+      })
+    ]
+    return Promise.all(counterGroups.map(group =>
+      group.query().increment('new_post_count').transacting(trx)))
+  })
+}
 
 export const afterSavingThread = function (thread, opts) {
   const userId = thread.get('user_id')
@@ -113,7 +125,7 @@ export function afterCreatingPost (post, opts) {
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
   ]))
   .then(() => Tag.updateForPost(post, opts.tag, opts.tagDescriptions, userId, trx))
-  .then(() => updateTagFollows(post, trx))
+  .then(() => bumpNewPostCounts(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }

@@ -64,9 +64,7 @@ export default function createAndPresentComment (commenterId, text, post, opts =
         : comment.createActivities()),
 
       isReplyToPost
-        ? Promise.join(
-            post.addFollowers(newFollowers, commenterId),
-          )
+        ? post.addFollowers(newFollowers, commenterId)
         : Promise.join(
             comment.addFollowers(newFollowers, commenterId),
             parentComment.addFollowers(newFollowers, commenterId)
