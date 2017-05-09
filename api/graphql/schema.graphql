@@ -64,7 +64,6 @@ type Topic {
   followersTotal: Int
   communityTopics(
     first: Int,
-    order: String,
     offset: Int
   ): CommunityTopicQuerySet
   topicSubscriptions(
