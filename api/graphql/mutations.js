@@ -52,6 +52,10 @@ export function createComment (userId, data) {
   .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
+export function createOrUpdateConnection (userId, withId, type) {
+  return Connection.createOrUpdate(userId, withId, type)
+}
+
 export function findOrCreateThread (userId, data) {
   return validateThreadData(userId, data)
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))

@@ -77,6 +77,7 @@ module.exports = {
 
       q.groupBy('user_connections.id')
       q.limit(opts.limit)
+      q.offset(opts.offset)
     })
   }
 }

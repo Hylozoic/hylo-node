@@ -328,6 +328,11 @@ input MessageThreadInput {
   participantIds: [String]
 }
 
+input ConnectionInput {
+  withIds: [String]
+  type: String
+}
+
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
@@ -336,6 +341,7 @@ type Mutation {
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
+  createOrUpdateConnections(data: ConnectionInput): [Connection]
 }
 
 type LinkPreview {
