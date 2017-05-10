@@ -29,6 +29,14 @@ module.exports = {
     }, attrs))
   },
 
+  connection: attrs => {
+    return new Connection(merge({
+      type: 'message',
+      created_at: Date.now(),
+      updated_at: Date.now()
+    }, attrs)
+  },
+
   user: attrs => {
     return new User(merge({
       name: text(),
