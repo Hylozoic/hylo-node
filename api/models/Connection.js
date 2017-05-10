@@ -25,12 +25,13 @@ module.exports = bookshelf.Model.extend({
       created_at: new Date(),
       updated_at: new Date()
     })
+    .save({}, { returning: '*' })
   },
 
   createOrUpdate: function (userId, withId, type) {
     return this.find(userId, withId, type)
       .then(connection => {
-        if (connection) return connection.update({ updated_at: new Date() })
+        if (connection) return connection.save({ updated_at: new Date() }, { returning: '*' })
         return this.create(userId, withId, type)
       })
   },
