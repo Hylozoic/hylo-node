@@ -1061,7 +1061,7 @@ CREATE SEQUENCE token_action_seq
 CREATE TABLE user_connections (
     id integer NOT NULL,
     user_id bigint,
-    with_id bigint,
+    other_user_id bigint,
     type character varying(255),
     created_at timestamp with time zone,
     updated_at timestamp with time zone
@@ -2527,19 +2527,19 @@ ALTER TABLE ONLY tags_users
 
 
 --
+-- Name: user_connections user_connections_other_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY user_connections
+    ADD CONSTRAINT user_connections_other_user_id_foreign FOREIGN KEY (other_user_id) REFERENCES users(id);
+
+
+--
 -- Name: user_connections user_connections_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_connections
     ADD CONSTRAINT user_connections_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
-
-
---
--- Name: user_connections user_connections_with_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY user_connections
-    ADD CONSTRAINT user_connections_with_id_foreign FOREIGN KEY (with_id) REFERENCES users(id);
 
 
 --
