@@ -30,11 +30,11 @@ module.exports = {
   },
 
   connection: attrs => {
-    return new Connection(merge({
+    return new UserConnection(merge({
       type: 'message',
       created_at: Date.now(),
       updated_at: Date.now()
-    }, attrs)
+    }, attrs))
   },
 
   user: attrs => {

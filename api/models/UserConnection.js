@@ -7,20 +7,23 @@ module.exports = bookshelf.Model.extend({
   },
 
   with: function () {
-    return this.belongsTo(User, 'with_id')
+    return this.belongsTo(User, 'other_user_id')
   }
 }, {
   Type: {
     MESSAGE: 'message'
   },
 
-  create: function (userId, withId, type) {
+  create: function (userId, otherUserId, type) {
     if (!this.Type.hasOwnProperty(type.toUpperCase())) {
-      throw new Error('Invalid Connection type specified')
+      throw new Error('Invalid UserConnection type specified')
     }
-    return new Connection({
+    if (userId === withId) {
+      throw new Error('other_user_id cannot equal user_id')
+    }
+    return new UserConnection({
       user_id: userId,
-      with_id: withId,
+      other_user_id: otherUserId,
       type,
       created_at: new Date(),
       updated_at: new Date()
@@ -28,8 +31,8 @@ module.exports = bookshelf.Model.extend({
     .save(null, { returning: '*' })
   },
 
-  createOrUpdate: function (userId, withId, type) {
-    return this.find(userId, withId, type)
+  createOrUpdate: function (userId, otherUserId, type) {
+    return this.find(userId, otherUserId, type)
       .then(connection => {
         if (connection) return connection.save(
           { updated_at: new Date() },
@@ -39,9 +42,9 @@ module.exports = bookshelf.Model.extend({
       })
   },
 
-  find: function (user_id, with_id, type) {
+  find: function (user_id, other_user_id, type) {
     if (!user_id) throw new Error('Parameter user_id must be supplied.')
-    return Connection.where({ user_id, with_id, type }).fetch()
+    return UserConnection.where({ user_id, other_user_id, type }).fetch()
   },
 
   isMessage: function () {

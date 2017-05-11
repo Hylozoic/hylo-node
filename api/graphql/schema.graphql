@@ -190,7 +190,7 @@ type Post {
   myVote: Boolean
 }
 
-type Connection {
+type PersonConnection {
   id: ID
   with: Person
   type: String
@@ -198,10 +198,10 @@ type Connection {
   updatedAt: String
 }
 
-type ConnectionQuerySet {
+type PersonConnectionQuerySet {
   total: Int
   hasMore: Boolean
-  items: [Connection]
+  items: [PersonConnection]
 }
 
 type CommentQuerySet {
@@ -284,7 +284,7 @@ type Query {
   connections(
     first: Int,
     offset: Int
-  ): ConnectionQuerySet
+  ): PersonConnectionQuerySet
 }
 
 input MeInput {
@@ -328,7 +328,7 @@ input MessageThreadInput {
   participantIds: [String]
 }
 
-input ConnectionInput {
+input PersonConnectionInput {
   withIds: [String]
   type: String
 }
@@ -341,7 +341,7 @@ type Mutation {
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
-  createOrUpdateConnections(data: ConnectionInput): [Connection]
+  createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
 }
 
 type LinkPreview {

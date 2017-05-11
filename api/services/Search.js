@@ -70,9 +70,9 @@ module.exports = {
     })
   },
 
-  forConnections: function (opts) {
-    return Connection.query(q => {
-      q.join('users', 'users.id', 'user_connections.with_id')
+  forUserConnections: function (opts) {
+    return UserConnection.query(q => {
+      q.join('users', 'users.id', 'user_connections.other_user_id')
       countTotal(q, 'user_connections', opts.totalColumnName)
 
       q.groupBy('user_connections.id')
