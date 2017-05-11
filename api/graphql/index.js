@@ -3,7 +3,7 @@ import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import {
-  updateMe, createComment, createOrUpdateConnection, createPost, findOrCreateThread, leaveCommunity, vote
+  updateMe, createComment, createOrUpdatePersonConnection, createPost, findOrCreateThread, leaveCommunity, vote
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -25,7 +25,7 @@ function createSchema (userId, isAdmin) {
       posts: (root, args) => fetchMany('Post', args),
       people: (root, args) => fetchMany('Person', args),
       topics: (root, args) => fetchMany('Topic', args),
-      connections: (root, args) => fetchMany('Connection', args)
+      connections: (root, args) => fetchMany('PersonConnection', args)
     },
     Mutation: {
       updateMe: (root, { changes }) =>
@@ -38,8 +38,8 @@ function createSchema (userId, isAdmin) {
         data.postId = data.messageThreadId
         return createComment(userId, data).then(message => fetchOne('Message', message.id))
       },
-      createOrUpdateConnections: (root, { data }) => data.personIds.map(
-        otherUserId => createOrUpdateConnection(userId, otherUserId, data.type)
+      createOrUpdatePersonConnections: (root, { data }) => data.personIds.map(
+        otherUserId => createOrUpdatePersonConnection(userId, otherUserId, data.type)
       ),
       findOrCreateThread: (root, { data }) =>
         findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),

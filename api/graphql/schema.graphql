@@ -192,7 +192,7 @@ type Post {
 
 type PersonConnection {
   id: ID
-  otherPerson: Person
+  person: Person
   type: String
   createdAt: String
   updatedAt: String

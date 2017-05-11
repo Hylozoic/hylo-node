@@ -305,7 +305,7 @@ export default function makeModels (userId, isAdmin) {
         'created_at',
         'updated_at'
       ],
-      relations: [ 'with' ],
+      relations: [ {otherUser: {alias: 'person'}} ],
       fetchMany: ({ first, offset = 0 }) =>
         searchQuerySet('forUserConnections', {limit: first, offset }),
       filter: nonAdminFilter(sharedMembership('users', userId))

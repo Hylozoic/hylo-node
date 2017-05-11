@@ -6,7 +6,7 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, 'user_id')
   },
 
-  otherUserId: function () {
+  otherUser: function () {
     return this.belongsTo(User, 'other_user_id')
   }
 }, {
