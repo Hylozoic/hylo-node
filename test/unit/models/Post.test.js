@@ -51,6 +51,54 @@ describe('Post', function () {
     })
   })
 
+  describe('#getCommenters', function () {
+    var c1, u1, u2, u3, u4, u5, u6, u7, u8, post
+
+    before(function (done) {
+      return setup.clearDb().then(function () {
+        u1 = new User({email: 'a@post.c'})
+        u2 = new User({email: 'b@post.b'})
+        u3 = new User({email: 'c@post.c'})
+        u4 = new User({email: 'd@post.d'})
+        u5 = new User({email: 'e@post.e'})
+        u6 = new User({email: 'f@post.f'})
+        u7 = new User({email: 'g@post.g'})
+        u8 = new User({email: 'h@post.h'})
+        post = new Post()
+        return Promise.join(
+          u1.save(),
+          u2.save(),
+          u3.save(),
+          u4.save(),
+          u5.save(),
+          u6.save(),
+          u7.save(),
+          u8.save()
+        ).then(function () {
+          post.set('user_id', u1.id)
+          return post.save()
+        }).then(function () {
+          return Promise.map([u1, u2, u3, u4, u5, u6, u7, u8], (u) => {
+            const c = new Comment({user_id: u.id, post_id: post.id})
+            return c.save()
+          })
+        }).then(function () {
+          done()
+        })
+      })
+    })
+
+    it('includes the current user always, regardless of when they commented', function () {
+      const first = 1
+      const currentUserId = u3.id
+      return post.getCommenters(first, currentUserId).then(function (results) {
+        console.log(currentUserId, Object.keys(results._byId))
+        expect(results.length).to.equal(first)
+        expect(results._byId[currentUserId]).to.not.be.undefined
+      })
+    })
+  })
+
   describe('#isVisibleToUser', () => {
     var post, c1, c2, user
 
