@@ -2,7 +2,7 @@ const root = require('root-path')
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
-describe.only('UserConnection', () => {
+describe('UserConnection', () => {
   let u
   let u2
 
