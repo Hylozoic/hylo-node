@@ -192,7 +192,7 @@ type Post {
 
 type PersonConnection {
   id: ID
-  with: Person
+  otherPerson: Person
   type: String
   createdAt: String
   updatedAt: String
@@ -329,7 +329,7 @@ input MessageThreadInput {
 }
 
 input PersonConnectionInput {
-  withIds: [String]
+  personIds: [String]
   type: String
 }
 

@@ -38,8 +38,8 @@ function createSchema (userId, isAdmin) {
         data.postId = data.messageThreadId
         return createComment(userId, data).then(message => fetchOne('Message', message.id))
       },
-      createOrUpdateConnections: (root, { data }) => data.withIds.map(
-        withId => createOrUpdateConnection(userId, withId, data.type)
+      createOrUpdateConnections: (root, { data }) => data.personIds.map(
+        otherUserId => createOrUpdateConnection(userId, otherUserId, data.type)
       ),
       findOrCreateThread: (root, { data }) =>
         findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),

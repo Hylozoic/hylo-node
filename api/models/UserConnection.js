@@ -6,7 +6,7 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, 'user_id')
   },
 
-  with: function () {
+  otherUserId: function () {
     return this.belongsTo(User, 'other_user_id')
   }
 }, {
@@ -18,7 +18,7 @@ module.exports = bookshelf.Model.extend({
     if (!this.Type.hasOwnProperty(type.toUpperCase())) {
       throw new Error('Invalid UserConnection type specified')
     }
-    if (userId === withId) {
+    if (userId === otherUserId) {
       throw new Error('other_user_id cannot equal user_id')
     }
     return new UserConnection({
@@ -38,7 +38,7 @@ module.exports = bookshelf.Model.extend({
           { updated_at: new Date() },
           { returning: '*' }
         )
-        return this.create(userId, withId, type)
+        return this.create(userId, otherUserId, type)
       })
   },
 
