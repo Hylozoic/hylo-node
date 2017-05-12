@@ -37,6 +37,14 @@ module.exports = {
     }, attrs))
   },
 
+  userConnection: attrs => {
+    return new UserConnection(merge({
+      type: 'message',
+      created_at: new Date,
+      updated_at: new Date
+    }, attrs))
+  },
+
   network: attrs => {
     return new Network(merge({
       name: text(),

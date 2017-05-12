@@ -892,6 +892,10 @@ bluebird@^3.1.1, bluebird@^3.4.1, bluebird@^3.4.3, bluebird@^3.4.6:
   version "3.4.6"
   resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.4.6.tgz#01da8d821d87813d158967e743d5fe6c62cf8c0f"
 
+bluebird@^3.4.7:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/bluebird/-/bluebird-3.5.0.tgz#791420d7f551eea2897453a8a77653f96606d67c"
+
 body-parser@1.15.1:
   version "1.15.1"
   resolved "https://registry.yarnpkg.com/body-parser/-/body-parser-1.15.1.tgz#9bceef0669b8f8b943f0ad8ce5d95716bd740fd2"
@@ -951,6 +955,13 @@ body-parser@~1.14.0:
     qs "5.2.0"
     raw-body "~2.1.5"
     type-is "~1.6.10"
+
+bookshelf-returning@^0.3.1:
+  version "0.3.1"
+  resolved "https://registry.yarnpkg.com/bookshelf-returning/-/bookshelf-returning-0.3.1.tgz#2f1c1d7b042b733758499240929a16280e4fd13d"
+  dependencies:
+    bluebird "^3.4.7"
+    lodash "^4.17.4"
 
 bookshelf@0.10.2:
   version "0.10.2"
@@ -3753,6 +3764,10 @@ lodash@>=2.4.x, lodash@^4.0.1, lodash@^4.14.0, lodash@^4.14.2, lodash@^4.8.2, lo
 lodash@^2.4.1, lodash@~2.4.0, lodash@~2.4.1:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-2.4.2.tgz#fadd834b9683073da179b3eae6d9c0d15053f73e"
+
+lodash@^4.17.4:
+  version "4.17.4"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
 
 lodash@~3.5.0:
   version "3.5.0"
