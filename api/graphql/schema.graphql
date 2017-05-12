@@ -341,6 +341,7 @@ type Mutation {
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
+  subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
   createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
 }
 
