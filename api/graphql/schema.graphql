@@ -103,6 +103,11 @@ type Community {
     order: String,
     offset: Int
   ): TopicSubscriptionQuerySet
+  notifications(
+    first: Int,
+    order: String,
+    offset: Int
+  ): NotificationQuerySet
 }
 
 type PersonQuerySet {
@@ -282,4 +287,23 @@ type LinkPreview {
   title: String
   url: String
   imageUrl: String
+}
+
+type Notification {
+  id: ID
+#  actor: Person
+#  comment: Comment
+#  post: Post
+  action: String
+  meta: NotificationMeta
+}
+
+type NotificationMeta {
+  reasons: [String]
+}
+
+type NotificationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Notification]
 }

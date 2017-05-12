@@ -5,6 +5,7 @@ import {
   sharedMembership,
   sharedPostMembership
 } from './filters'
+import { fetchNotificationQuerySet } from './notificationQuerySet'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -170,7 +171,11 @@ export default function makeModels (userId, isAdmin) {
             type: filter,
             sort: sortBy,
             topic
-          })
+          }),
+
+        notifications: (c, { first, order, offset = 0 }) =>
+          fetchNotificationQuerySet(c, userId, {first, order, offset})
+
       },
       filter: nonAdminFilter(q => {
         q.where('communities.id', 'in', myCommunityIds(userId))
@@ -263,6 +268,16 @@ export default function makeModels (userId, isAdmin) {
     Topic: {
       model: Tag,
       attributes: ['id', 'name']
+    },
+
+    Notification: {
+      model: Notification,
+      attributes: ['id'],
+      getters: {
+        action: n =>
+          Notification.priorityReason(n.relations.activity.get('meta').reasons),
+        meta: n => n.relations.activity.get('meta')
+      }
     }
   }
 }
