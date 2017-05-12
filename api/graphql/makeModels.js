@@ -274,6 +274,9 @@ export default function makeModels (userId, isAdmin) {
       model: Notification,
       attributes: ['id'],
       getters: {
+        actor: n => n.actor(),
+        post: n => n.post(),
+        comment: n => n.comment(),
         action: n =>
           Notification.priorityReason(n.relations.activity.get('meta').reasons),
         meta: n => n.relations.activity.get('meta')

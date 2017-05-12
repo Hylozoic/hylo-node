@@ -291,9 +291,9 @@ type LinkPreview {
 
 type Notification {
   id: ID
-#  actor: Person
-#  comment: Comment
-#  post: Post
+  actor: Person
+  comment: Comment
+  post: Post
   action: String
   meta: NotificationMeta
 }
