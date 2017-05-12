@@ -89,13 +89,24 @@ describe('Post', function () {
     })
 
     it('includes the current user always, regardless of when they commented', function () {
-      const first = 1
-      const currentUserId = u3.id
-      return post.getCommenters(first, currentUserId).then(function (results) {
-        console.log(currentUserId, Object.keys(results._byId))
-        expect(results.length).to.equal(first)
-        expect(results._byId[currentUserId]).to.not.be.undefined
-      })
+      return Promise.join(
+        post.getCommenters(1, u1.id).then(function (results) {
+          expect(results.length).to.equal(1)
+          expect(results._byId[u1.id]).to.not.be.undefined
+        }),
+        post.getCommenters(1, u2.id).then(function (results) {
+          expect(results.length).to.equal(1)
+          expect(results._byId[u2.id]).to.not.be.undefined
+        }),
+        post.getCommenters(3, u1.id).then(function (results) {
+          expect(results.length).to.equal(3)
+          expect(results._byId[u1.id]).to.not.be.undefined
+        }),
+        post.getCommenters(3, u2.id).then(function (results) {
+          expect(results.length).to.equal(3)
+          expect(results._byId[u2.id]).to.not.be.undefined
+        })
+      )
     })
   })
 

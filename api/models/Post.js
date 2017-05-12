@@ -12,13 +12,9 @@ import { countTotal } from '../../lib/util/knex'
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
   q.join('comments', 'comments.user_id', 'users.id')
+  q.where('comments.post_id', '=', post.id)
   if (currentUserId) {
-    q.where(function () {
-      this.where('comments.user_id', currentUserId)
-      this.where('comments.post_id', '=', post.id)
-    }).orWhere('comments.post_id', '=', post.id)
-  } else {
-    q.where('comments.post_id', '=', post.id)
+    q.orderBy(bookshelf.knex.raw(`case when user_id = ${currentUserId} then -1 else user_id end`))
   }
   q.groupBy('users.id', 'comments.user_id')
   if (limit) q.limit(limit)
