@@ -9,10 +9,13 @@ import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
 import { countTotal } from '../../lib/util/knex'
 
-const commentersQuery = (limit, post) => q => {
+const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
   q.join('comments', 'comments.user_id', 'users.id')
   q.where('comments.post_id', '=', post.id)
+  if (currentUserId) {
+    q.orderBy(bookshelf.knex.raw(`case when user_id = ${currentUserId} then -1 else user_id end`))
+  }
   q.groupBy('users.id', 'comments.user_id')
   if (limit) q.limit(limit)
 }
@@ -101,9 +104,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
       uniqBy('id', flatten(this.relations.comments.map(c => c.relations.tags.models))))
   },
 
-  getCommenters: function (first) {
-    return User.query(commentersQuery(first, this))
-    .fetchAll()
+  getCommenters: function (first, currentUserId) {
+    return User.query(commentersQuery(first, this, currentUserId)).fetchAll()
   },
 
   getCommentersTotal: function () {
