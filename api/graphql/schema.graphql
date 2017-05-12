@@ -358,15 +358,21 @@ type LinkPreview {
 
 type Notification {
   id: ID
-  actor: Person
-  comment: Comment
-  post: Post
+  activity: Activity
   action: String
-  meta: NotificationMeta
+  meta: ActivityMeta
 }
 
-type NotificationMeta {
+type ActivityMeta {
   reasons: [String]
+}
+
+type Activity {
+  id: ID
+  actor: Person
+  comment: Comment
+  post: Post,
+  meta: ActivityMeta
 }
 
 type NotificationQuerySet {

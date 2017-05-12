@@ -304,14 +304,22 @@ export default function makeModels (userId, isAdmin) {
     Notification: {
       model: Notification,
       attributes: ['id'],
+      relations: ['activity'],
       getters: {
-        actor: n => n.actor(),
-        post: n => n.post(),
-        comment: n => n.comment(),
         action: n =>
           Notification.priorityReason(n.relations.activity.get('meta').reasons),
         meta: n => n.relations.activity.get('meta')
       }
+    },
+
+    Activity: {
+      model: Activity,
+      attributes: ['id'],
+      relations: [
+        'actor',
+        'post',
+        'comment'
+      ]
     },
 
     PersonConnection: {
