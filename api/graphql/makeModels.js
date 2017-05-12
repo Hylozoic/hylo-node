@@ -107,7 +107,7 @@ export default function makeModels (userId, isAdmin) {
         title: p => p.get('name'),
         details: p => p.get('description'),
         public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
-        commenters: (p, { first }) => p.getCommenters(first),
+        commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
@@ -174,8 +174,16 @@ export default function makeModels (userId, isAdmin) {
           }),
 
         notifications: (c, { first, order, offset = 0 }) =>
-          fetchNotificationQuerySet(c, userId, {first, order, offset})
+          fetchNotificationQuerySet(c, userId, {first, order, offset}),
 
+        communityTopics: (c, { first, offset = 0, name, autocomplete }) =>
+          fetchSearchQuerySet('forCommunityTopics', {
+            limit: first,
+            offset,
+            name,
+            autocomplete,
+            communityId: c.id
+          })
       },
       filter: nonAdminFilter(q => {
         q.where('communities.id', 'in', myCommunityIds(userId))
@@ -265,9 +273,32 @@ export default function makeModels (userId, isAdmin) {
       })
     },
 
+    CommunityTopic: {
+      model: CommunityTag,
+      attributes: ['id'],
+      getters: {
+        postsTotal: ct => CommunityTag.taggedPostCount(ct.get('community_id'), ct.get('tag_id')),
+        followersTotal: ct => Tag.followersCount(ct.get('tag_id'), ct.get('community_id'))
+      },
+      relations: [
+        'community',
+        {tag: {alias: 'topic'}}
+      ]
+    },
+
     Topic: {
       model: Tag,
-      attributes: ['id', 'name']
+      attributes: ['id', 'name'],
+      getters: {
+        postsTotal: t => Tag.taggedPostCount(t.id),
+        followersTotal: t => Tag.followersCount(t.id)
+      },
+      relations: [
+        {communityTags: {alias: 'communityTopics', querySet: true}},
+        {follows: {alias: 'topicSubscriptions', querySet: true}}
+      ],
+      fetchMany: ({ first, offset = 0, name, autocomplete }) =>
+        searchQuerySet('forTags', {limit: first, offset, name, autocomplete})
     },
 
     Notification: {
@@ -281,6 +312,20 @@ export default function makeModels (userId, isAdmin) {
           Notification.priorityReason(n.relations.activity.get('meta').reasons),
         meta: n => n.relations.activity.get('meta')
       }
+    },
+
+    PersonConnection: {
+      model: UserConnection,
+      attributes: [
+        'id',
+        'type',
+        'created_at',
+        'updated_at'
+      ],
+      relations: [ {otherUser: {alias: 'person'}} ],
+      fetchMany: ({ first, offset = 0 }) =>
+        searchQuerySet('forUserConnections', {limit: first, offset}),
+      filter: nonAdminFilter(sharedMembership('users', userId))
     }
   }
 }

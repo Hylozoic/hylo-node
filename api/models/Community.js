@@ -60,6 +60,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Tag).through(CommunityTag).withPivot(['user_id', 'description'])
   },
 
+  communityTags: function () {
+    return this.hasMany(CommunityTag)
+  },
+
   comments: function () {
     var communityId = this.id
     return Comment.collection().query(q => {

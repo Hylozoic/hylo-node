@@ -64,5 +64,16 @@ const shims = {
   forUsers: options => {
     // TODO
     return options
-  }
+  },
+
+  forCommunityTopics: options => {
+    if (!options.communityId) {
+      throw new Error('communityId must be provided')
+    }
+    return options
+  },
+
+  forTags: options => options,
+
+  forUserConnections: options => options
 }

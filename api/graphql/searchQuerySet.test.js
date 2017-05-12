@@ -23,9 +23,15 @@ describe('sanitizeOptions', () => {
     })
   })
 
-  it('throws an error when value of topic isn\'t an ID', () => {
+  it('forPosts: throws an error when value of topic isn\'t an ID', () => {
     expect(() => {
       sanitizeOptions('forPosts', {topic: '123four'})
     }).to.throw(/invalid value for topic/)
+  })
+
+  it("forCommunityTopics: throws an error when communityId isn't defined", () => {
+    expect(() => {
+      sanitizeOptions('forCommunityTopics', {})
+    }).to.throw(/communityId must be provided/)
   })
 })

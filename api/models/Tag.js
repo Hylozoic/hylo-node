@@ -154,6 +154,10 @@ module.exports = bookshelf.Model.extend({
     .withPivot(['user_id', 'description'])
   },
 
+  communityTags: function () {
+    return this.hasMany(CommunityTag)
+  },
+
   posts: function () {
     return this.belongsToMany(Post).through(PostTag).withPivot('selected')
   },
@@ -292,6 +296,26 @@ module.exports = bookshelf.Model.extend({
       return Promise.all(tables.map(t => trx(t).where('tag_id', id).del()))
       .then(() => trx('tags').where('id', id).del())
     })
+  },
+
+  taggedPostCount: tagId => {
+    return bookshelf.knex('posts_tags')
+    .join('posts', 'posts.id', 'posts_tags.post_id')
+    .where('posts.active', true)
+    .where({tag_id: tagId})
+    .count()
+    .then(rows => Number(rows[0].count))
+  },
+
+  followersCount: (tagId, communityId) => {
+    const query = communityId ? {
+      community_id: communityId,
+      tag_id: tagId
+    } : {tag_id: tagId}
+    return bookshelf.knex('tag_follows')
+    .where(query)
+    .count()
+    .then(rows => Number(rows[0].count))
   },
 
   nonexistent: (names, communityIds) => {

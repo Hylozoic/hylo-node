@@ -37,9 +37,40 @@ type TopicSubscription {
   newPostCount: Int
 }
 
+type CommunityTopicQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CommunityTopic]
+}
+
+type CommunityTopic {
+  id: ID
+  topic: Topic
+  community: Community
+  postsTotal: Int
+  followersTotal: Int
+}
+
+type TopicQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Topic]
+}
+
 type Topic {
   id: ID
   name: String
+  postsTotal: Int
+  followersTotal: Int
+  communityTopics(
+    first: Int,
+    offset: Int
+  ): CommunityTopicQuerySet
+  topicSubscriptions(
+    first: Int,
+    order: String,
+    offset: Int
+  ): TopicSubscriptionQuerySet
 }
 
 type Person {
@@ -108,6 +139,12 @@ type Community {
     order: String,
     offset: Int
   ): NotificationQuerySet
+  communityTopics(
+    first: Int,
+    offset: Int
+    autocomplete: String,
+    name: String
+  ): CommunityTopicQuerySet
 }
 
 type PersonQuerySet {
@@ -156,6 +193,20 @@ type Post {
   linkPreview: LinkPreview
   votesTotal: Int
   myVote: Boolean
+}
+
+type PersonConnection {
+  id: ID
+  person: Person
+  type: String
+  createdAt: String
+  updatedAt: String
+}
+
+type PersonConnectionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [PersonConnection]
 }
 
 type CommentQuerySet {
@@ -229,6 +280,16 @@ type Query {
     autocomplete: String,
     filter: String
   ): PersonQuerySet
+  topics(
+    first: Int,
+    offset: Int,
+    autocomplete: String,
+    name: String
+  ): TopicQuerySet
+  connections(
+    first: Int,
+    offset: Int
+  ): PersonConnectionQuerySet
 }
 
 input MeInput {
@@ -272,6 +333,11 @@ input MessageThreadInput {
   participantIds: [String]
 }
 
+input PersonConnectionInput {
+  personIds: [String]
+  type: String
+}
+
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
@@ -280,6 +346,7 @@ type Mutation {
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
+  createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
 }
 
 type LinkPreview {

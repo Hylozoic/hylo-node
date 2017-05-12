@@ -384,6 +384,63 @@ describe('Tag', () => {
     })
   })
 
+  describe('.taggedPostCount', () => {
+    var t1, p1, p2, c
+
+    beforeEach(() => {
+      const k = bookshelf.knex
+      t1 = new Tag({name: 't1'})
+      p1 = factories.post()
+      p2 = factories.post({active: false})
+      c = factories.community()
+
+      return Promise.all([t1, p1, p2, c].map(x => x.save()))
+      .then(() => Promise.all([
+        k('posts_tags').insert({tag_id: t1.id, post_id: p1.id}),
+        k('posts_tags').insert({tag_id: t1.id, post_id: p2.id}),
+        k('communities_tags').insert({tag_id: t1.id, community_id: c.id})
+      ]))
+    })
+
+    it("doesn't count inactive posts in the count", function () {
+      return Tag.taggedPostCount(t1.id)
+      .then(count => {
+        expect(count).to.equal(1)
+      })
+    })
+  })
+
+  describe('.followersCount', () => {
+    var t1, c, c2
+
+    beforeEach(() => {
+      const k = bookshelf.knex
+      t1 = new Tag({name: 't1'})
+      c = factories.community()
+      c2 = factories.community()
+
+      return Promise.all([t1, c1, c2].map(x => x.save()))
+      .then(() => Promise.all([
+        k('communities_tags').insert({tag_id: t1.id, community_id: c.id}),
+        k('tag_follows').insert({tag_id: t1.id, community_id: c.id, user_id: u.id})
+      ]))
+    })
+
+    it('correctly counts the number of followers across the whole site', function () {
+      return Tag.followersCount(t1.id)
+      .then(count => {
+        expect(count).to.equal(1)
+      })
+    })
+
+    it('correctly counts the number of followers for a given community', function () {
+      return Tag.followersCount(t1.id, c2.id)
+      .then(count => {
+        expect(count).to.equal(0)
+      })
+    })
+  })
+
   describe('.nonexistent', () => {
     var cx, cy, t1, t2, t3
     beforeEach(() => {

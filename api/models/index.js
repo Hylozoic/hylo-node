@@ -11,6 +11,7 @@ export const init = () => {
   global.Promise = Promise
 
   global.bookshelf = Bookshelf(Knex(knexfile[process.env.NODE_ENV]))
+  global.bookshelf.plugin('bookshelf-returning')
 
   return readdirSync(__dirname)
   .map(filename => {
