@@ -65,3 +65,9 @@ export function vote (userId, postId, isUpvote) {
   return Post.find(postId)
   .then(post => post.vote(userId, isUpvote))
 }
+
+export function subscribe (userId, topicId, communityId, isSubscribing) {
+  return isSubscribing
+    ? TagFollow.add(topicId, userId, communityId)
+    : TagFollow.remove(topicId, userId, communityId)
+}
