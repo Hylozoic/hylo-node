@@ -5,7 +5,6 @@ import {
   sharedMembership,
   sharedPostMembership
 } from './filters'
-import { fetchNotificationQuerySet } from './notificationQuerySet'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -38,7 +37,8 @@ export default function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
-        {messageThreads: {typename: 'MessageThread'}}
+        {messageThreads: {typename: 'MessageThread'}},
+        {inAppNotifications: {querySet: true, alias: 'notifications'}}
       ],
       getters: {
         hasDevice: u => u.hasDevice()
@@ -173,9 +173,6 @@ export default function makeModels (userId, isAdmin) {
             topic
           }),
 
-        notifications: (c, { first, order, offset = 0 }) =>
-          fetchNotificationQuerySet(c, userId, {first, order, offset}),
-
         communityTopics: (c, { first, offset = 0, name, autocomplete }) =>
           fetchSearchQuerySet('forCommunityTopics', {
             limit: first,
@@ -306,20 +303,21 @@ export default function makeModels (userId, isAdmin) {
       attributes: ['id'],
       relations: ['activity'],
       getters: {
-        action: n =>
-          Notification.priorityReason(n.relations.activity.get('meta').reasons),
-        meta: n => n.relations.activity.get('meta')
+        createdAt: n => n.get('created_at')
       }
     },
 
     Activity: {
       model: Activity,
-      attributes: ['id'],
+      attributes: ['id', 'meta'],
       relations: [
         'actor',
         'post',
         'comment'
-      ]
+      ],
+      getters: {
+        action: a => Notification.priorityReason(a.get('meta').reasons)
+      }
     },
 
     PersonConnection: {
