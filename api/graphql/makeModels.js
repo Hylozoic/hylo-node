@@ -309,7 +309,7 @@ export default function makeModels (userId, isAdmin) {
 
     Activity: {
       model: Activity,
-      attributes: ['id', 'meta'],
+      attributes: ['id', 'meta', 'unread'],
       relations: [
         'actor',
         'post',

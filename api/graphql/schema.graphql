@@ -373,6 +373,7 @@ type Activity {
   post: Post
   action: String
   meta: ActivityMeta
+  unread: Boolean
 }
 
 type NotificationQuerySet {
