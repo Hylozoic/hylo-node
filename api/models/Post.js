@@ -3,7 +3,7 @@
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { normalizedSinglePostResponse } from '../../lib/util/normalize'
-import { pushToSockets } from '../services/Websockets'
+import { postRoom, pushToSockets, userRoom } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -182,8 +182,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   pushCommentToSockets: function (comment) {
-    var postId = this.id
-    return pushToSockets(`posts/${postId}`, 'commentAdded', {comment})
+    return pushToSockets(postRoom(this.id), 'commentAdded', {comment, postId: this.id})
   },
 
   pushMessageToSockets: function (message, userIds) {
@@ -193,13 +192,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
       return Promise.map(excludingSender, id => this.pushSelfToSocket(id))
     } else {
       return Promise.map(excludingSender, id =>
-        pushToSockets(`users/${id}`, 'messageAdded', {postId, message}))
+        pushToSockets(userRoom(id), 'messageAdded', {postId, message}))
     }
   },
 
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
-    var postId = this.id
-    pushToSockets(`posts/${postId}`, 'userTyping', {userId, userName, isTyping}, socketToExclude)
+    pushToSockets(postRoom(this.id), 'userTyping', {userId, userName, isTyping}, socketToExclude)
   },
 
   pushSelfToSocket: function (userId) {
@@ -207,7 +205,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.load(PostPresenter.relations(userId, opts))
     .then(post => PostPresenter.present(post, userId, opts))
     .then(normalizedSinglePostResponse)
-    .then(post => pushToSockets(`users/${userId}`, 'newThread', post))
+    .then(post => pushToSockets(userRoom(userId), 'newThread', post))
   },
 
   copy: function (attrs) {

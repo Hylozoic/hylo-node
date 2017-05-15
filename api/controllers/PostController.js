@@ -17,6 +17,7 @@ import {
   uniqize
 } from '../../lib/util/normalize'
 import { createCheckFreshnessAction } from '../../lib/freshness'
+import { joinRoom, leaveRoom } from '../services/Websockets'
 
 const sortColumns = {
   'fulfilled-last': 'fulfilled_at',
@@ -171,8 +172,6 @@ const checkPostTags = (attrs, userId, opts) => {
   .then(communityIds =>
     throwErrorIfMissingTags(tags, intersection(communityIds, opts.community_ids)))
 }
-
-const emptyResponse = res => err => err ? res.serverError(err) : res.ok({})
 
 const PostController = {
   findThreads: createFindAction(queryForThreads),
@@ -409,18 +408,11 @@ const PostController = {
   },
 
   subscribe: function (req, res) {
-    var post = res.locals.post
-    sails.sockets.join(req, `posts/${post.id}`, function (err) {
-      if (err) {
-        return res.serverError(err)
-      }
-      return res.ok({})
-    })
+    joinRoom(req, res, 'post', res.locals.post.id)
   },
 
   unsubscribe: function (req, res) {
-    var post = res.locals.post
-    sails.sockets.leave(req, `posts/${post.id}`, emptyResponse(res))
+    leaveRoom(req, res, 'post', res.locals.post.id)
   },
 
   typing: function (req, res) {
@@ -434,11 +426,11 @@ const PostController = {
   },
 
   subscribeToThreads: function (req, res) {
-    sails.sockets.join(req, `users/${req.session.userId}`, emptyResponse(res))
+    joinRoom(req, res, 'user', req.session.userId)
   },
 
   unsubscribeFromThreads: function (req, res) {
-    sails.sockets.leave(req, `users/${req.session.userId}`, emptyResponse(res))
+    leaveRoom(req, res, 'user', req.session.userId)
   }
 }
 
