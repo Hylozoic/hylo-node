@@ -371,6 +371,7 @@ type Activity {
   actor: Person
   comment: Comment
   post: Post
+  community: Community
   action: String
   meta: ActivityMeta
   unread: Boolean

@@ -313,7 +313,8 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         'actor',
         'post',
-        'comment'
+        'comment',
+        'community'
       ],
       getters: {
         action: a => Notification.priorityReason(a.get('meta').reasons)
