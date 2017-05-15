@@ -5,7 +5,6 @@ import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import {
   updateMe,
   createComment,
-  createOrUpdatePersonConnection,
   createPost,
   findOrCreateThread,
   leaveCommunity,
@@ -45,9 +44,6 @@ function createSchema (userId, isAdmin) {
         data.postId = data.messageThreadId
         return createComment(userId, data).then(message => fetchOne('Message', message.id))
       },
-      createOrUpdatePersonConnections: (root, { data }) => data.personIds.map(
-        otherUserId => createOrUpdatePersonConnection(userId, otherUserId, data.type)
-      ),
       findOrCreateThread: (root, { data }) =>
         findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
       leaveCommunity: (root, { id }) => leaveCommunity(userId, id),

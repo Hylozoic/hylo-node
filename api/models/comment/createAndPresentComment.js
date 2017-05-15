@@ -56,6 +56,7 @@ export default function createAndPresentComment (commenterId, text, post, opts =
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
       .tap(createMedia(opts.imageUrl, trx)))
+      .tap(createOrUpdateConnections(commenterId, existingFollowers))
     .then(comment => Promise.all([
       presentComment(comment).tap(c => isReplyToPost && notifySockets(c, post)),
 
@@ -105,4 +106,11 @@ const notifySockets = (comment, post) => {
   } else {
     return post.pushCommentToSockets(comment)
   }
+}
+
+const createOrUpdateConnections = (userId, existingFollowers) => comment => {
+  // Deliberately non-blocking (don't wait for promise to resolve/reject)
+  existingFollowers
+    .filter(f => f !== userId)
+    .forEach(follower => UserConnection.createOrUpdate(userId, follower, 'message'))
 }
