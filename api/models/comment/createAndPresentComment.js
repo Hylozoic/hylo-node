@@ -109,8 +109,7 @@ const notifySockets = (comment, post) => {
 }
 
 const createOrUpdateConnections = (userId, existingFollowers) => comment => {
-  // Deliberately non-blocking (don't wait for promise to resolve/reject)
-  existingFollowers
+  return existingFollowers
     .filter(f => f !== userId)
     .forEach(follower => UserConnection.createOrUpdate(userId, follower, 'message'))
 }
