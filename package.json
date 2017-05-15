@@ -112,7 +112,7 @@
     "debug": "node-debug app.js",
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
     "test": "./node_modules/.bin/mocha -r test/setup/core --compilers js:babel-register",
-    "cover": "./node_modules/.bin/nyc --cache -a -r lcov npm test -- -R dot",
+    "cover": "./node_modules/.bin/nyc -a -r lcov npm test -- -R dot",
     "knex": "knex",
     "update-migrations": "node ./migrations/scripts/updateMigrationsTable"
   },
