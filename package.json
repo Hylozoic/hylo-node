@@ -10,7 +10,10 @@
   "keywords": [],
   "nyc": {
     "sourceMap": false,
-    "instrument": false
+    "instrument": false,
+    "require": [
+      "babel-register"
+    ]
   },
   "devDependencies": {
     "babel-plugin-istanbul": "^2.0.3",
@@ -23,7 +26,7 @@
     "mocha": "^2.2.4",
     "mock-knex": "^0.3.7",
     "nock": "^7.0.2",
-    "nyc": "^8.3.2",
+    "nyc": "^10.0",
     "time": "^0.11.2"
   },
   "dependencies": {
@@ -109,7 +112,7 @@
     "debug": "node-debug app.js",
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
     "test": "./node_modules/.bin/mocha -r test/setup/core --compilers js:babel-register",
-    "cover": "./node_modules/.bin/nyc --reporter=lcov ./node_modules/.bin/_mocha --compilers js:babel-register -R dot",
+    "cover": "./node_modules/.bin/nyc --cache -a -r lcov npm test -- -R dot",
     "knex": "knex",
     "update-migrations": "node ./migrations/scripts/updateMigrationsTable"
   },

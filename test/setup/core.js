@@ -1,3 +1,5 @@
+process.env.NODE_ENV = 'test'
+
 // just set up the test globals, not the test database
 
 const chai = require('chai')
