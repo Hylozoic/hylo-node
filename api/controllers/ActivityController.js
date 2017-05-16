@@ -1,6 +1,6 @@
 const userColumns = q => q.column('users.id', 'name', 'avatar_url')
 
-export const actionFromReason = reason => {
+const actionFromReason = reason => {
   // this is for backwards compatibility with angular site
   switch (reason) {
     case 'newComment':
