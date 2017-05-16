@@ -178,6 +178,7 @@
       "Thank",
       "TokenAuth",
       "User",
+      "UserConnection",
       "UserExternalData",
       "UserPresenter",
       "UserSession",

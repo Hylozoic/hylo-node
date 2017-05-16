@@ -22,6 +22,11 @@ type Me {
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
+  notifications(
+    first: Int,
+    order: String,
+    offset: Int
+  ): NotificationQuerySet
 }
 
 type TopicSubscriptionQuerySet {
@@ -350,4 +355,31 @@ type LinkPreview {
   title: String
   url: String
   imageUrl: String
+}
+
+type Notification {
+  id: ID
+  activity: Activity
+  createdAt: String
+}
+
+type ActivityMeta {
+  reasons: [String]
+}
+
+type Activity {
+  id: ID
+  actor: Person
+  comment: Comment
+  post: Post
+  community: Community
+  action: String
+  meta: ActivityMeta
+  unread: Boolean
+}
+
+type NotificationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Notification]
 }
