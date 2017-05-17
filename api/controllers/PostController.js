@@ -414,13 +414,12 @@ const PostController = {
   },
 
   typing: function (req, res) {
-    var post = res.locals.post
-    res.ok({})
+    const { post } = res.locals
+    const { body: { isTyping }, socket } = req
 
-    User.find(req.session.userId)
-    .then(user => {
-      post.pushTypingToSockets(user.id, user.get('name'), req.body.isTyping, req.socket)
-    })
+    return User.find(req.session.userId)
+    .then(user => post.pushTypingToSockets(user.id, user.get('name'), isTyping, socket))
+    .then(() => res.ok({}))
   },
 
   subscribeToThreads: function (req, res) {
