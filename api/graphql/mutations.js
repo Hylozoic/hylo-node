@@ -71,3 +71,16 @@ export function subscribe (userId, topicId, communityId, isSubscribing) {
     ? TagFollow.add(topicId, userId, communityId)
     : TagFollow.remove(topicId, userId, communityId)
 }
+
+export function markActivityRead (userId, activityid) {
+  return Activity.find(activityid)
+  .then(a => {
+    if (a.get('reader_id') !== userId) return
+    return a.save({unread: false})
+  })
+}
+
+export function markAllActivitiesRead (userId) {
+  return Activity.query().where('reader_id', userId).update({unread: false})
+  .then(() => ({success: true}))
+}
