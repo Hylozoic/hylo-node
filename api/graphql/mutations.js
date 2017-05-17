@@ -3,12 +3,12 @@ import {
   createComment as underlyingCreateComment,
   validateCommentCreateData
 } from '../models/comment/createAndPresentComment'
-import {
-  createPost as underlyingCreatePost,
-  findOrCreateThread as underlyingFindOrCreateThread,
-  validatePostCreateData,
+import underlyingCreatePost, {
+  validatePostCreateData
+} from '../models/post/createPost'
+import underlyingFindOrCreateThread, {
   validateThreadData
-} from '../models/post/util'
+} from '../models/post/findOrCreateThread'
 
 function convertGraphqlUserSettingsData (data) {
   return transform(data, (result, value, key) => {

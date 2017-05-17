@@ -3,11 +3,9 @@ import { get, getOr } from 'lodash/fp'
 import {
   difference, includes, intersection, isEmpty, merge, omit, pick, pickBy
 } from 'lodash'
-import {
-  afterUpdatingPost,
-  createPost,
-  findOrCreateThread
-} from '../models/post/util'
+import { afterUpdatingPost } from '../models/post/util'
+import createPost from '../models/post/createPost'
+import findOrCreateThread from '../models/post/findOrCreateThread'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
