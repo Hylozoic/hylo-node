@@ -82,5 +82,5 @@ export function markActivityRead (userId, activityid) {
 
 export function markAllActivitiesRead (userId) {
   return Activity.query().where('reader_id', userId).update({unread: false})
-  .then(() => User.find(userId))
+  .then(() => ({success: true}))
 }
