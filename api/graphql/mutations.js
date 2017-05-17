@@ -1,4 +1,4 @@
-import { merge, transform, snakeCase } from 'lodash'
+import { isEmpty, merge, mapKeys, pick, transform, snakeCase } from 'lodash'
 import {
   createComment as underlyingCreateComment,
   validateCommentCreateData
@@ -70,4 +70,13 @@ export function subscribe (userId, topicId, communityId, isSubscribing) {
   return isSubscribing
     ? TagFollow.add(topicId, userId, communityId)
     : TagFollow.remove(topicId, userId, communityId)
+}
+
+export function updateMembership (userId, { id, slug, data }) {
+  return Membership.find(userId, id || slug)
+  .tap(m => {
+    const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
+    if (!isEmpty(whitelist)) return m.save(whitelist, {patch: true})
+  })
+  .then(m => m.id)
 }

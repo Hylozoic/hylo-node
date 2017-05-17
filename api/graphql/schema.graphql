@@ -338,6 +338,10 @@ input PersonConnectionInput {
   type: String
 }
 
+input MembershipInput {
+  newPostCount: Int
+}
+
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
@@ -348,6 +352,7 @@ type Mutation {
   vote(postId: ID, isUpvote: Boolean): Post
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
   createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
+  updateMembership(id: ID, slug: String, data: MembershipInput): Membership
 }
 
 type LinkPreview {
