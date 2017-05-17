@@ -2,6 +2,8 @@ import rollbar from 'rollbar'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { clone, isEmpty, merge, pick, sortBy } from 'lodash'
 import { curry } from 'lodash/fp'
+import { joinRoom, leaveRoom } from '../services/Websockets'
+
 const Promise = require('bluebird')
 const request = require('request')
 const post = Promise.promisify(request.post)
@@ -455,5 +457,13 @@ module.exports = {
     .then(({ models }) =>
       Promise.map(models, approveJoinRequest(req, res, community)))
     .then(() => res.ok({}))
+  },
+
+  subscribe: function (req, res) {
+    joinRoom(req, res, 'community', res.locals.community.id)
+  },
+
+  unsubscribe: function (req, res) {
+    leaveRoom(req, res, 'community', res.locals.community.id)
   }
 }
