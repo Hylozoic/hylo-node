@@ -348,6 +348,8 @@ type Mutation {
   vote(postId: ID, isUpvote: Boolean): Post
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
   createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
+  markAllActivitiesRead: Me
+  markActivityRead(id: ID): Activity
 }
 
 type LinkPreview {

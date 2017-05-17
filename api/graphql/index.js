@@ -10,7 +10,9 @@ import {
   findOrCreateThread,
   leaveCommunity,
   vote,
-  subscribe
+  subscribe,
+  markActivityRead,
+  markAllActivitiesRead
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -54,7 +56,9 @@ function createSchema (userId, isAdmin) {
       vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
       subscribe: (root, { communityId, topicId, isSubscribing }) =>
         subscribe(userId, topicId, communityId, isSubscribing)
-        .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null)
+        .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null),
+      markActivityRead: (root, { id }) => markActivityRead(userId, id),
+      markAllActivitiesRead: (root) => markAllActivitiesRead(userId)
     },
 
     FeedItemContent: {
