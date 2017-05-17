@@ -2,6 +2,7 @@ import { flatten, includes, isEmpty, merge, pick, uniq, values } from 'lodash'
 import { getOr } from 'lodash/fp'
 import { sanitize } from 'hylo-utils/text'
 import updateChildren from './updateChildren'
+import { communityRoom, pushToSockets } from '../../services/Websockets'
 
 export default function createPost (userId, params) {
   return setupNewPostAttrs(userId, params)
@@ -66,16 +67,17 @@ export function afterCreatingPost (post, opts) {
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
   ]))
   .then(() => Tag.updateForPost(post, opts.tag, opts.tagDescriptions, userId, trx))
-  .then(() => bumpNewPostCounts(post, trx))
+  .then(() => updateTagsAndCommunities(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
 
-function bumpNewPostCounts (post, trx) {
+function updateTagsAndCommunities (post, trx) {
   return post.load(['tags', 'communities'], {transacting: trx})
   .then(() => {
     const { tags, communities } = post.relations
-    const counterGroups = [
+
+    const bumpCounts = [
       TagFollow.query(q => {
         q.whereIn('tag_id', tags.map('id'))
         q.whereIn('community_id', communities.map('id'))
@@ -84,8 +86,11 @@ function bumpNewPostCounts (post, trx) {
         q.whereIn('community_id', communities.map('id'))
         q.where('active', true)
       })
-    ]
-    return Promise.all(counterGroups.map(group =>
-      group.query().increment('new_post_count').transacting(trx)))
+    ].map(group => group.query().increment('new_post_count').transacting(trx))
+
+    const notifySockets = communities.map(c =>
+      pushToSockets(communityRoom(c.id), 'newPost', {tags: tags.map('id')}))
+
+    return Promise.all(bumpCounts.concat(notifySockets))
   })
 }
