@@ -8,6 +8,8 @@ import {
   createPost,
   findOrCreateThread,
   leaveCommunity,
+  markActivityRead,
+  markAllActivitiesRead,
   subscribe,
   updateMe,
   updateMembership,
@@ -62,7 +64,10 @@ function createSchema (userId, isAdmin) {
         updateMembership(userId, args).then(id => fetchOne('Membership', id)),
 
       updateTopicSubscription: (root, args) =>
-        updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id))
+        updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id)),
+
+      markActivityRead: (root, { id }) => markActivityRead(userId, id),
+      markAllActivitiesRead: (root) => markAllActivitiesRead(userId)
     },
 
     FeedItemContent: {

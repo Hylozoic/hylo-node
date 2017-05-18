@@ -358,6 +358,12 @@ type Mutation {
   createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
   updateMembership(id: ID, slug: String, data: MembershipInput): Membership
   updateTopicSubscription(id: ID, data: TopicSubscriptionInput): TopicSubscription
+  markAllActivitiesRead: GenericResult
+  markActivityRead(id: ID): Activity
+}
+
+type GenericResult {
+  success: Boolean
 }
 
 type LinkPreview {

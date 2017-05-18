@@ -90,4 +90,16 @@ export function updateTopicSubscription (userId, { id, data }) {
   .update(whitelist)
   .returning('id')
   .then(ids => ids[0])
+
+export function markActivityRead (userId, activityid) {
+  return Activity.find(activityid)
+  .then(a => {
+    if (a.get('reader_id') !== userId) return
+    return a.save({unread: false})
+  })
+}
+
+export function markAllActivitiesRead (userId) {
+  return Activity.query().where('reader_id', userId).update({unread: false})
+  .then(() => ({success: true}))
 }
