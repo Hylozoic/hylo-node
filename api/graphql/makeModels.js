@@ -74,7 +74,7 @@ export default function makeModels (userId, isAdmin) {
         'tagline'
       ],
       getters: {
-        messageThreadId: p => p.getMessageThreadWith(userId).then(post => post.id)
+        messageThreadId: p => p.getMessageThreadWith(userId).then(post => post ? post.id : null)
       },
       relations: [
         'comments',
