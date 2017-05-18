@@ -89,7 +89,9 @@ function updateTagsAndCommunities (post, trx) {
     ].map(group => group.query().increment('new_post_count').transacting(trx))
 
     const notifySockets = communities.map(c =>
-      pushToSockets(communityRoom(c.id), 'newPost', {tags: tags.map('id')}))
+      pushToSockets(communityRoom(c.id), 'newPost', {
+        tags: tags.map('id').map(String)
+      }))
 
     return Promise.all(bumpCounts.concat(notifySockets))
   })
