@@ -217,7 +217,7 @@ export const createPost = (userId, params) =>
       {children: params.requests, transacting: trx}
     )))))
 
-export const findOrCreateThread = (userId, participantIds) =>
+export const findThread = (userId, participantIds) =>
   Post.query(q => {
     q.where('posts.type', Post.Type.THREAD)
     q.where('posts.id', 'in', Follow.query().where('user_id', userId).select('post_id'))
@@ -225,6 +225,9 @@ export const findOrCreateThread = (userId, participantIds) =>
     q.where('posts.id', 'not in', Follow.query().where('user_id', 'not in', [userId].concat(participantIds)).select('post_id'))
     q.groupBy('posts.id')
   }).fetch()
+
+export const findOrCreateThread = (userId, participantIds) =>
+  findThread(userId, participantIds)
   .then(post => post || createThread(userId, participantIds))
 
 export const createThread = (userId, participantIds) =>
