@@ -2011,7 +2011,7 @@ CREATE INDEX ix_vote_user_13 ON votes USING btree (user_id);
 --
 
 ALTER TABLE ONLY activities
-    ADD CONSTRAINT activities_contribution_id_foreign FOREIGN KEY (contribution_id) REFERENCES contributions(id);
+    ADD CONSTRAINT activities_contribution_id_foreign FOREIGN KEY (contribution_id) REFERENCES contributions(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2019,7 +2019,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY activities
-    ADD CONSTRAINT activities_parent_comment_id_foreign FOREIGN KEY (parent_comment_id) REFERENCES comments(id);
+    ADD CONSTRAINT activities_parent_comment_id_foreign FOREIGN KEY (parent_comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2043,7 +2043,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY activities
-    ADD CONSTRAINT activity_community_id_foreign FOREIGN KEY (community_id) REFERENCES communities(id);
+    ADD CONSTRAINT activity_community_id_foreign FOREIGN KEY (community_id) REFERENCES communities(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2067,7 +2067,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY comments
-    ADD CONSTRAINT comments_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id);
+    ADD CONSTRAINT comments_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2099,7 +2099,7 @@ ALTER TABLE ONLY communities_tags
 --
 
 ALTER TABLE ONLY communities_tags
-    ADD CONSTRAINT communities_tags_owner_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT communities_tags_owner_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2115,7 +2115,7 @@ ALTER TABLE ONLY communities_tags
 --
 
 ALTER TABLE ONLY community_invites
-    ADD CONSTRAINT community_invite_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id);
+    ADD CONSTRAINT community_invite_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2147,7 +2147,7 @@ ALTER TABLE ONLY devices
 --
 
 ALTER TABLE ONLY event_responses
-    ADD CONSTRAINT event_responses_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id);
+    ADD CONSTRAINT event_responses_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2155,7 +2155,7 @@ ALTER TABLE ONLY event_responses
 --
 
 ALTER TABLE ONLY event_responses
-    ADD CONSTRAINT event_responses_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT event_responses_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2459,7 +2459,7 @@ ALTER TABLE ONLY posts
 --
 
 ALTER TABLE ONLY posts
-    ADD CONSTRAINT post_parent_post_id_foreign FOREIGN KEY (parent_post_id) REFERENCES posts(id);
+    ADD CONSTRAINT post_parent_post_id_foreign FOREIGN KEY (parent_post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2531,7 +2531,7 @@ ALTER TABLE ONLY tags_users
 --
 
 ALTER TABLE ONLY user_connections
-    ADD CONSTRAINT user_connections_other_user_id_foreign FOREIGN KEY (other_user_id) REFERENCES users(id);
+    ADD CONSTRAINT user_connections_other_user_id_foreign FOREIGN KEY (other_user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2539,7 +2539,7 @@ ALTER TABLE ONLY user_connections
 --
 
 ALTER TABLE ONLY user_connections
-    ADD CONSTRAINT user_connections_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT user_connections_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2547,7 +2547,7 @@ ALTER TABLE ONLY user_connections
 --
 
 ALTER TABLE ONLY user_external_data
-    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT user_external_data_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
