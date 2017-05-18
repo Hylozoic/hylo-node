@@ -76,7 +76,7 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         'comments',
         'memberships',
-        'posts',
+        {posts: {querySet: true}},
         'votes'
       ],
       filter: nonAdminFilter(sharedMembership('users', userId)),

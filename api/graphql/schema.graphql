@@ -94,8 +94,15 @@ type Person {
   commentsTotal: Int
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
-  posts(first: Int, cursor: ID, order: String): [Post]
-  postsTotal: Int
+  posts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String,
+    topic: Int
+  ): PostQuerySet
   votes(first: Int, cursor: ID, order: String): [Vote]
   votesTotal: Int
 }
