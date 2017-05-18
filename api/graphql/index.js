@@ -3,16 +3,18 @@ import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import {
-  updateMe,
   createComment,
   createOrUpdatePersonConnection,
   createPost,
   findOrCreateThread,
   leaveCommunity,
-  vote,
-  subscribe,
   markActivityRead,
-  markAllActivitiesRead
+  markAllActivitiesRead,
+  subscribe,
+  updateMe,
+  updateMembership,
+  updateTopicSubscription,
+  vote
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -57,6 +59,13 @@ function createSchema (userId, isAdmin) {
       subscribe: (root, { communityId, topicId, isSubscribing }) =>
         subscribe(userId, topicId, communityId, isSubscribing)
         .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null),
+
+      updateMembership: (root, args) =>
+        updateMembership(userId, args).then(id => fetchOne('Membership', id)),
+
+      updateTopicSubscription: (root, args) =>
+        updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id)),
+
       markActivityRead: (root, { id }) => markActivityRead(userId, id),
       markAllActivitiesRead: (root) => markAllActivitiesRead(userId)
     },

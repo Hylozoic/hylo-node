@@ -2,8 +2,7 @@
 /* eslint-disable camelcase */
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
-import { normalizedSinglePostResponse } from '../../lib/util/normalize'
-import { pushToSockets } from '../services/Websockets'
+import { postRoom, pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -181,33 +180,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .then(x => x ? x.get('last_read_at') : new Date(0))
   },
 
-  pushCommentToSockets: function (comment) {
-    var postId = this.id
-    return pushToSockets(`posts/${postId}`, 'commentAdded', {comment})
-  },
-
-  pushMessageToSockets: function (message, userIds) {
-    var postId = this.id
-    const excludingSender = userIds.filter(id => id !== message.user_id.toString())
-    if (this.get('num_comments') === 0) {
-      return Promise.map(excludingSender, id => this.pushSelfToSocket(id))
-    } else {
-      return Promise.map(excludingSender, id =>
-        pushToSockets(`users/${id}`, 'messageAdded', {postId, message}))
-    }
-  },
-
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
-    var postId = this.id
-    pushToSockets(`posts/${postId}`, 'userTyping', {userId, userName, isTyping}, socketToExclude)
-  },
-
-  pushSelfToSocket: function (userId) {
-    const opts = {withComments: 'all'}
-    return this.load(PostPresenter.relations(userId, opts))
-    .then(post => PostPresenter.present(post, userId, opts))
-    .then(normalizedSinglePostResponse)
-    .then(post => pushToSockets(`users/${userId}`, 'newThread', post))
+    pushToSockets(postRoom(this.id), 'userTyping', {userId, userName, isTyping}, socketToExclude)
   },
 
   copy: function (attrs) {
