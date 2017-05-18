@@ -33,7 +33,7 @@ Create a `.env` file in the root directory. Values in square brackets are team s
 
 ```
 DEBUG_SQL=true
-DOMAIN=http://localhost:3001
+DOMAIN=localhost:3001
 EMAIL_SENDER=[ email ]
 ROLLBAR_SERVER_TOKEN=[ token ]
 FACEBOOK_APP_ID=[ app id ]
@@ -52,7 +52,7 @@ AWS_SECRET_ACCESS_KEY=[ secret access key ]
 AWS_ACCESS_KEY_ID=[ access key id ]
 AWS_S3_CONTENT_URL=[ content url ]
 PRETTY_JSON=true
-PROTOCOL=https
+PROTOCOL=http
 REDIS_URL=redis://0.0.0.0:6379
 SEGMENT_KEY=[ key ]
 SENDWITHUS_KEY=[ key ]
