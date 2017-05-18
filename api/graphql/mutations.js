@@ -90,6 +90,7 @@ export function updateTopicSubscription (userId, { id, data }) {
   .update(whitelist)
   .returning('id')
   .then(ids => ids[0])
+}
 
 export function markActivityRead (userId, activityid) {
   return Activity.find(activityid)
