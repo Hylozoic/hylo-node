@@ -72,11 +72,22 @@ export function subscribe (userId, topicId, communityId, isSubscribing) {
     : TagFollow.remove(topicId, userId, communityId)
 }
 
-export function updateMembership (userId, { id, slug, data }) {
-  return Membership.find(userId, id || slug)
-  .tap(m => {
-    const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
-    if (!isEmpty(whitelist)) return m.save(whitelist, {patch: true})
-  })
-  .then(m => m.id)
+export function updateMembership (userId, { id, data }) {
+  const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
+  if (isEmpty(whitelist)) return Promise.resolve(null)
+
+  return Membership.query().where({id, user_id: userId})
+  .update(whitelist)
+  .returning('id')
+  .then(ids => ids[0])
+}
+
+export function updateTopicSubscription (userId, { id, data }) {
+  const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
+  if (isEmpty(whitelist)) return Promise.resolve(null)
+
+  return TagFollow.query().where({id, user_id: userId})
+  .update(whitelist)
+  .returning('id')
+  .then(ids => ids[0])
 }

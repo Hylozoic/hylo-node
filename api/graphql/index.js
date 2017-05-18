@@ -11,6 +11,7 @@ import {
   subscribe,
   updateMe,
   updateMembership,
+  updateTopicSubscription,
   vote
 } from './mutations'
 import makeModels from './makeModels'
@@ -58,7 +59,10 @@ function createSchema (userId, isAdmin) {
         .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null),
 
       updateMembership: (root, args) =>
-        updateMembership(userId, args).then(id => fetchOne('Membership', id))
+        updateMembership(userId, args).then(id => fetchOne('Membership', id)),
+
+      updateTopicSubscription: (root, args) =>
+        updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id))
     },
 
     FeedItemContent: {
