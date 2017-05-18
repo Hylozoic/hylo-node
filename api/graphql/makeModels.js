@@ -37,7 +37,8 @@ export default function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
-        {messageThreads: {typename: 'MessageThread'}}
+        {messageThreads: {typename: 'MessageThread'}},
+        {inAppNotifications: {querySet: true, alias: 'notifications'}}
       ],
       getters: {
         hasDevice: u => u.hasDevice()
@@ -297,6 +298,29 @@ export default function makeModels (userId, isAdmin) {
         searchQuerySet('forTags', {limit: first, offset, name, autocomplete})
     },
 
+    Notification: {
+      model: Notification,
+      attributes: ['id'],
+      relations: ['activity'],
+      getters: {
+        createdAt: n => n.get('created_at')
+      }
+    },
+
+    Activity: {
+      model: Activity,
+      attributes: ['id', 'meta', 'unread'],
+      relations: [
+        'actor',
+        'post',
+        'comment',
+        'community'
+      ],
+      getters: {
+        action: a => Notification.priorityReason(a.get('meta').reasons)
+      }
+    },
+
     PersonConnection: {
       model: UserConnection,
       attributes: [
@@ -307,7 +331,7 @@ export default function makeModels (userId, isAdmin) {
       ],
       relations: [ {otherUser: {alias: 'person'}} ],
       fetchMany: ({ first, offset = 0 }) =>
-        searchQuerySet('forUserConnections', {limit: first, offset }),
+        searchQuerySet('forUserConnections', {limit: first, offset}),
       filter: nonAdminFilter(sharedMembership('users', userId))
     }
   }

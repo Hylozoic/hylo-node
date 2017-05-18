@@ -19,9 +19,14 @@ type Me {
   communitiesTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
-  messageThreads(first: Int, cursor: ID, order: String): [MessageThread]
+  messageThreads(first: Int, offset: Int, order: String, sortBy: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
+  notifications(
+    first: Int,
+    order: String,
+    offset: Int
+  ): NotificationQuerySet
 }
 
 type TopicSubscriptionQuerySet {
@@ -337,6 +342,12 @@ type Mutation {
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
+  markAllActivitiesRead: GenericResult
+  markActivityRead(id: ID): Activity
+}
+
+type GenericResult {
+  success: Boolean
 }
 
 type LinkPreview {
@@ -344,4 +355,31 @@ type LinkPreview {
   title: String
   url: String
   imageUrl: String
+}
+
+type Notification {
+  id: ID
+  activity: Activity
+  createdAt: String
+}
+
+type ActivityMeta {
+  reasons: [String]
+}
+
+type Activity {
+  id: ID
+  actor: Person
+  comment: Comment
+  post: Post
+  community: Community
+  action: String
+  meta: ActivityMeta
+  unread: Boolean
+}
+
+type NotificationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Notification]
 }
