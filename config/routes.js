@@ -49,6 +49,8 @@ module.exports.routes = {
   'GET    /noo/community/:communityId/joinRequests':         'CommunityController.joinRequests',
   'POST   /noo/community/:communityId/approve-join-request': 'CommunityController.approveJoinRequest',
   'POST   /noo/community/:communityId/approve-all-join-requests': 'CommunityController.approveAllJoinRequests',
+  'POST   /noo/community/:communityId/subscribe':            'CommunityController.subscribe',
+  'POST   /noo/community/:communityId/unsubscribe':          'CommunityController.unsubscribe',
 
   'GET    /noo/threads':                                  'PostController.findThreads',
   'GET    /noo/post/:postId':                             'PostController.findOne',

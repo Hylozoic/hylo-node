@@ -3,11 +3,9 @@ import { get, getOr } from 'lodash/fp'
 import {
   difference, includes, intersection, isEmpty, merge, omit, pick, pickBy
 } from 'lodash'
-import {
-  afterUpdatingPost,
-  createPost,
-  findOrCreateThread
-} from '../models/post/util'
+import { afterUpdatingPost } from '../models/post/util'
+import createPost from '../models/post/createPost'
+import findOrCreateThread from '../models/post/findOrCreateThread'
 import {
   handleMissingTagDescriptions, throwErrorIfMissingTags
 } from '../../lib/util/controllers'
@@ -17,6 +15,7 @@ import {
   uniqize
 } from '../../lib/util/normalize'
 import { createCheckFreshnessAction } from '../../lib/freshness'
+import { joinRoom, leaveRoom } from '../services/Websockets'
 
 const sortColumns = {
   'fulfilled-last': 'fulfilled_at',
@@ -171,8 +170,6 @@ const checkPostTags = (attrs, userId, opts) => {
   .then(communityIds =>
     throwErrorIfMissingTags(tags, intersection(communityIds, opts.community_ids)))
 }
-
-const emptyResponse = res => err => err ? res.serverError(err) : res.ok({})
 
 const PostController = {
   findThreads: createFindAction(queryForThreads),
@@ -409,36 +406,28 @@ const PostController = {
   },
 
   subscribe: function (req, res) {
-    var post = res.locals.post
-    sails.sockets.join(req, `posts/${post.id}`, function (err) {
-      if (err) {
-        return res.serverError(err)
-      }
-      return res.ok({})
-    })
+    joinRoom(req, res, 'post', res.locals.post.id)
   },
 
   unsubscribe: function (req, res) {
-    var post = res.locals.post
-    sails.sockets.leave(req, `posts/${post.id}`, emptyResponse(res))
+    leaveRoom(req, res, 'post', res.locals.post.id)
   },
 
   typing: function (req, res) {
-    var post = res.locals.post
-    res.ok({})
+    const { post } = res.locals
+    const { body: { isTyping }, socket } = req
 
-    User.find(req.session.userId)
-    .then(user => {
-      post.pushTypingToSockets(user.id, user.get('name'), req.body.isTyping, req.socket)
-    })
+    return User.find(req.session.userId)
+    .then(user => post.pushTypingToSockets(user.id, user.get('name'), isTyping, socket))
+    .then(() => res.ok({}))
   },
 
   subscribeToThreads: function (req, res) {
-    sails.sockets.join(req, `users/${req.session.userId}`, emptyResponse(res))
+    joinRoom(req, res, 'user', req.session.userId)
   },
 
   unsubscribeFromThreads: function (req, res) {
-    sails.sockets.leave(req, `users/${req.session.userId}`, emptyResponse(res))
+    leaveRoom(req, res, 'user', req.session.userId)
   }
 }
 
