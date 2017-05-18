@@ -57,19 +57,18 @@ export default function createAndPresentComment (commenterId, text, post, opts =
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
       .tap(createMedia(opts.imageUrl, trx)))
+    .tap(comment => isReplyToPost
+      ? post.addFollowers(newFollowers, commenterId)
+      : Promise.join(
+          comment.addFollowers(newFollowers, commenterId),
+          parentComment.addFollowers(newFollowers, commenterId)
+        ))
     .then(comment => Promise.all([
       presentComment(comment).tap(c => isReplyToPost && notifySockets(c, post)),
 
       (isThread
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
         : comment.createActivities()),
-
-      isReplyToPost
-        ? post.addFollowers(newFollowers, commenterId)
-        : Promise.join(
-            comment.addFollowers(newFollowers, commenterId),
-            parentComment.addFollowers(newFollowers, commenterId)
-          ),
 
       Queue.classMethod('Post', 'updateFromNewComment', {
         postId: post.id,
