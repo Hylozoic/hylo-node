@@ -105,6 +105,7 @@ type Person {
   ): PostQuerySet
   votes(first: Int, cursor: ID, order: String): [Vote]
   votesTotal: Int
+  messageThreadId: ID
 }
 
 type Membership {
