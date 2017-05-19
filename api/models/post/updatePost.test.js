@@ -1,5 +1,5 @@
-import setup from '../../test/setup'
-import factories from '../../test/setup/factories'
+import setup from '../../../test/setup'
+import factories from '../../../test/setup/factories'
 import { afterUpdatingPost } from './updatePost'
 
 describe('updatePost', () => {
