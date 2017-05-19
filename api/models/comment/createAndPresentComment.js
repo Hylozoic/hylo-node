@@ -57,6 +57,7 @@ export default function createAndPresentComment (commenterId, text, post, opts =
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
       .tap(createMedia(opts.imageUrl, trx)))
+    .tap(createOrUpdateConnections(commenterId, existingFollowers))
     .tap(comment => isReplyToPost
       ? post.addFollowers(newFollowers, commenterId)
       : Promise.join(
@@ -125,4 +126,10 @@ function pushMessageToSockets (thread, message, userIds) {
 
 function pushCommentToSockets (post, comment) {
   return pushToSockets(postRoom(post.id), 'commentAdded', {comment, postId: post.id})
+}
+
+const createOrUpdateConnections = (userId, existingFollowers) => comment => {
+  return existingFollowers
+    .filter(f => f !== userId)
+    .forEach(follower => UserConnection.createOrUpdate(userId, follower, 'message'))
 }

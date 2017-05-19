@@ -4,7 +4,6 @@ import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import {
   createComment,
-  createOrUpdatePersonConnection,
   createPost,
   findOrCreateThread,
   leaveCommunity,
@@ -14,6 +13,7 @@ import {
   updateMe,
   updateMembership,
   updateTopicSubscription,
+  unlinkAccount,
   vote
 } from './mutations'
 import makeModels from './makeModels'
@@ -49,13 +49,11 @@ function createSchema (userId, isAdmin) {
         data.postId = data.messageThreadId
         return createComment(userId, data).then(message => fetchOne('Message', message.id))
       },
-      createOrUpdatePersonConnections: (root, { data }) => data.personIds.map(
-        otherUserId => createOrUpdatePersonConnection(userId, otherUserId, data.type)
-      ),
       findOrCreateThread: (root, { data }) =>
         findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
       leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
-      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
+      markActivityRead: (root, { id }) => markActivityRead(userId, id),
+      markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
       subscribe: (root, { communityId, topicId, isSubscribing }) =>
         subscribe(userId, topicId, communityId, isSubscribing)
         .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null),
@@ -66,8 +64,10 @@ function createSchema (userId, isAdmin) {
       updateTopicSubscription: (root, args) =>
         updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id)),
 
-      markActivityRead: (root, { id }) => markActivityRead(userId, id),
-      markAllActivitiesRead: (root) => markAllActivitiesRead(userId)
+      unlinkAccount: (root, { provider }) =>
+        unlinkAccount(userId, provider),
+
+      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
     },
 
     FeedItemContent: {

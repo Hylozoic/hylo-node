@@ -2,14 +2,17 @@
 import { flattenDeep, pick } from 'lodash'
 import { map } from 'lodash/fp'
 
-export default function findOrCreateThread (userId, participantIds) {
-  return Post.query(q => {
+export const findThread = (userId, participantIds) =>
+  Post.query(q => {
     q.where('posts.type', Post.Type.THREAD)
     q.where('posts.id', 'in', Follow.query().where('user_id', userId).select('post_id'))
     participantIds.forEach(id => q.where('posts.id', 'in', Follow.query().where('user_id', id).select('post_id')))
     q.where('posts.id', 'not in', Follow.query().where('user_id', 'not in', [userId].concat(participantIds)).select('post_id'))
     q.groupBy('posts.id')
   }).fetch()
+
+export default function findOrCreateThread (userId, participantIds) {
+  return findThread(userId, participantIds)
   .then(post => post || createThread(userId, participantIds))
 }
 
