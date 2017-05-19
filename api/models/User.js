@@ -260,6 +260,21 @@ module.exports = bookshelf.Model.extend(merge({
     return fetchAndPresentFollowed(communityId, this.id)
   },
 
+  unlinkAccount (provider) {
+    const fieldName = {
+      'facebook': 'facebook_url',
+      'linkedin': 'linkedin_url',
+      'twitter': 'twitter_name'
+    }[provider]
+
+    if (!fieldName) throw new Error(`${provider} not a supported provider`)
+
+    return Promise.join(
+      LinkedAccount.query().where({'user_id': this.id, provider_key: provider}).del(),
+      this.save({[fieldName]: null})
+    )
+  },
+
   getMessageThreadWith (userId) {
     return findThread(this.id, [userId])
   }

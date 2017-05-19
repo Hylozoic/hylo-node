@@ -100,3 +100,12 @@ export function markAllActivitiesRead (userId) {
   return Activity.query().where('reader_id', userId).update({unread: false})
   .then(() => ({success: true}))
 }
+
+export function unlinkAccount (userId, provider) {
+  return User.find(userId)
+  .then(user => {
+    if (!user) throw new Error(`Couldn't find user with id ${userId}`)
+    return user.unlinkAccount(provider)
+  })
+  .then(() => ({success: true}))
+}

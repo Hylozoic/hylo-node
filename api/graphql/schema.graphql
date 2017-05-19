@@ -362,6 +362,7 @@ type Mutation {
   updateTopicSubscription(id: ID, data: TopicSubscriptionInput): TopicSubscription
   markAllActivitiesRead: GenericResult
   markActivityRead(id: ID): Activity
+  unlinkAccount(provider: String): GenericResult
 }
 
 type GenericResult {
