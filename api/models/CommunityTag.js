@@ -35,14 +35,14 @@ module.exports = bookshelf.Model.extend({
     .fetchAll({withRelated: 'tag', transacting: trx})
   },
 
-  findIdByTagAndCommunity (topicName, communitySlug) {
+  findByTagAndCommunity (topicName, communitySlug) {
     return CommunityTag.query(q => {
       q.join('communities', 'communities.id', 'communities_tags.community_id')
       q.where('communities.slug', communitySlug)
       q.join('tags', 'tags.id', 'communities_tags.tag_id')
       q.where('tags.name', topicName)
       q.select('communities_tags.id')
-    }).fetch().then(model => model ? model.id : null)
+    }).fetch()
   }
 
 })

@@ -39,8 +39,7 @@ function createSchema (userId, isAdmin) {
       topic: (root, { id, name }) => // you can specify id or name, but not both
         fetchOne('Topic', name || id, name ? 'name' : 'id'),
       communityTopic: (root, { topicName, communitySlug }) =>
-        CommunityTag.findIdByTagAndCommunity(topicName, communitySlug)
-        .then(id => id ? fetchOne('CommunityTopic', id) : null)
+        CommunityTag.findByTagAndCommunity(topicName, communitySlug)
     },
     Mutation: {
       updateMe: (root, { changes }) =>
