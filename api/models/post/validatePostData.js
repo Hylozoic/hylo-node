@@ -1,6 +1,5 @@
 import { includes, isEmpty, values } from 'lodash'
 
-// Note: make sure to "blank-out" values in params / existing post merge...
 export default function validatePostData (userId, data) {
   if (!data.name) {
     throw new Error('title can\'t be blank')

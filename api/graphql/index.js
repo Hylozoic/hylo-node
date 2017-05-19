@@ -42,14 +42,8 @@ function createSchema (userId, isAdmin) {
     Mutation: {
       updateMe: (root, { changes }) =>
         updateMe(userId, changes).then(() => fetchOne('Me', userId)),
-      createPost: (root, { data }) =>
-        createPost(userId, data).then(post => fetchOne('Post', post.id)),
-      updatePost: (root, args) => {
-        updatePost(userId, args).then(post => {
-          console.log(post)
-          return fetchOne('Post', post.id)
-        })
-      },
+      createPost: (root, { data }) => createPost(userId, data),
+      updatePost: (root, args) => updatePost(userId, args),
       createComment: (root, { data }) =>
         createComment(userId, data).then(comment => fetchOne('Comment', comment.id)),
       createMessage: (root, { data }) => {
