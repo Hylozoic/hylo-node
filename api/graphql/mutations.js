@@ -73,7 +73,10 @@ export function subscribe (userId, topicId, communityId, isSubscribing) {
 }
 
 export function updateMembership (userId, { id, data }) {
-  const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
+  const whitelist = mapKeys(pick(data, [
+    'newPostCount',
+    'lastViewedAt'
+  ]), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
   return Membership.query().where({id, user_id: userId})
