@@ -16,12 +16,13 @@ export function validateCommentCreateData (userId, data) {
 }
 
 export function createComment (userId, data) {
-  return createAndPresentComment(userId, data.text, data.post, data)
+  const opts = Object.assign({}, data, {returnRaw: true})
+  return createAndPresentComment(userId, data.text, data.post, opts)
 }
 
 export default function createAndPresentComment (commenterId, text, post, opts = {}) {
   text = sanitize(text)
-  const { parentComment } = opts
+  const { parentComment, returnRaw } = opts
   const isReplyToPost = !parentComment
 
   var attrs = {
@@ -75,8 +76,8 @@ export default function createAndPresentComment (commenterId, text, post, opts =
         postId: post.id,
         commentId: comment.id
       })
-    ]))
-    .then(promises => promises[0])
+    ])
+    .then(promises => returnRaw ? comment : promises[0]))
   })
 }
 

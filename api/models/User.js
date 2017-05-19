@@ -227,6 +227,7 @@ module.exports = bookshelf.Model.extend(merge({
           {patch: true, transacting}
         )
       ])))
+    .then(() => this)
   },
 
   enabledNotification (type, medium) {

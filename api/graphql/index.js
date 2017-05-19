@@ -43,34 +43,22 @@ function createSchema (userId, isAdmin) {
         CommunityTag.findByTagAndCommunity(topicName, communitySlug)
     },
     Mutation: {
-      updateMe: (root, { changes }) =>
-        updateMe(userId, changes).then(() => fetchOne('Me', userId)),
-      createPost: (root, { data }) =>
-        createPost(userId, data).then(post => fetchOne('Post', post.id)),
-      createComment: (root, { data }) =>
-        createComment(userId, data).then(comment => fetchOne('Comment', comment.id)),
+      updateMe: (root, { changes }) => updateMe(userId, changes),
+      createPost: (root, { data }) => createPost(userId, data),
+      createComment: (root, { data }) => createComment(userId, data),
       createMessage: (root, { data }) => {
         data.postId = data.messageThreadId
-        return createComment(userId, data).then(message => fetchOne('Message', message.id))
+        return createComment(userId, data)
       },
-      findOrCreateThread: (root, { data }) =>
-        findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
+      findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
       leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
       markActivityRead: (root, { id }) => markActivityRead(userId, id),
       markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
       subscribe: (root, { communityId, topicId, isSubscribing }) =>
-        subscribe(userId, topicId, communityId, isSubscribing)
-        .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null),
-
-      updateMembership: (root, args) =>
-        updateMembership(userId, args).then(id => fetchOne('Membership', id)),
-
-      updateTopicSubscription: (root, args) =>
-        updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id)),
-
-      unlinkAccount: (root, { provider }) =>
-        unlinkAccount(userId, provider),
-
+        subscribe(userId, topicId, communityId, isSubscribing),
+      updateMembership: (root, args) => updateMembership(userId, args),
+      updateTopicSubscription: (root, args) => updateTopicSubscription(userId, args),
+      unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
       vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
     },
 

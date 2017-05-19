@@ -65,7 +65,7 @@ export function vote (userId, postId, isUpvote) {
 export function subscribe (userId, topicId, communityId, isSubscribing) {
   return isSubscribing
     ? TagFollow.add(topicId, userId, communityId)
-    : TagFollow.remove(topicId, userId, communityId)
+    : TagFollow.remove(topicId, userId, communityId).then(() => null)
 }
 
 export function updateMembership (userId, { id, data }) {
@@ -78,7 +78,7 @@ export function updateMembership (userId, { id, data }) {
   return Membership.query().where({id, user_id: userId})
   .update(whitelist)
   .returning('id')
-  .then(ids => ids[0])
+  .then(ids => Membership.where('id', ids[0]).fetch())
 }
 
 export function updateTopicSubscription (userId, { id, data }) {
@@ -88,7 +88,7 @@ export function updateTopicSubscription (userId, { id, data }) {
   return TagFollow.query().where({id, user_id: userId})
   .update(whitelist)
   .returning('id')
-  .then(ids => ids[0])
+  .then(ids => TagFollow.where('id', ids[0]).fetch())
 }
 
 export function markActivityRead (userId, activityid) {
