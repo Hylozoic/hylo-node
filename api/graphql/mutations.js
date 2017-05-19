@@ -52,10 +52,6 @@ export function createComment (userId, data) {
   .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
-export function createOrUpdatePersonConnection (userId, personId, type) {
-  return UserConnection.createOrUpdate(userId, personId, type)
-}
-
 export function findOrCreateThread (userId, data) {
   return validateThreadData(userId, data)
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
@@ -109,7 +105,7 @@ export function unlinkAccount (userId, provider) {
   return User.find(userId)
   .then(user => {
     if (!user) throw new Error(`Couldn't find user with id ${userId}`)
-    user.unlinkAccount(provider)
+    return user.unlinkAccount(provider)
   })
   .then(() => ({success: true}))
 }
