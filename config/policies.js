@@ -91,7 +91,9 @@ module.exports.policies = {
     requestToJoin:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
     joinRequests:           ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
     approveJoinRequest:     ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
-    approveAllJoinRequests: ['sessionAuth', 'isModerator', 'checkAndSetMembership']
+    approveAllJoinRequests: ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
+    subscribe:              ['sessionAuth', 'checkAndSetMembership'],
+    unsubscribe:            ['sessionAuth', 'checkAndSetMembership']
   },
 
   PostController: {

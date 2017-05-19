@@ -1,3 +1,4 @@
+import { filter, merge } from 'lodash'
 var kue = require('kue')
 var Promise = require('bluebird')
 var promisify = Promise.promisify
@@ -18,10 +19,7 @@ module.exports = {
   },
 
   classMethod: function (className, methodName, data, delay = 2000) {
-    data = _.merge({
-      className: className,
-      methodName: methodName
-    }, data)
+    data = merge({className, methodName}, data)
     return this.addJob('classMethod', data, delay)
   },
 
@@ -36,7 +34,7 @@ module.exports = {
 
     return rangeByState(state, 0, size - 1, 'asc')
     .then(jobs => Promise.map(jobs, removeIfOldEnough))
-    .then(results => _.filter(results).length)
+    .then(results => filter(results).length)
   },
 
   // just for development use
