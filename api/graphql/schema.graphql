@@ -340,11 +340,6 @@ input MessageThreadInput {
   participantIds: [String]
 }
 
-input PersonConnectionInput {
-  personIds: [String]
-  type: String
-}
-
 input MembershipInput {
   newPostCount: Int
 }
@@ -362,7 +357,6 @@ type Mutation {
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
-  createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
   updateMembership(id: ID, slug: String, data: MembershipInput): Membership
   updateTopicSubscription(id: ID, data: TopicSubscriptionInput): TopicSubscription
   markAllActivitiesRead: GenericResult
