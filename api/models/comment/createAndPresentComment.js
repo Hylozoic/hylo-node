@@ -1,7 +1,8 @@
 import { sanitize } from 'hylo-utils/text'
 import { difference, uniq } from 'lodash'
 import { simpleUserColumns } from '../../presenters/UserPresenter'
-import { normalizeComment } from '../../../lib/util/normalize'
+import { normalizeComment, normalizedSinglePostResponse } from '../../../lib/util/normalize'
+import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 
 export function validateCommentCreateData (userId, data) {
   return Post.isVisibleToUser(data.postId, userId)
@@ -56,21 +57,19 @@ export default function createAndPresentComment (commenterId, text, post, opts =
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
       .tap(createMedia(opts.imageUrl, trx)))
+    .tap(createOrUpdateConnections(commenterId, existingFollowers))
+    .tap(comment => isReplyToPost
+      ? post.addFollowers(newFollowers, commenterId)
+      : Promise.join(
+          comment.addFollowers(newFollowers, commenterId),
+          parentComment.addFollowers(newFollowers, commenterId)
+        ))
     .then(comment => Promise.all([
       presentComment(comment).tap(c => isReplyToPost && notifySockets(c, post)),
 
       (isThread
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
         : comment.createActivities()),
-
-      isReplyToPost
-        ? Promise.join(
-            post.addFollowers(newFollowers, commenterId),
-          )
-        : Promise.join(
-            comment.addFollowers(newFollowers, commenterId),
-            parentComment.addFollowers(newFollowers, commenterId)
-          ),
 
       Queue.classMethod('Post', 'updateFromNewComment', {
         postId: post.id,
@@ -98,11 +97,39 @@ const presentComment = comment =>
     return Object.assign(buckets, c)
   })
 
-const notifySockets = (comment, post) => {
+function notifySockets (comment, post) {
   if (post.get('type') === Post.Type.THREAD) {
     const followerIds = post.relations.followers.pluck('id')
-    return post.pushMessageToSockets(comment, followerIds)
-  } else {
-    return post.pushCommentToSockets(comment)
+    return pushMessageToSockets(post, comment, followerIds)
   }
+
+  return pushCommentToSockets(post, comment)
+}
+
+// n.b.: `message` has already been formatted for presentation
+function pushMessageToSockets (thread, message, userIds) {
+  const excludingSender = userIds.filter(id => id !== message.user_id.toString())
+
+  if (thread.get('num_comments') === 0) {
+    return Promise.map(excludingSender, userId => {
+      const opts = {withComments: 'all'}
+      return this.load(PostPresenter.relations(userId, opts))
+      .then(post => PostPresenter.present(post, userId, opts))
+      .then(normalizedSinglePostResponse)
+      .then(post => pushToSockets(userRoom(userId), 'newThread', post))
+    })
+  }
+
+  return Promise.map(excludingSender, id =>
+    pushToSockets(userRoom(id), 'messageAdded', {postId: thread.id, message}))
+}
+
+function pushCommentToSockets (post, comment) {
+  return pushToSockets(postRoom(post.id), 'commentAdded', {comment, postId: post.id})
+}
+
+const createOrUpdateConnections = (userId, existingFollowers) => comment => {
+  return existingFollowers
+    .filter(f => f !== userId)
+    .forEach(follower => UserConnection.createOrUpdate(userId, follower, 'message'))
 }

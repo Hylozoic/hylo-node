@@ -1,158 +1,5 @@
-/* globals LastRead */
-import {
-  difference,
-  flatten,
-  flattenDeep,
-  has,
-  includes,
-  isEmpty,
-  isEqual,
-  merge,
-  omit,
-  pick,
-  some,
-  uniq,
-  values
-} from 'lodash'
-import { filter, getOr, map } from 'lodash/fp'
-import { sanitize } from 'hylo-utils/text'
-
-export function validatePostCreateData (userId, data) {
-  if (!data.name) {
-    throw new Error('title can\'t be blank')
-  }
-  if (data.type && !includes(values(Post.Type), data.type)) {
-    throw new Error('not a valid type')
-  }
-  if (isEmpty(data.community_ids)) {
-    throw new Error('no communities specified')
-  }
-  return Membership.inAllCommunities(userId, data.community_ids)
-  .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
-}
-
-export function validateThreadData (userId, data) {
-  const { participantIds } = data
-  if (!(participantIds && participantIds.length)) {
-    throw new Error("participantIds can't be empty")
-  }
-  const checkForSharedCommunity = (id) =>
-    Membership.inSameCommunity([userId, id])
-    .then(doesShare => {
-      if (doesShare) {
-        return Promise.resolve()
-      } else {
-        throw new Error(`no shared communities with user ${id}`)
-      }
-    })
-  return Promise.all(map(checkForSharedCommunity, participantIds))
-}
-
-export const setupNewPostAttrs = function (userId, params) {
-  const attrs = merge(Post.newPostAttrs(), {
-    name: sanitize(params.name),
-    description: sanitize(params.description),
-    user_id: userId,
-    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
-    link_preview_id: getOr(null, 'id', params.linkPreview),
-    parent_post_id: params.parent_post_id
-  }, pick(params, 'type', 'starts_at', 'ends_at', 'location', 'created_from'))
-
-  return Promise.resolve(attrs)
-}
-
-export const setupNewThreadAttrs = function (userId) {
-  return Promise.resolve({
-    type: Post.Type.THREAD,
-    visibility: Post.Visibility.DEFAULT,
-    user_id: userId
-  })
-}
-
-const updateTagFollows = (post, transacting) =>
-  post.load(['tags', 'communities'], {transacting})
-  .then(() => TagFollow.query(q => {
-    q.whereIn('tag_id', post.relations.tags.map('id'))
-    q.whereIn('community_id', post.relations.communities.map('id'))
-  }).query().increment('new_post_count').transacting(transacting))
-
-export const afterSavingThread = function (thread, opts) {
-  const userId = thread.get('user_id')
-  const participantIds = [userId].concat(opts.participantIds)
-  const trxOpts = pick(opts, 'transacting')
-
-  return Promise.all(flattenDeep([
-    map(id => LastRead.findOrCreate(id, thread.id, trxOpts), participantIds),
-    thread.addFollowers(participantIds, userId, trxOpts)
-  ]))
-}
-
-export function afterCreatingPost (post, opts) {
-  const userId = post.get('user_id')
-  const mentioned = RichText.getUserMentions(post.get('description'))
-  const followerIds = uniq(mentioned.concat(userId))
-  const trx = opts.transacting
-  const trxOpts = pick(opts, 'transacting')
-
-  return Promise.all(flatten([
-    opts.community_ids && post.communities().attach(uniq(opts.community_ids), trxOpts),
-
-    // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, userId, trxOpts),
-
-    // Add creator to RSVPs
-    post.get('type') === 'event' &&
-      EventResponse.create(post.id, {responderId: userId, response: 'yes', transacting: trx}),
-
-    // Add media, if any
-    opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, trx),
-    opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, trx),
-
-    opts.children && updateChildren(post, opts.children, trx),
-
-    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
-  ]))
-  .then(() => Tag.updateForPost(post, opts.tag, opts.tagDescriptions, userId, trx))
-  .then(() => updateTagFollows(post, trx))
-  .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
-  .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
-}
-
-export const updateChildren = (post, children, trx) => {
-  const isNew = child => child.id.startsWith('new')
-  const created = filter(c => isNew(c) && !!c.name, children)
-  const updated = filter(c => !isNew(c) && !!c.name, children)
-  return post.load('children', {transacting: trx})
-  .then(() => {
-    const existingIds = map('id', post.relations.children.models)
-    const removed = filter(id => !includes(map('id', updated), id), existingIds)
-    return Promise.all([
-      // mark removed posts as inactive
-      some(removed) && Post.query().where('id', 'in', removed)
-      .update('active', false).transacting(trx),
-
-      // update name and description for updated requests
-      Promise.map(updated, child =>
-        Post.query().where('id', child.id)
-        .update(omit(child, 'id')).transacting(trx)),
-
-      // create new requests
-      some(created) && Tag.find('request')
-      .then(tag => {
-        const attachment = {tag_id: tag.id, selected: true}
-        return Promise.map(created, child => {
-          const attrs = merge(omit(child, 'id'), {
-            parent_post_id: post.id,
-            user_id: post.get('user_id'),
-            is_project_request: true
-          })
-          return Post.create(attrs, {transacting: trx})
-          .then(post => post.tags().attach(attachment, {transacting: trx}))
-        })
-      })
-    ])
-  })
-}
+import { difference, has, isEqual, pick, some } from 'lodash'
+import updateChildren from './updateChildren'
 
 const updateMedia = (post, type, url, remove, transacting) => {
   if (!url && !remove) return
@@ -170,7 +17,7 @@ const updateMedia = (post, type, url, remove, transacting) => {
   }
 }
 
-export const updateAllMedia = (post, params, trx) => {
+const updateAllMedia = (post, params, trx) => {
   const mediaParams = [
     'docs', 'removedDocs', 'imageUrl', 'imageRemoved', 'videoUrl', 'videoRemoved'
   ]
@@ -196,7 +43,7 @@ export const updateAllMedia = (post, params, trx) => {
   })
 }
 
-export const updateCommunities = (post, newIds, trx) => {
+const updateCommunities = (post, newIds, trx) => {
   const oldIds = post.relations.communities.pluck('id')
   if (!isEqual(newIds, oldIds)) {
     const opts = {transacting: trx}
@@ -207,31 +54,6 @@ export const updateCommunities = (post, newIds, trx) => {
     )
   }
 }
-
-export const createPost = (userId, params) =>
-  setupNewPostAttrs(userId, params)
-  .then(attrs => bookshelf.transaction(trx =>
-    Post.create(attrs, {transacting: trx})
-    .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
-      {children: params.requests, transacting: trx}
-    )))))
-
-export const findOrCreateThread = (userId, participantIds) =>
-  Post.query(q => {
-    q.where('posts.type', Post.Type.THREAD)
-    q.where('posts.id', 'in', Follow.query().where('user_id', userId).select('post_id'))
-    participantIds.forEach(id => q.where('posts.id', 'in', Follow.query().where('user_id', id).select('post_id')))
-    q.where('posts.id', 'not in', Follow.query().where('user_id', 'not in', [userId].concat(participantIds)).select('post_id'))
-    q.groupBy('posts.id')
-  }).fetch()
-  .then(post => post || createThread(userId, participantIds))
-
-export const createThread = (userId, participantIds) =>
-  setupNewThreadAttrs(userId)
-  .then(attrs => bookshelf.transaction(trx =>
-    Post.create(attrs, {transacting: trx})
-    .tap(thread => afterSavingThread(thread, {participantIds, transacting: trx}))))
 
 export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
   var userId = (comment || post).get('user_id')
