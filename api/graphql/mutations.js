@@ -40,13 +40,13 @@ function convertGraphqlCreateData (data) {
 export function createPost (userId, data) {
   return convertGraphqlCreateData(data)
   .tap(convertedData => validatePostData(userId, convertedData))
-  .then(convertedData => underlyingCreatePost(userId, convertedData))
+  .then(validatedData => underlyingCreatePost(userId, validatedData))
 }
 
 export function updatePost (userId, { id, data }) {
   return convertGraphqlCreateData(data)
   .tap(convertedData => validatePostData(userId, convertedData))
-  .then(convertedData => underlyingUpdatePost(userId, id, convertedData))
+  .then(validatedData => underlyingUpdatePost(userId, id, validatedData))
 }
 
 export function createComment (userId, data) {

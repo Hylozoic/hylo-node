@@ -45,7 +45,10 @@ function createSchema (userId, isAdmin) {
       createPost: (root, { data }) =>
         createPost(userId, data).then(post => fetchOne('Post', post.id)),
       updatePost: (root, args) => {
-        updatePost(userId, args).then(post => fetchOne('Post', post.id))
+        updatePost(userId, args).then(post => {
+          console.log(post)
+          return fetchOne('Post', post.id)
+        })
       },
       createComment: (root, { data }) =>
         createComment(userId, data).then(comment => fetchOne('Comment', comment.id)),

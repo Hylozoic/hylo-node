@@ -9,9 +9,9 @@ import {
 export default function updatePost (userId, id, params) {
   return setupPostAttrs(userId, params)
   .then(attrs => bookshelf.transaction(transacting =>
-    Post.find(id)
-    .then(post => post.save(attrs, {patch: true, transacting})
-      .tap(() => afterUpdatingPost(post, {params, userId, transacting}))
+    Post.find(id).then(post =>
+      post.save(attrs, {patch: true, transacting})
+      .tap(updatedPost => afterUpdatingPost(updatedPost, {params, userId, transacting}))
     )))
 }
 

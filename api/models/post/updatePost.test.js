@@ -1,8 +1,6 @@
 import setup from '../../test/setup'
 import factories from '../../test/setup/factories'
-import {
-  afterUpdatingPost
-} from './updatePost'
+import { afterUpdatingPost } from './updatePost'
 
 describe('updatePost', () => {
   before(() => setup.clearDb().then(() => Tag.forge({name: 'request'}).save()))
