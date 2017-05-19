@@ -14,6 +14,7 @@ import {
   updateMe,
   updateMembership,
   updateTopicSubscription,
+  unlinkAccount,
   vote
 } from './mutations'
 import makeModels from './makeModels'
@@ -55,7 +56,8 @@ function createSchema (userId, isAdmin) {
       findOrCreateThread: (root, { data }) =>
         findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
       leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
-      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
+      markActivityRead: (root, { id }) => markActivityRead(userId, id),
+      markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
       subscribe: (root, { communityId, topicId, isSubscribing }) =>
         subscribe(userId, topicId, communityId, isSubscribing)
         .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null),
@@ -66,8 +68,10 @@ function createSchema (userId, isAdmin) {
       updateTopicSubscription: (root, args) =>
         updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id)),
 
-      markActivityRead: (root, { id }) => markActivityRead(userId, id),
-      markAllActivitiesRead: (root) => markAllActivitiesRead(userId)
+      unlinkAccount: (root, { provider }) =>
+        unlinkAccount(userId, provider),
+
+      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
     },
 
     FeedItemContent: {
