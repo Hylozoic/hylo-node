@@ -288,6 +288,8 @@ type Query {
     autocomplete: String,
     filter: String
   ): PersonQuerySet
+  topic(id: ID, name: String): Topic
+  communityTopic(topicName: String, communitySlug: String): CommunityTopic
   topics(
     first: Int,
     offset: Int,

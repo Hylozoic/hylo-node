@@ -36,7 +36,11 @@ function createSchema (userId, isAdmin) {
       posts: (root, args) => fetchMany('Post', args),
       people: (root, args) => fetchMany('Person', args),
       topics: (root, args) => fetchMany('Topic', args),
-      connections: (root, args) => fetchMany('PersonConnection', args)
+      connections: (root, args) => fetchMany('PersonConnection', args),
+      topic: (root, { id, name }) => // you can specify id or name, but not both
+        fetchOne('Topic', name || id, name ? 'name' : 'id'),
+      communityTopic: (root, { topicName, communitySlug }) =>
+        CommunityTag.findByTagAndCommunity(topicName, communitySlug)
     },
     Mutation: {
       updateMe: (root, { changes }) =>
