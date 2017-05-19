@@ -3,7 +3,7 @@ import { get, getOr } from 'lodash/fp'
 import {
   difference, includes, intersection, isEmpty, merge, omit, pick, pickBy
 } from 'lodash'
-import { afterUpdatingPost } from '../models/post/util'
+import afterUpdatingPost from '../models/post/afterUpdatingPost'
 import createPost from '../models/post/createPost'
 import findOrCreateThread from '../models/post/findOrCreateThread'
 import {

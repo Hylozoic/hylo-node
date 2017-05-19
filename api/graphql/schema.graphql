@@ -356,6 +356,7 @@ input TopicSubscriptionInput {
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
+  updatePost(id: ID, data: PostInput): Post
   findOrCreateThread(data: MessageThreadInput): MessageThread
   createComment(data: CommentInput): Comment
   createMessage(data: MessageInput): Message

@@ -6,6 +6,7 @@ import {
   createComment,
   createOrUpdatePersonConnection,
   createPost,
+  updatePost,
   findOrCreateThread,
   leaveCommunity,
   markActivityRead,
@@ -43,6 +44,9 @@ function createSchema (userId, isAdmin) {
         updateMe(userId, changes).then(() => fetchOne('Me', userId)),
       createPost: (root, { data }) =>
         createPost(userId, data).then(post => fetchOne('Post', post.id)),
+      updatePost: (root, args) => {
+        updatePost(userId, args).then(post => fetchOne('Post', post.id))
+      },
       createComment: (root, { data }) =>
         createComment(userId, data).then(comment => fetchOne('Comment', comment.id)),
       createMessage: (root, { data }) => {

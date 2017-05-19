@@ -1,7 +1,6 @@
 import { difference, has, isEqual, pick, some } from 'lodash'
-import updateChildren from './updateChildren'
 
-const updateMedia = (post, type, url, remove, transacting) => {
+export function updateMedia (post, type, url, remove, transacting) {
   if (!url && !remove) return
   var media = post.relations.media.find(m => m.get('type') === type)
 
@@ -17,7 +16,7 @@ const updateMedia = (post, type, url, remove, transacting) => {
   }
 }
 
-const updateAllMedia = (post, params, trx) => {
+export function updateAllMedia (post, params, trx) {
   const mediaParams = [
     'docs', 'removedDocs', 'imageUrl', 'imageRemoved', 'videoUrl', 'videoRemoved'
   ]
@@ -43,7 +42,7 @@ const updateAllMedia = (post, params, trx) => {
   })
 }
 
-const updateCommunities = (post, newIds, trx) => {
+export function updateCommunities (post, newIds, trx) {
   const oldIds = post.relations.communities.pluck('id')
   if (!isEqual(newIds, oldIds)) {
     const opts = {transacting: trx}
@@ -55,7 +54,7 @@ const updateCommunities = (post, newIds, trx) => {
   }
 }
 
-export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
+export function addFollowers (post, comment, userIds, addedById, opts = {}) {
   var userId = (comment || post).get('user_id')
   const { transacting, createActivity } = opts
 
@@ -76,25 +75,7 @@ export const addFollowers = (post, comment, userIds, addedById, opts = {}) => {
     }))
 }
 
-export function afterUpdatingPost (post, opts) {
-  const {
-    params,
-    params: { requests, community_ids, tag, tagDescriptions },
-    userId,
-    transacting
-  } = opts
-
-  return post.ensureLoad(['communities'])
-  .then(() => Promise.all([
-    updateChildren(post, requests, transacting),
-    updateCommunities(post, community_ids, transacting),
-    updateAllMedia(post, params, transacting),
-    Tag.updateForPost(post, tag, tagDescriptions, userId, transacting),
-    updateFollowers(post, transacting)
-  ]))
-}
-
-function updateFollowers (post, transacting) {
+export function updateFollowers (post, transacting) {
   return post.load('followers')
   .then(() => {
     const followerIds = post.relations.followers.pluck('id')
