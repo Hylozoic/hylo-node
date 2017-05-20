@@ -5,6 +5,7 @@ var validator = require('validator')
 import { has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
+import { findThread } from './post/util'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
@@ -226,6 +227,7 @@ module.exports = bookshelf.Model.extend(merge({
           {patch: true, transacting}
         )
       ])))
+    .then(() => this)
   },
 
   enabledNotification (type, medium) {
@@ -257,6 +259,25 @@ module.exports = bookshelf.Model.extend(merge({
 
   getFollowedTags (communityId) {
     return fetchAndPresentFollowed(communityId, this.id)
+  },
+
+  unlinkAccount (provider) {
+    const fieldName = {
+      'facebook': 'facebook_url',
+      'linkedin': 'linkedin_url',
+      'twitter': 'twitter_name'
+    }[provider]
+
+    if (!fieldName) throw new Error(`${provider} not a supported provider`)
+
+    return Promise.join(
+      LinkedAccount.query().where({'user_id': this.id, provider_key: provider}).del(),
+      this.save({[fieldName]: null})
+    )
+  },
+
+  getMessageThreadWith (userId) {
+    return findThread(this.id, [userId])
   }
 
 }, HasSettings), {

@@ -105,6 +105,7 @@ type Person {
   ): PostQuerySet
   votes(first: Int, cursor: ID, order: String): [Vote]
   votesTotal: Int
+  messageThreadId: ID
 }
 
 type Membership {
@@ -287,6 +288,8 @@ type Query {
     autocomplete: String,
     filter: String
   ): PersonQuerySet
+  topic(id: ID, name: String): Topic
+  communityTopic(topicName: String, communitySlug: String): CommunityTopic
   topics(
     first: Int,
     offset: Int,
@@ -340,11 +343,6 @@ input MessageThreadInput {
   participantIds: [String]
 }
 
-input PersonConnectionInput {
-  personIds: [String]
-  type: String
-}
-
 input MembershipInput {
   newPostCount: Int
 }
@@ -363,11 +361,11 @@ type Mutation {
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
-  createOrUpdatePersonConnections(data: PersonConnectionInput): [PersonConnection]
   updateMembership(id: ID, slug: String, data: MembershipInput): Membership
   updateTopicSubscription(id: ID, data: TopicSubscriptionInput): TopicSubscription
   markAllActivitiesRead: GenericResult
   markActivityRead(id: ID): Activity
+  unlinkAccount(provider: String): GenericResult
 }
 
 type GenericResult {

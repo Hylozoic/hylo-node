@@ -4,7 +4,6 @@ import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import {
   createComment,
-  createOrUpdatePersonConnection,
   createPost,
   updatePost,
   findOrCreateThread,
@@ -15,6 +14,7 @@ import {
   updateMe,
   updateMembership,
   updateTopicSubscription,
+  unlinkAccount,
   vote
 } from './mutations'
 import makeModels from './makeModels'
@@ -37,38 +37,31 @@ function createSchema (userId, isAdmin) {
       posts: (root, args) => fetchMany('Post', args),
       people: (root, args) => fetchMany('Person', args),
       topics: (root, args) => fetchMany('Topic', args),
-      connections: (root, args) => fetchMany('PersonConnection', args)
+      connections: (root, args) => fetchMany('PersonConnection', args),
+      topic: (root, { id, name }) => // you can specify id or name, but not both
+        fetchOne('Topic', name || id, name ? 'name' : 'id'),
+      communityTopic: (root, { topicName, communitySlug }) =>
+        CommunityTag.findByTagAndCommunity(topicName, communitySlug)
     },
     Mutation: {
-      updateMe: (root, { changes }) =>
-        updateMe(userId, changes).then(() => fetchOne('Me', userId)),
+      updateMe: (root, { changes }) => updateMe(userId, changes),
       createPost: (root, { data }) => createPost(userId, data),
       updatePost: (root, args) => updatePost(userId, args),
-      createComment: (root, { data }) =>
-        createComment(userId, data).then(comment => fetchOne('Comment', comment.id)),
+      createComment: (root, { data }) => createComment(userId, data),
       createMessage: (root, { data }) => {
         data.postId = data.messageThreadId
-        return createComment(userId, data).then(message => fetchOne('Message', message.id))
+        return createComment(userId, data)
       },
-      createOrUpdatePersonConnections: (root, { data }) => data.personIds.map(
-        otherUserId => createOrUpdatePersonConnection(userId, otherUserId, data.type)
-      ),
-      findOrCreateThread: (root, { data }) =>
-        findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id)),
+      findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
       leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
-      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
-      subscribe: (root, { communityId, topicId, isSubscribing }) =>
-        subscribe(userId, topicId, communityId, isSubscribing)
-        .then(topicSubscription => isSubscribing ? fetchOne('TopicSubscription', topicSubscription.id) : null),
-
-      updateMembership: (root, args) =>
-        updateMembership(userId, args).then(id => fetchOne('Membership', id)),
-
-      updateTopicSubscription: (root, args) =>
-        updateTopicSubscription(userId, args).then(id => fetchOne('TopicSubscription', id)),
-
       markActivityRead: (root, { id }) => markActivityRead(userId, id),
-      markAllActivitiesRead: (root) => markAllActivitiesRead(userId)
+      markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
+      subscribe: (root, { communityId, topicId, isSubscribing }) =>
+        subscribe(userId, topicId, communityId, isSubscribing),
+      updateMembership: (root, args) => updateMembership(userId, args),
+      updateTopicSubscription: (root, args) => updateTopicSubscription(userId, args),
+      unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
+      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
     },
 
     FeedItemContent: {

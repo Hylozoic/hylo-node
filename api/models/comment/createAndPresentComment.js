@@ -16,12 +16,13 @@ export function validateCommentCreateData (userId, data) {
 }
 
 export function createComment (userId, data) {
-  return createAndPresentComment(userId, data.text, data.post, data)
+  const opts = Object.assign({}, data, {returnRaw: true})
+  return createAndPresentComment(userId, data.text, data.post, opts)
 }
 
 export default function createAndPresentComment (commenterId, text, post, opts = {}) {
   text = sanitize(text)
-  const { parentComment } = opts
+  const { parentComment, returnRaw } = opts
   const isReplyToPost = !parentComment
 
   var attrs = {
@@ -57,6 +58,7 @@ export default function createAndPresentComment (commenterId, text, post, opts =
       new Comment(attrs).save(null, {transacting: trx})
       .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
       .tap(createMedia(opts.imageUrl, trx)))
+    .tap(createOrUpdateConnections(commenterId, existingFollowers))
     .tap(comment => isReplyToPost
       ? post.addFollowers(newFollowers, commenterId)
       : Promise.join(
@@ -74,8 +76,8 @@ export default function createAndPresentComment (commenterId, text, post, opts =
         postId: post.id,
         commentId: comment.id
       })
-    ]))
-    .then(promises => promises[0])
+    ])
+    .then(promises => returnRaw ? comment : promises[0]))
   })
 }
 
@@ -125,4 +127,10 @@ function pushMessageToSockets (thread, message, userIds) {
 
 function pushCommentToSockets (post, comment) {
   return pushToSockets(postRoom(post.id), 'commentAdded', {comment, postId: post.id})
+}
+
+const createOrUpdateConnections = (userId, existingFollowers) => comment => {
+  return existingFollowers
+    .filter(f => f !== userId)
+    .forEach(follower => UserConnection.createOrUpdate(userId, follower, 'message'))
 }

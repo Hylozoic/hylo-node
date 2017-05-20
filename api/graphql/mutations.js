@@ -58,10 +58,6 @@ export function createComment (userId, data) {
   .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
-export function createOrUpdatePersonConnection (userId, personId, type) {
-  return UserConnection.createOrUpdate(userId, personId, type)
-}
-
 export function findOrCreateThread (userId, data) {
   return validateThreadData(userId, data)
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
@@ -75,17 +71,20 @@ export function vote (userId, postId, isUpvote) {
 export function subscribe (userId, topicId, communityId, isSubscribing) {
   return isSubscribing
     ? TagFollow.add(topicId, userId, communityId)
-    : TagFollow.remove(topicId, userId, communityId)
+    : TagFollow.remove(topicId, userId, communityId).then(() => null)
 }
 
 export function updateMembership (userId, { id, data }) {
-  const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
+  const whitelist = mapKeys(pick(data, [
+    'newPostCount',
+    'lastViewedAt'
+  ]), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
   return Membership.query().where({id, user_id: userId})
   .update(whitelist)
   .returning('id')
-  .then(ids => ids[0])
+  .then(ids => Membership.where('id', ids[0]).fetch())
 }
 
 export function updateTopicSubscription (userId, { id, data }) {
@@ -95,7 +94,7 @@ export function updateTopicSubscription (userId, { id, data }) {
   return TagFollow.query().where({id, user_id: userId})
   .update(whitelist)
   .returning('id')
-  .then(ids => ids[0])
+  .then(ids => TagFollow.where('id', ids[0]).fetch())
 }
 
 export function markActivityRead (userId, activityid) {
@@ -108,5 +107,14 @@ export function markActivityRead (userId, activityid) {
 
 export function markAllActivitiesRead (userId) {
   return Activity.query().where('reader_id', userId).update({unread: false})
+  .then(() => ({success: true}))
+}
+
+export function unlinkAccount (userId, provider) {
+  return User.find(userId)
+  .then(user => {
+    if (!user) throw new Error(`Couldn't find user with id ${userId}`)
+    return user.unlinkAccount(provider)
+  })
   .then(() => ({success: true}))
 }
