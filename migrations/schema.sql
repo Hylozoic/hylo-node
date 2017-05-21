@@ -959,7 +959,7 @@ CREATE SEQUENCE skill_seq
 --
 
 CREATE TABLE tags (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     name character varying(255) NOT NULL,
     created_at timestamp with time zone,
     updated_at timestamp with time zone
