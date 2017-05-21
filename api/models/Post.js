@@ -2,17 +2,19 @@
 /* eslint-disable camelcase */
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
-import { normalizedSinglePostResponse } from '../../lib/util/normalize'
-import { pushToSockets } from '../services/Websockets'
+import { postRoom, pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
 import { countTotal } from '../../lib/util/knex'
 
-const commentersQuery = (limit, post) => q => {
+const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
   q.join('comments', 'comments.user_id', 'users.id')
   q.where('comments.post_id', '=', post.id)
+  if (currentUserId) {
+    q.orderBy(bookshelf.knex.raw(`case when user_id = ${currentUserId} then -1 else user_id end`))
+  }
   q.groupBy('users.id', 'comments.user_id')
   if (limit) q.limit(limit)
 }
@@ -101,9 +103,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
       uniqBy('id', flatten(this.relations.comments.map(c => c.relations.tags.models))))
   },
 
-  getCommenters: function (first) {
-    return User.query(commentersQuery(first, this))
-    .fetchAll()
+  getCommenters: function (first, currentUserId) {
+    return User.query(commentersQuery(first, this, currentUserId)).fetchAll()
   },
 
   getCommentersTotal: function () {
@@ -179,33 +180,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .then(x => x ? x.get('last_read_at') : new Date(0))
   },
 
-  pushCommentToSockets: function (comment) {
-    var postId = this.id
-    return pushToSockets(`posts/${postId}`, 'commentAdded', {comment})
-  },
-
-  pushMessageToSockets: function (message, userIds) {
-    var postId = this.id
-    const excludingSender = userIds.filter(id => id !== message.user_id.toString())
-    if (this.get('num_comments') === 0) {
-      return Promise.map(excludingSender, id => this.pushSelfToSocket(id))
-    } else {
-      return Promise.map(excludingSender, id =>
-        pushToSockets(`users/${id}`, 'messageAdded', {postId, message}))
-    }
-  },
-
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
-    var postId = this.id
-    pushToSockets(`posts/${postId}`, 'userTyping', {userId, userName, isTyping}, socketToExclude)
-  },
-
-  pushSelfToSocket: function (userId) {
-    const opts = {withComments: 'all'}
-    return this.load(PostPresenter.relations(userId, opts))
-    .then(post => PostPresenter.present(post, userId, opts))
-    .then(normalizedSinglePostResponse)
-    .then(post => pushToSockets(`users/${userId}`, 'newThread', post))
+    pushToSockets(postRoom(this.id), 'userTyping', {userId, userName, isTyping}, socketToExclude)
   },
 
   copy: function (attrs) {
@@ -257,7 +233,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   fulfillRequest,
 
-  unfulfillRequest
+  unfulfillRequest,
+
+  vote: function (userId, isUpvote) {
+    return this.votes().query({where: {user_id: userId}}).fetchOne()
+    .then(vote => bookshelf.transaction(trx => {
+      var inc = delta => () =>
+        this.save({num_votes: this.get('num_votes') + delta}, {transacting: trx})
+
+      return (vote && !isUpvote
+        ? vote.destroy({transacting: trx}).then(inc(-1))
+        : isUpvote && new Vote({
+          post_id: this.id,
+          user_id: userId
+        }).save().then(inc(1)))
+    }))
+    .then(() => this)
+  }
 
 }, EnsureLoad), {
   // Class Methods

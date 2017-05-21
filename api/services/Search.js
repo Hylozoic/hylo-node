@@ -1,10 +1,27 @@
 import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
+import { countTotal } from '../../lib/util/knex'
 import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
 
 module.exports = {
   forPosts,
   forUsers,
+
+  forCommunityTopics: function (opts) {
+    return CommunityTag.query(qb => {
+      qb.join('tags', 'tags.id', 'communities_tags.tag_id')
+      qb.join('communities', 'communities.id', 'communities_tags.community_id')
+      qb.where('communities.id', opts.communityId)
+      if (opts.name) qb.where('tags.name', opts.name)
+      if (opts.autocomplete) {
+        qb.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
+      }
+      qb.limit(opts.limit)
+      qb.offset(opts.offset)
+      countTotal(qb, 'communities_tags', opts.totalColumnName)
+      qb.groupBy('communities_tags.id')
+    })
+  },
 
   forCommunities: function (opts) {
     return Community.query(qb => {
@@ -24,7 +41,7 @@ module.exports = {
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      qb.select(bookshelf.knex.raw('communities.*, count(*) over () as total'))
+      countTotal(qb, 'communities', opts.totalColumnName)
 
       qb.limit(opts.limit)
       qb.offset(opts.offset)
@@ -39,12 +56,28 @@ module.exports = {
         q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
         q.whereIn('communities_tags.community_id', opts.communities)
       }
+      if (opts.name) {
+        q.where('tags.name', opts.name)
+      }
       if (opts.autocomplete) {
         q.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
       }
 
+      countTotal(q, 'tags', opts.totalColumnName)
+
       q.groupBy('tags.id')
       q.limit(opts.limit)
+    })
+  },
+
+  forUserConnections: function (opts) {
+    return UserConnection.query(q => {
+      q.join('users', 'users.id', 'user_connections.other_user_id')
+      countTotal(q, 'user_connections', opts.totalColumnName)
+
+      q.groupBy('user_connections.id')
+      q.limit(opts.limit)
+      q.offset(opts.offset)
     })
   }
 }

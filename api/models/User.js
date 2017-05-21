@@ -4,6 +4,8 @@ var crypto = require('crypto')
 var validator = require('validator')
 import { has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
+import { fetchAndPresentFollowed } from '../services/TagPresenter'
+import { findThread } from './post/util'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
@@ -36,6 +38,11 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Device, 'user_id')
   },
 
+  inAppNotifications: function () {
+    return this.hasMany(Notification, 'reader_id').through(Activity)
+    .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
+  },
+
   followedPosts: function () {
     return this.belongsToMany(Post).through(Follow)
   },
@@ -46,6 +53,10 @@ module.exports = bookshelf.Model.extend(merge({
 
   followedTags: function () {
     return this.belongsToMany(Tag).through(TagFollow)
+  },
+
+  tagFollows: function () {
+    return this.hasMany(TagFollow)
   },
 
   linkedAccounts: function () {
@@ -97,6 +108,12 @@ module.exports = bookshelf.Model.extend(merge({
     var communityId = (typeof community === 'object' ? community.id : community)
     return Membership.create(this.id, communityId, {role: Membership.DEFAULT_ROLE})
     .tap(() => this.markInvitationsUsed(communityId))
+  },
+
+  leaveCommunity: function (community) {
+    var communityId = (typeof community === 'object' ? community.id : community)
+    return Membership.find(this.id, communityId)
+    .then(m => m && m.destroy().then(m => m.id))
   },
 
   // sanitize certain values before storing them
@@ -192,7 +209,7 @@ module.exports = bookshelf.Model.extend(merge({
     var whitelist = pick(changes, [
       'name', 'bio', 'avatar_url', 'banner_url', 'location',
       'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
-      'work', 'intention', 'extra_info', 'settings'
+      'work', 'intention', 'extra_info', 'settings', 'tagline'
     ])
 
     return bookshelf.transaction(transacting =>
@@ -210,6 +227,7 @@ module.exports = bookshelf.Model.extend(merge({
           {patch: true, transacting}
         )
       ])))
+    .then(() => this)
   },
 
   enabledNotification (type, medium) {
@@ -237,6 +255,29 @@ module.exports = bookshelf.Model.extend(merge({
       comment_notifications: 'none',
       dm_notifications: 'none'
     }, true)
+  },
+
+  getFollowedTags (communityId) {
+    return fetchAndPresentFollowed(communityId, this.id)
+  },
+
+  unlinkAccount (provider) {
+    const fieldName = {
+      'facebook': 'facebook_url',
+      'linkedin': 'linkedin_url',
+      'twitter': 'twitter_name'
+    }[provider]
+
+    if (!fieldName) throw new Error(`${provider} not a supported provider`)
+
+    return Promise.join(
+      LinkedAccount.query().where({'user_id': this.id, provider_key: provider}).del(),
+      this.save({[fieldName]: null})
+    )
+  },
+
+  getMessageThreadWith (userId) {
+    return findThread(this.id, [userId])
   }
 
 }, HasSettings), {

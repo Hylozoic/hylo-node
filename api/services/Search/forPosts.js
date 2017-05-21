@@ -1,5 +1,6 @@
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 import { get } from 'lodash'
+import { countTotal } from '../../../lib/util/knex'
 
 export default function forPosts (opts) {
   return Post.query(qb => {
@@ -9,7 +10,7 @@ export default function forPosts (opts) {
 
     // this counts total rows matching the criteria, disregarding limit,
     // which is useful for pagination
-    qb.select(bookshelf.knex.raw('posts.*, count(*) over () as total'))
+    countTotal(qb, 'posts', opts.totalColumnName)
 
     if (opts.users) {
       qb.whereIn('posts.user_id', opts.users)

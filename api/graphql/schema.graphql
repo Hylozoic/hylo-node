@@ -6,7 +6,12 @@ type Me {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  twitterName: String
+  linkedinUrl: String
+  facebookUrl: String
   url: String
+  location: String
+  tagline: String
   hasDevice: Boolean
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
@@ -14,9 +19,63 @@ type Me {
   communitiesTotal: Int
   posts(first: Int, cursor: ID, order: String): [Post]
   postsTotal: Int
-  messageThreads(first: Int, cursor: ID, order: String): [MessageThread]
+  messageThreads(first: Int, offset: Int, order: String, sortBy: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
+  notifications(
+    first: Int,
+    order: String,
+    offset: Int
+  ): NotificationQuerySet
+}
+
+type TopicSubscriptionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [TopicSubscription]
+}
+
+type TopicSubscription {
+  id: ID
+  topic: Topic
+  community: Community
+  newPostCount: Int
+}
+
+type CommunityTopicQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CommunityTopic]
+}
+
+type CommunityTopic {
+  id: ID
+  topic: Topic
+  community: Community
+  postsTotal: Int
+  followersTotal: Int
+}
+
+type TopicQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Topic]
+}
+
+type Topic {
+  id: ID
+  name: String
+  postsTotal: Int
+  followersTotal: Int
+  communityTopics(
+    first: Int,
+    offset: Int
+  ): CommunityTopicQuerySet
+  topicSubscriptions(
+    first: Int,
+    order: String,
+    offset: Int
+  ): TopicSubscriptionQuerySet
 }
 
 type Person {
@@ -35,10 +94,18 @@ type Person {
   commentsTotal: Int
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
-  posts(first: Int, cursor: ID, order: String): [Post]
-  postsTotal: Int
+  posts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String,
+    topic: Int
+  ): PostQuerySet
   votes(first: Int, cursor: ID, order: String): [Vote]
   votesTotal: Int
+  messageThreadId: ID
 }
 
 type Membership {
@@ -47,6 +114,7 @@ type Membership {
   hasModeratorRole: Boolean
   createdAt: String
   lastViewedAt: String
+  newPostCount: Int
   community: Community
 }
 
@@ -54,6 +122,7 @@ type Community {
   id: ID
   name: String
   slug: String
+  description: String
   createdAt: String
   avatarUrl: String
   bannerUrl: String
@@ -64,13 +133,26 @@ type Community {
     sortBy: String,
     offset: Int,
     search: String,
-    filter: String
+    filter: String,
+    topic: Int
   ): PostQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
+  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  topicSubscriptions(
+    first: Int,
+    order: String,
+    offset: Int
+  ): TopicSubscriptionQuerySet
+  communityTopics(
+    first: Int,
+    offset: Int
+    autocomplete: String,
+    name: String
+  ): CommunityTopicQuerySet
 }
 
 type PersonQuerySet {
@@ -118,6 +200,21 @@ type Post {
   commentersTotal: Int
   linkPreview: LinkPreview
   votesTotal: Int
+  myVote: Boolean
+}
+
+type PersonConnection {
+  id: ID
+  person: Person
+  type: String
+  createdAt: String
+  updatedAt: String
+}
+
+type PersonConnectionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [PersonConnection]
 }
 
 type CommentQuerySet {
@@ -141,10 +238,15 @@ type MessageThread {
   updatedAt: String
   participants(first: Int, cursor: ID, order: String): [Person]
   participantsTotal: Int
-  messages(first: Int, cursor: ID, order: String): [Message]
-  messagesTotal: Int
+  messages(first: Int, cursor: ID, order: String): MessageQuerySet
   unreadCount: Int
   lastReadAt: String
+}
+
+type MessageQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Message]
 }
 
 type Message {
@@ -168,6 +270,36 @@ type Query {
   community(id: ID, slug: String): Community
   messageThread(id: ID): MessageThread
   post(id: ID): Post
+  posts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String,
+    topic: ID
+  ): PostQuerySet
+  people(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String,
+    filter: String
+  ): PersonQuerySet
+  topic(id: ID, name: String): Topic
+  communityTopic(topicName: String, communitySlug: String): CommunityTopic
+  topics(
+    first: Int,
+    offset: Int,
+    autocomplete: String,
+    name: String
+  ): TopicQuerySet
+  connections(
+    first: Int,
+    offset: Int
+  ): PersonConnectionQuerySet
 }
 
 input MeInput {
@@ -177,6 +309,11 @@ input MeInput {
   bannerUrl: String
   bio: String
   url: String
+  twitterName: String
+  linkedinUrl: String
+  facebookUrl: String
+  location: String
+  tagline: String
 }
 
 input PostInput {
@@ -206,12 +343,32 @@ input MessageThreadInput {
   participantIds: [String]
 }
 
+input MembershipInput {
+  newPostCount: Int
+}
+
+input TopicSubscriptionInput {
+  newPostCount: Int
+}
+
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
   findOrCreateThread(data: MessageThreadInput): MessageThread
   createComment(data: CommentInput): Comment
   createMessage(data: MessageInput): Message
+  leaveCommunity(id: ID): ID
+  vote(postId: ID, isUpvote: Boolean): Post
+  subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
+  updateMembership(id: ID, slug: String, data: MembershipInput): Membership
+  updateTopicSubscription(id: ID, data: TopicSubscriptionInput): TopicSubscription
+  markAllActivitiesRead: GenericResult
+  markActivityRead(id: ID): Activity
+  unlinkAccount(provider: String): GenericResult
+}
+
+type GenericResult {
+  success: Boolean
 }
 
 type LinkPreview {
@@ -219,4 +376,31 @@ type LinkPreview {
   title: String
   url: String
   imageUrl: String
+}
+
+type Notification {
+  id: ID
+  activity: Activity
+  createdAt: String
+}
+
+type ActivityMeta {
+  reasons: [String]
+}
+
+type Activity {
+  id: ID
+  actor: Person
+  comment: Comment
+  post: Post
+  community: Community
+  action: String
+  meta: ActivityMeta
+  unread: Boolean
+}
+
+type NotificationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Notification]
 }

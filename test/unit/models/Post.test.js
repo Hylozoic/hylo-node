@@ -51,6 +51,65 @@ describe('Post', function () {
     })
   })
 
+  describe('#getCommenters', function () {
+    var c1, u1, u2, u3, u4, u5, u6, u7, u8, post
+
+    before(function (done) {
+      return setup.clearDb().then(function () {
+        u1 = new User({email: 'a@post.c'})
+        u2 = new User({email: 'b@post.b'})
+        u3 = new User({email: 'c@post.c'})
+        u4 = new User({email: 'd@post.d'})
+        u5 = new User({email: 'e@post.e'})
+        u6 = new User({email: 'f@post.f'})
+        u7 = new User({email: 'g@post.g'})
+        u8 = new User({email: 'h@post.h'})
+        post = new Post()
+        return Promise.join(
+          u1.save(),
+          u2.save(),
+          u3.save(),
+          u4.save(),
+          u5.save(),
+          u6.save(),
+          u7.save(),
+          u8.save()
+        ).then(function () {
+          post.set('user_id', u1.id)
+          return post.save()
+        }).then(function () {
+          return Promise.map([u1, u2, u3, u4, u5, u6, u7, u8], (u) => {
+            const c = new Comment({user_id: u.id, post_id: post.id})
+            return c.save()
+          })
+        }).then(function () {
+          done()
+        })
+      })
+    })
+
+    it('includes the current user always, regardless of when they commented', function () {
+      return Promise.join(
+        post.getCommenters(1, u1.id).then(function (results) {
+          expect(results.length).to.equal(1)
+          expect(results._byId[u1.id]).to.not.be.undefined
+        }),
+        post.getCommenters(1, u2.id).then(function (results) {
+          expect(results.length).to.equal(1)
+          expect(results._byId[u2.id]).to.not.be.undefined
+        }),
+        post.getCommenters(3, u1.id).then(function (results) {
+          expect(results.length).to.equal(3)
+          expect(results._byId[u1.id]).to.not.be.undefined
+        }),
+        post.getCommenters(3, u2.id).then(function (results) {
+          expect(results.length).to.equal(3)
+          expect(results._byId[u2.id]).to.not.be.undefined
+        })
+      )
+    })
+  })
+
   describe('#isVisibleToUser', () => {
     var post, c1, c2, user
 
@@ -329,6 +388,40 @@ describe('Post', function () {
     it('returns the total number of messages (comments) if no last_read_at value', () => {
       return post.unreadCountForUser(user2.id)
       .then(count => expect(count).to.equal(3))
+    })
+  })
+
+  describe('#vote', () => {
+    var user, post
+    beforeEach(function (done) {
+      return setup.clearDb()
+      .then(() => {
+        user = new User({email: 'a@post.c'})
+
+        return user.save()
+        .then(() => {
+          post = factories.post({
+            user_id: user.id,
+            num_votes: 5
+          })
+          return post.save()
+        })
+        .then(() => done())
+      })
+    })
+
+    describe('without an existing vote', () => {
+      it('does nothing if isUpvote is false', () => {
+
+      })
+
+      it('creates a vote and increments vote count if isUpvote is true', () => {
+
+      })
+    })
+
+    describe('with an existing vote', () => {
+
     })
   })
 })

@@ -16,12 +16,12 @@ export default function (opts) {
       qb.groupBy(['users.id', 'communities_users.created_at'])
     } else {
       qb.orderBy(opts.sort || 'name', 'asc')
-      
+
       // prevent duplicates due to the joins
       qb.groupBy('users.id')
     }
 
-    countTotal(qb, 'users')
+    countTotal(qb, 'users', opts.totalColumnName)
 
     if (communities) {
       qb.join('communities_users', 'communities_users.user_id', 'users.id')

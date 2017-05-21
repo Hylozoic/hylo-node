@@ -48,7 +48,7 @@ const extraAttributes = (user, viewingUserId) => ({
 const shortAttributes = [
   'id', 'name', 'avatar_url', 'created_at',
   'bio', 'intention', 'work',
-  'facebook_url', 'linkedin_url', 'twitter_name'
+  'facebook_url', 'linkedin_url', 'twitter_name', 'tagline'
 ]
 
 const cleanBasicAttributes = attrs => {

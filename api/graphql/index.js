@@ -2,7 +2,20 @@ import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
-import { updateMe, createComment, createPost, findOrCreateThread } from './mutations'
+import {
+  createComment,
+  createPost,
+  findOrCreateThread,
+  leaveCommunity,
+  markActivityRead,
+  markAllActivitiesRead,
+  subscribe,
+  updateMe,
+  updateMembership,
+  updateTopicSubscription,
+  unlinkAccount,
+  vote
+} from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 
@@ -10,7 +23,7 @@ const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
 function createSchema (userId, isAdmin) {
   const models = makeModels(userId, isAdmin)
-  const { resolvers, fetchOne } = setupBridge(models)
+  const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   const allResolvers = Object.assign({
     Query: {
@@ -19,21 +32,34 @@ function createSchema (userId, isAdmin) {
         fetchOne('Community', slug || id, slug ? 'slug' : 'id'),
       person: (root, { id }) => fetchOne('Person', id),
       messageThread: (root, { id }) => fetchOne('MessageThread', id),
-      post: (root, { id }) => fetchOne('Post', id)
+      post: (root, { id }) => fetchOne('Post', id),
+      posts: (root, args) => fetchMany('Post', args),
+      people: (root, args) => fetchMany('Person', args),
+      topics: (root, args) => fetchMany('Topic', args),
+      connections: (root, args) => fetchMany('PersonConnection', args),
+      topic: (root, { id, name }) => // you can specify id or name, but not both
+        fetchOne('Topic', name || id, name ? 'name' : 'id'),
+      communityTopic: (root, { topicName, communitySlug }) =>
+        CommunityTag.findByTagAndCommunity(topicName, communitySlug)
     },
     Mutation: {
-      updateMe: (root, { changes }) =>
-        updateMe(userId, changes).then(() => fetchOne('Me', userId)),
-      createPost: (root, { data }) =>
-        createPost(userId, data).then(post => fetchOne('Post', post.id)),
-      createComment: (root, { data }) =>
-        createComment(userId, data).then(comment => fetchOne('Comment', comment.id)),
+      updateMe: (root, { changes }) => updateMe(userId, changes),
+      createPost: (root, { data }) => createPost(userId, data),
+      createComment: (root, { data }) => createComment(userId, data),
       createMessage: (root, { data }) => {
         data.postId = data.messageThreadId
-        return createComment(userId, data).then(message => fetchOne('Message', message.id))
+        return createComment(userId, data)
       },
-      findOrCreateThread: (root, { data }) =>
-        findOrCreateThread(userId, data).then(thread => fetchOne('MessageThread', thread.id))
+      findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
+      leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
+      markActivityRead: (root, { id }) => markActivityRead(userId, id),
+      markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
+      subscribe: (root, { communityId, topicId, isSubscribing }) =>
+        subscribe(userId, topicId, communityId, isSubscribing),
+      updateMembership: (root, args) => updateMembership(userId, args),
+      updateTopicSubscription: (root, args) => updateTopicSubscription(userId, args),
+      unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
+      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
     },
 
     FeedItemContent: {
