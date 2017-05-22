@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt')
 const faker = require('faker')
 const promisify = require('bluebird').promisify
 const hash = promisify(bcrypt.hash, bcrypt)
+const readline = require('readline')
 
 const n = {
   communities: 50,
@@ -9,7 +10,7 @@ const n = {
   posts: 3000,
   tags: 20,
   users: 1000,
-  threads: 2000
+  threads: 100
 }
 
 // Add your test account details here. You'll be randomly assigned to a community.
@@ -19,7 +20,33 @@ const email = 'rich@hylo.com'
 const password = 'hylo'
 let provider_user_id = ''
 
-exports.seed = (knex, Promise) => delAll(knex)
+function warning () {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  })
+
+  rl.setPrompt('> ')
+
+  return new Promise((resolve, reject) => {
+    rl.question(`
+      WARNING: Running the dummy seed will COMPLETELY WIPE anything you cared about
+      in the database. If you're sure that's what you want, type 'yes'. Anything else
+      will result in this script terminating.
+    `, answer => {
+      if (answer !== 'yes') {
+        console.log('Exiting.')
+        process.exit()
+      }
+      console.log('Ok, you asked for it...')
+      rl.close()
+      return resolve()
+    })
+  })
+}
+
+exports.seed = (knex, Promise) => warning()
+  .then(() => delAll(knex))
   .then(() => seed('users', knex, Promise))
   .then(() => hash(password, 10))
   .then(hash => { provider_user_id = hash })
@@ -69,38 +96,8 @@ ${err.message}
   })
 
 function delAll (knex) {
-  return knex('activities').del()
-    .then(() => knex('tag_follows').del())
-    .then(() => knex('communities_tags').del())
-    .then(() => knex('communities_posts').del())
-    .then(() => knex('communities_users').del())
-    .then(() => knex('community_invites').del())
-    .then(() => knex('comments_tags').del())
-    .then(() => knex('comments').del())
-    .then(() => knex('contributions').del())
-    .then(() => knex('devices').del())
-    .then(() => knex('event_responses').del())
-    .then(() => knex('follows').del())
-    .then(() => knex('join_requests').del())
-    .then(() => knex('link_previews').del())
-    .then(() => knex('linked_account').del())
-    .then(() => knex('media').del())
-    .then(() => knex('nexudus_accounts').del())
-    .then(() => knex('notifications').del())
-    .then(() => knex('posts_about_users').del())
-    .then(() => knex('posts_tags').del())
-    .then(() => knex('posts_users').del())
-    .then(() => knex('push_notifications').del())
-    .then(() => knex('tags_users').del())
-    .then(() => knex('thanks').del())
-    .then(() => knex('user_external_data').del())
-    .then(() => knex('user_post_relevance').del())
-    .then(() => knex('votes').del())
-    .then(() => knex('posts').del())
-    .then(() => knex('communities').del())
-    .then(() => knex('networks').del())
-    .then(() => knex('tags').del())
-    .then(() => knex('users').del())
+  return knex.raw('TRUNCATE TABLE users CASCADE')
+    .then(() => knex.raw('TRUNCATE TABLE tags CASCADE'))
 }
 
 const fake = {
