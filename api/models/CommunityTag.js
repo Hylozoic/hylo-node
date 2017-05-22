@@ -41,7 +41,6 @@ module.exports = bookshelf.Model.extend({
       q.where('communities.slug', communitySlug)
       q.join('tags', 'tags.id', 'communities_tags.tag_id')
       q.where('tags.name', topicName)
-      q.select('communities_tags.id')
     }).fetch()
   }
 
