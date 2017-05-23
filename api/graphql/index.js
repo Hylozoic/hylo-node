@@ -5,6 +5,7 @@ import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import {
   createComment,
   createPost,
+  updatePost,
   findOrCreateThread,
   leaveCommunity,
   markActivityRead,
@@ -45,6 +46,7 @@ function createSchema (userId, isAdmin) {
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
       createPost: (root, { data }) => createPost(userId, data),
+      updatePost: (root, args) => updatePost(userId, args),
       createComment: (root, { data }) => createComment(userId, data),
       createMessage: (root, { data }) => {
         data.postId = data.messageThreadId

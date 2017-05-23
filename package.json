@@ -106,7 +106,7 @@
     "console": "node console.js",
     "cron": "node cron.js",
     "worker": "node --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 worker.js",
-    "migrate": "node ./node_modules/.bin/knex migrate:latest",
+    "migrate": "node migrations/scripts/updateMigrationsTable.js && node ./node_modules/.bin/knex migrate:latest",
     "rollback": "node ./node_modules/.bin/knex migrate:rollback",
     "migrate-make": "node ./node_modules/.bin/knex migrate:make",
     "debug": "node-debug app.js",

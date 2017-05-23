@@ -4,13 +4,13 @@ const tableName = 'search_index'
 const columnName = 'document'
 const defaultLang = 'english'
 
-const raw = str => bookshelf.knex.raw(str)
+const raw = (str, knex = bookshelf.knex) => knex.raw(str)
 
-const dropView = () => raw(`drop materialized view ${tableName}`)
+const dropView = knex => raw(`drop materialized view ${tableName}`, knex)
 
 const refreshView = () => raw(`refresh materialized view ${tableName}`)
 
-const createView = lang => {
+const createView = (lang, knex) => {
   if (!lang) lang = defaultLang
   var wv = (column, weight) =>
     `setweight(to_tsvector('${lang}', ${column}), '${weight}')`
@@ -49,9 +49,9 @@ const createView = lang => {
     from comments c
     join users u on u.id = c.user_id
     where c.active = true and u.active = true
-  )`)
+  )`, knex)
   .then(() => raw(`create index idx_fts_search on ${tableName}
-    using gin(${columnName})`))
+    using gin(${columnName})`, knex))
 }
 
 const search = (opts) => {

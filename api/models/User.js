@@ -5,7 +5,7 @@ var validator = require('validator')
 import { has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
-import { findThread } from './post/util'
+import { findThread } from './post/findOrCreateThread'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
