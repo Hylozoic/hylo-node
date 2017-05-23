@@ -12,7 +12,8 @@ const n = {
   threads: 100
 }
 
-// Add your test account details here. You'll be randomly assigned to a community.
+// Add your test account details here. You'll be randomly assigned to a community,
+// and you'll also be added to the one specified below.
 // (You can create your own later if you want).
 const name = 'Test Account'
 const email = 'test@hylo.com'
