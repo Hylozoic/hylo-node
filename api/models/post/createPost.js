@@ -1,44 +1,16 @@
-import { flatten, includes, isEmpty, merge, pick, uniq, values } from 'lodash'
-import { getOr } from 'lodash/fp'
-import { sanitize } from 'hylo-utils/text'
+import { flatten, merge, pick, uniq } from 'lodash'
+import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
 import { communityRoom, pushToSockets } from '../../services/Websockets'
 
 export default function createPost (userId, params) {
-  return setupNewPostAttrs(userId, params)
-  .then(attrs => bookshelf.transaction(trx =>
-    Post.create(attrs, {transacting: trx})
+  return setupPostAttrs(userId, merge(Post.newPostAttrs(), params))
+  .then(attrs => bookshelf.transaction(transacting =>
+    Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
       pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
-      {children: params.requests, transacting: trx}
+      {children: params.requests, transacting}
     )))))
-}
-
-export function validatePostCreateData (userId, data) {
-  if (!data.name) {
-    throw new Error('title can\'t be blank')
-  }
-  if (data.type && !includes(values(Post.Type), data.type)) {
-    throw new Error('not a valid type')
-  }
-  if (isEmpty(data.community_ids)) {
-    throw new Error('no communities specified')
-  }
-  return Membership.inAllCommunities(userId, data.community_ids)
-  .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
-}
-
-function setupNewPostAttrs (userId, params) {
-  const attrs = merge(Post.newPostAttrs(), {
-    name: sanitize(params.name),
-    description: sanitize(params.description),
-    user_id: userId,
-    visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
-    link_preview_id: getOr(null, 'id', params.linkPreview),
-    parent_post_id: params.parent_post_id
-  }, pick(params, 'type', 'starts_at', 'ends_at', 'location', 'created_from'))
-
-  return Promise.resolve(attrs)
 }
 
 export function afterCreatingPost (post, opts) {

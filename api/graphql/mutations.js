@@ -3,9 +3,9 @@ import {
   createComment as underlyingCreateComment,
   validateCommentCreateData
 } from '../models/comment/createAndPresentComment'
-import underlyingCreatePost, {
-  validatePostCreateData
-} from '../models/post/createPost'
+import validatePostData from '../models/post/validatePostData'
+import underlyingCreatePost from '../models/post/createPost'
+import underlyingUpdatePost from '../models/post/updatePost'
 import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../models/post/findOrCreateThread'
@@ -39,8 +39,14 @@ function convertGraphqlCreateData (data) {
 
 export function createPost (userId, data) {
   return convertGraphqlCreateData(data)
-  .tap(convertedData => validatePostCreateData(userId, convertedData))
-  .then(convertedData => underlyingCreatePost(userId, convertedData))
+  .tap(convertedData => validatePostData(userId, convertedData))
+  .then(validatedData => underlyingCreatePost(userId, validatedData))
+}
+
+export function updatePost (userId, { id, data }) {
+  return convertGraphqlCreateData(data)
+  .tap(convertedData => validatePostData(userId, convertedData))
+  .then(validatedData => underlyingUpdatePost(userId, id, validatedData))
 }
 
 export function createComment (userId, data) {
