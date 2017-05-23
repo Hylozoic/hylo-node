@@ -1,6 +1,6 @@
 import { difference, has, isEqual, pick, some } from 'lodash'
 
-export function updateMedia (post, type, url, remove, transacting) {
+function updateMedia (post, type, url, remove, transacting) {
   if (!url && !remove) return
   var media = post.relations.media.find(m => m.get('type') === type)
 
