@@ -10,7 +10,7 @@ import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../models/post/findOrCreateThread'
 
-function convertGraphqlUserSettingsData (data) {
+function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
     result[snakeCase(key)] = value
   }, {})
@@ -18,7 +18,7 @@ function convertGraphqlUserSettingsData (data) {
 
 export function updateMe (userId, changes) {
   return User.find(userId)
-  .then(user => user.validateAndSave(convertGraphqlUserSettingsData(changes)))
+  .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }
 
 export function leaveCommunity (userId, communityId) {
@@ -26,7 +26,7 @@ export function leaveCommunity (userId, communityId) {
   .then(user => user.leaveCommunity(communityId))
 }
 
-function convertGraphqlCreateData (data) {
+function convertGraphqlPostData (data) {
   return Promise.resolve(merge({
     name: data.title,
     description: data.details,
@@ -38,13 +38,13 @@ function convertGraphqlCreateData (data) {
 }
 
 export function createPost (userId, data) {
-  return convertGraphqlCreateData(data)
+  return convertGraphqlPostData(data)
   .tap(convertedData => validatePostData(userId, convertedData))
   .then(validatedData => underlyingCreatePost(userId, validatedData))
 }
 
 export function updatePost (userId, { id, data }) {
-  return convertGraphqlCreateData(data)
+  return convertGraphqlPostData(data)
   .tap(convertedData => validatePostData(userId, convertedData))
   .then(validatedData => underlyingUpdatePost(userId, id, validatedData))
 }
@@ -117,4 +117,9 @@ export function unlinkAccount (userId, provider) {
     return user.unlinkAccount(provider)
   })
   .then(() => ({success: true}))
+}
+
+export function updateCommunitySettings (id, changes) {
+  return Community.find(id)
+  .then(community => community.update(convertGraphqlData(changes)))
 }
