@@ -126,6 +126,8 @@ type Community {
   createdAt: String
   avatarUrl: String
   bannerUrl: String
+  location: String
+  settings: String
   members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
   posts(
     first: Int,
@@ -351,6 +353,23 @@ input TopicSubscriptionInput {
   newPostCount: Int
 }
 
+input CommunityInput {
+  name: String
+  description: String
+  location: String
+  bannerUrl: String
+  avatarUrl: String
+  settings: CommunitySettingsInput
+  slackHookUrl: String
+  slackTeam: String
+  slackConfigureUrl: String
+  active: Boolean
+}
+
+input CommunitySettingsInput {
+  checklist: Boolean
+}
+
 type Mutation {
   updateMe(changes: MeInput): Me
   createPost(data: PostInput): Post
@@ -366,6 +385,7 @@ type Mutation {
   markAllActivitiesRead: GenericResult
   markActivityRead(id: ID): Activity
   unlinkAccount(provider: String): GenericResult
+  updateCommunitySettings(id: ID, changes: CommunityInput): Community
 }
 
 type GenericResult {

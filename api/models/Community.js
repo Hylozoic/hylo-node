@@ -2,7 +2,7 @@
 var Slack = require('../services/Slack')
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
-import { flatten, isEqual, merge, differenceBy } from 'lodash'
+import { flatten, isEqual, merge, differenceBy, pick, clone } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
@@ -189,6 +189,23 @@ module.exports = bookshelf.Model.extend(merge({
       applyPagination(q, 'posts', { first, cursor, order })
     }).fetch().then(posts =>
       posts.map(p => createFeedItem({post: p})))
+  },
+
+  update: function (changes) {
+    var whitelist = [
+      'banner_url', 'avatar_url', 'name', 'description', 'settings',
+      'welcome_message', 'leader_id', 'beta_access_code', 'location',
+      'slack_hook_url', 'slack_team', 'slack_configure_url', 'active'
+    ]
+
+    const attributes = pick(changes, whitelist)
+    const saneAttrs = clone(attributes)
+
+    if (attributes.settings) {
+      saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
+    }
+    return this.save(saneAttrs, {patch: true})
+    .then(() => this)
   }
 
 }, HasSettings), {

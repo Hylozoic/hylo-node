@@ -147,7 +147,8 @@ export default function makeModels (userId, isAdmin) {
         'avatar_url',
         'banner_url',
         'memberCount',
-        'postCount'
+        'postCount',
+        'location'
       ],
       relations: [
         {moderators: {querySet: true}},
