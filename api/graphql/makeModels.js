@@ -148,7 +148,6 @@ export default function makeModels (userId, isAdmin) {
         'banner_url',
         'memberCount',
         'postCount',
-        'welcome_message',
         'location'
       ],
       relations: [

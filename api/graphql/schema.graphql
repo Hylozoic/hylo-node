@@ -126,7 +126,6 @@ type Community {
   createdAt: String
   avatarUrl: String
   bannerUrl: String
-  welcomeMessage: String
   location: String
   settings: String
   members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
@@ -358,12 +357,9 @@ input CommunityInput {
   name: String
   description: String
   location: String
-  welcomeMessage: String
   bannerUrl: String
   avatarUrl: String
   settings: CommunitySettingsInput
-  leaderId: ID
-  betaAccessCode: String
   slackHookUrl: String
   slackTeam: String
   slackConfigureUrl: String

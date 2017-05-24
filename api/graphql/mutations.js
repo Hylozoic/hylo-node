@@ -119,7 +119,14 @@ export function unlinkAccount (userId, provider) {
   .then(() => ({success: true}))
 }
 
-export function updateCommunitySettings (id, changes) {
-  return Community.find(id)
-  .then(community => community.update(convertGraphqlData(changes)))
+export function updateCommunitySettings (userId, communityId, changes) {
+  return Membership.hasModeratorRole(userId, communityId)
+  .then(isModerator => {
+    if (isModerator) {
+      return Community.find(communityId)
+      .then(community => community.update(convertGraphqlData(changes)))
+    } else {
+      throw new Error("you don't have permission to modify this community")
+    }
+  })
 }

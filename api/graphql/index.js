@@ -60,7 +60,7 @@ function createSchema (userId, isAdmin) {
       subscribe: (root, { communityId, topicId, isSubscribing }) =>
         subscribe(userId, topicId, communityId, isSubscribing),
       updateCommunitySettings: (root, { id, changes }) =>
-        updateCommunitySettings(id, changes),
+        updateCommunitySettings(userId, id, changes),
       updateMembership: (root, args) => updateMembership(userId, args),
       updateTopicSubscription: (root, args) => updateTopicSubscription(userId, args),
       unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
