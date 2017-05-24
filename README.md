@@ -83,7 +83,13 @@ cat migrations/schema.sql | psql hylo
 ./node_modules/.bin/knex seed:run
 ```
 
-This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). The test database does not require seeding or migration. Note that running the seed in a development `$NODE_ENV` will delete rows from all tables and populate core tables with some fake data.
+This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). If you're new, you can also use the dummy seed to truncate everything and populate a bunch of fake data including a test account login like so:
+
+```shell
+NODE_ENV=dummy npm run knex seed:run
+```
+
+*This will trash everything in your current `hylo` database, so make sure you really want to do that!* The script will ask for confirmation. By default the test user will be `test@hylo.com` with password `hylo`, configurable at the top of `seeds/dummy/dummy.js`.
 
 
 ### running the dev server
