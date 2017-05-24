@@ -296,7 +296,12 @@ export default function makeModels (userId, isAdmin) {
       },
       relations: [
         {communityTags: {alias: 'communityTopics', querySet: true}},
-        {follows: {alias: 'topicSubscriptions', querySet: true}}
+        {follows: {
+          alias: 'topicSubscriptions',
+          querySet: true,
+          filter: (relation, { communityId }) =>
+            relation.query(q => q.where('community_id', communityId))
+        }}
       ],
       fetchMany: ({ first, offset = 0, name, autocomplete }) =>
         searchQuerySet('forTags', {limit: first, offset, name, autocomplete})

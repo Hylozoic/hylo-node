@@ -74,7 +74,8 @@ type Topic {
   topicSubscriptions(
     first: Int,
     order: String,
-    offset: Int
+    offset: Int,
+    communityId: ID
   ): TopicSubscriptionQuerySet
 }
 
