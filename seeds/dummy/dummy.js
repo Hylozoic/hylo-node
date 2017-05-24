@@ -175,19 +175,24 @@ function seedMessages (knex, Promise) {
     .join('posts', 'posts.id', 'follows.post_id')
     .select('follows.post_id as post', 'follows.user_id as user')
     .where('posts.type', 'thread')
-    .then(follows => Promise.all(
-      // Add five messages to each followed thread
-      [ ...follows, ...follows, ...follows, ...follows, ...follows ]
-        .map(follow => knex('comments')
-        .insert({
-          text: faker.lorem.paragraph(),
-          created_at: faker.date.past(),
-          post_id: follow.post,
-          user_id: follow.user,
-          active: true
-        }))
-      )
-    )
+    .then(follows => {
+      const created = faker.date.past()
+      return Promise.all(
+        // Add five messages to each followed thread
+        [ ...follows, ...follows, ...follows, ...follows, ...follows ]
+          .map(follow => {
+            created.setHours(created.getHours() + 1)
+            return knex('comments')
+              .insert({
+                text: faker.lorem.paragraph(),
+                post_id: follow.post,
+                user_id: follow.user,
+                created_at: created.toUTCString(),
+                active: true
+              })
+            })
+        )
+    })
 }
 
 // Grab random row or rows from table
