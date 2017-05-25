@@ -77,6 +77,7 @@ type Topic {
     offset: Int,
     communityId: ID
   ): TopicSubscriptionQuerySet
+  myTopicSubscription(communityId: ID): TopicSubscription
 }
 
 type Person {

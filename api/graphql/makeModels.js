@@ -301,6 +301,10 @@ export default function makeModels (userId, isAdmin) {
           querySet: true,
           filter: (relation, { communityId }) =>
             relation.query(q => q.where('community_id', communityId))
+        }},
+        {followForUserAndCommunity: {
+          alias: 'myTopicSubscription',
+          arguments: ({ communityId }) => [userId, communityId]
         }}
       ],
       fetchMany: ({ first, offset = 0, name, autocomplete }) =>
