@@ -157,13 +157,14 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
-        members: (c, { search, first, offset = 0, sortBy }) =>
+        members: (c, { search, first, offset = 0, sortBy, autocomplete }) =>
           fetchSearchQuerySet('forUsers', {
             term: search,
             communities: [c.id],
             limit: first,
             offset,
-            sort: sortBy || 'name'
+            sort: sortBy || 'name',
+            autocomplete
           }),
 
         posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
