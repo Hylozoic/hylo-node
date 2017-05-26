@@ -152,7 +152,24 @@ export default function makeModels (userId, isAdmin) {
       ],
       relations: [
         {moderators: {querySet: true}},
-        {tagFollows: {querySet: true, alias: 'topicSubscriptions'}}
+        {communityTags: {
+          querySet: true,
+          alias: 'communityTopics',
+          filter: (relation, { autocomplete, subscribed }) => relation.query(q => {
+            if (autocomplete) {
+              q.join('tags', 'tags.id', 'communities_tags.tag_id')
+              q.whereRaw('tags.name ilike ?', autocomplete + '%')
+            }
+
+            if (subscribed) {
+              q.join('tag_follows', 'tag_follows.tag_id', 'communities_tags.tag_id')
+              q.where({
+                'tag_follows.community_id': relation.relatedData.parentId,
+                'tag_follows.user_id': userId
+              })
+            }
+          })
+        }}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
@@ -175,15 +192,6 @@ export default function makeModels (userId, isAdmin) {
             type: filter,
             sort: sortBy,
             topic
-          }),
-
-        communityTopics: (c, { first, offset = 0, name, autocomplete }) =>
-          fetchSearchQuerySet('forCommunityTopics', {
-            limit: first,
-            offset,
-            name,
-            autocomplete,
-            communityId: c.id
           })
       },
       filter: nonAdminFilter(q => {
@@ -262,24 +270,14 @@ export default function makeModels (userId, isAdmin) {
       filter: nonAdminFilter(sharedPostMembership('votes', userId))
     },
 
-    TopicSubscription: {
-      model: TagFollow,
-      attributes: ['id', 'new_post_count'],
-      relations: [
-        {tag: {alias: 'topic'}},
-        'community'
-      ],
-      filter: relation => relation.query(q => {
-        q.where('tag_follows.user_id', userId)
-      })
-    },
-
     CommunityTopic: {
       model: CommunityTag,
       attributes: ['id'],
       getters: {
         postsTotal: ct => CommunityTag.taggedPostCount(ct.get('community_id'), ct.get('tag_id')),
-        followersTotal: ct => Tag.followersCount(ct.get('tag_id'), ct.get('community_id'))
+        followersTotal: ct => Tag.followersCount(ct.get('tag_id'), ct.get('community_id')),
+        isSubscribed: ct => ct.isFollowed(userId),
+        newPostCount: ct => ct.newPostCount(userId)
       },
       relations: [
         'community',
@@ -295,17 +293,7 @@ export default function makeModels (userId, isAdmin) {
         followersTotal: t => Tag.followersCount(t.id)
       },
       relations: [
-        {communityTags: {alias: 'communityTopics', querySet: true}},
-        {follows: {
-          alias: 'topicSubscriptions',
-          querySet: true,
-          filter: (relation, { communityId }) =>
-            relation.query(q => q.where('community_id', communityId))
-        }},
-        {followForUserAndCommunity: {
-          alias: 'myTopicSubscription',
-          arguments: ({ communityId }) => [userId, communityId]
-        }}
+        {communityTags: {alias: 'communityTopics', querySet: true}}
       ],
       fetchMany: ({ first, offset = 0, name, autocomplete }) =>
         searchQuerySet('forTags', {limit: first, offset, name, autocomplete})

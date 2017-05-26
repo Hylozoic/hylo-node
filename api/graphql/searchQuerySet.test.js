@@ -28,10 +28,4 @@ describe('sanitizeOptions', () => {
       sanitizeOptions('forPosts', {topic: '123four'})
     }).to.throw(/invalid value for topic/)
   })
-
-  it("forCommunityTopics: throws an error when communityId isn't defined", () => {
-    expect(() => {
-      sanitizeOptions('forCommunityTopics', {})
-    }).to.throw(/communityId must be provided/)
-  })
 })
