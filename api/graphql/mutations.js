@@ -130,3 +130,28 @@ export function updateCommunitySettings (userId, communityId, changes) {
     }
   })
 }
+
+export function addModerator (userId, personId, communityId) {
+  return Membership.hasModeratorRole(userId, communityId)
+  .then(isModerator => {
+    if (isModerator) {
+      return Membership.setModeratorRole(personId, communityId)
+      .then(() => Community.find(communityId))
+    } else {
+      throw new Error("you don't have permission to modify this community")
+    }
+  })
+}
+
+export function removeModerator (userId, personId, communityId) {
+  return Membership.hasModeratorRole(userId, communityId)
+  .then(isModerator => {
+    if (isModerator) {
+      console.log('removing mod')
+      return Membership.removeModeratorRole(personId, communityId)
+      .then(() => Community.find(communityId))
+    } else {
+      throw new Error("you don't have permission to modify this community")
+    }
+  })
+}

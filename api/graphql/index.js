@@ -16,7 +16,9 @@ import {
   updateMembership,
   updateTopicSubscription,
   unlinkAccount,
-  vote
+  vote,
+  addModerator,
+  removeModerator
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -64,7 +66,11 @@ function createSchema (userId, isAdmin) {
       updateMembership: (root, args) => updateMembership(userId, args),
       updateTopicSubscription: (root, args) => updateTopicSubscription(userId, args),
       unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
-      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
+      vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
+      addModerator: (root, { personId, communityId }) =>
+        addModerator(userId, personId, communityId),
+      removeModerator: (root, { personId, communityId }) =>
+        removeModerator(userId, personId, communityId)
     },
 
     FeedItemContent: {
