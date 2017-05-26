@@ -83,18 +83,16 @@ export function updateMembership (userId, { id, data }) {
 
   return Membership.query().where({id, user_id: userId})
   .update(whitelist)
-  .returning('id')
-  .then(ids => Membership.where('id', ids[0]).fetch())
+  .then(() => ({success: true}))
 }
 
-export function updateTopicSubscription (userId, { id, data }) {
+export function updateCommunityTopic (userId, { id, data }) {
   const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
-  return TagFollow.query().where({id, user_id: userId})
-  .update(whitelist)
-  .returning('id')
-  .then(ids => TagFollow.where('id', ids[0]).fetch())
+  return CommunityTag.where({id}).fetch()
+  .then(ct => ct.tagFollow(userId).query().update(whitelist))
+  .then(() => ({success: true}))
 }
 
 export function markActivityRead (userId, activityid) {

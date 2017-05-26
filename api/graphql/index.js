@@ -12,9 +12,9 @@ import {
   markAllActivitiesRead,
   subscribe,
   updateCommunitySettings,
+  updateCommunityTopic,
   updateMe,
   updateMembership,
-  updateTopicSubscription,
   unlinkAccount,
   vote
 } from './mutations'
@@ -61,8 +61,8 @@ function createSchema (userId, isAdmin) {
         subscribe(userId, topicId, communityId, isSubscribing),
       updateCommunitySettings: (root, { id, changes }) =>
         updateCommunitySettings(userId, id, changes),
+      updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
       updateMembership: (root, args) => updateMembership(userId, args),
-      updateTopicSubscription: (root, args) => updateTopicSubscription(userId, args),
       unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
       vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
     },
