@@ -29,19 +29,6 @@ type Me {
   ): NotificationQuerySet
 }
 
-type TopicSubscriptionQuerySet {
-  total: Int
-  hasMore: Boolean
-  items: [TopicSubscription]
-}
-
-type TopicSubscription {
-  id: ID
-  topic: Topic
-  community: Community
-  newPostCount: Int
-}
-
 type CommunityTopicQuerySet {
   total: Int
   hasMore: Boolean
@@ -54,6 +41,8 @@ type CommunityTopic {
   community: Community
   postsTotal: Int
   followersTotal: Int
+  isSubscribed: Boolean
+  newPostCount: Int
 }
 
 type TopicQuerySet {
@@ -71,11 +60,6 @@ type Topic {
     first: Int,
     offset: Int
   ): CommunityTopicQuerySet
-  topicSubscriptions(
-    first: Int,
-    order: String,
-    offset: Int
-  ): TopicSubscriptionQuerySet
 }
 
 type Person {
@@ -151,16 +135,12 @@ type Community {
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
-  topicSubscriptions(
-    first: Int,
-    order: String,
-    offset: Int
-  ): TopicSubscriptionQuerySet
   communityTopics(
     first: Int,
-    offset: Int
+    order: String,
+    offset: Int,
     autocomplete: String,
-    name: String
+    subscribed: Boolean
   ): CommunityTopicQuerySet
 }
 
@@ -356,7 +336,7 @@ input MembershipInput {
   newPostCount: Int
 }
 
-input TopicSubscriptionInput {
+input CommunityTopicInput {
   newPostCount: Int
 }
 
@@ -386,9 +366,9 @@ type Mutation {
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
   vote(postId: ID, isUpvote: Boolean): Post
-  subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): TopicSubscription
-  updateMembership(id: ID, slug: String, data: MembershipInput): Membership
-  updateTopicSubscription(id: ID, data: TopicSubscriptionInput): TopicSubscription
+  subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
+  updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
+  updateMembership(id: ID, slug: String, data: MembershipInput): GenericResult
   markAllActivitiesRead: GenericResult
   markActivityRead(id: ID): Activity
   unlinkAccount(provider: String): GenericResult

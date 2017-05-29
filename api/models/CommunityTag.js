@@ -11,6 +11,25 @@ module.exports = bookshelf.Model.extend({
 
   tag: function () {
     return this.belongsTo(Tag)
+  },
+
+  tagFollow: function (userId) {
+    return TagFollow.query(q => {
+      q.where({
+        user_id: userId,
+        community_id: this.get('community_id'),
+        tag_id: this.get('tag_id')
+      })
+    })
+  },
+
+  isFollowed: function (userId) {
+    return this.tagFollow(userId).count().then(count => Number(count) > 0)
+  },
+
+  newPostCount: function (userId) {
+    return this.tagFollow(userId).query().select('new_post_count')
+    .then(rows => rows.length > 0 ? rows[0].new_post_count : 0)
   }
 
 }, {

@@ -7,22 +7,6 @@ module.exports = {
   forPosts,
   forUsers,
 
-  forCommunityTopics: function (opts) {
-    return CommunityTag.query(qb => {
-      qb.join('tags', 'tags.id', 'communities_tags.tag_id')
-      qb.join('communities', 'communities.id', 'communities_tags.community_id')
-      qb.where('communities.id', opts.communityId)
-      if (opts.name) qb.where('tags.name', opts.name)
-      if (opts.autocomplete) {
-        qb.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
-      }
-      qb.limit(opts.limit)
-      qb.offset(opts.offset)
-      countTotal(qb, 'communities_tags', opts.totalColumnName)
-      qb.groupBy('communities_tags.id')
-    })
-  },
-
   forCommunities: function (opts) {
     return Community.query(qb => {
       if (opts.communities) {

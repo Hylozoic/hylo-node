@@ -168,6 +168,13 @@ module.exports = bookshelf.Model.extend({
 
   follows: function () {
     return this.hasMany(TagFollow)
+  },
+
+  followForUserAndCommunity: function (userId, communityId) {
+    return this.hasOne(TagFollow).query({where: {
+      user_id: userId,
+      community_id: communityId
+    }})
   }
 
 }, {
