@@ -30,6 +30,14 @@ module.exports = bookshelf.Model.extend({
   newPostCount: function (userId) {
     return this.tagFollow(userId).query().select('new_post_count')
     .then(rows => rows.length > 0 ? rows[0].new_post_count : 0)
+  },
+
+  postCount: function () {
+    return CommunityTag.taggedPostCount(this.get('community_id'), this.get('tag_id'))
+  },
+
+  followerCount: function () {
+    return Tag.followersCount(this.get('tag_id'), this.get('community_id'))
   }
 
 }, {

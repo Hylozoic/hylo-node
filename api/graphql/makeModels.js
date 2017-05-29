@@ -274,8 +274,8 @@ export default function makeModels (userId, isAdmin) {
       model: CommunityTag,
       attributes: ['id'],
       getters: {
-        postsTotal: ct => CommunityTag.taggedPostCount(ct.get('community_id'), ct.get('tag_id')),
-        followersTotal: ct => Tag.followersCount(ct.get('tag_id'), ct.get('community_id')),
+        postsTotal: ct => ct.postCount(),
+        followersTotal: ct => ct.followerCount(),
         isSubscribed: ct => ct.isFollowed(userId),
         newPostCount: ct => ct.newPostCount(userId)
       },
