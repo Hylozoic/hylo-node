@@ -282,6 +282,13 @@ type Query {
     first: Int,
     offset: Int
   ): PersonConnectionQuerySet
+  communityTopics(
+    first: Int,
+    order: String,
+    offset: Int,
+    autocomplete: String,
+    subscribed: Boolean
+  ): CommunityTopicQuerySet
 }
 
 input MeInput {

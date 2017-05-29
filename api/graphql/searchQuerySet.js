@@ -1,7 +1,7 @@
 import { mapValues } from 'lodash'
 import { isNull, isUndefined, omitBy } from 'lodash/fp'
 import { PAGINATION_TOTAL_COLUMN_NAME } from '../../lib/graphql-bookshelf-bridge/util/applyPagination'
-import presentQuerySet from '../../lib/graphql-bookshelf-bridge/util/presentQuerySet'
+import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 
 export default function searchQuerySet (searchName, options) {
   return Search[searchName](sanitizeOptions(searchName, options))

@@ -8,7 +8,6 @@ export function makeFilterToggle (enabled) {
 export const sharedMembership = curry((tableName, userId, q) => {
   const clauses = q => {
     q.where('communities_users.community_id', 'in', myCommunityIds(userId))
-    q.where('communities_users.active', true)
   }
 
   if (tableName === 'communities_users') return clauses(q)
@@ -30,4 +29,33 @@ export const sharedPostMembership = curry((tableName, userId, q) => {
 export function myCommunityIds (userId) {
   return Membership.query().select('community_id')
   .where({user_id: userId, active: true})
+}
+
+export function communityTopicFilter (userId, {
+  autocomplete,
+  subscribed,
+  communityId,
+  first,
+  order,
+  offset
+}) {
+  return q => {
+    q.limit(first || 1000)
+    q.offset(offset || 0)
+    // TODO: order
+
+    if (autocomplete) {
+      q.join('tags', 'tags.id', 'communities_tags.tag_id')
+      q.whereRaw('tags.name ilike ?', autocomplete + '%')
+    }
+
+    if (subscribed) {
+      q.join('tag_follows', 'tag_follows.tag_id', 'communities_tags.tag_id')
+      q.where('tag_follows.user_id', userId)
+      q.whereRaw('tag_follows.community_id = communities_tags.community_id')
+      if (communityId) {
+        q.where('tag_follows.community_id', communityId)
+      }
+    }
+  }
 }

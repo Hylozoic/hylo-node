@@ -1,5 +1,6 @@
 import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
 import {
+  communityTopicFilter,
   makeFilterToggle,
   myCommunityIds,
   sharedMembership,
@@ -155,20 +156,12 @@ export default function makeModels (userId, isAdmin) {
         {communityTags: {
           querySet: true,
           alias: 'communityTopics',
-          filter: (relation, { autocomplete, subscribed }) => relation.query(q => {
-            if (autocomplete) {
-              q.join('tags', 'tags.id', 'communities_tags.tag_id')
-              q.whereRaw('tags.name ilike ?', autocomplete + '%')
-            }
-
-            if (subscribed) {
-              q.join('tag_follows', 'tag_follows.tag_id', 'communities_tags.tag_id')
-              q.where({
-                'tag_follows.community_id': relation.relatedData.parentId,
-                'tag_follows.user_id': userId
-              })
-            }
-          })
+          filter: (relation, { autocomplete, subscribed }) =>
+            relation.query(communityTopicFilter(userId, {
+              autocomplete,
+              subscribed,
+              communityId: relation.relatedData.parentId
+            }))
         }}
       ],
       getters: {
@@ -282,7 +275,9 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         'community',
         {tag: {alias: 'topic'}}
-      ]
+      ],
+      filter: nonAdminFilter(sharedMembership('communities_tags', userId)),
+      fetchMany: args => CommunityTag.query(communityTopicFilter(userId, args))
     },
 
     Topic: {
