@@ -34,8 +34,7 @@ describe('models', () => {
       expect(querystring).to.equal(`select * from "communities_users"
         where "communities_users"."community_id" in
           (select "community_id" from "communities_users"
-          where "user_id" = 42 and "active" = true)
-        and "communities_users"."active" = true`.replace(/\n\s*/g, ' '))
+          where "user_id" = 42 and "active" = true)`.replace(/\n\s*/g, ' '))
     })
   })
 
@@ -48,8 +47,7 @@ describe('models', () => {
           (select "user_id" from "communities_users"
           where "communities_users"."community_id" in
             (select "community_id" from "communities_users"
-            where "user_id" = 42 and "active" = true)
-          and "communities_users"."active" = true)`.replace(/\n\s*/g, ' '))
+            where "user_id" = 42 and "active" = true))`.replace(/\n\s*/g, ' '))
     })
   })
 
