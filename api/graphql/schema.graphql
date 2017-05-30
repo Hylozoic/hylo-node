@@ -112,7 +112,14 @@ type Community {
   bannerUrl: String
   location: String
   settings: String
-  members(first: Int, order: String, sortBy: String, offset: Int, search: String): PersonQuerySet
+  members(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): PersonQuerySet
   posts(
     first: Int,
     order: String,
@@ -373,6 +380,8 @@ type Mutation {
   markActivityRead(id: ID): Activity
   unlinkAccount(provider: String): GenericResult
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
+  addModerator(personId: ID, communityId: ID): Community
+  removeModerator(personId: ID, communityId: ID): Community
 }
 
 type GenericResult {
