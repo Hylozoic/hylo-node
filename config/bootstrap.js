@@ -14,6 +14,7 @@ import path from 'path'
 import root from 'root-path'
 import util from 'util'
 import models from '../api/models'
+import queryMonitor from '../lib/util/queryMonitor'
 import { clone } from 'lodash'
 import { blue, cyan, green, red, yellow } from 'chalk'
 require('dotenv').load()
@@ -37,27 +38,7 @@ module.exports.bootstrap = function (done) {
     })
   }
 
-  // log SQL queries
-  if (process.env.DEBUG_SQL) {
-    bookshelf.knex.on('query', function (data) {
-      var args = (clone(data.bindings) || []).map(s => {
-        if (s === null) return blue('null')
-        if (s === undefined) return red('undefined')
-        if (typeof (s) === 'object') return blue(JSON.stringify(s))
-        return blue(s.toString())
-      })
-      args.unshift(data.sql.replace(/\?/g, '%s'))
-
-      // TODO fix missing limit and boolean values
-      var query = util.format.apply(util, args)
-      .replace(/^(select)/, cyan('$1'))
-      .replace(/^(insert)/, green('$1'))
-      .replace(/^(update)/, yellow('$1'))
-      .replace(/^(delete)/, red('$1'))
-
-      sails.log.info(query)
-    })
-  }
+  if (process.env.DEBUG_SQL) queryMonitor(bookshelf.knex)
 
   // add presenters to global namespace
   fs.readdirSync(root('api/presenters')).forEach(filename => {
