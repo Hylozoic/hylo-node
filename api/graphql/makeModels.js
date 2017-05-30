@@ -32,7 +32,8 @@ export default function makeModels (userId, isAdmin) {
         'location',
         'bio',
         'updated_at',
-        'tagline'
+        'tagline',
+        'new_notification_count'
       ],
       relations: [
         'communities',
@@ -42,7 +43,8 @@ export default function makeModels (userId, isAdmin) {
         {inAppNotifications: {querySet: true, alias: 'notifications'}}
       ],
       getters: {
-        hasDevice: u => u.hasDevice()
+        hasDevice: u => u.hasDevice(),
+        unseenThreadCount: u => User.unseenThreadCount(userId)
       }
     },
 
