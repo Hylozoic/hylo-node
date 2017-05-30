@@ -27,6 +27,8 @@ type Me {
     order: String,
     offset: Int
   ): NotificationQuerySet
+  newNotificationCount: Int
+  unseenThreadCount: Int
 }
 
 type CommunityTopicQuerySet {
