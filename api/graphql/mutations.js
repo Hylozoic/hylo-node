@@ -145,7 +145,6 @@ export function removeModerator (userId, personId, communityId) {
   return Membership.hasModeratorRole(userId, communityId)
   .then(isModerator => {
     if (isModerator) {
-      console.log('removing mod')
       return Membership.removeModeratorRole(personId, communityId)
       .then(() => Community.find(communityId))
     } else {
