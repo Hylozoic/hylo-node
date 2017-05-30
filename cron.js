@@ -6,8 +6,7 @@ var rollbar = skiff.rollbar
 var sails = skiff.sails
 var digest2 = require('./lib/community/digest2')
 var Promise = require('bluebird')
-
-require('colors')
+var { red } = require('chalk')
 
 const sendAndLogDigests = type =>
   digest2.sendAllDigests(type)
@@ -82,7 +81,7 @@ skiff.lift({
       skiff.lower()
     })
     .catch(function (err) {
-      sails.log.error(err.message.red)
+      sails.log.error(red(err.message))
       rollbar.handleError(err, () => skiff.lower())
     })
   }

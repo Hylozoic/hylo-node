@@ -41,7 +41,6 @@
     "bookshelf": "0.10.2",
     "bookshelf-returning": "^0.3.1",
     "cheerio": "0.19.0",
-    "colors": "^1.0.3",
     "connect-redis": "1.4.5",
     "csv-parser": "^1.7.0",
     "dataloader": "^1.2.0",

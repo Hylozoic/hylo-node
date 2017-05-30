@@ -25,8 +25,10 @@ if (process.env.NEW_RELIC_LICENSE_KEY) {
   require('newrelic')
 }
 
-var _ = require('lodash')
-require('colors')
+const { merge } = require('lodash')
+const chalk = require('chalk')
+chalk.enabled = true
+const { blue, yellow } = chalk
 
 // Ensure we're in the project directory, so relative paths work as expected
 // no matter where we actually lift from.
@@ -64,14 +66,14 @@ process.chdir(__dirname)
   }
 
   // Start server
-  sails.log.info('Lifting...'.yellow)
-  sails.lift(_.merge(rc('sails'), {
+  sails.log.info(yellow('Lifting...'))
+  sails.lift(merge(rc('sails'), {
     log: {noShip: true}
   }), function (err) {
     if (err) {
       sails.log.error(err.stack)
     } else {
-      sails.log.info('Aloft.'.blue)
+      sails.log.info(blue('Aloft.'))
     }
   })
 

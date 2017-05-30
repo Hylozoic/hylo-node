@@ -12,7 +12,7 @@
  */
 
 import { createRequestHandler } from '../api/graphql'
-require('colors')
+import { magenta } from 'chalk'
 const util = require('util')
 
 module.exports.http = {
@@ -34,7 +34,7 @@ module.exports.http = {
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
     requestLogger: function (req, res, next) {
-      sails.log.info(util.format('%s %s ', req.method, req.url).magenta)
+      sails.log.info(magenta(util.format('%s %s ', req.method, req.url)))
       next()
     },
 

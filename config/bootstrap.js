@@ -15,6 +15,7 @@ import root from 'root-path'
 import util from 'util'
 import models from '../api/models'
 import { clone } from 'lodash'
+import { blue, cyan, green, red, yellow } from 'chalk'
 require('dotenv').load()
 
 // very handy, these
@@ -26,35 +27,33 @@ module.exports.bootstrap = function (done) {
   models.init()
 
   if (process.env.DEBUG_MEMORY) {
-    require('colors')
-    sails.log.info('memwatch: starting'.red)
+    sails.log.info(red('memwatch: starting'))
     var memwatch = require('memwatch-next')
 
-    memwatch.on('leak', info => sails.log.info('memwatch: memory leak!'.red, info))
+    memwatch.on('leak', info => sails.log.info(red('memwatch: memory leak!'), info))
 
     memwatch.on('stats', stats => {
-      sails.log.info('memwatch: stats:'.red + '\n' + util.inspect(stats))
+      sails.log.info(red('memwatch: stats:') + '\n' + util.inspect(stats))
     })
   }
 
   // log SQL queries
   if (process.env.DEBUG_SQL) {
-    require('colors')
     bookshelf.knex.on('query', function (data) {
-      var args = (clone(data.bindings) || []).map(function (s) {
-        if (s === null) return 'null'.blue
-        if (s === undefined) return 'undefined'.red
-        if (typeof (s) === 'object') return JSON.stringify(s).blue
-        return s.toString().blue
+      var args = (clone(data.bindings) || []).map(s => {
+        if (s === null) return blue('null')
+        if (s === undefined) return red('undefined')
+        if (typeof (s) === 'object') return blue(JSON.stringify(s))
+        return blue(s.toString())
       })
       args.unshift(data.sql.replace(/\?/g, '%s'))
 
       // TODO fix missing limit and boolean values
       var query = util.format.apply(util, args)
-      .replace(/^(select)/, '$1'.cyan)
-      .replace(/^(insert)/, '$1'.green)
-      .replace(/^(update)/, '$1'.yellow)
-      .replace(/^(delete)/, '$1'.red)
+      .replace(/^(select)/, cyan('$1'))
+      .replace(/^(insert)/, green('$1'))
+      .replace(/^(update)/, yellow('$1'))
+      .replace(/^(delete)/, red('$1'))
 
       sails.log.info(query)
     })
