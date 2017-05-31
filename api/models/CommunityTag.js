@@ -38,6 +38,14 @@ module.exports = bookshelf.Model.extend({
 
   followerCount: function () {
     return Tag.followersCount(this.get('tag_id'), this.get('community_id'))
+  },
+
+  consolidateFollowerCount: function () {
+    this.followerCount()
+    .then(followers => {
+      if (followers === this.get('followers')) return Promise.resolve()
+      return this.save({followers})
+    })
   }
 
 }, {
