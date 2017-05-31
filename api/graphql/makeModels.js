@@ -279,7 +279,9 @@ export default function makeModels (userId, isAdmin) {
         'community',
         {tag: {alias: 'topic'}}
       ],
-      filter: nonAdminFilter(sharedMembership('communities_tags', userId)),
+      filter: nonAdminFilter(q => {
+        q.where('communities_tags.community_id', 'in', myCommunityIds(userId))
+      }),
       fetchMany: args => CommunityTag.query(communityTopicFilter(userId, args))
     },
 
