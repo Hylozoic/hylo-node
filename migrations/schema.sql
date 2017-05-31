@@ -191,7 +191,8 @@ CREATE TABLE communities_tags (
     updated_at timestamp with time zone,
     user_id bigint,
     description text,
-    is_default boolean DEFAULT false
+    is_default boolean DEFAULT false,
+    followers integer DEFAULT 0
 );
 
 
@@ -2561,4 +2562,3 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
-
