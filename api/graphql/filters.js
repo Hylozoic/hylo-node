@@ -36,13 +36,11 @@ export function communityTopicFilter (userId, {
   subscribed,
   communityId,
   first,
-  order,
   offset
 }) {
   return q => {
     q.limit(first || 1000)
     q.offset(offset || 0)
-    // TODO: order
 
     if (autocomplete) {
       q.join('tags', 'tags.id', 'communities_tags.tag_id')

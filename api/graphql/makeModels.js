@@ -268,7 +268,7 @@ export default function makeModels (userId, isAdmin) {
 
     CommunityTopic: {
       model: CommunityTag,
-      attributes: ['id'],
+      attributes: ['id', 'updated_at', 'created_at'],
       getters: {
         postsTotal: ct => ct.postCount(),
         followersTotal: ct => ct.followerCount(),
