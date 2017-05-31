@@ -127,8 +127,8 @@ module.exports.policies = {
     subscribe:                            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     unsubscribe:                          ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     typing:                               ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    subscribeToThreads:                   ['isSocket', 'sessionAuth'],
-    unsubscribeFromThreads:               ['isSocket', 'sessionAuth'],
+    subscribeToUpdates:                   ['isSocket', 'sessionAuth'],
+    unsubscribeFromUpdates:               ['isSocket', 'sessionAuth'],
     createFromEmailForm: ['checkAndDecodeToken']
   },
 
