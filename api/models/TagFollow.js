@@ -1,3 +1,4 @@
+/* eslint-disable camelcase  */
 import { get } from 'lodash/fp'
 
 const isBookshelfInstance = obj => !!get('attributes', obj)
@@ -44,18 +45,31 @@ module.exports = bookshelf.Model.extend({
   toggle: function (tagIdOrName, userId, communityId) {
     return lookup(tagIdOrName, userId, communityId)
     .then(({ error, instance, attrs }) => !error &&
-      (instance ? instance.destroy() : new TagFollow(attrs).save()))
+      (instance
+        ? TagFollow.remove({tagIdOrName, userId, communityId})
+        : TagFollow.add({tagIdOrName, userId, communityId})))
   },
 
-  add: function (tagIdOrName, userId, communityId) {
+  add: function ({tagIdOrName, userId, communityId, transacting}) {
     return lookup(tagIdOrName, userId, communityId)
     .then(({ error, instance, attrs }) => !error &&
-      (instance || new TagFollow(attrs).save()))
+      (instance ||
+      new TagFollow(attrs).save({transacting})
+      .then(() => CommunityTag.query(q => {
+        q.where('community_id', communityId)
+        q.where('tag_id', tagIdOrName)
+      }).query().increment('followers').transacting(transacting))))
   },
 
-  remove: function (tagIdOrName, userId, communityId) {
+  remove: function ({tagIdOrName, userId, communityId, transacting}) {
     return lookup(tagIdOrName, userId, communityId)
-    .then(({ error, instance }) => !error && instance && instance.destroy())
+    .then(({ error, instance }) => !error &&
+      instance &&
+      instance.destroy({transacting})
+      .then(() => CommunityTag.query(q => {
+        q.where('community_id', communityId)
+        q.where('tag_id', tagIdOrName)
+      }).query().decrement('followers').transacting(transacting)))
   },
 
   findFollowers: function (community_id, tag_id, limit = 3) {

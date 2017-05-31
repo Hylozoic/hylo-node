@@ -109,11 +109,12 @@ module.exports = {
     return bookshelf.transaction(trx => {
       const trxOpts = {transacting: trx}
       return Tag.findOrCreate(name, trxOpts)
-      .tap(tag => new TagFollow({
-        community_id: community.id,
-        tag_id: tag.id,
-        user_id: req.session.userId
-      }).save(null, trxOpts))
+      .tap(tag => TagFollow.add({
+        communityId: community.id,
+        tagIdOrName: tag.id,
+        userId: req.session.userId,
+        transacting: trx
+      }))
       .tap(tag => new CommunityTag({
         tag_id: tag.id,
         community_id: community.id,

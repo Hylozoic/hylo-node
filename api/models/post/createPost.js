@@ -65,6 +65,10 @@ function updateTagsAndCommunities (post, trx) {
         tags: tags.map('id').map(String)
       }))
 
-    return Promise.all(bumpCounts.concat(notifySockets))
+    const updateCommunityTags = CommunityTag.query(q => {
+      q.whereIn('tag_id', tags.map('id'))
+    }).query().update({updated_at: new Date()}).transacting(trx)
+
+    return Promise.all(bumpCounts.concat([notifySockets, updateCommunityTags]))
   })
 }
