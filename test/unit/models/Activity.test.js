@@ -147,6 +147,7 @@ describe('Activity', function () {
       .then(notification => {
         expect(notification).to.exist
         expect(notification.get('sent_at')).to.be.null
+        expect(notification.get('user_id')).to.equal(fixtures.u1.id)
       })
     })
 

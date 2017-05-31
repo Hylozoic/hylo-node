@@ -39,7 +39,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   inAppNotifications: function () {
-    return this.hasMany(Notification, 'reader_id').through(Activity)
+    return this.hasMany(Notification)
     .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
   },
 

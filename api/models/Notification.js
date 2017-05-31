@@ -18,9 +18,9 @@ const TYPE = {
 }
 
 const MEDIUM = {
-  InApp: 'in-app',
-  Push: 'push',
-  Email: 'email'
+  InApp: 0,
+  Push: 1,
+  Email: 2
 }
 
 module.exports = bookshelf.Model.extend({

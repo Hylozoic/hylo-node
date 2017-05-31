@@ -86,7 +86,12 @@ module.exports = bookshelf.Model.extend({
     }
     return this.load(relations, {transacting: trx})
     .then(() => Promise.map(Activity.generateNotificationMedia(this), medium =>
-      new Notification({activity_id: this.id, created_at: new Date(), medium})
+      new Notification({
+        activity_id: this.id,
+        created_at: new Date(),
+        medium,
+        user_id: this.get('reader_id')
+      })
       .save({}, {transacting: trx})))
   }
 
