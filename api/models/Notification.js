@@ -349,5 +349,11 @@ module.exports = bookshelf.Model.extend({
 
     const match = label => reasons.some(r => r.match(new RegExp('^' + label)))
     return orderedLabels.find(match) || ''
+  },
+
+  removeOldNotifications: function () {
+    return Notification.query()
+    .whereRaw("created_at < now() - interval '1 month'")
+    .del()
   }
 })
