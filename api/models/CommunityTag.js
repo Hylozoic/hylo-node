@@ -51,7 +51,7 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   create (attrs, { transacting } = {}) {
-    return this.forge(Object.assign({created_at: new Date()}, attrs))
+    return this.forge(Object.assign({created_at: new Date(), updated_at: new Date()}, attrs))
     .save({}, {transacting})
   },
 
