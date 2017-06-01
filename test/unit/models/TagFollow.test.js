@@ -119,6 +119,37 @@ describe('TagFollow', () => {
 
   describe('#remove', () => {
     it('destroys a TagFollow and updates CommunityTag followers', () => {
+
+      const attrs = {
+        tag_id: tag.id,
+        community_id: community.id,
+        user_id: user.id
+      }
+
+      return Promise.join(
+        new CommunityTag({
+          community_id: community.id,
+          tag_id: tag.id,
+          followers: 5
+        }).save(),
+        new TagFollow(attrs).save()
+      )
+      .then(() => TagFollow.remove({
+        tagId: tag.id,
+        userId: user.id,
+        communityId: community.id
+      }))
+      .then(() => TagFollow.where(attrs).fetch())
+      .then(tagFollow => {
+        expect(tagFollow).not.to.exist
+      })
+      .then(() => CommunityTag.where({
+        community_id: community.id,
+        tag_id: tag.id
+      }).fetch())
+      .then(communityTag => {
+        expect(communityTag.get('followers')).to.equal(4)
+      })
     })
   })
 })
