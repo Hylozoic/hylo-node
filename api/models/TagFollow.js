@@ -48,6 +48,7 @@ module.exports = bookshelf.Model.extend({
       community_id: communityId,
       user_id: userId
     }
+
     return new TagFollow(attrs).save(null, {transacting})
     .tap(() => CommunityTag.query(q => {
       q.where('community_id', communityId)
