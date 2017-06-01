@@ -1,25 +1,4 @@
 /* eslint-disable camelcase  */
-import { get } from 'lodash/fp'
-
-const isBookshelfInstance = obj => !!get('attributes', obj)
-
-const flexibleFind = model => idOrInstance =>
-  isBookshelfInstance(idOrInstance)
-    ? Promise.resolve(idOrInstance)
-    : model.find(idOrInstance)
-
-const getTag = flexibleFind(Tag)
-const getCommunity = flexibleFind(Community)
-
-const lookup = (tagIdOrInstance, user_id, communityIdOrInstance) =>
-  Promise.join(
-    getTag(tagIdOrInstance),
-    getCommunity(communityIdOrInstance),
-    (tag, community) => {
-      if (!tag) return {error: true}
-      const attrs = {community_id: community.id, tag_id: tag.id, user_id}
-      return Promise.props({attrs, instance: TagFollow.where(attrs).fetch()})
-    })
 
 module.exports = bookshelf.Model.extend({
   tableName: 'tag_follows',
@@ -42,33 +21,53 @@ module.exports = bookshelf.Model.extend({
     .save({}, {transacting})
   },
 
-  toggle: function (tagIdOrName, userId, communityId) {
-    return lookup(tagIdOrName, userId, communityId)
-    .then(({ error, instance, attrs }) => !error &&
-      (instance
-        ? TagFollow.remove({tagIdOrName, userId, communityId})
-        : TagFollow.add({tagIdOrName, userId, communityId})))
+  // toggle is used by hylo-redux
+  toggle: function (tagId, userId, communityId) {
+    return TagFollow.where({community_id: communityId, tag_id: tagId}).fetch()
+    .then(tagFollow => tagFollow
+      ? TagFollow.remove({tagId, userId, communityId})
+      : TagFollow.add({tagId, userId, communityId}))
   },
 
-  add: function ({tagIdOrName, userId, communityId, transacting}) {
-    return lookup(tagIdOrName, userId, communityId)
-    .then(({ error, instance, attrs }) => !error &&
-      (instance ||
-      new TagFollow(attrs).save({transacting})
-      .then(() => CommunityTag.query(q => {
-        q.where('community_id', communityId)
-        q.where('tag_id', tagIdOrName)
-      }).query().increment('followers').transacting(transacting))))
+  // subscribe is used by hylo-evo
+  subscribe: function (tagId, userId, communityId, isSubscribing) {
+    return TagFollow.where({community_id: communityId, tag_id: tagId, user_id: userId})
+    .fetch()
+    .then(tagFollow => {
+      if (tagFollow && !isSubscribing) {
+        return TagFollow.remove({tagId, userId, communityId})
+      } else if (!tagFollow && isSubscribing) {
+        return TagFollow.add({tagId, userId, communityId})
+      }
+    })
   },
 
-  remove: function ({tagIdOrName, userId, communityId, transacting}) {
-    return lookup(tagIdOrName, userId, communityId)
-    .then(({ error, instance }) => !error &&
-      instance &&
-      instance.destroy({transacting})
-      .then(() => CommunityTag.query(q => {
-        q.where('community_id', communityId)
-        q.where('tag_id', tagIdOrName)
+  add: function ({tagId, userId, communityId, transacting}) {
+    const attrs = {
+      tag_id: tagId,
+      community_id: communityId,
+      user_id: userId
+    }
+    return new TagFollow(attrs).save(null, {transacting})
+    .tap(() => CommunityTag.query(q => {
+      q.where('community_id', communityId)
+      q.where('tag_id', tagId)
+    }).query().increment('followers').transacting(transacting))
+  },
+
+  remove: function ({tagId, userId, communityId, transacting}) {
+    const attrs = {
+      tag_id: tagId,
+      community_id: communityId,
+      user_id: userId
+    }
+    return TagFollow.where(attrs)
+    .fetch()
+    .then(tagFollow => tagFollow &&
+      tagFollow.destroy({transacting})
+      .tap(() => CommunityTag.query(q => {
+        q.where('community_id', attrs.community_id)
+        q.where('tag_id', attrs.tag_id)
       }).query().decrement('followers').transacting(transacting)))
   },
 

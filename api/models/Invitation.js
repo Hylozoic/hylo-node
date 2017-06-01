@@ -45,7 +45,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         {role: Number(this.get('role')), transacting}))
     .tap(() => !this.isUsed() && this.get('tag_id') &&
       TagFollow.add({
-        tagIdOrName: this.get('tag_id'),
+        tagId: this.get('tag_id'),
         userId,
         communityId: this.get('community_id'),
         transacting

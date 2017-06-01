@@ -78,11 +78,16 @@ module.exports = {
   },
 
   follow: function (req, res) {
-    return TagFollow.toggle(
-      req.param('tagName'),
-      req.session.userId,
-      req.param('communityId')
-    ).then(res.ok, res.serverError)
+    return Promise.join(
+      Tag.find(req.param('tagName')),
+      Community.find(req.param('communityId')),
+      (tag, community) =>
+        TagFollow.toggle(
+          tag.id,
+          req.session.userId,
+          community.id
+        ).then(res.ok, res.serverError)
+    )
   },
 
   findForCommunity: function (req, res) {
@@ -111,7 +116,7 @@ module.exports = {
       return Tag.findOrCreate(name, trxOpts)
       .tap(tag => TagFollow.add({
         communityId: community.id,
-        tagIdOrName: tag.id,
+        tagId: tag.id,
         userId: req.session.userId,
         transacting: trx
       }))

@@ -69,9 +69,7 @@ export function vote (userId, postId, isUpvote) {
 }
 
 export function subscribe (userId, topicId, communityId, isSubscribing) {
-  return isSubscribing
-    ? TagFollow.add(topicId, userId, communityId)
-    : TagFollow.remove(topicId, userId, communityId).then(() => null)
+  return TagFollow.subscribe(topicId, userId, communityId, isSubscribing)
 }
 
 export function updateMembership (userId, { id, data }) {

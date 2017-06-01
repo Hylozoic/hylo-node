@@ -21,9 +21,10 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
     tagName && Tag.find(tagName)
     .then(tag => {
       if (!tag) return res.notFound()
+
       return TagFollow.add({
         communityId: community.id,
-        tagIdOrNamed: tag.id,
+        tagId: tag.id,
         userId: req.session.userId
       })
     })

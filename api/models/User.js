@@ -174,7 +174,7 @@ module.exports = bookshelf.Model.extend(merge({
         ? TagFollow.add({
           userId: this.id,
           communityId: communityId,
-          tagIdOrNamed: communityTag.get('tag_id'),
+          tagId: communityTag.get('tag_id'),
           transacting: trx
         })
       : null))
@@ -412,7 +412,7 @@ module.exports = bookshelf.Model.extend(merge({
       TagFollow.add({
         userId: userId,
         communityId: communityId,
-        tagIdOrName: id,
+        tagId: id,
         transacting: trx
       })
       .catch(err => {
