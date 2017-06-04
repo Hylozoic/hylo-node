@@ -3,6 +3,7 @@ const validMessageTypes = [
   'messageAdded',
   'userTyping',
   'newThread',
+  'newNotification',
   'newPost'
 ]
 
@@ -12,7 +13,11 @@ export function pushToSockets (room, messageType, payload, socketToExclude) {
   }
 
   if (process.env.NODE_ENV === 'test') return Promise.resolve()
-  sails.sockets.broadcast(room, messageType, payload, socketToExclude)
+  try {
+    sails.sockets.broadcast(room, messageType, payload, socketToExclude)
+  } catch (err) {
+    console.error('HEY:', err)
+  }
   return Promise.resolve()
 }
 

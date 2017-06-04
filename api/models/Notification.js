@@ -1,6 +1,7 @@
 var url = require('url')
 import { isEmpty } from 'lodash'
 import decode from 'ent/decode'
+import { userRoom, pushToSockets } from '../services/Websockets'
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -56,7 +57,9 @@ module.exports = bookshelf.Model.extend({
         action = this.sendEmail()
         break
       case MEDIUM.InApp:
-        action = User.incNewNotificationCount(this.reader().id)
+        const userId = this.reader().id
+        action = User.incNewNotificationCount(userId)
+          .then(foo => this.updateUserSocketRoom(userId))
         break
     }
     if (action) {
@@ -288,8 +291,16 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.community(community))
         }
       })))
-  }
+  },
 
+  updateUserSocketRoom: function (userId) {
+    const payload = {
+      actor: {
+        id: this.actor().id
+      }
+    }
+    return pushToSockets(userRoom(userId), 'newNotification', payload)
+  }
 }, {
   MEDIUM,
   TYPE,
