@@ -73,6 +73,7 @@ exports.seed = (knex, Promise) => warning()
     {name: 'intention'}
   ]))
   .then(() => seed('tags', knex, Promise))
+  .then(() => seed('networks', knex, Promise))
   .then(() => knex('communities').insert({ name: 'starter-posts', slug: 'starter-posts' }))
   .then(() => knex('communities').insert({ name: community, slug: communitySlug }))
   .then(() => seed('communities', knex, Promise))
