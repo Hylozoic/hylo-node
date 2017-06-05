@@ -342,7 +342,6 @@ module.exports = bookshelf.Model.extend({
         }
       }
       sails.sockets.broadcast(userRoom(userId), 'newNotification', payload)
-      return Promise.resolve()
     })
   }
 }, {
