@@ -1,11 +1,13 @@
 exports.up = function (knex, Promise) {
   return knex.schema.table('communities_tags', table => {
-    table.integer('followers').defaultTo(0)
+    table.dropColumn('followers')
+    table.integer('num_followers').defaultTo(0)
   })
 }
 
 exports.down = function (knex, Promise) {
   return knex.schema.table('communities_tags', table => {
-    table.dropColumn('followers')
+    table.dropColumn('num_followers')
+    table.integer('followers').defaultTo(0)
   })
 }

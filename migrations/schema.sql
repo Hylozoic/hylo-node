@@ -192,7 +192,7 @@ CREATE TABLE communities_tags (
     user_id bigint,
     description text,
     is_default boolean DEFAULT false,
-    followers integer DEFAULT 0
+    num_followers integer DEFAULT 0
 );
 
 

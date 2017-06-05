@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 module.exports = bookshelf.Model.extend({
   tableName: 'communities_tags',
 
@@ -41,10 +43,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   consolidateFollowerCount: function () {
-    this.followerCount()
-    .then(followers => {
-      if (followers === this.get('followers')) return Promise.resolve()
-      return this.save({followers})
+    return this.followerCount()
+    .then(num_followers => {
+      if (num_followers === this.get('num_followers')) return Promise.resolve()
+      return this.save({num_followers})
     })
   }
 

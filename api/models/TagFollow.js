@@ -53,7 +53,7 @@ module.exports = bookshelf.Model.extend({
     .tap(() => CommunityTag.query(q => {
       q.where('community_id', communityId)
       q.where('tag_id', tagId)
-    }).query().increment('followers').transacting(transacting))
+    }).query().increment('num_followers').transacting(transacting))
   },
 
   remove: function ({tagId, userId, communityId, transacting}) {
@@ -69,7 +69,7 @@ module.exports = bookshelf.Model.extend({
       .tap(() => CommunityTag.query(q => {
         q.where('community_id', attrs.community_id)
         q.where('tag_id', attrs.tag_id)
-      }).query().decrement('followers').transacting(transacting)))
+      }).query().decrement('num_followers').transacting(transacting)))
   },
 
   findFollowers: function (community_id, tag_id, limit = 3) {
