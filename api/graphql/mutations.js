@@ -152,3 +152,14 @@ export function removeModerator (userId, personId, communityId) {
     }
   })
 }
+
+export function deletePost (userId, postId) {
+  return Post.find(postId)
+  .then(post => {
+    if (post.get('user_id') !== userId) {
+      throw new Error("you don't have permission to modify this post")
+    }
+    return Post.deactivate(postId)
+  })
+  .then(() => ({success: true}))
+}

@@ -18,7 +18,8 @@ import {
   unlinkAccount,
   vote,
   addModerator,
-  removeModerator
+  removeModerator,
+  deletePost
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -73,7 +74,9 @@ function createSchema (userId, isAdmin) {
       addModerator: (root, { personId, communityId }) =>
         addModerator(userId, personId, communityId),
       removeModerator: (root, { personId, communityId }) =>
-        removeModerator(userId, personId, communityId)
+        removeModerator(userId, personId, communityId),
+      deletePost: (root, { id }) =>
+        deletePost(userId, id)
     },
 
     FeedItemContent: {

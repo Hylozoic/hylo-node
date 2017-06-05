@@ -384,6 +384,7 @@ type Mutation {
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   addModerator(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID): Community
+  deletePost(id: ID): GenericResult
 }
 
 type GenericResult {
