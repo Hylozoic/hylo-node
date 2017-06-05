@@ -1,7 +1,12 @@
 var url = require('url')
+import { constructor as Sails } from 'sails'
 import { isEmpty } from 'lodash'
 import decode from 'ent/decode'
+import parseRedisUrl from 'parse-redis-url'
+
 import { userRoom, pushToSockets } from '../services/Websockets'
+
+
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -294,12 +299,51 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateUserSocketRoom: function (userId) {
-    const payload = {
-      actor: {
-        id: this.actor().id
+    const sails = new Sails()
+    const redisUrlParser = parseRedisUrl()
+    const redisInfo = redisUrlParser.parse(process.env.REDIS_URL)
+    sails.load({
+      globals: false,
+      hooks: {
+        // Only load sockets, and http (required for sockets)
+        blueprints: false,
+        controllers: false,
+        cors: false,
+        csrf: false,
+        grunt: false,
+        i18n: false,
+        logger: false,
+        orm: false,
+        policies: false,
+        pubsub: false,
+        request: false,
+        responses: false,
+        session: false,
+        services: false,
+        userconfig: false,
+        userhooks: false,
+        views: false
+      },
+      sockets: {
+        adapter: 'socket.io-redis',
+        host: redisInfo.host,
+        port: redisInfo.port,
+        db: redisInfo.database,
+        pass: redisInfo.password
       }
-    }
-    return pushToSockets(userRoom(userId), 'newNotification', payload)
+    }, err => {
+      if (err) {
+        throw new Error(`Could not load Sails while attempting to broadcast notification to user socket room: ${err}`)
+        return
+      }
+      const payload = {
+        actor: {
+          id: this.actor().id
+        }
+      }
+      sails.sockets.broadcast(userRoom(userId), 'newNotification', payload)
+      return Promise.resolve()
+    })
   }
 }, {
   MEDIUM,

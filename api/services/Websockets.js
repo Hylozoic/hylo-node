@@ -13,11 +13,7 @@ export function pushToSockets (room, messageType, payload, socketToExclude) {
   }
 
   if (process.env.NODE_ENV === 'test') return Promise.resolve()
-  try {
-    sails.sockets.broadcast(room, messageType, payload, socketToExclude)
-  } catch (err) {
-    console.error('HEY:', err)
-  }
+  sails.sockets.broadcast(room, messageType, payload, socketToExclude)
   return Promise.resolve()
 }
 
