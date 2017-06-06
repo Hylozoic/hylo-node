@@ -50,8 +50,7 @@ describe('graphql request handler', () => {
 
     it('responds as expected', () => {
       return handler(req, res).then(() => {
-        expect(res.body).to.exist
-        expect(JSON.parse(res.body)).to.deep.equal({
+        expectJSON(res, {
           data: {
             me: {
               name: user.get('name'),
@@ -151,8 +150,7 @@ describe('graphql request handler', () => {
 
     it('responds as expected', () => {
       return handler(req, res).then(() => {
-        expect(res.body).to.exist
-        expect(JSON.parse(res.body)).to.deep.equal({
+        expectJSON(res, {
           data: {
             me: {
               name: user.get('name'),
@@ -219,4 +217,52 @@ describe('graphql request handler', () => {
       })
     })
   })
+
+  describe('without a logged-in user', () => {
+    beforeEach(() => {
+      req.session = {}
+      req.body = {
+        query: `{
+          me {
+            name
+          }
+          community(id: 9) {
+            name
+          }
+        }`
+      }
+    })
+
+    it('returns null for roots', () => {
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            me: null,
+            community: null
+          },
+          errors: [
+            {
+              locations: [
+                {column: 11, line: 2}
+              ],
+              message: 'not logged in',
+              path: ['me']
+            },
+            {
+              locations: [
+                {column: 11, line: 5}
+              ],
+              message: 'not logged in',
+              path: ['community']
+            }
+          ]
+        })
+      })
+    })
+  })
 })
+
+function expectJSON (res, expected) {
+  expect(res.body).to.exist
+  return expect(JSON.parse(res.body)).to.deep.equal(expected)
+}
