@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 module.exports = bookshelf.Model.extend({
   tableName: 'communities_tags',
 
@@ -38,12 +40,20 @@ module.exports = bookshelf.Model.extend({
 
   followerCount: function () {
     return Tag.followersCount(this.get('tag_id'), this.get('community_id'))
+  },
+
+  consolidateFollowerCount: function () {
+    return this.followerCount()
+    .then(num_followers => {
+      if (num_followers === this.get('num_followers')) return Promise.resolve()
+      return this.save({num_followers})
+    })
   }
 
 }, {
 
   create (attrs, { transacting } = {}) {
-    return this.forge(Object.assign({created_at: new Date()}, attrs))
+    return this.forge(Object.assign({created_at: new Date(), updated_at: new Date()}, attrs))
     .save({}, {transacting})
   },
 

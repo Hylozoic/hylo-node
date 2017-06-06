@@ -191,7 +191,8 @@ CREATE TABLE communities_tags (
     updated_at timestamp with time zone,
     user_id bigint,
     description text,
-    is_default boolean DEFAULT false
+    is_default boolean DEFAULT false,
+    num_followers integer DEFAULT 0
 );
 
 
