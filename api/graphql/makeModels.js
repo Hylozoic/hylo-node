@@ -128,7 +128,9 @@ export default function makeModels (userId, isAdmin) {
         'followers',
         'linkPreview'
       ],
-      filter: nonAdminFilter(composeFilters(activePost, sharedPostMembership)('posts', userId)),
+      filter: composeFilters(
+        activePost,
+        nonAdminFilter(sharedPostMembership('posts', userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
         searchQuerySet('forPosts', {
