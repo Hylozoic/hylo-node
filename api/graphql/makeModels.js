@@ -1,10 +1,12 @@
 import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
 import {
   communityTopicFilter,
+  composeFilters,
   makeFilterToggle,
   myCommunityIds,
   sharedMembership,
-  sharedPostMembership
+  sharedPostMembership,
+  activePost
 } from './filters'
 
 // this defines what subset of attributes and relations in each Bookshelf model
@@ -126,7 +128,7 @@ export default function makeModels (userId, isAdmin) {
         'followers',
         'linkPreview'
       ],
-      filter: nonAdminFilter(sharedPostMembership('posts', userId)),
+      filter: nonAdminFilter(composeFilters(activePost, sharedPostMembership)('posts', userId)),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
         searchQuerySet('forPosts', {
