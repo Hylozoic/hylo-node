@@ -1,4 +1,4 @@
-import { validateThreadData } from './findOrCreateThread'
+import { validateThreadData, createThread } from './findOrCreateThread'
 
 describe('validateThreadData', () => {
   var user, userSharingCommunity, userNotInCommunity, inCommunity
@@ -35,5 +35,31 @@ describe('validateThreadData', () => {
   it('continue the promise chain if user shares community with all participants', () => {
     const data = {participantIds: [userSharingCommunity.id]}
     expect(validateThreadData(user.id, data)).to.respondTo('then')
+  })
+})
+
+describe('createThread', () => {
+  var user, user2, community
+
+  before(function () {
+    community = new Community({slug: 'foo3', name: 'Foo3'})
+    user = new User({name: 'Cat', email: 'catcat@b.c'})
+    user2 = new User({name: 'Meow', email: 'meowcat@b.cd'})
+    return Promise.join(
+      community.save(),
+      user.save(),
+      user2.save()
+    ).then(function () {
+      return Promise.join(
+        user.joinCommunity(community),
+        user2.joinCommunity(community)
+      )
+    })
+  })
+
+  it('creates and returns a new thread', () => {
+    createThread(user.id, [user2.id]).then(p => {
+      expect(p).to.exist
+    })
   })
 })
