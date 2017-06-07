@@ -5,8 +5,6 @@ export function makeFilterToggle (enabled) {
     enabled ? relation.query(queryFn) : relation
 }
 
-export const composeFilters = (a, b) => q => a(b(q))
-
 export const sharedMembership = curry((tableName, userId, q) => {
   const clauses = q => {
     q.where('communities_users.community_id', 'in', myCommunityIds(userId))
@@ -28,9 +26,8 @@ export const sharedPostMembership = curry((tableName, userId, q) => {
     .where('community_id', 'in', myCommunityIds(userId)))
 })
 
-export const activePost = curry((tableName, userId, q) => {
-  return q.where('posts.active', true)
-})
+export const activePost = relation =>
+  relation.query(q => q.where('posts.active', true))
 
 export function myCommunityIds (userId) {
   return Membership.query().select('community_id')

@@ -56,7 +56,7 @@ describe('models', () => {
       const collection = models.Post.filter(Post.collection())
       const querystring = collection.query().toString()
       expect(querystring).to.equal(`select * from "posts"
-        where "posts"."id" in
+        where "posts"."active" = true and "posts"."id" in
           (select "post_id" from "communities_posts"
           where "community_id" in
             (select "community_id" from "communities_users"
