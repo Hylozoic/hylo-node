@@ -58,7 +58,7 @@ describe('createThread', () => {
   })
 
   it('creates and returns a new thread', () => {
-    createThread(user.id, [user2.id]).then(p => {
+    return createThread(user.id, [user2.id]).then(p => {
       expect(p).to.exist
     })
   })
