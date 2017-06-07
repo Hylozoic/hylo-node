@@ -26,6 +26,10 @@ export const sharedPostMembership = curry((tableName, userId, q) => {
     .where('community_id', 'in', myCommunityIds(userId)))
 })
 
+export const activePost = curry((tableName, userId, q) => {
+  return q.where('posts.active', true)
+})
+
 export function myCommunityIds (userId) {
   return Membership.query().select('community_id')
   .where({user_id: userId, active: true})
