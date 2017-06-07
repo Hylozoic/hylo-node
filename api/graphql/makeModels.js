@@ -1,13 +1,13 @@
 import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
 import {
   communityTopicFilter,
+  composeFilters,
   makeFilterToggle,
   myCommunityIds,
   sharedMembership,
   sharedPostMembership,
   activePost
 } from './filters'
-import { flow } from 'lodash/fp'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -128,7 +128,7 @@ export default function makeModels (userId, isAdmin) {
         'followers',
         'linkPreview'
       ],
-      filter: flow(
+      filter: composeFilters(
         activePost,
         nonAdminFilter(sharedPostMembership('posts', userId))),
       isDefaultTypeForTable: true,
