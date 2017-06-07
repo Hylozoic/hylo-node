@@ -44,11 +44,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
       Membership.create(userId, this.get('community_id'),
         {role: Number(this.get('role')), transacting}))
     .tap(() => !this.isUsed() && this.get('tag_id') &&
-      new TagFollow({
-        user_id: userId,
-        tag_id: this.get('tag_id'),
-        community_id: this.get('community_id')
-      }).save()
+      TagFollow.add({
+        tagId: this.get('tag_id'),
+        userId,
+        communityId: this.get('community_id'),
+        transacting
+      })
       .catch(err => {
         // do nothing if the tag follow already exists
         if (!err.message || !err.message.includes('duplicate key value')) {

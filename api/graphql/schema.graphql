@@ -45,6 +45,8 @@ type CommunityTopic {
   followersTotal: Int
   isSubscribed: Boolean
   newPostCount: Int
+  updatedAt: String
+  createdAt: String
 }
 
 type TopicQuerySet {
@@ -139,6 +141,7 @@ type Community {
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
   communityTopics(
     first: Int,
+    sortBy: String,
     order: String,
     offset: Int,
     autocomplete: String,
@@ -293,6 +296,7 @@ type Query {
   ): PersonConnectionQuerySet
   communityTopics(
     first: Int,
+    sortBy: String,
     order: String,
     offset: Int,
     autocomplete: String,

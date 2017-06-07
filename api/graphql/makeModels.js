@@ -272,7 +272,7 @@ export default function makeModels (userId, isAdmin) {
 
     CommunityTopic: {
       model: CommunityTag,
-      attributes: ['id'],
+      attributes: ['id', 'updated_at', 'created_at'],
       getters: {
         postsTotal: ct => ct.postCount(),
         followersTotal: ct => ct.followerCount(),
@@ -335,9 +335,8 @@ export default function makeModels (userId, isAdmin) {
         'updated_at'
       ],
       relations: [ {otherUser: {alias: 'person'}} ],
-      fetchMany: ({ first, offset = 0 }) =>
-        searchQuerySet('forUserConnections', {limit: first, offset}),
-      filter: nonAdminFilter(sharedMembership('users', userId))
+      fetchMany: () => UserConnection,
+      filter: relation => relation.query(q => q.where('user_id', userId))
     }
   }
 }

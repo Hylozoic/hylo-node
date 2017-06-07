@@ -25,6 +25,7 @@ import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
+import { mapValues } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -91,7 +92,7 @@ function createSchema (userId, isAdmin) {
 
   return makeExecutableSchema({
     typeDefs: [schemaText],
-    resolvers: allResolvers
+    resolvers: requireUser(allResolvers, userId)
   })
 }
 
@@ -115,3 +116,16 @@ export const createRequestHandler = () =>
       graphiql: true
     }
   })
+
+function requireUser (resolvers, userId) {
+  if (userId) return resolvers
+
+  const error = () => {
+    throw new Error('not logged in')
+  }
+
+  return Object.assign({}, resolvers, {
+    Query: mapValues(resolvers.Query, () => error),
+    Mutation: mapValues(resolvers.Mutation, () => error)
+  })
+}

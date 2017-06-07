@@ -144,7 +144,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         const tag = this.relations.selectedTags.first()
         if (!tag) return
         return Promise.each(this.relations.communities.models, community =>
-          TagFollow.remove(tag, user_id, community))
+          TagFollow.remove({tagIdOrName: tag.id, userId: user_id, communityId: community.id}))
       }))
     .tap(() => opts.createActivity && Activity.forUnfollow(this, user_id).save()
       .then(activity => activity.createNotifications()))
