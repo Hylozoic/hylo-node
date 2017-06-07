@@ -108,13 +108,13 @@ function notifySockets (comment, post) {
 }
 
 // n.b.: `message` has already been formatted for presentation
-function pushMessageToSockets (thread, message, userIds) {
+export function pushMessageToSockets (thread, message, userIds) {
   const excludingSender = userIds.filter(id => id !== message.user_id.toString())
 
   if (thread.get('num_comments') === 0) {
     return Promise.map(excludingSender, userId => {
       const opts = {withComments: 'all'}
-      return this.load(PostPresenter.relations(userId, opts))
+      return thread.load(PostPresenter.relations(userId, opts))
       .then(post => PostPresenter.present(post, userId, opts))
       .then(normalizedSinglePostResponse)
       .then(post => pushToSockets(userRoom(userId), 'newThread', post))
