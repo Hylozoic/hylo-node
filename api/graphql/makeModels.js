@@ -331,9 +331,8 @@ export default function makeModels (userId, isAdmin) {
         'updated_at'
       ],
       relations: [ {otherUser: {alias: 'person'}} ],
-      fetchMany: ({ first, offset = 0 }) =>
-        searchQuerySet('forUserConnections', {limit: first, offset}),
-      filter: nonAdminFilter(sharedMembership('users', userId))
+      fetchMany: () => UserConnection,
+      filter: relation => relation.query(q => q.where('user_id', userId))
     }
   }
 }

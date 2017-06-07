@@ -52,16 +52,5 @@ module.exports = {
       q.groupBy('tags.id')
       q.limit(opts.limit)
     })
-  },
-
-  forUserConnections: function (opts) {
-    return UserConnection.query(q => {
-      q.join('users', 'users.id', 'user_connections.other_user_id')
-      countTotal(q, 'user_connections', opts.totalColumnName)
-
-      q.groupBy('user_connections.id')
-      q.limit(opts.limit)
-      q.offset(opts.offset)
-    })
   }
 }
