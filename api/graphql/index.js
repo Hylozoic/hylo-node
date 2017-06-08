@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
+import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   createComment,
   createPost,
@@ -25,7 +26,7 @@ import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
-import { mapValues } from 'lodash'
+import { mapValues, merge } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -49,7 +50,12 @@ function createSchema (userId, isAdmin) {
       topic: (root, { id, name }) => // you can specify id or name, but not both
         fetchOne('Topic', name || id, name ? 'name' : 'id'),
       communityTopic: (root, { topicName, communitySlug }) =>
-        CommunityTag.findByTagAndCommunity(topicName, communitySlug)
+        CommunityTag.findByTagAndCommunity(topicName, communitySlug),
+      search: (root, args) =>
+        Search.fullTextSearch(userId, args)
+        .then(({ models, total }) => {
+          return presentQuerySet(models, merge(args, {total}))
+        })
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
@@ -86,6 +92,13 @@ function createSchema (userId, isAdmin) {
           return info.schema.getType('Post')
         }
         throw new Error('Post is the only implemented FeedItemContent type')
+      }
+    },
+
+    SearchResultContent: {
+      __resolveType (data, context, info) {
+        return data.getModelType()
+        // return info.schema.getType(data.getModelType())
       }
     }
   }, resolvers)
