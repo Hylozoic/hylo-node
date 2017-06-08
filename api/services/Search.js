@@ -102,11 +102,11 @@ module.exports = {
   }
 }
 
-const fetchAllCommunityIds = userId => Promise.resolve([29])
-  // Promise.join(
-  //   Network.activeCommunityIds(userId),
-  //   Membership.activeCommunityIds(userId)
-  // ).then(flow(flatten, uniq))
+const fetchAllCommunityIds = userId =>
+  Promise.join(
+    Network.activeCommunityIds(userId),
+    Membership.activeCommunityIds(userId)
+  ).then(flow(flatten, uniq))
 
 const presentResult = (posts, comments, people) => item => {
   if (item.user_id) {
