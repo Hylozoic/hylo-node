@@ -229,7 +229,7 @@ type Comment {
 union SearchResultContent = Person | Post | Comment
 
 type SearchResult {
-  type: String
+  id: ID
   content: SearchResultContent
 }
 

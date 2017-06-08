@@ -111,17 +111,17 @@ const fetchAllCommunityIds = userId => Promise.resolve([29])
 const presentResult = (posts, comments, people) => item => {
   if (item.user_id) {
     return {
-      type: 'Person',
+      id: `Person-${item.user_id}`,
       content: people.find(p => p.id === item.user_id)
     }
   } else if (item.post_id) {
     return {
-      type: 'Post',
+      id: `Post-${item.post_id}`,
       content: posts.find(p => p.id === item.post_id)
     }
   } else if (item.comment_id) {
     return {
-      type: 'Comment',
+      id: `Comment-${item.comment_id}`,
       content: comments.find(c => c.id === item.comment_id)
     }
   }
