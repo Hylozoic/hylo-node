@@ -298,10 +298,19 @@ module.exports = bookshelf.Model.extend({
   updateUserSocketRoom: function (userId) {
     return getSailsInstance()
       .then(sails => {
+        const actor = Object.assign({},
+          this.actor().pick([ 'id', 'name' ]),
+          { avatarUrl: this.actor().get('avatar_url') }
+        )
+        const comment = this.comment().pick([ 'id', 'text' ])
+        const community = this.relations.activity.relations.community.pick([ 'id', 'name', 'slug' ])
+        const post = { id: this.post().id, title: this.post().get('name') }
         const payload = {
-          actor: {
-            id: this.actor().id
-          }
+          id: '' + this.id,
+          createdAt: this.get('created_at'),
+          activity: Object.assign({},
+            this.relations.activity.pick([ 'action', 'id', 'meta', 'unread' ]),
+            { actor, comment, community, post })
         }
         sails.sockets.broadcast(userRoom(userId), 'newNotification', payload)
       })
