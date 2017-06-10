@@ -73,9 +73,6 @@ const search = (opts) => {
 }
 
 const searchInCommunities = (communityIds, opts) => {
-  console.log('searchInCommunities', communityIds)
-  console.log('opts', opts)
-
   const alias = 'search'
   const columns = [`${alias}.post_id`, `${alias}.comment_id`, `${alias}.user_id`, 'rank', 'total']
 

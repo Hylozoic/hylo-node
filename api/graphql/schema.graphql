@@ -317,6 +317,7 @@ type Query {
   ): CommunityTopicQuerySet
   search(
     term: String,
+    type: String,
     first: Int,
     offset: Int
   ): SearchResultQuerySet
