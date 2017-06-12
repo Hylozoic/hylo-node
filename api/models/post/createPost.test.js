@@ -8,10 +8,18 @@ describe('afterCreatingPost', () => {
   var post
   const videoUrl = 'https://www.youtube.com/watch?v=jsQ7yKwDPZk'
 
-  before(() => setup.clearDb().then(() => Tag.forge({name: 'request'}).save()))
+  before(() =>
+    setup.clearDb()
+    .then(() => Promise.props({
+      requestTag: Tag.forge({name: 'request'}).save(),
+      u1: new User({name: 'U1', email: 'a@b.c', active: true}).save()
+    }))
+    .then(props => {
+      post = factories.post({user_id: props.u1.id, description: 'wow!'})
+    })
+  )
 
   beforeEach(() => {
-    post = factories.post({description: 'wow!'})
     spyify(Queue, 'classMethod')
   })
 

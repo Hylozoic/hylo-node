@@ -269,6 +269,7 @@ describe('PostController', () => {
 
       it('increments the new_post_count of tag_follows', () => {
         Object.assign(req.params, {
+          user_id: fixtures.u2.id,
           name: 'New Tag Followed Post',
           description: '<p>this is relevant to #ntfpone and #ntfptwo</p>',
           tag: 'zounds',
