@@ -84,6 +84,13 @@ module.exports = bookshelf.Model.extend({
     .then(ms => ms && ms.hasModeratorRole())
   },
 
+  updateLastViewedAt: function (user_id, community_id) {
+    return bookshelf.knex('communities_users').where({
+      user_id: user_id,
+      community_id: community_id
+    }).update({last_viewed_at: new Date()})
+  },
+
   // do all of the users have at least one community in common?
   inSameCommunity: function (userIds) {
     return this.sharedCommunityIds(userIds)

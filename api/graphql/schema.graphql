@@ -261,7 +261,7 @@ type Vote {
 type Query {
   me: Me
   person(id: ID): Person
-  community(id: ID, slug: String): Community
+  community(id: ID, slug: String, updateLastViewed: Boolean): Community
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(

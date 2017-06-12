@@ -36,8 +36,14 @@ function createSchema (userId, isAdmin) {
   const allResolvers = Object.assign({
     Query: {
       me: () => fetchOne('Me', userId),
-      community: (root, { id, slug }) => // you can specify id or slug, but not both
-        fetchOne('Community', slug || id, slug ? 'slug' : 'id'),
+      community: (root, { id, slug, updateLastViewed }) => { // you can specify id or slug, but not both
+        return fetchOne('Community', slug || id, slug ? 'slug' : 'id')
+          .tap(community => {
+            if (community && updateLastViewed) {
+              return Membership.updateLastViewedAt(userId, community.id)
+            }
+          })
+      },
       person: (root, { id }) => fetchOne('Person', id),
       messageThread: (root, { id }) => fetchOne('MessageThread', id),
       post: (root, { id }) => fetchOne('Post', id),
