@@ -48,15 +48,16 @@ function updateTagsAndCommunities (post, trx) {
   return post.load(['tags', 'communities'], {transacting: trx})
   .then(() => {
     const { tags, communities } = post.relations
-
     const bumpCounts = [
       TagFollow.query(q => {
         q.whereIn('tag_id', tags.map('id'))
         q.whereIn('community_id', communities.map('id'))
+        q.whereNot('user_id', post.get('user_id'))
       }),
       Membership.query(q => {
         q.whereIn('community_id', communities.map('id'))
         q.where('active', true)
+        q.whereNot('user_id', post.get('user_id'))
       })
     ].map(group => group.query().increment('new_post_count').transacting(trx))
 
