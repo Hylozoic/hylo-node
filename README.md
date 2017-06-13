@@ -22,6 +22,14 @@ systemctl enable redis.service
 systemctl start redis.service
 ```
 
+Ubuntu Linux:
+
+```shell
+sudo apt-get -y install redis-server
+sudo systemctl enable redis
+sudo systemctl start redis
+```
+
 Next install the node modules (and Yarn, if you don't already have it available):
 
 ```shell
