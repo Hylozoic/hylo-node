@@ -108,20 +108,22 @@ const fetchAllCommunityIds = userId =>
     Membership.activeCommunityIds(userId)
   ).then(flow(flatten, uniq))
 
+const obfuscate = text => new Buffer(text).toString('hex')
+
 const presentResult = (posts, comments, people) => item => {
   if (item.user_id) {
     return {
-      id: `user_id-${item.user_id}`,
+      id: obfuscate(`user_id-${item.user_id}`),
       content: people.find(p => p.id === item.user_id)
     }
   } else if (item.post_id) {
     return {
-      id: `post_id-${item.post_id}`,
+      id: obfuscate(`post_id-${item.post_id}`),
       content: posts.find(p => p.id === item.post_id)
     }
   } else if (item.comment_id) {
     return {
-      id: `comment_id-${item.comment_id}`,
+      id: obfuscate(`comment_id-${item.comment_id}`),
       content: comments.find(c => c.id === item.comment_id)
     }
   }
