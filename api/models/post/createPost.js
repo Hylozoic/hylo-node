@@ -63,7 +63,8 @@ function updateTagsAndCommunities (post, trx) {
 
     const notifySockets = communities.map(c =>
       pushToSockets(communityRoom(c.id), 'newPost', {
-        tags: tags.map('id').map(String)
+        tags: tags.map('id').map(String),
+        creatorId: post.get('user_id')
       }))
 
     const updateCommunityTags = CommunityTag.query(q => {
