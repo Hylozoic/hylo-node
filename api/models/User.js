@@ -282,12 +282,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   unseenThreadCount () {
     return User.unseenThreadCount(this.id)
-  },
-
-  getModelType () {
-    return 'Person'
   }
-
 }, HasSettings), {
   authenticate: Promise.method(function (email, password) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt)

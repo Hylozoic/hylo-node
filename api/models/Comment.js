@@ -97,10 +97,6 @@ module.exports = bookshelf.Model.extend({
   addFollowers: function (userIds, addedById, opts = {}) {
     return this.load('post')
     .then(() => addFollowers(this.relations.post, this, userIds, addedById, opts))
-  },
-
-  getModelType () {
-    return 'Comment'
   }
 }, {
 

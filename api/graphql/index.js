@@ -26,7 +26,7 @@ import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
-import { mapValues, merge } from 'lodash'
+import { mapValues, merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -97,8 +97,7 @@ function createSchema (userId, isAdmin) {
 
     SearchResultContent: {
       __resolveType (data, context, info) {
-        return data.getModelType()
-        // return info.schema.getType(data.getModelType())
+        return getTypeForInstance(data, models)
       }
     }
   }, resolvers)
@@ -141,4 +140,20 @@ function requireUser (resolvers, userId) {
     Query: mapValues(resolvers.Query, () => error),
     Mutation: mapValues(resolvers.Mutation, () => error)
   })
+}
+
+var modelToTypeMap
+
+function getTypeForInstance (instance, models) {
+  if (!modelToTypeMap) {
+    modelToTypeMap = reduce(models, (m, v, k) => {
+      const tableName = v.model.forge().tableName
+      if (!m[tableName] || v.model.isDefaultTypeForTable) {
+        m[tableName] = k
+      }
+      return m
+    }, {})
+  }
+
+  return modelToTypeMap[instance.tableName]
 }

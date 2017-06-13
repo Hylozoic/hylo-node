@@ -235,10 +235,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   unfulfillRequest,
 
-  getModelType () {
-    return 'Post'
-  },
-
   vote: function (userId, isUpvote) {
     return this.votes().query({where: {user_id: userId}}).fetchOne()
     .then(vote => bookshelf.transaction(trx => {
