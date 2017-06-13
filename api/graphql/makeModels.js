@@ -57,7 +57,8 @@ export default function makeModels (userId, isAdmin) {
         'hasModeratorRole',
         'role',
         'last_viewed_at',
-        'new_post_count'
+        'new_post_count',
+        'settings'
       ],
       relations: ['community'],
       filter: nonAdminFilter(sharedMembership('communities_users', userId))

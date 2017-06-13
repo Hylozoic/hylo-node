@@ -104,6 +104,12 @@ type Membership {
   lastViewedAt: String
   newPostCount: Int
   community: Community
+  settings: MembershipSettings
+}
+
+type MembershipSettings {
+  send_push_notifications: Boolean
+  send_email: Boolean
 }
 
 type Community {
