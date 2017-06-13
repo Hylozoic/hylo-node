@@ -148,7 +148,7 @@ function getTypeForInstance (instance, models) {
   if (!modelToTypeMap) {
     modelToTypeMap = reduce(models, (m, v, k) => {
       const tableName = v.model.forge().tableName
-      if (!m[tableName] || v.model.isDefaultTypeForTable) {
+      if (!m[tableName] || v.isDefaultTypeForTable) {
         m[tableName] = k
       }
       return m
