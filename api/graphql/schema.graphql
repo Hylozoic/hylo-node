@@ -226,6 +226,19 @@ type Comment {
   createdFrom: String
 }
 
+union SearchResultContent = Person | Post | Comment
+
+type SearchResult {
+  id: ID
+  content: SearchResultContent
+}
+
+type SearchResultQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [SearchResult]
+}
+
 type MessageThread {
   id: ID
   createdAt: String
@@ -302,6 +315,12 @@ type Query {
     autocomplete: String,
     subscribed: Boolean
   ): CommunityTopicQuerySet
+  search(
+    term: String,
+    type: String,
+    first: Int,
+    offset: Int
+  ): SearchResultQuerySet
 }
 
 input MeInput {

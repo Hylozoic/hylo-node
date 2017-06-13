@@ -2,6 +2,7 @@ import { readFileSync } from 'fs'
 import graphqlHTTP from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
+import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   createComment,
   createPost,
@@ -25,7 +26,7 @@ import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
-import { mapValues } from 'lodash'
+import { mapValues, merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -55,7 +56,12 @@ function createSchema (userId, isAdmin) {
       topic: (root, { id, name }) => // you can specify id or name, but not both
         fetchOne('Topic', name || id, name ? 'name' : 'id'),
       communityTopic: (root, { topicName, communitySlug }) =>
-        CommunityTag.findByTagAndCommunity(topicName, communitySlug)
+        CommunityTag.findByTagAndCommunity(topicName, communitySlug),
+      search: (root, args) =>
+        Search.fullTextSearch(userId, args)
+        .then(({ models, total }) => {
+          return presentQuerySet(models, merge(args, {total}))
+        })
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
@@ -92,6 +98,12 @@ function createSchema (userId, isAdmin) {
           return info.schema.getType('Post')
         }
         throw new Error('Post is the only implemented FeedItemContent type')
+      }
+    },
+
+    SearchResultContent: {
+      __resolveType (data, context, info) {
+        return getTypeForInstance(data, models)
       }
     }
   }, resolvers)
@@ -134,4 +146,20 @@ function requireUser (resolvers, userId) {
     Query: mapValues(resolvers.Query, () => error),
     Mutation: mapValues(resolvers.Mutation, () => error)
   })
+}
+
+var modelToTypeMap
+
+function getTypeForInstance (instance, models) {
+  if (!modelToTypeMap) {
+    modelToTypeMap = reduce(models, (m, v, k) => {
+      const tableName = v.model.forge().tableName
+      if (!m[tableName] || v.isDefaultTypeForTable) {
+        m[tableName] = k
+      }
+      return m
+    }, {})
+  }
+
+  return modelToTypeMap[instance.tableName]
 }
