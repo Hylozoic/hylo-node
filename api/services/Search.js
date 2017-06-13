@@ -76,24 +76,9 @@ module.exports = {
         }, {})
 
         return Promise.join(
-          ids.posts && Post.where('id', 'in', ids.posts).fetchAll({
-            withRelated: PostPresenter.relations(userId)
-          }),
-
-          ids.comments && Comment.where('id', 'in', ids.comments).fetchAll({
-            withRelated: [
-              {'user': userColumns},
-              {'post': q => q.column('id', 'type', 'name', 'user_id')},
-              {'post.user': userColumns},
-              {'post.relatedUsers': userColumns},
-              {'thanks.thankedBy': userColumns}
-            ]
-          }),
-
-          ids.people && User.where('id', 'in', ids.people).fetchAll({
-            withRelated: 'tags'
-          }),
-
+          ids.posts && Post.where('id', 'in', ids.posts).fetchAll(),
+          ids.comments && Comment.where('id', 'in', ids.comments).fetchAll(),
+          ids.people && User.where('id', 'in', ids.people).fetchAll(),
           (posts, comments, people) =>
             items.map(presentResult(posts, comments, people))
         )
