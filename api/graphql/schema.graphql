@@ -22,11 +22,6 @@ type Me {
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): [MessageThread]
   messageThreadsTotal: Int
   updatedAt: String
-  notifications(
-    first: Int,
-    order: String,
-    offset: Int
-  ): NotificationQuerySet
   newNotificationCount: Int
   unseenThreadCount: Int
 }
@@ -274,6 +269,12 @@ type Vote {
 type Query {
   me: Me
   person(id: ID): Person
+  notifications(
+    first: Int,
+    order: String,
+    offset: Int,
+    resetCount: Boolean
+  ): NotificationQuerySet
   community(id: ID, slug: String, updateLastViewed: Boolean): Community
   messageThread(id: ID): MessageThread
   post(id: ID): Post

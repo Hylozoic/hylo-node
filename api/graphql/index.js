@@ -45,6 +45,16 @@ function createSchema (userId, isAdmin) {
             }
           })
       },
+      notifications: (root, { first, offset, resetCount }) => {
+        return fetchMany('Notification', { first, offset })
+        .tap(() => {
+          if (resetCount) {
+            return User.query()
+            .where('id', userId)
+            .update({new_notification_count: 0})
+          }
+        })
+      },
       person: (root, { id }) => fetchOne('Person', id),
       messageThread: (root, { id }) => fetchOne('MessageThread', id),
       post: (root, { id }) => fetchOne('Post', id),
