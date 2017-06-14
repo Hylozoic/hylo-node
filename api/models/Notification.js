@@ -2,6 +2,9 @@ var url = require('url')
 import { isEmpty } from 'lodash'
 import decode from 'ent/decode'
 
+import { userRoom } from '../services/Websockets'
+import { getSailsInstance } from '../services/Queue'
+
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
   TagFollow: 'TagFollow',
@@ -56,7 +59,9 @@ module.exports = bookshelf.Model.extend({
         action = this.sendEmail()
         break
       case MEDIUM.InApp:
-        action = User.incNewNotificationCount(this.reader().id)
+        const userId = this.reader().id
+        action = User.incNewNotificationCount(userId)
+          .then(foo => this.updateUserSocketRoom(userId))
         break
     }
     if (action) {
@@ -288,8 +293,28 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.community(community))
         }
       })))
-  }
+  },
 
+  updateUserSocketRoom: function (userId) {
+    return getSailsInstance()
+      .then(sails => {
+        const actor = Object.assign({},
+          this.actor().pick([ 'id', 'name' ]),
+          { avatarUrl: this.actor().get('avatar_url') }
+        )
+        const comment = this.comment().pick([ 'id', 'text' ])
+        const community = this.relations.activity.relations.community.pick([ 'id', 'name', 'slug' ])
+        const post = { id: this.post().id, title: this.post().get('name') }
+        const payload = {
+          id: '' + this.id,
+          createdAt: this.get('created_at'),
+          activity: Object.assign({},
+            this.relations.activity.pick([ 'action', 'id', 'meta', 'unread' ]),
+            { actor, comment, community, post })
+        }
+        sails.sockets.broadcast(userRoom(userId), 'newNotification', payload)
+      })
+  }
 }, {
   MEDIUM,
   TYPE,

@@ -161,7 +161,7 @@ module.exports.routes = {
   'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // from comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',
-  'POST   /noo/threads/subscribe':                        'PostController.subscribeToThreads',
-  'POST   /noo/threads/unsubscribe':                      'PostController.unsubscribeFromThreads'
+  'POST   /noo/threads/subscribe':                        'PostController.subscribeToUpdates',
+  'POST   /noo/threads/unsubscribe':                      'PostController.unsubscribeFromUpdates'
 
 }
