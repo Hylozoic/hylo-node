@@ -21,11 +21,12 @@ const afterCreatingMembership = (req, res, ms, community, preexisting) => {
     tagName && Tag.find(tagName)
     .then(tag => {
       if (!tag) return res.notFound()
-      return new TagFollow({
-        community_id: community.id,
-        tag_id: tag.id,
-        user_id: req.session.userId
-      }).save()
+
+      return TagFollow.add({
+        communityId: community.id,
+        tagId: tag.id,
+        userId: req.session.userId
+      })
     })
     .catch(err => {
       if (err.message && err.message.includes('duplicate key value')) {

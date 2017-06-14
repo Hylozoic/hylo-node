@@ -69,9 +69,7 @@ export function vote (userId, postId, isUpvote) {
 }
 
 export function subscribe (userId, topicId, communityId, isSubscribing) {
-  return isSubscribing
-    ? TagFollow.add(topicId, userId, communityId)
-    : TagFollow.remove(topicId, userId, communityId).then(() => null)
+  return TagFollow.subscribe(topicId, userId, communityId, isSubscribing)
 }
 
 export function updateMembership (userId, { id, data }) {
@@ -151,4 +149,15 @@ export function removeModerator (userId, personId, communityId) {
       throw new Error("you don't have permission to modify this community")
     }
   })
+}
+
+export function deletePost (userId, postId) {
+  return Post.find(postId)
+  .then(post => {
+    if (post.get('user_id') !== userId) {
+      throw new Error("you don't have permission to modify this post")
+    }
+    return Post.deactivate(postId)
+  })
+  .then(() => ({success: true}))
 }

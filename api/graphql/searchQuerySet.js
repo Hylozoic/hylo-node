@@ -66,7 +66,5 @@ const shims = {
     return options
   },
 
-  forTags: options => options,
-
-  forUserConnections: options => options
+  forTags: options => options
 }

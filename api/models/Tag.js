@@ -18,12 +18,13 @@ export const tagsInText = (text = '') => {
 
 const addToCommunity = ({ community_id, tag_id, user_id, description, is_default }, opts) =>
   CommunityTag.where({community_id, tag_id}).fetch(opts)
-  .then(comTag => comTag ||
+  .tap(comTag => comTag ||
     CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
     .catch(() => {}))
     // the catch above is for the case where another user just created the
     // CommunityTag (race condition): the save fails, but we don't care about
     // the result
+  .then(comTag => comTag && comTag.save({updated_at: new Date()}))
   .then(() => user_id &&
     TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
     .then(follow => follow ||

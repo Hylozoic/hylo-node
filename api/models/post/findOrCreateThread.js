@@ -16,7 +16,7 @@ export default function findOrCreateThread (userId, participantIds) {
   .then(post => post || createThread(userId, participantIds))
 }
 
-function createThread (userId, participantIds) {
+export function createThread (userId, participantIds) {
   return setupNewThreadAttrs(userId)
   .then(attrs => bookshelf.transaction(trx =>
     Post.create(attrs, {transacting: trx})
@@ -44,7 +44,8 @@ function setupNewThreadAttrs (userId) {
   return Promise.resolve({
     type: Post.Type.THREAD,
     visibility: Post.Visibility.DEFAULT,
-    user_id: userId
+    user_id: userId,
+    link_preview_id: null
   })
 }
 

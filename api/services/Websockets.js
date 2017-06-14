@@ -12,7 +12,7 @@ export function pushToSockets (room, messageType, payload, socketToExclude) {
     throw new Error(`unknown message type: ${messageType}`)
   }
 
-  if (process.env.NODE_ENV === 'test') return Promise.resolve()
+  if (process.env.NODE_ENV === 'test') return Promise.resolve({room, messageType, payload})
   sails.sockets.broadcast(room, messageType, payload, socketToExclude)
   return Promise.resolve()
 }

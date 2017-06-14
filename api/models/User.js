@@ -171,12 +171,12 @@ module.exports = bookshelf.Model.extend(merge({
     return CommunityTag.defaults(communityId, trx)
     .then(defaultTags => defaultTags.models.map(communityTag =>
       communityTag
-        ? new TagFollow({
-          user_id: this.id,
-          community_id: communityId,
-          tag_id: communityTag.get('tag_id')
+        ? TagFollow.add({
+          userId: this.id,
+          communityId: communityId,
+          tagId: communityTag.get('tag_id'),
+          transacting: trx
         })
-        .save({}, {transacting: trx})
       : null))
   },
 
@@ -409,12 +409,12 @@ module.exports = bookshelf.Model.extend(merge({
 
   followTags: function (userId, communityId, tagIds, trx) {
     return Promise.each(tagIds, id =>
-      new TagFollow({
-        user_id: userId,
-        community_id: communityId,
-        tag_id: id
+      TagFollow.add({
+        userId: userId,
+        communityId: communityId,
+        tagId: id,
+        transacting: trx
       })
-      .save({}, {transacting: trx})
       .catch(err => {
         if (!err.message.match(/duplicate key value/)) throw err
       }))

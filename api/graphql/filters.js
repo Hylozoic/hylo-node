@@ -26,6 +26,9 @@ export const sharedPostMembership = curry((tableName, userId, q) => {
     .where('community_id', 'in', myCommunityIds(userId)))
 })
 
+export const activePost = relation =>
+  relation.query(q => q.where('posts.active', true))
+
 export function myCommunityIds (userId) {
   return Membership.query().select('community_id')
   .where({user_id: userId, active: true})
@@ -36,13 +39,11 @@ export function communityTopicFilter (userId, {
   subscribed,
   communityId,
   first,
-  order,
   offset
 }) {
   return q => {
     q.limit(first || 1000)
     q.offset(offset || 0)
-    // TODO: order
 
     if (autocomplete) {
       q.join('tags', 'tags.id', 'communities_tags.tag_id')

@@ -18,12 +18,14 @@ import {
   unlinkAccount,
   vote,
   addModerator,
-  removeModerator
+  removeModerator,
+  deletePost
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
+import { mapValues } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -34,8 +36,14 @@ function createSchema (userId, isAdmin) {
   const allResolvers = Object.assign({
     Query: {
       me: () => fetchOne('Me', userId),
-      community: (root, { id, slug }) => // you can specify id or slug, but not both
-        fetchOne('Community', slug || id, slug ? 'slug' : 'id'),
+      community: (root, { id, slug, updateLastViewed }) => { // you can specify id or slug, but not both
+        return fetchOne('Community', slug || id, slug ? 'slug' : 'id')
+          .tap(community => {
+            if (community && updateLastViewed) {
+              return Membership.updateLastViewedAt(userId, community.id)
+            }
+          })
+      },
       person: (root, { id }) => fetchOne('Person', id),
       messageThread: (root, { id }) => fetchOne('MessageThread', id),
       post: (root, { id }) => fetchOne('Post', id),
@@ -73,7 +81,9 @@ function createSchema (userId, isAdmin) {
       addModerator: (root, { personId, communityId }) =>
         addModerator(userId, personId, communityId),
       removeModerator: (root, { personId, communityId }) =>
-        removeModerator(userId, personId, communityId)
+        removeModerator(userId, personId, communityId),
+      deletePost: (root, { id }) =>
+        deletePost(userId, id)
     },
 
     FeedItemContent: {
@@ -88,7 +98,7 @@ function createSchema (userId, isAdmin) {
 
   return makeExecutableSchema({
     typeDefs: [schemaText],
-    resolvers: allResolvers
+    resolvers: requireUser(allResolvers, userId)
   })
 }
 
@@ -112,3 +122,16 @@ export const createRequestHandler = () =>
       graphiql: true
     }
   })
+
+function requireUser (resolvers, userId) {
+  if (userId) return resolvers
+
+  const error = () => {
+    throw new Error('not logged in')
+  }
+
+  return Object.assign({}, resolvers, {
+    Query: mapValues(resolvers.Query, () => error),
+    Mutation: mapValues(resolvers.Mutation, () => error)
+  })
+}

@@ -4,8 +4,10 @@ import {
   makeFilterToggle,
   myCommunityIds,
   sharedMembership,
-  sharedPostMembership
+  sharedPostMembership,
+  activePost
 } from './filters'
+import { flow } from 'lodash/fp'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -126,7 +128,9 @@ export default function makeModels (userId, isAdmin) {
         'followers',
         'linkPreview'
       ],
-      filter: nonAdminFilter(sharedPostMembership('posts', userId)),
+      filter: flow(
+        activePost,
+        nonAdminFilter(sharedPostMembership('posts', userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
         searchQuerySet('forPosts', {
@@ -268,7 +272,7 @@ export default function makeModels (userId, isAdmin) {
 
     CommunityTopic: {
       model: CommunityTag,
-      attributes: ['id'],
+      attributes: ['id', 'updated_at', 'created_at'],
       getters: {
         postsTotal: ct => ct.postCount(),
         followersTotal: ct => ct.followerCount(),
@@ -331,9 +335,8 @@ export default function makeModels (userId, isAdmin) {
         'updated_at'
       ],
       relations: [ {otherUser: {alias: 'person'}} ],
-      fetchMany: ({ first, offset = 0 }) =>
-        searchQuerySet('forUserConnections', {limit: first, offset}),
-      filter: nonAdminFilter(sharedMembership('users', userId))
+      fetchMany: () => UserConnection,
+      filter: relation => relation.query(q => q.where('user_id', userId))
     }
   }
 }
