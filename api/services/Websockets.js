@@ -3,6 +3,7 @@ const validMessageTypes = [
   'messageAdded',
   'userTyping',
   'newThread',
+  'newNotification',
   'newPost'
 ]
 

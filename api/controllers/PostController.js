@@ -422,11 +422,11 @@ const PostController = {
     .then(() => res.ok({}))
   },
 
-  subscribeToThreads: function (req, res) {
+  subscribeToUpdates: function (req, res) {
     joinRoom(req, res, 'user', req.session.userId)
   },
 
-  unsubscribeFromThreads: function (req, res) {
+  unsubscribeFromUpdates: function (req, res) {
     leaveRoom(req, res, 'user', req.session.userId)
   }
 }

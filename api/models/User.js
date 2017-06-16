@@ -373,7 +373,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   isEmailUnique: function (email, excludeEmail, { transacting } = {}) {
     var query = bookshelf.knex('users')
-    .where('email', email).count('*')
+    .whereRaw('lower(email) = lower(?)', email).count('*')
     .transacting(transacting)
     if (excludeEmail) query = query.andWhere('email', '!=', excludeEmail)
     return query.then(rows => Number(rows[0].count) === 0)

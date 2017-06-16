@@ -43,8 +43,7 @@ export default function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
-        {messageThreads: {typename: 'MessageThread'}},
-        {inAppNotifications: {querySet: true, alias: 'notifications'}}
+        {messageThreads: {typename: 'MessageThread'}}
       ],
       getters: {
         hasDevice: u => u.hasDevice()
@@ -311,7 +310,12 @@ export default function makeModels (userId, isAdmin) {
       relations: ['activity'],
       getters: {
         createdAt: n => n.get('created_at')
-      }
+      },
+      fetchMany: ({ first, offset = 0 }) =>
+        Notification.where({
+          'medium': Notification.MEDIUM.InApp,
+          'user_id': userId
+        })
     },
 
     Activity: {
