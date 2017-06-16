@@ -45,8 +45,8 @@ function createSchema (userId, isAdmin) {
             }
           })
       },
-      notifications: (root, { first, offset, resetCount }) => {
-        return fetchMany('Notification', { first, offset })
+      notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
+        return fetchMany('Notification', { first, offset, order })
         .tap(() => {
           if (resetCount) {
             return User.query()

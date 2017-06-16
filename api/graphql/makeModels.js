@@ -309,11 +309,12 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         createdAt: n => n.get('created_at')
       },
-      fetchMany: ({ first, offset = 0 }) =>
+      fetchMany: ({ first, order, offset = 0 }) =>
         Notification.where({
           'medium': Notification.MEDIUM.InApp,
           'user_id': userId
         })
+        .orderBy('id', order)
     },
 
     Activity: {
