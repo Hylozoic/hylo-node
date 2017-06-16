@@ -36,7 +36,8 @@ export default function makeModels (userId, isAdmin) {
         'updated_at',
         'tagline',
         'new_notification_count',
-        'unseenThreadCount'
+        'unseenThreadCount',
+        'settings'
       ],
       relations: [
         'communities',
