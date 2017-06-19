@@ -315,8 +315,8 @@ module.exports = bookshelf.Model.extend({
         sails.sockets.broadcast(userRoom(userId), 'newNotification', payload)
         setTimeout(() => {
           sails.lower(err => {
-            if (err) return console.error('Could not lower Sails after socket update', err)
-            console.log(`Socket update: newNotification (${JSON.stringify(payload.activity.meta)})`)
+            if (err) return sails.log.error('Could not lower Sails after socket update', err)
+            sails.log.info(`Socket update: newNotification (${JSON.stringify(payload.activity.meta)})`)
           })
         }, 500)
       })

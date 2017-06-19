@@ -60,7 +60,6 @@ module.exports = {
           csrf: false,
           grunt: false,
           i18n: false,
-          logger: false,
           orm: false,
           policies: false,
           pubsub: false,
