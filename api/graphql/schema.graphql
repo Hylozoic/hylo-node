@@ -28,9 +28,9 @@ type Me {
 }
 
 type UserSettings {
-  digest_frequency: String
-  dm_notifications: String
-  comment_notifications: String
+  digestFrequency: String
+  dmNotifications: String
+  commentNotifications: String
 }
 
 type CommunityTopicQuerySet {
@@ -110,8 +110,8 @@ type Membership {
 }
 
 type MembershipSettings {
-  send_push_notifications: Boolean
-  send_email: Boolean
+  sendPushNotifications: Boolean
+  sendEmail: Boolean
 }
 
 
@@ -408,14 +408,14 @@ input CommunitySettingsInput {
 }
 
 input MembershipSettingsInput {
-  send_email: Boolean
-  send_push_notifications: Boolean
+  sendEmail: Boolean
+  sendPushNotifications: Boolean
 }
 
 input UserSettingsInput {
-  digest_frequency: String
-  dm_notifications: String
-  comment_notifications: String
+  digestFrequency: String
+  dmNotifications: String
+  commentNotifications: String
 }
 
 type Mutation {

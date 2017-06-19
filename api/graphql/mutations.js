@@ -12,7 +12,9 @@ import underlyingFindOrCreateThread, {
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
-    result[snakeCase(key)] = value
+    result[snakeCase(key)] = typeof value === 'object'
+      ? convertGraphqlData(value)
+      : value
   }, {})
 }
 
@@ -73,7 +75,7 @@ export function subscribe (userId, topicId, communityId, isSubscribing) {
 }
 
 export function updateMembership (userId, { id, data }) {
-  const { settings } = data
+  const settings = convertGraphqlData(data.settings)
   const whitelist = mapKeys(pick(data, [
     'newPostCount',
     'lastViewedAt'

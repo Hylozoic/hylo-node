@@ -7,7 +7,7 @@ import {
   sharedPostMembership,
   activePost
 } from './filters'
-import { flow } from 'lodash/fp'
+import { flow, mapKeys, camelCase } from 'lodash/fp'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -36,8 +36,7 @@ export default function makeModels (userId, isAdmin) {
         'updated_at',
         'tagline',
         'new_notification_count',
-        'unseenThreadCount',
-        'settings'
+        'unseenThreadCount'
       ],
       relations: [
         'communities',
@@ -46,7 +45,8 @@ export default function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread'}}
       ],
       getters: {
-        hasDevice: u => u.hasDevice()
+        hasDevice: u => u.hasDevice(),
+        settings: u => mapKeys(camelCase, u.get('settings'))
       }
     },
 
@@ -57,9 +57,11 @@ export default function makeModels (userId, isAdmin) {
         'hasModeratorRole',
         'role',
         'last_viewed_at',
-        'new_post_count',
-        'settings'
+        'new_post_count'
       ],
+      getters: {
+        settings: u => mapKeys(camelCase, u.get('settings'))
+      },
       relations: ['community'],
       filter: nonAdminFilter(sharedMembership('communities_users', userId))
     },
