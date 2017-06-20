@@ -12,7 +12,9 @@ import underlyingFindOrCreateThread, {
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
-    result[snakeCase(key)] = value
+    result[snakeCase(key)] = typeof value === 'object'
+      ? convertGraphqlData(value)
+      : value
   }, {})
 }
 
@@ -73,15 +75,27 @@ export function subscribe (userId, topicId, communityId, isSubscribing) {
 }
 
 export function updateMembership (userId, { id, data }) {
+  const settings = convertGraphqlData(data.settings)
   const whitelist = mapKeys(pick(data, [
     'newPostCount',
     'lastViewedAt'
   ]), (v, k) => snakeCase(k))
-  if (isEmpty(whitelist)) return Promise.resolve(null)
+  if (isEmpty(whitelist) && isEmpty(settings)) return Promise.resolve(null)
 
-  return Membership.query().where({id, user_id: userId})
-  .update(whitelist)
-  .then(() => ({success: true}))
+  return Membership.find(userId, id)
+  .then(membership => {
+    if (!membership) throw new Error("Couldn't find membership for community with id", id)
+
+    return isEmpty(settings)
+      ? Promise.resolve(membership)
+      : membership.addSetting(settings)
+  })
+  .then(membership =>
+    // if settings is not empty, it saves the membership anyway as settings have
+    // been added above
+    isEmpty(whitelist) && isEmpty(settings)
+      ? Promise.resolve(membership)
+      : membership.save(whitelist))
 }
 
 export function updateCommunityTopic (userId, { id, data }) {

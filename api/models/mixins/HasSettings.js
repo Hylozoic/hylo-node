@@ -6,6 +6,7 @@ export default {
     if (save) {
       return this.save({settings: this.get('settings')}, {patch: true})
     }
+    return this
   },
 
   removeSetting: function (path, save = false) {
@@ -13,6 +14,7 @@ export default {
     if (save) {
       return this.save({settings: this.get('settings')}, {patch: true})
     }
+    return this
   },
 
   getSetting: function (key) {

@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
-import { difference, every, intersection, isEmpty, map, uniq } from 'lodash'
+import { difference, every, intersection, isEmpty, map, uniq, merge } from 'lodash'
+import HasSettings from './mixins/HasSettings'
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(merge({
   tableName: 'communities_users',
 
   user: function () {
@@ -18,9 +19,11 @@ module.exports = bookshelf.Model.extend({
 
   hasModeratorRole: function () {
     return this.get('role') === Membership.MODERATOR_ROLE
-  }
+  },
 
-}, {
+  
+
+}, HasSettings), {
   DEFAULT_ROLE: 0,
   MODERATOR_ROLE: 1,
 
