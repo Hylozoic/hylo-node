@@ -61,7 +61,7 @@ module.exports = bookshelf.Model.extend({
       case MEDIUM.InApp:
         const userId = this.reader().id
         action = User.incNewNotificationCount(userId)
-          .then(foo => this.updateUserSocketRoom(userId))
+          // .then(() => this.updateUserSocketRoom(userId))
         break
     }
     if (action) {
