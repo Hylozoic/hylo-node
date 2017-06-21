@@ -10,6 +10,7 @@ var root = require('root-path')
 
 var TestSetup = function () {
   this.tables = []
+  this.initialized = false
 }
 
 var setup = new TestSetup()
@@ -25,6 +26,14 @@ before(function (done) {
     log: {level: process.env.LOG_LEVEL || 'warn'},
     silent: true,
     start: function () {
+      const { database } = bookshelf.knex.client.connectionSettings
+      if (!database.match(/^test|test$/)) {
+        const error = new Error(`Invalid test database name "${database}". It must start or end with "test".`)
+        return done(error)
+      }
+
+      setup.initialized = true
+
       // add controllers to the global namespace; they would otherwise be excluded
       // since the sails "http" module is not being loaded in the test env
       fs.readdirSync(root('api/controllers')).forEach(function (filename) {
@@ -44,6 +53,7 @@ before(function (done) {
 afterEach(() => nock.cleanAll())
 
 TestSetup.prototype.createSchema = function () {
+  if (!this.initialized) throw new Error('not initialized')
   return bookshelf.transaction(trx => {
     return bookshelf.knex.raw('drop schema public cascade').transacting(trx)
     .then(() => bookshelf.knex.raw('create schema public').transacting(trx))
@@ -67,6 +77,7 @@ TestSetup.prototype.createSchema = function () {
 }
 
 TestSetup.prototype.clearDb = function () {
+  if (!this.initialized) throw new Error('not initialized')
   return bookshelf.knex.transaction(trx => trx.raw('set constraints all deferred')
   .then(() => Promise.map(this.tables, table => trx.raw('delete from ' + table))))
 }
