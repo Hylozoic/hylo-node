@@ -8,6 +8,7 @@ import {
   createPost,
   updatePost,
   findOrCreateThread,
+  findOrCreateLinkPreviewByUrl,
   leaveCommunity,
   markActivityRead,
   markAllActivitiesRead,
@@ -83,6 +84,7 @@ function createSchema (userId, isAdmin) {
         return createComment(userId, data)
       },
       findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
+      findOrCreateLinkPreviewByUrl: (root, { data }) => findOrCreateLinkPreviewByUrl(data),
       leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
       markActivityRead: (root, { id }) => markActivityRead(userId, id),
       markAllActivitiesRead: (root) => markAllActivitiesRead(userId),

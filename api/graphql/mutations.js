@@ -9,6 +9,7 @@ import underlyingUpdatePost from '../models/post/updatePost'
 import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../models/post/findOrCreateThread'
+import underlyingFindLinkPreview from '../models/linkPreview/findOrCreateByUrl'
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
@@ -35,7 +36,8 @@ function convertGraphqlPostData (data) {
     community_ids: data.communityIds,
     starts_at: data.startsAt,
     ends_at: data.endsAt,
-    parent_post_id: data.parentPostId
+    parent_post_id: data.parentPostId,
+    link_preview_id: data.linkPreviewId
   }, data))
 }
 
@@ -63,6 +65,10 @@ export function createComment (userId, data) {
 export function findOrCreateThread (userId, data) {
   return validateThreadData(userId, data)
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
+}
+
+export function findOrCreateLinkPreviewByUrl (data) {
+  return underlyingFindLinkPreview(data.url)
 }
 
 export function vote (userId, postId, isUpvote) {
