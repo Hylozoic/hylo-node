@@ -231,7 +231,8 @@ export default function makeModels (userId, isAdmin) {
         'url',
         'image_url',
         'image_width',
-        'image_height'
+        'image_height',
+        'status'
       ]
     },
 

@@ -357,6 +357,7 @@ input PostInput {
   details: String
   type: String
   communityIds: [String]
+  linkPreviewId: String
   public: Boolean
   startsAt: String
   endsAt: String
@@ -454,6 +455,7 @@ type LinkPreview {
   description: String
   imageWidth: String
   imageHeight: String
+  status: String
 }
 
 type Notification {

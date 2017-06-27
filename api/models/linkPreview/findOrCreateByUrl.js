@@ -11,8 +11,17 @@ export default function (url) {
       return {status: 'loading'}
     }
 
-    return preview.pick(
-      'id', 'url', 'image_url', 'title', 'description', 'image_width', 'image_height'
+    return Object.assign(
+      preview.pick(
+        'id',
+        'url',
+        'image_url',
+        'title',
+        'description',
+        'image_width',
+        'image_height'
+      ),
+      {status: 'loaded'}
     )
   })
 }
