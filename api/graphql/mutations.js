@@ -33,11 +33,11 @@ function convertGraphqlPostData (data) {
   return Promise.resolve(merge({
     name: data.title,
     description: data.details,
+    link_preview_id: data.linkPreviewId,
     community_ids: data.communityIds,
     starts_at: data.startsAt,
     ends_at: data.endsAt,
-    parent_post_id: data.parentPostId,
-    link_preview_id: data.linkPreviewId
+    parent_post_id: data.parentPostId
   }, data))
 }
 
