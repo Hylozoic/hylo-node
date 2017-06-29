@@ -1,9 +1,10 @@
 var url = require('url')
 import { isEmpty } from 'lodash'
+import emitter from 'socket.io-emitter'
 import decode from 'ent/decode'
+import parseRedisUrl from 'parse-redis-url'
 
 import { userRoom } from '../services/Websockets'
-import { getSailsInstance } from '../services/Queue'
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -61,7 +62,7 @@ module.exports = bookshelf.Model.extend({
       case MEDIUM.InApp:
         const userId = this.reader().id
         action = User.incNewNotificationCount(userId)
-          // .then(() => this.updateUserSocketRoom(userId))
+          .then(() => this.updateUserSocketRoom(userId))
         break
     }
     if (action) {
@@ -296,30 +297,25 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateUserSocketRoom: function (userId) {
-    return getSailsInstance()
-      .then(sails => {
-        const actor = Object.assign({},
-          this.actor().pick([ 'id', 'name' ]),
-          { avatarUrl: this.actor().get('avatar_url') }
-        )
-        const comment = this.comment().pick([ 'id', 'text' ])
-        const community = this.relations.activity.relations.community.pick([ 'id', 'name', 'slug' ])
-        const post = { id: this.post().id, title: this.post().get('name') }
-        const payload = {
-          id: '' + this.id,
-          createdAt: this.get('created_at'),
-          activity: Object.assign({},
-            this.relations.activity.pick([ 'action', 'id', 'meta', 'unread' ]),
-            { actor, comment, community, post })
-        }
-        sails.sockets.broadcast(userRoom(userId), 'newNotification', payload)
-        setTimeout(() => {
-          sails.lower(err => {
-            if (err) return sails.log.error('Could not lower Sails after socket update', err)
-            sails.log.info(`Socket update: newNotification (${JSON.stringify(payload.activity.meta)})`)
-          })
-        }, 500)
-      })
+    const actor = Object.assign({},
+      this.actor().pick([ 'id', 'name' ]),
+      { avatarUrl: this.actor().get('avatar_url') }
+    )
+    const comment = this.comment().pick([ 'id', 'text' ])
+    const community = this.relations.activity.relations.community.pick([ 'id', 'name', 'slug' ])
+    const post = { id: this.post().id, title: this.post().get('name') }
+    const payload = {
+      id: '' + this.id,
+      createdAt: this.get('created_at'),
+      activity: Object.assign({},
+        this.relations.activity.pick([ 'action', 'id', 'meta', 'unread' ]),
+        { actor, comment, community, post })
+    }
+
+    const redisInfo = parseRedisUrl().parse(process.env.REDIS_URL)
+    const io = emitter(redisInfo)
+    io.on('error', err => console.error(`Socket error on newNotification: ${err}`))
+    io.in(userRoom(userId)).emit('newNotification', payload)
   }
 }, {
   MEDIUM,
