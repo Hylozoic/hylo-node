@@ -3,8 +3,6 @@ const kue = require('kue')
 const Promise = require('bluebird')
 const promisify = Promise.promisify
 const rangeByState = promisify(kue.Job.rangeByState, kue.Job)
-const redisUrlParser = require('parse-redis-url')()
-const Sails = require('sails').constructor
 
 module.exports = {
   addJob: function (name, data, delay = 2000) {
@@ -42,51 +40,5 @@ module.exports = {
   // just for development use
   clearAllPendingJobs: () =>
     Promise.map(['active', 'inactive', 'failed', 'delayed'], state =>
-      Queue.removeOldJobs(state, 10000, 0)),
-
-  // Sometimes a job running on a worker process requires a stripped-down sails
-  // object after the web process request has finished. Options passed in will
-  // take precedence: the default just provides sockets.
-  getSailsInstance: function (overrideConfig) {
-    return new Promise((resolve, reject) => {
-      const redisInfo = redisUrlParser.parse(process.env.REDIS_URL)
-      const defaultConfig = {
-        globals: false,
-        hooks: {
-          // Only load sockets, and http (required for sockets)
-          blueprints: false,
-          controllers: false,
-          cors: false,
-          csrf: false,
-          grunt: false,
-          i18n: false,
-          orm: false,
-          policies: false,
-          pubsub: false,
-          request: false,
-          responses: false,
-          session: false,
-          services: false,
-          userconfig: false,
-          userhooks: false,
-          views: false
-        },
-        sockets: {
-          adapter: 'socket.io-redis',
-          host: redisInfo.host,
-          port: redisInfo.port,
-          db: redisInfo.database,
-          pass: redisInfo.password
-        }
-      }
-      const options = Object.assign({}, defaultConfig, overrideConfig)
-      const sails = new Sails()
-      sails.load(options, err => {
-        if (err) {
-          return reject(new Error('Could not load Sails in worker process.'))
-        }
-        resolve(sails)
-      })
-    })
-  }
+      Queue.removeOldJobs(state, 10000, 0))
 }
