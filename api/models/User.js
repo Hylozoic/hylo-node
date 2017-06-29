@@ -346,13 +346,18 @@ module.exports = bookshelf.Model.extend(merge({
 
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
+    let q
     if (isNaN(Number(id))) {
-      return User.query(q =>
-        q.whereRaw('lower(email) = lower(?)', id)
-        .orWhere({name: id}))
-      .fetch(options)
+      q = User.query(q => {
+        q.where(function () {
+          this.whereRaw('lower(email) = lower(?)', id)
+          .orWhere({name: id})
+        })
+      })
+    } else {
+      q = User.where({id: id})
     }
-    return User.where({id: id}).fetch(options)
+    return q.where('active', true).fetch(options)
   },
 
   named: function (name) {

@@ -70,29 +70,33 @@ module.exports = {
     try {
       var replyData = Email.decodePostReplyAddress(req.param('To'))
     } catch (e) {
-      return res.serverError(new Error('Invalid reply address: ' + req.param('To')))
+      return res.status(422).send('Invalid reply address: ' + req.param('To'))
     }
 
-    return Post.find(replyData.postId, {withRelated: 'communities'})
-    .then(post => {
-      if (!post) return
-      const community = post.relations.communities.first()
-      Analytics.track({
-        userId: replyData.userId,
-        event: 'Post: Comment: Add by Email',
-        properties: {
-          post_id: post.id,
-          community: community && community.get('name')
-        }
-      })
-      return User.find(replyData.userId).then(user => {
+    return Promise.join(
+      Post.find(replyData.postId, {withRelated: 'communities'}),
+      User.find(replyData.userId),
+      (post, user) => {
+        if (!post) return res.status(422).send('valid token, but post not found')
+        if (!user) return res.status(422).send('valid token, but user not found')
+
+        const community = post.relations.communities.first()
+        Analytics.track({
+          userId: replyData.userId,
+          event: 'Post: Comment: Add by Email',
+          properties: {
+            post_id: post.id,
+            community: community && community.get('name')
+          }
+        })
+
         const text = Comment.cleanEmailText(user, req.param('stripped-text'), {
           useMarkdown: !post.isThread()
         })
         return createAndPresentComment(replyData.userId, text, post, {created_from: 'email'})
-      })
-    })
-    .then(() => res.ok({}), res.serverError)
+        .then(() => res.ok({}), res.serverError)
+      }
+    )
   },
 
   thank: function (req, res) {

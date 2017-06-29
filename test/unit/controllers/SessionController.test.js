@@ -57,7 +57,7 @@ describe('SessionController', function () {
         }
       })
 
-      cat = new User({name: 'Cat', email: 'iam@cat.org'})
+      cat = new User({name: 'Cat', email: 'iam@cat.org', active: true})
       return cat.save().then(() =>
         new LinkedAccount({
           provider_user_id: '$2a$10$UPh85nJvMSrm6gMPqYIS.OPhLjAMbZiFnlpjq1xrtoSBTyV6fMdJS',

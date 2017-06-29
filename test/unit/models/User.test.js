@@ -9,7 +9,7 @@ describe('User', function () {
   var cat
 
   before(function () {
-    cat = new User({name: 'Cat', email: 'Iam@cat.org'})
+    cat = new User({name: 'Cat', email: 'Iam@cat.org', active: true})
     return cat.save()
   })
 
@@ -32,6 +32,19 @@ describe('User', function () {
       expect(user).to.exist
       expect(user.get('name')).to.equal('Cat')
     })
+  })
+
+  it('cannot be found if inactive', () => {
+    const dog = new User({name: 'Dog', email: 'iam@dog.org'})
+    let dogId
+    return dog.save()
+    .tap(dog => { dogId = dog.id })
+    .then(() => User.find('Dog'))
+    .then(dog => expect(dog).not.to.exist)
+    .then(() => User.find('iam@dog.org'))
+    .then(dog => expect(dog).not.to.exist)
+    .then(() => User.find(dogId))
+    .then(dog => expect(dog).not.to.exist)
   })
 
   it('can join communities', function () {

@@ -333,12 +333,15 @@ describe('CommentController', function () {
   describe('#createFromEmail', function () {
     beforeEach(() => {
       req.params['stripped-text'] = 'foo bar baz'
+      req.params['To'] = 'wa'
     })
 
     it('raises an error with an invalid address', function () {
-      res.serverError = spy(() => {})
+      const send = spy(() => {})
+      res.status = spy(() => ({send}))
       CommentController.createFromEmail(req, res)
-      expect(res.serverError).to.have.been.called()
+      expect(res.status).to.have.been.called.with(422)
+      expect(send).to.have.been.called.with('Invalid reply address: wa')
     })
 
     it('creates a comment with created_from=email', function () {
