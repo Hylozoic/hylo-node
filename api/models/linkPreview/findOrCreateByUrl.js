@@ -1,4 +1,4 @@
-export default function (url) {
+export default function findOrCreateByUrl (url) {
   return LinkPreview.find(url).then(preview => {
     if (!preview) {
       return LinkPreview.queue(url)
