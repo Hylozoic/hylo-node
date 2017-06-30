@@ -74,7 +74,7 @@ export function subscribe (userId, topicId, communityId, isSubscribing) {
   return TagFollow.subscribe(topicId, userId, communityId, isSubscribing)
 }
 
-export function updateMembership (userId, { id, data }) {
+export function updateMembership (userId, { communityId, data }) {
   const settings = convertGraphqlData(data.settings)
   const whitelist = mapKeys(pick(data, [
     'newPostCount',
@@ -82,9 +82,9 @@ export function updateMembership (userId, { id, data }) {
   ]), (v, k) => snakeCase(k))
   if (isEmpty(whitelist) && isEmpty(settings)) return Promise.resolve(null)
 
-  return Membership.find(userId, id)
+  return Membership.find(userId, communityId)
   .then(membership => {
-    if (!membership) throw new Error("Couldn't find membership for community with id", id)
+    if (!membership) throw new Error("Couldn't find membership for community with id", communityId)
 
     return isEmpty(settings)
       ? Promise.resolve(membership)
