@@ -120,6 +120,7 @@ export default function makeModels (userId, isAdmin) {
         public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(),
+        commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
         myVote: p => p.userVote(userId).then(v => !!v)
