@@ -430,7 +430,7 @@ type Mutation {
   vote(postId: ID, isUpvote: Boolean): Post
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
-  updateMembership(id: ID, slug: String, data: MembershipInput): Membership
+  updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
   markAllActivitiesRead: GenericResult
   markActivityRead(id: ID): Activity
   unlinkAccount(provider: String): GenericResult
