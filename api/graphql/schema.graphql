@@ -114,8 +114,6 @@ type MembershipSettings {
   sendEmail: Boolean
 }
 
-
-
 type Community {
   id: ID
   name: String
@@ -360,6 +358,7 @@ input PostInput {
   details: String
   type: String
   communityIds: [String]
+  linkPreviewId: String
   public: Boolean
   startsAt: String
   endsAt: String
@@ -380,6 +379,10 @@ input MessageInput {
 
 input MessageThreadInput {
   participantIds: [String]
+}
+
+input LinkPreviewInput {
+  url: String
 }
 
 input MembershipInput {
@@ -424,6 +427,7 @@ type Mutation {
   createPost(data: PostInput): Post
   updatePost(id: ID, data: PostInput): Post
   findOrCreateThread(data: MessageThreadInput): MessageThread
+  findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   createComment(data: CommentInput): Comment
   createMessage(data: MessageInput): Message
   leaveCommunity(id: ID): ID
@@ -446,9 +450,13 @@ type GenericResult {
 
 type LinkPreview {
   id: ID
-  title: String
   url: String
   imageUrl: String
+  title: String
+  description: String
+  imageWidth: String
+  imageHeight: String
+  status: String
 }
 
 type Notification {

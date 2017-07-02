@@ -230,7 +230,10 @@ export default function makeModels (userId, isAdmin) {
         'id',
         'title',
         'url',
-        'image_url'
+        'image_url',
+        'image_width',
+        'image_height',
+        'status'
       ]
     },
 

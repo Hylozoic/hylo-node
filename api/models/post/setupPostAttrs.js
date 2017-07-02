@@ -8,7 +8,7 @@ export default function setupPostAttrs (userId, params) {
     description: sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
-    link_preview_id: getOr(null, 'id', params.linkPreview),
+    link_preview_id: params.link_preview_id || getOr(null, 'id', params.linkPreview),
     parent_post_id: params.parent_post_id,
     updated_at: new Date()
   }, pick(params, 'type', 'starts_at', 'ends_at', 'location', 'created_from'))
