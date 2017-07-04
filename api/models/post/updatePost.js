@@ -7,6 +7,7 @@ import {
 } from './util'
 
 export default function updatePost (userId, id, params) {
+  if (!id) throw new Error('updatePost called with no ID')
   return setupPostAttrs(userId, params)
   .then(attrs => bookshelf.transaction(transacting =>
     Post.find(id).then(post =>
