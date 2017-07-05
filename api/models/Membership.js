@@ -21,7 +21,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.get('role') === Membership.MODERATOR_ROLE
   },
 
-  
+
 
 }, HasSettings), {
   DEFAULT_ROLE: 0,
@@ -91,7 +91,10 @@ module.exports = bookshelf.Model.extend(merge({
     return bookshelf.knex('communities_users').where({
       user_id: user_id,
       community_id: community_id
-    }).update({last_viewed_at: new Date()})
+    }).update({
+      last_viewed_at: new Date(),
+      new_post_count: 0
+    })
   },
 
   // do all of the users have at least one community in common?
