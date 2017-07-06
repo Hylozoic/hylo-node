@@ -2,21 +2,15 @@ import { makeFilterToggle } from './filters'
 import makeModels from './makeModels'
 
 describe('makeFilterToggle', () => {
-  var relation, queryFn
-
-  beforeEach(() => {
-    queryFn = q => 'filtered'
-    relation = {
-      query: fn => fn()
-    }
-  })
+  var filterFn = relation => relation.query(q => 'filtered')
+  var relation = {query: fn => fn()}
 
   it('adds a filter when enabled', () => {
-    expect(makeFilterToggle(true)(queryFn)(relation)).to.equal('filtered')
+    expect(makeFilterToggle(true)(filterFn)(relation)).to.equal('filtered')
   })
 
   it('adds no filter when disabled', () => {
-    expect(makeFilterToggle(false)(queryFn)(relation)).to.equal(relation)
+    expect(makeFilterToggle(false)(filterFn)(relation)).to.equal(relation)
   })
 })
 

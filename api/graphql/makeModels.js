@@ -5,6 +5,7 @@ import {
   myCommunityIds,
   sharedMembership,
   sharedPostMembership,
+  sharedPostMembershipClause,
   activePost
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
@@ -198,9 +199,9 @@ export default function makeModels (userId, isAdmin) {
             topic
           })
       },
-      filter: nonAdminFilter(q => {
+      filter: nonAdminFilter(relation => relation.query(q => {
         q.where('communities.id', 'in', myCommunityIds(userId))
-      })
+      }))
     },
 
     Comment: {
@@ -213,14 +214,14 @@ export default function makeModels (userId, isAdmin) {
         'post',
         {user: {alias: 'creator'}}
       ],
-      filter: nonAdminFilter(q => {
+      filter: nonAdminFilter(relation => relation.query(q => {
         // this should technically just be equal to Post.isVisibleToUser
         q.where(function () {
-          sharedPostMembership('comments', userId, this)
+          sharedPostMembershipClause('comments', userId, this)
           .orWhere('comments.post_id', 'in',
             Follow.query().select('post_id').where('user_id', userId))
         })
-      }),
+      })),
       isDefaultTypeForTable: true
     },
 
@@ -248,11 +249,11 @@ export default function makeModels (userId, isAdmin) {
         {followers: {alias: 'participants'}},
         {comments: {alias: 'messages', typename: 'Message', querySet: true}}
       ],
-      filter: nonAdminFilter(q => {
+      filter: nonAdminFilter(relation => relation.query(q => {
         q.where('posts.id', 'in',
           Follow.query().select('post_id')
           .where('user_id', userId))
-      })
+      }))
     },
 
     Message: {
@@ -290,9 +291,9 @@ export default function makeModels (userId, isAdmin) {
         'community',
         {tag: {alias: 'topic'}}
       ],
-      filter: nonAdminFilter(q => {
+      filter: nonAdminFilter(relation => relation.query(q => {
         q.where('communities_tags.community_id', 'in', myCommunityIds(userId))
-      }),
+      })),
       fetchMany: args => CommunityTag.query(communityTopicFilter(userId, args))
     },
 
