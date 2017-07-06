@@ -23,7 +23,11 @@ module.exports = bookshelf.Model.extend({
 
   // toggle is used by hylo-redux
   toggle: function (tagId, userId, communityId) {
-    return TagFollow.where({community_id: communityId, tag_id: tagId}).fetch()
+    return TagFollow.where({
+      community_id: communityId,
+      tag_id: tagId,
+      user_id: userId
+    }).fetch()
     .then(tagFollow => tagFollow
       ? TagFollow.remove({tagId, userId, communityId})
       : TagFollow.add({tagId, userId, communityId}))
