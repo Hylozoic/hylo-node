@@ -2489,7 +2489,7 @@ ALTER TABLE ONLY media
 --
 
 ALTER TABLE ONLY networks_users
-    ADD CONSTRAINT networks_users_network_id_foreign FOREIGN KEY (network_id) REFERENCES networks(id);
+    ADD CONSTRAINT networks_users_network_id_foreign FOREIGN KEY (network_id) REFERENCES networks(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2497,7 +2497,7 @@ ALTER TABLE ONLY networks_users
 --
 
 ALTER TABLE ONLY networks_users
-    ADD CONSTRAINT networks_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT networks_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
