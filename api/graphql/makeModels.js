@@ -351,6 +351,23 @@ export default function makeModels (userId, isAdmin) {
       relations: [ {otherUser: {alias: 'person'}} ],
       fetchMany: () => UserConnection,
       filter: relation => relation.query(q => q.where('user_id', userId))
+    },
+
+    Network: {
+      model: Network,
+      attributes: [
+        'id',
+        'name',
+        'slug',
+        'description',
+        'created_at',
+        'avatar_url',
+        'banner_url'
+      ],
+      relations: [
+        {moderators: {querySet: true}},
+        {communities: {querySet: true}}
+      ]
     }
   }
 }

@@ -15,6 +15,11 @@ module.exports = bookshelf.Model.extend({
 
   communities: function () {
     return this.hasMany(Community).query({where: {'communities.active': true}})
+  },
+
+  moderators: function () {
+    return this.belongsToMany(User, 'networks_users', 'network_id', 'user_id')
+      .query({where: {role: Membership.MODERATOR_ROLE}})
   }
 
 }, {

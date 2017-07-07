@@ -336,6 +336,7 @@ type Query {
     first: Int,
     offset: Int
   ): SearchResultQuerySet
+  network(id: ID, slug: String): Network
 }
 
 input MeInput {
@@ -484,4 +485,22 @@ type NotificationQuerySet {
   total: Int
   hasMore: Boolean
   items: [Notification]
+}
+
+type Network {
+  id: ID
+  slug: String
+  name: String
+  description: String
+  avatarUrl: String
+  bannerUrl: String
+  createdAt: String
+  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  communities(first: Int, cursor: ID, order: String): CommunityQuerySet
+}
+
+type CommunityQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Community]
 }

@@ -72,7 +72,9 @@ function createSchema (userId, isAdmin) {
         Search.fullTextSearch(userId, args)
         .then(({ models, total }) => {
           return presentQuerySet(models, merge(args, {total}))
-        })
+        }),
+      network: (root, { id, slug }) =>  // you can specify id or slug, but not both
+        fetchOne('Network', slug || id, slug ? 'slug' : 'id')
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
