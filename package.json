@@ -159,6 +159,7 @@
       "Media",
       "Membership",
       "Network",
+      "NetworkMembership",      
       "Notification",
       "OneSignal",
       "PlayCrypto",
