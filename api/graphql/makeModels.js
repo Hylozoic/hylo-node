@@ -128,7 +128,10 @@ export default function makeModels (userId, isAdmin) {
       },
       relations: [
         {comments: {querySet: true}},
-        'communities',
+        {communities: {
+          filter: nonAdminFilter(relation => relation.query(q => {
+            q.where('communities.id', 'in', myCommunityIds(userId))
+          }))}},
         {user: {alias: 'creator'}},
         'followers',
         'linkPreview'
@@ -198,10 +201,7 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy,
             topic
           })
-      },
-      filter: nonAdminFilter(relation => relation.query(q => {
-        q.where('communities.id', 'in', myCommunityIds(userId))
-      }))
+      }
     },
 
     Comment: {
