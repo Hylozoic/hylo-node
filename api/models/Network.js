@@ -1,4 +1,4 @@
-import { includes } from 'lodash'
+import { includes, pick } from 'lodash'
 
 var knex = bookshelf.knex
 
@@ -20,6 +20,20 @@ module.exports = bookshelf.Model.extend({
   moderators: function () {
     return this.belongsToMany(User, 'networks_users', 'network_id', 'user_id')
       .query({where: {role: Membership.MODERATOR_ROLE}})
+  },
+
+  update: function (changes, saveOptions = {patch: true}) {
+    var whitelist = [
+      'name',
+      'description',
+      'avatar_url',
+      'banner_url',
+      'slug'
+    ]
+    const saneAttrs = pick(changes, whitelist)
+    return this
+      .save(saneAttrs, saveOptions)
+      .then(() => this)
   }
 
 }, {
