@@ -113,6 +113,13 @@ export function updateCommunityTopic (userId, { id, data }) {
   .then(() => ({success: true}))
 }
 
+export function updateNetwork (userId, { id, data }) {
+  console.log('updateNetwork mutation -- userId:', userId, 'id:', id, 'data:', data)
+  return Network.where({id}).fetch()
+  // .then(network => network.validateAndSave(convertGraphqlData(changes)))
+  // .then(() => ({success: true}))
+}
+
 export function markActivityRead (userId, activityid) {
   return Activity.find(activityid)
   .then(a => {

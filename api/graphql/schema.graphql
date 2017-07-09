@@ -417,6 +417,17 @@ input MembershipSettingsInput {
   sendPushNotifications: Boolean
 }
 
+input NetworkInput {
+  id: ID
+  slug: String
+  name: String
+  description: String
+  avatarUrl: String
+  bannerUrl: String
+  communityIds: [String]
+  moderatorUserIds: [String]
+}
+
 input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
@@ -442,6 +453,7 @@ type Mutation {
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   addModerator(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID): Community
+  updateNetwork(id: ID, data: NetworkInput): Network
   deletePost(id: ID): GenericResult
 }
 

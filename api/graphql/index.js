@@ -17,6 +17,7 @@ import {
   updateCommunityTopic,
   updateMe,
   updateMembership,
+  updateNetwork,
   unlinkAccount,
   vote,
   addModerator,
@@ -96,6 +97,7 @@ function createSchema (userId, isAdmin) {
         updateCommunitySettings(userId, id, changes),
       updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
       updateMembership: (root, args) => updateMembership(userId, args),
+      updateNetwork: (root, args) => updateNetwork(userId, args),
       unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
       vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
       addModerator: (root, { personId, communityId }) =>
