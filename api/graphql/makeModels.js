@@ -1,4 +1,5 @@
 import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
+import networkMembersQuerySet from './networkMembersQuerySet'
 import {
   communityTopicFilter,
   makeFilterToggle,
@@ -190,7 +191,6 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy || 'name',
             autocomplete
           }),
-
         posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
@@ -367,7 +367,10 @@ export default function makeModels (userId, isAdmin) {
       relations: [
         {moderators: {querySet: true}},
         {communities: {querySet: true}}
-      ]
+      ],
+      getters: {
+        members: networkMembersQuerySet
+      }
     }
   }
 }

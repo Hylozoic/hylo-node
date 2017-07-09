@@ -496,7 +496,15 @@ type Network {
   bannerUrl: String
   createdAt: String
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
-  communities(first: Int, cursor: ID, order: String): CommunityQuerySet
+  communities(first: Int, cursor: ID, order: String): CommunityQuerySet,
+  members(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): PersonQuerySet
 }
 
 type CommunityQuerySet {

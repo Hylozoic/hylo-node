@@ -19,10 +19,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   hasModeratorRole: function () {
     return this.get('role') === Membership.MODERATOR_ROLE
-  },
-
-
-
+  }
 }, HasSettings), {
   DEFAULT_ROLE: 0,
   MODERATOR_ROLE: 1,
