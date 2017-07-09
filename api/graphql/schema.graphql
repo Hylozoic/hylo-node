@@ -501,9 +501,7 @@ type Network {
     first: Int,
     order: String,
     sortBy: String,
-    offset: Int,
-    search: String,
-    autocomplete: String
+    offset: Int
   ): PersonQuerySet
 }
 
