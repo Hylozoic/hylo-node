@@ -10,6 +10,6 @@ export default function networkMembersQuerySet (n, { search, first, offset = 0, 
   })
   .fetchAll()
   .then(({ models }) =>
-    presentQuerySet(models, { first, offset })
+    presentQuerySet(models, {first, offset, total: models.length})
   )
 }
