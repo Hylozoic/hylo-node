@@ -115,7 +115,11 @@ export function updateCommunityTopic (userId, { id, data }) {
 
 export function updateNetwork (userId, { id, data }) {
   console.log('updateNetwork mutation -- userId:', userId, 'id:', id, 'data:', data)
-  return Network.where({id}).fetch()
+  return bookshelf.transaction(transacting =>
+    Network.find(id).then(
+      network => network.save(convertGraphqlData(pick(data, ['slug'])), {patch: true, transacting})
+    )
+  )
   // .then(network => network.validateAndSave(convertGraphqlData(changes)))
   // .then(() => ({success: true}))
 }
