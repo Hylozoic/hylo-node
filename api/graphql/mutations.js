@@ -10,6 +10,8 @@ import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../models/post/findOrCreateThread'
 import underlyingFindLinkPreview from '../models/linkPreview/findOrCreateByUrl'
+import validateNetworkData from '../models/network/validateNetworkData'
+import underlyingUpdateNetwork from '../models/network/updateNetwork'
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
@@ -114,9 +116,9 @@ export function updateCommunityTopic (userId, { id, data }) {
 }
 
 export function updateNetwork (userId, { id, data }) {
-  return Network.find(id).then(
-    network => network.update(convertGraphqlData(data))
-  )
+  const convertedData = convertGraphqlData(data)
+  return validateNetworkData(userId, convertedData)
+  .then(() => underlyingUpdateNetwork(userId, id, convertedData))
 }
 
 export function markActivityRead (userId, activityid) {

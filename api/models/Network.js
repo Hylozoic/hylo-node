@@ -20,23 +20,10 @@ module.exports = bookshelf.Model.extend({
   moderators: function () {
     return this.belongsToMany(User, 'networks_users', 'network_id', 'user_id')
       .query({where: {role: Membership.MODERATOR_ROLE}})
-  },
-
-  update: function (changes, saveOptions = {patch: true}) {
-    var whitelist = [
-      'name',
-      'description',
-      'avatar_url',
-      'banner_url',
-      'slug'
-    ]
-    const saneAttrs = pick(changes, whitelist)
-    return this
-      .save(saneAttrs, saveOptions)
-      .then(() => this)
   }
 
 }, {
+
   find: function (idOrSlug, options) {
     if (isNaN(Number(idOrSlug))) {
       return this.where({slug: idOrSlug}).fetch(options)
