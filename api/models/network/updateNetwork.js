@@ -1,4 +1,4 @@
-import { isEqual, difference, values } from 'lodash'
+import { isEqual, difference, values, some } from 'lodash'
 import setupNetworkAttrs from './setupNetworkAttrs'
 
 export default function updateNetwork (userId, id, params) {
@@ -21,27 +21,23 @@ export function afterUpdatingNetwork (network, opts) {
     transacting
   } = opts
   return Promise.all([
-    updateCommunities(network, values(community_ids), transacting)
+    updateCommunities(network, community_ids && values(community_ids), transacting) // eslint-disable-line camelcase
   ])
 }
 
 export function updateCommunities (network, newCommunityIds, transacting) {
-  const oldCommunityIds = network.relations.communities.pluck('id')
-  if (!isEqual(newCommunityIds, oldCommunityIds)) {
-    const opts = { transacting }
-    const communitiesToAdd = difference(newCommunityIds, oldCommunityIds)
-    const communitesToRemove = difference(newCommunityIds, oldCommunityIds)
+  if (!newCommunityIds) return
+  const currentCommunityIds = network.relations.communities.pluck('id')
+  if (!isEqual(newCommunityIds, currentCommunityIds)) {
+    const communitiesToAdd = difference(newCommunityIds, currentCommunityIds)
+    const communitesToRemove = difference(currentCommunityIds, newCommunityIds)
     return Promise.all([
-      // communitiesToAdd.forEach(communityId =>
-      //   Community.find(communityId, opts).then(community =>
-      //     community && community.save({network_id: network.id}, opts)
-      //   )
-      // ),
-      // communitesToRemove.forEach(communityId =>
-      //   Community.find(communityId, opts).then(community =>
-      //     community && community.save({network_id: null}, opts)
-      //   )
-      // )
+      // Add communities
+      some(communitiesToAdd) && Community.query().where('id', 'in', communitiesToAdd)
+      .update('network_id', network.id).transacting(transacting),
+      // Remove communities
+      some(communitesToRemove) && Community.query().where('id', 'in', communitesToRemove)
+      .update('network_id', null).transacting(transacting)
     ])
   }
 }
