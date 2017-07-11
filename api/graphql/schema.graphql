@@ -507,9 +507,9 @@ type Network {
   avatarUrl: String
   bannerUrl: String
   createdAt: String
-  communities(first: Int, cursor: ID, order: String): CommunityQuerySet
-  members(first: Int, cursor: ID, order: String): PersonQuerySet
-  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  communities(first: Int, offset: Int, order: String, sortBy: String): CommunityQuerySet
+  members(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
+  moderators(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
 }
 
 type CommunityQuerySet {

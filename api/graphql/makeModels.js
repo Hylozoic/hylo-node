@@ -366,7 +366,8 @@ export default function makeModels (userId, isAdmin) {
       ],
       relations: [
         {moderators: {querySet: true}},
-        {communities: {querySet: true}}
+        {communities: {querySet: true}},
+        {members: {querySet: true}}
       ],
       getters: {
         members: networkMembersQuerySet

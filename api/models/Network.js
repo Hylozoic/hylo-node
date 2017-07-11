@@ -20,6 +20,16 @@ module.exports = bookshelf.Model.extend({
   moderators: function () {
     return this.belongsToMany(User, 'networks_users', 'network_id', 'user_id')
       .query({where: {role: Membership.MODERATOR_ROLE}})
+  },
+
+  members: function () {
+    return User.where({}).query(q => {
+      q.distinct()
+      q.where({'networks.id': this.id})
+      q.join('communities_users', 'users.id', 'communities_users.user_id')
+      q.join('communities', 'communities.id', 'communities_users.community_id')
+      q.join('networks', 'networks.id', 'communities.network_id')
+    })
   }
 
 }, {
