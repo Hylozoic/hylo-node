@@ -425,7 +425,7 @@ input NetworkInput {
   avatarUrl: String
   bannerUrl: String
   communityIds: [String]
-  moderatorUserIds: [String]
+  moderatorIds: [String]
 }
 
 input UserSettingsInput {

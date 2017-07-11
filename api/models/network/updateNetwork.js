@@ -7,7 +7,7 @@ export default function updateNetwork (userId, id, params) {
   return setupNetworkAttrs(userId, params).then(attrs =>
     bookshelf.transaction(transacting =>
       // NOTE: EnsureLoad not built to work with belongsToMany relations
-      Network.find(id, {withRelated: 'communities'}).then(network => {
+      Network.find(id, {withRelated: ['communities', 'moderators']}).then(network => {
         return network.save(attrs, {patch: true, transacting})
         .tap(updatedNetwork => afterUpdatingNetwork(updatedNetwork, {params, userId, transacting}))
       })
@@ -17,11 +17,15 @@ export default function updateNetwork (userId, id, params) {
 
 export function afterUpdatingNetwork (network, opts) {
   const {
-    params: { community_ids },
+    params: {
+      community_ids,
+      moderator_ids
+    },
     transacting
   } = opts
   return Promise.all([
-    updateCommunities(network, community_ids && values(community_ids), transacting) // eslint-disable-line camelcase
+    updateCommunities(network, community_ids && values(community_ids), transacting), // eslint-disable-line camelcase
+    updateModerators(network, moderator_ids && values(moderator_ids), transacting) // eslint-disable-line camelcase
   ])
 }
 
@@ -39,5 +43,20 @@ export function updateCommunities (network, newCommunityIds, transacting) {
       some(communitesToRemove) && Community.query().where('id', 'in', communitesToRemove)
       .update('network_id', null).transacting(transacting)
     ])
+  }
+}
+
+export function updateModerators (network, newModeratorIds, transacting) {
+  if (!newModeratorIds) return
+  const currentModeratorIds = network.relations.moderators.pluck('id')
+  if (!isEqual(newModeratorIds, currentModeratorIds)) {
+    const opts = { transacting }
+    const moderators = network.moderators()
+    const moderatorsToAdd = difference(newModeratorIds, currentModeratorIds)
+    const moderatorsToRemove = difference(currentModeratorIds, newModeratorIds)
+    return Promise.join(
+      Promise.map(moderatorsToAdd, userId => NetworkMembership.addModerator(userId, network.id, opts)),
+      Promise.map(moderatorsToRemove, userId => moderators.detach(userId, opts))
+    )
   }
 }

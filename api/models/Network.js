@@ -1,4 +1,4 @@
-import { includes, pick } from 'lodash'
+import { includes } from 'lodash'
 
 var knex = bookshelf.knex
 
