@@ -369,10 +369,7 @@ export default function makeModels (userId, isAdmin) {
         {moderators: {querySet: true}},
         {communities: {querySet: true}},
         {members: {querySet: true}}
-      ],
-      getters: {
-        members: networkMembersQuerySet
-      }
+      ]
     }
   }
 }
