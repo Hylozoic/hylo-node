@@ -124,6 +124,7 @@ type Community {
   bannerUrl: String
   location: String
   settings: String
+  network: Network
   members(
     first: Int,
     order: String,

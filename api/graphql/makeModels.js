@@ -167,6 +167,7 @@ export default function makeModels (userId, isAdmin) {
         'location'
       ],
       relations: [
+        'network',
         {moderators: {querySet: true}},
         {communityTags: {
           querySet: true,
