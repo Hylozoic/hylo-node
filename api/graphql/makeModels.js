@@ -1,5 +1,4 @@
 import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
-import networkMembersQuerySet from './networkMembersQuerySet'
 import {
   communityTopicFilter,
   makeFilterToggle,
