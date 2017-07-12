@@ -34,13 +34,13 @@ export function updateCommunities (network, newCommunityIds, transacting) {
   const currentCommunityIds = network.relations.communities.pluck('id')
   if (!isEqual(newCommunityIds, currentCommunityIds)) {
     const communitiesToAdd = difference(newCommunityIds, currentCommunityIds)
-    const communitesToRemove = difference(currentCommunityIds, newCommunityIds)
+    const communitiesToRemove = difference(currentCommunityIds, newCommunityIds)
     return Promise.all([
       // Add communities
       some(communitiesToAdd) && Community.query().where('id', 'in', communitiesToAdd)
       .update('network_id', network.id).transacting(transacting),
       // Remove communities
-      some(communitesToRemove) && Community.query().where('id', 'in', communitesToRemove)
+      some(communitiesToRemove) && Community.query().where('id', 'in', communitiesToRemove)
       .update('network_id', null).transacting(transacting)
     ])
   }
