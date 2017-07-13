@@ -24,5 +24,4 @@ module.exports = bookshelf.Model.extend({
 
     return fetch(community_id_or_slug)
   }
-
 })

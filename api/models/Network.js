@@ -15,8 +15,12 @@ module.exports = bookshelf.Model.extend({
 
   communities: function () {
     return this.hasMany(Community).query({where: {'communities.active': true}})
-  }
+  },
 
+  posts: function () {
+    return this.belongsToMany(Post).through(PostNetworkMembership)
+    .query({where: {'posts.active': true}})
+  }
 }, {
   find: function (idOrSlug, options) {
     if (isNaN(Number(idOrSlug))) {

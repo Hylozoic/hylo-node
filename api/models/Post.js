@@ -33,6 +33,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .query({where: {'communities.active': true}})
   },
 
+  networks: function () {
+    return this.belongsToMany(Network).through(PostNetworkMembership)
+  },
+
   followers: function () {
     return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
   },
