@@ -3,7 +3,8 @@ import updateChildren from './updateChildren'
 import {
   updateCommunities,
   updateAllMedia,
-  updateFollowers
+  updateFollowers,
+  updateNetworkMemberships
 } from './util'
 
 export default function updatePost (userId, id, params) {
@@ -32,4 +33,6 @@ export function afterUpdatingPost (post, opts) {
     Tag.updateForPost(post, tag, tagDescriptions, userId, transacting),
     updateFollowers(post, transacting)
   ]))
+  .then(() => updateNetworkMemberships(post, transacting),
+)
 }

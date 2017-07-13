@@ -34,8 +34,7 @@ describe('updateNetworkMemberships', () => {
     }))
 
   it('updates the network memberships', () => {
-    return post.load('communities')
-    .then(() => updateNetworkMemberships(post))
+    return updateNetworkMemberships(post)
     .then(() => Promise.join(
       PostNetworkMembership.find(post.id, n1.id),
       PostNetworkMembership.find(post.id, n2.id),
