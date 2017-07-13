@@ -124,6 +124,7 @@ type Community {
   bannerUrl: String
   location: String
   settings: String
+  network: Network
   members(
     first: Int,
     order: String,
@@ -336,6 +337,7 @@ type Query {
     first: Int,
     offset: Int
   ): SearchResultQuerySet
+  network(id: ID, slug: String): Network
 }
 
 input MeInput {
@@ -416,6 +418,17 @@ input MembershipSettingsInput {
   sendPushNotifications: Boolean
 }
 
+input NetworkInput {
+  id: ID
+  slug: String
+  name: String
+  description: String
+  avatarUrl: String
+  bannerUrl: String
+  communityIds: [String]
+  moderatorIds: [String]
+}
+
 input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
@@ -441,6 +454,7 @@ type Mutation {
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   addModerator(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID): Community
+  updateNetwork(id: ID, data: NetworkInput): Network
   deletePost(id: ID): GenericResult
 }
 
@@ -484,4 +498,23 @@ type NotificationQuerySet {
   total: Int
   hasMore: Boolean
   items: [Notification]
+}
+
+type Network {
+  id: ID
+  slug: String
+  name: String
+  description: String
+  avatarUrl: String
+  bannerUrl: String
+  createdAt: String
+  communities(first: Int, offset: Int, order: String, sortBy: String): CommunityQuerySet
+  members(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
+  moderators(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
+}
+
+type CommunityQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Community]
 }

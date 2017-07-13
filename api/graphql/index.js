@@ -17,6 +17,7 @@ import {
   updateCommunityTopic,
   updateMe,
   updateMembership,
+  updateNetwork,
   unlinkAccount,
   vote,
   addModerator,
@@ -72,7 +73,9 @@ function createSchema (userId, isAdmin) {
         Search.fullTextSearch(userId, args)
         .then(({ models, total }) => {
           return presentQuerySet(models, merge(args, {total}))
-        })
+        }),
+      network: (root, { id, slug }) =>  // you can specify id or slug, but not both
+        fetchOne('Network', slug || id, slug ? 'slug' : 'id')
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
@@ -94,6 +97,7 @@ function createSchema (userId, isAdmin) {
         updateCommunitySettings(userId, id, changes),
       updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
       updateMembership: (root, args) => updateMembership(userId, args),
+      updateNetwork: (root, args) => updateNetwork(userId, args),
       unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
       vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
       addModerator: (root, { personId, communityId }) =>
