@@ -642,6 +642,36 @@ ALTER SEQUENCE networks_id_seq OWNED BY networks.id;
 
 
 --
+-- Name: networks_posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE networks_posts (
+    id integer NOT NULL,
+    network_id bigint,
+    post_id bigint
+);
+
+
+--
+-- Name: networks_posts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE networks_posts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: networks_posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE networks_posts_id_seq OWNED BY networks_posts.id;
+
+
+--
 -- Name: networks_users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1359,6 +1389,13 @@ ALTER TABLE ONLY networks ALTER COLUMN id SET DEFAULT nextval('networks_id_seq':
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY networks_posts ALTER COLUMN id SET DEFAULT nextval('networks_posts_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY networks_users ALTER COLUMN id SET DEFAULT nextval('networks_users_id_seq'::regclass);
 
 
@@ -1575,6 +1612,14 @@ ALTER TABLE ONLY link_previews
 
 ALTER TABLE ONLY networks
     ADD CONSTRAINT networks_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: networks_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY networks_posts
+    ADD CONSTRAINT networks_posts_pkey PRIMARY KEY (id);
 
 
 --
@@ -2482,6 +2527,22 @@ ALTER TABLE ONLY join_requests
 
 ALTER TABLE ONLY media
     ADD CONSTRAINT media_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES comments(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: networks_posts_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY networks_posts
+    ADD CONSTRAINT networks_posts_network_id_foreign FOREIGN KEY (network_id) REFERENCES networks(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: networks_posts_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY networks_posts
+    ADD CONSTRAINT networks_posts_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
