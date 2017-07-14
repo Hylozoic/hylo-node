@@ -3,6 +3,7 @@ import {
   communityTopicFilter,
   makeFilterToggle,
   myCommunityIds,
+  myNetworkCommunityIds,
   sharedMembership,
   sharedPostMembership,
   sharedPostMembershipClause,
@@ -128,7 +129,10 @@ export default function makeModels (userId, isAdmin) {
       },
       relations: [
         {comments: {querySet: true}},
-        'communities',
+        {communities: {
+          filter: nonAdminFilter(relation => relation.query(q => {
+            q.where('communities.id', 'in', myCommunityIds(userId))
+          }))}},
         {user: {alias: 'creator'}},
         'followers',
         'linkPreview'
@@ -163,6 +167,7 @@ export default function makeModels (userId, isAdmin) {
         'location'
       ],
       relations: [
+        'network',
         {moderators: {querySet: true}},
         {communityTags: {
           querySet: true,
@@ -187,7 +192,6 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy || 'name',
             autocomplete
           }),
-
         posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
@@ -200,7 +204,10 @@ export default function makeModels (userId, isAdmin) {
           })
       },
       filter: nonAdminFilter(relation => relation.query(q => {
-        q.where('communities.id', 'in', myCommunityIds(userId))
+        return q.where(cq =>
+          cq.where('communities.id', 'in', myCommunityIds(userId))
+          .orWhere('communities.id', 'in', myNetworkCommunityIds(userId))
+        )
       }))
     },
 
@@ -351,6 +358,24 @@ export default function makeModels (userId, isAdmin) {
       relations: [ {otherUser: {alias: 'person'}} ],
       fetchMany: () => UserConnection,
       filter: relation => relation.query(q => q.where('user_id', userId))
+    },
+
+    Network: {
+      model: Network,
+      attributes: [
+        'id',
+        'name',
+        'slug',
+        'description',
+        'created_at',
+        'avatar_url',
+        'banner_url'
+      ],
+      relations: [
+        {communities: {querySet: true}},
+        {moderators: {querySet: true}},
+        {members: {querySet: true}}
+      ]
     }
   }
 }

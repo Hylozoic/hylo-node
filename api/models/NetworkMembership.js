@@ -12,12 +12,12 @@ module.exports = bookshelf.Model.extend({
   DEFAULT_ROLE: 0,
   MODERATOR_ROLE: 1,
 
-  addModerator: function (userId, networkId) {
+  addModerator: function (userId, networkId, opts = {}) {
     return new NetworkMembership({
       user_id: userId,
       network_id: networkId,
       created_at: new Date(),
       role: NetworkMembership.MODERATOR_ROLE
-    }).save()
+    }).save({}, opts)
   }
 })
