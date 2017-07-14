@@ -3,6 +3,7 @@ import {
   communityTopicFilter,
   makeFilterToggle,
   myCommunityIds,
+  myNetworkCommunityIds,
   sharedMembership,
   sharedPostMembership,
   sharedPostMembershipClause,
@@ -201,7 +202,13 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy,
             topic
           })
-      }
+      },
+      filter: nonAdminFilter(relation => relation.query(q => {
+        return q.where(cq =>
+          cq.where('communities.id', 'in', myCommunityIds(userId))
+          .orWhere('communities.id', 'in', myNetworkCommunityIds(userId))
+        )
+      }))
     },
 
     Comment: {
@@ -365,8 +372,8 @@ export default function makeModels (userId, isAdmin) {
         'banner_url'
       ],
       relations: [
-        {moderators: {querySet: true}},
         {communities: {querySet: true}},
+        {moderators: {querySet: true}},
         {members: {querySet: true}}
       ],
       getters: {
