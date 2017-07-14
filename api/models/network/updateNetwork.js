@@ -6,7 +6,6 @@ export default function updateNetwork (userId, id, params) {
   if (!id) throw new Error('updateNetwork called with no ID')
   return setupNetworkAttrs(userId, params).then(attrs =>
     bookshelf.transaction(transacting =>
-      // NOTE: EnsureLoad not built to work with belongsToMany relations
       Network.find(id, {withRelated: ['communities', 'moderators']}).then(network => {
         return network.save(attrs, {patch: true, transacting})
         .tap(updatedNetwork => afterUpdatingNetwork(updatedNetwork, {params, userId, transacting}))
