@@ -1,4 +1,4 @@
-import { difference, has, isEqual, pick, some } from 'lodash'
+import { difference, has, isEqual, pick, some, compact } from 'lodash'
 
 function updateMedia (post, type, url, remove, transacting) {
   if (!url && !remove) return
@@ -92,5 +92,22 @@ export function updateFollowers (post, transacting) {
       }))
       return Activity.saveForReasons(reasons, transacting)
     })
+  })
+}
+
+export function updateNetworkMemberships (post, transacting) {
+  const opts = {transacting}
+
+  return post.load(['communities', 'networks'], opts)
+  .then(() => {
+    const newIds = compact(post.relations.communities.map(c => Number(c.get('network_id')))).sort()
+    const oldIds = post.relations.networks.pluck('id').sort()
+    if (!isEqual(newIds, oldIds)) {
+      const ns = post.networks()
+      return Promise.join(
+        Promise.map(difference(newIds, oldIds), id => ns.attach(id, opts)),
+        Promise.map(difference(oldIds, newIds), id => ns.detach(id, opts))
+      )
+    }
   })
 }

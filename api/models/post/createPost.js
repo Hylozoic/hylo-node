@@ -1,6 +1,7 @@
 import { flatten, merge, pick, uniq } from 'lodash'
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
+import { updateNetworkMemberships } from './util'
 import { communityRoom, pushToSockets } from '../../services/Websockets'
 
 export default function createPost (userId, params) {
@@ -40,6 +41,7 @@ export function afterCreatingPost (post, opts) {
   ]))
   .then(() => Tag.updateForPost(post, opts.tag, opts.tagDescriptions, userId, trx))
   .then(() => updateTagsAndCommunities(post, trx))
+  .then(() => updateNetworkMemberships(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }

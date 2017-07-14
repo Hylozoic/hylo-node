@@ -167,6 +167,7 @@
       "PostTag",
       "PostPresenter",
       "PostMembership",
+      "PostNetworkMembership",
       "PushNotification",
       "Queue",
       "Relevance",

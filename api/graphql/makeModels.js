@@ -375,7 +375,19 @@ export default function makeModels (userId, isAdmin) {
         {communities: {querySet: true}},
         {moderators: {querySet: true}},
         {members: {querySet: true}}
-      ]
+      ],
+      getters: {
+        posts: (n, { search, first, offset = 0, sortBy, filter, topic }) =>
+          fetchSearchQuerySet('forPosts', {
+            term: search,
+            networks: [n.id],
+            limit: first,
+            offset,
+            type: filter,
+            sort: sortBy,
+            topic
+          })
+      }
     }
   }
 }

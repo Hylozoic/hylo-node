@@ -29,8 +29,12 @@ module.exports = bookshelf.Model.extend({
       q.join('communities_users', 'users.id', 'communities_users.user_id')
       q.join('communities', 'communities.id', 'communities_users.community_id')
     })
-  }
+  },
 
+  posts: function () {
+    return this.belongsToMany(Post).through(PostNetworkMembership)
+    .query({where: {'posts.active': true}})
+  }
 }, {
 
   find: function (idOrSlug, options) {

@@ -511,6 +511,15 @@ type Network {
   communities(first: Int, offset: Int, order: String, sortBy: String): CommunityQuerySet
   members(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
   moderators(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
+  posts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String,
+    topic: Int
+  ): PostQuerySet
 }
 
 type CommunityQuerySet {

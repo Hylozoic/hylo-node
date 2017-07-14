@@ -99,6 +99,12 @@ export default function forPosts (opts) {
       qb.groupBy(['posts.id', 'communities_posts.post_id', 'communities_posts.pinned'])
     }
 
+    if (opts.networks) {
+      qb.join('networks_posts', 'networks_posts.post_id', '=', 'posts.id')
+      qb.whereIn('networks_posts.network_id', opts.networks)
+      qb.groupBy(['posts.id', 'networks_posts.post_id'])
+    }
+
     if (opts.parent_post_id) {
       qb.where('parent_post_id', opts.parent_post_id)
       qb.where('is_project_request', false)
