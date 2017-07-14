@@ -2,9 +2,6 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 9.5.1
--- Dumped by pg_dump version 9.5.1
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
@@ -642,6 +639,39 @@ CREATE SEQUENCE networks_id_seq
 --
 
 ALTER SEQUENCE networks_id_seq OWNED BY networks.id;
+
+
+--
+-- Name: networks_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE networks_users (
+    id integer NOT NULL,
+    network_id bigint,
+    user_id bigint,
+    role integer,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: networks_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE networks_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: networks_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE networks_users_id_seq OWNED BY networks_users.id;
 
 
 --
@@ -1329,6 +1359,13 @@ ALTER TABLE ONLY networks ALTER COLUMN id SET DEFAULT nextval('networks_id_seq':
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY networks_users ALTER COLUMN id SET DEFAULT nextval('networks_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY nexudus_accounts ALTER COLUMN id SET DEFAULT nextval('nexudus_accounts_id_seq'::regclass);
 
 
@@ -1546,6 +1583,14 @@ ALTER TABLE ONLY networks
 
 ALTER TABLE ONLY networks
     ADD CONSTRAINT networks_slug_unique UNIQUE (slug);
+
+
+--
+-- Name: networks_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY networks_users
+    ADD CONSTRAINT networks_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -2440,6 +2485,22 @@ ALTER TABLE ONLY media
 
 
 --
+-- Name: networks_users_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY networks_users
+    ADD CONSTRAINT networks_users_network_id_foreign FOREIGN KEY (network_id) REFERENCES networks(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: networks_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY networks_users
+    ADD CONSTRAINT networks_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: nexudus_accounts_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2578,3 +2639,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+
