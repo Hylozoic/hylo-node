@@ -58,6 +58,9 @@ module.exports = bookshelf.Model.extend(merge({
     .save({}, {transacting: opts.transacting})
     .tap(() => User.followDefaultTags(userId, communityId, opts.transacting))
     .tap(() => Community.find(communityId, {transacting: opts.transacting})
+      .tap(community => community.save({
+        num_members: community.get('num_members') + 1
+      }, {transacting: opts.transacting}))
       .then(community => Analytics.track({
         userId: userId,
         event: 'Joined community',
