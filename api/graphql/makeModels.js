@@ -162,7 +162,7 @@ export default function makeModels (userId, isAdmin) {
         'created_at',
         'avatar_url',
         'banner_url',
-        'memberCount',
+        'num_members',
         'postCount',
         'location'
       ],

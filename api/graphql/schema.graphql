@@ -125,6 +125,7 @@ type Community {
   location: String
   settings: String
   network: Network
+  numMembers: Int
   members(
     first: Int,
     order: String,
