@@ -376,6 +376,7 @@ export default function makeModels (userId, isAdmin) {
         {members: {querySet: true}}
       ],
       getters: {
+        memberCount: n => n.memberCount(),
         posts: (n, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
