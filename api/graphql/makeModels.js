@@ -372,7 +372,6 @@ export default function makeModels (userId, isAdmin) {
         'banner_url'
       ],
       relations: [
-        {communities: {querySet: true}},
         {moderators: {querySet: true}},
         {members: {querySet: true}}
       ],
@@ -386,6 +385,16 @@ export default function makeModels (userId, isAdmin) {
             type: filter,
             sort: sortBy,
             topic
+          }),
+        communities: (n, { search, first, offset = 0, sortBy, order, filter, topic }) =>
+          fetchSearchQuerySet('forCommunities', {
+            term: search,
+            networks: [n.id],
+            limit: first,
+            offset,
+            sort: sortBy,
+            topic,
+            order
           })
       }
     }

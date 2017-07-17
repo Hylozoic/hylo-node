@@ -68,5 +68,7 @@ const shims = {
 
   forTags: options => options,
 
-  forItems: options => options
+  forItems: options => options,
+
+  forCommunities: options => options
 }

@@ -509,7 +509,7 @@ type Network {
   avatarUrl: String
   bannerUrl: String
   createdAt: String
-  communities(first: Int, offset: Int, order: String, sortBy: String): CommunityQuerySet
+  communities(first: Int, offset: Int, order: String, sortBy: String, search: String): CommunityQuerySet
   members(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
   moderators(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
   posts(
