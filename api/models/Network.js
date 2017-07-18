@@ -31,6 +31,18 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  memberCount: function () {
+    const subq = Community.query(q => {
+      q.select('id')
+      q.where('network_id', this.id)
+    }).query()
+    return Membership.query(q => {
+      q.select(bookshelf.knex.raw('count(distinct user_id) as total'))
+      q.where('community_id', 'in', subq)
+    }).fetch()
+    .then(ms => ms.length === 0 ? 0 : ms.get('total'))
+  },
+
   posts: function () {
     return this.belongsToMany(Post).through(PostNetworkMembership)
     .query({where: {'posts.active': true}})

@@ -206,6 +206,12 @@ module.exports = bookshelf.Model.extend(merge({
     }
     return this.save(saneAttrs, {patch: true})
     .then(() => this)
+  },
+
+  reconcileNumMembers: function () {
+    return Membership.where({community_id: this.id, active: true})
+    .fetchAll()
+    .then(memberships => this.save({num_members: memberships.length}))
   }
 
 }, HasSettings), {

@@ -19,10 +19,18 @@ module.exports = {
         qb.whereRaw('communities.name ilike ?', opts.autocomplete + '%')
       }
 
+      if (opts.networks) {
+        qb.whereIn('communities.network_id', opts.networks)
+      }
+
       if (opts.term) {
         addTermToQueryBuilder(opts.term, qb, {
           columns: ['communities.name']
         })
+      }
+
+      if (opts.sort || opts.order) {
+        qb.orderBy(opts.sort || '', opts.order || 'asc')
       }
 
       // this counts total rows matching the criteria, disregarding limit,

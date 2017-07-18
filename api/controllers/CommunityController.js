@@ -228,7 +228,7 @@ module.exports = {
   },
 
   removeMember: function (req, res) {
-    Membership.query().where({
+    return Membership.query().where({
       user_id: req.param('userId'),
       community_id: req.param('communityId')
     }).update({
@@ -236,6 +236,8 @@ module.exports = {
       deactivated_at: new Date(),
       deactivator_id: req.session.userId
     })
+    .then(() => Community.query().where('id', req.param('communityId'))
+      .decrement('num_members'))
     .then(() => res.ok({}))
     .catch(res.serverError)
   },

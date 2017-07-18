@@ -160,7 +160,8 @@ CREATE TABLE communities (
     slack_hook_url text,
     slack_team text,
     slack_configure_url text,
-    active boolean DEFAULT true
+    active boolean DEFAULT true,
+    num_members integer DEFAULT 0
 );
 
 
