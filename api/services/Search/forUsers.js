@@ -2,7 +2,7 @@ import { countTotal } from '../../../lib/util/knex'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export default function (opts) {
-  const { communities } = opts
+  const { communities, network } = opts
   return User.query(function (qb) {
     qb.limit(opts.limit || 1000)
     qb.offset(opts.offset || 0)
@@ -27,6 +27,13 @@ export default function (opts) {
       qb.join('communities_users', 'communities_users.user_id', 'users.id')
       qb.whereIn('communities_users.community_id', opts.communities)
       qb.where('communities_users.active', true)
+    }
+
+    if (network) {
+      qb.distinct()
+      qb.where({'communities.network_id': network})
+      qb.join('communities_users', 'users.id', 'communities_users.user_id')
+      qb.join('communities', 'communities.id', 'communities_users.community_id')
     }
 
     if (opts.autocomplete) {
