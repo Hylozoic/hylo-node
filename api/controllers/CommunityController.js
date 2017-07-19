@@ -236,10 +236,8 @@ module.exports = {
       deactivated_at: new Date(),
       deactivator_id: req.session.userId
     })
-    .then(() => Community.find(req.param('communityId'))
-      .then(community => community.save({
-        num_members: community.get('num_members')
-      })))
+    .then(() => Community.query().where('id', req.param('communityId'))
+      .decrement('num_members'))
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
