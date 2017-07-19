@@ -1018,6 +1018,65 @@ CREATE SEQUENCE skill_seq
 
 
 --
+-- Name: skills; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE skills (
+    id integer NOT NULL,
+    name character varying(255)
+);
+
+
+--
+-- Name: skills_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE skills_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: skills_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE skills_id_seq OWNED BY skills.id;
+
+
+--
+-- Name: skills_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE skills_users (
+    id integer NOT NULL,
+    skill_id bigint,
+    user_id bigint
+);
+
+
+--
+-- Name: skills_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE skills_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: skills_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE skills_users_id_seq OWNED BY skills_users.id;
+
+
+--
 -- Name: tags; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1439,6 +1498,20 @@ ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('queued_
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY skills ALTER COLUMN id SET DEFAULT nextval('skills_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY skills_users ALTER COLUMN id SET DEFAULT nextval('skills_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY tag_follows ALTER COLUMN id SET DEFAULT nextval('followed_tags_id_seq'::regclass);
 
 
@@ -1781,6 +1854,22 @@ ALTER TABLE ONLY posts_users
 
 ALTER TABLE ONLY push_notifications
     ADD CONSTRAINT queued_pushes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY skills
+    ADD CONSTRAINT skills_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: skills_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY skills_users
+    ADD CONSTRAINT skills_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -2648,6 +2737,22 @@ ALTER TABLE ONLY posts_users
 
 ALTER TABLE ONLY posts_users
     ADD CONSTRAINT posts_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: skills_users_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY skills_users
+    ADD CONSTRAINT skills_users_skill_id_foreign FOREIGN KEY (skill_id) REFERENCES skills(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: skills_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY skills_users
+    ADD CONSTRAINT skills_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
