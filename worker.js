@@ -52,7 +52,7 @@ var processJobs = function () {
         const error = typeof err === 'string'
           ? new Error(err)
           : (err || new Error('kue job failed without error'))
-        sails.log.error(label + error.message.red)
+        sails.log.error(label + error.message.red, error)
         rollbar.handleErrorWithPayloadData(error, data)
         done(error)
       })

@@ -85,6 +85,7 @@ skiff.lift({
     })
     .catch(function (err) {
       sails.log.error(red(err.message))
+      sails.log.error(err)
       rollbar.handleError(err, () => skiff.lower())
     })
   }
