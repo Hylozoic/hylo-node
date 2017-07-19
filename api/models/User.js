@@ -96,6 +96,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Invitation, 'invited_by_id')
   },
 
+  skills: function () {
+    return this.belongsToMany(Skill, 'skills_users')
+  },
+
   tags: function () {
     return this.belongsToMany(Tag).through(TagUser)
   },
