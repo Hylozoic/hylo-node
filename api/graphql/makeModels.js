@@ -372,11 +372,19 @@ export default function makeModels (userId, isAdmin) {
         'banner_url'
       ],
       relations: [
-        {moderators: {querySet: true}},
-        {members: {querySet: true}}
+        {moderators: {querySet: true}}
       ],
       getters: {
         memberCount: n => n.memberCount(),
+        members: (n, { search, first, offset = 0, sortBy, autocomplete }) =>
+          fetchSearchQuerySet('forUsers', {
+            term: search,
+            network: n.id,
+            limit: first,
+            offset,
+            sort: sortBy || 'name',
+            autocomplete
+          }),
         posts: (n, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
