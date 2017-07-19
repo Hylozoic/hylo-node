@@ -1857,6 +1857,14 @@ ALTER TABLE ONLY push_notifications
 
 
 --
+-- Name: skills_name_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY skills
+    ADD CONSTRAINT skills_name_unique UNIQUE (name);
+
+
+--
 -- Name: skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
