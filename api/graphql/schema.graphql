@@ -459,6 +459,7 @@ type Mutation {
   updateNetwork(id: ID, data: NetworkInput): Network
   deletePost(id: ID): GenericResult
   addSkill(name: String): GenericResult
+  removeSkill(name: String): GenericResult
 }
 
 type GenericResult {

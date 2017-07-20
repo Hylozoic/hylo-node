@@ -199,3 +199,12 @@ export function addSkill (userId, name) {
   .then(skill => skill.users().attach(userId))
   .then(() => ({success: true}))
 }
+
+export function removeSkill (userId, name) {
+  return Skill.find(name)
+  .then(skill => {
+    if (!skill) throw new Error(`Couldn't find skill named ${name}`)
+    return skill.users().detach(userId)
+  })
+  .then(() => ({success: true}))
+}

@@ -108,7 +108,8 @@ function createSchema (userId, isAdmin) {
         removeModerator(userId, personId, communityId),
       deletePost: (root, { id }) =>
         deletePost(userId, id),
-      addSkill: (root, { name }) => addSkill(userId, name)
+      addSkill: (root, { name }) => addSkill(userId, name),
+      removeSkill: (root, { name }) => removeSkill(userId, name)
     },
 
     FeedItemContent: {
