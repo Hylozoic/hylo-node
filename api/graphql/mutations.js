@@ -189,3 +189,13 @@ export function deletePost (userId, postId) {
   })
   .then(() => ({success: true}))
 }
+
+export function addSkill (userId, name) {
+  return Skill.find(name)
+  .then(skill => {
+    if (!skill) return new Skill({name}).save()
+    return skill
+  })
+  .then(skill => skill.users().attach(userId))
+  .then(() => ({success: true}))
+}
