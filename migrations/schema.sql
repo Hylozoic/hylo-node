@@ -1881,6 +1881,14 @@ ALTER TABLE ONLY skills_users
 
 
 --
+-- Name: skills_users_skill_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY skills_users
+    ADD CONSTRAINT skills_users_skill_id_user_id_unique UNIQUE (skill_id, user_id);
+
+
+--
 -- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
