@@ -32,11 +32,11 @@ const createView = (lang, knex) => {
       u.id as user_id,
       null as comment_id,
       ${wv('u.name', 'A')} ||
-      ${wv("coalesce(string_agg(replace(t.name, '-', ' '), ' '), '')", 'C')} ||
+      ${wv("coalesce(string_agg(replace(s.name, '-', ' '), ' '), '')", 'C')} ||
       ${wv("coalesce(u.bio, '')", 'C')} as ${columnName}
     from users u
-    left join tags_users tu on u.id = tu.user_id
-    left join tags t on tu.tag_id = t.id
+    left join skills_users su on u.id = su.user_id
+    left join skills s on su.skill_id = s.id
     where u.active = true
     group by u.id
   ) union (
