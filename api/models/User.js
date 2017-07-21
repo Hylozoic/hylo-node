@@ -124,7 +124,7 @@ module.exports = bookshelf.Model.extend(merge({
   setSanely: function (attrs) {
     const saneAttrs = omit(attrs, 'settings')
 
-    if (saneAttrs.twitter_name) {
+    if (!isEmpty(saneAttrs.twitter_name)) {
       if (saneAttrs.twitter_name.match(/^\s*$/)) {
         saneAttrs.twitter_name = null
       } else if (saneAttrs.twitter_name.match(/^@/)) {
