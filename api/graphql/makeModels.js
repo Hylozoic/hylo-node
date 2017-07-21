@@ -90,6 +90,7 @@ export default function makeModels (userId, isAdmin) {
         'comments',
         'memberships',
         {posts: {querySet: true}},
+        {skills: {querySet: true}},
         'votes'
       ],
       filter: nonAdminFilter(sharedMembership('users', userId)),

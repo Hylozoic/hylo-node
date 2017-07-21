@@ -95,6 +95,7 @@ type Person {
   ): PostQuerySet
   votes(first: Int, cursor: ID, order: String): [Vote]
   votesTotal: Int
+  skills(first: Int, cursor: ID): SkillQuerySet
   messageThreadId: ID
 }
 
@@ -457,6 +458,8 @@ type Mutation {
   removeModerator(personId: ID, communityId: ID): Community
   updateNetwork(id: ID, data: NetworkInput): Network
   deletePost(id: ID): GenericResult
+  addSkill(name: String): GenericResult
+  removeSkill(name: String): GenericResult
 }
 
 type GenericResult {
@@ -528,4 +531,15 @@ type CommunityQuerySet {
   total: Int
   hasMore: Boolean
   items: [Community]
+}
+
+type Skill {
+  id: ID
+  name: String
+}
+
+type SkillQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Skill]
 }
