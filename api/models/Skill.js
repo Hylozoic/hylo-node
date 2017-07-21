@@ -10,10 +10,10 @@ module.exports = bookshelf.Model.extend({
   find: function (nameOrId, opts = {}) {
     if (!nameOrId) return Promise.resolve(null)
 
-    const where = isNaN(Number(nameOrId))
-      ? {name: nameOrId}
-      : {id: nameOrId}
-
-    return this.where(where).fetch(opts)
+    if (isNaN(Number(nameOrId))) {
+      return Skill.query(qb => qb.whereRaw('lower(name) = lower(?)', nameOrId))
+      .fetch(opts)
+    }
+    return Tag.where({id: nameOrId}).fetch(opts)
   }
 })
