@@ -93,9 +93,9 @@ type Person {
     filter: String,
     topic: Int
   ): PostQuerySet
+  skills(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, cursor: ID, order: String): [Vote]
   votesTotal: Int
-  skills(first: Int, cursor: ID): SkillQuerySet
   messageThreadId: ID
 }
 
