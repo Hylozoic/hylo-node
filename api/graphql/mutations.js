@@ -12,6 +12,7 @@ import underlyingFindOrCreateThread, {
 import underlyingFindLinkPreview from '../models/linkPreview/findOrCreateByUrl'
 import validateNetworkData from '../models/network/validateNetworkData'
 import underlyingUpdateNetwork from '../models/network/updateNetwork'
+import CommunityService from '../services/CommunityService'
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
@@ -177,6 +178,21 @@ export function removeModerator (userId, personId, communityId) {
       throw new Error("you don't have permission to modify this community")
     }
   })
+}
+
+/**
+ * As a moderator, removes member from a community.
+ */
+export function removeMember (userToRemove, communityId, loggedInUser) {
+  return Membership.hasModeratorRole(loggedInUser, communityId)
+    .then(isModerator => {
+      if (isModerator) {
+        return CommunityService.removeMember(userToRemove, communityId, loggedInUser)
+      } else {
+        throw new Error("you don't have permission to moderate this community")
+      }
+    })
+    .then(() => ({success: true}))
 }
 
 export function deletePost (userId, postId) {
