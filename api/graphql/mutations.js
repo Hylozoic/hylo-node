@@ -188,11 +188,11 @@ export function removeMember (userToRemove, communityId, loggedInUser) {
     .then(isModerator => {
       if (isModerator) {
         return CommunityService.removeMember(userToRemove, communityId, loggedInUser)
+          .then(() => Community.find(communityId))
       } else {
         throw new Error("you don't have permission to moderate this community")
       }
     })
-    .then(() => ({success: true}))
 }
 
 export function deletePost (userId, postId) {
