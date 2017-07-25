@@ -305,6 +305,11 @@ export default function makeModels (userId, isAdmin) {
       fetchMany: args => CommunityTag.query(communityTopicFilter(userId, args))
     },
 
+    Skill: {
+      model: Skill,
+      attributes: ['id', 'name']
+    },
+
     Topic: {
       model: Tag,
       attributes: ['id', 'name'],
