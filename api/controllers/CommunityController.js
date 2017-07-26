@@ -3,6 +3,7 @@ import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { clone, isEmpty, merge, pick, sortBy } from 'lodash'
 import { curry } from 'lodash/fp'
 import { joinRoom, leaveRoom } from '../services/Websockets'
+import CommunityService from '../services/CommunityService'
 
 const Promise = require('bluebird')
 const request = require('request')
@@ -228,16 +229,9 @@ module.exports = {
   },
 
   removeMember: function (req, res) {
-    return Membership.query().where({
-      user_id: req.param('userId'),
-      community_id: req.param('communityId')
-    }).update({
-      active: false,
-      deactivated_at: new Date(),
-      deactivator_id: req.session.userId
-    })
-    .then(() => Community.query().where('id', req.param('communityId'))
-      .decrement('num_members'))
+    return CommunityService.removeMember(req.param('userId'),
+      req.param('communityId'),
+      req.session.userId)
     .then(() => res.ok({}))
     .catch(res.serverError)
   },
