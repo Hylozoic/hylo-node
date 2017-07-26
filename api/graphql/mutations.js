@@ -183,7 +183,7 @@ export function removeModerator (userId, personId, communityId) {
 /**
  * As a moderator, removes member from a community.
  */
-export function removeMember (userToRemove, communityId, loggedInUser) {
+export function removeMember (loggedInUser, userToRemove, communityId) {
   return Membership.hasModeratorRole(loggedInUser, communityId)
     .then(isModerator => {
       if (isModerator) {
