@@ -44,7 +44,7 @@ export default function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
-        {messageThreads: {typename: 'MessageThread'}}
+        {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
         hasDevice: u => u.hasDevice(),
