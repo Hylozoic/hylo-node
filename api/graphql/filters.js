@@ -69,3 +69,13 @@ export function communityTopicFilter (userId, {
     }
   }
 }
+
+export const skillInCommunitiesFilter = curry((userId, relation) =>
+  relation.query(q => {
+    q.distinct()
+    q.select(bookshelf.knex.raw('upper("name")'))
+    q.join('skills_users', 'skills.id', 'skills_users.skill_id')
+    q.join('communities_users', 'skills_users.user_id', 'communities_users.user_id')
+    q.whereIn('communities_users.community_id', myCommunityIds(userId))
+    q.orWhereIn('communities_users.community_id', myNetworkCommunityIds(userId))
+  }))

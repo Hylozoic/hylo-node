@@ -7,7 +7,8 @@ import {
   sharedMembership,
   sharedPostMembership,
   sharedPostMembershipClause,
-  activePost
+  activePost,
+  skillInCommunitiesFilter
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 
@@ -317,7 +318,8 @@ export default function makeModels (userId, isAdmin) {
           if (autocomplete) {
             q.whereRaw('name ilike ?', autocomplete + '%')
           }
-        })
+        }),
+      filter: nonAdminFilter(skillInCommunitiesFilter(userId))
     },
 
     Topic: {
