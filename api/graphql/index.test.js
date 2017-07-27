@@ -129,19 +129,23 @@ describe('graphql request handler', () => {
               followersTotal
             }
             messageThreads {
-              id
-              messages {
-                items {
-                  text
-                  creator {
-                    name
+              total
+              hasMore
+              items {
+                id
+                messages {
+                  items {
+                    text
+                    creator {
+                      name
+                    }
                   }
                 }
+                participants {
+                  name
+                }
+                participantsTotal
               }
-              participants {
-                name
-              }
-              participantsTotal
             }
           }
         }`
@@ -187,30 +191,34 @@ describe('graphql request handler', () => {
                   followersTotal: 1
                 }
               ],
-              messageThreads: [
-                {
-                  id: thread.id,
-                  messages: {
-                    items: [
-                      {
-                        text: message.get('text'),
-                        creator: {
-                          name: user2.get('name')
+              messageThreads: {
+                hasMore: false,
+                total: 1,
+                items: [
+                  {
+                    id: thread.id,
+                    messages: {
+                      items: [
+                        {
+                          text: message.get('text'),
+                          creator: {
+                            name: user2.get('name')
+                          }
                         }
-                      }
-                    ]
-                  },
-                  participants: [
-                    {
-                      name: user.get('name')
+                      ]
                     },
-                    {
-                      name: user2.get('name')
-                    }
-                  ],
-                  participantsTotal: 2
-                }
-              ]
+                    participants: [
+                      {
+                        name: user.get('name')
+                      },
+                      {
+                        name: user2.get('name')
+                      }
+                    ],
+                    participantsTotal: 2
+                  }
+                ]
+              }
             }
           }
         })
