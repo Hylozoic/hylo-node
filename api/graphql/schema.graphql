@@ -346,6 +346,11 @@ type Query {
     offset: Int
   ): SearchResultQuerySet
   network(id: ID, slug: String): Network
+  skills(
+    first: Int,
+    offset: Int,
+    autocomplete: String
+  ): SkillQuerySet
 }
 
 input MeInput {

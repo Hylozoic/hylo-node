@@ -78,7 +78,8 @@ function createSchema (userId, isAdmin) {
           return presentQuerySet(models, merge(args, {total}))
         }),
       network: (root, { id, slug }) =>  // you can specify id or slug, but not both
-        fetchOne('Network', slug || id, slug ? 'slug' : 'id')
+        fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
+      skills: (root, args) => fetchMany('Skill', args)
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
