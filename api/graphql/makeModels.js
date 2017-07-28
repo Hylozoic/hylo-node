@@ -7,7 +7,8 @@ import {
   sharedMembership,
   sharedPostMembership,
   sharedPostMembershipClause,
-  activePost
+  activePost,
+  skillInCommunitiesOrNetworksFilter
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 
@@ -307,7 +308,18 @@ export default function makeModels (userId, isAdmin) {
 
     Skill: {
       model: Skill,
-      attributes: ['id', 'name']
+      attributes: ['id', 'name'],
+      fetchMany: ({ autocomplete, first = 1000, offset = 0 }) =>
+        Skill.query(q => {
+          q.limit(first)
+          q.offset(offset)
+          q.orderByRaw('upper("name") asc')
+
+          if (autocomplete) {
+            q.whereRaw('name ilike ?', autocomplete + '%')
+          }
+        }),
+      filter: nonAdminFilter(skillInCommunitiesOrNetworksFilter(userId))
     },
 
     Topic: {
