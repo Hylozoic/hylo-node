@@ -43,10 +43,10 @@ export default function (opts) {
     }
 
     if (opts.term) {
-      qb.leftJoin('tags_users', 'tags_users.user_id', 'users.id')
-      qb.leftJoin('tags', 'tags.id', 'tags_users.tag_id')
+      qb.leftJoin('skills_users', 'skills_users.user_id', 'users.id')
+      qb.leftJoin('skills', 'skills.id', 'skills_users.skill_id')
       addTermToQueryBuilder(opts.term, qb, {
-        columns: ['users.name', 'users.bio', 'tags.name']
+        columns: ['users.name', 'users.bio', 'skills.name']
       })
     }
 
