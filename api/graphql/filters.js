@@ -70,7 +70,7 @@ export function communityTopicFilter (userId, {
   }
 }
 
-export const skillInCommunitiesFilter = curry((userId, relation) =>
+export const skillInCommunitiesOrNetworksFilter = curry((userId, relation) =>
   relation.query(q => {
     q.distinct()
     q.select(bookshelf.knex.raw('upper("name")'))
