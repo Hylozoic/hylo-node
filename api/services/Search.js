@@ -67,7 +67,7 @@ module.exports = {
   fullTextSearch: function (userId, args) {
     var items, total
     args.limit = args.first
-    return fetchAllCommunityIds(userId)
+    return fetchAllCommunityIds(userId, args)
     .then(communityIds =>
       FullTextSearch.searchInCommunities(communityIds, args))
       .then(items_ => {
@@ -95,11 +95,17 @@ module.exports = {
   }
 }
 
-const fetchAllCommunityIds = userId =>
-  Promise.join(
+const fetchAllCommunityIds = (userId, { communityIds, networkId }) => {
+  if (communityIds) return Promise.resolve(communityIds)
+  if (networkId) {
+    return Network.find(networkId, {withRelated: 'communities'})
+    .then(n => n.relations.communities.map(c => c.id))
+  }
+  return Promise.join(
     Network.activeCommunityIds(userId),
     Membership.activeCommunityIds(userId)
   ).then(flow(flatten, uniq))
+}
 
 const obfuscate = text => new Buffer(text).toString('hex')
 
