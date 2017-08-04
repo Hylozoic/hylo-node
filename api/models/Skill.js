@@ -14,6 +14,6 @@ module.exports = bookshelf.Model.extend({
       return Skill.query(qb => qb.whereRaw('lower(name) = lower(?)', nameOrId))
       .fetch(opts)
     }
-    return Tag.where({id: nameOrId}).fetch(opts)
+    return Skill.where({id: nameOrId}).fetch(opts)
   }
 })

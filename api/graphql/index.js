@@ -111,7 +111,7 @@ function createSchema (userId, isAdmin) {
       deletePost: (root, { id }) =>
         deletePost(userId, id),
       addSkill: (root, { name }) => addSkill(userId, name),
-      removeSkill: (root, { name }) => removeSkill(userId, name),
+      removeSkill: (root, { id }) => removeSkill(userId, id),
       removeMember: (root, {personId, communityId}) => removeMember(userId, personId, communityId)
     },
 
