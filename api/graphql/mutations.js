@@ -212,14 +212,13 @@ export function addSkill (userId, name) {
     if (!skill) return new Skill({name}).save()
     return skill
   })
-  .then(skill => skill.users().attach(userId))
-  .then(() => ({success: true}))
+  .tap(skill => skill.users().attach(userId))
 }
 
-export function removeSkill (userId, name) {
-  return Skill.find(name)
+export function removeSkill (userId, skillId) {
+  return Skill.find(skillId)
   .then(skill => {
-    if (!skill) throw new Error(`Couldn't find skill named ${name}`)
+    if (!skill) throw new Error(`Couldn't find skill with ID ${skillId}`)
     return skill.users().detach(userId)
   })
   .then(() => ({success: true}))

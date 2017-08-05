@@ -469,8 +469,8 @@ type Mutation {
   removeModerator(personId: ID, communityId: ID): Community
   updateNetwork(id: ID, data: NetworkInput): Network
   deletePost(id: ID): GenericResult
-  addSkill(name: String): GenericResult
-  removeSkill(name: String): GenericResult
+  addSkill(name: String): Skill
+  removeSkill(id: ID): GenericResult
   removeMember(personId: ID, communityId: ID): Community
 }
 
