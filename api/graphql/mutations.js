@@ -223,3 +223,13 @@ export function removeSkill (userId, skillId) {
   })
   .then(() => ({success: true}))
 }
+
+export function regenerateAccessCode (userId, communityId) {
+  return Membership.hasModeratorRole(userId, communityId)
+  .then(isModerator => Community.find(communityId)
+    .then(community => {
+      if (!isModerator) return community
+      return Community.getNewAccessCode()
+      .then(beta_access_code => community.save({beta_access_code}, {patch: true})) // eslint-disable-line camelcase
+    }))
+}

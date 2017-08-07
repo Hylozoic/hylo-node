@@ -473,6 +473,7 @@ type Mutation {
   addSkill(name: String): Skill
   removeSkill(id: ID): GenericResult
   removeMember(personId: ID, communityId: ID): Community
+  regenerateAccessCode(communityId: ID): Community
 }
 
 type GenericResult {
