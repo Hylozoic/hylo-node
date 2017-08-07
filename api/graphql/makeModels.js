@@ -218,6 +218,12 @@ export default function makeModels (userId, isAdmin) {
             type: filter,
             sort: sortBy,
             topic
+          }),
+        betaAccessCode: c =>
+          Membership.hasModeratorRole(userId, c.id)
+          .then(isModerator => {
+            if (!isModerator) return null
+            return c.get('beta_access_code')
           })
       },
       filter: nonAdminFilter(relation => relation.query(q => {

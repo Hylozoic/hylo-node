@@ -125,6 +125,7 @@ type Community {
   bannerUrl: String
   location: String
   settings: String
+  betaAccessCode: String
   network: Network
   numMembers: Int
   members(
