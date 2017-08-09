@@ -114,6 +114,7 @@
   "addons": [
     "redisgreen",
     "scheduler",
+    "papertrail",
     "heroku-postgresql"
   ],
   "buildpacks": [
