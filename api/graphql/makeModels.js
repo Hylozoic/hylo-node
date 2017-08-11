@@ -218,6 +218,12 @@ export default function makeModels (userId, isAdmin) {
             type: filter,
             sort: sortBy,
             topic
+          }),
+        invitePath: c =>
+          Membership.hasModeratorRole(userId, c.id)
+          .then(isModerator => {
+            if (!isModerator) return null
+            return Frontend.Route.invitePath(c)
           })
       },
       filter: nonAdminFilter(relation => relation.query(q => {

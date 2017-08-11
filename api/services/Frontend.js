@@ -71,6 +71,10 @@ module.exports = {
 
     emailBatchCommentForm: function () {
       return url('/noo/hook/batchCommentForm')
+    },
+
+    invitePath: function (community) {
+      return `/c/${community.get('slug')}/join/${community.get('beta_access_code')}`
     }
   }
 }

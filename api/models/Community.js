@@ -290,7 +290,7 @@ module.exports = bookshelf.Model.extend(merge({
   getNewAccessCode: function () {
     const test = code => Community.where({beta_access_code: code}).count().then(Number)
     const loop = () => {
-      const code = randomstring.generate({length: 20, charset: 'alphanumeric'})
+      const code = randomstring.generate({length: 10, charset: 'alphanumeric'})
       return test(code).then(count => count ? loop() : code)
     }
     return loop()

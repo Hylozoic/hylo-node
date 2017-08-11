@@ -125,6 +125,7 @@ type Community {
   bannerUrl: String
   location: String
   settings: String
+  invitePath: String
   network: Network
   numMembers: Int
   members(
@@ -472,6 +473,7 @@ type Mutation {
   addSkill(name: String): Skill
   removeSkill(id: ID): GenericResult
   removeMember(personId: ID, communityId: ID): Community
+  regenerateAccessCode(communityId: ID): Community
 }
 
 type GenericResult {
