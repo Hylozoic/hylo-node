@@ -219,11 +219,11 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy,
             topic
           }),
-        betaAccessCode: c =>
+        invitePath: c =>
           Membership.hasModeratorRole(userId, c.id)
           .then(isModerator => {
             if (!isModerator) return null
-            return c.get('beta_access_code')
+            return Frontend.Route.invitePath(c)
           })
       },
       filter: nonAdminFilter(relation => relation.query(q => {
