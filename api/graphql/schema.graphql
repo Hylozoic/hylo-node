@@ -80,7 +80,7 @@ type Person {
   url: String
   location: String
   tagline: String
-  comments(first: Int, cursor: ID, order: String): [Comment]
+  comments(first: Int, offset: Int, order: String): CommentQuerySet
   commentsTotal: Int
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
@@ -94,7 +94,7 @@ type Person {
     topic: Int
   ): PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
-  votes(first: Int, cursor: ID, order: String): [Vote]
+  votes(first: Int, offset: Int, order: String): VoteQuerySet
   votesTotal: Int
   messageThreadId: ID
 }
@@ -288,6 +288,12 @@ type Vote {
   post: Post
   voter: Person
   createdAt: String
+}
+
+type VoteQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Vote]
 }
 
 type Query {
