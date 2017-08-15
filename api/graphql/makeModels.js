@@ -90,11 +90,11 @@ export default function makeModels (userId, isAdmin) {
         messageThreadId: p => p.getMessageThreadWith(userId).then(post => post ? post.id : null)
       },
       relations: [
-        'comments',
         'memberships',
         {posts: {querySet: true}},
+        {comments: {querySet: true}},
         {skills: {querySet: true}},
-        'votes'
+        {votes: {querySet: true}}
       ],
       filter: nonAdminFilter(sharedMembership('users', userId)),
       isDefaultTypeForTable: true,
