@@ -187,28 +187,37 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
-        members: (c, args) => {
-          const { search, first, offset = 0, sortBy, autocomplete } = args
-          if (!search || isEmpty(search)) {
-            return fetchSearchQuerySet('forUsers', {
-              communities: [c.id],
-              limit: first,
-              offset,
-              sort: sortBy || 'name',
-              autocomplete
-            })
-          } else {
-            return Search.fullTextSearch(userId, {
-              args,
-              type: 'person',
-              term: search,
-              communityIds: [c.id]
-            })
-            .then(({ models, total }) =>
-              // extract the content here because we can assume it's a person
-              presentQuerySet(models.map(m => m.content), merge(args, {total})))
-          }
-        },
+        members: (c, { search, first, offset = 0, sortBy, autocomplete }) =>
+          fetchSearchQuerySet('forUsers', {
+            term: search,
+            communities: [c.id],
+            limit: first,
+            offset,
+            sort: sortBy || 'name',
+            autocomplete
+          }),
+        // members: (c, args) => {
+        //   const { search, first, offset = 0, sortBy, autocomplete } = args
+        //   if (!search || isEmpty(search)) {
+        //     return fetchSearchQuerySet('forUsers', {
+        //       communities: [c.id],
+        //       limit: first,
+        //       offset,
+        //       sort: sortBy || 'name',
+        //       autocomplete
+        //     })
+        //   } else {
+        //     return Search.fullTextSearch(userId, {
+        //       args,
+        //       type: 'person',
+        //       term: search,
+        //       communityIds: [c.id]
+        //     })
+        //     .then(({ models, total }) =>
+        //       // extract the content here because we can assume it's a person
+        //       presentQuerySet(models.map(m => m.content), merge(args, {total})))
+        //   }
+        // },
         posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
