@@ -48,11 +48,11 @@ var processJobs = function () {
         done()
       })
       .catch(err => {
-        const data = {custom: {jobData: job.data}}
+        const data = {custom: {jobId: job.id, jobData: job.data}}
         const error = typeof err === 'string'
           ? new Error(err)
           : (err || new Error('kue job failed without error'))
-        sails.log.error(label + error.message.red)
+        sails.log.error(label + error.message.red, error)
         rollbar.handleErrorWithPayloadData(error, data)
         done(error)
       })
