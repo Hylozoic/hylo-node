@@ -233,3 +233,15 @@ export function regenerateAccessCode (userId, communityId) {
       .then(beta_access_code => community.save({beta_access_code}, {patch: true})) // eslint-disable-line camelcase
     }))
 }
+
+export function flagInappropriateContent (userId, {
+  category, reason, link
+}) {
+  return new FlaggedItem({
+    user_id: userId,
+    category,
+    reason,
+    link
+  }).save()
+  .then(() => ({success: true}))
+}

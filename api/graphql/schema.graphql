@@ -480,6 +480,7 @@ type Mutation {
   removeSkill(id: ID): GenericResult
   removeMember(personId: ID, communityId: ID): Community
   regenerateAccessCode(communityId: ID): Community
+  flagInappropriateContent(data: InappropriateContentInput): GenericResult
 }
 
 type GenericResult {
@@ -562,4 +563,10 @@ type SkillQuerySet {
   total: Int
   hasMore: Boolean
   items: [Skill]
+}
+
+input InappropriateContentInput {
+  category: String,
+  reason: String,
+  link: String
 }
