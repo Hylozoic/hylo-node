@@ -315,6 +315,11 @@ module.exports = bookshelf.Model.extend({
     const redisInfo = parseRedisUrl().parse(process.env.REDIS_URL)
     const io = emitter(redisInfo)
     io.on('error', err => console.error(`Socket error on newNotification: ${err}`))
+    io.redis.on('error', err => console.error(`
+      Redis error: ${JSON.stringify(err)}
+      while attempting to send notification via socket from actor: ${JSON.stringify(actor)}
+      in community ${JSON.stringify(community)}
+    `))
     io.in(userRoom(userId)).emit('newNotification', payload)
   }
 }, {
