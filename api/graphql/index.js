@@ -26,7 +26,8 @@ import {
   addSkill,
   removeSkill,
   removeMember,
-  regenerateAccessCode
+  regenerateAccessCode,
+  flagInappropriateContent
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -114,7 +115,8 @@ function createSchema (userId, isAdmin) {
       addSkill: (root, { name }) => addSkill(userId, name),
       removeSkill: (root, { id }) => removeSkill(userId, id),
       removeMember: (root, { personId, communityId }) => removeMember(userId, personId, communityId),
-      regenerateAccessCode: (root, { communityId }) => regenerateAccessCode(userId, communityId)
+      regenerateAccessCode: (root, { communityId }) => regenerateAccessCode(userId, communityId),
+      flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data)
     },
 
     FeedItemContent: {
