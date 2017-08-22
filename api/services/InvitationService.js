@@ -3,7 +3,12 @@ import { markdown } from 'hylo-utils/text'
 import { get, isEmpty, map, merge } from 'lodash/fp'
 
 module.exports = {
-  find: ({communityId, limit, offset, pendingOnly = false}) => {
+
+  findById: (invitationId) => {
+    return Invitation.find(invitationId)
+  },
+
+  find: ({communityId, limit, offset, pendingOnly = false, includeExpired = false}) => {
     return Community.find(communityId)
     .then(community => Invitation.query(qb => {
       qb.limit(limit || 20)
@@ -20,6 +25,8 @@ module.exports = {
 
       pendingOnly && qb.whereNull('used_by_id')
 
+      !includeExpired && qb.whereNull('expired_by_id')
+
       qb.orderBy('created_at', 'desc')
     }).fetchAll({withRelated: 'user'}))
     .then(invitations => ({
@@ -33,7 +40,7 @@ module.exports = {
             avatar_url: i.get('joined_user_avatar_url')
           }
         }
-        return merge(i.pick('id', 'email', 'created_at'), {
+        return merge(i.pick('id', 'email', 'created_at', 'last_sent_at'), {
           user: !isEmpty(user) ? user : null
         })
       })
@@ -104,11 +111,21 @@ module.exports = {
     })
   },
 
-  expire: (invitationId) => {
-    // TODO
+  expire: (userId, invitationId) => {
+    return Invitation.find(invitationId)
+    .then(invitation => {
+      if (!invitation) throw new Error('not found')
+
+      return invitation.expire(userId)
+    })
   },
 
   resend: (invitationId) => {
-    // TODO
+    return Invitation.find(invitationId)
+    .then(invitation => {
+      if (!invitation) throw new Error('not found')
+
+      return invitation.send()
+    })
   }
 }

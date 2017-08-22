@@ -172,6 +172,7 @@ type Invitation {
   id: Int
   email: String
   created_at: String
+  last_sent_at: String
 }
 type InvitationQuerySet {
   total: Int
@@ -498,8 +499,8 @@ type Mutation {
   removeMember(personId: ID, communityId: ID): Community
   regenerateAccessCode(communityId: ID): Community
   createInvitation(communityId: ID, data: InviteInput): GenericResult
-  expireInvitation(id: ID): GenericResult
-  resendInvitation(id: ID): GenericResult
+  expireInvitation(invitationId: ID): GenericResult
+  resendInvitation(invitationId: ID): GenericResult
   reinviteAll(communityId: ID): GenericResult
 }
 

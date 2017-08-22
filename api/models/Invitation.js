@@ -26,6 +26,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!this.get('used_by_id')
   },
 
+  isExpired: function () {
+    return !!this.get('expired_by_id')
+  },
+
   tagName: function () {
     return this.get('tag_id')
       ? Tag.find(this.get('tag_id')).then(t => t.get('name'))
@@ -59,6 +63,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .tap(() => !this.isUsed() &&
       this.save({used_by_id: userId, used_at: new Date()},
         {patch: true, transacting}))
+  },
+
+  expire: function (userId, opts = {}) {
+    const { transacting } = opts
+    return this.save({expired_by_id: userId, expired_at: new Date()},
+      {patch: true, transacting})
   },
 
   send: function () {
@@ -131,7 +141,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   reinviteAll: function (opts) {
     const { communityId } = opts
-    return Invitation.where({community_id: communityId, used_by_id: null})
+    return Invitation.where({community_id: communityId, used_by_id: null, expired_by_id: null})
     .fetchAll({withRelated: ['creator', 'community', 'tag']})
     .then(invitations =>
       Promise.map(invitations.models, invitation => invitation.send()))
@@ -145,6 +155,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         "(sent_count=4 and last_sent_at < now() - interval '9 day'))"
       q.whereRaw(whereClause)
       q.whereNull('used_by_id')
+      q.whereNull('expired_by_id')
     })
     .fetchAll({withRelated: ['creator', 'community', 'tag']})
     .tap(invitations => Promise.map(invitations.models, i => i.send()))

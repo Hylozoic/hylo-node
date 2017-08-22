@@ -242,19 +242,22 @@ export function createInvitation (userId, communityId, data) {
     emails: data.emails,
     message: data.message,
     moderator: data.isModerator || false,
-    subject: 'You have been invited!' // TODO copy for subject
+    subject: 'Join our community!'
   })
   .then(() => ({success: true}))
 }
 
 export function expireInvitation (userId, invitationId) {
-  // TODO
+  return InvitationService.expire(userId, invitationId)
+  .then(() => ({success: true}))
 }
 
 export function resendInvitation (userId, invitationId) {
-  // TODO
+  return InvitationService.resend(invitationId)
+  .then(() => ({success: true}))
 }
 
 export function reinviteAll (userId, communityId) {
-  // TODO
+  return InvitationService.reinviteAll(userId, communityId)
+  .then(() => ({success: true}))
 }
