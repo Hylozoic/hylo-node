@@ -149,6 +149,7 @@
       "Device",
       "Email",
       "EventResponse",
+      "FlaggedItem",
       "Follow",
       "Frontend",
       "FullTextSearch",
