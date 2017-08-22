@@ -1,6 +1,4 @@
-import validator from 'validator'
-import { markdown } from 'hylo-utils/text'
-import { get, isEmpty, map, merge } from 'lodash/fp'
+import { create, reinviteAll, find } from '../services/InvitationService'
 
 const parseEmailList = emails =>
   (emails || '').split(/,|\n/).map(email => {
@@ -52,86 +50,44 @@ module.exports = {
   },
 
   find: function (req, res) {
-    return Community.find(req.param('communityId'))
-    .then(community => Invitation.query(qb => {
-      qb.limit(req.param('limit') || 20)
-      qb.offset(req.param('offset') || 0)
-      qb.where('community_id', community.get('id'))
-      qb.leftJoin('users', 'users.id', 'community_invites.used_by_id')
-      qb.select(bookshelf.knex.raw(`
-        community_invites.*,
-        count(*) over () as total,
-        users.id as joined_user_id,
-        users.name as joined_user_name,
-        users.avatar_url as joined_user_avatar_url
-      `))
-      qb.orderBy('created_at', 'desc')
-    }).fetchAll({withRelated: 'user'}))
-    .then(invitations => ({
-      total: invitations.length > 0 ? Number(invitations.first().get('total')) : 0,
-      items: invitations.map(i => {
-        var user = i.relations.user.pick('id', 'name', 'avatar_url')
-        if (isEmpty(user) && i.get('joined_user_id')) {
-          user = {
-            id: i.get('joined_user_id'),
-            name: i.get('joined_user_name'),
-            avatar_url: i.get('joined_user_avatar_url')
-          }
-        }
-        return merge(i.pick('id', 'email', 'created_at'), {
-          user: !isEmpty(user) ? user : null
-        })
-      })
-    }))
+    return find({
+      communityId: req.param('communityId'),
+      limit: req.param('limit'),
+      offset: req.param('offset')
+    })
     .then(res.ok)
   },
 
   create: function (req, res) {
-    let tagName = req.param('tagName')
+    const tagName = req.param('tagName')
     const userIds = req.param('users')
     const rawEmails = req.param('emails')
-    return Promise.join(
-      userIds && User.where('id', 'in', userIds).fetchAll(),
-      Community.find(req.param('communityId')),
-      tagName && Tag.find(tagName),
-      (users, community, tag) => {
-        var emails = (rawEmails ? parseEmailList(rawEmails) : [])
-        .concat(map(u => u.get('email'), get('models', users)))
+    const communityId = req.param('communityId')
+    const message = req.param('message')
+    const moderator = req.param('moderator')
+    const subject = req.param('subject')
 
-        return Promise.map(emails, email => {
-          if (!validator.isEmail(email)) {
-            return {email, error: 'not a valid email address'}
-          }
+    const emails = (rawEmails ? parseEmailList(rawEmails) : [])
 
-          const opts = {
-            email,
-            userId: req.session.userId,
-            communityId: community.id
-          }
-
-          if (tag) {
-            opts.tagId = tag.id
-          } else {
-            opts.message = markdown(req.param('message'))
-            opts.moderator = req.param('moderator')
-            opts.subject = req.param('subject')
-          }
-
-          return Invitation.createAndSend(opts)
-          .then(() => ({email, error: null}))
-          .catch(err => ({email, error: err.message}))
-        })
-      })
+    return create({
+      sessionUserId: req.session.userId,
+      communityId,
+      tagName,
+      userIds,
+      emails,
+      message,
+      isModerator: moderator,
+      subject})
     .then(results => res.ok({results}))
   },
 
   reinviteAll: function (req, res) {
-    return Queue.classMethod('Invitation', 'reinviteAll', {
+    return reinviteAll({
       communityId: res.locals.community.id,
       subject: req.param('subject'),
       message: req.param('message'),
       moderator: req.param('moderator'),
-      userId: req.session.userId
+      sessionUserId: req.session.userId
     })
     .then(() => res.ok({}))
     .catch(res.serverError)

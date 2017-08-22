@@ -151,6 +151,7 @@ type Community {
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   communityTopics(
     first: Int,
     sortBy: String,
@@ -165,6 +166,17 @@ type PersonQuerySet {
   total: Int
   hasMore: Boolean
   items: [Person]
+}
+
+type Invitation {
+  id: Int
+  email: String
+  created_at: String
+}
+type InvitationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Invitation]
 }
 
 type PostQuerySet {
@@ -416,6 +428,11 @@ input CommunityTopicInput {
   newPostCount: Int
 }
 
+input InviteInput {
+  emails: [String]
+  message: String
+}
+
 input CommunityInput {
   name: String
   description: String
@@ -480,6 +497,10 @@ type Mutation {
   removeSkill(id: ID): GenericResult
   removeMember(personId: ID, communityId: ID): Community
   regenerateAccessCode(communityId: ID): Community
+  createInvitation(communityId: ID, data: InviteInput): GenericResult
+  expireInvitation(id: ID): GenericResult
+  resendInvitation(id: ID): GenericResult
+  reinviteAll(communityId: ID): GenericResult
 }
 
 type GenericResult {

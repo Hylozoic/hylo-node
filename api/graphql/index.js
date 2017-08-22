@@ -26,7 +26,11 @@ import {
   addSkill,
   removeSkill,
   removeMember,
-  regenerateAccessCode
+  regenerateAccessCode,
+  createInvitation,
+  expireInvitation,
+  resendInvitation,
+  reinviteAll
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -114,7 +118,11 @@ function createSchema (userId, isAdmin) {
       addSkill: (root, { name }) => addSkill(userId, name),
       removeSkill: (root, { id }) => removeSkill(userId, id),
       removeMember: (root, { personId, communityId }) => removeMember(userId, personId, communityId),
-      regenerateAccessCode: (root, { communityId }) => regenerateAccessCode(userId, communityId)
+      regenerateAccessCode: (root, { communityId }) => regenerateAccessCode(userId, communityId),
+      createInvitation: (root, {communityId, data}) => createInvitation(userId, communityId, data),
+      expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
+      resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
+      reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId)
     },
 
     FeedItemContent: {
