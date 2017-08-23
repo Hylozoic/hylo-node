@@ -243,8 +243,9 @@ export function createInvitation (userId, communityId, data) {
     message: data.message,
     moderator: data.isModerator || false,
     subject: 'Join our community!'
-  })
-  .then(() => ({success: true}))
+  }).then(invites => ({
+    invitations: invites
+  }))
 }
 
 export function expireInvitation (userId, invitationId) {
@@ -258,6 +259,6 @@ export function resendInvitation (userId, invitationId) {
 }
 
 export function reinviteAll (userId, communityId) {
-  return InvitationService.reinviteAll(userId, communityId)
+  return InvitationService.reinviteAll({sessionUserId: userId, communityId})
   .then(() => ({success: true}))
 }

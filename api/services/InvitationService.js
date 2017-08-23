@@ -86,7 +86,9 @@ module.exports = {
           }
 
           return Invitation.createAndSend(opts)
-          .then(() => ({email, error: null}))
+          .then((i) => merge(i.pick('id', 'email', 'created_at', 'last_sent_at'), {
+            error: null
+          }))
           .catch(err => ({email, error: err.message}))
         })
       })

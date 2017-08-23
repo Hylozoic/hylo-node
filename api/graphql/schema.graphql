@@ -498,7 +498,7 @@ type Mutation {
   removeSkill(id: ID): GenericResult
   removeMember(personId: ID, communityId: ID): Community
   regenerateAccessCode(communityId: ID): Community
-  createInvitation(communityId: ID, data: InviteInput): GenericResult
+  createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
   expireInvitation(invitationId: ID): GenericResult
   resendInvitation(invitationId: ID): GenericResult
   reinviteAll(communityId: ID): GenericResult
@@ -517,6 +517,10 @@ type LinkPreview {
   imageWidth: String
   imageHeight: String
   status: String
+}
+
+type CreatedInvitations {
+  invitations: [Invitation]
 }
 
 type Notification {
