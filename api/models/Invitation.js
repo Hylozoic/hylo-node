@@ -22,6 +22,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User, 'used_by_id')
   },
 
+  expiredBy: function () {
+    return this.belongsTo(User, 'expired_by_id')
+  },
+
   isUsed: function () {
     return !!this.get('used_by_id')
   },

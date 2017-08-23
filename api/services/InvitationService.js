@@ -64,9 +64,9 @@ module.exports = {
       Community.find(communityId),
       tagName && Tag.find(tagName),
       (users, community, tag) => {
-        emails.concat(map(u => u.get('email'), get('models', users)))
+        let concatenatedEmails = emails.concat(map(u => u.get('email'), get('models', users)))
 
-        return Promise.map(emails, email => {
+        return Promise.map(concatenatedEmails, email => {
           if (!validator.isEmail(email)) {
             return {email, error: 'not a valid email address'}
           }
