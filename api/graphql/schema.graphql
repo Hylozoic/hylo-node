@@ -31,6 +31,7 @@ type UserSettings {
   digestFrequency: String
   dmNotifications: String
   commentNotifications: String
+  signupInProgress: String
 }
 
 type CommunityTopicQuerySet {
@@ -436,6 +437,7 @@ input InviteInput {
 
 input CommunityInput {
   name: String
+  slug: String
   description: String
   location: String
   bannerUrl: String
@@ -471,6 +473,7 @@ input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
   commentNotifications: String
+  signupInProgress: String
 }
 
 type Mutation {
@@ -503,6 +506,7 @@ type Mutation {
   resendInvitation(invitationId: ID): GenericResult
   reinviteAll(communityId: ID): GenericResult
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  createCommunity(data: CommunityInput): Membership
 }
 
 type GenericResult {

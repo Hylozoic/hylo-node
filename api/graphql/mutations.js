@@ -274,3 +274,10 @@ export function flagInappropriateContent (userId, {
   }).save()
   .then(() => ({success: true}))
 }
+
+export function createCommunity (userId, data) {
+  return Community.create(userId, data)
+  .then(({ community, membership }) => {
+    return membership
+  })
+}
