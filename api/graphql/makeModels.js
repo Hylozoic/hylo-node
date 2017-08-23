@@ -10,9 +10,7 @@ import {
   activePost,
   skillInCommunitiesOrNetworksFilter
 } from './filters'
-import { flow, mapKeys, camelCase, isEmpty } from 'lodash/fp'
-import { merge } from 'lodash'
-import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
+import { flow, mapKeys, camelCase } from 'lodash/fp'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -196,28 +194,6 @@ export default function makeModels (userId, isAdmin) {
             sort: sortBy || 'name',
             autocomplete
           }),
-        // members: (c, args) => {
-        //   const { search, first, offset = 0, sortBy, autocomplete } = args
-        //   if (!search || isEmpty(search)) {
-        //     return fetchSearchQuerySet('forUsers', {
-        //       communities: [c.id],
-        //       limit: first,
-        //       offset,
-        //       sort: sortBy || 'name',
-        //       autocomplete
-        //     })
-        //   } else {
-        //     return Search.fullTextSearch(userId, {
-        //       args,
-        //       type: 'person',
-        //       term: search,
-        //       communityIds: [c.id]
-        //     })
-        //     .then(({ models, total }) =>
-        //       // extract the content here because we can assume it's a person
-        //       presentQuerySet(models.map(m => m.content), merge(args, {total})))
-        //   }
-        // },
         posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
@@ -424,28 +400,15 @@ export default function makeModels (userId, isAdmin) {
       ],
       getters: {
         memberCount: n => n.memberCount(),
-        members: (n, args) => {
-          const { search, first, offset = 0, sortBy, autocomplete } = args
-          if (!search || isEmpty(search)) {
-            return fetchSearchQuerySet('forUsers', {
-              network: n.id,
-              limit: first,
-              offset,
-              sort: sortBy || 'name',
-              autocomplete
-            })
-          } else {
-            return Search.fullTextSearch(userId, {
-              args,
-              type: 'person',
-              term: search,
-              networkId: n.id
-            })
-            .then(({ models, total }) =>
-              // extract the content here because we can assume it's a person
-              presentQuerySet(models.map(m => m.content), merge(args, {total})))
-          }
-        },
+        members: (n, { search, first, offset = 0, sortBy, autocomplete }) =>
+          fetchSearchQuerySet('forUsers', {
+            term: search,
+            network: n.id,
+            limit: first,
+            offset,
+            sort: sortBy || 'name',
+            autocomplete
+          }),
         posts: (n, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,

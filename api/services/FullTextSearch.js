@@ -55,21 +55,43 @@ const createView = (lang, knex) => {
 }
 
 const search = (opts) => {
+  var term = compact(opts.term.replace(/'/, '').split(' '))
+  .map(w => w + ':*')
+  .join(' & ')
+
   var lang = opts.lang || defaultLang
-  var term = compact(opts.term.replace(/'/, '').split(' ')).join(' & ')
   var tsquery = `to_tsquery('${lang}', '${term}')`
   var rank = `ts_rank_cd(${columnName}, ${tsquery})`
+  var columns
 
-  return bookshelf.knex
-  .select(raw(`post_id, comment_id, user_id, ${rank} as rank, count(*) over () as total`))
+  // set opts.subquery if you are using this search method within one of the
+  // services/Search methods, e.g. forUsers, and want to use the full-text
+  // search index
+  if (opts.subquery) {
+    columns = {
+      person: 'user_id',
+      post: 'post_id',
+      comment: 'comment_id'
+    }[opts.type]
+  } else {
+    columns = raw(`post_id, comment_id, user_id, ${rank} as rank, count(*) over () as total`)
+  }
+
+  var query = bookshelf.knex
+  .select(columns)
   .from(tableName)
   .where(raw(`${columnName} @@ ${tsquery}`))
-  .orderBy('rank', 'desc')
   .where(raw({
     person: 'user_id is not null',
     post: 'post_id is not null',
     comment: 'comment_id is not null'
   }[opts.type] || true))
+
+  if (!opts.subquery) {
+    query = query.orderBy('rank', 'desc')
+  }
+
+  return query
 }
 
 const searchInCommunities = (communityIds, opts) => {
@@ -99,5 +121,6 @@ module.exports = {
   createView,
   dropView,
   refreshView,
+  search,
   searchInCommunities
 }
