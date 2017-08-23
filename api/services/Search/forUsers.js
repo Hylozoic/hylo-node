@@ -43,7 +43,7 @@ export default function (opts) {
     }
 
     if (opts.term) {
-      qb.where('user_id', 'in', FullTextSearch.search({
+      qb.where('users.id', 'in', FullTextSearch.search({
         term: opts.term,
         type: 'person',
         subquery: true
