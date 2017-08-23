@@ -81,7 +81,7 @@ describe('Search', function () {
       .then(() => catdog.save())
       .then(() => house.save())
       .then(() => cat.joinCommunity(house))
-      .then(() => FullTextSearch.refreshView())
+      .then(() => FullTextSearch.createView(null, bookshelf.knex))
     })
 
     function userSearchTests (key) {
