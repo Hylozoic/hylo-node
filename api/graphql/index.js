@@ -30,7 +30,8 @@ import {
   createInvitation,
   expireInvitation,
   resendInvitation,
-  reinviteAll
+  reinviteAll,
+  flagInappropriateContent
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -122,7 +123,8 @@ function createSchema (userId, isAdmin) {
       createInvitation: (root, {communityId, data}) => createInvitation(userId, communityId, data),
       expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
-      reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId)
+      reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
+      flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data)
     },
 
     FeedItemContent: {

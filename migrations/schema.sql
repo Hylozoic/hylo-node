@@ -374,6 +374,38 @@ ALTER SEQUENCE event_responses_id_seq OWNED BY event_responses.id;
 
 
 --
+-- Name: flagged_items; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE flagged_items (
+    id integer NOT NULL,
+    user_id bigint,
+    category character varying(255),
+    reason text,
+    link character varying(255)
+);
+
+
+--
+-- Name: flagged_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE flagged_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: flagged_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE flagged_items_id_seq OWNED BY flagged_items.id;
+
+
+--
 -- Name: tag_follows; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1423,6 +1455,13 @@ ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_resp
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY flagged_items ALTER COLUMN id SET DEFAULT nextval('flagged_items_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY join_requests ALTER COLUMN id SET DEFAULT nextval('join_requests_id_seq'::regclass);
 
 
@@ -1569,10 +1608,10 @@ UNION
  SELECT NULL::bigint AS post_id,
     u.id AS user_id,
     NULL::bigint AS comment_id,
-    ((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(replace((t.name)::text, '-'::text, ' '::text), ' '::text), ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
+    ((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(replace((s.name)::text, '-'::text, ' '::text), ' '::text), ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
    FROM ((users u
-     LEFT JOIN tags_users tu ON ((u.id = tu.user_id)))
-     LEFT JOIN tags t ON ((tu.tag_id = t.id)))
+     LEFT JOIN skills_users su ON ((u.id = su.user_id)))
+     LEFT JOIN skills s ON ((su.skill_id = s.id)))
   WHERE (u.active = true)
   GROUP BY u.id
 UNION
@@ -1632,6 +1671,14 @@ ALTER TABLE ONLY event_responses
 
 ALTER TABLE ONLY event_responses
     ADD CONSTRAINT event_responses_user_id_post_id_unique UNIQUE (user_id, post_id);
+
+
+--
+-- Name: flagged_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY flagged_items
+    ADD CONSTRAINT flagged_items_pkey PRIMARY KEY (id);
 
 
 --
@@ -2587,6 +2634,14 @@ ALTER TABLE ONLY votes
 
 ALTER TABLE ONLY votes
     ADD CONSTRAINT fk_vote_user_13 FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: flagged_items_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY flagged_items
+    ADD CONSTRAINT flagged_items_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

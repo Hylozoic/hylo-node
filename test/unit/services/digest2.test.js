@@ -2,7 +2,7 @@ require('../../setup')
 import moment from 'moment-timezone'
 import formatData from '../../../lib/community/digest2/formatData'
 import personalizeData from '../../../lib/community/digest2/personalizeData'
-import { defaultTimezone, shouldSendData } from '../../../lib/community/digest2/util'
+import { defaultTimezone, shouldSendData, getRecipients } from '../../../lib/community/digest2/util'
 import { sendDigest, sendAllDigests } from '../../../lib/community/digest2'
 import factories from '../../setup/factories'
 import { spyify, unspyify } from '../../setup/helpers'
@@ -443,7 +443,9 @@ describe('community digest v2', () => {
         })
         .then(p => p.communities().attach(c.id)))
       .tap(c => u1.save()
-        .then(u => u.communities().attach({community_id: c.id, active: true})))
+        .then(u => u.communities().attach({
+          community_id: c.id, active: true, settings: {send_email: true}
+        })))
     })
 
     after(() => unspyify(Email, 'sendSimpleEmail'))
@@ -519,6 +521,59 @@ describe('community digest v2', () => {
         return sendDigest(community.id, 'daily')
         .then(result => expect(result).to.be.false)
       })
+    })
+  })
+})
+
+describe('getRecipients', () => {
+  var c, uIn1, uOut1, uOut2, uOut3, uOut4, uOut5, uIn2
+
+  before(() => {
+    const settings = {digest_frequency: 'daily'}
+    uIn1 = factories.user({settings})
+    uOut1 = factories.user({active: false, settings})                // inactive user
+    uOut2 = factories.user({settings})                               // inactive membership
+    uOut3 = factories.user({settings})                               // send_email = false
+    uOut4 = factories.user({settings: {digest_frequency: 'weekly'}}) // digest_frequency = 'weekly'
+    uOut5 = factories.user({settings})                               // not in the community
+    uIn2 = factories.user({settings})
+    c = factories.community()
+    return Promise.join(
+      uIn1.save(),
+      uOut1.save(),
+      uOut2.save(),
+      uOut3.save(),
+      uOut4.save(),
+      uOut5.save(),
+      uIn2.save(),
+      c.save())
+    .then(() => Promise.join(
+      uIn1.communities().attach({
+        community_id: c.id, active: true, settings: {send_email: true}
+      }),
+      uOut1.communities().attach({
+        community_id: c.id, active: true, settings: {send_email: true}
+      }),
+      uOut2.communities().attach({
+        community_id: c.id, active: false, settings: {send_email: true}
+      }),
+      uOut3.communities().attach({
+        community_id: c.id, active: false, settings: {send_email: false}
+      }),
+      uOut4.communities().attach({
+        community_id: c.id, active: false, settings: {send_email: true}
+      }),
+      uIn2.communities().attach({
+        community_id: c.id, active: true, settings: {send_email: true}
+      })
+    ))
+  })
+
+  it('only returns active members with email turned on and the right digest type', () => {
+    return getRecipients(c.id, 'daily')
+    .then(models => {
+      expect(models.length).to.equal(2)
+      expect(models.map(m => m.id).sort()).to.deep.equal([uIn1.id, uIn2.id].sort())
     })
   })
 })

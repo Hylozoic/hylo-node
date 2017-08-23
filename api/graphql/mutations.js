@@ -262,3 +262,15 @@ export function reinviteAll (userId, communityId) {
   return InvitationService.reinviteAll({sessionUserId: userId, communityId})
   .then(() => ({success: true}))
 }
+
+export function flagInappropriateContent (userId, {
+  category, reason, link
+}) {
+  return new FlaggedItem({
+    user_id: userId,
+    category,
+    reason,
+    link
+  }).save()
+  .then(() => ({success: true}))
+}

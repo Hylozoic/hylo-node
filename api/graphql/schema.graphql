@@ -502,6 +502,7 @@ type Mutation {
   expireInvitation(invitationId: ID): GenericResult
   resendInvitation(invitationId: ID): GenericResult
   reinviteAll(communityId: ID): GenericResult
+  flagInappropriateContent(data: InappropriateContentInput): GenericResult
 }
 
 type GenericResult {
@@ -588,4 +589,10 @@ type SkillQuerySet {
   total: Int
   hasMore: Boolean
   items: [Skill]
+}
+
+input InappropriateContentInput {
+  category: String,
+  reason: String,
+  link: String
 }
