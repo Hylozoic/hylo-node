@@ -27,6 +27,10 @@ import {
   removeSkill,
   removeMember,
   regenerateAccessCode,
+  createInvitation,
+  expireInvitation,
+  resendInvitation,
+  reinviteAll,
   flagInappropriateContent
 } from './mutations'
 import makeModels from './makeModels'
@@ -116,6 +120,10 @@ function createSchema (userId, isAdmin) {
       removeSkill: (root, { id }) => removeSkill(userId, id),
       removeMember: (root, { personId, communityId }) => removeMember(userId, personId, communityId),
       regenerateAccessCode: (root, { communityId }) => regenerateAccessCode(userId, communityId),
+      createInvitation: (root, {communityId, data}) => createInvitation(userId, communityId, data),
+      expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
+      resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
+      reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data)
     },
 

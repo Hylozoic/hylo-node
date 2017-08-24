@@ -117,16 +117,23 @@ Run `npm test` or `npm run cover`. The tests should use a different database (se
 Create a file called `.env.test` to set environment variables for the test environment.
 
 ```
-DATABASE_URL=postgres://localhost/hylo_test # run tests against a different database
+# NOTE: don't put comments after a variable initialization.  it will break your tests!
+
+# run tests against a different database
+DATABASE_URL=postgres://localhost/hylo_test 
 DOMAIN=testdomain
-KUE_NAMESPACE=qtest # this prevents jobs that were queued during testing from being run in development
+# this prevents jobs that were queued during testing from being run in development
+KUE_NAMESPACE=qtest 
 PROTOCOL=http
-ROLLBAR_SERVER_TOKEN= # don't log errors to Rollbar
-SENDWITHUS_KEY=test_... # you can set up a SendWithUs API key to return valid responses but send no email
+# don't log errors to Rollbar
+ROLLBAR_SERVER_TOKEN= 
+# you can set up a SendWithUs API key to return valid responses but send no email
+SENDWITHUS_KEY=test_... 
 MAILGUN_EMAIL_SALT=FFFFAAAA123456789
 MAILGUN_DOMAIN=mg.hylo.com
 PLAY_APP_SECRET=quxgrault12345678
 ```
+
 
 (Without the above Mailgun values, you'll see a failing test in the suite.) Since the test database was created above, `npm test` should work at this point.
 

@@ -11,6 +11,7 @@ import {
   skillInCommunitiesOrNetworksFilter
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
+import InvitationService from '../services/InvitationService'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -185,6 +186,7 @@ export default function makeModels (userId, isAdmin) {
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
+        pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
         members: (c, { search, first, offset = 0, sortBy, autocomplete }) =>
           fetchSearchQuerySet('forUsers', {
             term: search,

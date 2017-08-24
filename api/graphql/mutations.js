@@ -13,6 +13,7 @@ import underlyingFindLinkPreview from '../models/linkPreview/findOrCreateByUrl'
 import validateNetworkData from '../models/network/validateNetworkData'
 import underlyingUpdateNetwork from '../models/network/updateNetwork'
 import CommunityService from '../services/CommunityService'
+import InvitationService from '../services/InvitationService'
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
@@ -232,6 +233,34 @@ export function regenerateAccessCode (userId, communityId) {
       return Community.getNewAccessCode()
       .then(beta_access_code => community.save({beta_access_code}, {patch: true})) // eslint-disable-line camelcase
     }))
+}
+
+export function createInvitation (userId, communityId, data) {
+  return InvitationService.create({
+    sessionUserId: userId,
+    communityId,
+    emails: data.emails,
+    message: data.message,
+    moderator: data.isModerator || false,
+    subject: 'Join our community!'
+  }).then(invites => ({
+    invitations: invites
+  }))
+}
+
+export function expireInvitation (userId, invitationId) {
+  return InvitationService.expire(userId, invitationId)
+  .then(() => ({success: true}))
+}
+
+export function resendInvitation (userId, invitationId) {
+  return InvitationService.resend(invitationId)
+  .then(() => ({success: true}))
+}
+
+export function reinviteAll (userId, communityId) {
+  return InvitationService.reinviteAll({sessionUserId: userId, communityId})
+  .then(() => ({success: true}))
 }
 
 export function flagInappropriateContent (userId, {

@@ -5,7 +5,7 @@ import { format } from 'util'
 
 const sendEmail = opts =>
   new Promise((resolve, reject) =>
-    api.send(opts, (err, resp) => err ? reject(resp) : resolve(resp)))
+    api.send(opts, (err, resp) => err ? reject(err) : resolve(resp)))
 
 const defaultOptions = {
   sender: {

@@ -262,7 +262,9 @@ CREATE TABLE community_invites (
     last_sent_at timestamp with time zone,
     sent_count integer DEFAULT 0,
     subject character varying(255),
-    message text
+    message text,
+    expired_by_id bigint,
+    expired_at timestamp with time zone
 );
 
 
@@ -2368,6 +2370,14 @@ ALTER TABLE ONLY communities_tags
 
 ALTER TABLE ONLY community_invites
     ADD CONSTRAINT community_invite_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: community_invites_expired_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY community_invites
+    ADD CONSTRAINT community_invites_expired_by_id_foreign FOREIGN KEY (expired_by_id) REFERENCES users(id);
 
 
 --
