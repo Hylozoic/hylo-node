@@ -17,11 +17,11 @@ describe('FullTextSearch', () => {
       expect(query).to.equal(`
         select "search"."post_id", "search"."comment_id", "search"."user_id", "rank", "total"
         from (select post_id, comment_id, user_id,
-            ts_rank_cd(document, to_tsquery('english', 'zounds')) as rank,
+            ts_rank_cd(document, to_tsquery('english', 'zounds:*')) as rank,
             count(*) over () as total
           from "search_index"
           where
-            document @@ to_tsquery('english', 'zounds')
+            document @@ to_tsquery('english', 'zounds:*')
             and user_id is not null
           order by "rank" desc) as "search"
         left join "communities_users" on "communities_users"."user_id" = "search"."user_id"

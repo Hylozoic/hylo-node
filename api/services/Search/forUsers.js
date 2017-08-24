@@ -43,11 +43,11 @@ export default function (opts) {
     }
 
     if (opts.term) {
-      qb.leftJoin('skills_users', 'skills_users.user_id', 'users.id')
-      qb.leftJoin('skills', 'skills.id', 'skills_users.skill_id')
-      addTermToQueryBuilder(opts.term, qb, {
-        columns: ['users.name', 'users.bio', 'skills.name']
-      })
+      qb.where('users.id', 'in', FullTextSearch.search({
+        term: opts.term,
+        type: 'person',
+        subquery: true
+      }))
     }
 
     if (opts.start_time && opts.end_time) {

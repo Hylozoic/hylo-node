@@ -2,7 +2,7 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { has, isEmpty, merge, omit, pick } from 'lodash'
+import { get, has, isEmpty, merge, omit, pick } from 'lodash'
 import HasSettings from './mixins/HasSettings'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { findThread } from './post/findOrCreateThread'
@@ -314,17 +314,17 @@ module.exports = bookshelf.Model.extend(merge({
     })
   }),
 
-  create: function (attributes, options) {
-    if (!options) options = {}
-    var trx = options.transacting
-    var account = attributes.account
-    var community = attributes.community
+  create: function (attributes, options = {}) {
+    const { transacting } = options
+    const { account, community } = attributes
+    const communityId = Number(get(community, 'id'))
+    const digest_frequency = communityId === 2308 ? 'weekly' : 'daily' // eslint-disable-line camelcase
 
     attributes = merge({
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
       updated_at: new Date(),
-      settings: {digest_frequency: 'daily'},
+      settings: {digest_frequency},
       active: true
     }, omit(attributes, 'account', 'community'))
 
@@ -340,11 +340,11 @@ module.exports = bookshelf.Model.extend(merge({
     }
 
     return validateUserAttributes(attributes)
-    .then(() => new User(attributes).save({}, {transacting: trx}))
+    .then(() => new User(attributes).save({}, {transacting}))
     .tap(user => Promise.join(
-      account && LinkedAccount.create(user.id, account, {transacting: trx}),
-      community && Membership.create(user.id, community.id, {transacting: trx}),
-      community && user.markInvitationsUsed(community.id, trx)
+      account && LinkedAccount.create(user.id, account, {transacting}),
+      community && Membership.create(user.id, community.id, {transacting}),
+      community && user.markInvitationsUsed(community.id, transacting)
     ))
   },
 
