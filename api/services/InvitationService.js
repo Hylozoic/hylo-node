@@ -129,5 +129,13 @@ module.exports = {
 
       return invitation.send()
     })
+  },
+
+  use: (invitationId) => {
+    return Invitation.find(invitationId)
+    .then(invitation => {
+      if (!invitation) throw new Error('not found')
+      return {}
+    })
   }
 }

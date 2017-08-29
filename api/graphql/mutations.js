@@ -274,3 +274,7 @@ export function flagInappropriateContent (userId, {
   }).save()
   .then(() => ({success: true}))
 }
+
+export function useInvitation (invitationId) {
+  return InvitationService.use(invitationId).then()
+}

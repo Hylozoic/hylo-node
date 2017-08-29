@@ -501,7 +501,8 @@ type Mutation {
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
   expireInvitation(invitationId: ID): GenericResult
   resendInvitation(invitationId: ID): GenericResult
-  reinviteAll(communityId: ID): GenericResult
+  reinviteAll(communityId: ID): GenericResult,
+  useInvitation(invitationId: String): GenericResult,
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
 }
 

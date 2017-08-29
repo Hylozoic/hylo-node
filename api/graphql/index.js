@@ -31,6 +31,7 @@ import {
   expireInvitation,
   resendInvitation,
   reinviteAll,
+  useInvitation,
   flagInappropriateContent
 } from './mutations'
 import makeModels from './makeModels'
@@ -124,6 +125,7 @@ function createSchema (userId, isAdmin) {
       expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
+      useInvitation: (root, {invitationId}) => useInvitation(invitationId),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data)
     },
 
