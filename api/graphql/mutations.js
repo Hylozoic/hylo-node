@@ -276,5 +276,6 @@ export function flagInappropriateContent (userId, {
 }
 
 export function useInvitation (invitationId) {
-  return InvitationService.use(invitationId).then()
+  return InvitationService.use(invitationId)
+  .then(invitation => ({success: invitation}))
 }

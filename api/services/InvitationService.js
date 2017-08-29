@@ -135,7 +135,8 @@ module.exports = {
     return Invitation.find(invitationId)
     .then(invitation => {
       if (!invitation) throw new Error('not found')
-      return {}
+
+      return invitation
     })
   }
 }
