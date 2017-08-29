@@ -275,7 +275,8 @@ export function flagInappropriateContent (userId, {
   .then(() => ({success: true}))
 }
 
-export function useInvitation (invitationId) {
-  return InvitationService.use(invitationId)
-  .then(invitation => pick(invitation, ['id', 'email', 'created_at']))
+export function useInvitation (userId, invitationToken) {
+  return InvitationService.use(userId, invitationToken)
+  .then(membership => ({membership}))
+  .catch(error => ({error: error.message}))
 }

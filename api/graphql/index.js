@@ -125,7 +125,7 @@ function createSchema (userId, isAdmin) {
       expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
-      useInvitation: (root, {invitationId}) => useInvitation(invitationId),
+      useInvitation: (root, { invitationToken }) => useInvitation(userId, invitationToken),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data)
     },
 

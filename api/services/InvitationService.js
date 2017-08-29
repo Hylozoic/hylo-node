@@ -131,12 +131,12 @@ module.exports = {
     })
   },
 
-  use: (invitationId) => {
-    return Invitation.find(invitationId)
+  use: (userId, invitationToken) => {
+    return Invitation.where({token: invitationToken}).fetch()
     .then(invitation => {
       if (!invitation) throw new Error('not found')
-
-      return invitation
+      if (invitation.isExpired()) throw new Error('expired')
+      return invitation.use(userId)
     })
   }
 }

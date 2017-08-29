@@ -502,8 +502,13 @@ type Mutation {
   expireInvitation(invitationId: ID): GenericResult
   resendInvitation(invitationId: ID): GenericResult
   reinviteAll(communityId: ID): GenericResult,
-  useInvitation(invitationId: String): Invitation,
+  useInvitation(userId: ID, invitationToken: String): InvitationUseResult,
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+}
+
+type InvitationUseResult {
+  membership: Membership
+  error: String
 }
 
 type GenericResult {
