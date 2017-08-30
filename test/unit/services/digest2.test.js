@@ -402,8 +402,8 @@ describe('community digest v2', () => {
         return community.save()
       })
 
-      it('is true', () =>
-        shouldSendData({}, community.id).then(val => expect(val).to.be.true))
+      it('is false -- feature disabled', () =>
+        shouldSendData({}, community.id).then(val => expect(val).to.be.false))
     })
 
     describe("when the community's post_prompt_day is not today", () => {
@@ -510,9 +510,9 @@ describe('community digest v2', () => {
         return community.save()
       })
 
-      it('sends', () => {
+      it('does not send -- feature disabled', () => {
         return sendDigest(community.id, 'daily')
-        .then(result => expect(result).to.equal(0))
+        .then(result => expect(result).to.equal(false))
       })
     })
 
