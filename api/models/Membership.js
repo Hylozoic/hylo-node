@@ -18,7 +18,6 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   hasModeratorRole: function () {
-    console.log('hMR2', this.get('role'))
     return this.get('role') === Membership.MODERATOR_ROLE
   }
 }, HasSettings), {
@@ -84,7 +83,6 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   hasModeratorRole: function (user_id, community_id) {
-    console.log('hasModeratorRole', user_id, community_id)
     return this.find(user_id, community_id)
     .then(ms => ms && ms.hasModeratorRole())
   },
