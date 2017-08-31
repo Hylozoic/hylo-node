@@ -251,46 +251,14 @@ module.exports = {
 
   create: function (req, res) {
     const { userId } = req.session
-    var attrs = pick(req.allParams(),
-      'name', 'description', 'slug', 'category',
-      'beta_access_code', 'banner_url', 'avatar_url', 'location')
-
-    var promise = attrs.beta_access_code
-      ? Promise.resolve(attrs.beta_access_code)
-      : Community.getNewAccessCode()
-
-    return promise
-    .then(beta_access_code => { // eslint-disable-line
-      var community = new Community(merge(attrs, {
-        beta_access_code,
-        created_at: new Date(),
-        created_by_id: userId,
-        leader_id: userId,
-        welcome_message: welcomeMessage,
-        settings: {post_prompt_day: 0}
-      }))
-
-      return bookshelf.transaction(trx => {
-        return community.save(null, {transacting: trx})
-        .tap(community => community.createStarterTags(userId, trx))
-        .tap(community => community.createStarterPosts(trx))
-        .then(() => Membership.create(userId, community.id, {
-          role: Membership.MODERATOR_ROLE,
-          transacting: trx
-        }))
-      })
-      // Any assets were uploaded to /community/new, since we didn't have an id;
-      // copy them over to /community/:id now
-      .tap(() => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
-      .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
-      .then(membership => Promise.props(Object.assign(
-        membership.toJSON(), {
-          community,
-          left_nav_tags: fetchAndPresentFollowed(community.id, userId)
-        })))
-      .then(res.ok)
-      .catch(res.serverError)
-    })
+    return Community.create(userId, req.allParams())
+    .then(({ community, membership }) => Promise.props(Object.assign(
+      membership.toJSON(), {
+        community,
+        left_nav_tags: fetchAndPresentFollowed(community.id, userId)
+      })))
+    .then(res.ok)
+    .catch(res.serverError)
   },
 
   findForNetwork: function (req, res) {
