@@ -32,7 +32,8 @@ import {
   resendInvitation,
   reinviteAll,
   flagInappropriateContent,
-  removePost
+  removePost,
+  createCommunity
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -126,7 +127,8 @@ function createSchema (userId, isAdmin) {
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
-      removePost: (root, { postId, slug }) => removePost(userId, postId, slug)
+      removePost: (root, { postId, slug }) => removePost(userId, postId, slug),
+      createCommunity: (root, { data }) => createCommunity(userId, data)
     },
 
     FeedItemContent: {

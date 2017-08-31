@@ -286,3 +286,10 @@ export function removePost (userId, postId, slug) {
     })
   .then(() => ({success: true}))
 }
+
+export function createCommunity (userId, data) {
+  return Community.create(userId, data)
+  .then(({ community, membership }) => {
+    return membership
+  })
+}
