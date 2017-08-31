@@ -162,6 +162,7 @@ module.exports.routes = {
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // from comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',
   'POST   /noo/threads/subscribe':                        'PostController.subscribeToUpdates',
-  'POST   /noo/threads/unsubscribe':                      'PostController.unsubscribeFromUpdates'
+  'POST   /noo/threads/unsubscribe':                      'PostController.unsubscribeFromUpdates',
 
+  'POST   /noo/upload':                                   'UploadController.create'
 }
