@@ -503,6 +503,7 @@ type Mutation {
   resendInvitation(invitationId: ID): GenericResult
   reinviteAll(communityId: ID): GenericResult
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  removePost(postId: ID, communityId: ID): GenericResult
 }
 
 type GenericResult {

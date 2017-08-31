@@ -274,3 +274,15 @@ export function flagInappropriateContent (userId, {
   }).save()
   .then(() => ({success: true}))
 }
+
+export function removePost (userId, postId, communityId) {
+  return Promise.join(
+    Post.find(postId),
+    Membership.hasModeratorRole(userId, communityId),
+    (post, isModerator) => {
+      if (!post) throw new Error(`Couldn't find post with id ${postId}`)
+      if (!isModerator) throw new Error(`You don't have permission to remove this post`)
+      return post.removeFromCommunity(communityId)
+    })
+  .then(() => ({success: true}))
+}
