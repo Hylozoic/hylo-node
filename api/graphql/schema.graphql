@@ -21,6 +21,7 @@ type Me {
   postsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
   messageThreadsTotal: Int
+  skills(first: Int, cursor: ID): SkillQuerySet
   updatedAt: String
   newNotificationCount: Int
   unseenThreadCount: Int
@@ -161,6 +162,11 @@ type Community {
     autocomplete: String,
     subscribed: Boolean
   ): CommunityTopicQuerySet
+  skills(
+    first: Int,
+    offset: Int,
+    autocomplete: String
+  ): SkillQuerySet
 }
 
 type PersonQuerySet {

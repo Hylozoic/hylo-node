@@ -46,6 +46,7 @@ export default function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
+        {skills: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
@@ -181,6 +182,15 @@ export default function makeModels (userId, isAdmin) {
               subscribed,
               communityId: relation.relatedData.parentId
             }))
+        }},
+        {skills: {
+          querySet: true,
+          filter: (relation, { autocomplete }) =>
+            relation.query(q => {
+              if (autocomplete) {
+                q.whereRaw('skills.name ilike ?', autocomplete + '%')
+              }
+            })
         }}
       ],
       getters: {
@@ -327,7 +337,7 @@ export default function makeModels (userId, isAdmin) {
             q.whereRaw('name ilike ?', autocomplete + '%')
           }
         }),
-      filter: nonAdminFilter(skillInCommunitiesOrNetworksFilter(userId))
+      // filter: nonAdminFilter(skillInCommunitiesOrNetworksFilter(userId))
     },
 
     Topic: {
