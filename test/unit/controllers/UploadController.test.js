@@ -1,6 +1,5 @@
-import UploadController from './UploadController'
-
 var root = require('root-path')
+require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 
 describe('UploadController', () => {

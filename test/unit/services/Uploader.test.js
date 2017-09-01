@@ -1,8 +1,8 @@
-import { upload } from './Uploader'
+/* globals Uploader */
 
 describe('Uploader', () => {
   it('rejects invalid types', () => {
-    return upload({type: 'foo', id: 7})
+    return Uploader.upload({type: 'foo', id: 7})
     .then(() => {
       expect.fail('should reject')
     })
