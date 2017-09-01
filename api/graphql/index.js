@@ -32,6 +32,7 @@ import {
   resendInvitation,
   reinviteAll,
   flagInappropriateContent,
+  removePost,
   createCommunity
 } from './mutations'
 import makeModels from './makeModels'
@@ -126,6 +127,7 @@ function createSchema (userId, isAdmin) {
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
+      removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
       createCommunity: (root, { data }) => createCommunity(userId, data)
     },
 
