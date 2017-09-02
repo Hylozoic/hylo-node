@@ -7,7 +7,7 @@ describe('Uploader', () => {
       expect.fail('should reject')
     })
     .catch(err => {
-      expect(err.message).to.equal('Invalid type')
+      expect(err.message).to.equal('Validation error: Invalid type')
     })
   })
 })

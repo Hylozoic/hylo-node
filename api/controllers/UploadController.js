@@ -13,9 +13,7 @@ module.exports = {
           resolve(res.ok('uploaded!'))
         })
         .catch(err => {
-          if ([
-            'Invalid type'
-          ].includes(err.message)) {
+          if (err.message.startsWith('Validation error')) {
             return resolve(res.status(422).send(err.message))
           }
 

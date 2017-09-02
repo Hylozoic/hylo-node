@@ -1,3 +1,5 @@
+/* globals UploadController */
+
 var root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
@@ -25,7 +27,7 @@ describe('UploadController', () => {
     req.params.url = 'http://foo.com/foo.png'
     return UploadController.create(req, res)
     .then(() => {
-      expect(res.body).to.equal('Invalid type')
+      expect(res.body).to.equal('Validation error: Invalid type')
     })
   })
 })
