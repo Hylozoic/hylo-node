@@ -153,10 +153,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   resendAllReady () {
     return Invitation.query(q => {
-      const whereClause = "((sent_count=1 and last_sent_at < now() - interval '1 day') or " +
-        "(sent_count=2 and last_sent_at < now() - interval '1 day') or " +
-        "(sent_count=3 and last_sent_at < now() - interval '4 day') or " +
-        "(sent_count=4 and last_sent_at < now() - interval '9 day'))"
+      const whereClause = "((sent_count=1 and last_sent_at < now() - interval '4 day') or " +
+        "(sent_count=2 and last_sent_at < now() - interval '9 day'))"
       q.whereRaw(whereClause)
       q.whereNull('used_by_id')
       q.whereNull('expired_by_id')

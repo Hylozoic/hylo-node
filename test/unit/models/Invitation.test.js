@@ -176,42 +176,27 @@ describe('Invitation', function () {
           {
             email: 'a@sendme.com',
             sent_count: 1,
-            last_sent_at: new Date(now - day)
+            last_sent_at: new Date(now - 4 * day)
           },
           {
             email: 'b@sendme.com',
             sent_count: 2,
-            last_sent_at: new Date(now - day)
-          },
-          {
-            email: 'c@sendme.com',
-            sent_count: 3,
-            last_sent_at: new Date(now - 4 * day)
-          },
-          {
-            email: 'd@sendme.com',
-            sent_count: 4,
             last_sent_at: new Date(now - 9 * day)
           },
           {
             email: 'a@used.com',
             sent_count: 1,
-            last_sent_at: new Date(now - day),
+            last_sent_at: new Date(now - 10 * day),
             used_by_id: user.id
           },
           {
             email: 'a@notyet.com',
-            sent_count: 2,
-            last_sent_at: new Date(now - 60000)
-          },
-          {
-            email: 'b@notyet.com',
-            sent_count: 3,
+            sent_count: 1,
             last_sent_at: new Date(now - 3 * day)
           },
           {
-            email: 'c@notyet.com',
-            sent_count: 4,
+            email: 'b@notyet.com',
+            sent_count: 2,
             last_sent_at: new Date(now - 8 * day)
           }
         ]
@@ -240,28 +225,16 @@ describe('Invitation', function () {
             sent_count: 3
           },
           {
-            email: 'c@sendme.com',
-            sent_count: 4
-          },
-          {
-            email: 'd@sendme.com',
-            sent_count: 5
-          },
-          {
             email: 'a@used.com',
             sent_count: 1
           },
           {
             email: 'a@notyet.com',
-            sent_count: 2
+            sent_count: 1
           },
           {
             email: 'b@notyet.com',
-            sent_count: 3
-          },
-          {
-            email: 'c@notyet.com',
-            sent_count: 4
+            sent_count: 2
           }
         ])
 
