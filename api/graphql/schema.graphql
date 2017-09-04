@@ -386,6 +386,7 @@ input MeInput {
   facebookUrl: String
   location: String
   tagline: String
+  password: String
   settings: UserSettingsInput
 }
 

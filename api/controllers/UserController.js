@@ -114,9 +114,9 @@ module.exports = {
 
   sendPasswordReset: function (req, res) {
     var email = req.param('email')
-    User.where('email', email).fetch().then(function (user) {
+    return User.where('email', email).fetch().then(function (user) {
       if (!user) {
-        res.ok({error: 'no user'})
+        return res.ok({})
       } else {
         user.generateToken().then(function (token) {
           Queue.classMethod('Email', 'sendPasswordReset', {
@@ -125,7 +125,7 @@ module.exports = {
               login_url: Frontend.Route.tokenLogin(user, token)
             }
           })
-          res.ok({})
+          return res.ok({})
         })
       }
     })
