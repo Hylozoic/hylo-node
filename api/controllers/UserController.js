@@ -118,11 +118,15 @@ module.exports = {
       if (!user) {
         return res.ok({})
       } else {
+        const nextUrl = req.param('evo')
+          ? Frontend.Route.evo.passwordSetting()
+          : null
+
         user.generateToken().then(function (token) {
           Queue.classMethod('Email', 'sendPasswordReset', {
             email: user.get('email'),
             templateData: {
-              login_url: Frontend.Route.tokenLogin(user, token)
+              login_url: Frontend.Route.tokenLogin(user, token, nextUrl)
             }
           })
           return res.ok({})
