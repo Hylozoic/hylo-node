@@ -14,6 +14,7 @@ import validateNetworkData from '../models/network/validateNetworkData'
 import underlyingUpdateNetwork from '../models/network/updateNetwork'
 import CommunityService from '../services/CommunityService'
 import InvitationService from '../services/InvitationService'
+import underlyingDeleteComment from '../models/comment/deleteComment'
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
@@ -292,4 +293,13 @@ export function createCommunity (userId, data) {
   .then(({ community, membership }) => {
     return membership
   })
+}
+
+export function deleteComment (userId, commentId) {
+  return Comment.find(commentId)
+  .then(comment => {
+    if (comment.get('user_id') !== userId) throw new Error("You don't have permission to delete this comment")
+    return underlyingDeleteComment(comment, userId)
+  })
+  .then(() => ({success: true}))
 }
