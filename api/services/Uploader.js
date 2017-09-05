@@ -1,82 +1,75 @@
 import request from 'request'
-import path from 'path'
-import os from 'os'
-import fs from 'fs'
 import fileType from 'file-type'
 import { PassThrough } from 'stream'
-import sharp from 'sharp'
+import { createConverterStream } from './Uploader/converter'
+import { createStorageStream } from './Uploader/storage'
+import { validate } from './Uploader/validation'
+import path from 'path'
 
 export function upload (args) {
-  let { type, id, userId, url, stream, filename } = args
+  let { type, id, url, stream, filename } = args
 
   return validate(args)
   .then(() => {
-    // if url is present, construct a request stream
+    let source, finalUrl, passthrough, converter, storage, finalFilename
+    let sourceHasError = false
+
     if (url) {
-      stream = request(url)
+      source = request(url)
       filename = path.basename(url)
+    } else {
+      source = stream
     }
 
-    let testPath, passthrough, resizer, fileStream, finalFilename
-    let streamHasError = false
-
-    return new Promise((resolve, reject) => {
-      function setupStreams (data) {
-        // determine the file type from the first chunk of data
-        const type = fileType(data)
-        if (!type) {
-          stream.emit('error', new Error("couldn't determine file type"))
-          return
-        }
-
-        finalFilename = Date.now() + filename      // add timestamp
-        .replace(/\?.*$/, '')                      // remove query parameters
-        .replace(/(\.\w{2,4})?$/, '.' + type.ext)  // add file extension
-
-        testPath = path.join(os.tmpDir(), Date.now() + '_' + finalFilename)
-
-        // this is used so we can get the file type from the first chunk of
-        // data and still use `.pipe` -- you can't pipe a stream after getting
-        // data from it
-        passthrough = new PassThrough()
-        fileStream = fs.createWriteStream(testPath)
-        resizer = sharp().resize(300, 300)
-        passthrough.pipe(resizer).pipe(fileStream)
-
-        passthrough.on('end', () => {
-          console.log('passthrough end')
-        })
-
-        resizer.on('end', () => {
-          console.log('resizer end')
-          fileStream.end()
-
-          // putting this here because fileStream doesn't seem to ever send an
-          // end event ¯\_(ツ)_/¯
-          resolve('stream done! saved to ' + testPath)
-        })
-
-        fileStream.on('end', () => {
-          console.log('filestream end')
-        })
+    function setupStreams (data, resolve, reject) {
+      finalFilename = cleanupFilename(data, filename)
+      if (!finalFilename) {
+        return source.emit('error', new Error("couldn't determine file type"))
       }
 
-      stream.on('data', data => {
-        if (!finalFilename && !streamHasError) setupStreams(data)
+      // this is used so we can get the file type from the first chunk of
+      // data and still use `.pipe` -- you can't pipe a stream after getting
+      // data from it
+      passthrough = new PassThrough()
+
+      ;[storage, finalUrl] = createStorageStream(finalFilename, type, id)
+      converter = createConverterStream(type, id)
+
+      passthrough.pipe(converter).pipe(storage)
+
+      converter.on('end', () => {
+        console.log('converter end')
+        storage.end()
+
+        // putting this here because storage doesn't seem to ever send an
+        // end event ¯\_(ツ)_/¯
+        resolve('stream done! saved to ' + finalUrl)
+      })
+
+      storage.on('end', () => {
+        console.log('filestream end')
+      })
+    }
+
+    return new Promise((resolve, reject) => {
+      source.on('data', data => {
+        if (!finalFilename && !sourceHasError) {
+          setupStreams(data, resolve, reject)
+        }
         passthrough.write(data)
       })
 
-      stream.on('error', err => {
-        streamHasError = true
-        console.log('stream error')
-        stream.destroy(err)
+      source.on('error', err => {
+        sourceHasError = true
+        console.log('source stream error')
+        source.destroy(err)
         if (passthrough) passthrough.destroy(err)
-        if (resizer) resizer.destroy(err)
-        if (fileStream) fileStream.destroy(err)
+        if (converter) converter.destroy(err)
+        if (storage) storage.destroy(err)
         reject(err)
       })
 
-      stream.on('end', () => {
+      source.on('end', () => {
         if (passthrough) passthrough.end()
       })
     })
@@ -86,40 +79,28 @@ export function upload (args) {
   })
 }
 
-function validate ({ type, url, stream }) {
-  // file data or url must be present
-  // type & id must be present
-  // type must be valid
-  if (!uploadTypes.includes(type)) {
-    return Promise.reject(new Error('Validation error: Invalid type'))
-  }
 
-  if (!url && !stream) {
-    return Promise.reject(new Error('Validation error: No url and no stream'))
-  }
+function cleanupFilename (firstDataChunk, initialFilename) {
+  const type = fileType(firstDataChunk)
+  if (!type) return null
 
-  // current user must have permission to change type and id
+  const finalFilename = Date.now() + initialFilename // add timestamp
+  .replace(/\?.*$/, '')                              // remove query parameters
+  .replace(/(\.\w{2,4})?$/, '.' + type.ext)          // add file extension
 
-  return Promise.resolve()
+  return finalFilename
 }
 
-const uploadTypes = [
-  'user-avatar',
-  'user-banner',
-  'community-avatar',
-  'community-banner',
-  'network-avatar',
-  'network-banner',
-  'post',
-  'comment'
-]
-
-export const userAvatarUploadSettings = person => ({
-  id: person.id,
-  subject: 'user-avatar',
-  path: `user/${person.id}/avatar`,
-  convert: {width: 200, height: 200, fit: 'crop', rotate: 'exif'}
-})
+if (require.main === module) {
+  upload({
+    type: 'userAvatar',
+    userId: 1,
+    id: 1,
+    url: process.argv[2]
+  })
+  .then(x => console.log('yep!', x))
+  .catch(err => console.log('nope!', err))
+}
 
 // use UploadController for the first six but use the existing post & comment
 // creation endpoints for the last two? that would require supporting multipart
@@ -127,12 +108,3 @@ export const userAvatarUploadSettings = person => ({
 // https://medium.com/@danielbuechele/file-uploads-with-graphql-and-apollo-5502bbf3941e
 //
 // and then in that case, why not do the whole thing in graphql?
-
-if (require.main === module) {
-  upload({
-    type: 'user-avatar',
-    url: process.argv[2]
-  })
-  .then(x => console.log('yep!', x))
-  .catch(err => console.log('nope!', err))
-}

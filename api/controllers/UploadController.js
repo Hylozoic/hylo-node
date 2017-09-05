@@ -28,7 +28,7 @@ module.exports = {
       busboy.on('file', function (fieldname, stream, filename, encoding, mimetype) {
         console.log(`${fieldname}, ${filename}, ${encoding}, ${mimetype}`)
         gotFile = true
-        doUpload({stream})
+        doUpload({stream, filename})
       })
 
       busboy.on('finish', () => {
