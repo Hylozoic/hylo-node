@@ -33,7 +33,8 @@ import {
   reinviteAll,
   flagInappropriateContent,
   removePost,
-  createCommunity
+  createCommunity,
+  deleteComment
 } from './mutations'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
@@ -128,7 +129,8 @@ function createSchema (userId, isAdmin) {
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
       removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
-      createCommunity: (root, { data }) => createCommunity(userId, data)
+      createCommunity: (root, { data }) => createCommunity(userId, data),
+      deleteComment: (root, { id }) => deleteComment(userId, id)
     },
 
     FeedItemContent: {

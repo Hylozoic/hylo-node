@@ -508,6 +508,7 @@ type Mutation {
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   createCommunity(data: CommunityInput): Membership
+  deleteComment(id: ID): GenericResult
 }
 
 type GenericResult {
