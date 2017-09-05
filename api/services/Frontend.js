@@ -16,6 +16,12 @@ var url = function () {
 
 module.exports = {
   Route: {
+    evo: {
+      passwordSetting: function () {
+        return url('/settings/password')
+      }
+    },
+
     prefix,
 
     root: () => url('/app'),

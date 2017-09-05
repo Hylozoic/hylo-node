@@ -114,18 +114,22 @@ module.exports = {
 
   sendPasswordReset: function (req, res) {
     var email = req.param('email')
-    User.where('email', email).fetch().then(function (user) {
+    return User.where('email', email).fetch().then(function (user) {
       if (!user) {
-        res.ok({error: 'no user'})
+        return res.ok({})
       } else {
+        const nextUrl = req.param('evo')
+          ? Frontend.Route.evo.passwordSetting()
+          : null
+
         user.generateToken().then(function (token) {
           Queue.classMethod('Email', 'sendPasswordReset', {
             email: user.get('email'),
             templateData: {
-              login_url: Frontend.Route.tokenLogin(user, token)
+              login_url: Frontend.Route.tokenLogin(user, token, nextUrl)
             }
           })
-          res.ok({})
+          return res.ok({})
         })
       }
     })
