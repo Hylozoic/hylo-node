@@ -479,7 +479,7 @@ input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
   commentNotifications: String
-  signupInProgress: String
+  signupInProgress: Boolean
 }
 
 type Mutation {
