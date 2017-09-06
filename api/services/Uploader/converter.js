@@ -12,9 +12,9 @@ const sizes = {
   userBanner: {width: 1600, height: 600}
 }
 
-export function createConverterStream (type, id) {
+export function createConverterStream (type, id, strategy = 'center') {
   const { width, height } = sizes[type]
   return sharp()
   .resize(width, height)
-  .crop(sharp.strategy.attention)
+  .crop(strategy)
 }
