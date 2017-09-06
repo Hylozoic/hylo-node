@@ -8,10 +8,13 @@ export const userAvatarUploadSettings = person => ({
 })
 
 const sizes = {
-  userAvatar: {width: 200, height: 200}
+  userAvatar: {width: 200, height: 200},
+  userBanner: {width: 1600, height: 600}
 }
 
 export function createConverterStream (type, id) {
   const { width, height } = sizes[type]
-  return sharp().resize(width, height)
+  return sharp()
+  .resize(width, height)
+  .crop(sharp.strategy.attention)
 }
