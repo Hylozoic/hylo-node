@@ -32,7 +32,7 @@ type UserSettings {
   digestFrequency: String
   dmNotifications: String
   commentNotifications: String
-  signupInProgress: String
+  signupInProgress: Boolean
 }
 
 type CommunityTopicQuerySet {
