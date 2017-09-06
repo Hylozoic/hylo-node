@@ -19,7 +19,7 @@ describe('UploadController', () => {
     return UploadController.create(req, res)
     .then(() => {
       expect(res.statusCode).to.equal(422)
-      expect(res.body).to.equal("The request didn't contain any file data")
+      expect(res.body.error).to.equal("The request didn't contain any file data")
     })
   })
 
@@ -27,7 +27,7 @@ describe('UploadController', () => {
     req.params.url = 'http://foo.com/foo.png'
     return UploadController.create(req, res)
     .then(() => {
-      expect(res.body).to.equal('Validation error: Invalid type')
+      expect(res.body.error).to.equal('Validation error: Invalid type')
     })
   })
 })

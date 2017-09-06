@@ -33,7 +33,7 @@ module.exports = {
 
       busboy.on('finish', () => {
         if (!gotFile) {
-          resolve(res.status(422).send("The request didn't contain any file data"))
+          resolve(res.status(422).send({error: "The request didn't contain any file data"}))
         }
       })
 
