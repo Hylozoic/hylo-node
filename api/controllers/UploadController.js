@@ -9,12 +9,12 @@ module.exports = {
     return new Promise(resolve => {
       function doUpload (args) {
         upload(Object.assign({}, args, {type, id, userId: req.session.userId}))
-        .then(() => {
-          resolve(res.ok('uploaded!'))
+        .then(url => {
+          resolve(res.ok({url}))
         })
         .catch(err => {
           if (err.message.startsWith('Validation error')) {
-            return resolve(res.status(422).send(err.message))
+            return resolve(res.status(422).send({error: err.message}))
           }
 
           resolve(res.serverError(err))
