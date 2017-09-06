@@ -5,7 +5,7 @@ import mime from 'mime'
 import aws from 'aws-sdk'
 import { PassThrough } from 'stream'
 
-export function createTestFileStorageStream (filename, type, id) { // eslint-disable-line no-unused-vars
+export function createTestFileStorageStream (filename, type, id) {
   const testPath = path.join(os.tmpdir(), filename)
   const stream = fs.createWriteStream(testPath)
   stream.url = testPath

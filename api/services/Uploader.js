@@ -34,11 +34,10 @@ export function upload (args) {
       passthrough = new PassThrough()
 
       converter = createConverterStream(type, id)
-      converter.on('finish', () => console.log('converter: finish'))
       converter.on('error', err => reject(err))
 
       storage = createS3StorageStream(finalFilename, type, id)
-      storage.on('finish', () => resolve('storage: finish: ' + storage.url))
+      storage.on('finish', () => resolve(storage.url))
       storage.on('error', err => reject(err))
       if (onProgress) storage.on('progress', onProgress)
 
@@ -49,10 +48,7 @@ export function upload (args) {
       source.on('data', data => {
         if (sourceHasError) return
         if (!finalFilename) setupStreams(data, resolve, reject)
-        if (passthrough) {
-          passthrough.write(data)
-          process.stdout.write('.')
-        }
+        if (passthrough) passthrough.write(data)
       })
 
       source.on('error', err => {
