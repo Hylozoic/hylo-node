@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import mime from 'mime'
 import aws from 'aws-sdk'
+import { parse } from 'url'
 import { PassThrough } from 'stream'
 
 export function createTestFileStorageStream (filename, type, id) {
@@ -28,7 +29,7 @@ export function createS3StorageStream (filename, type, id) {
     Key: path.join(process.env.UPLOADER_PATH_PREFIX, type, String(id), filename)
   }, (err, data) => {
     if (err) return wrapper.emit('error', err)
-    wrapper.url = data.Location
+    wrapper.url = makeUrl(data.Location)
     wrapper.triggerFinish()
   })
 
@@ -59,4 +60,11 @@ function createWrapperStream () {
   stream.triggerFinish = () => onFinishCallbacks.forEach(fn => fn())
 
   return stream
+}
+
+function makeUrl (url) {
+  if (!process.env.UPLOADER_HOST) return url
+  const u = parse(url)
+  u.host = process.env.UPLOADER_HOST
+  return u.format()
 }

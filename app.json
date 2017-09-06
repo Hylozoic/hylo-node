@@ -102,6 +102,12 @@
     "STRIPE_SECRET_KEY": {
       "required": true
     },
+    "UPLOADER_PATH_PREFIX": {
+      "required": true
+    },
+    "UPLOADER_HOST": {
+      "required": true
+    },
     "ZEROPUSH_PROD_TOKEN": {
       "required": true
     },
