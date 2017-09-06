@@ -2,19 +2,19 @@ import { isEmpty, merge, mapKeys, pick, transform, snakeCase } from 'lodash'
 import {
   createComment as underlyingCreateComment,
   validateCommentCreateData
-} from '../models/comment/createAndPresentComment'
-import validatePostData from '../models/post/validatePostData'
-import underlyingCreatePost from '../models/post/createPost'
-import underlyingUpdatePost from '../models/post/updatePost'
+} from '../../models/comment/createAndPresentComment'
+import validatePostData from '../../models/post/validatePostData'
+import underlyingCreatePost from '../../models/post/createPost'
+import underlyingUpdatePost from '../../models/post/updatePost'
 import underlyingFindOrCreateThread, {
   validateThreadData
-} from '../models/post/findOrCreateThread'
-import underlyingFindLinkPreview from '../models/linkPreview/findOrCreateByUrl'
-import validateNetworkData from '../models/network/validateNetworkData'
-import underlyingUpdateNetwork from '../models/network/updateNetwork'
-import CommunityService from '../services/CommunityService'
-import InvitationService from '../services/InvitationService'
-import underlyingDeleteComment from '../models/comment/deleteComment'
+} from '../../models/post/findOrCreateThread'
+import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
+import validateNetworkData from '../../models/network/validateNetworkData'
+import underlyingUpdateNetwork from '../../models/network/updateNetwork'
+import CommunityService from '../../services/CommunityService'
+import InvitationService from '../../services/InvitationService'
+export { deleteComment, canDeleteComment } from './comment'
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
@@ -293,13 +293,4 @@ export function createCommunity (userId, data) {
   .then(({ community, membership }) => {
     return membership
   })
-}
-
-export function deleteComment (userId, commentId) {
-  return Comment.find(commentId)
-  .then(comment => {
-    if (comment.get('user_id') !== userId) throw new Error("You don't have permission to delete this comment")
-    return underlyingDeleteComment(comment, userId)
-  })
-  .then(() => ({success: true}))
 }
