@@ -3,7 +3,7 @@ require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 import {
   canDeleteComment
-} from '../../../api/graphql/mutations'
+} from '../../../../api/graphql/mutations/comment'
 
 describe('canDeleteComment', () => {
   var u1, u2, u3, c, community
