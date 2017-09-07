@@ -1,5 +1,5 @@
 import { extend, merge, pick, reduce } from 'lodash'
-const randomstring = require('randomstring')
+import randomstring from 'randomstring'
 import { spy } from 'chai'
 import i18n from 'i18n'
 import { ReadableStreamBuffer } from 'stream-buffers'
@@ -100,7 +100,10 @@ module.exports = {
 
       self = {
         ok: setBody(),
-        serverError: spy(err => { throw err }),
+        serverError: spy(err => {
+          self.statusCode = 500
+          self.body = err
+        }),
         badRequest: setBody(),
         notFound: setBody(),
         forbidden: setBody(),

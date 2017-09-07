@@ -24,9 +24,6 @@ export function upload (args) {
 
     function setupStreams (data, resolve, reject) {
       finalFilename = cleanupFilename(data, filename)
-      if (!finalFilename) {
-        return source.emit('error', new Error("couldn't determine file type"))
-      }
 
       // this is used so we can get the file type from the first chunk of
       // data and still use `.pipe` -- you can't pipe a stream after getting
@@ -53,7 +50,6 @@ export function upload (args) {
 
       source.on('error', err => {
         sourceHasError = true
-        source.destroy(err)
         if (passthrough) passthrough.destroy(err)
         if (converter) converter.destroy(err)
         if (storage) storage.destroy(err)
@@ -68,14 +64,17 @@ export function upload (args) {
 }
 
 function cleanupFilename (firstDataChunk, initialFilename) {
-  const type = fileType(firstDataChunk)
-  if (!type) return null
-
   // add timestamp, remove query parameters, add file extension
-  const finalFilename = Date.now() + '_' + initialFilename
+  let finalFilename = Date.now() + '_' + initialFilename
   .replace(/[\t\r\n]/g, '')
   .replace(/\?.*$/, '')
-  .replace(/(\.\w{2,4})?$/, '.' + type.ext)
+
+  try {
+    const type = fileType(firstDataChunk)
+    if (type) {
+      finalFilename = finalFilename.replace(/(\.\w{2,4})?$/, '.' + type.ext)
+    }
+  } catch (err) {}
 
   return finalFilename
 }
@@ -100,10 +99,3 @@ if (require.main === module) {
     console.log('ERROR!', err.message)
   })
 }
-
-// use UploadController for the first six but use the existing post & comment
-// creation endpoints for the last two? that would require supporting multipart
-// uploads in GraphQL
-// https://medium.com/@danielbuechele/file-uploads-with-graphql-and-apollo-5502bbf3941e
-//
-// and then in that case, why not do the whole thing in graphql?

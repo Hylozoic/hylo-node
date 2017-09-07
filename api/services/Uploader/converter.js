@@ -10,6 +10,7 @@ const sizes = {
 }
 
 export function createConverterStream (type, id, strategy = 'center') {
+  // TODO: skip this if there is no conversion needed (e.g. non-image files)
   const { width, height } = sizes[type]
   return sharp()
   .resize(width, height)

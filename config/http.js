@@ -11,9 +11,8 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.http.html
  */
 
-import { createRequestHandler } from '../api/graphql'
+import customMiddleware from './customMiddleware'
 import { magenta } from 'chalk'
-const util = require('util')
 
 module.exports.http = {
 
@@ -34,7 +33,7 @@ module.exports.http = {
     rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
 
     requestLogger: function (req, res, next) {
-      sails.log.info(magenta(util.format('%s %s ', req.method, req.url)))
+      sails.log.info(magenta(`${req.method} ${req.url}`))
       next()
     },
 
@@ -51,8 +50,6 @@ module.exports.http = {
       'session',
       'passportInit',
       'passportSession',
-      'bodyParser',
-      'handleBodyParserError',
       'compress',
       'methodOverride',
       'poweredBy',
@@ -79,24 +76,7 @@ module.exports.http = {
 
   },
 
-  customMiddleware: function (app) {
-    var kue = require('kue')
-    var kueUI = require('kue-ui')
-    var isAdmin = require('../api/policies/isAdmin')
-    var accessTokenAuth = require('../api/policies/accessTokenAuth')
-
-    kueUI.setup({
-      apiURL: '/admin/kue/api',
-      baseURL: '/admin/kue'
-    })
-
-    app.use('/admin/kue', isAdmin)
-    app.use('/admin/kue/api', kue.app)
-    app.use('/admin/kue', kueUI.app)
-
-    app.use('/noo/graphql', accessTokenAuth)
-    app.use('/noo/graphql', createRequestHandler())
-  }
+  customMiddleware,
 
   /***************************************************************************
   *                                                                          *
