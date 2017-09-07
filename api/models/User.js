@@ -324,7 +324,10 @@ module.exports = bookshelf.Model.extend(merge({
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
       updated_at: new Date(),
-      settings: {digest_frequency},
+      settings: {
+        digest_frequency: 'daily',
+        signup_in_progress: true
+      },
       active: true
     }, omit(attributes, 'account', 'community'))
 

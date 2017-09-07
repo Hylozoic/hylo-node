@@ -2,18 +2,19 @@ import { isEmpty, merge, mapKeys, pick, transform, snakeCase } from 'lodash'
 import {
   createComment as underlyingCreateComment,
   validateCommentCreateData
-} from '../models/comment/createAndPresentComment'
-import validatePostData from '../models/post/validatePostData'
-import underlyingCreatePost from '../models/post/createPost'
-import underlyingUpdatePost from '../models/post/updatePost'
+} from '../../models/comment/createAndPresentComment'
+import validatePostData from '../../models/post/validatePostData'
+import underlyingCreatePost from '../../models/post/createPost'
+import underlyingUpdatePost from '../../models/post/updatePost'
 import underlyingFindOrCreateThread, {
   validateThreadData
-} from '../models/post/findOrCreateThread'
-import underlyingFindLinkPreview from '../models/linkPreview/findOrCreateByUrl'
-import validateNetworkData from '../models/network/validateNetworkData'
-import underlyingUpdateNetwork from '../models/network/updateNetwork'
-import CommunityService from '../services/CommunityService'
-import InvitationService from '../services/InvitationService'
+} from '../../models/post/findOrCreateThread'
+import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
+import validateNetworkData from '../../models/network/validateNetworkData'
+import underlyingUpdateNetwork from '../../models/network/updateNetwork'
+import CommunityService from '../../services/CommunityService'
+import InvitationService from '../../services/InvitationService'
+export { deleteComment, canDeleteComment } from './comment'
 
 function convertGraphqlData (data) {
   return transform(data, (result, value, key) => {
@@ -279,4 +280,23 @@ export function useInvitation (userId, invitationToken) {
   return InvitationService.use(userId, invitationToken)
   .then(membership => ({membership}))
   .catch(error => ({error: error.message}))
+}
+
+export function removePost (userId, postId, communityIdOrSlug) {
+  return Promise.join(
+    Post.find(postId),
+    Membership.hasModeratorRole(userId, communityIdOrSlug),
+    (post, isModerator) => {
+      if (!post) throw new Error(`Couldn't find post with id ${postId}`)
+      if (!isModerator) throw new Error(`You don't have permission to remove this post`)
+      return post.removeFromCommunity(communityIdOrSlug)
+    })
+  .then(() => ({success: true}))
+}
+
+export function createCommunity (userId, data) {
+  return Community.create(userId, data)
+  .then(({ community, membership }) => {
+    return membership
+  })
 }

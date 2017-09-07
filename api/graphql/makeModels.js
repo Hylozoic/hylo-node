@@ -7,8 +7,7 @@ import {
   sharedMembership,
   sharedPostMembership,
   sharedPostMembershipClause,
-  activePost,
-  skillInCommunitiesOrNetworksFilter
+  activePost
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
@@ -46,6 +45,7 @@ export default function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
+        {skills: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
@@ -181,6 +181,15 @@ export default function makeModels (userId, isAdmin) {
               subscribed,
               communityId: relation.relatedData.parentId
             }))
+        }},
+        {skills: {
+          querySet: true,
+          filter: (relation, { autocomplete }) =>
+            relation.query(q => {
+              if (autocomplete) {
+                q.whereRaw('skills.name ilike ?', autocomplete + '%')
+              }
+            })
         }}
       ],
       getters: {
@@ -326,8 +335,13 @@ export default function makeModels (userId, isAdmin) {
           if (autocomplete) {
             q.whereRaw('name ilike ?', autocomplete + '%')
           }
-        }),
-      filter: nonAdminFilter(skillInCommunitiesOrNetworksFilter(userId))
+          q.join('skills_users', 'skills_users.skill_id', 'skills.id')
+          q.join('communities_users', 'communities_users.user_id', 'skills_users.user_id')
+          q.where(function () {
+            this.whereIn('communities_users.community_id', myCommunityIds(userId))
+            .orWhereIn('communities_users.community_id', myNetworkCommunityIds(userId))
+          })
+        })
     },
 
     Topic: {

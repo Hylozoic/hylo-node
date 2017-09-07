@@ -21,6 +21,7 @@ type Me {
   postsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
   messageThreadsTotal: Int
+  skills(first: Int, cursor: ID): SkillQuerySet
   updatedAt: String
   newNotificationCount: Int
   unseenThreadCount: Int
@@ -31,6 +32,7 @@ type UserSettings {
   digestFrequency: String
   dmNotifications: String
   commentNotifications: String
+  signupInProgress: Boolean
 }
 
 type CommunityTopicQuerySet {
@@ -160,6 +162,11 @@ type Community {
     autocomplete: String,
     subscribed: Boolean
   ): CommunityTopicQuerySet
+  skills(
+    first: Int,
+    offset: Int,
+    autocomplete: String
+  ): SkillQuerySet
 }
 
 type PersonQuerySet {
@@ -385,6 +392,7 @@ input MeInput {
   facebookUrl: String
   location: String
   tagline: String
+  password: String
   settings: UserSettingsInput
 }
 
@@ -436,6 +444,7 @@ input InviteInput {
 
 input CommunityInput {
   name: String
+  slug: String
   description: String
   location: String
   bannerUrl: String
@@ -471,6 +480,7 @@ input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
   commentNotifications: String
+  signupInProgress: Boolean
 }
 
 type Mutation {
@@ -504,6 +514,9 @@ type Mutation {
   reinviteAll(communityId: ID): GenericResult,
   useInvitation(userId: ID, invitationToken: String): InvitationUseResult,
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  removePost(postId: ID, slug: String, communityId: ID): GenericResult
+  createCommunity(data: CommunityInput): Membership
+  deleteComment(id: ID): GenericResult
 }
 
 type InvitationUseResult {

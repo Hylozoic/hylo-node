@@ -253,6 +253,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
         }).save().then(inc(1)))
     }))
     .then(() => this)
+  },
+
+  removeFromCommunity: function (idOrSlug) {
+    return PostMembership.find(this.id, idOrSlug)
+    .then(membership => membership.destroy())
   }
 
 }, EnsureLoad), {
