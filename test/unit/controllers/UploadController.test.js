@@ -12,7 +12,7 @@ describe('UploadController', () => {
     res = factories.mock.response()
   })
 
-  describe('uploading via url', () => {
+  describe('uploading via x-www-form-urlencoded', () => {
     beforeEach(() => {
       req.headers['content-type'] = 'application/x-www-form-urlencoded'
     })
@@ -21,13 +21,34 @@ describe('UploadController', () => {
       req.body = 'type=userAvatar'
       return UploadController.create(req, res)
       .then(() => {
-        expect(res.statusCode).to.equal(422)
         expect(res.body.error).to.equal('Validation error: No url and no stream')
       })
     })
 
     it('returns an error if the request has a bad type', () => {
       req.body = 'url=http://foo.com/foo.png'
+      return UploadController.create(req, res)
+      .then(() => {
+        expect(res.body.error).to.equal('Validation error: Invalid type')
+      })
+    })
+  })
+
+  describe('uploading via json', () => {
+    beforeEach(() => {
+      req.headers['content-type'] = 'application/json'
+    })
+
+    it('returns an error if the request has no url', () => {
+      req.params.type = 'userAvatar'
+      return UploadController.create(req, res)
+      .then(() => {
+        expect(res.body.error).to.equal('Validation error: No url and no stream')
+      })
+    })
+
+    it('returns an error if the request has a bad type', () => {
+      req.params.url = 'http://foo.com/foo.png'
       return UploadController.create(req, res)
       .then(() => {
         expect(res.body.error).to.equal('Validation error: Invalid type')
