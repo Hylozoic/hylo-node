@@ -75,6 +75,17 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
+  skills: function () {
+    return Skill.collection().query(q => {
+      q.where({
+        'communities_users.community_id': this.id,
+        'communities_users.active': true
+      })
+      q.join('skills_users', 'skills_users.skill_id', 'skills.id')
+      q.join('communities_users', 'communities_users.user_id', 'skills_users.user_id')
+    })
+  },
+
   nexudusAccounts: function () {
     this.hasMany(NexudusAccount)
   },
