@@ -1,7 +1,6 @@
 import request from 'request'
 import fileType from 'file-type'
 import { PassThrough } from 'stream'
-import { createReadStream } from 'fs'
 import { createConverterStream } from './Uploader/converter'
 import { createS3StorageStream } from './Uploader/storage'
 import { validate } from './Uploader/validation'
