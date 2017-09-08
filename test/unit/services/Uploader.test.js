@@ -1,5 +1,7 @@
 /* globals Uploader */
 
+require('../../setup')
+
 describe('Uploader', () => {
   it('rejects a call with no id', () => {
     return Uploader.upload({type: 'userAvatar', url: 'http://foo.com/foo.png'})

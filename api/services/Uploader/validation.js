@@ -1,5 +1,8 @@
+import { values } from 'lodash'
+import * as types from './types'
+
 export function validate ({ type, id, userId, url, stream }) {
-  if (!uploadTypes.includes(type)) {
+  if (!values(types).includes(type)) {
     return Promise.reject(new Error('Validation error: Invalid type'))
   }
 
@@ -34,14 +37,3 @@ function hasPermission (userId, type, id) {
     })
   }
 }
-
-const uploadTypes = [
-  'userAvatar',
-  'userBanner',
-  'communityAvatar',
-  'communityBanner',
-  'networkAvatar',
-  'networkBanner',
-  'post',
-  'comment'
-]

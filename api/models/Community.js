@@ -1,9 +1,10 @@
 /* globals NexudusAccount */
-var Slack = require('../services/Slack')
+import Slack from '../services/Slack'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import { flatten, isEqual, merge, differenceBy, pick, clone } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
+import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../services/Uploader/types'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
@@ -249,8 +250,8 @@ module.exports = bookshelf.Model.extend(merge({
 
   copyAssets: function (opts) {
     return Community.find(opts.communityId).then(c => Promise.join(
-        AssetManagement.copyAsset(c, 'community', 'avatar_url'),
-        AssetManagement.copyAsset(c, 'community', 'banner_url')
+      AssetManagement.copyAsset(c, COMMUNITY_AVATAR, 'avatar_url'),
+      AssetManagement.copyAsset(c, COMMUNITY_BANNER, 'banner_url')
     ))
   },
 
