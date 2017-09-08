@@ -4,17 +4,17 @@ import Promise from 'bluebird'
 import request from 'request'
 import sharp from 'sharp'
 import { createS3StorageStream } from './Uploader/storage'
+import sanitize from 'sanitize-filename'
 
-// this defends against filenames that are blank or have troublesome characters
-const basename = url => {
-  const name = path.basename(url).replace(/(\?.*|[ %+])/g, '')
+const safeBasename = url => {
+  const name = sanitize(path.basename(url))
   return name === '' ? crypto.randomBytes(2).toString('hex') : name
 }
 
 module.exports = {
   copyAsset: function (instance, type, attr) {
     const sourceUrl = instance.get(attr)
-    const filename = basename(sourceUrl)
+    const filename = safeBasename(sourceUrl)
     .replace(/((_\d+)?(\.\w{2,4}))?$/, `_${Date.now()}$3`)
 
     return runPipeline(sourceUrl, filename, type, instance.id)
@@ -24,7 +24,7 @@ module.exports = {
   resizeAsset: function (instance, fromAttr, toAttr, settings = {}) {
     const { width, height, type, transacting } = settings
     const sourceUrl = instance.get(fromAttr)
-    const filename = basename(sourceUrl)
+    const filename = safeBasename(sourceUrl)
     .replace(/(\.\w{2,4})?$/, `_${width}x${height}$1`)
 
     return runPipeline(sourceUrl, filename, type, instance.id, stream =>

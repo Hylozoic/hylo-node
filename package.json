@@ -93,6 +93,7 @@
     "root-path": "^0.2.0",
     "s3-upload-stream": "^1.0.7",
     "sails": "~0.12.3",
+    "sanitize-filename": "^1.6.1",
     "sendwithus": "^2.8.0",
     "sharp": "^0.18.2",
     "slug": "^0.9.1",
