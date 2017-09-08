@@ -24,6 +24,8 @@ module.exports.policies = {
 
   SessionController: true,
 
+  UploadController: ['sessionAuth'],
+
   InvitationController: {
     findOne: true,
     use: ['sessionAuth'],

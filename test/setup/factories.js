@@ -1,7 +1,8 @@
 import { extend, merge, pick, reduce } from 'lodash'
-const randomstring = require('randomstring')
+import randomstring from 'randomstring'
 import { spy } from 'chai'
 import i18n from 'i18n'
+import { ReadableStreamBuffer } from 'stream-buffers'
 
 var text = function (length) {
   return randomstring.generate({length: length || 10, charset: 'alphabetic'})
@@ -40,8 +41,8 @@ module.exports = {
   userConnection: attrs => {
     return new UserConnection(merge({
       type: 'message',
-      created_at: new Date,
-      updated_at: new Date
+      created_at: new Date(),
+      updated_at: new Date()
     }, attrs))
   },
 
@@ -82,6 +83,12 @@ module.exports = {
             version: UserSession.version,
             userId: userId
           })
+        },
+        pipe: function (out) {
+          const buf = new ReadableStreamBuffer()
+          buf.put(this.body)
+          buf.stop()
+          return buf.pipe(out)
         }
       }
     },
@@ -93,7 +100,10 @@ module.exports = {
 
       self = {
         ok: setBody(),
-        serverError: spy(err => { throw err }),
+        serverError: spy(err => {
+          self.statusCode = 500
+          self.body = err
+        }),
         badRequest: setBody(),
         notFound: setBody(),
         forbidden: setBody(),

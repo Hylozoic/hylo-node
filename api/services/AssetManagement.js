@@ -1,68 +1,51 @@
-const aws = require('aws-sdk')
-const crypto = require('crypto')
-const gm = require('gm')
-const mime = require('mime')
-const path = require('path')
-const Promise = require('bluebird')
-const request = require('request')
+import crypto from 'crypto'
+import path from 'path'
+import Promise from 'bluebird'
+import request from 'request'
+import sharp from 'sharp'
+import { createS3StorageStream } from './Uploader/storage'
+import sanitize from 'sanitize-filename'
 
-const basename = url => {
-  const name = path.basename(url).replace(/(\?.*|[ %+])/g, '')
+const safeBasename = url => {
+  const name = sanitize(path.basename(url))
   return name === '' ? crypto.randomBytes(2).toString('hex') : name
 }
 
 module.exports = {
-  copyAsset: function (instance, modelName, attr) {
-    const subfolder = attr.replace('_url', '')
-    const url = instance.get(attr)
-    const key = path.join(modelName.toLowerCase(), instance.id, subfolder, basename(url))
-    const newUrl = process.env.AWS_S3_CONTENT_URL + '/' + key
-    const s3 = new aws.S3()
-    const httpget = Promise.promisify(request.get, request, {multiArgs: true})
+  copyAsset: function (instance, type, attr) {
+    const sourceUrl = instance.get(attr)
+    const filename = safeBasename(sourceUrl)
+    .replace(/((_\d+)?(\.\w{2,4}))?$/, `_${Date.now()}$3`)
 
-    sails.log.info('from: ' + url)
-    sails.log.info('to:   ' + newUrl)
-
-    if (url !== newUrl) {
-      return httpget({url, encoding: null})
-      .then(([ resp, body ]) => s3.upload({
-        Bucket: process.env.AWS_S3_BUCKET,
-        ACL: 'public-read',
-        ContentType: mime.lookup(key),
-        Key: key,
-        Body: body
-      }).promise())
-      .then(() => instance.save({[attr]: newUrl}, {patch: true}))
-    }
+    return runPipeline(sourceUrl, filename, type, instance.id)
+    .then(url => instance.save({[attr]: url}, {patch: true}))
   },
 
   resizeAsset: function (instance, fromAttr, toAttr, settings = {}) {
-    const { width, height, transacting } = settings
-    const s3 = new aws.S3()
-    const url = instance.get(fromAttr)
-    const key = url.replace(process.env.AWS_S3_CONTENT_URL + '/', '')
-    const newKey = key.replace(/(\.\w{2,4})?$/, `-resized${width}x${height}$1`)
-    const newUrl = process.env.AWS_S3_CONTENT_URL + '/' + newKey
+    const { width, height, type, transacting } = settings
+    const sourceUrl = instance.get(fromAttr)
+    const filename = safeBasename(sourceUrl)
+    .replace(/(\.\w{2,4})?$/, `_${width}x${height}$1`)
 
-    sails.log.info('from: ' + url)
-    sails.log.info('to:   ' + newUrl)
-
-    const httpget = Promise.promisify(request.get, request, {multiArgs: true})
-
-    return httpget({url, encoding: null})
-    .then(([ resp, body ]) => {
-      const resize = gm(body)
-      .resize(width, height, '>') // do not resize if already smaller
-      .stream()
-
-      return s3.upload({
-        Bucket: process.env.AWS_S3_BUCKET,
-        ACL: 'public-read',
-        ContentType: mime.lookup(key),
-        Key: newKey,
-        Body: resize
-      }).promise()
-      .then(() => instance.save({[toAttr]: newUrl}, {patch: true, transacting}))
-    })
+    return runPipeline(sourceUrl, filename, type, instance.id, stream =>
+      stream.pipe(sharp().resize(width, height)))
+    .then(url => instance.save({[toAttr]: url}, {patch: true, transacting}))
   }
+}
+
+function runPipeline (url, filename, type, id, pipeFn) {
+  return new Promise((resolve, reject) => {
+    sails.log.info('from: ' + url)
+
+    let stream = request.get({url, encoding: null})
+    if (pipeFn) stream = pipeFn(stream)
+    stream = stream.pipe(createS3StorageStream(filename, type, id))
+
+    stream.on('finish', () => {
+      sails.log.info('to:   ' + stream.url)
+      resolve(stream.url)
+    })
+
+    stream.on('error', reject)
+  })
 }

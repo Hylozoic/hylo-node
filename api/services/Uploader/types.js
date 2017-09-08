@@ -1,0 +1,8 @@
+export const USER_AVATAR = 'userAvatar'
+export const USER_BANNER = 'userBanner'
+export const COMMUNITY_AVATAR = 'communityAvatar'
+export const COMMUNITY_BANNER = 'communityBanner'
+export const NETWORK_AVATAR = 'networkAvatar'
+export const NETWORK_BANNER = 'networkBanner'
+export const POST = 'post'
+export const COMMENT = 'comment'
