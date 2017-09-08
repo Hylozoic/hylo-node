@@ -15,4 +15,5 @@ export function createConverterStream (type, id, strategy = 'center') {
   return sharp()
   .resize(width, height)
   .crop(strategy)
+  .withoutEnlargement()
 }
