@@ -14,7 +14,17 @@ export function createTestFileStorageStream (filename, type, id) {
 }
 
 export function createS3StorageStream (filename, type, id) {
-  // AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be in process.env
+  ;[
+    'AWS_ACCESS_KEY_ID',
+    'AWS_SECRET_ACCESS_KEY',
+    'AWS_S3_BUCKET',
+    'UPLOADER_PATH_PREFIX'
+  ].forEach(key => {
+    if (!process.env[key]) {
+      throw new Error(`missing process.env.${key}`)
+    }
+  })
+
   const s3 = new aws.S3()
   const wrapper = createWrapperStream()
 

@@ -44,7 +44,13 @@ export function upload (args) {
     return new Promise((resolve, reject) => {
       source.on('data', data => {
         if (sourceHasError) return
-        if (!finalFilename) setupStreams(data, resolve, reject)
+        if (!finalFilename) {
+          try {
+            setupStreams(data, resolve, reject)
+          } catch (err) {
+            reject(err)
+          }
+        }
         if (passthrough) passthrough.write(data)
       })
 
