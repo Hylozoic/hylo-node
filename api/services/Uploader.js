@@ -84,24 +84,3 @@ function cleanupFilename (firstDataChunk, initialFilename) {
 
   return finalFilename
 }
-
-if (require.main === module) {
-  const dotenv = require('dotenv')
-  dotenv.load()
-
-  const arg = process.argv[2]
-
-  upload({
-    type: 'userBanner',
-    userId: 42,
-    id: 42,
-    url: arg.startsWith('http') ? arg : null,
-    stream: arg.startsWith('http') ? null : createReadStream(arg),
-    filename: path.basename(arg),
-    onProgress: progress => console.log('progress:', progress)
-  })
-  .then(x => console.log('OK!', x))
-  .catch(err => {
-    console.log('ERROR!', err.message)
-  })
-}
