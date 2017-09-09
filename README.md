@@ -58,7 +58,6 @@ PLAY_APP_SECRET=[ app secret ]
 AWS_S3_BUCKET=[ bucket name ]
 AWS_SECRET_ACCESS_KEY=[ secret access key ]
 AWS_ACCESS_KEY_ID=[ access key id ]
-AWS_S3_CONTENT_URL=[ content url ]
 PRETTY_JSON=true
 PROTOCOL=http
 REDIS_URL=redis://0.0.0.0:6379
@@ -69,6 +68,8 @@ SLACK_APP_CLIENT_ID=[ client id ]
 SLACK_APP_CLIENT_SECRET=[ client secret ]
 ADMIN_GOOGLE_CLIENT_ID=[ client id ]
 ADMIN_GOOGLE_CLIENT_SECRET=[ client secret ]
+UPLOADER_HOST=[ hostname ]
+UPLOADER_PATH_PREFIX=[ path ]
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
 * `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
@@ -120,15 +121,15 @@ Create a file called `.env.test` to set environment variables for the test envir
 # NOTE: don't put comments after a variable initialization.  it will break your tests!
 
 # run tests against a different database
-DATABASE_URL=postgres://localhost/hylo_test 
+DATABASE_URL=postgres://localhost/hylo_test
 DOMAIN=testdomain
 # this prevents jobs that were queued during testing from being run in development
-KUE_NAMESPACE=qtest 
+KUE_NAMESPACE=qtest
 PROTOCOL=http
 # don't log errors to Rollbar
-ROLLBAR_SERVER_TOKEN= 
+ROLLBAR_SERVER_TOKEN=
 # you can set up a SendWithUs API key to return valid responses but send no email
-SENDWITHUS_KEY=test_... 
+SENDWITHUS_KEY=test_...
 MAILGUN_EMAIL_SALT=FFFFAAAA123456789
 MAILGUN_DOMAIN=mg.hylo.com
 PLAY_APP_SECRET=quxgrault12345678

@@ -19,5 +19,13 @@ module.exports = bookshelf.Model.extend({
       created_at: new Date(),
       role: NetworkMembership.MODERATOR_ROLE
     }).save({}, opts)
+  },
+
+  hasModeratorRole: function (userId, networkId) {
+    return NetworkMembership.where({
+      user_id: userId,
+      network_id: networkId,
+      role: NetworkMembership.MODERATOR_ROLE
+    }).count().then(count => Number(count) === 1)
   }
 })
