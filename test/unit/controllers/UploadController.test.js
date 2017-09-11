@@ -57,16 +57,8 @@ describe('UploadController', () => {
   })
 
   describe('uploading via file', () => {
-    let tmpEnvVar
-
     beforeEach(() => {
       req.headers['content-type'] = 'multipart/form-data; boundary=125b0ae93a754d0ba988b98b397d587f'
-      tmpEnvVar = process.env.AWS_ACCESS_KEY_ID
-      process.env.AWS_ACCESS_KEY_ID = 'nah'
-    })
-
-    afterEach(() => {
-      process.env.AWS_ACCESS_KEY_ID = tmpEnvVar
     })
 
     it('parses a multipart request', () => {

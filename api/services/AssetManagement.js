@@ -3,7 +3,7 @@ import path from 'path'
 import Promise from 'bluebird'
 import request from 'request'
 import sharp from 'sharp'
-import { createS3StorageStream } from './Uploader/storage'
+import { createS3StorageStream } from '../../lib/uploader/storage'
 import sanitize from 'sanitize-filename'
 
 const safeBasename = url => {

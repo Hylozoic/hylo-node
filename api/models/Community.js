@@ -4,7 +4,7 @@ import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import { flatten, isEqual, merge, differenceBy, pick, clone } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
-import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../services/Uploader/types'
+import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../../lib/uploader/types'
 
 const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
 const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
