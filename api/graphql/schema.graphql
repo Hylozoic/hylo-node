@@ -316,7 +316,12 @@ type VoteQuerySet {
   items: [Vote]
 }
 
+type CommunityExistsOutput {
+  data: Boolean
+}
+
 type Query {
+  communityExists(slug: String): CommunityExistsOutput
   me: Me
   person(id: ID): Person
   notifications(

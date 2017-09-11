@@ -59,6 +59,12 @@ function createSchema (userId, isAdmin) {
             }
           })
       },
+      communityExists: (root, { slug }) => {
+        return Search.forCommunities({ slug }).fetch().then(result => {
+          if (result) return {data: true}
+          return {data: false}
+        })
+      },
       notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
         return fetchMany('Notification', { first, offset, order })
         .tap(() => {
