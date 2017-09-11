@@ -65,4 +65,17 @@ describe('Uploader', () => {
       expect(err.message).to.equal('Validation error: Not a moderator of this network')
     })
   })
+
+  it('rejects a call changing a non existing post', () => {
+    return Uploader.upload({
+      userId: '6',
+      type: 'post',
+      id: '1234567',
+      url: 'http://foo.com/foo.png'
+    })
+    .then(() => expect.fail('should reject'))
+    .catch(err => {
+      expect(err.message).to.equal('Validation error: Not allowed to edit this post')
+    })
+  })
 })

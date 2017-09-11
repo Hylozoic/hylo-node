@@ -41,7 +41,7 @@ function hasPermission (userId, type, id) {
     if (id === 'new') return Promise.resolve()
     return Post.find(id)
     .then(post => {
-      if (post.get('user_id') !== userId) throw new Error('Validation error: Not allowed to edit this post')
+      if (!post || post.get('user_id') !== userId) throw new Error('Validation error: Not allowed to edit this post')
     })
   }
 }
