@@ -64,13 +64,14 @@ module.exports = bookshelf.Model.extend({
       thumbnailSize && media.createThumbnail({ thumbnailSize, transacting }))
   },
 
-  createForPost: function (postId, type, url, trx) {
+  createForPost: function ({postId, type, url, position = 0}, trx) {
     switch (type) {
       case 'image':
         return createAndAddSize({
           post_id: postId,
-          url: url,
+          url,
           type,
+          position,
           transacting: trx
         })
       case 'video':

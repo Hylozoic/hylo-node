@@ -12,7 +12,9 @@ function updateMedia (post, type, url, remove, transacting) {
       .then(media => media.updateMetadata({transacting}))
     }
   } else if (url) { // create new media
-    return Media.createForPost(post.id, type, url, transacting)
+    return Media.createForPost({
+      postId: post.id, type, url
+    }, transacting)
   }
 }
 
