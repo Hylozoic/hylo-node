@@ -138,7 +138,11 @@ export default function makeModels (userId, isAdmin) {
           }))}},
         {user: {alias: 'creator'}},
         'followers',
-        'linkPreview'
+        'linkPreview',
+        {media: {
+          alias: 'attachments',
+          arguments: ({ type }) => [type]
+        }}
       ],
       filter: flow(
         activePost,
@@ -446,6 +450,18 @@ export default function makeModels (userId, isAdmin) {
             order
           })
       }
+    },
+
+    Attachment: {
+      model: Media,
+      attributes: [
+        'id',
+        'type',
+        'url',
+        'thumbnail_url',
+        'position',
+        'created_at'
+      ]
     }
   }
 }
