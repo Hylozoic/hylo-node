@@ -228,6 +228,17 @@ type Post {
   linkPreview: LinkPreview
   votesTotal: Int
   myVote: Boolean
+  attachments(type: String): [Attachment]
+  attachmentsTotal: Int
+}
+
+type Attachment {
+  id: ID
+  type: String
+  position: Int
+  url: String
+  thumbnailUrl: String
+  createdAt: String
 }
 
 type PersonConnection {
