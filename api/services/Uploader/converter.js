@@ -6,7 +6,8 @@ const sizes = {
   communityAvatar: {width: 160, height: 160},
   communityBanner: {width: 1600, height: 600},
   networkAvatar: {width: 160, height: 160},
-  networkBanner: {width: 1600, height: 600}
+  networkBanner: {width: 1600, height: 600},
+  post: {width: 1600, height: 600}
 }
 
 export function createConverterStream (type, id, strategy = 'center') {
