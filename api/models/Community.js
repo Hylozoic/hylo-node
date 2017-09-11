@@ -339,7 +339,6 @@ module.exports = bookshelf.Model.extend(merge({
       })
       // Any assets were uploaded to /community/new, since we didn't have an id;
       // copy them over to /community/:id now
-      .tap(() => Queue.classMethod('Community', 'copyAssets', {communityId: community.id}))
       .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
     })
   }

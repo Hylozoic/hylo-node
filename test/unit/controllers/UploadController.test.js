@@ -57,8 +57,16 @@ describe('UploadController', () => {
   })
 
   describe('uploading via file', () => {
+    let tmpEnvVar
+
     beforeEach(() => {
       req.headers['content-type'] = 'multipart/form-data; boundary=125b0ae93a754d0ba988b98b397d587f'
+      tmpEnvVar = process.env.AWS_ACCESS_KEY_ID
+      process.env.AWS_ACCESS_KEY_ID = 'nah'
+    })
+
+    afterEach(() => {
+      process.env.AWS_ACCESS_KEY_ID = tmpEnvVar
     })
 
     it('parses a multipart request', () => {
@@ -66,10 +74,10 @@ describe('UploadController', () => {
       req.session.userId = '42'
       return UploadController.create(req, res)
       .then(() => {
-        // this error is thrown by sharp; the fact that it is thrown confirms
-        // that busboy was able to parse the request and start streaming it
-        // into the convert & upload pipeline.
-        expect(res.body.error).to.equal('Unsupported image format')
+        // this error is thrown by createS3StorageStream; the fact that it is
+        // thrown confirms that busboy was able to parse the request and set up
+        // the stream pipeline.
+        expect(res.body.code).to.equal('InvalidAccessKeyId')
       })
     })
   })

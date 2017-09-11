@@ -1,10 +1,10 @@
 import os from 'os'
 import fs from 'fs'
 import path from 'path'
-import mime from 'mime'
 import aws from 'aws-sdk'
 import { parse } from 'url'
 import { PassThrough } from 'stream'
+import mime from 'mime'
 
 export function createTestFileStorageStream (filename, type, id) {
   const testPath = path.join(os.tmpdir(), filename)
@@ -13,7 +13,7 @@ export function createTestFileStorageStream (filename, type, id) {
   return stream
 }
 
-export function createS3StorageStream (filename, type, id) {
+export function createS3StorageStream (uploadType, id, { userId, fileType, filename }) {
   ;[
     'AWS_ACCESS_KEY_ID',
     'AWS_SECRET_ACCESS_KEY',
@@ -35,11 +35,11 @@ export function createS3StorageStream (filename, type, id) {
 
     ACL: 'public-read',
     Bucket: process.env.AWS_S3_BUCKET,
-    ContentType: mime.lookup(filename),
-    Key: path.join(process.env.UPLOADER_PATH_PREFIX, type, String(id), filename)
+    ContentType: getMimeType(fileType, filename),
+    Key: makePath(uploadType, id, { userId, fileType, filename })
   }, (err, data) => {
     if (err) return wrapper.emit('error', err)
-    wrapper.url = makeUrl(data.Location)
+    wrapper.url = getFinalUrl(data.Location)
     wrapper.triggerFinish()
   })
 
@@ -72,9 +72,32 @@ function createWrapperStream () {
   return stream
 }
 
-function makeUrl (url) {
+function getFinalUrl (url) {
   if (!process.env.UPLOADER_HOST) return url
   const u = parse(url)
   u.host = process.env.UPLOADER_HOST
   return u.format()
+}
+
+export function makePath (type, id, { userId, fileType, filename }) {
+  const rand = Math.random().toString().substring(2, 6)
+  let basename = filename || `${Date.now()}_${rand}`
+  if (fileType) {
+    basename = basename.replace(/(\.\w{2,4})?$/, '.' + fileType.ext)
+  }
+
+  return path.join(
+    process.env.UPLOADER_PATH_PREFIX,
+    'user',
+    userId ? String(userId) : 'system',
+    `${type}_${id || 'new'}_${basename}`
+  )
+}
+
+function getMimeType (fileType, filename) {
+  return fileType
+    ? fileType.mime
+    : filename
+      ? mime.lookup(filename)
+      : 'application/octet-stream'
 }

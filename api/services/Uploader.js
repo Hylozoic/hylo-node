@@ -1,38 +1,35 @@
 import request from 'request'
-import fileType from 'file-type'
+import getFileType from 'file-type'
 import { PassThrough } from 'stream'
 import { createConverterStream } from './Uploader/converter'
 import { createS3StorageStream } from './Uploader/storage'
 import { validate } from './Uploader/validation'
-import path from 'path'
 
 export function upload (args) {
-  let { type, id, url, stream, filename, onProgress } = args
+  let { type, id, userId, url, stream, onProgress } = args
 
   return validate(args)
   .then(() => {
-    let source, passthrough, converter, storage, finalFilename
-    let sourceHasError = false
-
-    if (url) {
-      source = request(url)
-      filename = path.basename(url)
-    } else {
-      source = stream
-    }
+    let passthrough, converter, storage, didSetup, sourceHasError
+    const source = url ? request(url) : stream
 
     function setupStreams (data, resolve, reject) {
-      finalFilename = cleanupFilename(data, filename)
+      let fileType
+      try {
+        fileType = getFileType(data)
+      } catch (err) {}
+
+      didSetup = true
 
       // this is used so we can get the file type from the first chunk of
       // data and still use `.pipe` -- you can't pipe a stream after getting
       // data from it
       passthrough = new PassThrough()
 
-      converter = createConverterStream(type, id)
+      converter = createConverterStream(type, id, {fileType})
       converter.on('error', err => reject(err))
 
-      storage = createS3StorageStream(finalFilename, type, id)
+      storage = createS3StorageStream(type, id, {userId, fileType})
       storage.on('finish', () => resolve(storage.url))
       storage.on('error', err => reject(err))
       if (onProgress) storage.on('progress', onProgress)
@@ -43,7 +40,7 @@ export function upload (args) {
     return new Promise((resolve, reject) => {
       source.on('data', data => {
         if (sourceHasError) return
-        if (!finalFilename) {
+        if (!didSetup) {
           try {
             setupStreams(data, resolve, reject)
           } catch (err) {
@@ -66,20 +63,4 @@ export function upload (args) {
       })
     })
   })
-}
-
-function cleanupFilename (firstDataChunk, initialFilename) {
-  // add timestamp, remove query parameters, add file extension
-  let finalFilename = Date.now() + '_' + initialFilename
-  .replace(/[\t\r\n]/g, '')
-  .replace(/\?.*$/, '')
-
-  try {
-    const type = fileType(firstDataChunk)
-    if (type) {
-      finalFilename = finalFilename.replace(/(\.\w{2,4})?$/, '.' + type.ext)
-    }
-  } catch (err) {}
-
-  return finalFilename
 }
