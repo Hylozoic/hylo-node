@@ -3,7 +3,7 @@ import path from 'path'
 import Promise from 'bluebird'
 import request from 'request'
 import sharp from 'sharp'
-import { createS3StorageStream } from './Uploader/storage'
+import { createS3StorageStream } from '../../lib/uploader/storage'
 import sanitize from 'sanitize-filename'
 
 const safeBasename = url => {
@@ -39,7 +39,7 @@ function runPipeline (url, filename, type, id, pipeFn) {
 
     let stream = request.get({url, encoding: null})
     if (pipeFn) stream = pipeFn(stream)
-    stream = stream.pipe(createS3StorageStream(filename, type, id))
+    stream = stream.pipe(createS3StorageStream(type, id, {filename}))
 
     stream.on('finish', () => {
       sails.log.info('to:   ' + stream.url)
