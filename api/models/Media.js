@@ -46,7 +46,8 @@ module.exports = bookshelf.Model.extend({
     height,
     comment_id,
     transacting,
-    thumbnailSize
+    thumbnailSize,
+    position
   }) {
     return Media.forge({
       created_at: new Date(),
@@ -57,20 +58,22 @@ module.exports = bookshelf.Model.extend({
       thumbnail_url,
       width,
       height,
-      comment_id
+      comment_id,
+      position
     })
     .save(null, { transacting })
     .tap(media =>
       thumbnailSize && media.createThumbnail({ thumbnailSize, transacting }))
   },
 
-  createForPost: function (postId, type, url, trx) {
+  createForPost: function ({postId, type, url, position = 0}, trx) {
     switch (type) {
       case 'image':
         return createAndAddSize({
           post_id: postId,
-          url: url,
+          url,
           type,
+          position,
           transacting: trx
         })
       case 'video':
@@ -81,6 +84,7 @@ module.exports = bookshelf.Model.extend({
             transacting: trx,
             url,
             thumbnail_url,
+            position,
             type
           }))
     }
