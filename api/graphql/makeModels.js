@@ -59,7 +59,6 @@ export default function makeModels (userId, isAdmin) {
       attributes: [
         'created_at',
         'hasModeratorRole',
-        'role',
         'last_viewed_at',
         'new_post_count'
       ],
