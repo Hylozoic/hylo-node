@@ -1,8 +1,4 @@
-import { isEmpty, merge, mapKeys, pick, transform, snakeCase } from 'lodash'
-import {
-  createComment as underlyingCreateComment,
-  validateCommentCreateData
-} from '../../models/comment/createAndPresentComment'
+import { isEmpty, merge, mapKeys, pick, snakeCase } from 'lodash'
 import validatePostData from '../../models/post/validatePostData'
 import underlyingCreatePost from '../../models/post/createPost'
 import underlyingUpdatePost from '../../models/post/updatePost'
@@ -10,19 +6,12 @@ import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../../models/post/findOrCreateThread'
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
-import validateNetworkData from '../../models/network/validateNetworkData'
-import underlyingUpdateNetwork from '../../models/network/updateNetwork'
 import CommunityService from '../../services/CommunityService'
 import InvitationService from '../../services/InvitationService'
-export { deleteComment, canDeleteComment } from './comment'
+import convertGraphqlData from './convertGraphqlData'
 
-function convertGraphqlData (data) {
-  return transform(data, (result, value, key) => {
-    result[snakeCase(key)] = typeof value === 'object'
-      ? convertGraphqlData(value)
-      : value
-  }, {})
-}
+export { createComment, deleteComment, canDeleteComment } from './comment'
+export { updateNetwork } from './network'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
@@ -56,15 +45,6 @@ export function updatePost (userId, { id, data }) {
   return convertGraphqlPostData(data)
   .tap(convertedData => validatePostData(userId, convertedData))
   .then(validatedData => underlyingUpdatePost(userId, id, validatedData))
-}
-
-export function createComment (userId, data) {
-  return validateCommentCreateData(userId, data)
-  .then(() => Promise.props({
-    post: Post.find(data.postId),
-    parentComment: data.parentCommentId ? Comment.find(data.parentCommentId) : null
-  }))
-  .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
 export function findOrCreateThread (userId, data) {
@@ -116,12 +96,6 @@ export function updateCommunityTopic (userId, { id, data }) {
   return CommunityTag.where({id}).fetch()
   .then(ct => ct.tagFollow(userId).query().update(whitelist))
   .then(() => ({success: true}))
-}
-
-export function updateNetwork (userId, { id, data }) {
-  const convertedData = convertGraphqlData(data)
-  return validateNetworkData(userId, convertedData)
-  .then(() => underlyingUpdateNetwork(userId, id, convertedData))
 }
 
 export function markActivityRead (userId, activityid) {
