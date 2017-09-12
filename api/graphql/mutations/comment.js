@@ -32,7 +32,7 @@ export function createComment (userId, data) {
   .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
-function validateCommentCreateData (userId, data) {
+export function validateCommentCreateData (userId, data) {
   return Post.isVisibleToUser(data.postId, userId)
   .then(isVisible => {
     if (isVisible) {
