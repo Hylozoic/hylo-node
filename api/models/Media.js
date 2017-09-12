@@ -84,6 +84,7 @@ module.exports = bookshelf.Model.extend({
             transacting: trx,
             url,
             thumbnail_url,
+            position,
             type
           }))
     }
