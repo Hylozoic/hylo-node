@@ -58,12 +58,14 @@ export default function makeModels (userId, isAdmin) {
       model: Membership,
       attributes: [
         'created_at',
-        'hasModeratorRole',
-        'last_viewed_at',
-        'new_post_count'
+        'hasModeratorRole'
       ],
       getters: {
-        settings: u => mapKeys(camelCase, u.get('settings'))
+        settings: m => mapKeys(camelCase, m.get('settings')),
+        lastViewedAt: m =>
+          m.get('user_id') === userId ? m.get('last_viewed_at') : null,
+        newPostCount: m =>
+          m.get('user_id') === userId ? m.get('new_post_count') : null
       },
       relations: ['community'],
       filter: nonAdminFilter(sharedMembership('communities_users', userId))
