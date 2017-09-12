@@ -46,7 +46,8 @@ module.exports = bookshelf.Model.extend({
     height,
     comment_id,
     transacting,
-    thumbnailSize
+    thumbnailSize,
+    position
   }) {
     return Media.forge({
       created_at: new Date(),
@@ -57,7 +58,8 @@ module.exports = bookshelf.Model.extend({
       thumbnail_url,
       width,
       height,
-      comment_id
+      comment_id,
+      position
     })
     .save(null, { transacting })
     .tap(media =>
