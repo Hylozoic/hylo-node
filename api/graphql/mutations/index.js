@@ -7,11 +7,13 @@ import underlyingFindOrCreateThread, {
 } from '../../models/post/findOrCreateThread'
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
 import CommunityService from '../../services/CommunityService'
-import InvitationService from '../../services/InvitationService'
 import convertGraphqlData from './convertGraphqlData'
 
 export { createComment, deleteComment, canDeleteComment } from './comment'
 export { updateNetwork } from './network'
+export {
+  createInvitation, expireInvitation, resendInvitation, reinviteAll
+} from './invitation'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
@@ -139,7 +141,7 @@ export function addModerator (userId, personId, communityId) {
       return Membership.setModeratorRole(personId, communityId)
       .then(() => Community.find(communityId))
     } else {
-      throw new Error("you don't have permission to modify this community")
+      throw new Error("You don't have permission to modify this community")
     }
   })
 }
@@ -151,7 +153,7 @@ export function removeModerator (userId, personId, communityId) {
       return Membership.removeModeratorRole(personId, communityId)
       .then(() => Community.find(communityId))
     } else {
-      throw new Error("you don't have permission to modify this community")
+      throw new Error("You don't have permission to modify this community")
     }
   })
 }
@@ -166,7 +168,7 @@ export function removeMember (loggedInUser, userToRemove, communityId) {
         return CommunityService.removeMember(userToRemove, communityId, loggedInUser)
           .then(() => Community.find(communityId))
       } else {
-        throw new Error("you don't have permission to moderate this community")
+        throw new Error("You don't have permission to moderate this community")
       }
     })
 }
@@ -175,7 +177,7 @@ export function deletePost (userId, postId) {
   return Post.find(postId)
   .then(post => {
     if (post.get('user_id') !== userId) {
-      throw new Error("you don't have permission to modify this post")
+      throw new Error("You don't have permission to modify this post")
     }
     return Post.deactivate(postId)
   })
@@ -210,37 +212,7 @@ export function regenerateAccessCode (userId, communityId) {
     }))
 }
 
-export function createInvitation (userId, communityId, data) {
-  return InvitationService.create({
-    sessionUserId: userId,
-    communityId,
-    emails: data.emails,
-    message: data.message,
-    moderator: data.isModerator || false,
-    subject: 'Join our community!'
-  }).then(invites => ({
-    invitations: invites
-  }))
-}
-
-export function expireInvitation (userId, invitationId) {
-  return InvitationService.expire(userId, invitationId)
-  .then(() => ({success: true}))
-}
-
-export function resendInvitation (userId, invitationId) {
-  return InvitationService.resend(invitationId)
-  .then(() => ({success: true}))
-}
-
-export function reinviteAll (userId, communityId) {
-  return InvitationService.reinviteAll({sessionUserId: userId, communityId})
-  .then(() => ({success: true}))
-}
-
-export function flagInappropriateContent (userId, {
-  category, reason, link
-}) {
+export function flagInappropriateContent (userId, { category, reason, link }) {
   return new FlaggedItem({
     user_id: userId,
     category,
