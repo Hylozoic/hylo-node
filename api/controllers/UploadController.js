@@ -1,5 +1,5 @@
 import Busboy from 'busboy'
-import { upload } from '../services/Uploader'
+import { upload } from '../../lib/uploader'
 
 module.exports = {
   create: function (req, res) {
