@@ -83,7 +83,6 @@ type Person {
   location: String
   tagline: String
   comments(first: Int, offset: Int, order: String): CommentQuerySet
-  commentsTotal: Int
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   posts(
