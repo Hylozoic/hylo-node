@@ -92,7 +92,7 @@ function createSchema (userId, isAdmin) {
       skills: (root, args) => fetchMany('Skill', args),
       checkInvitation: (root, { invitationToken }) =>
         Invitation.query()
-        .where(bookshelf.knex.raw('token = ? AND used_by_id IS NULL', invitationToken))
+        .where({token: invitationToken, used_by_id: null})
         .count()
         .then(result => {
           return {valid: result[0].count !== '0'}
