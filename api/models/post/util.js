@@ -1,4 +1,4 @@
-import { difference, has, isEqual, pick, some, compact, isEmpty } from 'lodash'
+import { difference, has, isEqual, pick, some, compact } from 'lodash'
 
 function updateMedia (post, type, url, remove, transacting) {
   if (!url && !remove) return
@@ -19,7 +19,7 @@ function updateMedia (post, type, url, remove, transacting) {
 }
 
 function updateMediaEvo (post, type, urls, transacting) {
-  if (isEmpty(urls)) return
+  if (!urls) return
   var media = post.relations.media.filter(m => m.get('type') === type)
 
   return Promise.map(media, m => m.destroy({transacting}))
@@ -37,6 +37,7 @@ export function updateAllMedia (post, params, trx) {
   return (some(mediaParams, p => has(params, p))
     ? post.load('media')
     : Promise.resolve())
+  // TODO: remove updateMedia and rename updateMediaEvo after transition to evo.hylo.com
   .tap(() => updateMedia(post, 'image', params.imageUrl, params.imageRemoved, trx))
   .tap(() => updateMediaEvo(post, 'image', params.imageUrls, trx))
   .tap(() => updateMedia(post, 'video', params.videoUrl, params.videoRemoved, trx))
