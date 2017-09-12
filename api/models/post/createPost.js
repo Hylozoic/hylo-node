@@ -42,11 +42,10 @@ export function afterCreatingPost (post, opts) {
     }, trx),
 
     // evo version
-    opts.imageUrls && Promise.map(opts.imageUrls, (url, i) => {
-      return Media.createForPost({
+    opts.imageUrls && Promise.map(opts.imageUrls, (url, i) =>
+      Media.createForPost({
         postId: post.id, type: 'image', url, position: i
-      }, trx)
-    }),
+      }, trx)),
 
     opts.children && updateChildren(post, opts.children, trx),
 
