@@ -270,7 +270,7 @@ const PostController = {
         event: 'Add Post by Email Form',
         properties: {community: community.get('name')}
       }))
-      .then(post => res.redirect(Frontend.Route.post(post))))
+      .then(post => res.redirect(Frontend.Route.post(post, community))))
     .catch(res.serverError)
   },
 
