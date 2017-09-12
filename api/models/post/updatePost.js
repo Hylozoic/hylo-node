@@ -11,10 +11,19 @@ export default function updatePost (userId, id, params) {
   if (!id) throw new Error('updatePost called with no ID')
   return setupPostAttrs(userId, params)
   .then(attrs => bookshelf.transaction(transacting =>
-    Post.find(id).then(post =>
-      post.save(attrs, {patch: true, transacting})
+    Post.find(id).then(post => {
+      if (!post) throw new Error('Post not found')
+      const updatableTypes = [
+        Post.Type.OFFER,
+        Post.Type.REQUEST,
+        Post.Type.DISCUSSION
+      ]
+      if (!updatableTypes.includes(post.get('type'))) {
+        throw new Error("This post can't be modified")
+      }
+      return post.save(attrs, {patch: true, transacting})
       .tap(updatedPost => afterUpdatingPost(updatedPost, {params, userId, transacting}))
-    )))
+    })))
 }
 
 export function afterUpdatingPost (post, opts) {
@@ -33,6 +42,5 @@ export function afterUpdatingPost (post, opts) {
     Tag.updateForPost(post, tag, tagDescriptions, userId, transacting),
     updateFollowers(post, transacting)
   ]))
-  .then(() => updateNetworkMemberships(post, transacting),
-)
+  .then(() => updateNetworkMemberships(post, transacting))
 }
