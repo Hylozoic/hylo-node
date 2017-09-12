@@ -492,6 +492,6 @@ function validateUserAttributes (attrs, { existingUser, transacting } = {}) {
     return Promise.reject(new Error('invalid-email'))
   }
 
-  return User.isEmailUnique(email, oldEmail, {transacting})
+  return User.isEmailUnique(attrs.email, oldEmail, {transacting})
   .then(unique => unique || Promise.reject(new Error('duplicate-email')))
 }
