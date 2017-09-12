@@ -489,7 +489,9 @@ describe('PostController', () => {
     describe('with an existing image', () => {
       var originalImageId
       beforeEach(() =>
-        Media.createForPost(post.id, 'image', testImageUrl)
+        Media.createForPost({
+          postId: post.id, type: 'image', url: testImageUrl
+        })
         .tap(image => {
           originalImageId = image.id
         }))
@@ -523,7 +525,9 @@ describe('PostController', () => {
       beforeEach(() => {
         return Media.generateThumbnailUrl(testVideoUrl)
         .then(url => stubGetImageSize(url))
-        .then(() => Media.createForPost(post.id, 'video', testVideoUrl))
+        .then(() => Media.createForPost({
+          postId: post.id, type: 'video', url: testVideoUrl
+        }))
         .tap(video => {
           originalVideoId = video.id
         })

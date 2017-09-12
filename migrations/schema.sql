@@ -637,7 +637,8 @@ CREATE TABLE media (
     name character varying(255),
     width integer,
     height integer,
-    comment_id bigint
+    comment_id bigint,
+    "position" integer DEFAULT 0
 );
 
 

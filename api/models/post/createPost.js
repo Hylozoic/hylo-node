@@ -9,7 +9,7 @@ export default function createPost (userId, params) {
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'imageUrls'),
       {children: params.requests, transacting}
     )))))
 }
@@ -32,8 +32,20 @@ export function afterCreatingPost (post, opts) {
       EventResponse.create(post.id, {responderId: userId, response: 'yes', transacting: trx}),
 
     // Add media, if any
-    opts.imageUrl && Media.createForPost(post.id, 'image', opts.imageUrl, trx),
-    opts.videoUrl && Media.createForPost(post.id, 'video', opts.videoUrl, trx),
+    // redux version
+    opts.imageUrl && Media.createForPost({
+      postId: post.id, type: 'image', url: opts.imageUrl
+    }, trx),
+
+    opts.videoUrl && Media.createForPost({
+      postId: post.id, type: 'video', url: opts.videoUrl
+    }, trx),
+
+    // evo version
+    opts.imageUrls && Promise.map(opts.imageUrls, (url, i) =>
+      Media.createForPost({
+        postId: post.id, type: 'image', url, position: i
+      }, trx)),
 
     opts.children && updateChildren(post, opts.children, trx),
 
