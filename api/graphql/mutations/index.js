@@ -6,14 +6,24 @@ import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../../models/post/findOrCreateThread'
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
-import CommunityService from '../../services/CommunityService'
 import convertGraphqlData from './convertGraphqlData'
 
 export { createComment, deleteComment, canDeleteComment } from './comment'
 export { updateNetwork } from './network'
 export {
-  createInvitation, expireInvitation, resendInvitation, reinviteAll
+  createInvitation,
+  expireInvitation,
+  resendInvitation,
+  reinviteAll
 } from './invitation'
+export {
+  updateCommunitySettings,
+  addModerator,
+  removeModerator,
+  removeMember,
+  regenerateAccessCode,
+  createCommunity
+} from './community'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
@@ -122,57 +132,6 @@ export function unlinkAccount (userId, provider) {
   .then(() => ({success: true}))
 }
 
-export function updateCommunitySettings (userId, communityId, changes) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => {
-    if (isModerator) {
-      return Community.find(communityId)
-      .then(community => community.update(convertGraphqlData(changes)))
-    } else {
-      throw new Error("you don't have permission to modify this community")
-    }
-  })
-}
-
-export function addModerator (userId, personId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => {
-    if (isModerator) {
-      return Membership.setModeratorRole(personId, communityId)
-      .then(() => Community.find(communityId))
-    } else {
-      throw new Error("You don't have permission to modify this community")
-    }
-  })
-}
-
-export function removeModerator (userId, personId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => {
-    if (isModerator) {
-      return Membership.removeModeratorRole(personId, communityId)
-      .then(() => Community.find(communityId))
-    } else {
-      throw new Error("You don't have permission to modify this community")
-    }
-  })
-}
-
-/**
- * As a moderator, removes member from a community.
- */
-export function removeMember (loggedInUser, userToRemove, communityId) {
-  return Membership.hasModeratorRole(loggedInUser, communityId)
-    .then(isModerator => {
-      if (isModerator) {
-        return CommunityService.removeMember(userToRemove, communityId, loggedInUser)
-          .then(() => Community.find(communityId))
-      } else {
-        throw new Error("You don't have permission to moderate this community")
-      }
-    })
-}
-
 export function deletePost (userId, postId) {
   return Post.find(postId)
   .then(post => {
@@ -202,16 +161,6 @@ export function removeSkill (userId, skillId) {
   .then(() => ({success: true}))
 }
 
-export function regenerateAccessCode (userId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => Community.find(communityId)
-    .then(community => {
-      if (!isModerator) return community
-      return Community.getNewAccessCode()
-      .then(beta_access_code => community.save({beta_access_code}, {patch: true})) // eslint-disable-line camelcase
-    }))
-}
-
 export function flagInappropriateContent (userId, { category, reason, link }) {
   return new FlaggedItem({
     user_id: userId,
@@ -232,11 +181,4 @@ export function removePost (userId, postId, communityIdOrSlug) {
       return post.removeFromCommunity(communityIdOrSlug)
     })
   .then(() => ({success: true}))
-}
-
-export function createCommunity (userId, data) {
-  return Community.create(userId, data)
-  .then(({ community, membership }) => {
-    return membership
-  })
 }
