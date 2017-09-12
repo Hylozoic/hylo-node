@@ -89,7 +89,14 @@ function createSchema (userId, isAdmin) {
         }),
       network: (root, { id, slug }) =>  // you can specify id or slug, but not both
         fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
-      skills: (root, args) => fetchMany('Skill', args)
+      skills: (root, args) => fetchMany('Skill', args),
+      checkInvitation: (root, { invitationToken }) =>
+        Invitation.query()
+        .where(bookshelf.knex.raw('token = ? AND used_by_id IS NULL', invitationToken))
+        .count()
+        .then(result => {
+          return {valid: result[0].count !== '0'}
+        })
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),

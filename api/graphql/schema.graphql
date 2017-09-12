@@ -387,7 +387,8 @@ type Query {
     first: Int,
     offset: Int,
     autocomplete: String
-  ): SkillQuerySet
+  ): SkillQuerySet,
+  checkInvitation(invitationToken: String): CheckInvitationResult
 }
 
 input MeInput {
@@ -551,6 +552,10 @@ type LinkPreview {
 
 type CreatedInvitations {
   invitations: [Invitation]
+}
+
+type CheckInvitationResult {
+  valid: Boolean
 }
 
 type Notification {
