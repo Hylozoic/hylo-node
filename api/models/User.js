@@ -2,7 +2,8 @@
 var bcrypt = require('bcrypt')
 var crypto = require('crypto')
 var validator = require('validator')
-import { get, has, isEmpty, merge, omit, pick } from 'lodash'
+import { compact, get, has, isEmpty, merge, omit, pick } from 'lodash'
+import { validateUser } from 'hylo-utils/validators'
 import HasSettings from './mixins/HasSettings'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { findThread } from './post/findOrCreateThread'
@@ -211,9 +212,9 @@ module.exports = bookshelf.Model.extend(merge({
     // TODO maybe throw an error if a non-whitelisted field is supplied (besides
     // tags and password, which are used later)
     var whitelist = pick(changes, [
-      'name', 'bio', 'avatar_url', 'banner_url', 'location',
-      'url', 'twitter_name', 'linkedin_url', 'facebook_url', 'email',
-      'work', 'intention', 'extra_info', 'settings', 'tagline'
+      'avatar_url', 'banner_url', 'bio', 'email', 'extra_info', 'facebook_url',
+      'intention', 'linkedin_url', 'location', 'name', 'password', 'settings',
+      'tagline', 'twitter_name', 'url', 'work' 
     ])
 
     return bookshelf.transaction(transacting =>
@@ -222,7 +223,7 @@ module.exports = bookshelf.Model.extend(merge({
       // condition between two updates on the same user that depend upon
       // existing data, e.g. when updating settings
       .then(() => this.refresh({transacting}))
-      .then(() => this.setSanely(whitelist))
+      .then(() => this.setSanely(omit(whitelist, 'password')))
       .then(() => Promise.all([
         changes.tags && Tag.updateUser(this, changes.tags, {transacting}),
         changes.password && this.setPassword(changes.password, {transacting}),
@@ -473,16 +474,24 @@ module.exports = bookshelf.Model.extend(merge({
 })
 
 function validateUserAttributes (attrs, { existingUser, transacting } = {}) {
+  if (has(attrs, 'password')) {
+    const invalidReason = validateUser.password(attrs.password)
+    if (invalidReason) return Promise.reject(new Error(invalidReason))
+  }
+
+  if (has(attrs, 'name')) {
+    const invalidReason = validateUser.name(attrs.name)
+    if (invalidReason) return Promise.reject(new Error(invalidReason))
+  }
+
   // for an existing user, the email field can be omitted.
   if (existingUser && !has(attrs, 'email')) return Promise.resolve()
-
-  const { email } = attrs
   const oldEmail = existingUser ? existingUser.get('email') : null
 
-  if (!validator.isEmail(email)) {
+  if (!validator.isEmail(attrs.email)) {
     return Promise.reject(new Error('invalid-email'))
   }
 
-  return User.isEmailUnique(email, oldEmail, {transacting})
+  return User.isEmailUnique(attrs.email, oldEmail, {transacting})
   .then(unique => unique || Promise.reject(new Error('duplicate-email')))
 }
