@@ -53,8 +53,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(LastRead)
   },
 
-  media: function () {
-    return this.hasMany(Media)
+  media: function (type) {
+    const relation = this.hasMany(Media)
+    return type ? relation.query({where: {type}}) : relation
   },
 
   votes: function () {
