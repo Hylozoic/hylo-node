@@ -47,7 +47,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const { transacting } = opts
     return Membership.where({
       user_id: userId, community_id: this.get('community_id')
-    }).fetch({withRelated: 'community'})
+    })
+    // including related community data for ease of consumption by callers
+    .fetch({withRelated: 'community'})
     .then(membership => membership ||
       Membership.create(userId, this.get('community_id'),
         {role: Number(this.get('role')), transacting}))
