@@ -3,6 +3,14 @@ import { markdown } from 'hylo-utils/text'
 import { get, isEmpty, map, merge } from 'lodash/fp'
 
 module.exports = {
+  checkPermission: (userId, invitationId) => {
+    return Invitation.find(invitationId, {withRelated: 'community'})
+    .then(invitation => {
+      if (!invitation) throw new Error('Invitation not found')
+      const { community } = invitation.relations
+      return Membership.hasModeratorRole(userId, community.id)
+    })
+  },
 
   findById: (invitationId) => {
     return Invitation.find(invitationId)

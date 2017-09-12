@@ -1,4 +1,4 @@
-var uuid = require('node-uuid')
+import uuid from 'node-uuid'
 import { map } from 'lodash/fp'
 import { presentForList } from '../presenters/UserPresenter'
 import EnsureLoad from './mixins/EnsureLoad'

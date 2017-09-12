@@ -1,8 +1,4 @@
-import { isEmpty, merge, mapKeys, pick, transform, snakeCase } from 'lodash'
-import {
-  createComment as underlyingCreateComment,
-  validateCommentCreateData
-} from '../../models/comment/createAndPresentComment'
+import { isEmpty, merge, mapKeys, pick, snakeCase } from 'lodash'
 import validatePostData from '../../models/post/validatePostData'
 import underlyingCreatePost from '../../models/post/createPost'
 import underlyingUpdatePost from '../../models/post/updatePost'
@@ -10,19 +6,24 @@ import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../../models/post/findOrCreateThread'
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
-import validateNetworkData from '../../models/network/validateNetworkData'
-import underlyingUpdateNetwork from '../../models/network/updateNetwork'
-import CommunityService from '../../services/CommunityService'
-import InvitationService from '../../services/InvitationService'
-export { deleteComment, canDeleteComment } from './comment'
+import convertGraphqlData from './convertGraphqlData'
 
-function convertGraphqlData (data) {
-  return transform(data, (result, value, key) => {
-    result[snakeCase(key)] = typeof value === 'object'
-      ? convertGraphqlData(value)
-      : value
-  }, {})
-}
+export { createComment, deleteComment, canDeleteComment } from './comment'
+export { updateNetwork } from './network'
+export {
+  createInvitation,
+  expireInvitation,
+  resendInvitation,
+  reinviteAll
+} from './invitation'
+export {
+  updateCommunitySettings,
+  addModerator,
+  removeModerator,
+  removeMember,
+  regenerateAccessCode,
+  createCommunity
+} from './community'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
@@ -56,15 +57,6 @@ export function updatePost (userId, { id, data }) {
   return convertGraphqlPostData(data)
   .tap(convertedData => validatePostData(userId, convertedData))
   .then(validatedData => underlyingUpdatePost(userId, id, validatedData))
-}
-
-export function createComment (userId, data) {
-  return validateCommentCreateData(userId, data)
-  .then(() => Promise.props({
-    post: Post.find(data.postId),
-    parentComment: data.parentCommentId ? Comment.find(data.parentCommentId) : null
-  }))
-  .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
 export function findOrCreateThread (userId, data) {
@@ -118,12 +110,6 @@ export function updateCommunityTopic (userId, { id, data }) {
   .then(() => ({success: true}))
 }
 
-export function updateNetwork (userId, { id, data }) {
-  const convertedData = convertGraphqlData(data)
-  return validateNetworkData(userId, convertedData)
-  .then(() => underlyingUpdateNetwork(userId, id, convertedData))
-}
-
 export function markActivityRead (userId, activityid) {
   return Activity.find(activityid)
   .then(a => {
@@ -146,62 +132,11 @@ export function unlinkAccount (userId, provider) {
   .then(() => ({success: true}))
 }
 
-export function updateCommunitySettings (userId, communityId, changes) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => {
-    if (isModerator) {
-      return Community.find(communityId)
-      .then(community => community.update(convertGraphqlData(changes)))
-    } else {
-      throw new Error("you don't have permission to modify this community")
-    }
-  })
-}
-
-export function addModerator (userId, personId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => {
-    if (isModerator) {
-      return Membership.setModeratorRole(personId, communityId)
-      .then(() => Community.find(communityId))
-    } else {
-      throw new Error("you don't have permission to modify this community")
-    }
-  })
-}
-
-export function removeModerator (userId, personId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => {
-    if (isModerator) {
-      return Membership.removeModeratorRole(personId, communityId)
-      .then(() => Community.find(communityId))
-    } else {
-      throw new Error("you don't have permission to modify this community")
-    }
-  })
-}
-
-/**
- * As a moderator, removes member from a community.
- */
-export function removeMember (loggedInUser, userToRemove, communityId) {
-  return Membership.hasModeratorRole(loggedInUser, communityId)
-    .then(isModerator => {
-      if (isModerator) {
-        return CommunityService.removeMember(userToRemove, communityId, loggedInUser)
-          .then(() => Community.find(communityId))
-      } else {
-        throw new Error("you don't have permission to moderate this community")
-      }
-    })
-}
-
 export function deletePost (userId, postId) {
   return Post.find(postId)
   .then(post => {
     if (post.get('user_id') !== userId) {
-      throw new Error("you don't have permission to modify this post")
+      throw new Error("You don't have permission to modify this post")
     }
     return Post.deactivate(postId)
   })
@@ -226,47 +161,7 @@ export function removeSkill (userId, skillId) {
   .then(() => ({success: true}))
 }
 
-export function regenerateAccessCode (userId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
-  .then(isModerator => Community.find(communityId)
-    .then(community => {
-      if (!isModerator) return community
-      return Community.getNewAccessCode()
-      .then(beta_access_code => community.save({beta_access_code}, {patch: true})) // eslint-disable-line camelcase
-    }))
-}
-
-export function createInvitation (userId, communityId, data) {
-  return InvitationService.create({
-    sessionUserId: userId,
-    communityId,
-    emails: data.emails,
-    message: data.message,
-    moderator: data.isModerator || false,
-    subject: 'Join our community!'
-  }).then(invites => ({
-    invitations: invites
-  }))
-}
-
-export function expireInvitation (userId, invitationId) {
-  return InvitationService.expire(userId, invitationId)
-  .then(() => ({success: true}))
-}
-
-export function resendInvitation (userId, invitationId) {
-  return InvitationService.resend(invitationId)
-  .then(() => ({success: true}))
-}
-
-export function reinviteAll (userId, communityId) {
-  return InvitationService.reinviteAll({sessionUserId: userId, communityId})
-  .then(() => ({success: true}))
-}
-
-export function flagInappropriateContent (userId, {
-  category, reason, link
-}) {
+export function flagInappropriateContent (userId, { category, reason, link }) {
   return new FlaggedItem({
     user_id: userId,
     category,
@@ -292,11 +187,4 @@ export function removePost (userId, postId, communityIdOrSlug) {
       return post.removeFromCommunity(communityIdOrSlug)
     })
   .then(() => ({success: true}))
-}
-
-export function createCommunity (userId, data) {
-  return Community.create(userId, data)
-  .then(({ community, membership }) => {
-    return membership
-  })
 }

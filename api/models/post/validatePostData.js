@@ -1,10 +1,11 @@
-import { includes, isEmpty, values } from 'lodash'
+import { includes, isEmpty } from 'lodash'
 
 export default function validatePostData (userId, data) {
   if (!data.name) {
     throw new Error('title can\'t be blank')
   }
-  if (data.type && !includes(values(Post.Type), data.type)) {
+  const allowedTypes = [Post.Type.REQUEST, Post.Type.OFFER, Post.Type.DISCUSSION]
+  if (data.type && !includes(allowedTypes, data.type)) {
     throw new Error('not a valid type')
   }
   if (isEmpty(data.community_ids)) {

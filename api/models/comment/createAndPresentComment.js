@@ -4,17 +4,6 @@ import { simpleUserColumns } from '../../presenters/UserPresenter'
 import { normalizeComment, normalizedSinglePostResponse } from '../../../lib/util/normalize'
 import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 
-export function validateCommentCreateData (userId, data) {
-  return Post.isVisibleToUser(data.postId, userId)
-  .then(isVisible => {
-    if (isVisible) {
-      return Promise.resolve()
-    } else {
-      throw new Error('post not found')
-    }
-  })
-}
-
 export function createComment (userId, data) {
   const opts = Object.assign({}, data, {returnRaw: true})
   return createAndPresentComment(userId, data.text, data.post, opts)

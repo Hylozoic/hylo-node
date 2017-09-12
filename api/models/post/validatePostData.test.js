@@ -21,8 +21,8 @@ describe('validatePostData', () => {
     expect(fn).to.throw(/title can't be blank/)
   })
 
-  it('fails if invalid type is provided', () => {
-    const fn = () => validatePostData(null, {name: 't', type: 'tweet'})
+  it('fails if an invalid type is provided', () => {
+    const fn = () => validatePostData(null, {name: 't', type: 'thread'})
     expect(fn).to.throw(/not a valid type/)
   })
 
