@@ -16,7 +16,8 @@ export default function updatePost (userId, id, params) {
       const updatableTypes = [
         Post.Type.OFFER,
         Post.Type.REQUEST,
-        Post.Type.DISCUSSION
+        Post.Type.DISCUSSION,
+        null
       ]
       if (!updatableTypes.includes(post.get('type'))) {
         throw new Error("This post can't be modified")
