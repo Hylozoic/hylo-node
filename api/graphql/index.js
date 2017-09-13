@@ -193,7 +193,10 @@ function requireUser (resolvers, userId) {
   }
 
   return Object.assign({}, resolvers, {
-    Query: mapValues(resolvers.Query, () => error),
+    Query: mapValues(resolvers.Query, (v, k) => {
+      if (k === 'checkInvitation') return v
+      return error
+    }),
     Mutation: mapValues(resolvers.Mutation, () => error)
   })
 }
