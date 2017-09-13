@@ -76,7 +76,7 @@ export function addFollowers (post, comment, userIds, addedById, opts = {}) {
   return Promise.map(userIds, followerId =>
     Follow.create(followerId, post.id, (comment || {}).id, {addedById, transacting})
     .tap(follow => {
-      if (!createActivity) return
+      if (!createActivity || !follow) return
 
       var updates = []
       const addActivity = (recipientId, method) => {
@@ -98,8 +98,14 @@ export function updateFollowers (post, transacting) {
     .filter(id => !followerIds.includes(id))
 
     return addFollowers(post, null, newMentionedIds, null, {transacting})
-    .then(() => {
-      const reasons = newMentionedIds.map(id => ({
+    .then(follows => {
+      const newFollowerIds = compact(follows).map(f => f.get('user_id'))
+      // this check removes any ids that don't correspond to valid users, which
+      // can happen if the post mentioned a user and then that user was deleted
+      const validMentionedIds = newMentionedIds.filter(id =>
+        newFollowerIds.includes(id))
+
+      const reasons = validMentionedIds.map(id => ({
         reader_id: id,
         post_id: post.id,
         actor_id: post.get('user_id'),

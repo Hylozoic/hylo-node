@@ -14,14 +14,15 @@ module.exports = bookshelf.Model.extend({
     MODERATOR: 1
   },
 
-  create: function (user_id, post_id, comment_id, options = {}) {
-    return new Follow({
-      post_id,
-      comment_id,
+  create: function (userId, postId, commentId, { transacting, addedById } = {}) {
+    return User.where({id: userId}).count()
+    .then(count => Number(count) === 0 ? null : Follow.forge({
+      post_id: postId,
+      comment_id: commentId,
       added_at: new Date(),
-      user_id: user_id,
-      added_by_id: options.addedById
-    }).save(null, _.pick(options, 'transacting'))
+      user_id: userId,
+      added_by_id: addedById
+    }).save(null, {transacting}))
   },
 
   exists: function (userId, postId) {
