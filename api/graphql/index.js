@@ -172,7 +172,13 @@ export const createRequestHandler = () =>
     // or deny access to those paths
     return {
       schema: createSchema(req.session.userId, Admin.isSignedIn(req)),
-      graphiql: true
+      graphiql: true,
+      formatError: process.env.NODE_ENV === 'development' ? error => ({
+        message: error.message,
+        locations: error.locations,
+        stack: error.stack,
+        path: error.path
+      }) : null
     }
   })
 
