@@ -171,6 +171,12 @@ export function flagInappropriateContent (userId, { category, reason, link }) {
   .then(() => ({success: true}))
 }
 
+export function useInvitation (userId, invitationToken) {
+  return InvitationService.use(userId, invitationToken)
+  .then(membership => ({membership}))
+  .catch(error => ({error: error.message}))
+}
+
 export function removePost (userId, postId, communityIdOrSlug) {
   return Promise.join(
     Post.find(postId),

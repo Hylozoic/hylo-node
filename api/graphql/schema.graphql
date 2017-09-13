@@ -387,7 +387,8 @@ type Query {
     first: Int,
     offset: Int,
     autocomplete: String
-  ): SkillQuerySet
+  ): SkillQuerySet,
+  checkInvitation(invitationToken: String): CheckInvitationResult
 }
 
 input MeInput {
@@ -522,11 +523,17 @@ type Mutation {
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
   expireInvitation(invitationId: ID): GenericResult
   resendInvitation(invitationId: ID): GenericResult
-  reinviteAll(communityId: ID): GenericResult
+  reinviteAll(communityId: ID): GenericResult,
+  useInvitation(userId: ID, invitationToken: String): InvitationUseResult,
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   createCommunity(data: CommunityInput): Membership
   deleteComment(id: ID): GenericResult
+}
+
+type InvitationUseResult {
+  membership: Membership
+  error: String
 }
 
 type GenericResult {
@@ -546,6 +553,10 @@ type LinkPreview {
 
 type CreatedInvitations {
   invitations: [Invitation]
+}
+
+type CheckInvitationResult {
+  valid: Boolean
 }
 
 type Notification {

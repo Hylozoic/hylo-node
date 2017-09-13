@@ -31,6 +31,7 @@ import {
   expireInvitation,
   resendInvitation,
   reinviteAll,
+  useInvitation,
   flagInappropriateContent,
   removePost,
   createCommunity,
@@ -88,7 +89,14 @@ function createSchema (userId, isAdmin) {
         }),
       network: (root, { id, slug }) =>  // you can specify id or slug, but not both
         fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
-      skills: (root, args) => fetchMany('Skill', args)
+      skills: (root, args) => fetchMany('Skill', args),
+      checkInvitation: (root, { invitationToken }) =>
+        Invitation.query()
+        .where({token: invitationToken, used_by_id: null})
+        .count()
+        .then(result => {
+          return {valid: result[0].count !== '0'}
+        })
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
@@ -127,6 +135,7 @@ function createSchema (userId, isAdmin) {
       expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
+      useInvitation: (root, { invitationToken }) => useInvitation(userId, invitationToken),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
       removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
       createCommunity: (root, { data }) => createCommunity(userId, data),
@@ -190,7 +199,10 @@ function requireUser (resolvers, userId) {
   }
 
   return Object.assign({}, resolvers, {
-    Query: mapValues(resolvers.Query, () => error),
+    Query: mapValues(resolvers.Query, (v, k) => {
+      if (k === 'checkInvitation') return v
+      return error
+    }),
     Mutation: mapValues(resolvers.Mutation, () => error)
   })
 }

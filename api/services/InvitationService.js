@@ -137,5 +137,14 @@ module.exports = {
 
       return invitation.send()
     })
+  },
+
+  use: (userId, invitationToken) => {
+    return Invitation.where({token: invitationToken}).fetch()
+    .then(invitation => {
+      if (!invitation) throw new Error('not found')
+      if (invitation.isExpired()) throw new Error('expired')
+      return invitation.use(userId)
+    })
   }
 }
