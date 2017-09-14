@@ -1,15 +1,7 @@
-import crypto from 'crypto'
-import path from 'path'
 import Promise from 'bluebird'
 import request from 'request'
 import sharp from 'sharp'
-import { createS3StorageStream } from '../../lib/uploader/storage'
-import sanitize from 'sanitize-filename'
-
-const safeBasename = url => {
-  const name = sanitize(path.basename(url))
-  return name === '' ? crypto.randomBytes(2).toString('hex') : name
-}
+import { createS3StorageStream, safeBasename } from '../../lib/uploader/storage'
 
 module.exports = {
   copyAsset: function (instance, type, attr) {
