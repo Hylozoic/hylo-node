@@ -1,4 +1,4 @@
-import { isEmpty, merge, mapKeys, pick, snakeCase } from 'lodash'
+import { isEmpty, merge, mapKeys, pick, snakeCase, size } from 'lodash'
 import validatePostData from '../../models/post/validatePostData'
 import underlyingCreatePost from '../../models/post/createPost'
 import underlyingUpdatePost from '../../models/post/updatePost'
@@ -14,7 +14,8 @@ export {
   createInvitation,
   expireInvitation,
   resendInvitation,
-  reinviteAll
+  reinviteAll,
+  useInvitation
 } from './invitation'
 export {
   updateCommunitySettings,
@@ -144,6 +145,11 @@ export function deletePost (userId, postId) {
 }
 
 export function addSkill (userId, name) {
+  if (isEmpty(name)) {
+    throw new Error('Skill cannot be empty')
+  } else if (size(name) > 39) {
+    throw new Error('Skill must be less than 40 characters')
+  }
   return Skill.find(name)
   .then(skill => {
     if (!skill) return new Skill({name}).save()
@@ -169,12 +175,6 @@ export function flagInappropriateContent (userId, { category, reason, link }) {
     link
   }).save()
   .then(() => ({success: true}))
-}
-
-export function useInvitation (userId, invitationToken) {
-  return InvitationService.use(userId, invitationToken)
-  .then(membership => ({membership}))
-  .catch(error => ({error: error.message}))
 }
 
 export function removePost (userId, postId, communityIdOrSlug) {

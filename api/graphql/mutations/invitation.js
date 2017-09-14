@@ -42,3 +42,9 @@ export function reinviteAll (userId, communityId) {
   .then(() => InvitationService.reinviteAll({sessionUserId: userId, communityId}))
   .then(() => ({success: true}))
 }
+
+export function useInvitation (userId, invitationToken) {
+  return InvitationService.use(userId, invitationToken)
+  .then(membership => ({membership}))
+  .catch(error => ({error: error.message}))
+}
