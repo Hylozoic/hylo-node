@@ -76,6 +76,14 @@ module.exports = bookshelf.Model.extend({
           position,
           transacting: trx
         })
+      case 'file':
+        return Media.create({
+          post_id: postId,
+          url,
+          type,
+          position,
+          transacting: trx
+        })
       case 'video':
         return this.generateThumbnailUrl(url)
         .then(thumbnail_url =>

@@ -418,6 +418,7 @@ input PostInput {
   endsAt: String
   location: String
   imageUrls: [String]
+  fileUrls: [String]
 }
 
 input CommentInput {
