@@ -47,6 +47,12 @@ export function afterCreatingPost (post, opts) {
         postId: post.id, type: 'image', url, position: i
       }, trx)),
 
+    // evo version
+    opts.fileUrls && Promise.map(opts.imageUrls, (url, i) =>
+      Media.createForPost({
+        postId: post.id, type: 'file', url, position: i
+      }, trx)),
+
     opts.children && updateChildren(post, opts.children, trx),
 
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))

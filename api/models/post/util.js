@@ -22,6 +22,8 @@ function updateMediaEvo (post, type, urls, transacting) {
   if (!urls) return
   var media = post.relations.media.filter(m => m.get('type') === type)
 
+  console.log('updateMediaEvo', type, urls)
+
   return Promise.map(media, m => m.destroy({transacting}))
   .then(() => Promise.map(urls, (url, i) =>
     Media.createForPost({
@@ -31,7 +33,8 @@ function updateMediaEvo (post, type, urls, transacting) {
 
 export function updateAllMedia (post, params, trx) {
   const mediaParams = [
-    'docs', 'removedDocs', 'imageUrl', 'imageRemoved', 'videoUrl', 'videoRemoved', 'imageUrls'
+    'docs', 'removedDocs', 'imageUrl', 'imageRemoved', 'videoUrl', 'videoRemoved',
+    'imageUrls', 'fileUrls'
   ]
 
   return (some(mediaParams, p => has(params, p))
@@ -40,6 +43,7 @@ export function updateAllMedia (post, params, trx) {
   // TODO: remove updateMedia and rename updateMediaEvo after transition to evo.hylo.com
   .tap(() => updateMedia(post, 'image', params.imageUrl, params.imageRemoved, trx))
   .tap(() => updateMediaEvo(post, 'image', params.imageUrls, trx))
+  .tap(() => updateMediaEvo(post, 'file', params.fileUrls, trx))
   .tap(() => updateMedia(post, 'video', params.videoUrl, params.videoRemoved, trx))
   .tap(() => {
     if (!params.removedDocs) return
