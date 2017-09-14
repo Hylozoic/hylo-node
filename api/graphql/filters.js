@@ -46,14 +46,9 @@ export function myNetworkCommunityIds (userId) {
 export function communityTopicFilter (userId, {
   autocomplete,
   subscribed,
-  communityId,
-  first,
-  offset
+  communityId
 }) {
   return q => {
-    q.limit(first || 1000)
-    q.offset(offset || 0)
-
     if (autocomplete) {
       q.join('tags', 'tags.id', 'communities_tags.tag_id')
       q.whereRaw('tags.name ilike ?', autocomplete + '%')
