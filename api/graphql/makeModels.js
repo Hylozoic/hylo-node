@@ -133,10 +133,7 @@ export default function makeModels (userId, isAdmin) {
       },
       relations: [
         {comments: {querySet: true}},
-        {communities: {
-          filter: nonAdminFilter(relation => relation.query(q => {
-            q.where('communities.id', 'in', myCommunityIds(userId))
-          }))}},
+        'communities',
         {user: {alias: 'creator'}},
         'followers',
         'linkPreview',
