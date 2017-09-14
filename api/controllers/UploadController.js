@@ -13,7 +13,8 @@ module.exports = {
       // busboy's 'field' event handler.
       type: req.param('type'),
       id: req.param('id'),
-      url: req.param('url')
+      url: req.param('url'),
+      filename: req.param('filename')
     }
 
     // this promise is used for tests
