@@ -22,8 +22,6 @@ function updateMediaEvo (post, type, urls, transacting) {
   if (!urls) return
   var media = post.relations.media.filter(m => m.get('type') === type)
 
-  console.log('updateMediaEvo', type, urls)
-
   return Promise.map(media, m => m.destroy({transacting}))
   .then(() => Promise.map(urls, (url, i) =>
     Media.createForPost({
