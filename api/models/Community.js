@@ -341,6 +341,10 @@ module.exports = bookshelf.Model.extend(merge({
       // copy them over to /community/:id now
       .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
     })
+  },
+  isSlugValid: function (slug) {
+    const regex = /^[0-9a-z\s-]+$/
+    return regex.test(slug) && slug.length <= 40
   }
 })
 

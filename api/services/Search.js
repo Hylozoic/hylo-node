@@ -23,6 +23,10 @@ module.exports = {
         qb.whereIn('communities.network_id', opts.networks)
       }
 
+      if (opts.slug) {
+        qb.whereIn('communities.slug', opts.slug)
+      }
+
       if (opts.term) {
         addTermToQueryBuilder(opts.term, qb, {
           columns: ['communities.name']

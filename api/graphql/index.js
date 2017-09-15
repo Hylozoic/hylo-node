@@ -60,6 +60,17 @@ function createSchema (userId, isAdmin) {
             }
           })
       },
+      communityExists: (root, { slug }) => {
+        if (Community.isSlugValid(slug)) {
+          return Community.where(bookshelf.knex.raw('slug = ?', slug))
+          .count()
+          .then(count => {
+            if (count > 0) return {exists: true}
+            return {exists: false}
+          })
+        }
+        throw new Error('Slug is invalid')
+      },
       notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
         return fetchMany('Notification', { first, offset, order })
         .tap(() => {
