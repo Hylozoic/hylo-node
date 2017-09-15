@@ -1,7 +1,4 @@
-import { isEmpty, merge, mapKeys, pick, snakeCase, size, trim } from 'lodash'
-import validatePostData from '../../models/post/validatePostData'
-import underlyingCreatePost from '../../models/post/createPost'
-import underlyingUpdatePost from '../../models/post/updatePost'
+import { isEmpty, mapKeys, pick, snakeCase, size, trim } from 'lodash'
 import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../../models/post/findOrCreateThread'
@@ -25,6 +22,12 @@ export {
   regenerateAccessCode,
   createCommunity
 } from './community'
+export {
+  createPost,
+  updatePost,
+  vote,
+  deletePost
+} from './post'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
@@ -36,30 +39,6 @@ export function leaveCommunity (userId, communityId) {
   .then(user => user.leaveCommunity(communityId))
 }
 
-function convertGraphqlPostData (data) {
-  return Promise.resolve(merge({
-    name: data.title,
-    description: data.details,
-    link_preview_id: data.linkPreviewId,
-    community_ids: data.communityIds,
-    starts_at: data.startsAt,
-    ends_at: data.endsAt,
-    parent_post_id: data.parentPostId
-  }, data))
-}
-
-export function createPost (userId, data) {
-  return convertGraphqlPostData(data)
-  .tap(convertedData => validatePostData(userId, convertedData))
-  .then(validatedData => underlyingCreatePost(userId, validatedData))
-}
-
-export function updatePost (userId, { id, data }) {
-  return convertGraphqlPostData(data)
-  .tap(convertedData => validatePostData(userId, convertedData))
-  .then(validatedData => underlyingUpdatePost(userId, id, validatedData))
-}
-
 export function findOrCreateThread (userId, data) {
   return validateThreadData(userId, data)
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
@@ -67,11 +46,6 @@ export function findOrCreateThread (userId, data) {
 
 export function findOrCreateLinkPreviewByUrl (data) {
   return underlyingFindLinkPreview(data.url)
-}
-
-export function vote (userId, postId, isUpvote) {
-  return Post.find(postId)
-  .then(post => post.vote(userId, isUpvote))
 }
 
 export function subscribe (userId, topicId, communityId, isSubscribing) {
@@ -129,17 +103,6 @@ export function unlinkAccount (userId, provider) {
   .then(user => {
     if (!user) throw new Error(`Couldn't find user with id ${userId}`)
     return user.unlinkAccount(provider)
-  })
-  .then(() => ({success: true}))
-}
-
-export function deletePost (userId, postId) {
-  return Post.find(postId)
-  .then(post => {
-    if (post.get('user_id') !== userId) {
-      throw new Error("You don't have permission to modify this post")
-    }
-    return Post.deactivate(postId)
   })
   .then(() => ({success: true}))
 }
