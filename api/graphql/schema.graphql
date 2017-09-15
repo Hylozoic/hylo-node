@@ -179,6 +179,7 @@ type Invitation {
   email: String
   created_at: String
   last_sent_at: String
+  error: String
 }
 type InvitationQuerySet {
   total: Int
