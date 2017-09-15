@@ -9,7 +9,7 @@ export default function createPost (userId, params) {
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'imageUrls'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'imageUrls', 'fileUrls'),
       {children: params.requests, transacting}
     )))))
 }
@@ -48,7 +48,7 @@ export function afterCreatingPost (post, opts) {
       }, trx)),
 
     // evo version
-    opts.fileUrls && Promise.map(opts.imageUrls, (url, i) =>
+    opts.fileUrls && Promise.map(opts.fileUrls, (url, i) =>
       Media.createForPost({
         postId: post.id, type: 'file', url, position: i
       }, trx)),
