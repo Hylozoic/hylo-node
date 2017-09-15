@@ -326,7 +326,7 @@ module.exports = bookshelf.Model.extend(merge({
       created_at: new Date(),
       updated_at: new Date(),
       settings: {
-        digest_frequency: 'daily',
+        digest_frequency,
         signup_in_progress: true
       },
       active: true
