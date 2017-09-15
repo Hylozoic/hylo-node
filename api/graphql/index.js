@@ -13,7 +13,7 @@ import {
   markActivityRead,
   markAllActivitiesRead,
   subscribe,
-  updateCommunitySettings,
+  updateCommunity,
   updateCommunityTopic,
   updateMe,
   updateMembership,
@@ -126,7 +126,7 @@ function createSchema (userId, isAdmin) {
       subscribe: (root, { communityId, topicId, isSubscribing }) =>
         subscribe(userId, topicId, communityId, isSubscribing),
       updateCommunitySettings: (root, { id, changes }) =>
-        updateCommunitySettings(userId, id, changes),
+        updateCommunity(userId, id, changes),
       updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
       updateMembership: (root, args) => updateMembership(userId, args),
       updateNetwork: (root, args) => updateNetwork(userId, args),

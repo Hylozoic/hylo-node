@@ -109,9 +109,9 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Thank)
   },
 
-  joinCommunity: function (community) {
+  joinCommunity: function (community, role = Membership.DEFAULT_ROLE) {
     var communityId = (typeof community === 'object' ? community.id : community)
-    return Membership.create(this.id, communityId, {role: Membership.DEFAULT_ROLE})
+    return Membership.create(this.id, communityId, {role})
     .tap(() => this.markInvitationsUsed(communityId))
   },
 
@@ -214,7 +214,7 @@ module.exports = bookshelf.Model.extend(merge({
     var whitelist = pick(changes, [
       'avatar_url', 'banner_url', 'bio', 'email', 'extra_info', 'facebook_url',
       'intention', 'linkedin_url', 'location', 'name', 'password', 'settings',
-      'tagline', 'twitter_name', 'url', 'work' 
+      'tagline', 'twitter_name', 'url', 'work'
     ])
 
     return bookshelf.transaction(transacting =>

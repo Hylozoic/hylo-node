@@ -1,14 +1,14 @@
 import CommunityService from '../../services/CommunityService'
 import convertGraphqlData from './convertGraphqlData'
 
-export function updateCommunitySettings (userId, communityId, changes) {
+export function updateCommunity (userId, communityId, changes) {
   return Membership.hasModeratorRole(userId, communityId)
   .then(isModerator => {
     if (isModerator) {
       return Community.find(communityId)
       .then(community => community.update(convertGraphqlData(changes)))
     } else {
-      throw new Error("you don't have permission to modify this community")
+      throw new Error("You don't have permission to modify this community")
     }
   })
 }

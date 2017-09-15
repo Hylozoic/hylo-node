@@ -2,7 +2,7 @@
 import Slack from '../services/Slack'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
-import { flatten, isEqual, merge, differenceBy, pick, clone } from 'lodash'
+import { clone, differenceBy, flatten, isEqual, merge, pick, trim } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
 import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../../lib/uploader/types'
 
@@ -216,8 +216,17 @@ module.exports = bookshelf.Model.extend(merge({
     if (attributes.settings) {
       saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
     }
-    return this.save(saneAttrs, {patch: true})
-    .then(() => this)
+
+    this.set(saneAttrs)
+    return this.validate().then(() => this.save())
+  },
+
+  validate: function () {
+    if (!trim(this.get('name'))) {
+      return Promise.reject(new Error('Name cannot be blank'))
+    }
+
+    return Promise.resolve()
   },
 
   reconcileNumMembers: function () {
