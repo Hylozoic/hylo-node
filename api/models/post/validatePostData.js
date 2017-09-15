@@ -1,7 +1,7 @@
-import { includes, isEmpty } from 'lodash'
+import { includes, isEmpty, trim } from 'lodash'
 
 export default function validatePostData (userId, data) {
-  if (!data.name) {
+  if (!trim(data.name)) {
     throw new Error('title can\'t be blank')
   }
   const allowedTypes = [Post.Type.REQUEST, Post.Type.OFFER, Post.Type.DISCUSSION]

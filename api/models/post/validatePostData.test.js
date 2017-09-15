@@ -39,13 +39,20 @@ describe('validatePostData', () => {
     })
   })
 
+  it('fails if a blank name is provided', () => {
+    const fn = () => validatePostData(null, {name: '   ', community_ids: [inCommunity.id]})
+    expect(fn).to.throw(/title can't be blank/)
+  })
+
   it('continues the promise chain if name is provided and user is member of communities', () => {
     const data = {name: 't', community_ids: [inCommunity.id]}
-    expect(validatePostData(user.id, data)).to.respondTo('then')
+    return validatePostData(user.id, data)
+    .catch(() => expect.fail('should resolve'))
   })
 
   it('continues the promise chain if valid type is provided', () => {
     const data = {name: 't', type: 'request', community_ids: [inCommunity.id]}
-    expect(validatePostData(user.id, data)).to.respondTo('then')
+    return validatePostData(user.id, data)
+    .catch(() => expect.fail('should resolve'))
   })
 })
