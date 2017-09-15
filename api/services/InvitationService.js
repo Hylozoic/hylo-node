@@ -93,10 +93,8 @@ module.exports = {
             opts.subject = subject
           }
 
-          return Invitation.createAndSend(opts)
-          .then((i) => merge(i.pick('id', 'email', 'created_at', 'last_sent_at'), {
-            error: null
-          }))
+          return Queue.classMethod('Invitation', 'createAndSend', opts)
+          .then(() => ({email}))
           .catch(err => ({email, error: err.message}))
         })
       })

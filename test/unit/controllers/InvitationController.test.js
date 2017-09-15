@@ -1,9 +1,9 @@
+import { spyify, unspyify } from '../../setup/helpers'
+import { find, sortBy } from 'lodash/fp'
 var root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var InvitationController = require(root('api/controllers/InvitationController'))
-import { mockify, spyify, unspyify } from '../../setup/helpers'
-import { map, sortBy, find } from 'lodash/fp'
 
 describe('InvitationController', () => {
   var user, community, invitation, inviter, req, res
@@ -70,14 +70,18 @@ describe('InvitationController', () => {
     afterEach(() => unspyify(Email, 'sendInvitation'))
 
     it('rejects invalid email', () => {
-      _.extend(req.params, {communityId: community.id, emails: 'wow, lol'})
+      Object.assign(req.params, {
+        communityId: community.id,
+        emails: 'wow, lol, ok@here.com'
+      })
 
       return InvitationController.create(req, res)
       .then(() => {
         expect(res.body).to.deep.equal({
           results: [
             {email: 'wow', error: 'not a valid email address'},
-            {email: 'lol', error: 'not a valid email address'}
+            {email: 'lol', error: 'not a valid email address'},
+            {email: 'ok@here.com'}
           ]
         })
       })
@@ -85,7 +89,7 @@ describe('InvitationController', () => {
 
     it('sends invitations to emails and users', function () {
       this.timeout(10000)
-      _.extend(req.params, {
+      Object.assign(req.params, {
         communityId: community.id,
         emails: 'foo@bar.com, bar@baz.com',
         users: [u1.id, u2.id]
@@ -94,30 +98,13 @@ describe('InvitationController', () => {
       return InvitationController.create(req, res)
       .then(() => {
         expect(res.body.results).to.have.length(4)
-        res.body.results.forEach(result => {
-          expect(result).to.have.property('error', null)
-        })
-
-        expect(Email.sendInvitation).to.have.been.called.exactly(4)
-        return expect(Promise.all(sendInvitationResults).then(map('success')))
-        .to.eventually.deep.equal([true, true, true, true])
-      })
-    })
-
-    it('returns error message if mail sending fails', () => {
-      mockify(Email, 'sendInvitation', () => new Promise((res, rej) => rej({message: 'failed'})))
-      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com', users: []})
-
-      return InvitationController.create(req, res)
-      .then(() => {
-        expect(res.body).to.deep.equal({
-          results: [
-            {email: 'foo@bar.com', error: 'failed'},
-            {email: 'bar@baz.com', error: 'failed'}
-          ]
-        })
-
-        expect(Email.sendInvitation).to.have.been.called.exactly(2)
+        const sort = sortBy('email')
+        expect(sort(res.body.results)).to.deep.equal(sort([
+          {email: 'foo@bar.com'},
+          {email: 'bar@baz.com'},
+          {email: u1.get('email')},
+          {email: u2.get('email')}
+        ]))
       })
     })
   })
