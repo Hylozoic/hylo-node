@@ -76,7 +76,7 @@ module.exports = {
 
         return Promise.map(concatenatedEmails, email => {
           if (!validator.isEmail(email)) {
-            return {email, error: 'failed'}
+            return {email, error: 'not a valid email address'}
           }
 
           const opts = {

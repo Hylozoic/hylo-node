@@ -104,22 +104,22 @@ describe('InvitationController', () => {
       })
     })
 
-    it('returns error message if mail sending fails', () => {
-      mockify(Email, 'sendInvitation', () => new Promise((res, rej) => rej({message: 'failed'})))
-      _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com', users: []})
-
-      return InvitationController.create(req, res)
-      .then(() => {
-        expect(res.body).to.deep.equal({
-          results: [
-            {email: 'foo@bar.com', error: 'failed'},
-            {email: 'bar@baz.com', error: 'failed'}
-          ]
-        })
-
-        expect(Email.sendInvitation).to.have.been.called.exactly(2)
-      })
-    })
+    // it('returns error message if mail sending fails', () => {
+    //   mockify(Email, 'sendInvitation', () => new Promise((res, rej) => rej({message: 'failed'})))
+    //   _.extend(req.params, {communityId: community.id, emails: 'foo@bar.com, bar@baz.com', users: []})
+    //
+    //   return InvitationController.create(req, res)
+    //   .then(() => {
+    //     expect(res.body).to.deep.equal({
+    //       results: [
+    //         {email: 'foo@bar.com', error: 'failed'},
+    //         {email: 'bar@baz.com', error: 'failed'}
+    //       ]
+    //     })
+    //
+    //     expect(Email.sendInvitation).to.have.been.called.exactly(2)
+    //   })
+    // })
   })
 
   describe('.find', () => {
