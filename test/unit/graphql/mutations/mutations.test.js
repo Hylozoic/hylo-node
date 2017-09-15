@@ -1,11 +1,10 @@
-import root from 'root-path'
-require(root('test/setup'))
-const factories = require(root('test/setup/factories'))
-
 import {
   addSkill,
   removeSkill
 } from '../../../../api/graphql/mutations'
+import root from 'root-path'
+require(root('test/setup'))
+const factories = require(root('test/setup/factories'))
 
 describe('mutations', () => {
   var u1, community
@@ -28,7 +27,7 @@ describe('mutations', () => {
   })
 
   it('fails when adding a skill with 0 length', () => {
-    expect(() => addSkill(u1.id, '')).to.throw('empty')
+    expect(() => addSkill(u1.id, '')).to.throw('blank')
   })
 
   it('fails for skills larger than 40 characters', () => {
