@@ -1,12 +1,12 @@
 import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
 import {
+  commentFilter,
   communityTopicFilter,
   makeFilterToggle,
   myCommunityIds,
   myNetworkCommunityIds,
-  sharedMembership,
-  sharedPostMembership,
-  sharedPostMembershipClause,
+  sharedCommunityMembership,
+  sharedNetworkMembership,
   activePost
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
@@ -68,7 +68,7 @@ export default function makeModels (userId, isAdmin) {
           m.get('user_id') === userId ? m.get('new_post_count') : null
       },
       relations: ['community'],
-      filter: nonAdminFilter(sharedMembership('communities_users', userId))
+      filter: nonAdminFilter(sharedCommunityMembership('communities_users', userId))
     },
 
     Person: {
@@ -96,7 +96,7 @@ export default function makeModels (userId, isAdmin) {
         {skills: {querySet: true}},
         {votes: {querySet: true}}
       ],
-      filter: nonAdminFilter(sharedMembership('users', userId)),
+      filter: nonAdminFilter(sharedCommunityMembership('users', userId)),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
         searchQuerySet('forUsers', {
@@ -144,7 +144,7 @@ export default function makeModels (userId, isAdmin) {
       ],
       filter: flow(
         activePost,
-        nonAdminFilter(sharedPostMembership('posts', userId))),
+        nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
         searchQuerySet('forPosts', {
@@ -224,12 +224,7 @@ export default function makeModels (userId, isAdmin) {
             return Frontend.Route.invitePath(c)
           })
       },
-      filter: nonAdminFilter(relation => relation.query(q => {
-        return q.where(cq =>
-          cq.where('communities.id', 'in', myCommunityIds(userId))
-          .orWhere('communities.id', 'in', myNetworkCommunityIds(userId))
-        )
-      }))
+      filter: nonAdminFilter(sharedNetworkMembership('communities', userId))
     },
 
     Comment: {
@@ -242,14 +237,7 @@ export default function makeModels (userId, isAdmin) {
         'post',
         {user: {alias: 'creator'}}
       ],
-      filter: nonAdminFilter(relation => relation.query(q => {
-        // this should technically just be equal to Post.isVisibleToUser
-        q.where(function () {
-          sharedPostMembershipClause('comments', userId, this)
-          .orWhere('comments.post_id', 'in',
-            Follow.query().select('post_id').where('user_id', userId))
-        })
-      })),
+      filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true
     },
 
@@ -303,7 +291,7 @@ export default function makeModels (userId, isAdmin) {
         'post',
         {user: {alias: 'voter'}}
       ],
-      filter: nonAdminFilter(sharedPostMembership('votes', userId))
+      filter: nonAdminFilter(sharedNetworkMembership('votes', userId))
     },
 
     CommunityTopic: {
