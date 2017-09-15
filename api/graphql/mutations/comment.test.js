@@ -17,15 +17,22 @@ describe('validateCommentCreateData', () => {
     })
   })
 
-  it('fails if user cannot access the post', () => {
+  it('rejects if user cannot access the post', () => {
     const data = {text: 't', postId: post2.id}
     return validateCommentCreateData(user.id, data)
-    .catch(function (e) {
-      expect(e.message).to.match(/post not found/)
-    })
+    .then(() => expect.fail('should reject'))
+    .catch(e => expect(e.message).to.match(/post not found/))
   })
-  it('continue the promise chain if checks pass', () => {
+
+  it('resolves if checks pass', () => {
     const data = {text: 't', postId: post.id}
-    expect(validateCommentCreateData(user.id, data)).to.respondTo('then')
+    return validateCommentCreateData(user.id, data)
+    .catch(() => expect.fail('should resolve'))
+  })
+
+  it('rejects if the comment is blank', () => {
+    return validateCommentCreateData(user.id, {text: '   ', postId: post.id})
+    .then(() => expect.fail('should reject'))
+    .catch(e => expect(e.message).to.match(/blank comment/))
   })
 })

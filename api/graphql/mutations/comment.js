@@ -2,7 +2,7 @@ import underlyingDeleteComment from '../../models/comment/deleteComment'
 import {
   createComment as underlyingCreateComment
 } from '../../models/comment/createAndPresentComment'
-import { merge } from 'lodash'
+import { merge, trim } from 'lodash'
 
 export function canDeleteComment (userId, comment) {
   if (comment.get('user_id') === userId) return Promise.resolve(true)
@@ -36,6 +36,9 @@ export function validateCommentCreateData (userId, data) {
   return Post.isVisibleToUser(data.postId, userId)
   .then(isVisible => {
     if (isVisible) {
+      if (!data.imageUrl && !trim(data.text)) {
+        throw new Error("Can't create a blank comment")
+      }
       return Promise.resolve()
     } else {
       throw new Error('post not found')
