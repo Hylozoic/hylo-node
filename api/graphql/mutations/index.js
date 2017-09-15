@@ -1,4 +1,4 @@
-import { isEmpty, merge, mapKeys, pick, snakeCase, size } from 'lodash'
+import { isEmpty, merge, mapKeys, pick, snakeCase, size, trim } from 'lodash'
 import validatePostData from '../../models/post/validatePostData'
 import underlyingCreatePost from '../../models/post/createPost'
 import underlyingUpdatePost from '../../models/post/updatePost'
@@ -145,8 +145,8 @@ export function deletePost (userId, postId) {
 }
 
 export function addSkill (userId, name) {
-  if (isEmpty(name)) {
-    throw new Error('Skill cannot be empty')
+  if (isEmpty(trim(name))) {
+    throw new Error('Skill cannot be blank')
   } else if (size(name) > 39) {
     throw new Error('Skill must be less than 40 characters')
   }
