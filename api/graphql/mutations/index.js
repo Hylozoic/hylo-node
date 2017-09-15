@@ -145,7 +145,8 @@ export function deletePost (userId, postId) {
 }
 
 export function addSkill (userId, name) {
-  if (isEmpty(trim(name))) {
+  name = trim(name)
+  if (isEmpty(name)) {
     throw new Error('Skill cannot be blank')
   } else if (size(name) > 39) {
     throw new Error('Skill must be less than 40 characters')
