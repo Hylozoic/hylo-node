@@ -49,8 +49,8 @@ module.exports = {
 
       if (isString(community)) { // In case we passed just the slug in instead of community object
         communitySlug = community
-      } else {
-        communitySlug = get(community, 'slug')
+      } else if (community) {
+        communitySlug = community.slug || community.get('slug')
       }
 
       let communityUrl = isEmpty(communitySlug) ? '/all' : `/c/${communitySlug}`
