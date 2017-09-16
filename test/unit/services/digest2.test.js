@@ -1,4 +1,3 @@
-require('../../setup')
 import moment from 'moment-timezone'
 import formatData from '../../../lib/community/digest2/formatData'
 import personalizeData from '../../../lib/community/digest2/personalizeData'
@@ -7,6 +6,7 @@ import { sendDigest, sendAllDigests } from '../../../lib/community/digest2'
 import factories from '../../setup/factories'
 import { spyify, unspyify } from '../../setup/helpers'
 import { merge, omit } from 'lodash'
+require('../../setup')
 const model = factories.mock.model
 const collection = factories.mock.collection
 
@@ -146,7 +146,7 @@ describe('community digest v2', () => {
             id: 5,
             title: 'Do you have a dollar?',
             user: u1.attributes,
-            url: Frontend.Route.post({id: 5}),
+            url: Frontend.Route.post({id: 5}, community),
             comments: [
               {
                 id: 12,
@@ -165,7 +165,7 @@ describe('community digest v2', () => {
             id: 6,
             title: 'I have cookies!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 6}),
+            url: Frontend.Route.post({id: 6}, community),
             comments: []
           }
         ],
@@ -174,7 +174,7 @@ describe('community digest v2', () => {
             id: 7,
             title: 'Kapow!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 7}),
+            url: Frontend.Route.post({id: 7}, community),
             comments: [],
             link_preview: omit(linkPreview.attributes, 'id')
           }
@@ -183,7 +183,7 @@ describe('community digest v2', () => {
           {
             id: 8,
             title: 'Old Post, New Comments',
-            url: Frontend.Route.post({id: 8}),
+            url: Frontend.Route.post({id: 8}, community),
             comments: [
               {
                 id: 13,
@@ -219,7 +219,7 @@ describe('community digest v2', () => {
             location: 'Home',
             when: '6pm - December 17, 1995',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 76}),
+            url: Frontend.Route.post({id: 76}, community),
             comments: []
           }
         ],
@@ -228,7 +228,7 @@ describe('community digest v2', () => {
             id: 77,
             title: 'A project with requests',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 77}),
+            url: Frontend.Route.post({id: 77}, community),
             comments: [],
             requests: [
               'I need things',
@@ -274,7 +274,7 @@ describe('community digest v2', () => {
               `<a href="${prefix}/u/16325">Julia Pope</a> ` +
               `<a href="${prefix}/c/foo/tag/oakland">#oakland</a></p>`,
             user: u1.attributes,
-            url: Frontend.Route.post({id: 1}),
+            url: Frontend.Route.post({id: 1}, community),
             comments: []
           }
         ],
@@ -475,7 +475,7 @@ describe('community digest v2', () => {
               id: post.id,
               title: post.get('name'),
               reply_url: Email.postReplyAddress(post.id, u1.id),
-              url: Frontend.Route.post(post) + clickthroughParams,
+              url: Frontend.Route.post(post, community) + clickthroughParams,
               user: u2.pick('id', 'avatar_url', 'name'),
               comments: [],
               requests: []

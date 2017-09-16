@@ -242,7 +242,7 @@ module.exports = bookshelf.Model.extend({
           post_label: postLabel,
           post_title: title,
           comment_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post) + '?ctt=comment_email&cti=' + reader.id + `#comment-${comment.id}`),
+            Frontend.Route.post(post, community) + '?ctt=comment_email&cti=' + reader.id + `#comment-${comment.id}`),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.unfollow(post, community)),
           tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})

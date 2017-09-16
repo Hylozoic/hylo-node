@@ -1,3 +1,5 @@
+import { isString, get, isEmpty } from 'lodash'
+
 /*
 
 This file exists because we sometimes need to refer to URL's that live in the
@@ -35,15 +37,25 @@ module.exports = {
     },
 
     communityJoinRequests: function (community) {
-      return this.community(community) + '/invite#join_requests'
+      return this.communitySettings(community) + '/invite#join_requests'
     },
 
     profile: function (user) {
-      return url('/u/%s', user.id)
+      return url('/m/%s', user.id)
     },
 
-    post: function (post) {
-      return url(`/p/${post.id}`)
+    post: function (post, community) {
+      let communitySlug
+
+      if (isString(community)) { // In case we passed just the slug in instead of community object
+        communitySlug = community
+      } else if (community) {
+        communitySlug = community.slug || community.get('slug')
+      }
+
+      let communityUrl = isEmpty(communitySlug) ? '/all' : `/c/${communitySlug}`
+
+      return url(`${communityUrl}/p/${post.id}`)
     },
 
     thread: function (post) {
