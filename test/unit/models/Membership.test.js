@@ -49,25 +49,30 @@ describe('Membership', function () {
   })
 
   describe('.create', function () {
+    var tag
     before(function () {
       community = new Community({slug: 'bar', name: 'bar'})
       user = new User({name: 'Dog', email: 'b@c.d'})
+      tag = new Tag({name: 'hello'})
       return Promise.join(
         community.save(),
         user.save(),
-        Tag.createStarterTags())
-      .then(() => community.createStarterTags(user.id))
+        tag.save()
+      )
+      .then(() => CommunityTag.create({
+        tag_id: tag.id,
+        community_id: community.id,
+        is_default: true
+      }))
     })
 
     it('creates tag follows for default tags', function () {
       return Membership.create(user.id, community.id, {role: Membership.DEFAULT_ROLE})
       .then(() => user.load('followedTags'))
       .then(() => {
-        expect(user.relations.followedTags.length).to.equal(3)
+        expect(user.relations.followedTags.length).to.equal(1)
         var tagNames = user.relations.followedTags.map(t => t.get('name'))
-        expect(_.includes(tagNames, 'offer')).to.deep.equal(true)
-        expect(_.includes(tagNames, 'request')).to.deep.equal(true)
-        expect(_.includes(tagNames, 'intention')).to.deep.equal(true)
+        expect(tagNames[0]).to.equal('hello')
       })
     })
   })

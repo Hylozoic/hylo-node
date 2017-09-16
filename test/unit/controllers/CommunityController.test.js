@@ -1,10 +1,10 @@
+import { sortBy, times, omit } from 'lodash'
 var root = require('root-path')
 require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var Promise = require('bluebird')
 var checkAndSetMembership = Promise.promisify(require(require('root-path')('api/policies/checkAndSetMembership')))
 var CommunityController = require(root('api/controllers/CommunityController'))
-import { sortBy, times, omit } from 'lodash'
 
 describe('CommunityController', () => {
   var req, res, user
@@ -28,8 +28,6 @@ describe('CommunityController', () => {
         leader_id: user.id
       })
       return community.save()
-      .then(() => Tag.createStarterTags())
-      .then(() => community.createStarterTags(user.id))
       .then(() => user.joinCommunity(community))
       .then(() => {
         req.params.communityId = community.id
@@ -58,57 +56,6 @@ describe('CommunityController', () => {
             avatar_url: user.get('avatar_url')
           }
         })
-        expect(res.body.defaultTags.sort()).to.deep.equal(['intention', 'offer', 'request'])
-      })
-    })
-  })
-
-  describe('.create', () => {
-    var p1, p2
-    before(() => {
-      p1 = factories.post()
-      p2 = factories.post()
-      return Promise.join(
-        Tag.createStarterTags(),
-        new Community({name: 'Scoby', slug: 'starter-posts'}).save()
-        .then(c => Promise.join(
-          p1.save().then(() => p1.communities().attach(c.id))
-          .then(() => Tag.find('request'))
-          .then(tag => p1.tags().attach({tag_id: tag.id, selected: true})),
-
-          p2.save().then(() => p2.communities().attach(c.id))
-          .then(() => Tag.find('offer'))
-          .then(tag => p2.tags().attach({tag_id: tag.id, selected: true}))
-        ))
-      )
-    })
-
-    it('creates starter posts and default tags', () => {
-      req.session.userId = user.id
-      _.extend(req.params, {name: 'Bar', slug: 'bar'})
-
-      return CommunityController.create(req, res)
-      .then(() => Community.find('bar', {withRelated: [
-        'users', 'memberships', 'leader', 'tags', 'posts', 'posts.selectedTags'
-      ]}))
-      .then(community => {
-        expect(community).to.exist
-        expect(community.get('name')).to.equal('Bar')
-        expect(community.get('slug')).to.equal('bar')
-        expect(community.relations.leader.id).to.equal(user.id)
-        expect(community.relations.users.first().pivot.get('role')).to.equal(Membership.MODERATOR_ROLE)
-
-        const tags = community.relations.tags
-        expect(tags.length).to.equal(3)
-        expect(tags.pluck('name').sort()).to.deep.equal(['intention', 'offer', 'request'])
-        expect(tags.map(t => t.pivot.get('user_id'))).to.deep.equal(times(3, () => user.id))
-
-        const posts = sortBy(community.relations.posts.models, p => p.get('created_at'))
-        expect(posts.length).to.equal(2)
-        expect(posts[0].get('name')).to.equal(p1.get('name'))
-        expect(posts[0].relations.selectedTags.first().get('name')).to.equal('request')
-        expect(posts[1].get('name')).to.equal(p2.get('name'))
-        expect(posts[1].relations.selectedTags.first().get('name')).to.equal('offer')
       })
     })
   })

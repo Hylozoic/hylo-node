@@ -119,18 +119,6 @@ module.exports = bookshelf.Model.extend(merge({
     }))
   },
 
-  createStarterTags: function (userId, trx) {
-    return Tag.starterTags(trx).then(tags =>
-      Promise.map(tags.models, tag => new CommunityTag({
-        community_id: this.id,
-        is_default: true,
-        tag_id: tag.id,
-        user_id: userId,
-        created_at: new Date()
-      })
-      .save({}, {transacting: trx})))
-  },
-
   updateChecklist: function () {
     const { checklist } = this.get('settings') || {}
     const completed = {
@@ -143,15 +131,14 @@ module.exports = bookshelf.Model.extend(merge({
       {tags: q => q.limit(4)},
       {invitations: q => q.limit(1)}
     ])
-    .then(() => Tag.starterTags())
-    .then(starterTags => {
+    .then(() => {
       const { invitations, posts, tags } = this.relations
 
       const updatedChecklist = {
         logo: this.get('avatar_url') !== defaultAvatar,
         banner: this.get('banner_url') !== defaultBanner,
         invite: invitations.length > 0,
-        topics: differenceBy(tags.models, starterTags.models, 'id').length > 0,
+        topics: tags.length > 0,
         post: !!posts.find(p => p.get('user_id') !== axolotlId)
       }
 
@@ -338,7 +325,6 @@ module.exports = bookshelf.Model.extend(merge({
 
       return bookshelf.transaction(trx => {
         return community.save(null, {transacting: trx})
-        .tap(community => community.createStarterTags(userId, trx))
         .tap(community => community.createStarterPosts(trx))
         .then(() => Membership.create(userId, community.id, {
           role: Membership.MODERATOR_ROLE,

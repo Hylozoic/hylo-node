@@ -299,17 +299,15 @@ describe('User', function () {
   describe('#followDefaultTags', function () {
     it('creates TagFollows for the default tags of a community', () => {
       var c1 = factories.community()
-      return Tag.createStarterTags()
-      .then(() => c1.save())
-      .then(() => c1.createStarterTags(factories.user().save().id))
+      return c1.save()
+      .then(() => Tag.forge({name: 'hello'}).save())
+      .then(tag => CommunityTag.create({tag_id: tag.id, community_id: c1.id, is_default: true}))
       .then(() => User.followDefaultTags(cat.id, c1.id))
       .then(() => cat.load('followedTags'))
       .then(() => {
-        expect(cat.relations.followedTags.length).to.equal(3)
+        expect(cat.relations.followedTags.length).to.equal(1)
         var tagNames = cat.relations.followedTags.map(t => t.get('name'))
-        expect(includes(tagNames, 'offer')).to.deep.equal(true)
-        expect(includes(tagNames, 'request')).to.deep.equal(true)
-        expect(includes(tagNames, 'intention')).to.deep.equal(true)
+        expect(tagNames[0]).to.equal('hello')
       })
     })
   })
