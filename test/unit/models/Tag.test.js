@@ -502,9 +502,9 @@ describe('Tag', () => {
       return Tag.updateUser(u, [t2.get('name'), t3.get('name')])
       .then(() => u.load('tags'))
       .then(() => {
-        expect(u.relations.tags.map(t => t.get('name'))).to.deep.equal([
+        expect(u.relations.tags.map(t => t.get('name')).sort()).to.deep.equal([
           t2.get('name'), t3.get('name')
-        ])
+        ].sort())
       })
     })
   })
