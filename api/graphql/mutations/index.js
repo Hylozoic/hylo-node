@@ -132,12 +132,12 @@ export function removeSkill (userId, skillId) {
 }
 
 export function flagInappropriateContent (userId, { category, reason, link }) {
-  return new FlaggedItem({
+  return FlaggedItem.create({
     user_id: userId,
     category,
     reason,
     link
-  }).save()
+  }) 
   .then(() => ({success: true}))
 }
 
