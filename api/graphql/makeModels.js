@@ -3,11 +3,11 @@ import {
   commentFilter,
   communityTopicFilter,
   makeFilterToggle,
-  myCommunityIds,
   sharedCommunityMembership,
   sharedNetworkMembership,
   activePost
 } from './filters'
+import { myCommunityIds } from '../models/util/queryFilters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
 import { filterAndSortUsers } from '../services/Search/forUsers'
