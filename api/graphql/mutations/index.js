@@ -15,7 +15,7 @@ export {
   useInvitation
 } from './invitation'
 export {
-  updateCommunitySettings,
+  updateCommunity,
   addModerator,
   removeModerator,
   removeMember,
