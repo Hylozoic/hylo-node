@@ -7,7 +7,7 @@ import faker from 'faker'
 module.exports = {
   community: attrs => {
     return new Community(merge({
-      name: faker.company.companyName(),
+      name: faker.random.words(6),
       slug: faker.lorem.slug()
     }, attrs))
   },
@@ -45,7 +45,7 @@ module.exports = {
   network: attrs => {
     return new Network(merge({
       name: faker.company.companyName(),
-      slug: faker.lorem.slug()
+      slug: faker.lorem.slug(5)
     }, attrs))
   },
 
