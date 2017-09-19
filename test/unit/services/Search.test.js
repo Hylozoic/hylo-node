@@ -81,7 +81,8 @@ describe('Search', function () {
       .then(() => catdog.save())
       .then(() => house.save())
       .then(() => cat.joinCommunity(house))
-      .then(() => FullTextSearch.createView(null, bookshelf.knex))
+      .then(() => FullTextSearch.dropView().catch(err => {})) // eslint-disable-line handle-callback-err
+      .then(() => FullTextSearch.createView())
     })
 
     function userSearchTests (key) {
