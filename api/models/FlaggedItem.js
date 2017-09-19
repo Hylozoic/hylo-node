@@ -30,6 +30,6 @@ module.exports = bookshelf.Model.extend({
     const invalidLink = validateFlaggedItem.link(link)
     if (invalidLink) return Promise.reject(invalidLink)
 
-    return FlaggedItem.forge(attrs).save()
+    return this.forge(attrs).save()
   }
 })
