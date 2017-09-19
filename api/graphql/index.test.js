@@ -1,22 +1,35 @@
 import { createRequestHandler } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
+import { sortBy } from 'lodash/fp'
+import { wait } from '../../test/setup/helpers'
+import { updateNetworkMemberships } from '../models/post/util'
 
 describe('graphql request handler', () => {
-  var handler, req, res, user, community, post
+  var handler, req, res, user, user2, community, network, post
 
   before(() => {
     handler = createRequestHandler()
 
     user = factories.user()
+    user2 = factories.user()
     community = factories.community()
+    network = factories.network()
     post = factories.post()
-    return Promise.all([user.save(), community.save()])
+    return network.save()
+    .then(() => community.save({network_id: network.id}))
+    .then(() => user.save())
+    .then(() => user2.save())
     .then(() => post.save({user_id: user.id}))
     .then(() => Promise.all([
       community.posts().attach(post),
-      community.users().attach({user_id: user.id, active: true})
+      community.users().attach({
+        user_id: user.id,
+        active: true,
+        created_at: new Date(new Date().getTime() - 86400000)}),
+      community.users().attach({user_id: user2.id, active: true})
     ]))
+    .then(() => updateNetworkMemberships(post))
   })
 
   beforeEach(() => {
@@ -79,24 +92,22 @@ describe('graphql request handler', () => {
   })
 
   describe('with a complex query', () => {
-    var user2, thread, comment, message
+    var thread, comment, message
 
     before(() => {
-      user2 = factories.user()
       thread = factories.post({type: Post.Type.THREAD})
 
-      return Promise.all([user2.save(), thread.save()])
+      return thread.save()
       .then(() => {
         comment = factories.comment({post_id: post.id, user_id: user2.id})
         message = factories.comment({post_id: thread.id, user_id: user2.id})
         return Promise.all([
           comment.save(),
           message.save(),
-          community.users().attach({user_id: user2.id, active: true}),
           post.followers().attach(user2),
-          thread.followers().attach(user),
-          thread.followers().attach(user2)
+          thread.followers().attach(user)
         ])
+        .then(() => thread.followers().attach(user2))
       })
     })
 
@@ -229,6 +240,9 @@ describe('graphql request handler', () => {
   describe('without a logged-in user', () => {
     beforeEach(() => {
       req.session = {}
+    })
+
+    it('shows "not logged in" errors for most queries', () => {
       req.body = {
         query: `{
           me {
@@ -239,9 +253,7 @@ describe('graphql request handler', () => {
           }
         }`
       }
-    })
 
-    it('returns null for roots', () => {
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
@@ -264,6 +276,146 @@ describe('graphql request handler', () => {
               path: ['community']
             }
           ]
+        })
+      })
+    })
+
+    it('allows checkInvitation', () => {
+      req.body = {
+        query: `{
+          checkInvitation(invitationToken: "foo") {
+            valid
+          }
+        }`
+      }
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            checkInvitation: {
+              valid: false
+            }
+          }
+        })
+      })
+    })
+  })
+
+  describe('querying community data', () => {
+    it('works as expected', () => {
+      req.body = {
+        query: `{
+          community(id: "${community.id}") {
+            slug
+            members(first: 2, sortBy: "join") {
+              items {
+                name
+              }
+            }
+            posts(first: 1) {
+              items {
+                title
+              }
+            }
+          }
+        }`
+      }
+
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            community: {
+              slug: community.get('slug'),
+              members: {
+                items: [
+                  {name: user2.get('name')},
+                  {name: user.get('name')}
+                ]
+              },
+              posts: {
+                items: [
+                  {title: post.get('name')}
+                ]
+              }
+            }
+          }
+        })
+      })
+    })
+
+    describe('with an invalid sort option', () => {
+      it('shows an error', () => {
+        req.body = {
+          query: `{
+            community(id: "${community.id}") {
+              members(first: 2, sortBy: "height") {
+                items {
+                  name
+                }
+              }
+            }
+          }`
+        }
+
+        return handler(req, res).then(() => {
+          expectJSON(res, {
+            data: {
+              community: {
+                members: null
+              }
+            },
+            errors: [
+              {
+                locations: [
+                  {column: 15, line: 3}
+                ],
+                message: 'Cannot sort by "height"',
+                path: ['community', 'members']
+              }
+            ]
+          })
+        })
+      })
+    })
+  })
+
+  describe('querying network data', () => {
+    it('works as expected', () => {
+      req.body = {
+        query: `{
+          network(id: "${network.id}") {
+            slug
+            members(first: 2, sortBy: "name") {
+              items {
+                name
+              }
+            }
+            posts(first: 1) {
+              items {
+                title
+              }
+            }
+          }
+        }`
+      }
+
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            network: {
+              slug: network.get('slug'),
+              members: {
+                items: sortBy('name', [
+                  {name: user2.get('name')},
+                  {name: user.get('name')}
+                ])
+              },
+              posts: {
+                items: [
+                  {title: post.get('name')}
+                ]
+              }
+            }
+          }
         })
       })
     })
