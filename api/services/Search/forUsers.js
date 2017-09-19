@@ -1,6 +1,5 @@
 import { countTotal } from '../../../lib/util/knex'
-import addTermToQueryBuilder from './addTermToQueryBuilder'
-import { curry, pick } from 'lodash'
+import { filterAndSortUsers } from './util'
 
 export default function (opts) {
   const { communities, network } = opts
@@ -9,7 +8,11 @@ export default function (opts) {
     qb.offset(opts.offset || 0)
     qb.where('users.active', '=', true)
 
-    filterAndSortUsers(pick(opts, 'autocomplete', 'term', 'sort'), qb)
+    filterAndSortUsers({
+      autocomplete: opts.autocomplete,
+      search: opts.term,
+      sortBy: opts.sort
+    }, qb)
 
     if (opts.sort === 'join') {
       if (!communities || communities.length !== 1) {
@@ -50,29 +53,3 @@ export default function (opts) {
     }
   })
 }
-
-export const filterAndSortUsers = curry(({ autocomplete, term, sort }, q) => {
-  if (autocomplete) {
-    addTermToQueryBuilder(autocomplete, q, {
-      columns: ['users.name']
-    })
-  }
-
-  if (term) {
-    q.where('users.id', 'in', FullTextSearch.search({
-      term,
-      type: 'person',
-      subquery: true
-    }))
-  }
-
-  if (sort && !['name', 'location', 'join'].includes(sort)) {
-    throw new Error(`Cannot sort by "${sort}"`)
-  }
-
-  if (sort === 'join') {
-    q.orderBy('communities_users.created_at', 'desc')
-  } else {
-    q.orderBy(sort || 'name', 'asc')
-  }
-})

@@ -1,6 +1,6 @@
-import addTermToQueryBuilder from './addTermToQueryBuilder'
 import { get } from 'lodash'
 import { countTotal } from '../../../lib/util/knex'
+import { filterAndSortPosts } from './util'
 
 export default function forPosts (opts) {
   return Post.query(qb => {
@@ -18,17 +18,6 @@ export default function forPosts (opts) {
 
     if (opts.excludeUsers) {
       qb.whereNotIn('posts.user_id', opts.excludeUsers)
-    }
-
-    if (opts.tag) {
-      qb.join('posts_tags', 'posts_tags.post_id', '=', 'posts.id')
-      qb.whereIn('posts_tags.tag_id', [opts.tag])
-    }
-
-    if (opts.term) {
-      addTermToQueryBuilder(opts.term, qb, {
-        columns: ['posts.name', 'posts.description']
-      })
     }
 
     if (opts.type === Post.Type.THREAD || opts.follower) {
@@ -73,15 +62,12 @@ export default function forPosts (opts) {
       qb.whereIn('visibility', opts.visibility)
     }
 
-    if (opts.sort === 'fulfilled_at') {
-      qb.orderByRaw('posts.fulfilled_at desc, posts.updated_at desc')
-    } else if (Array.isArray(opts.sort)) {
-      qb.orderBy(opts.sort[0], opts.sort[1])
-    } else if (opts.sort === 'posts.updated_at' && get(opts.communities, 'length') === 1) {
-      qb.orderByRaw('communities_posts.pinned desc, posts.updated_at desc')
-    } else if (opts.sort) {
-      qb.orderBy(opts.sort, 'desc')
-    }
+    filterAndSortPosts({
+      search: opts.term,
+      sortBy: opts.sort,
+      topic: opts.tag,
+      showPinnedFirst: get(opts.communities, 'length') === 1
+    }, qb)
 
     if (opts.omit) {
       qb.whereNotIn('posts.id', opts.omit)

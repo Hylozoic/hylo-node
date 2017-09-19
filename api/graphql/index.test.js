@@ -2,7 +2,6 @@ import { createRequestHandler } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
 import { sortBy } from 'lodash/fp'
-import { wait } from '../../test/setup/helpers'
 import { updateNetworkMemberships } from '../models/post/util'
 
 describe('graphql request handler', () => {

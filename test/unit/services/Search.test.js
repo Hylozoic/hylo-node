@@ -30,13 +30,13 @@ describe('Search', function () {
         inner join "communities_posts" on "communities_posts"."post_id" = "posts"."id"
         where "posts"."active" = true
         and "posts"."user_id" in (42, 41)
-        and (((to_tsvector('english', posts.name) @@ to_tsquery('milk:* & toast:*'))
-          or (to_tsvector('english', posts.description) @@ to_tsquery('milk:* & toast:*'))))
         and "follows"."user_id" = 37
         and (posts.user_id != 37 or posts.user_id is null)
         and "type" = 'request'
         and ((posts.created_at between '%s' and '%s')
           or (posts.updated_at between '%s' and '%s'))
+          and (((to_tsvector('english', posts.name) @@ to_tsquery('milk:* & toast:*'))
+          or (to_tsvector('english', posts.description) @@ to_tsquery('milk:* & toast:*'))))
         and "communities_posts"."community_id" in (9, 12)
         and "parent_post_id" is null
         group by "posts"."id", "communities_posts"."post_id", "communities_posts"."pinned"

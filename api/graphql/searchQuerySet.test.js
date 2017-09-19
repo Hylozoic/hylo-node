@@ -16,45 +16,19 @@ describe('sanitizeOptions', () => {
     expect(sanitizeOptions('forPosts', {})).to.deep.equal({
       limit: 100,
       offset: 0,
-      sort: 'posts.updated_at',
       totalColumnName: '__total'
     })
   })
 
   it('does not override default options with null or undefined values', () => {
     expect(sanitizeOptions('forPosts', {
-      sort: null, offset: undefined, foo: false
+      offset: undefined, foo: false
     }))
     .to.deep.equal({
       limit: 100,
       offset: 0,
       foo: false,
-      sort: 'posts.updated_at',
       totalColumnName: '__total'
-    })
-  })
-
-  describe('for posts', () => {
-    it('throws an error when sort option is invalid', () => {
-      expect(() => {
-        sanitizeOptions('forPosts', {sort: 'size'})
-      }).to.throw(/invalid value for sort/)
-    })
-
-    it('throws an error when value of topic is not an ID', () => {
-      expect(() => {
-        sanitizeOptions('forPosts', {topic: '123four'})
-      }).to.throw(/invalid value for topic/)
-    })
-  })
-
-  it('sets tag based on topic', () => {
-    expect(sanitizeOptions('forPosts', {topic: '7'})).to.deep.equal({
-      limit: 100,
-      offset: 0,
-      totalColumnName: '__total',
-      sort: 'posts.updated_at',
-      tag: '7'
     })
   })
 

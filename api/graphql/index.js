@@ -96,6 +96,9 @@ function createSchema (userId, isAdmin) {
       search: (root, args) =>
         Search.fullTextSearch(userId, args)
         .then(({ models, total }) => {
+          // FIXME this shouldn't be used directly here -- there should be some
+          // way of integrating this into makeModels and using the presentation
+          // logic that's already in the fetcher
           return presentQuerySet(models, merge(args, {total}))
         }),
       network: (root, { id, slug }) =>  // you can specify id or slug, but not both
