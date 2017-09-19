@@ -2,7 +2,7 @@
 import Slack from '../services/Slack'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
-import { clone, differenceBy, flatten, isEqual, merge, pick, trim } from 'lodash'
+import { clone, flatten, isEqual, merge, pick, trim } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
 import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../../lib/uploader/types'
 

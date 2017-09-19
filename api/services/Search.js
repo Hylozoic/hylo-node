@@ -8,7 +8,7 @@ import { flatten, flow, uniq, get } from 'lodash/fp'
 module.exports = {
   forPosts,
   forUsers,
-
+  forSkills: opts => Skill.search(opts),
   forCommunities: function (opts) {
     return Community.query(qb => {
       if (opts.communities) {
@@ -132,5 +132,3 @@ const presentResult = (posts, comments, people) => item => {
   }
   return null
 }
-
-const userColumns = q => q.column('id', 'name', 'avatar_url')

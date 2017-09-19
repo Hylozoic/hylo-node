@@ -4,7 +4,6 @@ import {
   communityTopicFilter,
   makeFilterToggle,
   myCommunityIds,
-  myNetworkCommunityIds,
   sharedCommunityMembership,
   sharedNetworkMembership,
   activePost
@@ -317,20 +316,8 @@ export default function makeModels (userId, isAdmin) {
       model: Skill,
       attributes: ['id', 'name'],
       fetchMany: ({ autocomplete, first = 1000, offset = 0 }) =>
-        Skill.query(q => {
-          q.limit(first)
-          q.offset(offset)
-          q.orderByRaw('upper("name") asc')
-
-          if (autocomplete) {
-            q.whereRaw('name ilike ?', autocomplete + '%')
-          }
-          q.join('skills_users', 'skills_users.skill_id', 'skills.id')
-          q.join('communities_users', 'communities_users.user_id', 'skills_users.user_id')
-          q.where(function () {
-            this.whereIn('communities_users.community_id', myCommunityIds(userId))
-            .orWhereIn('communities_users.community_id', myNetworkCommunityIds(userId))
-          })
+        searchQuerySet('skills', {
+          autocomplete, first, offset, currentUserId: userId
         })
     },
 

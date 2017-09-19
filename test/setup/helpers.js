@@ -35,3 +35,8 @@ export const stubGetImageSize = url => {
   // console.log(`stubbing ${host}${u.pathname}`)
   return nock(host).get(u.pathname).reply(200, pixel)
 }
+
+export function expectEqualQuery (collection, expected) {
+  const reformatted = expected.replace(/\n\s*/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')')
+  expect(collection.query().toString()).to.equal(reformatted)
+}
