@@ -1,40 +1,36 @@
 import { extend, merge, pick, reduce } from 'lodash'
-import randomstring from 'randomstring'
 import { spy } from 'chai'
 import i18n from 'i18n'
 import { ReadableStreamBuffer } from 'stream-buffers'
-
-var text = function (length) {
-  return randomstring.generate({length: length || 10, charset: 'alphabetic'})
-}
+import faker from 'faker'
 
 module.exports = {
   community: attrs => {
     return new Community(merge({
-      name: text(),
-      slug: text()
+      name: faker.company.companyName(),
+      slug: faker.lorem.slug()
     }, attrs))
   },
 
   post: attrs => {
     return new Post(merge({
       active: true,
-      name: text()
+      name: faker.random.words(4)
     }, attrs))
   },
 
   comment: attrs => {
     return new Comment(merge({
       active: true,
-      text: text()
+      text: faker.lorem.sentences(2)
     }, attrs))
   },
 
   user: attrs => {
     return new User(merge({
-      name: text(),
+      name: faker.name.findName(),
       active: true,
-      email: `${text()}@example.com`
+      email: faker.internet.email()
     }, attrs))
   },
 
@@ -48,14 +44,14 @@ module.exports = {
 
   network: attrs => {
     return new Network(merge({
-      name: text(),
-      slug: text()
+      name: faker.company.companyName(),
+      slug: faker.lorem.slug()
     }, attrs))
   },
 
   tag: attrs => {
     return new Tag(merge({
-      name: text()
+      name: faker.random.words(3).replace(/ /g, '-').toLowerCase()
     }, attrs))
   },
 
