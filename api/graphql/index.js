@@ -93,14 +93,16 @@ function createSchema (userId, isAdmin) {
         fetchOne('Topic', name || id, name ? 'name' : 'id'),
       communityTopic: (root, { topicName, communitySlug }) =>
         CommunityTag.findByTagAndCommunity(topicName, communitySlug),
-      search: (root, args) =>
-        Search.fullTextSearch(userId, args)
+      search: (root, args) => {
+        if (!args.first) args.first = 20
+        return Search.fullTextSearch(userId, args)
         .then(({ models, total }) => {
           // FIXME this shouldn't be used directly here -- there should be some
           // way of integrating this into makeModels and using the presentation
           // logic that's already in the fetcher
           return presentQuerySet(models, merge(args, {total}))
-        }),
+        })
+      },
       network: (root, { id, slug }) =>  // you can specify id or slug, but not both
         fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
       skills: (root, args) => fetchMany('Skill', args),
