@@ -419,6 +419,47 @@ describe('graphql request handler', () => {
       })
     })
   })
+
+  describe('search', () => {
+    beforeEach(() => {
+      return FullTextSearch.dropView().catch(() => {})
+      .then(() => FullTextSearch.createView())
+    })
+
+    it('works', () => {
+      req.body = {
+        query: `{
+          search(term: "${post.get('name').substring(0, 4)}") {
+            items {
+              content {
+                __typename
+                ... on Post {
+                  title
+                }
+              }
+            }
+          }
+        }`
+      }
+
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            search: {
+              items: [
+                {
+                  content: {
+                    __typename: 'Post',
+                    title: post.get('name')
+                  }
+                }
+              ]
+            }
+          }
+        })
+      })
+    })
+  })
 })
 
 function expectJSON (res, expected) {
