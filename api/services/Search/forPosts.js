@@ -73,12 +73,7 @@ export default function forPosts (opts) {
       qb.whereIn('visibility', opts.visibility)
     }
 
-    if (opts.sort === 'suggested') {
-      qb.join('user_post_relevance', 'user_post_relevance.post_id', '=', 'posts.id')
-      qb.where('user_post_relevance.user_id', opts.forUser)
-      qb.orderBy('similarity', 'desc')
-      qb.groupBy('similarity')
-    } else if (opts.sort === 'fulfilled_at') {
+    if (opts.sort === 'fulfilled_at') {
       qb.orderByRaw('posts.fulfilled_at desc, posts.updated_at desc')
     } else if (Array.isArray(opts.sort)) {
       qb.orderBy(opts.sort[0], opts.sort[1])
