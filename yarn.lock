@@ -4500,7 +4500,7 @@ liftoff@~2.2.0:
 
 linkifyjs@Hylozoic/linkifyjs#allow-underscores:
   version "2.1.4"
-  resolved "https://codeload.github.com/Hylozoic/linkifyjs/tar.gz/ede14b0f4bf09c675f74e707ab5a173041685dc8"
+  resolved "https://codeload.github.com/Hylozoic/linkifyjs/tar.gz/d7de1aaa8012fae035a995051cf062ff78ea878e"
   optionalDependencies:
     jquery ">=1.9.0"
     react ">=0.14.0"
