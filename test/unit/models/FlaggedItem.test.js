@@ -1,6 +1,6 @@
 import setup from '../../setup'
 
-describe.only('FlaggedItem', () => {
+describe('FlaggedItem', () => {
   const item = {
     category: 'abusive',
     reason: 'Said wombats were not cute. Just mean.',
