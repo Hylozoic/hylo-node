@@ -10,3 +10,5 @@ ratings:
   paths:
   - api/**
   - lib/**
+exclude_paths:
+- "**/*.test.js"
