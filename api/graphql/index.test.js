@@ -42,54 +42,6 @@ describe('graphql request handler', () => {
     res = factories.mock.response()
   })
 
-  describe('querying Comment attachments', () => {
-    beforeEach(() => {
-      req.body = {
-        query: `{
-          post (id: ${post.id}) {
-            comments {
-              items {
-                text
-                attachments {
-                  id
-                  type
-                  position
-                  url
-                }
-              }
-            }
-          }
-        }`
-      }
-    })
-
-    it('responds as expected', () => {
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            post: {
-              comments: {
-                items: [
-                  {
-                    text: comment.get('text'),
-                    attachments: [
-                      {
-                        id: media.id,
-                        type: media.get('type'),
-                        position: media.get('position'),
-                        url: media.get('url')
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        })
-      })
-    })
-  })
-
   describe('with a simple query', () => {
     beforeEach(() => {
       req.body = {
@@ -143,17 +95,16 @@ describe('graphql request handler', () => {
   })
 
   describe('with a complex query', () => {
-    var thread, comment, message
+    var thread, message
 
     before(() => {
       thread = factories.post({type: Post.Type.THREAD})
 
       return thread.save()
       .then(() => {
-        comment = factories.comment({post_id: post.id, user_id: user2.id})
         message = factories.comment({post_id: thread.id, user_id: user2.id})
         return Promise.all([
-          comment.save(),
+          comment.save({user_id: user2.id}),
           message.save(),
           post.followers().attach(user2),
           thread.followers().attach(user)
@@ -278,6 +229,54 @@ describe('graphql request handler', () => {
                       }
                     ],
                     participantsTotal: 2
+                  }
+                ]
+              }
+            }
+          }
+        })
+      })
+    })
+  })
+
+  describe('querying Comment attachments', () => {
+    beforeEach(() => {
+      req.body = {
+        query: `{
+          post (id: ${post.id}) {
+            comments {
+              items {
+                text
+                attachments {
+                  id
+                  type
+                  position
+                  url
+                }
+              }
+            }
+          }
+        }`
+      }
+    })
+
+    it('responds as expected', () => {
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            post: {
+              comments: {
+                items: [
+                  {
+                    text: comment.get('text'),
+                    attachments: [
+                      {
+                        id: media.id,
+                        type: media.get('type'),
+                        position: media.get('position'),
+                        url: media.get('url')
+                      }
+                    ]
                   }
                 ]
               }
