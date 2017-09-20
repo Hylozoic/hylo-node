@@ -1,9 +1,12 @@
-import { mapValues } from 'lodash'
+import { capitalize, mapValues } from 'lodash'
 import { isNull, isUndefined, omitBy } from 'lodash/fp'
 import { PAGINATION_TOTAL_COLUMN_NAME } from '../../lib/graphql-bookshelf-bridge/util/applyPagination'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 
 export default function searchQuerySet (searchName, options) {
+  if (!searchName.startsWith('for')) {
+    searchName = 'for' + capitalize(searchName)
+  }
   return Search[searchName](sanitizeOptions(searchName, options))
 }
 
@@ -13,12 +16,20 @@ export function fetchSearchQuerySet (searchName, options) {
 }
 
 export function sanitizeOptions (name, options) {
-  const shim = shims[name]
-  if (!shim) throw new Error(`no option shim for ${name}`)
+  if (options.first) {
+    options.limit = options.first
+    delete options.first
+  }
 
-  const withDefaults = Object.assign({}, defaultOptions.all,
-    defaultOptions[name], omitBy(x => isNull(x) || isUndefined(x), options))
-  return shim(withDefaults)
+  options = Object.assign(
+    {},
+    defaultOptions.all,
+    defaultOptions[name],
+    omitBy(x => isNull(x) || isUndefined(x), options)
+  )
+
+  const shim = shims[name]
+  return shim ? shim(options) : options
 }
 
 const defaultOptions = {
@@ -49,7 +60,7 @@ const shims = {
     if (options.topic) {
       const onlyNumbers = /^\d+$/
       if (!onlyNumbers.test(options.topic)) {
-        throw new Error(`invalid value for topic: ${options.sort}. should be an ID`)
+        throw new Error(`invalid value for topic: ${options.topic}. should be an ID`)
       }
       options.tag = options.topic
       delete options.topic
@@ -59,16 +70,5 @@ const shims = {
       if (key === 'sort') return sortOptionShim[val]
       return val
     })
-  },
-
-  forUsers: options => {
-    // TODO
-    return options
-  },
-
-  forTags: options => options,
-
-  forItems: options => options,
-
-  forCommunities: options => options
+  }
 }

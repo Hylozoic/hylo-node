@@ -3,14 +3,14 @@ import {
   commentFilter,
   communityTopicFilter,
   makeFilterToggle,
-  myCommunityIds,
-  myNetworkCommunityIds,
   sharedCommunityMembership,
   sharedNetworkMembership,
   activePost
 } from './filters'
+import { myCommunityIds } from '../models/util/queryFilters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
+import { filterAndSortUsers } from '../services/Search/forUsers'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -192,21 +192,22 @@ export default function makeModels (userId, isAdmin) {
                 q.whereRaw('skills.name ilike ?', autocomplete + '%')
               }
             })
+        }},
+        {users: {
+          alias: 'members',
+          querySet: true,
+          filter: (relation, { autocomplete, search, sortBy }) =>
+            relation.query(filterAndSortUsers({
+              autocomplete,
+              term: search,
+              sort: sortBy
+            }))
         }}
       ],
       getters: {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
         pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
-        members: (c, { search, first, offset = 0, sortBy, autocomplete }) =>
-          fetchSearchQuerySet('forUsers', {
-            term: search,
-            communities: [c.id],
-            limit: first,
-            offset,
-            sort: sortBy || 'name',
-            autocomplete
-          }),
         posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,
@@ -317,20 +318,8 @@ export default function makeModels (userId, isAdmin) {
       model: Skill,
       attributes: ['id', 'name'],
       fetchMany: ({ autocomplete, first = 1000, offset = 0 }) =>
-        Skill.query(q => {
-          q.limit(first)
-          q.offset(offset)
-          q.orderByRaw('upper("name") asc')
-
-          if (autocomplete) {
-            q.whereRaw('name ilike ?', autocomplete + '%')
-          }
-          q.join('skills_users', 'skills_users.skill_id', 'skills.id')
-          q.join('communities_users', 'communities_users.user_id', 'skills_users.user_id')
-          q.where(function () {
-            this.whereIn('communities_users.community_id', myCommunityIds(userId))
-            .orWhereIn('communities_users.community_id', myNetworkCommunityIds(userId))
-          })
+        searchQuerySet('skills', {
+          autocomplete, first, offset, currentUserId: userId
         })
     },
 
@@ -402,19 +391,19 @@ export default function makeModels (userId, isAdmin) {
         'banner_url'
       ],
       relations: [
-        {moderators: {querySet: true}}
+        {moderators: {querySet: true}},
+        {members: {
+          querySet: true,
+          filter: (relation, { autocomplete, search, sortBy }) =>
+            relation.query(filterAndSortUsers({
+              autocomplete,
+              term: search,
+              sort: sortBy
+            }))
+        }}
       ],
       getters: {
         memberCount: n => n.memberCount(),
-        members: (n, { search, first, offset = 0, sortBy, autocomplete }) =>
-          fetchSearchQuerySet('forUsers', {
-            term: search,
-            network: n.id,
-            limit: first,
-            offset,
-            sort: sortBy || 'name',
-            autocomplete
-          }),
         posts: (n, { search, first, offset = 0, sortBy, filter, topic }) =>
           fetchSearchQuerySet('forPosts', {
             term: search,

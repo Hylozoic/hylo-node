@@ -1,5 +1,6 @@
 import { makeFilterToggle } from './filters'
 import makeModels from './makeModels'
+import { expectEqualQuery } from '../../test/setup/helpers'
 
 describe('makeFilterToggle', () => {
   var filterFn = relation => relation.query(q => 'filtered')
@@ -15,8 +16,16 @@ describe('makeFilterToggle', () => {
 })
 
 const myId = 42
-const myCommunityIds = `(select "community_id" from "communities_users"
-where "user_id" = ${myId} and "active" = true)`
+
+const selectMyCommunityIds = `(select "community_id" from "communities_users"
+  where "user_id" = ${myId} and "active" = true)`
+
+const selectMyNetworkCommunityIds = `(select "id" from "communities"
+  where "network_id" in (
+    select distinct "network_id" from "communities"
+    where "id" in ${selectMyCommunityIds}
+    and network_id is not null
+  ))`
 
 var models
 
@@ -29,7 +38,7 @@ describe('model filters', () => {
     it('filters down to memberships for communities the user is in', () => {
       const collection = models.Membership.filter(Membership.collection())
       expectEqualQuery(collection, `select * from "communities_users"
-        where "communities_users"."community_id" in ${myCommunityIds}`)
+        where "communities_users"."community_id" in ${selectMyCommunityIds}`)
     })
   })
 
@@ -39,7 +48,7 @@ describe('model filters', () => {
       expectEqualQuery(collection, `select * from "users"
         where "users"."id" in (
           select "user_id" from "communities_users"
-          where "communities_users"."community_id" in ${myCommunityIds}
+          where "communities_users"."community_id" in ${selectMyCommunityIds}
         )`)
     })
   })
@@ -52,14 +61,8 @@ describe('model filters', () => {
           on "posts"."id" = "communities_posts"."post_id"
         where "posts"."active" = true
         and (
-          "communities_posts"."community_id" in ${myCommunityIds}
-          or "communities_posts"."community_id" in (
-            select "id" from "communities" where "network_id" in (
-              select distinct "network_id" from "communities"
-              where "id" in ${myCommunityIds}
-              and network_id is not null
-            )
-          )
+          "communities_posts"."community_id" in ${selectMyCommunityIds}
+          or "communities_posts"."community_id" in ${selectMyNetworkCommunityIds}
         )`)
     })
   })
@@ -75,23 +78,11 @@ describe('model filters', () => {
           "comments"."post_id" in (
             select "post_id" from "follows" where "user_id" = 42
           )
-          or (
-            ("communities_posts"."community_id" in ${myCommunityIds}
-            or "communities_posts"."community_id" in (
-              select "id" from "communities" where "network_id" in (
-                select distinct "network_id" from "communities"
-                where "id" in ${myCommunityIds}
-                and network_id is not null
-              )
-            )
-          )
-        )
-      )`)
+          or ((
+            "communities_posts"."community_id" in ${selectMyCommunityIds}
+            or "communities_posts"."community_id" in ${selectMyNetworkCommunityIds}
+          ))
+        )`)
     })
   })
 })
-
-function expectEqualQuery (collection, expected) {
-  const reformatted = expected.replace(/\n\s*/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')')
-  expect(collection.query().toString()).to.equal(reformatted)
-}

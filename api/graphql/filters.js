@@ -1,4 +1,5 @@
 import { curry } from 'lodash'
+import { myCommunityIds, myNetworkCommunityIds } from '../models/util/queryFilters'
 
 export function makeFilterToggle (enabled) {
   return filterFn => relation =>
@@ -54,15 +55,6 @@ export const commentFilter = userId => relation => relation.query(q => {
 
 export const activePost = relation =>
   relation.query(q => q.where('posts.active', true))
-
-export function myCommunityIds (userId) {
-  return Membership.query().select('community_id')
-  .where({user_id: userId, active: true})
-}
-
-export function myNetworkCommunityIds (userId) {
-  return Network.activeCommunityIds(userId, true)
-}
 
 export function communityTopicFilter (userId, {
   autocomplete,

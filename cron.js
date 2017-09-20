@@ -40,8 +40,7 @@ const daily = now => {
 
 const hourly = now => {
   const tasks = [
-    updateFromNexudus({dryRun: false}),
-    process.env.SERENDIPITY_ENABLED && Relevance.cron(1, 'hour')
+    updateFromNexudus({dryRun: false})
   ]
 
   switch (now.hour()) {
