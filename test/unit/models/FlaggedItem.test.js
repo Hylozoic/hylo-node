@@ -33,5 +33,11 @@ describe.only('FlaggedItem', () => {
       const p = FlaggedItem.create(Object.assign({}, item, { reason: undefined }))
       return expect(p).to.be.rejectedWith(/Reason must be a string/)
     })
+
+    it('rejects on a huge reason', () => {
+      const reason = new Array(6000).join('z')
+      const p = FlaggedItem.create(Object.assign({}, item, { reason }))
+      return expect(p).to.be.rejectedWith(/Reason must be less than/)
+    })
   })
 })

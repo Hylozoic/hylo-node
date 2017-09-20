@@ -57,7 +57,7 @@
     "graphql": "^0.8.2",
     "graphql-tools": "^0.10.1",
     "grunt": "1.0.0",
-    "hylo-utils": "https://github.com/Hylozoic/hylo-utils#2a89e9b",
+    "hylo-utils": "Hylozoic/hylo-utils#4202b24",
     "image-size": "^0.3.5",
     "knex": "0.12.1",
     "kue": "^0.11.0",

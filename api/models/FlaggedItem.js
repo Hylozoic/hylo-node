@@ -25,7 +25,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     const invalidReason = validateFlaggedItem.reason(reason)
-    if (invalidReason) Promise.reject(invalidReason)
+    if (invalidReason) return Promise.reject(invalidReason)
 
     const invalidLink = validateFlaggedItem.link(link)
     if (invalidLink) return Promise.reject(invalidLink)
