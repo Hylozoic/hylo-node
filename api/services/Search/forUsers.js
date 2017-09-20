@@ -1,5 +1,5 @@
 import { countTotal } from '../../../lib/util/knex'
-import addTermToQueryBuilder from './addTermToQueryBuilder'
+import { filterAndSortUsers } from './util'
 
 export default function (opts) {
   const { communities, network } = opts
@@ -8,17 +8,16 @@ export default function (opts) {
     qb.offset(opts.offset || 0)
     qb.where('users.active', '=', true)
 
+    filterAndSortUsers({
+      autocomplete: opts.autocomplete,
+      search: opts.term,
+      sortBy: opts.sort
+    }, qb)
+
     if (opts.sort === 'join') {
       if (!communities || communities.length !== 1) {
         throw new Error('When sorting by join date, you must specify exactly one community.')
       }
-      qb.orderBy('communities_users.created_at', 'desc')
-      qb.groupBy(['users.id', 'communities_users.created_at'])
-    } else {
-      qb.orderBy(opts.sort || 'name', 'asc')
-
-      // prevent duplicates due to the joins
-      qb.groupBy('users.id')
     }
 
     countTotal(qb, 'users', opts.totalColumnName)
@@ -36,26 +35,21 @@ export default function (opts) {
       qb.join('communities', 'communities.id', 'communities_users.community_id')
     }
 
-    if (opts.autocomplete) {
-      addTermToQueryBuilder(opts.autocomplete, qb, {
-        columns: ['users.name']
-      })
-    }
-
-    if (opts.term) {
-      qb.where('users.id', 'in', FullTextSearch.search({
-        term: opts.term,
-        type: 'person',
-        subquery: true
-      }))
-    }
-
     if (opts.start_time && opts.end_time) {
       qb.whereRaw('users.created_at between ? and ?', [opts.start_time, opts.end_time])
     }
 
     if (opts.exclude) {
       qb.whereNotIn('id', opts.exclude)
+    }
+
+    if (network || (communities && communities.length > 1)) {
+      // prevent duplicates due to the joins
+      if (opts.sort === 'join') {
+        qb.groupBy(['users.id', 'communities_users.created_at'])
+      } else {
+        qb.groupBy('users.id')
+      }
     }
   })
 }

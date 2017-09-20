@@ -1,4 +1,6 @@
 import { curry } from 'lodash'
+import { myCommunityIds, myNetworkCommunityIds } from '../models/util/queryFilters'
+import { hasJoin } from '../../lib/util/knex'
 
 export function makeFilterToggle (enabled) {
   return filterFn => relation =>
@@ -33,7 +35,9 @@ export const sharedNetworkMembership = curry((tableName, userId, relation) =>
       case 'communities':
         return filterCommunities(q, 'communities.id', userId)
       case 'posts':
-        q.join('communities_posts', 'posts.id', 'communities_posts.post_id')
+        if (!hasJoin(relation, 'communities_posts')) {
+          q.join('communities_posts', 'posts.id', 'communities_posts.post_id')
+        }
         return filterCommunities(q, 'communities_posts.community_id', userId)
       case 'votes':
         q.join('communities_posts', 'votes.post_id', 'communities_posts.post_id')
@@ -54,15 +58,6 @@ export const commentFilter = userId => relation => relation.query(q => {
 
 export const activePost = relation =>
   relation.query(q => q.where('posts.active', true))
-
-export function myCommunityIds (userId) {
-  return Membership.query().select('community_id')
-  .where({user_id: userId, active: true})
-}
-
-export function myNetworkCommunityIds (userId) {
-  return Network.activeCommunityIds(userId, true)
-}
 
 export function communityTopicFilter (userId, {
   autocomplete,

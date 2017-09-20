@@ -1,5 +1,6 @@
-require(require('root-path')('test/setup'))
-var moment = require('moment-timezone')
+import moment from 'moment-timezone'
+import { expectEqualQuery } from '../../setup/helpers'
+import setup from '../../setup'
 
 describe('Search', function () {
   describe('.forPosts', function () {
@@ -10,7 +11,7 @@ describe('Search', function () {
       var startTimeAsString = startTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
       var endTimeAsString = endTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
 
-      var query = Search.forPosts({
+      const search = Search.forPosts({
         limit: 5,
         offset: 7,
         users: [42, 41],
@@ -21,35 +22,27 @@ describe('Search', function () {
         start_time: startTime.toDate(),
         end_time: endTime.toDate(),
         sort: 'posts.updated_at'
-      }).query().toString()
+      })
 
-      var expected = format(`
-        select posts.*, count(*) over () as total, "communities_posts"."pinned"
+      expectEqualQuery(search, `select posts.*, count(*) over () as total, "communities_posts"."pinned"
         from "posts"
         inner join "follows" on "follows"."post_id" = "posts"."id"
         inner join "communities_posts" on "communities_posts"."post_id" = "posts"."id"
         where "posts"."active" = true
         and "posts"."user_id" in (42, 41)
-        and (((to_tsvector('english', posts.name) @@ to_tsquery('milk:* & toast:*'))
-          or (to_tsvector('english', posts.description) @@ to_tsquery('milk:* & toast:*'))))
         and "follows"."user_id" = 37
         and (posts.user_id != 37 or posts.user_id is null)
         and "type" = 'request'
-        and ((posts.created_at between '%s' and '%s')
-          or (posts.updated_at between '%s' and '%s'))
+        and ((posts.created_at between '${startTimeAsString}' and '${endTimeAsString}')
+          or (posts.updated_at between '${startTimeAsString}' and '${endTimeAsString}'))
+        and (((to_tsvector('english', posts.name) @@ to_tsquery('milk:* & toast:*'))
+        or (to_tsvector('english', posts.description) @@ to_tsquery('milk:* & toast:*'))))
         and "communities_posts"."community_id" in (9, 12)
         and "parent_post_id" is null
         group by "posts"."id", "communities_posts"."post_id", "communities_posts"."pinned"
         order by "posts"."updated_at" desc
         limit 5
-        offset 7
-      `.replace(/(\n\s*)/g, ' ').trim(),
-      startTimeAsString,
-      endTimeAsString,
-      startTimeAsString,
-      endTimeAsString)
-
-      expect(query).to.equal(expected)
+        offset 7`)
     })
 
     it('excludes welcome and thread posts by default', () => {
@@ -76,12 +69,15 @@ describe('Search', function () {
       dog = new User({name: 'Mister Dog', email: 'iam@dog.org', active: true})
       catdog = new User({name: 'Cat Dog', email: 'iam@catdog.org', active: true})
       house = new Community({name: 'House', slug: 'House'})
-      return cat.save()
+
+      return setup.clearDb()
+      .then(() => cat.save())
       .then(() => dog.save())
       .then(() => catdog.save())
       .then(() => house.save())
       .then(() => cat.joinCommunity(house))
-      .then(() => FullTextSearch.createView(null, bookshelf.knex))
+      .then(() => FullTextSearch.dropView().catch(err => {})) // eslint-disable-line handle-callback-err
+      .then(() => FullTextSearch.createView())
     })
 
     function userSearchTests (key) {

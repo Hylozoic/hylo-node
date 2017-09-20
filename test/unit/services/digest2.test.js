@@ -452,7 +452,7 @@ describe('community digest v2', () => {
 
     it('calls SendWithUs with expected data', function () {
       this.timeout(10000)
-      const clickthroughParams = `?ctt=digest_email&cti=${u1.id}&ctcn=${community.get('name')}`
+      const clickthroughParams = `?ctt=digest_email&cti=${u1.id}&ctcn=${encodeURIComponent(community.get('name'))}`
 
       return sendAllDigests('daily').then(result => {
         expect(result).to.deep.equal([[community.id, 1]])
