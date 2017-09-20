@@ -1,4 +1,4 @@
-import { makeFilterToggle } from './filters'
+import { makeFilterToggle, sharedNetworkMembership } from './filters'
 import makeModels from './makeModels'
 import { expectEqualQuery } from '../../test/setup/helpers'
 
@@ -84,5 +84,13 @@ describe('model filters', () => {
           ))
         )`)
     })
+  })
+})
+
+describe('sharedNetworkMembership', () => {
+  it('supports a limited set of tables', () => {
+    expect(() => {
+      sharedNetworkMembership('foo', 42, Post.collection())
+    }).to.throw(/does not support foo/)
   })
 })

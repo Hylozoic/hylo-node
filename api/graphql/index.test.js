@@ -2,7 +2,6 @@ import { createRequestHandler } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
 import { sortBy } from 'lodash/fp'
-import { wait } from '../../test/setup/helpers'
 import { updateNetworkMemberships } from '../models/post/util'
 
 describe('graphql request handler', () => {
@@ -414,6 +413,47 @@ describe('graphql request handler', () => {
                   {title: post.get('name')}
                 ]
               }
+            }
+          }
+        })
+      })
+    })
+  })
+
+  describe('search', () => {
+    beforeEach(() => {
+      return FullTextSearch.dropView().catch(() => {})
+      .then(() => FullTextSearch.createView())
+    })
+
+    it('works', () => {
+      req.body = {
+        query: `{
+          search(term: "${post.get('name').substring(0, 4)}") {
+            items {
+              content {
+                __typename
+                ... on Post {
+                  title
+                }
+              }
+            }
+          }
+        }`
+      }
+
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            search: {
+              items: [
+                {
+                  content: {
+                    __typename: 'Post',
+                    title: post.get('name')
+                  }
+                }
+              ]
             }
           }
         })

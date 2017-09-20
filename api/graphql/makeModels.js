@@ -1,4 +1,4 @@
-import searchQuerySet, { fetchSearchQuerySet } from './searchQuerySet'
+import searchQuerySet from './searchQuerySet'
 import {
   commentFilter,
   communityTopicFilter,
@@ -10,7 +10,11 @@ import {
 import { myCommunityIds } from '../models/util/queryFilters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
-import { filterAndSortUsers } from '../services/Search/forUsers'
+import {
+  filterAndSortCommunities,
+  filterAndSortPosts,
+  filterAndSortUsers
+} from '../services/Search/util'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -99,7 +103,7 @@ export default function makeModels (userId, isAdmin) {
       filter: nonAdminFilter(sharedCommunityMembership('users', userId)),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
-        searchQuerySet('forUsers', {
+        searchQuerySet('users', {
           term: search,
           limit: first,
           offset,
@@ -147,7 +151,7 @@ export default function makeModels (userId, isAdmin) {
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
-        searchQuerySet('forPosts', {
+        searchQuerySet('posts', {
           term: search,
           limit: first,
           offset,
@@ -197,10 +201,16 @@ export default function makeModels (userId, isAdmin) {
           alias: 'members',
           querySet: true,
           filter: (relation, { autocomplete, search, sortBy }) =>
-            relation.query(filterAndSortUsers({
-              autocomplete,
-              term: search,
-              sort: sortBy
+            relation.query(filterAndSortUsers({ autocomplete, search, sortBy }))
+        }},
+        {posts: {
+          querySet: true,
+          filter: (relation, { search, sortBy, topic }) =>
+            relation.query(filterAndSortPosts({
+              search,
+              sortBy,
+              topic,
+              showPinnedFirst: true
             }))
         }}
       ],
@@ -208,16 +218,6 @@ export default function makeModels (userId, isAdmin) {
         popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
         pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
-        posts: (c, { search, first, offset = 0, sortBy, filter, topic }) =>
-          fetchSearchQuerySet('forPosts', {
-            term: search,
-            communities: [c.id],
-            limit: first,
-            offset,
-            type: filter,
-            sort: sortBy,
-            topic
-          }),
         invitePath: c =>
           Membership.hasModeratorRole(userId, c.id)
           .then(isModerator => {
@@ -334,7 +334,7 @@ export default function makeModels (userId, isAdmin) {
         {communityTags: {alias: 'communityTopics', querySet: true}}
       ],
       fetchMany: ({ first, offset = 0, name, autocomplete }) =>
-        searchQuerySet('forTags', {limit: first, offset, name, autocomplete})
+        searchQuerySet('tags', {limit: first, offset, name, autocomplete})
     },
 
     Notification: {
@@ -388,43 +388,27 @@ export default function makeModels (userId, isAdmin) {
         'description',
         'created_at',
         'avatar_url',
-        'banner_url'
+        'banner_url',
+        'memberCount'
       ],
       relations: [
         {moderators: {querySet: true}},
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, search, sortBy }) =>
-            relation.query(filterAndSortUsers({
-              autocomplete,
-              term: search,
-              sort: sortBy
-            }))
+            relation.query(filterAndSortUsers({ autocomplete, search, sortBy }))
+        }},
+        {posts: {
+          querySet: true,
+          filter: (relation, { search, sortBy, topic }) =>
+            relation.query(filterAndSortPosts({ search, sortBy, topic }))
+        }},
+        {communities: {
+          querySet: true,
+          filter: (relation, { search, sortBy }) =>
+            relation.query(filterAndSortCommunities({ search, sortBy }))
         }}
-      ],
-      getters: {
-        memberCount: n => n.memberCount(),
-        posts: (n, { search, first, offset = 0, sortBy, filter, topic }) =>
-          fetchSearchQuerySet('forPosts', {
-            term: search,
-            networks: [n.id],
-            limit: first,
-            offset,
-            type: filter,
-            sort: sortBy,
-            topic
-          }),
-        communities: (n, { search, first, offset = 0, sortBy, order, filter, topic }) =>
-          fetchSearchQuerySet('forCommunities', {
-            term: search,
-            networks: [n.id],
-            limit: first,
-            offset,
-            sort: sortBy,
-            topic,
-            order
-          })
-      }
+      ]
     },
 
     Attachment: {
