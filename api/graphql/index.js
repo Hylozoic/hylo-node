@@ -37,6 +37,7 @@ import {
   createCommunity,
   deleteComment
 } from './mutations'
+import InvitationService from '../services/InvitationService'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
@@ -106,13 +107,8 @@ function createSchema (userId, isAdmin) {
       network: (root, { id, slug }) =>  // you can specify id or slug, but not both
         fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
       skills: (root, args) => fetchMany('Skill', args),
-      checkInvitation: (root, { invitationToken }) =>
-        Invitation.query()
-        .where({token: invitationToken, used_by_id: null})
-        .count()
-        .then(result => {
-          return {valid: result[0].count !== '0'}
-        })
+      checkInvitation: (root, { invitationToken, betaAccessCode }) =>
+        InvitationService.check(userId, invitationToken, betaAccessCode)
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
@@ -151,7 +147,7 @@ function createSchema (userId, isAdmin) {
       expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
-      useInvitation: (root, { invitationToken }) => useInvitation(userId, invitationToken),
+      useInvitation: (root, { invitationToken, betaAccessCode }) => useInvitation(userId, invitationToken, betaAccessCode),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
       removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
       createCommunity: (root, { data }) => createCommunity(userId, data),

@@ -137,12 +137,57 @@ module.exports = {
     })
   },
 
-  use: (userId, invitationToken) => {
-    return Invitation.where({token: invitationToken}).fetch()
-    .then(invitation => {
-      if (!invitation) throw new Error('not found')
-      if (invitation.isExpired()) throw new Error('expired')
-      return invitation.use(userId)
-    })
+  check: (userId, token, betaAccessCode) => {
+    if (betaAccessCode) {
+      return Community.query(qb => {
+        qb.whereRaw('lower(beta_access_code) = lower(?)', betaAccessCode)
+        qb.where('active', true)
+      })
+      .count()
+      .then(count => {
+        return {valid: count !== '0'}
+      })
+    }
+    if (token) {
+      return Invitation.query()
+      .where({token, used_by_id: null})
+      .count()
+      .then(result => {
+        return {valid: result[0].count !== '0'}
+      })
+    }
+  },
+
+  use: (userId, token, betaAccessCode) => {
+    if (betaAccessCode) {
+      var community // , preexisting
+      return Community.query(qb => {
+        qb.whereRaw('lower(beta_access_code) = lower(?)', betaAccessCode)
+        qb.where('active', true)
+      })
+      .fetch()
+      .tap(c => { community = c })
+      .then(() => !!community && Membership.create(userId, community.id))
+      .catch(err => {
+        if (err.message && err.message.includes('duplicate key value')) {
+          // preexisting = true
+          return true
+        } else {
+          throw new Error(err.message)
+        }
+      })
+      // we get here if the membership was created successfully, or it already existed
+      .then(ok => ok && Membership.find(userId, community.id, {includeInactive: true}))
+      .then(membership => membership && !membership.get('active') &&
+        membership.save({active: true}, {patch: true}))
+    }
+    if (token) {
+      return Invitation.where({token}).fetch()
+      .then(invitation => {
+        if (!invitation) throw new Error('not found')
+        if (invitation.isExpired()) throw new Error('expired')
+        return invitation.use(userId)
+      })
+    }
   }
 }
