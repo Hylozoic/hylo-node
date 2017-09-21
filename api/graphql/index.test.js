@@ -512,7 +512,7 @@ describe('graphql request handler', () => {
     })
   })
 
-  describe.only('removeSkill', () => {
+  describe('removeSkill', () => {
     var skill1, skill2
 
     before(() => {
