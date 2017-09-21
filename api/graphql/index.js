@@ -144,7 +144,7 @@ function createSchema (userId, isAdmin) {
       deletePost: (root, { id }) =>
         deletePost(userId, id),
       addSkill: (root, { name }) => addSkill(userId, name),
-      removeSkill: (root, { id }) => removeSkill(userId, id),
+      removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
       removeMember: (root, { personId, communityId }) => removeMember(userId, personId, communityId),
       regenerateAccessCode: (root, { communityId }) => regenerateAccessCode(userId, communityId),
       createInvitation: (root, {communityId, data}) => createInvitation(userId, communityId, data),

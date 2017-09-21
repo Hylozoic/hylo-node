@@ -63,6 +63,12 @@ module.exports = {
     }, attrs))
   },
 
+  skill: attrs => {
+    return new Skill(merge({
+      name: faker.lorem.word()
+    }, attrs))
+  },
+
   mock: {
     request: function () {
       return {
