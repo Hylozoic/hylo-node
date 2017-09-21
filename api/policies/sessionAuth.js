@@ -9,7 +9,6 @@ var fail = function (res) {
 
 module.exports = function (req, res, next) {
   if (UserSession.isLoggedIn(req)) {
-    console.log('userId', req.session.userId)
     return next()
   }
 
