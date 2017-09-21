@@ -5,7 +5,7 @@ import { sortBy } from 'lodash/fp'
 import { updateNetworkMemberships } from '../models/post/util'
 
 describe('graphql request handler', () => {
-  var handler, req, res, user, user2, community, network, post
+  var handler, req, res, user, user2, community, network, post, comment, media
 
   before(() => {
     handler = createRequestHandler()
@@ -15,11 +15,15 @@ describe('graphql request handler', () => {
     community = factories.community()
     network = factories.network()
     post = factories.post()
+    comment = factories.comment()
+    media = factories.media()
     return network.save()
     .then(() => community.save({network_id: network.id}))
     .then(() => user.save())
     .then(() => user2.save())
     .then(() => post.save({user_id: user.id}))
+    .then(() => comment.save({post_id: post.id}))
+    .then(() => media.save({comment_id: comment.id}))
     .then(() => Promise.all([
       community.posts().attach(post),
       community.users().attach({
@@ -91,17 +95,16 @@ describe('graphql request handler', () => {
   })
 
   describe('with a complex query', () => {
-    var thread, comment, message
+    var thread, message
 
     before(() => {
       thread = factories.post({type: Post.Type.THREAD})
 
       return thread.save()
       .then(() => {
-        comment = factories.comment({post_id: post.id, user_id: user2.id})
         message = factories.comment({post_id: thread.id, user_id: user2.id})
         return Promise.all([
-          comment.save(),
+          comment.save({user_id: user2.id}),
           message.save(),
           post.followers().attach(user2),
           thread.followers().attach(user)
@@ -226,6 +229,54 @@ describe('graphql request handler', () => {
                       }
                     ],
                     participantsTotal: 2
+                  }
+                ]
+              }
+            }
+          }
+        })
+      })
+    })
+  })
+
+  describe('querying Comment attachments', () => {
+    beforeEach(() => {
+      req.body = {
+        query: `{
+          post (id: ${post.id}) {
+            comments {
+              items {
+                text
+                attachments {
+                  id
+                  type
+                  position
+                  url
+                }
+              }
+            }
+          }
+        }`
+      }
+    })
+
+    it('responds as expected', () => {
+      return handler(req, res).then(() => {
+        expectJSON(res, {
+          data: {
+            post: {
+              comments: {
+                items: [
+                  {
+                    text: comment.get('text'),
+                    attachments: [
+                      {
+                        id: media.id,
+                        type: media.get('type'),
+                        position: media.get('position'),
+                        url: media.get('url')
+                      }
+                    ]
                   }
                 ]
               }

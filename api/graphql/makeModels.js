@@ -236,7 +236,11 @@ export default function makeModels (userId, isAdmin) {
       ],
       relations: [
         'post',
-        {user: {alias: 'creator'}}
+        {user: {alias: 'creator'}},
+        {media: {
+          alias: 'attachments',
+          arguments: ({ type }) => [type]
+        }}
       ],
       filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true

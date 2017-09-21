@@ -55,6 +55,14 @@ module.exports = {
     }, attrs))
   },
 
+  media: attrs => {
+    return new Media(merge({
+      position: 0,
+      type: 'image',
+      url: faker.internet.url()
+    }, attrs))
+  },
+
   mock: {
     request: function () {
       return {
