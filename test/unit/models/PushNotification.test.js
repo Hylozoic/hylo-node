@@ -2,7 +2,7 @@ var setup = require(require('root-path')('test/setup'))
 var nock = require('nock')
 
 describe('PushNotification', function () {
-  var pushNotification
+  var pushNotification, tmpEnvVar
 
   before(() => {
     pushNotification = new PushNotification({
@@ -13,7 +13,13 @@ describe('PushNotification', function () {
       platform: 'ios_macos'
     })
 
+    tmpEnvVar = process.env.DISABLE_PUSH_NOTIFICATIONS
+    process.env.DISABLE_PUSH_NOTIFICATIONS = true
     return setup.clearDb().then(() => pushNotification.save())
+  })
+
+  after(() => {
+    process.env.DISABLE_PUSH_NOTIFICATIONS = tmpEnvVar
   })
 
   describe('.send', () => {
@@ -22,13 +28,13 @@ describe('PushNotification', function () {
       .reply(200, {result: 'success'})
     })
 
-    it('sets sent_at', function () {
+    it('sets sent_at and disabled', function () {
       return pushNotification.send()
       .then(result => {
-        expect(result.body).to.deep.equal({result: 'success'})
         return pushNotification.fetch()
         .then(pn => {
           expect(pn.get('sent_at')).to.not.equal(null)
+          expect(pn.get('disabled')).to.be.true
         })
       })
     })
