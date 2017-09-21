@@ -12,3 +12,4 @@ ratings:
   - lib/**
 exclude_paths:
 - "**/*.test.js"
+- migrations
