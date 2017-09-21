@@ -1,6 +1,3 @@
-// FIXME: this table duplicates the "device_token" value in Device, which is
-// probably not necessary
-
 import decode from 'ent/decode'
 import rollbar from 'rollbar'
 import truncate from 'trunc-html'
@@ -8,25 +5,31 @@ import truncate from 'trunc-html'
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
 
+  device: function () {
+    return this.belongsTo(Device)
+  },
+
   send: function (options) {
-    var deviceToken = this.get('device_token')
     var platform = this.getPlatform()
     var alert = this.get('alert')
     var path = this.get('path')
     var badgeNo = this.get('badge_no')
     const disabled = !!process.env.DISABLE_PUSH_NOTIFICATIONS
 
-    return this.save({sent_at: (new Date()).toISOString(), disabled}, options)
-    .then(pn => disabled ||
-      OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
-    .catch(e => {
-      const err = e instanceof Error ? e : new Error(e)
-      if (process.env.NODE_ENV !== 'production') throw err
-      rollbar.handleErrorWithPayloadData(err, {custom: {
-        server_token: process.env.ONESIGNAL_APP_ID,
-        device_token: deviceToken
-      }})
-    })
+    return this.load('device')
+    .then(() => this.relations.device && this.relations.device.get('token'))
+    .then(token =>
+      this.save({sent_at: (new Date()).toISOString(), disabled}, options)
+      .then(pn => disabled ||
+        OneSignal.notify(platform, token, alert, path, badgeNo))
+      .catch(e => {
+        const err = e instanceof Error ? e : new Error(e)
+        if (process.env.NODE_ENV !== 'production') throw err
+        rollbar.handleErrorWithPayloadData(err, {custom: {
+          server_token: process.env.ONESIGNAL_APP_ID,
+          device_id: this.relations.device.id
+        }})
+      }))
   },
 
   getPlatform: function () {
@@ -73,5 +76,9 @@ module.exports = bookshelf.Model.extend({
 
   textForApprovedJoinRequest: function (community, actor) {
     return `${actor.get('name')} approved your request to join ${community.get('name')}`
+  },
+
+  setupDeviceIds: function () {
+
   }
 })

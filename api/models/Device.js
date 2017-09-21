@@ -1,6 +1,10 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'devices',
 
+  pushNotifications: function () {
+    return this.hasMany(PushNotification)
+  },
+
   user: function () {
     return this.belongsTo(User, 'user_id')
   },
@@ -17,7 +21,7 @@ module.exports = bookshelf.Model.extend({
         alert,
         path,
         badge_no: user.get('new_notification_count') + count,
-        device_token: this.get('token'),
+        device_id: this.id,
         platform: this.get('platform'),
         queued_at: new Date().toISOString()
       }).save().then(push => push.send())))
@@ -29,7 +33,7 @@ module.exports = bookshelf.Model.extend({
       return
     }
     return PushNotification.forge({
-      device_token: device.get('token'),
+      device_id: this.id,
       alert: '',
       path: '',
       badge_no: 0,

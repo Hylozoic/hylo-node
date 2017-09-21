@@ -1,4 +1,4 @@
-require('../../setup')
+import '../../setup'
 import factories from '../../setup/factories'
 
 describe('Device', () => {
@@ -25,7 +25,7 @@ describe('Device', () => {
       .catch(err => {
         expect(err.message).to.equal('OneSignal.notify for device foo failed with status code 400')
       })
-      .then(() => PushNotification.where({device_token: 'foo'}).fetch())
+      .then(() => PushNotification.where({device_id: device.id}).fetch())
       .then(push => {
         expect(push).to.exist
         const queuedAt = push.get('queued_at')

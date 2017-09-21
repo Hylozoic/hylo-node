@@ -309,7 +309,7 @@ CREATE SEQUENCE device_seq
 --
 
 CREATE TABLE devices (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     user_id bigint,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
@@ -317,7 +317,8 @@ CREATE TABLE devices (
     token character varying(255),
     enabled boolean DEFAULT true,
     platform character varying(255),
-    version character varying(255)
+    version character varying(255),
+    player_id character varying(255)
 );
 
 
@@ -1006,7 +1007,8 @@ CREATE TABLE push_notifications (
     badge_no integer DEFAULT 0,
     platform character varying(255),
     path character varying(255),
-    disabled boolean
+    disabled boolean,
+    device_id bigint
 );
 
 
@@ -2823,6 +2825,14 @@ ALTER TABLE ONLY posts_users
 
 
 --
+-- Name: push_notifications_device_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY push_notifications
+    ADD CONSTRAINT push_notifications_device_id_foreign FOREIGN KEY (device_id) REFERENCES devices(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: skills_users_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2889,4 +2899,3 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
-

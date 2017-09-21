@@ -2,20 +2,27 @@ var setup = require(require('root-path')('test/setup'))
 var nock = require('nock')
 
 describe('PushNotification', function () {
-  var pushNotification, tmpEnvVar
+  var device, pushNotification, tmpEnvVar
 
   before(() => {
+    tmpEnvVar = process.env.DISABLE_PUSH_NOTIFICATIONS
+    process.env.DISABLE_PUSH_NOTIFICATIONS = true
+
+    device = new Device({
+      token: 'foo'
+    })
+
     pushNotification = new PushNotification({
-      device_token: 'abcd',
       alert: 'hi',
       path: '/p',
       badge_no: 7,
       platform: 'ios_macos'
     })
 
-    tmpEnvVar = process.env.DISABLE_PUSH_NOTIFICATIONS
-    process.env.DISABLE_PUSH_NOTIFICATIONS = true
-    return setup.clearDb().then(() => pushNotification.save())
+    return setup.clearDb()
+    .then(() => device.save())
+    .then(() => pushNotification.set('device_id', device.id))
+    .then(() => pushNotification.save())
   })
 
   after(() => {
