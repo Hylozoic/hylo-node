@@ -397,6 +397,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   gravatar: function (email) {
+    if (!email) email = ''
     var emailHash = crypto.createHash('md5').update(email).digest('hex')
     return `https://www.gravatar.com/avatar/${emailHash}?d=mm&s=140`
   },

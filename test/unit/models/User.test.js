@@ -393,4 +393,10 @@ describe('User', function () {
       .then(comments => expect(comments.length).to.equal(1))
     })
   })
+
+  describe('.gravatar', () => {
+    it('handles a blank email', () => {
+      expect(User.gravatar(null)).to.equal('https://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e?d=mm&s=140')
+    })
+  })
 })
