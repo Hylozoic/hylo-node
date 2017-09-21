@@ -1,9 +1,8 @@
-var url = require('url')
+import url from 'url'
 import { isEmpty } from 'lodash'
 import emitter from 'socket.io-emitter'
 import decode from 'ent/decode'
 import parseRedisUrl from 'parse-redis-url'
-
 import { userRoom } from '../services/Websockets'
 
 const TYPE = {

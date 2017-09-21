@@ -14,9 +14,11 @@ module.exports = bookshelf.Model.extend({
     var alert = this.get('alert')
     var path = this.get('path')
     var badgeNo = this.get('badge_no')
+    const disabled = !!process.env.DISABLE_PUSH_NOTIFICATIONS
 
-    return this.save({'sent_at': (new Date()).toISOString()}, options)
-    .then(pn => OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
+    return this.save({sent_at: (new Date()).toISOString(), disabled}, options)
+    .then(pn => disabled ||
+      OneSignal.notify(platform, deviceToken, alert, path, badgeNo))
     .catch(e => {
       const err = e instanceof Error ? e : new Error(e)
       if (process.env.NODE_ENV !== 'production') throw err

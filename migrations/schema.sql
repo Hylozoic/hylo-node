@@ -1005,7 +1005,8 @@ CREATE TABLE push_notifications (
     alert character varying(255) DEFAULT ''::character varying,
     badge_no integer DEFAULT 0,
     platform character varying(255),
-    path character varying(255)
+    path character varying(255),
+    disabled boolean
 );
 
 
