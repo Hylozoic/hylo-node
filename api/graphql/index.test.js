@@ -1,6 +1,7 @@
 import { createRequestHandler, makeMutations, makeQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
+import { spyify, unspyify } from '../../test/setup/helpers'
 import { some, sortBy } from 'lodash/fp'
 import { updateNetworkMemberships } from '../models/post/util'
 
@@ -623,7 +624,7 @@ describe('makeQueries', () => {
   let queries
 
   before(() => {
-    queries = makeQueries(10)
+    queries = makeQueries('10', spy(() => Promise.resolve({})), spy(() => Promise.resolve([])))
   })
 
   describe('communityExists', () => {
@@ -638,6 +639,30 @@ describe('makeQueries', () => {
       return community.save()
       .then(() => queries.communityExists(null, {slug: community.get('slug')}))
       .then(result => expect(result.exists).to.be.true)
+    })
+
+    it('returns false if the slug is not in use', () => {
+      return queries.communityExists(null, {slug: 'sofadogtotherescue'})
+      .then(result => expect(result.exists).to.be.false)
+    })
+  })
+
+  describe('notifications', () => {
+    beforeEach(() => spyify(User, 'resetNewNotificationCount'))
+    afterEach(() => unspyify(User, 'query'))
+
+    it('resets new notification count if requested', () => {
+      return queries.notifications(null, {resetCount: true})
+      .then(() => {
+        expect(User.resetNewNotificationCount).to.have.been.called.with('10')
+      })
+    })
+
+    it('does not reset new notification count if not requested', () => {
+      return queries.notifications(null, {})
+      .then(() => {
+        expect(User.resetNewNotificationCount).not.to.have.been.called()
+      })
     })
   })
 })

@@ -100,13 +100,7 @@ export function makeQueries (userId, fetchOne, fetchMany) {
     },
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
-      .tap(() => {
-        if (resetCount) {
-          return User.query()
-          .where('id', userId)
-          .update({new_notification_count: 0})
-        }
-      })
+      .tap(() => resetCount && User.resetNewNotificationCount(userId))
     },
     person: (root, { id }) => fetchOne('Person', id),
     messageThread: (root, { id }) => fetchOne('MessageThread', id),
