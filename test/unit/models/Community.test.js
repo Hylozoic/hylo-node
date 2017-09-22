@@ -58,4 +58,15 @@ describe('Community', () => {
       })
     })
   })
+
+  describe('.isSlugValid', () => {
+    it('rejects invalid slugs', () => {
+      expect(Community.isSlugValid('a b')).to.be.false
+      expect(Community.isSlugValid('IAM')).to.be.false
+      expect(Community.isSlugValid('wow!')).to.be.false
+      expect(Community.isSlugValid('uh_')).to.be.false
+      expect(Community.isSlugValid('a')).to.be.false
+      expect(Community.isSlugValid('abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdx')).to.be.false
+    })
+  })
 })

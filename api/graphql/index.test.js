@@ -1,7 +1,8 @@
-import { createRequestHandler } from './index'
+import { createRequestHandler, makeMutations, makeQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
-import { sortBy } from 'lodash/fp'
+import { spyify, unspyify } from '../../test/setup/helpers'
+import { some, sortBy } from 'lodash/fp'
 import { updateNetworkMemberships } from '../models/post/util'
 
 describe('graphql request handler', () => {
@@ -584,6 +585,83 @@ describe('graphql request handler', () => {
         })
         expect(user.relations.skills.length).to.equal(1)
         expect(user.relations.skills.first().id).to.equal(skill1.id)
+      })
+    })
+  })
+})
+
+describe('makeMutations', () => {
+  it('imports mutation functions correctly', () => {
+    // this test does not check the correctness of the functions used in
+    // mutations; it only checks that they are actually functions (i.e. it fails
+    // if there are any broken imports)
+
+    const mutations = makeMutations(11)
+    const root = {}
+    const args = {}
+
+    return Promise.each(Object.keys(mutations), key => {
+      const fn = mutations[key]
+      return Promise.resolve()
+      .then(() => fn(root, args))
+      .catch(err => {
+        if (some(pattern => err.message.match(pattern), [
+          /is not a function/,
+          /is not defined/
+        ])) {
+          expect.fail(null, null, `Mutation "${key}" is not imported correctly: ${err.message}`)
+        }
+
+        // FIXME: the console.log below shows a number of places where we need
+        // more validation and/or are exposing SQL errors to the end-user
+        // console.log(`${key}: ${err.message}`)
+      })
+    })
+  })
+})
+
+describe('makeQueries', () => {
+  let queries
+
+  before(() => {
+    queries = makeQueries('10', spy(() => Promise.resolve({})), spy(() => Promise.resolve([])))
+  })
+
+  describe('communityExists', () => {
+    it('throws an error if slug is invalid', () => {
+      expect(() => {
+        queries.communityExists(null, {slug: 'a b'})
+      }).to.throw()
+    })
+
+    it('returns true if the slug is in use', () => {
+      const community = factories.community()
+      return community.save()
+      .then(() => queries.communityExists(null, {slug: community.get('slug')}))
+      .then(result => expect(result.exists).to.be.true)
+    })
+
+    it('returns false if the slug is not in use', () => {
+      return queries.communityExists(null, {slug: 'sofadogtotherescue'})
+      .then(result => expect(result.exists).to.be.false)
+    })
+  })
+
+  describe('notifications', () => {
+    beforeEach(() => spyify(User, 'resetNewNotificationCount'))
+    afterEach(() => unspyify(User, 'query'))
+
+    it('resets new notification count if requested', () => {
+      return queries.notifications(null, {resetCount: true})
+      .then(() => {
+        expect(User.resetNewNotificationCount).to.have.been.called.with('10')
+      })
+    })
+
+    it('does not reset new notification count if not requested', () => {
+      return queries.notifications(null, {})
+      .then(() => {
+        expect(User.resetNewNotificationCount).not.to.have.been.called()
       })
     })
   })
