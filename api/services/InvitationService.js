@@ -137,12 +137,9 @@ module.exports = {
     })
   },
 
-  check: (userId, token, betaAccessCode) => {
-    if (betaAccessCode) {
-      return Community.query(qb => {
-        qb.whereRaw('lower(beta_access_code) = lower(?)', betaAccessCode)
-        qb.where('active', true)
-      })
+  check: (userId, token, accessCode) => {
+    if (accessCode) {
+      return Community.findByAccessCode(accessCode)
       .count()
       .then(count => {
         return {valid: count !== '0'}
@@ -158,13 +155,10 @@ module.exports = {
     }
   },
 
-  use: (userId, token, betaAccessCode) => {
-    if (betaAccessCode) {
+  use: (userId, token, accessCode) => {
+    if (accessCode) {
       var community // , preexisting
-      return Community.query(qb => {
-        qb.whereRaw('lower(beta_access_code) = lower(?)', betaAccessCode)
-        qb.where('active', true)
-      })
+      return Community.findByAccessCode(accessCode)
       .fetch()
       .tap(c => { community = c })
       .then(() => !!community && Membership.create(userId, community.id))

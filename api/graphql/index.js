@@ -107,8 +107,8 @@ function createSchema (userId, isAdmin) {
       network: (root, { id, slug }) =>  // you can specify id or slug, but not both
         fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
       skills: (root, args) => fetchMany('Skill', args),
-      checkInvitation: (root, { invitationToken, betaAccessCode }) =>
-        InvitationService.check(userId, invitationToken, betaAccessCode)
+      checkInvitation: (root, { invitationToken, accessCode }) =>
+        InvitationService.check(userId, invitationToken, accessCode)
     },
     Mutation: {
       updateMe: (root, { changes }) => updateMe(userId, changes),
@@ -147,7 +147,7 @@ function createSchema (userId, isAdmin) {
       expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
       resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
       reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
-      useInvitation: (root, { invitationToken, betaAccessCode }) => useInvitation(userId, invitationToken, betaAccessCode),
+      useInvitation: (root, { invitationToken, accessCode }) => useInvitation(userId, invitationToken, accessCode),
       flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
       removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
       createCommunity: (root, { data }) => createCommunity(userId, data),
