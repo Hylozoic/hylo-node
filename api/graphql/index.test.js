@@ -5,7 +5,11 @@ import { sortBy } from 'lodash/fp'
 import { updateNetworkMemberships } from '../models/post/util'
 
 describe('graphql request handler', () => {
-  var handler, req, res, user, user2, community, network, post, comment, media
+  var handler,
+    req, res,
+    user, user2,
+    community, network,
+    post, post2, comment, media
 
   before(() => {
     handler = createRequestHandler()
@@ -14,7 +18,8 @@ describe('graphql request handler', () => {
     user2 = factories.user()
     community = factories.community()
     network = factories.network()
-    post = factories.post()
+    post = factories.post({type: Post.Type.DISCUSSION})
+    post2 = factories.post({type: Post.Type.REQUEST})
     comment = factories.comment()
     media = factories.media()
     return network.save()
@@ -22,17 +27,22 @@ describe('graphql request handler', () => {
     .then(() => user.save())
     .then(() => user2.save())
     .then(() => post.save({user_id: user.id}))
+    .then(() => post2.save())
     .then(() => comment.save({post_id: post.id}))
     .then(() => media.save({comment_id: comment.id}))
     .then(() => Promise.all([
       community.posts().attach(post),
+      community.posts().attach(post2),
       community.users().attach({
         user_id: user.id,
         active: true,
         created_at: new Date(new Date().getTime() - 86400000)}),
       community.users().attach({user_id: user2.id, active: true})
     ]))
-    .then(() => updateNetworkMemberships(post))
+    .then(() => Promise.all([
+      updateNetworkMemberships(post),
+      updateNetworkMemberships(post2)
+    ]))
   })
 
   beforeEach(() => {
@@ -361,7 +371,7 @@ describe('graphql request handler', () => {
                 name
               }
             }
-            posts(first: 1) {
+            posts(first: 1, filter: "${Post.Type.REQUEST}") {
               items {
                 title
               }
@@ -383,7 +393,7 @@ describe('graphql request handler', () => {
               },
               posts: {
                 items: [
-                  {title: post.get('name')}
+                  {title: post2.get('name')}
                 ]
               }
             }
@@ -439,7 +449,7 @@ describe('graphql request handler', () => {
                 name
               }
             }
-            posts(first: 1) {
+            posts(first: 1, filter: "${Post.Type.REQUEST}") {
               items {
                 title
               }
@@ -461,7 +471,7 @@ describe('graphql request handler', () => {
               },
               posts: {
                 items: [
-                  {title: post.get('name')}
+                  {title: post2.get('name')}
                 ]
               }
             }

@@ -757,6 +757,7 @@ describe('PostController', () => {
       .then(() => {
         req.params.communityId = c4.id
         req.params.comments = true
+        req.params.type = 'project'
         res.locals.community = c4
         res.locals.membership = new Membership({
           user_id: fixtures.u1.id,

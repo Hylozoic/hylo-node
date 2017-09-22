@@ -30,17 +30,6 @@ export default function forPosts (opts) {
       }
     }
 
-    if (!opts.type || opts.type === 'all') {
-      qb.where(function () {
-        this.where('posts.type', 'not in', ['welcome', Post.Type.THREAD])
-        .orWhere('posts.type', null)
-      })
-    } else if (opts.type === 'discussion') {
-      qb.where({type: null})
-    } else if (opts.type !== 'all+welcome') {
-      qb.where({type: opts.type})
-    }
-
     if (opts.type === 'event' && opts.filter === 'future') {
       qb.whereRaw('(posts.starts_at > now())')
     }
@@ -66,6 +55,7 @@ export default function forPosts (opts) {
       search: opts.term,
       sortBy: opts.sort,
       topic: opts.tag,
+      type: opts.type,
       showPinnedFirst: get(opts.communities, 'length') === 1
     }, qb)
 
