@@ -43,8 +43,8 @@ export function reinviteAll (userId, communityId) {
   .then(() => ({success: true}))
 }
 
-export function useInvitation (userId, invitationToken) {
-  return InvitationService.use(userId, invitationToken)
+export function useInvitation (userId, invitationToken, accessCode) {
+  return InvitationService.use(userId, invitationToken, accessCode)
   .then(membership => ({membership}))
   .catch(error => ({error: error.message}))
 }

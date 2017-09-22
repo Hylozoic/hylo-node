@@ -236,6 +236,13 @@ module.exports = bookshelf.Model.extend(merge({
     return this.find(key, merge({active: true}, opts))
   },
 
+  queryByAccessCode: function (accessCode) {
+    return this.query(qb => {
+      qb.whereRaw('lower(beta_access_code) = lower(?)', accessCode)
+      qb.where('active', true)
+    })
+  },
+
   canInvite: function (userId, communityId) {
     return Community.find(communityId).then(function (community) {
       if (!community) return false

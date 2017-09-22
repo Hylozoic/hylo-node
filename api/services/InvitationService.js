@@ -137,12 +137,55 @@ module.exports = {
     })
   },
 
-  use: (userId, invitationToken) => {
-    return Invitation.where({token: invitationToken}).fetch()
-    .then(invitation => {
-      if (!invitation) throw new Error('not found')
-      if (invitation.isExpired()) throw new Error('expired')
-      return invitation.use(userId)
-    })
+  check: (userId, token, accessCode) => {
+    if (accessCode) {
+      return Community.queryByAccessCode(accessCode)
+      .count()
+      .then(count => {
+        return {valid: count !== '0'}
+      })
+    }
+    if (token) {
+      return Invitation.query()
+      .where({token, used_by_id: null})
+      .count()
+      .then(result => {
+        return {valid: result[0].count !== '0'}
+      })
+    }
+  },
+
+  use: (userId, token, accessCode) => {
+    if (accessCode) {
+      var community // , preexisting
+      return Community.queryByAccessCode(accessCode)
+      .fetch()
+      .tap(c => { community = c })
+      .then(() => !!community && Membership.create(userId, community.id))
+      .catch(err => {
+        if (err.message && err.message.includes('duplicate key value')) {
+          // preexisting = true
+          return true
+        } else {
+          throw new Error(err.message)
+        }
+      })
+      // we get here if the membership was created successfully, or it already existed
+      .then(ok => ok && Membership.find(userId, community.id, {includeInactive: true}))
+      .then(membership => {
+        if (membership && !membership.get('active')) {
+          return membership.save({active: true}, {patch: true})
+        }
+        return membership
+      })
+    }
+    if (token) {
+      return Invitation.where({token}).fetch()
+      .then(invitation => {
+        if (!invitation) throw new Error('not found')
+        if (invitation.isExpired()) throw new Error('expired')
+        return invitation.use(userId)
+      })
+    }
   }
 }

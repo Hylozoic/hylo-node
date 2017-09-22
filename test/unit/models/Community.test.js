@@ -38,4 +38,24 @@ describe('Community', () => {
         .then(popularSkills => expect(popularSkills).to.deep.equal(['skill1', 'skill2', 'skill3']))
     })
   })
+
+  describe('.queryByAccessCode', () => {
+    let community
+
+    before(() => {
+      return factories.community({active: true})
+      .save()
+      .then(c => { community = c })
+    })
+
+    it('finds and fetches a community by accessCode', () => {
+      const communityId = community.get('id')
+      const accessCode = community.get('beta_access_code')
+      return Community.queryByAccessCode(accessCode)
+      .fetch()
+      .then(c => {
+        return expect(c.id).to.equal(communityId)
+      })
+    })
+  })
 })

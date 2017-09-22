@@ -1,17 +1,105 @@
-/* globals InvitationService */
 import { markdown } from 'hylo-utils/text'
 var root = require('root-path')
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 const { mockify } = require(root('test/setup/helpers'))
+var InvitationService = require(root('api/services/InvitationService'))
 
 describe('InvitationService', () => {
-  var community, inviter
+  var community, inviter, invitee, invitation
 
   before(() => {
     inviter = factories.user()
+    invitee = factories.user()
     community = factories.community()
-    return Promise.join(inviter.save(), community.save())
+    return Promise.join(inviter.save(), invitee.save(), community.save())
+  })
+
+  describe('check', () => {
+    before(() => {
+      invitation = factories.invitation()
+      return invitation.save({
+        invited_by_id: inviter.id,
+        community_id: community.id
+      })
+    })
+
+    it('should find a community by a valid accessCode', () => {
+      return InvitationService.check(invitee.get('id'), null, community.get('beta_access_code'))
+      .then(result =>
+        expect(result.valid).to.equal(true)
+      )
+    })
+
+    it('should find a community by a valid token', () => {
+      const userId = invitee.get('id')
+      const token = invitation.get('token')
+      return InvitationService.check(userId, token, null)
+      .then(result =>
+        expect(result.valid).to.equal(true)
+      )
+    })
+
+    it('should find a community by accessCode if both an accessCode and token are provided', () => {
+      const userId = invitee.get('id')
+      const accessCode = community.get('beta_access_code')
+      const token = 'INVALIDTOKEN'
+      InvitationService.check(userId, token, accessCode).then(result =>
+        expect(result.valid).to.equal(true)
+      )
+    })
+  })
+
+  describe('use', () => {
+    before(() => {
+      invitation = factories.invitation()
+      return invitation.save({
+        invited_by_id: inviter.get('id'),
+        community_id: community.get('id')
+      })
+    })
+
+    it('should join the invitee to community if beta_access_code is valid', () => {
+      const accessCode = community.get('beta_access_code')
+      return InvitationService.use(invitee.get('id'), null, accessCode)
+      .then(membership =>
+        expect(membership.attributes).to.contain({
+          user_id: invitee.get('id'),
+          community_id: community.get('id'),
+          active: true
+        })
+      )
+    })
+
+    it('should join the invitee to community if token is valid', () => {
+      const userId = invitee.get('id')
+      const token = invitation.get('token')
+      return InvitationService.use(userId, token, null)
+      .then(membership =>
+        expect(membership.attributes).to.contain({
+          user_id: invitee.get('id'),
+          community_id: community.get('id'),
+          active: true
+        })
+      )
+    })
+
+    it('should join the invitee to community by accessCode if both an accessCode and token are provided', () => {
+      const userId = invitee.get('id')
+      const token = invitation.get('token')
+      const accessCode = community.get('beta_access_code')
+      return InvitationService.use(userId, token, accessCode)
+      .then(membership => {
+        invitation.fetch().then(updatedInvitation => {
+          expect(updatedInvitation.get('used_by_id')).to.equal(invitee.get('id'))
+          return expect(membership.attributes).to.contain({
+            user_id: invitee.get('id'),
+            community_id: community.get('id'),
+            active: true
+          })
+        })
+      })
+    })
   })
 
   describe('create', () => {
