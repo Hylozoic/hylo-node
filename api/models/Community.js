@@ -345,8 +345,8 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
   isSlugValid: function (slug) {
-    const regex = /^[0-9a-z\s-]+$/
-    return regex.test(slug) && slug.length <= 40
+    const regex = /^[0-9a-z-]{2,40}$/
+    return regex.test(slug)
   }
 })
 
