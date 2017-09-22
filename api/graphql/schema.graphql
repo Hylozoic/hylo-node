@@ -505,39 +505,40 @@ input UserSettingsInput {
 }
 
 type Mutation {
-  updateMe(changes: MeInput): Me
-  createPost(data: PostInput): Post
-  updatePost(id: ID, data: PostInput): Post
-  findOrCreateThread(data: MessageThreadInput): MessageThread
-  findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
+  addModerator(personId: ID, communityId: ID): Community
+  addSkill(name: String): Skill
   createComment(data: CommentInput): Comment
+  createCommunity(data: CommunityInput): Membership
+  createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
   createMessage(data: MessageInput): Message
+  createPost(data: PostInput): Post
+  deleteComment(id: ID): GenericResult
+  deletePost(id: ID): GenericResult
+  expireInvitation(invitationId: ID): GenericResult
+  findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
+  findOrCreateThread(data: MessageThreadInput): MessageThread
+  flagInappropriateContent(data: InappropriateContentInput): GenericResult
   leaveCommunity(id: ID): ID
-  vote(postId: ID, isUpvote: Boolean): Post
-  subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
-  updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
-  updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
-  markAllActivitiesRead: GenericResult
   markActivityRead(id: ID): Activity
+  markAllActivitiesRead: GenericResult
+  regenerateAccessCode(communityId: ID): Community
+  registerDevice(playerId: String, version: String): GenericResult
+  reinviteAll(communityId: ID): GenericResult,
+  removeMember(personId: ID, communityId: ID): Community
+  removeModerator(personId: ID, communityId: ID): Community
+  removePost(postId: ID, slug: String, communityId: ID): GenericResult
+  removeSkill(id: ID, name: String): GenericResult
+  resendInvitation(invitationId: ID): GenericResult
+  subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
-  addModerator(personId: ID, communityId: ID): Community
-  removeModerator(personId: ID, communityId: ID): Community
+  updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
+  updateMe(changes: MeInput): Me
+  updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
   updateNetwork(id: ID, data: NetworkInput): Network
-  deletePost(id: ID): GenericResult
-  addSkill(name: String): Skill
-  removeSkill(id: ID, name: String): GenericResult
-  removeMember(personId: ID, communityId: ID): Community
-  regenerateAccessCode(communityId: ID): Community
-  createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
-  expireInvitation(invitationId: ID): GenericResult
-  resendInvitation(invitationId: ID): GenericResult
-  reinviteAll(communityId: ID): GenericResult,
+  updatePost(id: ID, data: PostInput): Post
   useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
-  flagInappropriateContent(data: InappropriateContentInput): GenericResult
-  removePost(postId: ID, slug: String, communityId: ID): GenericResult
-  createCommunity(data: CommunityInput): Membership
-  deleteComment(id: ID): GenericResult
+  vote(postId: ID, isUpvote: Boolean): Post
 }
 
 type InvitationUseResult {

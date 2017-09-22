@@ -152,3 +152,8 @@ export function removePost (userId, postId, communityIdOrSlug) {
     })
   .then(() => ({success: true}))
 }
+
+export function registerDevice (userId, playerId, version) {
+  return Device.upsert(userId, playerId, version)
+  .then(() => ({success: true}))
+}

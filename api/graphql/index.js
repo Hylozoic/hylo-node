@@ -20,6 +20,7 @@ import {
   markActivityRead,
   markAllActivitiesRead,
   regenerateAccessCode,
+  registerDevice,
   reinviteAll,
   removeMember,
   removeModerator,
@@ -174,7 +175,9 @@ export function makeMutations (userId) {
     flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
     removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
     createCommunity: (root, { data }) => createCommunity(userId, data),
-    deleteComment: (root, { id }) => deleteComment(userId, id)
+    deleteComment: (root, { id }) => deleteComment(userId, id),
+    registerDevice: (root, { playerId, version }) =>
+      registerDevice(userId, playerId, version)
   }
 }
 
