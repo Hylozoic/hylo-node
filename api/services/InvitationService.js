@@ -139,7 +139,7 @@ module.exports = {
 
   check: (userId, token, accessCode) => {
     if (accessCode) {
-      return Community.findByAccessCode(accessCode)
+      return Community.queryByAccessCode(accessCode)
       .count()
       .then(count => {
         return {valid: count !== '0'}
@@ -158,7 +158,7 @@ module.exports = {
   use: (userId, token, accessCode) => {
     if (accessCode) {
       var community // , preexisting
-      return Community.findByAccessCode(accessCode)
+      return Community.queryByAccessCode(accessCode)
       .fetch()
       .tap(c => { community = c })
       .then(() => !!community && Membership.create(userId, community.id))
