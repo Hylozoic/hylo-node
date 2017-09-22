@@ -632,6 +632,13 @@ describe('makeQueries', () => {
         queries.communityExists(null, {slug: 'a b'})
       }).to.throw()
     })
+
+    it('returns true if the slug is in use', () => {
+      const community = factories.community()
+      return community.save()
+      .then(() => queries.communityExists(null, {slug: community.get('slug')}))
+      .then(result => expect(result.exists).to.be.true)
+    })
   })
 })
 
