@@ -172,8 +172,12 @@ module.exports = {
       })
       // we get here if the membership was created successfully, or it already existed
       .then(ok => ok && Membership.find(userId, community.id, {includeInactive: true}))
-      .then(membership => membership && !membership.get('active') &&
-        membership.save({active: true}, {patch: true}))
+      .then(membership => {
+        if (membership && !membership.get('active')) {
+          return membership.save({active: true}, {patch: true})
+        }
+        return membership
+      })
     }
     if (token) {
       return Invitation.where({token}).fetch()

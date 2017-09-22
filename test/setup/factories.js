@@ -8,7 +8,16 @@ module.exports = {
   community: attrs => {
     return new Community(merge({
       name: faker.random.words(6),
-      slug: faker.lorem.slug()
+      slug: faker.lorem.slug(),
+      beta_access_code: faker.random.alphaNumeric(6)
+    }, attrs))
+  },
+
+  invitation: attrs => {
+    return new Invitation(merge({
+      token: faker.random.alphaNumeric(36),
+      email: faker.internet.email(),
+      created_at: new Date()
     }, attrs))
   },
 
