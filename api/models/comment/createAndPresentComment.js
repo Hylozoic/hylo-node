@@ -10,7 +10,9 @@ export function createComment (userId, data) {
 }
 
 export default function createAndPresentComment (commenterId, text, post, opts = {}) {
+  console.log('TEXT UNSANITIZED', text)
   text = sanitize(text)
+  console.log('TEXT SANITIZED', text)
   const { parentComment, returnRaw } = opts
   const isReplyToPost = !parentComment
 
