@@ -1,7 +1,8 @@
 import addTermToQueryBuilder from './addTermToQueryBuilder'
-import { curry, values } from 'lodash'
+import { curry, includes, values } from 'lodash'
 
-export const filterAndSortPosts = curry(({ search, sortBy = 'updated', topic, showPinnedFirst }, q) => {
+export const filterAndSortPosts = curry((opts, q) => {
+  const { search, sortBy = 'updated', topic, showPinnedFirst, type } = opts
   const sortColumns = {
     votes: 'num_votes',
     updated: 'posts.updated_at'
@@ -10,6 +11,22 @@ export const filterAndSortPosts = curry(({ search, sortBy = 'updated', topic, sh
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === sortBy)
   if (!sort) {
     throw new Error(`Cannot sort by "${sortBy}"`)
+  }
+
+  const { DISCUSSION, REQUEST, OFFER } = Post.Type
+
+  if (!type || type === 'all' || type === 'all+welcome') {
+    q.where(function () {
+      this.where('posts.type', 'in', [DISCUSSION, REQUEST, OFFER])
+      .orWhere('posts.type', null)
+    })
+  } else if (type === DISCUSSION) {
+    q.where({'posts.type': null}).orWhere({'posts.type': DISCUSSION})
+  } else {
+    if (!includes(values(Post.Type), type)) {
+      throw new Error(`unknown post type: "${type}"`)
+    }
+    q.where({'posts.type': opts.type})
   }
 
   if (search) {

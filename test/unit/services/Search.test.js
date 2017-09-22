@@ -32,9 +32,9 @@ describe('Search', function () {
         and "posts"."user_id" in (42, 41)
         and "follows"."user_id" = 37
         and (posts.user_id != 37 or posts.user_id is null)
-        and "type" = 'request'
         and ((posts.created_at between '${startTimeAsString}' and '${endTimeAsString}')
           or (posts.updated_at between '${startTimeAsString}' and '${endTimeAsString}'))
+        and "posts"."type" = 'request'
         and (((to_tsvector('english', posts.name) @@ to_tsquery('milk:* & toast:*'))
         or (to_tsvector('english', posts.description) @@ to_tsquery('milk:* & toast:*'))))
         and "communities_posts"."community_id" in (9, 12)
@@ -45,14 +45,14 @@ describe('Search', function () {
         offset 7`)
     })
 
-    it('excludes welcome and thread posts by default', () => {
+    it('includes only basic post types by default', () => {
       var query = Search.forPosts({communities: 9}).query().toString()
-      expect(query).to.contain('("posts"."type" not in (\'welcome\', \'thread\') or "posts"."type" is null)')
+      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\') or "posts"."type" is null)')
     })
 
-    it('excludes welcome and thread posts when type is "all"', () => {
+    it('includes only basic post types when type is "all"', () => {
       var query = Search.forPosts({communities: 9, type: 'all'}).query().toString()
-      expect(query).to.contain('("posts"."type" not in (\'welcome\', \'thread\') or "posts"."type" is null)')
+      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\') or "posts"."type" is null)')
     })
 
     it('accepts an option to change the name of the total column', () => {

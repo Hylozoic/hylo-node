@@ -205,11 +205,12 @@ export default function makeModels (userId, isAdmin) {
         }},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic }) =>
+          filter: (relation, { search, sortBy, topic, filter }) =>
             relation.query(filterAndSortPosts({
               search,
               sortBy,
               topic,
+              type: filter,
               showPinnedFirst: true
             }))
         }}
@@ -404,8 +405,8 @@ export default function makeModels (userId, isAdmin) {
         }},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic }) =>
-            relation.query(filterAndSortPosts({ search, sortBy, topic }))
+          filter: (relation, { search, sortBy, topic, filter }) =>
+            relation.query(filterAndSortPosts({ search, sortBy, topic, type: filter }))
         }},
         {communities: {
           querySet: true,
