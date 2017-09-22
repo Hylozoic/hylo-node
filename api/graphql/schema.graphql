@@ -526,7 +526,7 @@ type Mutation {
   updateNetwork(id: ID, data: NetworkInput): Network
   deletePost(id: ID): GenericResult
   addSkill(name: String): Skill
-  removeSkill(id: ID): GenericResult
+  removeSkill(id: ID, name: String): GenericResult
   removeMember(personId: ID, communityId: ID): Community
   regenerateAccessCode(communityId: ID): Community
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations

@@ -122,10 +122,10 @@ export function addSkill (userId, name) {
   .tap(skill => skill.users().attach(userId))
 }
 
-export function removeSkill (userId, skillId) {
-  return Skill.find(skillId)
+export function removeSkill (userId, skillIdOrName) {
+  return Skill.find(skillIdOrName)
   .then(skill => {
-    if (!skill) throw new Error(`Couldn't find skill with ID ${skillId}`)
+    if (!skill) throw new Error(`Couldn't find skill with ID or name ${skillIdOrName}`)
     return skill.users().detach(userId)
   })
   .then(() => ({success: true}))
@@ -137,7 +137,7 @@ export function flagInappropriateContent (userId, { category, reason, link }) {
     category,
     reason,
     link
-  }) 
+  })
   .then(() => ({success: true}))
 }
 

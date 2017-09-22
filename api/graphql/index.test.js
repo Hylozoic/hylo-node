@@ -521,6 +521,72 @@ describe('graphql request handler', () => {
       })
     })
   })
+
+  describe('removeSkill', () => {
+    var skill1, skill2
+
+    before(() => {
+      skill1 = factories.skill()
+      skill2 = factories.skill()
+      return Promise.join(skill1.save(), skill2.save())
+    })
+
+    beforeEach(() => {
+      return Promise.join(
+        user.skills().detach(skill1),
+        user.skills().detach(skill2)
+      ).then(() => Promise.join(
+        user.skills().attach(skill1),
+        user.skills().attach(skill2)
+      ))
+    })
+
+    it('removes a skill with an id', () => {
+      req.body = {
+        query: `mutation {
+          removeSkill(id: ${skill1.id}) {
+            success
+          }
+        }`
+      }
+      return handler(req, res)
+      .then(() => user.load('skills'))
+      .then(() => {
+        expectJSON(res, {
+          data: {
+            removeSkill: {
+              success: true
+            }
+          }
+        })
+        expect(user.relations.skills.length).to.equal(1)
+        expect(user.relations.skills.first().id).to.equal(skill2.id)
+      })
+    })
+
+    it('removes a skill with a name', () => {
+      req.body = {
+        query: `mutation {
+          removeSkill(name: "${skill2.get('name')}") {
+            success
+          }
+        }`
+      }
+      return handler(req, res)
+      .then(() => user.load('skills'))
+      .then(() => {
+        expectJSON(res, {
+          data: {
+            removeSkill: {
+              success: true
+            }
+          }
+        })
+        expect(user.relations.skills.length).to.equal(1)
+        expect(user.relations.skills.first().id).to.equal(skill1.id)
+      })
+    })
+  })
 })
 
 function expectJSON (res, expected) {
