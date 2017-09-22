@@ -1,4 +1,4 @@
-import { createRequestHandler, makeMutations } from './index'
+import { createRequestHandler, makeMutations, makeQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
 import { some, sortBy } from 'lodash/fp'
@@ -615,6 +615,22 @@ describe('makeMutations', () => {
         // more validation and/or are exposing SQL errors to the end-user
         // console.log(`${key}: ${err.message}`)
       })
+    })
+  })
+})
+
+describe('makeQueries', () => {
+  let queries
+
+  before(() => {
+    queries = makeQueries(10)
+  })
+
+  describe('communityExists', () => {
+    it('throws an error if slug is invalid', () => {
+      expect(() => {
+        queries.communityExists(null, {slug: 'a b'})
+      }).to.throw()
     })
   })
 })

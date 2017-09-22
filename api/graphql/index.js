@@ -76,7 +76,7 @@ function createSchema (userId, isAdmin) {
   })
 }
 
-function makeQueries (userId, fetchOne, fetchMany) {
+export function makeQueries (userId, fetchOne, fetchMany) {
   return {
     me: () => fetchOne('Me', userId),
     community: (root, { id, slug, updateLastViewed }) => { // you can specify id or slug, but not both
