@@ -339,7 +339,7 @@ module.exports = bookshelf.Model.extend(merge({
       )
     }
 
-    if (!attributes.name) {
+    if (!attributes.name && attributes.email) {
       attributes.name = attributes.email.split('@')[0].replace(/[._]/g, ' ')
     }
 

@@ -165,6 +165,16 @@ describe('User', function () {
       .catch(err => expect(err.message).to.equal('invalid-email'))
     })
 
+    it('rejects a blank email address', () => {
+      return User.create({
+        email: null,
+        community,
+        account: {type: 'password', password: 'password'}
+      })
+      .then(user => expect.fail())
+      .catch(err => expect(err.message).to.equal('invalid-email'))
+    })
+
     it('works with a password', function () {
       return bookshelf.transaction(function (trx) {
         return User.create({
