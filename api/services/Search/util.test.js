@@ -42,16 +42,20 @@ describe('filterAndSortPosts', () => {
   it('includes basic types when filter is blank', () => {
     filterAndSortPosts({}, query)
     expectEqualQuery(relation, `select * from "posts"
-      where ("posts"."type" in ('discussion', 'request', 'offer')
-      or "posts"."type" is null)
+      where (
+        "posts"."type" in ('discussion', 'request', 'offer')
+        or "posts"."type" is null
+      )
       order by "posts"."updated_at" desc`)
   })
 
   it('includes null-typed posts as discussions', () => {
     filterAndSortPosts({type: 'discussion'}, query)
     expectEqualQuery(relation, `select * from "posts"
-      where "posts"."type" is null
-      or ("posts"."type" = 'discussion')
+      where (
+        "posts"."type" is null
+        or ("posts"."type" = 'discussion')
+      )
       order by "posts"."updated_at" desc`)
   })
 })
