@@ -421,7 +421,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       )),
 
   createActivities: (opts) =>
-    Post.find(opts.postId).then(post =>
+    Post.find(opts.postId).then(post => post &&
       bookshelf.transaction(trx => post.createActivities(trx))),
 
   fixTypedPosts: () =>
