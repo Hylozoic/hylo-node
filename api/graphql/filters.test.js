@@ -73,7 +73,7 @@ describe('model filters', () => {
       expectEqualQuery(collection, `select * from "comments"
         left join "communities_posts"
           on "comments"."post_id" = "communities_posts"."post_id"
-        where "active" = true
+        where "comments"."active" = true
         and (
           "comments"."post_id" in (
             select "post_id" from "follows" where "user_id" = 42

@@ -49,7 +49,7 @@ export const sharedNetworkMembership = curry((tableName, userId, relation) =>
 
 export const commentFilter = userId => relation => relation.query(q => {
   q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
-  q.where({active: true})
+  q.where({'comments.active': true})
   q.where(q2 => {
     q2.where('comments.post_id', 'in', Follow.query().select('post_id').where('user_id', userId))
     .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
