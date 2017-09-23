@@ -3,7 +3,7 @@ module.exports = function checkAndDecodeToken (req, res, next) {
   try {
     tokenData = Email.decodeFormToken(req.param('token'))
   } catch (e) {
-    return Promise.resolve(res.serverError(new Error('Invalid token: ' + req.param('token'))))
+    return Promise.resolve(res.badRequest(new Error('Invalid token: ' + req.param('token'))))
   }
   res.locals.tokenData = tokenData
 

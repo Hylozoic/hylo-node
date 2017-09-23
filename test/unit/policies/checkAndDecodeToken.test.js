@@ -9,7 +9,7 @@ describe('checkAndDecodeToken', function () {
   beforeEach(() => {
     req = factories.mock.request()
     res = factories.mock.response()
-    res.serverError = spy()
+    res.badRequest = spy()
     next = spy()
   })
 
@@ -17,7 +17,7 @@ describe('checkAndDecodeToken', function () {
     req.params.token = 'abadtoken'
     return checkAndDecodeToken(req, res, next)
     .then(() => {
-      expect(res.serverError).to.have.been.called()
+      expect(res.badRequest).to.have.been.called()
       expect(next).not.to.have.been.called()
     })
   })
