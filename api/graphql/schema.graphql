@@ -522,7 +522,7 @@ type Mutation {
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
   regenerateAccessCode(communityId: ID): Community
-  registerDevice(playerId: String, version: String): GenericResult
+  registerDevice(playerId: String, platform: String, version: String): GenericResult
   reinviteAll(communityId: ID): GenericResult,
   removeMember(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID): Community

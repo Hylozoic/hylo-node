@@ -44,18 +44,20 @@ module.exports = bookshelf.Model.extend({
     .then(pushNotification => pushNotification.send())
   }
 }, {
-  upsert: function (userId, playerId, version) {
+  upsert: function ({ userId, playerId, platform, version }) {
     return Device.where({player_id: playerId}).fetch()
     .then(device => device
       ? device.save({
-        version,
         user_id: userId,
+        platform,
+        version,
         updated_at: new Date()
       })
       : Device.forge({
-        version,
         user_id: userId,
         player_id: playerId,
+        platform,
+        version,
         created_at: new Date()
       }).save())
   }

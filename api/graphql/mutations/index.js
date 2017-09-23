@@ -7,6 +7,7 @@ import convertGraphqlData from './convertGraphqlData'
 
 export { createComment, deleteComment, canDeleteComment } from './comment'
 export { updateNetwork } from './network'
+export { registerDevice } from './mobile'
 export {
   createInvitation,
   expireInvitation,
@@ -150,10 +151,5 @@ export function removePost (userId, postId, communityIdOrSlug) {
       if (!isModerator) throw new Error(`You don't have permission to remove this post`)
       return post.removeFromCommunity(communityIdOrSlug)
     })
-  .then(() => ({success: true}))
-}
-
-export function registerDevice (userId, playerId, version) {
-  return Device.upsert(userId, playerId, version)
   .then(() => ({success: true}))
 }

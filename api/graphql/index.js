@@ -176,8 +176,8 @@ export function makeMutations (userId) {
     removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
     createCommunity: (root, { data }) => createCommunity(userId, data),
     deleteComment: (root, { id }) => deleteComment(userId, id),
-    registerDevice: (root, { playerId, version }) =>
-      registerDevice(userId, playerId, version)
+    registerDevice: (root, { playerId, platform, version }) =>
+      registerDevice(userId, { playerId, platform, version })
   }
 }
 
