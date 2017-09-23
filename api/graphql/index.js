@@ -170,7 +170,7 @@ export function makeMutations (userId) {
     expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
     resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
     reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
-    useInvitation: (root, { invitationToken }) => useInvitation(userId, invitationToken),
+    useInvitation: (root, { invitationToken, accessCode }) => useInvitation(userId, invitationToken, accessCode),
     flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
     removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
     createCommunity: (root, { data }) => createCommunity(userId, data),
