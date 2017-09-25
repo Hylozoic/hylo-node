@@ -17,7 +17,10 @@ describe('registerDevice', () => {
     return registerDevice(user.id, {
       playerId: 'bar', platform: 'ios', version: '2'
     })
-    .then(() => Device.where('player_id', 'bar').fetch())
+    .then(response => {
+      expect(response.success).to.be.true
+      return Device.where('player_id', 'bar').fetch()
+    })
     .then(d => {
       expect(d).to.exist
       expect(d.get('user_id')).to.equal(user.id)
