@@ -32,7 +32,7 @@ function androidNotificationParams (deviceToken, alert, path) {
 function notificationParams (platform, deviceToken, alert, path, badgeNo, appId) {
   var params
 
-  if (platform === 'ios_macos') {
+  if (platform.startsWith('ios')) {
     if (path === '') {
       params = iosBadgeUpdateParams(deviceToken, badgeNo)
     } else {
