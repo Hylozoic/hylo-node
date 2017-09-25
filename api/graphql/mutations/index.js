@@ -7,6 +7,7 @@ import convertGraphqlData from './convertGraphqlData'
 
 export { createComment, deleteComment, canDeleteComment } from './comment'
 export { updateNetwork } from './network'
+export { registerDevice } from './mobile'
 export {
   createInvitation,
   expireInvitation,

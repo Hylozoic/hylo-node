@@ -1,31 +1,29 @@
-var setup = require(require('root-path')('test/setup'))
-var nock = require('nock')
+import factories from '../../setup/factories'
 
 describe('PushNotification', function () {
-  var pushNotification, tmpEnvVar
+  describe('when PUSH_NOTIFICATIONS_ENABLED is not set', () => {
+    var device, pushNotification, tmpEnvVar
 
-  before(() => {
-    pushNotification = new PushNotification({
-      device_token: 'abcd',
-      alert: 'hi',
-      path: '/p',
-      badge_no: 7,
-      platform: 'ios_macos'
+    before(() => {
+      tmpEnvVar = process.env.PUSH_NOTIFICATIONS_ENABLED
+      delete process.env.PUSH_NOTIFICATIONS_ENABLED
+
+      device = factories.device()
+
+      pushNotification = new PushNotification({
+        alert: 'hi',
+        path: '/p',
+        badge_no: 7,
+        platform: 'ios_macos'
+      })
+
+      return device.save()
+      .then(() => pushNotification.set('device_id', device.id))
+      .then(() => pushNotification.save())
     })
 
-    tmpEnvVar = process.env.DISABLE_PUSH_NOTIFICATIONS
-    process.env.DISABLE_PUSH_NOTIFICATIONS = true
-    return setup.clearDb().then(() => pushNotification.save())
-  })
-
-  after(() => {
-    process.env.DISABLE_PUSH_NOTIFICATIONS = tmpEnvVar
-  })
-
-  describe('.send', () => {
-    beforeEach(() => {
-      nock(OneSignal.host).post('/api/v1/notifications')
-      .reply(200, {result: 'success'})
+    after(() => {
+      process.env.PUSH_NOTIFICATIONS_ENABLED = tmpEnvVar
     })
 
     it('sets sent_at and disabled', function () {
@@ -33,7 +31,7 @@ describe('PushNotification', function () {
       .then(result => {
         return pushNotification.fetch()
         .then(pn => {
-          expect(pn.get('sent_at')).to.not.equal(null)
+          expect(pn.get('sent_at')).not.to.equal(null)
           expect(pn.get('disabled')).to.be.true
         })
       })

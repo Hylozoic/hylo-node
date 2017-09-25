@@ -1,6 +1,10 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'devices',
 
+  pushNotifications: function () {
+    return this.hasMany(PushNotification)
+  },
+
   user: function () {
     return this.belongsTo(User, 'user_id')
   },
@@ -17,26 +21,41 @@ module.exports = bookshelf.Model.extend({
         alert,
         path,
         badge_no: user.get('new_notification_count') + count,
-        device_token: this.get('token'),
+        device_id: this.id,
         platform: this.get('platform'),
         queued_at: new Date().toISOString()
       }).save().then(push => push.send())))
   },
 
   resetNotificationCount: function () {
-    var device = this
-    if (!this.get('enabled') || this.get('platform') !== 'ios_macos') {
-      return
-    }
+    if (!this.get('enabled')) return
     return PushNotification.forge({
-      device_token: device.get('token'),
+      device_id: this.id,
       alert: '',
       path: '',
       badge_no: 0,
-      platform: device.get('platform'),
+      platform: this.get('platform'),
       queued_at: (new Date()).toISOString()
     })
     .save({})
     .then(pushNotification => pushNotification.send())
+  }
+}, {
+  upsert: function ({ userId, playerId, platform, version }) {
+    return Device.where({player_id: playerId}).fetch()
+    .then(device => device
+      ? device.save({
+        user_id: userId,
+        platform,
+        version,
+        updated_at: new Date()
+      })
+      : Device.forge({
+        user_id: userId,
+        player_id: playerId,
+        platform,
+        version,
+        created_at: new Date()
+      }).save())
   }
 })

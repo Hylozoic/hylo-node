@@ -1,8 +1,7 @@
-import nock from 'nock'
 import '../../setup'
 import factories from '../../setup/factories'
-const model = factories.mock.model
-import { spyify, unspyify } from '../../setup/helpers'
+import { spyify, unspyify, mockify } from '../../setup/helpers'
+const { model } = factories.mock
 
 const destroyAllPushNotifications = () => {
   return PushNotification.fetchAll()
@@ -54,10 +53,8 @@ describe('Notification', function () {
   beforeEach(() => destroyAllPushNotifications())
 
   describe('.send', () => {
-    beforeEach(() => {
-      nock(OneSignal.host).post('/api/v1/notifications')
-      .reply(200, {result: 'success'})
-    })
+    beforeEach(() => mockify(OneSignal, 'notify'))
+    afterEach(() => unspyify(OneSignal, 'notify'))
 
     it('sends a push for a new post', () => {
       return new Activity({
@@ -72,7 +69,7 @@ describe('Notification', function () {
       }).save())
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+      .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
@@ -94,7 +91,7 @@ describe('Notification', function () {
       }).save())
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+      .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
@@ -117,7 +114,7 @@ describe('Notification', function () {
         }).save())
         .then(notification => notification.load(relations))
         .then(notification => notification.send())
-        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => expect(pns.length).to.equal(0))
       })
     })
@@ -139,7 +136,7 @@ describe('Notification', function () {
         }).save())
         .then(notification => notification.load(relations))
         .then(notification => notification.send())
-        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => {
           expect(pns).to.exist
           expect(pns.length).to.equal(1)
@@ -161,7 +158,7 @@ describe('Notification', function () {
         }).save())
         .then(notification => notification.load(relations))
         .then(notification => notification.send())
-        .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+        .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => {
           expect(pns).to.exist
           expect(pns.length).to.equal(1)
@@ -184,7 +181,7 @@ describe('Notification', function () {
       }).save())
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+      .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
@@ -206,7 +203,7 @@ describe('Notification', function () {
       }).save())
       .then(notification => notification.load(relations))
       .then(notification => notification.send())
-      .then(() => PushNotification.where({device_token: device.get('token')}).fetchAll())
+      .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
         expect(pns).to.exist
         expect(pns.length).to.equal(1)
