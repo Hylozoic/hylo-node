@@ -76,9 +76,5 @@ module.exports = bookshelf.Model.extend({
 
   textForApprovedJoinRequest: function (community, actor) {
     return `${actor.get('name')} approved your request to join ${community.get('name')}`
-  },
-
-  setupDeviceIds: function () {
-
   }
 })
