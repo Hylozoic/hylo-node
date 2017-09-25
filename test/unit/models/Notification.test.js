@@ -1,8 +1,7 @@
-import nock from 'nock'
 import '../../setup'
 import factories from '../../setup/factories'
-const model = factories.mock.model
-import { spyify, unspyify } from '../../setup/helpers'
+import { spyify, unspyify, mockify } from '../../setup/helpers'
+const { model } = factories.mock
 
 const destroyAllPushNotifications = () => {
   return PushNotification.fetchAll()
@@ -54,10 +53,8 @@ describe('Notification', function () {
   beforeEach(() => destroyAllPushNotifications())
 
   describe('.send', () => {
-    beforeEach(() => {
-      nock(OneSignal.host).post('/api/v1/notifications')
-      .reply(200, {result: 'success'})
-    })
+    beforeEach(() => mockify(OneSignal, 'notify'))
+    afterEach(() => unspyify(OneSignal, 'notify'))
 
     it('sends a push for a new post', () => {
       return new Activity({

@@ -2,7 +2,7 @@ import request from 'request'
 import Promise from 'bluebird'
 import { merge, omit } from 'lodash'
 
-const host = 'https://onesignal.com'
+const HOST = 'https://onesignal.com'
 
 function iosBadgeUpdateParams (deviceToken, badgeNo) {
   return {
@@ -51,15 +51,14 @@ const postToAPI = (name, deviceToken, options) =>
     request(Object.assign({method: 'POST'}, options), (error, resp, body) =>
       error ? reject(error)
         : resp.statusCode !== 200
-          ? reject(`OneSignal.${name} for device ${deviceToken} failed with status code ${resp.statusCode}`)
+          ? reject(new Error(`OneSignal.${name} for device ${deviceToken} failed with status code ${resp.statusCode}`))
           : resolve(resp)))
 
 module.exports = {
-  host,
-
+  // DEPRECATED
   register: (platform, deviceToken) =>
     postToAPI('register', deviceToken, {
-      url: `${host}/api/v1/players`,
+      url: `${HOST}/api/v1/players`,
       json: {
         app_id: process.env.ONESIGNAL_APP_ID,
         device_type: platform === 'ios_macos' ? 0 : 1,
@@ -70,7 +69,7 @@ module.exports = {
 
   notify: (platform, deviceToken, alert, path, badgeNo, appId) =>
     postToAPI('notify', deviceToken, {
-      url: `${host}/api/v1/notifications`,
+      url: `${HOST}/api/v1/notifications`,
       json: notificationParams(platform, deviceToken, alert, path, badgeNo, appId)
     })
 }

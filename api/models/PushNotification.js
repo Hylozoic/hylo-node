@@ -10,11 +10,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   send: function (options) {
-    var platform = this.getPlatform()
-    var alert = this.get('alert')
-    var path = this.get('path')
-    var badgeNo = this.get('badge_no')
-    const disabled = !!process.env.DISABLE_PUSH_NOTIFICATIONS
+    const platform = this.getPlatform()
+    const alert = this.get('alert')
+    const path = this.get('path')
+    const badgeNo = this.get('badge_no')
+    const disabled = !process.env.PUSH_NOTIFICATIONS_ENABLED
 
     return this.load('device')
     .then(() => this.relations.device && this.relations.device.get('token'))

@@ -78,6 +78,12 @@ module.exports = {
     }, attrs))
   },
 
+  device: attrs => {
+    return new Device(merge({
+      token: faker.random.uuid()
+    }, attrs))
+  },
+
   mock: {
     request: function () {
       return {
