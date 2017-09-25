@@ -28,16 +28,13 @@ module.exports = bookshelf.Model.extend({
   },
 
   resetNotificationCount: function () {
-    var device = this
-    if (!this.get('enabled') || this.get('platform') !== 'ios_macos') {
-      return
-    }
+    if (!this.get('enabled')) return
     return PushNotification.forge({
       device_id: this.id,
       alert: '',
       path: '',
       badge_no: 0,
-      platform: device.get('platform'),
+      platform: this.get('platform'),
       queued_at: (new Date()).toISOString()
     })
     .save({})
