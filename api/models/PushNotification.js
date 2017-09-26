@@ -14,14 +14,20 @@ module.exports = bookshelf.Model.extend({
     const alert = this.get('alert')
     const path = this.get('path')
     const badgeNo = this.get('badge_no')
-    const disabled = !process.env.PUSH_NOTIFICATIONS_ENABLED
 
     return this.load('device')
-    .then(() => this.relations.device && this.relations.device.get('token'))
-    .then(token =>
-      this.save({sent_at: (new Date()).toISOString(), disabled}, options)
-      .then(pn => disabled ||
-        OneSignal.notify(platform, token, alert, path, badgeNo))
+    .then(() => {
+      const { device } = this.relations
+      const deviceToken = device.get('device_token')
+      const playerId = device.get('player_id')
+      const disabled = !process.env.PUSH_NOTIFICATIONS_ENABLED && (
+        !process.env.PUSH_NOTIFICATIONS_TESTING_ENABLED || !device.get('tester')
+      )
+
+      return this.save({sent_at: new Date().toISOString(), disabled}, options)
+      .then(pn => disabled || OneSignal.notify({
+        platform, deviceToken, playerId, alert, path, badgeNo
+      }))
       .catch(e => {
         const err = e instanceof Error ? e : new Error(e)
         if (process.env.NODE_ENV !== 'production') throw err
@@ -29,7 +35,8 @@ module.exports = bookshelf.Model.extend({
           server_token: process.env.ONESIGNAL_APP_ID,
           device_id: this.relations.device.id
         }})
-      }))
+      })
+    })
   },
 
   getPlatform: function () {

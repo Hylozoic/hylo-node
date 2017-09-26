@@ -318,7 +318,8 @@ CREATE TABLE devices (
     enabled boolean DEFAULT true,
     platform character varying(255),
     version character varying(255),
-    player_id character varying(255)
+    player_id character varying(255),
+    tester boolean
 );
 
 
@@ -1000,7 +1001,6 @@ ALTER SEQUENCE posts_users_id_seq OWNED BY posts_users.id;
 
 CREATE TABLE push_notifications (
     id integer NOT NULL,
-    device_token character varying(255),
     queued_at timestamp with time zone,
     sent_at timestamp with time zone,
     alert character varying(255) DEFAULT ''::character varying,
@@ -2899,3 +2899,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+
