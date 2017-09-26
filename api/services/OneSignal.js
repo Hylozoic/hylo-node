@@ -1,45 +1,55 @@
 import request from 'request'
 import Promise from 'bluebird'
-import { merge, omit } from 'lodash'
+import { isNull, merge, omit } from 'lodash'
+import { omitBy } from 'lodash/fp'
 
 const HOST = 'https://onesignal.com'
 
-function iosBadgeUpdateParams (deviceToken, badgeNo) {
-  return {
-    include_ios_tokens: [deviceToken],
+function iosBadgeUpdateParams ({ deviceToken, playerId, badgeNo }) {
+  return omitBy(isNull, {
+    include_ios_tokens: deviceToken ? [deviceToken] : null,
+    include_player_ids: playerId ? [playerId] : null,
     ios_badgeType: 'SetTo',
     ios_badgeCount: badgeNo,
     content_available: true
-  }
+  })
 }
 
-function iosNotificationParams (deviceToken, alert, path, badgeNo) {
-  return merge(omit(iosBadgeUpdateParams(deviceToken, badgeNo), 'content_available'),
+function iosNotificationParams ({ deviceToken, playerId, alert, path, badgeNo }) {
+  const coreParams = iosBadgeUpdateParams({deviceToken, playerId, badgeNo})
+  return merge(
+    omit(coreParams, 'content_available'),
     {
       contents: {en: alert},
-      data: {path: path}
-    })
+      data: {path}
+    }
+  )
 }
 
-function androidNotificationParams (deviceToken, alert, path) {
-  return {
-    include_android_reg_ids: [deviceToken],
+function androidNotificationParams ({ deviceToken, playerId, alert, path }) {
+  return omitBy(isNull, {
+    include_android_reg_ids: deviceToken ? [deviceToken] : null,
+    include_player_ids: playerId ? [playerId] : null,
     contents: {en: alert},
-    data: {alert: alert, path: path}
-  }
+    data: {alert, path}
+  })
 }
 
-function notificationParams (platform, deviceToken, alert, path, badgeNo, appId) {
-  var params
+function notificationParams ({ platform, deviceToken, playerId, alert, path, badgeNo, appId }) {
+  if (deviceToken && playerId) {
+    throw new Error("Can't pass both a device token and a player ID")
+  }
 
-  if (platform === 'ios_macos') {
+  let params
+
+  if (platform.startsWith('ios')) {
     if (path === '') {
-      params = iosBadgeUpdateParams(deviceToken, badgeNo)
+      params = iosBadgeUpdateParams({deviceToken, playerId, badgeNo})
     } else {
-      params = iosNotificationParams(deviceToken, alert, path, badgeNo)
+      params = iosNotificationParams({deviceToken, playerId, alert, path, badgeNo})
     }
   } else {
-    params = androidNotificationParams(deviceToken, alert, path)
+    params = androidNotificationParams({deviceToken, playerId, alert, path})
   }
 
   params['app_id'] = appId || process.env.ONESIGNAL_APP_ID
@@ -67,9 +77,9 @@ module.exports = {
       }
     }),
 
-  notify: (platform, deviceToken, alert, path, badgeNo, appId) =>
+  notify: ({ platform, deviceToken, playerId, alert, path, badgeNo, appId }) =>
     postToAPI('notify', deviceToken, {
       url: `${HOST}/api/v1/notifications`,
-      json: notificationParams(platform, deviceToken, alert, path, badgeNo, appId)
+      json: notificationParams({platform, deviceToken, playerId, alert, path, badgeNo, appId})
     })
 }
