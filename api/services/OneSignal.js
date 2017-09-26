@@ -6,10 +6,6 @@ import { omitBy } from 'lodash/fp'
 const HOST = 'https://onesignal.com'
 
 function iosBadgeUpdateParams ({ deviceToken, playerId, badgeNo }) {
-  if (deviceToken && playerId) {
-    throw new Error("Can't pass both a device token and a player ID")
-  }
-
   return omitBy(isNull, {
     include_ios_tokens: deviceToken ? [deviceToken] : null,
     include_player_ids: playerId ? [playerId] : null,
@@ -25,26 +21,26 @@ function iosNotificationParams ({ deviceToken, playerId, alert, path, badgeNo })
     omit(coreParams, 'content_available'),
     {
       contents: {en: alert},
-      data: {path: path}
+      data: {path}
     }
   )
 }
 
 function androidNotificationParams ({ deviceToken, playerId, alert, path }) {
-  if (deviceToken && playerId) {
-    throw new Error("Can't pass both a device token and a player ID")
-  }
-
   return omitBy(isNull, {
     include_android_reg_ids: deviceToken ? [deviceToken] : null,
     include_player_ids: playerId ? [playerId] : null,
     contents: {en: alert},
-    data: {alert: alert, path: path}
+    data: {alert, path}
   })
 }
 
 function notificationParams ({ platform, deviceToken, playerId, alert, path, badgeNo, appId }) {
-  var params
+  if (deviceToken && playerId) {
+    throw new Error("Can't pass both a device token and a player ID")
+  }
+
+  let params
 
   if (platform.startsWith('ios')) {
     if (path === '') {
@@ -53,7 +49,7 @@ function notificationParams ({ platform, deviceToken, playerId, alert, path, bad
       params = iosNotificationParams({deviceToken, playerId, alert, path, badgeNo})
     }
   } else {
-    params = androidNotificationParams({deviceToken, alert, path})
+    params = androidNotificationParams({deviceToken, playerId, alert, path})
   }
 
   params['app_id'] = appId || process.env.ONESIGNAL_APP_ID
