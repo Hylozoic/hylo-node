@@ -1,4 +1,5 @@
-require('../../setup')
+/* globals LastRead */
+import '../../setup'
 import factories from '../../setup/factories'
 import { removePost } from '../../../api/services/PostManagement'
 
@@ -13,6 +14,8 @@ describe('PostManagement', () => {
         post = factories.post({user_id: user.id})
         return post.save()
       })
+      .then(() => factories.comment({post_id: post.id}).save())
+      .then(() => LastRead.findOrCreate(user.id, post.id))
     })
 
     it('works', () => {

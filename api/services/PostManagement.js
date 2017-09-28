@@ -8,7 +8,7 @@ const removeComments = (postId, trx) =>
 
     return Promise.all([
       remove('thanks'),
-      remove('comments_Tags')
+      remove('comments_tags')
     ])
     .then(() => remove('comments', 'id'))
   })
