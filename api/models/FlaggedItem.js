@@ -28,7 +28,7 @@ module.exports = bookshelf.Model.extend({
       return Promise.reject('Unknown category.')
     }
 
-    // set reason to N/A if not required and it's empty.
+    // set reason to 'N/A' if not required (!other) and it's empty.
     if (category !== this.Category.other && isEmpty(trim(reason))) {
       reason = 'N/A'
     }
@@ -36,7 +36,7 @@ module.exports = bookshelf.Model.extend({
     const invalidReason = validateFlaggedItem.reason(reason)
     if (invalidReason) return Promise.reject(invalidReason)
 
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV !== 'development') {
       const invalidLink = validateFlaggedItem.link(link)
       if (invalidLink) return Promise.reject(invalidLink)
     }
