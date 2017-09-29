@@ -639,5 +639,11 @@ type SkillQuerySet {
 input InappropriateContentInput {
   category: String,
   reason: String,
-  link: String
+  linkData: LinkDataInput
+}
+
+input LinkDataInput {
+  id: ID
+  slug: String
+  type: String
 }

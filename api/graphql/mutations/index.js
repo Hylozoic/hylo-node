@@ -132,7 +132,22 @@ export function removeSkill (userId, skillIdOrName) {
   .then(() => ({success: true}))
 }
 
-export function flagInappropriateContent (userId, { category, reason, link }) {
+export function flagInappropriateContent (userId, { category, reason, linkData }) {
+  let link
+  switch (trim(linkData.type)) {
+    case 'post':
+      link = Frontend.Route.post(linkData.id, linkData.slug)
+      break
+    case 'comment':
+      link = Frontend.Route.thread(linkData.id)
+      break
+    case 'member':
+      link = Frontend.Route.profile(linkData.id)
+      break
+    default:
+      throw new Error('Invalid Link Type')
+  }
+
   return FlaggedItem.create({
     user_id: userId,
     category,
