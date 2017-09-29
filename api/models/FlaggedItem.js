@@ -29,7 +29,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     // set reason to 'N/A' if not required (!other) and it's empty.
-    if (category !== this.Category.other && isEmpty(trim(reason))) {
+    if (category !== 'other' && isEmpty(trim(reason))) {
       reason = 'N/A'
     }
 
