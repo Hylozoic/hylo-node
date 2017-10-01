@@ -56,7 +56,7 @@ describe('mutations', () => {
     })
   })
 
-  it('flags inappropriate posts with valid parameters', () => {
+  it('flags post with valid parameters', () => {
     let flaggedContent
     let data = {
       category: 'spam',
@@ -77,7 +77,7 @@ describe('mutations', () => {
     })
   })
 
-  it('flags inappropriate content with valid parameters', () => {
+  it('flags comment with valid parameters', () => {
     let flaggedContent
     let data = {
       category: 'inappropriate',
@@ -98,7 +98,7 @@ describe('mutations', () => {
     })
   })
 
-  it('flags inappropriate content with valid parameters', () => {
+  it('flags member with valid parameters', () => {
     let flaggedContent
     let data = {
       category: 'illegal',
@@ -116,6 +116,27 @@ describe('mutations', () => {
     })
     .then(flaggedItem => {
       expect(flaggedItem.toJSON()).to.have.property('reason', 'my member reason')
+    })
+  })
+
+  it('flags content with non-other category and empty reason', () => {
+    let flaggedContent
+    let data = {
+      category: 'abusive',
+      reason: '',
+      linkData: {
+        id: 10,
+        type: 'member'
+      }
+    }
+
+    return flagInappropriateContent(u1.id, data)
+    .then(result => {
+      expect(result).to.have.property('success', true)
+      return FlaggedItem.where('category', 'abusive').fetch()
+    })
+    .then(flaggedItem => {
+      expect(flaggedItem.toJSON()).to.have.property('reason', '')
     })
   })
 
