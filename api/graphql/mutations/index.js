@@ -145,7 +145,7 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
       link = Frontend.Route.profile(linkData.id)
       break
     default:
-      throw new Error('Invalid Link Type')
+      return Promise.reject(new Error('Invalid Link Type'))
   }
 
   return FlaggedItem.create({

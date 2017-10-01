@@ -1,6 +1,7 @@
 import {
   addSkill,
-  removeSkill
+  removeSkill,
+  flagInappropriateContent
 } from '../../../../api/graphql/mutations'
 import root from 'root-path'
 require(root('test/setup'))
@@ -54,4 +55,98 @@ describe('mutations', () => {
       expect(skills.toJSON()).to.not.contain.a.thing.with.property('name', name)
     })
   })
+
+  it('flags inappropriate posts with valid parameters', () => {
+    let flaggedContent
+    let data = {
+      category: 'spam',
+      reason: 'my post reason',
+      linkData: {
+        id: 10,
+        type: 'post'
+      }
+    }
+
+    return flagInappropriateContent(u1.id, data)
+    .then(result => {
+      expect(result).to.have.property('success', true)
+      return FlaggedItem.where('category', 'spam').fetch()
+    })
+    .then(flaggedItem => {
+      expect(flaggedItem.toJSON()).to.have.property('reason', 'my post reason')
+    })
+  })
+
+  it('flags inappropriate content with valid parameters', () => {
+    let flaggedContent
+    let data = {
+      category: 'inappropriate',
+      reason: 'my comment reason',
+      linkData: {
+        id: 10,
+        type: 'comment'
+      }
+    }
+
+    return flagInappropriateContent(u1.id, data)
+    .then(result => {
+      expect(result).to.have.property('success', true)
+      return FlaggedItem.where('category', 'inappropriate').fetch()
+    })
+    .then(flaggedItem => {
+      expect(flaggedItem.toJSON()).to.have.property('reason', 'my comment reason')
+    })
+  })
+
+  it('flags inappropriate content with valid parameters', () => {
+    let flaggedContent
+    let data = {
+      category: 'illegal',
+      reason: 'my member reason',
+      linkData: {
+        id: 10,
+        type: 'member'
+      }
+    }
+
+    return flagInappropriateContent(u1.id, data)
+    .then(result => {
+      expect(result).to.have.property('success', true)
+      return FlaggedItem.where('category', 'illegal').fetch()
+    })
+    .then(flaggedItem => {
+      expect(flaggedItem.toJSON()).to.have.property('reason', 'my member reason')
+    })
+  })
+
+  it('fails to flag unidentified content with valid parameters', (done) => {
+    let flaggedContent
+    let data = {
+      category: 'safety',
+      reason: 'my UFO reason',
+      linkData: {
+        id: 10,
+        type: 'ufo'
+      }
+    }
+
+    expect(flagInappropriateContent(u1.id, data)).to.eventually.be.rejectedWith(Error, 'Invalid Link Type').and.notify(done)
+  })
+
+  it('fails to flag inappropriate content with type: other and no reason', (done) => {
+    let flaggedContent
+    let data = {
+      category: 'other',
+      reason: '',
+      linkData: {
+        id: 10,
+        type: 'post'
+      }
+    }
+
+    expect(flagInappropriateContent(u1.id, data)).to.eventually.be.rejected.and.notify(done)
+  })
+
+
+
 })
