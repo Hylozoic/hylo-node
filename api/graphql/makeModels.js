@@ -26,7 +26,7 @@ export default function makeModels (userId, isAdmin) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
 
   return {
-    Me: { // the root of the graph
+    Me: {
       model: User,
       attributes: [
         'id',
