@@ -92,7 +92,7 @@ type Person {
     offset: Int,
     search: String,
     filter: String,
-    topic: Int
+    topic: ID
   ): PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
@@ -615,7 +615,7 @@ type Network {
     offset: Int,
     search: String,
     filter: String,
-    topic: Int
+    topic: ID
   ): PostQuerySet
 }
 
