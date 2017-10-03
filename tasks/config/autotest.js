@@ -14,7 +14,7 @@ module.exports = function (grunt) {
     gaze(['api/**/*', 'lib/**/*', 'test/**/*'], function (_, watcher) {
       this.on('all', debounce(() => {
         child.spawn('bash', ['-c', cmd], {stdio: 'inherit'})
-      }, 500, true))
+      }, 2000, true))
     })
   })
 }
