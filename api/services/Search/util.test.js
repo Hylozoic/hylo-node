@@ -6,7 +6,11 @@ describe('filterAndSortPosts', () => {
 
   beforeEach(() => {
     relation = Post.collection()
-    relation.query(q => { query = q })
+    relation.query(q => {
+      query = q
+      spy.on(q, 'join')
+      spy.on(q, 'where')
+    })
   })
 
   it('accepts old sort values', () => {
@@ -27,10 +31,22 @@ describe('filterAndSortPosts', () => {
     }).to.throw()
   })
 
-  it('rejects bad topic values', () => {
-    expect(() => {
-      filterAndSortPosts({topic: '123four'}, query)
-    }).to.throw(/invalid value for topic/)
+  it('allows topic IDs', () => {
+    filterAndSortPosts({topic: '122'}, query)
+    expect(query.join).to.have.been.called.with('posts_tags', 'posts_tags.post_id', 'posts.id')
+    expect(query.where).to.have.been.called.with('posts_tags.tag_id', '122')
+  })
+
+  it('allows topic names', () => {
+    filterAndSortPosts({topic: 'design'}, query)
+    expect(query.join).to.have.been.called.twice
+    expect(query.join.__spy.calls[0]).to.deep.equal([
+      'posts_tags', 'posts_tags.post_id', 'posts.id'
+    ])
+    expect(query.join.__spy.calls[1]).to.deep.equal([
+      'tags', 'posts_tags.tag_id', 'tags.id'
+    ])
+    expect(query.where).to.have.been.called.with('tags.name', 'design')
   })
 
   it('rejects bad type values', () => {

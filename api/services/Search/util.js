@@ -37,13 +37,14 @@ export const filterAndSortPosts = curry((opts, q) => {
   }
 
   if (topic) {
-    const onlyNumbers = /^\d+$/
-    if (!onlyNumbers.test(topic)) {
-      throw new Error(`invalid value for topic: ${topic}. should be an ID`)
+    if (/^\d+$/.test(topic)) { // topic ID
+      q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
+      q.where('posts_tags.tag_id', topic)
+    } else { // topic name
+      q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
+      q.join('tags', 'posts_tags.tag_id', 'tags.id')
+      q.where('tags.name', topic)
     }
-
-    q.join('posts_tags', 'posts_tags.post_id', '=', 'posts.id')
-    q.whereIn('posts_tags.tag_id', [topic])
   }
 
   if (sort === 'posts.updated_at' && showPinnedFirst) {

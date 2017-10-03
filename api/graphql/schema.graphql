@@ -144,7 +144,7 @@ type Community {
     offset: Int,
     search: String,
     filter: String,
-    topic: Int
+    topic: ID
   ): PostQuerySet
   popularSkills(first: Int): [String]
   memberCount: Int
