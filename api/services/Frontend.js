@@ -1,4 +1,4 @@
-import { isString, get, isEmpty } from 'lodash'
+import { isString, isNumber, get, isEmpty } from 'lodash'
 
 /*
 
@@ -16,6 +16,29 @@ var url = function () {
   return format.apply(null, args)
 }
 
+var getModelId = function(model) {
+  let id
+  // If it's a number, than we just passed the ID in straight
+  if (isString(model) || isNumber(model)) {
+    id = model
+  } else if (model) {
+    id = model.id
+  }
+
+  return id
+}
+
+var getSlug = function(community) {
+  let slug
+  if (isString(community)) { // In case we passed just the slug in instead of community object
+    slug = community
+  } else if (community) {
+    slug = community.slug || community.get('slug')
+  }
+
+  return slug
+}
+
 module.exports = {
   Route: {
     evo: {
@@ -29,7 +52,7 @@ module.exports = {
     root: () => url('/app'),
 
     community: function (community) {
-      return url('/c/%s', community.get('slug'))
+      return url('/c/%s', getSlug(community))
     },
 
     communitySettings: function (community) {
@@ -41,25 +64,19 @@ module.exports = {
     },
 
     profile: function (user) {
-      return url('/m/%s', user.id)
+      return url(`/m/${getModelId(user)}`)
     },
 
     post: function (post, community) {
-      let communitySlug
-
-      if (isString(community)) { // In case we passed just the slug in instead of community object
-        communitySlug = community
-      } else if (community) {
-        communitySlug = community.slug || community.get('slug')
-      }
+      let communitySlug = getSlug(community)
 
       let communityUrl = isEmpty(communitySlug) ? '/all' : `/c/${communitySlug}`
 
-      return url(`${communityUrl}/p/${post.id}`)
+      return url(`${communityUrl}/p/${getModelId(post)}`)
     },
 
     thread: function (post) {
-      return url(`/t/${post.id}`)
+      return url(`/t/${getModelId(post)}`)
     },
 
     unfollow: function (post, community) {
@@ -92,7 +109,7 @@ module.exports = {
     },
 
     invitePath: function (community) {
-      return `/c/${community.get('slug')}/join/${community.get('beta_access_code')}`
+      return `/c/${getSlug(community)}/join/${community.get('beta_access_code')}`
     }
   }
 }

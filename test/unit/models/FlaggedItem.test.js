@@ -30,7 +30,7 @@ describe('FlaggedItem', () => {
     })
 
     it('rejects on a missing reason', () => {
-      const p = FlaggedItem.create(Object.assign({}, item, { reason: undefined }))
+      const p = FlaggedItem.create(Object.assign({}, item, { category: 'other', reason: undefined }))
       return expect(p).to.be.rejectedWith(/Reason must be a string/)
     })
 

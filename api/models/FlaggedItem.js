@@ -1,4 +1,4 @@
-import { values } from 'lodash'
+import { values, isEmpty, trim } from 'lodash'
 import { validateFlaggedItem } from 'hylo-utils/validators'
 
 module.exports = bookshelf.Model.extend({
@@ -10,6 +10,8 @@ module.exports = bookshelf.Model.extend({
 
 }, {
   Category: {
+    INAPPROPRIATE: 'inappropriate',
+    OFFENSIVE: 'offensive',
     ABUSIVE: 'abusive',
     ILLEGAL: 'illegal',
     OTHER: 'other',
@@ -18,17 +20,26 @@ module.exports = bookshelf.Model.extend({
   },
 
   create: function (attrs) {
-    const { category, link, reason } = attrs
+    const { category, link } = attrs
+
+    let { reason } = attrs
 
     if (!values(this.Category).find(c => category === c)) {
       return Promise.reject('Unknown category.')
     }
 
+    // set reason to 'N/A' if not required (!other) and it's empty.
+    if (category !== 'other' && isEmpty(trim(reason))) {
+      reason = 'N/A'
+    }
+
     const invalidReason = validateFlaggedItem.reason(reason)
     if (invalidReason) return Promise.reject(invalidReason)
 
-    const invalidLink = validateFlaggedItem.link(link)
-    if (invalidLink) return Promise.reject(invalidLink)
+    if (process.env.NODE_ENV !== 'development') {
+      const invalidLink = validateFlaggedItem.link(link)
+      if (invalidLink) return Promise.reject(invalidLink)
+    }
 
     return this.forge(attrs).save()
   }
