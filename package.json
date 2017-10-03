@@ -20,7 +20,7 @@
     "chai": "~2.3",
     "chai-as-promised": "5.0.0",
     "chai-datetime": "^1.4.1",
-    "chai-spies": "^0.5.1",
+    "chai-spies": "^0.7",
     "faker": "^4.1.0",
     "i18n": "^0.8.3",
     "mocha": "^2.2.4",
