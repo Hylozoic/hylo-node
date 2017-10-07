@@ -8,6 +8,7 @@ import convertGraphqlData from './convertGraphqlData'
 export { createComment, deleteComment, canDeleteComment } from './comment'
 export { updateNetwork } from './network'
 export { registerDevice } from './mobile'
+export { subscribe } from './topic'
 export {
   createInvitation,
   expireInvitation,
@@ -47,10 +48,6 @@ export function findOrCreateThread (userId, data) {
 
 export function findOrCreateLinkPreviewByUrl (data) {
   return underlyingFindLinkPreview(data.url)
-}
-
-export function subscribe (userId, topicId, communityId, isSubscribing) {
-  return TagFollow.subscribe(topicId, userId, communityId, isSubscribing)
 }
 
 export function updateMembership (userId, { communityId, data }) {
