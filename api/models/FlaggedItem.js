@@ -25,7 +25,7 @@ module.exports = bookshelf.Model.extend({
     let { reason } = attrs
 
     if (!values(this.Category).find(c => category === c)) {
-      return Promise.reject('Unknown category.')
+      return Promise.reject(new Error('Unknown category.'))
     }
 
     // set reason to 'N/A' if not required (!other) and it's empty.
@@ -34,11 +34,11 @@ module.exports = bookshelf.Model.extend({
     }
 
     const invalidReason = validateFlaggedItem.reason(reason)
-    if (invalidReason) return Promise.reject(invalidReason)
+    if (invalidReason) return Promise.reject(new Error(invalidReason))
 
     if (process.env.NODE_ENV !== 'development') {
       const invalidLink = validateFlaggedItem.link(link)
-      if (invalidLink) return Promise.reject(invalidLink)
+      if (invalidLink) return Promise.reject(new Error(invalidLink))
     }
 
     return this.forge(attrs).save()

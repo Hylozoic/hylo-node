@@ -8,9 +8,14 @@ require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
 describe('mutations', () => {
-  var u1, community
+  var u1, community, protocol, domain
 
   before(() => {
+    protocol = process.env.PROTOCOL
+    domain = process.env.DOMAIN
+    process.env.PROTOCOL = 'https'
+    process.env.DOMAIN = 'www.hylo.com'
+
     community = factories.community()
     u1 = factories.user()
     return Promise.join(
@@ -18,6 +23,11 @@ describe('mutations', () => {
     .then(() => Promise.join(
       u1.joinCommunity(community)
     ))
+  })
+
+  after(() => {
+    process.env.PROTOCOL = protocol
+    process.env.DOMAIN = domain
   })
 
   it('can add a skill', () => {
@@ -57,7 +67,6 @@ describe('mutations', () => {
   })
 
   it('flags post with valid parameters', () => {
-    let flaggedContent
     let data = {
       category: 'spam',
       reason: 'my post reason',
@@ -78,7 +87,6 @@ describe('mutations', () => {
   })
 
   it('flags comment with valid parameters', () => {
-    let flaggedContent
     let data = {
       category: 'inappropriate',
       reason: 'my comment reason',
@@ -99,7 +107,6 @@ describe('mutations', () => {
   })
 
   it('flags member with valid parameters', () => {
-    let flaggedContent
     let data = {
       category: 'illegal',
       reason: 'my member reason',
@@ -120,7 +127,6 @@ describe('mutations', () => {
   })
 
   it('flags content with non-other category and empty reason', () => {
-    let flaggedContent
     let data = {
       category: 'abusive',
       reason: '',
@@ -141,7 +147,6 @@ describe('mutations', () => {
   })
 
   it('fails to flag unidentified content with valid parameters', (done) => {
-    let flaggedContent
     let data = {
       category: 'safety',
       reason: 'my UFO reason',
@@ -155,7 +160,6 @@ describe('mutations', () => {
   })
 
   it('fails to flag inappropriate content with type: other and no reason', (done) => {
-    let flaggedContent
     let data = {
       category: 'other',
       reason: '',
@@ -167,7 +171,4 @@ describe('mutations', () => {
 
     expect(flagInappropriateContent(u1.id, data)).to.eventually.be.rejected.and.notify(done)
   })
-
-
-
 })

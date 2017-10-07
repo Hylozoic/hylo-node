@@ -1,4 +1,4 @@
-import { isString, isNumber, get, isEmpty } from 'lodash'
+import { isString, isNumber, isEmpty } from 'lodash'
 
 /*
 
@@ -8,15 +8,20 @@ throughout the code.
 
 */
 
-const prefix = `${process.env.PROTOCOL}://${process.env.DOMAIN}`
+let prefix = `${process.env.PROTOCOL}://${process.env.DOMAIN}`
+const isTesting = process.env.NODE_ENV === 'test'
 
 var url = function () {
+  // allow these values to be changed in individual tests
+  if (isTesting) {
+    prefix = `${process.env.PROTOCOL}://${process.env.DOMAIN}`
+  }
   var args = Array.prototype.slice.call(arguments)
   args[0] = prefix + args[0]
   return format.apply(null, args)
 }
 
-var getModelId = function(model) {
+var getModelId = function (model) {
   let id
   // If it's a number, than we just passed the ID in straight
   if (isString(model) || isNumber(model)) {
@@ -28,7 +33,7 @@ var getModelId = function(model) {
   return id
 }
 
-var getSlug = function(community) {
+var getSlug = function (community) {
   let slug
   if (isString(community)) { // In case we passed just the slug in instead of community object
     slug = community
