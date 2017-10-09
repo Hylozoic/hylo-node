@@ -40,6 +40,8 @@ yarn install
 Create a `.env` file in the root directory. Values in square brackets are team specific and should be supplied:
 
 ```
+COOKIE_NAME=[ any string without spaces ]
+COOKIE_SECRET=[ any string without spaces ]
 DEBUG_SQL=true
 DOMAIN=localhost:3001
 EMAIL_SENDER=[ email ]

@@ -23,7 +23,7 @@ module.exports.session = {
   * of your users, forcing them to log in again.                             *
   *                                                                          *
   ***************************************************************************/
-  secret: '406cf5647d40abc02507cd812856b634',
+  secret: process.env.COOKIE_SECRET,
 
   /***************************************************************************
   *                                                                          *
@@ -32,7 +32,7 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
 
-  key: 'hylo.sid.1', // cookie name, instead of sails.sid
+  key: process.env.COOKIE_NAME, // cookie name, instead of sails.sid
 
   cookie: {
     domain: process.env.COOKIE_DOMAIN,
