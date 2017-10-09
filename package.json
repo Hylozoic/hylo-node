@@ -27,6 +27,7 @@
     "mock-knex": "^0.3.7",
     "mock-require": "^2.0.2",
     "nock": "^7.0.2",
+    "nodemon": "^1.12.1",
     "nyc": "^10.0"
   },
   "dependencies": {
@@ -188,6 +189,13 @@
       "UserSession",
       "Validation",
       "Vote"
+    ]
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "npm-debug.log",
+      ".tmp",
+      "*.test.js"
     ]
   }
 }
