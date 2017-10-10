@@ -48,6 +48,7 @@ export const sharedNetworkMembership = curry((tableName, userId, relation) =>
   }))
 
 export const commentFilter = userId => relation => relation.query(q => {
+  q.distinct()
   q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
   q.where({'comments.active': true})
   q.where(q2 => {
