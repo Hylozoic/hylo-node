@@ -70,7 +70,7 @@ describe('model filters', () => {
   describe('Comment', () => {
     it('filters down to active comments on in-network posts or followed posts', () => {
       const collection = models.Comment.filter(Comment.collection())
-      expectEqualQuery(collection, `select * from "comments"
+      expectEqualQuery(collection, `select distinct * from "comments"
         left join "communities_posts"
           on "comments"."post_id" = "communities_posts"."post_id"
         where "comments"."active" = true
