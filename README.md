@@ -33,7 +33,7 @@ sudo systemctl start redis
 Next install the node modules (and Yarn, if you don't already have it available):
 
 ```shell
-npm install -g forever sails foreman yarn
+npm install -g foreman yarn
 yarn install
 ```
 
