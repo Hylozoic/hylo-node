@@ -1,2 +1,2 @@
-web: nodemon app.js
-worker: DELAY_START=5 nodemon worker.js
+web: nodemon app.js --delay=0.5
+worker: DELAY_START=5 nodemon worker.js --delay=0.5
