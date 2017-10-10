@@ -4,6 +4,8 @@
   },
   "hooks": {
     "orm": false,
-    "pubsub": false
+    "pubsub": false,
+    "grunt": false,
+    "blueprints": false
   }
 }
