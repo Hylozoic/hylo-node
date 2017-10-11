@@ -23,7 +23,6 @@ module.exports = {
       iTunesItemIdentifier: '1002185140'
     }
     */
-    // console.log('req.headers', req.headers)
     var version = req.param('ios-version') || req.param('android-version')
     switch (version) {
       case '1.6':
