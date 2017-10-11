@@ -298,19 +298,30 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateUserSocketRoom: function (userId) {
+    const { activity } = this.relations
     const actor = Object.assign({},
       this.actor().pick([ 'id', 'name' ]),
       { avatarUrl: this.actor().get('avatar_url') }
     )
+    const meta = activity.get('meta')
+    const action = Notification.priorityReason(meta.reasons)
     const comment = this.comment().pick([ 'id', 'text' ])
-    const community = this.relations.activity.relations.community.pick([ 'id', 'name', 'slug' ])
+    const community = activity.relations.community.pick([ 'id', 'name', 'slug' ])
+    const createdAt = activity.get('created_at').toString()
     const post = { id: this.post().id, title: this.post().get('name') }
     const payload = {
       id: '' + this.id,
-      createdAt: this.get('created_at'),
-      activity: Object.assign({},
-        this.relations.activity.pick([ 'action', 'id', 'meta', 'unread' ]),
-        { actor, comment, community, post })
+      activity: {
+        action,
+        actor,
+        comment,
+        community,
+        createdAt,
+        id: '' + this.relations.activity.id,
+        meta,
+        post,
+        unread: activity.get('unread')
+      }
     }
 
     const redisInfo = parseRedisUrl().parse(process.env.REDIS_URL)
