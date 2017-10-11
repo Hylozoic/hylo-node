@@ -4,6 +4,8 @@ import emitter from 'socket.io-emitter'
 import decode from 'ent/decode'
 import parseRedisUrl from 'parse-redis-url'
 import { userRoom } from '../services/Websockets'
+import rollbar from 'rollbar'
+rollbar.init(process.env.ROLLBAR_SERVER_TOKEN)
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -313,7 +315,6 @@ module.exports = bookshelf.Model.extend({
 
     const redisInfo = parseRedisUrl().parse(process.env.REDIS_URL)
     const io = emitter(redisInfo)
-    io.on('error', err => console.error(`Socket error on newNotification: ${err}`))
     io.redis.on('error', err => console.error(`
       Redis error: ${JSON.stringify(err)}
       while attempting to send notification via socket from actor: ${JSON.stringify(actor)}
@@ -367,8 +368,10 @@ module.exports = bookshelf.Model.extend({
     ]})
     .then(ns => ns.length > 0 &&
       Promise.each(ns.models,
-        n => n.send().catch(() =>
-          n.save({failed_at: new Date()}, {patch: true})))
+        n => n.send().catch(err => {
+          rollbar.handleErrorWithPayloadData(err, {notification: n.attributes})
+          return n.save({failed_at: new Date()}, {patch: true})
+        }))
       .then(() => Notification.sendUnsent()))
   },
 
