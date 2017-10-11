@@ -82,7 +82,9 @@ passport.use(facebookStrategy)
 
 var facebookTokenStrategy = new FacebookTokenStrategy({
   clientID: process.env.FACEBOOK_APP_ID,
-  clientSecret: process.env.FACEBOOK_APP_SECRET
+  clientSecret: process.env.FACEBOOK_APP_SECRET,
+  scope: ['public_profile', 'email', 'user_friends', 'user_about_me', 'user_likes', 'user_location'],
+  profileFields: ['id', 'displayName', 'email', 'link']
 }, function (accessToken, refreshToken, profile, done) {
   done(null, formatProfile(profile, accessToken, refreshToken))
 })
