@@ -217,6 +217,7 @@ module.exports = {
     })
     .catch(res.serverError)
   },
-
-  findUser // this is here for testing
+  // these are here for testing
+  findUser,
+  upsertLinkedAccount
 }

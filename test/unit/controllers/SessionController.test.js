@@ -40,6 +40,43 @@ describe('SessionController.findUser', () => {
   })
 })
 
+describe('SessionController.upsertLinkedAccount', () => {
+  var user, req, profile
+  const upsertLinkedAccount = SessionController.upsertLinkedAccount
+  const facebookUrl = 'http://facebook.com/foo'
+
+  before(() => {
+    profile = {
+      id: 'foo',
+      _json: {
+        link: facebookUrl
+      }
+    }
+    user = factories.user()
+    return user.save()
+    .then(() => {
+      req = {session: {userId: user.id}}
+    })
+  })
+
+  describe('with a directly linked user ', () => {
+    before(() => {
+      return LinkedAccount.create(user.id, {type: 'facebook', profile: {id: profile.id}})
+    })
+
+    after(() => {
+      return LinkedAccount.query().where('user_id', user.id).del()
+    })
+
+    it('updates the user facebook_url', () => {
+      upsertLinkedAccount(req, 'facebook', profile)
+      .then(() => {
+        expect(user.get('facebook_url')).to.equal(facebookUrl)
+      })
+    })
+  })
+})
+
 describe('SessionController', function () {
   var req, res, cat
 
