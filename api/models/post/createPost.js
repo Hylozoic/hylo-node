@@ -65,7 +65,9 @@ export function afterCreatingPost (post, opts) {
 }
 
 function updateTagsAndCommunities (post, trx) {
-  return post.load(['tags', 'communities'], {transacting: trx})
+  return post.load([
+    'attachments', 'communities', 'linkPreview', 'networks', 'tags', 'user'
+  ], {transacting: trx})
   .then(() => {
     const { tags, communities } = post.relations
     const bumpCounts = [
@@ -81,11 +83,21 @@ function updateTagsAndCommunities (post, trx) {
       })
     ].map(group => group.query().increment('new_post_count').transacting(trx))
 
-    const notifySockets = communities.map(c =>
-      pushToSockets(communityRoom(c.id), 'newPost', {
-        tags: tags.map('id').map(String),
-        creatorId: post.get('user_id')
-      }))
+    // NOTE: the payload object is released to many users, so it cannot be
+    // subject to the usual permissions checks (which communities/networks
+    // the user is allowed to view, etc). This means we either omit the
+    // information, or (as below) we only post community data for the socket
+    // room it's being pushed to.
+    // TODO: eventually we will need to push to socket rooms for networks.
+    const payload = post.getNewPostSocketPayload()
+    const notifySockets = communities.map(c => {
+      const communities = [ c ]
+      pushToSockets(
+        communityRoom(c.id),
+        'newPost',
+        Object.assign({}, payload, { communities })
+      )
+    })
 
     const updateCommunityTags = CommunityTag.query(q => {
       q.whereIn('tag_id', tags.map('id'))

@@ -259,8 +259,102 @@ module.exports = bookshelf.Model.extend(Object.assign({
   removeFromCommunity: function (idOrSlug) {
     return PostMembership.find(this.id, idOrSlug)
     .then(membership => membership.destroy())
-  }
+  },
 
+  // Emulate the graphql request for a post in the feed so the feed can be
+  // updated via socket.
+  // TODO: if we were in a position to avoid duplicating the graphql layer
+  // here, that'd be grand.
+  getNewPostSocketPayload: function () {
+    const attachments = this.relations.attachments.map(a => a.pick([
+      'id', 'position', 'type', 'url'
+    ]))
+    const communities = this.relations.communities.map(c => c.pick([
+      'id', 'name', 'slug'
+    ]))
+    const creator = this.relations.user.pick([ 'id', 'name', 'avatarUrl' ])
+    const createdAt = this.get('created_at').toString()
+    // const linkPreview = this.relations.linkPreview.pick([
+    //   'id', 'imageUrl', 'title', 'url'
+    // ])
+    const topics = this.tags().map('id').map(String),
+    const updatedAt = this.get('updated_at').toString()
+    const votesTotal = this.get('num_votes')
+
+    return Object.assign({},
+      this.pick([ 'id', 'title', 'details', 'type' ]),
+      {
+        // Shouldn't have commenters immediately after creation
+        attachments,
+        commenters: [],
+        commentsTotal: 0,
+        communities,
+        createdAt,
+        creator,
+        // linkPreview,
+        updatedAt,
+        votesTotal,
+
+        // May need to retain these to avoid breaking legacy code.
+        // TODO: Check if these are still required.
+        creatorId: creator.id
+      }
+    )
+  }
+// id
+// title
+// details
+// type
+// creator {
+//   id
+//   name
+//   avatarUrl
+// }
+// createdAt
+// updatedAt
+// commenters(first: 3) {
+//   id
+//   name
+//   avatarUrl
+// }
+// commentersTotal
+// ${withComments ? `comments(first: 10, order: "desc") {
+//   items {
+//     id
+//     text
+//     creator {
+//       id
+//       name
+//       avatarUrl
+//     }
+//     attachments {
+//       id
+//       url
+//     }
+//     createdAt
+//   }
+//   total
+//   hasMore
+// }` : ''}
+// linkPreview {
+//   id
+//   title
+//   url
+//   imageUrl
+// }
+// votesTotal
+// myVote
+// communities {
+//   id
+//   name
+//   slug
+// }
+// attachments {
+//   id
+//   position
+//   type
+//   url
+// }`
 }, EnsureLoad), {
   // Class Methods
 
