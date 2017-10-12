@@ -24,13 +24,13 @@ module.exports = {
     }
     */
     switch (req.param('ios-version')) {
-      case '2.0':
-        result = Object.assign(
-          suggestUpdate,
-          { message: 'The version you are using is not longer up to date. Please go to the App Store to update.' }
-        )
-        break
-      case '1.65':
+      // case '2.0':
+      //   result = Object.assign(
+      //     suggestUpdate,
+      //     { message: 'The version you are using is not longer up to date. Please go to the App Store to update.' }
+      //   )
+      //   break
+      case '1.9':
         result = Object.assign(
           forceUpdate,
           { message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update' }
@@ -46,13 +46,13 @@ module.exports = {
     }
 
     switch (req.param('android-version')) {
-      case '2.0':
-        result = Object.assign(
-          suggestUpdate,
-          { message: 'The version you are using is not longer up to date. Please go to the App Store to update.' }
-        )
-        break
-      case '1.65':
+      // case '1.9':
+      //   result = Object.assign(
+      //     suggestUpdate,
+      //     { message: 'The version you are using is not longer up to date. Please go to the App Store to update.' }
+      //   )
+      //   break
+      case '1.9':
         result = Object.assign(
           forceUpdate,
           { message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update' }
