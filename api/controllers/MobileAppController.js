@@ -1,19 +1,5 @@
 module.exports = {
-
   updateInfo: function (req, res) {
-    var result = {}
-    var iTunesItemIdentifier = '1002185140'
-    var forceUpdate = {
-      type: 'force',
-      title: 'A new version of the app is available',
-      iTunesItemIdentifier
-    }
-    var suggestUpdate = {
-      type: 'suggest',
-      title: 'An update is available',
-      iTunesItemIdentifier
-    }
-
     /*
     Format for result:
     result = {
@@ -23,49 +9,53 @@ module.exports = {
       iTunesItemIdentifier: '1002185140'
     }
     */
+    var SUGGEST = 'suggest'
+    var FORCE = 'force'
+    var IOS = 'ios'
+    var ANDROID = 'android'
+    var result = {}
+
     switch (req.param('ios-version')) {
-      // case '2.0':
-      //   result = Object.assign(
-      //     suggestUpdate,
-      //     { message: 'The version you are using is not longer up to date. Please go to the App Store to update.' }
-      //   )
-      //   break
+      case '2.0':
+        result = resultBuilder(SUGGEST, IOS)
+        break
       case '1.9':
-        result = Object.assign(
-          forceUpdate,
-          { message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update' }
-        )
+        result = resultBuilder(FORCE, IOS)
         break
       case undefined:
         break
       default:
-        result = Object.assign(
-          forceUpdate,
-          { message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update' }
-        )
+        result = resultBuilder(FORCE, IOS)
     }
 
     switch (req.param('android-version')) {
-      // case '1.9':
-      //   result = Object.assign(
-      //     suggestUpdate,
-      //     { message: 'The version you are using is not longer up to date. Please go to the App Store to update.' }
-      //   )
-      //   break
+      case '2.0':
+        result = resultBuilder(SUGGEST, ANDROID)
+        break
       case '1.9':
-        result = Object.assign(
-          forceUpdate,
-          { message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update' }
-        )
+        result = resultBuilder(FORCE, ANDROID)
         break
       case undefined:
         break
       default:
-        result = Object.assign(
-          forceUpdate,
-          { message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update' }
-        )
+        result = resultBuilder(FORCE, ANDROID)
     }
+
     res.ok(result)
+  }
+}
+
+function resultBuilder (type, platform) {
+  var iTunesItemIdentifier = '1002185140'
+  var title = type === 'suggest' ? 'An update is available' : 'A new version of the app is available'
+  var store = platform === 'ios' ? 'App Store' : 'Other Store'
+  var suggestUpdateMessage = `The version you are using is not longer up to date. Please go to the ${store} to update.`
+  var forceUpdateMessage = `The version you are using is no longer compatible with the site. Please go to the ${store} now to update`
+  var message = type === 'suggest' ? suggestUpdateMessage : forceUpdateMessage
+  return {
+    type,
+    title,
+    message,
+    iTunesItemIdentifier
   }
 }
