@@ -16,8 +16,7 @@ describe('MobileAppController', () => {
         type: 'force',
         title: 'A new version of the app is available',
         message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update.',
-        link: 'https://itunes.apple.com/app/com.hylo.HyloA',
-        iTunesItemIdentifier: '1002185140'
+        link: 'https://itunes.apple.com/app/id1002185140'
       }
       req.headers = {'ios-version': '2.0'}
       MobileAppController.updateInfo(req, res)
@@ -28,8 +27,7 @@ describe('MobileAppController', () => {
         type: 'force',
         title: 'A new version of the app is available',
         message: 'The version you are using is no longer compatible with the site. Please go to the Play Store now to update.',
-        link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative',
-        iTunesItemIdentifier: '1002185140'
+        link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
       }
       req.headers = {'android-version': '2.0'}
       MobileAppController.updateInfo(req, res)
@@ -44,8 +42,7 @@ describe('MobileAppController', () => {
           type: 'suggest',
           title: 'An update is available',
           message: 'The version you are using is not longer up to date. Please go to the App Store to update.',
-          link: 'https://itunes.apple.com/app/com.hylo.HyloA',
-          iTunesItemIdentifier: '1002185140'
+          link: 'https://itunes.apple.com/app/id1002185140'
         }
 
         req.params = {'ios-version': '2.0'}
@@ -57,8 +54,7 @@ describe('MobileAppController', () => {
           type: 'force',
           title: 'A new version of the app is available',
           message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update',
-          link: 'https://itunes.apple.com/app/com.hylo.HyloA',
-          iTunesItemIdentifier: '1002185140'
+          link: 'https://itunes.apple.com/app/id1002185140'
         }
 
         req.params = {'ios-version': '1.9'}
@@ -70,8 +66,7 @@ describe('MobileAppController', () => {
           type: 'suggest',
           title: 'An update is available',
           message: 'The version you are using is not longer up to date. Please go to the Play Store to update.',
-          link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative',
-          iTunesItemIdentifier: '1002185140'
+          link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
         }
 
         req.params = {'android-version': '2.0'}
@@ -83,8 +78,7 @@ describe('MobileAppController', () => {
           type: 'force',
           title: 'A new version of the app is available',
           message: 'The version you are using is no longer compatible with the site. Please go to the Play Store now to update',
-          link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative',
-          iTunesItemIdentifier: '1002185140'
+          link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
         }
 
         req.params = {'android-version': '1.9'}

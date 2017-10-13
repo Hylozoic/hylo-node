@@ -1,6 +1,7 @@
 module.exports = {
   updateInfo: function (req, res) {
-    var link = 'https://itunes.apple.com/app/com.hylo.HyloA'
+    var iTunesItemIdentifier = '1002185140'
+    var link = `https://itunes.apple.com/app/id${iTunesItemIdentifier}`
     var store = 'App Store'
     if (req.headers['android-version']) {
       link = 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
@@ -11,8 +12,7 @@ module.exports = {
       type: 'force',
       title: 'A new version of the app is available',
       message: `The version you are using is no longer compatible with the site. Please go to the ${store} now to update.`,
-      link,
-      iTunesItemIdentifier: '1002185140'
+      link
     }
     return res.ok(result)
   },
@@ -63,9 +63,9 @@ module.exports = {
 }
 
 function resultBuilder (type, platform) {
-  var appStoreLink = 'https://itunes.apple.com/app/com.hylo.HyloA'
-  var playStoreLink = 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
   var iTunesItemIdentifier = '1002185140'
+  var appStoreLink = `https://itunes.apple.com/app/id${iTunesItemIdentifier}`
+  var playStoreLink = 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
   var title = type === 'suggest' ? 'An update is available' : 'A new version of the app is available'
   var store = platform === 'ios' ? 'App Store' : 'Play Store'
   var suggestUpdateMessage = `The version you are using is not longer up to date. Please go to the ${store} to update.`
@@ -76,7 +76,6 @@ function resultBuilder (type, platform) {
     type,
     title,
     message,
-    link,
-    iTunesItemIdentifier
+    link
   }
 }
