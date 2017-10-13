@@ -69,7 +69,7 @@ describe('SessionController.upsertLinkedAccount', () => {
     })
 
     it('updates the user facebook_url', () => {
-      upsertLinkedAccount(req, 'facebook', profile)
+      return upsertLinkedAccount(req, 'facebook', profile)
       .then(() => {
         expect(user.get('facebook_url')).to.equal(facebookUrl)
       })
