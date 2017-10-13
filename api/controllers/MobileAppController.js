@@ -1,5 +1,14 @@
 module.exports = {
   updateInfo: function (req, res) {
+    var result = {
+      type: 'force',
+      title: 'A new version of the app is available',
+      message: 'The version you are using is no longer compatible with the site. Please go to the Play Store now to update.',
+      iTunesItemIdentifier: '1002185140'
+    }
+    return res.ok(result)
+  },
+  checkShouldUpdate: function (req, res) {
     /*
     Format for result:
     result = {
@@ -41,14 +50,14 @@ module.exports = {
         result = resultBuilder(FORCE, ANDROID)
     }
 
-    res.ok(result)
+    return res.ok(result)
   }
 }
 
 function resultBuilder (type, platform) {
   var iTunesItemIdentifier = '1002185140'
   var title = type === 'suggest' ? 'An update is available' : 'A new version of the app is available'
-  var store = platform === 'ios' ? 'App Store' : 'Other Store'
+  var store = platform === 'ios' ? 'App Store' : 'Play Store'
   var suggestUpdateMessage = `The version you are using is not longer up to date. Please go to the ${store} to update.`
   var forceUpdateMessage = `The version you are using is no longer compatible with the site. Please go to the ${store} now to update`
   var message = type === 'suggest' ? suggestUpdateMessage : forceUpdateMessage
