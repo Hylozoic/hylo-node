@@ -177,8 +177,8 @@ type PersonQuerySet {
 type Invitation {
   id: Int
   email: String
-  created_at: String
-  last_sent_at: String
+  createdAt: String
+  lastSentAt: String
   error: String
 }
 type InvitationQuerySet {
