@@ -66,7 +66,7 @@ export function afterCreatingPost (post, opts) {
 
 function updateTagsAndCommunities (post, trx) {
   return post.load([
-    'attachments', 'communities', 'linkPreview', 'networks', 'tags', 'user'
+    'communities', 'media', 'networks', 'tags', 'user'
   ], {transacting: trx})
   .then(() => {
     const { tags, communities } = post.relations
@@ -104,5 +104,6 @@ function updateTagsAndCommunities (post, trx) {
     }).query().update({updated_at: new Date()}).transacting(trx)
 
     return Promise.all(bumpCounts.concat([notifySockets, updateCommunityTags]))
+      .catch(err => console.error('updateTagsAndCommunities:', err))
   })
 }
