@@ -66,7 +66,7 @@ export function afterCreatingPost (post, opts) {
 
 function updateTagsAndCommunities (post, trx) {
   return post.load([
-    'communities', 'media', 'networks', 'tags', 'user'
+    'communities', 'linkPreview', 'media', 'networks', 'tags', 'user'
   ], {transacting: trx})
   .then(() => {
     const { tags, communities } = post.relations
