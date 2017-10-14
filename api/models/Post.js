@@ -1,12 +1,13 @@
 /* globals LastRead, _ */
 /* eslint-disable camelcase */
-import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
+import { camelCase, filter, keys, isNull, mapKeys, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
 import { countTotal } from '../../lib/util/knex'
+import { refineMany, refineOne } from './util/relations'
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -266,31 +267,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // TODO: if we were in a position to avoid duplicating the graphql layer
   // here, that'd be grand.
   getNewPostSocketPayload: function () {
-    const attachments = this.relations.media.map(m => m.pick([
-      'id', 'position', 'type', 'url'
-    ]))
-    const communities = this.relations.communities.map(c => c.pick([
-      'id', 'name', 'slug'
-    ]))
-    const creator = this.relations.user.pick([ 'id', 'name', 'avatarUrl' ])
-    const createdAt = this.get('created_at').toString()
-    const topics = this.tags().map('id').map(String)
-    const updatedAt = this.get('updated_at').toString()
-    const votesTotal = this.get('num_votes')
+    const { communities, linkPreview, media, tags, user } = this.relations
+
+    const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
+    const topics = refineMany(tags, [ 'id', 'name' ])
 
     return Object.assign({},
-      this.pick([ 'id', 'title', 'details', 'type' ]),
+      refineOne(this, [ 'created_at', 'details', 'id', 'title', 'type', 'updated_at' ]),
       {
-        attachments,
+        attachments: refineMany(media, [ 'id', 'position', 'type', 'url' ]),
         // Shouldn't have commenters immediately after creation
         commenters: [],
         commentsTotal: 0,
-        communities,
-        createdAt,
-        creator,
+        communities: refineMany(communities, [ 'id', 'name', 'slug' ]),
+        creator: refineOne(user, [ 'id', 'name', 'avatar_url' ]),
+        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
         topics,
-        updatedAt,
-        votesTotal,
+        votesTotal: this.get('num_votes'),
 
         // May need to retain these to avoid breaking legacy code.
         // TODO: Check if these are still required.

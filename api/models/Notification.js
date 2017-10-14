@@ -6,6 +6,7 @@ import parseRedisUrl from 'parse-redis-url'
 import { userRoom } from '../services/Websockets'
 import rollbar from 'rollbar'
 rollbar.init(process.env.ROLLBAR_SERVER_TOKEN)
+import { refineOne } from './util/relations'
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -299,29 +300,24 @@ module.exports = bookshelf.Model.extend({
 
   updateUserSocketRoom: function (userId) {
     const { activity } = this.relations
-    const actor = Object.assign({},
-      this.actor().pick([ 'id', 'name' ]),
-      { avatarUrl: this.actor().get('avatar_url') }
-    )
+    const { actor, comment, community, post } = activity.relations
     const meta = activity.get('meta')
     const action = Notification.priorityReason(meta.reasons)
-    const comment = this.comment().pick([ 'id', 'text' ])
-    const community = activity.relations.community.pick([ 'id', 'name', 'slug' ])
-    const createdAt = activity.get('created_at').toString()
-    const post = { id: this.post().id, title: this.post().get('name') }
+
+    const p = refineOne(post, [ 'id', 'name', 'details' ])
     const payload = {
       id: '' + this.id,
-      activity: {
-        action,
-        actor,
-        comment,
-        community,
-        createdAt,
-        id: '' + this.relations.activity.id,
-        meta,
-        post,
-        unread: activity.get('unread')
-      }
+      activity: Object.assign({},
+        refineOne(activity, [ 'created_at', 'id', 'meta', 'unread' ]),
+        {
+          action,
+          actor: refineOne(actor, [ 'avatar_url', 'id', 'name' ]),
+          comment: refineOne(comment, [ 'id', 'text' ]),
+          community: refineOne(community, [ 'id', 'name', 'slug' ]),
+          meta,
+          post: { id: p.id, title: p.name, details: p.details }
+        }
+      )
     }
 
     const redisInfo = parseRedisUrl().parse(process.env.REDIS_URL)
