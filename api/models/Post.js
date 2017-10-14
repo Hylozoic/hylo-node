@@ -1,6 +1,6 @@
 /* globals LastRead, _ */
 /* eslint-disable camelcase */
-import { camelCase, filter, keys, isNull, mapKeys, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
+import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
