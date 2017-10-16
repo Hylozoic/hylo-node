@@ -2,7 +2,7 @@ import rootPath from 'root-path'
 const factories = require(rootPath('test/setup/factories'))
 import { refineMany, refineOne } from './relations'
 
-describe.only('refineOne', () => {
+describe('refineOne', () => {
   let post
 
   beforeEach(() => {

@@ -66,7 +66,7 @@ export function afterCreatingPost (post, opts) {
 
 function updateTagsAndCommunities (post, trx) {
   return post.load([
-    'communities', 'linkPreview', 'media', 'networks', 'tags', 'user'
+    'communities', 'details', 'linkPreview', 'name', 'networks', 'tags', 'user'
   ], {transacting: trx})
   .then(() => {
     const { tags, communities } = post.relations
@@ -90,12 +90,11 @@ function updateTagsAndCommunities (post, trx) {
     // room it's being pushed to.
     // TODO: eventually we will need to push to socket rooms for networks.
     const payload = post.getNewPostSocketPayload()
-    const notifySockets = communities.map(c => {
-      const communities = [ c ]
+    const notifySockets = payload.communities.map(c => {
       pushToSockets(
         communityRoom(c.id),
         'newPost',
-        Object.assign({}, payload, { communities })
+        Object.assign({}, payload, { communities: [ c ] })
       )
     })
 
