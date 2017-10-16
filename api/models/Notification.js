@@ -301,10 +301,8 @@ module.exports = bookshelf.Model.extend({
   updateUserSocketRoom: function (userId) {
     const { activity } = this.relations
     const { actor, comment, community, post } = activity.relations
-    const meta = activity.get('meta')
-    const action = Notification.priorityReason(meta.reasons)
+    const action = Notification.priorityReason(activity.get('meta').reasons)
 
-    const p = refineOne(post, [ 'id', 'name', 'details' ])
     const payload = {
       id: '' + this.id,
       activity: Object.assign({},
@@ -314,8 +312,11 @@ module.exports = bookshelf.Model.extend({
           actor: refineOne(actor, [ 'avatar_url', 'id', 'name' ]),
           comment: refineOne(comment, [ 'id', 'text' ]),
           community: refineOne(community, [ 'id', 'name', 'slug' ]),
-          meta,
-          post: { id: p.id, title: p.name, details: p.details }
+          post: refineOne(
+            post,
+            [ 'id', 'name', 'description' ],
+            { description: 'details', name: 'title' }
+          )
         }
       )
     }
