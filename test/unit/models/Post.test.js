@@ -54,7 +54,7 @@ describe('Post', function () {
   describe('#getCommenters', function () {
     var c1, u1, u2, u3, u4, u5, u6, u7, u8, post
 
-    before(function (done) {
+    before(() => {
       return setup.clearDb().then(function () {
         u1 = new User({email: 'a@post.c'})
         u2 = new User({email: 'b@post.b'})
@@ -79,11 +79,13 @@ describe('Post', function () {
           return post.save()
         }).then(function () {
           return Promise.map([u1, u2, u3, u4, u5, u6, u7, u8], (u) => {
-            const c = new Comment({user_id: u.id, post_id: post.id})
+            const c = new Comment({
+              user_id: u.id,
+              post_id: post.id,
+              active: true
+            })
             return c.save()
           })
-        }).then(function () {
-          done()
         })
       })
     })
