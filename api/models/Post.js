@@ -12,7 +12,10 @@ import { refineMany, refineOne } from './util/relations'
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
   q.join('comments', 'comments.user_id', 'users.id')
-  q.where('comments.post_id', '=', post.id)
+  q.where({
+    'comments.post_id': post.id,
+    'comments.active': true
+  })
   if (currentUserId) {
     q.orderBy(bookshelf.knex.raw(`case when user_id = ${currentUserId} then -1 else user_id end`))
   }
