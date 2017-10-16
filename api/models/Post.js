@@ -7,6 +7,7 @@ import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
 import { countTotal } from '../../lib/util/knex'
+import { refineMany, refineOne } from './util/relations'
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -259,8 +260,40 @@ module.exports = bookshelf.Model.extend(Object.assign({
   removeFromCommunity: function (idOrSlug) {
     return PostMembership.find(this.id, idOrSlug)
     .then(membership => membership.destroy())
-  }
+  },
 
+  // Emulate the graphql request for a post in the feed so the feed can be
+  // updated via socket. Some fields omitted, linkPreview for example.
+  // TODO: if we were in a position to avoid duplicating the graphql layer
+  // here, that'd be grand.
+  getNewPostSocketPayload: function () {
+    const { communities, linkPreview, tags, user } = this.relations
+
+    const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
+    const topics = refineMany(tags, [ 'id', 'name' ])
+
+    return Object.assign({},
+      refineOne(
+        this,
+        [ 'created_at', 'description', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
+        { 'description': 'details', 'name': 'title', 'num_votes': 'votesTotal' }
+      ),
+      {
+        // Shouldn't have commenters immediately after creation
+        commenters: [],
+        commentsTotal: 0,
+        communities: refineMany(communities, [ 'id', 'name', 'slug' ]),
+        creator,
+        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
+        topics,
+
+        // May need to retain these to avoid breaking legacy code.
+        // TODO: Check if these are still required.
+        creatorId: creator.id,
+        tags: topics
+      }
+    )
+  }
 }, EnsureLoad), {
   // Class Methods
 
