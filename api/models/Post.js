@@ -269,20 +269,21 @@ module.exports = bookshelf.Model.extend(Object.assign({
   getNewPostSocketPayload: function () {
     const { communities, linkPreview, tags, user } = this.relations
 
+    const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
     const topics = refineMany(tags, [ 'id', 'name' ])
 
     return Object.assign({},
       refineOne(
         this,
-        [ 'created_at', 'details', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
-        { 'name': 'title', 'num_votes': 'votesTotal' }
+        [ 'created_at', 'description', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
+        { 'description': 'details', 'name': 'title', 'num_votes': 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation
         commenters: [],
         commentsTotal: 0,
         communities: refineMany(communities, [ 'id', 'name', 'slug' ]),
-        creator: refineOne(user, [ 'id', 'name', 'avatar_url' ]),
+        creator,
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
         topics,
 
