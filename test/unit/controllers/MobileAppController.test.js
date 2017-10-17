@@ -29,7 +29,7 @@ describe('MobileAppController', () => {
           type: 'force',
           title: 'A new version of the app is available',
           message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update',
-          link: 'https://itunes.apple.com/app/id1002185140'
+          link: process.env.IOS_APP_STORE_URL
         }
 
         req.params = {'ios-version': '1.9'}
@@ -53,7 +53,7 @@ describe('MobileAppController', () => {
           type: 'force',
           title: 'A new version of the app is available',
           message: 'The version you are using is no longer compatible with the site. Please go to the Play Store now to update',
-          link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
+          link: process.env.ANDROID_APP_STORE_URL
         }
 
         req.params = {'android-version': '1.9'}
