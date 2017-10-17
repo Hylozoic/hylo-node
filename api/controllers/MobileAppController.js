@@ -46,9 +46,8 @@ module.exports = {
 }
 
 function resultBuilder (type, platform) {
-  var iTunesItemIdentifier = '1002185140'
-  var appStoreLink = `https://itunes.apple.com/app/id${iTunesItemIdentifier}`
-  var playStoreLink = 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
+  var appStoreLink = process.env.IOS_APP_STORE_URL
+  var playStoreLink = process.env.ANDROID_APP_STORE_URL
   var title = type === 'suggest' ? 'An update is available' : 'A new version of the app is available'
   var store = platform === 'ios' ? 'App Store' : 'Play Store'
   var suggestUpdateMessage = `The version you are using is not longer up to date. Please go to the ${store} to update.`
