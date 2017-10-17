@@ -1,21 +1,4 @@
 module.exports = {
-  updateInfo: function (req, res) {
-    var iTunesItemIdentifier = '1002185140'
-    var link = `https://itunes.apple.com/app/id${iTunesItemIdentifier}`
-    var store = 'App Store'
-    if (req.headers['android-version']) {
-      link = 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
-      store = 'Play Store'
-    }
-
-    var result = {
-      type: 'force',
-      title: 'A new version of the app is available',
-      message: `The version you are using is no longer compatible with the site. Please go to the ${store} now to update.`,
-      link
-    }
-    return res.ok(result)
-  },
   checkShouldUpdate: function (req, res) {
     /*
     Format for result:
@@ -33,9 +16,9 @@ module.exports = {
     var result = {}
 
     switch (req.param('ios-version')) {
-      case '2.0':
-        result = resultBuilder(SUGGEST, IOS)
-        break
+      // case '2.0':
+      //   result = resultBuilder(SUGGEST, IOS)
+      //   break
       case '1.9':
         result = resultBuilder(FORCE, IOS)
         break
@@ -46,9 +29,9 @@ module.exports = {
     }
 
     switch (req.param('android-version')) {
-      case '2.0':
-        result = resultBuilder(SUGGEST, ANDROID)
-        break
+      // case '2.0':
+      //   result = resultBuilder(SUGGEST, ANDROID)
+      //   break
       case '1.9':
         result = resultBuilder(FORCE, ANDROID)
         break

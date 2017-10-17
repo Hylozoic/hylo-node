@@ -10,31 +10,6 @@ describe('MobileAppController', () => {
     res = factories.mock.response()
   })
 
-  describe('updateInfo', () => {
-    it('returns a force update object for ios', () => {
-      var expected = {
-        type: 'force',
-        title: 'A new version of the app is available',
-        message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update.',
-        link: 'https://itunes.apple.com/app/id1002185140'
-      }
-      req.headers = {'ios-version': '2.0'}
-      MobileAppController.updateInfo(req, res)
-      expect(res.body).to.deep.equal(expected)
-    })
-    it('returns a force update object for android', () => {
-      var expected = {
-        type: 'force',
-        title: 'A new version of the app is available',
-        message: 'The version you are using is no longer compatible with the site. Please go to the Play Store now to update.',
-        link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
-      }
-      req.headers = {'android-version': '2.0'}
-      MobileAppController.updateInfo(req, res)
-      expect(res.body).to.deep.equal(expected)
-    })
-  })
-
   describe('checkShouldUpdate', () => {
     describe('calls the resultBuilder with the right params', () => {
       it('returns the expected object for ios suggest update', () => {
