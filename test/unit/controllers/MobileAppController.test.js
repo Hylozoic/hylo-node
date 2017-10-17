@@ -12,18 +12,18 @@ describe('MobileAppController', () => {
 
   describe('checkShouldUpdate', () => {
     describe('calls the resultBuilder with the right params', () => {
-      it('returns the expected object for ios suggest update', () => {
-        var expected = {
-          type: 'suggest',
-          title: 'An update is available',
-          message: 'The version you are using is not longer up to date. Please go to the App Store to update.',
-          link: 'https://itunes.apple.com/app/id1002185140'
-        }
-
-        req.params = {'ios-version': '2.0'}
-        MobileAppController.checkShouldUpdate(req, res)
-        expect(res.body).to.deep.equal(expected)
-      })
+      // it('returns the expected object for ios suggest update', () => {
+      //   var expected = {
+      //     type: 'suggest',
+      //     title: 'An update is available',
+      //     message: 'The version you are using is not longer up to date. Please go to the App Store to update.',
+      //     link: 'https://itunes.apple.com/app/id1002185140'
+      //   }
+      //
+      //   req.params = {'ios-version': '2.0'}
+      //   MobileAppController.checkShouldUpdate(req, res)
+      //   expect(res.body).to.deep.equal(expected)
+      // })
       it('returns the expected object for ios force update', () => {
         var expected = {
           type: 'force',
@@ -36,18 +36,18 @@ describe('MobileAppController', () => {
         MobileAppController.checkShouldUpdate(req, res)
         expect(res.body).to.deep.equal(expected)
       })
-      it('returns the expected object for android suggest update', () => {
-        var expected = {
-          type: 'suggest',
-          title: 'An update is available',
-          message: 'The version you are using is not longer up to date. Please go to the Play Store to update.',
-          link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
-        }
-
-        req.params = {'android-version': '2.0'}
-        MobileAppController.checkShouldUpdate(req, res)
-        expect(res.body).to.deep.equal(expected)
-      })
+      // it('returns the expected object for android suggest update', () => {
+      //   var expected = {
+      //     type: 'suggest',
+      //     title: 'An update is available',
+      //     message: 'The version you are using is not longer up to date. Please go to the Play Store to update.',
+      //     link: 'https://play.google.com/store/apps/details?id=com.hylo.reactnative'
+      //   }
+      //
+      //   req.params = {'android-version': '2.0'}
+      //   MobileAppController.checkShouldUpdate(req, res)
+      //   expect(res.body).to.deep.equal(expected)
+      // })
       it('returns the expected object for android force update', () => {
         var expected = {
           type: 'force',
