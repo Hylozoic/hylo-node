@@ -28,7 +28,7 @@ describe('MobileAppController', () => {
         var expected = {
           type: 'force',
           title: 'A new version of the app is available',
-          message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update',
+          message: 'The version you are using is no longer supported. Please go to the App Store now to update.',
           link: process.env.IOS_APP_STORE_URL
         }
 
@@ -52,13 +52,23 @@ describe('MobileAppController', () => {
         var expected = {
           type: 'force',
           title: 'A new version of the app is available',
-          message: 'The version you are using is no longer compatible with the site. Please go to the Play Store now to update',
+          message: 'The version you are using is no longer supported. Please go to the Play Store now to update.',
           link: process.env.ANDROID_APP_STORE_URL
         }
 
         req.params = {'android-version': '1.9'}
         MobileAppController.checkShouldUpdate(req, res)
         expect(res.body).to.deep.equal(expected)
+      })
+      it('returns falsy for ios version 2.0', () => {
+        req.params = {'ios-version': '2.0'}
+        MobileAppController.checkShouldUpdate(req, res)
+        expect(res.body).to.equal(undefined)
+      })
+      it('returns falsy for android version 2.0', () => {
+        req.params = {'android-version': '2.0'}
+        MobileAppController.checkShouldUpdate(req, res)
+        expect(res.body).to.equal(undefined)
       })
     })
   })
