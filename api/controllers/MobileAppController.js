@@ -9,16 +9,16 @@ module.exports = {
       iTunesItemIdentifier: '1002185140'
     }
     */
-    var SUGGEST = 'suggest'
-    var FORCE = 'force'
-    var IOS = 'ios'
-    var ANDROID = 'android'
+    const SUGGEST = 'suggest'
+    const FORCE = 'force'
+    const IOS = 'ios'
+    const ANDROID = 'android'
     var result = {}
 
     switch (req.param('ios-version')) {
-      // case '2.0':
-      //   result = resultBuilder(SUGGEST, IOS)
-      //   break
+      case 'test-suggest':
+        result = resultBuilder(SUGGEST, IOS)
+        break
       case '1.9':
         result = resultBuilder(FORCE, IOS)
         break
@@ -29,9 +29,9 @@ module.exports = {
     }
 
     switch (req.param('android-version')) {
-      // case '2.0':
-      //   result = resultBuilder(SUGGEST, ANDROID)
-      //   break
+      case 'test-suggest':
+        result = resultBuilder(SUGGEST, ANDROID)
+        break
       case '1.9':
         result = resultBuilder(FORCE, ANDROID)
         break
