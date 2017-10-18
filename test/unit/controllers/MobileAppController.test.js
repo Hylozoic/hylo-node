@@ -61,6 +61,11 @@ describe('MobileAppController', () => {
         expect(res.body).to.deep.equal(expected)
       })
       it('returns falsy for ios version 2.0', () => {
+        req.params = {'ios-version': '2.0'}
+        MobileAppController.checkShouldUpdate(req, res)
+        expect(res.body).to.equal(undefined)
+      })
+      it('returns falsy for android version 2.0', () => {
         req.params = {'android-version': '2.0'}
         MobileAppController.checkShouldUpdate(req, res)
         expect(res.body).to.equal(undefined)
