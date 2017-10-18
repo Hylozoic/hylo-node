@@ -13,12 +13,11 @@ module.exports = {
     var FORCE = 'force'
     var IOS = 'ios'
     var ANDROID = 'android'
-    var result = {}
+    var result
 
     switch (req.param('ios-version')) {
-      // case '2.0':
-      //   result = resultBuilder(SUGGEST, IOS)
-      //   break
+      case '2.0':
+        break
       case '1.9':
         result = resultBuilder(FORCE, IOS)
         break
@@ -29,9 +28,8 @@ module.exports = {
     }
 
     switch (req.param('android-version')) {
-      // case '2.0':
-      //   result = resultBuilder(SUGGEST, ANDROID)
-      //   break
+      case '2.0':
+        break
       case '1.9':
         result = resultBuilder(FORCE, ANDROID)
         break
