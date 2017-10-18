@@ -51,7 +51,7 @@ function resultBuilder (type, platform) {
   var title = type === 'suggest' ? 'An update is available' : 'A new version of the app is available'
   var store = platform === 'ios' ? 'App Store' : 'Play Store'
   var suggestUpdateMessage = `The version you are using is not longer up to date. Please go to the ${store} to update.`
-  var forceUpdateMessage = `The version you are using is no longer compatible with the site. Please go to the ${store} now to update`
+  var forceUpdateMessage = `The version you are using is no longer supported. Please go to the ${store} now to update.`
   var message = type === 'suggest' ? suggestUpdateMessage : forceUpdateMessage
   var link = platform === 'ios' ? appStoreLink : playStoreLink
   return {
