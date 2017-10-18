@@ -13,9 +13,11 @@ module.exports = {
     const FORCE = 'force'
     const IOS = 'ios'
     const ANDROID = 'android'
-    var result = {}
+    var result
 
     switch (req.param('ios-version')) {
+      case '2.0':
+        break
       case 'test-suggest':
         result = resultBuilder(SUGGEST, IOS)
         break
@@ -29,6 +31,8 @@ module.exports = {
     }
 
     switch (req.param('android-version')) {
+      case '2.0':
+        break
       case 'test-suggest':
         result = resultBuilder(SUGGEST, ANDROID)
         break
