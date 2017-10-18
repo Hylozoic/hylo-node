@@ -7,8 +7,10 @@ module.exports = {
     .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
     .then(user => {
       if (req.param('resp') === 'user') {
-        return UserPresenter.fetchAndPresentForSelf(user.id, req.session, Admin.isSignedIn(req))
-        .then(res.ok)
+        return res.ok({
+          name: user.get('name'),
+          email: user.get('email')
+        })
       } else {
         return res.ok({})
       }

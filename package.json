@@ -185,7 +185,6 @@
       "User",
       "UserConnection",
       "UserExternalData",
-      "UserPresenter",
       "UserSession",
       "Validation",
       "Vote"

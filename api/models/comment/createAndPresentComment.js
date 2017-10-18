@@ -1,6 +1,5 @@
 import { sanitize } from 'hylo-utils/text'
 import { difference, uniq } from 'lodash'
-import { simpleUserColumns } from '../../presenters/UserPresenter'
 import { normalizeComment, normalizedSinglePostResponse } from '../../../lib/util/normalize'
 import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 import { refineOne } from '../util/relations'
@@ -81,7 +80,7 @@ const createMedia = (url, transacting) => comment =>
   })
 
 const presentComment = comment =>
-  comment.load([{user: simpleUserColumns}, 'media'])
+  comment.load([{user: q => q.column('id', 'name', 'avatar_url')}, 'media'])
   .then(c => CommentPresenter.present(c))
   .then(c => {
     const buckets = {people: []}
