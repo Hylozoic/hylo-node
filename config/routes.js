@@ -152,7 +152,7 @@ module.exports.routes = {
 
   'POST    /noo/subscription':                            'SubscriptionController.create',
 
-  'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
+  'GET     /noo/mobile/check-should-update':              'MobileAppController.checkShouldUpdate',
 
   'GET     /noo/live-status':                             'LiveStatusController.show',
   'GET     /noo/link-preview':                            'LinkPreviewController.findOne',
