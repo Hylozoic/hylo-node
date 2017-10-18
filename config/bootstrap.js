@@ -15,8 +15,7 @@ import root from 'root-path'
 import util from 'util'
 import models from '../api/models'
 import queryMonitor from '../lib/util/queryMonitor'
-import { clone } from 'lodash'
-import { blue, cyan, green, red, yellow } from 'chalk'
+import { red } from 'chalk'
 require('dotenv').load()
 
 // very handy, these

@@ -15,7 +15,7 @@ describe('afterCreatingPost', () => {
       u1: new User({name: 'U1', email: 'a@b.c', active: true}).save()
     }))
     .then(props => {
-      post = factories.post({user_id: props.u1.id, description: 'wow!'})
+      post = factories.post({user_id: props.u1.id, description: 'wow!', link_preview_id: null})
     })
   )
 

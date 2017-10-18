@@ -2,8 +2,9 @@
 import { markdown } from 'hylo-utils/text'
 import { addFollowers } from './post/util'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'
+import EnsureLoad from './mixins/EnsureLoad'
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'comments',
 
   user: function () {
@@ -98,7 +99,7 @@ module.exports = bookshelf.Model.extend({
     return this.load('post')
     .then(() => addFollowers(this.relations.post, this, userIds, addedById, opts))
   }
-}, {
+}, EnsureLoad), {
 
   find: function (id, options) {
     return Comment.where({id: id}).fetch(options)

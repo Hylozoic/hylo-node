@@ -3,6 +3,7 @@ import { difference, uniq } from 'lodash'
 import { simpleUserColumns } from '../../presenters/UserPresenter'
 import { normalizeComment, normalizedSinglePostResponse } from '../../../lib/util/normalize'
 import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
+import { refineOne } from '../util/relations'
 
 export function createComment (userId, data) {
   const opts = Object.assign({}, data, {returnRaw: true})
@@ -55,7 +56,8 @@ export default function createAndPresentComment (commenterId, text, post, opts =
           parentComment.addFollowers(newFollowers, commenterId)
         ))
     .then(comment => Promise.all([
-      presentComment(comment).tap(c => isReplyToPost && notifySockets(c, post)),
+      presentComment(comment)
+      .tap(c => isReplyToPost && notifySockets(c, post, comment)),
 
       (isThread
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
@@ -87,13 +89,13 @@ const presentComment = comment =>
     return Object.assign(buckets, c)
   })
 
-function notifySockets (comment, post) {
+function notifySockets (presentedComment, post, realComment) {
   if (post.get('type') === Post.Type.THREAD) {
     const followerIds = post.relations.followers.pluck('id')
-    return pushMessageToSockets(post, comment, followerIds)
+    return pushMessageToSockets(post, presentedComment, followerIds)
   }
 
-  return pushCommentToSockets(post, comment)
+  return pushCommentToSockets(post, realComment)
 }
 
 // n.b.: `message` has already been formatted for presentation
@@ -115,7 +117,18 @@ export function pushMessageToSockets (thread, message, userIds) {
 }
 
 function pushCommentToSockets (post, comment) {
-  return pushToSockets(postRoom(post.id), 'commentAdded', {comment, postId: post.id})
+  return comment.ensureLoad('user')
+  .then(() => pushToSockets(
+    postRoom(post.id),
+    'commentAdded',
+    Object.assign({},
+      refineOne(comment, ['id', 'text', 'created_at']),
+      {
+        creator: refineOne(comment.relations.user, ['id', 'name', 'avatar_url']),
+        post: post.id
+      }
+    )
+  ))
 }
 
 const createOrUpdateConnections = (userId, existingFollowers) => comment => {
