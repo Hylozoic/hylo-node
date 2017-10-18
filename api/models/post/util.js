@@ -22,20 +22,6 @@ export function updateAllMedia (post, params, trx) {
     : Promise.resolve())
   .tap(() => updateMedia(post, 'image', params.imageUrls, trx))
   .tap(() => updateMedia(post, 'file', params.fileUrls, trx))
-  .tap(() => {
-    if (!params.removedDocs) return
-    return Promise.map(params.removedDocs, doc => {
-      var media = post.relations.media.find(m => m.get('url') === doc.url)
-      if (media) return media.destroy({transacting: trx})
-    })
-  })
-  .tap(() => {
-    if (!params.docs) return
-    return Promise.map(params.docs, doc => {
-      var media = post.relations.media.find(m => m.get('url') === doc.url)
-      if (!media) return Media.createDoc(post.id, doc, trx)
-    })
-  })
 }
 
 export function updateCommunities (post, newIds, trx) {
