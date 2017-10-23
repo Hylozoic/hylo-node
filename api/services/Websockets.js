@@ -1,3 +1,5 @@
+import { cyan } from 'chalk'
+
 const validMessageTypes = [
   'commentAdded',
   'messageAdded',
@@ -12,6 +14,7 @@ export function pushToSockets (room, messageType, payload, socketToExclude) {
     throw new Error(`unknown message type: ${messageType}`)
   }
 
+  sails.log.info(`${cyan('Websockets:')} pushToSockets: ${room}, ${messageType}`)
   if (process.env.NODE_ENV === 'test') return Promise.resolve({room, messageType, payload})
   sails.sockets.broadcast(room, messageType, payload, socketToExclude)
   return Promise.resolve()
@@ -20,7 +23,7 @@ export function pushToSockets (room, messageType, payload, socketToExclude) {
 const makeRoomAction = method => (req, res, type, id, options = {}) => {
   const callback = options.callback || emptyResponse(res)
   const room = roomTypes[type](id)
-  sails.log.info(`${method}: ${room}`)
+  sails.log.info(`${cyan('Websockets:')} ${method}: ${room}`)
   return sails.sockets[method](req, room, callback)
 }
 
