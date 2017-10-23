@@ -2,7 +2,7 @@
 import { isEmpty } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import { markdown } from 'hylo-utils/text'
-import createAndPresentComment from '../models/comment/createAndPresentComment'
+import createComment from '../models/comment/createAndPresentComment'
 
 module.exports = {
   createFromEmail: function (req, res) {
@@ -32,7 +32,7 @@ module.exports = {
         const text = Comment.cleanEmailText(user, req.param('stripped-text'), {
           useMarkdown: !post.isThread()
         })
-        return createAndPresentComment(replyData.userId, text, post, {created_from: 'email'})
+        return createComment(replyData.userId, {text, post, created_from: 'email'})
         .then(() => res.ok({}), res.serverError)
       }
     )
@@ -75,8 +75,11 @@ module.exports = {
               community: community && community.get('name')
             }
           })
-          return createAndPresentComment(userId, replyText(post.id), post,
-            {created_from: 'email batch form'})
+          return createComment(userId, {
+            text: replyText(post.id),
+            post,
+            created_from: 'email batch form'
+          })
           .then(() => Post.updateFromNewComment({
             postId: post.id,
             commentId: comment.id

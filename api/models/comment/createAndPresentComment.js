@@ -1,17 +1,11 @@
 import { sanitize } from 'hylo-utils/text'
 import { difference, uniq } from 'lodash'
-import { normalizeComment, normalizedSinglePostResponse } from '../../../lib/util/normalize'
 import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
-import { refineOne } from '../util/relations'
+import { refineOne, refineMany } from '../util/relations'
 
-export function createComment (userId, data) {
-  const opts = Object.assign({}, data, {returnRaw: true})
-  return createAndPresentComment(userId, data.text, data.post, opts)
-}
-
-export default function createAndPresentComment (commenterId, text, post, opts = {}) {
+export default function createComment (commenterId, opts = {}) {
+  let { text, post, parentComment } = opts
   text = sanitize(text)
-  const { parentComment, returnRaw } = opts
   const isReplyToPost = !parentComment
 
   var attrs = {
@@ -54,9 +48,8 @@ export default function createAndPresentComment (commenterId, text, post, opts =
           comment.addFollowers(newFollowers, commenterId),
           parentComment.addFollowers(newFollowers, commenterId)
         ))
-    .then(comment => Promise.all([
-      presentComment(comment)
-      .tap(c => isReplyToPost && notifySockets(c, post, comment)),
+    .tap(comment => Promise.all([
+      isReplyToPost && notifySockets(comment, post, isThread),
 
       (isThread
         ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
@@ -67,7 +60,7 @@ export default function createAndPresentComment (commenterId, text, post, opts =
         commentId: comment.id
       })
     ])
-    .then(promises => returnRaw ? comment : promises[0]))
+    .then(() => comment))
   })
 }
 
@@ -79,52 +72,53 @@ const createMedia = (url, transacting) => comment =>
     transacting
   })
 
-const presentComment = comment =>
-  comment.load([{user: q => q.column('id', 'name', 'avatar_url')}, 'media'])
-  .then(c => CommentPresenter.present(c))
-  .then(c => {
-    const buckets = {people: []}
-    normalizeComment(c, buckets, true)
-    return Object.assign(buckets, c)
-  })
-
-function notifySockets (presentedComment, post, realComment) {
-  if (post.get('type') === Post.Type.THREAD) {
-    const followerIds = post.relations.followers.pluck('id')
-    return pushMessageToSockets(post, presentedComment, followerIds)
-  }
-
-  return pushCommentToSockets(post, realComment)
+function notifySockets (comment, post, isThread) {
+  if (isThread) return pushMessageToSockets(comment, post)
+  return pushCommentToSockets(comment)
 }
 
-// n.b.: `message` has already been formatted for presentation
-export function pushMessageToSockets (thread, message, userIds) {
-  const excludingSender = userIds.filter(id => id !== message.user_id.toString())
+export function pushMessageToSockets (message, thread) {
+  const { followers } = thread.relations
+  const userIds = followers.pluck('id')
+  const excludingSender = userIds.filter(id => id !== message.get('user_id'))
+
+  let response = refineOne(message,
+    ['id', 'text', 'created_at', 'user_id', 'post_id'],
+    {
+      user_id: 'creator',
+      post_id: 'messageThread'
+    }
+  )
+
+  let socketMessageName
 
   if (thread.get('num_comments') === 0) {
-    return Promise.map(excludingSender, userId => {
-      const opts = {withComments: 'all'}
-      return thread.load(PostPresenter.relations(userId, opts))
-      .then(post => PostPresenter.present(post, userId, opts))
-      .then(normalizedSinglePostResponse)
-      .then(post => pushToSockets(userRoom(userId), 'newThread', post))
-    })
+    response = Object.assign(
+      {
+        participants: refineMany(followers, ['id', 'name', 'avatar_url']),
+        messages: [response]
+      },
+      refineOne(thread, ['id', 'created_at', 'updated_at'])
+    )
+    socketMessageName = 'newThread'
+  } else {
+    socketMessageName = 'messageAdded'
   }
 
-  return Promise.map(excludingSender, id =>
-    pushToSockets(userRoom(id), 'messageAdded', {postId: thread.id, message}))
+  return Promise.map(excludingSender, userId =>
+    pushToSockets(userRoom(userId), socketMessageName, response))
 }
 
-function pushCommentToSockets (post, comment) {
+function pushCommentToSockets (comment) {
   return comment.ensureLoad('user')
   .then(() => pushToSockets(
-    postRoom(post.id),
+    postRoom(comment.get('post_id')),
     'commentAdded',
     Object.assign({},
       refineOne(comment, ['id', 'text', 'created_at']),
       {
         creator: refineOne(comment.relations.user, ['id', 'name', 'avatar_url']),
-        post: post.id
+        post: comment.get('post_id')
       }
     )
   ))
