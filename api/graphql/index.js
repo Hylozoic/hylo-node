@@ -183,12 +183,15 @@ export function makeMutations (userId) {
 
 export const createRequestHandler = () =>
   graphqlHTTP((req, res) => {
-    sails.log.info('\n' +
-      red('graphql query start') + '\n' +
-      req.body.query + '\n' +
-      red('graphql query end')
-    )
-    sails.log.info(inspect(req.body.variables))
+    if (process.env.DEBUG_GRAPHQL) {
+      sails.log.info('\n' +
+        red('graphql query start') + '\n' +
+        req.body.query + '\n' +
+        red('graphql query end')
+      )
+      sails.log.info(inspect(req.body.variables))
+    }
+
     // TODO: this function can return a promise -- maybe run through some
     // policies based on the current user here and assign them to context, so
     // that the resolvers can use them to deny or restrict access?
