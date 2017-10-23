@@ -44,6 +44,7 @@ module.exports.policies = {
   },
 
   PostController: {
+    updateLastRead:         ['sessionAuth', 'checkAndSetPost'],
     subscribe:              ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     unsubscribe:            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
     typing:                 ['isSocket', 'sessionAuth', 'checkAndSetPost'],

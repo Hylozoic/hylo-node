@@ -9,8 +9,7 @@ module.exports.routes = {
   'POST   /noo/user/password':                            'UserController.sendPasswordReset',
   'POST   /noo/user':                                     'UserController.create',
 
-  'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',
-  'POST   /noo/community/:communityId/unsubscribe':       'CommunityController.unsubscribe',
+  'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
 
   'GET    /noo/network/:networkId':                       'NetworkController.findOne',
   'POST   /noo/network':                                  'NetworkController.create',
@@ -56,6 +55,8 @@ module.exports.routes = {
   'GET     /noo/mobile/check-should-update':              'MobileAppController.checkShouldUpdate',
 
   // websockets routes
+  'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',
+  'POST   /noo/community/:communityId/unsubscribe':       'CommunityController.unsubscribe',
   'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // from comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',

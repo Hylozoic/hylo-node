@@ -1,3 +1,4 @@
+/* globals LastRead */
 import { includes } from 'lodash'
 import createPost from '../models/post/createPost'
 import { joinRoom, leaveRoom } from '../services/Websockets'
@@ -48,6 +49,15 @@ const PostController = {
         properties: {community: community.get('name')}
       }))
       .then(post => res.redirect(Frontend.Route.post(post, community))))
+    .catch(res.serverError)
+  },
+
+  updateLastRead: function (req, res) {
+    const { post } = res.locals
+    const userId = req.session.userId
+    return LastRead.findOrCreate(userId, post.id)
+    .tap(lastRead => lastRead.setToNow())
+    .then(() => res.ok({}))
     .catch(res.serverError)
   },
 
