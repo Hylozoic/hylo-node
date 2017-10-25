@@ -33,6 +33,7 @@ type UserSettings {
   dmNotifications: String
   commentNotifications: String
   signupInProgress: Boolean
+  lastViewedMessagesAt: String
 }
 
 type CommunityTopicQuerySet {
@@ -413,6 +414,7 @@ input MeInput {
   tagline: String
   password: String
   settings: UserSettingsInput
+  newNotificationCount: Int
 }
 
 input PostInput {
@@ -502,6 +504,7 @@ input UserSettingsInput {
   dmNotifications: String
   commentNotifications: String
   signupInProgress: Boolean
+  lastViewedMessagesAt: String
 }
 
 type Mutation {
