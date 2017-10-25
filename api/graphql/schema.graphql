@@ -414,6 +414,7 @@ input MeInput {
   tagline: String
   password: String
   settings: UserSettingsInput
+  newNotificationCount: Int
 }
 
 input PostInput {
