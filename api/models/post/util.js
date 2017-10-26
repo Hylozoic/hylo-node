@@ -11,17 +11,10 @@ function updateMedia (post, type, urls, transacting) {
     }, transacting)))
 }
 
-export function updateAllMedia (post, params, trx) {
-  const mediaParams = [
-    'docs', 'removedDocs', 'imageUrl', 'imageRemoved', 'videoUrl', 'videoRemoved',
-    'imageUrls', 'fileUrls'
-  ]
-
-  return (some(mediaParams, p => has(params, p))
-    ? post.load('media')
-    : Promise.resolve())
-  .tap(() => updateMedia(post, 'image', params.imageUrls, trx))
-  .tap(() => updateMedia(post, 'file', params.fileUrls, trx))
+export function updateAllMedia (post, { imageUrls, fileUrls }, trx) {
+  return (imageUrls || fileUrls ? post.load('media') : Promise.resolve())
+  .tap(() => updateMedia(post, 'image', imageUrls, trx))
+  .tap(() => updateMedia(post, 'file', fileUrls, trx))
 }
 
 export function updateCommunities (post, newIds, trx) {

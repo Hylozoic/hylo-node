@@ -49,4 +49,7 @@ describe('afterUpdatingPost', () => {
       .to.deep.equal([u1.id, u2.id].sort())
     })
   })
+
+  it('does not remove existing images if the imageUrls param is absent')
+  it('removes existing images if the imageUrls param is empty')
 })
