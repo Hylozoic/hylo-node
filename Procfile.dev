@@ -1,2 +1,2 @@
-web: nodemon --inspect=3002 app.js --delay=0.5
+web: nodemon --inspect=3002 --ext js,json,graphql app.js --delay=0.5
 worker: DELAY_START=5 nodemon worker.js --delay=0.5
