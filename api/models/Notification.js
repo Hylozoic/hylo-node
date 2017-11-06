@@ -1,5 +1,5 @@
 import url from 'url'
-import { isEmpty, pick } from 'lodash'
+import { isEmpty } from 'lodash'
 import emitter from 'socket.io-emitter'
 import decode from 'ent/decode'
 import { userRoom } from '../services/Websockets'
