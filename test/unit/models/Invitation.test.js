@@ -176,12 +176,12 @@ describe('Invitation', function () {
           {
             email: 'a@sendme.com',
             sent_count: 1,
-            last_sent_at: new Date(now - 4 * day)
+            last_sent_at: new Date(now - 4.1 * day)
           },
           {
             email: 'b@sendme.com',
             sent_count: 2,
-            last_sent_at: new Date(now - 9 * day)
+            last_sent_at: new Date(now - 9.1 * day)
           },
           {
             email: 'a@used.com',
@@ -209,7 +209,7 @@ describe('Invitation', function () {
     })
 
     it('sends the invitations that are ready and unused', function () {
-      this.timeout(5000)
+      this.timeout(10000)
       const now = new Date().getTime()
 
       return Invitation.resendAllReady()
