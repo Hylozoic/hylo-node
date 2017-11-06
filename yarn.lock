@@ -3697,9 +3697,9 @@ https-proxy-agent@0, https-proxy-agent@^0.3.5:
     debug "2"
     extend "3"
 
-hylo-utils@Hylozoic/hylo-utils#4202b24:
-  version "1.1.0"
-  resolved "https://codeload.github.com/Hylozoic/hylo-utils/tar.gz/4202b24df757c6e3c7b505a433e654c0956517c2"
+hylo-utils@Hylozoic/hylo-utils#dce87b29:
+  version "1.2.1"
+  resolved "https://codeload.github.com/Hylozoic/hylo-utils/tar.gz/dce87b29ac034fc42c712ce06771fe14484b08e3"
   dependencies:
     buffer "^5.0.6"
     cheerio "^0.22.0"
@@ -7116,7 +7116,7 @@ semver@^4.1.0, semver@^4.3.4:
   version "4.3.6"
   resolved "https://registry.yarnpkg.com/semver/-/semver-4.3.6.tgz#300bc6e0e86374f7ba61068b5b1ecd57fc6532da"
 
-semver@^5.0.3, semver@^5.1.0:
+semver@^5.0.3, semver@^5.1.0, semver@^5.4.1:
   version "5.4.1"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.4.1.tgz#e059c09d8571f0540823733433505d3a2f00b18e"
 
