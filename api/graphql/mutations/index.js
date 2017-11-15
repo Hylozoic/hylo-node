@@ -28,7 +28,8 @@ export {
   createPost,
   updatePost,
   vote,
-  deletePost
+  deletePost,
+  pinPost
 } from './post'
 
 export function updateMe (userId, changes) {
