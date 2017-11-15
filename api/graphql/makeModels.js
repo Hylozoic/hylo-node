@@ -141,6 +141,7 @@ export default function makeModels (userId, isAdmin) {
         {user: {alias: 'creator'}},
         'followers',
         'linkPreview',
+        'postMemberships',
         {media: {
           alias: 'attachments',
           arguments: ({ type }) => [type]
@@ -425,6 +426,17 @@ export default function makeModels (userId, isAdmin) {
         'thumbnail_url',
         'position',
         'created_at'
+      ]
+    },
+
+    PostMembership: {
+      model: PostMembership,
+      attributes: [
+        'id',
+        'pinned'
+      ],
+      relations: [
+        'community'
       ]
     }
   }

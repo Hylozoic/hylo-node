@@ -231,6 +231,14 @@ type Post {
   myVote: Boolean
   attachments(type: String): [Attachment]
   attachmentsTotal: Int
+  postMemberships: [PostMembership]
+  postMembershipsTotal: Int
+}
+
+type PostMembership {
+  id: ID
+  pinned: Boolean
+  community: Community
 }
 
 type Attachment {
@@ -542,6 +550,7 @@ type Mutation {
   updatePost(id: ID, data: PostInput): Post
   useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
   vote(postId: ID, isUpvote: Boolean): Post
+  pinPost(postId: ID, communityId: ID): GenericResult
 }
 
 type InvitationUseResult {

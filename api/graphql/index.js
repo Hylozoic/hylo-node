@@ -19,6 +19,7 @@ import {
   leaveCommunity,
   markActivityRead,
   markAllActivitiesRead,
+  pinPost,
   regenerateAccessCode,
   registerDevice,
   reinviteAll,
@@ -177,7 +178,8 @@ export function makeMutations (userId) {
     createCommunity: (root, { data }) => createCommunity(userId, data),
     deleteComment: (root, { id }) => deleteComment(userId, id),
     registerDevice: (root, { playerId, platform, version }) =>
-      registerDevice(userId, { playerId, platform, version })
+      registerDevice(userId, { playerId, platform, version }),
+    pinPost: (root, { postId, communityId }) => pinPost(userId, postId, communityId)
   }
 }
 
