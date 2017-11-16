@@ -7,6 +7,10 @@ module.exports = bookshelf.Model.extend({
 
   community: function () {
     return this.belongsTo(Community)
+  },
+
+  pinned: function () {
+    return !!this.get('pinned_at')
   }
 
 }, {

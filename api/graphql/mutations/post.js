@@ -38,7 +38,11 @@ export function pinPost (userId, postId, communityId) {
     .then(postMembership => {
       if (!postMembership) throw new Error("Couldn't find postMembership")
 
-      return postMembership.save({pinned: !postMembership.get('pinned')})
+      if (postMembership.pinned()) {
+        return postMembership.save({pinned_at: null})
+      } else {
+        return postMembership.save({pinned_at: new Date()})
+      }
     })
     .then(() => ({success: true}))
   })
