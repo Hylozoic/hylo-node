@@ -145,7 +145,6 @@
       "AssetManagement",
       "Comment",
       "CommentTag",
-      "CommentPresenter",
       "Community",
       "CommunityTag",
       "Contribution",
@@ -169,7 +168,6 @@
       "PlayCrypto",
       "Post",
       "PostTag",
-      "PostPresenter",
       "PostMembership",
       "PostNetworkMembership",
       "PushNotification",
@@ -186,7 +184,6 @@
       "User",
       "UserConnection",
       "UserExternalData",
-      "UserPresenter",
       "UserSession",
       "Validation",
       "Vote"

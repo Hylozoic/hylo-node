@@ -17,7 +17,7 @@ module.exports = bookshelf.Model.extend({
     return this.load('device')
     .then(() => {
       const { device } = this.relations
-      const deviceToken = device.get('device_token')
+      const deviceToken = device.get('token')
       const playerId = device.get('player_id')
       const disabled = !process.env.PUSH_NOTIFICATIONS_ENABLED && (
         !process.env.PUSH_NOTIFICATIONS_TESTING_ENABLED || !device.get('tester')
