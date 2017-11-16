@@ -96,12 +96,12 @@ module.exports = {
       return await postToAPI('notify', 'notifications', params)
     } catch (e) {
       const err = e instanceof Error ? e : new Error(e)
-      rollbar.handleErrorWithPayloadData(err, {custom: {
+      rollbar.error(err, null, {
         deviceToken,
+        devicePlatform: platform, // 'platform' is a Rollbar reserved word
         playerId,
-        platform,
         response: err.response
-      }})
+      })
     }
   }
 }

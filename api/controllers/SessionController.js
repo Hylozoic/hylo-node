@@ -84,7 +84,7 @@ const finishOAuth = function (strategy, req, res, next) {
 
   return new Promise((resolve, reject) => {
     var respond = error => {
-      if (error && error.stack) rollbar.handleError(error, req)
+      if (error && error.stack) rollbar.error(error, req)
       if (req.headers.accept === 'application/json') {
         error ? res.serverError(error) : res.ok({})
         return resolve()

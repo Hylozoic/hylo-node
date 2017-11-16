@@ -25,6 +25,13 @@ if (process.env.NEW_RELIC_LICENSE_KEY) {
   require('newrelic')
 }
 
+var rollbar = require('rollbar')
+rollbar.init({
+  accessToken: process.env.ROLLBAR_SERVER_TOKEN,
+  captureUncaught: true,
+  captureUnhandledRejections: true
+})
+
 const { merge } = require('lodash')
 const chalk = require('chalk')
 chalk.enabled = true
