@@ -174,7 +174,7 @@ CREATE TABLE communities_posts (
     community_id bigint NOT NULL,
     id integer NOT NULL,
     pinned_at timestamp with time zone,
-    pinned boolean
+    pinned boolean DEFAULT false
 );
 
 
