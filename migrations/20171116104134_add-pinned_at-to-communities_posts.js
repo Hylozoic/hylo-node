@@ -5,7 +5,7 @@ exports.up = function (knex, Promise) {
 }
 
 exports.down = function (knex, Promise) {
-  return knex.schema.table('communities', table => {
+  return knex.schema.table('communities_posts', table => {
     table.dropColumn('pinned_at')
   })
 }
