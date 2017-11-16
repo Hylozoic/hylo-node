@@ -106,19 +106,32 @@ export function unlinkAccount (userId, provider) {
   .then(() => ({success: true}))
 }
 
-export function addSkill (userId, name) {
+export async function addSkill (userId, name) {
   name = trim(name)
   if (isEmpty(name)) {
     throw new Error('Skill cannot be blank')
   } else if (size(name) > 39) {
     throw new Error('Skill must be less than 40 characters')
   }
-  return Skill.find(name)
-  .then(skill => {
-    if (!skill) return new Skill({name}).save()
-    return skill
-  })
-  .tap(skill => skill.users().attach(userId))
+  let skill
+  try {
+    skill = await Skill.forge({name}).save()
+  } catch (err) {
+    if (!err.message || !err.message.includes('duplicate')) {
+      throw err
+    }
+    skill = await Skill.find(name)
+  }
+
+  try {
+    await skill.users().attach(userId)
+  } catch (err) {
+    if (!err.message || !err.message.includes('duplicate')) {
+      throw err
+    }
+  }
+
+  return skill
 }
 
 export function removeSkill (userId, skillIdOrName) {
