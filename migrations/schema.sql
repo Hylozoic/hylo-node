@@ -173,8 +173,7 @@ CREATE TABLE communities_posts (
     post_id bigint NOT NULL,
     community_id bigint NOT NULL,
     id integer NOT NULL,
-    pinned_at timestamp with time zone,
-    pinned boolean DEFAULT false
+    pinned_at timestamp with time zone DEFAULT '1974-12-30 23:00:00-08'::timestamp with time zone
 );
 
 
