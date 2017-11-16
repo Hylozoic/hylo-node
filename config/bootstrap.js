@@ -39,14 +39,6 @@ module.exports.bootstrap = function (done) {
 
   if (process.env.DEBUG_SQL) queryMonitor(bookshelf.knex)
 
-  // add presenters to global namespace
-  fs.readdirSync(root('api/presenters')).forEach(filename => {
-    if (path.extname(filename) === '.js') {
-      var modelName = path.basename(filename, '.js')
-      global[modelName] = require(root('api/presenters/' + modelName))
-    }
-  })
-
   // It's very important to trigger this callback method when you are finished
   // with the bootstrap!  (otherwise your server will never lift, since it's waiting on the bootstrap)
   done()
