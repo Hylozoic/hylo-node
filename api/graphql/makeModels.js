@@ -432,14 +432,12 @@ export default function makeModels (userId, isAdmin) {
     PostMembership: {
       model: PostMembership,
       attributes: [
-        'id'
+        'id',
+        'pinned'
       ],
       relations: [
         'community'
-      ],
-      getters: {
-        pinned: pm => pm.pinned()
-      }
+      ]
     }
   }
 }
