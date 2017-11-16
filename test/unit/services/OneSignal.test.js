@@ -102,10 +102,12 @@ describe('OneSignal.notify', () => {
   })
 
   it('rejects a call with both device token and player id', () => {
-    expect(() => notify({
+    return notify({
       platform: 'android',
       deviceToken: 'foo',
       playerId: 'foo'
-    })).to.throw(/Can't pass both/)
+    })
+    .then(() => expect.fail('should throw'))
+    .catch(err => expect(err.message).to.match(/Can't pass both/))
   })
 })

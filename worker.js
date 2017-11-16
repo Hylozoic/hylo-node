@@ -4,9 +4,9 @@ require('./config/kue') // this must be third
 
 const Promise = require('bluebird')
 const queue = require('kue').createQueue()
-const rollbar = skiff.rollbar
-const sails = skiff.sails
 const lodash = require('lodash')
+const rollbar = require('rollbar')
+const sails = skiff.sails
 const { forIn, omit } = lodash
 
 // define new jobs here.
@@ -48,12 +48,12 @@ var processJobs = function () {
         done()
       })
       .catch(err => {
-        const data = {custom: {jobId: job.id, jobData: job.data}}
+        const data = {jobId: job.id, jobData: job.data}
         const error = typeof err === 'string'
           ? new Error(err)
           : (err || new Error('kue job failed without error'))
         sails.log.error(label + error.message.red, error)
-        rollbar.handleErrorWithPayloadData(error, data)
+        rollbar.error(error, null, data)
         done(error)
       })
     })

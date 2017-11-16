@@ -30,19 +30,27 @@ describe('mutations', () => {
     process.env.DOMAIN = domain
   })
 
-  it('can add a skill', () => {
-    return addSkill(u1.id, 'New Skill')
-      .then(skill => {
-        expect(skill.get('name')).to.equal('New Skill')
-      })
+  it('can add a skill', async () => {
+    const skill = await addSkill(u1.id, 'New Skill')
+    expect(skill.get('name')).to.equal('New Skill')
   })
 
-  it('fails when adding a skill with 0 length', () => {
-    expect(() => addSkill(u1.id, '')).to.throw('blank')
+  it('fails when adding a skill with 0 length', async () => {
+    try {
+      await addSkill(u1.id, '')
+      expect.fail('should throw')
+    } catch (err) {
+      expect(err.message).to.include('blank')
+    }
   })
 
-  it('fails for skills larger than 40 characters', () => {
-    expect(() => addSkill(u1.id, '01234567890123456789012345678901234567890')).to.throw('must be less')
+  it('fails for skills larger than 40 characters', async () => {
+    try {
+      await addSkill(u1.id, '01234567890123456789012345678901234567890')
+      expect.fail('should throw')
+    } catch (err) {
+      expect(err.message).to.include('must be less')
+    }
   })
 
   it('removes a skill from a user', () => {

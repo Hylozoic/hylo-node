@@ -30,6 +30,20 @@ export function deletePost (userId, postId) {
   .then(() => ({success: true}))
 }
 
+export function pinPost (userId, postId, communityId) {
+  return Membership.hasModeratorRole(userId, communityId)
+  .then(isModerator => {
+    if (!isModerator) throw new Error("You don't have permission to modify this community")
+    return PostMembership.find(postId, communityId)
+    .then(postMembership => {
+      if (!postMembership) throw new Error("Couldn't find postMembership")
+
+      return postMembership.save({pinned: !postMembership.get('pinned')})
+    })
+    .then(() => ({success: true}))
+  })
+}
+
 // converts input data from the way it's received in GraphQL to the format that
 // the legacy code expects -- this sort of thing can be removed/refactored once
 // hylo-redux is no longer in use

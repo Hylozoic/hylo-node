@@ -1,51 +1,43 @@
+import semver from 'semver'
+
 module.exports = {
   checkShouldUpdate: function (req, res) {
-    /*
-    Format for result:
-    result = {
-      type: 'force',  // can be 'force' or 'suggest'
-      title: 'A new version of the app is available',
-      message: 'You can go to the App Store now to update',
-      iTunesItemIdentifier: '1002185140'
-    }
-    */
-    const SUGGEST = 'suggest'
-    const FORCE = 'force'
-    const IOS = 'ios'
-    const ANDROID = 'android'
-    var result
+    const iosVersion = req.param('ios-version')
+    const androidVersion = req.param('android-version')
+    const version = iosVersion || androidVersion
+    const platform = iosVersion ? IOS : ANDROID
+    return res.ok(shouldUpdate(version, platform))
+  }
+}
 
-    switch (req.param('ios-version')) {
-      case '2.0':
-        break
-      case 'test-suggest':
-        result = resultBuilder(SUGGEST, IOS)
-        break
-      case '1.9':
-        result = resultBuilder(FORCE, IOS)
-        break
-      case undefined:
-        break
-      default:
-        result = resultBuilder(FORCE, IOS)
-    }
+const SUGGEST = 'suggest'
+const FORCE = 'force'
+const IOS = 'ios'
+const ANDROID = 'android'
 
-    switch (req.param('android-version')) {
-      case '2.0':
-        break
-      case 'test-suggest':
-        result = resultBuilder(SUGGEST, ANDROID)
-        break
-      case '1.9':
-        result = resultBuilder(FORCE, ANDROID)
-        break
-      case undefined:
-        break
-      default:
-        result = resultBuilder(FORCE, ANDROID)
+function shouldUpdate (version, platform) {
+  // fix incomplete values like 2 or 2.0
+  if (!isNaN(Number(version))) {
+    if (semver.valid(version + '.0')) {
+      version = version + '.0'
+    } else if (semver.valid(version + '.0.0')) {
+      version = version + '.0.0'
     }
+  }
 
-    return res.ok(result)
+  if (semver.valid(version)) {
+    if (semver.lt(version, '2.0.0')) {
+      return resultBuilder(FORCE, platform)
+    } else {
+      return undefined
+    }
+  }
+
+  switch (version) {
+    case 'test-suggest':
+      return resultBuilder(SUGGEST, platform)
+    default:
+      return resultBuilder(FORCE, platform)
   }
 }
 
