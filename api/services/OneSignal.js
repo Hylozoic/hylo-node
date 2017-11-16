@@ -2,6 +2,7 @@ import request from 'request'
 import Promise from 'bluebird'
 import { isNull, merge, omit } from 'lodash'
 import { omitBy } from 'lodash/fp'
+import rollbar from 'rollbar'
 
 const HOST = 'https://onesignal.com'
 
@@ -56,30 +57,51 @@ function notificationParams ({ platform, deviceToken, playerId, alert, path, bad
   return params
 }
 
-const postToAPI = (name, deviceToken, options) =>
-  new Promise((resolve, reject) =>
-    request(Object.assign({method: 'POST'}, options), (error, resp, body) =>
-      error ? reject(error)
-        : resp.statusCode !== 200
-          ? reject(new Error(`OneSignal.${name} for device ${deviceToken} failed with status code ${resp.statusCode}`))
-          : resolve(resp)))
+const postToAPI = (name, path, params) =>
+  new Promise((resolve, reject) => {
+    const opts = Object.assign({
+      url: HOST + '/api/v1/' + path,
+      method: 'POST',
+      json: params
+    })
+
+    request(opts, (error, resp, body) => {
+      if (error) return reject(error)
+
+      if (resp.statusCode !== 200) {
+        const error = new Error(`OneSignal.${name} failed`)
+        error.response = resp
+        return reject(error)
+      }
+
+      resolve(resp)
+    })
+  })
 
 module.exports = {
   // DEPRECATED
   register: (platform, deviceToken) =>
-    postToAPI('register', deviceToken, {
-      url: `${HOST}/api/v1/players`,
-      json: {
-        app_id: process.env.ONESIGNAL_APP_ID,
-        device_type: platform === 'ios_macos' ? 0 : 1,
-        identifier: deviceToken,
-        test_type: process.env.NODE_ENV === 'development' ? 1 : null
-      }
+    postToAPI('register', 'players', {
+      app_id: process.env.ONESIGNAL_APP_ID,
+      device_type: platform === 'ios_macos' ? 0 : 1,
+      identifier: deviceToken,
+      test_type: process.env.NODE_ENV === 'development' ? 1 : null
     }),
 
-  notify: ({ platform, deviceToken, playerId, alert, path, badgeNo, appId }) =>
-    postToAPI('notify', deviceToken, {
-      url: `${HOST}/api/v1/notifications`,
-      json: notificationParams({platform, deviceToken, playerId, alert, path, badgeNo, appId})
-    })
+  notify: async (opts) => {
+    const { platform, deviceToken, playerId } = opts
+    const params = notificationParams(opts)
+
+    try {
+      return await postToAPI('notify', 'notifications', params)
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(e)
+      rollbar.handleErrorWithPayloadData(err, {custom: {
+        deviceToken,
+        playerId,
+        platform,
+        response: err.response
+      }})
+    }
+  }
 }
