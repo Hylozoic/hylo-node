@@ -14,19 +14,20 @@ describe('pinPost', () => {
     .then(() => user.joinCommunity(community, Membership.MODERATOR_ROLE))
   })
 
-  it('sets pinned to true if not true', () => {
+  it('sets pinned_at to current time if not set', () => {
     return pinPost(user.id, post.id, community.id)
     .then(() => PostMembership.find(post.id, community.id))
     .then(postMembership => {
-      expect(postMembership.get('pinned')).to.equal(true)
+      expect(postMembership.get('pinned_at').getTime())
+      .to.be.closeTo(new Date().getTime(), 2000)
     })
   })
 
-  it('sets pinned to false if true', () => {
+  it('sets pinned_at to null if set', () => {
     return pinPost(user.id, post.id, community.id)
     .then(() => PostMembership.find(post.id, community.id))
     .then(postMembership => {
-      expect(postMembership.get('pinned')).to.equal(false)
+      expect(postMembership.get('pinned_at')).to.equal(null)
     })
   })
 
