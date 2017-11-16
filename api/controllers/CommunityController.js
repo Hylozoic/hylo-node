@@ -163,7 +163,7 @@ module.exports = {
       }, {patch: true}))
       .then(() => res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced'))
       .catch(err => {
-        rollbar.handleError(err, req)
+        rollbar.error(err, req)
         res.redirect(Frontend.Route.community(community) + '/settings?expand=advanced&slackerror=true')
       })
     })

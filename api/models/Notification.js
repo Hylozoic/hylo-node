@@ -5,7 +5,6 @@ import decode from 'ent/decode'
 import { userRoom } from '../services/Websockets'
 import { refineOne } from './util/relations'
 import rollbar from 'rollbar'
-rollbar.init(process.env.ROLLBAR_SERVER_TOKEN)
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -322,9 +321,7 @@ module.exports = bookshelf.Model.extend({
 
     const io = emitter(process.env.REDIS_URL)
     io.redis.on('error', err => {
-      rollbar.handleErrorWithPayloadData(err, {
-        custom: {notificationId: this.id}
-      })
+      rollbar.error(err, null, {notificationId: this.id})
     })
     io.in(userRoom(userId)).emit('newNotification', payload)
   }
@@ -375,7 +372,7 @@ module.exports = bookshelf.Model.extend({
     .then(ns => ns.length > 0 &&
       Promise.each(ns.models,
         n => n.send().catch(err => {
-          rollbar.handleErrorWithPayloadData(err, {custom: {notification: n.attributes}})
+          rollbar.error(err, null, {notification: n.attributes})
           return n.save({failed_at: new Date()}, {patch: true})
         }))
       .then(() => Notification.sendUnsent()))

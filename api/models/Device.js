@@ -18,7 +18,7 @@ module.exports = bookshelf.Model.extend({
     return User.find(this.get('user_id'))
     .then(user => User.unseenThreadCount(user.id)
       .then(count => new PushNotification({
-        alert,
+        alert: alert.substring(0, 255),
         path,
         badge_no: user.get('new_notification_count') + count,
         device_id: this.id,
