@@ -1,6 +1,11 @@
 import semver from 'semver'
 
 module.exports = {
+  updateInfo: function (req, res) {
+    const iosVersion = req.param('ios-version')
+    const platform = iosVersion ? IOS : ANDROID
+    return res.ok(resultBuilder(FORCE, platform))
+  },
   checkShouldUpdate: function (req, res) {
     const iosVersion = req.param('ios-version')
     const androidVersion = req.param('android-version')

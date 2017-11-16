@@ -22,6 +22,33 @@ describe('MobileAppController', () => {
     process.env.ANDROID_APP_STORE_URL = tmpVar2
   })
 
+  describe('updateInfo', () => {
+    it('returns the force update object for ios', () => {
+      var expected = {
+        type: 'force',
+        title: 'A new version of the app is available',
+        message: 'The version you are using is no longer supported. Please go to the App Store now to update.',
+        link: mockIosStoreUrl
+      }
+
+      req.params = {'ios-version': '1.9'}
+      MobileAppController.updateInfo(req, res)
+      expect(res.body).to.deep.equal(expected)
+    })
+    it('returns the force update object for android', () => {
+      var expected = {
+        type: 'force',
+        title: 'A new version of the app is available',
+        message: 'The version you are using is no longer supported. Please go to the Play Store now to update.',
+        link: mockAndroidStoreUrl
+      }
+
+      req.params = {'android-version': '1.9'}
+      MobileAppController.checkShouldUpdate(req, res)
+      expect(res.body).to.deep.equal(expected)
+    })
+  })
+
   describe('checkShouldUpdate', () => {
     it('returns the expected object for ios suggest update', () => {
       var expected = {
