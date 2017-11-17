@@ -15,22 +15,23 @@ describe('comment/createAndPresentComment', () => {
     before(function () {
       user = new User({name: 'Oo Joy', email: 'oojoy@b.c'})
       user2 = new User({name: 'Oo Boy', email: 'ooboy@c.d'})
-      return Promise.join(
-        user.save(),
-        user2.save()
-      ).then(() => {
+      return Promise.join(user.save(), user2.save())
+      .then(() => {
         return createThread(user.id, [user2.id])
         .then(t => {
           thread = t
+          return thread.load('followers')
         })
       })
     })
 
     it('sends newThread event if first message', () => {
-      const message = {
+      const message = new Comment({
+        text: 'hi',
+        post_id: thread.id,
         user_id: user.id
-      }
-      return pushMessageToSockets(thread, message, [user.id, user2.id])
+      })
+      return pushMessageToSockets(message, thread)
       .then(promises => {
         expect(promises.length).to.equal(1)
         const { room, messageType, payload } = promises[0]
@@ -41,18 +42,20 @@ describe('comment/createAndPresentComment', () => {
     })
 
     it('sends messageAdded event if not first message', () => {
-      const message = {
+      const message = new Comment({
+        text: 'hi',
+        post_id: thread.id,
         user_id: user.id
-      }
+      })
       thread.set({num_comments: 2})
-      return pushMessageToSockets(thread, message, [user.id, user2.id])
+      return pushMessageToSockets(message, thread)
       .then(promises => {
         expect(promises.length).to.equal(1)
         const { room, messageType, payload } = promises[0]
         expect(room).to.equal(`users/${user2.id}`)
         expect(messageType).to.equal('messageAdded')
-        expect(payload.postId).to.equal(thread.id)
-        expect(payload.message).to.exist
+        expect(payload.messageThread).to.equal(thread.id)
+        expect(payload.text).to.equal('hi')
       })
     })
   })

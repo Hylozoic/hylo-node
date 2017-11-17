@@ -1,24 +1,6 @@
 import { difference, has, isEqual, pick, some, compact } from 'lodash'
 
-function updateMedia (post, type, url, remove, transacting) {
-  if (!url && !remove) return
-  var media = post.relations.media.find(m => m.get('type') === type)
-
-  if (media && remove) { // remove media
-    return media.destroy({transacting})
-  } else if (media) { // replace url in existing media
-    if (media.get('url') !== url) {
-      return media.save({url}, {patch: true, transacting})
-      .then(media => media.updateMetadata({transacting}))
-    }
-  } else if (url) { // create new media
-    return Media.createForPost({
-      postId: post.id, type, url
-    }, transacting)
-  }
-}
-
-function updateMediaEvo (post, type, urls, transacting) {
+function updateMedia (post, type, urls, transacting) {
   if (!urls) return
   var media = post.relations.media.filter(m => m.get('type') === type)
 
@@ -29,34 +11,10 @@ function updateMediaEvo (post, type, urls, transacting) {
     }, transacting)))
 }
 
-export function updateAllMedia (post, params, trx) {
-  const mediaParams = [
-    'docs', 'removedDocs', 'imageUrl', 'imageRemoved', 'videoUrl', 'videoRemoved',
-    'imageUrls', 'fileUrls'
-  ]
-
-  return (some(mediaParams, p => has(params, p))
-    ? post.load('media')
-    : Promise.resolve())
-  // TODO: remove updateMedia and rename updateMediaEvo after transition to evo.hylo.com
-  .tap(() => updateMedia(post, 'image', params.imageUrl, params.imageRemoved, trx))
-  .tap(() => updateMediaEvo(post, 'image', params.imageUrls, trx))
-  .tap(() => updateMediaEvo(post, 'file', params.fileUrls, trx))
-  .tap(() => updateMedia(post, 'video', params.videoUrl, params.videoRemoved, trx))
-  .tap(() => {
-    if (!params.removedDocs) return
-    return Promise.map(params.removedDocs, doc => {
-      var media = post.relations.media.find(m => m.get('url') === doc.url)
-      if (media) return media.destroy({transacting: trx})
-    })
-  })
-  .tap(() => {
-    if (!params.docs) return
-    return Promise.map(params.docs, doc => {
-      var media = post.relations.media.find(m => m.get('url') === doc.url)
-      if (!media) return Media.createDoc(post.id, doc, trx)
-    })
-  })
+export function updateAllMedia (post, { imageUrls, fileUrls }, trx) {
+  return (imageUrls || fileUrls ? post.load('media') : Promise.resolve())
+  .tap(() => updateMedia(post, 'image', imageUrls, trx))
+  .tap(() => updateMedia(post, 'file', fileUrls, trx))
 }
 
 export function updateCommunities (post, newIds, trx) {

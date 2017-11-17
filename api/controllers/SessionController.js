@@ -84,7 +84,7 @@ const finishOAuth = function (strategy, req, res, next) {
 
   return new Promise((resolve, reject) => {
     var respond = error => {
-      if (error && error.stack) rollbar.handleError(error, req)
+      if (error && error.stack) rollbar.error(error, req)
       if (req.headers.accept === 'application/json') {
         error ? res.serverError(error) : res.ok({})
         return resolve()
@@ -131,14 +131,8 @@ module.exports = {
     return User.authenticate(email, password)
     .tap(user => UserSession.login(req, user, 'password'))
     .tap(user => user.save({last_login_at: new Date()}, {patch: true}))
-    .tap(user => {
-      if (req.param('resp') === 'user') {
-        return UserPresenter.fetchAndPresentForSelf(user.id, req.session, Admin.isSignedIn(req))
-        .then(res.ok)
-      } else {
-        return res.ok({})
-      }
-    }).catch(function (err) {
+    .tap(user => res.ok({}))
+    .catch(function (err) {
       // 422 means 'well-formed but semantically invalid'
       res.status(422).send(err.message)
     })

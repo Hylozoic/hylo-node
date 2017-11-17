@@ -1,7 +1,5 @@
 import underlyingDeleteComment from '../../models/comment/deleteComment'
-import {
-  createComment as underlyingCreateComment
-} from '../../models/comment/createAndPresentComment'
+import underlyingCreateComment from '../../models/comment/createAndPresentComment'
 import { merge, trim } from 'lodash'
 
 export function canDeleteComment (userId, comment) {
