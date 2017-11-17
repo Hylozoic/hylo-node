@@ -2,9 +2,13 @@ import semver from 'semver'
 
 module.exports = {
   updateInfo: function (req, res) {
-    const iosVersion = req.param('ios-version')
-    const platform = iosVersion ? IOS : ANDROID
-    return res.ok(resultBuilder(FORCE, platform))
+    var result = {
+      type: 'force',
+      title: 'A new version of the app is available',
+      message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update',
+      iTunesItemIdentifier: '1002185140'
+    }
+    res.ok(result)
   },
   checkShouldUpdate: function (req, res) {
     const iosVersion = req.param('ios-version')
