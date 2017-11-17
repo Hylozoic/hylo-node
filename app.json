@@ -3,6 +3,7 @@
   "scripts": {
   },
   "env": {
+    "COOKIE_DOMAIN": "",
     "ADMIN_GOOGLE_CLIENT_ID": {
       "required": true
     },
@@ -117,7 +118,6 @@
   "addons": [
     "redisgreen",
     "scheduler",
-    "papertrail",
     "heroku-postgresql"
   ],
   "buildpacks": [
