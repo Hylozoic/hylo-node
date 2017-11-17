@@ -30,8 +30,8 @@ const selectMyNetworkCommunityIds = `(select "id" from "communities"
 var models
 
 describe('model filters', () => {
-  before(() => {
-    models = makeModels(myId, false)
+  before(async () => {
+    models = await makeModels(myId, false)
   })
 
   describe('Membership', () => {

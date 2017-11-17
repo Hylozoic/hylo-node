@@ -48,8 +48,8 @@ import { mapValues, merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
-function createSchema (userId, isAdmin) {
-  const models = makeModels(userId, isAdmin)
+async function createSchema (userId, isAdmin) {
+  const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   const allResolvers = Object.assign({
@@ -184,7 +184,7 @@ export function makeMutations (userId) {
 }
 
 export const createRequestHandler = () =>
-  graphqlHTTP((req, res) => {
+  graphqlHTTP(async (req, res) => {
     if (process.env.DEBUG_GRAPHQL) {
       sails.log.info('\n' +
         red('graphql query start') + '\n' +
@@ -194,15 +194,17 @@ export const createRequestHandler = () =>
       sails.log.info(inspect(req.body.variables))
     }
 
-    // TODO: this function can return a promise -- maybe run through some
+    // TODO: since this function can return a promise, we could run through some
     // policies based on the current user here and assign them to context, so
-    // that the resolvers can use them to deny or restrict access?
+    // that the resolvers can use them to deny or restrict access...
     //
     // ideally we would be able to associate paths with policies, analyze the
     // query to find the policies which should be tested, and run them to allow
     // or deny access to those paths
+
+    const schema = await createSchema(req.session.userId, Admin.isSignedIn(req))
     return {
-      schema: createSchema(req.session.userId, Admin.isSignedIn(req)),
+      schema,
       graphiql: true,
       formatError: process.env.NODE_ENV === 'development' ? error => ({
         message: error.message,

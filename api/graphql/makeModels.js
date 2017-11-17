@@ -22,7 +22,7 @@ import {
 //
 // keys in the returned object are GraphQL schema type names
 //
-export default function makeModels (userId, isAdmin) {
+export default async function makeModels (userId, isAdmin) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
 
   return {
