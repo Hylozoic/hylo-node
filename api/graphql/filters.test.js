@@ -57,12 +57,13 @@ describe('model filters', () => {
     it('filters down to active in-network posts', () => {
       const collection = models.Post.filter(Post.collection())
       expectEqualQuery(collection, `select * from "posts"
-        inner join "communities_posts"
-          on "posts"."id" = "communities_posts"."post_id"
         where "posts"."active" = true
-        and (
-          "communities_posts"."community_id" in ${selectMyCommunityIds}
-          or "communities_posts"."community_id" in ${selectMyNetworkCommunityIds}
+        and "posts"."id" in (
+          select "post_id" from "communities_posts"
+          where (
+            "community_id" in ${selectMyCommunityIds}
+            or "community_id" in ${selectMyNetworkCommunityIds}
+          )
         )`)
     })
   })
