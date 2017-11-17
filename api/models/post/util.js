@@ -1,4 +1,4 @@
-import { difference, has, isEqual, pick, some, compact } from 'lodash'
+import { difference, isEqual, pick, compact, uniq } from 'lodash'
 
 function updateMedia (post, type, urls, transacting) {
   if (!urls) return
@@ -81,7 +81,7 @@ export function updateNetworkMemberships (post, transacting) {
 
   return post.load(['communities', 'networks'], opts)
   .then(() => {
-    const newIds = compact(post.relations.communities.map(c => Number(c.get('network_id')))).sort()
+    const newIds = compact(uniq(post.relations.communities.map(c => Number(c.get('network_id'))))).sort()
     const oldIds = post.relations.networks.pluck('id').sort()
     if (!isEqual(newIds, oldIds)) {
       const ns = post.networks()
