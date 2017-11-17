@@ -418,9 +418,6 @@ export default async function makeModels (userId, isAdmin) {
 
     PostMembership: {
       model: PostMembership,
-      attributes: [
-        'pinned'
-      ],
       relations: [
         'community'
       ]
