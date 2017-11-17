@@ -48,7 +48,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   }
 
   if (sort === 'posts.updated_at' && showPinnedFirst) {
-    q.orderByRaw('communities_posts.pinned desc, posts.updated_at desc')
+    q.orderByRaw('communities_posts.pinned_at is null asc, communities_posts.pinned_at desc, posts.updated_at desc')
   } else if (sort) {
     q.orderBy(sort, 'desc')
   }

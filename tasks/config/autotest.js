@@ -11,7 +11,12 @@ module.exports = function (grunt) {
     const file = argv.file || argv.f || ''
     const cmd = `npm test -s -- -b -R min ${file}`
 
-    gaze(['api/**/*', 'lib/**/*', 'test/**/*'], function (_, watcher) {
+    gaze([
+      'api/**/*',
+      'config/**/*',
+      'lib/**/*',
+      'test/**/*'
+    ], function (_, watcher) {
       this.on('all', debounce(() => {
         child.spawn('bash', ['-c', cmd], {stdio: 'inherit'})
       }, 2000, true))

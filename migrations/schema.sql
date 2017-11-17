@@ -173,7 +173,7 @@ CREATE TABLE communities_posts (
     post_id bigint NOT NULL,
     community_id bigint NOT NULL,
     id integer NOT NULL,
-    pinned boolean DEFAULT false
+    pinned_at timestamp without time zone
 );
 
 
@@ -914,7 +914,7 @@ CREATE TABLE posts (
     location character varying(255),
     created_from character varying(255),
     parent_post_id bigint,
-    link_preview_id integer,
+    link_preview_id bigint,
     is_project_request boolean DEFAULT false
 );
 

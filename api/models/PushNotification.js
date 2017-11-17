@@ -1,5 +1,4 @@
 import decode from 'ent/decode'
-import rollbar from 'rollbar'
 import truncate from 'trunc-html'
 
 module.exports = bookshelf.Model.extend({
@@ -18,7 +17,7 @@ module.exports = bookshelf.Model.extend({
     return this.load('device')
     .then(() => {
       const { device } = this.relations
-      const deviceToken = device.get('device_token')
+      const deviceToken = device.get('token')
       const playerId = device.get('player_id')
       const disabled = !process.env.PUSH_NOTIFICATIONS_ENABLED && (
         !process.env.PUSH_NOTIFICATIONS_TESTING_ENABLED || !device.get('tester')
@@ -28,14 +27,6 @@ module.exports = bookshelf.Model.extend({
       .then(pn => disabled || OneSignal.notify({
         platform, deviceToken, playerId, alert, path, badgeNo
       }))
-      .catch(e => {
-        const err = e instanceof Error ? e : new Error(e)
-        if (process.env.NODE_ENV !== 'production') throw err
-        rollbar.handleErrorWithPayloadData(err, {custom: {
-          server_token: process.env.ONESIGNAL_APP_ID,
-          device_id: this.relations.device.id
-        }})
-      })
     })
   },
 

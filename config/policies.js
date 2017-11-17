@@ -19,20 +19,13 @@
  */
 
 module.exports.policies = {
-
   '*': false,
-
+  AdminController: ['isAdmin'],
+  MobileAppController: true,
+  NexudusController: true,
   SessionController: true,
-
+  SubscriptionController: true,
   UploadController: ['sessionAuth'],
-
-  InvitationController: {
-    findOne: true,
-    use: ['sessionAuth'],
-    find: ['sessionAuth', 'canInvite'],
-    create: ['sessionAuth', 'canInvite'],
-    reinviteAll: ['sessionAuth', 'canInvite', 'checkAndSetMembership']
-  },
 
   AdminSessionController: {
     create:  true,
@@ -40,151 +33,30 @@ module.exports.policies = {
     destroy: true
   },
 
-  AdminController: {
-    '*': ['isAdmin']
-  },
-
-  SearchController: {
-    autocomplete: ['sessionAuth', 'checkAndSetMembership'],
-    showFullText: ['sessionAuth']
-  },
-
-  UserController: {
-    status:              true,
-    create:              true,
-    findSelf:            ['allowPublicAccess', 'accessTokenAuth', 'sessionAuth'],
-    findOne:             ['accessTokenAuth', 'sessionAuth', 'inSameCommunityOrNetwork'],
-    update:              ['sessionAuth', 'isSelf'],
-    contributions:       ['sessionAuth', 'inSameCommunityOrNetwork'],
-    thanks:              ['sessionAuth', 'inSameCommunityOrNetwork'],
-    sendPasswordReset:   true,
-    findForCommunity:    ['sessionAuth', 'checkAndSetMembership'],
-    findForNetwork:      ['sessionAuth', 'inNetwork'],
-    findAll:             ['sessionAuth'],
-    resetTooltips:       ['sessionAuth', 'isSelf']
-  },
-
-  ActivityController: {
-    find:             ['sessionAuth'],
-    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
-    update:           ['sessionAuth', 'isActivityOwner'],
-    markAllRead:      ['sessionAuth']
-  },
-
-  CommunityController: {
-    find:                   ['sessionAuth', 'isAdmin'],
-    findOne:                ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    findSettings:           ['sessionAuth', 'canInvite'],
-    update:                 ['sessionAuth', 'isModerator'],
-    addSlack:               ['sessionAuth', 'isModerator'],
-    findModerators:         ['sessionAuth', 'isModerator'], // FIXME move to UserController
-    addModerator:           ['sessionAuth', 'isModerator'],
-    removeModerator:        ['sessionAuth', 'isModerator'],
-    removeMember:           ['sessionAuth', 'isModerator'],
-    pinPost:                ['sessionAuth', 'isModerator'],
-    leave:                  ['sessionAuth', 'checkAndSetMembership'],
-    updateMembership:       ['sessionAuth', 'checkAndSetMembership'],
-    validate:               true,
-    create:                 ['sessionAuth'],
-    findForNetwork:         ['sessionAuth', 'inNetwork'],
-    findForNetworkNav:      ['sessionAuth', 'inNetwork'],
-    joinWithCode:           ['sessionAuth'],
-    updateChecklist:        ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
-    requestToJoin:          ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    joinRequests:           ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
-    approveJoinRequest:     ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
-    approveAllJoinRequests: ['sessionAuth', 'isModerator', 'checkAndSetMembership'],
-    subscribe:              ['sessionAuth', 'checkAndSetMembership'],
-    unsubscribe:            ['sessionAuth', 'checkAndSetMembership']
-  },
-
-  PostController: {
-    findThreads:                          ['sessionAuth'],
-    findOne:                              ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
-    findForPost:                          ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
-    checkFreshnessForPost:                ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost'],
-    findForCommunity:                     ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    checkFreshnessForCommunity:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    findForUser:                          ['sessionAuth', 'inSameCommunityOrNetwork'],
-    checkFreshnessForUser:                ['sessionAuth', 'inSameCommunityOrNetwork'],
-    findForNetwork:                       ['sessionAuth', 'inNetwork'],
-    checkFreshnessForNetwork:             ['sessionAuth', 'inNetwork'],
-    create:                               ['accessTokenAuth', 'sessionAuth', 'inCommunities'],
-    findOrCreateThread:                   ['sessionAuth'],
-    update:                               ['sessionAuth', 'checkAndSetWritablePost'],
-    follow:                               ['sessionAuth', 'checkAndSetPost'],
-    unfollow:                             ['sessionAuth', 'checkAndSetPost'],
-    rsvp:                                 ['sessionAuth', 'checkAndSetPost'],
-    updateLastRead:                       ['sessionAuth', 'checkAndSetPost'],
-    findForFollowed:                      ['sessionAuth', 'isSelf'],
-    checkFreshnessForFollowed:            ['sessionAuth', 'isSelf'],
-    findForAllForUser:                    ['sessionAuth', 'isSelf'],
-    checkFreshnessForAllForUser:          ['sessionAuth', 'isSelf'],
-    findForTagInAllCommunities:           ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    checkFreshnessForTagInAllCommunities: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    fulfill:                              ['sessionAuth', 'checkAndSetWritablePost'],
-    vote:                                 ['sessionAuth', 'checkAndSetPost'],
-    complain:                             ['sessionAuth', 'checkAndSetPost'],
-    destroy:                              ['sessionAuth', 'checkAndSetWritablePost'],
-    subscribe:                            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    unsubscribe:                          ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    typing:                               ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    subscribeToUpdates:                   ['isSocket', 'sessionAuth'],
-    unsubscribeFromUpdates:               ['isSocket', 'sessionAuth'],
-    createFromEmailForm: ['checkAndDecodeToken']
-  },
-
   CommentController: {
-    create:          ['sessionAuth', 'checkAndSetPost', 'setComment'],
-    thank:           ['sessionAuth'],
-    findForParent:   ['allowPublicAccess', 'sessionAuth', 'checkAndSetPost', 'setComment'],
-    destroy:         ['sessionAuth', 'isCommentOwner'],
-    update:          ['sessionAuth', 'isCommentOwner'],
     createFromEmail: true,
     createBatchFromEmailForm: ['checkAndDecodeToken']
   },
 
-  DeviceController: {
-    create:           ['sessionAuth'],
-    destroy:          ['sessionAuth'],
-    updateBadgeNo:    ['sessionAuth']
+  CommunityController: {
+    subscribe:   ['isSocket', 'sessionAuth', 'checkAndSetMembership'],
+    unsubscribe: ['isSocket', 'sessionAuth', 'checkAndSetMembership']
   },
 
-  NetworkController: {
-    findOne: ['sessionAuth', 'inNetwork'],
-    create:  ['sessionAuth'],
-    update:  ['sessionAuth', 'inNetwork'],
-    validate:        true
+  PostController: {
+    updateLastRead:         ['sessionAuth', 'checkAndSetPost'],
+    subscribe:              ['isSocket', 'sessionAuth', 'checkAndSetPost'],
+    unsubscribe:            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
+    typing:                 ['isSocket', 'sessionAuth', 'checkAndSetPost'],
+    createFromEmailForm:    ['checkAndDecodeToken'],
+
+    // FIXME these two should go in UserController
+    subscribeToUpdates:     ['isSocket', 'sessionAuth'],
+    unsubscribeFromUpdates: ['isSocket', 'sessionAuth']
   },
 
-  SubscriptionController: {
+  UserController: {
+    status: true,
     create: true
-  },
-
-  NexudusController: true,
-  MobileAppController: true,
-
-  LiveStatusController: {
-    show: ['doNotCache']
-  },
-
-  TagController: {
-    findOne: ['sessionAuth'],
-    findOneInCommunity: ['allowPublicAccess', 'sessionAuth', 'checkAndSetMembership'],
-    follow: ['sessionAuth'],
-    findForCommunity: ['sessionAuth', 'checkAndSetMembership'],
-    removeFromCommunity: ['sessionAuth', 'isModerator'],
-    updateForCommunity: ['sessionAuth', 'isModerator'],
-    findOneSummary: ['sessionAuth', 'checkAndSetMembership'],
-    create: ['sessionAuth', 'checkAndSetMembership']
-  },
-
-  LinkPreviewController: {
-    findOne: ['sessionAuth']
-  },
-
-  AccessTokenController: {
-    create: ['sessionAuth'],
-    destroy: ['sessionAuth']
   }
 }

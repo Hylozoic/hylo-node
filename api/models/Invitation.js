@@ -1,6 +1,4 @@
 import uuid from 'node-uuid'
-import { map } from 'lodash/fp'
-import { presentForList } from '../presenters/UserPresenter'
 import EnsureLoad from './mixins/EnsureLoad'
 
 module.exports = bookshelf.Model.extend(Object.assign({
@@ -102,12 +100,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       })
       .then(() => {
         if (this.get('tag_id')) {
-          return TagFollow.findFollowers(community.id, this.get('tag_id'), 3)
-          .then(followers => {
-            data.participants = map(u => presentForList(u, {tags: true}), followers)
-            data.tag_name = tag.get('name')
-            return Email.sendTagInvitation(email, data)
-          })
+          throw new Error('need to re-implement tag invitations')
         } else {
           return Email.sendInvitation(email, data)
         }

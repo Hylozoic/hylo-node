@@ -30,7 +30,7 @@ module.exports.http = {
 
     passportInit: require('passport').initialize(),
     passportSession: require('passport').session(),
-    rollbar: require('rollbar').errorHandler(process.env.ROLLBAR_SERVER_TOKEN),
+    rollbar: require('rollbar').errorHandler(),
 
     requestLogger: function (req, res, next) {
       sails.log.info(magenta(`${req.method} ${req.url}`))

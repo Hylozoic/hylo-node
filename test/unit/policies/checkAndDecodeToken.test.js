@@ -15,11 +15,9 @@ describe('checkAndDecodeToken', function () {
 
   it('rejects a bad token', () => {
     req.params.token = 'abadtoken'
-    return checkAndDecodeToken(req, res, next)
-    .then(() => {
-      expect(res.badRequest).to.have.been.called()
-      expect(next).not.to.have.been.called()
-    })
+    checkAndDecodeToken(req, res, next)
+    expect(res.badRequest).to.have.been.called()
+    expect(next).not.to.have.been.called()
   })
 
   it('decodes a good token', () => {
@@ -27,11 +25,9 @@ describe('checkAndDecodeToken', function () {
     const userId = '321'
     req.params.token = Email.formToken(communityId, userId)
 
-    return checkAndDecodeToken(req, res, next)
-    .then(() => {
-      expect(res.locals.tokenData.communityId).to.equal(communityId)
-      expect(res.locals.tokenData.userId).to.equal(userId)
-      expect(next).to.have.been.called()
-    })
+    checkAndDecodeToken(req, res, next)
+    expect(res.locals.tokenData.communityId).to.equal(communityId)
+    expect(res.locals.tokenData.userId).to.equal(userId)
+    expect(next).to.have.been.called()
   })
 })
