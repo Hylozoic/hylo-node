@@ -22,7 +22,7 @@ import {
 //
 // keys in the returned object are GraphQL schema type names
 //
-export default function makeModels (userId, isAdmin) {
+export default async function makeModels (userId, isAdmin) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
 
   return {
@@ -42,8 +42,7 @@ export default function makeModels (userId, isAdmin) {
         'bio',
         'updated_at',
         'tagline',
-        'new_notification_count',
-        'unseenThreadCount'
+        'new_notification_count'
       ],
       relations: [
         'communities',
@@ -53,7 +52,6 @@ export default function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
-        hasDevice: u => u.hasDevice(),
         settings: u => mapKeys(camelCase, u.get('settings'))
       }
     },
@@ -61,8 +59,7 @@ export default function makeModels (userId, isAdmin) {
     Membership: {
       model: Membership,
       attributes: [
-        'created_at',
-        'hasModeratorRole'
+        'created_at'
       ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
@@ -78,7 +75,6 @@ export default function makeModels (userId, isAdmin) {
     Person: {
       model: User,
       attributes: [
-        'id',
         'name',
         'avatar_url',
         'banner_url',
@@ -116,7 +112,6 @@ export default function makeModels (userId, isAdmin) {
     Post: {
       model: Post,
       attributes: [
-        'id',
         'created_at',
         'updated_at',
         'fulfilled_at',
@@ -165,7 +160,6 @@ export default function makeModels (userId, isAdmin) {
     Community: {
       model: Community,
       attributes: [
-        'id',
         'name',
         'slug',
         'description',
@@ -233,7 +227,6 @@ export default function makeModels (userId, isAdmin) {
     Comment: {
       model: Comment,
       attributes: [
-        'id',
         'created_at'
       ],
       relations: [
@@ -251,7 +244,6 @@ export default function makeModels (userId, isAdmin) {
     LinkPreview: {
       model: LinkPreview,
       attributes: [
-        'id',
         'title',
         'url',
         'image_url',
@@ -263,7 +255,7 @@ export default function makeModels (userId, isAdmin) {
 
     MessageThread: {
       model: Post,
-      attributes: ['id', 'created_at', 'updated_at'],
+      attributes: ['created_at', 'updated_at'],
       getters: {
         unreadCount: t => t.unreadCountForUser(userId),
         lastReadAt: t => t.lastReadAtForUser(userId)
@@ -281,7 +273,7 @@ export default function makeModels (userId, isAdmin) {
 
     Message: {
       model: Comment,
-      attributes: ['id', 'created_at'],
+      attributes: ['created_at'],
       relations: [
         {post: {alias: 'messageThread'}},
         {user: {alias: 'creator'}}
@@ -290,7 +282,6 @@ export default function makeModels (userId, isAdmin) {
 
     Vote: {
       model: Vote,
-      attributes: ['id'],
       getters: {
         createdAt: v => v.get('date_voted')
       },
@@ -303,7 +294,7 @@ export default function makeModels (userId, isAdmin) {
 
     CommunityTopic: {
       model: CommunityTag,
-      attributes: ['id', 'updated_at', 'created_at'],
+      attributes: ['updated_at', 'created_at'],
       getters: {
         postsTotal: ct => ct.postCount(),
         followersTotal: ct => ct.followerCount(),
@@ -322,7 +313,7 @@ export default function makeModels (userId, isAdmin) {
 
     Skill: {
       model: Skill,
-      attributes: ['id', 'name'],
+      attributes: ['name'],
       fetchMany: ({ autocomplete, first = 1000, offset = 0 }) =>
         searchQuerySet('skills', {
           autocomplete, first, offset, currentUserId: userId
@@ -331,7 +322,7 @@ export default function makeModels (userId, isAdmin) {
 
     Topic: {
       model: Tag,
-      attributes: ['id', 'name'],
+      attributes: ['name'],
       getters: {
         postsTotal: t => Tag.taggedPostCount(t.id),
         followersTotal: t => Tag.followersCount(t.id)
@@ -345,7 +336,6 @@ export default function makeModels (userId, isAdmin) {
 
     Notification: {
       model: Notification,
-      attributes: ['id'],
       relations: ['activity'],
       getters: {
         createdAt: n => n.get('created_at')
@@ -360,7 +350,7 @@ export default function makeModels (userId, isAdmin) {
 
     Activity: {
       model: Activity,
-      attributes: ['id', 'meta', 'unread'],
+      attributes: ['meta', 'unread'],
       relations: [
         'actor',
         'post',
@@ -375,7 +365,6 @@ export default function makeModels (userId, isAdmin) {
     PersonConnection: {
       model: UserConnection,
       attributes: [
-        'id',
         'type',
         'created_at',
         'updated_at'
@@ -388,7 +377,6 @@ export default function makeModels (userId, isAdmin) {
     Network: {
       model: Network,
       attributes: [
-        'id',
         'name',
         'slug',
         'description',
@@ -420,7 +408,6 @@ export default function makeModels (userId, isAdmin) {
     Attachment: {
       model: Media,
       attributes: [
-        'id',
         'type',
         'url',
         'thumbnail_url',
@@ -432,7 +419,6 @@ export default function makeModels (userId, isAdmin) {
     PostMembership: {
       model: PostMembership,
       attributes: [
-        'id',
         'pinned'
       ],
       relations: [
