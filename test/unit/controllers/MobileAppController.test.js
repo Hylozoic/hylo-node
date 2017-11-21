@@ -22,6 +22,19 @@ describe('MobileAppController', () => {
     process.env.ANDROID_APP_STORE_URL = tmpVar2
   })
 
+  describe('updateInfo', () => {
+    it('returns the force update object', () => {
+      var expected = {
+        type: 'force',
+        title: 'A new version of the app is available',
+        message: 'The version you are using is no longer compatible with the site. Please go to the App Store now to update',
+        iTunesItemIdentifier: '1002185140'
+      }
+      MobileAppController.updateInfo({}, res)
+      expect(res.body).to.deep.equal(expected)
+    })
+  })
+
   describe('checkShouldUpdate', () => {
     it('returns the expected object for ios suggest update', () => {
       var expected = {

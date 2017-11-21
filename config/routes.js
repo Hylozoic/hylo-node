@@ -53,6 +53,7 @@ module.exports.routes = {
   'POST    /noo/subscription':                            'SubscriptionController.create',
 
   'GET     /noo/mobile/check-should-update':              'MobileAppController.checkShouldUpdate',
+  'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
 
   // websockets routes
   'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',
