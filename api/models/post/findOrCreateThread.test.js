@@ -1,4 +1,21 @@
-import { validateThreadData, createThread } from './findOrCreateThread'
+import findOrCreateThread, { validateThreadData, createThread } from './findOrCreateThread'
+
+describe('findOrCreateThread', () => {
+  var user
+  before(() => {
+    user = new User({name: 'Dog', email: 'abxt@b.c'})
+    return user.save()
+  })
+
+  it("creates a thread if one doesn't exist", () => {
+    return findOrCreateThread(user.id, [user.id])
+    .then(post => Post.find(post.id, {withRelated: 'followers'}))
+    .then(post => {
+      expect(post).to.exist
+      expect(post.relations.followers.length).to.equal(1)
+    })
+  })
+})
 
 describe('validateThreadData', () => {
   var user, userSharingCommunity, userNotInCommunity, inCommunity

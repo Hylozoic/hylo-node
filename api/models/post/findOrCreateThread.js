@@ -1,6 +1,6 @@
 /* globals LastRead */
 import { flattenDeep, pick } from 'lodash'
-import { map } from 'lodash/fp'
+import { map, uniq } from 'lodash/fp'
 
 export const findThread = (userId, participantIds) =>
   Post.query(q => {
@@ -12,8 +12,8 @@ export const findThread = (userId, participantIds) =>
   }).fetch()
 
 export default function findOrCreateThread (userId, participantIds) {
-  return findThread(userId, participantIds)
-  .then(post => post || createThread(userId, participantIds))
+  return findThread(userId, uniq(participantIds))
+  .then(post => post || createThread(userId, uniq(participantIds)))
 }
 
 export function createThread (userId, participantIds) {
@@ -51,7 +51,7 @@ function setupNewThreadAttrs (userId) {
 
 function afterSavingThread (thread, opts) {
   const userId = thread.get('user_id')
-  const participantIds = [userId].concat(opts.participantIds)
+  const participantIds = uniq([userId].concat(opts.participantIds))
   const trxOpts = pick(opts, 'transacting')
 
   return Promise.all(flattenDeep([
