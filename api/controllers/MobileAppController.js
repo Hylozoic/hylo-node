@@ -33,9 +33,7 @@ module.exports = {
       ; // TODO should we do something here?
     }
 
-    rollbar.handleErrorWithPayloadData(new Error('ReactNativeError'), {
-      custom: {errorJSON, extraJSON}
-    })
+    rollbar.error(new Error('ReactNativeError'), null, {custom: {errorJSON, extraJSON}})
 
     return res.ok({success: true})
   }
