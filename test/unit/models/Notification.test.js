@@ -1,6 +1,12 @@
+import ioClient from 'socket.io-client'
+import io from 'socket.io'
+import redis from 'socket.io-redis'
+
 import '../../setup'
 import factories from '../../setup/factories'
 import { spyify, unspyify, mockify } from '../../setup/helpers'
+import { userRoom } from '../../../api/services/Websockets'
+
 const { model } = factories.mock
 
 const destroyAllPushNotifications = () => {
@@ -71,7 +77,6 @@ describe('Notification', function () {
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe posted "My Post" in My Community')
@@ -93,7 +98,6 @@ describe('Notification', function () {
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe mentioned you in "My Post"')
@@ -138,7 +142,6 @@ describe('Notification', function () {
         .then(notification => notification.send())
         .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => {
-          expect(pns).to.exist
           expect(pns.length).to.equal(1)
           var pn = pns.first()
           expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
@@ -160,7 +163,6 @@ describe('Notification', function () {
         .then(notification => notification.send())
         .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => {
-          expect(pns).to.exist
           expect(pns.length).to.equal(1)
           var pn = pns.first()
           expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
@@ -183,7 +185,6 @@ describe('Notification', function () {
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe asked to join My Community')
@@ -205,7 +206,6 @@ describe('Notification', function () {
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe approved your request to join My Community')
@@ -449,6 +449,64 @@ describe('Notification', function () {
 
     it('returns the empty string as a fallthrough', () => {
       expect(Notification.priorityReason(['wat', 'lol'])).to.equal('')
+    })
+  })
+
+  describe.only('updateUserSocketRoom', () => {
+    const ioServer = io.listen(3333)
+    let socketClient, socketServer, notification
+
+    before(() => {
+      socketServer = ioServer.adapter(redis(process.env.REDIS_URL))
+      socketServer.on('connection', s => {
+        s.join(userRoom(reader.id))
+      })
+    })
+
+    after(() => {
+      ioServer.close()
+    })
+
+    beforeEach(done => {
+      socketClient = ioClient.connect('http://localhost:3333', {
+        transports: [ 'websocket' ],
+        'force new connection': true
+      })
+      socketClient.on('connect', () => {
+        notification = new Activity({
+          post_id: post.id,
+          meta: { reasons: [ 'mention' ] },
+          reader_id: reader.id,
+          actor_id: actor.id
+        })
+          .save()
+          .then(activity => new Notification({
+            activity_id: activity.id,
+            medium: Notification.MEDIUM.InApp
+          }).save())
+
+        // Break it up to make notification available in each fixture,
+        // and do all of this _after_ the socket is connected
+        // (mixing promises and callbacks is always fun!)
+        notification
+          .then(() => notification.load(relations))
+          .then(() => done())
+      })
+    })
+
+    afterEach(() => {
+      if (socketClient.connected) {
+        socketClient.disconnect()
+      }
+    })
+
+    it('updates socket room', done => {
+      socketClient.on('newNotification', data => {
+        expect(data.activity.post.id).to.equal(post.id)
+        done()
+      })
+
+      notification.send()
     })
   })
 })
