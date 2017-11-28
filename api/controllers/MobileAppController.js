@@ -1,4 +1,5 @@
 import semver from 'semver'
+import rollbar from '../../lib/rollbar'
 
 module.exports = {
   updateInfo: function (req, res) {
@@ -16,6 +17,25 @@ module.exports = {
     const version = iosVersion || androidVersion
     const platform = iosVersion ? IOS : ANDROID
     return res.ok(shouldUpdate(version, platform))
+  },
+
+  logError: function (req, res) {
+    const error = req.param('error')
+    const extra = req.param('extra')
+
+    let errorJSON = error
+    let extraJSON = extra
+
+    try {
+      errorJSON = JSON.parse(error)
+      extraJSON = JSON.parse(extra)
+    } catch (e) {
+      ; // TODO should we do something here?
+    }
+
+    rollbar.error(new Error('ReactNativeError'), null, {custom: {errorJSON, extraJSON}})
+
+    return res.ok({success: true})
   }
 }
 
