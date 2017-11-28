@@ -2,7 +2,7 @@ import request from 'request'
 import Promise from 'bluebird'
 import { isNull, merge, omit } from 'lodash'
 import { omitBy } from 'lodash/fp'
-import rollbar from 'rollbar'
+import rollbar from '../../lib/rollbar'
 
 const HOST = 'https://onesignal.com'
 

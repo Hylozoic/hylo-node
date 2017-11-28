@@ -4,7 +4,7 @@ import emitter from 'socket.io-emitter'
 import decode from 'ent/decode'
 import { userRoom } from '../services/Websockets'
 import { refineOne } from './util/relations'
-import rollbar from 'rollbar'
+import rollbar from '../../lib/rollbar'
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment

@@ -1,5 +1,5 @@
 const passport = require('passport')
-const rollbar = require('rollbar')
+const rollbar = require('../../lib/rollbar')
 
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
