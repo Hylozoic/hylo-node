@@ -1,5 +1,5 @@
 import semver from 'semver'
-import rollbar from 'rollbar'
+import rollbar from '../../lib/rollbar'
 
 module.exports = {
   updateInfo: function (req, res) {
