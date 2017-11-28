@@ -157,7 +157,7 @@ module.exports = {
 
   use: (userId, token, accessCode) => {
     if (accessCode) {
-      var community // , preexisting
+      var community
       return Community.queryByAccessCode(accessCode)
       .fetch()
       .tap(c => { community = c })
@@ -179,6 +179,7 @@ module.exports = {
         return membership
       })
     }
+
     if (token) {
       return Invitation.where({token}).fetch()
       .then(invitation => {
@@ -187,5 +188,7 @@ module.exports = {
         return invitation.use(userId)
       })
     }
+
+    throw new Error('must provide either token or accessCode')
   }
 }
