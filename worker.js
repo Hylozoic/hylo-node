@@ -5,7 +5,7 @@ require('./config/kue') // this must be third
 const Promise = require('bluebird')
 const queue = require('kue').createQueue()
 const lodash = require('lodash')
-const rollbar = require('rollbar')
+const rollbar = require('./lib/rollbar')
 const sails = skiff.sails
 const { forIn, omit } = lodash
 

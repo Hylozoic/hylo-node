@@ -1,4 +1,4 @@
-import rollbar from 'rollbar'
+import rollbar from '../../lib/rollbar'
 
 module.exports = ({ statusCode, statusText, logData }) => function (data, options) {
   // Get access to `req`, `res`, & `sails`
