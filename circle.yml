@@ -1,6 +1,8 @@
 machine:
   node:
     version: 8.6.0
+  services:
+    - redis
 deployment:
   production:
     branch: master
