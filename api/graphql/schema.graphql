@@ -1,31 +1,32 @@
 # The currently logged-in person.
 type Me {
   id: ID
-  name: String
-  email: String
   avatarUrl: String
   bannerUrl: String
   bio: String
-  twitterName: String
-  linkedinUrl: String
-  facebookUrl: String
-  url: String
-  location: String
-  tagline: String
-  hasDevice: Boolean
-  memberships(first: Int, cursor: ID, order: String): [Membership]
-  membershipsTotal: Int
   communities(first: Int, cursor: ID, order: String): [Membership]
   communitiesTotal: Int
-  posts(first: Int, cursor: ID, order: String): [Post]
-  postsTotal: Int
+  email: String
+  facebookUrl: String
+  hasDevice: Boolean
+  isAdmin: Boolean
+  linkedinUrl: String
+  location: String
+  memberships(first: Int, cursor: ID, order: String): [Membership]
+  membershipsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
   messageThreadsTotal: Int
-  skills(first: Int, cursor: ID): SkillQuerySet
-  updatedAt: String
+  name: String
   newNotificationCount: Int
-  unseenThreadCount: Int
+  posts(first: Int, cursor: ID, order: String): [Post]
+  postsTotal: Int
   settings: UserSettings
+  skills(first: Int, cursor: ID): SkillQuerySet
+  tagline: String
+  twitterName: String
+  unseenThreadCount: Int
+  updatedAt: String
+  url: String
 }
 
 type UserSettings {
