@@ -393,7 +393,7 @@ describe('Notification', function () {
   //  - end each fixture with the call to `updateUserSocketRoom`
   //  - take down the socket server
   //  Nothing is mocked here, so may not be the most rapid tests in the world.
-  describe.only('updateUserSocketRoom', () => {
+  describe('updateUserSocketRoom', () => {
     const ioServer = io.listen(3333)
     let notification, socketActivity, socketClient, socketServer
 
