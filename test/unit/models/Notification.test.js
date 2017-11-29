@@ -1,6 +1,12 @@
+import ioClient from 'socket.io-client'
+import io from 'socket.io'
+import redis from 'socket.io-redis'
+
 import '../../setup'
 import factories from '../../setup/factories'
 import { spyify, unspyify, mockify } from '../../setup/helpers'
+import { userRoom } from '../../../api/services/Websockets'
+
 const { model } = factories.mock
 
 const destroyAllPushNotifications = () => {
@@ -22,17 +28,28 @@ const relations = [
   'activity.actor'
 ]
 
+// Alleviate some code duplication: grab the notification for an activity and
+// load its relations
+const preloadNotification = (activity, medium) =>
+  new Activity(activity)
+    .save()
+    .then(a => new Notification({
+      activity_id: a.id,
+      medium
+    }).save())
+    .then(n => n.load(relations))
+
 describe('Notification', function () {
-  var post, comment, activity, community, reader, actor, device
+  let activities, activity, actor, comment, community, device, post, reader
 
   before(() => {
-    return factories.user({name: 'Joe'}).save()
+    return factories.user({avatar_url: 'http://joe.com/headshot.jpg', name: 'Joe'}).save()
     .then(u => { actor = u })
     .then(() => factories.post({name: 'My Post', user_id: actor.id, description: 'The body of the post'}).save())
     .then(p => { post = p })
     .then(() => new Comment({text: 'hi', user_id: actor.id, post_id: post.id}).save())
     .then(c => { comment = c })
-    .then(() => factories.community({name: 'My Community'}).save())
+    .then(() => factories.community({name: 'My Community', slug: 'my-community'}).save())
     .then(c => { community = c })
     .then(() => community.posts().attach(post))
     .then(() => factories.user({email: 'readersemail@hylo.com'}).save())
@@ -47,7 +64,48 @@ describe('Notification', function () {
     .then(() => new Activity({
       post_id: post.id
     }).save())
-    .then(a => { activity = a })
+    .then(a => {
+      activity = a
+      activities = {
+        approvedJoinRequest: {
+          meta: {reasons: ['approvedJoinRequest']},
+          reader_id: reader.id,
+          actor_id: actor.id,
+          community_id: community.id
+        },
+        newComment: {
+          comment_id: comment.id,
+          meta: {reasons: ['newComment']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        },
+        commentMention: {
+          comment_id: comment.id,
+          meta: {reasons: ['commentMention']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        },
+        joinRequest: {
+          meta: {reasons: ['joinRequest']},
+          reader_id: reader.id,
+          actor_id: actor.id,
+          community_id: community.id
+        },
+        mention: {
+          post_id: post.id,
+          meta: {reasons: ['mention']},
+          reader_id: reader.id,
+          actor_id: actor.id
+        },
+        newPost: {
+          post_id: post.id,
+          meta: {reasons: [`newPost: ${community.id}`]},
+          reader_id: reader.id,
+          actor_id: actor.id,
+          community_id: community.id
+        }
+      }
+    })
   })
 
   beforeEach(() => destroyAllPushNotifications())
@@ -57,21 +115,10 @@ describe('Notification', function () {
     afterEach(() => unspyify(OneSignal, 'notify'))
 
     it('sends a push for a new post', () => {
-      return new Activity({
-        post_id: post.id,
-        meta: {reasons: [`newPost: ${community.id}`]},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.newPost, Notification.MEDIUM.Push)
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe posted "My Post" in My Community')
@@ -79,21 +126,10 @@ describe('Notification', function () {
     })
 
     it('sends a push for a mention in a post', () => {
-      return new Activity({
-        post_id: post.id,
-        meta: {reasons: ['mention']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.mention, Notification.MEDIUM.Push)
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe mentioned you in "My Post"')
@@ -102,17 +138,7 @@ describe('Notification', function () {
 
     describe('with a user with push notifications for comments enabled', () => {
       it('sends no push for a comment', () => {
-        return new Activity({
-          comment_id: comment.id,
-          meta: {reasons: ['newComment']},
-          reader_id: reader.id,
-          actor_id: actor.id
-        }).save()
-        .then(activity => new Notification({
-          activity_id: activity.id,
-          medium: Notification.MEDIUM.Push
-        }).save())
-        .then(notification => notification.load(relations))
+        return preloadNotification(activities.newComment, Notification.MEDIUM.Push)
         .then(notification => notification.send())
         .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => expect(pns.length).to.equal(0))
@@ -124,21 +150,10 @@ describe('Notification', function () {
       afterEach(() => reader.removeSetting('comment_notifications', true))
 
       it('sends a push for a comment', () => {
-        return new Activity({
-          comment_id: comment.id,
-          meta: {reasons: ['newComment']},
-          reader_id: reader.id,
-          actor_id: actor.id
-        }).save()
-        .then(activity => new Notification({
-          activity_id: activity.id,
-          medium: Notification.MEDIUM.Push
-        }).save())
-        .then(notification => notification.load(relations))
+        return preloadNotification(activities.newComment, Notification.MEDIUM.Push)
         .then(notification => notification.send())
         .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => {
-          expect(pns).to.exist
           expect(pns.length).to.equal(1)
           var pn = pns.first()
           expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
@@ -146,21 +161,10 @@ describe('Notification', function () {
       })
 
       it('sends a push for a mention in a comment', () => {
-        return new Activity({
-          comment_id: comment.id,
-          meta: {reasons: ['commentMention']},
-          reader_id: reader.id,
-          actor_id: actor.id
-        }).save()
-        .then(activity => new Notification({
-          activity_id: activity.id,
-          medium: Notification.MEDIUM.Push
-        }).save())
-        .then(notification => notification.load(relations))
+        return preloadNotification(activities.commentMention, Notification.MEDIUM.Push)
         .then(notification => notification.send())
         .then(() => PushNotification.where({device_id: device.id}).fetchAll())
         .then(pns => {
-          expect(pns).to.exist
           expect(pns.length).to.equal(1)
           var pn = pns.first()
           expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
@@ -169,21 +173,10 @@ describe('Notification', function () {
     })
 
     it('sends a push for a join request', () => {
-      return new Activity({
-        meta: {reasons: ['joinRequest']},
-        reader_id: reader.id,
-        actor_id: actor.id,
-        community_id: community.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.joinRequest, Notification.MEDIUM.Push)
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe asked to join My Community')
@@ -191,21 +184,10 @@ describe('Notification', function () {
     })
 
     it('sends a push for an approved join request', () => {
-      return new Activity({
-        meta: {reasons: ['approvedJoinRequest']},
-        reader_id: reader.id,
-        actor_id: actor.id,
-        community_id: community.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Push
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.approvedJoinRequest, Notification.MEDIUM.Push)
       .then(notification => notification.send())
       .then(() => PushNotification.where({device_id: device.id}).fetchAll())
       .then(pns => {
-        expect(pns).to.exist
         expect(pns.length).to.equal(1)
         var pn = pns.first()
         expect(pn.get('alert')).to.equal('Joe approved your request to join My Community')
@@ -230,17 +212,7 @@ describe('Notification', function () {
         })
       })
 
-      return new Activity({
-        post_id: post.id,
-        meta: {reasons: ['mention']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Email
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.mention, Notification.MEDIUM.Email)
       .then(notification => notification.send())
       .then(() => {
         expect(Email.sendPostMentionNotification).to.have.been.called()
@@ -251,17 +223,7 @@ describe('Notification', function () {
     it('sends no email for a comment', () => {
       spyify(Email, 'sendNewCommentNotification')
 
-      return new Activity({
-        comment_id: comment.id,
-        meta: {reasons: ['newComment']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Email
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.newComment, Notification.MEDIUM.Email)
       .then(notification => notification.send())
       .then(() => {
         expect(Email.sendNewCommentNotification).not.to.have.been.called()
@@ -272,17 +234,7 @@ describe('Notification', function () {
     it('sends no email for a mention in a comment', () => {
       spyify(Email, 'sendNewCommentNotification')
 
-      return new Activity({
-        comment_id: comment.id,
-        meta: {reasons: ['commentMention']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Email
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.commentMention, Notification.MEDIUM.Email)
       .then(notification => notification.send())
       .then(() => {
         expect(Email.sendNewCommentNotification).not.to.have.been.called()
@@ -306,17 +258,7 @@ describe('Notification', function () {
         })
       })
 
-      return new Activity({
-        community_id: community.id,
-        meta: {reasons: ['joinRequest']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Email
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.joinRequest, Notification.MEDIUM.Email)
       .then(notification => notification.send())
       .then(() => {
         expect(Email.sendJoinRequestNotification).to.have.been.called()
@@ -340,17 +282,7 @@ describe('Notification', function () {
         })
       })
 
-      return new Activity({
-        community_id: community.id,
-        meta: {reasons: ['approvedJoinRequest']},
-        reader_id: reader.id,
-        actor_id: actor.id
-      }).save()
-      .then(activity => new Notification({
-        activity_id: activity.id,
-        medium: Notification.MEDIUM.Email
-      }).save())
-      .then(notification => notification.load(relations))
+      return preloadNotification(activities.approvedJoinRequest, Notification.MEDIUM.Email)
       .then(notification => notification.send())
       .then(() => {
         expect(Email.sendApprovedJoinRequestNotification).to.have.been.called()
@@ -449,6 +381,187 @@ describe('Notification', function () {
 
     it('returns the empty string as a fallthrough', () => {
       expect(Notification.priorityReason(['wat', 'lol'])).to.equal('')
+    })
+  })
+
+  // The workflow here is roughly:
+  //  - create a socket server (attached to Redis via the adapter)
+  //  - for each test, create a fresh socket client
+  //  - once the client has connected, create the activity and load its relations
+  //  - within each fixture, add a socket listener for `newNotification`
+  //  - make the assertion and call `done` within the socket listener
+  //  - end each fixture with the call to `updateUserSocketRoom`
+  //  - take down the socket server
+  //  Nothing is mocked here, so may not be the most rapid tests in the world.
+  describe('updateUserSocketRoom', () => {
+    const ioServer = io.listen(3333)
+    let notification, socketActivity, socketClient, socketServer
+
+    before(() => {
+      socketServer = ioServer.adapter(redis(process.env.REDIS_URL))
+      socketServer.on('connection', s => {
+        s.join(userRoom(reader.id))
+      })
+    })
+
+    after(() => {
+      ioServer.close()
+    })
+
+    beforeEach(done => {
+      socketClient = ioClient.connect('http://localhost:3333', {
+        transports: [ 'websocket' ],
+        'force new connection': true
+      })
+      socketClient.on('connect', () => {
+        return preloadNotification(socketActivity, Notification.MEDIUM.InApp)
+          .then(n => {
+            notification = n
+            done()
+          })
+      })
+    })
+
+    afterEach(() => {
+      if (socketClient.connected) {
+        socketClient.disconnect()
+      }
+    })
+
+    // TODO: Feels like a good place for snapshots...
+    describe('new posts', () => {
+      before(() => {
+        socketActivity = activities.newPost
+      })
+
+      it('updates socket room with the correct action', done => {
+        socketClient.on('newNotification', data => {
+          expect(data.activity.action).to.equal('newPost')
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+
+      it('updates socket room with the correct actor', done => {
+        socketClient.on('newNotification', data => {
+          const expected = {
+            avatarUrl: 'http://joe.com/headshot.jpg',
+            name: 'Joe',
+            id: actor.id
+          }
+          const actual = data.activity.actor
+          expect(actual).to.deep.equal(expected)
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+
+      it('updates socket room with the correct post', done => {
+        socketClient.on('newNotification', data => {
+          const expected = {
+            details: 'The body of the post',
+            id: post.id,
+            title: 'My Post'
+          }
+          const actual = data.activity.post
+          expect(actual).to.deep.equal(expected)
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+
+      it('updates socket room with the correct community', done => {
+        socketClient.on('newNotification', data => {
+          const expected = {
+            id: community.id,
+            name: 'My Community',
+            slug: 'my-community'
+          }
+          const actual = data.activity.community
+          expect(actual).to.deep.equal(expected)
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+    })
+
+    describe('post mentions', () => {
+      before(() => {
+        socketActivity = activities.mention
+      })
+
+      it('updates socket room with the correct action', done => {
+        socketClient.on('newNotification', data => {
+          expect(data.activity.action).to.equal('mention')
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+    })
+
+    describe('comment mentions', () => {
+      before(() => {
+        socketActivity = activities.commentMention
+      })
+
+      it('updates socket room with the correct action', done => {
+        socketClient.on('newNotification', data => {
+          expect(data.activity.action).to.equal('commentMention')
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+    })
+
+    describe('join requests', () => {
+      before(() => {
+        socketActivity = activities.joinRequest
+      })
+
+      it('updates socket room with the correct action', done => {
+        socketClient.on('newNotification', data => {
+          expect(data.activity.action).to.equal('joinRequest')
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+    })
+
+    describe('approved join requests', () => {
+      before(() => {
+        socketActivity = activities.approvedJoinRequest
+      })
+
+      it('updates socket room with the correct action', done => {
+        socketClient.on('newNotification', data => {
+          expect(data.activity.action).to.equal('approvedJoinRequest')
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
+    })
+
+    describe('comments', () => {
+      before(() => {
+        socketActivity = activities.newComment
+      })
+
+      it('updates socket room with the correct action', done => {
+        socketClient.on('newNotification', data => {
+          expect(data.activity.action).to.equal('newComment')
+          done()
+        })
+
+        notification.updateUserSocketRoom(reader.id)
+      })
     })
   })
 })

@@ -1,6 +1,10 @@
 machine:
+  environment:
+    REDIS_URL: redis://0.0.0.0:6379/1
   node:
     version: 8.6.0
+  services:
+    - redis
 deployment:
   production:
     branch: master
