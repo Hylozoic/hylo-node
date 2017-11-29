@@ -476,7 +476,7 @@ describe('Notification', function () {
       it('updates socket room with the correct community', done => {
         socketClient.on('newNotification', data => {
           const expected = {
-            id: '1',
+            id: community.id,
             name: 'My Community',
             slug: 'my-community'
           }
