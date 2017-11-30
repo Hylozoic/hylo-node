@@ -517,7 +517,9 @@ input UserSettingsInput {
 }
 
 type Mutation {
+  addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
+  addNetworkModerator(personId: ID, networkId: ID): Network
   addSkill(name: String): Skill
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
@@ -533,11 +535,14 @@ type Mutation {
   leaveCommunity(id: ID): ID
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
+  pinPost(postId: ID, communityId: ID): GenericResult
   regenerateAccessCode(communityId: ID): Community
   registerDevice(playerId: String, platform: String, version: String): GenericResult
-  reinviteAll(communityId: ID): GenericResult,
+  reinviteAll(communityId: ID): GenericResult
+  removeCommunityFromNetwork(communityId: ID, networkId: ID): Network
   removeMember(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID): Community
+  removeNetworkModerator(personId: ID, networkId: ID): Network
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
   resendInvitation(invitationId: ID): GenericResult
@@ -551,7 +556,6 @@ type Mutation {
   updatePost(id: ID, data: PostInput): Post
   useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
   vote(postId: ID, isUpvote: Boolean): Post
-  pinPost(postId: ID, communityId: ID): GenericResult
 }
 
 type InvitationUseResult {
