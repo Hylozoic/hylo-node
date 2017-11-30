@@ -519,7 +519,7 @@ input UserSettingsInput {
 type Mutation {
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
-  addNetworkModerator(personId: ID, networkId: ID): Network
+  addNetworkModeratorRole(personId: ID, networkId: ID): Network
   addSkill(name: String): Skill
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
@@ -542,7 +542,7 @@ type Mutation {
   removeCommunityFromNetwork(communityId: ID, networkId: ID): Network
   removeMember(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID): Community
-  removeNetworkModerator(personId: ID, networkId: ID): Network
+  removeNetworkModeratorRole(personId: ID, networkId: ID): Network
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
   resendInvitation(invitationId: ID): GenericResult

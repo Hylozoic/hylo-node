@@ -2,48 +2,49 @@ import validateNetworkData from '../../models/network/validateNetworkData'
 import underlyingUpdateNetwork from '../../models/network/updateNetwork'
 import convertGraphqlData from './convertGraphqlData'
 
-export function addCommunityToNetwork (userId, { communityId, networkId }) {
-  return NetworkMembership.hasModeratorRole(userId, networkId)
-    .then(ok => {
-      if (!ok) throw new Error("You don't have permission to modify this network.")
-    })
-    .then(() => true)
+// TODO: more integrated `isAdmin` handling for mutations?
+export function networkMutationPermissionCheck ({ userId, isAdmin = false }, networkId) {
+  return isAdmin
+    ? Promise.resolve()
+    : NetworkMembership.hasModeratorRole(userId, networkId)
+        .then(ok => {
+          if (!ok) throw new Error("You don't have permission to modify this network.")
+        })
 }
 
-export function addNetworkModeratorRole (userId, { personId, networkId }) {
-  return NetworkMembership.hasModeratorRole(userId, networkId)
-    .then(ok => {
-      if (!ok) throw new Error("You don't have permission to modify this network.")
-    })
+export function addCommunityToNetwork (user, { communityId, networkId }) {
+  return networkMutationPermissionCheck(user, networkId)
+    .then(() => Community
+      .where('id', communityId)
+      .save('network_id', networkId, { method: 'update', patch: true }))
+    .then(() => Network.find(networkId, { withRelated: [ 'communities' ] }))
+}
+
+export function addNetworkModeratorRole (user, { personId, networkId }) {
+  return networkMutationPermissionCheck(user, networkId)
     .then(() => NetworkMembership.addModerator(personId, networkId))
-    .then(() => Network.find(networkId))
+    .then(() => Network.find(networkId, { withRelated: [ 'moderators' ] }))
 }
 
-export function removeCommunityFromNetwork (userId, { communityId, networkId }) {
-  return NetworkMembership.hasModeratorRole(userId, networkId)
-    .then(ok => {
-      if (!ok) throw new Error("You don't have permission to modify this network.")
-    })
-    .then(() => true)
+export function removeCommunityFromNetwork (user, { communityId, networkId }) {
+  return networkMutationPermissionCheck(user)
+    .then(() => Community
+      .where('id', communityId)
+      .save('network_id', null, { method: 'update', patch: true }))
+    .then(() => Network.find(networkId, { withRelated: [ 'communities' ] }))
 }
 
-export function removeNetworkModeratorRole (userId, { personId, networkId }) {
-  return NetworkMembership.hasModeratorRole(userId, networkId)
-    .then(ok => {
-      if (!ok) throw new Error("You don't have permission to modify this network.")
-    })
+export function removeNetworkModeratorRole (user, { personId, networkId }) {
+  return networkMutationPermissionCheck(user, networkId)
     .then(() => NetworkMembership
-      .where({ user_id: userId, network_id: networkId })
-      .delete())
-    .then(() => Network.find(networkId))
+      .where({ user_id: personId, network_id: networkId })
+      .destroy())
+    .then(() => Network.find(networkId, { withRelated: [ 'moderators' ] }))
 }
 
-export function updateNetwork (userId, { id, data }) {
+export function updateNetwork (user, { id, data }) {
   const convertedData = convertGraphqlData(data)
-  return NetworkMembership.hasModeratorRole(userId, id)
-  .then(ok => {
-    if (!ok) throw new Error("You don't have permission to modify this network")
-  })
-  .then(() => validateNetworkData(userId, convertedData))
-  .then(() => underlyingUpdateNetwork(userId, id, convertedData))
+  return networkMutationPermissionCheck(user, id)
+  .then(() => validateNetworkData(user.userId, convertedData))
+  .then(() => underlyingUpdateNetwork(user.userId, id, convertedData))
 }
