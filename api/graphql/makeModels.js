@@ -52,6 +52,7 @@ export default async function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
+        isAdmin: () => isAdmin || false,
         settings: u => mapKeys(camelCase, u.get('settings'))
       }
     },
