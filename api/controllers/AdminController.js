@@ -1,9 +1,6 @@
 import moment from 'moment'
 import { merge, transform, sortBy } from 'lodash'
 
-// this is the id of the user that owns all the starter posts
-var axolotlId = 13986
-
 var rawMetricsQuery = startTime => Promise.props({
   community: Community.query(q => {
     q.select(['id', 'name', 'created_at', 'avatar_url'])
@@ -18,7 +15,7 @@ var rawMetricsQuery = startTime => Promise.props({
   post: Post.query(q => {
     q.where('posts.created_at', '>', startTime)
     q.where('posts.type', '!=', 'welcome')
-    q.where('posts.user_id', '!=', axolotlId)
+    q.where('posts.user_id', '!=', User.AXOLOTL_ID)
     q.join('communities_posts', 'posts.id', 'communities_posts.post_id')
     q.select(['posts.id', 'posts.created_at', 'communities_posts.community_id', 'posts.user_id'])
   }).query(),

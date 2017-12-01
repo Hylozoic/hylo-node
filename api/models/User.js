@@ -1,8 +1,8 @@
 /* globals LastRead */
-var bcrypt = require('bcrypt')
-var crypto = require('crypto')
-var validator = require('validator')
-import { compact, get, has, isEmpty, merge, omit, pick } from 'lodash'
+import bcrypt from 'bcrypt'
+import crypto from 'crypto'
+import validator from 'validator'
+import { get, has, isEmpty, merge, omit, pick } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
 import HasSettings from './mixins/HasSettings'
 import { fetchAndPresentFollowed } from '../services/TagPresenter'
@@ -290,6 +290,8 @@ module.exports = bookshelf.Model.extend(merge({
   }
 
 }, HasSettings), {
+  AXOLOTL_ID: '13986',
+
   authenticate: Promise.method(function (email, password) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt)
 
