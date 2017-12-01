@@ -384,7 +384,9 @@ CREATE TABLE flagged_items (
     user_id bigint,
     category character varying(255),
     reason text,
-    link character varying(255)
+    link character varying(255),
+    object_id bigint,
+    object_type character varying(255)
 );
 
 
@@ -1734,6 +1736,14 @@ ALTER TABLE ONLY link_previews
 
 
 --
+-- Name: network_id_post_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY networks_posts
+    ADD CONSTRAINT network_id_post_id_key UNIQUE (network_id, post_id);
+
+
+--
 -- Name: networks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2829,7 +2839,7 @@ ALTER TABLE ONLY posts_users
 --
 
 ALTER TABLE ONLY push_notifications
-    ADD CONSTRAINT push_notifications_device_id_foreign FOREIGN KEY (device_id) REFERENCES devices(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT push_notifications_device_id_foreign FOREIGN KEY (device_id) REFERENCES devices(id);
 
 
 --
