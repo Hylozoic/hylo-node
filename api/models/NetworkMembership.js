@@ -27,8 +27,8 @@ module.exports = bookshelf.Model.extend({
       network_id: networkId
     }).fetch()
     .then(membership => {
-      return membership.get('role') === NetworkMembership.MODERATOR_ROLE ||
-        membership.get('role') === NetworkMembership.ADMIN_ROLE
+      return !!membership && (membership.get('role') === NetworkMembership.MODERATOR_ROLE ||
+        membership.get('role') === NetworkMembership.ADMIN_ROLE)
     })
   },
 
@@ -38,7 +38,7 @@ module.exports = bookshelf.Model.extend({
       network_id: networkId
     }).fetch()
     .then(membership => {
-      return membership.get('role') === NetworkMembership.ADMIN_ROLE
+      return !!membership && membership.get('role') === NetworkMembership.ADMIN_ROLE
     })
   }
 })
@@ -48,6 +48,6 @@ export function addMemberWithRole (userId, networkId, role, opts = {}) {
     user_id: userId,
     network_id: networkId,
     created_at: new Date(),
-    role: NetworkMembership.MODERATOR_ROLE
+    role
   }).save({}, opts)
 }
