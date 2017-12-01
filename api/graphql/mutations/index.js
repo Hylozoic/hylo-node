@@ -163,7 +163,9 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
     user_id: userId,
     category,
     reason,
-    link
+    link,
+    object_id: linkData.id,
+    object_type: linkData.type
   })
   .then(() => ({success: true}))
 }
