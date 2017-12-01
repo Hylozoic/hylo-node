@@ -1,4 +1,4 @@
-import HasSettings from './mixins/'
+import HasSettings from './mixins/HasSettings'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
