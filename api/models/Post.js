@@ -6,6 +6,7 @@ import { postRoom, pushToSockets } from '../services/Websockets'
 import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
+import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
 
@@ -301,7 +302,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       }
     )
   }
-}, EnsureLoad), {
+}, EnsureLoad, HasGroup), {
   // Class Methods
 
   Type: {

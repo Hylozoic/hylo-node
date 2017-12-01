@@ -1,4 +1,5 @@
 import { includes } from 'lodash'
+import HasGroup from './mixins/HasGroup'
 
 var knex = bookshelf.knex
 
@@ -10,7 +11,7 @@ var networkIdsQuery = function (userId) {
     .whereIn('id', communityIdsQuery).whereRaw('network_id is not null')
 }
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'networks',
 
   communities: function () {
@@ -47,7 +48,7 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(Post).through(PostNetworkMembership)
     .query({where: {'posts.active': true}})
   }
-}, {
+}, HasGroup), {
 
   find: function (idOrSlug, options) {
     if (isNaN(Number(idOrSlug))) {

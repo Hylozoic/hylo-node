@@ -2,6 +2,7 @@
 import Slack from '../services/Slack'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
+import HasGroup from './mixins/HasGroup'
 import { clone, flatten, isEqual, merge, pick, trim } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
 import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../../lib/uploader/types'
@@ -206,7 +207,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(memberships => this.save({num_members: memberships.length}))
   }
 
-}, HasSettings), {
+}, HasSettings, HasGroup), {
   find: function (key, opts = {}) {
     if (!key) return Promise.resolve(null)
 
