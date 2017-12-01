@@ -1,6 +1,6 @@
 import * as mutations from './network'
 
-describe.only('network mutations', () => {
+describe('network mutations', () => {
   let community, network, user
 
   before(() => {
