@@ -46,7 +46,8 @@ const sails = require('sails')
       process.exit()
     })
 
-    require('promirepl').promirepl(repl)
+    require('async-repl/stubber')(repl)
+    // require('promirepl').promirepl(repl)
   })
 })()
 
