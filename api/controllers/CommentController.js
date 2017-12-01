@@ -2,7 +2,7 @@
 import { isEmpty } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
 import { markdown } from 'hylo-utils/text'
-import createComment from '../models/comment/createAndPresentComment'
+import createComment from '../models/comment/createComment'
 
 module.exports = {
   createFromEmail: function (req, res) {

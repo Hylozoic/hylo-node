@@ -82,6 +82,8 @@ export function pushMessageToSockets (message, thread) {
   const userIds = followers.pluck('id')
   const excludingSender = userIds.filter(id => id !== message.get('user_id'))
 
+  console.log('pushing message with date', message.get('created_at'))
+
   let response = refineOne(message,
     ['id', 'text', 'created_at', 'user_id', 'post_id'],
     {
@@ -89,6 +91,8 @@ export function pushMessageToSockets (message, thread) {
       post_id: 'messageThread'
     }
   )
+
+  response.createdAt = response.createdAt.toString()
 
   let socketMessageName
 
