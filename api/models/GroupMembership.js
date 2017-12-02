@@ -14,5 +14,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
 }, HasSettings), {
   create (groupId, userId, { role, settings }) {
     // TODO
+  },
+
+  update (groupId, userId, { role, settings }) {
+    // TODO
   }
 })

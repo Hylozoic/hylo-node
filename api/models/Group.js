@@ -25,6 +25,10 @@ module.exports = bookshelf.Model.extend({
     // TODO
   },
 
+  updateMembership (userId, { role, settings }) {
+    return GroupMembership.update(this.id, userId, { role, settings })
+  },
+
   addChildGroup () {
     // TODO
   },
