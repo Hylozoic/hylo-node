@@ -14,8 +14,8 @@ exports.up = function (knex, Promise) {
   })
   .then(() => knex.schema.createTable('group_connections', t => {
     t.bigIncrements().primary()
-    t.bigInteger('parent_group_id').references('id').inTable('groups')
-    t.bigInteger('child_group_id').references('id').inTable('groups')
+    t.bigInteger('parent_group_id').references('id').inTable('groups').notNullable()
+    t.bigInteger('child_group_id').references('id').inTable('groups').notNullable()
     t.boolean('active').defaultTo(true)
     t.integer('role')
     t.jsonb('settings')
@@ -26,8 +26,8 @@ exports.up = function (knex, Promise) {
   .then(() => setDeferrable(knex, 'group_connections', 'group_connections_parent_group_id_foreign'))
   .then(() => knex.schema.createTable('group_memberships', t => {
     t.bigIncrements().primary()
-    t.bigInteger('group_id').references('id').inTable('groups')
-    t.bigInteger('user_id').references('id').inTable('users')
+    t.bigInteger('group_id').references('id').inTable('groups').notNullable()
+    t.bigInteger('user_id').references('id').inTable('users').notNullable()
     t.boolean('active').defaultTo(true)
     t.integer('role')
     t.jsonb('settings')
