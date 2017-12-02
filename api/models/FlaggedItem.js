@@ -6,6 +6,16 @@ module.exports = bookshelf.Model.extend({
 
   user: function () {
     return this.belongsTo(User, 'user_id')
+  },
+
+  getObject: function (opts) {
+    if (!this.get('object_id')) throw new Error('No object_id defined for Flagged Item')
+    switch (this.get('type')) {
+      case FlaggedItem.Type.POST:
+        return Post.find(this.get('object_id'), opts)
+      default:
+        throw new Error('Unsupported type for Flagged Item', this.get('type'))
+    }
   }
 
 }, {
@@ -17,6 +27,17 @@ module.exports = bookshelf.Model.extend({
     OTHER: 'other',
     SAFETY: 'safety',
     SPAM: 'spam'
+  },
+
+  Type: {
+    POST: 'post',
+    COMMENT: 'comment',
+    MEMBER: 'member'
+  },
+
+  find (id, opts = {}) {
+    return FlaggedItem.where({id})
+    .fetch(opts)
   },
 
   create: function (attrs) {
@@ -42,5 +63,20 @@ module.exports = bookshelf.Model.extend({
     }
 
     return this.forge(attrs).save()
+  },
+
+  async notifyModerators ({ id }) {
+    const flaggedItem = await FlaggedItem.find(id)
+    switch (flaggedItem.get('type')) {
+      case FlaggedItem.Type.POST:
+        return notifyModeratorsPost(flaggedItem)
+      default:
+        throw new Error('Unsupported type for Flagged Item', flaggedItem.get('type'))
+    }
   }
 })
+
+async function notifyModeratorsPost (flaggedItem) {
+  const post = await flaggedItem.getObject({withRelated: 'communities'})
+  
+}

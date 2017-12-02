@@ -145,6 +145,7 @@ export function removeSkill (userId, skillIdOrName) {
 
 export function flagInappropriateContent (userId, { category, reason, linkData }) {
   let link
+  // TODO use FlaggedItem.Type
   switch (trim(linkData.type)) {
     case 'post':
       link = Frontend.Route.post(linkData.id, linkData.slug)
@@ -167,6 +168,7 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
     object_id: linkData.id,
     object_type: linkData.type
   })
+  .tap(flaggedItem => Queue.classMethod('FlaggedItem', 'notifyModerators', {id: flaggedItem.id}))
   .then(() => ({success: true}))
 }
 
