@@ -233,7 +233,7 @@ export function makeMutations (userId, isAdmin) {
 
     updateMembership: (root, args) => updateMembership(userId, args),
 
-    updateNetwork: (root, args) => updateNetwork(userId, args),
+    updateNetwork: (root, args) => updateNetwork({ userId, isAdmin }, args),
 
     updatePost: (root, args) => updatePost(userId, args),
 
