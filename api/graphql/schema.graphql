@@ -354,6 +354,15 @@ type Query {
     resetCount: Boolean
   ): NotificationQuerySet
   community(id: ID, slug: String, updateLastViewed: Boolean): Community
+  communities(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String,
+    filter: String
+  ): CommunityQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
