@@ -31,6 +31,13 @@ GroupConnection
   updated_at
 ```
 
+If we want to efficiently query values that are stored in the `settings` columns
+then we will need to create indexes on them. e.g.:
+
+```
+create index on group_memberships ((settings->>'lastReadAt'));
+```
+
 ## notes
 
 Relationship between a user and group:
