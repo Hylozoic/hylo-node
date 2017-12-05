@@ -2388,13 +2388,17 @@ ejs-locals@1.0.2:
   dependencies:
     ejs "0.8.x"
 
-ejs@0.8.x, ejs@~0.8.4:
+ejs@0.8.x:
   version "0.8.8"
   resolved "https://registry.yarnpkg.com/ejs/-/ejs-0.8.8.tgz#ffdc56dcc35d02926dd50ad13439bbc54061d598"
 
 ejs@2.3.4:
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/ejs/-/ejs-2.3.4.tgz#3c76caa09664b3583b0037af9dc136e79ec68b98"
+
+ejs@^2.5.5:
+  version "2.5.7"
+  resolved "https://registry.yarnpkg.com/ejs/-/ejs-2.5.7.tgz#cc872c168880ae3c7189762fd5ffc00896c9518a"
 
 emitter-component@^1.1.1:
   version "1.1.1"
