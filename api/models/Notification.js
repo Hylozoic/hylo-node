@@ -375,7 +375,9 @@ module.exports = bookshelf.Model.extend({
           rollbar.error(err, null, {notification: n.attributes})
           return n.save({failed_at: new Date()}, {patch: true})
         }))
-      .then(() => Notification.sendUnsent()))
+      .then(() => new Promise(resolve => {
+        setTimeout(() => resolve(Notification.sendUnsent()), 1000)
+      })))
   },
 
   priorityReason: function (reasons) {
