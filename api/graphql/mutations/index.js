@@ -6,7 +6,13 @@ import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUr
 import convertGraphqlData from './convertGraphqlData'
 
 export { createComment, deleteComment, canDeleteComment } from './comment'
-export { updateNetwork } from './network'
+export {
+  addCommunityToNetwork,
+  addNetworkModeratorRole,
+  removeCommunityFromNetwork,
+  removeNetworkModeratorRole,
+  updateNetwork
+} from './network'
 export { registerDevice } from './mobile'
 export { subscribe } from './topic'
 export {
