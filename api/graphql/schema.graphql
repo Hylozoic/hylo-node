@@ -634,6 +634,8 @@ type Network {
   communities(first: Int, offset: Int, order: String, sortBy: String, search: String): CommunityQuerySet
   members(first: Int, offset: Int, order: String, sortBy: String, search: String): PersonQuerySet
   moderators(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
+  isModerator: Boolean
+  isAdmin: Boolean
   posts(
     first: Int,
     order: String,

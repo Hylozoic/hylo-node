@@ -445,6 +445,8 @@ describe('graphql request handler', () => {
         query: `{
           network(id: "${network.id}") {
             slug
+            isModerator
+            isAdmin
             members(first: 2, sortBy: "name") {
               items {
                 name
@@ -464,6 +466,8 @@ describe('graphql request handler', () => {
           data: {
             network: {
               slug: network.get('slug'),
+              isAdmin: false,
+              isModerator: false,
               members: {
                 items: sortBy('name', [
                   {name: user2.get('name')},

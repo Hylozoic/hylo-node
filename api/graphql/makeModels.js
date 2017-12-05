@@ -395,6 +395,10 @@ export default async function makeModels (userId, isAdmin) {
         'banner_url',
         'memberCount'
       ],
+      getters: {
+        isModerator: n => NetworkMembership.hasModeratorRole(userId, n.id),
+        isAdmin: n => NetworkMembership.hasAdminRole(userId, n.id)
+      },
       relations: [
         {moderators: {querySet: true}},
         {members: {
