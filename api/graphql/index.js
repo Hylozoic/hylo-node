@@ -4,6 +4,8 @@ import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
+  addCommunityToNetwork,
+  addNetworkModeratorRole,
   addModerator,
   addSkill,
   createComment,
@@ -23,8 +25,10 @@ import {
   regenerateAccessCode,
   registerDevice,
   reinviteAll,
+  removeCommunityFromNetwork,
   removeMember,
   removeModerator,
+  removeNetworkModeratorRole,
   removePost,
   removeSkill,
   resendInvitation,
@@ -54,7 +58,7 @@ async function createSchema (userId, isAdmin) {
 
   const allResolvers = Object.assign({
     Query: makeQueries(userId, fetchOne, fetchMany),
-    Mutation: makeMutations(userId),
+    Mutation: makeMutations(userId, isAdmin),
 
     FeedItemContent: {
       __resolveType (data, context, info) {
@@ -100,6 +104,7 @@ export function makeQueries (userId, fetchOne, fetchMany) {
       }
       throw new Error('Slug is invalid')
     },
+    communities: (root, args) => fetchMany('Community', args),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
       .tap(() => resetCount && User.resetNewNotificationCount(userId))
@@ -134,52 +139,108 @@ export function makeQueries (userId, fetchOne, fetchMany) {
   }
 }
 
-export function makeMutations (userId) {
+export function makeMutations (userId, isAdmin) {
   return {
-    updateMe: (root, { changes }) => updateMe(userId, changes),
-    createPost: (root, { data }) => createPost(userId, data),
-    updatePost: (root, args) => updatePost(userId, args),
+    addCommunityToNetwork: (root, { communityId, networkId }) =>
+      addCommunityToNetwork({ userId, isAdmin }, { communityId, networkId }),
+
+    addModerator: (root, { personId, communityId }) =>
+      addModerator(userId, personId, communityId),
+
+    addNetworkModeratorRole: (root, { personId, networkId }) =>
+      addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
+
+    addSkill: (root, { name }) => addSkill(userId, name),
+
     createComment: (root, { data }) => createComment(userId, data),
+
+    createCommunity: (root, { data }) => createCommunity(userId, data),
+
+    createInvitation: (root, {communityId, data}) =>
+      createInvitation(userId, communityId, data),
+
     createMessage: (root, { data }) => {
       data.postId = data.messageThreadId
       return createComment(userId, data)
     },
-    findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
-    findOrCreateLinkPreviewByUrl: (root, { data }) => findOrCreateLinkPreviewByUrl(data),
-    leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
-    markActivityRead: (root, { id }) => markActivityRead(userId, id),
-    markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
-    subscribe: (root, { communityId, topicId, isSubscribing }) =>
-      subscribe(userId, topicId, communityId, isSubscribing),
-    updateCommunitySettings: (root, { id, changes }) =>
-      updateCommunity(userId, id, changes),
-    updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
-    updateMembership: (root, args) => updateMembership(userId, args),
-    updateNetwork: (root, args) => updateNetwork(userId, args),
-    unlinkAccount: (root, { provider }) => unlinkAccount(userId, provider),
-    vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote),
-    addModerator: (root, { personId, communityId }) =>
-      addModerator(userId, personId, communityId),
-    removeModerator: (root, { personId, communityId }) =>
-      removeModerator(userId, personId, communityId),
-    deletePost: (root, { id }) =>
-      deletePost(userId, id),
-    addSkill: (root, { name }) => addSkill(userId, name),
-    removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
-    removeMember: (root, { personId, communityId }) => removeMember(userId, personId, communityId),
-    regenerateAccessCode: (root, { communityId }) => regenerateAccessCode(userId, communityId),
-    createInvitation: (root, {communityId, data}) => createInvitation(userId, communityId, data),
-    expireInvitation: (root, {invitationId}) => expireInvitation(userId, invitationId),
-    resendInvitation: (root, {invitationId}) => resendInvitation(userId, invitationId),
-    reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
-    useInvitation: (root, { invitationToken, accessCode }) => useInvitation(userId, invitationToken, accessCode),
-    flagInappropriateContent: (root, { data }) => flagInappropriateContent(userId, data),
-    removePost: (root, { postId, communityId, slug }) => removePost(userId, postId, communityId || slug),
-    createCommunity: (root, { data }) => createCommunity(userId, data),
+
+    createPost: (root, { data }) => createPost(userId, data),
+
     deleteComment: (root, { id }) => deleteComment(userId, id),
+
+    deletePost: (root, { id }) => deletePost(userId, id),
+
+    expireInvitation: (root, {invitationId}) =>
+      expireInvitation(userId, invitationId),
+
+    findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
+
+    findOrCreateLinkPreviewByUrl: (root, { data }) =>
+      findOrCreateLinkPreviewByUrl(data),
+
+    flagInappropriateContent: (root, { data }) =>
+      flagInappropriateContent(userId, data),
+
+    leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
+
+    markActivityRead: (root, { id }) => markActivityRead(userId, id),
+
+    markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
+
+    pinPost: (root, { postId, communityId }) =>
+      pinPost(userId, postId, communityId),
+
+    regenerateAccessCode: (root, { communityId }) =>
+      regenerateAccessCode(userId, communityId),
+
     registerDevice: (root, { playerId, platform, version }) =>
       registerDevice(userId, { playerId, platform, version }),
-    pinPost: (root, { postId, communityId }) => pinPost(userId, postId, communityId)
+
+    reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
+
+    removeCommunityFromNetwork: (root, { communityId, networkId }) =>
+      removeCommunityFromNetwork({ userId, isAdmin }, { communityId, networkId }),
+
+    removeMember: (root, { personId, communityId }) =>
+      removeMember(userId, personId, communityId),
+
+    removeModerator: (root, { personId, communityId }) =>
+      removeModerator(userId, personId, communityId),
+
+    removeNetworkModeratorRole: (root, { personId, networkId }) =>
+      removeNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
+
+    removePost: (root, { postId, communityId, slug }) =>
+      removePost(userId, postId, communityId || slug),
+
+    removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
+
+    resendInvitation: (root, {invitationId}) =>
+      resendInvitation(userId, invitationId),
+
+    subscribe: (root, { communityId, topicId, isSubscribing }) =>
+      subscribe(userId, topicId, communityId, isSubscribing),
+
+    unlinkAccount: (root, { provider }) =>
+      unlinkAccount(userId, provider),
+
+    updateCommunitySettings: (root, { id, changes }) =>
+      updateCommunity(userId, id, changes),
+
+    updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
+
+    updateMe: (root, { changes }) => updateMe(userId, changes),
+
+    updateMembership: (root, args) => updateMembership(userId, args),
+
+    updateNetwork: (root, args) => updateNetwork({ userId, isAdmin }, args),
+
+    updatePost: (root, args) => updatePost(userId, args),
+
+    useInvitation: (root, { invitationToken, accessCode }) =>
+      useInvitation(userId, invitationToken, accessCode),
+
+    vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
   }
 }
 

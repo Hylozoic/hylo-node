@@ -222,7 +222,16 @@ export default async function makeModels (userId, isAdmin) {
             return Frontend.Route.invitePath(c)
           })
       },
-      filter: nonAdminFilter(sharedNetworkMembership('communities', userId))
+      filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
+      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
+        searchQuerySet('communities', {
+          term: search,
+          limit: first,
+          offset,
+          type: filter,
+          autocomplete,
+          sort: sortBy
+        })
     },
 
     Comment: {

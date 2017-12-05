@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "analytics-node": "^1.2.0",
+    "async-repl": "ef4/async-repl",
     "aws-sdk": "^2.9.0",
     "babel": "^6.5.2",
     "babel-cli": "^6.9.0",
@@ -49,7 +50,7 @@
     "csv-parser": "^1.7.0",
     "dataloader": "^1.2.0",
     "dotenv": "^0.4.0",
-    "ejs": "~0.8.4",
+    "ejs": "^2.5.5",
     "ent": "^2.2.0",
     "express-graphql": "^0.6.1",
     "file-type": "^6.1.0",
