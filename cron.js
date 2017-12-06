@@ -2,7 +2,7 @@
 require('babel-register')
 var skiff = require('./lib/skiff') // this must be required first
 var moment = require('moment-timezone')
-var rollbar = skiff.rollbar
+var rollbar = require('./lib/rollbar')
 var sails = skiff.sails
 var digest2 = require('./lib/community/digest2')
 var Promise = require('bluebird')

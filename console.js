@@ -37,7 +37,7 @@ const sails = require('sails')
       sockets: false,
       views: false
     }
-  }), function (err) {
+  }), function (err) { // eslint-disable-line
     var repl = require('repl').start('sails> ')
     try {
       history(repl, require('path').join(sails.config.paths.tmp, '.node_history'))
@@ -46,7 +46,11 @@ const sails = require('sails')
       process.exit()
     })
 
-    require('promirepl').promirepl(repl)
+    if (process.env.PROMIREPL) {
+      require('promirepl').promirepl(repl)
+    } else {
+      require('async-repl/stubber')(repl)
+    }
   })
 })()
 
@@ -68,7 +72,7 @@ function history (repl, file) {
 
   repl.rli.addListener('line', function (code) {
     if (code && code !== '.history') {
-      fs.write(fd, code + '\n')
+      fs.write(fd, code + '\n', () => {})
     } else {
       repl.rli.historyIndex++
       repl.rli.history.pop()
