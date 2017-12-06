@@ -124,6 +124,32 @@ describe('User', function () {
     })
   })
 
+  describe('#communitiesSharedWithPost', () => {
+    var user, post, c1, c2, c3, c4
+    before(() => {
+      user = factories.user()
+      post = factories.post()
+      c1 = factories.community()
+      c2 = factories.community()
+      c3 = factories.community()
+      c4 = factories.community()
+      return Promise.join(
+        user.save(), post.save(), c1.save(), c2.save(), c3.save(), c4.save())
+      .then(() => post.communities().attach([c1, c2, c3]))
+      .then(() => user.joinCommunity(c2))
+      .then(() => user.joinCommunity(c3))
+      .then(() => user.joinCommunity(c4))
+    })
+
+    it('returns the shared communities', () => {
+      return user.communitiesSharedWithPost(post)
+      .then(cs => {
+        expect(cs.length).to.equal(2)
+        expect(cs.map(c => c.id)).to.deep.equal([c2.id, c3.id])
+      })
+    })
+  })
+
   describe('.authenticate', function () {
     before(function () {
       return new LinkedAccount({

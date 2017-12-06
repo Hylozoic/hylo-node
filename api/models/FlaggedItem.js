@@ -1,5 +1,6 @@
 import { values, isEmpty, trim } from 'lodash'
 import { validateFlaggedItem } from 'hylo-utils/validators'
+import { sendMessageFromAxolotl } from '../services/MessagingService'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'flagged_items',
@@ -10,11 +11,26 @@ module.exports = bookshelf.Model.extend({
 
   getObject: function (opts) {
     if (!this.get('object_id')) throw new Error('No object_id defined for Flagged Item')
-    switch (this.get('type')) {
+    switch (this.get('object_type')) {
       case FlaggedItem.Type.POST:
         return Post.find(this.get('object_id'), opts)
       default:
-        throw new Error('Unsupported type for Flagged Item', this.get('type'))
+        throw new Error('Unsupported type for Flagged Item', this.get('object_type'))
+    }
+  },
+
+  getMessageText: function (community) {
+    return `${this.relations.user.get('name')} flagged a ${this.get('object_type')} in ${community.get('name')} for being ${this.get('category')} \n` +
+      `Message: ${this.get('reason')}\n` +
+      `${this.getContentLink(community)}`
+  },
+
+  getContentLink: function (community) {
+    switch (this.get('object_type')) {
+      case FlaggedItem.Type.POST:
+        return Frontend.Route.post(this.get('object_id'), community)
+      default:
+        throw new Error('Unsupported type for Flagged Item', this.get('object_type'))
     }
   }
 
@@ -66,17 +82,23 @@ module.exports = bookshelf.Model.extend({
   },
 
   async notifyModerators ({ id }) {
-    const flaggedItem = await FlaggedItem.find(id)
-    switch (flaggedItem.get('type')) {
+    const flaggedItem = await FlaggedItem.find(id, {withRelated: 'user'})
+    switch (flaggedItem.get('object_type')) {
       case FlaggedItem.Type.POST:
         return notifyModeratorsPost(flaggedItem)
       default:
-        throw new Error('Unsupported type for Flagged Item', flaggedItem.get('type'))
+        throw new Error('Unsupported type for Flagged Item', flaggedItem.get('object_type'))
     }
   }
 })
 
 async function notifyModeratorsPost (flaggedItem) {
   const post = await flaggedItem.getObject({withRelated: 'communities'})
-  
+  const user = flaggedItem.relations.user
+  const communities = await user.communitiesSharedWithPost(post)
+  communities.map(c => c.load('moderators')
+    .then(() => {
+      const moderatorIds = c.relations.moderators.map('id')
+      sendMessageFromAxolotl(moderatorIds, flaggedItem.getMessageText(c))
+    }))
 }
