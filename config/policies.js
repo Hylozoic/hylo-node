@@ -57,6 +57,7 @@ module.exports.policies = {
 
   UserController: {
     status: true,
-    create: true
+    create: true,
+    sendPasswordReset: true
   }
 }
