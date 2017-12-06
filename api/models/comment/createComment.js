@@ -92,7 +92,7 @@ export function pushMessageToSockets (message, thread) {
     }
   )
 
-  response.createdAt = response.createdAt.toString()
+  response.createdAt = response.createdAt && response.createdAt.toString()
 
   let socketMessageName
 
