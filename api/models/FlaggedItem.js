@@ -9,26 +9,36 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, 'user_id')
   },
 
-  getObject: function (opts) {
+  getObject: function () {
     if (!this.get('object_id')) throw new Error('No object_id defined for Flagged Item')
     switch (this.get('object_type')) {
       case FlaggedItem.Type.POST:
-        return Post.find(this.get('object_id'), opts)
+        return Post.find(this.get('object_id'), {withRelated: 'communities'})
+      case FlaggedItem.Type.COMMENT:
+        return Comment.find(this.get('object_id'), {withRelated: 'post.communities'})
+      case FlaggedItem.Type.MEMBER:
+        return User.find(this.get('object_id'), {withRelated: 'communities'})
       default:
         throw new Error('Unsupported type for Flagged Item', this.get('object_type'))
     }
   },
 
-  getMessageText: function (community) {
+  async getMessageText (community) {
+    const link = await this.getContentLink(community)
     return `${this.relations.user.get('name')} flagged a ${this.get('object_type')} in ${community.get('name')} for being ${this.get('category')} \n` +
       `Message: ${this.get('reason')}\n` +
-      `${this.getContentLink(community)}`
+      `${link}`
   },
 
-  getContentLink: function (community) {
+  async getContentLink (community) {
     switch (this.get('object_type')) {
       case FlaggedItem.Type.POST:
         return Frontend.Route.post(this.get('object_id'), community)
+      case FlaggedItem.Type.COMMENT:
+        const comment = await this.getObject()
+        return Frontend.Route.comment(comment, community)
+      case FlaggedItem.Type.MEMBER:
+        return Frontend.Route.profile(this.get('object_id'))
       default:
         throw new Error('Unsupported type for Flagged Item', this.get('object_type'))
     }
@@ -86,6 +96,10 @@ module.exports = bookshelf.Model.extend({
     switch (flaggedItem.get('object_type')) {
       case FlaggedItem.Type.POST:
         return notifyModeratorsPost(flaggedItem)
+      case FlaggedItem.Type.COMMENT:
+        return notifyModeratorsComment(flaggedItem)
+      case FlaggedItem.Type.MEMBER:
+        return notifyModeratorsMember(flaggedItem)
       default:
         throw new Error('Unsupported type for Flagged Item', flaggedItem.get('object_type'))
     }
@@ -93,12 +107,33 @@ module.exports = bookshelf.Model.extend({
 })
 
 async function notifyModeratorsPost (flaggedItem) {
-  const post = await flaggedItem.getObject({withRelated: 'communities'})
+  const post = await flaggedItem.getObject()
   const user = flaggedItem.relations.user
   const communities = await user.communitiesSharedWithPost(post)
-  communities.map(c => c.load('moderators')
-    .then(() => {
+  return sendToCommunities(flaggedItem, communities)
+}
+
+async function notifyModeratorsComment (flaggedItem) {
+  const comment = await flaggedItem.getObject()
+  const post = comment.relations.post
+  const user = flaggedItem.relations.user
+  const communities = await user.communitiesSharedWithPost(post)
+  return sendToCommunities(flaggedItem, communities)
+}
+
+async function notifyModeratorsMember (flaggedItem) {
+  const member = await flaggedItem.getObject()
+  const user = flaggedItem.relations.user
+  const communities = await user.communitiesSharedWithUser(member)
+  return sendToCommunities(flaggedItem, communities)
+}
+
+async function sendToCommunities (flaggedItem, communities) {
+  return communities.map(c =>
+    c.load('moderators')
+    .then(() => flaggedItem.getMessageText(c))
+    .then(messageText => {
       const moderatorIds = c.relations.moderators.map('id')
-      sendMessageFromAxolotl(moderatorIds, flaggedItem.getMessageText(c))
+      sendMessageFromAxolotl(moderatorIds, messageText)
     }))
 }

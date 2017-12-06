@@ -292,6 +292,11 @@ module.exports = bookshelf.Model.extend(merge({
   communitiesSharedWithPost (post) {
     return Promise.join(this.load('communities'), post.load('communities'))
     .then(() => intersectionBy(post.relations.communities.models, this.relations.communities.models, 'id'))
+  },
+
+  communitiesSharedWithUser (user) {
+    return Promise.join(this.load('communities'), user.load('communities'))
+    .then(() => intersectionBy(user.relations.communities.models, this.relations.communities.models, 'id'))
   }
 
 }, HasSettings), {

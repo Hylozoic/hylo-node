@@ -60,6 +60,17 @@ module.exports = {
       return url('/c/%s', getSlug(community))
     },
 
+    comment: function (comment, community) {
+      // TODO: update to use comment specific url when implemented in frontend
+      let communitySlug = getSlug(community)
+
+      let communityUrl = isEmpty(communitySlug) ? '/all' : `/c/${communitySlug}`
+
+      const postId = comment.relations.post.id
+
+      return url(`${communityUrl}/p/${postId}`)
+    },
+
     communitySettings: function (community) {
       return this.community(community) + '/settings'
     },
