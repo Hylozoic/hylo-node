@@ -101,10 +101,6 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Skill, 'skills_users')
   },
 
-  tags: function () {
-    return this.belongsToMany(Tag).through(TagUser)
-  },
-
   thanks: function () {
     return this.hasMany(Thank)
   },
@@ -225,7 +221,6 @@ module.exports = bookshelf.Model.extend(merge({
       .then(() => this.refresh({transacting}))
       .then(() => this.setSanely(omit(whitelist, 'password')))
       .then(() => Promise.all([
-        changes.tags && Tag.updateUser(this, changes.tags, {transacting}),
         changes.password && this.setPassword(changes.password, {transacting}),
         !isEmpty(this.changed) && this.save(
           Object.assign({updated_at: new Date()}, this.changed),

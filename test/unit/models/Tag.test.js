@@ -355,19 +355,16 @@ describe('Tag', () => {
         k('communities_tags').insert({tag_id: t2.id, community_id: c.id}),
         k('communities_tags').insert({tag_id: t3.id, community_id: c.id}),
         k('tag_follows').insert({tag_id: t1.id, community_id: c.id, user_id: u.id}),
-        k('tag_follows').insert({tag_id: t2.id, community_id: c.id, user_id: u.id}),
-        k('tags_users').insert({tag_id: t1.id, user_id: u.id}),
-        k('tags_users').insert({tag_id: t2.id, user_id: u.id})
+        k('tag_follows').insert({tag_id: t2.id, community_id: c.id, user_id: u.id})
       ]))
     })
 
     it('removes rows that would cause duplicates and updates the rest', function () {
       return Tag.merge(t1.id, t2.id)
-      .then(() => t1.load(['posts', 'communities', 'follows', 'users']))
+      .then(() => t1.load(['posts', 'communities', 'follows']))
       .then(() => {
         expect(t1.relations.posts.map('id')).to.deep.equal([p1.id, p2.id])
         expect(t1.relations.communities.map('id')).to.deep.equal([c.id])
-        expect(t1.relations.users.map('id')).to.deep.equal([u.id])
 
         const follows = t1.relations.follows
         expect(follows.length).to.equal(1)
@@ -484,28 +481,6 @@ describe('Tag', () => {
     it('finds a hashtag inside an anchor tag', () => {
       const text = 'hey <a>#whoa</a> <a>#nah</a>'
       expect(Tag.tagsInText(text)).to.deep.equal(['whoa', 'nah'])
-    })
-  })
-
-  describe('.updateUser', () => {
-    var t1, t2, t3
-
-    beforeEach(() => {
-      t1 = factories.tag()
-      t2 = factories.tag()
-      t3 = factories.tag()
-      return Promise.join(t1.save(), t2.save(), t3.save())
-      .then(() => u.tags().attach([t1.id, t2.id]))
-    })
-
-    it('works', () => {
-      return Tag.updateUser(u, [t2.get('name'), t3.get('name')])
-      .then(() => u.load('tags'))
-      .then(() => {
-        expect(u.relations.tags.map(t => t.get('name')).sort()).to.deep.equal([
-          t2.get('name'), t3.get('name')
-        ].sort())
-      })
     })
   })
 })

@@ -142,10 +142,6 @@ const createAsNeeded = (tagNames, { transacting } = {}) => {
 module.exports = bookshelf.Model.extend({
   tableName: 'tags',
 
-  users: function () {
-    return this.belongsToMany(User).through(TagUser)
-  },
-
   memberships: function () {
     return this.hasMany(CommunityTag)
   },
@@ -245,25 +241,6 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  // allTagNames is the exact list of tag names that the user should end up with
-  // after this operation completes. Tags will be added and removed as necessary
-  // for that to be the case.
-  updateUser: function (user, allTagNames, opts = {}) {
-    return user.load('tags')
-    .then(() => {
-      const oldTags = user.relations.tags.map(t => t.pick('id', 'name'))
-      const newTags = map(name => ({name}), allTagNames)
-      const lowerName = t => t.name.toLowerCase()
-      const toRemove = differenceBy(lowerName, oldTags, newTags)
-      const toAdd = differenceBy(lowerName, newTags, oldTags)
-
-      return Promise.all([
-        !isEmpty(toRemove) && user.tags().detach(map('id', toRemove), opts),
-        !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd), opts)
-      ])
-    })
-  },
-
   merge: (id1, id2) => {
     return bookshelf.transaction(trx => {
       const update = (table, uniqueCols) =>
@@ -272,8 +249,7 @@ module.exports = bookshelf.Model.extend({
       return Promise.join(
         update('posts_tags', ['post_id']),
         update('communities_tags', ['community_id']),
-        update('tag_follows', ['community_id', 'user_id']),
-        update('tags_users', ['user_id'])
+        update('tag_follows', ['community_id', 'user_id'])
       )
       .then(() => trx('tags').where('id', id2).del())
     })
@@ -281,7 +257,7 @@ module.exports = bookshelf.Model.extend({
 
   remove: id => {
     return bookshelf.transaction(trx => {
-      const tables = ['tags_users', 'tag_follows', 'communities_tags', 'posts_tags']
+      const tables = ['tag_follows', 'communities_tags', 'posts_tags']
       return Promise.all(tables.map(t => trx(t).where('tag_id', id).del()))
       .then(() => trx('tags').where('id', id).del())
     })
