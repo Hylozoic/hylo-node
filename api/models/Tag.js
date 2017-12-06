@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 
 import { updateOrRemove } from '../../lib/util/knex'
-import { difference, flatten, includes, isEmpty, isUndefined, uniq } from 'lodash'
+import { flatten, includes, isUndefined } from 'lodash'
 import {
-  differenceBy, filter, find, get, map, omitBy, pick, some, uniqBy
+  differenceBy, filter, find, get, omitBy, pick, some, uniqBy
 } from 'lodash/fp'
 
 export const tagsInText = (text = '') => {
@@ -110,35 +110,6 @@ const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, u
   })
 }
 
-const invalidCharacterRegex = /[^\w-]/
-const sanitize = tag => tag.replace(/ /g, '-').replace(invalidCharacterRegex, '')
-
-const createAsNeeded = (tagNames, { transacting } = {}) => {
-  const lower = t => t.toLowerCase()
-  const knex = transacting || bookshelf.knex
-  const tagQuery = transacting ? Tag.query().transacting(transacting) : Tag.query()
-
-  // sure wish knex handled this for me automatically
-  const sqlize = arr => arr.map(x => `'${x}'`).join(', ')
-  const nameMatch = arr => `lower(name) in (${sqlize(map(lower, arr))})`
-
-  // find existing tags
-  return tagQuery.whereRaw(nameMatch(tagNames)).select(['id', 'name'])
-  .then(existing => {
-    const toCreate = differenceBy(lower, tagNames, map('name', existing))
-    const created_at = new Date()
-
-    // create new tags as necessary
-    return (isEmpty(toCreate)
-      ? Promise.resolve([])
-      : knex('tags')
-        .insert(toCreate.map(name => ({name, created_at})))
-        .then(() => tagQuery.whereRaw(nameMatch(toCreate)).select('id')))
-    // return the ids of existing and created tags together
-    .then(created => map('id', existing.concat(created)))
-  })
-}
-
 module.exports = bookshelf.Model.extend({
   tableName: 'tags',
 
@@ -230,15 +201,6 @@ module.exports = bookshelf.Model.extend({
     }))
     .then(() => Post.find(comment.get('post_id')))
     .then(post => post && Tag.updateForPost(post, null, null, null, trx))
-  },
-
-  addToUser: function (user, tagNames, { transacting } = {}) {
-    return createAsNeeded(uniq(map(sanitize, tagNames)), {transacting})
-    .then(ids => {
-      const now = new Date()
-      const pivot = id => ({tag_id: id, created_at: now})
-      return user.tags().attach(ids.map(pivot), {transacting})
-    })
   },
 
   merge: (id1, id2) => {
