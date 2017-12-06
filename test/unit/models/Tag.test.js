@@ -1,7 +1,7 @@
+import { sortBy } from 'lodash'
 var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
-import { sortBy } from 'lodash'
 
 describe('Tag', () => {
   var u, c1
@@ -481,6 +481,15 @@ describe('Tag', () => {
     it('finds a hashtag inside an anchor tag', () => {
       const text = 'hey <a>#whoa</a> <a>#nah</a>'
       expect(Tag.tagsInText(text)).to.deep.equal(['whoa', 'nah'])
+    })
+  })
+
+  describe('.remove', () => {
+    it('works', () => {
+      return Tag.forge({name: 'foo'}).save()
+      .then(tag => Tag.remove(tag.id))
+      .then(() => Tag.find('foo'))
+      .then(tag => expect(tag).to.be.null)
     })
   })
 })
