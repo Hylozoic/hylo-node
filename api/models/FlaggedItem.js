@@ -1,6 +1,6 @@
 import { values, isEmpty, trim } from 'lodash'
 import { validateFlaggedItem } from 'hylo-utils/validators'
-import { sendMessageFromAxolotl } from '../services/MessagingService'
+import { notifyModeratorsPost, notifyModeratorsMember, notifyModeratorsComment } from './flaggedItem/notifyUtils'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'flagged_items',
@@ -105,35 +105,3 @@ module.exports = bookshelf.Model.extend({
     }
   }
 })
-
-async function notifyModeratorsPost (flaggedItem) {
-  const post = await flaggedItem.getObject()
-  const user = flaggedItem.relations.user
-  const communities = await user.communitiesSharedWithPost(post)
-  return sendToCommunities(flaggedItem, communities)
-}
-
-async function notifyModeratorsComment (flaggedItem) {
-  const comment = await flaggedItem.getObject()
-  const post = comment.relations.post
-  const user = flaggedItem.relations.user
-  const communities = await user.communitiesSharedWithPost(post)
-  return sendToCommunities(flaggedItem, communities)
-}
-
-async function notifyModeratorsMember (flaggedItem) {
-  const member = await flaggedItem.getObject()
-  const user = flaggedItem.relations.user
-  const communities = await user.communitiesSharedWithUser(member)
-  return sendToCommunities(flaggedItem, communities)
-}
-
-async function sendToCommunities (flaggedItem, communities) {
-  return communities.map(c =>
-    c.load('moderators')
-    .then(() => flaggedItem.getMessageText(c))
-    .then(messageText => {
-      const moderatorIds = c.relations.moderators.map('id')
-      sendMessageFromAxolotl(moderatorIds, messageText)
-    }))
-}
