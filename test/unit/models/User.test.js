@@ -3,7 +3,7 @@ require('../../setup')
 import bcrypt from 'bcrypt'
 import factories from '../../setup/factories'
 import { wait } from '../../setup/helpers'
-import { includes, times } from 'lodash'
+import { times } from 'lodash'
 
 describe('User', function () {
   var cat
@@ -145,7 +145,7 @@ describe('User', function () {
       return user.communitiesSharedWithPost(post)
       .then(cs => {
         expect(cs.length).to.equal(2)
-        expect(cs.map(c => c.id)).to.deep.equal([c2.id, c3.id])
+        expect(cs.map(c => c.id).sort()).to.deep.equal([c2.id, c3.id].sort())
       })
     })
   })
