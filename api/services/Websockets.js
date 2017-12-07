@@ -11,14 +11,18 @@ const validMessageTypes = [
   'newPost'
 ]
 
+var io
+
 export function broadcast (room, messageType, payload, socketToExclude) {
   if (sails.sockets) {
     sails.sockets.broadcast(room, messageType, payload, socketToExclude)
   } else {
-    const io = emitter(process.env.REDIS_URL)
-    io.redis.on('error', err => {
-      rollbar.error(err, null, {room, messageType, payload})
-    })
+    if (!io) {
+      io = emitter(process.env.REDIS_URL)
+      io.redis.on('error', err => {
+        rollbar.error(err, null, {room, messageType, payload})
+      })
+    }
     io.in(room).emit(messageType, payload) // TODO handle socketToExclude
   }
 }
