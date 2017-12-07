@@ -2839,7 +2839,7 @@ ALTER TABLE ONLY posts_users
 --
 
 ALTER TABLE ONLY push_notifications
-    ADD CONSTRAINT push_notifications_device_id_foreign FOREIGN KEY (device_id) REFERENCES devices(id);
+    ADD CONSTRAINT push_notifications_device_id_foreign FOREIGN KEY (device_id) REFERENCES devices(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -2909,4 +2909,3 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
-
