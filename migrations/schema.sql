@@ -384,7 +384,9 @@ CREATE TABLE flagged_items (
     user_id bigint,
     category character varying(255),
     reason text,
-    link character varying(255)
+    link character varying(255),
+    object_id bigint,
+    object_type character varying(255)
 );
 
 
@@ -2836,4 +2838,3 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
-

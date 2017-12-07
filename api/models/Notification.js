@@ -1,10 +1,9 @@
 import url from 'url'
 import { isEmpty } from 'lodash'
-import emitter from 'socket.io-emitter'
 import decode from 'ent/decode'
-import { userRoom } from '../services/Websockets'
 import { refineOne } from './util/relations'
 import rollbar from '../../lib/rollbar'
+import { broadcast, userRoom } from '../services/Websockets'
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -319,11 +318,7 @@ module.exports = bookshelf.Model.extend({
       )
     }
 
-    const io = emitter(process.env.REDIS_URL)
-    io.redis.on('error', err => {
-      rollbar.error(err, null, {notificationId: this.id})
-    })
-    io.in(userRoom(userId)).emit('newNotification', payload)
+    broadcast(userRoom(userId), 'newNotification', payload)
   }
 }, {
   MEDIUM,

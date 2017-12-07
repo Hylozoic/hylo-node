@@ -1,12 +1,12 @@
 import {
   pushMessageToSockets
-} from '../../../../api/models/comment/createAndPresentComment'
+} from '../../../../api/models/comment/createComment'
 import {
   createThread
 } from '../../../../api/models/post/findOrCreateThread'
 import setup from '../../../setup'
 
-describe('comment/createAndPresentComment', () => {
+describe('comment/createComment', () => {
   before(() => setup.clearDb())
 
   describe('pushMessageToSockets', () => {

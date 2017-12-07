@@ -38,7 +38,9 @@ describe('model filters', () => {
     it('filters down to memberships for communities the user is in', () => {
       const collection = models.Membership.filter(Membership.collection())
       expectEqualQuery(collection, `select * from "communities_users"
-        where "communities_users"."community_id" in ${selectMyCommunityIds}`)
+        where
+          ("communities_users"."community_id" in ${selectMyCommunityIds}
+          or "communities_users"."user_id" = '${User.AXOLOTL_ID}')`)
     })
   })
 
@@ -48,7 +50,9 @@ describe('model filters', () => {
       expectEqualQuery(collection, `select * from "users"
         where "users"."id" in (
           select "user_id" from "communities_users"
-          where "communities_users"."community_id" in ${selectMyCommunityIds}
+          where
+          ("communities_users"."community_id" in ${selectMyCommunityIds}
+            or "communities_users"."user_id" = '${User.AXOLOTL_ID}')
         )`)
     })
   })

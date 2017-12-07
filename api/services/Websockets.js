@@ -1,4 +1,6 @@
 import { cyan } from 'chalk'
+import rollbar from '../../lib/rollbar'
+import emitter from 'socket.io-emitter'
 
 const validMessageTypes = [
   'commentAdded',
@@ -9,6 +11,22 @@ const validMessageTypes = [
   'newPost'
 ]
 
+var io
+
+export function broadcast (room, messageType, payload, socketToExclude) {
+  if (sails.sockets) {
+    sails.sockets.broadcast(room, messageType, payload, socketToExclude)
+  } else {
+    if (!io) {
+      io = emitter(process.env.REDIS_URL)
+      io.redis.on('error', err => {
+        rollbar.error(err, null, {room, messageType, payload})
+      })
+    }
+    io.in(room).emit(messageType, payload) // TODO handle socketToExclude
+  }
+}
+
 export function pushToSockets (room, messageType, payload, socketToExclude) {
   if (!validMessageTypes.includes(messageType)) {
     throw new Error(`unknown message type: ${messageType}`)
@@ -16,7 +34,7 @@ export function pushToSockets (room, messageType, payload, socketToExclude) {
 
   sails.log.info(`${cyan('Websockets:')} pushToSockets: ${room}, ${messageType}`)
   if (process.env.NODE_ENV === 'test') return Promise.resolve({room, messageType, payload})
-  sails.sockets.broadcast(room, messageType, payload, socketToExclude)
+  broadcast(room, messageType, payload, socketToExclude)
   return Promise.resolve()
 }
 

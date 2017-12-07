@@ -1,6 +1,5 @@
 import { curry } from 'lodash'
 import { myCommunityIds, myNetworkCommunityIds } from '../models/util/queryFilters'
-import { hasJoin } from '../../lib/util/knex'
 
 export function makeFilterToggle (enabled) {
   return filterFn => relation =>
@@ -10,7 +9,10 @@ export function makeFilterToggle (enabled) {
 export const sharedCommunityMembership = curry((tableName, userId, relation) =>
   relation.query(q => {
     const clauses = q => {
-      q.where('communities_users.community_id', 'in', myCommunityIds(userId))
+      q.where(q2 => {
+        q2.where('communities_users.community_id', 'in', myCommunityIds(userId))
+        .orWhere('communities_users.user_id', User.AXOLOTL_ID)
+      })
     }
 
     if (tableName === 'communities_users') return clauses(q)

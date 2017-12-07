@@ -1,11 +1,47 @@
 import { values, isEmpty, trim } from 'lodash'
 import { validateFlaggedItem } from 'hylo-utils/validators'
+import { notifyModeratorsPost, notifyModeratorsMember, notifyModeratorsComment } from './flaggedItem/notifyUtils'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'flagged_items',
 
   user: function () {
     return this.belongsTo(User, 'user_id')
+  },
+
+  getObject: function () {
+    if (!this.get('object_id')) throw new Error('No object_id defined for Flagged Item')
+    switch (this.get('object_type')) {
+      case FlaggedItem.Type.POST:
+        return Post.find(this.get('object_id'), {withRelated: 'communities'})
+      case FlaggedItem.Type.COMMENT:
+        return Comment.find(this.get('object_id'), {withRelated: 'post.communities'})
+      case FlaggedItem.Type.MEMBER:
+        return User.find(this.get('object_id'), {withRelated: 'communities'})
+      default:
+        throw new Error('Unsupported type for Flagged Item', this.get('object_type'))
+    }
+  },
+
+  async getMessageText (community) {
+    const link = await this.getContentLink(community)
+    return `${this.relations.user.get('name')} flagged a ${this.get('object_type')} in ${community.get('name')} for being ${this.get('category')}\n` +
+      `Message: ${this.get('reason')}\n` +
+      `${link}`
+  },
+
+  async getContentLink (community) {
+    switch (this.get('object_type')) {
+      case FlaggedItem.Type.POST:
+        return Frontend.Route.post(this.get('object_id'), community)
+      case FlaggedItem.Type.COMMENT:
+        const comment = await this.getObject()
+        return Frontend.Route.comment(comment, community)
+      case FlaggedItem.Type.MEMBER:
+        return Frontend.Route.profile(this.get('object_id'))
+      default:
+        throw new Error('Unsupported type for Flagged Item', this.get('object_type'))
+    }
   }
 
 }, {
@@ -17,6 +53,17 @@ module.exports = bookshelf.Model.extend({
     OTHER: 'other',
     SAFETY: 'safety',
     SPAM: 'spam'
+  },
+
+  Type: {
+    POST: 'post',
+    COMMENT: 'comment',
+    MEMBER: 'member'
+  },
+
+  find (id, opts = {}) {
+    return FlaggedItem.where({id})
+    .fetch(opts)
   },
 
   create: function (attrs) {
@@ -42,5 +89,19 @@ module.exports = bookshelf.Model.extend({
     }
 
     return this.forge(attrs).save()
+  },
+
+  async notifyModerators ({ id }) {
+    const flaggedItem = await FlaggedItem.find(id, {withRelated: 'user'})
+    switch (flaggedItem.get('object_type')) {
+      case FlaggedItem.Type.POST:
+        return notifyModeratorsPost(flaggedItem)
+      case FlaggedItem.Type.COMMENT:
+        return notifyModeratorsComment(flaggedItem)
+      case FlaggedItem.Type.MEMBER:
+        return notifyModeratorsMember(flaggedItem)
+      default:
+        throw new Error('Unsupported type for Flagged Item', flaggedItem.get('object_type'))
+    }
   }
 })

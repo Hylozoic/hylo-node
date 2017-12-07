@@ -2,7 +2,7 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import validator from 'validator'
-import { get, has, isEmpty, merge, omit, pick } from 'lodash'
+import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
@@ -277,9 +277,21 @@ module.exports = bookshelf.Model.extend(merge({
 
   unseenThreadCount () {
     return User.unseenThreadCount(this.id)
+  },
+
+  communitiesSharedWithPost (post) {
+    return Promise.join(this.load('communities'), post.load('communities'))
+    .then(() => intersectionBy(post.relations.communities.models, this.relations.communities.models, 'id'))
+  },
+
+  communitiesSharedWithUser (user) {
+    return Promise.join(this.load('communities'), user.load('communities'))
+    .then(() => intersectionBy(user.relations.communities.models, this.relations.communities.models, 'id'))
   }
 
 }, HasSettings), {
+  AXOLOTL_ID: '13986',
+
   authenticate: Promise.method(function (email, password) {
     var compare = Promise.promisify(bcrypt.compare, bcrypt)
 

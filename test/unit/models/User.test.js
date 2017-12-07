@@ -3,7 +3,7 @@ require('../../setup')
 import bcrypt from 'bcrypt'
 import factories from '../../setup/factories'
 import { wait } from '../../setup/helpers'
-import { includes, times } from 'lodash'
+import { times } from 'lodash'
 
 describe('User', function () {
   var cat
@@ -120,6 +120,32 @@ describe('User', function () {
           sea: true,
           see: true
         }
+      })
+    })
+  })
+
+  describe('#communitiesSharedWithPost', () => {
+    var user, post, c1, c2, c3, c4
+    before(() => {
+      user = factories.user()
+      post = factories.post()
+      c1 = factories.community()
+      c2 = factories.community()
+      c3 = factories.community()
+      c4 = factories.community()
+      return Promise.join(
+        user.save(), post.save(), c1.save(), c2.save(), c3.save(), c4.save())
+      .then(() => post.communities().attach([c1, c2, c3]))
+      .then(() => user.joinCommunity(c2))
+      .then(() => user.joinCommunity(c3))
+      .then(() => user.joinCommunity(c4))
+    })
+
+    it('returns the shared communities', () => {
+      return user.communitiesSharedWithPost(post)
+      .then(cs => {
+        expect(cs.length).to.equal(2)
+        expect(cs.map(c => c.id).sort()).to.deep.equal([c2.id, c3.id].sort())
       })
     })
   })

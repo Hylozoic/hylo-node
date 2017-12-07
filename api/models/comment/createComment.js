@@ -90,6 +90,8 @@ export function pushMessageToSockets (message, thread) {
     }
   )
 
+  response.createdAt = response.createdAt && response.createdAt.toString()
+
   let socketMessageName
 
   if (thread.get('num_comments') === 0) {
