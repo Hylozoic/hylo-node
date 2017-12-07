@@ -148,7 +148,6 @@ type Community {
     filter: String,
     topic: ID
   ): PostQuerySet
-  popularSkills(first: Int): [String]
   memberCount: Int
   postCount: Int
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]

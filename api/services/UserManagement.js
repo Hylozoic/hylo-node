@@ -56,7 +56,6 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['votes', 'user_id', 'post_id'],
     ['tag_follows', 'user_id', 'tag_id'],
     ['communities_tags', 'user_id', 'tag_id'],
-    ['tags_users', 'user_id', 'tag_id'],
     ['thanks', 'thanked_by_id', 'comment_id'],
     ['posts_users', 'user_id', 'post_id']
   ].forEach(args => {
@@ -111,7 +110,6 @@ const generateRemoveQueries = function (userId, knex) {
     ['votes', 'user_id'],
     ['comments', 'user_id'],
     ['user_external_data', 'user_id'],
-    ['tags_users', 'user_id'],
     ['tag_follows', 'user_id'],
     ['posts_about_users', 'user_id'],
     ['posts_users', 'user_id'],

@@ -212,7 +212,6 @@ export default async function makeModels (userId, isAdmin) {
         }}
       ],
       getters: {
-        popularSkills: (c, { first }) => c.popularSkills(first),
         feedItems: (c, args) => c.feedItems(args),
         pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
         invitePath: c =>
