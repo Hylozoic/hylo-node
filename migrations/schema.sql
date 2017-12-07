@@ -173,7 +173,7 @@ CREATE TABLE communities_posts (
     post_id bigint NOT NULL,
     community_id bigint NOT NULL,
     id integer NOT NULL,
-    pinned_at timestamp without time zone
+    pinned_at timestamp with time zone
 );
 
 
@@ -1148,38 +1148,6 @@ ALTER SEQUENCE tags_id_seq OWNED BY tags.id;
 
 
 --
--- Name: tags_users; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE tags_users (
-    id integer NOT NULL,
-    tag_id bigint,
-    user_id bigint,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-
-
---
--- Name: tags_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE tags_users_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: tags_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE tags_users_id_seq OWNED BY tags_users.id;
-
-
---
 -- Name: thank_you_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1573,13 +1541,6 @@ ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('tags_id_seq'::regclas
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY tags_users ALTER COLUMN id SET DEFAULT nextval('tags_users_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY user_connections ALTER COLUMN id SET DEFAULT nextval('user_connections_id_seq'::regclass);
 
 
@@ -1960,14 +1921,6 @@ ALTER TABLE ONLY tags
 
 
 --
--- Name: tags_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tags_users
-    ADD CONSTRAINT tags_users_pkey PRIMARY KEY (id);
-
-
---
 -- Name: unique_beta_access_code; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2029,14 +1982,6 @@ ALTER TABLE ONLY tags
 
 ALTER TABLE ONLY posts_tags
     ADD CONSTRAINT unique_posts_tags UNIQUE (post_id, tag_id);
-
-
---
--- Name: unique_tags_users; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tags_users
-    ADD CONSTRAINT unique_tags_users UNIQUE (tag_id, user_id);
 
 
 --
@@ -2856,22 +2801,6 @@ ALTER TABLE ONLY skills_users
 
 ALTER TABLE ONLY skills_users
     ADD CONSTRAINT skills_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: tags_users_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tags_users
-    ADD CONSTRAINT tags_users_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES tags(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: tags_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY tags_users
-    ADD CONSTRAINT tags_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

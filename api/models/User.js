@@ -5,7 +5,6 @@ import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
 import HasSettings from './mixins/HasSettings'
-import { fetchAndPresentFollowed } from '../services/TagPresenter'
 import { findThread } from './post/findOrCreateThread'
 
 module.exports = bookshelf.Model.extend(merge({
@@ -99,10 +98,6 @@ module.exports = bookshelf.Model.extend(merge({
 
   skills: function () {
     return this.belongsToMany(Skill, 'skills_users')
-  },
-
-  tags: function () {
-    return this.belongsToMany(Tag).through(TagUser)
   },
 
   thanks: function () {
@@ -225,7 +220,6 @@ module.exports = bookshelf.Model.extend(merge({
       .then(() => this.refresh({transacting}))
       .then(() => this.setSanely(omit(whitelist, 'password')))
       .then(() => Promise.all([
-        changes.tags && Tag.updateUser(this, changes.tags, {transacting}),
         changes.password && this.setPassword(changes.password, {transacting}),
         !isEmpty(this.changed) && this.save(
           Object.assign({updated_at: new Date()}, this.changed),
@@ -260,10 +254,6 @@ module.exports = bookshelf.Model.extend(merge({
       comment_notifications: 'none',
       dm_notifications: 'none'
     }, true)
-  },
-
-  getFollowedTags (communityId) {
-    return fetchAndPresentFollowed(communityId, this.id)
   },
 
   unlinkAccount (provider) {

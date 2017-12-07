@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 
 import { updateOrRemove } from '../../lib/util/knex'
-import { difference, flatten, includes, isEmpty, isUndefined, uniq } from 'lodash'
+import { flatten, includes, isUndefined } from 'lodash'
 import {
-  differenceBy, filter, find, get, map, omitBy, pick, some, uniqBy
+  differenceBy, filter, find, get, omitBy, pick, some, uniqBy
 } from 'lodash/fp'
 
 export const tagsInText = (text = '') => {
@@ -110,41 +110,8 @@ const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, u
   })
 }
 
-const invalidCharacterRegex = /[^\w-]/
-const sanitize = tag => tag.replace(/ /g, '-').replace(invalidCharacterRegex, '')
-
-const createAsNeeded = (tagNames, { transacting } = {}) => {
-  const lower = t => t.toLowerCase()
-  const knex = transacting || bookshelf.knex
-  const tagQuery = transacting ? Tag.query().transacting(transacting) : Tag.query()
-
-  // sure wish knex handled this for me automatically
-  const sqlize = arr => arr.map(x => `'${x}'`).join(', ')
-  const nameMatch = arr => `lower(name) in (${sqlize(map(lower, arr))})`
-
-  // find existing tags
-  return tagQuery.whereRaw(nameMatch(tagNames)).select(['id', 'name'])
-  .then(existing => {
-    const toCreate = differenceBy(lower, tagNames, map('name', existing))
-    const created_at = new Date()
-
-    // create new tags as necessary
-    return (isEmpty(toCreate)
-      ? Promise.resolve([])
-      : knex('tags')
-        .insert(toCreate.map(name => ({name, created_at})))
-        .then(() => tagQuery.whereRaw(nameMatch(toCreate)).select('id')))
-    // return the ids of existing and created tags together
-    .then(created => map('id', existing.concat(created)))
-  })
-}
-
 module.exports = bookshelf.Model.extend({
   tableName: 'tags',
-
-  users: function () {
-    return this.belongsToMany(User).through(TagUser)
-  },
 
   memberships: function () {
     return this.hasMany(CommunityTag)
@@ -236,34 +203,6 @@ module.exports = bookshelf.Model.extend({
     .then(post => post && Tag.updateForPost(post, null, null, null, trx))
   },
 
-  addToUser: function (user, tagNames, { transacting } = {}) {
-    return createAsNeeded(uniq(map(sanitize, tagNames)), {transacting})
-    .then(ids => {
-      const now = new Date()
-      const pivot = id => ({tag_id: id, created_at: now})
-      return user.tags().attach(ids.map(pivot), {transacting})
-    })
-  },
-
-  // allTagNames is the exact list of tag names that the user should end up with
-  // after this operation completes. Tags will be added and removed as necessary
-  // for that to be the case.
-  updateUser: function (user, allTagNames, opts = {}) {
-    return user.load('tags')
-    .then(() => {
-      const oldTags = user.relations.tags.map(t => t.pick('id', 'name'))
-      const newTags = map(name => ({name}), allTagNames)
-      const lowerName = t => t.name.toLowerCase()
-      const toRemove = differenceBy(lowerName, oldTags, newTags)
-      const toAdd = differenceBy(lowerName, newTags, oldTags)
-
-      return Promise.all([
-        !isEmpty(toRemove) && user.tags().detach(map('id', toRemove), opts),
-        !isEmpty(toAdd) && Tag.addToUser(user, map('name', toAdd), opts)
-      ])
-    })
-  },
-
   merge: (id1, id2) => {
     return bookshelf.transaction(trx => {
       const update = (table, uniqueCols) =>
@@ -272,8 +211,7 @@ module.exports = bookshelf.Model.extend({
       return Promise.join(
         update('posts_tags', ['post_id']),
         update('communities_tags', ['community_id']),
-        update('tag_follows', ['community_id', 'user_id']),
-        update('tags_users', ['user_id'])
+        update('tag_follows', ['community_id', 'user_id'])
       )
       .then(() => trx('tags').where('id', id2).del())
     })
@@ -281,7 +219,7 @@ module.exports = bookshelf.Model.extend({
 
   remove: id => {
     return bookshelf.transaction(trx => {
-      const tables = ['tags_users', 'tag_follows', 'communities_tags', 'posts_tags']
+      const tables = ['tag_follows', 'communities_tags', 'posts_tags']
       return Promise.all(tables.map(t => trx(t).where('tag_id', id).del()))
       .then(() => trx('tags').where('id', id).del())
     })
