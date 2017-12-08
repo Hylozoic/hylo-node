@@ -24,6 +24,7 @@ export async function notifyModeratorsMember (flaggedItem) {
 
 export function sendToCommunities (flaggedItem, communities) {
   var sendToAdmins = () => Promise.resolve()
+
   if (flaggedItem.get('category') === FlaggedItem.Category.ILLEGAL &&
     process.env.HYLO_ADMINS) {
     const adminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
