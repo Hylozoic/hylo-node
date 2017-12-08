@@ -64,12 +64,19 @@ describe('sendToCommunities', () => {
       getMessageText: c => Promise.resolve(`${message} ${c.id}`)
     })
 
-    const hyloAdminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+    var expectedUserIds = [modIds1, modIds2]
+    var expectedText = [`${message} 1`, `${message} 2`]
+
+    const hyloAdminIds = process.env.HYLO_ADMINS && process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+    if (hyloAdminIds) {
+      expectedUserIds.push(hyloAdminIds)
+      expectedText.push(`${message} 1`)
+    }
 
     return sendToCommunities(flaggedItem, communities)
     .then(result => {
-      expect(argUserIds).to.deep.equal([modIds1, modIds2, hyloAdminIds])
-      expect(argText).to.deep.equal([`${message} 1`, `${message} 2`, `${message} 1`])
+      expect(argUserIds).to.deep.equal(expectedUserIds)
+      expect(argText).to.deep.equal(expectedText)
     })
   })
 })
