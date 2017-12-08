@@ -7,8 +7,6 @@ describe('sendToCommunities', () => {
   var argUserIds, argText, sendToCommunities
 
   before(() => {
-    argUserIds = []
-    argText = []
     mockRequire.stopAll()
     mockRequire('../../../../api/services/MessagingService', {
       sendMessageFromAxolotl: spy((userIds, text) => {
@@ -18,6 +16,11 @@ describe('sendToCommunities', () => {
       })
     })
     sendToCommunities = mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').sendToCommunities
+  })
+
+  beforeEach(() => {
+    argUserIds = []
+    argText = []
   })
 
   it('sends a message from axolotl to the communtiy moderators', () => {
@@ -32,14 +35,41 @@ describe('sendToCommunities', () => {
     const modIds2 = [2, 3]
     const communities = [mockCommunity(1, modIds1), mockCommunity(2, modIds2)]
     const message = 'this is the message being sent to'
-    const flaggedItem = {
+    const flaggedItem = model({
+      category: FlaggedItem.Category.SPAM,
       getMessageText: c => Promise.resolve(`${message} ${c.id}`)
-    }
+    })
 
     return sendToCommunities(flaggedItem, communities)
     .then(result => {
       expect(argUserIds).to.deep.equal([modIds1, modIds2])
       expect(argText).to.deep.equal([`${message} 1`, `${message} 2`])
+    })
+  })
+
+  it('it sends illegal content to HYLO ADMINS as well', () => {
+    const mockCommunity = (id, modIds) => ({
+      load: () => Promise.resolve(),
+      id,
+      relations: {
+        moderators: modIds.map(id => ({id}))
+      }
+    })
+    const modIds1 = [1, 2]
+    const modIds2 = [2, 3]
+    const communities = [mockCommunity(1, modIds1), mockCommunity(2, modIds2)]
+    const message = 'this is the message being sent to'
+    const flaggedItem = model({
+      category: FlaggedItem.Category.ILLEGAL,
+      getMessageText: c => Promise.resolve(`${message} ${c.id}`)
+    })
+
+    const hyloAdminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+
+    return sendToCommunities(flaggedItem, communities)
+    .then(result => {
+      expect(argUserIds).to.deep.equal([modIds1, modIds2, hyloAdminIds])
+      expect(argText).to.deep.equal([`${message} 1`, `${message} 2`, `${message} 1`])
     })
   })
 })
