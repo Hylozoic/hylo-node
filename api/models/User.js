@@ -5,6 +5,7 @@ import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
 import HasSettings from './mixins/HasSettings'
+import HasGroupMemberships from './user/HasGroupMemberships'
 import { findThread } from './post/findOrCreateThread'
 
 module.exports = bookshelf.Model.extend(merge({
@@ -289,7 +290,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(() => intersectionBy(user.relations.communities.models, this.relations.communities.models, 'id'))
   }
 
-}, HasSettings), {
+}, HasSettings, HasGroupMemberships), {
   AXOLOTL_ID: '13986',
 
   authenticate: Promise.method(function (email, password) {

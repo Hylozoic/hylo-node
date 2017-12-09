@@ -6,7 +6,7 @@ function setDeferrable (knex, table, constraint) {
 exports.up = function (knex, Promise) {
   return knex.schema.createTable('groups', t => {
     t.bigIncrements().primary()
-    t.string('group_data_type')
+    t.integer('group_data_type').notNullable()
     t.bigInteger('group_data_id')
     t.boolean('active').defaultTo(true)
     t.timestamps()
@@ -15,7 +15,9 @@ exports.up = function (knex, Promise) {
   .then(() => knex.schema.createTable('group_connections', t => {
     t.bigIncrements().primary()
     t.bigInteger('parent_group_id').references('id').inTable('groups').notNullable()
+    t.integer('parent_group_data_type').notNullable()
     t.bigInteger('child_group_id').references('id').inTable('groups').notNullable()
+    t.integer('child_group_data_type').notNullable()
     t.boolean('active').defaultTo(true)
     t.integer('role')
     t.jsonb('settings')

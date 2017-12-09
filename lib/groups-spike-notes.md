@@ -1,4 +1,4 @@
-## schema
+## schema sketch
 
 ```
 Group
@@ -41,9 +41,10 @@ create index on group_memberships ((settings->>'lastReadAt'));
 ## notes
 
 Relationship between a user and group:
-* Basic belonging (e.g. show up in member list)
+* Basic belonging (e.g. is a member)
 * Special privileges (e.g. moderation)
-* Subscription/notification settings
+* Subscription/following
+* Notification settings
 * Activity data (e.g. last read timestamp)
 
 Relationship between a group and a parent group:
@@ -54,6 +55,8 @@ The basic directionality of GroupConnection is that one group contains the other
 group, right? We would want to have constraints so that when you have a relation
 between a network and a community, say, the network id is always parent_group_id
 and the community_id is always child_group_id.
+
+### making changes
 
 Use cases to generalize:
 
@@ -79,23 +82,16 @@ post
     network.group.addChildGroup(post)
 ```
 
+### querying
+
 Given the above, how do we efficiently select subsets of all child groups of a
 network based on type? i.e. all posts or all communities.
 Join group_connections to groups to read group_data_type, I guess.
 
-If this works out as desired, we should be able to drop the following tables
-(after migrating their data of course):
+Or denormalize: add parent_ and child_group_data_type to group_connections;
+get a list of group ids; use those ids in a subquery to get object ids
 
-* comments_tags
-* communities_tags
-* communities_users
-* follows
-* networks_posts
-* networks_users
-* posts_tags
-* posts_users
-* tag_follows
-* tags_users
+--------------------------------------------------------------------------------
 
 `tag_follows` is an interesting one since it's a three-way relation between a
 community, a topic, and a user... Is it a group with two parent groups, one of
@@ -118,3 +114,36 @@ and g_commu.group_data_id = '1' -- sandbox
 and g_commu.group_data_type = 'communities'
 and g_topic.group_data_type = 'tags'
 ```
+
+g_child above would be a group without its own group data object, meaningful
+only because it's the child of gc_commu and gc_topic. we could call this an
+"intersection group"?
+
+### cleanup
+
+If this works out as desired, we should be able to drop the following tables
+(after migrating their data of course):
+
+* comments_tags
+* communities.network_id
+* communities_posts
+* communities_tags
+* communities_users
+* follows
+* networks_posts
+* networks_users
+* posts_tags
+* posts_users
+* tag_follows
+
+## alternate approach?
+
+keep the DB schema as-is and just have a common API in the code that maps to the
+underlying tables correctly?
+
+## would be nice...
+
+upgrade knex to 0.14 to get better syntax for table aliasing -- but that will
+require an upgraded version of mock-knex that doesn't yet exist (or rewriting a
+test file to not use it, and removing it), as well as an upgraded version of
+bookshelf and testing around that.

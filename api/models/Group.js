@@ -25,8 +25,8 @@ module.exports = bookshelf.Model.extend({
     // TODO
   },
 
-  updateMembership (userId, { role, settings }) {
-    return GroupMembership.update(this.id, userId, { role, settings })
+  updateMembership (userId, { active, role, settings }) {
+    // TODO
   },
 
   addChildGroup () {
@@ -45,16 +45,45 @@ module.exports = bookshelf.Model.extend({
     // TODO
   }
 }, {
+  DataType: {
+    POST: 0,
+    COMMUNITY: 1,
+    NETWORK: 2,
+    TOPIC: 3,
+    COMMENT: 4,
+    COMMUNITY_AND_TOPIC: 5
+  },
+
+  getDataTypeForTableName (tableName) {
+    switch (tableName) {
+      case 'posts': return this.DataType.POST
+      case 'communities': return this.DataType.COMMUNITY
+      case 'networks': return this.DataType.NETWORK
+      case 'tags': return this.DataType.TOPIC
+      case 'comments': return this.DataType.COMMENT
+    }
+
+    throw new Error(`unsupported table name: ${tableName}`)
+  },
+
+  getDataTypeForInstance (instance) {
+    if (instance instanceof Post) return this.DataType.POST
+    if (instance instanceof Community) return this.DataType.COMMUNITY
+    if (instance instanceof Network) return this.DataType.NETWORK
+    if (instance instanceof Tag) return this.DataType.TOPIC
+    if (instance instanceof Comment) return this.DataType.COMMENT
+  },
+
   find (instanceOrId) {
     if (!instanceOrId) return null
 
-    if (instanceOrId.tableName) {
-      return this.where({
-        group_data_type: instanceOrId.tableName,
-        group_data_id: instanceOrId.id
-      }).fetch()
+    if (typeof instanceOrId === 'string' || typeof instanceOrId === 'number') {
+      return this.where('id', instanceOrId).fetch()
     }
 
-    return this.where('id', instanceOrId).fetch()
+    return this.where({
+      group_data_id: instanceOrId.id,
+      group_data_type: this.getDataTypeForInstance(instanceOrId)
+    }).fetch()
   }
 })
