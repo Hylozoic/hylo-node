@@ -4,7 +4,7 @@ import mockRequire from 'mock-require'
 const model = factories.mock.model
 
 describe('sendToCommunities', () => {
-  var argUserIds, argText, sendToCommunities
+  var argUserIds, argText, sendToCommunities, oldHyloAdmins
 
   before(() => {
     mockRequire.stopAll()
@@ -16,11 +16,17 @@ describe('sendToCommunities', () => {
       })
     })
     sendToCommunities = mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').sendToCommunities
+    oldHyloAdmins = process.env.HYLO_ADMINS
+    process.env.HYLO_ADMINS = '11,22'
   })
 
   beforeEach(() => {
     argUserIds = []
     argText = []
+  })
+
+  after(() => {
+    process.env.HYLO_ADMINS = oldHyloAdmins
   })
 
   it('sends a message from axolotl to the communtiy moderators', () => {
@@ -68,10 +74,8 @@ describe('sendToCommunities', () => {
     var expectedText = [`${message} 1`, `${message} 2`]
 
     const hyloAdminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
-    if (hyloAdminIds) {
-      expectedUserIds.push(hyloAdminIds)
-      expectedText.push(`${message} 1`)
-    }
+    expectedUserIds.push(hyloAdminIds)
+    expectedText.push(`${message} 1`)
 
     return sendToCommunities(flaggedItem, communities)
     .then(result => {
