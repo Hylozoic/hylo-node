@@ -47,7 +47,7 @@ describe('sendToCommunities', () => {
     })
   })
 
-  it('it sends illegal content to HYLO ADMINS as well', () => {
+  it('sends illegal content to HYLO ADMINS as well', () => {
     const mockCommunity = (id, modIds) => ({
       load: () => Promise.resolve(),
       id,
@@ -67,7 +67,7 @@ describe('sendToCommunities', () => {
     var expectedUserIds = [modIds1, modIds2]
     var expectedText = [`${message} 1`, `${message} 2`]
 
-    const hyloAdminIds = process.env.HYLO_ADMINS && process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+    const hyloAdminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
     if (hyloAdminIds) {
       expectedUserIds.push(hyloAdminIds)
       expectedText.push(`${message} 1`)
