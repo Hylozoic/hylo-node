@@ -27,7 +27,7 @@ module.exports = bookshelf.Model.extend({
     const link = await this.getContentLink(community)
     return `${this.relations.user.get('name')} flagged a ${this.get('object_type')} in ${community.get('name')} for being ${this.get('category')}\n` +
       `Message: ${this.get('reason')}\n` +
-      `${link}`
+      `${link}\n\n`
   },
 
   async getContentLink (community) {
