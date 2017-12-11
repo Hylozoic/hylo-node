@@ -4,11 +4,9 @@ import mockRequire from 'mock-require'
 const model = factories.mock.model
 
 describe('sendToCommunities', () => {
-  var argUserIds, argText, sendToCommunities
+  var argUserIds, argText, sendToCommunities, oldHyloAdmins
 
   before(() => {
-    argUserIds = []
-    argText = []
     mockRequire.stopAll()
     mockRequire('../../../../api/services/MessagingService', {
       sendMessageFromAxolotl: spy((userIds, text) => {
@@ -18,6 +16,17 @@ describe('sendToCommunities', () => {
       })
     })
     sendToCommunities = mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').sendToCommunities
+    oldHyloAdmins = process.env.HYLO_ADMINS
+    process.env.HYLO_ADMINS = '11,22'
+  })
+
+  beforeEach(() => {
+    argUserIds = []
+    argText = []
+  })
+
+  after(() => {
+    process.env.HYLO_ADMINS = oldHyloAdmins
   })
 
   it('sends a message from axolotl to the communtiy moderators', () => {
@@ -32,14 +41,46 @@ describe('sendToCommunities', () => {
     const modIds2 = [2, 3]
     const communities = [mockCommunity(1, modIds1), mockCommunity(2, modIds2)]
     const message = 'this is the message being sent to'
-    const flaggedItem = {
+    const flaggedItem = model({
+      category: FlaggedItem.Category.SPAM,
       getMessageText: c => Promise.resolve(`${message} ${c.id}`)
-    }
+    })
 
     return sendToCommunities(flaggedItem, communities)
     .then(result => {
       expect(argUserIds).to.deep.equal([modIds1, modIds2])
       expect(argText).to.deep.equal([`${message} 1`, `${message} 2`])
+    })
+  })
+
+  it('sends illegal content to HYLO ADMINS as well', () => {
+    const mockCommunity = (id, modIds) => ({
+      load: () => Promise.resolve(),
+      id,
+      relations: {
+        moderators: modIds.map(id => ({id}))
+      }
+    })
+    const modIds1 = [1, 2]
+    const modIds2 = [2, 3]
+    const communities = [mockCommunity(1, modIds1), mockCommunity(2, modIds2)]
+    const message = 'this is the message being sent to'
+    const flaggedItem = model({
+      category: FlaggedItem.Category.ILLEGAL,
+      getMessageText: c => Promise.resolve(`${message} ${c.id}`)
+    })
+
+    var expectedUserIds = [modIds1, modIds2]
+    var expectedText = [`${message} 1`, `${message} 2`]
+
+    const hyloAdminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+    expectedUserIds.push(hyloAdminIds)
+    expectedText.push(`${message} 1`)
+
+    return sendToCommunities(flaggedItem, communities)
+    .then(result => {
+      expect(argUserIds).to.deep.equal(expectedUserIds)
+      expect(argText).to.deep.equal(expectedText)
     })
   })
 })
