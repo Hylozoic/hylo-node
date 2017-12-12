@@ -57,10 +57,14 @@ module.exports = bookshelf.Model.extend({
   },
 
   socialMediaAttributes: function (type, profile) {
+    var jsonLink = get(profile, '_json.link')
+    if (isEmpty(jsonLink)) {
+      jsonLink = null
+    }
     switch (type) {
       case 'facebook':
         return {
-          facebook_url: profile.profileUrl || get(profile, '_json.link'),
+          facebook_url: profile.profileUrl || jsonLink,
           avatar_url: `https://graph.facebook.com/${profile.id}/picture?type=large`
         }
       case 'linkedin':
