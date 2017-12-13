@@ -31,7 +31,7 @@ export default {
     .where({
       group_data_id: this.id,
       group_data_type: Group.getDataTypeForInstance(this),
-      active: true
+      'group_memberships.active': true
     })
     .select('user_id')
 

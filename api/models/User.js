@@ -44,10 +44,6 @@ module.exports = bookshelf.Model.extend(merge({
     .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
   },
 
-  followedPosts: function () {
-    return this.belongsToMany(Post).through(Follow)
-  },
-
   lastReads: function () {
     return this.hasMany(LastRead)
   },

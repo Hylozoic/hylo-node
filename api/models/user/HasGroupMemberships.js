@@ -1,21 +1,27 @@
 export default {
-  queryByGroupMembership (model) {
+  queryByGroupMembership (model, { where } = {}) {
     const dataType = Group.getDataTypeForTableName(model.forge().tableName)
 
-    const subq = GroupMembership.query()
+    let subq = GroupMembership.query()
     .join('groups', 'groups.id', 'group_memberships.group_id')
     .where({
       user_id: this.id,
       group_data_type: dataType,
-      active: true
+      'group_memberships.active': true
     })
     .select('group_data_id')
 
-    return model.where('id', 'in', subq)
+    if (where) subq = subq.where(where)
+
+    return model.collection().query(q => q.where('id', 'in', subq))
   },
 
-  groupPosts () {
-    return this.queryByGroupMembership(Post)
+  followedPosts () {
+    return this.queryByGroupMembership(Post, {
+      where: q => {
+        q.whereRaw(`(settings->>'following')::boolean = true`)
+      }
+    })
   },
 
   groupCommunities () {
