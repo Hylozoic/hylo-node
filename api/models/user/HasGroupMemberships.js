@@ -4,7 +4,11 @@ export default {
 
     const subq = GroupMembership.query()
     .join('groups', 'groups.id', 'group_memberships.group_id')
-    .where({user_id: this.id, group_data_type: dataType})
+    .where({
+      user_id: this.id,
+      group_data_type: dataType,
+      active: true
+    })
     .select('group_data_id')
 
     return model.where('id', 'in', subq)

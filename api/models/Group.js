@@ -29,6 +29,10 @@ module.exports = bookshelf.Model.extend({
     // TODO
   },
 
+  updateGroupConnection () {
+
+  },
+
   addChildGroup () {
     // TODO
   },
@@ -37,11 +41,11 @@ module.exports = bookshelf.Model.extend({
     // TODO
   },
 
-  joinGroup () {
+  joinParentGroup () {
     // TODO
   },
 
-  leaveGroup () {
+  leaveParentGroup () {
     // TODO
   }
 }, {

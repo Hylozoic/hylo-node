@@ -38,7 +38,7 @@ then we will need to create indexes on them. e.g.:
 create index on group_memberships ((settings->>'lastReadAt'));
 ```
 
-## notes
+--------------------------------------------------------------------------------
 
 Relationship between a user and group:
 * Basic belonging (e.g. is a member)
@@ -56,7 +56,7 @@ group, right? We would want to have constraints so that when you have a relation
 between a network and a community, say, the network id is always parent_group_id
 and the community_id is always child_group_id.
 
-### making changes
+## making changes
 
 Use cases to generalize:
 
@@ -82,7 +82,7 @@ post
     network.group.addChildGroup(post)
 ```
 
-### querying
+## querying
 
 Given the above, how do we efficiently select subsets of all child groups of a
 network based on type? i.e. all posts or all communities.
@@ -117,9 +117,9 @@ and g_topic.group_data_type = 'tags'
 
 g_child above would be a group without its own group data object, meaningful
 only because it's the child of gc_commu and gc_topic. we could call this an
-"intersection group"?
+"intersection group"? a "join group"?
 
-### cleanup
+## cleanup
 
 If this works out as desired, we should be able to drop the following tables
 (after migrating their data of course):
@@ -147,3 +147,15 @@ upgrade knex to 0.14 to get better syntax for table aliasing -- but that will
 require an upgraded version of mock-knex that doesn't yet exist (or rewriting a
 test file to not use it, and removing it), as well as an upgraded version of
 bookshelf and testing around that.
+
+upgrade postgres to 9.5+ to get the `||` operator for merging JSON
+
+## deployment / migration
+
+- run a migration script that uses the old relations
+- deploy code that uses the new relations
+- remove the old relations from the code
+
+## performance
+
+GraphQL tuning -- can DataLoader etc. be used for group queries?
