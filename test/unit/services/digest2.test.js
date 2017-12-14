@@ -488,7 +488,7 @@ describe('community digest v2', () => {
           tracking_pixel_url: Analytics.pixelUrl('Digest', {
             userId: u1.id,
             community: community.get('name'),
-            'Email Version': 'v3'
+            'Email Version': 'v4'
           }),
           email_settings_url: Frontend.Route.userSettings() + clickthroughParams + '&expand=account'
         })
