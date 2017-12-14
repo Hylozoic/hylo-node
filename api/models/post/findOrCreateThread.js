@@ -56,6 +56,6 @@ function afterSavingThread (thread, opts) {
 
   return Promise.all(flattenDeep([
     map(id => LastRead.findOrCreate(id, thread.id, trxOpts), participantIds),
-    thread.addFollowers(participantIds, userId, trxOpts)
+    thread.addFollowers(participantIds, trxOpts)
   ]))
 }

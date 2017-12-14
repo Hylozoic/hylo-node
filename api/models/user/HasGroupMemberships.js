@@ -1,4 +1,7 @@
 export default {
+  // note that this `where` argument is applied to the subquery;
+  // to add clauses to the outer query, just use `.query` on the
+  // result of this method
   queryByGroupMembership (model, { where } = {}) {
     const dataType = Group.getDataTypeForTableName(model.forge().tableName)
 
@@ -14,14 +17,6 @@ export default {
     if (where) subq = subq.where(where)
 
     return model.collection().query(q => q.where('id', 'in', subq))
-  },
-
-  followedPosts () {
-    return this.queryByGroupMembership(Post, {
-      where: q => {
-        q.whereRaw(`(settings->>'following')::boolean = true`)
-      }
-    })
   },
 
   groupCommunities () {

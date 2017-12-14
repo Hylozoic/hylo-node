@@ -1,3 +1,5 @@
+import { difference, isEqual } from 'lodash'
+
 module.exports = bookshelf.Model.extend({
   tableName: 'groups',
 
@@ -17,8 +19,31 @@ module.exports = bookshelf.Model.extend({
     return this.belongsToMany(User).through(GroupMembership)
   },
 
-  addMember () {
-    // TODO
+  memberships () {
+    return this.hasMany(GroupMembership)
+  },
+
+  // if a group membership doesn't exist for a user id, create it.
+  // make sure the group memberships have the passed-in role and settings
+  // (merge on top of existing settings).
+  async addMembers (userIds, { role, settings }, { transacting } = {}) {
+    const existingMemberships = await this.memberships()
+    .query(q => q.where('user_id', 'in', userIds)).fetch()
+
+    for (let ms of existingMemberships.models) {
+      const updatedColumns = {
+        role,
+        settings: Object.assign({}, ms.get('settings'), settings)
+      }
+      if (!isEqual(updatedColumns, ms.pick('role', 'settings'))) {
+        await ms.save(updatedColumns, {patch: true, transacting})
+      }
+    }
+
+    const newUserIds = difference(userIds, existingMemberships.pluck('id'))
+    for (let id of newUserIds) {
+      await this.memberships().create({user_id: id, role, settings}, {transacting})
+    }
   },
 
   removeMember () {
@@ -78,16 +103,16 @@ module.exports = bookshelf.Model.extend({
     if (instance instanceof Comment) return this.DataType.COMMENT
   },
 
-  find (instanceOrId) {
+  find (instanceOrId, { transacting } = {}) {
     if (!instanceOrId) return null
 
     if (typeof instanceOrId === 'string' || typeof instanceOrId === 'number') {
-      return this.where('id', instanceOrId).fetch()
+      return this.where('id', instanceOrId).fetch({transacting})
     }
 
     return this.where({
       group_data_id: instanceOrId.id,
       group_data_type: this.getDataTypeForInstance(instanceOrId)
-    }).fetch()
+    }).fetch({transacting})
   }
 })

@@ -9,9 +9,6 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.bootstrap.html
  */
 
-import fs from 'fs'
-import path from 'path'
-import root from 'root-path'
 import util from 'util'
 import models from '../api/models'
 import queryMonitor from '../lib/util/queryMonitor'

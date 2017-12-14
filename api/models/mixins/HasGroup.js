@@ -1,6 +1,19 @@
 export default {
-  group () {
-    return Group.find(this)
+  async createGroup () {
+    return await this.group() || Group.forge({
+      group_data_id: this.id,
+      group_data_type: Group.getDataTypeForInstance(this),
+      created_at: new Date()
+    }).save()
+  },
+
+  async group (opts) {
+    return Group.find(this, opts)
+  },
+
+  async addGroupMembers (...args) {
+    const dbOpts = args[2]
+    return this.group(dbOpts).then(group => group.addMembers(...args))
   },
 
   queryByGroupConnection (model, direction = 'parent') {
@@ -25,8 +38,8 @@ export default {
     return model.where('id', 'in', subq)
   },
 
-  groupMembers () {
-    const subq = GroupMembership.query()
+  groupMembers ({ where } = {}) {
+    let subq = GroupMembership.query()
     .join('groups', 'groups.id', 'group_memberships.group_id')
     .where({
       group_data_id: this.id,
@@ -34,8 +47,9 @@ export default {
       'group_memberships.active': true
     })
     .select('user_id')
+    if (where) subq = subq.where(where)
 
-    return User.where('id', 'in', subq)
+    return User.collection().query(q => q.where('id', 'in', subq))
   }
 
   // proxy some instance methods of Group?

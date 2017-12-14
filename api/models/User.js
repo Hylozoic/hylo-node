@@ -80,9 +80,15 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Vote)
   },
 
+  followedPosts () {
+    return this.queryByGroupMembership(Post, {
+      where: q => q.whereRaw(`(settings->>'following')::boolean = true`)
+    })
+    .query(q => q.where('active', true))
+  },
+
   messageThreads: function () {
-    return this.belongsToMany(Post).through(Follow)
-    .query(q => q.where({type: Post.Type.THREAD, active: true}))
+    return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
   },
 
   eventsRespondedTo: function () {

@@ -1,4 +1,4 @@
-import { difference, isEqual, pick, compact, uniq } from 'lodash'
+import { difference, isEqual, compact, uniq } from 'lodash'
 
 function updateMedia (post, type, urls, transacting) {
   if (!urls) return
@@ -29,50 +29,26 @@ export function updateCommunities (post, newIds, trx) {
   }
 }
 
-export function addFollowers (post, comment, userIds, addedById, opts = {}) {
-  var userId = (comment || post).get('user_id')
-  const { transacting, createActivity } = opts
+export async function updateFollowers (post, transacting) {
+  const followerIds = await post.followers().fetch().then(f => f.pluck('id'))
+  const newMentionedIds = RichText.getUserMentions(post.get('description'))
+  .filter(id => !followerIds.includes(id))
 
-  return Promise.map(userIds, followerId =>
-    Follow.create(followerId, post.id, (comment || {}).id, {addedById, transacting})
-    .tap(follow => {
-      if (!createActivity || !follow) return
+  return post.addFollowers(newMentionedIds, {transacting})
+  .then(follows => {
+    const newFollowerIds = compact(follows).map(f => f.get('user_id'))
+    // this check removes any ids that don't correspond to valid users, which
+    // can happen if the post mentioned a user and then that user was deleted
+    const validMentionedIds = newMentionedIds.filter(id =>
+      newFollowerIds.includes(id))
 
-      var updates = []
-      const addActivity = (recipientId, method) => {
-        updates.push(Activity[method](follow, recipientId)
-        .save({}, pick(opts, 'transacting'))
-        .then(activity => activity.createNotifications(transacting)))
-      }
-      if (followerId !== addedById) addActivity(followerId, 'forFollowAdd')
-      if (userId !== addedById) addActivity(userId, 'forFollow')
-      return Promise.all(updates)
+    const reasons = validMentionedIds.map(id => ({
+      reader_id: id,
+      post_id: post.id,
+      actor_id: post.get('user_id'),
+      reason: 'mention'
     }))
-}
-
-export function updateFollowers (post, transacting) {
-  return post.load('followers')
-  .then(() => {
-    const followerIds = post.relations.followers.pluck('id')
-    const newMentionedIds = RichText.getUserMentions(post.get('description'))
-    .filter(id => !followerIds.includes(id))
-
-    return addFollowers(post, null, newMentionedIds, null, {transacting})
-    .then(follows => {
-      const newFollowerIds = compact(follows).map(f => f.get('user_id'))
-      // this check removes any ids that don't correspond to valid users, which
-      // can happen if the post mentioned a user and then that user was deleted
-      const validMentionedIds = newMentionedIds.filter(id =>
-        newFollowerIds.includes(id))
-
-      const reasons = validMentionedIds.map(id => ({
-        reader_id: id,
-        post_id: post.id,
-        actor_id: post.get('user_id'),
-        reason: 'mention'
-      }))
-      return Activity.saveForReasons(reasons, transacting)
-    })
+    return Activity.saveForReasons(reasons, transacting)
   })
 }
 

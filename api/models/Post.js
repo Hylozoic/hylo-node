@@ -3,7 +3,6 @@
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
-import { addFollowers } from './post/util'
 import { fulfillRequest, unfulfillRequest } from './post/request'
 import EnsureLoad from './mixins/EnsureLoad'
 import HasGroup from './mixins/HasGroup'
@@ -43,7 +42,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   followers: function () {
-    return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
+    return this.groupMembers({
+      where: q => {
+        q.whereRaw(`(settings->>'following')::boolean = true`)
+      }
+    })
   },
 
   contributions: function () {
@@ -147,21 +150,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  addFollowers: function (userIds, addedById, opts = {}) {
-    return addFollowers(this, null, userIds, addedById, opts)
-  },
-
-  removeFollower: function (user_id, opts = {}) {
-    return Follow.where({user_id, post_id: this.id}).destroy()
-    .tap(() => this.isProject() && this.load(['selectedTags', 'communities'])
-      .then(() => {
-        const tag = this.relations.selectedTags.first()
-        if (!tag) return
-        return Promise.each(this.relations.communities.models, community =>
-          TagFollow.remove({tagIdOrName: tag.id, userId: user_id, communityId: community.id}))
-      }))
-    .tap(() => opts.createActivity && Activity.forUnfollow(this, user_id).save()
-      .then(activity => activity.createNotifications()))
+  addFollowers: async function (userIds, opts) {
+    return this.addGroupMembers(userIds, {settings: {following: true}}, opts)
   },
 
   isPublic: function () {
