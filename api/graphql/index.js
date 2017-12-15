@@ -267,12 +267,7 @@ export const createRequestHandler = () =>
     return {
       schema,
       graphiql: true,
-      formatError: process.env.NODE_ENV === 'development' ? error => ({
-        message: error.message,
-        locations: error.locations,
-        stack: error.stack,
-        path: error.path
-      }) : null
+      formatError: process.env.NODE_ENV === 'development' ? logError : null
     }
   })
 
@@ -306,4 +301,15 @@ function getTypeForInstance (instance, models) {
   }
 
   return modelToTypeMap[instance.tableName]
+}
+
+function logError (error) {
+  console.error(error.stack)
+
+  return {
+    message: error.message,
+    locations: error.locations,
+    stack: error.stack,
+    path: error.path
+  }
 }
