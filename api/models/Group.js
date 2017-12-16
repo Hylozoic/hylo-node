@@ -119,11 +119,10 @@ module.exports = bookshelf.Model.extend({
     }).query().select('group_data_id')
   },
 
-  havingExactMembers (userIds, filter) {
+  havingExactMembers (userIds) {
     const { raw } = bookshelf.knex
     userIds = sortBy(userIds, Number)
     return this.query(q => {
-      if (filter) filter(q)
       q.join('group_memberships', 'groups.id', 'group_memberships.group_id')
       q.where('group_memberships.active', true)
       q.groupBy('groups.id')
