@@ -1,5 +1,4 @@
-/* globals LastRead */
-require('../../setup')
+import '../../setup'
 import bcrypt from 'bcrypt'
 import factories from '../../setup/factories'
 import { wait } from '../../setup/helpers'
@@ -351,26 +350,24 @@ describe('User', function () {
   describe('.unseenThreadCount', () => {
     var doge, post, post2
 
-    before(() => {
+    before(async () => {
       doge = factories.user()
       ;[ post, post2 ] = times(2, () => factories.post({type: Post.Type.THREAD}))
 
-      return doge.save()
-      .then(() => Promise.map([post, post2], p =>
-        p.save()
-        .then(() => Follow.create(cat.id, p.id))
-        .then(() => Follow.create(doge.id, p.id))))
+      await doge.save()
+      return Promise.map([post, post2], p =>
+        p.save().then(() => p.addFollowers([cat.id, doge.id])))
     })
 
-    it('works as expected', function () {
+    it('works as expected', async function () {
       this.timeout(5000)
 
-      const addMessages = (p, num = 1) =>
+      const addMessages = (p, num = 1, creator = doge) =>
         wait(100)
         .then(() => Promise.all(times(num, () =>
           Comment.forge({
             post_id: p.id,
-            user_id: doge.id,
+            user_id: creator.id,
             text: 'arf',
             active: true
           }).save())))
@@ -379,34 +376,36 @@ describe('User', function () {
           commentId: comments.slice(-1)[0].id
         }))
 
-      return User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
+      const n = await User.unseenThreadCount(cat.id)
+      expect(n).to.equal(0)
 
       // four messages but two threads
-      .then(() => addMessages(post, 2))
-      .then(() => addMessages(post2, 2))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2)))
-      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      await addMessages(post, 2)
+      await addMessages(post2, 2)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2))
+      await User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(0))
 
       // mark one thread as read
-      .then(() => LastRead.findOrCreate(cat.id, post.id))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1)))
-      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      await post.markAsRead(cat.id)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1))
 
       // another new message
-      .then(() => addMessages(post))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2)))
+      await addMessages(post)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2))
 
       // dropdown was opened
-      .then(() => {
-        cat.addSetting({last_viewed_messages_at: new Date()})
-        return cat.save()
-      })
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0)))
+      await cat.addSetting({last_viewed_messages_at: new Date()}, true)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
 
       // new message after dropdown was opened
-      .then(() => addMessages(post2))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1)))
-      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      await addMessages(post2)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1))
+
+      // cat responds
+      await addMessages(post, 2, cat)
+      await addMessages(post2, 2, cat)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
+      await User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2))
     })
   })
 

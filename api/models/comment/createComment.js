@@ -59,9 +59,9 @@ function notifySockets (comment, post, isThread) {
   return pushCommentToSockets(comment)
 }
 
-export function pushMessageToSockets (message, thread) {
-  const { followers } = thread.relations
-  const userIds = followers.pluck('id')
+export async function pushMessageToSockets (message, thread) {
+  const followers = await thread.followers().fetch().then(x => x.models)
+  const userIds = followers.map(x => x.id)
   const excludingSender = userIds.filter(id => id !== message.get('user_id'))
 
   let response = refineOne(message,

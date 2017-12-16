@@ -1,4 +1,4 @@
-/* globals LastRead, RedisClient */
+/* globals RedisClient */
 import { times } from 'lodash'
 import setup from '../../setup'
 import factories from '../../setup/factories'
@@ -43,7 +43,7 @@ describe('Comment', () => {
   describe('sendDigests', () => {
     var u1, u2, post, comments, log, now
 
-    beforeEach(() => {
+    beforeEach(async () => {
       now = new Date()
       log = []
       comments = []
@@ -52,22 +52,16 @@ describe('Comment', () => {
       u2 = factories.user({settings: {dm_notifications: 'both'}})
       post = factories.post({type: Post.Type.THREAD, updated_at: now})
 
-      return Promise.join(u1.save(), u2.save(), post.save())
-      .then(() => Promise.join(
-        Follow.create(u1.id, post.id),
-        Follow.create(u2.id, post.id)
-      ))
-      .then(() => {
-        ;[u1.id, u2.id].forEach(userId =>
-          times(2, i => comments.push(factories.comment({
-            post_id: post.id,
-            user_id: userId,
-            created_at: new Date(now - (5 - i) * 60000)
-          }))))
-        return Promise.map(comments, c => c.save())
-      })
-      .then(() => RedisClient.create()
-        .delAsync(Comment.sendDigests.REDIS_TIMESTAMP_KEY))
+      await Promise.join(u1.save(), u2.save(), post.save())
+      await post.addFollowers([u1.id, u2.id])
+      ;[u1.id, u2.id].forEach(userId =>
+        times(2, i => comments.push(factories.comment({
+          post_id: post.id,
+          user_id: userId,
+          created_at: new Date(now - (5 - i) * 60000)
+        }))))
+      await Promise.all(comments.map(c => c.save()))
+      await RedisClient.create().delAsync(Comment.sendDigests.REDIS_TIMESTAMP_KEY)
     })
 
     afterEach(() => setup.clearDb())
@@ -94,12 +88,14 @@ describe('Comment', () => {
         })
       })
 
-      it('respects last_read_at', () => {
-        return Promise.join(
-          LastRead.findOrCreate(u1.id, post.id, {date: new Date(now - 4.5 * 60000)}),
-          LastRead.findOrCreate(u2.id, post.id)
-        )
-        .then(() => Comment.sendDigests())
+      it('respects last_read_at', async () => {
+        const ms1 = await GroupMembership.forPair(u1, post).fetch()
+        await ms1.addSetting({lastReadAt: new Date(now - 4.5 * 60000)}, true)
+
+        const ms2 = await GroupMembership.forPair(u2, post).fetch()
+        await ms2.addSetting({lastReadAt: now}, true)
+
+        return Comment.sendDigests()
         .then(count => {
           expect(count).to.equal(1)
           expect(Email.sendMessageDigest).to.have.been.called.exactly(1)

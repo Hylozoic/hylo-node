@@ -1,4 +1,4 @@
-/* globals LastRead, _ */
+/* globals _ */
 /* eslint-disable camelcase */
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { flatten } from 'lodash'
@@ -8,6 +8,7 @@ import EnsureLoad from './mixins/EnsureLoad'
 import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
+import { isFollowing } from './group/queryUtils'
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -42,11 +43,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   followers: function () {
-    return this.groupMembers({
-      where: q => {
-        q.whereRaw(`(settings->>'following')::boolean = true`)
-      }
-    })
+    return this.groupMembers(q => isFollowing(q))
+  },
+
+  followersWithPivots: function () {
+    return this.groupMembersWithPivots().query(q => isFollowing(q))
   },
 
   contributions: function () {
@@ -59,10 +60,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   comments: function () {
     return this.hasMany(Comment, 'post_id').query({where: {active: true}})
-  },
-
-  lastReads: function () {
-    return this.hasMany(LastRead)
   },
 
   media: function (type) {
@@ -179,9 +176,19 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  lastReadAtForUser: function (userId) {
-    return this.lastReads().query(q => q.where('user_id', userId)).fetchOne()
-    .then(x => x ? x.get('last_read_at') : new Date(0))
+  async markAsRead (userId) {
+    const group = await this.group()
+    return group.updateMembership(userId, {
+      settings: {
+        lastReadAt: new Date().toISOString()
+      }
+    })
+  },
+
+  async lastReadAtForUser (userId) {
+    const user = await this.groupMembersWithPivots()
+    .query(q => q.where('users.id', userId)).fetchOne()
+    return new Date(user ? user.pivot.getSetting('lastReadAt') : 0)
   },
 
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
@@ -331,35 +338,34 @@ module.exports = bookshelf.Model.extend(Object.assign({
     }, {}))
   },
 
-  isVisibleToUser: function (postId, userId) {
+  isVisibleToUser: async function (postId, userId) {
     if (!postId || !userId) return Promise.resolve(false)
     var pcids
 
-    return Post.find(postId)
-    // is the post public?
-    .then(post => post.isPublic() ||
-      Post.isVisibleToUser(post.get('parent_post_id'), userId))
-    .then(success =>
-      // or is the user:
-      success || Promise.join(
-        PostMembership.query().where({post_id: postId}),
-        Membership.query().where({user_id: userId, active: true})
-      )
-      .spread((postMships, userMships) => {
-        // in one of the post's communities?
-        pcids = postMships.map(m => m.community_id)
-        return _.intersection(pcids, userMships.map(m => m.community_id)).length > 0
-      }))
-    .then(success =>
-      // or following the post?
-      success || Follow.exists(userId, postId))
-    .then(success =>
-      // or in one of the post's communities' networks?
-      success || Community.query().whereIn('id', pcids).pluck('network_id')
-      .then(networkIds =>
-        Promise.map(_.compact(_.uniq(networkIds)), id =>
-          Network.containsUser(id, userId)))
-      .then(results => _.some(results)))
+    const post = await Post.find(postId)
+    if (post.isPublic()) return true
+
+    const sharesCommunity = await Promise.join(
+      PostMembership.query().where({post_id: postId}),
+      Membership.query().where({user_id: userId, active: true})
+    )
+    .spread((postMships, userMships) => {
+      // in one of the post's communities?
+      pcids = postMships.map(m => m.community_id)
+      return _.intersection(pcids, userMships.map(m => m.community_id)).length > 0
+    })
+
+    if (sharesCommunity) return true
+    if (await post.isFollowed(userId)) return true
+
+    const sharesNetwork = await Community.query()
+    .whereIn('id', pcids).pluck('network_id')
+    .then(networkIds =>
+      Promise.map(_.compact(_.uniq(networkIds)), id =>
+        Network.containsUser(id, userId)))
+    .then(results => _.some(results))
+
+    return sharesNetwork
   },
 
   find: function (id, options) {
@@ -378,19 +384,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  createWelcomePost: function (userId, communityId, trx) {
-    var attrs = _.merge(Post.newPostAttrs(), {
-      type: 'welcome'
-    })
-
-    return new Post(attrs).save({}, {transacting: trx})
-    .tap(post => Promise.join(
-      post.relatedUsers().attach(userId, {transacting: trx}),
-      post.communities().attach(communityId, {transacting: trx}),
-      Follow.create(userId, post.id, null, {transacting: trx})
-    ))
-  },
-
   newPostAttrs: () => ({
     created_at: new Date(),
     updated_at: new Date(),
@@ -404,22 +397,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .save(null, _.pick(opts, 'transacting'))
   },
 
-  updateFromNewComment: ({ postId, commentId }) => {
+  async updateFromNewComment ({ postId, commentId }) {
     const where = {post_id: postId, active: true}
     const now = new Date()
-    const select = (model, id, column) =>
-      model.where('id', id).query().select(column)
 
-    return Comment.query()
-    .where(where)
-    .orderBy('created_at', 'desc')
-    .limit(2)
-    .pluck('id')
-    .then(ids => Promise.all([
-      Comment.query().where('id', 'in', ids).update('recent', true),
-      Comment.query().where('id', 'not in', ids)
-      .where({recent: true, post_id: postId})
-      .update('recent', false),
+    return Promise.all([
+      Comment.query().where(where).orderBy('created_at', 'desc').limit(2)
+      .pluck('id').then(ids => Promise.all([
+        Comment.query().where('id', 'in', ids).update('recent', true),
+        Comment.query().where('id', 'not in', ids)
+        .where({recent: true, post_id: postId})
+        .update('recent', false)
+      ])),
 
       // update num_comments and updated_at (only update the latter when
       // creating a comment, not deleting one)
@@ -429,19 +418,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
           updated_at: commentId ? now : null
         }))),
 
-      // when creating a comment, set updated_at in parent post if it exists,
-      // and set last_read_at for the commenter
-      commentId && Promise.join(
-        Post.query().whereIn('id', select(Post, postId, 'parent_post_id'))
-        .update({updated_at: now}),
+      // bump updated_at on the post's group
+      commentId && Group.queryByTypeAndId(Group.DataType.POST, postId).query()
+      .update({updated_at: now}),
 
-        LastRead.query().where({
-          post_id: postId,
-          user_id: select(Comment, commentId, 'user_id')
-        })
-        .update({last_read_at: now})
-      )
-    ]))
+      // when creating a comment, set last_read_at for the commenter
+      commentId && Comment.where('id', commentId).query().pluck('user_id')
+      .then(([ userId ]) => Post.find(postId)
+        .then(post => post.markAsRead(userId)))
+    ])
   },
 
   deactivate: postId =>

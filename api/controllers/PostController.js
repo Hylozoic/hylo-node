@@ -1,4 +1,3 @@
-/* globals LastRead */
 import { includes } from 'lodash'
 import createPost from '../models/post/createPost'
 import { joinRoom, leaveRoom } from '../services/Websockets'

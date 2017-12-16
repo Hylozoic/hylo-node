@@ -1,14 +1,14 @@
 export default {
-  async createGroup () {
-    return await this.group() || Group.forge({
+  async createGroup ({ transacting } = {}) {
+    return Group.forge({
       group_data_id: this.id,
       group_data_type: Group.getDataTypeForInstance(this),
       created_at: new Date()
-    }).save()
+    }).save(null, {transacting})
   },
 
   async group (opts) {
-    return Group.find(this, opts)
+    return await Group.find(this, opts) || this.createGroup(opts)
   },
 
   async addGroupMembers (...args) {
@@ -50,6 +50,57 @@ export default {
     if (where) subq = subq.where(where)
 
     return User.collection().query(q => q.where('id', 'in', subq))
+  },
+
+  groupMembersWithPivots () {
+    // This method uses Bookshelf's `withPivot` to return instances with
+    // join table columns attached.
+    //
+    // To do so, we need to get the Bookshelf model instance for the group, so
+    // we need to get the group asynchronously. But we don't want this method
+    // to be asynchronous, because we want to still be able to do e.g.
+    //
+    //   await post.followers().fetch()
+    //
+    // not
+    //
+    //   const followers = await post.followers()
+    //   await followers.fetch()
+    //
+    // so we use a little ES6 Proxy that pretends to be a Bookshelf collection
+    // instance (at least by accepting `.query` calls), and then when `fetch` or
+    // `fetchOne` is called, gets the group, then applies any stored `query`
+    // calls and the final `fetch` to the real relation.
+    //
+    // A good reference for proxies:
+    // https://ponyfoo.com/articles/es6-proxies-in-depth
+
+    const queryCalls = []
+    const addQueryCall = cb => queryCalls.push(cb) && proxy
+    const proxy = new Proxy(this, {
+      get (target, key) {
+        if (key === 'query') return addQueryCall
+
+        // handle other keys here if it becomes necessary to fake any other
+        // Bookshelf collection properties
+
+        if (typeof key === 'string' && key.startsWith('fetch')) {
+          return async (...args) => {
+            const group = await target.group()
+            let relation = group.members().withPivot(['role', 'settings'])
+            for (let cb of queryCalls) relation = relation.query(cb)
+            return relation[key](...args)
+          }
+        }
+      }
+    })
+
+    return proxy
+  },
+
+  async isFollowed (userId) {
+    const ms = await GroupMembership.forPair(userId, this).fetch()
+    return !!(ms && ms.getSetting('following'))
   }
 
   // proxy some instance methods of Group?

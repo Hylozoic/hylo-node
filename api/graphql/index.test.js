@@ -28,7 +28,6 @@ describe('graphql request handler', () => {
     await user.save()
     await user2.save()
     await post.save({user_id: user.id})
-    await post.createGroup()
     await post2.save()
     await comment.save({post_id: post.id})
     await media.save({comment_id: comment.id})
@@ -112,16 +111,15 @@ describe('graphql request handler', () => {
     before(async () => {
       thread = factories.post({type: Post.Type.THREAD})
       await thread.save()
-      await thread.createGroup()
+      await comment.save({user_id: user2.id})
 
-      message = factories.comment({post_id: thread.id, user_id: user2.id})
-      await Promise.all([
-        comment.save({user_id: user2.id}),
-        message.save(),
-        post.addFollowers([user2.id]),
-        thread.addFollowers([user.id])
-      ])
-      await thread.addFollowers([user2.id])
+      message = await factories.comment({
+        post_id: thread.id,
+        user_id: user2.id
+      }).save()
+
+      await post.addFollowers([user2.id])
+      await thread.addFollowers([user.id, user2.id])
     })
 
     beforeEach(() => {

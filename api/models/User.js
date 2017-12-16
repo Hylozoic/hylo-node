@@ -1,4 +1,3 @@
-/* globals LastRead */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import validator from 'validator'
@@ -42,10 +41,6 @@ module.exports = bookshelf.Model.extend(merge({
   inAppNotifications: function () {
     return this.hasMany(Notification)
     .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
-  },
-
-  lastReads: function () {
-    return this.hasMany(LastRead)
   },
 
   followedTags: function () {
@@ -454,32 +449,23 @@ module.exports = bookshelf.Model.extend(merge({
     .then(user => user.removeSetting('viewedTooltips', true))
   },
 
-  unseenThreadCount: function (userId) {
+  unseenThreadCount: async function (userId) {
     const { raw } = bookshelf.knex
-    return User.where('id', userId).query()
+
+    const lastViewed = await User.where('id', userId).query()
     .select(raw("settings->'last_viewed_messages_at' as time"))
-    .then(rows => rows[0].time)
-    .then(lastViewed => Post.query(q => {
-      if (lastViewed) q.where('posts.updated_at', '>', new Date(lastViewed))
-      q.join('follows', 'posts.id', 'follows.post_id')
+    .then(rows => new Date(rows[0].time))
+
+    return GroupMembership.queryUnread(userId, {afterTime: lastViewed})
+    .query(q => {
+      q.join('posts', 'groups.group_data_id', 'posts.id')
       q.where({
-        'follows.user_id': userId,
-        type: Post.Type.THREAD
+        'group_data_type': Group.DataType.POST,
+        'posts.type': Post.Type.THREAD
       })
       q.where('num_comments', '>', 0)
-      q.count()
-
-      q.leftJoin('posts_users', function () {
-        this.on('posts_users.post_id', 'posts.id')
-        .andOn('posts_users.user_id', raw(userId))
-      })
-
-      q.where(function () {
-        this.where('posts_users.id', null)
-        .orWhere('posts_users.last_read_at', '<', bookshelf.knex.raw('posts.updated_at'))
-      })
-    }).query())
-    .then(rows => Number(rows[0].count))
+    })
+    .count().then(c => Number(c))
   }
 })
 

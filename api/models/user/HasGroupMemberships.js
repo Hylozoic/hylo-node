@@ -19,7 +19,7 @@ export default {
     return model.collection().query(q => q.where('id', 'in', subq))
   },
 
-  groupCommunities () {
+  communitiesNotImplementedYet () {
     return this.queryByGroupMembership(Community)
   }
 }
