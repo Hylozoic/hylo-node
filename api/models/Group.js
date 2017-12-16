@@ -47,17 +47,6 @@ module.exports = bookshelf.Model.extend({
     // TODO
   },
 
-  async updateMembership (userId, attributes) {
-    const ms = await this.memberships().query(q => q.where('user_id', userId))
-    .fetchOne()
-
-    return ms.updateAndSave(attributes)
-  },
-
-  updateGroupConnection () {
-
-  },
-
   addChildGroup () {
     // TODO
   },

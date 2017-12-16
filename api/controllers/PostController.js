@@ -51,13 +51,13 @@ const PostController = {
     .catch(res.serverError)
   },
 
-  updateLastRead: function (req, res) {
-    const { post } = res.locals
-    const userId = req.session.userId
-    return LastRead.findOrCreate(userId, post.id)
-    .tap(lastRead => lastRead.setToNow())
-    .then(() => res.ok({}))
-    .catch(res.serverError)
+  updateLastRead: async function (req, res) {
+    try {
+      await res.locals.post.markAsRead(req.session.userId)
+      res.ok({})
+    } catch (err) {
+      res.serverError(err)
+    }
   },
 
   subscribe: function (req, res) {

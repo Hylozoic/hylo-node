@@ -177,12 +177,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async markAsRead (userId) {
-    const group = await this.group()
-    return group.updateMembership(userId, {
-      settings: {
-        lastReadAt: new Date().toISOString()
-      }
-    })
+    const gm = await GroupMembership.forPair(userId, this).fetch()
+    return gm.addSetting({lastReadAt: new Date()}, true)
   },
 
   async lastReadAtForUser (userId) {

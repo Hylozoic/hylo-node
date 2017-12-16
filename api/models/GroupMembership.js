@@ -1,5 +1,5 @@
 import HasSettings from './mixins/HasSettings'
-import { isEqual } from 'lodash'
+import { isEmpty } from 'lodash'
 import { isFollowing } from './group/queryUtils'
 
 module.exports = bookshelf.Model.extend(Object.assign({
@@ -14,16 +14,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async updateAndSave (attrs, { transacting } = {}) {
-    // if we're changing settings, merge them with existing ones
-    if (attrs.settings) {
-      const settings = Object.assign({}, this.get('settings'), attrs.settings)
-      attrs = Object.assign({}, attrs, {settings})
+    for (let key in attrs) {
+      if (key === 'settings') {
+        this.addSetting(attrs[key])
+      } else {
+        this.set(key, attrs[key])
+      }
     }
 
-    if (!isEqual(attrs, this.pick(...Object.keys(attrs)))) {
-      return this.save(attrs, {patch: true, transacting})
-    }
-
+    if (!isEmpty(this.changed)) await this.save(null, {transacting})
     return this
   }
 
