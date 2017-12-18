@@ -47,26 +47,6 @@ module.exports = bookshelf.Model.extend({
     for (let id of newUserIds) {
       await this.memberships().create({user_id: id, role, settings}, {transacting})
     }
-  },
-
-  removeMember () {
-    // TODO
-  },
-
-  addChildGroup () {
-    // TODO
-  },
-
-  removeChildGroup () {
-    // TODO
-  },
-
-  joinParentGroup () {
-    // TODO
-  },
-
-  leaveParentGroup () {
-    // TODO
   }
 }, {
   DataType,

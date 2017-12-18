@@ -28,14 +28,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   }
 
 }, HasSettings), {
-  create (groupId, userId, { role, settings }) {
-    // TODO
-  },
-
-  update (groupId, userId, { role, settings }) {
-    // TODO
-  },
-
   whereUnread (userId, { afterTime } = {}) {
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
