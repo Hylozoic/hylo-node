@@ -194,31 +194,30 @@ describe('Post', function () {
   describe('.deactivate', () => {
     var post
 
-    beforeEach(() => {
-      post = factories.post()
-      return post.save()
-      .then(() => new Activity({post_id: post.id}).save())
-      .then(activity => new Notification({activity_id: activity.id}).save())
-      .then(() => factories.comment({post_id: post.id}).save())
-      .then(comment => new Activity({comment_id: comment.id}).save())
-      .then(activity => new Notification({activity_id: activity.id}).save())
+    beforeEach(async () => {
+      post = await factories.post().save()
+      await post.createGroup()
+      const activity = await new Activity({post_id: post.id}).save()
+      await new Notification({activity_id: activity.id}).save()
+      const comment = await factories.comment({post_id: post.id}).save()
+      const activity2 = new Activity({comment_id: comment.id}).save()
+      await new Notification({activity_id: activity2.id}).save()
     })
 
-    it('handles notifications, comments, and activity', () => {
-      Post.deactivate(post.id)
-      .then(() => post.refresh())
-      .then(() => post.load([
+    it('handles notifications, comments, activity, and group', async () => {
+      await Post.deactivate(post.id)
+      await post.refresh()
+      await post.load([
         'comments',
         'activities',
         'activities.notifications',
         'comments.activities',
         'comments.activities.notifications'
-      ]))
-      .then(() => {
-        expect(post.relations.activities.length).to.equal(0)
-        expect(post.relations.comments.first().activities.length).to.equal(0)
-        expect(post.get('active')).to.be.false
-      })
+      ])
+      expect(post.relations.activities.length).to.equal(0)
+      expect(post.relations.comments.first().activities.length).to.equal(0)
+      expect(post.get('active')).to.be.false
+      expect(await Group.find(post).then(g => g.get('active'))).to.be.false
     })
   })
 
