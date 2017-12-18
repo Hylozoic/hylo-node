@@ -25,7 +25,7 @@ export function afterCreatingPost (post, opts) {
     opts.community_ids && post.communities().attach(uniq(opts.community_ids), trxOpts),
 
     // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, userId, trxOpts),
+    post.addFollowers(followerIds, trxOpts),
 
     // Add creator to RSVPs
     post.get('type') === 'event' &&

@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { markdown } from 'hylo-utils/text'
-import { addFollowers } from './post/util'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'
 import EnsureLoad from './mixins/EnsureLoad'
 
@@ -60,44 +59,34 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Promise.resolve([])
   },
 
-  createActivities: function (trx) {
-    const isReplyToPost = !this.get('comment_id')
+  createActivities: async function (trx) {
+    var toLoad = ['post']
 
-    var toLoad = ['post', 'post.followers']
-    if (!isReplyToPost) toLoad = toLoad.concat(['comment', 'comment.followers'])
+    await this.ensureLoad(toLoad)
+    const actorId = this.get('user_id')
+    const followers = await this.relations.post.followers().fetch()
+    const mentionedIds = RichText.getUserMentions(this.get('text'))
 
-    return this.load(toLoad)
-    .then(() => {
-      const actorId = this.get('user_id')
-      const followers = this.relations[isReplyToPost ? 'post' : 'comment'].relations.followers
-      const mentionedIds = RichText.getUserMentions(this.get('text'))
-
-      const createActivity = reason => id => ({
-        reader_id: id,
-        comment_id: this.id,
-        parent_comment_id: this.get('comment_id') || null,
-        post_id: this.relations.post.id,
-        actor_id: actorId,
-        reason
-      })
-
-      const newCommentActivities = followers
-      .filter(u => u.id !== actorId)
-      .map(u => u.id)
-      .map(createActivity('newComment'))
-
-      const mentionActivities = mentionedIds
-      .filter(u => u.id !== actorId)
-      .map(createActivity('commentMention'))
-
-      return Activity.saveForReasons(
-        newCommentActivities.concat(mentionActivities), trx)
+    const createActivity = reason => id => ({
+      reader_id: id,
+      comment_id: this.id,
+      parent_comment_id: this.get('comment_id') || null,
+      post_id: this.relations.post.id,
+      actor_id: actorId,
+      reason
     })
-  },
 
-  addFollowers: function (userIds, addedById, opts = {}) {
-    return this.load('post')
-    .then(() => addFollowers(this.relations.post, this, userIds, addedById, opts))
+    const newCommentActivities = followers
+    .filter(u => u.id !== actorId)
+    .map(u => u.id)
+    .map(createActivity('newComment'))
+
+    const mentionActivities = mentionedIds
+    .filter(u => u.id !== actorId)
+    .map(createActivity('commentMention'))
+
+    return Activity.saveForReasons(
+      newCommentActivities.concat(mentionActivities), trx)
   }
 }, EnsureLoad), {
 

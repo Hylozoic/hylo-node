@@ -2,6 +2,7 @@
 import Slack from '../services/Slack'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
+import HasGroup from './mixins/HasGroup'
 import { clone, flatten, isEqual, merge, pick, trim } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
 import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../../lib/uploader/types'
@@ -92,28 +93,22 @@ module.exports = bookshelf.Model.extend(merge({
 
   createStarterPosts: function (transacting) {
     var now = new Date()
-    var timeShift = {null: 0, intention: 1, offer: 2, request: 3}
-    return Community.find('starter-posts', {withRelated: [
-      'posts', 'posts.followers', 'posts.selectedTags'
-    ]})
+    var timeShift = {offer: 1, request: 2}
+    return Community.find('starter-posts', {withRelated: ['posts']})
     .tap(c => {
       if (!c) throw new Error('Starter posts community not found')
     })
     .then(c => c.relations.posts.models)
     .then(posts => Promise.map(posts, post => {
       if (post.get('type') === 'welcome') return
-      const tag = post.relations.selectedTags.first()
-      const tagName = tag ? tag.get('name') : null
 
       var newPost = post.copy()
-      var time = new Date(now - timeShift[tagName] * 1000)
+      var time = new Date(now - timeShift[post.get('type') || 0] * 1000)
       return newPost.save({created_at: time, updated_at: time}, {transacting})
       .then(() => Promise.all(flatten([
         this.posts().attach(newPost, {transacting}),
-        tagName && Tag.find(tagName).then(tag =>
-          newPost.tags().attach({tag_id: tag.id, selected: true}, {transacting})),
-        post.relations.followers.map(u =>
-          Follow.create(u.id, newPost.id, null, {transacting}))
+        post.followers().fetch().then(followers => followers.each(u =>
+          Follow.create(u.id, newPost.id, null, {transacting})))
       ])))
     }))
   },
@@ -206,7 +201,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(memberships => this.save({num_members: memberships.length}))
   }
 
-}, HasSettings), {
+}, HasSettings, HasGroup), {
   find: function (key, opts = {}) {
     if (!key) return Promise.resolve(null)
 

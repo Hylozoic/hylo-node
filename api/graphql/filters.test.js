@@ -81,7 +81,10 @@ describe('model filters', () => {
         where "comments"."active" = true
         and (
           "comments"."post_id" in (
-            select "post_id" from "follows" where "user_id" = 42
+            select "group_data_id" from "groups"
+            inner join "group_memberships"
+              on "groups"."id" = "group_memberships"."group_id"
+            where "group_data_type" = 0 and "user_id" = 42
           )
           or ((
             "communities_posts"."community_id" in ${selectMyCommunityIds}

@@ -12,17 +12,11 @@ describe('comment/createComment', () => {
   describe('pushMessageToSockets', () => {
     var user, user2, thread
 
-    before(function () {
+    before(async () => {
       user = new User({name: 'Oo Joy', email: 'oojoy@b.c'})
       user2 = new User({name: 'Oo Boy', email: 'ooboy@c.d'})
-      return Promise.join(user.save(), user2.save())
-      .then(() => {
-        return createThread(user.id, [user2.id])
-        .then(t => {
-          thread = t
-          return thread.load('followers')
-        })
-      })
+      await Promise.join(user.save(), user2.save())
+      thread = await createThread(user.id, [user2.id])
     })
 
     it('sends newThread event if first message', () => {

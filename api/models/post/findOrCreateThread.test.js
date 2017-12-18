@@ -7,13 +7,12 @@ describe('findOrCreateThread', () => {
     return user.save()
   })
 
-  it("creates a thread if one doesn't exist", () => {
-    return findOrCreateThread(user.id, [user.id])
-    .then(post => Post.find(post.id, {withRelated: 'followers'}))
-    .then(post => {
-      expect(post).to.exist
-      expect(post.relations.followers.length).to.equal(1)
-    })
+  it("creates a thread if one doesn't exist", async () => {
+    let post = await findOrCreateThread(user.id, [user.id])
+    post = await Post.find(post.id)
+    expect(post).to.exist
+    const followers = await post.followers().fetch()
+    expect(followers.length).to.equal(1)
   })
 })
 

@@ -5,31 +5,30 @@ import truncate from 'trunc-html'
 import { parse } from 'url'
 import { compact, some, sum } from 'lodash/fp'
 
-export const notifyAboutMessage = ({commentId}) =>
-  Comment.find(commentId, {withRelated: [
-    'post.followers', 'post.lastReads', 'media'
-  ]})
-  .then(comment => {
-    const { user_id, post_id, text } = comment.attributes
-    const { followers, lastReads } = comment.relations.post.relations
-    const recipients = followers.filter(u => u.id !== user_id)
-    const user = followers.find(u => u.id === user_id)
-    const alert = comment.relations.media.length !== 0
-      ? `${user.get('name')} sent an image`
-      : `${user.get('name')}: ${decode(truncate(text, 140).text).trim()}`
-    const path = parse(Frontend.Route.thread({id: post_id})).path
+export async function notifyAboutMessage ({ commentId }) {
+  const comment = await Comment.find(commentId, {withRelated: ['media']})
+  const post = await Post.find(comment.get('post_id'))
+  const followers = await post.followersWithPivots().fetch()
 
-    return Promise.map(recipients, user => {
-      // don't notify if the user has read the thread recently and respect the
-      // dm_notifications setting.
-      if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Push)) return
+  const { user_id, post_id, text } = comment.attributes
+  const recipients = followers.filter(u => u.id !== user_id)
+  const user = followers.find(u => u.id === user_id)
+  const alert = comment.relations.media.length !== 0
+    ? `${user.get('name')} sent an image`
+    : `${user.get('name')}: ${decode(truncate(text, 140).text).trim()}`
+  const path = parse(Frontend.Route.thread({id: post_id})).path
 
-      const lr = lastReads.find(r => r.get('user_id') === user.id)
-      if (!lr || comment.get('created_at') > lr.get('last_read_at')) {
-        return user.sendPushNotification(alert, path)
-      }
-    })
+  return Promise.map(recipients, async user => {
+    // don't notify if the user has read the thread recently and respect the
+    // dm_notifications setting.
+    if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Push)) return
+
+    const lastReadAt = user.pivot.getSetting('lastReadAt')
+    if (!lastReadAt || comment.get('created_at') > new Date(lastReadAt)) {
+      return user.sendPushNotification(alert, path)
+    }
   })
+}
 
 export const sendDigests = () => {
   const redis = RedisClient.create()
@@ -42,8 +41,6 @@ export const sendDigests = () => {
   .then(time =>
     Post.where('updated_at', '>', time)
     .fetchAll({withRelated: [
-      'followers',
-      'lastReads',
       {comments: q => {
         q.where('created_at', '>', time)
         q.orderBy('created_at', 'asc')
@@ -51,16 +48,20 @@ export const sendDigests = () => {
       'comments.user',
       'comments.media'
     ]}))
-  .then(posts => Promise.all(posts.map(post => {
-    const { comments, followers, lastReads } = post.relations
+  .then(posts => Promise.all(posts.map(async post => {
+    const { comments } = post.relations
     if (comments.length === 0) return []
+
+    const followers = await post.followersWithPivots().fetch()
 
     return Promise.map(followers.models, user => {
       // select comments not written by this user and newer than user's last
       // read time.
-      const r = lastReads.find(l => l.get('user_id') === user.id)
+      let lastReadAt = user.pivot.getSetting('lastReadAt')
+      if (lastReadAt) lastReadAt = new Date(lastReadAt)
+
       const filtered = comments.filter(c =>
-        c.get('created_at') > (r ? r.get('last_read_at') : 0) &&
+        c.get('created_at') > (lastReadAt || 0) &&
         c.get('user_id') !== user.id)
 
       if (filtered.length === 0) return
@@ -130,4 +131,7 @@ export const sendDigests = () => {
   .then(sum)
 }
 
+// we keep track of the last time we sent comment digests in Redis, so that the
+// next time we send them, we can exclude any comments that were created before
+// the last send.
 sendDigests.REDIS_TIMESTAMP_KEY = 'Comment.sendDigests.lastSentAt'
