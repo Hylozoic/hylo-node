@@ -36,7 +36,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     // TODO
   },
 
-  queryUnread (userId, { afterTime } = {}) {
+  whereUnread (userId, { afterTime } = {}) {
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
       if (afterTime) q.where('groups.updated_at', '>', afterTime)

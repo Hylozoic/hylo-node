@@ -83,10 +83,10 @@ module.exports = bookshelf.Model.extend({
   },
 
   findByTypeAndId (type, id, { transacting } = {}) {
-    return this.queryByTypeAndId(type, id).fetch({transacting})
+    return this.whereTypeAndId(type, id).fetch({transacting})
   },
 
-  queryByTypeAndId (type, id) {
+  whereTypeAndId (type, id) {
     return this.where({group_data_type: type, group_data_id: id})
   },
 

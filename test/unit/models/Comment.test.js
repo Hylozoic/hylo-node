@@ -88,7 +88,7 @@ describe('Comment', () => {
         })
       })
 
-      it('respects last_read_at', async () => {
+      it('respects lastReadAt', async () => {
         const ms1 = await GroupMembership.forPair(u1, post).fetch()
         await ms1.addSetting({lastReadAt: new Date(now - 4.5 * 60000)}, true)
 

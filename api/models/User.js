@@ -456,7 +456,7 @@ module.exports = bookshelf.Model.extend(merge({
     .select(raw("settings->'last_viewed_messages_at' as time"))
     .then(rows => new Date(rows[0].time))
 
-    return GroupMembership.queryUnread(userId, {afterTime: lastViewed})
+    return GroupMembership.whereUnread(userId, {afterTime: lastViewed})
     .query(q => {
       q.join('posts', 'groups.group_data_id', 'posts.id')
       q.where({

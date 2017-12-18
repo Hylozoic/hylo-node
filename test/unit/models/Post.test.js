@@ -358,7 +358,7 @@ describe('Post', function () {
       .then(count => expect(count).to.equal(2))
     })
 
-    it('returns the total number of messages (comments) if no last_read_at value', () => {
+    it('returns the total number of messages (comments) with no read timestamps', () => {
       return post.unreadCountForUser(user2.id)
       .then(count => expect(count).to.equal(3))
     })
