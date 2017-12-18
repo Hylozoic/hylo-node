@@ -24,4 +24,13 @@ describe('Group', () => {
       expect(gm2.get('role')).to.equal(1)
     })
   })
+
+  describe('groupData', () => {
+    it('returns a related post', async () => {
+      const post = await factories.post().save()
+      const group = await post.createGroup()
+      const post2 = await group.groupData().fetch()
+      expect(post2.id).to.equal(post.id)
+    })
+  })
 })

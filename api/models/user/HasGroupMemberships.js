@@ -1,9 +1,11 @@
+import { getDataTypeForModel } from '../group/DataType'
+
 export default {
   // note that this `where` argument is applied to the subquery;
   // to add clauses to the outer query, just use `.query` on the
   // result of this method
   queryByGroupMembership (model, { where } = {}) {
-    const dataType = Group.getDataTypeForTableName(model.forge().tableName)
+    const dataType = getDataTypeForModel(model)
 
     let subq = GroupMembership.query()
     .join('groups', 'groups.id', 'group_memberships.group_id')

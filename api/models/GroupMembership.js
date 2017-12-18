@@ -1,6 +1,7 @@
 import HasSettings from './mixins/HasSettings'
 import { isEmpty } from 'lodash'
 import { isFollowing } from './group/queryUtils'
+import { getDataTypeForInstance } from './group/DataType'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
@@ -56,7 +57,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
       q.where({
-        group_data_type: Group.getDataTypeForInstance(instance),
+        group_data_type: getDataTypeForInstance(instance),
         group_data_id: instance.id,
         'group_memberships.user_id': userId
       })
