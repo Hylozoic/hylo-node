@@ -23,6 +23,15 @@ export async function notifyModeratorsMember (flaggedItem) {
 }
 
 export function sendToCommunities (flaggedItem, communities) {
+  const shouldSendToAdmins = flaggedItem.get('category') === FlaggedItem.Category.ILLEGAL &&
+    process.env.HYLO_ADMINS
+  var sendToAdmins = () => {
+    const adminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+    const community = communities[0]
+    return flaggedItem.getMessageText(community)
+    .then(messageText => sendMessageFromAxolotl(adminIds, messageText))
+  }
+
   return Promise.map(communities, c =>
     c.load('moderators')
     .then(() => flaggedItem.getMessageText(c))
@@ -30,4 +39,5 @@ export function sendToCommunities (flaggedItem, communities) {
       const moderatorIds = c.relations.moderators.map(m => m.id)
       return sendMessageFromAxolotl(moderatorIds, messageText)
     }))
+  .then(() => shouldSendToAdmins && sendToAdmins())
 }
