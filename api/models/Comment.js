@@ -46,10 +46,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Comment, 'comment_id').query({where: {active: true}})
   },
 
-  followers: function () {
-    return this.belongsToMany(User).through(Follow).withPivot('added_by_id')
-  },
-
   media: function () {
     return this.hasMany(Media)
   },

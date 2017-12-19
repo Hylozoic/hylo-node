@@ -107,8 +107,8 @@ module.exports = bookshelf.Model.extend(merge({
       return newPost.save({created_at: time, updated_at: time}, {transacting})
       .then(() => Promise.all(flatten([
         this.posts().attach(newPost, {transacting}),
-        post.followers().fetch().then(followers => followers.each(u =>
-          Follow.create(u.id, newPost.id, null, {transacting})))
+        post.followers().fetch().then(followers =>
+          newPost.addFollowers(followers.map(f => f.id), {transacting}))
       ])))
     }))
   },
