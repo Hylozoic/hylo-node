@@ -40,7 +40,7 @@ export default {
     return model.where('id', 'in', subq)
   },
 
-  groupMembers ({ where } = {}) {
+  groupMembers (where) {
     let subq = GroupMembership.query()
     .join('groups', 'groups.id', 'group_memberships.group_id')
     .where({
