@@ -28,6 +28,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
   }
 
 }, HasSettings), {
+  Role: {
+    DEFAULT: 0,
+    MODERATOR: 1
+  },
+
   whereUnread (userId, { afterTime } = {}) {
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
