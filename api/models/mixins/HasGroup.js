@@ -51,7 +51,10 @@ export default {
     .select('user_id')
     if (where) subq = subq.where(where)
 
-    return User.collection().query(q => q.where('id', 'in', subq))
+    return User.collection().query(q => {
+      q.where('id', 'in', subq)
+      q.where('users.active', true)
+    })
   },
 
   groupMembersWithPivots () {
