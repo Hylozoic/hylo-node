@@ -9,22 +9,24 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User, 'user_id')
   },
 
-  sendPushNotification: function (alert, path) {
+  sendPushNotification: async function (alert, path) {
     if (!this.get('enabled')) return
 
-    // this will be replaced to a call to an alternative push api for old versions of the app
+    // this will be replaced to a call to an alternative push api for old
+    // versions of the app
     if (!this.get('version')) return
 
-    return User.find(this.get('user_id'))
-    .then(user => User.unseenThreadCount(user.id)
-      .then(count => new PushNotification({
-        alert: alert.substring(0, 255),
-        path,
-        badge_no: user.get('new_notification_count') + count,
-        device_id: this.id,
-        platform: this.get('platform'),
-        queued_at: new Date().toISOString()
-      }).save().then(push => push.send())))
+    const user = await User.find(this.get('user_id'))
+    const count = await User.unseenThreadCount(user.id)
+    const push = await PushNotification.forge({
+      alert: alert.substring(0, 255),
+      path,
+      badge_no: user.get('new_notification_count') + count,
+      device_id: this.id,
+      platform: this.get('platform'),
+      queued_at: new Date().toISOString()
+    }).save()
+    return push.send()
   },
 
   resetNotificationCount: function () {
