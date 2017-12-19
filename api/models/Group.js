@@ -35,7 +35,7 @@ module.exports = bookshelf.Model.extend({
   // if a group membership doesn't exist for a user id, create it.
   // make sure the group memberships have the passed-in role and settings
   // (merge on top of existing settings).
-  async addMembers (userIds, { role, settings }, { transacting } = {}) {
+  async addMembers (userIds, { role = GroupMembership.Role.DEFAULT, settings } = {}, { transacting } = {}) {
     const existingMemberships = await this.memberships()
     .query(q => q.where('user_id', 'in', userIds)).fetch()
 

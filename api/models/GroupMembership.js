@@ -37,7 +37,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
       if (afterTime) q.where('groups.updated_at', '>', afterTime)
-      q.where('group_memberships.user_id', userId)
+      q.where({
+        'group_memberships.user_id': userId,
+        'group_memberships.active': true
+      })
       isFollowing(q)
 
       q.where(q2 => {
@@ -51,12 +54,16 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   forPair (userOrId, instance) {
     const userId = userOrId instanceof User ? userOrId.id : userOrId
+    if (!userId) {
+      throw new Error("Can't call forPair without a user or user id")
+    }
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
       q.where({
         group_data_type: getDataTypeForInstance(instance),
         group_data_id: instance.id,
-        'group_memberships.user_id': userId
+        'group_memberships.user_id': userId,
+        'group_memberships.active': true
       })
     })
   }
