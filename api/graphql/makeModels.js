@@ -276,7 +276,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: relation => relation.query(q =>
         q.where('posts.id', 'in',
-          Group.queryIdsByMemberId(Group.DataType.POST, userId, isFollowing)))
+          Group.queryIdsByMemberId(Post, userId, isFollowing)))
     },
 
     Message: {

@@ -1,6 +1,6 @@
 import { difference, sortBy } from 'lodash'
 import DataType, {
-  getDataTypeForInstance, getModelForDataType
+  getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
 
 module.exports = bookshelf.Model.extend({
@@ -62,15 +62,23 @@ module.exports = bookshelf.Model.extend({
     return this.findByTypeAndId(type, instanceOrId.id, { transacting })
   },
 
-  findByTypeAndId (type, id, { transacting } = {}) {
-    return this.whereTypeAndId(type, id).fetch({transacting})
+  findByTypeAndId (typeOrModel, id, { transacting } = {}) {
+    return this.whereTypeAndId(typeOrModel, id).fetch({transacting})
   },
 
-  whereTypeAndId (type, id) {
+  whereTypeAndId (typeOrModel, id) {
+    const type = typeof typeOrModel === 'number'
+      ? typeOrModel
+      : getDataTypeForModel(typeOrModel)
+
     return this.where({group_data_type: type, group_data_id: id})
   },
 
-  queryIdsByMemberId (type, userId, where) {
+  queryIdsByMemberId (typeOrModel, userId, where) {
+    const type = typeof typeOrModel === 'number'
+      ? typeOrModel
+      : getDataTypeForModel(typeOrModel)
+
     return this.query(q => {
       q.join('group_memberships', 'groups.id', 'group_memberships.group_id')
       q.where({

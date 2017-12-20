@@ -55,7 +55,7 @@ export const commentFilter = userId => relation => relation.query(q => {
   q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
   q.where({'comments.active': true})
   q.where(q2 => {
-    const groupIds = Group.queryIdsByMemberId(Group.DataType.POST, userId)
+    const groupIds = Group.queryIdsByMemberId(Post, userId)
     q2.where('comments.post_id', 'in', groupIds)
     .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
   })

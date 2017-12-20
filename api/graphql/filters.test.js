@@ -84,7 +84,10 @@ describe('model filters', () => {
             select "group_data_id" from "groups"
             inner join "group_memberships"
               on "groups"."id" = "group_memberships"."group_id"
-            where "group_data_type" = 0 and "user_id" = 42
+            where "groups"."group_data_type" = 0
+            and "group_memberships"."active" = true
+            and "groups"."active" = true
+            and "user_id" = 42
           )
           or ((
             "communities_posts"."community_id" in ${selectMyCommunityIds}

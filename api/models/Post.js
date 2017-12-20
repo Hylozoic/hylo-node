@@ -415,7 +415,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         }))),
 
       // bump updated_at on the post's group
-      commentId && Group.whereTypeAndId(Group.DataType.POST, postId).query()
+      commentId && Group.whereTypeAndId(Post, postId).query()
       .update({updated_at: now}),
 
       // when creating a comment, mark post as read for the commenter
@@ -431,7 +431,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         Activity.removeForPost(postId, trx),
         Post.where('id', postId).query()
         .update({active: false}).transacting(trx),
-        Group.whereTypeAndId(Group.DataType.POST, postId).query()
+        Group.whereTypeAndId(Post, postId).query()
         .update({active: false}).transacting(trx)
       )),
 
