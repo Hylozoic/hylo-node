@@ -519,7 +519,8 @@ CREATE TABLE group_memberships (
     role integer,
     settings jsonb,
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    group_data_type integer NOT NULL
 );
 
 
