@@ -15,6 +15,7 @@ import {
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
+import { isFollowing } from '../models/group/queryUtils'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -272,7 +273,10 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         {followers: {alias: 'participants'}},
         {comments: {alias: 'messages', typename: 'Message', querySet: true}}
-      ]
+      ],
+      filter: relation => relation.query(q =>
+        q.where('posts.id', 'in',
+          Group.queryIdsByMemberId(Group.DataType.POST, userId, isFollowing)))
     },
 
     Message: {

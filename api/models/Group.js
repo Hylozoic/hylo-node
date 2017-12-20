@@ -70,11 +70,16 @@ module.exports = bookshelf.Model.extend({
     return this.where({group_data_type: type, group_data_id: id})
   },
 
-  queryIdsByMemberId (type, userId) {
+  queryIdsByMemberId (type, userId, where) {
     return this.query(q => {
       q.join('group_memberships', 'groups.id', 'group_memberships.group_id')
-      q.where('group_data_type', type)
+      q.where({
+        'groups.group_data_type': type,
+        'group_memberships.active': true,
+        'groups.active': true
+      })
       q.where('user_id', userId)
+      if (where) q.where(where)
     }).query().select('group_data_id')
   },
 
