@@ -11,11 +11,12 @@ exports.up = async function (knex, Promise) {
     model: MembershipDeprecated, // eslint-disable-line
     parent: 'community',
     copyColumns: ['role', 'active', 'created_at'],
-    selectColumns: ['settings', 'last_viewed_at'],
+    selectColumns: ['settings', 'last_viewed_at', 'new_post_count'],
     getSettings: row => Object.assign(
       mapKeys(row.settings, (v, k) => camelCase(k)),
       {
-        lastReadAt: row.last_viewed_at
+        lastReadAt: row.last_viewed_at,
+        newPostCount: row.new_post_count
       }
     )
   }))
