@@ -34,11 +34,10 @@ describe('graphql request handler', () => {
     return Promise.all([
       community.posts().attach(post),
       community.posts().attach(post2),
-      community.users().attach({
-        user_id: user.id,
-        active: true,
-        created_at: new Date(new Date().getTime() - 86400000)}),
-      community.users().attach({user_id: user2.id, active: true})
+      community.addMembers([user.id, user2.id]).then((memberships) => {
+        const earlier = new Date(new Date().getTime() - 86400000)
+        return memberships[0].save({created_at: earlier}, {patch: true})
+      })
     ])
     .then(() => Promise.all([
       updateNetworkMemberships(post),

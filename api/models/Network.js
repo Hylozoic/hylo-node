@@ -4,8 +4,7 @@ import HasGroup from './mixins/HasGroup'
 var knex = bookshelf.knex
 
 var networkIdsQuery = function (userId) {
-  var communityIdsQuery = knex.select('community_id').from('communities_users')
-    .where({user_id: userId, active: true})
+  const communityIdsQuery = Group.pluckIdsForMember(userId, Community)
 
   return knex.select().distinct('network_id').from('communities')
     .whereIn('id', communityIdsQuery).whereRaw('network_id is not null')
@@ -20,15 +19,20 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   moderators: function () {
     return this.belongsToMany(User, 'networks_users', 'network_id', 'user_id')
-      .query({where: {role: Membership.MODERATOR_ROLE}})
+    .query({where: {role: GroupMembership.Role.MODERATOR}})
   },
 
   members: function () {
     return User.collection().query(q => {
       q.distinct()
-      q.where({'communities.network_id': this.id})
-      q.join('communities_users', 'users.id', 'communities_users.user_id')
-      q.join('communities', 'communities.id', 'communities_users.community_id')
+      q.join('group_memberships', 'users.id', 'group_memberships.user_id')
+      q.join('groups', 'group_memberships.group_id', 'groups.id')
+      q.join('communities', 'groups.group_data_id', 'communities.id')
+      q.where({
+        'group_memberships.active': true,
+        'groups.group_data_type': Group.DataType.COMMUNITY,
+        'communities.network_id': this.id
+      })
     })
   },
 
@@ -37,9 +41,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
       q.select('id')
       q.where('network_id', this.id)
     }).query()
-    return Membership.query(q => {
+    return GroupMembership.query(q => {
       q.select(bookshelf.knex.raw('count(distinct user_id) as total'))
-      q.where('community_id', 'in', subq)
+      q.join('groups', 'groups.id', 'group_memberships.group_id')
+      q.where('groups.group_data_id', 'in', subq)
+      q.where({
+        'groups.group_data_type': Group.DataType.COMMUNITY,
+        'group_memberships.active': true,
+        'groups.active': true
+      })
     }).fetch()
     .then(ms => ms.length === 0 ? 0 : ms.get('total'))
   },

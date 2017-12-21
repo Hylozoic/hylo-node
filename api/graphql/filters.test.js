@@ -2,6 +2,13 @@ import { makeFilterToggle, sharedNetworkMembership } from './filters'
 import makeModels from './makeModels'
 import { expectEqualQuery } from '../../test/setup/helpers'
 
+const myId = '42'
+
+var models,
+  selectMyCommunityIds,
+  selectMyNetworkCommunityIds,
+  sharedMemberships
+
 describe('makeFilterToggle', () => {
   var filterFn = relation => relation.query(q => 'filtered')
   var relation = {query: fn => fn()}
@@ -15,32 +22,39 @@ describe('makeFilterToggle', () => {
   })
 })
 
-const myId = 42
-
-const selectMyCommunityIds = `(select "community_id" from "communities_users"
-  where "user_id" = ${myId} and "active" = true)`
-
-const selectMyNetworkCommunityIds = `(select "id" from "communities"
-  where "network_id" in (
-    select distinct "network_id" from "communities"
-    where "id" in ${selectMyCommunityIds}
-    and network_id is not null
-  ))`
-
-var models
-
 describe('model filters', () => {
   before(async () => {
+    selectMyCommunityIds = `(select "group_data_id" from "groups"
+      inner join "group_memberships"
+      on "groups"."id" = "group_memberships"."group_id"
+      where "groups"."group_data_type" = ${Group.DataType.COMMUNITY}
+      and "group_memberships"."active" = true
+      and "groups"."active" = true
+      and "group_memberships"."user_id" = '${myId}')`
+
+    selectMyNetworkCommunityIds = `(select "id" from "communities"
+      where "network_id" in (
+        select distinct "network_id" from "communities"
+        where "id" in ${selectMyCommunityIds}
+        and network_id is not null
+      ))`
+
+    sharedMemberships = `"group_memberships"
+      where "group_memberships"."active" = true
+      and "group_memberships"."group_id" in (
+        select "group_id" from "group_memberships"
+        where "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
+        and "group_memberships"."group_data_type" = ${Group.DataType.COMMUNITY}
+        and "group_memberships"."active" = true
+      )`
+
     models = await makeModels(myId, false)
   })
 
   describe('Membership', () => {
     it('filters down to memberships for communities the user is in', () => {
-      const collection = models.Membership.filter(Membership.collection())
-      expectEqualQuery(collection, `select * from "communities_users"
-        where
-          ("communities_users"."community_id" in ${selectMyCommunityIds}
-          or "communities_users"."user_id" = '${User.AXOLOTL_ID}')`)
+      const collection = models.Membership.filter(GroupMembership.collection())
+      expectEqualQuery(collection, `select * from ${sharedMemberships}`)
     })
   })
 
@@ -48,12 +62,7 @@ describe('model filters', () => {
     it('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
-        where "users"."id" in (
-          select "user_id" from "communities_users"
-          where
-          ("communities_users"."community_id" in ${selectMyCommunityIds}
-            or "communities_users"."user_id" = '${User.AXOLOTL_ID}')
-        )`)
+        where "users"."id" in (select "user_id" from ${sharedMemberships})`)
     })
   })
 
@@ -87,7 +96,7 @@ describe('model filters', () => {
             where "groups"."group_data_type" = 0
             and "group_memberships"."active" = true
             and "groups"."active" = true
-            and "user_id" = 42
+            and "group_memberships"."user_id" = '${myId}'
           )
           or ((
             "communities_posts"."community_id" in ${selectMyCommunityIds}

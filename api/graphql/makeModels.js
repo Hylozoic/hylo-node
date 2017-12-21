@@ -3,7 +3,8 @@ import {
   commentFilter,
   communityTopicFilter,
   makeFilterToggle,
-  sharedCommunityMembership,
+  membershipFilter,
+  personFilter,
   sharedNetworkMembership,
   activePost
 } from './filters'
@@ -59,19 +60,19 @@ export default async function makeModels (userId, isAdmin) {
     },
 
     Membership: {
-      model: Membership,
+      model: GroupMembership,
       attributes: [
         'created_at'
       ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
         lastViewedAt: m =>
-          m.get('user_id') === userId ? m.get('last_viewed_at') : null,
+          m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
-          m.get('user_id') === userId ? m.get('new_post_count') : null
+          m.get('user_id') === userId ? m.getSetting('newPostCount') : null,
+        community: m => m.groupData().fetch()
       },
-      relations: ['community'],
-      filter: nonAdminFilter(sharedCommunityMembership('communities_users', userId))
+      filter: nonAdminFilter(membershipFilter(userId))
     },
 
     Person: {
@@ -98,7 +99,7 @@ export default async function makeModels (userId, isAdmin) {
         {skills: {querySet: true}},
         {votes: {querySet: true}}
       ],
-      filter: nonAdminFilter(sharedCommunityMembership('users', userId)),
+      filter: nonAdminFilter(personFilter(userId)),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
         searchQuerySet('users', {
@@ -216,11 +217,8 @@ export default async function makeModels (userId, isAdmin) {
         feedItems: (c, args) => c.feedItems(args),
         pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
         invitePath: c =>
-          Membership.hasModeratorRole(userId, c.id)
-          .then(isModerator => {
-            if (!isModerator) return null
-            return Frontend.Route.invitePath(c)
-          })
+          GroupMembership.hasModeratorRole(userId, c)
+          .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
       fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
@@ -276,7 +274,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: relation => relation.query(q =>
         q.where('posts.id', 'in',
-          Group.queryIdsByMemberId(Post, userId, isFollowing)))
+          Group.pluckIdsForMember(userId, Post, isFollowing)))
     },
 
     Message: {

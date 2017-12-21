@@ -8,7 +8,11 @@ describe('Group', () => {
       group = await Group.forge({group_data_type: 0}).save()
       u1 = await factories.user().save()
       u2 = await factories.user().save()
-      gm1 = await group.memberships().create({user_id: u1.id, settings: {here: true}})
+      gm1 = await group.memberships().create({
+        user_id: u1.id,
+        settings: {here: true},
+        group_data_type: 0
+      })
     })
 
     it('merges new settings to existing memberships and creates new ones', async () => {

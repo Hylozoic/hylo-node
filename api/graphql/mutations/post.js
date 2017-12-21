@@ -30,8 +30,9 @@ export function deletePost (userId, postId) {
   .then(() => ({success: true}))
 }
 
-export function pinPost (userId, postId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
+export async function pinPost (userId, postId, communityId) {
+  const community = await Community.find(communityId)
+  return GroupMembership.hasModeratorRole(userId, community)
   .then(isModerator => {
     if (!isModerator) throw new Error("You don't have permission to modify this community")
     return PostMembership.find(postId, communityId)

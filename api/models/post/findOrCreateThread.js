@@ -3,10 +3,9 @@ import { map, uniq } from 'lodash/fp'
 import { isFollowing } from '../group/queryUtils'
 
 export const findThread = userIds => {
-  const subquery = Group.havingExactMembers(userIds).query(q => {
-    q.where('group_data_type', Group.DataType.POST)
-    isFollowing(q)
-  }).query().select('group_data_id')
+  const subquery = Group.havingExactMembers(userIds, Post)
+  .query(isFollowing)
+  .query().select('group_data_id')
 
   return Post.where({id: subquery, type: Post.Type.THREAD}).fetch()
 }

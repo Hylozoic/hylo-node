@@ -36,7 +36,8 @@ export const stubGetImageSize = url => {
   return nock(host).get(u.pathname).reply(200, pixel)
 }
 
-export function expectEqualQuery (collection, expected) {
+export function expectEqualQuery (actual, expected, { isCollection = true } = {}) {
   const reformatted = expected.replace(/\n\s*/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')')
-  expect(collection.query().toString()).to.equal(reformatted)
+  const query = isCollection ? actual.query() : actual
+  expect(query.toString()).to.equal(reformatted)
 }

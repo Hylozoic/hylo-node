@@ -34,13 +34,12 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(TagFollow)
   },
 
-  memberships: function () {
-    return this.hasMany(Membership).query({where: {'communities_users.active': true}})
-  },
+  // memberships: function () {
+  //   return this.hasMany(Membership).query({where: {'communities_users.active': true}})
+  // },
 
   moderators: function () {
-    return this.belongsToMany(User, 'communities_users', 'community_id', 'user_id')
-      .query({where: {role: Membership.MODERATOR_ROLE, 'communities_users.active': true}})
+    return this.groupMembers({role: GroupMembership.Role.MODERATOR})
   },
 
   network: function () {
@@ -48,8 +47,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   users: function () {
-    return this.belongsToMany(User).through(Membership)
-      .query({where: {'communities_users.active': true, 'users.active': true}}).withPivot('role')
+    return this.groupMembersWithPivots()
   },
 
   posts: function () {
@@ -143,13 +141,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberCount: function () {
-    return User.query(q => {
-      q.select(bookshelf.knex.raw('count(*)'))
-      q.join('communities_users', 'users.id', 'communities_users.user_id')
-      q.where({'communities_users.community_id': this.id, 'communities_users.active': true})
-    })
-    .fetch()
-    .then(result => result.get('count'))
+    return this.get('num_members')
+  },
+
+  addMembers: async function (userIds, opts) {
+    return this.addGroupMembers(userIds, {}, opts)
   },
 
   postCount: function () {
@@ -195,10 +191,9 @@ module.exports = bookshelf.Model.extend(merge({
     return Promise.resolve()
   },
 
-  reconcileNumMembers: function () {
-    return Membership.where({community_id: this.id, active: true})
-    .fetchAll()
-    .then(memberships => this.save({num_members: memberships.length}))
+  reconcileNumMembers: async function () {
+    const count = await this.users().count()
+    return this.save({num_members: count}, {patch: true})
   }
 
 }, HasSettings, HasGroup), {
@@ -323,6 +318,7 @@ module.exports = bookshelf.Model.extend(merge({
       .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
     })
   },
+
   isSlugValid: function (slug) {
     const regex = /^[0-9a-z-]{2,40}$/
     return regex.test(slug)
