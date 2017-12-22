@@ -19,9 +19,5 @@ export default {
     if (where) subq = subq.where(where)
 
     return model.collection().query(q => q.where('id', 'in', subq))
-  },
-
-  communitiesNotImplementedYet () {
-    return this.queryByGroupMembership(Community)
   }
 }
