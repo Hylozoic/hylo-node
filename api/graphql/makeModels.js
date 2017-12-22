@@ -69,7 +69,7 @@ export default async function makeModels (userId, isAdmin) {
         lastViewedAt: m =>
           m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
-          m.get('user_id') === userId ? m.getSetting('newPostCount') : null,
+          m.get('user_id') === userId ? m.get('new_post_count') : null,
         community: m => m.groupData().fetch()
       },
       filter: nonAdminFilter(membershipFilter(userId))

@@ -1,4 +1,7 @@
 import { expectEqualQuery } from '../../setup/helpers'
+import {
+  myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment
+} from '../../../api/models/util/queryFilters.test.helpers'
 
 describe('Skill.find', () => {
   it('returns nothing for a null id', () => {
@@ -9,24 +12,6 @@ describe('Skill.find', () => {
 
 describe('Skill.search', () => {
   let myId = '42'
-  let selectMyCommunityIds, selectMyNetworkCommunityIds
-
-  before(() => {
-    selectMyCommunityIds = `(select "group_data_id" from "groups"
-      inner join "group_memberships"
-      on "groups"."id" = "group_memberships"."group_id"
-      where "groups"."group_data_type" = ${Group.DataType.COMMUNITY}
-      and "group_memberships"."active" = true
-      and "groups"."active" = true
-      and "group_memberships"."user_id" = '${myId}')`
-
-    selectMyNetworkCommunityIds = `(select "id" from "communities"
-      where "network_id" in (
-        select distinct "network_id" from "communities"
-        where "id" in ${selectMyCommunityIds}
-        and network_id is not null
-      ))`
-  })
 
   it('produces the expected query', () => {
     const query = Skill.search({
@@ -42,8 +27,8 @@ describe('Skill.search', () => {
       inner join "communities_users"
         on "communities_users"."user_id" = "skills_users"."user_id"
       where name ilike 'go%' and (
-        "communities_users"."community_id" in ${selectMyCommunityIds}
-        or "communities_users"."community_id" in ${selectMyNetworkCommunityIds}
+        "communities_users"."community_id" in ${myCommunityIdsSqlFragment(myId)}
+        or "communities_users"."community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
       )
       order by upper("name") asc
       limit 10

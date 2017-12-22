@@ -7,16 +7,16 @@ exports.up = async function (knex, Promise) {
   models.init()
   console.log('Creating groups. This can take a while...')
   console.log('Community:', await makeGroups(Community))
+
   console.log('Membership:', await makeGroupMemberships({
     model: MembershipDeprecated, // eslint-disable-line
     parent: 'community',
-    copyColumns: ['role', 'active', 'created_at'],
-    selectColumns: ['settings', 'last_viewed_at', 'new_post_count'],
+    copyColumns: ['role', 'active', 'created_at', 'new_post_count'],
+    selectColumns: ['settings', 'last_viewed_at'],
     getSettings: row => Object.assign(
       mapKeys(row.settings, (v, k) => camelCase(k)),
       {
-        lastReadAt: row.last_viewed_at,
-        newPostCount: row.new_post_count
+        lastReadAt: row.last_viewed_at
       }
     )
   }))

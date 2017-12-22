@@ -520,6 +520,7 @@ CREATE TABLE group_memberships (
     settings jsonb,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
+    new_post_count integer,
     group_data_type integer NOT NULL
 );
 

@@ -34,10 +34,6 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(TagFollow)
   },
 
-  // memberships: function () {
-  //   return this.hasMany(Membership).query({where: {'communities_users.active': true}})
-  // },
-
   moderators: function () {
     return this.groupMembers({role: GroupMembership.Role.MODERATOR})
   },

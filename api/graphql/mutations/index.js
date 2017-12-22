@@ -59,14 +59,19 @@ export function findOrCreateLinkPreviewByUrl (data) {
 
 export async function updateMembership (userId, { communityId, data }) {
   const settings = convertGraphqlData(data.settings)
-  if (data.newPostCount) settings.newPostCount = data.newPostCount
+  const whitelist = mapKeys(pick(data, [
+    'newPostCount'
+  ]), (v, k) => snakeCase(k))
   if (data.lastViewedAt) settings.lastReadAt = data.lastViewedAt // legacy
   if (data.lastReadAt) settings.lastReadAt = data.lastReadAt
-  if (isEmpty(settings)) return Promise.resolve(null)
+  if (isEmpty(settings) && isEmpty(whitelist)) return Promise.resolve(null)
 
   const membership = await GroupMembership.forIds(userId, communityId, Community).fetch()
   if (!membership) throw new Error("Couldn't find membership for community with id", communityId)
-  return membership.addSetting(settings, true)
+  if (!isEmpty(settings)) membership.addSetting(settings)
+  if (!isEmpty(whitelist)) membership.set(whitelist)
+  if (membership.changed) await membership.save()
+  return membership
 }
 
 export function updateCommunityTopic (userId, { id, data }) {

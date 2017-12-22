@@ -1,13 +1,13 @@
 import { makeFilterToggle, sharedNetworkMembership } from './filters'
 import makeModels from './makeModels'
 import { expectEqualQuery } from '../../test/setup/helpers'
+import {
+  myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment
+} from '../models/util/queryFilters.test.helpers'
 
 const myId = '42'
 
-var models,
-  selectMyCommunityIds,
-  selectMyNetworkCommunityIds,
-  sharedMemberships
+var models, sharedMemberships
 
 describe('makeFilterToggle', () => {
   var filterFn = relation => relation.query(q => 'filtered')
@@ -24,21 +24,6 @@ describe('makeFilterToggle', () => {
 
 describe('model filters', () => {
   before(async () => {
-    selectMyCommunityIds = `(select "group_data_id" from "groups"
-      inner join "group_memberships"
-      on "groups"."id" = "group_memberships"."group_id"
-      where "groups"."group_data_type" = ${Group.DataType.COMMUNITY}
-      and "group_memberships"."active" = true
-      and "groups"."active" = true
-      and "group_memberships"."user_id" = '${myId}')`
-
-    selectMyNetworkCommunityIds = `(select "id" from "communities"
-      where "network_id" in (
-        select distinct "network_id" from "communities"
-        where "id" in ${selectMyCommunityIds}
-        and network_id is not null
-      ))`
-
     sharedMemberships = `"group_memberships"
       where "group_memberships"."active" = true
       and "group_memberships"."group_id" in (
@@ -74,8 +59,8 @@ describe('model filters', () => {
         and "posts"."id" in (
           select "post_id" from "communities_posts"
           where (
-            "community_id" in ${selectMyCommunityIds}
-            or "community_id" in ${selectMyNetworkCommunityIds}
+            "community_id" in ${myCommunityIdsSqlFragment(myId)}
+            or "community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
           )
         )`)
     })
@@ -99,8 +84,8 @@ describe('model filters', () => {
             and "group_memberships"."user_id" = '${myId}'
           )
           or ((
-            "communities_posts"."community_id" in ${selectMyCommunityIds}
-            or "communities_posts"."community_id" in ${selectMyNetworkCommunityIds}
+            "communities_posts"."community_id" in ${myCommunityIdsSqlFragment(myId)}
+            or "communities_posts"."community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
           ))
         )`)
     })
