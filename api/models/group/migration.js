@@ -1,10 +1,7 @@
-/* globals LastReadDeprecated, FollowDeprecated */
 /* eslint-disable camelcase */
 
 import { compact, isNil } from 'lodash'
-import { getDataTypeForModel } from '../api/models/group/DataType'
-
-const reset = async () => bookshelf.knex.raw('truncate table groups, group_connections, group_memberships')
+import { getDataTypeForModel } from './DataType'
 
 export async function makeGroups (model) {
   const group_data_type = getDataTypeForModel(model)
@@ -104,7 +101,10 @@ async function makeGroupConnections ({ model, filter, childModel, childFk, paren
   return rowsToInsert.length
 }
 
-async function seed () {
+// This is not meant to be run. It's just here as an example of how to convert
+// different relations. The actual conversion process should take place in
+// knex migration files (see e.g. the post-group-memberships migration).
+async function seed () { // eslint-disable-line no-unused-vars
   /*
   TODO
 
@@ -117,27 +117,12 @@ async function seed () {
   console.log('Network:', await makeGroups(Network))
   console.log('Community:', await makeGroups(Community))
   console.log('Topic:', await makeGroups(Tag))
-  console.log('Post:', await makeGroups(Post))
   console.log('Comment:', await makeGroups(Comment))
-
-  console.log('Follow:', await makeGroupMemberships({
-    model: FollowDeprecated,
-    parent: 'post',
-    settings: {following: true},
-    copyColumns: {added_at: 'created_at'}
-  }))
 
   console.log('Membership:', await makeGroupMemberships({
     model: Membership,
     parent: 'community',
     copyColumns: ['role', 'active', 'created_at']
-  }))
-
-  console.log('LastRead:', await updateGroupMemberships({
-    model: LastReadDeprecated,
-    parent: 'post',
-    getSettings: row => ({lastReadAt: row.last_read_at}),
-    selectColumns: ['last_read_at']
   }))
 
   console.log('PostMembership:', await makeGroupConnectionsM2M({
@@ -164,20 +149,11 @@ async function seed () {
   }))
 }
 
-export default async function () {
-  await reset()
-  await seed()
-}
-
-async function pluckOneId (query) {
-  return query.pluck('id').then(r => r[0])
-}
-
 async function getGroupId (model, dataId) {
-  return pluckOneId(Group.query().where({
+  return Group.query().where({
     group_data_type: getDataTypeForModel(model),
     group_data_id: dataId
-  }))
+  }).pluck('id').then(r => r[0])
 }
 
 function getRelatedData (model, relationName) {

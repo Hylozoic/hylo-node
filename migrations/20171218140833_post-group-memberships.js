@@ -3,7 +3,7 @@ require('babel-register')
 const models = require('../api/models')
 const {
   makeGroups, makeGroupMemberships, updateGroupMemberships
-} = require('../lib/groups-spike')
+} = require('../api/models/group/migration')
 
 exports.up = async function (knex, Promise) {
   models.init()
