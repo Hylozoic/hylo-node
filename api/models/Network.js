@@ -36,22 +36,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  memberCount: function () {
-    const subq = Community.query(q => {
-      q.select('id')
-      q.where('network_id', this.id)
-    }).query()
-    return GroupMembership.query(q => {
-      q.select(bookshelf.knex.raw('count(distinct user_id) as total'))
-      q.join('groups', 'groups.id', 'group_memberships.group_id')
-      q.where('groups.group_data_id', 'in', subq)
-      q.where({
-        'groups.group_data_type': Group.DataType.COMMUNITY,
-        'group_memberships.active': true,
-        'groups.active': true
-      })
-    }).fetch()
-    .then(ms => ms.length === 0 ? 0 : ms.get('total'))
+  async memberCount () {
+    const communityIds = await Community.where('network_id', this.id)
+    .query().pluck('id')
+
+    return GroupMembership.forIds(null, communityIds, Community).query()
+    .select(bookshelf.knex.raw('count(distinct user_id) as total'))
+    .then(rows => Number(rows[0].total))
   },
 
   posts: function () {

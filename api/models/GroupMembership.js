@@ -2,7 +2,6 @@ import HasSettings from './mixins/HasSettings'
 import { isEmpty } from 'lodash'
 import { isFollowing, queryForMember } from './group/queryUtils'
 import {
-  getDataTypeForInstance,
   getDataTypeForModel,
   getModelForDataType
 } from './group/DataType'
@@ -79,6 +78,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     if (!userId) {
       throw new Error("Can't call forPair without a user or user id")
     }
+    if (!instance) {
+      throw new Error("Can't call forPair without an instance")
+    }
 
     return this.forIds(userId, instance.id, instance.constructor, opts)
   },
@@ -90,11 +92,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
-      q.where({
-        group_data_id: instanceId,
-        'groups.group_data_type': type,
-        'group_memberships.user_id': userId
-      })
+      q.where('groups.group_data_type', type)
+
+      // note that if userId or instanceId is null, the clause for it is
+      // omitted. this is occasionally useful, e.g. for Network.memberCount()
+
+      if (Array.isArray(instanceId)) {
+        q.whereIn('group_data_id', instanceId)
+      } else if (instanceId) {
+        q.where('group_data_id', instanceId)
+      }
+
+      if (Array.isArray(userId)) {
+        q.whereIn('group_memberships.user_id', userId)
+      } else if (userId) {
+        q.where('group_memberships.user_id', userId)
+      }
+
       if (!opts.includeInactive) {
         q.where('group_memberships.active', true)
       }
