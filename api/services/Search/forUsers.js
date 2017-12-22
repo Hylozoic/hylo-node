@@ -22,6 +22,9 @@ export default function (opts) {
 
     countTotal(qb, 'users', opts.totalColumnName)
 
+    // TODO perhaps the group-related code below can be refactored into
+    // a more general-purpose form?
+
     if (communities) {
       qb.join('group_memberships', 'group_memberships.user_id', 'users.id')
       qb.join('groups', 'groups.id', 'group_memberships.group_id')

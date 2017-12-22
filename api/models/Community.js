@@ -188,7 +188,9 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   reconcileNumMembers: async function () {
-    const count = await this.users().count()
+    // FIXME this is not ideal, but the simple `.count()` methods don't work
+    // here because of the where clauses on join tables in `.users()`
+    const count = await this.users().fetch().then(x => x.length)
     return this.save({num_members: count}, {patch: true})
   }
 

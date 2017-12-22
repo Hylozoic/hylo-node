@@ -47,4 +47,21 @@ describe('Community', () => {
       expect(Community.isSlugValid('abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdx')).to.be.false
     })
   })
+
+  describe('.reconcileNumMembers', () => {
+    let community
+
+    before(async () => {
+      community = await factories.community().save()
+      await community.addGroupMembers([
+        await factories.user().save(),
+        await factories.user({active: false}).save()
+      ])
+    })
+
+    it('sets num_members correctly', async () => {
+      await community.reconcileNumMembers()
+      expect(community.get('num_members')).to.equal(1)
+    })
+  })
 })
