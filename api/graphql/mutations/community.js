@@ -62,7 +62,4 @@ export async function regenerateAccessCode (userId, communityId) {
 
 export function createCommunity (userId, data) {
   return Community.create(userId, data)
-  .then(({ community, membership }) => {
-    return membership
-  })
 }

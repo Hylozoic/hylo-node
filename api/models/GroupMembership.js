@@ -1,5 +1,5 @@
 import HasSettings from './mixins/HasSettings'
-import { isEmpty } from 'lodash'
+import { castArray, isEmpty } from 'lodash'
 import { isFollowing, queryForMember } from './group/queryUtils'
 import {
   getDataTypeForModel,
@@ -85,33 +85,45 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.forIds(userId, instance.id, instance.constructor, opts)
   },
 
-  forIds (userId, instanceId, typeOrModel, opts = {}) {
+  // `usersOrIds` can be a single user or id, a list of either, or null
+  forIds (usersOrIds, instanceId, typeOrModel, opts = {}) {
+    const userIds = usersOrIds
+      ? castArray(usersOrIds).map(x => x instanceof User ? x.id : x)
+      : null
     const type = typeof typeOrModel === 'number'
       ? typeOrModel
       : getDataTypeForModel(typeOrModel)
 
-    return this.query(q => {
-      q.join('groups', 'groups.id', 'group_memberships.group_id')
-      q.where('groups.group_data_type', type)
+    const queryRoot = opts.multiple ? this.collection() : this
+
+    return queryRoot.query(q => {
+      q.where('group_memberships.group_data_type', type)
 
       // note that if userId or instanceId is null, the clause for it is
       // omitted. this is occasionally useful, e.g. for Network.memberCount()
 
-      if (Array.isArray(instanceId)) {
-        q.whereIn('group_data_id', instanceId)
-      } else if (instanceId) {
-        q.where('group_data_id', instanceId)
+      if (instanceId) {
+        q.join('groups', 'groups.id', 'group_memberships.group_id')
+        if (Array.isArray(instanceId)) {
+          q.whereIn('group_data_id', instanceId)
+        } else {
+          q.where('group_data_id', instanceId)
+        }
       }
 
-      if (Array.isArray(userId)) {
-        q.whereIn('group_memberships.user_id', userId)
-      } else if (userId) {
-        q.where('group_memberships.user_id', userId)
+      if (userIds) {
+        if (userIds.length === 1) {
+          q.where('group_memberships.user_id', userIds[0])
+        } else {
+          q.whereIn('group_memberships.user_id', userIds)
+        }
       }
 
       if (!opts.includeInactive) {
         q.where('group_memberships.active', true)
       }
+
+      if (opts.query) opts.query(q)
     })
   },
 
@@ -129,6 +141,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   forMember (userOrId, model) {
-    return this.collection().query(q => queryForMember(q, userOrId, model))
+    return this.forIds(userOrId, null, model, {multiple: true})
   }
 })

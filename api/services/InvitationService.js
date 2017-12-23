@@ -8,7 +8,7 @@ module.exports = {
     .then(invitation => {
       if (!invitation) throw new Error('Invitation not found')
       const { community } = invitation.relations
-      return Membership.hasModeratorRole(userId, community.id)
+      return GroupMembership.hasModeratorRole(userId, community)
     })
   },
 

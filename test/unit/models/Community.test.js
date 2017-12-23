@@ -1,7 +1,7 @@
+/* eslint-disable no-unused-expressions */
 const root = require('root-path')
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
-import { times } from 'lodash'
 
 describe('Community', () => {
   it('can be created', function () {

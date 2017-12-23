@@ -105,25 +105,15 @@ module.exports = bookshelf.Model.extend({
     return this.where({group_data_type: type, group_data_id: id})
   },
 
-  forMember (userOrId, typeOrModel, where) {
-    const type = typeof typeOrModel === 'number'
-      ? typeOrModel
-      : getDataTypeForModel(typeOrModel)
-
-    return this.query(q => {
-      q.join('group_memberships', 'groups.id', 'group_memberships.group_id')
-      q.where({
-        'groups.group_data_type': type,
-        'group_memberships.active': true,
-        'groups.active': true
-      })
-      whereUserId(q, userOrId)
-      if (where) q.where(where)
-    })
-  },
-
-  pluckIdsForMember (userOrId, typeOrModel) {
-    return this.forMember(userOrId, typeOrModel).query().pluck('group_data_id')
+  pluckIdsForMember (userOrId, typeOrModel, where) {
+    return GroupMembership.forIds(userOrId, null, typeOrModel, {
+      query: q => {
+        if (where) q.where(where)
+        q.join('groups', 'groups.id', 'group_memberships.group_id')
+        q.where('groups.active', true)
+      },
+      multiple: true
+    }).query().pluck('group_data_id')
   },
 
   havingExactMembers (userIds, typeOrModel) {

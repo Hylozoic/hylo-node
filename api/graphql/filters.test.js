@@ -28,8 +28,8 @@ describe('model filters', () => {
       where "group_memberships"."active" = true
       and "group_memberships"."group_id" in (
         select "group_id" from "group_memberships"
-        where "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
-        and "group_memberships"."group_data_type" = ${Group.DataType.COMMUNITY}
+        where "group_memberships"."group_data_type" = ${Group.DataType.COMMUNITY}
+        and "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
         and "group_memberships"."active" = true
       )`
 
@@ -75,13 +75,14 @@ describe('model filters', () => {
         where "comments"."active" = true
         and (
           "comments"."post_id" in (
-            select "group_data_id" from "groups"
-            inner join "group_memberships"
+            select "group_data_id" from "group_memberships"
+            inner join "groups"
               on "groups"."id" = "group_memberships"."group_id"
-            where "groups"."group_data_type" = 0
-            and "group_memberships"."active" = true
-            and "groups"."active" = true
+            where "group_memberships"."group_data_type" = 0
             and "group_memberships"."user_id" = '${myId}'
+            and "group_memberships"."active" = true
+            and ((group_memberships.settings->>'following')::boolean = true)
+            and "groups"."active" = true
           )
           or ((
             "communities_posts"."community_id" in ${myCommunityIdsSqlFragment(myId)}
