@@ -1,6 +1,11 @@
 import HasSettings from './mixins/HasSettings'
-import { castArray, isEmpty } from 'lodash'
-import { isFollowing, queryForMember } from './group/queryUtils'
+import { isEmpty } from 'lodash'
+import {
+  isFollowing,
+  queryForMember,
+  whereGroupDataId,
+  whereUserId
+} from './group/queryUtils'
 import {
   getDataTypeForModel,
   getModelForDataType
@@ -87,9 +92,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   // `usersOrIds` can be a single user or id, a list of either, or null
   forIds (usersOrIds, instanceId, typeOrModel, opts = {}) {
-    const userIds = usersOrIds
-      ? castArray(usersOrIds).map(x => x instanceof User ? x.id : x)
-      : null
     const type = typeof typeOrModel === 'number'
       ? typeOrModel
       : getDataTypeForModel(typeOrModel)
@@ -98,31 +100,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     return queryRoot.query(q => {
       q.where('group_memberships.group_data_type', type)
-
-      // note that if userId or instanceId is null, the clause for it is
-      // omitted. this is occasionally useful, e.g. for Network.memberCount()
-
       if (instanceId) {
         q.join('groups', 'groups.id', 'group_memberships.group_id')
-        if (Array.isArray(instanceId)) {
-          q.whereIn('group_data_id', instanceId)
-        } else {
-          q.where('group_data_id', instanceId)
-        }
       }
-
-      if (userIds) {
-        if (userIds.length === 1) {
-          q.where('group_memberships.user_id', userIds[0])
-        } else {
-          q.whereIn('group_memberships.user_id', userIds)
-        }
-      }
-
-      if (!opts.includeInactive) {
-        q.where('group_memberships.active', true)
-      }
-
+      whereGroupDataId(q, instanceId)
+      whereUserId(q, usersOrIds)
+      if (!opts.includeInactive) q.where('group_memberships.active', true)
       if (opts.query) opts.query(q)
     })
   },

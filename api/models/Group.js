@@ -2,7 +2,6 @@ import { difference, intersection, sortBy } from 'lodash'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
-import { whereUserId } from './group/queryUtils'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'groups',

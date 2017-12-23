@@ -1,16 +1,27 @@
 import { getDataTypeForModel } from './DataType'
+import { castArray, has } from 'lodash'
 
 export function isFollowing (q) {
   q.whereRaw("(group_memberships.settings->>'following')::boolean = true")
 }
 
-// handle a single value or a list of user instances or ids
-export function whereUserId (q, userOrId) {
-  if (Array.isArray(userOrId)) {
-    const userIds = userOrId.map(x => x instanceof User ? x.id : x)
-    q.where('group_memberships.user_id', 'in', userIds)
+export function whereUserId (q, usersOrIds) {
+  return whereId(q, usersOrIds, 'group_memberships.user_id')
+}
+
+export function whereGroupDataId (q, instanceIds) {
+  return whereId(q, instanceIds, 'group_data_id')
+}
+
+// handle a single value or a list of instances or ids; do nothing if no ids or
+// instances are passed
+function whereId (q, instancesOrIds, columnName) {
+  if (!instancesOrIds) return
+  const ids = castArray(instancesOrIds).map(x => has(x, 'id') ? x.id : x)
+  if (ids.length > 1) {
+    q.whereIn(columnName, ids)
   } else {
-    q.where('group_memberships.user_id', userOrId instanceof User ? userOrId.id : userOrId)
+    q.where(columnName, ids[0])
   }
 }
 
