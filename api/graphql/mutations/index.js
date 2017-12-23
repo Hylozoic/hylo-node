@@ -37,6 +37,7 @@ export {
   deletePost,
   pinPost
 } from './post'
+export { updateMembership } from './membership'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
@@ -55,23 +56,6 @@ export function findOrCreateThread (userId, data) {
 
 export function findOrCreateLinkPreviewByUrl (data) {
   return underlyingFindLinkPreview(data.url)
-}
-
-export async function updateMembership (userId, { communityId, data }) {
-  const settings = convertGraphqlData(data.settings)
-  const whitelist = mapKeys(pick(data, [
-    'newPostCount'
-  ]), (v, k) => snakeCase(k))
-  if (data.lastViewedAt) settings.lastReadAt = data.lastViewedAt // legacy
-  if (data.lastReadAt) settings.lastReadAt = data.lastReadAt
-  if (isEmpty(settings) && isEmpty(whitelist)) return Promise.resolve(null)
-
-  const membership = await GroupMembership.forIds(userId, communityId, Community).fetch()
-  if (!membership) throw new Error("Couldn't find membership for community with id", communityId)
-  if (!isEmpty(settings)) membership.addSetting(settings)
-  if (!isEmpty(whitelist)) membership.set(whitelist)
-  if (membership.changed) await membership.save()
-  return membership
 }
 
 export function updateCommunityTopic (userId, { id, data }) {
