@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import { createRequestHandler, makeMutations, makeQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
@@ -622,10 +623,13 @@ describe('makeMutations', () => {
 })
 
 describe('makeQueries', () => {
-  let queries
+  let queries, user
 
-  before(() => {
-    queries = makeQueries('10', spy(() => Promise.resolve({})), spy(() => Promise.resolve([])))
+  before(async () => {
+    user = await factories.user().save()
+    const fetchOne = spy(() => Promise.resolve({}))
+    const fetchMany = spy(() => Promise.resolve([]))
+    queries = makeQueries(user.id, fetchOne, fetchMany)
   })
 
   describe('communityExists', () => {
@@ -655,7 +659,7 @@ describe('makeQueries', () => {
     it('resets new notification count if requested', () => {
       return queries.notifications(null, {resetCount: true})
       .then(() => {
-        expect(User.resetNewNotificationCount).to.have.been.called.with('10')
+        expect(User.resetNewNotificationCount).to.have.been.called.with(user.id)
       })
     })
 
@@ -664,6 +668,26 @@ describe('makeQueries', () => {
       .then(() => {
         expect(User.resetNewNotificationCount).not.to.have.been.called()
       })
+    })
+  })
+
+  describe('community', () => {
+    let community
+
+    beforeEach(async () => {
+      community = await factories.community().save()
+      await community.addGroupMembers([user])
+    })
+
+    it('updates last viewed time', async () => {
+      await queries.community(null, {
+        id: community.id,
+        updateLastViewed: true
+      })
+
+      const membership = await GroupMembership.forPair(user, community).fetch()
+      expect(new Date(membership.getSetting('lastReadAt')).getTime())
+      .to.be.closeTo(new Date().getTime(), 2000)
     })
   })
 })

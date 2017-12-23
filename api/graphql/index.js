@@ -87,12 +87,17 @@ export function makeQueries (userId, fetchOne, fetchMany) {
     me: () => fetchOne('Me', userId),
     community: async (root, { id, slug, updateLastViewed }) => {
       // you can specify id or slug, but not both
-      const community = await fetchOne('Community', slug || id, slug ? 'slug' : 'id')
-      if (community && updateLastViewed) {
-        const membership = await GroupMembership.forPair(userId, community)
-        await membership.addSetting({lastReadAt: new Date()}, true)
+      const response = await fetchOne('Community', slug || id, slug ? 'slug' : 'id')
+      if (updateLastViewed) {
+        const community = await Community.find(id || slug)
+        if (community) {
+          const membership = await GroupMembership.forPair(userId, community).fetch()
+          if (membership) {
+            await membership.addSetting({lastReadAt: new Date()}, true)
+          }
+        }
       }
-      return community
+      return response
     },
     communityExists: (root, { slug }) => {
       if (Community.isSlugValid(slug)) {

@@ -1,8 +1,15 @@
 /* eslint-disable no-unused-expressions */
 import factories from '../../../test/setup/factories'
-import { createCommunity, updateCommunity } from './community'
+import {
+  createCommunity,
+  updateCommunity,
+  addModerator,
+  removeModerator,
+  removeMember,
+  regenerateAccessCode
+ } from './community'
 
-describe('updateCommunity', () => {
+describe('moderation', () => {
   var user, community
 
   before(function () {
@@ -12,18 +19,65 @@ describe('updateCommunity', () => {
     .then(() => user.joinCommunity(community, GroupMembership.Role.MODERATOR))
   })
 
-  it('rejects if name is blank', () => {
-    const data = {name: '   '}
-    return updateCommunity(user.id, community.id, data)
-    .then(() => expect.fail('should reject'))
-    .catch(e => expect(e.message).to.match(/Name cannot be blank/))
+  describe('updateCommunity', () => {
+    it('rejects if name is blank', () => {
+      const data = {name: '   '}
+      return updateCommunity(user.id, community.id, data)
+      .then(() => expect.fail('should reject'))
+      .catch(e => expect(e.message).to.match(/Name cannot be blank/))
+    })
+
+    it('rejects if user is not a moderator', () => {
+      const data = {name: '   '}
+      return updateCommunity('777', community.id, data)
+      .then(() => expect.fail('should reject'))
+      .catch(e => expect(e.message).to.match(/don't have permission/))
+    })
   })
 
-  it('rejects if user is not a moderator', () => {
-    const data = {name: '   '}
-    return updateCommunity('777', community.id, data)
-    .then(() => expect.fail('should reject'))
-    .catch(e => expect(e.message).to.match(/don't have permission/))
+  describe('addModerator', () => {
+    it('works for a non-member', async () => {
+      const user2 = await factories.user().save()
+      await addModerator(user.id, user2.id, community.id)
+      expect(await GroupMembership.hasModeratorRole(user2, community))
+    })
+
+    it('works for an existing member', async () => {
+      const user2 = await factories.user().save()
+      await user2.joinCommunity(community)
+      await addModerator(user.id, user2.id, community.id)
+      expect(await GroupMembership.hasModeratorRole(user2, community))
+    })
+  })
+
+  describe('removeModerator', () => {
+    it('works', async () => {
+      const user2 = await factories.user().save()
+      await user2.joinCommunity(community, GroupMembership.Role.MODERATOR)
+      await removeModerator(user.id, user2.id, community.id)
+      expect(!await GroupMembership.hasModeratorRole(user2, community))
+    })
+  })
+
+  describe('removeMember', () => {
+    it('works', async () => {
+      const user2 = await factories.user().save()
+      await user2.joinCommunity(community, GroupMembership.Role.MODERATOR)
+      await removeMember(user.id, user2.id, community.id)
+
+      const membership = await GroupMembership.forPair(user2, community,
+        {includeInactive: true}).fetch()
+      expect(membership.get('active')).to.be.false
+    })
+  })
+
+  describe('regenerateAccessCode', () => {
+    it('works', async () => {
+      const code = community.get('beta_access_code')
+      await regenerateAccessCode(user.id, community.id)
+      await community.refresh()
+      expect(community.get('beta_access_code')).not.to.equal(code)
+    })
   })
 })
 
