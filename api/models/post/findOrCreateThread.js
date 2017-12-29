@@ -1,18 +1,18 @@
-/* globals LastRead */
-import { flattenDeep, pick } from 'lodash'
+import { pick } from 'lodash'
 import { map, uniq } from 'lodash/fp'
+import { isFollowing } from '../group/queryUtils'
 
-export const findThread = (userId, participantIds) =>
-  Post.query(q => {
-    q.where('posts.type', Post.Type.THREAD)
-    q.where('posts.id', 'in', Follow.query().where('user_id', userId).select('post_id'))
-    participantIds.forEach(id => q.where('posts.id', 'in', Follow.query().where('user_id', id).select('post_id')))
-    q.where('posts.id', 'not in', Follow.query().where('user_id', 'not in', [userId].concat(participantIds)).select('post_id'))
-    q.groupBy('posts.id')
-  }).fetch()
+export const findThread = userIds => {
+  const subquery = Group.havingExactMembers(userIds).query(q => {
+    q.where('group_data_type', Group.DataType.POST)
+    isFollowing(q)
+  }).query().select('group_data_id')
+
+  return Post.where({id: subquery, type: Post.Type.THREAD}).fetch()
+}
 
 export default function findOrCreateThread (userId, participantIds) {
-  return findThread(userId, uniq(participantIds))
+  return findThread(uniq([userId].concat(participantIds)))
   .then(post => post || createThread(userId, uniq(participantIds)))
 }
 
@@ -54,8 +54,5 @@ function afterSavingThread (thread, opts) {
   const participantIds = uniq([userId].concat(opts.participantIds))
   const trxOpts = pick(opts, 'transacting')
 
-  return Promise.all(flattenDeep([
-    map(id => LastRead.findOrCreate(id, thread.id, trxOpts), participantIds),
-    thread.addFollowers(participantIds, userId, trxOpts)
-  ]))
+  return thread.addFollowers(participantIds, trxOpts)
 }

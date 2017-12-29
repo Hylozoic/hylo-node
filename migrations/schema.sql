@@ -471,6 +471,111 @@ CREATE TABLE follows (
 
 
 --
+-- Name: group_connections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE group_connections (
+    id bigint NOT NULL,
+    parent_group_id bigint NOT NULL,
+    parent_group_data_type integer NOT NULL,
+    child_group_id bigint NOT NULL,
+    child_group_data_type integer NOT NULL,
+    active boolean DEFAULT true,
+    role integer,
+    settings jsonb,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: group_connections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE group_connections_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_connections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE group_connections_id_seq OWNED BY group_connections.id;
+
+
+--
+-- Name: group_memberships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE group_memberships (
+    id bigint NOT NULL,
+    group_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    active boolean DEFAULT true,
+    role integer,
+    settings jsonb,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: group_memberships_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE group_memberships_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_memberships_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE group_memberships_id_seq OWNED BY group_memberships.id;
+
+
+--
+-- Name: groups; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE groups (
+    id bigint NOT NULL,
+    group_data_type integer NOT NULL,
+    group_data_id bigint,
+    active boolean DEFAULT true,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: groups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE groups_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE groups_id_seq OWNED BY groups.id;
+
+
+--
 -- Name: invite_request_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1436,6 +1541,27 @@ ALTER TABLE ONLY flagged_items ALTER COLUMN id SET DEFAULT nextval('flagged_item
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY group_connections ALTER COLUMN id SET DEFAULT nextval('group_connections_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships ALTER COLUMN id SET DEFAULT nextval('group_memberships_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY groups ALTER COLUMN id SET DEFAULT nextval('groups_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY join_requests ALTER COLUMN id SET DEFAULT nextval('join_requests_id_seq'::regclass);
 
 
@@ -1662,6 +1788,54 @@ ALTER TABLE ONLY tag_follows
 
 ALTER TABLE ONLY tag_follows
     ADD CONSTRAINT followed_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_connections_parent_group_id_child_group_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_parent_group_id_child_group_id_unique UNIQUE (parent_group_id, child_group_id);
+
+
+--
+-- Name: group_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_memberships_group_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_group_id_user_id_unique UNIQUE (group_id, user_id);
+
+
+--
+-- Name: group_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: groups_group_data_id_group_data_type_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY groups
+    ADD CONSTRAINT groups_group_data_id_group_data_type_unique UNIQUE (group_data_id, group_data_type);
+
+
+--
+-- Name: groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY groups
+    ADD CONSTRAINT groups_pkey PRIMARY KEY (id);
 
 
 --
@@ -2636,6 +2810,38 @@ ALTER TABLE ONLY follows
 
 
 --
+-- Name: group_connections_child_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_child_group_id_foreign FOREIGN KEY (child_group_id) REFERENCES groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_connections_parent_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_parent_group_id_foreign FOREIGN KEY (parent_group_id) REFERENCES groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_memberships_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_group_id_foreign FOREIGN KEY (group_id) REFERENCES groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_memberships_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+
+
+--
 -- Name: join_requests_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2838,3 +3044,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+
