@@ -195,7 +195,7 @@ module.exports = {
     const nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
     try {
       const user = await User.find(req.param('u'))
-      if (!user) return res.status(422).send('No user id')
+      if (!user) return res.status(422).send('Link expired')
       const match = await user.checkToken(req.param('t'))
       if (match) {
         UserSession.login(req, user, 'password')
@@ -207,7 +207,7 @@ module.exports = {
         // if a specific URL other than the default was the entry point
         return shouldRedirect && req.param('n')
           ? res.redirect(nextUrl)
-          : res.status(422).send("Token doesn't match")
+          : res.status(422).send('Link expired')
       }
     } catch (e) {
       return res.serverError
