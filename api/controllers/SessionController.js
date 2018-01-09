@@ -188,29 +188,29 @@ module.exports = {
     res.ok({})
   },
 
-  createWithToken: function (req, res) {
-    var nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
-
-    return User.find(req.param('u')).then(function (user) {
+  createWithToken: async function (req, res) {
+    const nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
+    const shouldRedirect = req.method === 'GET'
+    try {
+      const user = await User.find(req.param('u'))
       if (!user) return res.status(422).send('No user id')
-
-      return Promise.join(user, user.checkToken(req.param('t')))
-    })
-    .spread((user, match) => {
+      const match = await user.checkToken(req.param('t'))
       if (match) {
         UserSession.login(req, user, 'password')
-        return res.redirect(nextUrl)
-      }
-
-      if (req.param('n')) {
-        // still redirect, to give the user a chance to log in manually
-        res.redirect(nextUrl)
+        return shouldRedirect
+          ? res.redirect(nextUrl)
+          : res.ok({success: true})
       } else {
-        res.status(422).send("Token doesn't match")
+        // still redirect, to give the user a chance to log in manually
+        return shouldRedirect
+          ? res.redirect(nextUrl)
+          : res.status(422).send("Token doesn't match")
       }
-    })
-    .catch(res.serverError)
+    } catch (e) {
+      return res.serverError
+    }
   },
+
   // these are here for testing
   findUser,
   upsertLinkedAccount
