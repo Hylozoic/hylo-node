@@ -127,7 +127,7 @@ describe('SessionController', function () {
       .then(t => token = t)
     })
 
-    it('logs a user in and redirects', () => {
+    it('logs a user in and redirects (Web/GET request)', () => {
       _.extend(req.params, {u: user.id, t: token})
       req.method = 'GET'
 
@@ -138,6 +138,20 @@ describe('SessionController', function () {
         expect(res.redirected).to.equal(Frontend.Route.userSettings() + '?expand=password')
       })
     })
+
+    it('logs a user in and redirects (API/POST request)', () => {
+      _.extend(req.params, {u: user.id, t: token})
+      req.method = 'POST'
+
+      res = factories.mock.response()
+      return SessionController.createWithToken(req, res)
+      .then(() => {
+        expect(UserSession.login).to.have.been.called()
+        expect(res.redirect).not.to.have.been.called()
+        expect(res.ok).to.have.been.called()
+      })
+    })
+
 
     it('rejects an invalid token', () => {
       var error
