@@ -129,6 +129,7 @@ describe('SessionController', function () {
 
     it('logs a user in and redirects', () => {
       _.extend(req.params, {u: user.id, t: token})
+      req.method = 'GET'
 
       return SessionController.createWithToken(req, res)
       .then(() => {

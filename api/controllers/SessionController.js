@@ -189,8 +189,10 @@ module.exports = {
   },
 
   createWithToken: async function (req, res) {
-    const nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
+    // Web links will go directly to the server and redirects from here,
+    // Native does a POST as an API call and this should not redirect
     const shouldRedirect = req.method === 'GET'
+    const nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
     try {
       const user = await User.find(req.param('u'))
       if (!user) return res.status(422).send('No user id')
@@ -202,7 +204,8 @@ module.exports = {
           : res.ok({success: true})
       } else {
         // still redirect, to give the user a chance to log in manually
-        return shouldRedirect
+        // if a specific URL other than the default was the entry point
+        return shouldRedirect && req.param('n')
           ? res.redirect(nextUrl)
           : res.status(422).send("Token doesn't match")
       }
