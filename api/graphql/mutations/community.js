@@ -67,8 +67,14 @@ export function regenerateAccessCode (userId, communityId) {
   })
 }
 
-export function createCommunity (userId, data) {
-  return Community.create(userId, data)
+export async function createCommunity (userId, data) {
+  if (data.networkId) {
+    const canModerate = await NetworkMembership.hasModeratorRole(userId, data.networkId)
+    if (!canModerate) {
+      throw new Error("You don't have permission to add a community to this network")
+    }
+  }
+  return Community.create(userId, convertGraphqlData(data))
   .then(({ community, membership }) => {
     return membership
   })

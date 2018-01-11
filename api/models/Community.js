@@ -293,7 +293,7 @@ module.exports = bookshelf.Model.extend(merge({
   create: function (userId, data) {
     var attrs = pick(data,
       'name', 'description', 'slug', 'category',
-      'beta_access_code', 'banner_url', 'avatar_url', 'location')
+      'beta_access_code', 'banner_url', 'avatar_url', 'location', 'network_id')
 
     var promise = attrs.beta_access_code
       ? Promise.resolve(attrs.beta_access_code)
