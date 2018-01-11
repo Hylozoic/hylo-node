@@ -152,7 +152,6 @@ describe('SessionController', function () {
       })
     })
 
-
     it('rejects an invalid token', () => {
       var error
       _.extend(req.params, {u: user.id, t: token + 'x'})
@@ -161,7 +160,7 @@ describe('SessionController', function () {
       return SessionController.createWithToken(req, res)
       .then(() => {
         expect(res.send).to.have.been.called()
-        expect(error).to.equal("Token doesn't match")
+        expect(error).to.equal('Link expired')
       })
     })
   })
