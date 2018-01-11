@@ -1,5 +1,5 @@
 import factories from '../../../test/setup/factories'
-import { updateCommunity } from './community'
+import { updateCommunity, createCommunity } from './community'
 
 describe('updateCommunity', () => {
   var user, community
@@ -23,5 +23,34 @@ describe('updateCommunity', () => {
     return updateCommunity('777', community.id, data)
     .then(() => expect.fail('should reject'))
     .catch(e => expect(e.message).to.match(/don't have permission/))
+  })
+})
+
+describe('createCommunity', () => {
+  var user, network
+
+  before(function () {
+    user = factories.user()
+    network = factories.network()
+    const starterCommunity = factories.community({slug: 'starter-posts'})
+    return Promise.join(network.save(), user.save(), starterCommunity.save())
+    .then(() => NetworkMembership.addModerator(user.id, network.id))
+  })
+
+  it("rejects if can't moderate network", () => {
+    const data = {name: 'goose', slug: 'goose', networkId: network.id + 1}
+    return createCommunity(user.id, data)
+    .then(() => expect.fail('should reject'))
+    .catch(e => expect(e.message).to.match(/don't have permission/))
+  })
+
+  it('creates community in network if user can moderate', () => {
+    const data = {name: 'goose', slug: 'goose', networkId: network.id}
+    return createCommunity(user.id, data)
+    .then(membership => Community.find(membership.get('community_id')))
+    .then(community => {
+      expect(community).to.exist
+      expect(Number(community.get('network_id'))).to.equal(network.id)
+    })
   })
 })
