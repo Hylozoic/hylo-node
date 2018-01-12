@@ -278,7 +278,7 @@ module.exports = bookshelf.Model.extend(merge({
   async create (userId, data) {
     var attrs = pick(data,
       'name', 'description', 'slug', 'category',
-      'beta_access_code', 'banner_url', 'avatar_url', 'location')
+      'beta_access_code', 'banner_url', 'avatar_url', 'location', 'network_id')
 
     // eslint-disable-next-line camelcase
     const beta_access_code = attrs.beta_access_code ||

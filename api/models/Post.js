@@ -184,7 +184,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   async lastReadAtForUser (userId) {
     const user = await this.groupMembersWithPivots()
     .query(q => q.where('users.id', userId)).fetchOne()
-    return new Date(user ? user.pivot.getSetting('lastReadAt') : 0)
+    return new Date((user && user.pivot.getSetting('lastReadAt')) || 0)
   },
 
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {

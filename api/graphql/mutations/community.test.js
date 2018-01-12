@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-expressions */
 import factories from '../../../test/setup/factories'
+
 import {
   createCommunity,
   updateCommunity,
@@ -82,13 +83,15 @@ describe('moderation', () => {
 })
 
 describe('createCommunity', () => {
-  let user, starterCommunity, starterPost
+  let user, starterCommunity, starterPost, network
 
   before(async () => {
     user = await factories.user().save()
+    network = await factories.network().save()
     starterCommunity = await factories.community({slug: 'starter-posts'}).save()
     starterPost = await factories.post().save()
     await starterCommunity.posts().attach(starterPost.id)
+    await NetworkMembership.addModerator(user.id, network.id)
   })
 
   it('returns the new moderator membership', async () => {
@@ -106,5 +109,24 @@ describe('createCommunity', () => {
     const post = await community.posts().fetchOne()
     expect(post).to.exist
     expect(post.get('name')).to.equal(starterPost.get('name'))
+  })
+
+  it("rejects if can't moderate network", () => {
+    const data = {name: 'goose', slug: 'goose', networkId: network.id + 1}
+    return createCommunity(user.id, data)
+    .then(() => expect.fail('should reject'))
+    .catch(e => expect(e.message).to.match(/don't have permission/))
+  })
+
+  it('creates community in network if user can moderate', () => {
+    const data = {name: 'goose', slug: 'goose', networkId: network.id}
+    return createCommunity(user.id, data)
+    .then(membership => {
+      return membership.groupData().fetch()
+    })
+    .then(community => {
+      expect(community).to.exist
+      expect(Number(community.get('network_id'))).to.equal(network.id)
+    })
   })
 })

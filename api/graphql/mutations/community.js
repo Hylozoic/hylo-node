@@ -33,8 +33,14 @@ export async function regenerateAccessCode (userId, communityId) {
   return community.save({beta_access_code: code}, {patch: true}) // eslint-disable-line camelcase
 }
 
-export function createCommunity (userId, data) {
-  return Community.create(userId, data)
+export async function createCommunity (userId, data) {
+  if (data.networkId) {
+    const canModerate = await NetworkMembership.hasModeratorRole(userId, data.networkId)
+    if (!canModerate) {
+      throw new Error("You don't have permission to add a community to this network")
+    }
+  }
+  return Community.create(userId, convertGraphqlData(data))
 }
 
 async function getModeratedCommunity (userId, communityId) {
@@ -49,4 +55,5 @@ async function getModeratedCommunity (userId, communityId) {
   }
 
   return community
+
 }

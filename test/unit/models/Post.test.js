@@ -7,7 +7,7 @@ describe('Post', function () {
   describe('#addFollowers', function () {
     var u1, u2, post
 
-    before(async () => {
+    beforeEach(async () => {
       await setup.clearDb()
       u1 = await factories.user().save()
       u2 = await factories.user().save()
@@ -26,6 +26,14 @@ describe('Post', function () {
 
       followers = await post.followers().fetch()
       expect(followers.length).to.equal(2)
+    })
+
+    it('queries for lastReadAt correctly', async () => {
+      await post.addFollowers([u1.id])
+
+      expect((await post.lastReadAtForUser(u1.id)).getTime()).to.be.closeTo(new Date(0).getTime(), 2000)
+      await post.markAsRead(u1.id)
+      expect((await post.lastReadAtForUser(u1.id)).getTime()).to.be.closeTo(new Date().getTime(), 2000)
     })
   })
 
