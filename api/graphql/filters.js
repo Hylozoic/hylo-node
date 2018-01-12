@@ -8,13 +8,7 @@ export function makeFilterToggle (enabled) {
 }
 
 function sharesMembership (userId, q) {
-  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community, {
-    query: q => {
-      q.join('groups', 'groups.id', 'group_memberships.group_id')
-      q.join('communities', 'communities.id', 'groups.group_data_id')
-      q.where('communities.active', true)
-    }
-  })
+  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community)
   .query().pluck('group_id')
 
   q.where('group_memberships.active', true)

@@ -123,7 +123,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return instance.addGroupMembers([userId], {role: this.Role.DEFAULT})
   },
 
-  forMember (userOrId, model, opts = {}) {
-    return this.forIds(userOrId, null, model, Object.assign({}, opts, {multiple: true}))
+  forMember (userOrId, model) {
+    return this.forIds(userOrId, null, model, {multiple: true})
   }
 })

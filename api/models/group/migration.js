@@ -61,10 +61,13 @@ export async function makeGroupMemberships ({ model, parent, copyColumns, select
 export async function deactivateMembershipsByGroupDataType (group_data_type) {
   const parents = await Group.where({group_data_type, active: false})
   .fetchAll({withRelated: 'memberships'})
-  const setInactive = group =>
-    group.relations.memberships
-    .map(membership => membership.update({active: false}))
-  return parents.map(setInactive).length
+  const setInactive = group => Promise.map(group.relations.memberships.models,
+    membership => membership.save({active: false}))
+
+  console.log('parents.models', parents.models)
+
+  await Promise.map(parents.models, setInactive)
+  return parents.length
 }
 
 export async function updateGroupMemberships ({ model, parent, getSettings, selectColumns }) {

@@ -1,6 +1,6 @@
 require('babel-register')
 const models = require('../api/models')
-const DataType = require('../api/models/group/DataType')
+const DataType = require('../api/models/group/DataType').default
 const {
   makeGroups,
   makeGroupMemberships,
