@@ -1,6 +1,11 @@
 require('babel-register')
 const models = require('../api/models')
-const { makeGroups, makeGroupMemberships } = require('../api/models/group/migration')
+const DataType = require('../api/models/group/DataType')
+const {
+  makeGroups,
+  makeGroupMemberships,
+  deactivateMembershipsByGroupDataType
+} = require('../api/models/group/migration')
 const { camelCase, mapKeys } = require('lodash')
 
 exports.up = async function (knex, Promise) {
@@ -20,6 +25,8 @@ exports.up = async function (knex, Promise) {
       }
     )
   }))
+
+  console.log('Deactivating Memberships:', await deactivateMembershipsByGroupDataType(DataType.COMMUNITY))
 }
 
 exports.down = async function (knex, Promise) {

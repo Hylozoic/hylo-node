@@ -222,6 +222,15 @@ module.exports = bookshelf.Model.extend(merge({
     ))
   },
 
+  deactivate: communityId =>
+    bookshelf.transaction(trx =>
+      Promise.join(
+        Community.where('id', communityId).query()
+        .update({active: false}).transacting(trx),
+        Group.whereIdAndType(communityId, Community).query()
+        .update({active: false}).transacting(trx)
+      )),
+
   notifyAboutCreate: function (opts) {
     return Community.find(opts.communityId, {withRelated: ['creator']})
     .then(c => {
