@@ -57,6 +57,7 @@ module.exports = bookshelf.Model.extend({
     }
 
     const newUserIds = difference(userIds, existingMemberships.pluck('user_id'))
+
     for (let id of newUserIds) {
       changes.push(this.memberships().create({
         user_id: id,
@@ -97,6 +98,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   whereIdAndType (id, typeOrModel) {
+
     const type = typeof typeOrModel === 'number'
       ? typeOrModel
       : getDataTypeForModel(typeOrModel)
@@ -104,10 +106,10 @@ module.exports = bookshelf.Model.extend({
     return this.where({group_data_type: type, group_data_id: id})
   },
 
-  async deactivate (id, type, { transacting } = {}) {
-    const group = await Group.whereIdAndType(id, type).query()
-    await group.update({active: false}).transacting(transacting)
-    return group.removeMembers(group.members())
+  async deactivate (dataId, type, opts = {}) {
+    const group = await Group.whereIdAndType(dataId, type).fetch()
+    await group.save({active: false}, opts)
+    return group.removeMembers(await group.members().fetch(), opts)
   },
 
   pluckIdsForMember (userOrId, typeOrModel, where) {

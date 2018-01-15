@@ -38,15 +38,29 @@ describe('Group', () => {
     })
   })
 
-  describe('deactivite', () => {
+  describe('removeMembers', () => {
+    it('removes child members', async () => {
+      const community = await factories.community().save()
+      const group = await community.createGroup()
+      const user1 = await factories.user().save()
+      const user2 = await factories.user().save()
+      await group.addMembers([user1, user2])
+      await group.removeMembers(await group.members().fetch())
+      const postRemoveMembers = await group.members().fetch()
+      expect(postRemoveMembers.length).to.equal(0)
+    })
+  })
+
+  describe('deactivate', () => {
     it('deactivates all child members', async () => {
       const community = await factories.community().save()
       const group = await community.createGroup()
       const user1 = await factories.user().save()
       const user2 = await factories.user().save()
       await group.addMembers([user1, user2])
-      const members = await group.members()
-      expect(members.length).to.equal(2)
+      await Group.deactivate(community.id, Community)
+      const postDeactivationMembers = await group.members().fetch()
+      expect(postDeactivationMembers.length).to.equal(0)
     })
   })
 })
