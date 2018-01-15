@@ -64,44 +64,51 @@ export function afterCreatingPost (post, opts) {
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
 
-function updateTagsAndCommunities (post, trx) {
-  return post.load([
+async function updateTagsAndCommunities (post, trx) {
+  await post.load([
     'communities', 'linkPreview', 'networks', 'tags', 'user'
   ], {transacting: trx})
-  .then(() => {
-    const { tags, communities } = post.relations
-    const bumpCounts = [
-      TagFollow.query(q => {
-        q.whereIn('tag_id', tags.map('id'))
-        q.whereIn('community_id', communities.map('id'))
-        q.whereNot('user_id', post.get('user_id'))
-      }),
-      Membership.query(q => {
-        q.whereIn('community_id', communities.map('id'))
-        q.where('active', true)
-        q.whereNot('user_id', post.get('user_id'))
-      })
-    ].map(group => group.query().increment('new_post_count').transacting(trx))
 
-    // NOTE: the payload object is released to many users, so it cannot be
-    // subject to the usual permissions checks (which communities/networks
-    // the user is allowed to view, etc). This means we either omit the
-    // information, or (as below) we only post community data for the socket
-    // room it's being pushed to.
-    // TODO: eventually we will need to push to socket rooms for networks.
-    const payload = post.getNewPostSocketPayload()
-    const notifySockets = payload.communities.map(c => {
-      pushToSockets(
-        communityRoom(c.id),
-        'newPost',
-        Object.assign({}, payload, { communities: [ c ] })
-      )
-    })
+  const { tags, communities } = post.relations
 
-    const updateCommunityTags = CommunityTag.query(q => {
-      q.whereIn('tag_id', tags.map('id'))
-    }).query().update({updated_at: new Date()}).transacting(trx)
-
-    return Promise.all(bumpCounts.concat([notifySockets, updateCommunityTags]))
+  // NOTE: the payload object is released to many users, so it cannot be
+  // subject to the usual permissions checks (which communities/networks
+  // the user is allowed to view, etc). This means we either omit the
+  // information, or (as below) we only post community data for the socket
+  // room it's being pushed to.
+  // TODO: eventually we will need to push to socket rooms for networks.
+  const payload = post.getNewPostSocketPayload()
+  const notifySockets = payload.communities.map(c => {
+    pushToSockets(
+      communityRoom(c.id),
+      'newPost',
+      Object.assign({}, payload, { communities: [ c ] })
+    )
   })
+
+  const updateCommunityTags = CommunityTag.query(q => {
+    q.whereIn('tag_id', tags.map('id'))
+  }).query().update({updated_at: new Date()}).transacting(trx)
+
+  return Promise.all([
+    notifySockets,
+    updateCommunityTags,
+
+    TagFollow.query(q => {
+      q.whereIn('tag_id', tags.map('id'))
+      q.whereIn('community_id', communities.map('id'))
+      q.whereNot('user_id', post.get('user_id'))
+    }).query().increment('new_post_count').transacting(trx),
+
+    GroupMembership.query(q => {
+      const groupIds = Group.query(q2 => {
+        q2.whereIn('group_data_id', communities.map('id'))
+        q2.where('group_data_type', Group.DataType.COMMUNITY)
+      }).query().pluck('id')
+
+      q.whereIn('group_id', groupIds)
+      q.whereNot('group_memberships.user_id', post.get('user_id'))
+      q.where('group_memberships.active', true)
+    }).query().increment('new_post_count').transacting(trx)
+  ])
 }

@@ -1,7 +1,15 @@
 import HasSettings from './mixins/HasSettings'
 import { isEmpty } from 'lodash'
-import { isFollowing } from './group/queryUtils'
-import { getDataTypeForInstance } from './group/DataType'
+import {
+  isFollowing,
+  queryForMember,
+  whereGroupDataId,
+  whereUserId
+} from './group/queryUtils'
+import {
+  getDataTypeForModel,
+  getModelForDataType
+} from './group/DataType'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
@@ -14,6 +22,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
+  groupData () {
+    // This is the main reason for the denormalizing of group_data_type from
+    // groups onto group_memberships so far; if we're looking up the object for
+    // a given membership, we need to know what model to use.
+    //
+    // It remains to be seen whether this is a good enough need to justify the
+    // duplication of data. All the uses of this method so far are in contexts
+    // where we could pass the correct model in as an argument.
+
+    const model = getModelForDataType(this.get('group_data_type'))
+    const { tableName } = model.forge()
+    return model.query(q => {
+      q.join('groups', `${tableName}.id`, 'groups.group_data_id')
+      q.where('groups.id', this.get('group_id'))
+    })
+  },
+
   async updateAndSave (attrs, { transacting } = {}) {
     for (let key in attrs) {
       if (key === 'settings') {
@@ -23,16 +48,25 @@ module.exports = bookshelf.Model.extend(Object.assign({
       }
     }
 
-    if (!isEmpty(this.changed)) await this.save(null, {transacting})
+    if (!isEmpty(this.changed)) return this.save(null, {transacting})
     return this
+  },
+
+  hasRole (role) {
+    return Number(role) === this.get('role')
   }
 
 }, HasSettings), {
-  whereUnread (userId, { afterTime } = {}) {
+  Role: {
+    DEFAULT: 0,
+    MODERATOR: 1
+  },
+
+  whereUnread (userId, model, { afterTime } = {}) {
     return this.query(q => {
       q.join('groups', 'groups.id', 'group_memberships.group_id')
       if (afterTime) q.where('groups.updated_at', '>', afterTime)
-      q.where('group_memberships.user_id', userId)
+      queryForMember(q, userId, model)
       isFollowing(q)
 
       q.where(q2 => {
@@ -44,15 +78,52 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  forPair (userOrId, instance) {
+  forPair (userOrId, instance, opts = {}) {
     const userId = userOrId instanceof User ? userOrId.id : userOrId
-    return this.query(q => {
-      q.join('groups', 'groups.id', 'group_memberships.group_id')
-      q.where({
-        group_data_type: getDataTypeForInstance(instance),
-        group_data_id: instance.id,
-        'group_memberships.user_id': userId
-      })
+    if (!userId) {
+      throw new Error("Can't call forPair without a user or user id")
+    }
+    if (!instance) {
+      throw new Error("Can't call forPair without an instance")
+    }
+
+    return this.forIds(userId, instance.id, instance.constructor, opts)
+  },
+
+  // `usersOrIds` can be a single user or id, a list of either, or null
+  forIds (usersOrIds, instanceId, typeOrModel, opts = {}) {
+    const type = typeof typeOrModel === 'number'
+      ? typeOrModel
+      : getDataTypeForModel(typeOrModel)
+
+    const queryRoot = opts.multiple ? this.collection() : this
+
+    return queryRoot.query(q => {
+      q.where('group_memberships.group_data_type', type)
+      if (instanceId) {
+        q.join('groups', 'groups.id', 'group_memberships.group_id')
+      }
+      whereGroupDataId(q, instanceId)
+      whereUserId(q, usersOrIds)
+      if (!opts.includeInactive) q.where('group_memberships.active', true)
+      if (opts.query) opts.query(q)
     })
+  },
+
+  async hasModeratorRole (userOrId, instance) {
+    const gm = await this.forPair(userOrId, instance).fetch()
+    return gm && gm.hasRole(this.Role.MODERATOR)
+  },
+
+  async setModeratorRole (userId, instance) {
+    return instance.addGroupMembers([userId], {role: this.Role.MODERATOR})
+  },
+
+  async removeModeratorRole (userId, instance) {
+    return instance.addGroupMembers([userId], {role: this.Role.DEFAULT})
+  },
+
+  forMember (userOrId, model) {
+    return this.forIds(userOrId, null, model, {multiple: true})
   }
 })

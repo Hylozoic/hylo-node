@@ -1,16 +1,24 @@
-import setup from '../../../setup'
+import '../../../setup'
 import factories from '../../../setup/factories'
 import mockRequire from 'mock-require'
 const model = factories.mock.model
 
 describe('sendToCommunities', () => {
-  var argUserIds, argText, sendToCommunities, oldHyloAdmins
+  var argUserIds,
+    argText,
+    sendToCommunities,
+    oldHyloAdmins,
+    communities,
+    modIds1,
+    modIds2,
+    c1,
+    c2
 
   before(() => {
     mockRequire.stopAll()
     mockRequire('../../../../api/services/MessagingService', {
       sendMessageFromAxolotl: spy((userIds, text) => {
-        argUserIds.push(userIds)
+        for (let i of userIds) argUserIds.push(i)
         argText.push(text)
         return 'Bob the result'
       })
@@ -20,26 +28,28 @@ describe('sendToCommunities', () => {
     process.env.HYLO_ADMINS = '11,22'
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     argUserIds = []
     argText = []
+
+    c1 = await factories.community().save()
+    c2 = await factories.community().save()
+    const u1 = await factories.user().save()
+    const u2 = await factories.user().save()
+    const u3 = await factories.user().save()
+    await c1.addGroupMembers([u1, u2], {role: GroupMembership.Role.MODERATOR})
+    await c2.addGroupMembers([u2, u3], {role: GroupMembership.Role.MODERATOR})
+
+    communities = [c1, c2]
+    modIds1 = [u1.id, u2.id]
+    modIds2 = [u2.id, u3.id]
   })
 
   after(() => {
     process.env.HYLO_ADMINS = oldHyloAdmins
   })
 
-  it('sends a message from axolotl to the communtiy moderators', () => {
-    const mockCommunity = (id, modIds) => ({
-      load: () => Promise.resolve(),
-      id,
-      relations: {
-        moderators: modIds.map(id => ({id}))
-      }
-    })
-    const modIds1 = [1, 2]
-    const modIds2 = [2, 3]
-    const communities = [mockCommunity(1, modIds1), mockCommunity(2, modIds2)]
+  it('sends a message from axolotl to the community moderators', () => {
     const message = 'this is the message being sent to'
     const flaggedItem = model({
       category: FlaggedItem.Category.SPAM,
@@ -48,38 +58,27 @@ describe('sendToCommunities', () => {
 
     return sendToCommunities(flaggedItem, communities)
     .then(result => {
-      expect(argUserIds).to.deep.equal([modIds1, modIds2])
-      expect(argText).to.deep.equal([`${message} 1`, `${message} 2`])
+      expect(argUserIds.sort()).to.deep.equal(modIds1.concat(modIds2).sort())
+      expect(argText).to.deep.equal([`${message} ${c1.id}`, `${message} ${c2.id}`])
     })
   })
 
   it('sends illegal content to HYLO ADMINS as well', () => {
-    const mockCommunity = (id, modIds) => ({
-      load: () => Promise.resolve(),
-      id,
-      relations: {
-        moderators: modIds.map(id => ({id}))
-      }
-    })
-    const modIds1 = [1, 2]
-    const modIds2 = [2, 3]
-    const communities = [mockCommunity(1, modIds1), mockCommunity(2, modIds2)]
     const message = 'this is the message being sent to'
     const flaggedItem = model({
       category: FlaggedItem.Category.ILLEGAL,
       getMessageText: c => Promise.resolve(`${message} ${c.id}`)
     })
 
-    var expectedUserIds = [modIds1, modIds2]
-    var expectedText = [`${message} 1`, `${message} 2`]
+    var expectedText = [`${message} ${c1.id}`, `${message} ${c2.id}`]
 
     const hyloAdminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
-    expectedUserIds.push(hyloAdminIds)
-    expectedText.push(`${message} 1`)
+    var expectedUserIds = modIds1.concat(modIds2).concat(hyloAdminIds).sort()
+    expectedText.push(`${message} ${c1.id}`)
 
     return sendToCommunities(flaggedItem, communities)
     .then(result => {
-      expect(argUserIds).to.deep.equal(expectedUserIds)
+      expect(argUserIds.sort()).to.deep.equal(expectedUserIds)
       expect(argText).to.deep.equal(expectedText)
     })
   })
@@ -89,13 +88,16 @@ describe('sendToCommunities', () => {
 // that it was called with the right args. However, you can't do that with mock-require
 // because it is in the same file as the functions we're testing
 
-describe('notifyModeratorsPost', () => {
-  var argUserIds, argText, notifyModeratorsPost,
-    flaggedItem, modIds1, modIds2
+const notifyUtilsPath = '../../../../api/models/flaggedItem/notifyUtils'
+
+describe('notifying moderators', () => {
+  var argUserIds,
+    argText,
+    flaggedItem,
+    modIds1,
+    modIds2
 
   before(() => {
-    argUserIds = []
-    argText = []
     mockRequire.stopAll()
     mockRequire('../../../../api/services/MessagingService', {
       sendMessageFromAxolotl: spy((userIds, text) => {
@@ -104,36 +106,44 @@ describe('notifyModeratorsPost', () => {
         return 'Bob the result'
       })
     })
-    notifyModeratorsPost =
-      mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').notifyModeratorsPost
 
     modIds1 = [1, 2]
     modIds2 = [2, 3]
+
+    const mockCommunities = [
+      model({
+        id: 1,
+        moderators: () => ({
+          fetch: async () => modIds1.map(id => ({id}))
+        })
+      }),
+      model({
+        id: 2,
+        moderators: () => ({
+          fetch: async () => modIds2.map(id => ({id}))
+        })
+      })
+    ]
+
     flaggedItem = model({
-      getObject: () => {},
+      getObject: () => ({relations: {}}),
       getMessageText: c => `the message ${c.id}`,
       relations: {
         user: model({
-          communitiesSharedWithPost: () => [
-            model({
-              id: 1,
-              relations: {
-                moderators: modIds1.map(id => ({id}))
-              }
-            }),
-            model({
-              id: 2,
-              relations: {
-                moderators: modIds2.map(id => ({id}))
-              }
-            })
-          ]
+          communitiesSharedWithPost: () => mockCommunities,
+          communitiesSharedWithUser: () => mockCommunities
         })
       }
     })
   })
 
-  it('calls sendMessageFromAxolotl with the modIds', () => {
+  beforeEach(() => {
+    argUserIds = []
+    argText = []
+  })
+
+  it('works for a post', () => {
+    const notifyModeratorsPost = mockRequire.reRequire(notifyUtilsPath).notifyModeratorsPost
     return notifyModeratorsPost(flaggedItem)
     .then(result => {
       expect(argUserIds).to.deep.equal([modIds1, modIds2])
@@ -143,53 +153,9 @@ describe('notifyModeratorsPost', () => {
       ])
     })
   })
-})
 
-describe('notifyModeratorsComment', () => {
-  var argUserIds, argText, notifyModeratorsComment,
-    flaggedItem, modIds1, modIds2
-
-  before(() => {
-    argUserIds = []
-    argText = []
-    mockRequire.stopAll()
-    mockRequire('../../../../api/services/MessagingService', {
-      sendMessageFromAxolotl: spy((userIds, text) => {
-        argUserIds.push(userIds)
-        argText.push(text)
-        return 'Bob the result'
-      })
-    })
-    notifyModeratorsComment =
-      mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').notifyModeratorsComment
-
-    modIds1 = [1, 2]
-    modIds2 = [2, 3]
-    flaggedItem = model({
-      getObject: () => ({relations: {}}),
-      getMessageText: c => `the message ${c.id}`,
-      relations: {
-        user: model({
-          communitiesSharedWithPost: () => [
-            model({
-              id: 1,
-              relations: {
-                moderators: modIds1.map(id => ({id}))
-              }
-            }),
-            model({
-              id: 2,
-              relations: {
-                moderators: modIds2.map(id => ({id}))
-              }
-            })
-          ]
-        })
-      }
-    })
-  })
-
-  it('calls sendMessageFromAxolotl with the modIds', () => {
+  it('works for a comment', () => {
+    const notifyModeratorsComment = mockRequire.reRequire(notifyUtilsPath).notifyModeratorsComment
     return notifyModeratorsComment(flaggedItem)
     .then(result => {
       expect(argUserIds).to.deep.equal([modIds1, modIds2])
@@ -199,53 +165,9 @@ describe('notifyModeratorsComment', () => {
       ])
     })
   })
-})
 
-describe('notifyModeratorsMember', () => {
-  var argUserIds, argText, notifyModeratorsMember,
-    flaggedItem, modIds1, modIds2
-
-  before(() => {
-    argUserIds = []
-    argText = []
-    mockRequire.stopAll()
-    mockRequire('../../../../api/services/MessagingService', {
-      sendMessageFromAxolotl: spy((userIds, text) => {
-        argUserIds.push(userIds)
-        argText.push(text)
-        return 'Bob the result'
-      })
-    })
-    notifyModeratorsMember =
-      mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').notifyModeratorsMember
-
-    modIds1 = [1, 2]
-    modIds2 = [2, 3]
-    flaggedItem = model({
-      getObject: () => ({relations: {}}),
-      getMessageText: c => `the message ${c.id}`,
-      relations: {
-        user: model({
-          communitiesSharedWithUser: () => [
-            model({
-              id: 1,
-              relations: {
-                moderators: modIds1.map(id => ({id}))
-              }
-            }),
-            model({
-              id: 2,
-              relations: {
-                moderators: modIds2.map(id => ({id}))
-              }
-            })
-          ]
-        })
-      }
-    })
-  })
-
-  it('calls sendMessageFromAxolotl with the modIds', () => {
+  it('works for a member', () => {
+    const notifyModeratorsMember = mockRequire.reRequire(notifyUtilsPath).notifyModeratorsMember
     return notifyModeratorsMember(flaggedItem)
     .then(result => {
       expect(argUserIds).to.deep.equal([modIds1, modIds2])

@@ -85,13 +85,19 @@ async function createSchema (userId, isAdmin) {
 export function makeQueries (userId, fetchOne, fetchMany) {
   return {
     me: () => fetchOne('Me', userId),
-    community: (root, { id, slug, updateLastViewed }) => { // you can specify id or slug, but not both
-      return fetchOne('Community', slug || id, slug ? 'slug' : 'id')
-        .tap(community => {
-          if (community && updateLastViewed) {
-            return Membership.updateLastViewedAt(userId, community.id)
+    community: async (root, { id, slug, updateLastViewed }) => {
+      // you can specify id or slug, but not both
+      const response = await fetchOne('Community', slug || id, slug ? 'slug' : 'id')
+      if (updateLastViewed) {
+        const community = await Community.find(id || slug)
+        if (community) {
+          const membership = await GroupMembership.forPair(userId, community).fetch()
+          if (membership) {
+            await membership.addSetting({lastReadAt: new Date()}, true)
           }
-        })
+        }
+      }
+      return response
     },
     communityExists: (root, { slug }) => {
       if (Community.isSlugValid(slug)) {

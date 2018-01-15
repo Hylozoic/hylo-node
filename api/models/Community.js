@@ -34,13 +34,8 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(TagFollow)
   },
 
-  memberships: function () {
-    return this.hasMany(Membership).query({where: {'communities_users.active': true}})
-  },
-
   moderators: function () {
-    return this.belongsToMany(User, 'communities_users', 'community_id', 'user_id')
-      .query({where: {role: Membership.MODERATOR_ROLE, 'communities_users.active': true}})
+    return this.groupMembers({role: GroupMembership.Role.MODERATOR})
   },
 
   network: function () {
@@ -48,8 +43,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   users: function () {
-    return this.belongsToMany(User).through(Membership)
-      .query({where: {'communities_users.active': true, 'users.active': true}}).withPivot('role')
+    return this.groupMembersWithPivots()
   },
 
   posts: function () {
@@ -103,7 +97,7 @@ module.exports = bookshelf.Model.extend(merge({
       if (post.get('type') === 'welcome') return
 
       var newPost = post.copy()
-      var time = new Date(now - timeShift[post.get('type') || 0] * 1000)
+      var time = new Date(now - (timeShift[post.get('type')] || 0) * 1000)
       return newPost.save({created_at: time, updated_at: time}, {transacting})
       .then(() => Promise.all(flatten([
         this.posts().attach(newPost, {transacting}),
@@ -143,13 +137,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberCount: function () {
-    return User.query(q => {
-      q.select(bookshelf.knex.raw('count(*)'))
-      q.join('communities_users', 'users.id', 'communities_users.user_id')
-      q.where({'communities_users.community_id': this.id, 'communities_users.active': true})
-    })
-    .fetch()
-    .then(result => result.get('count'))
+    return this.get('num_members')
+  },
+
+  addMembers: async function (userIds, opts) {
+    return this.addGroupMembers(userIds, {}, opts)
   },
 
   postCount: function () {
@@ -195,10 +187,11 @@ module.exports = bookshelf.Model.extend(merge({
     return Promise.resolve()
   },
 
-  reconcileNumMembers: function () {
-    return Membership.where({community_id: this.id, active: true})
-    .fetchAll()
-    .then(memberships => this.save({num_members: memberships.length}))
+  reconcileNumMembers: async function () {
+    // FIXME this is not ideal, but the simple `.count()` methods don't work
+    // here because of the where clauses on join tables in `this.users`
+    const count = await this.users().fetch().then(x => x.length)
+    return this.save({num_members: count}, {patch: true})
   }
 
 }, HasSettings, HasGroup), {
@@ -222,19 +215,21 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
-  canInvite: function (userId, communityId) {
-    return Community.find(communityId).then(function (community) {
-      if (!community) return false
-      if (community.get('settings').all_can_invite) return true
-      return Membership.hasModeratorRole(userId, communityId)
-    })
-  },
-
   copyAssets: function (opts) {
     return Community.find(opts.communityId).then(c => Promise.join(
       AssetManagement.copyAsset(c, COMMUNITY_AVATAR, 'avatar_url'),
       AssetManagement.copyAsset(c, COMMUNITY_BANNER, 'banner_url')
     ))
+  },
+
+  deactivate: function (communityId) {
+    return bookshelf.transaction(trx =>
+      Promise.join(
+        Community.where('id', communityId).query()
+        .update({active: false}).transacting(trx),
+        Group.deactivate(communityId, Community, {transacting: trx})
+      )
+    )
   },
 
   notifyAboutCreate: function (opts) {
@@ -290,39 +285,35 @@ module.exports = bookshelf.Model.extend(merge({
     return loop()
   },
 
-  create: function (userId, data) {
+  async create (userId, data) {
     var attrs = pick(data,
       'name', 'description', 'slug', 'category',
-      'beta_access_code', 'banner_url', 'avatar_url', 'location')
+      'beta_access_code', 'banner_url', 'avatar_url', 'location', 'network_id')
 
-    var promise = attrs.beta_access_code
-      ? Promise.resolve(attrs.beta_access_code)
-      : Community.getNewAccessCode()
+    // eslint-disable-next-line camelcase
+    const beta_access_code = attrs.beta_access_code ||
+      await Community.getNewAccessCode()
 
-    return promise
-    .then(beta_access_code => { // eslint-disable-line
-      var community = new Community(merge(attrs, {
-        beta_access_code,
-        created_at: new Date(),
-        created_by_id: userId,
-        leader_id: userId,
-        settings: {post_prompt_day: 0}
-      }))
+    const community = new Community(merge(attrs, {
+      beta_access_code,
+      created_at: new Date(),
+      created_by_id: userId,
+      settings: {post_prompt_day: 0}
+    }))
 
-      return bookshelf.transaction(trx => {
-        return community.save(null, {transacting: trx})
-        .tap(community => community.createStarterPosts(trx))
-        .then(() => Membership.create(userId, community.id, {
-          role: Membership.MODERATOR_ROLE,
-          transacting: trx
-        }))
-        .then(membership => ({ membership, community }))
-      })
-      // Any assets were uploaded to /community/new, since we didn't have an id;
-      // copy them over to /community/:id now
-      .tap(() => Queue.classMethod('Community', 'notifyAboutCreate', {communityId: community.id}))
+    const memberships = await bookshelf.transaction(async trx => {
+      await community.save(null, {transacting: trx})
+      await community.createStarterPosts(trx)
+      return community.addGroupMembers([userId],
+        {role: GroupMembership.Role.MODERATOR}, {transacting: trx})
     })
+
+    await Queue.classMethod('Community', 'notifyAboutCreate',
+      {communityId: community.id})
+
+    return memberships[0]
   },
+
   isSlugValid: function (slug) {
     const regex = /^[0-9a-z-]{2,40}$/
     return regex.test(slug)

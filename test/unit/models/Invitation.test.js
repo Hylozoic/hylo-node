@@ -1,8 +1,9 @@
+/* eslint-disable no-unused-expressions */
+import { spyify, unspyify } from '../../setup/helpers'
+import { sortBy } from 'lodash/fp'
 var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
-import { spyify, unspyify } from '../../setup/helpers'
-import { sortBy } from 'lodash/fp'
 
 describe('Invitation', function () {
   before(() => setup.clearDb())
@@ -16,47 +17,32 @@ describe('Invitation', function () {
   describe('#use', function () {
     var user, community, tag, invitation1, invitation2, inviter
 
-    before(() => {
-      inviter = new User({email: 'inviter@bar.com'})
-      user = new User({email: 'foo@bar.com'})
-      community = new Community({name: 'foo', slug: 'foo'})
-      tag = new Tag({name: 'taginvitationtest'})
-      return Promise.join(
-        user.save(),
-        inviter.save(),
-        community.save(),
-        tag.save()
-      )
-      .then(() => Invitation.create({
+    before(async () => {
+      inviter = await factories.user().save()
+      user = await factories.user().save()
+      community = await factories.community().save()
+      tag = await new Tag({name: 'taginvitationtest'}).save()
+      invitation1 = await Invitation.create({
         userId: inviter.id,
         communityId: community.id,
         email: 'foo@comcom.com',
         moderator: true
-      }))
-      .tap(i => {
-        invitation1 = i
       })
-      .then(() => Invitation.create({
+      invitation2 = await Invitation.create({
         userId: inviter.id,
         communityId: community.id,
         email: 'foo@comcom.com',
         moderator: true,
         tag_id: tag.id
-      }))
-      .tap(i => {
-        invitation2 = i
       })
     })
 
-    it('creates a membership and marks itself used', function () {
-      return bookshelf.transaction(trx => invitation1.use(user.id, {transacting: trx}))
-      .then(() => {
-        expect(invitation1.get('used_by_id')).to.equal(user.id)
-        expect(invitation1.get('used_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
-
-        return Membership.hasModeratorRole(user.id, community.id)
-      })
-      .then(isModerator => expect(isModerator).to.be.true)
+    it('creates a membership and marks itself used', async () => {
+      await bookshelf.transaction(trx => invitation1.use(user.id, {transacting: trx}))
+      expect(invitation1.get('used_by_id')).to.equal(user.id)
+      expect(invitation1.get('used_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
+      const isModerator = await GroupMembership.hasModeratorRole(user, community)
+      expect(isModerator).to.be.true
     })
 
     it('creates a tag_follow when it has a tag_id', function () {

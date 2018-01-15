@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import root from 'root-path'
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
@@ -6,7 +7,7 @@ describe('Post', function () {
   describe('#addFollowers', function () {
     var u1, u2, post
 
-    before(async () => {
+    beforeEach(async () => {
       await setup.clearDb()
       u1 = await factories.user().save()
       u2 = await factories.user().save()
@@ -25,6 +26,14 @@ describe('Post', function () {
 
       followers = await post.followers().fetch()
       expect(followers.length).to.equal(2)
+    })
+
+    it('queries for lastReadAt correctly', async () => {
+      await post.addFollowers([u1.id])
+
+      expect((await post.lastReadAtForUser(u1.id)).getTime()).to.be.closeTo(new Date(0).getTime(), 2000)
+      await post.markAsRead(u1.id)
+      expect((await post.lastReadAtForUser(u1.id)).getTime()).to.be.closeTo(new Date().getTime(), 2000)
     })
   })
 
@@ -113,19 +122,17 @@ describe('Post', function () {
       .then(visible => expect(visible).to.be.false)
     })
 
-    it('is false if the user and post share a community', () => {
-      return Membership.create(user.id, c2.id)
-      .then(() => post.communities().attach(c1.id))
+    it('is true if the user and post share a community', () => {
+      return c2.addGroupMembers([user.id])
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
 
-    it("is false if the user has a disabled membership in the post's community", () => {
-      return Membership.create(user.id, c2.id)
-      .then(ms => ms.save({active: false}, {patch: true}))
-      .then(() => post.communities().attach(c1.id))
-      .then(() => Post.isVisibleToUser(post.id, user.id))
-      .then(visible => expect(visible).to.be.true)
+    it("is false if the user has a disabled membership in the post's community", async () => {
+      await c2.addGroupMembers([user.id])
+      await c2.removeGroupMembers([user.id])
+      const visible = await Post.isVisibleToUser(post.id, user.id)
+      expect(visible).to.be.false
     })
 
     it('is true if the user and post share a network', () => {
@@ -223,16 +230,13 @@ describe('Post', function () {
 
   describe('.createActivities', () => {
     var u, u2, u3, c
-    before(() => {
-      u = factories.user()
-      u2 = factories.user()
-      u3 = factories.user()
-      c = factories.community()
-      return Promise.join(u.save(), u2.save(), u3.save(), c.save())
-      .then(() => Promise.join(
-        u2.joinCommunity(c),
-        u3.joinCommunity(c)
-      ))
+    before(async () => {
+      u = await factories.user().save()
+      u2 = await factories.user().save()
+      u3 = await factories.user().save()
+      c = await factories.community().save()
+      await u2.joinCommunity(c)
+      await u3.joinCommunity(c)
     })
 
     it('creates activity for community members', () => {

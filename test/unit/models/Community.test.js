@@ -1,7 +1,7 @@
+/* eslint-disable no-unused-expressions */
 const root = require('root-path')
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
-import { times } from 'lodash'
 
 describe('Community', () => {
   it('can be created', function () {
@@ -45,6 +45,23 @@ describe('Community', () => {
       expect(Community.isSlugValid('uh_')).to.be.false
       expect(Community.isSlugValid('a')).to.be.false
       expect(Community.isSlugValid('abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdx')).to.be.false
+    })
+  })
+
+  describe('.reconcileNumMembers', () => {
+    let community
+
+    before(async () => {
+      community = await factories.community().save()
+      await community.addGroupMembers([
+        await factories.user().save(),
+        await factories.user({active: false}).save()
+      ])
+    })
+
+    it('sets num_members correctly', async () => {
+      await community.reconcileNumMembers()
+      expect(community.get('num_members')).to.equal(1)
     })
   })
 })

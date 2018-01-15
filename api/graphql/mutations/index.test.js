@@ -2,7 +2,7 @@ import {
   addSkill,
   removeSkill,
   flagInappropriateContent
-} from '../../../../api/graphql/mutations'
+} from './index'
 import root from 'root-path'
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))

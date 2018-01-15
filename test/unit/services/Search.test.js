@@ -117,15 +117,12 @@ describe('Search', function () {
         })
       })
 
-      it('excludes inactive members', () => {
-        return Membership.query().where({
-          user_id: cat.id,
-          community_id: house.id
-        }).update({active: false}).then(() => {
-          return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll().then(users => {
-            expect(users.length).to.equal(0)
-          })
-        })
+      it('excludes inactive members', async () => {
+        await cat.leaveCommunity(house)
+        const users = await Search.forUsers({
+          term: 'mister', communities: [house.id]
+        }).fetchAll()
+        expect(users.length).to.equal(0)
       })
     })
   })

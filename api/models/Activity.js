@@ -70,8 +70,8 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(Notification)
   },
 
-  createNotifications: function (trx) {
-    const relations = ['reader', 'reader.memberships']
+  createNotifications: async function (trx) {
+    const relations = ['reader']
     if (this.get('post_id')) {
       relations.splice(0, 0, 'post', 'post.communities')
     }
@@ -84,15 +84,15 @@ module.exports = bookshelf.Model.extend({
     if (this.get('community_id')) {
       relations.push('community')
     }
-    return this.load(relations, {transacting: trx})
-    .then(() => Promise.map(Activity.generateNotificationMedia(this), medium =>
+    await this.load(relations, {transacting: trx})
+    const notificationData = await Activity.generateNotificationMedia(this)
+    return Promise.map(notificationData, medium =>
       new Notification({
         activity_id: this.id,
         created_at: new Date(),
         medium,
         user_id: this.get('reader_id')
-      })
-      .save({}, {transacting: trx})))
+      }).save({}, {transacting: trx}))
   }
 
 }, {
@@ -219,18 +219,21 @@ module.exports = bookshelf.Model.extend({
     return []
   },
 
-  generateNotificationMedia: function (activity) {
+  generateNotificationMedia: async function (activity) {
     var notifications = []
     var communities = Activity.communityIds(activity)
     var user = activity.relations.reader
 
-    const relevantMemberships = filter(user.relations.memberships.models, mem =>
-      includes(communities, mem.get('community_id')))
-    const membershipsPermitting = (setting) =>
-      filter(relevantMemberships, mem => mem.get('settings')[setting])
+    const memberships = await user.groupMembershipsForModel(Community)
+    .fetch({withRelated: 'group'})
 
-    const emailable = membershipsPermitting('send_email')
-    const pushable = membershipsPermitting('send_push_notifications')
+    const relevantMemberships = filter(memberships.models, mem =>
+      includes(communities, mem.relations.group.get('group_data_id')))
+    const membershipsPermitting = key =>
+      filter(relevantMemberships, mem => mem.getSetting(key))
+
+    const emailable = membershipsPermitting('sendEmail')
+    const pushable = membershipsPermitting('sendPushNotifications')
 
     if (!isEmpty(emailable) && !isJustNewPost(activity)) {
       notifications.push(Notification.MEDIUM.Email)

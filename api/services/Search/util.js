@@ -74,7 +74,7 @@ export const filterAndSortUsers = curry(({ autocomplete, search, sortBy }, q) =>
   }
 
   if (sortBy === 'join') {
-    q.orderBy('communities_users.created_at', 'desc')
+    q.orderBy('group_memberships.created_at', 'desc')
   } else {
     q.orderBy(sortBy || 'name', 'asc')
   }

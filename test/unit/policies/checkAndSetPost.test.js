@@ -17,13 +17,10 @@ describe('checkAndSetPost', function () {
       fixtures = props
       return Promise.props({
         pc1: props.c1.posts().attach(props.p1.id),
-        pc2: props.c2.posts().attach(props.p2.id),
-        m1: Membership.create(props.u1.id, props.c1.id)
+        pc2: props.c2.posts().attach(props.p2.id)
       })
     })
-    .then(function (props) {
-      fixtures.m1 = props.m1
-    })
+    .then(() => fixtures.c1.addGroupMembers([fixtures.u1.id]))
   })
 
   describe('with a userId', function () {

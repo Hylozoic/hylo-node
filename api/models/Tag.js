@@ -57,8 +57,7 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
     // userId here is the id of the user making the edit, which is not always
     // the same as the user who created the taggable. we add the tag only to
     // those communities of which the user making the edit is a member.
-    .then(() => userId && Membership.where({active: true, user_id: userId})
-      .query().pluck('community_id'))
+    .then(() => userId && Group.pluckIdsForMember(userId, Community))
     .then(communityIds => {
       if (!communityIds) return
       const communities = filter(c => includes(communityIds, c.id),
