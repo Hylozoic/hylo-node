@@ -2,6 +2,7 @@
 const root = require('root-path')
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
+const { mockify, unspyify } = require(root('test/setup/helpers'))
 
 describe('Community', () => {
   it('can be created', function () {
@@ -62,6 +63,24 @@ describe('Community', () => {
     it('sets num_members correctly', async () => {
       await community.reconcileNumMembers()
       expect(community.get('num_members')).to.equal(1)
+    })
+  })
+
+  describe('.deactivate', () => {
+    before(() => {
+      mockify(Group, 'deactivate')
+    })
+
+    after(() => {
+      unspyify(Group, 'deactivate')
+    })
+
+    it('sets active to false and calls Group.deactivate', async () => {
+      const community = await factories.community({active: true}).save()
+      await Community.deactivate(community.id)
+      await community.refresh()
+      expect(community.get('active')).to.equal(false)
+      expect(Group.deactivate).to.have.been.called.with(community.id, Community)
     })
   })
 })

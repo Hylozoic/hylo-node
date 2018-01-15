@@ -431,4 +431,29 @@ describe('User', function () {
       expect(User.gravatar(null)).to.equal('https://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e?d=mm&s=140')
     })
   })
+
+  describe('#communitiesSharedWithUser', () => {
+    it('returns shared', async () => {
+      const user1 = await factories.user().save()
+      const user2 = await factories.user().save()
+      const community1 = await factories.community().save()
+      await community1.createGroup()
+      const community2 = await factories.community().save()
+      await community2.createGroup()
+      const community3 = await factories.community().save()
+      await community3.createGroup()
+      const community4 = await factories.community().save()
+      await community4.createGroup()
+      await Promise.join(
+        user1.joinCommunity(community1),
+        user1.joinCommunity(community2),
+        user1.joinCommunity(community3),
+        user2.joinCommunity(community2),
+        user2.joinCommunity(community3),
+        user2.joinCommunity(community4))
+      const sharedCommunities = await user1.communitiesSharedWithUser(user2)
+      expect(sharedCommunities.length).to.equal(2)
+      expect(sharedCommunities.map(c => c.id).sort()).to.deep.equal([community2.id, community3.id].sort())
+    })
+  })
 })
