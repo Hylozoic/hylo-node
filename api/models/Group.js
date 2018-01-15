@@ -104,6 +104,12 @@ module.exports = bookshelf.Model.extend({
     return this.where({group_data_type: type, group_data_id: id})
   },
 
+  async deactivate (id, type, { transacting } = {}) {
+    const group = await Group.whereIdAndType(id, type).query()
+    await group.update({active: false}).transacting(transacting)
+    return group.removeMembers(group.members())
+  },
+
   pluckIdsForMember (userOrId, typeOrModel, where) {
     return GroupMembership.forIds(userOrId, null, typeOrModel, {
       query: q => {

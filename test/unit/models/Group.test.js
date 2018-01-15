@@ -37,4 +37,16 @@ describe('Group', () => {
       expect(post2.id).to.equal(post.id)
     })
   })
+
+  describe('deactivite', () => {
+    it('deactivates all child members', async () => {
+      const community = await factories.community().save()
+      const group = await community.createGroup()
+      const user1 = await factories.user().save()
+      const user2 = await factories.user().save()
+      await group.addMembers([user1, user2])
+      const members = await group.members()
+      expect(members.length).to.equal(2)
+    })
+  })
 })

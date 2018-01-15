@@ -63,9 +63,6 @@ export async function deactivateMembershipsByGroupDataType (group_data_type) {
   .fetchAll({withRelated: 'memberships'})
   const setInactive = group => Promise.map(group.relations.memberships.models,
     membership => membership.save({active: false}))
-
-  console.log('parents.models', parents.models)
-
   await Promise.map(parents.models, setInactive)
   return parents.length
 }
