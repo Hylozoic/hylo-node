@@ -192,7 +192,7 @@ module.exports = {
     // Web links will go directly to the server and redirects from here,
     // Native does a POST as an API call and this should not redirect
     const shouldRedirect = req.method === 'GET'
-    const nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
+    const nextUrl = req.param('n') || Frontend.Route.evo.passwordSetting()
     try {
       const user = await User.find(req.param('u'))
       if (!user) return res.status(422).send('Link expired')

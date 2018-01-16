@@ -135,7 +135,7 @@ describe('SessionController', function () {
       .then(() => {
         expect(UserSession.login).to.have.been.called()
         expect(res.redirect).to.have.been.called()
-        expect(res.redirected).to.equal(Frontend.Route.userSettings() + '?expand=password')
+        expect(res.redirected).to.equal(Frontend.Route.evo.passwordSetting())
       })
     })
 
