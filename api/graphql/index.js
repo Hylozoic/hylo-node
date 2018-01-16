@@ -78,7 +78,7 @@ async function createSchema (userId, isAdmin) {
 
   return makeExecutableSchema({
     typeDefs: [schemaText],
-    resolvers: requireUser(allResolvers, userId)
+    resolvers: requireUser(allResolvers, userId, isAdmin)
   })
 }
 
@@ -271,8 +271,8 @@ export const createRequestHandler = () =>
     }
   })
 
-function requireUser (resolvers, userId) {
-  if (userId) return resolvers
+function requireUser (resolvers, userId, isAdmin) {
+  if (userId || isAdmin) return resolvers
 
   const error = () => {
     throw new Error('not logged in')
