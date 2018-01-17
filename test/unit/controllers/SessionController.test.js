@@ -139,7 +139,7 @@ describe('SessionController', function () {
       })
     })
 
-    it('logs a user in and redirects (API/POST request)', () => {
+    it("logs a user in doesn't redirect (API/POST request)", () => {
       _.extend(req.params, {u: user.id, t: token})
       req.method = 'POST'
 
