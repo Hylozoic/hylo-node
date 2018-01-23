@@ -127,14 +127,28 @@ describe('SessionController', function () {
       .then(t => token = t)
     })
 
-    it('logs a user in and redirects', () => {
+    it('logs a user in and redirects (Web/GET request)', () => {
       _.extend(req.params, {u: user.id, t: token})
+      req.method = 'GET'
 
       return SessionController.createWithToken(req, res)
       .then(() => {
         expect(UserSession.login).to.have.been.called()
         expect(res.redirect).to.have.been.called()
-        expect(res.redirected).to.equal(Frontend.Route.userSettings() + '?expand=password')
+        expect(res.redirected).to.equal(Frontend.Route.evo.passwordSetting())
+      })
+    })
+
+    it("logs a user in doesn't redirect (API/POST request)", () => {
+      _.extend(req.params, {u: user.id, t: token})
+      req.method = 'POST'
+
+      res = factories.mock.response()
+      return SessionController.createWithToken(req, res)
+      .then(() => {
+        expect(UserSession.login).to.have.been.called()
+        expect(res.redirect).not.to.have.been.called()
+        expect(res.ok).to.have.been.called()
       })
     })
 
@@ -146,7 +160,7 @@ describe('SessionController', function () {
       return SessionController.createWithToken(req, res)
       .then(() => {
         expect(res.send).to.have.been.called()
-        expect(error).to.equal("Token doesn't match")
+        expect(error).to.equal('Link expired')
       })
     })
   })
