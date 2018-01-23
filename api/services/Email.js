@@ -44,7 +44,7 @@ module.exports = {
     sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
       email,
       data,
-      version: 'user-edited text',
+      version: 'DEV-152',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
         reply_to: data.inviter_email

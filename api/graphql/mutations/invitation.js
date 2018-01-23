@@ -5,14 +5,18 @@ export function createInvitation (userId, communityId, data) {
   .then(ok => {
     if (!ok) throw new Error("You don't have permission to create an invitation for this community")
   })
-  .then(() => InvitationService.create({
-    sessionUserId: userId,
-    communityId,
-    emails: data.emails,
-    message: data.message,
-    moderator: data.isModerator || false,
-    subject: 'Join our community!'
-  }))
+  .then(() => Community.find(communityId))
+  .then((community) => {
+    if (!community) throw new Error('Cannot find community to send invites for')
+    return InvitationService.create({
+      sessionUserId: userId,
+      communityId,
+      emails: data.emails,
+      message: data.message,
+      moderator: data.isModerator || false,
+      subject: `Join me in ${community.get('name')} on Hylo!`
+    })
+  })
   .then(invitations => ({invitations}))
 }
 
