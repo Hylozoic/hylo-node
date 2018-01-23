@@ -96,7 +96,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Thank)
   },
 
-  async joinCommunity (community, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
+  joinCommunity: async function (community, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
     const memberships = await community.addGroupMembers([this.id], {role},
       {transacting})
     await Community.query().where('id', community.id)
