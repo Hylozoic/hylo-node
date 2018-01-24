@@ -33,7 +33,6 @@ module.exports = {
         const nextUrl = req.param('evo')
           ? Frontend.Route.evo.passwordSetting()
           : null
-
         user.generateToken().then(function (token) {
           Queue.classMethod('Email', 'sendPasswordReset', {
             email: user.get('email'),
