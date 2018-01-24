@@ -5,6 +5,5 @@ exports.seed = function (knex, Promise) {
     .then(() => knex('communities_users').del())
     .then(() => knex('communities').del())   // Deletes ALL existing entries
     .then(() => knex('communities')
-                    .insert({id: 1, name: 'starter-posts', slug: 'starter-posts'})
-  )
+      .insert({name: 'starter-posts', slug: 'starter-posts'}))
 }

@@ -527,6 +527,7 @@ input UserSettingsInput {
 
 type Mutation {
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
+  addMemberToCommunity(personId: ID, communityId: ID): Membership
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
   addSkill(name: String): Skill

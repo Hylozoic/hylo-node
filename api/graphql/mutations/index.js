@@ -24,6 +24,7 @@ export {
 } from './invitation'
 export {
   updateCommunity,
+  addMember,
   addModerator,
   removeModerator,
   removeMember,

@@ -37,6 +37,13 @@ export function removeModerator (userId, personId, communityId) {
   })
 }
 
+// Admin-only (for now) addition of member
+export async function addMember (authZ, personId, communityId) {
+  if (!authZ.isAdmin) throw new Error("You don't have permission to modify this community")
+  await Membership.create(personId, communityId)
+  return Membership.find(personId, communityId)
+}
+
 /**
  * As a moderator, removes member from a community.
  */
