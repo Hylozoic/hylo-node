@@ -44,9 +44,10 @@ export function updateMe (userId, changes) {
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }
 
-export function leaveCommunity (userId, communityId) {
-  return User.find(userId)
-  .then(user => user.leaveCommunity(communityId))
+export async function leaveCommunity (userId, communityId) {
+  const community = await Community.find(communityId)
+  const user = await User.find(userId)
+  return user.leaveCommunity(community)
 }
 
 export function findOrCreateThread (userId, data) {

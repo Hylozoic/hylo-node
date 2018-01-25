@@ -55,5 +55,4 @@ async function getModeratedCommunity (userId, communityId) {
   }
 
   return community
-
 }
