@@ -4,7 +4,8 @@ const DataType = require('../api/models/group/DataType').default
 const {
   makeGroups,
   makeGroupMemberships,
-  deactivateMembershipsByGroupDataType
+  deactivateMembershipsByGroupDataType,
+  reconcileNumMembersInCommunities
 } = require('../api/models/group/migration')
 const { camelCase, mapKeys } = require('lodash')
 
@@ -27,6 +28,7 @@ exports.up = async function (knex, Promise) {
   }))
 
   console.log('Deactivating Memberships:', await deactivateMembershipsByGroupDataType(DataType.COMMUNITY))
+  console.log('Reconciling num_members in communities', await reconcileNumMembersInCommunities())
 }
 
 exports.down = async function (knex, Promise) {

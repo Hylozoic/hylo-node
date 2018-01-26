@@ -67,6 +67,12 @@ export async function deactivateMembershipsByGroupDataType (group_data_type) {
   return parents.length
 }
 
+export async function reconcileNumMembersInCommunities () {
+  const communities = await Community.fetchAll()
+  await Promise.map(communities.models, c => c.reconcileNumMembers())
+  return communities.length
+}
+
 export async function updateGroupMemberships ({ model, parent, getSettings, selectColumns }) {
   const { target, foreignKey } = getRelatedData(model, parent)
   const rows = await model.query().select(['user_id', foreignKey, ...selectColumns])
