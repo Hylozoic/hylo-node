@@ -15,12 +15,11 @@ export async function createTopic (userId, topicName, communityId) {
   }
 
   const topic = await Tag.findOrCreate(name)
-  const foo = await Tag.addToCommunity({
+  await Tag.addToCommunity({
     community_id: communityId,
     tag_id: topic.id,
     user_id: userId
   })
-  console.log('t', topic, foo)
   return topic
 }
 
