@@ -20,7 +20,7 @@ export default function updateChildren (post, children, trx) {
         .update(omit(child, 'id')).transacting(trx)),
 
       // create new requests
-      some(created) && Tag.find('request')
+      some(created) && Tag.find({ name: 'request' })
       .then(tag => {
         const attachment = {tag_id: tag.id, selected: true}
         return Promise.map(created, child => {

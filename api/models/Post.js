@@ -288,8 +288,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
         topics,
 
-        // May need to retain these to avoid breaking legacy code.
-        // TODO: Check if these are still required.
+        // TODO: Once legacy site is decommissioned, these are no longer required.
         creatorId: creator.id,
         tags: topics
       }

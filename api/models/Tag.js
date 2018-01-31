@@ -5,6 +5,7 @@ import { flatten, includes, isUndefined } from 'lodash'
 import {
   differenceBy, filter, find, get, omitBy, pick, some, uniqBy
 } from 'lodash/fp'
+import { validateTopicName } from 'hylo-utils/validators'
 
 export const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w_-]+)/g
@@ -15,20 +16,6 @@ export const tagsInText = (text = '') => {
   }
   return tags
 }
-
-const addToCommunity = ({ community_id, tag_id, user_id, description, is_default }, opts) =>
-  CommunityTag.where({community_id, tag_id}).fetch(opts)
-  .tap(comTag => comTag ||
-    CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
-    .catch(() => {}))
-    // the catch above is for the case where another user just created the
-    // CommunityTag (race condition): the save fails, but we don't care about
-    // the result
-  .then(comTag => comTag && comTag.save({updated_at: new Date()}))
-  .then(() => user_id &&
-    TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
-    .then(follow => follow ||
-      TagFollow.create({community_id, tag_id, user_id}, opts)))
 
 const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) => {
   var association, getCommunities
@@ -43,7 +30,7 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
     getCommunities = comment => comment.relations.post.relations.communities
   }
   const created_at = new Date()
-  const findTag = () => Tag.find(name, opts)
+  const findTag = () => Tag.find({ name }, opts)
   return taggable.load(association, opts).then(findTag)
   // create the tag -- if creation fails, find the existing one
   .then(tag => tag ||
@@ -63,7 +50,7 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
       if (!communityIds) return
       const communities = filter(c => includes(communityIds, c.id),
         getCommunities(taggable).models)
-      return Promise.map(communities, com => addToCommunity({
+      return Promise.map(communities, com => Tag.addToCommunity({
         community_id: com.id,
         tag_id: tag.id,
         user_id: taggable.get('user_id'),
@@ -146,23 +133,43 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+  addToCommunity: ({ community_id, tag_id, user_id, description, is_default }, opts) =>
+  CommunityTag.where({community_id, tag_id}).fetch(opts)
+  .tap(comTag => comTag ||
+    CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
+    .catch(() => {}))
+    // the catch above is for the case where another user just created the
+    // CommunityTag (race condition): the save fails, but we don't care about
+    // the result
+  .then(comTag => comTag && comTag.save({updated_at: new Date()}))
+  .then(() => user_id &&
+    TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
+    .then(follow => follow ||
+      TagFollow.create({community_id, tag_id, user_id}, opts))),
+
   isValidTag: function (text) {
-    return !!text.match(/^[A-Za-z][\w-]+$/)
+    return !validateTopicName(text)
+  },
+
+  validate: function (text) {
+    return validateTopicName(text)
   },
 
   tagsInText,
 
-  find: function (id, options) {
-    if (!id) return Promise.resolve(null)
-    if (isNaN(Number(id))) {
-      return Tag.query(qb => qb.whereRaw('lower(name) = lower(?)', id))
-      .fetch(options)
+  find: function ({ id, name }, options) {
+    if (id) {
+      return Tag.where({ id }).fetch(options)
     }
-    return Tag.where({id: id}).fetch(options)
+    if (name) {
+      return Tag.query(qb => qb.whereRaw('lower(name) = lower(?)', name))
+        .fetch(options)
+    }
+    return Promise.resolve(null)
   },
 
   findOrCreate: function (name, options) {
-    return Tag.find(name, options)
+    return Tag.find({ name }, options)
     .then(tag => {
       if (tag) return tag
       return new Tag({name}).save(null, options)

@@ -34,7 +34,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   tagName: function () {
     return this.get('tag_id')
-      ? Tag.find(this.get('tag_id')).then(t => t.get('name'))
+      ? Tag.find({ id: this.get('tag_id') }).then(t => t.get('name'))
       : Promise.resolve()
   },
 

@@ -22,7 +22,7 @@ describe('Tag', () => {
       })
       return post.save()
       .then(post => Tag.updateForPost(post, 'newtagone'))
-      .then(() => Tag.find('newtagone', {withRelated: ['posts']}))
+      .then(() => Tag.find({ name: 'newtagone' }, {withRelated: ['posts']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagone')
@@ -40,7 +40,7 @@ describe('Tag', () => {
       return new Tag({name: 'newtagtwo'}).save()
       .then(() => post.save())
       .then(post => Tag.updateForPost(post, 'newtagtwo'))
-      .then(() => Tag.find('newtagtwo', {withRelated: ['posts']}))
+      .then(() => Tag.find({ name: 'newtagtwo' }, {withRelated: ['posts']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagtwo')
@@ -57,7 +57,7 @@ describe('Tag', () => {
       })
       return post.save()
       .then(post => Tag.updateForPost(post))
-      .then(() => Tag.find('newtagthree', {withRelated: ['posts']}))
+      .then(() => Tag.find({ name: 'newtagthree' }, {withRelated: ['posts']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagthree')
@@ -75,7 +75,7 @@ describe('Tag', () => {
       return new Tag({name: 'newtagfour'}).save()
       .then(() => post.save())
       .then(post => Tag.updateForPost(post))
-      .then(() => Tag.find('newtagfour', {withRelated: ['posts']}))
+      .then(() => Tag.find({ name: 'newtagfour' }, {withRelated: ['posts']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagfour')
@@ -93,7 +93,7 @@ describe('Tag', () => {
       return new Tag({name: 'duplicated'}).save()
       .then(() => post.save())
       .then(post => Tag.updateForPost(post))
-      .then(() => Tag.find('duplicated', {withRelated: ['posts']}))
+      .then(() => Tag.find({ name: 'duplicated' }, {withRelated: ['posts']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('duplicated')
@@ -110,7 +110,7 @@ describe('Tag', () => {
       })
       return post.save()
       .then(post => Tag.updateForPost(post))
-      .then(() => Tag.find('nametagone', {withRelated: ['posts']}))
+      .then(() => Tag.find({ name: 'nametagone' }, {withRelated: ['posts']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('nametagone')
@@ -128,7 +128,7 @@ describe('Tag', () => {
       return new Tag({name: 'nametagtwo'}).save()
       .then(() => post.save())
       .then(post => Tag.updateForPost(post))
-      .then(() => Tag.find('nametagtwo', {withRelated: ['posts']}))
+      .then(() => Tag.find({ name: 'nametagtwo' }, {withRelated: ['posts']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('nametagtwo')
@@ -148,8 +148,8 @@ describe('Tag', () => {
         new PostTag({post_id: post.id, tag_id: tag.id}).save())
       .then(() => Tag.updateForPost(post))
       .then(() => Promise.join(
-        Tag.find('newtagfive', {withRelated: ['posts']}),
-        Tag.find('newtagsix', {withRelated: ['posts']}),
+        Tag.find({ name: 'newtagfive' }, {withRelated: ['posts']}),
+        Tag.find({ name: 'newtagsix' }, {withRelated: ['posts']}),
         (removed, added) => {
           expect(removed).to.exist
           expect(removed.get('name')).to.equal('newtagfive')
@@ -171,8 +171,8 @@ describe('Tag', () => {
         new PostTag({post_id: post.id, tag_id: tag.id, selected: true}).save())
       .then(() => Tag.updateForPost(post, 'newtageight'))
       .then(() => Promise.join(
-        Tag.find('newtagseven', {withRelated: ['posts']}),
-        Tag.find('newtageight', {withRelated: ['posts']}),
+        Tag.find({ name: 'newtagseven' }, {withRelated: ['posts']}),
+        Tag.find({ name: 'newtageight' }, {withRelated: ['posts']}),
         (unselected, selected) => {
           expect(unselected).to.exist
           expect(unselected.get('name')).to.equal('newtagseven')
@@ -197,7 +197,7 @@ describe('Tag', () => {
       .then(() => post.communities().attach(c1.id))
       .then(() => post.communities().attach(c2.id))
       .then(() => Tag.updateForPost(post, 'newtagnine', null, u.id))
-      .then(() => Tag.find('newtagnine', {withRelated: ['communities']}))
+      .then(() => Tag.find({ name: 'newtagnine' }, {withRelated: ['communities']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagnine')
@@ -226,7 +226,7 @@ describe('Tag', () => {
       .then(() => post.communities().attach(c1.id))
       .then(() => post.communities().attach(c2.id))
       .then(() => Tag.updateForPost(post, 'newtagten', null, user.id))
-      .then(() => Tag.find('newtagten', {withRelated: ['communities']}))
+      .then(() => Tag.find({ name: 'newtagten' }, {withRelated: ['communities']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('newtagten')
@@ -247,7 +247,7 @@ describe('Tag', () => {
       .then(() => post.save())
       .then(() => post.communities().attach(c1.id))
       .then(() => Tag.updateForPost(post, 'newtageleven', null, u.id))
-      .then(() => Tag.find('newtageleven'))
+      .then(() => Tag.find({ name: 'newtageleven' }))
       .then(tag => TagFollow.where({tag_id: tag.id, user_id: u.id, community_id: c1.id}).fetch())
       .then(tagFollow => expect(tagFollow).to.exist)
     })
@@ -314,7 +314,7 @@ describe('Tag', () => {
       })
 
       .then(comment => Tag.updateForComment(comment, {commenthashtag: {description: 'lol'}}, u.id))
-      .then(() => Tag.find('commenthashtag', {withRelated: ['comments', 'communities']}))
+      .then(() => Tag.find({ name: 'commenthashtag' }, {withRelated: ['comments', 'communities']}))
       .then(tag => {
         expect(tag).to.exist
         expect(tag.get('name')).to.equal('commenthashtag')
@@ -372,7 +372,7 @@ describe('Tag', () => {
           community_id: c.id, user_id: u.id
         })
       })
-      .then(() => Tag.find(t2.id))
+      .then(() => Tag.find(t2))
       .then(tag => expect(tag).not.to.exist)
       .then(() => p2.load('tags'))
       .then(() => {
@@ -488,7 +488,7 @@ describe('Tag', () => {
     it('works', () => {
       return Tag.forge({name: 'foo'}).save()
       .then(tag => Tag.remove(tag.id))
-      .then(() => Tag.find('foo'))
+      .then(() => Tag.find({ name: 'foo' }))
       .then(tag => expect(tag).to.be.null)
     })
   })
