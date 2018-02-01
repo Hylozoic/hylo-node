@@ -1,12 +1,14 @@
 import { curry } from 'lodash'
 import { myCommunityIds, myNetworkCommunityIds } from '../models/util/queryFilters'
 import { isFollowing } from '../models/group/queryUtils'
+import GroupDataType from '../models/group/DataType'
 
 export function makeFilterToggle (enabled) {
   return filterFn => relation =>
     enabled ? filterFn(relation) : relation
 }
 
+// This does not include users connected by a network
 function sharesMembership (userId, q) {
   const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community)
   .query().pluck('group_id')
@@ -18,10 +20,12 @@ function sharesMembership (userId, q) {
 export const membershipFilter = userId => relation =>
   relation.query(q => sharesMembership(userId, q))
 
-export const personFilter = userId => relation => relation.query(q => {
-  // find all other memberships for the user's community groups
-  const sharedMemberships = GroupMembership.query(q2 =>
-    sharesMembership(userId, q2))
+export const personFilter = userId => relation => relation.query(async q => {
+  // find all other memberships for users that share a network
+  const sharedMemberships = GroupMembership.query(q3 => {
+    filterCommunities(q3, 'group_id', userId)
+    q3.where('group_data_type', GroupDataType.COMMUNITY)
+  })
 
   // limit to users that are in those other memberships
   q.where('users.id', 'in', sharedMemberships.query().pluck('user_id'))

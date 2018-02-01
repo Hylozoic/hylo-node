@@ -37,7 +37,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async memberCount () {
-    const communityIds = await Community.where('network_id', this.id)
+    const communityIds = await Community.where({
+      network_id: this.id,
+      active: true
+    })
     .query().pluck('id')
 
     return GroupMembership.forIds(null, communityIds, Community).query()
