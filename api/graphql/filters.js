@@ -20,11 +20,12 @@ function sharesMembership (userId, q) {
 export const membershipFilter = userId => relation =>
   relation.query(q => sharesMembership(userId, q))
 
-export const personFilter = userId => relation => relation.query(async q => {
+export const personFilter = userId => relation => relation.query(q => {
   // find all other memberships for users that share a network
   const sharedMemberships = GroupMembership.query(q3 => {
-    filterCommunities(q3, 'group_id', userId)
-    q3.where('group_data_type', GroupDataType.COMMUNITY)
+    filterCommunities(q3, 'groups.group_data_id', userId)
+    q3.join('groups', 'groups.id', 'group_memberships.group_id')
+    q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
   })
 
   // limit to users that are in those other memberships
