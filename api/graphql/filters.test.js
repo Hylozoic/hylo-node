@@ -1,6 +1,13 @@
 import { makeFilterToggle, sharedNetworkMembership } from './filters'
 import makeModels from './makeModels'
 import { expectEqualQuery } from '../../test/setup/helpers'
+import {
+  myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment
+} from '../models/util/queryFilters.test.helpers'
+
+const myId = '42'
+
+var models, sharedMemberships
 
 describe('makeFilterToggle', () => {
   var filterFn = relation => relation.query(q => 'filtered')
@@ -15,32 +22,24 @@ describe('makeFilterToggle', () => {
   })
 })
 
-const myId = 42
-
-const selectMyCommunityIds = `(select "community_id" from "communities_users"
-  where "user_id" = ${myId} and "active" = true)`
-
-const selectMyNetworkCommunityIds = `(select "id" from "communities"
-  where "network_id" in (
-    select distinct "network_id" from "communities"
-    where "id" in ${selectMyCommunityIds}
-    and network_id is not null
-  ))`
-
-var models
-
 describe('model filters', () => {
   before(async () => {
+    sharedMemberships = `"group_memberships"
+      where "group_memberships"."active" = true
+      and "group_memberships"."group_id" in (
+        select "group_id" from "group_memberships"
+        where "group_memberships"."group_data_type" = ${Group.DataType.COMMUNITY}
+        and "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
+        and "group_memberships"."active" = true
+      )`
+
     models = await makeModels(myId, false)
   })
 
   describe('Membership', () => {
     it('filters down to memberships for communities the user is in', () => {
-      const collection = models.Membership.filter(Membership.collection())
-      expectEqualQuery(collection, `select * from "communities_users"
-        where
-          ("communities_users"."community_id" in ${selectMyCommunityIds}
-          or "communities_users"."user_id" = '${User.AXOLOTL_ID}')`)
+      const collection = models.Membership.filter(GroupMembership.collection())
+      expectEqualQuery(collection, `select * from ${sharedMemberships}`)
     })
   })
 
@@ -48,12 +47,16 @@ describe('model filters', () => {
     it('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
-        where "users"."id" in (
-          select "user_id" from "communities_users"
-          where
-          ("communities_users"."community_id" in ${selectMyCommunityIds}
-            or "communities_users"."user_id" = '${User.AXOLOTL_ID}')
-        )`)
+        where "users"."id" in
+          (select "user_id"
+          from "group_memberships"
+          inner join "groups"
+            on "groups"."id" = "group_memberships"."group_id"
+          where ("groups"."group_data_id" in
+            ${myCommunityIdsSqlFragment(42)}
+                or "groups"."group_data_id" in
+              ${myNetworkCommunityIdsSqlFragment(42)})
+                      and "group_memberships"."group_data_type" = 1)`)
     })
   })
 
@@ -65,8 +68,8 @@ describe('model filters', () => {
         and "posts"."id" in (
           select "post_id" from "communities_posts"
           where (
-            "community_id" in ${selectMyCommunityIds}
-            or "community_id" in ${selectMyNetworkCommunityIds}
+            "community_id" in ${myCommunityIdsSqlFragment(myId)}
+            or "community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
           )
         )`)
     })
@@ -81,17 +84,18 @@ describe('model filters', () => {
         where "comments"."active" = true
         and (
           "comments"."post_id" in (
-            select "group_data_id" from "groups"
-            inner join "group_memberships"
+            select "group_data_id" from "group_memberships"
+            inner join "groups"
               on "groups"."id" = "group_memberships"."group_id"
-            where "groups"."group_data_type" = 0
+            where "group_memberships"."group_data_type" = 0
+            and "group_memberships"."user_id" = '${myId}'
             and "group_memberships"."active" = true
+            and ((group_memberships.settings->>'following')::boolean = true)
             and "groups"."active" = true
-            and "user_id" = 42
           )
           or ((
-            "communities_posts"."community_id" in ${selectMyCommunityIds}
-            or "communities_posts"."community_id" in ${selectMyNetworkCommunityIds}
+            "communities_posts"."community_id" in ${myCommunityIdsSqlFragment(myId)}
+            or "communities_posts"."community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
           ))
         )`)
     })

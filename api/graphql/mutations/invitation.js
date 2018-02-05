@@ -1,7 +1,8 @@
 import InvitationService from '../../services/InvitationService'
 
-export function createInvitation (userId, communityId, data) {
-  return Membership.hasModeratorRole(userId, communityId)
+export async function createInvitation (userId, communityId, data) {
+  const community = await Community.find(communityId)
+  return GroupMembership.hasModeratorRole(userId, community)
   .then(ok => {
     if (!ok) throw new Error("You don't have permission to create an invitation for this community")
   })
@@ -38,8 +39,9 @@ export function resendInvitation (userId, invitationId) {
   .then(() => ({success: true}))
 }
 
-export function reinviteAll (userId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
+export async function reinviteAll (userId, communityId) {
+  const community = await Community.find(communityId)
+  return GroupMembership.hasModeratorRole(userId, community)
   .then(ok => {
     if (!ok) throw new Error("You don't have permission to modify this invitation")
   })

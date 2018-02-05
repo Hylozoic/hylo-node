@@ -17,7 +17,7 @@ module.exports = bookshelf.Model.extend({
       case FlaggedItem.Type.COMMENT:
         return Comment.find(this.get('object_id'), {withRelated: 'post.communities'})
       case FlaggedItem.Type.MEMBER:
-        return User.find(this.get('object_id'), {withRelated: 'communities'})
+        return User.find(this.get('object_id'))
       default:
         throw new Error('Unsupported type for Flagged Item', this.get('object_type'))
     }

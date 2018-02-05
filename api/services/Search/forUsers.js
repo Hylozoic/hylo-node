@@ -22,17 +22,29 @@ export default function (opts) {
 
     countTotal(qb, 'users', opts.totalColumnName)
 
+    // TODO perhaps the group-related code below can be refactored into
+    // a more general-purpose form?
+
     if (communities) {
-      qb.join('communities_users', 'communities_users.user_id', 'users.id')
-      qb.whereIn('communities_users.community_id', opts.communities)
-      qb.where('communities_users.active', true)
+      qb.join('group_memberships', 'group_memberships.user_id', 'users.id')
+      qb.join('groups', 'groups.id', 'group_memberships.group_id')
+      qb.where('groups.group_data_id', 'in', opts.communities)
+      qb.where({
+        'groups.group_data_type': Group.DataType.COMMUNITY,
+        'group_memberships.active': true
+      })
     }
 
     if (network) {
       qb.distinct()
-      qb.where({'communities.network_id': network})
-      qb.join('communities_users', 'users.id', 'communities_users.user_id')
-      qb.join('communities', 'communities.id', 'communities_users.community_id')
+      qb.join('group_memberships', 'group_memberships.user_id', 'users.id')
+      qb.join('groups', 'groups.id', 'group_memberships.group_id')
+      qb.join('communities', 'communities.id', 'groups.group_data_id')
+      qb.where({
+        'groups.group_data_type': Group.DataType.COMMUNITY,
+        'group_memberships.active': true,
+        'communities.network_id': network
+      })
     }
 
     if (opts.start_time && opts.end_time) {
@@ -46,7 +58,7 @@ export default function (opts) {
     if (network || (communities && communities.length > 1)) {
       // prevent duplicates due to the joins
       if (opts.sort === 'join') {
-        qb.groupBy(['users.id', 'communities_users.created_at'])
+        qb.groupBy(['users.id', 'group_memberships.created_at'])
       } else {
         qb.groupBy('users.id')
       }

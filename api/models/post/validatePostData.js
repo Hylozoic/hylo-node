@@ -11,6 +11,7 @@ export default function validatePostData (userId, data) {
   if (isEmpty(data.community_ids)) {
     throw new Error('no communities specified')
   }
-  return Membership.inAllCommunities(userId, data.community_ids)
+
+  return Group.allHaveMember(data.community_ids, userId, Community)
   .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
 }

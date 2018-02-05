@@ -22,22 +22,22 @@ export async function notifyModeratorsMember (flaggedItem) {
   return sendToCommunities(flaggedItem, communities)
 }
 
-export function sendToCommunities (flaggedItem, communities) {
-  const shouldSendToAdmins = flaggedItem.get('category') === FlaggedItem.Category.ILLEGAL &&
-    process.env.HYLO_ADMINS
-  var sendToAdmins = () => {
-    const adminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
-    const community = communities[0]
-    return flaggedItem.getMessageText(community)
-    .then(messageText => sendMessageFromAxolotl(adminIds, messageText))
+export async function sendToCommunities (flaggedItem, communities) {
+  const send = async (community, userIds) => {
+    const text = await flaggedItem.getMessageText(community)
+    return sendMessageFromAxolotl(userIds, text)
   }
 
-  return Promise.map(communities, c =>
-    c.load('moderators')
-    .then(() => flaggedItem.getMessageText(c))
-    .then(messageText => {
-      const moderatorIds = c.relations.moderators.map(m => m.id)
-      return sendMessageFromAxolotl(moderatorIds, messageText)
-    }))
-  .then(() => shouldSendToAdmins && sendToAdmins())
+  for (let community of communities) {
+    const moderators = await community.moderators().fetch()
+    await send(community, moderators.map(x => x.id))
+  }
+
+  const shouldSendToAdmins = process.env.HYLO_ADMINS &&
+    flaggedItem.get('category') === FlaggedItem.Category.ILLEGAL
+
+  if (shouldSendToAdmins) {
+    const adminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
+    await send(communities[0], adminIds)
+  }
 }

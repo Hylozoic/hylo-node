@@ -4,32 +4,18 @@ var factories = require(root('test/setup/factories'))
 var checkAndSetMembership = require(root('api/policies/checkAndSetMembership'))
 
 describe('checkAndSetMembership', () => {
-  var community, req, res
+  var user, community, req, res
 
-  before(() => {
-    community = factories.community()
-    let network = factories.network()
-    return network.save()
-    .then(() => community.save({network_id: network.id}))
+  before(async () => {
+    const network = await factories.network().save()
+    community = await factories.community({network_id: network.id}).save()
+    user = await factories.user().save()
   })
 
   beforeEach(() => {
     req = factories.mock.request()
     req.params.communityId = community.id
-
     res = factories.mock.response()
-  })
-
-  it('sets res.locals.membership for admins', () => {
-    req.user = {email: 'lawrence@hylo.com'}
-    var next = spy(() => {})
-
-    return checkAndSetMembership(req, res, next)
-    .then(() => {
-      expect(next).to.have.been.called()
-      expect(res.locals.membership).to.exist
-      expect(typeof res.locals.membership.save).to.equal('function')
-    })
   })
 
   it("doesn't set res.locals.membership if publicAccessAllowed", () => {
@@ -40,7 +26,6 @@ describe('checkAndSetMembership', () => {
     return checkAndSetMembership(req, res, next)
     .then(() => {
       expect(next).to.have.been.called()
-      expect(res.locals.membership).to.not.exist
     })
   })
 
@@ -53,12 +38,20 @@ describe('checkAndSetMembership', () => {
     return checkAndSetMembership(req, res, next)
     .then(() => {
       expect(next).to.have.been.called()
-      expect(res.locals.membership).to.not.exist
     })
   })
 
   it('returns false if the user is not logged in', () => {
+    req.session.userId = user.id
     return checkAndSetMembership(req, res)
     .then(() => expect(res.forbidden).to.have.been.called())
+  })
+
+  it('returns true if the user is in the community', async () => {
+    req.session.userId = user.id
+    const next = spy()
+    await community.addGroupMembers([user.id])
+    return checkAndSetMembership(req, res, next)
+    .then(() => expect(next).to.have.been.called())
   })
 })

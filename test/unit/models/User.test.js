@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-expressions */
+
 import '../../setup'
 import bcrypt from 'bcrypt'
 import factories from '../../setup/factories'
@@ -55,8 +57,8 @@ describe('User', function () {
       community2.save()
     )
     .then(() => Promise.join(
-        cat.joinCommunity(community1),
-        cat.joinCommunity(community2)
+      cat.joinCommunity(community1),
+      cat.joinCommunity(community2)
     ))
     .then(() => cat.communities().fetch())
     .then(function (communities) {
@@ -73,9 +75,8 @@ describe('User', function () {
     var street = new Community({name: 'Street', slug: 'street'})
 
     return street.save()
-    .then(() => cat.joinCommunity(street))
-    .then(() => Membership.setModeratorRole(cat.id, street.id))
-    .then(() => cat.memberships().query({where: {community_id: street.id}}).fetchOne())
+    .then(() => cat.joinCommunity(street, GroupMembership.Role.MODERATOR))
+    .then(() => GroupMembership.forPair(cat, street).fetch())
     .then(membership => {
       expect(membership).to.exist
       expect(membership.get('role')).to.equal(1)
@@ -223,9 +224,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('password')
             expect(bcrypt.compareSync('password!', account.get('provider_user_id'))).to.be.true
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -250,9 +250,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('google')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -285,9 +284,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('facebook')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -323,9 +321,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('linkedin')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -432,6 +429,31 @@ describe('User', function () {
   describe('.gravatar', () => {
     it('handles a blank email', () => {
       expect(User.gravatar(null)).to.equal('https://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e?d=mm&s=140')
+    })
+  })
+
+  describe('#communitiesSharedWithUser', () => {
+    it('returns shared', async () => {
+      const user1 = await factories.user().save()
+      const user2 = await factories.user().save()
+      const community1 = await factories.community().save()
+      await community1.createGroup()
+      const community2 = await factories.community().save()
+      await community2.createGroup()
+      const community3 = await factories.community().save()
+      await community3.createGroup()
+      const community4 = await factories.community().save()
+      await community4.createGroup()
+      await Promise.join(
+        user1.joinCommunity(community1),
+        user1.joinCommunity(community2),
+        user1.joinCommunity(community3),
+        user2.joinCommunity(community2),
+        user2.joinCommunity(community3),
+        user2.joinCommunity(community4))
+      const sharedCommunities = await user1.communitiesSharedWithUser(user2)
+      expect(sharedCommunities.length).to.equal(2)
+      expect(sharedCommunities.map(c => c.id).sort()).to.deep.equal([community2.id, community3.id].sort())
     })
   })
 })
