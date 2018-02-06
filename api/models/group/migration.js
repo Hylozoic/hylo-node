@@ -5,17 +5,19 @@ import { getDataTypeForModel } from './DataType'
 
 export async function makeGroups (model) {
   const group_data_type = getDataTypeForModel(model)
-  const rows = await model.query().select(['id', 'created_at'])
+  // TODO: Need to ammend for Topic which doesn't have an active field
+  const rows = await model.query().select(['id', 'created_at', 'active'])
   const rowsToInsert = rows.map(row => ({
     group_data_type,
     group_data_id: row.id,
+    active: row.active,
     created_at: row.created_at
   }))
   await bookshelf.knex.batchInsert('groups', rowsToInsert)
   return rowsToInsert.length
 }
 
-export async function makeGroupMemberships ({ model, parent, copyColumns, settings }) {
+export async function makeGroupMemberships ({ model, parent, copyColumns, selectColumns, settings, getSettings }) {
   const { target, foreignKey } = getRelatedData(model, parent)
 
   let columns = ['user_id', foreignKey]
@@ -24,13 +26,25 @@ export async function makeGroupMemberships ({ model, parent, copyColumns, settin
   } else if (copyColumns) {
     columns = columns.concat(Object.keys(copyColumns))
   }
+
+  if (selectColumns) {
+    columns = columns.concat(selectColumns)
+  }
+
   const rows = await model.query().select(columns)
 
   async function processRow (row) {
     const { user_id, [foreignKey]: parentId } = row
     const group_id = await getGroupId(target, parentId)
 
-    const newRow = {user_id, group_id, settings}
+    const newRow = {user_id, group_id}
+
+    if (getSettings) {
+      newRow.settings = getSettings(row)
+    } else {
+      newRow.settings = settings
+    }
+
     if (Array.isArray(copyColumns)) {
       for (let k of copyColumns) newRow[k] = row[k]
     } else if (copyColumns) {
@@ -42,6 +56,21 @@ export async function makeGroupMemberships ({ model, parent, copyColumns, settin
   const rowsToInsert = await Promise.all(rows.map(processRow))
   await bookshelf.knex.batchInsert('group_memberships', rowsToInsert)
   return rowsToInsert.length
+}
+
+export async function deactivateMembershipsByGroupDataType (group_data_type) {
+  const parents = await Group.where({group_data_type, active: false})
+  .fetchAll({withRelated: 'memberships'})
+  const setInactive = group => Promise.map(group.relations.memberships.models,
+    membership => membership.save({active: false}))
+  await Promise.map(parents.models, setInactive)
+  return parents.length
+}
+
+export async function reconcileNumMembersInCommunities () {
+  const communities = await Community.fetchAll()
+  await Promise.map(communities.models, c => c.reconcileNumMembers())
+  return communities.length
 }
 
 export async function updateGroupMemberships ({ model, parent, getSettings, selectColumns }) {
@@ -115,15 +144,8 @@ async function seed () { // eslint-disable-line no-unused-vars
   */
 
   console.log('Network:', await makeGroups(Network))
-  console.log('Community:', await makeGroups(Community))
   console.log('Topic:', await makeGroups(Tag))
   console.log('Comment:', await makeGroups(Comment))
-
-  console.log('Membership:', await makeGroupMemberships({
-    model: Membership,
-    parent: 'community',
-    copyColumns: ['role', 'active', 'created_at']
-  }))
 
   console.log('PostMembership:', await makeGroupConnectionsM2M({
     model: PostMembership,

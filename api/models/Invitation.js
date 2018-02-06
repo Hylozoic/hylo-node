@@ -41,32 +41,36 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // this should always return the membership, regardless of whether the
   // invitation is unused, whether the membership already exists, and whether
   // the tag follow already exists
-  use: function (userId, opts = {}) {
-    const { transacting } = opts
-    return Membership.where({
-      user_id: userId, community_id: this.get('community_id')
-    })
-    // including related community data for ease of consumption by callers
-    .fetch({withRelated: 'community'})
-    .then(membership => membership ||
-      Membership.create(userId, this.get('community_id'),
-        {role: Number(this.get('role')), transacting}))
-    .tap(() => !this.isUsed() && this.get('tag_id') &&
-      TagFollow.add({
-        tagId: this.get('tag_id'),
-        userId,
-        communityId: this.get('community_id'),
-        transacting
-      })
-      .catch(err => {
+  async use (userId, { transacting } = {}) {
+    const user = await User.find(userId, {transacting})
+    const community = await this.community().fetch({transacting})
+    const role = Number(this.get('role'))
+    const membership =
+      await GroupMembership.forPair(user, community).fetch({transacting}) ||
+      await user.joinCommunity(community, role, {transacting})
+
+    if (!this.isUsed() && this.get('tag_id')) {
+      try {
+        await TagFollow.add({
+          tagId: this.get('tag_id'),
+          userId,
+          communityId: this.get('community_id'),
+          transacting
+        })
+      } catch (err) {
         // do nothing if the tag follow already exists
         if (!err.message || !err.message.includes('duplicate key value')) {
           throw err
         }
-      }))
-    .tap(() => !this.isUsed() &&
-      this.save({used_by_id: userId, used_at: new Date()},
-        {patch: true, transacting}))
+      }
+    }
+
+    if (!this.isUsed()) {
+      await this.save({used_by_id: userId, used_at: new Date()},
+        {patch: true, transacting})
+    }
+
+    return membership
   },
 
   expire: function (userId, opts = {}) {
@@ -78,7 +82,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   send: function () {
     return this.ensureLoad(['creator', 'community', 'tag'])
     .then(() => {
-      const { creator, community, tag } = this.relations
+      const { creator, community } = this.relations
       const email = this.get('email')
 
       const data = {
@@ -117,14 +121,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   create: function (opts) {
-    var role = (opts.moderator ? Membership.MODERATOR_ROLE : Membership.DEFAULT_ROLE)
-
     return new Invitation({
       invited_by_id: opts.userId,
       community_id: opts.communityId,
       email: opts.email,
       tag_id: opts.tagId,
-      role: role,
+      role: GroupMembership.Role[opts.moderator ? 'MODERATOR' : 'DEFAULT'],
       token: uuid.v4(),
       created_at: new Date(),
       subject: opts.subject,

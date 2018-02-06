@@ -22,7 +22,7 @@ describe('CommentController', function () {
     .then(() => Promise.join(
       fixtures.p1.communities().attach(fixtures.c1.id),
       fixtures.p1.comments().create(fixtures.cm1),
-      fixtures.c1.users().attach({user_id: fixtures.u1.id, active: true})
+      fixtures.c1.addGroupMembers([fixtures.u1.id])
     )))
 
   beforeEach(() => {

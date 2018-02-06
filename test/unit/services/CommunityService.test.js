@@ -4,33 +4,30 @@ var factories = require(root('test/setup/factories'))
 var CommunityService = require(root('api/services/CommunityService'))
 
 describe('CommunityService', function () {
-  let fixtures;
+  let u1, u2, c1
 
-  before(() => {
-    return setup.clearDb()
-      .then(() => Promise.props({
-        u1: factories.user({name: 'moderator'}).save(),
-        u2: factories.user().save({name: 'user' }),
-        c1: factories.community({num_members: 0}).save()
-      }))
-      .then(props => fixtures = props)
-      .then(() => Membership.create(fixtures.u1.id, fixtures.c1.id, {role: Membership.MODERATOR_ROLE}))
-      .then(() => Membership.create(fixtures.u2.id, fixtures.c1.id))
+  before(async () => {
+    await setup.clearDb()
+    u1 = await factories.user({name: 'moderator'}).save()
+    u2 = await factories.user().save({name: 'user'})
+    c1 = await factories.community({num_members: 0}).save()
+    await u1.joinCommunity(c1, GroupMembership.Role.MODERATOR)
+    await u2.joinCommunity(c1)
   })
 
   it('removes a member from a community', () => {
-    return Membership.inAllCommunities(fixtures.u2.id, [fixtures.c1.id])
-      .then(result => {
-        expect(result).to.equal(true)
-        return CommunityService.removeMember(fixtures.u2.id, fixtures.c1.id, fixtures.u1.id)
-      })
-      .then(() => Promise.props({
-        inCommunity: Membership.inAllCommunities(fixtures.u2.id, [fixtures.c1.id]),
-        refreshedCommunity: fixtures.c1.refresh()
-      }))
-      .then(props => {
-        expect(props.inCommunity).to.equal(false)
-        expect(props.refreshedCommunity.get('num_members')).to.equal(1)
-      })
+    return Group.allHaveMember([c1.id], u2.id, Community)
+    .then(result => {
+      expect(result).to.equal(true)
+      return CommunityService.removeMember(u2.id, c1.id, u1.id)
+    })
+    .then(() => Promise.props({
+      inCommunity: Group.allHaveMember([c1.id], u2.id, Community),
+      refreshedCommunity: c1.refresh()
+    }))
+    .then(props => {
+      expect(props.inCommunity).to.equal(false)
+      expect(props.refreshedCommunity.get('num_members')).to.equal(1)
+    })
   })
 })

@@ -40,15 +40,17 @@ export {
   deletePost,
   pinPost
 } from './post'
+export { updateMembership } from './membership'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }
 
-export function leaveCommunity (userId, communityId) {
-  return User.find(userId)
-  .then(user => user.leaveCommunity(communityId))
+export async function leaveCommunity (userId, communityId) {
+  const community = await Community.find(communityId)
+  const user = await User.find(userId)
+  return user.leaveCommunity(community)
 }
 
 export function findOrCreateThread (userId, data) {
@@ -58,30 +60,6 @@ export function findOrCreateThread (userId, data) {
 
 export function findOrCreateLinkPreviewByUrl (data) {
   return underlyingFindLinkPreview(data.url)
-}
-
-export function updateMembership (userId, { communityId, data }) {
-  const settings = convertGraphqlData(data.settings)
-  const whitelist = mapKeys(pick(data, [
-    'newPostCount',
-    'lastViewedAt'
-  ]), (v, k) => snakeCase(k))
-  if (isEmpty(whitelist) && isEmpty(settings)) return Promise.resolve(null)
-
-  return Membership.find(userId, communityId)
-  .then(membership => {
-    if (!membership) throw new Error("Couldn't find membership for community with id", communityId)
-
-    return isEmpty(settings)
-      ? Promise.resolve(membership)
-      : membership.addSetting(settings)
-  })
-  .then(membership =>
-    // if settings is not empty, it saves the membership anyway as settings have
-    // been added above
-    isEmpty(whitelist) && isEmpty(settings)
-      ? Promise.resolve(membership)
-      : membership.save(whitelist))
 }
 
 export function updateCommunityTopic (userId, { id, data }) {
@@ -181,10 +159,11 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
   .then(() => ({success: true}))
 }
 
-export function removePost (userId, postId, communityIdOrSlug) {
+export async function removePost (userId, postId, communityIdOrSlug) {
+  const community = await Community.find(communityIdOrSlug)
   return Promise.join(
     Post.find(postId),
-    Membership.hasModeratorRole(userId, communityIdOrSlug),
+    GroupMembership.hasModeratorRole(userId, community),
     (post, isModerator) => {
       if (!post) throw new Error(`Couldn't find post with id ${postId}`)
       if (!isModerator) throw new Error(`You don't have permission to remove this post`)

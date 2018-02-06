@@ -1,6 +1,5 @@
 export function myCommunityIds (userId) {
-  return Membership.query().select('community_id')
-  .where({user_id: userId, active: true})
+  return Group.pluckIdsForMember(userId, Community)
 }
 
 export function myNetworkCommunityIds (userId) {

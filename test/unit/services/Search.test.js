@@ -62,20 +62,27 @@ describe('Search', function () {
   })
 
   describe('.forUsers', () => {
-    var cat, dog, catdog, house
+    var cat, dog, catdog, house, mouse, mouseCommunity, network
 
     before(() => {
       cat = new User({name: 'Mister Cat', email: 'iam@cat.org', active: true})
       dog = new User({name: 'Mister Dog', email: 'iam@dog.org', active: true})
+      mouse = new User({name: 'Mister Mouse', email: 'iam@mouse.org', active: true})
       catdog = new User({name: 'Cat Dog', email: 'iam@catdog.org', active: true})
       house = new Community({name: 'House', slug: 'House'})
+      mouseCommunity = new Community({name: 'MouseCommunity', slug: 'MouseCommunity'})
+      network = new Network({name: 'network', slug: 'network'})
 
       return setup.clearDb()
       .then(() => cat.save())
       .then(() => dog.save())
       .then(() => catdog.save())
+      .then(() => mouse.save())
+      .then(() => network.save())
+      .then(() => mouseCommunity.save({network_id: network.id}))
       .then(() => house.save())
       .then(() => cat.joinCommunity(house))
+      .then(() => mouse.joinCommunity(mouseCommunity))
       .then(() => FullTextSearch.dropView().catch(err => {})) // eslint-disable-line handle-callback-err
       .then(() => FullTextSearch.createView())
     })
@@ -83,7 +90,7 @@ describe('Search', function () {
     function userSearchTests (key) {
       it('finds members based on name', () => {
         return Search.forUsers({[key]: 'mister'}).fetchAll().then(users => {
-          expect(users.length).to.equal(2)
+          expect(users.length).to.equal(3)
         })
       })
 
@@ -117,15 +124,30 @@ describe('Search', function () {
         })
       })
 
-      it('excludes inactive members', () => {
-        return Membership.query().where({
-          user_id: cat.id,
-          community_id: house.id
-        }).update({active: false}).then(() => {
-          return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll().then(users => {
-            expect(users.length).to.equal(0)
-          })
+      it('excludes inactive members', async () => {
+        await cat.leaveCommunity(house)
+        const users = await Search.forUsers({
+          term: 'mister', communities: [house.id]
+        }).fetchAll()
+        expect(users.length).to.equal(0)
+      })
+    })
+
+    describe('for a network', () => {
+      it('finds members', () => {
+        return Search.forUsers({term: 'mister', network: network.id}).fetchAll()
+        .then(users => {
+          expect(users.length).to.equal(1)
+          expect(users.first().get('name')).to.equal('Mister Mouse')
         })
+      })
+
+      it('excludes inactive members', async () => {
+        await mouse.leaveCommunity(mouseCommunity)
+        const users = await Search.forUsers({
+          term: 'mister', network: network.id
+        }).fetchAll()
+        expect(users.length).to.equal(0)
       })
     })
   })

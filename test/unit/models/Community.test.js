@@ -1,7 +1,8 @@
+/* eslint-disable no-unused-expressions */
 const root = require('root-path')
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
-import { times } from 'lodash'
+const { mockify, unspyify } = require(root('test/setup/helpers'))
 
 describe('Community', () => {
   it('can be created', function () {
@@ -45,6 +46,41 @@ describe('Community', () => {
       expect(Community.isSlugValid('uh_')).to.be.false
       expect(Community.isSlugValid('a')).to.be.false
       expect(Community.isSlugValid('abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdx')).to.be.false
+    })
+  })
+
+  describe('.reconcileNumMembers', () => {
+    let community
+
+    before(async () => {
+      community = await factories.community().save()
+      await community.addGroupMembers([
+        await factories.user().save(),
+        await factories.user({active: false}).save()
+      ])
+    })
+
+    it('sets num_members correctly', async () => {
+      await community.reconcileNumMembers()
+      expect(community.get('num_members')).to.equal(1)
+    })
+  })
+
+  describe('.deactivate', () => {
+    before(() => {
+      mockify(Group, 'deactivate')
+    })
+
+    after(() => {
+      unspyify(Group, 'deactivate')
+    })
+
+    it('sets active to false and calls Group.deactivate', async () => {
+      const community = await factories.community({active: true}).save()
+      await Community.deactivate(community.id)
+      await community.refresh()
+      expect(community.get('active')).to.equal(false)
+      expect(Group.deactivate).to.have.been.called.with(community.id, Community)
     })
   })
 })

@@ -107,11 +107,11 @@ const fetchAllCommunityIds = (userId, { communityIds, networkId }) => {
   }
   return Promise.join(
     Network.activeCommunityIds(userId),
-    Membership.activeCommunityIds(userId)
+    Group.pluckIdsForMember(userId, Community)
   ).then(flow(flatten, uniq))
 }
 
-const obfuscate = text => new Buffer(text).toString('hex')
+const obfuscate = text => Buffer.from(text).toString('hex')
 
 const presentResult = (posts, comments, people) => item => {
   if (item.user_id) {

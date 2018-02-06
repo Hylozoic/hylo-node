@@ -423,29 +423,25 @@ describe('community digest v2', () => {
   describe('sendAllDigests', () => {
     var args, u1, u2, community, post
 
-    before(() => {
+    before(async () => {
       spyify(Email, 'sendSimpleEmail', function () { args = arguments })
       const six = moment.tz(defaultTimezone).startOf('day').add(6, 'hours')
 
-      u1 = factories.user({
+      u1 = await factories.user({
         active: true,
         settings: {digest_frequency: 'daily'},
         avatar_url: 'av1'
-      })
-      u2 = factories.user({avatar_url: 'av2'})
-      community = factories.community({daily_digest: true, avatar_url: 'foo'})
+      }).save()
+      u2 = await factories.user({avatar_url: 'av2'}).save()
+      community = await factories.community({
+        daily_digest: true, avatar_url: 'foo'
+      }).save()
 
-      return community.save()
-      .tap(c => u2.save()
-        .then(u => {
-          post = factories.post({created_at: six, user_id: u2.id})
-          return post.save()
-        })
-        .then(p => p.communities().attach(c.id)))
-      .tap(c => u1.save()
-        .then(u => u.communities().attach({
-          community_id: c.id, active: true, settings: {send_email: true}
-        })))
+      post = await factories.post({created_at: six, user_id: u2.id}).save()
+      await post.communities().attach(community.id)
+      await community.addGroupMembers([u1.id], {
+        settings: {sendEmail: true}
+      })
     })
 
     after(() => unspyify(Email, 'sendSimpleEmail'))
@@ -528,7 +524,7 @@ describe('community digest v2', () => {
 describe('getRecipients', () => {
   var c, uIn1, uOut1, uOut2, uOut3, uOut4, uOut5, uIn2
 
-  before(() => {
+  before(async () => {
     const settings = {digest_frequency: 'daily'}
     uIn1 = factories.user({settings})
     uOut1 = factories.user({active: false, settings})                // inactive user
@@ -538,7 +534,7 @@ describe('getRecipients', () => {
     uOut5 = factories.user({settings})                               // not in the community
     uIn2 = factories.user({settings})
     c = factories.community()
-    return Promise.join(
+    await Promise.join(
       uIn1.save(),
       uOut1.save(),
       uOut2.save(),
@@ -546,34 +542,23 @@ describe('getRecipients', () => {
       uOut4.save(),
       uOut5.save(),
       uIn2.save(),
-      c.save())
-    .then(() => Promise.join(
-      uIn1.communities().attach({
-        community_id: c.id, active: true, settings: {send_email: true}
-      }),
-      uOut1.communities().attach({
-        community_id: c.id, active: true, settings: {send_email: true}
-      }),
-      uOut2.communities().attach({
-        community_id: c.id, active: false, settings: {send_email: true}
-      }),
-      uOut3.communities().attach({
-        community_id: c.id, active: false, settings: {send_email: false}
-      }),
-      uOut4.communities().attach({
-        community_id: c.id, active: false, settings: {send_email: true}
-      }),
-      uIn2.communities().attach({
-        community_id: c.id, active: true, settings: {send_email: true}
-      })
-    ))
+      c.save()
+    )
+
+    await c.addGroupMembers([uIn1, uOut1, uOut2, uOut4, uIn2], {
+      settings: {sendEmail: true}
+    })
+
+    await c.addGroupMembers([uOut3], {settings: {sendEmail: false}})
+    await c.removeGroupMembers([uOut2])
   })
 
   it('only returns active members with email turned on and the right digest type', () => {
     return getRecipients(c.id, 'daily')
     .then(models => {
       expect(models.length).to.equal(2)
-      expect(models.map(m => m.id).sort()).to.deep.equal([uIn1.id, uIn2.id].sort())
+      expect(models.map(m => m.id).sort())
+      .to.deep.equal([uIn1.id, uIn2.id].sort())
     })
   })
 })
