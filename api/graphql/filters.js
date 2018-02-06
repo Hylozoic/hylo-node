@@ -29,7 +29,9 @@ export const personFilter = userId => relation => relation.query(q => {
   })
 
   // limit to users that are in those other memberships
-  q.where('users.id', 'in', sharedMemberships.query().pluck('user_id'))
+  q.where(inner =>
+    inner.where('users.id', User.AXOLOTL_ID)
+    .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id')))
 })
 
 function filterCommunities (q, idColumn, userId) {
