@@ -47,16 +47,17 @@ describe('model filters', () => {
     it('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
-        where "users"."id" in
-          (select "user_id"
-          from "group_memberships"
-          inner join "groups"
-            on "groups"."id" = "group_memberships"."group_id"
-          where ("groups"."group_data_id" in
-            ${myCommunityIdsSqlFragment(42)}
-                or "groups"."group_data_id" in
-              ${myNetworkCommunityIdsSqlFragment(42)})
-                      and "group_memberships"."group_data_type" = 1)`)
+        where ("users"."id" = '${User.AXOLOTL_ID}' or
+          "users"."id" in
+            (select "user_id"
+            from "group_memberships"
+            inner join "groups"
+              on "groups"."id" = "group_memberships"."group_id"
+            where ("groups"."group_data_id" in
+              ${myCommunityIdsSqlFragment(42)}
+                  or "groups"."group_data_id" in
+                ${myNetworkCommunityIdsSqlFragment(42)})
+                        and "group_memberships"."group_data_type" = 1))`)
     })
   })
 
