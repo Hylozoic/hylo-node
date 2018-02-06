@@ -1,7 +1,11 @@
 import { sanitize } from 'hylo-utils/text'
 
 export async function topicMutationPermissionCheck (userId, communityId) {
-  if (!await Membership.find(userId, communityId)) {
+  const community = await Community.find(communityId)
+  if (!community) {
+    throw new Error('That community does not exist.')
+  }
+  if (!await GroupMembership.hasActiveMembership(userId, community)) {
     throw new Error("You're not a member of that community.")
   }
 }
