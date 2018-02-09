@@ -51,7 +51,7 @@ describe('topic mutations', () => {
     })
   })
 
-  describe.only('subscribe', async () => {
+  describe('subscribe', async () => {
     let t
 
     beforeEach(async () => {
