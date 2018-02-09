@@ -46,7 +46,7 @@ describe('topic mutations', () => {
     it('adds the topic to the community', async () => {
       const topic = await mutations.createTopic(u1.id, 'wombats', c1.id)
       await topic.refresh({ withRelated: [ 'communities' ] })
-      const community = topic.communities().first()
+      const community = topic.relations.communities.first()
       expect(community.id).to.equal(c1.id)
     })
   })
@@ -66,8 +66,8 @@ describe('topic mutations', () => {
     it('adds the user to the topic', async () => {
       await mutations.subscribe(u1.id, t.id, c1.id, true)
       await u1.refresh({ withRelated: [ 'followedTags' ] })
-      const tag = u1.relations.followedTags.first()
-      expect(tag.id).to.equal(t.id)
+      const tag = u1.relations.followedTags.find({ id: t.id })
+      expect(tag).not.to.equal(undefined)
     })
 
     it('removes the user from the topic if isSubscribing falsy', async () => {
