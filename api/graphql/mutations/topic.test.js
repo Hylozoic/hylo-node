@@ -42,11 +42,11 @@ describe.only('topic mutations', () => {
       await expect(actual).to.be.rejectedWith(/must not contain whitespace/)
     })
 
-    // Bah... fix!
     it('adds the topic to the community', async () => {
       const topic = await mutations.createTopic(u.id, 'wombats', c1.id)
-      await topic.related('communities')
-      expect(topic.communities.length).to.equal(1)
+      await topic.refresh({ withRelated: [ 'communities' ] })
+      const community = topic.relations.communities.first()
+      expect(community.id).to.equal(c1.id)
     })
   })
 })
