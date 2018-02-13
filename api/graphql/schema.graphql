@@ -131,6 +131,7 @@ type Community {
   invitePath: String
   network: Network
   numMembers: Int
+  hidden: Boolean
   members(
     first: Int,
     order: String,
@@ -494,6 +495,7 @@ input CommunityInput {
   slackTeam: String
   slackConfigureUrl: String
   active: Boolean
+  hidden: Boolean
   networkId: ID
 }
 

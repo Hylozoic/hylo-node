@@ -165,7 +165,8 @@ module.exports = bookshelf.Model.extend(merge({
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
       'welcome_message', 'leader_id', 'beta_access_code', 'location',
-      'slack_hook_url', 'slack_team', 'slack_configure_url', 'active'
+      'slack_hook_url', 'slack_team', 'slack_configure_url', 'active',
+      'hidden'
     ]
 
     const attributes = pick(changes, whitelist)
