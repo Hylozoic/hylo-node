@@ -114,7 +114,6 @@ const generateRemoveQueries = function (userId, knex) {
     ['posts_about_users', 'user_id'],
     ['posts_users', 'user_id'],
     ['thanks', 'thanked_by_id'],
-    ['group_memberships', 'user_id'],
     ['users', 'id']
   ].forEach(args => {
     var table = args[0]
