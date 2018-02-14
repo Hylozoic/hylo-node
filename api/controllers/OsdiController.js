@@ -1,3 +1,4 @@
+import osdiQuery from '../../lib/osdi/osdi-query'
 
 const MESSAGE_OF_THE_DAY = 'Welcome to the Hylo OSDI API Entry Point'
 const VENDOR_NAME        = 'Hylo, Inc'
@@ -53,8 +54,23 @@ module.exports = {
     // send response
   },
   getPeople: function (req, res) {
-    // list people
-    // implement query params
+    const filter = req.query.filter
+    // ensure that filter is entirely valid
+    // per_page
+    // page
+    // convert filter string into knex friendly query for users
+    User
+      .query(osdiQuery(filter))
+      // use fetchPage
+      .fetchAll()
+      .then(users => {
+
+        // convert users to hal+json
+        res.send(users.toArray())
+      })
+      .catch(function(err) {
+        res.send(err)
+      })
   },
   getPerson: function (req, res) {
     // get user id
