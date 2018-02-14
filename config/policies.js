@@ -33,6 +33,15 @@ module.exports.policies = {
     destroy: true
   },
 
+  OsdiController: {
+    entry: ['rateLimit'],
+    createPerson: ['rateLimit', 'osdiTokenAuth'],
+    readPerson: ['rateLimit', 'osdiTokenAuth'],
+    updatePerson: ['rateLimit', 'osdiTokenAuth'],
+    deletePerson: ['rateLimit', 'osdiTokenAuth'],
+    personSignupHelper: ['rateLimit', 'osdiTokenAuth']
+  },
+
   CommentController: {
     createFromEmail: true,
     createBatchFromEmailForm: ['checkAndDecodeToken']

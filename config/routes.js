@@ -66,5 +66,14 @@ module.exports.routes = {
   'POST   /noo/threads/subscribe':                        'PostController.subscribeToUpdates',
   'POST   /noo/threads/unsubscribe':                      'PostController.unsubscribeFromUpdates',
 
-  'POST   /noo/upload':                                   'UploadController.create'
+  'POST   /noo/upload':                                   'UploadController.create',
+
+  // osdi api routes
+  'GET    /api/v1':                                       'OsdiController.entry',
+  'POST   /api/v1/people':                                'OsdiController.createPerson',
+  'GET    /api/v1/people':                                'OsdiController.getPeople',
+  'GET    /api/v1/people/:personId':                      'OsdiController.getPerson',
+  'PUT    /api/v1/people/:personId':                      'OsdiController.updatePerson',
+  'DELETE /api/v1/people/:personId':                      'OsdiController.deletePerson',
+  'POST   /api/v1/people/person_signup':                  'OsdiController.personSignupHelper'
 }
