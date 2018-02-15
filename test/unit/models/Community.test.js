@@ -26,7 +26,7 @@ describe('Community', () => {
 
     const savedCommunity = await Community.find('comm1')
     expect(savedCommunity.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg')
-    expect(savedCommunity.get('avater_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.jpg')
+    expect(savedCommunity.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.jpg')
   })
 
   describe('.find', () => {
