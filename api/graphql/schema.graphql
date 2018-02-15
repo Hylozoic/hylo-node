@@ -560,6 +560,7 @@ type Mutation {
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
+  updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community  
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
   updateMe(changes: MeInput): Me
   updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership

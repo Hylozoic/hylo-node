@@ -11,6 +11,7 @@ export {
   addNetworkModeratorRole,
   removeCommunityFromNetwork,
   removeNetworkModeratorRole,
+  updateCommunityHiddenSetting,
   updateNetwork
 } from './network'
 export { registerDevice } from './mobile'
