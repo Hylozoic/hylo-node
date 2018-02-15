@@ -36,7 +36,8 @@ module.exports.policies = {
   OsdiController: {
     entry: ['rateLimit'],
     createPerson: ['rateLimit', 'osdiTokenAuth'],
-    readPerson: ['rateLimit', 'osdiTokenAuth'],
+    getPeople: ['rateLimit', 'osdiTokenAuth'],
+    getPerson: ['rateLimit', 'osdiTokenAuth'],
     updatePerson: ['rateLimit', 'osdiTokenAuth'],
     deletePerson: ['rateLimit', 'osdiTokenAuth'],
     personSignupHelper: ['rateLimit', 'osdiTokenAuth']

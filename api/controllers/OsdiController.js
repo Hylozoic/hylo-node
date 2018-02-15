@@ -4,7 +4,8 @@ const MESSAGE_OF_THE_DAY = 'Welcome to the Hylo OSDI API Entry Point'
 const VENDOR_NAME        = 'Hylo, Inc'
 const PRODUCT_NAME       = 'Hylo'
 const OSDI_VERSION       = '1.2.0'
-const MAX_PAGESIZE       = 25
+const DEFAULT_PAGESIZE   = 25
+const MAX_PAGESIZE       = 100
 const NAMESPACE          = 'hylo'
 
 // TODO replace 'hylo.com' with domain of this instance
@@ -54,18 +55,19 @@ module.exports = {
     // send response
   },
   getPeople: function (req, res) {
+    // TODO: ensure that filter is entirely valid
     const filter = req.query.filter
-    // ensure that filter is entirely valid
-    // per_page
-    // page
-    // convert filter string into knex friendly query for users
+    const pageSize = req.query.per_page || DEFAULT_PAGESIZE
+    const page = req.query.page || 1
     User
-      .query(osdiQuery(filter))
-      // use fetchPage
-      .fetchAll()
+      .query(filter ? osdiQuery(filter) : () => {})
+      .fetchPage({
+        pageSize,
+        page
+      })
       .then(users => {
-
         // convert users to hal+json
+        console.log(users.pagination)
         res.send(users.toArray())
       })
       .catch(function(err) {

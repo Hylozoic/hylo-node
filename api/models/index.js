@@ -12,6 +12,7 @@ export const init = () => {
 
   global.bookshelf = Bookshelf(Knex(knexfile[process.env.NODE_ENV]))
   global.bookshelf.plugin('bookshelf-returning')
+  global.bookshelf.plugin('pagination')
 
   return readdirSync(__dirname)
   .map(filename => {
