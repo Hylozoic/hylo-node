@@ -20,7 +20,7 @@ describe('Community', () => {
     }
 
     const user = await new User({name: 'username', email: 'john@foo.com', active: true}).save()
-    await new Community({slug: 'starter-posts', name: 'starter-posts', beta_access_code: 'foo!'}).save()
+    await new Community({slug: 'starter-posts', name: 'starter-posts', beta_access_code: 'aasdfkjh3##Sasdfsdfedss'}).save()
 
     const community = await Community.create(user.id, data)
 
