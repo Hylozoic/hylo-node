@@ -5,6 +5,7 @@ import {
   createThread
 } from '../../../../api/models/post/findOrCreateThread'
 import setup from '../../../setup'
+import factories from '../../../setup/factories'
 
 describe('comment/createComment', () => {
   before(() => setup.clearDb())
@@ -13,9 +14,8 @@ describe('comment/createComment', () => {
     var user, user2, thread
 
     before(async () => {
-      user = new User({name: 'Oo Joy', email: 'oojoy@b.c'})
-      user2 = new User({name: 'Oo Boy', email: 'ooboy@c.d'})
-      await Promise.join(user.save(), user2.save())
+      user = await factories.user().save()
+      user2 = await factories.user().save()
       thread = await createThread(user.id, [user2.id])
     })
 

@@ -1,40 +1,38 @@
-import findOrCreateThread, { validateThreadData, createThread } from './findOrCreateThread'
+import findOrCreateThread, { validateThreadData } from './findOrCreateThread'
+import factories from '../../../test/setup/factories'
 
 describe('findOrCreateThread', () => {
-  var user
-  before(() => {
-    user = new User({name: 'Dog', email: 'abxt@b.c'})
-    return user.save()
+  var u1, u2, u3
+  before(async () => {
+    u1 = await factories.user().save()
+    u2 = await factories.user().save()
+    u3 = await factories.user().save()
   })
 
-  it("creates a thread if one doesn't exist", async () => {
-    let post = await findOrCreateThread(user.id, [user.id])
-    post = await Post.find(post.id)
-    expect(post).to.exist
-    const followers = await post.followers().fetch()
-    expect(followers.length).to.equal(1)
+  it('finds or creates a thread', async () => {
+    let thread = await findOrCreateThread(u1.id, [u1.id, u2.id, u3.id])
+    thread = await Post.find(thread.id)
+    expect(await thread.followers().fetch().then(x => x.length)).to.equal(3)
+
+    let thread2 = await findOrCreateThread(u2.id, [u1.id, u2.id, u3.id])
+    expect(thread2.id).to.equal(thread.id)
+
+    let thread3 = await findOrCreateThread(u2.id, [u2.id, u3.id])
+    expect(thread3.id).not.to.equal(thread.id)
+    expect(await thread3.followers().fetch().then(x => x.length)).to.equal(2)
   })
 })
 
 describe('validateThreadData', () => {
-  var user, userSharingCommunity, userNotInCommunity, inCommunity
+  var user, userSharingCommunity, userNotInCommunity, community
 
-  before(function () {
-    inCommunity = new Community({slug: 'foo2', name: 'Foo2'})
-    user = new User({name: 'Cat', email: 'abt@b.c'})
-    userSharingCommunity = new User({name: 'Meow', email: 'a@b.cd'})
-    userNotInCommunity = new User({name: 'Dog', email: 'abd@b.c'})
-    return Promise.join(
-      inCommunity.save(),
-      user.save(),
-      userSharingCommunity.save(),
-      userNotInCommunity.save()
-    ).then(function () {
-      return Promise.join(
-        user.joinCommunity(inCommunity),
-        userSharingCommunity.joinCommunity(inCommunity)
-      )
-    })
+  before(async () => {
+    community = await factories.community().save()
+    user = await factories.user().save()
+    userSharingCommunity = await factories.user().save()
+    userNotInCommunity = await factories.user().save()
+    await user.joinCommunity(community)
+    await userSharingCommunity.joinCommunity(community)
   })
 
   it('fails if no participantIds are provided', () => {
@@ -51,31 +49,5 @@ describe('validateThreadData', () => {
   it('continue the promise chain if user shares community with all participants', () => {
     const data = {participantIds: [userSharingCommunity.id]}
     expect(validateThreadData(user.id, data)).to.respondTo('then')
-  })
-})
-
-describe('createThread', () => {
-  var user, user2, community
-
-  before(function () {
-    community = new Community({slug: 'foo3', name: 'Foo3'})
-    user = new User({name: 'Cat', email: 'catcat@b.c'})
-    user2 = new User({name: 'Meow', email: 'meowcat@b.cd'})
-    return Promise.join(
-      community.save(),
-      user.save(),
-      user2.save()
-    ).then(function () {
-      return Promise.join(
-        user.joinCommunity(community),
-        user2.joinCommunity(community)
-      )
-    })
-  })
-
-  it('creates and returns a new thread', () => {
-    return createThread(user.id, [user2.id]).then(p => {
-      expect(p).to.exist
-    })
   })
 })

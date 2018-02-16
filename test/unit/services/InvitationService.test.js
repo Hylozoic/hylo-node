@@ -65,7 +65,6 @@ describe('InvitationService', () => {
       .then(membership =>
         expect(membership.attributes).to.contain({
           user_id: invitee.get('id'),
-          community_id: community.get('id'),
           active: true
         })
       )
@@ -78,7 +77,6 @@ describe('InvitationService', () => {
       .then(membership =>
         expect(membership.attributes).to.contain({
           user_id: invitee.get('id'),
-          community_id: community.get('id'),
           active: true
         })
       )
@@ -90,11 +88,11 @@ describe('InvitationService', () => {
       const accessCode = community.get('beta_access_code')
       return InvitationService.use(userId, token, accessCode)
       .then(membership => {
-        invitation.fetch().then(updatedInvitation => {
+        return invitation.refresh()
+        .then(updatedInvitation => {
           expect(updatedInvitation.get('used_by_id')).to.equal(invitee.get('id'))
           return expect(membership.attributes).to.contain({
             user_id: invitee.get('id'),
-            community_id: community.get('id'),
             active: true
           })
         })

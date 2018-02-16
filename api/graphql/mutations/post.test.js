@@ -11,7 +11,7 @@ describe('pinPost', () => {
     post = factories.post()
     return Promise.join(community.save(), user.save(), post.save())
     .then(() => community.posts().attach(post))
-    .then(() => user.joinCommunity(community, Membership.MODERATOR_ROLE))
+    .then(() => user.joinCommunity(community, GroupMembership.Role.MODERATOR))
   })
 
   it('sets pinned_at to current time if not set', () => {

@@ -7,7 +7,7 @@ export function canDeleteComment (userId, comment) {
   return comment.load('post.communities')
   .then(comment => Promise.any(
     comment.relations.post.relations.communities.map(c =>
-      Membership.hasModeratorRole(userId, c.id))
+      GroupMembership.hasModeratorRole(userId, c))
   ))
 }
 

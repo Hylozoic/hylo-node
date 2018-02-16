@@ -18,6 +18,11 @@ export default {
     return this.group(dbOpts).then(group => group.addMembers(...args))
   },
 
+  async removeGroupMembers (...args) {
+    const dbOpts = args[1]
+    return this.group(dbOpts).then(group => group.removeMembers(...args))
+  },
+
   queryByGroupConnection (model, direction = 'parent') {
     // TODO we can infer the correct direction in most cases rather than
     // requiring it to be specified
@@ -45,13 +50,16 @@ export default {
     .join('groups', 'groups.id', 'group_memberships.group_id')
     .where({
       group_data_id: this.id,
-      group_data_type: getDataTypeForInstance(this),
+      'groups.group_data_type': getDataTypeForInstance(this),
       'group_memberships.active': true
     })
     .select('user_id')
     if (where) subq = subq.where(where)
 
-    return User.collection().query(q => q.where('id', 'in', subq))
+    return User.collection().query(q => {
+      q.where('id', 'in', subq)
+      q.where('users.active', true)
+    })
   },
 
   groupMembersWithPivots () {
@@ -79,9 +87,12 @@ export default {
 
     const queryCalls = []
     const addQueryCall = cb => queryCalls.push(cb) && proxy
+    const tableName = User.forge().tableName
+    const tableNameFn = () => tableName
     const proxy = new Proxy(this, {
       get (target, key) {
         if (key === 'query') return addQueryCall
+        if (key === 'tableName') return tableNameFn
 
         // handle other keys here if it becomes necessary to fake any other
         // Bookshelf collection properties
@@ -89,7 +100,7 @@ export default {
         if (typeof key === 'string' && key.startsWith('fetch')) {
           return async (...args) => {
             const group = await target.group()
-            let relation = group.members().withPivot(['role', 'settings'])
+            let relation = group.members().withPivot(['created_at', 'role', 'settings'])
             for (let cb of queryCalls) relation = relation.query(cb)
             return relation[key](...args)
           }

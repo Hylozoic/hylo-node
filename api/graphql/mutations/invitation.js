@@ -1,18 +1,23 @@
 import InvitationService from '../../services/InvitationService'
 
-export function createInvitation (userId, communityId, data) {
-  return Membership.hasModeratorRole(userId, communityId)
+export async function createInvitation (userId, communityId, data) {
+  const community = await Community.find(communityId)
+  return GroupMembership.hasModeratorRole(userId, community)
   .then(ok => {
     if (!ok) throw new Error("You don't have permission to create an invitation for this community")
   })
-  .then(() => InvitationService.create({
-    sessionUserId: userId,
-    communityId,
-    emails: data.emails,
-    message: data.message,
-    moderator: data.isModerator || false,
-    subject: 'Join our community!'
-  }))
+  .then(() => Community.find(communityId))
+  .then((community) => {
+    if (!community) throw new Error('Cannot find community to send invites for')
+    return InvitationService.create({
+      sessionUserId: userId,
+      communityId,
+      emails: data.emails,
+      message: data.message,
+      moderator: data.isModerator || false,
+      subject: `Join me in ${community.get('name')} on Hylo!`
+    })
+  })
   .then(invitations => ({invitations}))
 }
 
@@ -34,8 +39,9 @@ export function resendInvitation (userId, invitationId) {
   .then(() => ({success: true}))
 }
 
-export function reinviteAll (userId, communityId) {
-  return Membership.hasModeratorRole(userId, communityId)
+export async function reinviteAll (userId, communityId) {
+  const community = await Community.find(communityId)
+  return GroupMembership.hasModeratorRole(userId, community)
   .then(ok => {
     if (!ok) throw new Error("You don't have permission to modify this invitation")
   })

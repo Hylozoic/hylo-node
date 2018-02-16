@@ -18,7 +18,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   hasModeratorRole: function () {
-    return this.get('role') === Membership.MODERATOR_ROLE
+    return this.get('role') === this.constructor.MODERATOR_ROLE
   }
 }, HasSettings), {
   DEFAULT_ROLE: 0,
@@ -30,7 +30,7 @@ module.exports = bookshelf.Model.extend(merge({
     var fetch = function (community_id) {
       var attrs = {user_id, community_id}
       if (!options || !options.includeInactive) attrs.active = true
-      return Membership.where(attrs).fetch(options)
+      return this.where(attrs).fetch(options)
     }
 
     if (isNaN(Number(community_id_or_slug))) {
@@ -46,14 +46,14 @@ module.exports = bookshelf.Model.extend(merge({
   create: function (userId, communityId, opts) {
     if (!opts) opts = {}
 
-    return new Membership({
+    return this.forge({
       user_id: userId,
       community_id: communityId,
       created_at: new Date(),
       settings: {send_email: true, send_push_notifications: true},
       last_viewed_at: new Date(),
       active: true,
-      role: opts.role || Membership.DEFAULT_ROLE
+      role: opts.role || this.DEFAULT_ROLE
     })
     .save({}, {transacting: opts.transacting})
     .tap(() => User.followDefaultTags(userId, communityId, opts.transacting))
@@ -72,14 +72,14 @@ module.exports = bookshelf.Model.extend(merge({
     return bookshelf.knex('communities_users').where({
       user_id: user_id,
       community_id: community_id
-    }).update({role: Membership.MODERATOR_ROLE})
+    }).update({role: this.MODERATOR_ROLE})
   },
 
   removeModeratorRole: function (user_id, community_id) {
     return bookshelf.knex('communities_users').where({
       user_id: user_id,
       community_id: community_id
-    }).update({role: Membership.DEFAULT_ROLE})
+    }).update({role: this.DEFAULT_ROLE})
   },
 
   hasModeratorRole: function (user_id, community_id) {
@@ -129,21 +129,13 @@ module.exports = bookshelf.Model.extend(merge({
     if (!user_id) return Promise.resolve([])
     var query = {user_id: user_id, active: true}
     if (moderator) {
-      query.role = Membership.MODERATOR_ROLE
+      query.role = this.MODERATOR_ROLE
     }
-    return Membership.query()
+    return this.query()
     .where(query)
     .pluck('community_id')
   },
-
-  inAllCommunities: function (userId, communityIds) {
-    return this.activeCommunityIds(userId)
-    .then(ids => difference(communityIds, ids))
-    .then(remainingIds => remainingIds.length === 0 ||
-      Promise.map(remainingIds, id => Community.inNetworkWithUser(id, userId))
-      .then(every))
-  },
-
+  
   lastViewed: userId =>
     Membership.query(q => {
       q.where('user_id', userId)

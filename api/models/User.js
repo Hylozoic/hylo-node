@@ -26,8 +26,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   communities: function () {
-    return this.belongsToMany(Community, 'communities_users').through(Membership)
-      .query({where: {'communities_users.active': true, 'communities.active': true}}).withPivot('role')
+    return this.queryByGroupMembership(Community)
+    .query(q => q.where('active', true))
   },
 
   contributions: function () {
@@ -56,13 +56,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships: function () {
-    return this.hasMany(Membership).query(qb => {
-      qb.where('communities_users.active', true)
-      qb.leftJoin('communities', function () {
-        this.on('communities.id', '=', 'communities_users.community_id')
-      })
-      qb.where('communities.active', true)
-    })
+    return this.groupMembershipsForModel(Community)
   },
 
   posts: function () {
@@ -102,16 +96,19 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Thank)
   },
 
-  joinCommunity: function (community, role = Membership.DEFAULT_ROLE) {
-    var communityId = (typeof community === 'object' ? community.id : community)
-    return Membership.create(this.id, communityId, {role})
-    .tap(() => this.markInvitationsUsed(communityId))
+  joinCommunity: async function (community, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
+    const memberships = await community.addGroupMembers([this.id], {role},
+      {transacting})
+    await Community.query().where('id', community.id)
+    .increment('num_members').transacting(transacting)
+    await this.followDefaultTags(community.id, transacting)
+    await this.markInvitationsUsed(community.id, transacting)
+    return memberships[0]
   },
 
-  leaveCommunity: function (community) {
-    var communityId = (typeof community === 'object' ? community.id : community)
-    return Membership.find(this.id, communityId)
-    .then(m => m && m.destroy().then(m => m.id))
+  leaveCommunity: async function (community) {
+    await community.removeGroupMembers([this.id])
+    await Community.query().where('id', community.id).decrement('num_members')
   },
 
   // sanitize certain values before storing them
@@ -166,16 +163,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   followDefaultTags: function (communityId, trx) {
-    return CommunityTag.defaults(communityId, trx)
-    .then(defaultTags => defaultTags.models.map(communityTag =>
-      communityTag
-        ? TagFollow.add({
-          userId: this.id,
-          communityId: communityId,
-          tagId: communityTag.get('tag_id'),
-          transacting: trx
-        })
-      : null))
+    return this.constructor.followDefaultTags(this.id, communityId, trx)
   },
 
   hasNoAvatar: function () {
@@ -277,14 +265,16 @@ module.exports = bookshelf.Model.extend(merge({
     return User.unseenThreadCount(this.id)
   },
 
-  communitiesSharedWithPost (post) {
-    return Promise.join(this.load('communities'), post.load('communities'))
-    .then(() => intersectionBy(post.relations.communities.models, this.relations.communities.models, 'id'))
+  async communitiesSharedWithPost (post) {
+    const myCommunities = await this.communities().fetch()
+    await post.load('communities')
+    return intersectionBy(post.relations.communities.models, myCommunities.models, 'id')
   },
 
-  communitiesSharedWithUser (user) {
-    return Promise.join(this.load('communities'), user.load('communities'))
-    .then(() => intersectionBy(user.relations.communities.models, this.relations.communities.models, 'id'))
+  async communitiesSharedWithUser (user) {
+    const myCommunities = await this.communities().fetch()
+    const theirCommunities = await user.communities().fetch()
+    return intersectionBy(myCommunities.models, theirCommunities.models, 'id')
   }
 
 }, HasSettings, HasGroupMemberships), {
@@ -347,7 +337,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(() => new User(attributes).save({}, {transacting}))
     .tap(user => Promise.join(
       account && LinkedAccount.create(user.id, account, {transacting}),
-      community && Membership.create(user.id, community.id, {transacting}),
+      community && community.addMembers([user.id], {transacting}),
       community && user.markInvitationsUsed(community.id, transacting)
     ))
   },
@@ -363,7 +353,7 @@ module.exports = bookshelf.Model.extend(merge({
         })
       })
     } else {
-      q = User.where({id: id})
+      q = User.where({id})
     }
     return q.where('active', true).fetch(options)
   },
@@ -456,13 +446,10 @@ module.exports = bookshelf.Model.extend(merge({
     .select(raw("settings->'last_viewed_messages_at' as time"))
     .then(rows => new Date(rows[0].time))
 
-    return GroupMembership.whereUnread(userId, {afterTime: lastViewed})
+    return GroupMembership.whereUnread(userId, Post, {afterTime: lastViewed})
     .query(q => {
       q.join('posts', 'groups.group_data_id', 'posts.id')
-      q.where({
-        'group_data_type': Group.DataType.POST,
-        'posts.type': Post.Type.THREAD
-      })
+      q.where('posts.type', Post.Type.THREAD)
       q.where('num_comments', '>', 0)
     })
     .count().then(c => Number(c))
