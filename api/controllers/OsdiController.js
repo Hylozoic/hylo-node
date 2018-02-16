@@ -121,50 +121,46 @@ module.exports = {
   },
   getPeople: async function (req, res) {
     // TODO: ensure that filter is entirely valid
-    try {
-      const rootUrl = req.protocol + '://' + req.get('host')
-      const filter = req.query.filter
-      const pageSize = req.query.per_page || DEFAULT_PAGESIZE
-      const page = req.query.page || 1
-      const users = await User
-        .query(filter ? osdiQuery(filter) : () => {})
-        .fetchPage({
-          pageSize,
-          page
-        })
-      const { pageCount, rowCount } = users.pagination
-      let nextUrl = null
-      if (page < pageCount) {
-        nextUrl = `${rootUrl}${API_ROUTE}/people?per_page=${pageSize}&page=${(parseInt(page, 10) + 1)}`
-        if (filter) {
-          nextUrl += `&filter=${filter}`
-        }
+    const rootUrl = req.protocol + '://' + req.get('host')
+    const filter = req.query.filter
+    const pageSize = req.query.per_page || DEFAULT_PAGESIZE
+    const page = req.query.page || 1
+    const users = await User
+      .query(filter ? osdiQuery(filter) : () => {})
+      .fetchPage({
+        pageSize,
+        page
+      })
+    const { pageCount, rowCount } = users.pagination
+    let nextUrl = null
+    if (page < pageCount) {
+      nextUrl = `${rootUrl}${API_ROUTE}/people?per_page=${pageSize}&page=${(parseInt(page, 10) + 1)}`
+      if (filter) {
+        nextUrl += `&filter=${filter}`
       }
-      const response = {
-        'total_pages': pageCount,
-        'per_page': pageSize,
-        'page': page,
-        'total_records': rowCount,
-        '_links': {
-          'next': href(nextUrl),
-          'osdi:people': users.map(u => href(`${rootUrl}${API_ROUTE}/people/${u.get('id')}`)),
-          'curies': [
-            {
-              'name': 'osdi',
-              'href': rootUrl + '/docs/v1/{rel}',
-              'templated': true
-            }
-          ],
-          'self': href(rootUrl + req.originalUrl)
-        },
-        '_embedded': {
-          'osdi:people': users.map(u => personToOsdi(rootUrl, u))
-        }
-      }
-      res.send(response)
-    } catch (err) {
-      res.send(err)
     }
+    const response = {
+      'total_pages': pageCount,
+      'per_page': pageSize,
+      'page': page,
+      'total_records': rowCount,
+      '_links': {
+        'next': href(nextUrl),
+        'osdi:people': users.map(u => href(`${rootUrl}${API_ROUTE}/people/${u.get('id')}`)),
+        'curies': [
+          {
+            'name': 'osdi',
+            'href': rootUrl + '/docs/v1/{rel}',
+            'templated': true
+          }
+        ],
+        'self': href(rootUrl + req.originalUrl)
+      },
+      '_embedded': {
+        'osdi:people': users.map(u => personToOsdi(rootUrl, u))
+      }
+    }
+    res.send(response)
   },
   getPerson: async function (req, res) {
     const rootUrl = req.protocol + '://' + req.get('host')
