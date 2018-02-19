@@ -37,15 +37,10 @@ export async function removeCommunityFromNetwork (authZ, { communityId, networkI
 }
 
 export async function updateCommunityHiddenSetting (authZ, communityId, hidden) {
-  console.log('1 hahaha', authZ)
   const community = await Community.find(communityId)
-  console.log('2 hahaha', communityId)
   const networkId = community.get('network_id')
-  console.log('3 hahaha', networkId)
   if (!networkId) throw new Error('This community is not part of a network.')
-  console.log('4 hahaha')
   await networkMutationPermissionCheck(authZ, networkId)
-  console.log('5 hahaha')
   return community.updateHidden(hidden)
 }
 
