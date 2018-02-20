@@ -12,6 +12,23 @@ describe('Community', () => {
     })
   })
 
+  it('creates with default banner and avatar', async () => {
+    const data = {
+      'name': 'my community',
+      'description': 'a community description',
+      'slug': 'comm1'
+    }
+
+    const user = await new User({name: 'username', email: 'john@foo.com', active: true}).save()
+    await new Community({slug: 'starter-posts', name: 'starter-posts', beta_access_code: 'aasdfkjh3##Sasdfsdfedss'}).save()
+
+    const community = await Community.create(user.id, data)
+
+    const savedCommunity = await Community.find('comm1')
+    expect(savedCommunity.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg')
+    expect(savedCommunity.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png')
+  })
+
   describe('.find', () => {
     it('ignores a blank id', () => {
       return Community.find(null).then(i => expect(i).to.be.null)

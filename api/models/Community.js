@@ -3,12 +3,12 @@ import Slack from '../services/Slack'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import HasGroup from './mixins/HasGroup'
-import { clone, flatten, isEqual, merge, pick, trim } from 'lodash'
+import { clone, flatten, isEqual, merge, pick, trim, defaults } from 'lodash'
 import { applyPagination } from '../../lib/graphql-bookshelf-bridge/util'
 import { COMMUNITY_AVATAR, COMMUNITY_BANNER } from '../../lib/uploader/types'
 
-const defaultBanner = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
-const defaultAvatar = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
+const DEFAULT_BANNER = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
+const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'communities',
@@ -123,8 +123,8 @@ module.exports = bookshelf.Model.extend(merge({
       const { invitations, posts, tags } = this.relations
 
       const updatedChecklist = {
-        logo: this.get('avatar_url') !== defaultAvatar,
-        banner: this.get('banner_url') !== defaultBanner,
+        logo: this.get('avatar_url') !== DEFAULT_AVATAR,
+        banner: this.get('banner_url') !== DEFAULT_BANNER,
         invite: invitations.length > 0,
         topics: tags.length > 0,
         post: !!posts.find(p => p.get('user_id') !== User.AXOLOTL_ID)
@@ -290,9 +290,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   async create (userId, data) {
-    var attrs = pick(data,
-      'name', 'description', 'slug', 'category',
-      'beta_access_code', 'banner_url', 'avatar_url', 'location', 'network_id')
+    var attrs = defaults(
+      pick(data,
+        'name', 'description', 'slug', 'category',
+        'beta_access_code', 'banner_url', 'avatar_url', 'location', 'network_id'),
+      {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR})
 
     // eslint-disable-next-line camelcase
     const beta_access_code = attrs.beta_access_code ||
