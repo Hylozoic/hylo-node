@@ -131,6 +131,7 @@ type Community {
   invitePath: String
   network: Network
   numMembers: Int
+  hidden: Boolean
   members(
     first: Int,
     order: String,
@@ -494,6 +495,7 @@ input CommunityInput {
   slackTeam: String
   slackConfigureUrl: String
   active: Boolean
+  hidden: Boolean
   networkId: ID
 }
 
@@ -559,6 +561,7 @@ type Mutation {
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
+  updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community  
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
   updateMe(changes: MeInput): Me
   updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership

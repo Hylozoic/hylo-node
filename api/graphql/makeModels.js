@@ -175,7 +175,8 @@ export default async function makeModels (userId, isAdmin) {
         'banner_url',
         'num_members',
         'postCount',
-        'location'
+        'location',
+        'hidden'
       ],
       relations: [
         'network',
