@@ -36,6 +36,14 @@ export async function removeCommunityFromNetwork (authZ, { communityId, networkI
   return Network.find(networkId, { withRelated: [ 'communities' ] })
 }
 
+export async function updateCommunityHiddenSetting (authZ, communityId, hidden) {
+  const community = await Community.find(communityId)
+  const networkId = community.get('network_id')
+  if (!networkId) throw new Error('This community is not part of a network.')
+  await networkMutationPermissionCheck(authZ, networkId)
+  return community.updateHidden(hidden)
+}
+
 export async function removeNetworkModeratorRole (authZ, { personId, networkId }) {
   await networkMutationPermissionCheck(authZ, networkId)
   await NetworkMembership

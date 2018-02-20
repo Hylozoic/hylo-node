@@ -109,5 +109,23 @@ describe('network mutations', () => {
         expect(network.relations.moderators.length).to.equal(0)
       })
     })
+
+    describe('updateCommunityHiddenSetting', () => {
+      var community
+      before(async () => {
+        community = await new Community({
+          name: 'cc', slug: 'ccc', hidden: true, network_id: network.id }).save()
+      })
+
+      after(() => {
+        return community.destroy()
+      })
+
+      it('updates the community hidden setting', async () => {
+        await mutations.updateCommunityHiddenSetting({isAdmin: true}, community.id, true)
+        const newCommunity = await Community.find(community.id)
+        expect(newCommunity.get('hidden')).to.equal(true)
+      })
+    })
   })
 })

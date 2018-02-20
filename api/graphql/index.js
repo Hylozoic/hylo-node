@@ -35,6 +35,7 @@ import {
   subscribe,
   unlinkAccount,
   updateCommunity,
+  updateCommunityHiddenSetting,
   updateCommunityTopic,
   updateMe,
   updateMembership,
@@ -232,6 +233,9 @@ export function makeMutations (userId, isAdmin) {
 
     updateCommunitySettings: (root, { id, changes }) =>
       updateCommunity(userId, id, changes),
+
+    updateCommunityHiddenSetting: (root, { id, hidden }) =>
+      updateCommunityHiddenSetting({ userId, isAdmin }, id, hidden),
 
     updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
 

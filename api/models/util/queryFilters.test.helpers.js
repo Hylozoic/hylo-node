@@ -10,10 +10,11 @@ export function myCommunityIdsSqlFragment (userId) {
 
 export function myNetworkCommunityIdsSqlFragment (userId, opts = {}) {
   const str = `select "id" from "communities"
-    where "network_id" in (
+    where ("network_id" in (
       select distinct "network_id" from "communities"
       where "id" in ${myCommunityIdsSqlFragment(userId)}
-      and network_id is not null
+        and network_id is not null)
+      and "communities"."hidden" = false
     )`
   return opts.parens === false ? str : `(${str})`
 }

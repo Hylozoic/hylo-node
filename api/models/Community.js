@@ -179,6 +179,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.validate().then(() => this.save())
   },
 
+  updateHidden: function (hidden) {
+    return this.save({hidden})
+  },
+
   validate: function () {
     if (!trim(this.get('name'))) {
       return Promise.reject(new Error('Name cannot be blank'))

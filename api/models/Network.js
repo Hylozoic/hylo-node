@@ -69,7 +69,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   activeCommunityIds: function (userId, rawQuery) {
     var query = knex.select('id').from('communities')
-    .whereIn('network_id', networkIdsQuery(userId))
+    .where(inner =>
+      inner.whereIn('network_id', networkIdsQuery(userId))
+      .andWhere('communities.hidden', false))
 
     return rawQuery ? query : query.pluck('id')
   },
