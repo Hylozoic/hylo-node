@@ -59,7 +59,7 @@
     "graphql": "^0.8.2",
     "graphql-tools": "^0.10.1",
     "grunt": "1.0.0",
-    "hylo-utils": "Hylozoic/hylo-utils#52154a8",
+    "hylo-utils": "Hylozoic/hylo-utils#a2db48c",
     "image-size": "^0.3.5",
     "jade": "^1.11.0",
     "knex": "0.12.1",
