@@ -7,7 +7,7 @@ export function findThread (userIds) {
   .query(isFollowing)
   .query().select('group_data_id')
 
-  return Post.where({id: subquery, type: Post.Type.THREAD}).fetch()
+  return Post.query(q => q.whereIn('id', subquery).where({type: Post.Type.THREAD})).fetch()
 }
 
 export default function findOrCreateThread (userId, participantIds) {
