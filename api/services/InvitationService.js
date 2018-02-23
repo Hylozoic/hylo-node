@@ -70,7 +70,7 @@ module.exports = {
     return Promise.join(
       userIds && User.where('id', 'in', userIds).fetchAll(),
       Community.find(communityId),
-      tagName && Tag.find(tagName),
+      tagName && Tag.find({ name: tagName }),
       (users, community, tag) => {
         let concatenatedEmails = emails.concat(map(u => u.get('email'), get('models', users)))
 

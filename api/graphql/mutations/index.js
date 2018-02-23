@@ -15,7 +15,10 @@ export {
   updateNetwork
 } from './network'
 export { registerDevice } from './mobile'
-export { subscribe } from './topic'
+export {
+  createTopic,
+  subscribe
+} from './topic'
 export {
   createInvitation,
   expireInvitation,

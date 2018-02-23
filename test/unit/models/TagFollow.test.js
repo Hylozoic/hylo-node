@@ -5,24 +5,16 @@ const factories = require(root('test/setup/factories'))
 describe('TagFollow', () => {
   var tag, community, user, attrs
 
-  beforeEach(function (done) {
-    return setup.clearDb().then(() => {
-      tag = factories.tag()
-      community = factories.community()
-      user = factories.user()
-    })
-    .then(() => Promise.join(
-      tag.save(),
-      community.save(),
-      user.save())
-    .then(() => {
-      attrs = {
-        tag_id: tag.id,
-        user_id: user.id,
-        community_id: community.id
-      }
-    })
-    .then(() => done()))
+  beforeEach(async function () {
+    await setup.clearDb()
+    tag = await factories.tag().save()
+    community = await factories.community().save()
+    user = await factories.user().save()
+    attrs = {
+      tag_id: tag.id,
+      user_id: user.id,
+      community_id: community.id
+    }
   })
 
   describe('#toggle', () => {

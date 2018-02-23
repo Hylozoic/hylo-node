@@ -12,6 +12,7 @@ import {
   createCommunity,
   createInvitation,
   createPost,
+  createTopic,
   deleteComment,
   deletePost,
   expireInvitation,
@@ -172,6 +173,8 @@ export function makeMutations (userId, isAdmin) {
     },
 
     createPost: (root, { data }) => createPost(userId, data),
+
+    createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
 

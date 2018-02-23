@@ -537,6 +537,7 @@ type Mutation {
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
   createMessage(data: MessageInput): Message
   createPost(data: PostInput): Post
+  createTopic(topicName: String, communityId: ID): Topic
   deleteComment(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   expireInvitation(invitationId: ID): GenericResult
