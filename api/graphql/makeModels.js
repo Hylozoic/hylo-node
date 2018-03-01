@@ -236,7 +236,14 @@ export default async function makeModels (userId, isAdmin) {
           sort: sortBy
         })
     },
-
+    Invitation: {
+      model: Invitation,
+      attributes: [
+        'email',
+        'created_at',
+        'last_sent_at'
+      ]
+    },
     Comment: {
       model: Comment,
       attributes: [
