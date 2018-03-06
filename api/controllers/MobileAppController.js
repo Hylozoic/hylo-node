@@ -11,6 +11,7 @@ module.exports = {
     }
     res.ok(result)
   },
+
   checkShouldUpdate: function (req, res) {
     const iosVersion = req.param('ios-version')
     const androidVersion = req.param('android-version')
@@ -55,7 +56,7 @@ function shouldUpdate (version, platform) {
   }
 
   if (semver.valid(version)) {
-    if (semver.lt(version, '2.0.0')) {
+    if (semver.lt(version, '2.1.0')) {
       return resultBuilder(FORCE, platform)
     } else {
       return undefined
