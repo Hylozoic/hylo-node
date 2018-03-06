@@ -49,7 +49,7 @@ describe('MobileAppController', () => {
       expect(res.body).to.deep.equal(expected)
     })
 
-    it('returns the expected object for ios < 2.0.2', () => {
+    it('returns the expected object for ios < 2.1', () => {
       var expected = {
         type: 'force',
         title: 'A new version of the app is available',
@@ -62,7 +62,7 @@ describe('MobileAppController', () => {
       expect(res.body).to.deep.equal(expected)
     })
 
-    it('returns the expected object for android < 2.0.2', () => {
+    it('returns the expected object for android < 2.1', () => {
       var expected = {
         type: 'force',
         title: 'A new version of the app is available',
@@ -101,25 +101,25 @@ describe('MobileAppController', () => {
       expect(res.body).to.deep.equal(expected)
     })
 
-    it('returns undefined for android version 2.0.2', () => {
-      req.params = {'android-version': '2.0.2'}
+    it('returns undefined for android version 2.1', () => {
+      req.params = {'android-version': '2.1'}
       MobileAppController.checkShouldUpdate(req, res)
       expect(res.body).to.equal(undefined)
     })
 
-    it('returns undefined for ios version 2.0.2', () => {
-      req.params = {'ios-version': '2.0.2'}
+    it('returns undefined for ios version 2.1', () => {
+      req.params = {'ios-version': '2.1'}
       MobileAppController.checkShouldUpdate(req, res)
       expect(res.body).to.equal(undefined)
     })
 
-    it('returns undefined for android version > 2.0.2', () => {
+    it('returns undefined for android version > 2.1', () => {
       req.params = {'android-version': '2.1.1'}
       MobileAppController.checkShouldUpdate(req, res)
       expect(res.body).to.equal(undefined)
     })
 
-    it('returns undefined for ios version > 2.0.2', () => {
+    it('returns undefined for ios version > 2.1', () => {
       req.params = {'ios-version': '2.1.1'}
       MobileAppController.checkShouldUpdate(req, res)
       expect(res.body).to.equal(undefined)

@@ -56,7 +56,7 @@ function shouldUpdate (version, platform) {
   }
 
   if (semver.valid(version)) {
-    if (semver.lt(version, '2.0.2')) {
+    if (semver.lt(version, '2.1.0')) {
       return resultBuilder(FORCE, platform)
     } else {
       return undefined
