@@ -52,11 +52,26 @@ describe('moderation', () => {
   })
 
   describe('removeModerator', () => {
-    it('works', async () => {
+    it('just removes moderator role', async () => {
       const user2 = await factories.user().save()
       await user2.joinCommunity(community, GroupMembership.Role.MODERATOR)
       await removeModerator(user.id, user2.id, community.id)
       expect(!await GroupMembership.hasModeratorRole(user2, community))
+
+      const membership = await GroupMembership.forPair(user2, community,
+      {includeInactive: true}).fetch()
+      expect(membership.get('active')).to.be.true
+    })
+
+    it('also removes from community when selected', async () => {
+      const user2 = await factories.user().save()
+      await user2.joinCommunity(community, GroupMembership.Role.MODERATOR)
+      await removeModerator(user.id, user2.id, community.id, true)
+      expect(!await GroupMembership.hasModeratorRole(user2, community))
+
+      const membership = await GroupMembership.forPair(user2, community,
+      {includeInactive: true}).fetch()
+      expect(membership.get('active')).to.be.false
     })
   })
 
