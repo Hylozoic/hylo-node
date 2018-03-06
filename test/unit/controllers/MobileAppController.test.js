@@ -66,8 +66,8 @@ describe('MobileAppController', () => {
       var expected = {
         type: 'force',
         title: 'A new version of the app is available',
-        message: 'The version you are using is no longer supported. Please go to the App Store now to update.',
-        link: mockIosStoreUrl
+        message: 'The version you are using is no longer supported. Please go to the Play Store now to update.',
+        link: mockAndroidStoreUrl
       }
 
       req.params = {'android-version': '2.0'}
