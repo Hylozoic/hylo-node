@@ -214,8 +214,8 @@ export function makeMutations (userId, isAdmin) {
     removeMember: (root, { personId, communityId }) =>
       removeMember(userId, personId, communityId),
 
-    removeModerator: (root, { personId, communityId }) =>
-      removeModerator(userId, personId, communityId),
+    removeModerator: (root, { personId, communityId, isRemoveFromCommunity }) =>
+      removeModerator(userId, personId, communityId, isRemoveFromCommunity),
 
     removeNetworkModeratorRole: (root, { personId, networkId }) =>
       removeNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),

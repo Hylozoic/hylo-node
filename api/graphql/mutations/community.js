@@ -12,9 +12,14 @@ export async function addModerator (userId, personId, communityId) {
   return community
 }
 
-export async function removeModerator (userId, personId, communityId) {
+export async function removeModerator (userId, personId, communityId, isRemoveFromCommunity) {
   const community = await getModeratedCommunity(userId, communityId)
-  await GroupMembership.removeModeratorRole(personId, community)
+  if (isRemoveFromCommunity) {
+    await CommunityService.removeMember(personId, communityId)
+  } else {
+    await GroupMembership.removeModeratorRole(personId, community)
+  }
+
   return community
 }
 
