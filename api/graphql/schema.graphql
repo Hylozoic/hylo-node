@@ -553,7 +553,7 @@ type Mutation {
   reinviteAll(communityId: ID): GenericResult
   removeCommunityFromNetwork(communityId: ID, networkId: ID): Network
   removeMember(personId: ID, communityId: ID): Community
-  removeModerator(personId: ID, communityId: ID): Community
+  removeModerator(personId: ID, communityId: ID, isRemoveFromCommunity: Boolean): Community
   removeNetworkModeratorRole(personId: ID, networkId: ID): Network
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
