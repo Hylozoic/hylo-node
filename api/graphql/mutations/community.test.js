@@ -73,6 +73,16 @@ describe('moderation', () => {
       {includeInactive: true}).fetch()
       expect(membership.get('active')).to.be.false
     })
+
+    it('throws an error if youre not a moderator', async () => {
+      const nonModeratorUser = await factories.user().save()
+      await nonModeratorUser.joinCommunity(community, GroupMembership.Role.DEFAULT)
+
+      const user2 = await factories.user().save()
+      await user2.joinCommunity(community, GroupMembership.Role.MODERATOR)
+
+      return expect(removeModerator(nonModeratorUser.id, user2.id, community.id, true)).to.eventually.be.rejected
+    })
   })
 
   describe('removeMember', () => {

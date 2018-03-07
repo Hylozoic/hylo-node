@@ -15,6 +15,7 @@ export async function addModerator (userId, personId, communityId) {
 export async function removeModerator (userId, personId, communityId, isRemoveFromCommunity) {
   const community = await getModeratedCommunity(userId, communityId)
   if (isRemoveFromCommunity) {
+    await GroupMembership.removeModeratorRole(personId, community)
     await CommunityService.removeMember(personId, communityId)
   } else {
     await GroupMembership.removeModeratorRole(personId, community)
