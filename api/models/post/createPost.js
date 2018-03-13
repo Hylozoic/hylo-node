@@ -9,7 +9,7 @@ export default function createPost (userId, params) {
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'imageUrls', 'fileUrls'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'imageUrls', 'fileUrls'),
       {children: params.requests, transacting}
     )))))
 }
@@ -57,7 +57,7 @@ export function afterCreatingPost (post, opts) {
 
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
   ]))
-  .then(() => Tag.updateForPost(post, opts.tag, opts.tagDescriptions, userId, trx))
+  .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndCommunities(post, trx))
   .then(() => updateNetworkMemberships(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))

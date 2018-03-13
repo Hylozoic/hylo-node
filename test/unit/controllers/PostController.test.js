@@ -55,14 +55,14 @@ describe('PostController', () => {
       return PostController.createFromEmailForm(req, res)
       .then(() => {
         const postId = res.redirected.match(/p\/(\d+)/)[1]
-        return Post.find(postId, {withRelated: ['selectedTags', 'communities']})
+        return Post.find(postId, {withRelated: ['tags', 'communities']})
       })
       .then(post => {
         expect(post.get('name')).to.equal("I'm looking for a penguin")
         expect(post.get('description')).to.equal('I just love the tuxedo')
         expect(post.get('user_id')).to.equal(fixtures.u1.id)
         expect(post.get('created_from')).to.equal('email_form')
-        const tag = post.relations.selectedTags.first()
+        const tag = post.relations.tags.first()
         expect(tag.get('name')).to.equal('request')
         const community = post.relations.communities.first()
         expect(community.id).to.equal(fixtures.c1.id)

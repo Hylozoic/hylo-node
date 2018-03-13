@@ -277,14 +277,13 @@ describe('Post', function () {
 
     it('creates an activity for a tag follower', () => {
       var post = factories.post({
-        user_id: u.id,
-        description: '#FollowThisTag'
+        user_id: u.id
       })
 
       return new Tag({name: 'FollowThisTag'}).save()
       .tap(tag => u3.followedTags().attach({tag_id: tag.id, community_id: c.id}))
       .then(() => post.save())
-      .then(() => Tag.updateForPost(post, null))
+      .then(() => Tag.updateForPost(post, ['FollowThisTag']))
       .then(() => post.communities().attach(c.id))
       .then(() => post.createActivities())
       .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
