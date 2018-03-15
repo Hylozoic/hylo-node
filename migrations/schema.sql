@@ -2,12 +2,17 @@
 -- PostgreSQL database dump
 --
 
+-- Dumped from database version 9.6.3
+-- Dumped by pg_dump version 9.6.3
+
 SET statement_timeout = 0;
 SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+SET row_security = off;
 
 SET search_path = public, pg_catalog;
 
@@ -1025,7 +1030,8 @@ CREATE TABLE posts (
     created_from character varying(255),
     parent_post_id bigint,
     link_preview_id bigint,
-    is_project_request boolean DEFAULT false
+    is_project_request boolean DEFAULT false,
+    announcement boolean DEFAULT false
 );
 
 
@@ -1485,203 +1491,203 @@ CREATE TABLE votes (
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: activities id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities ALTER COLUMN id SET DEFAULT nextval('activity_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: comments_tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments_tags ALTER COLUMN id SET DEFAULT nextval('comments_tags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: communities_posts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_posts ALTER COLUMN id SET DEFAULT nextval('post_community_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: communities_tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('communities_tags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: communities_users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_users ALTER COLUMN id SET DEFAULT nextval('users_community_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: devices id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY devices ALTER COLUMN id SET DEFAULT nextval('devices_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: event_responses id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_responses_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: flagged_items id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY flagged_items ALTER COLUMN id SET DEFAULT nextval('flagged_items_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: group_connections id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_connections ALTER COLUMN id SET DEFAULT nextval('group_connections_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: group_memberships id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_memberships ALTER COLUMN id SET DEFAULT nextval('group_memberships_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: groups id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY groups ALTER COLUMN id SET DEFAULT nextval('groups_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: join_requests id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY join_requests ALTER COLUMN id SET DEFAULT nextval('join_requests_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: knex_migrations id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('knex_migrations_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: link_previews id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY link_previews ALTER COLUMN id SET DEFAULT nextval('link_previews_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: networks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks ALTER COLUMN id SET DEFAULT nextval('networks_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: networks_posts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_posts ALTER COLUMN id SET DEFAULT nextval('networks_posts_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: networks_users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_users ALTER COLUMN id SET DEFAULT nextval('networks_users_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: nexudus_accounts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY nexudus_accounts ALTER COLUMN id SET DEFAULT nextval('nexudus_accounts_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: notifications id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY notifications ALTER COLUMN id SET DEFAULT nextval('notifications_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: posts_tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags ALTER COLUMN id SET DEFAULT nextval('posts_tags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: posts_users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_users ALTER COLUMN id SET DEFAULT nextval('posts_users_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: push_notifications id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('queued_pushes_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: skills id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills ALTER COLUMN id SET DEFAULT nextval('skills_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: skills_users id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills_users ALTER COLUMN id SET DEFAULT nextval('skills_users_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: tag_follows id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows ALTER COLUMN id SET DEFAULT nextval('followed_tags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('tags_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: user_connections id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_connections ALTER COLUMN id SET DEFAULT nextval('user_connections_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: user_external_data id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('user_external_data_id_seq'::regclass);
 
 
 --
--- Name: pk_users; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users pk_users; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users
@@ -1722,7 +1728,7 @@ UNION
 
 
 --
--- Name: activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activity_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -1730,7 +1736,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: comments_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: comments_tags comments_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments_tags
@@ -1738,7 +1744,7 @@ ALTER TABLE ONLY comments_tags
 
 
 --
--- Name: communities_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_tags communities_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags
@@ -1746,7 +1752,7 @@ ALTER TABLE ONLY communities_tags
 
 
 --
--- Name: devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: devices devices_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY devices
@@ -1754,7 +1760,7 @@ ALTER TABLE ONLY devices
 
 
 --
--- Name: event_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_responses event_responses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY event_responses
@@ -1762,7 +1768,7 @@ ALTER TABLE ONLY event_responses
 
 
 --
--- Name: event_responses_user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_responses event_responses_user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY event_responses
@@ -1770,7 +1776,7 @@ ALTER TABLE ONLY event_responses
 
 
 --
--- Name: flagged_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: flagged_items flagged_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY flagged_items
@@ -1778,7 +1784,7 @@ ALTER TABLE ONLY flagged_items
 
 
 --
--- Name: followed_tags_community_id_tag_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: tag_follows followed_tags_community_id_tag_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows
@@ -1786,7 +1792,7 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: followed_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: tag_follows followed_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows
@@ -1794,7 +1800,7 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: group_connections_parent_group_id_child_group_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: group_connections group_connections_parent_group_id_child_group_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_connections
@@ -1802,7 +1808,7 @@ ALTER TABLE ONLY group_connections
 
 
 --
--- Name: group_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: group_connections group_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_connections
@@ -1810,7 +1816,7 @@ ALTER TABLE ONLY group_connections
 
 
 --
--- Name: group_memberships_group_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships group_memberships_group_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_memberships
@@ -1818,7 +1824,7 @@ ALTER TABLE ONLY group_memberships
 
 
 --
--- Name: group_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships group_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_memberships
@@ -1826,7 +1832,7 @@ ALTER TABLE ONLY group_memberships
 
 
 --
--- Name: groups_group_data_id_group_data_type_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: groups groups_group_data_id_group_data_type_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY groups
@@ -1834,7 +1840,7 @@ ALTER TABLE ONLY groups
 
 
 --
--- Name: groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: groups groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY groups
@@ -1842,7 +1848,7 @@ ALTER TABLE ONLY groups
 
 
 --
--- Name: join_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: join_requests join_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY join_requests
@@ -1850,7 +1856,7 @@ ALTER TABLE ONLY join_requests
 
 
 --
--- Name: knex_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: knex_migrations knex_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY knex_migrations
@@ -1858,7 +1864,7 @@ ALTER TABLE ONLY knex_migrations
 
 
 --
--- Name: link_previews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: link_previews link_previews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY link_previews
@@ -1866,7 +1872,7 @@ ALTER TABLE ONLY link_previews
 
 
 --
--- Name: link_previews_url_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: link_previews link_previews_url_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY link_previews
@@ -1874,7 +1880,7 @@ ALTER TABLE ONLY link_previews
 
 
 --
--- Name: network_id_post_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: networks_posts network_id_post_id_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_posts
@@ -1882,7 +1888,7 @@ ALTER TABLE ONLY networks_posts
 
 
 --
--- Name: networks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: networks networks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks
@@ -1890,7 +1896,7 @@ ALTER TABLE ONLY networks
 
 
 --
--- Name: networks_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: networks_posts networks_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_posts
@@ -1898,7 +1904,7 @@ ALTER TABLE ONLY networks_posts
 
 
 --
--- Name: networks_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: networks networks_slug_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks
@@ -1906,7 +1912,7 @@ ALTER TABLE ONLY networks
 
 
 --
--- Name: networks_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: networks_users networks_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_users
@@ -1914,7 +1920,7 @@ ALTER TABLE ONLY networks_users
 
 
 --
--- Name: nexudus_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: nexudus_accounts nexudus_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY nexudus_accounts
@@ -1922,7 +1928,7 @@ ALTER TABLE ONLY nexudus_accounts
 
 
 --
--- Name: notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY notifications
@@ -1930,7 +1936,7 @@ ALTER TABLE ONLY notifications
 
 
 --
--- Name: pk_comment; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: comments pk_comment; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments
@@ -1938,7 +1944,7 @@ ALTER TABLE ONLY comments
 
 
 --
--- Name: pk_community; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities pk_community; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities
@@ -1946,7 +1952,7 @@ ALTER TABLE ONLY communities
 
 
 --
--- Name: pk_community_invite; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: community_invites pk_community_invite; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invites
@@ -1954,7 +1960,7 @@ ALTER TABLE ONLY community_invites
 
 
 --
--- Name: pk_contributor; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: contributions pk_contributor; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY contributions
@@ -1962,7 +1968,7 @@ ALTER TABLE ONLY contributions
 
 
 --
--- Name: pk_follower; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: follows pk_follower; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follows
@@ -1970,7 +1976,7 @@ ALTER TABLE ONLY follows
 
 
 --
--- Name: pk_linked_account; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: linked_account pk_linked_account; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY linked_account
@@ -1978,7 +1984,7 @@ ALTER TABLE ONLY linked_account
 
 
 --
--- Name: pk_media; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: media pk_media; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY media
@@ -1986,7 +1992,7 @@ ALTER TABLE ONLY media
 
 
 --
--- Name: pk_post; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: posts pk_post; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts
@@ -1994,7 +2000,7 @@ ALTER TABLE ONLY posts
 
 
 --
--- Name: pk_thank_you; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: thanks pk_thank_you; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY thanks
@@ -2002,7 +2008,7 @@ ALTER TABLE ONLY thanks
 
 
 --
--- Name: pk_user_post_relevance; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_post_relevance pk_user_post_relevance; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_post_relevance
@@ -2010,7 +2016,7 @@ ALTER TABLE ONLY user_post_relevance
 
 
 --
--- Name: pk_vote; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: votes pk_vote; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY votes
@@ -2018,7 +2024,7 @@ ALTER TABLE ONLY votes
 
 
 --
--- Name: post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_posts post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_posts
@@ -2026,7 +2032,7 @@ ALTER TABLE ONLY communities_posts
 
 
 --
--- Name: post_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_posts post_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_posts
@@ -2034,7 +2040,7 @@ ALTER TABLE ONLY communities_posts
 
 
 --
--- Name: posts_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_tags posts_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags
@@ -2042,7 +2048,7 @@ ALTER TABLE ONLY posts_tags
 
 
 --
--- Name: posts_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_users posts_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_users
@@ -2050,7 +2056,7 @@ ALTER TABLE ONLY posts_users
 
 
 --
--- Name: queued_pushes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: push_notifications queued_pushes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY push_notifications
@@ -2058,7 +2064,7 @@ ALTER TABLE ONLY push_notifications
 
 
 --
--- Name: skills_name_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: skills skills_name_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills
@@ -2066,7 +2072,7 @@ ALTER TABLE ONLY skills
 
 
 --
--- Name: skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: skills skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills
@@ -2074,7 +2080,7 @@ ALTER TABLE ONLY skills
 
 
 --
--- Name: skills_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: skills_users skills_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills_users
@@ -2082,7 +2088,7 @@ ALTER TABLE ONLY skills_users
 
 
 --
--- Name: skills_users_skill_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: skills_users skills_users_skill_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills_users
@@ -2090,7 +2096,7 @@ ALTER TABLE ONLY skills_users
 
 
 --
--- Name: tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: tags tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tags
@@ -2098,7 +2104,7 @@ ALTER TABLE ONLY tags
 
 
 --
--- Name: unique_beta_access_code; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities unique_beta_access_code; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities
@@ -2106,7 +2112,7 @@ ALTER TABLE ONLY communities
 
 
 --
--- Name: unique_comments_tags; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: comments_tags unique_comments_tags; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments_tags
@@ -2114,7 +2120,7 @@ ALTER TABLE ONLY comments_tags
 
 
 --
--- Name: unique_communities_tags; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_tags unique_communities_tags; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags
@@ -2122,7 +2128,7 @@ ALTER TABLE ONLY communities_tags
 
 
 --
--- Name: unique_email; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users unique_email; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY users
@@ -2130,7 +2136,7 @@ ALTER TABLE ONLY users
 
 
 --
--- Name: unique_follows; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: follows unique_follows; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follows
@@ -2138,7 +2144,7 @@ ALTER TABLE ONLY follows
 
 
 --
--- Name: unique_join_requests; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: join_requests unique_join_requests; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY join_requests
@@ -2146,7 +2152,7 @@ ALTER TABLE ONLY join_requests
 
 
 --
--- Name: unique_name; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: tags unique_name; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tags
@@ -2154,7 +2160,7 @@ ALTER TABLE ONLY tags
 
 
 --
--- Name: unique_posts_tags; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_tags unique_posts_tags; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags
@@ -2162,7 +2168,7 @@ ALTER TABLE ONLY posts_tags
 
 
 --
--- Name: uq_community_1; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities uq_community_1; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities
@@ -2170,7 +2176,7 @@ ALTER TABLE ONLY communities
 
 
 --
--- Name: uq_community_2; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities uq_community_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities
@@ -2178,7 +2184,7 @@ ALTER TABLE ONLY communities
 
 
 --
--- Name: uq_no_multiple_contributor_2; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: contributions uq_no_multiple_contributor_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY contributions
@@ -2186,7 +2192,7 @@ ALTER TABLE ONLY contributions
 
 
 --
--- Name: uq_no_multiple_thankyous_2; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: thanks uq_no_multiple_thankyous_2; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY thanks
@@ -2194,7 +2200,7 @@ ALTER TABLE ONLY thanks
 
 
 --
--- Name: uq_no_multiple_tokens; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: community_invites uq_no_multiple_tokens; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invites
@@ -2202,7 +2208,7 @@ ALTER TABLE ONLY community_invites
 
 
 --
--- Name: uq_vote_1; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: votes uq_vote_1; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY votes
@@ -2210,7 +2216,7 @@ ALTER TABLE ONLY votes
 
 
 --
--- Name: user_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_users user_community_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_users
@@ -2218,7 +2224,7 @@ ALTER TABLE ONLY communities_users
 
 
 --
--- Name: user_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_connections user_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_connections
@@ -2226,7 +2232,7 @@ ALTER TABLE ONLY user_connections
 
 
 --
--- Name: user_external_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_external_data user_external_data_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_external_data
@@ -2234,7 +2240,7 @@ ALTER TABLE ONLY user_external_data
 
 
 --
--- Name: user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_post_relevance user_id_post_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_post_relevance
@@ -2242,7 +2248,7 @@ ALTER TABLE ONLY user_post_relevance
 
 
 --
--- Name: users_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_users users_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_users
@@ -2397,7 +2403,7 @@ CREATE INDEX notifications_pk_medium_0 ON notifications USING btree (id) WHERE (
 
 
 --
--- Name: activities_contribution_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activities_contribution_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -2405,7 +2411,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: activities_parent_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activities_parent_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -2413,7 +2419,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: activity_actor_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activity_actor_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -2421,7 +2427,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: activity_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activity_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -2429,7 +2435,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: activity_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activity_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -2437,7 +2443,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: activity_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activity_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -2445,7 +2451,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: activity_reader_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: activities activity_reader_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY activities
@@ -2453,7 +2459,7 @@ ALTER TABLE ONLY activities
 
 
 --
--- Name: comments_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: comments comments_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments
@@ -2461,7 +2467,7 @@ ALTER TABLE ONLY comments
 
 
 --
--- Name: comments_tags_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: comments_tags comments_tags_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments_tags
@@ -2469,7 +2475,7 @@ ALTER TABLE ONLY comments_tags
 
 
 --
--- Name: comments_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: comments_tags comments_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments_tags
@@ -2477,7 +2483,7 @@ ALTER TABLE ONLY comments_tags
 
 
 --
--- Name: communities_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_tags communities_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags
@@ -2485,7 +2491,7 @@ ALTER TABLE ONLY communities_tags
 
 
 --
--- Name: communities_tags_owner_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_tags communities_tags_owner_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags
@@ -2493,7 +2499,7 @@ ALTER TABLE ONLY communities_tags
 
 
 --
--- Name: communities_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_tags communities_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_tags
@@ -2501,7 +2507,7 @@ ALTER TABLE ONLY communities_tags
 
 
 --
--- Name: community_invite_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: community_invites community_invite_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invites
@@ -2509,7 +2515,7 @@ ALTER TABLE ONLY community_invites
 
 
 --
--- Name: community_invites_expired_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: community_invites community_invites_expired_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invites
@@ -2517,7 +2523,7 @@ ALTER TABLE ONLY community_invites
 
 
 --
--- Name: community_leader_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities community_leader_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities
@@ -2525,7 +2531,7 @@ ALTER TABLE ONLY communities
 
 
 --
--- Name: community_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities community_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities
@@ -2533,7 +2539,7 @@ ALTER TABLE ONLY communities
 
 
 --
--- Name: devices_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: devices devices_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY devices
@@ -2541,7 +2547,7 @@ ALTER TABLE ONLY devices
 
 
 --
--- Name: event_responses_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_responses event_responses_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY event_responses
@@ -2549,7 +2555,7 @@ ALTER TABLE ONLY event_responses
 
 
 --
--- Name: event_responses_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_responses event_responses_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY event_responses
@@ -2557,7 +2563,7 @@ ALTER TABLE ONLY event_responses
 
 
 --
--- Name: fk_comment_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: comments fk_comment_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments
@@ -2565,7 +2571,7 @@ ALTER TABLE ONLY comments
 
 
 --
--- Name: fk_comment_post_2; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: comments fk_comment_post_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments
@@ -2573,7 +2579,7 @@ ALTER TABLE ONLY comments
 
 
 --
--- Name: fk_comment_user_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: comments fk_comment_user_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY comments
@@ -2581,7 +2587,7 @@ ALTER TABLE ONLY comments
 
 
 --
--- Name: fk_community_created_by_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities fk_community_created_by_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities
@@ -2589,7 +2595,7 @@ ALTER TABLE ONLY communities
 
 
 --
--- Name: fk_community_invite_community_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: community_invites fk_community_invite_community_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invites
@@ -2597,7 +2603,7 @@ ALTER TABLE ONLY community_invites
 
 
 --
--- Name: fk_community_invite_invited_by_3; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: community_invites fk_community_invite_invited_by_3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invites
@@ -2605,7 +2611,7 @@ ALTER TABLE ONLY community_invites
 
 
 --
--- Name: fk_community_invite_used_by_2; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: community_invites fk_community_invite_used_by_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY community_invites
@@ -2613,7 +2619,7 @@ ALTER TABLE ONLY community_invites
 
 
 --
--- Name: fk_contributor_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: contributions fk_contributor_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY contributions
@@ -2621,7 +2627,7 @@ ALTER TABLE ONLY contributions
 
 
 --
--- Name: fk_contributor_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: contributions fk_contributor_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY contributions
@@ -2629,7 +2635,7 @@ ALTER TABLE ONLY contributions
 
 
 --
--- Name: fk_follower_addedby_3; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: follows fk_follower_addedby_3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follows
@@ -2637,7 +2643,7 @@ ALTER TABLE ONLY follows
 
 
 --
--- Name: fk_follower_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: follows fk_follower_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follows
@@ -2645,7 +2651,7 @@ ALTER TABLE ONLY follows
 
 
 --
--- Name: fk_follower_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: follows fk_follower_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follows
@@ -2653,7 +2659,7 @@ ALTER TABLE ONLY follows
 
 
 --
--- Name: fk_linked_account_user_4; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: linked_account fk_linked_account_user_4; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY linked_account
@@ -2661,7 +2667,7 @@ ALTER TABLE ONLY linked_account
 
 
 --
--- Name: fk_media_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: media fk_media_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY media
@@ -2669,7 +2675,7 @@ ALTER TABLE ONLY media
 
 
 --
--- Name: fk_post_community_community_02; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_posts fk_post_community_community_02; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_posts
@@ -2677,7 +2683,7 @@ ALTER TABLE ONLY communities_posts
 
 
 --
--- Name: fk_post_community_post_01; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_posts fk_post_community_post_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_posts
@@ -2685,7 +2691,7 @@ ALTER TABLE ONLY communities_posts
 
 
 --
--- Name: fk_post_creator_11; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts fk_post_creator_11; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts
@@ -2693,7 +2699,7 @@ ALTER TABLE ONLY posts
 
 
 --
--- Name: fk_post_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts fk_post_deactivated_by_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts
@@ -2701,7 +2707,7 @@ ALTER TABLE ONLY posts
 
 
 --
--- Name: fk_thank_you_comment_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: thanks fk_thank_you_comment_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY thanks
@@ -2709,7 +2715,7 @@ ALTER TABLE ONLY thanks
 
 
 --
--- Name: fk_thank_you_thanked_by_3; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: thanks fk_thank_you_thanked_by_3; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY thanks
@@ -2717,7 +2723,7 @@ ALTER TABLE ONLY thanks
 
 
 --
--- Name: fk_thank_you_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: thanks fk_thank_you_user_2; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY thanks
@@ -2725,7 +2731,7 @@ ALTER TABLE ONLY thanks
 
 
 --
--- Name: fk_upr_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_post_relevance fk_upr_post_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_post_relevance
@@ -2733,7 +2739,7 @@ ALTER TABLE ONLY user_post_relevance
 
 
 --
--- Name: fk_upr_user_1; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_post_relevance fk_upr_user_1; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_post_relevance
@@ -2741,7 +2747,7 @@ ALTER TABLE ONLY user_post_relevance
 
 
 --
--- Name: fk_users_community_community_02; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_users fk_users_community_community_02; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_users
@@ -2749,7 +2755,7 @@ ALTER TABLE ONLY communities_users
 
 
 --
--- Name: fk_users_community_users_01; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_users fk_users_community_users_01; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_users
@@ -2757,7 +2763,7 @@ ALTER TABLE ONLY communities_users
 
 
 --
--- Name: fk_vote_post_14; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: votes fk_vote_post_14; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY votes
@@ -2765,7 +2771,7 @@ ALTER TABLE ONLY votes
 
 
 --
--- Name: fk_vote_user_13; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: votes fk_vote_user_13; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY votes
@@ -2773,7 +2779,7 @@ ALTER TABLE ONLY votes
 
 
 --
--- Name: flagged_items_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: flagged_items flagged_items_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY flagged_items
@@ -2781,7 +2787,7 @@ ALTER TABLE ONLY flagged_items
 
 
 --
--- Name: followed_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: tag_follows followed_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows
@@ -2789,7 +2795,7 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: followed_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: tag_follows followed_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows
@@ -2797,7 +2803,7 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: followed_tags_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: tag_follows followed_tags_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY tag_follows
@@ -2805,7 +2811,7 @@ ALTER TABLE ONLY tag_follows
 
 
 --
--- Name: follows_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: follows follows_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY follows
@@ -2813,7 +2819,7 @@ ALTER TABLE ONLY follows
 
 
 --
--- Name: group_connections_child_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_connections group_connections_child_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_connections
@@ -2821,7 +2827,7 @@ ALTER TABLE ONLY group_connections
 
 
 --
--- Name: group_connections_parent_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_connections group_connections_parent_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_connections
@@ -2829,7 +2835,7 @@ ALTER TABLE ONLY group_connections
 
 
 --
--- Name: group_memberships_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships group_memberships_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_memberships
@@ -2837,7 +2843,7 @@ ALTER TABLE ONLY group_memberships
 
 
 --
--- Name: group_memberships_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_memberships group_memberships_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY group_memberships
@@ -2845,7 +2851,7 @@ ALTER TABLE ONLY group_memberships
 
 
 --
--- Name: join_requests_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: join_requests join_requests_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY join_requests
@@ -2853,7 +2859,7 @@ ALTER TABLE ONLY join_requests
 
 
 --
--- Name: join_requests_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: join_requests join_requests_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY join_requests
@@ -2861,7 +2867,7 @@ ALTER TABLE ONLY join_requests
 
 
 --
--- Name: media_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: media media_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY media
@@ -2869,7 +2875,7 @@ ALTER TABLE ONLY media
 
 
 --
--- Name: networks_posts_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: networks_posts networks_posts_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_posts
@@ -2877,7 +2883,7 @@ ALTER TABLE ONLY networks_posts
 
 
 --
--- Name: networks_posts_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: networks_posts networks_posts_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_posts
@@ -2885,7 +2891,7 @@ ALTER TABLE ONLY networks_posts
 
 
 --
--- Name: networks_users_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: networks_users networks_users_network_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_users
@@ -2893,7 +2899,7 @@ ALTER TABLE ONLY networks_users
 
 
 --
--- Name: networks_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: networks_users networks_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY networks_users
@@ -2901,7 +2907,7 @@ ALTER TABLE ONLY networks_users
 
 
 --
--- Name: nexudus_accounts_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: nexudus_accounts nexudus_accounts_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY nexudus_accounts
@@ -2909,7 +2915,7 @@ ALTER TABLE ONLY nexudus_accounts
 
 
 --
--- Name: notifications_activity_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_activity_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY notifications
@@ -2917,7 +2923,7 @@ ALTER TABLE ONLY notifications
 
 
 --
--- Name: notifications_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: notifications notifications_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY notifications
@@ -2925,7 +2931,7 @@ ALTER TABLE ONLY notifications
 
 
 --
--- Name: post_link_preview_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts post_link_preview_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts
@@ -2933,7 +2939,7 @@ ALTER TABLE ONLY posts
 
 
 --
--- Name: post_parent_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts post_parent_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts
@@ -2941,7 +2947,7 @@ ALTER TABLE ONLY posts
 
 
 --
--- Name: posts_about_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_about_users posts_about_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_about_users
@@ -2949,7 +2955,7 @@ ALTER TABLE ONLY posts_about_users
 
 
 --
--- Name: posts_about_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_about_users posts_about_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_about_users
@@ -2957,7 +2963,7 @@ ALTER TABLE ONLY posts_about_users
 
 
 --
--- Name: posts_tags_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_tags posts_tags_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags
@@ -2965,7 +2971,7 @@ ALTER TABLE ONLY posts_tags
 
 
 --
--- Name: posts_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_tags posts_tags_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_tags
@@ -2973,7 +2979,7 @@ ALTER TABLE ONLY posts_tags
 
 
 --
--- Name: posts_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_users posts_users_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_users
@@ -2981,7 +2987,7 @@ ALTER TABLE ONLY posts_users
 
 
 --
--- Name: posts_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: posts_users posts_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY posts_users
@@ -2989,7 +2995,7 @@ ALTER TABLE ONLY posts_users
 
 
 --
--- Name: push_notifications_device_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: push_notifications push_notifications_device_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY push_notifications
@@ -2997,7 +3003,7 @@ ALTER TABLE ONLY push_notifications
 
 
 --
--- Name: skills_users_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: skills_users skills_users_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills_users
@@ -3005,7 +3011,7 @@ ALTER TABLE ONLY skills_users
 
 
 --
--- Name: skills_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: skills_users skills_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY skills_users
@@ -3013,7 +3019,7 @@ ALTER TABLE ONLY skills_users
 
 
 --
--- Name: user_connections_other_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_connections user_connections_other_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_connections
@@ -3021,7 +3027,7 @@ ALTER TABLE ONLY user_connections
 
 
 --
--- Name: user_connections_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_connections user_connections_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_connections
@@ -3029,7 +3035,7 @@ ALTER TABLE ONLY user_connections
 
 
 --
--- Name: user_external_data_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_external_data user_external_data_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY user_external_data
@@ -3037,7 +3043,7 @@ ALTER TABLE ONLY user_external_data
 
 
 --
--- Name: users_community_deactivator_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communities_users users_community_deactivator_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY communities_users
@@ -3047,3 +3053,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+

@@ -234,6 +234,7 @@ type Post {
   attachmentsTotal: Int
   postMemberships: [PostMembership]
   postMembershipsTotal: Int
+  announcement: Boolean
 }
 
 type PostMembership {
@@ -447,6 +448,7 @@ input PostInput {
   location: String
   imageUrls: [String]
   fileUrls: [String]
+  announcement: Boolean
 }
 
 input CommentInput {
@@ -561,7 +563,7 @@ type Mutation {
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
-  updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community  
+  updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
   updateMe(changes: MeInput): Me
   updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
