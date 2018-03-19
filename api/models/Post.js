@@ -237,15 +237,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
         reason: `newPost: ${community.id}`
       }))
 
-      const announcees = userIds.map(userId => ({
-        reader_id: userId,
-        post_id: this.id,
-        actor_id: this.get('user_id'),
-        community_id: community.id,
-        reason: `announcement: ${community.id}`
-      }))
+      if (this.get('annoucement')) {
+        const announcees = userIds.map(userId => ({
+          reader_id: userId,
+          post_id: this.id,
+          actor_id: this.get('user_id'),
+          community_id: community.id,
+          reason: `announcement: ${community.id}`
+        }))
+        return newPosts.concat(announcees)
+      }
 
-      return newPosts.concat(announcees)
+      return newPosts
     }))
 
     members = flatten(members)
