@@ -7,7 +7,7 @@ const isJustNewPost = activity => {
 
 const isAnnouncement = activity => {
   const reasons = activity.get('meta').reasons
-  return reasons.every(reason => reason.match(/^announcement/))
+  return filter(reasons, reason => reason.match(/^announcement/)).length > 0
 }
 
 const mergeByReader = activities => {

@@ -237,7 +237,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         reason: `newPost: ${community.id}`
       }))
 
-      if (this.get('annoucement')) {
+      if (this.get('announcement')) {
         const announcees = userIds.map(userId => ({
           reader_id: userId,
           post_id: this.id,
