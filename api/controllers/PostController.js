@@ -20,7 +20,7 @@ const PostController = {
       created_from: 'email_form',
       name: `${namePrefixes[type]} ${req.param('name')}`,
       community_ids: [communityId],
-      tag: type,
+      topicNames: [type],
       description: req.param('description')
     }
 

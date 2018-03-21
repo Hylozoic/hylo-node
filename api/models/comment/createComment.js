@@ -27,7 +27,6 @@ export default async function createComment (commenterId, opts = {}) {
 
   return bookshelf.transaction(trx =>
     new Comment(attrs).save(null, {transacting: trx})
-    .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
     .tap(createMedia(opts.imageUrl, trx)))
   .tap(createOrUpdateConnections(commenterId, existingFollowers))
   .tap(comment => post.addFollowers(newFollowers))
