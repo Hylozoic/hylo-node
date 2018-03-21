@@ -6,10 +6,9 @@ SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET client_min_messages = warning;
-
-SET search_path = public, pg_catalog;
 
 SET default_tablespace = '';
 
@@ -72,7 +71,7 @@ CREATE SEQUENCE comment_seq
 --
 
 CREATE TABLE comments (
-    id bigint DEFAULT nextval('public.comment_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('comment_seq'::regclass) NOT NULL,
     user_id bigint,
     post_id bigint,
     created_at timestamp without time zone,
@@ -136,7 +135,7 @@ CREATE SEQUENCE community_seq
 --
 
 CREATE TABLE communities (
-    id bigint DEFAULT nextval('public.community_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('community_seq'::regclass) NOT NULL,
     name character varying(255) NOT NULL,
     avatar_url character varying(255),
     background_url character varying(255),
@@ -250,7 +249,7 @@ CREATE SEQUENCE community_invite_seq
 --
 
 CREATE TABLE community_invites (
-    id bigint DEFAULT nextval('public.community_invite_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('community_invite_seq'::regclass) NOT NULL,
     community_id bigint NOT NULL,
     created_at timestamp without time zone NOT NULL,
     invited_by_id bigint NOT NULL,
@@ -286,7 +285,7 @@ CREATE SEQUENCE contributor_seq
 --
 
 CREATE TABLE contributions (
-    id bigint DEFAULT nextval('public.contributor_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('contributor_seq'::regclass) NOT NULL,
     post_id bigint NOT NULL,
     user_id bigint NOT NULL,
     contributed_at timestamp without time zone NOT NULL
@@ -461,7 +460,7 @@ CREATE SEQUENCE follower_seq
 --
 
 CREATE TABLE follows (
-    id bigint DEFAULT nextval('public.follower_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('follower_seq'::regclass) NOT NULL,
     post_id bigint,
     added_at timestamp without time zone,
     user_id bigint,
@@ -716,7 +715,7 @@ CREATE SEQUENCE linked_account_seq
 --
 
 CREATE TABLE linked_account (
-    id bigint DEFAULT nextval('public.linked_account_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('linked_account_seq'::regclass) NOT NULL,
     user_id bigint,
     provider_user_id character varying(255),
     provider_key character varying(255)
@@ -740,7 +739,7 @@ CREATE SEQUENCE media_seq
 --
 
 CREATE TABLE media (
-    id bigint DEFAULT nextval('public.media_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('media_seq'::regclass) NOT NULL,
     type character varying(255),
     url character varying(255),
     thumbnail_url character varying(255),
@@ -1004,7 +1003,7 @@ CREATE SEQUENCE post_view_seq
 --
 
 CREATE TABLE posts (
-    id bigint DEFAULT nextval('public.post_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('post_seq'::regclass) NOT NULL,
     name text,
     description text,
     type character varying(255),
@@ -1272,7 +1271,7 @@ CREATE SEQUENCE thank_you_seq
 --
 
 CREATE TABLE thanks (
-    id bigint DEFAULT nextval('public.thank_you_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('thank_you_seq'::regclass) NOT NULL,
     comment_id bigint NOT NULL,
     date_thanked timestamp without time zone NOT NULL,
     user_id bigint NOT NULL,
@@ -1387,7 +1386,7 @@ CREATE SEQUENCE user_post_relevance_seq
 --
 
 CREATE TABLE user_post_relevance (
-    id bigint DEFAULT nextval('public.user_post_relevance_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('user_post_relevance_seq'::regclass) NOT NULL,
     user_id bigint,
     post_id bigint,
     similarity real,
@@ -1413,7 +1412,7 @@ CREATE SEQUENCE users_seq
 --
 
 CREATE TABLE users (
-    id bigint DEFAULT nextval('public.users_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
     email character varying(255) NOT NULL,
     name character varying(255),
     avatar_url character varying(255),
@@ -1477,7 +1476,7 @@ CREATE SEQUENCE vote_seq
 --
 
 CREATE TABLE votes (
-    id bigint DEFAULT nextval('public.vote_seq'::regclass) NOT NULL,
+    id bigint DEFAULT nextval('vote_seq'::regclass) NOT NULL,
     user_id bigint,
     post_id bigint,
     date_voted timestamp without time zone
@@ -1697,7 +1696,7 @@ CREATE MATERIALIZED VIEW search_index AS
     NULL::bigint AS user_id,
     NULL::bigint AS comment_id,
     ((setweight(to_tsvector('english'::regconfig, p.name), 'B'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(p.description, ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
-   FROM (public.posts p
+   FROM (posts p
      JOIN users u ON ((u.id = p.user_id)))
   WHERE ((p.active = true) AND (u.active = true))
 UNION
@@ -1705,7 +1704,7 @@ UNION
     u.id AS user_id,
     NULL::bigint AS comment_id,
     ((setweight(to_tsvector('english'::regconfig, (u.name)::text), 'A'::"char") || setweight(to_tsvector('english'::regconfig, COALESCE(string_agg(replace((s.name)::text, '-'::text, ' '::text), ' '::text), ''::text)), 'C'::"char")) || setweight(to_tsvector('english'::regconfig, COALESCE(u.bio, ''::text)), 'C'::"char")) AS document
-   FROM ((public.users u
+   FROM ((users u
      LEFT JOIN skills_users su ON ((u.id = su.user_id)))
      LEFT JOIN skills s ON ((su.skill_id = s.id)))
   WHERE (u.active = true)
@@ -1715,7 +1714,7 @@ UNION
     NULL::bigint AS user_id,
     c.id AS comment_id,
     (setweight(to_tsvector('english'::regconfig, c.text), 'C'::"char") || setweight(to_tsvector('english'::regconfig, (u.name)::text), 'D'::"char")) AS document
-   FROM (public.comments c
+   FROM (comments c
      JOIN users u ON ((u.id = c.user_id)))
   WHERE ((c.active = true) AND (u.active = true))
   WITH NO DATA;
