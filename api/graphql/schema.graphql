@@ -233,7 +233,6 @@ type Post {
   attachments(type: String): [Attachment]
   attachmentsTotal: Int
   postMemberships: [PostMembership]
-  postMembershipsTotal: Int
   postMembershipsTotal: Int,
   topics: [Topic],
   topicsTotal: Int
