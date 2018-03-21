@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 
 import { updateOrRemove } from '../../lib/util/knex'
-import { flatten, includes, isUndefined } from 'lodash'
+import { includes, isUndefined } from 'lodash'
 import {
-  differenceBy, filter, find, get, omitBy, pick, some, uniqBy
+  filter, omitBy, some, uniq
 } from 'lodash/fp'
 import { validateTopicName } from 'hylo-utils/validators'
 
@@ -17,7 +17,7 @@ export const tagsInText = (text = '') => {
   return tags
 }
 
-const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) => {
+const addToTaggable = (taggable, name, userId, opts) => {
   var association, getCommunities
   var isPost = taggable.tableName === 'posts'
   if (isPost) {
@@ -38,8 +38,7 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
   .tap(tag =>
     taggable.tags().attach(omitBy(isUndefined, {
       tag_id: tag.id,
-      created_at,
-      selected: isPost ? selected : undefined
+      created_at
     }), opts)
     // userId here is the id of the user making the edit, which is not always
     // the same as the user who created the taggable. we add the tag only to
@@ -52,9 +51,7 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
       return Promise.map(communities, com => Tag.addToCommunity({
         community_id: com.id,
         tag_id: tag.id,
-        user_id: taggable.get('user_id'),
-        description: get('description', tagDescriptions[tag.get('name')]),
-        is_default: get('is_default', tagDescriptions[tag.get('name')])
+        user_id: taggable.get('user_id')
       }, opts))
     }))
 }
@@ -63,36 +60,12 @@ const removeFromTaggable = (taggable, tag, opts) => {
   return taggable.tags().detach(tag.id, opts)
 }
 
-const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, userId, transacting }) => {
-  const lowerName = t => t.name.toLowerCase()
-  const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
-
-  return taggable.getTagsInComments({transacting})
-  .then(childTags => {
-    var newTags = tagsInText(text).map(name => ({name, selected: false}))
-    newTags = newTags.concat(childTags.map(ct => ({name: ct.get('name'), selected: false})))
-    if (selectedTagName) {
-      const dupe = find(t => t.name === selectedTagName, newTags)
-      if (dupe) {
-        dupe.selected = true
-      } else {
-        newTags.push({name: selectedTagName, selected: true})
-      }
-    }
-    return taggable.load('tags', {transacting})
-    .then(() => {
-      const oldTags = taggable.relations.tags.map(t => ({
-        id: t.id,
-        name: t.get('name'),
-        selected: t.pivot.get('selected')
-      }))
-      const toAdd = uniqBy(lowerName, tagDifference(newTags, oldTags))
-      const toRemove = tagDifference(oldTags, newTags)
-      return Promise.all(flatten([
-        toRemove.map(tag => removeFromTaggable(taggable, tag, {transacting})),
-        toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions || {}, userId, {transacting}))
-      ]))
-    })
+const updateForTaggable = ({ taggable, tagNames, userId, transacting }) => {
+  return taggable.load('tags', {transacting})
+  .then(() => {
+    const toRemove = taggable.relations.tags.models
+    return Promise.map(toRemove, tag => removeFromTaggable(taggable, tag, {transacting}))
+    .then(() => Promise.map(uniq(tagNames), name => addToTaggable(taggable, name, userId, {transacting})))
   })
 }
 
@@ -175,38 +148,13 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  updateForPost: function (post, selectedTagName, tagDescriptions, userId, trx) {
-    const text = post.get('name') + ' ' + post.get('description')
-
-    const getSelectedTagName = () =>
-      post.load('selectedTags')
-      .then(() => {
-        const selectedTag = post.relations.selectedTags.first()
-        return selectedTag ? selectedTag.get('name') : null
-      })
-
-    return (selectedTagName ? Promise.resolve(selectedTagName) : getSelectedTagName())
-    .then(selectedTagName => updateForTaggable({
+  updateForPost: function (post, tagNames, userId, trx) {
+    return updateForTaggable({
       taggable: post,
-      text,
-      selectedTagName,
-      tagDescriptions,
+      tagNames,
       userId,
       transacting: trx
-    }))
-  },
-
-  updateForComment: function (comment, tagDescriptions, userId, trx) {
-    return Post.find(comment.get('post_id'))
-    .then(() => updateForTaggable({
-      taggable: comment,
-      text: comment.get('text'),
-      tagDescriptions,
-      userId,
-      transacting: trx
-    }))
-    .then(() => Post.find(comment.get('post_id')))
-    .then(post => post && Tag.updateForPost(post, null, null, null, trx))
+    })
   },
 
   merge: (id1, id2) => {

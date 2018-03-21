@@ -148,7 +148,8 @@ export default async function makeModels (userId, isAdmin) {
         {media: {
           alias: 'attachments',
           arguments: ({ type }) => [type]
-        }}
+        }},
+        {tags: {alias: 'topics'}}
       ],
       filter: flow(
         activePost,
