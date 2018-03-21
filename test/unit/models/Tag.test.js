@@ -182,7 +182,7 @@ describe('Tag', () => {
       return Tag.merge(t1.id, t2.id)
       .then(() => t1.load(['posts', 'communities', 'follows']))
       .then(() => {
-        expect(t1.relations.posts.map('id')).to.deep.equal([p1.id, p2.id])
+        expect(t1.relations.posts.map('id').sort()).to.deep.equal([p1.id, p2.id].sort())
         expect(t1.relations.communities.map('id')).to.deep.equal([c.id])
 
         const follows = t1.relations.follows
