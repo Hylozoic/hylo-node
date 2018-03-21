@@ -6,9 +6,10 @@ SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+
+SET search_path = public, pg_catalog;
 
 SET default_tablespace = '';
 
@@ -51,7 +52,7 @@ CREATE SEQUENCE activity_id_seq
 -- Name: activity_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE activity_id_seq OWNED BY public.activities.id;
+ALTER SEQUENCE activity_id_seq OWNED BY activities.id;
 
 
 --
@@ -115,7 +116,7 @@ CREATE SEQUENCE comments_tags_id_seq
 -- Name: comments_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE comments_tags_id_seq OWNED BY public.comments_tags.id;
+ALTER SEQUENCE comments_tags_id_seq OWNED BY comments_tags.id;
 
 
 --
@@ -210,7 +211,7 @@ CREATE SEQUENCE communities_tags_id_seq
 -- Name: communities_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE communities_tags_id_seq OWNED BY public.communities_tags.id;
+ALTER SEQUENCE communities_tags_id_seq OWNED BY communities_tags.id;
 
 
 --
@@ -339,7 +340,7 @@ CREATE SEQUENCE devices_id_seq
 -- Name: devices_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE devices_id_seq OWNED BY public.devices.id;
+ALTER SEQUENCE devices_id_seq OWNED BY devices.id;
 
 
 --
@@ -372,7 +373,7 @@ CREATE SEQUENCE event_responses_id_seq
 -- Name: event_responses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE event_responses_id_seq OWNED BY public.event_responses.id;
+ALTER SEQUENCE event_responses_id_seq OWNED BY event_responses.id;
 
 
 --
@@ -406,7 +407,7 @@ CREATE SEQUENCE flagged_items_id_seq
 -- Name: flagged_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE flagged_items_id_seq OWNED BY public.flagged_items.id;
+ALTER SEQUENCE flagged_items_id_seq OWNED BY flagged_items.id;
 
 
 --
@@ -440,7 +441,7 @@ CREATE SEQUENCE followed_tags_id_seq
 -- Name: followed_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE followed_tags_id_seq OWNED BY public.tag_follows.id;
+ALTER SEQUENCE followed_tags_id_seq OWNED BY tag_follows.id;
 
 
 --
@@ -504,7 +505,7 @@ CREATE SEQUENCE group_connections_id_seq
 -- Name: group_connections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE group_connections_id_seq OWNED BY public.group_connections.id;
+ALTER SEQUENCE group_connections_id_seq OWNED BY group_connections.id;
 
 
 --
@@ -541,7 +542,7 @@ CREATE SEQUENCE group_memberships_id_seq
 -- Name: group_memberships_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE group_memberships_id_seq OWNED BY public.group_memberships.id;
+ALTER SEQUENCE group_memberships_id_seq OWNED BY group_memberships.id;
 
 
 --
@@ -574,7 +575,7 @@ CREATE SEQUENCE groups_id_seq
 -- Name: groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE groups_id_seq OWNED BY public.groups.id;
+ALTER SEQUENCE groups_id_seq OWNED BY groups.id;
 
 
 --
@@ -618,7 +619,7 @@ CREATE SEQUENCE join_requests_id_seq
 -- Name: join_requests_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE join_requests_id_seq OWNED BY public.join_requests.id;
+ALTER SEQUENCE join_requests_id_seq OWNED BY join_requests.id;
 
 
 --
@@ -649,7 +650,7 @@ CREATE SEQUENCE knex_migrations_id_seq
 -- Name: knex_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE knex_migrations_id_seq OWNED BY public.knex_migrations.id;
+ALTER SEQUENCE knex_migrations_id_seq OWNED BY knex_migrations.id;
 
 
 --
@@ -695,7 +696,7 @@ CREATE SEQUENCE link_previews_id_seq
 -- Name: link_previews_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE link_previews_id_seq OWNED BY public.link_previews.id;
+ALTER SEQUENCE link_previews_id_seq OWNED BY link_previews.id;
 
 
 --
@@ -785,7 +786,7 @@ CREATE SEQUENCE networks_id_seq
 -- Name: networks_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE networks_id_seq OWNED BY public.networks.id;
+ALTER SEQUENCE networks_id_seq OWNED BY networks.id;
 
 
 --
@@ -815,7 +816,7 @@ CREATE SEQUENCE networks_posts_id_seq
 -- Name: networks_posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE networks_posts_id_seq OWNED BY public.networks_posts.id;
+ALTER SEQUENCE networks_posts_id_seq OWNED BY networks_posts.id;
 
 
 --
@@ -848,7 +849,7 @@ CREATE SEQUENCE networks_users_id_seq
 -- Name: networks_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE networks_users_id_seq OWNED BY public.networks_users.id;
+ALTER SEQUENCE networks_users_id_seq OWNED BY networks_users.id;
 
 
 --
@@ -881,7 +882,7 @@ CREATE SEQUENCE nexudus_accounts_id_seq
 -- Name: nexudus_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE nexudus_accounts_id_seq OWNED BY public.nexudus_accounts.id;
+ALTER SEQUENCE nexudus_accounts_id_seq OWNED BY nexudus_accounts.id;
 
 
 --
@@ -940,7 +941,7 @@ CREATE SEQUENCE notifications_id_seq
 -- Name: notifications_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE notifications_id_seq OWNED BY public.notifications.id;
+ALTER SEQUENCE notifications_id_seq OWNED BY notifications.id;
 
 
 --
@@ -971,7 +972,7 @@ CREATE SEQUENCE post_community_id_seq
 -- Name: post_community_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE post_community_id_seq OWNED BY public.communities_posts.id;
+ALTER SEQUENCE post_community_id_seq OWNED BY communities_posts.id;
 
 
 --
@@ -1068,7 +1069,7 @@ CREATE SEQUENCE posts_tags_id_seq
 -- Name: posts_tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE posts_tags_id_seq OWNED BY public.posts_tags.id;
+ALTER SEQUENCE posts_tags_id_seq OWNED BY posts_tags.id;
 
 
 --
@@ -1101,7 +1102,7 @@ CREATE SEQUENCE posts_users_id_seq
 -- Name: posts_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE posts_users_id_seq OWNED BY public.posts_users.id;
+ALTER SEQUENCE posts_users_id_seq OWNED BY posts_users.id;
 
 
 --
@@ -1137,7 +1138,7 @@ CREATE SEQUENCE queued_pushes_id_seq
 -- Name: queued_pushes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE queued_pushes_id_seq OWNED BY public.push_notifications.id;
+ALTER SEQUENCE queued_pushes_id_seq OWNED BY push_notifications.id;
 
 
 --
@@ -1190,7 +1191,7 @@ CREATE SEQUENCE skills_id_seq
 -- Name: skills_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE skills_id_seq OWNED BY public.skills.id;
+ALTER SEQUENCE skills_id_seq OWNED BY skills.id;
 
 
 --
@@ -1220,7 +1221,7 @@ CREATE SEQUENCE skills_users_id_seq
 -- Name: skills_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE skills_users_id_seq OWNED BY public.skills_users.id;
+ALTER SEQUENCE skills_users_id_seq OWNED BY skills_users.id;
 
 
 --
@@ -1251,7 +1252,7 @@ CREATE SEQUENCE tags_id_seq
 -- Name: tags_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE tags_id_seq OWNED BY public.tags.id;
+ALTER SEQUENCE tags_id_seq OWNED BY tags.id;
 
 
 --
@@ -1321,7 +1322,7 @@ CREATE SEQUENCE user_connections_id_seq
 -- Name: user_connections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE user_connections_id_seq OWNED BY public.user_connections.id;
+ALTER SEQUENCE user_connections_id_seq OWNED BY user_connections.id;
 
 
 --
@@ -1354,7 +1355,7 @@ CREATE SEQUENCE user_external_data_id_seq
 -- Name: user_external_data_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE user_external_data_id_seq OWNED BY public.user_external_data.id;
+ALTER SEQUENCE user_external_data_id_seq OWNED BY user_external_data.id;
 
 
 --
@@ -1456,7 +1457,7 @@ CREATE SEQUENCE users_community_id_seq
 -- Name: users_community_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE users_community_id_seq OWNED BY public.communities_users.id;
+ALTER SEQUENCE users_community_id_seq OWNED BY communities_users.id;
 
 
 --
@@ -1487,196 +1488,196 @@ CREATE TABLE votes (
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY activities ALTER COLUMN id SET DEFAULT nextval('public.activity_id_seq'::regclass);
+ALTER TABLE ONLY activities ALTER COLUMN id SET DEFAULT nextval('activity_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY comments_tags ALTER COLUMN id SET DEFAULT nextval('public.comments_tags_id_seq'::regclass);
+ALTER TABLE ONLY comments_tags ALTER COLUMN id SET DEFAULT nextval('comments_tags_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY communities_posts ALTER COLUMN id SET DEFAULT nextval('public.post_community_id_seq'::regclass);
+ALTER TABLE ONLY communities_posts ALTER COLUMN id SET DEFAULT nextval('post_community_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('public.communities_tags_id_seq'::regclass);
+ALTER TABLE ONLY communities_tags ALTER COLUMN id SET DEFAULT nextval('communities_tags_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY communities_users ALTER COLUMN id SET DEFAULT nextval('public.users_community_id_seq'::regclass);
+ALTER TABLE ONLY communities_users ALTER COLUMN id SET DEFAULT nextval('users_community_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY devices ALTER COLUMN id SET DEFAULT nextval('public.devices_id_seq'::regclass);
+ALTER TABLE ONLY devices ALTER COLUMN id SET DEFAULT nextval('devices_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('public.event_responses_id_seq'::regclass);
+ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_responses_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY flagged_items ALTER COLUMN id SET DEFAULT nextval('public.flagged_items_id_seq'::regclass);
+ALTER TABLE ONLY flagged_items ALTER COLUMN id SET DEFAULT nextval('flagged_items_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY group_connections ALTER COLUMN id SET DEFAULT nextval('public.group_connections_id_seq'::regclass);
+ALTER TABLE ONLY group_connections ALTER COLUMN id SET DEFAULT nextval('group_connections_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY group_memberships ALTER COLUMN id SET DEFAULT nextval('public.group_memberships_id_seq'::regclass);
+ALTER TABLE ONLY group_memberships ALTER COLUMN id SET DEFAULT nextval('group_memberships_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY groups ALTER COLUMN id SET DEFAULT nextval('public.groups_id_seq'::regclass);
+ALTER TABLE ONLY groups ALTER COLUMN id SET DEFAULT nextval('groups_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY join_requests ALTER COLUMN id SET DEFAULT nextval('public.join_requests_id_seq'::regclass);
+ALTER TABLE ONLY join_requests ALTER COLUMN id SET DEFAULT nextval('join_requests_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('public.knex_migrations_id_seq'::regclass);
+ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('knex_migrations_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY link_previews ALTER COLUMN id SET DEFAULT nextval('public.link_previews_id_seq'::regclass);
+ALTER TABLE ONLY link_previews ALTER COLUMN id SET DEFAULT nextval('link_previews_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY networks ALTER COLUMN id SET DEFAULT nextval('public.networks_id_seq'::regclass);
+ALTER TABLE ONLY networks ALTER COLUMN id SET DEFAULT nextval('networks_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY networks_posts ALTER COLUMN id SET DEFAULT nextval('public.networks_posts_id_seq'::regclass);
+ALTER TABLE ONLY networks_posts ALTER COLUMN id SET DEFAULT nextval('networks_posts_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY networks_users ALTER COLUMN id SET DEFAULT nextval('public.networks_users_id_seq'::regclass);
+ALTER TABLE ONLY networks_users ALTER COLUMN id SET DEFAULT nextval('networks_users_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY nexudus_accounts ALTER COLUMN id SET DEFAULT nextval('public.nexudus_accounts_id_seq'::regclass);
+ALTER TABLE ONLY nexudus_accounts ALTER COLUMN id SET DEFAULT nextval('nexudus_accounts_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY notifications ALTER COLUMN id SET DEFAULT nextval('public.notifications_id_seq'::regclass);
+ALTER TABLE ONLY notifications ALTER COLUMN id SET DEFAULT nextval('notifications_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY posts_tags ALTER COLUMN id SET DEFAULT nextval('public.posts_tags_id_seq'::regclass);
+ALTER TABLE ONLY posts_tags ALTER COLUMN id SET DEFAULT nextval('posts_tags_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY posts_users ALTER COLUMN id SET DEFAULT nextval('public.posts_users_id_seq'::regclass);
+ALTER TABLE ONLY posts_users ALTER COLUMN id SET DEFAULT nextval('posts_users_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('public.queued_pushes_id_seq'::regclass);
+ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('queued_pushes_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY skills ALTER COLUMN id SET DEFAULT nextval('public.skills_id_seq'::regclass);
+ALTER TABLE ONLY skills ALTER COLUMN id SET DEFAULT nextval('skills_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY skills_users ALTER COLUMN id SET DEFAULT nextval('public.skills_users_id_seq'::regclass);
+ALTER TABLE ONLY skills_users ALTER COLUMN id SET DEFAULT nextval('skills_users_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY tag_follows ALTER COLUMN id SET DEFAULT nextval('public.followed_tags_id_seq'::regclass);
+ALTER TABLE ONLY tag_follows ALTER COLUMN id SET DEFAULT nextval('followed_tags_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('public.tags_id_seq'::regclass);
+ALTER TABLE ONLY tags ALTER COLUMN id SET DEFAULT nextval('tags_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY user_connections ALTER COLUMN id SET DEFAULT nextval('public.user_connections_id_seq'::regclass);
+ALTER TABLE ONLY user_connections ALTER COLUMN id SET DEFAULT nextval('user_connections_id_seq'::regclass);
 
 
 --
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('public.user_external_data_id_seq'::regclass);
+ALTER TABLE ONLY user_external_data ALTER COLUMN id SET DEFAULT nextval('user_external_data_id_seq'::regclass);
 
 
 --
