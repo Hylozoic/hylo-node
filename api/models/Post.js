@@ -229,13 +229,27 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     let members = await Promise.all(communities.map(async community => {
       const userIds = await community.users().fetch().then(u => u.pluck('id'))
-      return userIds.map(userId => ({
+      const newPosts = userIds.map(userId => ({
         reader_id: userId,
         post_id: this.id,
         actor_id: this.get('user_id'),
         community_id: community.id,
         reason: `newPost: ${community.id}`
       }))
+
+      const isModerator = await GroupMembership.hasModeratorRole(this.get('user_id'), community)
+      if (this.get('announcement') && isModerator) {
+        const announcees = userIds.map(userId => ({
+          reader_id: userId,
+          post_id: this.id,
+          actor_id: this.get('user_id'),
+          community_id: community.id,
+          reason: `announcement: ${community.id}`
+        }))
+        return newPosts.concat(announcees)
+      }
+
+      return newPosts
     }))
 
     members = flatten(members)

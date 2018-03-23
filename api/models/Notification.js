@@ -17,7 +17,8 @@ const TYPE = {
   Welcome: 'welcome', // a welcome post
   JoinRequest: 'joinRequest',
   ApprovedJoinRequest: 'approvedJoinRequest',
-  Message: 'message'
+  Message: 'message',
+  Announcement: 'announcement'
 }
 
 const MEDIUM = {
@@ -377,8 +378,8 @@ module.exports = bookshelf.Model.extend({
 
   priorityReason: function (reasons) {
     const orderedLabels = [
-      'mention', 'commentMention', 'newComment', 'newContribution', 'tag', 'newPost', 'follow',
-      'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
+      'announcement', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
+      'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
     ]
 
     const match = label => reasons.some(r => r.match(new RegExp('^' + label)))

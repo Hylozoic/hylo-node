@@ -5,6 +5,11 @@ const isJustNewPost = activity => {
   return reasons.every(reason => reason.match(/^newPost/))
 }
 
+const isAnnouncement = activity => {
+  const reasons = activity.get('meta').reasons
+  return filter(reasons, reason => reason.match(/^announcement/)).length > 0
+}
+
 const mergeByReader = activities => {
   const fields = ['actor_id', 'community_id']
   const merged = activities.reduce((acc, activity) => {
@@ -102,7 +107,8 @@ module.exports = bookshelf.Model.extend({
     Contribution: 'contribution', // someone add you as a contributor to a #request
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
-    Unfollow: 'unfollow' // someone leaves your post
+    Unfollow: 'unfollow', // someone leaves your post
+    Announcement: 'announcement'
   },
 
   find: function (id) {
@@ -235,17 +241,18 @@ module.exports = bookshelf.Model.extend({
     const emailable = membershipsPermitting('sendEmail')
     const pushable = membershipsPermitting('sendPushNotifications')
 
-    if (!isEmpty(emailable) && !isJustNewPost(activity)) {
+    if ((!isEmpty(emailable) && !isJustNewPost(activity)) || isAnnouncement(activity)) {
       notifications.push(Notification.MEDIUM.Email)
     }
 
-    if (!isEmpty(pushable)) {
+    if (!isEmpty(pushable) || isAnnouncement(activity)) {
       notifications.push(Notification.MEDIUM.Push)
     }
 
-    if (!isJustNewPost(activity)) {
+    if (!isJustNewPost(activity) || isAnnouncement(activity)) {
       notifications.push(Notification.MEDIUM.InApp)
     }
+
     return notifications
   },
 

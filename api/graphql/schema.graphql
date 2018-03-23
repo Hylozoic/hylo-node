@@ -236,6 +236,7 @@ type Post {
   postMembershipsTotal: Int,
   topics: [Topic],
   topicsTotal: Int
+  announcement: Boolean
 }
 
 type PostMembership {
@@ -449,6 +450,7 @@ input PostInput {
   location: String
   imageUrls: [String]
   fileUrls: [String]
+  announcement: Boolean
   topicNames: [String]
 }
 

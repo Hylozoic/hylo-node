@@ -124,7 +124,8 @@ export default async function makeModels (userId, isAdmin) {
         'fulfilled_at',
         'starts_at',
         'ends_at',
-        'location'
+        'location',
+        'announcement'
       ],
       getters: {
         title: p => p.get('name'),
