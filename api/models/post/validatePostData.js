@@ -11,6 +11,9 @@ export default function validatePostData (userId, data) {
   if (isEmpty(data.community_ids)) {
     throw new Error('no communities specified')
   }
+  if (data.topicNames && data.topicNames.length > 3) {
+    throw new Error('too many topics in post, maximum 3')
+  }
 
   return Group.allHaveMember(data.community_ids, userId, Community)
   .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
