@@ -544,6 +544,7 @@ type Mutation {
   createPost(data: PostInput): Post
   createTopic(topicName: String, communityId: ID): Topic
   deleteComment(id: ID): GenericResult
+  deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
