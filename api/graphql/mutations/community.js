@@ -66,9 +66,9 @@ async function getModeratedCommunity (userId, communityId) {
 
 export async function deleteCommunityTopic (userId, communityTopicId) {
   const communityTopic = await CommunityTag.where({id: communityTopicId}).fetch()
-    
+
   await getModeratedCommunity(userId, communityTopic.get('community_id'))
-    
+
   await underlyingDeleteCommunityTopic(communityTopic)
   return {success: true}
 }
