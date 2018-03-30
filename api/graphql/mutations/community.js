@@ -1,5 +1,6 @@
 import CommunityService from '../../services/CommunityService'
 import convertGraphqlData from './convertGraphqlData'
+import underlyingDeleteCommunityTopic from '../../models/community/deleteCommunityTopic'
 
 export async function updateCommunity (userId, communityId, changes) {
   const community = await getModeratedCommunity(userId, communityId)
@@ -61,4 +62,13 @@ async function getModeratedCommunity (userId, communityId) {
   }
 
   return community
+}
+
+export async function deleteCommunityTopic (userId, communityTopicId) {
+  const communityTopic = await CommunityTag.where({id: communityTopicId}).fetch()
+
+  await getModeratedCommunity(userId, communityTopic.get('community_id'))
+
+  await underlyingDeleteCommunityTopic(communityTopic)
+  return {success: true}
 }

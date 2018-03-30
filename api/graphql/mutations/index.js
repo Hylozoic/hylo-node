@@ -29,6 +29,7 @@ export {
 export {
   updateCommunity,
   addModerator,
+  deleteCommunityTopic,
   removeModerator,
   removeMember,
   regenerateAccessCode,

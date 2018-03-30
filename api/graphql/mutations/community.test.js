@@ -7,7 +7,8 @@ import {
   addModerator,
   removeModerator,
   removeMember,
-  regenerateAccessCode
+  regenerateAccessCode,
+  deleteCommunityTopic
  } from './community'
 
 describe('moderation', () => {
@@ -153,5 +154,28 @@ describe('createCommunity', () => {
       expect(community).to.exist
       expect(Number(community.get('network_id'))).to.equal(network.id)
     })
+  })  
+})
+
+describe('deleteCommunityTopic', () => {
+  var user, community
+
+  before(function () {
+    user = factories.user()
+    community = factories.community()
+    return Promise.join(community.save(), user.save())
+    .then(() => user.joinCommunity(community, GroupMembership.Role.MODERATOR))
+  })
+
+  it('deletes the topic', async () => {
+    const topic = await factories.tag().save()
+    const communityTopic = await CommunityTag.create({
+      community_id: community.id,
+      tag_id: topic.id
+    })
+    await deleteCommunityTopic(user.id, communityTopic.id)
+    const searched = await CommunityTag.where({id: communityTopic.id}).fetch()
+    expect(searched).not.to.exist
   })
 })
+
