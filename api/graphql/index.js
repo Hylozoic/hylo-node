@@ -14,6 +14,7 @@ import {
   createPost,
   createTopic,
   deleteComment,
+  deleteCommunityTopic,
   deletePost,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
@@ -177,6 +178,8 @@ export function makeMutations (userId, isAdmin) {
     createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
+
+    deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
 
     deletePost: (root, { id }) => deletePost(userId, id),
 
