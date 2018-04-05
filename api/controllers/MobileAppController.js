@@ -17,6 +17,7 @@ module.exports = {
     const androidVersion = req.param('android-version')
     const version = iosVersion || androidVersion
     const platform = iosVersion ? IOS : ANDROID
+    console.log('shouldUpdate?', shouldUpdate(version, platform))
     return res.ok(shouldUpdate(version, platform))
   },
 
@@ -60,7 +61,7 @@ function shouldUpdate (version, platform) {
     if (semver.lt(version, process.env.MINIMUM_SUPPORTED_MOBILE_VERSION || '0.0.0')) {
       return resultBuilder(FORCE, platform)
     } else {
-      return undefined
+      return { success: true }
     }
   }
 
