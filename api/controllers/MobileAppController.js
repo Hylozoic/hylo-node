@@ -17,7 +17,6 @@ module.exports = {
     const androidVersion = req.param('android-version')
     const version = iosVersion || androidVersion
     const platform = iosVersion ? IOS : ANDROID
-    console.log('shouldUpdate?', shouldUpdate(version, platform))
     return res.ok(shouldUpdate(version, platform))
   },
 
