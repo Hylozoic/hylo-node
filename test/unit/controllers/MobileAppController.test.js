@@ -91,28 +91,28 @@ describe('MobileAppController', () => {
       expect(res.body).to.deep.equal(expected)
     })
 
-    it('returns undefined for android version 2.0', () => {
+    it('returns success for android version 2.0', () => {
       req.params = {'android-version': '2.0'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
 
-    it('returns undefined for ios version 2.0', () => {
+    it('returns success for ios version 2.0', () => {
       req.params = {'ios-version': '2.0'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
 
-    it('returns undefined for android version > 2.0', () => {
+    it('returns success for android version > 2.0', () => {
       req.params = {'android-version': '2.0.1'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
 
-    it('returns undefined for ios version > 2.0', () => {
+    it('returns success for ios version > 2.0', () => {
       req.params = {'ios-version': '2.0.1'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
   })
 })
