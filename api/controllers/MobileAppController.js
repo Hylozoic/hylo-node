@@ -60,7 +60,7 @@ function shouldUpdate (version, platform) {
     if (semver.lt(version, process.env.MINIMUM_SUPPORTED_MOBILE_VERSION || '0.0.0')) {
       return resultBuilder(FORCE, platform)
     } else {
-      return undefined
+      return { success: true }
     }
   }
 
