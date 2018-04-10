@@ -112,7 +112,7 @@ describe('MobileAppController', () => {
     it('returns success for ios version > 2.0', () => {
       req.params = {'ios-version': '2.0.1'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(true)
+      expect(res.body.success).to.equal(true)
     })
   })
 })
