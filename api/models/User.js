@@ -97,7 +97,13 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   joinCommunity: async function (community, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
-    const memberships = await community.addGroupMembers([this.id], {role},
+    const memberships = await community.addGroupMembers([this.id],
+      {
+        role,
+        settings: {
+          sendEmail: true,
+          sendPushNotifications: true
+        }},
       {transacting})
     await Community.query().where('id', community.id)
     .increment('num_members').transacting(transacting)
@@ -317,7 +323,9 @@ module.exports = bookshelf.Model.extend(merge({
       updated_at: new Date(),
       settings: {
         digest_frequency,
-        signup_in_progress: true
+        signup_in_progress: true,
+        dm_notifications: 'both',
+        comment_notifications: 'both'
       },
       active: true
     }, omit(attributes, 'account', 'community'))

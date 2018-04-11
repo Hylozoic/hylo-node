@@ -69,6 +69,13 @@ describe('User', function () {
       expect(names[0]).to.equal('House')
       expect(names[1]).to.equal('Yard')
     })
+    .then(() => GroupMembership.forPair(cat, community1).fetch())
+    .then(membership => {
+      expect(membership).to.exist
+      const settings = membership.get('settings')
+      expect(settings.sendEmail).to.equal(true)
+      expect(settings.sendPushNotifications).to.equal(true)
+    })
   })
 
   it('can become moderator', function () {
@@ -217,6 +224,8 @@ describe('User', function () {
         expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'))
         expect(user.get('created_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
         expect(user.get('settings').digest_frequency).to.equal('daily')
+        expect(user.get('settings').dm_notifications).to.equal('both')
+        expect(user.get('settings').comment_notifications).to.equal('both')
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
