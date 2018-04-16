@@ -105,6 +105,23 @@ describe('User', function () {
       expect(user.get('twitter_name')).to.be.null
     })
 
+    it('adds protocol to url, facebook_url and linkedin_url', function () {
+      var user = new User()
+
+      user.setSanely({
+        url: 'myawesomesite.com',
+        facebook_url: 'www.facebook.com/user/123',
+        linkedin_url: 'linkedin.com/user/123'
+      })
+
+      expect(user.get('url')).to.equal('https://myawesomesite.com')
+      expect(user.get('facebook_url')).to.equal('https://www.facebook.com/user/123')
+      expect(user.get('linkedin_url')).to.equal('https://linkedin.com/user/123')
+
+      user.setSanely({linkedin_url: 'http://linkedin.com/user/123'})
+      expect(user.get('linkedin_url')).to.equal('http://linkedin.com/user/123')
+    })
+
     it('preserves existing settings keys', () => {
       var user = new User({
         settings: {
