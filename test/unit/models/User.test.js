@@ -105,6 +105,16 @@ describe('User', function () {
       expect(user.get('twitter_name')).to.be.null
     })
 
+    it("doesn't add url, facebook_url or linkedin_url if not provided", function () {
+      var user = new User()
+
+      user.setSanely({})
+
+      expect(user.get('url')).to.equal(undefined)
+      expect(user.get('facebook_url')).to.equal(undefined)
+      expect(user.get('linkedin_url')).to.equal(undefined)
+    })
+    
     it('adds protocol to url, facebook_url and linkedin_url', function () {
       var user = new User()
 
