@@ -127,7 +127,13 @@ module.exports = bookshelf.Model.extend(merge({
       } else if (saneAttrs.twitter_name.match(/^@/)) {
         saneAttrs.twitter_name = saneAttrs.twitter_name.substring(1)
       }
-    }
+    }        
+    
+    const urlAttrs = ['url', 'facebook_url', 'linkedin_url']
+    
+    urlAttrs.forEach(key => {
+      saneAttrs[key] = addProtocol(saneAttrs[key])
+    })
 
     if (attrs.settings) this.addSetting(attrs.settings)
 
@@ -485,4 +491,13 @@ function validateUserAttributes (attrs, { existingUser, transacting } = {}) {
 
   return User.isEmailUnique(attrs.email, oldEmail, {transacting})
   .then(unique => unique || Promise.reject(new Error('duplicate-email')))
+}
+
+export function addProtocol (url) {
+  const regex = /^(http:\/\/|https:\/\/)/
+  if (regex.test(url)) {
+    return url
+  } else {
+    return 'https://' + url
+  }
 }
