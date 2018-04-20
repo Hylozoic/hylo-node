@@ -4,6 +4,7 @@ const DataType = require('../api/models/group/DataType').default
 
 exports.up = async function (knex, Promise) {
   models.init()
+  console.log('Updating new users notifications')
 
   const users = await User.where('created_at', '>', '2017-12-31')
   .fetchAll()
