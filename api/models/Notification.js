@@ -54,6 +54,7 @@ module.exports = bookshelf.Model.extend({
     var action
     switch (this.get('medium')) {
       case MEDIUM.Push:
+        // TODO check here
         action = this.sendPush()
         break
       case MEDIUM.Email:
@@ -89,9 +90,23 @@ module.exports = bookshelf.Model.extend({
         return this.sendJoinRequestPush()
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestPush()
+      case 'announcement':
+        return this.sendPushAnnouncement()
       default:
         return Promise.resolve()
     }
+  },
+
+  sendPushAnnouncement: function (version) {
+    var post = this.post()
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
+    return Community.find(communityIds[0])
+    .then(community => {
+      var path = url.parse(Frontend.Route.post(post, community)).path
+      var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
+      return this.reader().sendPushNotification(alertText, path)
+    })
   },
 
   sendPostPush: function (version) {
