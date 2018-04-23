@@ -54,7 +54,6 @@ module.exports = bookshelf.Model.extend({
     var action
     switch (this.get('medium')) {
       case MEDIUM.Push:
-        // TODO check here
         action = this.sendPush()
         break
       case MEDIUM.Email:
