@@ -60,6 +60,12 @@ describe('PushNotification', () => {
         process.env.PUSH_NOTIFICATIONS_TESTING_ENABLED = tmpEnvVar2
       })
 
+      it('returns correct text with textForAnnouncement', () => {
+        // TODO create post
+        var post = factories.post()
+        expect(typeof this.textForAnnouncement(post)).toEqual('string')
+      })
+
       it('sets sent_at and disabled for a non-test device', async () => {
         await pushNotification.send()
         const pn = await pushNotification.fetch()
