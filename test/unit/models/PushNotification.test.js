@@ -63,7 +63,7 @@ describe('PushNotification', () => {
       it('returns correct text with textForAnnouncement', () => {
         // TODO create post
         var post = factories.post()
-        expect(typeof this.textForAnnouncement(post)).toEqual('string')
+        expect(typeof pushNotification.textForAnnouncement(post)).toEqual('string')
       })
 
       it('sets sent_at and disabled for a non-test device', async () => {
