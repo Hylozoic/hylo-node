@@ -37,6 +37,11 @@ describe('PushNotification', () => {
       delete process.env.PUSH_NOTIFICATIONS_ENABLED
     })
 
+    it('returns correct text with textForAnnouncement', () => {
+      var post = factories.post()
+      expect(typeof pushNotification.textForAnnouncement(post)).toEqual('string')
+    })
+
     it('sets sent_at and disabled', function () {
       return pushNotification.send()
       .then(result => {
@@ -58,12 +63,6 @@ describe('PushNotification', () => {
 
       after(() => {
         process.env.PUSH_NOTIFICATIONS_TESTING_ENABLED = tmpEnvVar2
-      })
-
-      it('returns correct text with textForAnnouncement', () => {
-        // TODO create post
-        var post = factories.post()
-        expect(typeof pushNotification.textForAnnouncement(post)).toEqual('string')
       })
 
       it('sets sent_at and disabled for a non-test device', async () => {
