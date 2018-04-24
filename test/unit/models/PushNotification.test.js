@@ -37,10 +37,10 @@ describe('PushNotification', () => {
       delete process.env.PUSH_NOTIFICATIONS_ENABLED
     })
 
-    it('returns correct text with textForAnnouncement', () => {
-      var post = factories.post()
-      expect(typeof pushNotification.textForAnnouncement(post)).toEqual('string')
-    })
+    // it('returns correct text with textForAnnouncement', () => {
+    //   var post = factories.post()
+    //   expect(typeof pushNotification.textForAnnouncement(post)).toEqual('string')
+    // })
 
     it('sets sent_at and disabled', function () {
       return pushNotification.send()
