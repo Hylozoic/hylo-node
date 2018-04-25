@@ -113,21 +113,21 @@ module.exports = bookshelf.Model.extend({
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
-      .then(community => {
-        var path = url.parse(Frontend.Route.post(post, community)).path
-        var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
-        return this.reader().sendPushNotification(alertText, path)
-      })
+    .then(community => {
+      var path = url.parse(Frontend.Route.post(post, community)).path
+      var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
+      return this.reader().sendPushNotification(alertText, path)
+    })
   },
 
   sendContributionPush: function (version) {
     return this.load(['contribution', 'contribution.post'])
-      .then(() => {
-        const { contribution } = this.relations.activity.relations
-        var path = url.parse(Frontend.Route.post(contribution.relations.post)).path
-        var alertText = PushNotification.textForContribution(contribution, version)
-        return this.reader().sendPushNotification(alertText, path)
-      })
+    .then(() => {
+      const { contribution } = this.relations.activity.relations
+      var path = url.parse(Frontend.Route.post(contribution.relations.post)).path
+      var alertText = PushNotification.textForContribution(contribution, version)
+      return this.reader().sendPushNotification(alertText, path)
+    })
   },
 
   sendCommentPush: function (version) {
@@ -144,22 +144,22 @@ module.exports = bookshelf.Model.extend({
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
-      .then(community => {
-        var path = url.parse(Frontend.Route.communityJoinRequests(community)).path
-        var alertText = PushNotification.textForJoinRequest(community, this.actor())
-        return this.reader().sendPushNotification(alertText, path)
-      })
+    .then(community => {
+      var path = url.parse(Frontend.Route.communityJoinRequests(community)).path
+      var alertText = PushNotification.textForJoinRequest(community, this.actor())
+      return this.reader().sendPushNotification(alertText, path)
+    })
   },
 
   sendApprovedJoinRequestPush: function () {
     var communityIds = Activity.communityIds(this.relations.activity)
     if (isEmpty(communityIds)) throw new Error('no community ids in activity')
     return Community.find(communityIds[0])
-      .then(community => {
-        var path = url.parse(Frontend.Route.community(community)).path
-        var alertText = PushNotification.textForApprovedJoinRequest(community, this.actor())
-        return this.reader().sendPushNotification(alertText, path)
-      })
+    .then(community => {
+      var path = url.parse(Frontend.Route.community(community)).path
+      var alertText = PushNotification.textForApprovedJoinRequest(community, this.actor())
+      return this.reader().sendPushNotification(alertText, path)
+    })
   },
 
   sendEmail: function () {
