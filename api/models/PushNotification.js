@@ -69,6 +69,13 @@ module.exports = bookshelf.Model.extend({
       : `${person} posted "${postName}" in ${community.get('name')}`
   },
 
+  textForAnnouncement: function (post) {
+    const person = post.relations.user.get('name')
+    const postName = decode(post.get('name'))
+
+    return `${person} sent an announcement titled "${postName}"`
+  },
+
   textForJoinRequest: function (community, actor) {
     return `${actor.get('name')} asked to join ${community.get('name')}`
   },

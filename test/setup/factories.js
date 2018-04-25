@@ -84,6 +84,14 @@ module.exports = {
     }, attrs))
   },
 
+  activity: attrs => {
+    return new Activity(attrs)
+  },
+
+  notification: attrs => {
+    return new Notification(attrs)
+  },
+
   mock: {
     request: function () {
       return {
