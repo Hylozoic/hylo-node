@@ -33,24 +33,36 @@ describe('PushNotification', () => {
   })
 
   describe('without PUSH_NOTIFICATIONS_ENABLED', () => {
+    var user, post
+
     before(() => {
       delete process.env.PUSH_NOTIFICATIONS_ENABLED
     })
 
-    // it('returns correct text with textForAnnouncement', () => {
-    //   var post = factories.post()
-    //   expect(typeof pushNotification.textForAnnouncement(post)).toEqual('string')
-    // })
+    beforeEach(async () => {
+      var username = 'username'
+      var postname = 'My Post'
+      user = await factories.user({name: username}).save()
+      post = await factories.post({user_id: user.id, name: postname}).save()
+    })
+
+    it('returns correct text with textForAnnouncement', async () => {
+      await post.load('user')
+      const person = post.relations.user.get('name')
+      const postName = post.get('name')
+      var expected = `${person} sent an announcement titled "${postName}"`
+      expect(PushNotification.textForAnnouncement(post)).to.equal(expected)
+    })
 
     it('sets sent_at and disabled', function () {
       return pushNotification.send()
-      .then(result => {
-        return pushNotification.fetch()
-        .then(pn => {
-          expect(pn.get('sent_at')).not.to.equal(null)
-          expect(pn.get('disabled')).to.be.true
+        .then(result => {
+          return pushNotification.fetch()
+            .then(pn => {
+              expect(pn.get('sent_at')).not.to.equal(null)
+              expect(pn.get('disabled')).to.be.true
+            })
         })
-      })
     })
 
     describe('with PUSH_NOTIFICATIONS_TESTING_ENABLED', () => {
