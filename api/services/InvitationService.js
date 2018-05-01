@@ -93,9 +93,13 @@ module.exports = {
             opts.subject = subject
           }
 
-          return Queue.classMethod('Invitation', 'createAndSend', opts)
-          .then(() => ({email}))
-          .catch(err => ({email, error: err.message}))
+          return Invitation.create(opts)
+            .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
+            .then(invitation => {
+              return Queue.classMethod('Invitation', 'createAndSend', {invitation})
+                .then(() => ({email, id: invitation.id}))
+                .catch(err => ({email, error: err.message}))
+            })
         })
       })
   },
