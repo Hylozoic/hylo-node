@@ -97,7 +97,12 @@ module.exports = {
             .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
             .then(invitation => {
               return Queue.classMethod('Invitation', 'createAndSend', {invitation})
-                .then(() => ({email, id: invitation.id}))
+                .then(() => ({
+                  email,
+                  id: invitation.id,
+                  createdAt: invitation.created_at,
+                  lastSentAt: invitation.last_sent_at
+                }))
                 .catch(err => ({email, error: err.message}))
             })
         })
