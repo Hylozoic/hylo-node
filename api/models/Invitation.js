@@ -134,10 +134,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     }).save()
   },
 
-  createAndSend: function (opts) {
-    return Invitation.create(opts)
-    .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
-    .tap(invitation => invitation.send())
+  createAndSend: function ({invitation}) {
+    return invitation => invitation.send()
   },
 
   reinviteAll: function (opts) {
