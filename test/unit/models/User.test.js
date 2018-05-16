@@ -2,6 +2,7 @@
 
 import '../../setup'
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import factories from '../../setup/factories'
 import { wait } from '../../setup/helpers'
 import { times } from 'lodash'
@@ -114,7 +115,7 @@ describe('User', function () {
       expect(user.get('facebook_url')).to.equal(undefined)
       expect(user.get('linkedin_url')).to.equal(undefined)
     })
-    
+
     it('adds protocol to url, facebook_url and linkedin_url', function () {
       var user = new User()
 
@@ -490,6 +491,17 @@ describe('User', function () {
       const sharedCommunities = await user1.communitiesSharedWithUser(user2)
       expect(sharedCommunities.length).to.equal(2)
       expect(sharedCommunities.map(c => c.id).sort()).to.deep.equal([community2.id, community3.id].sort())
+    })
+  })
+
+  describe('#intercomHash', () => {
+    it('returns an HMAC', async () => {
+      const user = await factories.user().save()
+      process.env.INTERCOM_KEY = '12345'
+      const hash = crypto.createHmac('sha256', process.env.INTERCOM_KEY)
+      .update(user.id)
+      .digest('hex')
+      expect(user.intercomHash()).to.equal(hash)
     })
   })
 })
