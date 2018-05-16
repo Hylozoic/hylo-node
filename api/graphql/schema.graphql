@@ -27,6 +27,7 @@ type Me {
   unseenThreadCount: Int
   updatedAt: String
   url: String
+  intercomHash: String
 }
 
 type UserSettings {
