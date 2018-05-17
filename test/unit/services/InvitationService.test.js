@@ -122,34 +122,26 @@ describe('InvitationService', () => {
         expect(results).to.deep.equal([
           {email: 'foo', error: 'not a valid email address'},
           {email: 'bar', error: 'not a valid email address'},
-          {email: 'foo@foo.com'},
-          {email: 'bar@bar.com'}
+          {email: 'foo@foo.com', lastSentAt: undefined, createdAt: undefined, id: results[2].id},
+          {email: 'bar@bar.com', lastSentAt: undefined, createdAt: undefined, id: results[3].id}
         ])
 
         expect(Queue.classMethod).to.have.been.called.exactly(2)
+        const firstInvitation = queuedCalls[0][2].invitation
+        const secondInvitation = queuedCalls[1][2].invitation
         expect(queuedCalls).to.deep.equal([
           [
             'Invitation',
             'createAndSend',
             {
-              email: 'foo@foo.com',
-              userId: inviter.id,
-              communityId: community.id,
-              message: markdown(message),
-              subject,
-              moderator: false
+              invitation: firstInvitation
             }
           ],
           [
             'Invitation',
             'createAndSend',
             {
-              email: 'bar@bar.com',
-              userId: inviter.id,
-              communityId: community.id,
-              message: markdown(message),
-              subject,
-              moderator: false
+              invitation: secondInvitation
             }
           ]
         ])
