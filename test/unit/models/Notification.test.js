@@ -584,7 +584,7 @@ describe('Notification', function () {
       })
     })
 
-    it.only('calls sendPushNotification with the correct params', async () => {
+    it('calls sendPushNotification with the correct params', async () => {
       await notification.sendPushAnnouncement()
       expect(notification.relations.activity.relations.reader.sendPushNotification).to.have.been.called()
       expect(alertText).to.equal(PushNotification.textForAnnouncement(post))
