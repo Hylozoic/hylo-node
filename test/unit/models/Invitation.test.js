@@ -115,19 +115,21 @@ describe('Invitation', function () {
 
     after(() => unspyify(Email, 'sendInvitation'))
 
-    it('creates an invite and calls Email.sendInvitation', () => {
+    it('creates an invite and calls Email.sendInvitation', async () => {
       const subject = 'The invite subject'
       const message = 'The invite message'
-
-      const opts = {
+      const email = 'foo@comcom.com'
+      const invitation = await Invitation.create({
         userId: inviter.id,
         communityId: community.id,
-        email: user.get('email'),
+        email,
+        moderator: true,
         subject,
         message
-      }
-      return Invitation.createAndSend(opts)
-      .then(() => Invitation.where({email: user.get('email'), community_id: community.id}).fetch())
+      })
+      // console.log('invitation in test', invitation)
+      return Invitation.createAndSend({invitation})
+      .then(() => Invitation.where({email: email, community_id: community.id}).fetch())
       .then(invitation => {
         expect(invitation).to.exist
         expect(invitation.get('subject')).to.equal(subject)
@@ -135,7 +137,7 @@ describe('Invitation', function () {
       })
       .then(() => {
         expect(Email.sendInvitation).to.have.been.called.exactly(1)
-        expect(invEmail).to.equal(user.get('email'))
+        expect(invEmail).to.equal(email)
         expect(invData).to.contain({
           subject,
           message,

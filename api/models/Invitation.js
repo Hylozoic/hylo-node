@@ -80,7 +80,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   send: function () {
-    console.log('in send *****')
     return this.ensureLoad(['creator', 'community', 'tag'])
     .then(() => {
       const { creator, community } = this.relations
@@ -98,7 +97,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
           community: community.get('name')
         })
       }
-      console.log('**** beforeSave')
       return this.save({
         sent_count: this.get('sent_count') + 1,
         last_sent_at: new Date()
@@ -107,7 +105,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
         if (this.get('tag_id')) {
           throw new Error('need to re-implement tag invitations')
         } else {
-          console.log('***** sendInvitation')
           return Email.sendInvitation(email, data)
         }
       })
