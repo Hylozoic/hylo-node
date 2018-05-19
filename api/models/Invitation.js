@@ -97,7 +97,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
           community: community.get('name')
         })
       }
-
       return this.save({
         sent_count: this.get('sent_count') + 1,
         last_sent_at: new Date()
@@ -135,7 +134,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   createAndSend: function ({invitation}) {
-    return invitation => invitation.send()
+    return Invitation.find(invitation.id)
+      .then(invitation =>
+        invitation.send()
+      )
   },
 
   reinviteAll: function (opts) {
