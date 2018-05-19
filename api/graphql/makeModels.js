@@ -44,7 +44,8 @@ export default async function makeModels (userId, isAdmin) {
         'bio',
         'updated_at',
         'tagline',
-        'new_notification_count'
+        'new_notification_count',
+        'intercomHash'
       ],
       relations: [
         'communities',

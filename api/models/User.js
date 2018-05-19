@@ -96,6 +96,12 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Thank)
   },
 
+  intercomHash: function () {
+    return crypto.createHmac('sha256', process.env.INTERCOM_KEY)
+    .update(this.id)
+    .digest('hex')
+  },
+
   joinCommunity: async function (community, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
     const memberships = await community.addGroupMembers([this.id],
       {
