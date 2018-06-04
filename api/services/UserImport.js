@@ -88,11 +88,11 @@ export function createUser (attrs, options) {
       updated_at: new Date()
     }))
     .tap(user => {
-      if (community && community.id === '1126') {
+      if (community && community.id === '9') {
         return Email.sendSimpleEmail(
           user.get('email'), 'tem_GC822hsXScRMV23pddPNZM',
           {recipient_name: name.split(' ')[0]},
-          {sender: {name: 'Impact Hub Baltimore'}}
+          {sender: {name: 'Impact Hub Oakland'}}
         )
       }
     })

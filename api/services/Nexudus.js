@@ -9,7 +9,7 @@ import { filter, map, compact } from 'lodash/fp'
 // Business-Read, CoworkerContract-List, ProductNote-List, User-List, Coworker-List
 
 const apiHost = 'https://spaces.nexudus.com/api'
-const pageSize = 500
+const pageSize = 10000
 
 const avatarUrl = (id, subdomain) =>
   `https://${subdomain}.spaces.nexudus.com/en/coworker/getavatar/${id}?h=150&w=150`
@@ -22,7 +22,7 @@ const formatRecord = subdomain => record => {
     created_at: record.CreatedOn,
     updated_at: record.UpdatedOn,
     avatar_url: avatarUrl(record.Id, subdomain)
-  })  
+  })
 }
 
 const logCount = label => ({ length }) => console.log(`${label}: ${length}`)
@@ -83,17 +83,19 @@ API.prototype.fetchMembers = function () {
   const intersects = record =>
     includes(map('CoworkerId', contracts), record.Id)
 
-  return this.getSpaceInfo().tap(info => this.subdomain = info.WebAddress)
-  .then(() => this.getActiveContracts().tap(r1 => contracts = r1))
-  .then(() => this.getActiveCoworkers().tap(r2 => coworkers = r2))
+  return this.getSpaceInfo().tap(info => { this.subdomain = info.WebAddress })
+  .then(() => this.getActiveContracts().tap(r1 => { contracts = r1 }))
+  .then(() => this.getActiveCoworkers().tap(r2 => { coworkers = r2 }))
   .then(filter(intersects))
   .tap(logCount('active members'))
   .then(records => compact(map(formatRecord(this.subdomain), records)))
+  .tap(logCount('compacted active members'))
   .then(records => this.options.verbose ? {contracts, coworkers, records} : records)
 }
 
 API.prototype.updateMembers = function () {
   return this.fetchMembers()
+  .tap(records => console.log('about to create users', records.length))
   .then(records => Promise.map(records, r => UserImport.createUser(r, this.options)))
   .then(users => compact(users).length)
 }
