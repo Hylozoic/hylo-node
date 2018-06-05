@@ -18,8 +18,6 @@ module.exports = {
     var email = params.e
     var token = generateToken(params.t, params.a, params.d, params.h)
     
-    console.log('token', token)
-    
     Nexudus.fetchUsers(params.a, token)
     .tap(results => Email.sendRawEmail('robbie@hylo.com', {
       subject: format('Nexudus user records (%s) for %s', results.length, email)

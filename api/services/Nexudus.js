@@ -89,7 +89,6 @@ API.prototype.fetchMembers = function () {
   .then(filter(intersects))
   .tap(logCount('active members'))
   .then(records => compact(map(formatRecord(this.subdomain), records)))
-  .tap(logCount('compacted active members'))
   .then(records => this.options.verbose ? {contracts, coworkers, records} : records)
 }
 
