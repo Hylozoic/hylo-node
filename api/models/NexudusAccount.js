@@ -6,7 +6,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   decryptedPassword: function () {
-    return PlayCrypto.decrypt(this.get('password'))
+    return this.get('password')
   }
 }, {
 

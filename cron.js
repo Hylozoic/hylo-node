@@ -40,7 +40,7 @@ const daily = now => {
 
 const hourly = now => {
   const tasks = [
-    // updateFromNexudus({dryRun: false})
+    updateFromNexudus({dryRun: false})
   ]
 
   switch (now.hour()) {
