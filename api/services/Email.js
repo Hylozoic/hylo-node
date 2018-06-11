@@ -66,7 +66,10 @@ module.exports = {
   sendPostMentionNotification: sendEmailWithOptions('tem_wXiqtyNzAr8EF4fqBna5WQ'),
   sendJoinRequestNotification: sendEmailWithOptions('tem_9sW4aBxaLi5ve57bp7FGXZ'),
   sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
-  sendMessageDigest: sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK', {version: 'v2'}),
+
+  sendMessageDigest: opts =>
+    sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK',
+      Object.assign({version: 'v2'}, opts)),
 
   sendCommentDigest: opts =>
     sendEmailWithOptions('tem_tP6JzrYzvvDXhgTNmtkxuW',
