@@ -66,11 +66,11 @@ module.exports = {
   sendPostMentionNotification: sendEmailWithOptions('tem_wXiqtyNzAr8EF4fqBna5WQ'),
   sendJoinRequestNotification: sendEmailWithOptions('tem_9sW4aBxaLi5ve57bp7FGXZ'),
   sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
-  sendMessageDigest: sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK'),
+  sendMessageDigest: sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK', {version: 'v2'}),
 
   sendCommentDigest: opts =>
     sendEmailWithOptions('tem_tP6JzrYzvvDXhgTNmtkxuW',
-      Object.assign({version: 'multiple'}, opts)),
+      Object.assign({version: 'v2'}, opts)),
 
   postReplyAddress: function (postId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId)

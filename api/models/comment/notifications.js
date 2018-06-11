@@ -35,9 +35,12 @@ export const sendDigests = () => {
   const now = new Date()
   const fallbackTime = () => new Date(now - 10 * 60000)
 
+  console.log('sendingDigests')
+
   return redis.getAsync(sendDigests.REDIS_TIMESTAMP_KEY)
   .then(i => i ? new Date(Number(i)) : fallbackTime())
   .catch(() => fallbackTime())
+  .tap(time => console.log('last time', time))
   .then(time =>
     Post.where('updated_at', '>', time)
     .fetchAll({withRelated: [
@@ -48,6 +51,7 @@ export const sendDigests = () => {
       'comments.user',
       'comments.media'
     ]}))
+  .tap(posts => console.log('posts.length', posts.length))
   .then(posts => Promise.all(posts.map(async post => {
     const { comments } = post.relations
     if (comments.length === 0) return []
@@ -69,9 +73,14 @@ export const sendDigests = () => {
       if (post.get('type') === Post.Type.THREAD) {
         if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Email)) return
 
-        // here, we assume that all of the messages were sent by 1 other person,
-        // so this will have to change when we support group messaging
-        const other = filtered[0].relations.user
+        const others = filtered.map(comment => comment.relations.user)
+
+        const otherNames = others.map(other => other.get('name'))
+
+        const otherAvatarUrls = others.map(other => other.get('avatar_url'))
+
+        var participantNames = otherNames.slice(0, otherNames.length - 1).join(', ') +
+        ' & ' + otherNames[otherNames.length - 1]
 
         const presentMessage = comment =>
           comment.relations.media.length !== 0
@@ -81,8 +90,10 @@ export const sendDigests = () => {
         return Email.sendMessageDigest({
           email: user.get('email'),
           data: {
-            other_person_avatar_url: other.get('avatar_url'),
-            other_person_name: other.get('name'),
+            other_avatar_urls: otherAvatarUrls,
+            participant_avatars: otherAvatarUrls[0],
+            participant_names: participantNames,
+            other_names: otherNames,
             thread_url: Frontend.Route.thread(post),
             messages: filtered.map(presentMessage)
           },
@@ -113,7 +124,8 @@ export const sendDigests = () => {
           email: user.get('email'),
           data: {
             post_title: truncate(post.get('name'), 140).text,
-            post_url: Frontend.Route.post(post),
+            poster_creator_avatar_url: post.relations.user.get('avatar_url'),
+            thread_url: Frontend.Route.post(post),
             comments: commentData,
             subject_prefix: some(hasMention, commentData)
               ? 'You were mentioned in'
@@ -128,6 +140,7 @@ export const sendDigests = () => {
     .then(sends => compact(sends).length)
   })))
   .tap(() => redis.setAsync(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime()))
+  .tap(result => console.log('result', result))
   .then(sum)
 }
 
