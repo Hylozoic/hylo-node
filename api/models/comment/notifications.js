@@ -3,7 +3,7 @@
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
 import { parse } from 'url'
-import { compact, some, sum } from 'lodash/fp'
+import { compact, some, sum, uniq } from 'lodash/fp'
 
 export async function notifyAboutMessage ({ commentId }) {
   const comment = await Comment.find(commentId, {withRelated: ['media']})
@@ -82,7 +82,7 @@ export const sendDigests = () => {
 
         const others = filtered.map(comment => comment.relations.user)
 
-        const otherNames = others.map(other => other.get('name'))
+        const otherNames = uniq(others.map(other => other.get('name')))
 
         const otherAvatarUrls = others.map(other => other.get('avatar_url'))
 
@@ -93,7 +93,6 @@ export const sendDigests = () => {
           email: user.get('email'),
           data: {
             count: filtered.length,
-            other_avatar_urls: otherAvatarUrls,
             participant_avatars: otherAvatarUrls[0],
             participant_names: participantNames,
             other_names: otherNames,
