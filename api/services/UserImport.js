@@ -16,6 +16,7 @@ const fs = require('fs')
 const csv = require('csv-parser')
 const validator = require('validator')
 const _ = require('lodash')
+const IMPACT_HUB_OAKLAND_ID = '9'
 
 const promisifyStream = stream =>
   new Promise((resolve, reject) => {
@@ -58,7 +59,7 @@ const runWithJSONStream = function (stream, options, rowAction) {
 
 export function createUser (attrs, options) {
   if (!attrs) return
-  const { verbose, community, dryRun } = options
+  const { community, dryRun } = options
   const { name, email } = attrs
 
   if (!validator.isEmail(email)) {
@@ -66,36 +67,69 @@ export function createUser (attrs, options) {
     return
   }
 
+  if (dryRun) {
+    console.log(`dry run: ${name} <${email}>`)
+    return
+  }
+
   return User.isEmailUnique(email)
-  .then(unique => {
+  .then(async unique => {
     if (!unique) {
-      if (verbose) console.error('email already exists: ' + email)
-      return
-    }
+      const user = await User.where({
+        email,
+        active: true
+      }).fetch()
+      // eject if user is inactive
+      if (!user) return
 
-    if (dryRun) {
-      console.log(`dry run: ${name} <${email}>`)
-      return
-    }
+      const group = await community.group()
+      const existingMemberships = await group.memberships(true)
+      .query(q => q.where('user_id', '=', user.id)).fetch()
 
-    // TODO handle skills as tags
-    return User.create(_.merge(attrs, {
-      community: community,
-      settings: {
-        digest_frequency: 'weekly'
-      },
-      created_at: new Date(),
-      updated_at: new Date()
-    }))
-    .tap(user => {
-      if (community && community.id === '9') {
-        return Email.sendSimpleEmail(
-          user.get('email'), 'tem_GC822hsXScRMV23pddPNZM',
-          {recipient_name: name.split(' ')[0]},
-          {sender: {name: 'Impact Hub Oakland'}}
-        )
+      if (existingMemberships && existingMemberships.length > 0) {
+        const existingMembership = existingMemberships.models[0]
+        if (existingMembership.get('active')) return
+
+        if (!existingMembership.get('settings').removed_by_nexudus) {
+          // if they were not removed by nexudus, they removed themselves and we shouldn't add them
+          return
+        } else {
+          // if they were removed by nexudus, we remove the setting and then continue below to add them
+          existingMembership.removeSetting('removed_by_nexudus')
+          await existingMembership.save()
+        }
       }
-    })
+
+      community.addMembers([user.id])
+      .then(() => {
+        if (community && community.id === IMPACT_HUB_OAKLAND_ID) {
+          return Email.sendSimpleEmail(
+            user.get('email'), 'tem_GC822hsXScRMV23pddPNZM',
+            {recipient_name: name.split(' ')[0]},
+            {sender: {name: 'Impact Hub Oakland'}}
+          )
+        }
+      })
+    } else {
+      // TODO handle skills as tags
+      return User.create(_.merge(attrs, {
+        community: community,
+        settings: {
+          digest_frequency: 'weekly'
+        },
+        created_at: new Date(),
+        updated_at: new Date()
+      }))
+      .tap(user => {
+        if (community && community.id === IMPACT_HUB_OAKLAND_ID) {
+          return Email.sendSimpleEmail(
+            user.get('email'), 'tem_GC822hsXScRMV23pddPNZM',
+            {recipient_name: name.split(' ')[0]},
+            {sender: {name: 'Impact Hub Oakland'}}
+          )
+        }
+      })
+    }
   })
 }
 

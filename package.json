@@ -156,6 +156,7 @@
       "Device",
       "Email",
       "EventResponse",
+      "format",
       "FlaggedItem",
       "Frontend",
       "FullTextSearch",

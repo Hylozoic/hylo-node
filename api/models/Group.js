@@ -31,9 +31,12 @@ module.exports = bookshelf.Model.extend({
     }))
   },
 
-  memberships () {
+  memberships (includeInactive = false) {
     return this.hasMany(GroupMembership)
-    .query(q => q.where('group_memberships.active', true))
+    .query(q => {
+      if (includeInactive) return
+      q.where('group_memberships.active', true)
+    })
   },
 
   // if a group membership doesn't exist for a user id, create it.
@@ -47,13 +50,13 @@ module.exports = bookshelf.Model.extend({
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
 
-    const existingMemberships = await this.memberships()
+    const existingMemberships = await this.memberships(true)
     .query(q => q.where('user_id', 'in', userIds)).fetch()
 
     const changes = []
 
     for (let ms of existingMemberships.models) {
-      changes.push(ms.updateAndSave({role, settings}, {transacting}))
+      changes.push(ms.updateAndSave({role, settings, active: true}, {transacting}))
     }
 
     const newUserIds = difference(userIds, existingMemberships.pluck('user_id'))
@@ -98,7 +101,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   whereIdAndType (id, typeOrModel) {
-
     const type = typeof typeOrModel === 'number'
       ? typeOrModel
       : getDataTypeForModel(typeOrModel)

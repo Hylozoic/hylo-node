@@ -95,6 +95,7 @@ API.prototype.fetchMembers = function () {
 API.prototype.updateMembers = function () {
   return this.fetchMembers()
   .tap(records => console.log('about to create users', records.length))
+  .tap(records => records)   // TODO: remove users who are not in records
   .then(records => Promise.map(records, r => UserImport.createUser(r, this.options)))
   .then(users => compact(users).length)
 }

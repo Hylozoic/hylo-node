@@ -100,7 +100,7 @@ export default {
         if (typeof key === 'string' && key.startsWith('fetch')) {
           return async (...args) => {
             const group = await target.group()
-            let relation = group.members().withPivot(['created_at', 'role', 'settings'])
+            let relation = group.members().withPivot(['active', 'created_at', 'role', 'settings'])
             for (let cb of queryCalls) relation = relation.query(cb)
             return relation[key](...args)
           }
