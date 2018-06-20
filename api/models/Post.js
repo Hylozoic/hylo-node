@@ -9,6 +9,7 @@ import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
 import { isFollowing } from './group/queryUtils'
+import html2text from '../../lib/htmlparser/html2text'
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -130,6 +131,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
         return result[0].total
       }
     })
+  },
+
+  getDetailsText: async function () {
+    return html2text(this.get('description'))
   },
 
   getType: function () {
