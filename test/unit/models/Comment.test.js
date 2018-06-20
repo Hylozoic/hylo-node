@@ -48,8 +48,8 @@ describe('Comment', () => {
       log = []
       comments = []
 
-      u1 = factories.user({settings: {dm_notifications: 'both'}})
-      u2 = factories.user({settings: {dm_notifications: 'both'}})
+      u1 = factories.user({avatar_url: 'foo.png', settings: {dm_notifications: 'both'}})
+      u2 = factories.user({avatar_url: 'bar.png', settings: {dm_notifications: 'both'}})
       post = factories.post({type: Post.Type.THREAD, updated_at: now})
 
       await Promise.join(u1.save(), u2.save(), post.save())
@@ -80,11 +80,29 @@ describe('Comment', () => {
 
           const send1 = log.find(l => l.email === u1.get('email'))
           expect(send1.data.messages)
-          .to.deep.equal([comments[2].get('text'), comments[3].get('text')])
+          .to.deep.equal([
+            {
+              text: comments[2].get('text'),
+              name: u2.get('name'),
+              avatar_url: u2.get('avatar_url')
+            }, {
+              text: comments[3].get('text'),
+              name: u2.get('name'),
+              avatar_url: u2.get('avatar_url')
+            }])
 
           const send2 = log.find(l => l.email === u2.get('email'))
           expect(send2.data.messages)
-          .to.deep.equal([comments[0].get('text'), comments[1].get('text')])
+          .to.deep.equal([
+            {
+              text: comments[0].get('text'),
+              name: u1.get('name'),
+              avatar_url: u1.get('avatar_url')
+            }, {
+              text: comments[1].get('text'),
+              name: u1.get('name'),
+              avatar_url: u1.get('avatar_url')
+            }])
         })
       })
 
@@ -102,7 +120,11 @@ describe('Comment', () => {
 
           expect(log[0].email).to.equal(u1.get('email'))
           expect(log[0].data.messages)
-          .to.deep.equal([comments[3].get('text')])
+          .to.deep.equal([{
+            text: comments[3].get('text'),
+            name: u2.get('name'),
+            avatar_url: u2.get('avatar_url')
+          }])
         })
       })
 
@@ -115,7 +137,15 @@ describe('Comment', () => {
 
           expect(log[0].email).to.equal(u2.get('email'))
           expect(log[0].data.messages)
-          .to.deep.equal([comments[0].get('text'), comments[1].get('text')])
+          .to.deep.equal([{
+            name: u1.get('name'),
+            avatar_url: u1.get('avatar_url'),
+            text: comments[0].get('text')
+          }, {
+            name: u1.get('name'),
+            avatar_url: u1.get('avatar_url'),
+            text: comments[1].get('text')
+          }])
         })
       })
     })

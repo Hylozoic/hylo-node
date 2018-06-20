@@ -3,7 +3,7 @@
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
 import { parse } from 'url'
-import { compact, some, sum } from 'lodash/fp'
+import { compact, some, sum, uniq } from 'lodash/fp'
 
 export async function notifyAboutMessage ({ commentId }) {
   const comment = await Comment.find(commentId, {withRelated: ['media']})
@@ -45,6 +45,7 @@ export const sendDigests = () => {
         q.where('created_at', '>', time)
         q.orderBy('created_at', 'asc')
       }},
+      'user',
       'comments.user',
       'comments.media'
     ]}))
@@ -66,25 +67,37 @@ export const sendDigests = () => {
 
       if (filtered.length === 0) return
 
+      const presentComment = comment => {
+        const presented = {
+          name: comment.relations.user.get('name'),
+          avatar_url: comment.relations.user.get('avatar_url')
+        }
+        return comment.relations.media.length !== 0
+          ? Object.assign({}, presented, {image: comment.relations.media.first().pick('url', 'thumbnail_url')})
+          : Object.assign({}, presented, {text: comment.get('text')})
+      }
+
       if (post.get('type') === Post.Type.THREAD) {
         if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Email)) return
 
-        // here, we assume that all of the messages were sent by 1 other person,
-        // so this will have to change when we support group messaging
-        const other = filtered[0].relations.user
+        const others = filtered.map(comment => comment.relations.user)
 
-        const presentMessage = comment =>
-          comment.relations.media.length !== 0
-          ? {image: comment.relations.media.first().pick('url', 'thumbnail_url')}
-          : comment.get('text')
+        const otherNames = uniq(others.map(other => other.get('name')))
+
+        const otherAvatarUrls = others.map(other => other.get('avatar_url'))
+
+        var participantNames = otherNames.slice(0, otherNames.length - 1).join(', ') +
+        ' & ' + otherNames[otherNames.length - 1]
 
         return Email.sendMessageDigest({
           email: user.get('email'),
           data: {
-            other_person_avatar_url: other.get('avatar_url'),
-            other_person_name: other.get('name'),
+            count: filtered.length,
+            participant_avatars: otherAvatarUrls[0],
+            participant_names: participantNames,
+            other_names: otherNames,
             thread_url: Frontend.Route.thread(post),
-            messages: filtered.map(presentMessage)
+            messages: filtered.map(presentComment)
           },
           sender: {
             reply_to: Email.postReplyAddress(post.id, user.id)
@@ -93,18 +106,6 @@ export const sendDigests = () => {
       } else {
         if (!user.enabledNotification(Notification.TYPE.Comment, Notification.MEDIUM.Email)) return
 
-        const presentComment = comment => {
-          const attrs = {
-            text: RichText.qualifyLinks(comment.get('text')),
-            user: comment.relations.user.pick('name', 'avatar_url'),
-            url: Frontend.Route.post(post) + `#comment-${comment.id}`
-          }
-          if (comment.relations.media.length !== 0) {
-            attrs.image = comment.relations.media.first().pick('url', 'thumbnail_url')
-          }
-          return attrs
-        }
-
         const commentData = comments.map(presentComment)
         const hasMention = ({ text }) =>
           RichText.getUserMentions(text).includes(user.id)
@@ -112,8 +113,10 @@ export const sendDigests = () => {
         return Email.sendCommentDigest({
           email: user.get('email'),
           data: {
+            count: commentData.length,
             post_title: truncate(post.get('name'), 140).text,
-            post_url: Frontend.Route.post(post),
+            post_creator_avatar_url: post.relations.user.get('avatar_url'),
+            thread_url: Frontend.Route.post(post),
             comments: commentData,
             subject_prefix: some(hasMention, commentData)
               ? 'You were mentioned in'
