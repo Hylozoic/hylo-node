@@ -75,12 +75,19 @@ module.exports = bookshelf.Model.extend({
     return Promise.all(changes)
   },
 
-  async removeMembers (usersOrIds, { transacting } = {}) {
+  async removeMembers (usersOrIds, { settings = null, transacting } = {}) {
+    // WARNING: adding a settings param here will overwrite any other settings in the Group Membership
+    const attrs = {active: false}
+    if (settings) {
+      attrs.settings = settings
+    }
+
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
+
     return GroupMembership.query(q => {
       q.where('group_id', this.id)
       q.where('user_id', 'in', userIds)
-    }).query().update({active: false}).transacting(transacting)
+    }).query().update(attrs).transacting(transacting)
   }
 }, {
   DataType,

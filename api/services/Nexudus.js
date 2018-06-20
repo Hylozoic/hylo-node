@@ -2,7 +2,7 @@
 import request from 'request'
 var Promise = require('bluebird')
 var get = Promise.promisify(request.get, request)
-import { includes } from 'lodash'
+import { includes, differenceBy } from 'lodash'
 import { filter, map, compact } from 'lodash/fp'
 
 // Nexudus app requires the following permissions
@@ -92,10 +92,18 @@ API.prototype.fetchMembers = function () {
   .then(records => this.options.verbose ? {contracts, coworkers, records} : records)
 }
 
+API.prototype.removeUnlistedMembers = async function (records) {
+  const { community } = this.options
+  const userEmailsAndIds = (await community.users().fetch())
+    .map(u => ({id: u.id, email: u.get('email')}))
+  const nonMemberEmailsAndIds = differenceBy(userEmailsAndIds, records, 'email')
+  const group = await community.group()
+  return group.removeMembers(nonMemberEmailsAndIds.map(u => u.id), {settings: {removed_by_nexudus: true}})
+}
+
 API.prototype.updateMembers = function () {
   return this.fetchMembers()
-  .tap(records => console.log('about to create users', records.length))
-  .tap(records => records)   // TODO: remove users who are not in records
+  .tap(records => this.removeUnlistedMembers(records))
   .then(records => Promise.map(records, r => UserImport.createUser(r, this.options)))
   .then(users => compact(users).length)
 }
