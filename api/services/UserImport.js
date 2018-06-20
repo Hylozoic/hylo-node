@@ -75,9 +75,9 @@ export function createUser (attrs, options) {
   return User.isEmailUnique(email)
   .then(async unique => {
     if (!unique) {
-      const user = await User.where({
-        email,
-        active: true
+      const user = await User.query(q => {
+        q.whereRaw('lower(email) = lower(?)', email)
+        q.where('active', true)
       }).fetch()
       // eject if user is inactive
       if (!user) return
