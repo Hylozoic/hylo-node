@@ -36,7 +36,7 @@ describe('mutations', () => {
     expect(skill.get('name')).to.equal('New Skill')
   })
 
-  it('set allow community invites to true', async () => {
+  it('sets allow community invites to true', async () => {
     const results = await allowCommunityInvites(u1.id, true)
     expect(results.get('success')).to.equal(true)
   })
