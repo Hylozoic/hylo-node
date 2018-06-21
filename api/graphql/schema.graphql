@@ -538,6 +538,7 @@ type Mutation {
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
   addSkill(name: String): Skill
+  allowCommunityInvites(communityId: ID, data: Boolean): Community
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations

@@ -49,6 +49,11 @@ export function updateMe (userId, changes) {
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }
 
+export function allowCommunityInvites (communityId) {
+  return Community.query().where('id', communityId).update({allow_community_invites: false})
+  .then(() => ({success: true}))
+}
+
 export async function leaveCommunity (userId, communityId) {
   const community = await Community.find(communityId)
   const user = await User.find(userId)
