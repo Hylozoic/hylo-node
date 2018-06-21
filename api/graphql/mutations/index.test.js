@@ -38,7 +38,8 @@ describe('mutations', () => {
 
   it('sets allow community invites to true', async () => {
     const results = await allowCommunityInvites(u1.id, true)
-    expect(results.get('success')).to.equal(true)
+    console.log('results', results)
+    expect(results.success).to.equal(true)
   })
 
   it('fails when adding a skill with 0 length', async () => {
