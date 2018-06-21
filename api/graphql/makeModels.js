@@ -131,6 +131,7 @@ export default async function makeModels (userId, isAdmin) {
       getters: {
         title: p => p.get('name'),
         details: p => p.get('description'),
+        detailsText: p => p.getDetailsText(),
         public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(),
