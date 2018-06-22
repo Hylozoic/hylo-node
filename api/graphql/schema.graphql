@@ -168,7 +168,8 @@ type Community {
     first: Int,
     offset: Int,
     autocomplete: String
-  ): SkillQuerySet
+  ): SkillQuerySet,
+  allowCommunityInvites: Boolean
 }
 
 type PersonQuerySet {

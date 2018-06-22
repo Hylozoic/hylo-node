@@ -49,8 +49,8 @@ export function updateMe (userId, changes) {
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }
 
-export function allowCommunityInvites (communityId) {
-  return Community.query().where('id', communityId).update({allow_community_invites: false})
+export function allowCommunityInvites (communityId, data) {
+  return Community.query().where('id', communityId).update({allow_community_invites: data})
   .then(() => ({success: true}))
 }
 

@@ -179,7 +179,8 @@ export default async function makeModels (userId, isAdmin) {
         'num_members',
         'postCount',
         'location',
-        'hidden'
+        'hidden',
+        'allow_community_invites'
       ],
       relations: [
         'network',

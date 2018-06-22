@@ -162,7 +162,7 @@ export function makeMutations (userId, isAdmin) {
 
     addSkill: (root, { name }) => addSkill(userId, name),
 
-    allowCommunityInvites: (root, { communityId }) => allowCommunityInvites(communityId),
+    allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
 
     createComment: (root, { data }) => createComment(userId, data),
 
