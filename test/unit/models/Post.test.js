@@ -4,6 +4,13 @@ const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
 describe('Post', function () {
+  it('getDetailsText', async () => {
+    await setup.clearDb()
+    const post = await factories.post({description: `<p>hello <a data-user-id="334" data-entity-type='mention'>John Doe</a> #MOO</p>`}).save()
+    const text = await post.getDetailsText()
+    expect(text).to.equal('hello [John Doe:334] #MOO\n')
+  })
+
   describe('#addFollowers', function () {
     var u1, u2, post
 
