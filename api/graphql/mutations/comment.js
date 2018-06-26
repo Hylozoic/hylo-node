@@ -1,5 +1,6 @@
 import underlyingDeleteComment from '../../models/comment/deleteComment'
 import underlyingCreateComment from '../../models/comment/createComment'
+import underlyingUpdateComment from '../../models/comment/updateComment'
 import { merge, trim } from 'lodash'
 
 export function canDeleteComment (userId, comment) {
@@ -9,6 +10,11 @@ export function canDeleteComment (userId, comment) {
     comment.relations.post.relations.communities.map(c =>
       GroupMembership.hasModeratorRole(userId, c))
   ))
+}
+
+export function canUpdateComment (userId, comment) {
+  if (comment.get('user_id') === userId) return Promise.resolve(true)
+  return Promise.resolve(false)
 }
 
 export function deleteComment (userId, commentId) {
@@ -30,6 +36,16 @@ export function createComment (userId, data) {
   .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
 }
 
+export function updateComment (userId, { id, data }) {
+  return Comment.find(id)
+  .then(comment => canUpdateComment(userId, comment))
+  .then(canUpdate => {
+    if (!canUpdate) throw new Error("You don't have permission to edit this comment")
+    return validateCommentUpdateData(userId, data)
+    .then(validatedData => underlyingUpdateComment(userId, id, validatedData))
+  })
+}
+
 export function validateCommentCreateData (userId, data) {
   return Post.isVisibleToUser(data.postId, userId)
   .then(isVisible => {
@@ -42,4 +58,11 @@ export function validateCommentCreateData (userId, data) {
       throw new Error('post not found')
     }
   })
+}
+
+export function validateCommentUpdateData (userId, data) {
+  if (!data.imageUrl && !trim(data.text)) {
+    throw new Error("Can't create a blank comment")
+  }
+  return Promise.resolve(data)
 }
