@@ -45,7 +45,7 @@ export default async function createComment (commenterId, opts = {}) {
   .then(() => comment))
 }
 
-const createMedia = (url, transacting) => comment =>
+export const createMedia = (url, transacting) => comment =>
   url && Media.create({
     comment_id: comment.id,
     url,

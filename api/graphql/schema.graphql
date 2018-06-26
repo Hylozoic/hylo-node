@@ -570,6 +570,7 @@ type Mutation {
   resendInvitation(invitationId: ID): GenericResult
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
+  updateComment(id: ID, data: CommentInput): Comment
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult

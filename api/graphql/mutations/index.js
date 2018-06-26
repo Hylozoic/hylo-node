@@ -5,7 +5,7 @@ import underlyingFindOrCreateThread, {
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
 import convertGraphqlData from './convertGraphqlData'
 
-export { createComment, deleteComment, canDeleteComment } from './comment'
+export { createComment, deleteComment, canDeleteComment, updateComment, canUpdateComment } from './comment'
 export {
   addCommunityToNetwork,
   addNetworkModeratorRole,

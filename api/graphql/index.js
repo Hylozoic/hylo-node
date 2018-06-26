@@ -9,6 +9,7 @@ import {
   addModerator,
   addSkill,
   allowCommunityInvites,
+  canUpdateComment,
   createComment,
   createCommunity,
   createInvitation,
@@ -37,6 +38,7 @@ import {
   resendInvitation,
   subscribe,
   unlinkAccount,
+  updateComment,
   updateCommunity,
   updateCommunityHiddenSetting,
   updateCommunityTopic,
@@ -255,6 +257,7 @@ export function makeMutations (userId, isAdmin) {
     updateNetwork: (root, args) => updateNetwork({ userId, isAdmin }, args),
 
     updatePost: (root, args) => updatePost(userId, args),
+    updateComment: (root, args) => updateComment(userId, args),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
