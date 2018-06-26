@@ -8,6 +8,7 @@ import {
   addNetworkModeratorRole,
   addModerator,
   addSkill,
+  allowCommunityInvites,
   createComment,
   createCommunity,
   createInvitation,
@@ -160,6 +161,8 @@ export function makeMutations (userId, isAdmin) {
       addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
+
+    allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
 
     createComment: (root, { data }) => createComment(userId, data),
 

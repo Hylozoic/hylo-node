@@ -1,7 +1,8 @@
 import {
   addSkill,
   removeSkill,
-  flagInappropriateContent
+  flagInappropriateContent,
+  allowCommunityInvites
 } from './index'
 import root from 'root-path'
 require(root('test/setup'))
@@ -33,6 +34,14 @@ describe('mutations', () => {
   it('can add a skill', async () => {
     const skill = await addSkill(u1.id, 'New Skill')
     expect(skill.get('name')).to.equal('New Skill')
+  })
+
+  it('sets allow community invites', async () => {
+    const results = await allowCommunityInvites(u1.id, false)
+    expect(results.success).to.equal(true)
+
+    const results2 = await allowCommunityInvites(u1.id, true)
+    expect(results2.success).to.equal(true)
   })
 
   it('fails when adding a skill with 0 length', async () => {
