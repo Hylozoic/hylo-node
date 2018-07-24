@@ -394,7 +394,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       relations: [ {otherUser: {alias: 'person'}} ],
       fetchMany: () => UserConnection,
-      filter: relation => relation.query(q => q.where('user_id', userId))
+      filter: relation => relation.query(q => q.where('user_id', userId).orderBy('created_at', 'desc'))
     },
 
     Network: {
