@@ -4,7 +4,7 @@ export default function validatePostData (userId, data) {
   if (!trim(data.name)) {
     throw new Error('title can\'t be blank')
   }
-  const allowedTypes = [Post.Type.REQUEST, Post.Type.OFFER, Post.Type.DISCUSSION]
+  const allowedTypes = [Post.Type.REQUEST, Post.Type.OFFER, Post.Type.DISCUSSION, Post.Type.PROJECT]
   if (data.type && !includes(allowedTypes, data.type)) {
     throw new Error('not a valid type')
   }

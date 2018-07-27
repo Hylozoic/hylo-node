@@ -42,6 +42,9 @@ export {
   deletePost,
   pinPost
 } from './post'
+export {
+  createProject
+} from './project'
 export { updateMembership } from './membership'
 
 export function updateMe (userId, changes) {
