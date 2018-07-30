@@ -43,7 +43,9 @@ export {
   pinPost
 } from './post'
 export {
-  createProject
+  createProject,
+  createProjectRole,
+  deleteProjectRole
 } from './project'
 export { updateMembership } from './membership'
 

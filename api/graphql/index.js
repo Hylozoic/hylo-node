@@ -9,16 +9,17 @@ import {
   addModerator,
   addSkill,
   allowCommunityInvites,
-  canUpdateComment,
   createComment,
   createCommunity,
   createInvitation,
   createPost,
   createProject,
+  createProjectRole,
   createTopic,
   deleteComment,
   deleteCommunityTopic,
   deletePost,
+  deleteProjectRole,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
@@ -183,6 +184,8 @@ export function makeMutations (userId, isAdmin) {
 
     createProject: (root, { data }) => createProject(userId, data),
 
+    createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
+
     createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
@@ -190,6 +193,8 @@ export function makeMutations (userId, isAdmin) {
     deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
 
     deletePost: (root, { id }) => deletePost(userId, id),
+
+    deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
 
     expireInvitation: (root, {invitationId}) =>
       expireInvitation(userId, invitationId),
