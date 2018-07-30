@@ -4,4 +4,11 @@ module.exports = bookshelf.Model.extend({
   project: function () {
     return this.belongsTo(Post)
   }
+
+}, {
+
+  find: function (id, options) {
+    return ProjectRole.where({id}).fetch(options)
+  }
+
 })

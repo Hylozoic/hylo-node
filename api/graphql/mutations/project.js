@@ -29,4 +29,18 @@ export async function createProjectRole (userId, projectId, roleName) {
     name: roleName
   })
   .save()
+  .then(() => ({success: true}))
+}
+
+export async function deleteProjectRole (userId, id) {
+  const projectRole = await ProjectRole.find(id, {withRelated: 'project'})
+
+  if (!projectRole) {
+    throw new Error('Project Role not found')
+  }
+
+  await getModeratedProject(userId, projectRole.relations.project.id)
+  return projectRole.destroy()
+  .then()
+  .then(() => ({success: true}))
 }
