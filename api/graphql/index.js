@@ -5,8 +5,9 @@ import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   addCommunityToNetwork,
-  addNetworkModeratorRole,
   addModerator,
+  addNetworkModeratorRole,
+  addPeopleToProjectRole,
   addSkill,
   allowCommunityInvites,
   createComment,
@@ -163,6 +164,9 @@ export function makeMutations (userId, isAdmin) {
 
     addNetworkModeratorRole: (root, { personId, networkId }) =>
       addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
+
+    addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
+      addPeopleToProjectRole(userId, peopleIds, projectRoleId),
 
     addSkill: (root, { name }) => addSkill(userId, name),
 

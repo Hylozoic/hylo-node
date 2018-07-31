@@ -45,7 +45,8 @@ export {
 export {
   createProject,
   createProjectRole,
-  deleteProjectRole
+  deleteProjectRole,
+  addPeopleToProjectRole
 } from './project'
 export { updateMembership } from './membership'
 

@@ -121,6 +121,7 @@ module.exports = bookshelf.Model.extend({
       },
       multiple: true
     }).query().pluck('group_data_id')
+    .tap(ids => console.log('plucked ids for', userOrId, ':', ids))
   },
 
   havingExactMembers (userIds, typeOrModel) {
@@ -145,8 +146,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   async inSameGroup (userIds, typeOrModel) {
+    console.log('inSameGroup, userIds', userIds)
     const groupIds = await Promise.all(userIds.map(id =>
       this.pluckIdsForMember(id, typeOrModel)))
+    console.log('groupIds', groupIds)
+    console.log('intersection', intersection(groupIds))
     return intersection(groupIds).length > 0
   }
 })

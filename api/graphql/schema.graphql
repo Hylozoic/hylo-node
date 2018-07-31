@@ -539,6 +539,7 @@ type Mutation {
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
+  addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult  
   addSkill(name: String): Skill
   allowCommunityInvites(communityId: ID, data: Boolean): Community
   createComment(data: CommentInput): Comment
