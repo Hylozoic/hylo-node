@@ -523,8 +523,7 @@ CREATE TABLE group_memberships (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     new_post_count integer,
-    group_data_type integer NOT NULL,
-    project_role_id bigint
+    group_data_type integer NOT NULL
 );
 
 
@@ -1109,36 +1108,6 @@ ALTER SEQUENCE posts_users_id_seq OWNED BY posts_users.id;
 
 
 --
--- Name: project_roles; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE project_roles (
-    id bigint NOT NULL,
-    name character varying(255),
-    post_id bigint
-);
-
-
---
--- Name: project_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE project_roles_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: project_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE project_roles_id_seq OWNED BY project_roles.id;
-
-
---
 -- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1688,13 +1657,6 @@ ALTER TABLE ONLY posts_users ALTER COLUMN id SET DEFAULT nextval('posts_users_id
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY project_roles ALTER COLUMN id SET DEFAULT nextval('project_roles_id_seq'::regclass);
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
 ALTER TABLE ONLY push_notifications ALTER COLUMN id SET DEFAULT nextval('queued_pushes_id_seq'::regclass);
 
 
@@ -2107,14 +2069,6 @@ ALTER TABLE ONLY posts_tags
 
 ALTER TABLE ONLY posts_users
     ADD CONSTRAINT posts_users_pkey PRIMARY KEY (id);
-
-
---
--- Name: project_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY project_roles
-    ADD CONSTRAINT project_roles_pkey PRIMARY KEY (id);
 
 
 --
@@ -2905,14 +2859,6 @@ ALTER TABLE ONLY group_memberships
 
 
 --
--- Name: group_memberships_project_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY group_memberships
-    ADD CONSTRAINT group_memberships_project_role_id_foreign FOREIGN KEY (project_role_id) REFERENCES project_roles(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
 -- Name: group_memberships_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3062,14 +3008,6 @@ ALTER TABLE ONLY posts_users
 
 ALTER TABLE ONLY posts_users
     ADD CONSTRAINT posts_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: project_roles_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY project_roles
-    ADD CONSTRAINT project_roles_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
