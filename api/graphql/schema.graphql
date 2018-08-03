@@ -539,6 +539,7 @@ type Mutation {
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
+  addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult  
   addSkill(name: String): Skill
   allowCommunityInvites(communityId: ID, data: Boolean): Community
   createComment(data: CommentInput): Comment
@@ -546,10 +547,13 @@ type Mutation {
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
   createMessage(data: MessageInput): Message
   createPost(data: PostInput): Post
+  createProject(data: PostInput): Post
+  createProjectRole(projectId: ID, roleName: String): GenericResult
   createTopic(topicName: String, communityId: ID): Topic
   deleteComment(id: ID): GenericResult
   deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
+  deleteProjectRole(id: ID): GenericResult
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread

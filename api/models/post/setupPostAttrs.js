@@ -13,6 +13,5 @@ export default function setupPostAttrs (userId, params) {
     updated_at: new Date(),
     announcement: params.announcement
   }, pick(params, 'type', 'starts_at', 'ends_at', 'location', 'created_from'))
-
   return Promise.resolve(attrs)
 }
