@@ -61,17 +61,28 @@ export async function addPeopleToProjectRole (userId, peopleIds, projectRoleId) 
     throw new Error('Project Role not found')
   }
 
-  await getModeratedProject(userId, projectRole.relations.project.id)
+  const project = await getModeratedProject(userId, projectRole.relations.project.id)
+
+  if (!project) {
+    throw new Error('No associated project')
+  }
 
   const checkForSharedCommunity = id =>
     Group.inSameGroup([userId, id], Community)
     .then(doesShare => {
-      console.log('doesShare', doesShare)
       if (!doesShare) throw new Error(`no shared communities with user ${id}`)
     })
 
-  await Promise.map(peopleIds, async id => {
-    return checkForSharedCommunity(id)
-    .then(() => console.log('userId', id))
+  return Promise.map(peopleIds, async id => {
+    await checkForSharedCommunity(id)
+    var gm = await GroupMembership.forPair(id, project).fetch()
+    if (!gm) {
+      await project.addGroupMembers([id])
+      gm = await GroupMembership.forPair(id, project).fetch()
+    }
+    await gm.save({
+      project_role_id: projectRoleId
+    })
   })
+  .then(() => ({success: true}))
 }
