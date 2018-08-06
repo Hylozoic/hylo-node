@@ -59,7 +59,7 @@ describe('validatePostData', () => {
   })
 
   it('continues the promise chain if valid type is provided', () => {
-    const data = {name: 't', type: 'request', community_ids: [inCommunity.id]}
+    const data = {name: 't', type: Post.Type.PROJECT, community_ids: [inCommunity.id]}
     return validatePostData(user.id, data)
     .catch(() => expect.fail('should resolve'))
   })

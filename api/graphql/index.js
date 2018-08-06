@@ -5,19 +5,22 @@ import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   addCommunityToNetwork,
-  addNetworkModeratorRole,
   addModerator,
+  addNetworkModeratorRole,
+  addPeopleToProjectRole,
   addSkill,
   allowCommunityInvites,
-  canUpdateComment,
   createComment,
   createCommunity,
   createInvitation,
   createPost,
+  createProject,
+  createProjectRole,
   createTopic,
   deleteComment,
   deleteCommunityTopic,
   deletePost,
+  deleteProjectRole,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
@@ -162,6 +165,9 @@ export function makeMutations (userId, isAdmin) {
     addNetworkModeratorRole: (root, { personId, networkId }) =>
       addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
 
+    addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
+      addPeopleToProjectRole(userId, peopleIds, projectRoleId),
+
     addSkill: (root, { name }) => addSkill(userId, name),
 
     allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
@@ -180,6 +186,10 @@ export function makeMutations (userId, isAdmin) {
 
     createPost: (root, { data }) => createPost(userId, data),
 
+    createProject: (root, { data }) => createProject(userId, data),
+
+    createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
+
     createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
@@ -187,6 +197,8 @@ export function makeMutations (userId, isAdmin) {
     deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
 
     deletePost: (root, { id }) => deletePost(userId, id),
+
+    deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
 
     expireInvitation: (root, {invitationId}) =>
       expireInvitation(userId, invitationId),

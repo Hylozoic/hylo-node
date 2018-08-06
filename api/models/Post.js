@@ -10,6 +10,7 @@ import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
 import { isFollowing } from './group/queryUtils'
 import html2text from '../../lib/htmlparser/html2text'
+import ProjectMixin from './project/mixin'
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -321,7 +322,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       }
     )
   }
-}, EnsureLoad, HasGroup), {
+}, EnsureLoad, HasGroup, ProjectMixin), {
   // Class Methods
 
   Type: {
