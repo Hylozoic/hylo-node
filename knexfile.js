@@ -50,5 +50,14 @@ module.exports = {
   `,
   onDropTrigger: table => `
     DROP TRIGGER ${table}_updated_at ON ${table}
+  `,
+  createUpdateTrigger: () => `
+    CREATE OR REPLACE FUNCTION on_update_timestamp()
+    RETURNS trigger AS $$
+    BEGIN
+      NEW.updated_at = now();
+      RETURN NEW;
+    END;
+    $$ language 'plpgsql';
   `
 }
