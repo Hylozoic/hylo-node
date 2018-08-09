@@ -49,7 +49,7 @@ module.exports = {
     EXECUTE PROCEDURE on_update_timestamp();
   `,
   dropUpdateTrigger: table => `
-    DROP TRIGGER ${table}_updated_at ON ${table}
+    DROP TRIGGER IF EXISTS ${table}_updated_at ON ${table}
   `,
   createUpdateFunction: () => `
     CREATE OR REPLACE FUNCTION on_update_timestamp()
@@ -59,5 +59,8 @@ module.exports = {
       RETURN NEW;
     END;
     $$ language 'plpgsql';
+  `,
+  dropUpdateFunction: () => `
+    DROP FUNCTION IF EXISTS on_update_timestamp()
   `
 }
