@@ -41,5 +41,14 @@ module.exports = {
         { user: 'hylo', password: 'hylo', port: '5300' }
       )
     }
-  )
+  ),
+  onUpdateTrigger: table => `
+    CREATE TRIGGER ${table}_updated_at
+    BEFORE UPDATE ON ${table}
+    FOR EACH ROW
+    EXECUTE PROCEDURE on_update_timestamp();
+  `,
+  onDropTrigger: table => `
+    DROP TRIGGER ${table}_updated_at ON ${table}
+  `
 }
