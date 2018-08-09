@@ -1,14 +1,14 @@
 const {
-  onUpdateTrigger,
-  onDropTrigger,
-  createUpdateTrigger
+  createUpdateTrigger,
+  dropUpdateTrigger,
+  createUpdateFunction
 } = require('../knexfile')
 
 exports.up = function (knex, Promise) {
-  knex.raw(createUpdateTrigger())
-  knex.raw(onUpdateTrigger('group_memberships'))
+  knex.raw(createUpdateFunction())
+  knex.raw(createUpdateTrigger('group_memberships'))
 }
 
 exports.down = function (knex, Promise) {
-  knex.raw(onDropTrigger('group_memberships'))
+  knex.raw(dropUpdateTrigger('group_memberships'))
 }
