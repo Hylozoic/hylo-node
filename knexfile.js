@@ -1,6 +1,8 @@
 const merge = require('lodash/merge')
 require('dotenv').load()
 
+throw new Error('entered knexfile')
+
 if (!process.env.DATABASE_URL) {
   throw new Error('process.env.DATABASE_URL must be set')
 }
