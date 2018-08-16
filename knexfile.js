@@ -18,7 +18,7 @@ const defaults = {
   connection: {
     host: url.hostname,
     port: url.port,
-    user: user,
+    user: user || 'any',
     password: password,
     database: url.pathname.substring(1)
   },
@@ -33,7 +33,7 @@ console.log('dburl', process.env.DATABASE_URL)
 
 console.log('defaults', JSON.stringify(defaults))
 
-throw new Error('entered knexfile dburl' + process.env.DATABASE_URL)
+// throw new Error('entered knexfile dburl' + process.env.DATABASE_URL)
 
 module.exports = {
   test: defaults,
