@@ -18,7 +18,7 @@ const defaults = {
   connection: {
     host: url.hostname,
     port: url.port,
-    user: user || 'any',
+    user: user || '',
     password: password,
     database: url.pathname.substring(1)
   },
