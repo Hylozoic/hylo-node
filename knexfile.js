@@ -1,8 +1,6 @@
 const merge = require('lodash/merge')
 require('dotenv').load()
 
-throw new Error('entered knexfile')
-
 if (!process.env.DATABASE_URL) {
   throw new Error('process.env.DATABASE_URL must be set')
 }
@@ -28,6 +26,14 @@ const defaults = {
     tableName: 'knex_migrations'
   }
 }
+
+console.log('jsut a log')
+
+console.log('dburl', process.env.DATABASE_URL)
+
+console.log('defaults', JSON.stringify(defaults))
+
+throw new Error('entered knexfile dburl' + process.env.DATABASE_URL)
 
 module.exports = {
   test: defaults,
