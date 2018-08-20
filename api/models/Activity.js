@@ -11,8 +11,15 @@ const isAnnouncement = activity => {
 }
 
 const isTopic = activity => {
+  console.log('activity', activity)
   const reasons = activity.get('meta').reasons
-  return filter(reasons, reason => reason.match(/^tag/)).length > 0
+  console.log('reasons', reasons)
+  console.log('activity.relations.post', activity.relations.post)
+  console.log('activity.relations.post.attributes', activity.relations.post.attributes)
+  console.log('activity.relations.post.relations', activity.relations.post.relations)
+
+  const t = filter(reasons, reason => reason.match(/^tag/)).length > 0
+  return t
 }
 
 const mergeByReader = activities => {
@@ -250,7 +257,7 @@ module.exports = bookshelf.Model.extend({
       notifications.push(Notification.MEDIUM.Email)
     }
 
-    if (!isEmpty(pushable) || isAnnouncement(activity) || isTopic(activity)) {
+    if (isTopic(activity) || !isEmpty(pushable) || isAnnouncement(activity)) {
       notifications.push(Notification.MEDIUM.Push)
     }
 
