@@ -27,14 +27,6 @@ const defaults = {
   }
 }
 
-console.log('jsut a log')
-
-console.log('dburl', process.env.DATABASE_URL)
-
-console.log('defaults', JSON.stringify(defaults))
-
-// throw new Error('entered knexfile dburl' + process.env.DATABASE_URL)
-
 module.exports = {
   test: defaults,
   development: defaults,
