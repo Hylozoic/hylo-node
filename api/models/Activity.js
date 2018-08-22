@@ -10,6 +10,18 @@ const isAnnouncement = activity => {
   return filter(reasons, reason => reason.match(/^announcement/)).length > 0
 }
 
+const isTopic = activity => {
+  console.log('activity', activity)
+  const reasons = activity.get('meta').reasons
+  console.log('reasons', reasons)
+  console.log('activity.relations.post', activity.relations.post)
+  console.log('activity.relations.post.attributes', activity.relations.post.attributes)
+  console.log('activity.relations.post.relations', activity.relations.post.relations)
+
+  const t = filter(reasons, reason => reason.match(/^tag/)).length > 0
+  return t
+}
+
 const mergeByReader = activities => {
   const fields = ['actor_id', 'community_id']
   const merged = activities.reduce((acc, activity) => {
@@ -245,7 +257,7 @@ module.exports = bookshelf.Model.extend({
       notifications.push(Notification.MEDIUM.Email)
     }
 
-    if (!isEmpty(pushable) || isAnnouncement(activity)) {
+    if (isTopic(activity) || !isEmpty(pushable) || isAnnouncement(activity)) {
       notifications.push(Notification.MEDIUM.Push)
     }
 
