@@ -18,7 +18,7 @@ const defaults = {
   connection: {
     host: url.hostname,
     port: url.port,
-    user: user,
+    user: user || 'postgres',
     password: password,
     database: url.pathname.substring(1)
   },
