@@ -157,6 +157,36 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.addGroupMembers(userIds, {settings: {following: true}}, opts)
   },
 
+  addProjectMembers: async function (userIds, opts) {
+    const memberRole = await this.getOrCreateMemberProjectRole(opts)
+    return Promise.map(userIds, async id => {
+      var gm = await GroupMembership.forPair(id, this).fetch(opts)
+      if (!gm) {
+        await this.addGroupMembers([id], {}, opts)
+        gm = await GroupMembership.forPair(id, this).fetch(opts)
+      }
+      return gm.save({
+        project_role_id: memberRole.id
+      }, opts)
+    })  
+  },
+
+  getOrCreateMemberProjectRole: async function (opts) {
+    const memberRole = await ProjectRole.where({
+      name: ProjectRole.MEMBER_ROLE_NAME,
+      post_id: this.id
+    }).fetch(opts)
+    if (memberRole) {
+      return memberRole
+    } else {
+      return ProjectRole.forge({
+        post_id: this.id,
+        name: ProjectRole.MEMBER_ROLE_NAME
+      })
+      .save({}, opts)
+    }
+  },
+
   isPublic: function () {
     return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
   },

@@ -455,6 +455,7 @@ input PostInput {
   fileUrls: [String]
   announcement: Boolean
   topicNames: [String]
+  memberIds: [ID]
 }
 
 input CommentInput {
