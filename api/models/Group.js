@@ -78,7 +78,8 @@ module.exports = bookshelf.Model.extend({
       q.where('group_id', this.id)
       q.where('user_id', 'in', userIds)
     }).query().update({active: false}).transacting(transacting)
-  }
+  },
+  
 }, {
   DataType,
 

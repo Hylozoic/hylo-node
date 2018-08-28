@@ -224,6 +224,7 @@ type Post {
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
+  members(first: Int, cursor: ID, order: String): PersonQuerySet
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet

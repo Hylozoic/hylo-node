@@ -8,7 +8,7 @@ import EnsureLoad from './mixins/EnsureLoad'
 import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
-import { isFollowing } from './group/queryUtils'
+import { isFollowing, isProjectMember } from './group/queryUtils'
 import html2text from '../../lib/htmlparser/html2text'
 import ProjectMixin from './project/mixin'
 
@@ -46,6 +46,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   followers: function () {
     return this.groupMembers(q => isFollowing(q))
+  },
+
+  members: function () {
+    return this.groupMembers(q => isProjectMember(q))
   },
 
   followersWithPivots: function () {
@@ -157,16 +161,19 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.addGroupMembers(userIds, {settings: {following: true}}, opts)
   },
 
-  addProjectMembers: async function (userIds, opts) {
+  updateProjectMembers: async function (userIds, opts) {
+    const members = await this.members().fetch()
+    await this.removeGroupMembers(members, opts)
     const memberRole = await this.getOrCreateMemberProjectRole(opts)
     return Promise.map(userIds, async id => {
-      var gm = await GroupMembership.forPair(id, this).fetch(opts)
+      var gm = await GroupMembership.forPair(id, this, {includeInactive: true}).fetch(opts)
       if (!gm) {
         await this.addGroupMembers([id], {}, opts)
         gm = await GroupMembership.forPair(id, this).fetch(opts)
       }
       return gm.save({
-        project_role_id: memberRole.id
+        project_role_id: memberRole.id,
+        active: true
       }, opts)
     })  
   },

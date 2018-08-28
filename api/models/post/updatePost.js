@@ -30,9 +30,9 @@ export default function updatePost (userId, id, params) {
 export function afterUpdatingPost (post, opts) {
   const {
     params,
-    params: { requests, community_ids, topicNames },
+    params: { requests, community_ids, topicNames, memberIds },
     userId,
-    transacting
+    transacting    
   } = opts
 
   return post.ensureLoad(['communities'])
@@ -43,5 +43,6 @@ export function afterUpdatingPost (post, opts) {
     Tag.updateForPost(post, topicNames, userId, transacting),
     updateFollowers(post, transacting)
   ]))
+  .then(() => post.updateProjectMembers(memberIds, {transacting}))
   .then(() => updateNetworkMemberships(post, transacting))
 }
