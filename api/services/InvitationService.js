@@ -167,26 +167,19 @@ module.exports = {
   async use (userId, token, accessCode) {
     const user = await User.find(userId)
     if (accessCode) {
-      var community
       return Community.queryByAccessCode(accessCode)
       .fetch()
-      .tap(c => { community = c })
-      .then(() => !!community && user.joinCommunity(community))
-      .catch(err => {
-        if (err.message && err.message.includes('duplicate key value')) {
-          // preexisting = true
-          return true
-        } else {
+      .then(community => {
+        return GroupMembership.forPair(user, community, {includeInactive: true}).fetch()
+        .then(existingMembership => {
+          if (existingMembership) return existingMembership.get('active')
+              ? existingMembership
+              : existingMembership.save({active: true}, {patch: true}).then(membership => membership)
+          if (!!community) return user.joinCommunity(community).then(membership => membership)
+        })
+        .catch(err => {
           throw new Error(err.message)
-        }
-      })
-      // we get here if the membership was created successfully, or it already existed
-      .then(ok => ok && GroupMembership.forPair(user, community, {includeInactive: true}).fetch())
-      .then(membership => {
-        if (membership && !membership.get('active')) {
-          return membership.save({active: true}, {patch: true})
-        }
-        return membership
+        })
       })
     }
 
