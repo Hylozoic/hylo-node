@@ -69,6 +69,8 @@ export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
   q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
   q.where({'comments.active': true})
+  // TODO: Blocking. Need to filter blocked users here
+  q.where('comments.user_id', 'NOT IN', [42])
   q.where(q2 => {
     const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
     q2.where('comments.post_id', 'in', groupIds)
