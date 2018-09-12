@@ -11,20 +11,6 @@ SET client_min_messages = warning;
 
 SET search_path = public, pg_catalog;
 
---
--- Name: on_update_timestamp(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION on_update_timestamp() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-    BEGIN
-      NEW.updated_at = now();
-      RETURN NEW;
-    END;
-    $$;
-
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -2523,13 +2509,6 @@ CREATE INDEX ix_vote_user_13 ON votes USING btree (user_id);
 --
 
 CREATE INDEX notifications_pk_medium_0 ON notifications USING btree (id) WHERE (medium = 0);
-
-
---
--- Name: group_memberships_updated_at; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER group_memberships_updated_at BEFORE UPDATE ON group_memberships FOR EACH ROW EXECUTE PROCEDURE on_update_timestamp();
 
 
 --
