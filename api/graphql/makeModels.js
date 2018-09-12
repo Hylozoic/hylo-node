@@ -399,7 +399,7 @@ export default async function makeModels (userId, isAdmin) {
       filter: relation => {
         return relation.query(q => {
           // TODO: Blocking. Need to filter blocked users here
-          q.where('other_user_id', 'NOT IN', [42])
+          q.where('other_user_id', 'NOT IN', [process.env.BLOCKED_USER_ID])
           q.where('user_id', userId)
           q.orderBy('created_at', 'desc')
         })

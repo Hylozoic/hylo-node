@@ -20,7 +20,7 @@ module.exports = bookshelf.Model.extend(merge({
       q.join('posts', 'posts.id', 'comments.post_id')
 
       // TODO: Block
-      q.where('posts.user_id', 'NOT IN', [42])
+      q.where('posts.user_id', 'NOT IN', [process.env.BLOCKED_USER_ID])
 
       q.where(function () {
         this.where('posts.type', '!=', Post.Type.THREAD)
@@ -80,7 +80,7 @@ module.exports = bookshelf.Model.extend(merge({
     .query(q => {
 
       // // TODO: Block
-      // q.where('user_id', 'NOT IN', [42])
+      // q.where('user_id', 'NOT IN', [process.env.BLOCKED_USER_ID])
 
       return q.where('active', true)
     })
