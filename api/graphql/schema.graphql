@@ -542,6 +542,7 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   addSkill(name: String): Skill
   allowCommunityInvites(communityId: ID, data: Boolean): Community
+  blockUser(blockedUserId: ID): GenericResult
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
@@ -574,6 +575,7 @@ type Mutation {
   resendInvitation(invitationId: ID): GenericResult
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
+  unblockUser(blockedUserId: ID): GenericResult
   updateComment(id: ID, data: CommentInput): Comment
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community

@@ -48,6 +48,10 @@ export {
   deleteProjectRole,
   addPeopleToProjectRole
 } from './project'
+export {
+  blockUser,
+  unblockUser
+} from './user'
 export { updateMembership } from './membership'
 
 export function updateMe (userId, changes) {
