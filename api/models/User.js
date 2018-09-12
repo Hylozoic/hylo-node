@@ -18,6 +18,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Comment)
     .query(q => {
       q.join('posts', 'posts.id', 'comments.post_id')
+
+      // TODO: Block
+      q.where('posts.user_id', 'NOT IN', [42])
+
       q.where(function () {
         this.where('posts.type', '!=', Post.Type.THREAD)
         .orWhere('posts.type', null)
@@ -73,7 +77,13 @@ module.exports = bookshelf.Model.extend(merge({
     return this.queryByGroupMembership(Post, {
       where: q => q.whereRaw(`(settings->>'following')::boolean = true`)
     })
-    .query(q => q.where('active', true))
+    .query(q => {
+
+      // // TODO: Block
+      // q.where('user_id', 'NOT IN', [42])
+
+      return q.where('active', true)
+    })
   },
 
   messageThreads: function () {
