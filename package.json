@@ -156,6 +156,7 @@
       "Aggregate",
       "Analytics",
       "AssetManagement",
+      "BlockedUser",
       "Comment",
       "CommentTag",
       "Community",
