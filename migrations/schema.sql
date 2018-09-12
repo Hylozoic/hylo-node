@@ -11,6 +11,20 @@ SET client_min_messages = warning;
 
 SET search_path = public, pg_catalog;
 
+--
+-- Name: on_update_timestamp(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION on_update_timestamp() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+    BEGIN
+      NEW.updated_at = now();
+      RETURN NEW;
+    END;
+    $$;
+
+
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -53,6 +67,38 @@ CREATE SEQUENCE activity_id_seq
 --
 
 ALTER SEQUENCE activity_id_seq OWNED BY activities.id;
+
+
+--
+-- Name: blocked_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE blocked_users (
+    id integer NOT NULL,
+    user_id bigint,
+    blocked_user_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: blocked_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE blocked_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: blocked_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE blocked_users_id_seq OWNED BY blocked_users.id;
 
 
 --
@@ -1548,6 +1594,13 @@ ALTER TABLE ONLY activities ALTER COLUMN id SET DEFAULT nextval('activity_id_seq
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY blocked_users ALTER COLUMN id SET DEFAULT nextval('blocked_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY comments_tags ALTER COLUMN id SET DEFAULT nextval('comments_tags_id_seq'::regclass);
 
 
@@ -1787,6 +1840,14 @@ UNION
 
 ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: blocked_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY blocked_users
+    ADD CONSTRAINT blocked_users_pkey PRIMARY KEY (id);
 
 
 --
@@ -2465,6 +2526,13 @@ CREATE INDEX notifications_pk_medium_0 ON notifications USING btree (id) WHERE (
 
 
 --
+-- Name: group_memberships_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER group_memberships_updated_at BEFORE UPDATE ON group_memberships FOR EACH ROW EXECUTE PROCEDURE on_update_timestamp();
+
+
+--
 -- Name: activities_contribution_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2518,6 +2586,22 @@ ALTER TABLE ONLY activities
 
 ALTER TABLE ONLY activities
     ADD CONSTRAINT activity_reader_id_foreign FOREIGN KEY (reader_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: blocked_users_blocked_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY blocked_users
+    ADD CONSTRAINT blocked_users_blocked_user_id_foreign FOREIGN KEY (blocked_user_id) REFERENCES users(id);
+
+
+--
+-- Name: blocked_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY blocked_users
+    ADD CONSTRAINT blocked_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
 
 
 --
