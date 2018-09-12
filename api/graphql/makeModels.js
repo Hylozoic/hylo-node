@@ -394,7 +394,14 @@ export default async function makeModels (userId, isAdmin) {
       ],
       relations: [ {otherUser: {alias: 'person'}} ],
       fetchMany: () => UserConnection,
-      filter: relation => relation.query(q => q.where('user_id', userId).orderBy('created_at', 'desc'))
+      filter: relation => {
+        return relation.query(q => {
+          // TODO: Blocking. Need to filter blocked users here
+          q.where('other_user_id', 'NOT IN', [42])
+          q.where('user_id', userId)
+          q.orderBy('created_at', 'desc')
+        })
+      }
     },
 
     Network: {
