@@ -55,6 +55,7 @@ export default async function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
+        blockedUsers: u => u.blockedUsers().fetch(),
         isAdmin: () => isAdmin || false,
         settings: u => mapKeys(camelCase, u.get('settings'))
       }

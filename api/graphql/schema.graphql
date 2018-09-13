@@ -28,6 +28,8 @@ type Me {
   updatedAt: String
   url: String
   intercomHash: String
+  blockedUsers: [Person]
+  blockedUsersTotal: Int
 }
 
 type UserSettings {

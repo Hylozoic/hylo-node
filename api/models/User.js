@@ -102,6 +102,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Skill, 'skills_users')
   },
 
+  blockedUsers: function () {
+    return this.belongsToMany(User, 'blocked_users', 'user_id', 'blocked_user_id')
+  },
+
   thanks: function () {
     return this.hasMany(Thank)
   },

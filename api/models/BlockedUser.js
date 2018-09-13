@@ -42,11 +42,11 @@ module.exports = bookshelf.Model.extend({
 
   blockedFor: function (userId) {
     return bookshelf.knex.raw(`
-      SELECT user_id AS blockedId
+      SELECT user_id
       FROM blocked_users
       WHERE blocked_user_id = ?
       UNION
-      SELECT blocked_user_id AS blockedId
+      SELECT blocked_user_id
       FROM blocked_users
       WHERE user_id = ?
     `, [userId, userId])
