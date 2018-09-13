@@ -38,5 +38,12 @@ module.exports = bookshelf.Model.extend({
   find: function (user_id, blocked_user_id) {
     if (!user_id) throw new Error('Parameter user_id must be supplied.')
     return BlockedUser.where({user_id, blocked_user_id}).fetch()
+  },
+
+  blockedFor: function (userId) {
+    return BlockedUser.query(bq => {
+      bq.select('blocked_user_id')
+      bq.where('user_id', userId)
+    }).query()
   }
 })

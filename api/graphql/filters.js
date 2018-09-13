@@ -28,8 +28,7 @@ export const personFilter = userId => relation => relation.query(q => {
     q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
   })
 
-  // TODO: Blocking. Need to filter blocked users here
-  q.where('users.id', 'NOT IN', [process.env.BLOCKED_USER_ID])
+  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
 
   // limit to users that are in those other memberships
   q.where(inner =>
