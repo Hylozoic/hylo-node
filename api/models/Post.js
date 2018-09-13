@@ -16,8 +16,7 @@ const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
   q.join('comments', 'comments.user_id', 'users.id')
 
-  // TODO: Blocking. Need to filter blocked users here
-  q.where('users.id', 'NOT IN', [process.env.BLOCKED_USER_ID])
+  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
 
   q.where({
     'comments.post_id': post.id,

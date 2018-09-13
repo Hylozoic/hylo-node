@@ -19,8 +19,7 @@ module.exports = bookshelf.Model.extend(merge({
     .query(q => {
       q.join('posts', 'posts.id', 'comments.post_id')
 
-      // TODO: Block
-      q.where('posts.user_id', 'NOT IN', [process.env.BLOCKED_USER_ID])
+      q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
 
       q.where(function () {
         this.where('posts.type', '!=', Post.Type.THREAD)
