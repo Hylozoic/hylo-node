@@ -134,7 +134,7 @@ export default async function makeModels (userId, isAdmin) {
         detailsText: p => p.getDetailsText(),
         public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
         commenters: (p, { first }) => p.getCommenters(first, userId),
-        commentersTotal: p => p.getCommentersTotal(),
+        commentersTotal: p => p.getCommentersTotal(userId),
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
@@ -154,7 +154,7 @@ export default async function makeModels (userId, isAdmin) {
         {tags: {alias: 'topics'}}
       ],
       filter: flow(
-        activePost,
+        activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>

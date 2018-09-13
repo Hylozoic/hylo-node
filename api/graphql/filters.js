@@ -76,11 +76,13 @@ export const commentFilter = userId => relation => relation.query(q => {
   })
 })
 
-export const activePost = relation =>
-  relation.query(q => {
+export const activePost = userId => relation => {
+  console.log('!!! activePost', userId)
+  return relation.query(q => {
     q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
     q.where('posts.active', true)
   })
+}
 
 export function communityTopicFilter (userId, {
   autocomplete,

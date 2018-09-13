@@ -15,9 +15,7 @@ import ProjectMixin from './project/mixin'
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
   q.join('comments', 'comments.user_id', 'users.id')
-
-  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
-
+  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(currentUserId))
   q.where({
     'comments.post_id': post.id,
     'comments.active': true
@@ -126,8 +124,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return User.query(commentersQuery(first, this, currentUserId)).fetchAll()
   },
 
-  getCommentersTotal: function () {
-    return countTotal(User.query(commentersQuery(null, this)).query(), 'users')
+  getCommentersTotal: function (currentUserId) {
+    return countTotal(User.query(commentersQuery(null, this, currentUserId)).query(), 'users')
     .then(result => {
       if (isEmpty(result)) {
         return 0

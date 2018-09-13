@@ -25,3 +25,4 @@ latest.dump
 *.swp
 .nyc_output/
 startserver.sh
+.vscode
