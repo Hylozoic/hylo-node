@@ -41,9 +41,14 @@ module.exports = bookshelf.Model.extend({
   },
 
   blockedFor: function (userId) {
-    return BlockedUser.query(bq => {
-      bq.select('blocked_user_id')
-      bq.where('user_id', userId)
-    }).query()
+    return bookshelf.knex.raw(`
+      SELECT user_id AS blockedId
+      FROM blocked_users
+      WHERE blocked_user_id = ?
+      UNION
+      SELECT blocked_user_id AS blockedId
+      FROM blocked_users
+      WHERE user_id = ?
+    `, [userId, userId])
   }
 })
