@@ -18,10 +18,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Comment)
     .query(q => {
       q.join('posts', 'posts.id', 'comments.post_id')
-
-      console.log('!!! Post commentersQuery this.id:', this.id)
       q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(this.id))
-
       q.where(function () {
         this.where('posts.type', '!=', Post.Type.THREAD)
         .orWhere('posts.type', null)
