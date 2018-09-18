@@ -14,6 +14,7 @@ import {
   createComment,
   createCommunity,
   createInvitation,
+  createMessage,
   createPost,
   createProject,
   createProjectRole,
@@ -183,10 +184,7 @@ export function makeMutations (userId, isAdmin) {
     createInvitation: (root, {communityId, data}) =>
       createInvitation(userId, communityId, data),
 
-    createMessage: (root, { data }) => {
-      data.postId = data.messageThreadId
-      return createComment(userId, data)
-    },
+    createMessage: (root, { data }) => createMessage(userId, data),
 
     createPost: (root, { data }) => createPost(userId, data),
 
