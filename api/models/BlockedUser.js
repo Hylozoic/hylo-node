@@ -13,6 +13,10 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   create: function (userId, blockedUserId) {
+    if (blockedUserId === User.AXOLOTL_ID) {
+      throw new Error('cannot block Hylo the Axolotl')
+    }
+    
     if (userId === blockedUserId) {
       throw new Error('blocked_user_id cannot equal user_id')
     }
