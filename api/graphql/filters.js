@@ -36,6 +36,10 @@ export const personFilter = userId => relation => relation.query(q => {
     .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id')))
 })
 
+export const messageFilter = userId => relation => relation.query(q => {
+  q.where('user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+})
+
 function filterCommunities (q, idColumn, userId) {
   // the effect of using `where` like this is to wrap everything within its
   // callback in parentheses -- this is necessary to keep `or` from "leaking"

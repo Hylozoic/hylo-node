@@ -6,7 +6,8 @@ import {
   membershipFilter,
   personFilter,
   sharedNetworkMembership,
-  activePost
+  activePost,
+  messageFilter
 } from './filters'
 import { myCommunityIds } from '../models/util/queryFilters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
@@ -303,7 +304,8 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         {post: {alias: 'messageThread'}},
         {user: {alias: 'creator'}}
-      ]
+      ],
+      filter: messageFilter(userId)
     },
 
     Vote: {
