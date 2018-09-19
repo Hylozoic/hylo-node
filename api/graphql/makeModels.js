@@ -302,7 +302,7 @@ export default async function makeModels (userId, isAdmin) {
       model: Comment,
       attributes: ['created_at'],
       relations: [
-        {post: {alias: 'messageThread'}},
+        {post: {alias: 'messageThread', typename: 'MessageThread'}},
         {user: {alias: 'creator'}}
       ],
       filter: messageFilter(userId)
