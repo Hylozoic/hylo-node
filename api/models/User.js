@@ -74,13 +74,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.queryByGroupMembership(Post, {
       where: q => q.whereRaw(`(settings->>'following')::boolean = true`)
     })
-    .query(q => {
-
-      // // TODO: Block
-      // q.where('user_id', 'NOT IN', [process.env.BLOCKED_USER_ID])
-
-      return q.where('active', true)
-    })
+    .query(q => q.where('active', true))
   },
 
   messageThreads: function () {
