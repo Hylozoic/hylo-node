@@ -55,7 +55,7 @@ module.exports = bookshelf.Model.extend({
     var action
     return this.shouldBeBlocked()
     .then(shouldBeBlocked => {
-      if (shouldBeBlocked === true) {
+      if (shouldBeBlocked) {
         this.destroy()
         return Promise.resolve()
       }
@@ -320,7 +320,7 @@ module.exports = bookshelf.Model.extend({
 
   shouldBeBlocked: async function () {
     const blockedUserIds = (await BlockedUser.blockedFor(this.get('user_id'))).rows.map(r => r.user_id)
-    if (blockedUserIds.length === 0) return Promise.resolve('false')
+    if (blockedUserIds.length === 0) return Promise.resolve(false)
 
     await this.load(['activity', 'activity.post', 'activity.post.user', 'activity.comment', 'activity.comment.user'])
     const postCreatorId = get('relations.activity.relations.post.relations.user.id', this)
