@@ -1,5 +1,6 @@
 import url from 'url'
 import { isEmpty } from 'lodash'
+import { get, includes } from 'lodash/fp'
 import decode from 'ent/decode'
 import { refineOne } from './util/relations'
 import rollbar from '../../lib/rollbar'
@@ -48,32 +49,49 @@ module.exports = bookshelf.Model.extend({
 
   actor: function () {
     return this.relations.activity.relations.actor
-  },
+  }, 
 
   send: function () {
     var action
-    switch (this.get('medium')) {
-      case MEDIUM.Push:
-        action = this.sendPush()
-        break
-      case MEDIUM.Email:
-        action = this.sendEmail()
-        break
-      case MEDIUM.InApp:
-        const userId = this.reader().id
-        action = User.incNewNotificationCount(userId)
-          .then(() => this.updateUserSocketRoom(userId))
-        break
-    }
-    if (action) {
-      return action
-        .then(() => this.save({'sent_at': (new Date()).toISOString()}))
-    } else {
-      return Promise.resolve()
-    }
+    console.log('***************************')
+    console.log('***************************')
+    console.log('in send, medium', this.get('medium'))
+    console.log('medium is push', this.get('medium') === MEDIUM.Push)    
+    return this.shouldBeBlocked()
+    .then(shouldBeBlocked => {
+      console.log('should be blocked', shouldBeBlocked)
+      if (shouldBeBlocked) {
+        this.destroy()
+        return Promise.resolve()
+      }
+
+      switch (this.get('medium')) {
+        case MEDIUM.Push:
+          console.log('MEDIUM.Push')
+          action = this.sendPush()
+          break
+        case MEDIUM.Email:
+        console.log('MEDIUM.Email')
+          action = this.sendEmail()
+          break
+        case MEDIUM.InApp:
+          console.log('MEDIUM.InApp')
+          const userId = this.reader().id
+          action = User.incNewNotificationCount(userId)
+            .then(() => this.updateUserSocketRoom(userId))
+          break
+      }
+      if (action) {
+        return action
+          .then(() => this.save({'sent_at': (new Date()).toISOString()}))
+      } else {
+        return Promise.resolve()
+      }
+    })
   },
 
   sendPush: function () {
+    console.log('sending push with reason', Notification.priorityReason(this.relations.activity.get('meta').reasons))
     switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
       case 'mention':
         return this.sendPostPush('mention')
@@ -308,6 +326,36 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.community(community))
         }
       })))
+  },
+
+  shouldBeBlocked: async function () {
+    console.log('in shouldBeBlocked')
+    const blockedUserIds = (await BlockedUser.blockedFor(this.get('user_id'))).rows.map(r => r.user_id)
+    if (blockedUserIds.length === 0) return Promise.resolve('false')
+
+    await this.load(['activity', 'activity.post', 'activity.post.user', 'activity.comment', 'activity.comment.user'])
+
+    console.log('blockedUserIds', blockedUserIds)
+
+    const postCreatorId = get('relations.activity.relations.post.relations.user.id', this)
+
+    console.log('postCreatorId', postCreatorId)
+
+    const commentCreatorId = get('relations.activity.relations.comment.relations.user.id', this)
+
+    console.log('commentCreatorId', commentCreatorId)
+
+    const actorId = get('relations.activity.relations.actor.id', this)
+
+    console.log('actorId', actorId)
+
+    if (includes(postCreatorId, blockedUserIds)
+      || includes(commentCreatorId, blockedUserIds)
+      || includes(actorId, blockedUserIds)) {      
+      return Promise.resolve(true)
+    }
+    console.log('about to leave shouldBeBlocked')
+    return Promise.resolve(false)
   },
 
   updateUserSocketRoom: function (userId) {
