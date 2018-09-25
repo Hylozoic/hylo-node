@@ -2,7 +2,7 @@ import { makeFilterToggle, sharedNetworkMembership } from './filters'
 import makeModels from './makeModels'
 import { expectEqualQuery } from '../../test/setup/helpers'
 import {
-  myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment
+  myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment, blockedUserSqlFragment
 } from '../models/util/queryFilters.test.helpers'
 
 const myId = '42'
@@ -44,10 +44,13 @@ describe('model filters', () => {
   })
 
   describe('Person', () => {
-    it('filters down to people that share a community with the user', () => {
+    it.only('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
-        where ("users"."id" = '${User.AXOLOTL_ID}' or
+        where 
+        ${blockedUserSqlFragment(42)}
+        and
+        ("users"."id" = '${User.AXOLOTL_ID}' or
           "users"."id" in
             (select "user_id"
             from "group_memberships"
