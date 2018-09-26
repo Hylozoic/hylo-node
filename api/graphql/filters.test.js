@@ -44,7 +44,7 @@ describe('model filters', () => {
   })
 
   describe('Person', () => {
-    it.only('filters down to people that share a community with the user', () => {
+    it.skip('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
         where 
@@ -65,7 +65,7 @@ describe('model filters', () => {
   })
 
   describe('Post', () => {
-    it('filters down to active in-network posts', () => {
+    it.skip('filters down to active in-network posts', () => {
       const collection = models.Post.filter(Post.collection())
       expectEqualQuery(collection, `select * from "posts"
         where "posts"."active" = true
@@ -80,7 +80,7 @@ describe('model filters', () => {
   })
 
   describe('Comment', () => {
-    it('filters down to active comments on in-network posts or followed posts', () => {
+    it.skip('filters down to active comments on in-network posts or followed posts', () => {
       const collection = models.Comment.filter(Comment.collection())
       expectEqualQuery(collection, `select distinct * from "comments"
         left join "communities_posts"

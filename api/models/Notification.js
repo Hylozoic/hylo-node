@@ -319,6 +319,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   shouldBeBlocked: async function () {
+    if (!this.get('user_id')) return Promise.resolve(false)
+
     const blockedUserIds = (await BlockedUser.blockedFor(this.get('user_id'))).rows.map(r => r.user_id)
     if (blockedUserIds.length === 0) return Promise.resolve(false)
 

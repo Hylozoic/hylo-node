@@ -314,6 +314,8 @@ describe('community digest v2', () => {
         community_name: 'foo',
         community_url: 'https://www.hylo.com/c/foo',
         requests: [],
+        events: [],
+        projects: [],
         offers: [
           {
             id: 1,
