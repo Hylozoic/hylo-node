@@ -4,6 +4,7 @@ import { expectEqualQuery } from '../../test/setup/helpers'
 import {
   myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment, blockedUserSqlFragment
 } from '../models/util/queryFilters.test.helpers'
+import factories from '../../test/setup/factories'
 
 const myId = '42'
 
@@ -44,6 +45,33 @@ describe('model filters', () => {
   })
 
   describe('Person', () => {
+    var u1, u2, u3, u4, community;
+
+    before(async () => {
+      u1 = factories.user()
+      u2 = factories.user()
+      u3 = factories.user()
+      u4 = factories.user()
+      community = factories.community()
+      await u1.save()
+      await u2.save()
+      await u3.save()
+      await u4.save()
+      await community.save()
+      await u1.joinCommunity(community)
+      await u2.joinCommunity(community)
+      await u3.joinCommunity(community)
+      await u4.joinCommunity(community)                  
+      await BlockedUser.create(u1.id, u2.id)
+      await BlockedUser.create(u3.id, u1.id)      
+    })
+
+    it('filters out blocked and blocking users', async () => {
+      const models = await makeModels(u1.id, false)
+      const users = await models.Person.filter(User.collection()).fetch()
+      expect(users.map('id')).to.deep.equal([u1.id, u4.id])
+    })    
+
     it.skip('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
