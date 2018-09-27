@@ -1,5 +1,5 @@
 import factories from '../../../test/setup/factories'
-import { canDeleteComment, validateCommentCreateData } from './comment'
+import { canDeleteComment, validateCommentCreateData, createMessage } from './comment'
 
 describe('validateCommentCreateData', () => {
   var user, post, post2
@@ -78,5 +78,20 @@ describe('canDeleteComment', () => {
     .then(canDelete => {
       expect(canDelete).to.be.false
     })
+  })
+})
+
+describe('createMessage', () => {
+  var u1, u2, post
+
+  before(async () => {
+    u1 = await factories.user().save() // creator
+    u2 = await factories.user().save() // moderator
+    post = await factories.post({user_id: u1.id, active: true}).save()
+    await post.addFollowers([u1.id, u2.id])
+  })
+
+  it('throws an error with a blocked user', async () => {
+    await createMessage(u1.id, {messageThreadId: post.id, text: 'la'})
   })
 })

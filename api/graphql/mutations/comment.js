@@ -47,8 +47,6 @@ export async function createMessage (userId, data) {
   return createComment(userId, data)      
 }
 
-
-
 export function updateComment (userId, { id, data }) {
   return Comment.find(id)
   .then(comment => canUpdateComment(userId, comment))

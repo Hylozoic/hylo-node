@@ -10,6 +10,26 @@ const myId = '42'
 
 var models, sharedMemberships
 
+const setupBlockedUserData = async () => {
+  const u1 = factories.user()
+  const u2 = factories.user()
+  const u3 = factories.user()
+  const u4 = factories.user()
+  const community = factories.community()
+  await u1.save()
+  await u2.save()
+  await u3.save()
+  await u4.save()
+  await community.save()
+  await u1.joinCommunity(community)
+  await u2.joinCommunity(community)
+  await u3.joinCommunity(community)
+  await u4.joinCommunity(community)                  
+  await BlockedUser.create(u1.id, u2.id)
+  await BlockedUser.create(u3.id, u1.id)
+  return {u1, u2, u3, u4, community} 
+}
+
 describe('makeFilterToggle', () => {
   var filterFn = relation => relation.query(q => 'filtered')
   var relation = {query: fn => fn()}
@@ -45,25 +65,12 @@ describe('model filters', () => {
   })
 
   describe('Person', () => {
-    var u1, u2, u3, u4, community;
+    var u1, u4;
 
     before(async () => {
-      u1 = factories.user()
-      u2 = factories.user()
-      u3 = factories.user()
-      u4 = factories.user()
-      community = factories.community()
-      await u1.save()
-      await u2.save()
-      await u3.save()
-      await u4.save()
-      await community.save()
-      await u1.joinCommunity(community)
-      await u2.joinCommunity(community)
-      await u3.joinCommunity(community)
-      await u4.joinCommunity(community)                  
-      await BlockedUser.create(u1.id, u2.id)
-      await BlockedUser.create(u3.id, u1.id)      
+      const blockedUserData = await setupBlockedUserData()
+      u1 = blockedUserData.u1
+      u4 = blockedUserData.u4
     })
 
     it('filters out blocked and blocking users', async () => {
@@ -93,6 +100,32 @@ describe('model filters', () => {
   })
 
   describe('Post', () => {
+    var u1, u2, u3, u4, community;
+
+    before(async () => {
+      const blockedUserData = await setupBlockedUserData()
+      u1 = blockedUserData.u1
+      u2 = blockedUserData.u2
+      u3 = blockedUserData.u3
+      u4 = blockedUserData.u4
+      community = blockedUserData.community
+      const p1 = factories.post({user_id: u2.id})
+      const p2 = factories.post({user_id: u3.id})
+      const p3 = factories.post({user_id: u4.id})
+      await p1.save({active: true})
+      await p1.communities().attach(community)
+      await p2.save({active: true})
+      await p2.communities().attach(community)      
+      await p3.save({active: true})     
+      await p3.communities().attach(community)      
+    })
+  
+    it('filters posts by blocked and blocking users', async () => {
+      const models = await makeModels(u1.id, false)
+      const posts = await models.Post.filter(Post.collection()).fetch()
+      expect(posts.models.map(p => p.get('user_id'))).to.deep.equal([u4.id])
+    })    
+
     it.skip('filters down to active in-network posts', () => {
       const collection = models.Post.filter(Post.collection())
       expectEqualQuery(collection, `select * from "posts"
