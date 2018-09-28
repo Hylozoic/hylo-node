@@ -5,7 +5,14 @@ import underlyingFindOrCreateThread, {
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
 import convertGraphqlData from './convertGraphqlData'
 
-export { createComment, deleteComment, canDeleteComment, updateComment, canUpdateComment } from './comment'
+export { 
+  createComment,
+  createMessage,
+  deleteComment,
+  canDeleteComment,
+  updateComment,
+  canUpdateComment 
+} from './comment'
 export {
   addCommunityToNetwork,
   addNetworkModeratorRole,
@@ -48,6 +55,10 @@ export {
   deleteProjectRole,
   addPeopleToProjectRole
 } from './project'
+export {
+  blockUser,
+  unblockUser
+} from './user'
 export { updateMembership } from './membership'
 
 export function updateMe (userId, changes) {

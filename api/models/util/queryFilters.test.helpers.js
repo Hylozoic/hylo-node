@@ -18,3 +18,15 @@ export function myNetworkCommunityIdsSqlFragment (userId, opts = {}) {
     )`
   return opts.parens === false ? str : `(${str})`
 }
+
+export function blockedUserSqlFragment (userId) {
+  return `"users"."id" not in (
+    SELECT user_id
+    FROM blocked_users
+    WHERE blocked_user_id = '${userId}'
+    UNION
+    SELECT blocked_user_id
+    FROM blocked_users
+    WHERE user_id = '${userId}'
+  )`
+}

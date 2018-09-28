@@ -1,5 +1,6 @@
 import url from 'url'
 import { isEmpty } from 'lodash'
+import { get, includes } from 'lodash/fp'
 import decode from 'ent/decode'
 import { refineOne } from './util/relations'
 import rollbar from '../../lib/rollbar'
@@ -48,29 +49,36 @@ module.exports = bookshelf.Model.extend({
 
   actor: function () {
     return this.relations.activity.relations.actor
-  },
+  }, 
 
   send: function () {
     var action
-    switch (this.get('medium')) {
-      case MEDIUM.Push:
-        action = this.sendPush()
-        break
-      case MEDIUM.Email:
-        action = this.sendEmail()
-        break
-      case MEDIUM.InApp:
-        const userId = this.reader().id
-        action = User.incNewNotificationCount(userId)
-          .then(() => this.updateUserSocketRoom(userId))
-        break
-    }
-    if (action) {
-      return action
-        .then(() => this.save({'sent_at': (new Date()).toISOString()}))
-    } else {
-      return Promise.resolve()
-    }
+    return this.shouldBeBlocked()
+    .then(shouldBeBlocked => {
+      if (shouldBeBlocked) {
+        this.destroy()
+        return Promise.resolve()
+      }
+      switch (this.get('medium')) {
+        case MEDIUM.Push:
+          action = this.sendPush()
+          break
+        case MEDIUM.Email:
+          action = this.sendEmail()
+          break
+        case MEDIUM.InApp:
+          const userId = this.reader().id
+          action = User.incNewNotificationCount(userId)
+            .then(() => this.updateUserSocketRoom(userId))
+          break
+      }
+      if (action) {
+        return action
+          .then(() => this.save({'sent_at': (new Date()).toISOString()}))
+      } else {
+        return Promise.resolve()
+      }
+    })
   },
 
   sendPush: function () {
@@ -308,6 +316,25 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.community(community))
         }
       })))
+  },
+
+  shouldBeBlocked: async function () {
+    if (!this.get('user_id')) return Promise.resolve(false)
+
+    const blockedUserIds = (await BlockedUser.blockedFor(this.get('user_id'))).rows.map(r => r.user_id)
+    if (blockedUserIds.length === 0) return Promise.resolve(false)
+
+    await this.load(['activity', 'activity.post', 'activity.post.user', 'activity.comment', 'activity.comment.user'])
+    const postCreatorId = get('relations.activity.relations.post.relations.user.id', this)
+    const commentCreatorId = get('relations.activity.relations.comment.relations.user.id', this)
+    const actorId = get('relations.activity.relations.actor.id', this)
+
+    if (includes(postCreatorId, blockedUserIds)
+      || includes(commentCreatorId, blockedUserIds)
+      || includes(actorId, blockedUserIds)) {      
+      return Promise.resolve(true)
+    }
+    return Promise.resolve(false)
   },
 
   updateUserSocketRoom: function (userId) {
