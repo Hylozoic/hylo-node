@@ -165,7 +165,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const members = await this.members().fetch()
     await this.removeGroupMembers(members, opts)
     const memberRole = await this.getOrCreateMemberProjectRole(opts)
-    return Promise.map(userIds, async id => {
+    return Promise.map(uniq(userIds.concat(this.get('user_id'))), async id => {
       var gm = await GroupMembership.forPair(id, this, {includeInactive: true}).fetch(opts)
       if (!gm) {
         await this.addGroupMembers([id], {}, opts)
