@@ -2,6 +2,7 @@ import underlyingDeleteComment from '../../models/comment/deleteComment'
 import underlyingCreateComment from '../../models/comment/createComment'
 import underlyingUpdateComment from '../../models/comment/updateComment'
 import { merge, trim } from 'lodash'
+import { includes } from 'lodash/fp'
 
 export function canDeleteComment (userId, comment) {
   if (comment.get('user_id') === userId) return Promise.resolve(true)
@@ -34,6 +35,16 @@ export function createComment (userId, data) {
     parentComment: data.parentCommentId ? Comment.find(data.parentCommentId) : null
   }))
   .then(extraData => underlyingCreateComment(userId, merge(data, extraData)))
+}
+
+export async function createMessage (userId, data) {
+  const post = await Post.find(data.messageThreadId)
+  const followers = await post.followers().fetch()
+  const blockedUserIds = (await BlockedUser.blockedFor(userId)).rows.map(r => r.user_id)
+  const otherParticipants = followers.filter(f => f.id !== userId && !includes(f.id, blockedUserIds))
+  if (otherParticipants.length < 1) throw new Error ('cannot send a message to this thread')
+  data.postId = data.messageThreadId
+  return createComment(userId, data)      
 }
 
 export function updateComment (userId, { id, data }) {

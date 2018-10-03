@@ -10,9 +10,11 @@ import {
   addPeopleToProjectRole,
   addSkill,
   allowCommunityInvites,
+  blockUser,
   createComment,
   createCommunity,
   createInvitation,
+  createMessage,
   createPost,
   createProject,
   createProjectRole,
@@ -40,6 +42,7 @@ import {
   removeSkill,
   resendInvitation,
   subscribe,
+  unblockUser,
   unlinkAccount,
   updateComment,
   updateCommunity,
@@ -172,6 +175,8 @@ export function makeMutations (userId, isAdmin) {
 
     allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
 
+    blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
+
     createComment: (root, { data }) => createComment(userId, data),
 
     createCommunity: (root, { data }) => createCommunity(userId, data),
@@ -179,10 +184,7 @@ export function makeMutations (userId, isAdmin) {
     createInvitation: (root, {communityId, data}) =>
       createInvitation(userId, communityId, data),
 
-    createMessage: (root, { data }) => {
-      data.postId = data.messageThreadId
-      return createComment(userId, data)
-    },
+    createMessage: (root, { data }) => createMessage(userId, data),
 
     createPost: (root, { data }) => createPost(userId, data),
 
@@ -250,6 +252,8 @@ export function makeMutations (userId, isAdmin) {
 
     subscribe: (root, { communityId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, communityId, isSubscribing),
+
+    unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
 
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),

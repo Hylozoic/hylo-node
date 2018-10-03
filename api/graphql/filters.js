@@ -28,10 +28,16 @@ export const personFilter = userId => relation => relation.query(q => {
     q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
   })
 
+  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
+
   // limit to users that are in those other memberships
   q.where(inner =>
     inner.where('users.id', User.AXOLOTL_ID)
     .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id')))
+})
+
+export const messageFilter = userId => relation => relation.query(q => {
+  q.where('user_id', 'NOT IN', BlockedUser.blockedFor(userId))
 })
 
 function filterCommunities (q, idColumn, userId) {
@@ -66,6 +72,7 @@ export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
   q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
   q.where({'comments.active': true})
+  q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
   q.where(q2 => {
     const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
     q2.where('comments.post_id', 'in', groupIds)
@@ -73,8 +80,12 @@ export const commentFilter = userId => relation => relation.query(q => {
   })
 })
 
-export const activePost = relation =>
-  relation.query(q => q.where('posts.active', true))
+export const activePost = userId => relation => {
+  return relation.query(q => {
+    q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+    q.where('posts.active', true)
+  })
+}
 
 export function communityTopicFilter (userId, {
   autocomplete,

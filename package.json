@@ -127,7 +127,7 @@
     "debug": "node-debug app.js",
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
     "dump": "docker exec -i hylopg pg_dump -U hylo -Osxn public hylo | sed -e 's/; Tablespace: $//' > migrations/schema.sql",
-    "test": "[ \"$NODE_ENV\" != production ] && mocha -r test/setup/core --require babel-core/register",
+    "test": "[ \"$NODE_ENV\" != production ] && mocha -r test/setup/core -r babel-core/register",
     "cover": "./node_modules/.bin/nyc --cache -a -r lcov ./node_modules/.bin/mocha -r test/setup/core --require babel-core/register -R dot",
     "knex": "knex",
     "update-migrations": "node ./migrations/scripts/updateMigrationsTable"
@@ -156,6 +156,7 @@
       "Aggregate",
       "Analytics",
       "AssetManagement",
+      "BlockedUser",
       "Comment",
       "CommentTag",
       "Community",

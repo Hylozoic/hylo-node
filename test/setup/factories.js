@@ -5,6 +5,13 @@ import { ReadableStreamBuffer } from 'stream-buffers'
 import faker from 'faker'
 
 module.exports = {
+  blockedUser: attrs => {
+    return new BlockedUser(merge({
+      created_at: new Date(),
+      updated_at: new Date()
+    }, attrs))
+  },
+
   community: attrs => {
     return new Community(merge({
       name: faker.random.words(6),

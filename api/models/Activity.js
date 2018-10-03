@@ -11,13 +11,7 @@ const isAnnouncement = activity => {
 }
 
 const isTopic = activity => {
-  console.log('activity', activity)
   const reasons = activity.get('meta').reasons
-  console.log('reasons', reasons)
-  console.log('activity.relations.post', activity.relations.post)
-  console.log('activity.relations.post.attributes', activity.relations.post.attributes)
-  console.log('activity.relations.post.relations', activity.relations.post.relations)
-
   const t = filter(reasons, reason => reason.match(/^tag/)).length > 0
   return t
 }
