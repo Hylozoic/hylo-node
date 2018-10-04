@@ -92,3 +92,9 @@ export async function joinProject (projectId, userId) {
     .then(project => project.addFollowers([userId]))
     .then(() => ({success: true}))
 }
+
+export async function leaveProject (projectId, userId) {
+  return await Post.find(projectId)
+    .then(project => project.removeFollowers([userId]))
+    .then(() => ({success: true}))
+}

@@ -18,7 +18,6 @@ import {
   createPost,
   createProject,
   createProjectRole,
-  joinProject,
   createTopic,
   deleteComment,
   deleteCommunityTopic,
@@ -28,7 +27,9 @@ import {
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
   flagInappropriateContent,
+  joinProject,
   leaveCommunity,
+  leaveProject,
   markActivityRead,
   markAllActivitiesRead,
   pinPost,
@@ -217,6 +218,8 @@ export function makeMutations (userId, isAdmin) {
       flagInappropriateContent(userId, data),
 
     leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
+
+    leaveProject: (root, { id }) => leaveProject(id, userId),
 
     markActivityRead: (root, { id }) => markActivityRead(userId, id),
 

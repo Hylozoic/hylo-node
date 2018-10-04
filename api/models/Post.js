@@ -162,6 +162,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.addGroupMembers(userIds, {settings: {following: true}}, opts)
   },
 
+  removeFollowers: async function (userIds, opts) {
+    return this.removeGroupMembers(userIds, opts)
+  },
+  
   updateProjectMembers: async function (userIds, opts) {
     const members = await this.members().fetch()
     await this.removeGroupMembers(members, opts)
