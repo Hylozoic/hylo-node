@@ -88,13 +88,13 @@ export async function addPeopleToProjectRole (userId, peopleIds, projectRoleId) 
 }
 
 export async function joinProject (projectId, userId) {
-  return await Post.find(projectId)
-    .then(project => project.addFollowers([userId]))
-    .then(() => ({success: true}))
+  const project = await Post.find(projectId)
+  return project.addProjectMembers([userId])
+    ? {success: true} : null
 }
 
 export async function leaveProject (projectId, userId) {
-  return await Post.find(projectId)
-    .then(project => project.removeFollowers([userId]))
-    .then(() => ({success: true}))
+  const project = await Post.find(projectId)
+  return project.removeProjectMembers([userId])
+    ? {success: true} : null
 }

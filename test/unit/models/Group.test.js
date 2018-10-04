@@ -51,6 +51,26 @@ describe('Group', () => {
     })
   })
 
+  describe('updateMembers', () => {
+    it('updates members', async () => {
+      const community = await factories.community().save()
+      const group = await community.createGroup()
+      const user1 = await factories.user().save()
+      const user2 = await factories.user().save()
+      const projectRole = await ProjectRole.forge({name: 'test role'}).save()
+      const role = 1
+      const project_role_id = projectRole.id
+      const updates = { role, project_role_id }
+      await group.addMembers([user1, user2])
+      await group.updateMembers([user1, user2], updates)
+      const updatedMemberships = await group.memberships().fetch()
+      updatedMemberships.models.forEach(membership => {
+        expect(membership.get('project_role_id')).to.equal(project_role_id)
+        expect(membership.get('role')).to.equal(role)
+      })
+    })
+  })
+
   describe('deactivate', () => {
     it('deactivates all child members', async () => {
       const community = await factories.community().save()

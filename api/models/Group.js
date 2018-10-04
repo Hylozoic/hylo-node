@@ -36,6 +36,25 @@ module.exports = bookshelf.Model.extend({
     .query(q => includeInactive ? q : q.where('group_memberships.active', true))
   },
 
+  async updateMembers (usersOrIds, attrs, { transacting } = {}) {
+    const {
+      role,
+      project_role_id,
+      settings = {}
+    } = attrs
+    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
+
+    const existingMemberships = await this.memberships(true)
+    .query(q => q.where('user_id', 'in', userIds)).fetch()
+
+    const updatedAttribs = { settings }
+    if (role) updatedAttribs.role = role
+    if (project_role_id) updatedAttribs.project_role_id = project_role_id
+
+    for (let ms of existingMemberships.models)
+      await ms.updateAndSave(updatedAttribs, {transacting})
+  },
+  
   // if a group membership doesn't exist for a user id, create it.
   // make sure the group memberships have the passed-in role and settings
   // (merge on top of existing settings).
@@ -45,35 +64,27 @@ module.exports = bookshelf.Model.extend({
       settings = {}
     } = attrs
 
-    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
+    const updatedAttribs = {
+      role,
+      settings,
+      active: true,
+    }
 
+    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingMemberships = await this.memberships(true)
     .query(q => q.where('user_id', 'in', userIds)).fetch()
+    const existingUserIds = existingMemberships.pluck('user_id')
+    const newUserIds = difference(userIds, existingUserIds)
 
-    const changes = []
+    await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
 
-    for (let ms of existingMemberships.models) {
-      changes.push(ms.updateAndSave({
-        role,
-        settings,
-        active: true
-      }, {transacting}))
-    }
-
-    const newUserIds = difference(userIds, existingMemberships.pluck('user_id'))
-
-    for (let id of newUserIds) {
-      changes.push(this.memberships().create({
-        user_id: id,
-        role,
-        settings,
-        active: true,
-        created_at: new Date(),
-        group_data_type: this.get('group_data_type')
-      }, {transacting}))
-    }
-
-    return Promise.all(changes)
+    for (let id of newUserIds)
+      await this.memberships().create(
+        Object.assign({}, updatedAttribs, {
+          user_id: id,
+          created_at: new Date(),
+          group_data_type: this.get('group_data_type')
+        }), {transacting})
   },
 
   async removeMembers (usersOrIds, { transacting } = {}) {
@@ -83,7 +94,7 @@ module.exports = bookshelf.Model.extend({
       q.where('user_id', 'in', userIds)
     }).query().update({active: false}).transacting(transacting)
   },
-  
+
 }, {
   DataType,
 

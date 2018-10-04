@@ -8,7 +8,7 @@ import EnsureLoad from './mixins/EnsureLoad'
 import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
-import { isFollowing, isProjectMember } from './group/queryUtils'
+import { isFollowing } from './group/queryUtils'
 import html2text from '../../lib/htmlparser/html2text'
 import ProjectMixin from './project/mixin'
 
@@ -47,10 +47,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   followers: function () {
     return this.groupMembers(q => isFollowing(q))
-  },
-
-  members: function () {
-    return this.groupMembers(q => isProjectMember(q))
   },
 
   followersWithPivots: function () {
@@ -163,40 +159,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   removeFollowers: async function (userIds, opts) {
-    return this.removeGroupMembers(userIds, opts)
-  },
-  
-  updateProjectMembers: async function (userIds, opts) {
-    const members = await this.members().fetch()
-    await this.removeGroupMembers(members, opts)
-    const memberRole = await this.getOrCreateMemberProjectRole(opts)
-    return Promise.map(uniq(userIds.concat(this.get('user_id'))), async id => {
-      var gm = await GroupMembership.forPair(id, this, {includeInactive: true}).fetch(opts)
-      if (!gm) {
-        await this.addGroupMembers([id], {}, opts)
-        gm = await GroupMembership.forPair(id, this).fetch(opts)
-      }
-      return gm.save({
-        project_role_id: memberRole.id,
-        active: true
-      }, opts)
-    })  
-  },
-
-  getOrCreateMemberProjectRole: async function (opts) {
-    const memberRole = await ProjectRole.where({
-      name: ProjectRole.MEMBER_ROLE_NAME,
-      post_id: this.id
-    }).fetch(opts)
-    if (memberRole) {
-      return memberRole
-    } else {
-      return ProjectRole.forge({
-        post_id: this.id,
-        name: ProjectRole.MEMBER_ROLE_NAME
-      })
-      .save({}, opts)
-    }
+    return this.updateGroupMembers(userIds, {settings: {following: false}}, opts)
   },
 
   isPublic: function () {
@@ -205,10 +168,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   isWelcome: function () {
     return this.get('type') === Post.Type.WELCOME
-  },
-
-  isProject: function () {
-    return this.get('type') === Post.Type.PROJECT
   },
 
   isThread: function () {
