@@ -18,6 +18,7 @@ import {
   createPost,
   createProject,
   createProjectRole,
+  joinProject,
   createTopic,
   deleteComment,
   deleteCommunityTopic,
@@ -191,6 +192,8 @@ export function makeMutations (userId, isAdmin) {
     createProject: (root, { data }) => createProject(userId, data),
 
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
+
+    joinProject: (root, { id }) => joinProject(id, userId),
 
     createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
 

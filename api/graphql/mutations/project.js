@@ -86,3 +86,9 @@ export async function addPeopleToProjectRole (userId, peopleIds, projectRoleId) 
   })
   .then(() => ({success: true}))
 }
+
+export async function joinProject (projectId, userId) {
+  return await Post.find(projectId)
+    .then(project => project.addFollowers([userId]))
+    .then(() => ({success: true}))
+}

@@ -53,7 +53,8 @@ export {
   createProject,
   createProjectRole,
   deleteProjectRole,
-  addPeopleToProjectRole
+  addPeopleToProjectRole,
+  joinProject
 } from './project'
 export {
   blockUser,
