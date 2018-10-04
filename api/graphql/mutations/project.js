@@ -90,11 +90,11 @@ export async function addPeopleToProjectRole (userId, peopleIds, projectRoleId) 
 export async function joinProject (projectId, userId) {
   const project = await Post.find(projectId)
   return project.addProjectMembers([userId])
-    ? {success: true} : null
+  .then(() => ({success: true}))
 }
 
 export async function leaveProject (projectId, userId) {
   const project = await Post.find(projectId)
   return project.removeProjectMembers([userId])
-    ? {success: true} : null
+  .then(() => ({success: true}))
 }

@@ -10,16 +10,18 @@ export default {
   },
 
   addProjectMembers: async function (usersOrIds, opts) {
-    return project.addGroupMembers([userId], {
-      project_role_id: ProjectRole.MEMBER_ROLE_NAME,
-      following: true
-    })
+    // need to fetchId for ProjectRole
+    const projectRole =  await this.getOrCreateMemberProjectRole()
+    return this.addGroupMembers(usersOrIds, {
+      project_role_id: projectRole.id,
+      settings: {following: true}
+    }, opts)
   },
 
-  removeProjectMembers: async function (usersOrIds, attrs, opts) {
-    return project.updateGroupMembers([userId], {
+  removeProjectMembers: async function (usersOrIds, opts) {
+    return this.updateGroupMembers(usersOrIds, {
       project_role_id: null,
-      following: false
+      settings: {following: false}
     }, opts)
   },
 

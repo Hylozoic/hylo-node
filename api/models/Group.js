@@ -1,7 +1,15 @@
-import { difference, intersection, sortBy } from 'lodash'
+import { difference, intersection, sortBy, pick, omitBy, isUndefined } from 'lodash'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
+
+export const GROUP_ATTR_UPDATE_WHITELIST = [
+  'role',
+  'project_role_id',
+  'following',
+  'settings',
+  'active'
+]
 
 module.exports = bookshelf.Model.extend({
   tableName: 'groups',
@@ -40,16 +48,19 @@ module.exports = bookshelf.Model.extend({
     const {
       role,
       project_role_id,
-      settings = {}
+      settings = {},
+      active
     } = attrs
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
 
     const existingMemberships = await this.memberships(true)
     .query(q => q.where('user_id', 'in', userIds)).fetch()
 
-    const updatedAttribs = { settings }
-    if (role) updatedAttribs.role = role
-    if (project_role_id) updatedAttribs.project_role_id = project_role_id
+    const updatedAttribs = Object.assign(
+      {},
+      {settings: {}},
+      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
+    )
 
     for (let ms of existingMemberships.models)
       await ms.updateAndSave(updatedAttribs, {transacting})
@@ -88,11 +99,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   async removeMembers (usersOrIds, { transacting } = {}) {
-    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
-    return GroupMembership.query(q => {
-      q.where('group_id', this.id)
-      q.where('user_id', 'in', userIds)
-    }).query().update({active: false}).transacting(transacting)
+    return this.updateMembers(usersOrIds, {active: false}, {transacting})
   },
 
 }, {
