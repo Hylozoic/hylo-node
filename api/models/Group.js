@@ -45,12 +45,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   async updateMembers (usersOrIds, attrs, { transacting } = {}) {
-    const {
-      role,
-      project_role_id,
-      settings = {},
-      active
-    } = attrs
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
 
     const existingMemberships = await this.memberships(true)
@@ -70,16 +64,14 @@ module.exports = bookshelf.Model.extend({
   // make sure the group memberships have the passed-in role and settings
   // (merge on top of existing settings).
   async addMembers (usersOrIds, attrs = {}, { transacting } = {}) {
-    const {
-      role = GroupMembership.Role.DEFAULT,
-      settings = {}
-    } = attrs
-
-    const updatedAttribs = {
-      role,
-      settings,
-      active: true,
-    }
+    const updatedAttribs = Object.assign(
+      {},
+      {
+        role: GroupMembership.Role.DEFAULT,
+        active: true
+      },
+      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
+    )
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingMemberships = await this.memberships(true)
