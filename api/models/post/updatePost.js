@@ -44,6 +44,6 @@ export function afterUpdatingPost (post, opts) {
     Tag.updateForPost(post, topicNames, userId, transacting),
     updateFollowers(post, transacting)
   ]))
-  .then(() => post.updateProjectMembers(memberIds, {transacting}))
+  .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
   .then(() => updateNetworkMemberships(post, transacting))
 }
