@@ -15,6 +15,7 @@ export default function updatePost (userId, id, params) {
       if (!post) throw new Error('Post not found')
       const updatableTypes = [
         Post.Type.OFFER,
+        Post.Type.PROJECT,
         Post.Type.REQUEST,
         Post.Type.DISCUSSION,
         null
