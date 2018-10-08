@@ -26,7 +26,6 @@ export default {
     }, opts)
   },
 
-  // Add following: true?
   updateProjectMembers: async function (userIds, opts) {
     const members = await this.members().fetch()
     await this.removeGroupMembers(members, opts)
@@ -37,6 +36,7 @@ export default {
         await this.addGroupMembers([id], {}, opts)
         gm = await GroupMembership.forPair(id, this).fetch(opts)
       }
+      gm.addSetting({following: true})
       return gm.save({
         project_role_id: memberRole.id,
         active: true
