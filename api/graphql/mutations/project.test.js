@@ -1,7 +1,8 @@
 import '../../../test/setup'
 import factories from '../../../test/setup/factories'
 import {
-  createProject, createProjectRole, deleteProjectRole, addPeopleToProjectRole
+  createProject, createProjectRole, deleteProjectRole, addPeopleToProjectRole,
+  joinProject, leaveProject
 } from './project'
 
 describe('createProject', () => {
@@ -85,5 +86,41 @@ describe('addPeopleToProjectRole', () => {
     await addPeopleToProjectRole(user.id, [user2.id], projectRole.id)
     const gm = await GroupMembership.forPair(user2.id, project).fetch()
     expect(gm.get('project_role_id')).to.equal(projectRole.id)
+  })
+})
+
+describe('joinProject', () => {
+  var user, project
+
+  before(async function () {
+    user = factories.user()
+    await user.save()
+    project = factories.post({type: Post.Type.PROJECT})
+    await project.save()
+  })
+
+  it('adds a user to a project', async () => {
+    await joinProject(project.id, user.id)
+    const members = await project.members().fetch()
+    expect(members.length).to.equal(1)
+    expect(members.first().id).to.equal(user.id)    
+  })
+})
+
+describe.only('leaveProject', () => {
+  var user, project
+
+  before(async function () {
+    user = factories.user()
+    await user.save()
+    project = factories.post({type: Post.Type.PROJECT})
+    await project.save()
+    await project.addProjectMembers([user.id])
+  })
+
+  it('removes a user from a project', async () => {
+    await leaveProject(project.id, user.id)
+    const members = await project.members().fetch()
+    expect(members.length).to.equal(0)
   })
 })
