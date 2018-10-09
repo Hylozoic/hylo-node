@@ -56,8 +56,7 @@ module.exports = bookshelf.Model.extend({
       pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
     )
 
-    for (let ms of existingMemberships.models)
-      await ms.updateAndSave(updatedAttribs, {transacting})
+    return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
   },
   
   // if a group membership doesn't exist for a user id, create it.
@@ -81,13 +80,19 @@ module.exports = bookshelf.Model.extend({
 
     await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
 
-    for (let id of newUserIds)
-      await this.memberships().create(
+    const updatedMemberships = await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
+    const newMemberships = []
+ 
+    for (let id of newUserIds) {
+      const membership = await this.memberships().create(
         Object.assign({}, updatedAttribs, {
           user_id: id,
           created_at: new Date(),
           group_data_type: this.get('group_data_type')
         }), {transacting})
+      newMemberships.push(membership)
+    }
+    return updatedMemberships.concat(newMemberships)
   },
 
   async removeMembers (usersOrIds, { transacting } = {}) {

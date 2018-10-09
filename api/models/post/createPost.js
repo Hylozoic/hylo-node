@@ -58,7 +58,7 @@ export function afterCreatingPost (post, opts) {
     opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx)),
 
   ]))
-  .then(() => post.updateProjectMembers(opts.memberIds, trxOpts))
+  .then(() => post.updateProjectMembers(opts.memberIds || [], trxOpts))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndCommunities(post, trx))
   .then(() => updateNetworkMemberships(post, trx))
