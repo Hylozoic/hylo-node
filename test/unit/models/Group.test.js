@@ -16,7 +16,8 @@ describe('Group', () => {
     })
 
     it('merges new settings to existing memberships and creates new ones', async () => {
-      await group.addMembers([u1.id, u2.id], {role: 1, settings: {there: true}})
+      const results = await group.addMembers([u1.id, u2.id], {role: 1, settings: {there: true}})
+      expect(results.length).to.equal(2)
 
       await gm1.refresh()
       expect(gm1.get('settings')).to.deep.equal({here: true, there: true})

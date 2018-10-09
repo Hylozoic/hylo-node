@@ -107,7 +107,7 @@ describe('joinProject', () => {
   })
 })
 
-describe.only('leaveProject', () => {
+describe('leaveProject', () => {
   var user, project
 
   before(async function () {
