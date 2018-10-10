@@ -6,23 +6,28 @@ import {
 } from './project'
 
 describe('createProject', () => {
-  var user, community
+  var user, user2, community
 
   before(function () {
     user = factories.user()
+    user2 = factories.user()    
     community = factories.community()
-    return Promise.join(community.save(), user.save())
+    return Promise.join(community.save(), user.save(), user2.save())
     .then(() => user.joinCommunity(community))
   })
 
-  it('creates a post with project type', async () => {
+  it('creates a post with project type, adding members and creator as member', async () => {
     const data = {
       title: 'abc',
-      communityIds: [community.id]
+      communityIds: [community.id],
+      memberIds: [user2.id]
     }
     const post = await createProject(user.id, data)
     const project = await Post.find(post.id)
     expect(project.get('type')).to.equal(Post.Type.PROJECT)
+    const members = await project.members().fetch()
+    expect(members.length).to.equal(2)
+    expect(members.map(m => m.id).sort()).to.deep.equal([user.id, user2.id])    
   })
 })
 

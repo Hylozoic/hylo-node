@@ -1,7 +1,12 @@
 import { createPost } from './post'
+import { uniq } from 'lodash/fp'
 
 export function createProject (userId, data) {
-  const projectData = Object.assign({}, data, {type: Post.Type.PROJECT})
+  // add creator as a member of project on creation
+  const memberIds = data.memberIds
+    ? uniq(data.memberIds.concat([userId])) 
+    : []
+  const projectData = Object.assign({}, data, {type: Post.Type.PROJECT, memberIds})
   return createPost(userId, projectData)
 }
 
