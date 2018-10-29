@@ -158,16 +158,16 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.addGroupMembers(userIds, {settings: {following: true}}, opts)
   },
 
+  removeFollowers: async function (userIds, opts) {
+    return this.updateGroupMembers(userIds, {settings: {following: false}}, opts)
+  },
+
   isPublic: function () {
     return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
   },
 
   isWelcome: function () {
     return this.get('type') === Post.Type.WELCOME
-  },
-
-  isProject: function () {
-    return this.get('type') === Post.Type.PROJECT
   },
 
   isThread: function () {

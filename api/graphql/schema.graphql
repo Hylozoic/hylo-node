@@ -226,6 +226,7 @@ type Post {
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
+  members(first: Int, cursor: ID, order: String): PersonQuerySet
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
@@ -457,6 +458,7 @@ input PostInput {
   fileUrls: [String]
   announcement: Boolean
   topicNames: [String]
+  memberIds: [ID]
 }
 
 input CommentInput {
@@ -561,7 +563,9 @@ type Mutation {
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
+  leaveProject(id: ID): GenericResult
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
   pinPost(postId: ID, communityId: ID): GenericResult

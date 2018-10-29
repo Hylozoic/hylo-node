@@ -147,6 +147,7 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         {user: {alias: 'creator'}},
         'followers',
+        {members: {querySet: true}},
         'linkPreview',
         'postMemberships',
         {media: {

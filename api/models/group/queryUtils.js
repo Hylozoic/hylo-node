@@ -5,6 +5,10 @@ export function isFollowing (q) {
   q.whereRaw("(group_memberships.settings->>'following')::boolean = true")
 }
 
+export function isProjectMember (q) {
+  q.whereRaw("(group_memberships.project_role_id IS NOT NULL)")
+}
+
 export function whereUserId (q, usersOrIds) {
   return whereId(q, usersOrIds, 'group_memberships.user_id')
 }

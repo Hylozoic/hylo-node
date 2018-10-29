@@ -23,6 +23,11 @@ export default {
     return this.group(dbOpts).then(group => group.removeMembers(...args))
   },
 
+  async updateGroupMembers (...args) {
+    const dbOpts = args[1]
+    return this.group(dbOpts).then(group => group.updateMembers(...args))
+  },
+
   queryByGroupConnection (model, direction = 'parent') {
     // TODO we can infer the correct direction in most cases rather than
     // requiring it to be specified

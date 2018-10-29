@@ -1,7 +1,15 @@
-import { difference, intersection, sortBy } from 'lodash'
+import { difference, intersection, sortBy, pick, omitBy, isUndefined } from 'lodash'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
+
+export const GROUP_ATTR_UPDATE_WHITELIST = [
+  'role',
+  'project_role_id',
+  'following',
+  'settings',
+  'active'
+]
 
 module.exports = bookshelf.Model.extend({
   tableName: 'groups',
@@ -31,54 +39,66 @@ module.exports = bookshelf.Model.extend({
     }))
   },
 
-  memberships () {
+  memberships (includeInactive = false) {
     return this.hasMany(GroupMembership)
-    .query(q => q.where('group_memberships.active', true))
+    .query(q => includeInactive ? q : q.where('group_memberships.active', true))
   },
 
+  async updateMembers (usersOrIds, attrs, { transacting } = {}) {
+    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
+
+    const existingMemberships = await this.memberships(true)
+    .query(q => q.where('user_id', 'in', userIds)).fetch()
+
+    const updatedAttribs = Object.assign(
+      {},
+      {settings: {}},
+      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
+    )
+
+    return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
+  },
+  
   // if a group membership doesn't exist for a user id, create it.
   // make sure the group memberships have the passed-in role and settings
   // (merge on top of existing settings).
   async addMembers (usersOrIds, attrs = {}, { transacting } = {}) {
-    const {
-      role = GroupMembership.Role.DEFAULT,
-      settings = {}
-    } = attrs
+    const updatedAttribs = Object.assign(
+      {},
+      {
+        role: GroupMembership.Role.DEFAULT,
+        active: true
+      },
+      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
+    )
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
-
-    const existingMemberships = await this.memberships()
+    const existingMemberships = await this.memberships(true)
     .query(q => q.where('user_id', 'in', userIds)).fetch()
+    const existingUserIds = existingMemberships.pluck('user_id')
+    const newUserIds = difference(userIds, existingUserIds)
 
-    const changes = []
+    await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
 
-    for (let ms of existingMemberships.models) {
-      changes.push(ms.updateAndSave({role, settings}, {transacting}))
-    }
-
-    const newUserIds = difference(userIds, existingMemberships.pluck('user_id'))
-
+    const updatedMemberships = await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
+    const newMemberships = []
+ 
     for (let id of newUserIds) {
-      changes.push(this.memberships().create({
-        user_id: id,
-        role,
-        settings,
-        active: true,
-        created_at: new Date(),
-        group_data_type: this.get('group_data_type')
-      }, {transacting}))
+      const membership = await this.memberships().create(
+        Object.assign({}, updatedAttribs, {
+          user_id: id,
+          created_at: new Date(),
+          group_data_type: this.get('group_data_type')
+        }), {transacting})
+      newMemberships.push(membership)
     }
-
-    return Promise.all(changes)
+    return updatedMemberships.concat(newMemberships)
   },
 
   async removeMembers (usersOrIds, { transacting } = {}) {
-    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
-    return GroupMembership.query(q => {
-      q.where('group_id', this.id)
-      q.where('user_id', 'in', userIds)
-    }).query().update({active: false}).transacting(transacting)
-  }
+    return this.updateMembers(usersOrIds, {active: false}, {transacting})
+  },
+
 }, {
   DataType,
 

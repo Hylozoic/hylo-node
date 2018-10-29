@@ -47,12 +47,12 @@ describe('Search', function () {
 
     it('includes only basic post types by default', () => {
       var query = Search.forPosts({communities: 9}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\') or "posts"."type" is null)')
+      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\') or "posts"."type" is null)')
     })
 
     it('includes only basic post types when type is "all"', () => {
       var query = Search.forPosts({communities: 9, type: 'all'}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\') or "posts"."type" is null)')
+      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\') or "posts"."type" is null)')
     })
 
     it('accepts an option to change the name of the total column', () => {

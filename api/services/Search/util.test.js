@@ -59,7 +59,7 @@ describe('filterAndSortPosts', () => {
     filterAndSortPosts({}, query)
     expectEqualQuery(relation, `select * from "posts"
       where (
-        "posts"."type" in ('discussion', 'request', 'offer')
+        "posts"."type" in ('discussion', 'request', 'offer', 'project')
         or "posts"."type" is null
       )
       order by "posts"."updated_at" desc`)

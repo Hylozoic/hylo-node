@@ -1,7 +1,12 @@
 import { createPost } from './post'
+import { uniq } from 'lodash/fp'
 
 export function createProject (userId, data) {
-  const projectData = Object.assign({}, data, {type: Post.Type.PROJECT})
+  // add creator as a member of project on creation
+  const memberIds = data.memberIds
+    ? uniq(data.memberIds.concat([userId])) 
+    : []
+  const projectData = Object.assign({}, data, {type: Post.Type.PROJECT, memberIds})
   return createPost(userId, projectData)
 }
 
@@ -84,5 +89,17 @@ export async function addPeopleToProjectRole (userId, peopleIds, projectRoleId) 
       project_role_id: projectRoleId
     })
   })
+  .then(() => ({success: true}))
+}
+
+export async function joinProject (projectId, userId) {
+  const project = await Post.find(projectId)
+  return project.addProjectMembers([userId])
+  .then(() => ({success: true}))
+}
+
+export async function leaveProject (projectId, userId) {
+  const project = await Post.find(projectId)
+  return project.removeProjectMembers([userId])
   .then(() => ({success: true}))
 }
