@@ -77,7 +77,19 @@ describe('model filters', () => {
       const models = await makeModels(u1.id, false)
       const users = await models.Person.filter(User.collection()).fetch()
       expect(users.map('id')).to.deep.equal([u1.id, u4.id])
-    })    
+    })  
+    
+    it('includes people you share a connection with', async () => {
+      const currentUser = await factories.user().save()
+      const connectedUser = await factories.user().save()
+      // another user
+      await factories.user().save()
+      await UserConnection.create(currentUser.id, connectedUser.id, UserConnection.Type.MESSAGE)
+
+      const models = await makeModels(currentUser.id, false)
+      const users = await models.Person.filter(User.collection()).fetch()
+      expect(users.map('id')).to.deep.equal([connectedUser.id])
+    })  
 
     it.skip('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())

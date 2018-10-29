@@ -31,9 +31,15 @@ export const personFilter = userId => relation => relation.query(q => {
   q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
 
   // limit to users that are in those other memberships
+
+  const sharedConnections = UserConnection.query(ucq =>{
+    ucq.where('user_id', userId)
+  })
+
   q.where(inner =>
     inner.where('users.id', User.AXOLOTL_ID)
-    .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id')))
+    .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id'))
+    .orWhere('users.id', 'in', sharedConnections.query().pluck('other_user_id')))
 })
 
 export const messageFilter = userId => relation => relation.query(q => {
