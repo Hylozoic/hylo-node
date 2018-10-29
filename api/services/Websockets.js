@@ -60,10 +60,15 @@ export function communityRoom (communityId) {
   return `communities/${communityId}`
 }
 
+export function networkRoom (networkId) {
+  return `networks/${networkId}`
+}
+
 const roomTypes = {
   user: userRoom,
   post: postRoom,
-  community: communityRoom
+  community: communityRoom,
+  network: networkRoom
 }
 
 const emptyResponse = res => err => err ? res.serverError(err) : res.ok({})

@@ -11,11 +11,6 @@ module.exports.routes = {
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
 
-  'GET    /noo/network/:networkId':                       'NetworkController.findOne',
-  'POST   /noo/network':                                  'NetworkController.create',
-  'POST   /noo/network/validate':                         'NetworkController.validate',
-  'POST   /noo/network/:networkId':                       'NetworkController.update',
-
   'GET    /noo/admin/login':                              'AdminSessionController.create',
   'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',
   'GET    /noo/admin/logout':                             'AdminSessionController.destroy',
@@ -60,6 +55,8 @@ module.exports.routes = {
   // websockets routes
   'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',
   'POST   /noo/community/:communityId/unsubscribe':       'CommunityController.unsubscribe',
+  'POST   /noo/network/:networkId/subscribe':             'NetworkController.subscribe',
+  'POST   /noo/network/:networkId/unsubscribe':           'NetworkController.unsubscribe',
   'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // from comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',

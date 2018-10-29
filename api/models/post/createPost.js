@@ -2,7 +2,7 @@ import { flatten, merge, pick, uniq } from 'lodash'
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
 import { updateNetworkMemberships } from './util'
-import { communityRoom, pushToSockets } from '../../services/Websockets'
+import { communityRoom, networkRoom, pushToSockets } from '../../services/Websockets'
 
 export default function createPost (userId, params) {
   return setupPostAttrs(userId, merge(Post.newPostAttrs(), params))
@@ -78,13 +78,20 @@ async function updateTagsAndCommunities (post, trx) {
   // the user is allowed to view, etc). This means we either omit the
   // information, or (as below) we only post community data for the socket
   // room it's being pushed to.
-  // TODO: eventually we will need to push to socket rooms for networks.
   const payload = post.getNewPostSocketPayload()
-  const notifySockets = payload.communities.map(c => {
+  const notifyCommunitySockets = payload.communities.map(c => {
     pushToSockets(
       communityRoom(c.id),
       'newPost',
       Object.assign({}, payload, { communities: [ c ] })
+    )
+  })
+  // TODO: eventually we will need to push to socket rooms for networks.
+  const notifyNetworkSockets = payload.networks.map(n => {
+    pushToSockets(
+      networkRoom(n.id),
+      'newPost',
+      Object.assign({}, payload, { networks: [ n ] })
     )
   })
 
@@ -93,7 +100,8 @@ async function updateTagsAndCommunities (post, trx) {
   }).query().update({updated_at: new Date()}).transacting(trx)
 
   return Promise.all([
-    notifySockets,
+    notifyCommunitySockets,
+    notifyNetworkSockets,
     updateCommunityTags,
 
     TagFollow.query(q => {

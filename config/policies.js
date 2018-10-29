@@ -43,6 +43,11 @@ module.exports.policies = {
     unsubscribe: ['isSocket', 'sessionAuth', 'checkAndSetMembership']
   },
 
+  NetworkController: {
+    subscribe:   ['isSocket', 'sessionAuth', 'checkAndSetMembership'],
+    unsubscribe: ['isSocket', 'sessionAuth', 'checkAndSetMembership']
+  },
+
   PostController: {
     updateLastRead:         ['sessionAuth', 'checkAndSetPost'],
     subscribe:              ['isSocket', 'sessionAuth', 'checkAndSetPost'],

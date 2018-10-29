@@ -297,7 +297,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // TODO: if we were in a position to avoid duplicating the graphql layer
   // here, that'd be grand.
   getNewPostSocketPayload: function () {
-    const { communities, linkPreview, tags, user } = this.relations
+    const { communities, networks, linkPreview, tags, user } = this.relations
 
     const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
     const topics = refineMany(tags, [ 'id', 'name' ])
@@ -313,6 +313,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         commenters: [],
         commentsTotal: 0,
         communities: refineMany(communities, [ 'id', 'name', 'slug' ]),
+        networks: refineMany(networks, [ 'id', 'name', 'slug' ]),
         creator,
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
         topics,

@@ -3,6 +3,17 @@ module.exports = async function checkAndSetMembership (req, res, next) {
   if (res.locals.publicAccessAllowed) return next()
 
   const communityId = req.param('communityId')
+  const networkId = req.param('networkId')
+
+  if (networkId && req.session.userId) {
+    const network = await Network.find(networkId, {active: true})
+    const inNetwork = await Network.containsUser(network.id, req.session.userId)
+    console.log('!!!! in check and set membership', networkId, req.session.userId, network)
+    if (inNetwork) {
+      res.locals.network = network
+      return next()
+    }
+  }
 
   // if no community id is specified, continue.
   // this is for routes that can be limited to a specific community
