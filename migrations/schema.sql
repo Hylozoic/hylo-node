@@ -1212,7 +1212,8 @@ CREATE TABLE users (
     settings jsonb DEFAULT '{}'::jsonb,
     location character varying(255),
     url character varying(255),
-    tagline character varying(255)
+    tagline character varying(255),
+    stripe_account_id bigint
 );
 
 
@@ -1353,6 +1354,35 @@ CREATE SEQUENCE skills_users_id_seq
 --
 
 ALTER SEQUENCE skills_users_id_seq OWNED BY skills_users.id;
+
+
+--
+-- Name: stripe_accounts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE stripe_accounts (
+    id bigint NOT NULL,
+    stripe_account_external_id character varying(255)
+);
+
+
+--
+-- Name: stripe_accounts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE stripe_accounts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: stripe_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE stripe_accounts_id_seq OWNED BY stripe_accounts.id;
 
 
 --
@@ -1750,6 +1780,13 @@ ALTER TABLE ONLY skills ALTER COLUMN id SET DEFAULT nextval('skills_id_seq'::reg
 --
 
 ALTER TABLE ONLY skills_users ALTER COLUMN id SET DEFAULT nextval('skills_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY stripe_accounts ALTER COLUMN id SET DEFAULT nextval('stripe_accounts_id_seq'::regclass);
 
 
 --
@@ -2203,6 +2240,14 @@ ALTER TABLE ONLY skills_users
 
 ALTER TABLE ONLY skills_users
     ADD CONSTRAINT skills_users_skill_id_user_id_unique UNIQUE (skill_id, user_id);
+
+
+--
+-- Name: stripe_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY stripe_accounts
+    ADD CONSTRAINT stripe_accounts_pkey PRIMARY KEY (id);
 
 
 --
@@ -3190,6 +3235,14 @@ ALTER TABLE ONLY user_external_data
 
 ALTER TABLE ONLY communities_users
     ADD CONSTRAINT users_community_deactivator_id_foreign FOREIGN KEY (deactivator_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_stripe_account_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY users
+    ADD CONSTRAINT users_stripe_account_id_foreign FOREIGN KEY (stripe_account_id) REFERENCES stripe_accounts(id);
 
 
 --
