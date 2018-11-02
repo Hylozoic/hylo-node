@@ -1060,7 +1060,8 @@ CREATE TABLE posts (
     parent_post_id bigint,
     link_preview_id bigint,
     is_project_request boolean DEFAULT false,
-    announcement boolean DEFAULT false
+    announcement boolean DEFAULT false,
+    accept_contributions boolean DEFAULT false
 );
 
 
