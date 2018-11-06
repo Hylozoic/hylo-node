@@ -9,3 +9,28 @@ export async function unblockUser (userId, blockedUserId) {
   return blockedUser.destroy()
   .then(() => ({success: true}))
 }
+
+export async function updateStripeAccount (userId, accountId) {
+  // TODO: add validation on accountId
+  const user = await User.find(userId, {withRelated: 'stripeAccount'})
+  const existingAccount = user.relations.stripeAccount
+  const newAccount = await StripeAccount.forge({
+    stripe_account_external_id: accountId
+  }).save()
+  return user.save({
+    stripe_account_id: newAccount.id
+  })
+  .then(() => {
+    if (existingAccount) {
+      return existingAccount.destroy()
+    }  
+  })
+  .then(() => ({success: true}))
+}
+
+export async function registerStripeAccount (userId, authorizationCode) {
+  // TODO: add validation on accountId
+  const user = await User.find(userId, {withRelated: 'stripeAccount'})
+  console.log('authorizationCode', authorizationCode)
+  return {success: true}
+}

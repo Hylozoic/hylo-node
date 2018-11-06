@@ -59,7 +59,9 @@ export {
 } from './project'
 export {
   blockUser,
-  unblockUser
+  unblockUser,
+  updateStripeAccount,
+  registerStripeAccount
 } from './user'
 export { updateMembership } from './membership'
 

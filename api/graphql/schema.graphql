@@ -572,6 +572,7 @@ type Mutation {
   regenerateAccessCode(communityId: ID): Community
   registerDevice(playerId: String, platform: String, version: String): GenericResult
   reinviteAll(communityId: ID): GenericResult
+  registerStripeAccount(authorizationCode: String): GenericResult
   removeCommunityFromNetwork(communityId: ID, networkId: ID): Network
   removeMember(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID, isRemoveFromCommunity: Boolean): Community
@@ -590,6 +591,7 @@ type Mutation {
   updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
   updateNetwork(id: ID, data: NetworkInput): Network
   updatePost(id: ID, data: PostInput): Post
+  updateStripeAccount(accountId: String): GenericResult
   useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
   vote(postId: ID, isUpvote: Boolean): Post
 }

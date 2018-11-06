@@ -66,6 +66,10 @@ module.exports = bookshelf.Model.extend(merge({
     }))
   },
 
+  stripeAccount: function () {
+    return this.belongsTo(StripeAccount)
+  },
+
   votes: function () {
     return this.hasMany(Vote)
   },
