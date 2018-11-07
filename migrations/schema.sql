@@ -1362,7 +1362,8 @@ ALTER SEQUENCE skills_users_id_seq OWNED BY skills_users.id;
 
 CREATE TABLE stripe_accounts (
     id bigint NOT NULL,
-    stripe_account_external_id character varying(255)
+    stripe_account_external_id character varying(255),
+    refresh_token character varying(255)
 );
 
 

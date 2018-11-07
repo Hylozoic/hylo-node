@@ -304,6 +304,23 @@ module.exports = bookshelf.Model.extend(merge({
     const myCommunities = await this.communities().fetch()
     const theirCommunities = await user.communities().fetch()
     return intersectionBy(myCommunities.models, theirCommunities.models, 'id')
+  },
+
+  async updateStripeAccount (accountId, refreshToken = '') {
+    await this.load('stripeAccount')
+    const existingAccount = this.relations.stripeAccount
+    const newAccount = await StripeAccount.forge({
+      stripe_account_external_id: accountId,
+      refresh_token: refreshToken
+    }).save()
+    return this.save({
+      stripe_account_id: newAccount.id
+    })
+    .then(() => {
+      if (existingAccount) {
+        return existingAccount.destroy()
+      }  
+    })    
   }
 
 }, HasSettings, HasGroupMemberships), {
