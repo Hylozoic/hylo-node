@@ -30,6 +30,7 @@ type Me {
   intercomHash: String
   blockedUsers: [Person]
   blockedUsersTotal: Int
+  hasStripeAccount: Boolean
 }
 
 type UserSettings {
@@ -243,6 +244,8 @@ type Post {
   topics: [Topic],
   topicsTotal: Int
   announcement: Boolean
+  acceptContributions: Boolean
+  totalContributions: Int
 }
 
 type PostMembership {
@@ -459,6 +462,7 @@ input PostInput {
   announcement: Boolean
   topicNames: [String]
   memberIds: [ID]
+  acceptContributions: Boolean
 }
 
 input CommentInput {

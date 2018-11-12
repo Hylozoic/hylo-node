@@ -321,6 +321,10 @@ module.exports = bookshelf.Model.extend(merge({
         return existingAccount.destroy()
       }  
     })    
+  },
+
+  hasStripeAccount () {
+    return !!this.get('stripe_account_id')
   }
 
 }, HasSettings, HasGroupMemberships), {

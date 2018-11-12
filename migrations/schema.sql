@@ -1061,7 +1061,9 @@ CREATE TABLE posts (
     link_preview_id bigint,
     is_project_request boolean DEFAULT false,
     announcement boolean DEFAULT false,
-    accept_contributions boolean DEFAULT false
+    accept_contributions boolean DEFAULT false,
+    accept_donations boolean DEFAULT false,
+    total_donations integer DEFAULT 0
 );
 
 
