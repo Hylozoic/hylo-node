@@ -573,6 +573,7 @@ type Mutation {
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
   pinPost(postId: ID, communityId: ID): GenericResult
+  processStripeToken(postId: ID, token: String, amount: Int): GenericResult
   regenerateAccessCode(communityId: ID): Community
   registerDevice(playerId: String, platform: String, version: String): GenericResult
   reinviteAll(communityId: ID): GenericResult

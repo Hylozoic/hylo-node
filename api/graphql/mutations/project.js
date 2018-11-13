@@ -1,5 +1,6 @@
 import { createPost } from './post'
 import { uniq } from 'lodash/fp'
+var stripe = require("stripe")(process.env.STRIPE_API_KEY);
 
 export function createProject (userId, data) {
   // add creator as a member of project on creation
@@ -101,5 +102,23 @@ export async function joinProject (projectId, userId) {
 export async function leaveProject (projectId, userId) {
   const project = await Post.find(projectId)
   return project.removeProjectMembers([userId])
+  .then(() => ({success: true}))
+}
+
+export async function processStripeToken (userId, projectId, token, amount) {
+  const user = await User.find(userId)
+  const project = await Post.find(projectId)  
+  const charge = await stripe.charges.create({
+    amount: Number(amount) * 100,
+    currency: 'usd',
+    description: `${user.get('name')} contributing to project ${project.get('name')} - project id: ${projectId}`,
+    source: token
+  })
+
+  const newTotal = Number(project.get('total_contributions')) + Number(amount)
+
+  return project.save({
+    total_contributions: newTotal
+  })
   .then(() => ({success: true}))
 }

@@ -55,7 +55,8 @@ export {
   deleteProjectRole,
   addPeopleToProjectRole,
   joinProject,
-  leaveProject
+  leaveProject,
+  processStripeToken
 } from './project'
 export {
   blockUser,

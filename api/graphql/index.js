@@ -33,6 +33,7 @@ import {
   markActivityRead,
   markAllActivitiesRead,
   pinPost,
+  processStripeToken,
   regenerateAccessCode,
   registerDevice,
   registerStripeAccount,
@@ -229,7 +230,10 @@ export function makeMutations (userId, isAdmin) {
 
     pinPost: (root, { postId, communityId }) =>
       pinPost(userId, postId, communityId),
-
+      
+    processStripeToken: (root, { postId, token, amount }) =>
+      processStripeToken(userId, postId, token, amount),
+      
     regenerateAccessCode: (root, { communityId }) =>
       regenerateAccessCode(userId, communityId),
 
