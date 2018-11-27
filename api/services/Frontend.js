@@ -49,6 +49,17 @@ module.exports = {
     evo: {
       passwordSetting: function () {
         return url('/settings/password')
+      },
+
+      paymentSettings: function (opts) {
+        switch (opts.registered) {
+          case 'success':
+            return url('/settings/payment?registered=success')
+          case 'error':
+            return url('/settings/payment?registered=error')
+          default:
+            return url('/settings/payment')
+        }
       }
     },
 

@@ -57,6 +57,9 @@ module.exports.routes = {
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
   'POST    /noo/mobile/logerror':                         'MobileAppController.logError',
 
+'GET     /noo/payment/registerStripe':                  'PaymentController.registerStripe',
+'POST    /noo/payment/registerStripe':                  'PaymentController.registerStripe',
+
   // websockets routes
   'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',
   'POST   /noo/community/:communityId/unsubscribe':       'CommunityController.unsubscribe',

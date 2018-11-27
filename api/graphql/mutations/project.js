@@ -106,14 +106,27 @@ export async function leaveProject (projectId, userId) {
 }
 
 export async function processStripeToken (userId, projectId, token, amount) {
-  const user = await User.find(userId)
+  const applicationFeeFraction = 0.01
+  const user = await User.find(userId, {withRelated: 'stripeAccount'})
+  if (!user.relations.stripeAccount) {
+    throw new Error (`This user does not have a connected Stripe account`)
+  }
   const project = await Post.find(projectId)  
+  const chargeAmount = Number(amount) * 100
+  const applicationFee = chargeAmount * applicationFeeFraction
+  console.log('stripe_account', user.relations.stripeAccount.get('stripe_account_external_id'))
   const charge = await stripe.charges.create({
-    amount: Number(amount) * 100,
+    amount: chargeAmount,
     currency: 'usd',
     description: `${user.get('name')} contributing to project ${project.get('name')} - project id: ${projectId}`,
-    source: token
+    source: token,
+    application_fee: applicationFee
+  }, {
+    stripe_account: user.relations.stripeAccount.get('stripe_account_external_id')
   })
+
+  console.log('charge', charge)
+  console.log('applicationFee', applicationFee)
 
   const newTotal = Number(project.get('total_contributions')) + Number(amount)
 
