@@ -19,7 +19,9 @@ const TYPE = {
   JoinRequest: 'joinRequest',
   ApprovedJoinRequest: 'approvedJoinRequest',
   Message: 'message',
-  Announcement: 'announcement'
+  Announcement: 'announcement',
+  DonationTo: 'donation to',
+  DonationFrom: 'donation from'
 }
 
 const MEDIUM = {
@@ -99,6 +101,10 @@ module.exports = bookshelf.Model.extend({
         return this.sendApprovedJoinRequestPush()
       case 'announcement':
         return this.sendPushAnnouncement()
+      case 'donation to':
+        console.log('SEND PUSH DONATION TO')
+      case 'donation from':
+        console.log('SEND PUSH DONATION FROM')
       default:
         return Promise.resolve()
     }
@@ -178,6 +184,10 @@ module.exports = bookshelf.Model.extend({
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestEmail()
+      case 'donation to':
+        console.log('SEND EMAIL DONATION TO')
+      case 'donation from':
+        console.log('SEND EMAIL DONATION FROM')        
       default:
         return Promise.resolve()
     }
@@ -419,7 +429,7 @@ module.exports = bookshelf.Model.extend({
 
   priorityReason: function (reasons) {
     const orderedLabels = [
-      'announcement', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
+      'donation to', 'donation from', 'announcement', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
       'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
     ]
 

@@ -105,28 +105,49 @@ export async function leaveProject (projectId, userId) {
   .then(() => ({success: true}))
 }
 
+export async function createStripePaymentNotifications (user, project, amount) {
+  const creatorId = project.get('user_id')
+  const activities = [
+    {
+      reader_id: user.id,
+      post_id: project.id,
+      actor_id: user.id,
+      reason: `donation from`
+    },
+    {
+      reader_id: creatorId,
+      post_id: project.id,
+      actor_id: user.id,
+      reason: `donation to`
+    },
+  ]
+  return Activity.saveForReasons(activities)
+}
+
 export async function processStripeToken (userId, projectId, token, amount) {
   const applicationFeeFraction = 0.01
-  const user = await User.find(userId, {withRelated: 'stripeAccount'})
-  if (!user.relations.stripeAccount) {
+  const project = await Post.find(projectId)  
+  if (!project) {
+    throw new Error (`Can't find project with that id`)
+  }
+  const contributor = await User.find(userId)
+  const projectCreator = await User.find(project.get('user_id'), {withRelated: 'stripeAccount'})
+  if (!projectCreator.relations.stripeAccount) {
     throw new Error (`This user does not have a connected Stripe account`)
   }
-  const project = await Post.find(projectId)  
   const chargeAmount = Number(amount) * 100
   const applicationFee = chargeAmount * applicationFeeFraction
-  console.log('stripe_account', user.relations.stripeAccount.get('stripe_account_external_id'))
-  const charge = await stripe.charges.create({
+  await stripe.charges.create({
     amount: chargeAmount,
     currency: 'usd',
-    description: `${user.get('name')} contributing to project ${project.get('name')} - project id: ${projectId}`,
+    description: `${contributor.get('name')} contributing to project ${project.get('name')} - project id: ${projectId}`,
     source: token,
     application_fee: applicationFee
   }, {
-    stripe_account: user.relations.stripeAccount.get('stripe_account_external_id')
+    stripe_account: projectCreator.relations.stripeAccount.get('stripe_account_external_id')
   })
 
-  console.log('charge', charge)
-  console.log('applicationFee', applicationFee)
+  await createStripePaymentNotifications(contributor, project, amount)
 
   const newTotal = Number(project.get('total_contributions')) + Number(amount)
 
