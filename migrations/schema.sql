@@ -36,7 +36,8 @@ CREATE TABLE public.activities (
     community_id bigint,
     meta jsonb DEFAULT '{}'::jsonb,
     parent_comment_id bigint,
-    contribution_id bigint
+    contribution_id bigint,
+    project_contribution_id bigint
 );
 
 
@@ -2626,6 +2627,14 @@ ALTER TABLE ONLY public.activities
 
 ALTER TABLE ONLY public.activities
     ADD CONSTRAINT activities_parent_comment_id_foreign FOREIGN KEY (parent_comment_id) REFERENCES public.comments(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: activities activities_project_contribution_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activities
+    ADD CONSTRAINT activities_project_contribution_id_foreign FOREIGN KEY (project_contribution_id) REFERENCES public.project_contributions(id);
 
 
 --

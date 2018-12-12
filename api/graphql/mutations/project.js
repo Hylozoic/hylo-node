@@ -105,19 +105,23 @@ export async function leaveProject (projectId, userId) {
   .then(() => ({success: true}))
 }
 
-export async function createStripePaymentNotifications (user, project, amount) {
-  const creatorId = project.get('user_id')
+export async function createStripePaymentNotifications (contribution, creatorId) {
+  const userId = contribution.get('user_id')
+  const postId = contribution.get('post_id')
+
   const activities = [
     {
-      reader_id: user.id,
-      post_id: project.id,
-      actor_id: user.id,
+      reader_id: userId,
+      post_id: postId,
+      actor_id: userId,
+      project_contribution_id: contribution.id,
       reason: `donation from`
     },
     {
       reader_id: creatorId,
-      post_id: project.id,
-      actor_id: user.id,
+      post_id: postId,
+      actor_id: userId,
+      project_contribution_id: contribution.id,
       reason: `donation to`
     },
   ]
@@ -135,6 +139,8 @@ export async function processStripeToken (userId, projectId, token, amount) {
   if (!projectCreator.relations.stripeAccount) {
     throw new Error (`This user does not have a connected Stripe account`)
   }
+
+  // amount is in dollars, chargeAmount is in cents
   const chargeAmount = Number(amount) * 100
   const applicationFee = chargeAmount * applicationFeeFraction
   await stripe.charges.create({
@@ -147,7 +153,13 @@ export async function processStripeToken (userId, projectId, token, amount) {
     stripe_account: projectCreator.relations.stripeAccount.get('stripe_account_external_id')
   })
 
-  await createStripePaymentNotifications(contributor, project, amount)
+  const contribution = await ProjectContribution.forge({
+    user_id: contributor.id,
+    post_id: projectId,
+    amount: chargeAmount
+  }).save()
+
+  await createStripePaymentNotifications(contribution, project.get('user_id'))
 
   const newTotal = Number(project.get('total_contributions')) + Number(amount)
 

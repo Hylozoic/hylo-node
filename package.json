@@ -187,6 +187,7 @@
       "PostMembership",
       "PostNetworkMembership",
       "ProjectRole",
+      "ProjectContributions",
       "PushNotification",
       "Queue",
       "RequestValidation",
