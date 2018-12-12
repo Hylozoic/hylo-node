@@ -7,7 +7,8 @@ module.exports = bookshelf.Model.extend({
 
   project: function () {
     return this.belongsTo(Post)
-  },
+  }
+
 }, {
 
   // find: function (nameOrId, opts = {}) {

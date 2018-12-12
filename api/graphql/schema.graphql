@@ -648,6 +648,7 @@ type Activity {
   action: String
   meta: ActivityMeta
   unread: Boolean
+  contributionAmount: Int
 }
 
 type NotificationQuerySet {

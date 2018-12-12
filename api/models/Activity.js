@@ -65,6 +65,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Contribution, 'contribution_id')
   },
 
+  projectContribution: function () {
+    return this.belongsTo(ProjectContribution, 'project_contribution_id')
+  },
+
   post: function () {
     return this.belongsTo(Post)
   },
@@ -104,6 +108,11 @@ module.exports = bookshelf.Model.extend({
         medium,
         user_id: this.get('reader_id')
       }).save({}, {transacting: trx}))
+  },
+
+  contributionAmount: async function () {
+    await this.load('projectContribution')
+    return this.relations.projectContribution.get('amount')
   }
 
 }, {

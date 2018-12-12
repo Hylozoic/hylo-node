@@ -1066,8 +1066,7 @@ CREATE TABLE public.posts (
     link_preview_id bigint,
     is_project_request boolean DEFAULT false,
     announcement boolean DEFAULT false,
-    accept_contributions boolean DEFAULT false,
-    total_contributions integer DEFAULT 0
+    accept_contributions boolean DEFAULT false
 );
 
 

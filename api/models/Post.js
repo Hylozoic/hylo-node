@@ -74,6 +74,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Vote)
   },
 
+  projectContributions: function () {
+    return this.hasMany(ProjectContribution)
+  },
+
   responders: function () {
     return this.belongsToMany(User).through(EventResponse)
   },
@@ -322,7 +326,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
         tags: topics
       }
     )
+  },
+
+  totalContributions: async function () {
+    await this.load('projectContributions')
+    return this.relations.projectContributions.models.reduce((total, contribution) => total + contribution.get('amount'), 0)
   }
+
+
 }, EnsureLoad, HasGroup, ProjectMixin), {
   // Class Methods
 

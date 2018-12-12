@@ -115,14 +115,14 @@ export async function createStripePaymentNotifications (contribution, creatorId)
       post_id: postId,
       actor_id: userId,
       project_contribution_id: contribution.id,
-      reason: `donation from`
+      reason: `donation to`
     },
     {
       reader_id: creatorId,
       post_id: postId,
       actor_id: userId,
       project_contribution_id: contribution.id,
-      reason: `donation to`
+      reason: `donation from`
     },
   ]
   return Activity.saveForReasons(activities)
@@ -153,18 +153,13 @@ export async function processStripeToken (userId, projectId, token, amount) {
     stripe_account: projectCreator.relations.stripeAccount.get('stripe_account_external_id')
   })
 
+  // ProjectContribution stores the amount in cents, and everywhere else in the app it's in cents
   const contribution = await ProjectContribution.forge({
     user_id: contributor.id,
     post_id: projectId,
     amount: chargeAmount
   }).save()
 
-  await createStripePaymentNotifications(contribution, project.get('user_id'))
-
-  const newTotal = Number(project.get('total_contributions')) + Number(amount)
-
-  return project.save({
-    total_contributions: newTotal
-  })
+  return createStripePaymentNotifications(contribution, project.get('user_id'))
   .then(() => ({success: true}))
 }

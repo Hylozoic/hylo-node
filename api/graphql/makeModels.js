@@ -130,8 +130,7 @@ export default async function makeModels (userId, isAdmin) {
         'ends_at',
         'location',
         'announcement',
-        'accept_contributions',
-        'total_contributions'
+        'accept_contributions'
       ],
       getters: {
         title: p => p.get('name'),
@@ -143,7 +142,7 @@ export default async function makeModels (userId, isAdmin) {
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
-        myVote: p => p.userVote(userId).then(v => !!v)
+        myVote: p => p.userVote(userId).then(v => !!v),
       },
       relations: [
         {comments: {querySet: true}},
@@ -400,6 +399,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         action: a => Notification.priorityReason(a.get('meta').reasons)
+        // contributionAmount: a => a.relations.projectContribution.get('amount')
       }
     },
 
