@@ -3,7 +3,11 @@ const Promise = require('bluebird')
 import { curry, merge } from 'lodash'
 import { format } from 'util'
 
-const sendEmail = opts =>
+// const sendEmail = opts => 
+//   new Promise((resolve, reject) =>
+//     api.send(opts, (err, resp) => err ? reject(err) : resolve(resp)))
+
+const sendEmail = opts => 
   new Promise((resolve, reject) =>
     api.send(opts, (err, resp) => err ? reject(err) : resolve(resp)))
 
@@ -66,6 +70,8 @@ module.exports = {
   sendPostMentionNotification: sendEmailWithOptions('tem_wXiqtyNzAr8EF4fqBna5WQ'),
   sendJoinRequestNotification: sendEmailWithOptions('tem_9sW4aBxaLi5ve57bp7FGXZ'),
   sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
+  sendDonationToEmail: sendEmailWithOptions('tem_bhptVWGW6k67tpFtqRDWKTHQ'),  
+  sendDonationFromEmail: sendEmailWithOptions('tem_TCgS9xJykShS9mJjwj9Kd3v6'),  
 
   sendMessageDigest: opts =>
     sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK',

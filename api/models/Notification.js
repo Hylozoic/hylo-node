@@ -53,6 +53,10 @@ module.exports = bookshelf.Model.extend({
     return this.relations.activity.relations.actor
   }, 
 
+  projectContribution: function () {
+    return this.relations.activity.relations.projectContribution
+  },
+
   send: function () {
     var action
     return this.shouldBeBlocked()
@@ -102,9 +106,9 @@ module.exports = bookshelf.Model.extend({
       case 'announcement':
         return this.sendPushAnnouncement()
       case 'donation to':
-        console.log('SEND PUSH DONATION TO')
+        return this.sendPushDonationTo()
       case 'donation from':
-        console.log('SEND PUSH DONATION FROM')
+        return this.sendPushDonationFrom()
       default:
         return Promise.resolve()
     }
@@ -176,6 +180,22 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  sendPushDonationTo: async function () {
+    await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    var projectContribution = this.projectContribution()
+    var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
+    var alertText = PushNotification.textForDonationTo(projectContribution)
+    return this.reader().sendPushNotification(alertText, path)
+  },
+
+  sendPushDonationFrom: async function () {
+    await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    var projectContribution = this.projectContribution()
+    var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
+    var alertText = PushNotification.textForDonationFrom(projectContribution)
+    return this.reader().sendPushNotification(alertText, path)
+  },
+
   sendEmail: function () {
     switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
       case 'mention':
@@ -185,9 +205,9 @@ module.exports = bookshelf.Model.extend({
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestEmail()
       case 'donation to':
-        console.log('SEND EMAIL DONATION TO')
+        return this.sendDonationToEmail()
       case 'donation from':
-        console.log('SEND EMAIL DONATION FROM')        
+        return this.sendDonationFromEmail()
       default:
         return Promise.resolve()
     }
@@ -326,6 +346,52 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.community(community))
         }
       })))
+  },
+
+  sendDonationToEmail: async function () {
+    await this.load(['activity.actor', 'activity.post', 'activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    const projectContribution = this.projectContribution()
+    const project = this.post()
+    const actor = this.actor()
+    const reader = this.reader()
+    const token = await reader.generateToken()
+    return Email.sendDonationToEmail({
+      email: reader.get('email'),
+      sender: {name: project.get('name')},
+      data: {
+        project_title: project.get('name'),
+        project_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),        
+        contribution_amount: projectContribution.get('amount') / 100,
+        contributor_name: actor.get('name'),
+        contributor_avatar_url: actor.get('avatar_url'),
+        contributor_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+       }
+    })
+  },
+
+  sendDonationFromEmail: async function () {
+    await this.load(['activity.actor', 'activity.post', 'activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    const projectContribution = this.projectContribution()
+    const project = this.post()
+    const actor = this.actor()
+    const reader = this.reader()
+    const token = await reader.generateToken()
+    return Email.sendDonationFromEmail({
+      email: reader.get('email'),
+      sender: {name: project.get('name')},
+      data: {
+        project_title: project.get('name'),
+        project_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),        
+        contribution_amount: projectContribution.get('amount') / 100,
+        contributor_name: actor.get('name'),
+        contributor_avatar_url: actor.get('avatar_url'),
+        contributor_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+       }
+    })
   },
 
   shouldBeBlocked: async function () {
