@@ -16,9 +16,10 @@ const resendInvites = () =>
   Invitation.resendAllReady()
   .tap(results => sails.log.debug(`Resent the following invites: ${results}`))
 
-const updateFromNexudus = opts =>
-  Nexudus.updateAllCommunities(opts)
-  .then(report => sails.log.debug('Updated users from Nexudus:', report))
+// Currently Nexudus updates are disabled
+// const updateFromNexudus = opts =>
+//   Nexudus.updateAllCommunities(opts)
+//   .then(report => sails.log.debug('Updated users from Nexudus:', report))
 
 const daily = now => {
   const tasks = []
@@ -39,9 +40,12 @@ const daily = now => {
 }
 
 const hourly = now => {
-  const tasks = [
-    updateFromNexudus({dryRun: false})
-  ]
+  // Currently nexudus updates are disabled. To enable, uncomment here and definition at top of this file.
+  // const tasks = [
+  //   updateFromNexudus({dryRun: false})
+  // ]
+
+  const tasks = []
 
   switch (now.hour()) {
     case 12:
