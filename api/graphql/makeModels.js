@@ -377,15 +377,14 @@ export default async function makeModels (userId, isAdmin) {
           'notifications.user_id': userId
         })
         .orderBy('id', order),
-      // TODO: fix this filter. right now it doesn't return rows that have no comment_id
-      // filter: (relation) => relation.query(q => {
-      //   q.join('activities', 'activities.id', 'notifications.activity_id')
-      //   q.join('posts', 'posts.id', 'activities.post_id')
-      //   q.join('comments', 'comments.id', 'activities.comment_id')
-      //   q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      //   q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      //   q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      // })
+      filter: (relation) => relation.query(q => {
+        q.leftJoin('activities', 'activities.id', 'notifications.activity_id')
+        q.leftJoin('posts', 'posts.id', 'activities.post_id')
+        q.leftJoin('comments', 'comments.id', 'activities.comment_id')
+        q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
+        q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+        q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      })
     },
 
     Activity: {
