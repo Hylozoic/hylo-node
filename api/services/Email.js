@@ -3,10 +3,6 @@ const Promise = require('bluebird')
 import { curry, merge } from 'lodash'
 import { format } from 'util'
 
-// const sendEmail = opts => 
-//   new Promise((resolve, reject) =>
-//     api.send(opts, (err, resp) => err ? reject(err) : resolve(resp)))
-
 const sendEmail = opts => 
   new Promise((resolve, reject) =>
     api.send(opts, (err, resp) => err ? reject(err) : resolve(resp)))

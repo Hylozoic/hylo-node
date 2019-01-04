@@ -398,7 +398,6 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         action: a => Notification.priorityReason(a.get('meta').reasons)
-        // contributionAmount: a => a.relations.projectContribution.get('amount')
       }
     },
 

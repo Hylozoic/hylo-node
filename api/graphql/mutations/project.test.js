@@ -2,8 +2,9 @@ import '../../../test/setup'
 import factories from '../../../test/setup/factories'
 import {
   createProject, createProjectRole, deleteProjectRole, addPeopleToProjectRole,
-  joinProject, leaveProject
+  joinProject, leaveProject, createStripePaymentNotifications
 } from './project'
+import mockRequire from 'mock-require'
 
 describe('createProject', () => {
   var user, user2, community
@@ -129,3 +130,41 @@ describe('leaveProject', () => {
     expect(members.length).to.equal(0)
   })
 })
+
+describe.only('processStripeToken', () => {
+  var creator, contributor, project, projectMutations, options
+
+  before(async () => {
+    options = null
+    const mockStripe = () => ({
+      charges: {
+        create: ops => { options = ops }
+      }
+    })
+
+    mockRequire('stripe', mockStripe)
+    projectMutations = mockRequire.reRequire('./project')
+
+    contributor = await factories.user().save()
+    const stripeAccount = await factories.stripeAccount().save()
+    creator = await factories.user({stripe_account_id: stripeAccount.id}).save()
+    project = await factories.post({user_id: creator.id}).save()
+  })
+
+  after(() => mockRequire.stopAll())
+
+  it('works', async () => {
+    const applicationFeeFraction = 0.01
+    const token = 'fkljdfk'
+    const amount = 123
+    await projectMutations.processStripeToken(contributor.id, project.id, token, amount)
+    expect(options).to.deep.equal({
+      amount: amount * 100,
+      currency: 'usd',
+      source: token,
+      application_fee: amount * 100 * applicationFeeFraction,
+      description: `${contributor.get('name')} contributing to project ${project.get('name')} - project id: ${project.id}`,
+    })
+  })
+})
+

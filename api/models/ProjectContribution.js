@@ -10,16 +10,4 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-
-  // find: function (nameOrId, opts = {}) {
-  //   if (!nameOrId) return Promise.resolve(null)
-
-  //   if (isNaN(Number(nameOrId))) {
-  //     return this.query(qb => qb.whereRaw('lower(name) = lower(?)', nameOrId))
-  //     .fetch(opts)
-  //   }
-  //   return this.where({id: nameOrId}).fetch(opts)
-  // },
-
-
 })
