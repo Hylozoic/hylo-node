@@ -2242,7 +2242,7 @@ ALTER TABLE ONLY posts_users
 --
 
 ALTER TABLE ONLY project_contributions
-    ADD CONSTRAINT project_contributions_pkey PRIMARY KEY (id);
+    ADD CONSTRAINT project_contributions_pkey PRIMARY KEY (id) ;
 
 
 --
@@ -2629,7 +2629,7 @@ ALTER TABLE ONLY activities
 --
 
 ALTER TABLE ONLY activities
-    ADD CONSTRAINT activities_project_contribution_id_foreign FOREIGN KEY (project_contribution_id) REFERENCES project_contributions(id);
+    ADD CONSTRAINT activities_project_contribution_id_foreign FOREIGN KEY (project_contribution_id) REFERENCES project_contributions(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -3237,7 +3237,7 @@ ALTER TABLE ONLY posts_users
 --
 
 ALTER TABLE ONLY project_contributions
-    ADD CONSTRAINT project_contributions_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id);
+    ADD CONSTRAINT project_contributions_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -3245,7 +3245,7 @@ ALTER TABLE ONLY project_contributions
 --
 
 ALTER TABLE ONLY project_contributions
-    ADD CONSTRAINT project_contributions_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+    ADD CONSTRAINT project_contributions_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
