@@ -131,7 +131,7 @@ describe('leaveProject', () => {
   })
 })
 
-describe.only('processStripeToken', () => {
+describe('processStripeToken', () => {
   var creator, contributor, project, projectMutations, options
 
   before(async () => {
