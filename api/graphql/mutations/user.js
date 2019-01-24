@@ -20,7 +20,6 @@ export async function updateStripeAccount (userId, accountId) {
 }
 
 export async function registerStripeAccount (userId, authorizationCode) {
-  console.log('user.js:registerStripeAccount', userId, authorizationCode)
   const user = await User.find(userId, {withRelated: 'stripeAccount'})
   const options = {
     uri: 'https://connect.stripe.com/oauth/token',
