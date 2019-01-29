@@ -51,7 +51,7 @@ module.exports = {
         return url('/settings/password')
       },
 
-      paymentSettings: function (opts) {
+      paymentSettings: function (opts = {}) {
         switch (opts.registered) {
           case 'success':
             return url('/settings/payment?registered=success')
