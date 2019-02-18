@@ -459,6 +459,9 @@ input PostInput {
   announcement: Boolean
   topicNames: [String]
   memberIds: [ID]
+  eventInviteeIds: [ID]  
+  startTime: String
+  endTime: String
 }
 
 input CommentInput {

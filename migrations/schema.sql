@@ -390,7 +390,7 @@ CREATE TABLE public.event_invitations (
     user_id bigint,
     inviter_id bigint,
     event_id bigint,
-    status character varying(255),
+    response character varying(255),
     created_at timestamp with time zone,
     updated_at timestamp with time zone
 );
@@ -1101,7 +1101,9 @@ CREATE TABLE public.posts (
     link_preview_id bigint,
     is_project_request boolean DEFAULT false,
     announcement boolean DEFAULT false,
-    accept_contributions boolean DEFAULT false
+    accept_contributions boolean DEFAULT false,
+    start_time timestamp with time zone,
+    end_time timestamp with time zone
 );
 
 

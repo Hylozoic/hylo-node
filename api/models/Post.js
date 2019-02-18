@@ -11,6 +11,7 @@ import { refineMany, refineOne } from './util/relations'
 import { isFollowing } from './group/queryUtils'
 import html2text from '../../lib/htmlparser/html2text'
 import ProjectMixin from './project/mixin'
+import EventMixin from './event/mixin'
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -74,8 +75,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Vote)
   },
 
-  responders: function () {
-    return this.belongsToMany(User).through(EventResponse)
+  invitees: function () {
+    return this.belongsToMany(User).through(EventInvitation)
   },
 
   userVote: function (userId) {
@@ -323,7 +324,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       }
     )
   }
-}, EnsureLoad, HasGroup, ProjectMixin), {
+}, EnsureLoad, HasGroup, ProjectMixin, EventMixin), {
   // Class Methods
 
   Type: {

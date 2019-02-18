@@ -81,8 +81,8 @@ module.exports = bookshelf.Model.extend(merge({
     return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
   },
 
-  eventsRespondedTo: function () {
-    return this.belongsToMany(Post).through(EventResponse)
+  eventsInvitedTo: function () {
+    return this.belongsToMany(Post).through(EventInvitation)
   },
 
   sentInvitations: function () {
