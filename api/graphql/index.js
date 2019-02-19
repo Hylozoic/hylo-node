@@ -43,6 +43,7 @@ import {
   removePost,
   removeSkill,
   resendInvitation,
+  respondToEvent,
   subscribe,
   unblockUser,
   unlinkAccount,
@@ -255,6 +256,9 @@ export function makeMutations (userId, isAdmin) {
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),
+
+    respondToEvent: (root, {id, response}) =>
+      respondToEvent(userId, id, response),
 
     subscribe: (root, { communityId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, communityId, isSubscribing),

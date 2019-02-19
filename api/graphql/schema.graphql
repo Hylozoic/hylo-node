@@ -227,6 +227,7 @@ type Post {
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
   members(first: Int, cursor: ID, order: String): PersonQuerySet
+  eventInvitations(first: Int, cursor: ID, order: String): [EventInvitationQuerySet]
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
@@ -302,6 +303,17 @@ type SearchResultQuerySet {
   total: Int
   hasMore: Boolean
   items: [SearchResult]
+}
+
+type EventInvitation {
+  response: String
+  person: Person
+}
+
+type EventInvitationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [EventInvitation]
 }
 
 type MessageThreadQuerySet {
@@ -562,6 +574,7 @@ type Mutation {
   deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   deleteProjectRole(id: ID): GenericResult
+  respondToEvent(id: ID, response: String): GenericResult
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread

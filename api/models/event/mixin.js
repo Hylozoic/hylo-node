@@ -7,6 +7,11 @@ export default {
 
   eventInvitees: function () {
     return this.belongsToMany(User).through(EventInvitation, 'event_id', 'user_id')
+    .withPivot('response')
+  },
+
+  eventInvitations: function () {
+    return this.hasMany(EventInvitation)
   },
 
   removeEventInvitees: async function (userIds, opts) {

@@ -148,6 +148,7 @@ export default async function makeModels (userId, isAdmin) {
         {user: {alias: 'creator'}},
         'followers',
         {members: {querySet: true}},
+        {eventInvitations: {querySet: true}},
         'linkPreview',
         'postMemberships',
         {media: {
@@ -251,6 +252,16 @@ export default async function makeModels (userId, isAdmin) {
         'email',
         'created_at',
         'last_sent_at'
+      ]
+    },
+
+    EventInvitation: {
+      model: EventInvitation,
+      attributes: [
+        'response'
+      ],
+      relations: [
+        'user'
       ]
     },
 
