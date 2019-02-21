@@ -11,7 +11,7 @@ export default {
   },
 
   eventInvitations: function () {
-    return this.hasMany(EventInvitation)
+    return this.hasMany(EventInvitation, 'event_id')
   },
 
   removeEventInvitees: async function (userIds, opts) {

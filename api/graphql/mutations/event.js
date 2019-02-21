@@ -2,8 +2,8 @@ import { values, includes } from 'lodash/fp'
 
 export async function respondToEvent(userId, eventId, response) {
 
-  if (!includes(response, values(EventInvitation.response))) {
-    throw new Error('response must be one of', values(EventInvitation.response), '. received', response)
+  if (!includes(response, values(EventInvitation.RESPONSE))) {
+    throw new Error(`response must be one of ${values(EventInvitation.RESPONSE)}. received ${response}`)
   }
 
   const event = await Post.find(eventId)
@@ -13,13 +13,14 @@ export async function respondToEvent(userId, eventId, response) {
 
   var eventInvitation = await EventInvitation.find({userId, eventId})
   if (eventInvitation) {
-    return eventInvitation.update({response})
+    await eventInvitation.save({response})
   } else {
-    return EventInvitation.create({
+    await EventInvitation.create({
       userId,
       inviterId: userId,
       eventId,
       response
     })
   }
+  return {success: true}
 }

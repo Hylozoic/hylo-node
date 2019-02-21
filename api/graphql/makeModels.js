@@ -261,7 +261,7 @@ export default async function makeModels (userId, isAdmin) {
         'response'
       ],
       relations: [
-        'user'
+        {user: {alias: 'person'}}
       ]
     },
 
