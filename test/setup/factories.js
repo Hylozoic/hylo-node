@@ -5,6 +5,13 @@ import { ReadableStreamBuffer } from 'stream-buffers'
 import faker from 'faker'
 
 module.exports = {
+  blockedUser: attrs => {
+    return new BlockedUser(merge({
+      created_at: new Date(),
+      updated_at: new Date()
+    }, attrs))
+  },
+
   community: attrs => {
     return new Community(merge({
       name: faker.random.words(6),
@@ -82,6 +89,14 @@ module.exports = {
     return new Device(merge({
       token: faker.random.uuid()
     }, attrs))
+  },
+
+  activity: attrs => {
+    return new Activity(attrs)
+  },
+
+  notification: attrs => {
+    return new Notification(attrs)
   },
 
   mock: {

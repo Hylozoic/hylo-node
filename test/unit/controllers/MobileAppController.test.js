@@ -7,19 +7,22 @@ const mockIosStoreUrl = 'http://get-my-ios-app.com/lol'
 const mockAndroidStoreUrl = 'http://get-my-android-app.com/lol'
 
 describe('MobileAppController', () => {
-  var req, res, tmpVar1, tmpVar2
+  var req, res, tmpVar1, tmpVar2, tmpVar3
   beforeEach(() => {
     req = factories.mock.request()
     res = factories.mock.response()
     tmpVar1 = process.env.IOS_APP_STORE_URL
     tmpVar2 = process.env.ANDROID_APP_STORE_URL
+    tmpVar3 = process.env.MINIMUM_SUPPORTED_MOBILE_VERSION
     process.env.IOS_APP_STORE_URL = mockIosStoreUrl
     process.env.ANDROID_APP_STORE_URL = mockAndroidStoreUrl
+    process.env.MINIMUM_SUPPORTED_MOBILE_VERSION = '2.0.0'
   })
 
   afterEach(() => {
     process.env.IOS_APP_STORE_URL = tmpVar1
     process.env.ANDROID_APP_STORE_URL = tmpVar2
+    process.env.MINIMUM_SUPPORTED_MOBILE_VERSION = tmpVar3
   })
 
   describe('updateInfo', () => {
@@ -88,28 +91,28 @@ describe('MobileAppController', () => {
       expect(res.body).to.deep.equal(expected)
     })
 
-    it('returns undefined for android version 2.0', () => {
+    it('returns success for android version 2.0', () => {
       req.params = {'android-version': '2.0'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
 
-    it('returns undefined for ios version 2.0', () => {
+    it('returns success for ios version 2.0', () => {
       req.params = {'ios-version': '2.0'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
 
-    it('returns undefined for android version > 2.0', () => {
+    it('returns success for android version > 2.0', () => {
       req.params = {'android-version': '2.0.1'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
 
-    it('returns undefined for ios version > 2.0', () => {
+    it('returns success for ios version > 2.0', () => {
       req.params = {'ios-version': '2.0.1'}
       MobileAppController.checkShouldUpdate(req, res)
-      expect(res.body).to.equal(undefined)
+      expect(res.body.success).to.equal(true)
     })
   })
 })

@@ -1,16 +1,16 @@
 import { includes } from 'lodash'
+import HasGroup from './mixins/HasGroup'
 
 var knex = bookshelf.knex
 
 var networkIdsQuery = function (userId) {
-  var communityIdsQuery = knex.select('community_id').from('communities_users')
-    .where({user_id: userId, active: true})
+  const communityIdsQuery = Group.pluckIdsForMember(userId, Community)
 
   return knex.select().distinct('network_id').from('communities')
     .whereIn('id', communityIdsQuery).whereRaw('network_id is not null')
 }
 
-module.exports = bookshelf.Model.extend({
+module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'networks',
 
   communities: function () {
@@ -19,35 +19,40 @@ module.exports = bookshelf.Model.extend({
 
   moderators: function () {
     return this.belongsToMany(User, 'networks_users', 'network_id', 'user_id')
-      .query({where: {role: Membership.MODERATOR_ROLE}})
+    .query({where: {role: GroupMembership.Role.MODERATOR}})
   },
 
   members: function () {
     return User.collection().query(q => {
       q.distinct()
-      q.where({'communities.network_id': this.id})
-      q.join('communities_users', 'users.id', 'communities_users.user_id')
-      q.join('communities', 'communities.id', 'communities_users.community_id')
+      q.join('group_memberships', 'users.id', 'group_memberships.user_id')
+      q.join('groups', 'group_memberships.group_id', 'groups.id')
+      q.join('communities', 'groups.group_data_id', 'communities.id')
+      q.where({
+        'group_memberships.active': true,
+        'groups.group_data_type': Group.DataType.COMMUNITY,
+        'communities.network_id': this.id
+      })
     })
   },
 
-  memberCount: function () {
-    const subq = Community.query(q => {
-      q.select('id')
-      q.where('network_id', this.id)
-    }).query()
-    return Membership.query(q => {
-      q.select(bookshelf.knex.raw('count(distinct user_id) as total'))
-      q.where('community_id', 'in', subq)
-    }).fetch()
-    .then(ms => ms.length === 0 ? 0 : ms.get('total'))
+  async memberCount () {
+    const communityIds = await Community.where({
+      network_id: this.id,
+      active: true
+    })
+    .query().pluck('id')
+
+    return GroupMembership.forIds(null, communityIds, Community).query()
+    .select(bookshelf.knex.raw('count(distinct user_id) as total'))
+    .then(rows => Number(rows[0].total))
   },
 
   posts: function () {
     return this.belongsToMany(Post).through(PostNetworkMembership)
     .query({where: {'posts.active': true}})
   }
-}, {
+}, HasGroup), {
 
   find: function (idOrSlug, options) {
     if (isNaN(Number(idOrSlug))) {
@@ -64,7 +69,9 @@ module.exports = bookshelf.Model.extend({
 
   activeCommunityIds: function (userId, rawQuery) {
     var query = knex.select('id').from('communities')
-    .whereIn('network_id', networkIdsQuery(userId))
+    .where(inner =>
+      inner.whereIn('network_id', networkIdsQuery(userId))
+      .andWhere('communities.hidden', false))
 
     return rawQuery ? query : query.pluck('id')
   },

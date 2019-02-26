@@ -44,6 +44,14 @@ describe('validatePostData', () => {
     expect(fn).to.throw(/title can't be blank/)
   })
 
+  it('fails if there are more than 3 topicNames', () => {
+    const fn = () => validatePostData(null, {
+      name: 't',
+      community_ids: [inCommunity.id],
+      topicNames: ['la', 'ra', 'bar', 'far']})
+    expect(fn).to.throw(/too many topics in post, maximum 3/)
+  })
+
   it('continues the promise chain if name is provided and user is member of communities', () => {
     const data = {name: 't', community_ids: [inCommunity.id]}
     return validatePostData(user.id, data)
@@ -51,7 +59,7 @@ describe('validatePostData', () => {
   })
 
   it('continues the promise chain if valid type is provided', () => {
-    const data = {name: 't', type: 'request', community_ids: [inCommunity.id]}
+    const data = {name: 't', type: Post.Type.PROJECT, community_ids: [inCommunity.id]}
     return validatePostData(user.id, data)
     .catch(() => expect.fail('should resolve'))
   })

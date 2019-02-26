@@ -1,26 +1,50 @@
 import { curry } from 'lodash'
 import { myCommunityIds, myNetworkCommunityIds } from '../models/util/queryFilters'
+import { isFollowing } from '../models/group/queryUtils'
+import GroupDataType from '../models/group/DataType'
 
 export function makeFilterToggle (enabled) {
   return filterFn => relation =>
     enabled ? filterFn(relation) : relation
 }
 
-export const sharedCommunityMembership = curry((tableName, userId, relation) =>
-  relation.query(q => {
-    const clauses = q => {
-      q.where(q2 => {
-        q2.where('communities_users.community_id', 'in', myCommunityIds(userId))
-        .orWhere('communities_users.user_id', User.AXOLOTL_ID)
-      })
-    }
+// This does not include users connected by a network
+function sharesMembership (userId, q) {
+  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community)
+  .query().pluck('group_id')
 
-    if (tableName === 'communities_users') return clauses(q)
+  q.where('group_memberships.active', true)
+  q.where('group_memberships.group_id', 'in', subq)
+}
 
-    const columnName = tableName === 'users' ? 'users.id' : `${tableName}.user_id`
-    return q.where(columnName, 'in',
-      Membership.query(clauses).query().select('user_id'))
-  }))
+export const membershipFilter = userId => relation =>
+  relation.query(q => sharesMembership(userId, q))
+
+export const personFilter = userId => relation => relation.query(q => {
+  // find all other memberships for users that share a network
+  const sharedMemberships = GroupMembership.query(q3 => {
+    filterCommunities(q3, 'groups.group_data_id', userId)
+    q3.join('groups', 'groups.id', 'group_memberships.group_id')
+    q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
+  })
+
+  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
+
+  // limit to users that are in those other memberships
+
+  const sharedConnections = UserConnection.query(ucq =>{
+    ucq.where('user_id', userId)
+  })
+
+  q.where(inner =>
+    inner.where('users.id', User.AXOLOTL_ID)
+    .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id'))
+    .orWhere('users.id', 'in', sharedConnections.query().pluck('other_user_id')))
+})
+
+export const messageFilter = userId => relation => relation.query(q => {
+  q.where('user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+})
 
 function filterCommunities (q, idColumn, userId) {
   // the effect of using `where` like this is to wrap everything within its
@@ -54,14 +78,20 @@ export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
   q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
   q.where({'comments.active': true})
+  q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
   q.where(q2 => {
-    q2.where('comments.post_id', 'in', Follow.query().select('post_id').where('user_id', userId))
+    const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
+    q2.where('comments.post_id', 'in', groupIds)
     .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
   })
 })
 
-export const activePost = relation =>
-  relation.query(q => q.where('posts.active', true))
+export const activePost = userId => relation => {
+  return relation.query(q => {
+    q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+    q.where('posts.active', true)
+  })
+}
 
 export function communityTopicFilter (userId, {
   autocomplete,

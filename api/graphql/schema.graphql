@@ -27,6 +27,9 @@ type Me {
   unseenThreadCount: Int
   updatedAt: String
   url: String
+  intercomHash: String
+  blockedUsers: [Person]
+  blockedUsersTotal: Int
 }
 
 type UserSettings {
@@ -131,6 +134,7 @@ type Community {
   invitePath: String
   network: Network
   numMembers: Int
+  hidden: Boolean
   members(
     first: Int,
     order: String,
@@ -166,7 +170,8 @@ type Community {
     first: Int,
     offset: Int,
     autocomplete: String
-  ): SkillQuerySet
+  ): SkillQuerySet,
+  allowCommunityInvites: Boolean
 }
 
 type PersonQuerySet {
@@ -209,6 +214,7 @@ type Post {
   id: ID
   title: String
   details: String
+  detailsText: String
   type: String
   createdAt: String
   updatedAt: String
@@ -220,6 +226,7 @@ type Post {
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
+  members(first: Int, cursor: ID, order: String): PersonQuerySet
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
@@ -232,7 +239,10 @@ type Post {
   attachments(type: String): [Attachment]
   attachmentsTotal: Int
   postMemberships: [PostMembership]
-  postMembershipsTotal: Int
+  postMembershipsTotal: Int,
+  topics: [Topic],
+  topicsTotal: Int
+  announcement: Boolean
 }
 
 type PostMembership {
@@ -446,6 +456,9 @@ input PostInput {
   location: String
   imageUrls: [String]
   fileUrls: [String]
+  announcement: Boolean
+  topicNames: [String]
+  memberIds: [ID]
 }
 
 input CommentInput {
@@ -494,6 +507,8 @@ input CommunityInput {
   slackTeam: String
   slackConfigureUrl: String
   active: Boolean
+  hidden: Boolean
+  networkId: ID
 }
 
 input CommunitySettingsInput {
@@ -528,19 +543,29 @@ type Mutation {
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
+  addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   addSkill(name: String): Skill
+  allowCommunityInvites(communityId: ID, data: Boolean): Community
+  blockUser(blockedUserId: ID): GenericResult
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
   createMessage(data: MessageInput): Message
   createPost(data: PostInput): Post
+  createProject(data: PostInput): Post
+  createProjectRole(projectId: ID, roleName: String): GenericResult
+  createTopic(topicName: String, communityId: ID): Topic
   deleteComment(id: ID): GenericResult
+  deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
+  deleteProjectRole(id: ID): GenericResult
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
+  leaveProject(id: ID): GenericResult
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
   pinPost(postId: ID, communityId: ID): GenericResult
@@ -549,14 +574,17 @@ type Mutation {
   reinviteAll(communityId: ID): GenericResult
   removeCommunityFromNetwork(communityId: ID, networkId: ID): Network
   removeMember(personId: ID, communityId: ID): Community
-  removeModerator(personId: ID, communityId: ID): Community
+  removeModerator(personId: ID, communityId: ID, isRemoveFromCommunity: Boolean): Community
   removeNetworkModeratorRole(personId: ID, networkId: ID): Network
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
   resendInvitation(invitationId: ID): GenericResult
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
+  unblockUser(blockedUserId: ID): GenericResult
+  updateComment(id: ID, data: CommentInput): Comment
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
+  updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
   updateMe(changes: MeInput): Me
   updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership

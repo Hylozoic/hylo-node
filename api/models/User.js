@@ -1,10 +1,10 @@
-/* globals LastRead */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
 import HasSettings from './mixins/HasSettings'
+import HasGroupMemberships from './user/HasGroupMemberships'
 import { findThread } from './post/findOrCreateThread'
 
 module.exports = bookshelf.Model.extend(merge({
@@ -18,6 +18,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Comment)
     .query(q => {
       q.join('posts', 'posts.id', 'comments.post_id')
+      q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(this.id))
       q.where(function () {
         this.where('posts.type', '!=', Post.Type.THREAD)
         .orWhere('posts.type', null)
@@ -26,8 +27,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   communities: function () {
-    return this.belongsToMany(Community, 'communities_users').through(Membership)
-      .query({where: {'communities_users.active': true, 'communities.active': true}}).withPivot('role')
+    return this.queryByGroupMembership(Community)
+    .query(q => q.where('active', true))
   },
 
   contributions: function () {
@@ -43,14 +44,6 @@ module.exports = bookshelf.Model.extend(merge({
     .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
   },
 
-  followedPosts: function () {
-    return this.belongsToMany(Post).through(Follow)
-  },
-
-  lastReads: function () {
-    return this.hasMany(LastRead)
-  },
-
   followedTags: function () {
     return this.belongsToMany(Tag).through(TagFollow)
   },
@@ -64,13 +57,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships: function () {
-    return this.hasMany(Membership).query(qb => {
-      qb.where('communities_users.active', true)
-      qb.leftJoin('communities', function () {
-        this.on('communities.id', '=', 'communities_users.community_id')
-      })
-      qb.where('communities.active', true)
-    })
+    return this.groupMembershipsForModel(Community)
   },
 
   posts: function () {
@@ -83,9 +70,15 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Vote)
   },
 
+  followedPosts () {
+    return this.queryByGroupMembership(Post, {
+      where: q => q.whereRaw(`(settings->>'following')::boolean = true`)
+    })
+    .query(q => q.where('active', true))
+  },
+
   messageThreads: function () {
-    return this.belongsToMany(Post).through(Follow)
-    .query(q => q.where({type: Post.Type.THREAD, active: true}))
+    return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
   },
 
   eventsRespondedTo: function () {
@@ -100,20 +93,39 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Skill, 'skills_users')
   },
 
+  blockedUsers: function () {
+    return this.belongsToMany(User, 'blocked_users', 'user_id', 'blocked_user_id')
+  },
+
   thanks: function () {
     return this.hasMany(Thank)
   },
 
-  joinCommunity: function (community, role = Membership.DEFAULT_ROLE) {
-    var communityId = (typeof community === 'object' ? community.id : community)
-    return Membership.create(this.id, communityId, {role})
-    .tap(() => this.markInvitationsUsed(communityId))
+  intercomHash: function () {
+    return crypto.createHmac('sha256', process.env.INTERCOM_KEY)
+    .update(this.id)
+    .digest('hex')
   },
 
-  leaveCommunity: function (community) {
-    var communityId = (typeof community === 'object' ? community.id : community)
-    return Membership.find(this.id, communityId)
-    .then(m => m && m.destroy().then(m => m.id))
+  joinCommunity: async function (community, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
+    const memberships = await community.addGroupMembers([this.id],
+      {
+        role,
+        settings: {
+          sendEmail: true,
+          sendPushNotifications: true
+        }},
+      {transacting})
+    await Community.query().where('id', community.id)
+    .increment('num_members').transacting(transacting)
+    await this.followDefaultTags(community.id, transacting)
+    await this.markInvitationsUsed(community.id, transacting)
+    return memberships[0]
+  },
+
+  leaveCommunity: async function (community) {
+    await community.removeGroupMembers([this.id])
+    await Community.query().where('id', community.id).decrement('num_members')
   },
 
   // sanitize certain values before storing them
@@ -127,6 +139,14 @@ module.exports = bookshelf.Model.extend(merge({
         saneAttrs.twitter_name = saneAttrs.twitter_name.substring(1)
       }
     }
+    const urlAttrs = ['url', 'facebook_url', 'linkedin_url']
+
+    urlAttrs.forEach(key => {
+      const normalized = addProtocol(saneAttrs[key])
+      if (!isEmpty(normalized)) {
+        saneAttrs[key] = normalized
+      }
+    })
 
     if (attrs.settings) this.addSetting(attrs.settings)
 
@@ -168,16 +188,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   followDefaultTags: function (communityId, trx) {
-    return CommunityTag.defaults(communityId, trx)
-    .then(defaultTags => defaultTags.models.map(communityTag =>
-      communityTag
-        ? TagFollow.add({
-          userId: this.id,
-          communityId: communityId,
-          tagId: communityTag.get('tag_id'),
-          transacting: trx
-        })
-      : null))
+    return this.constructor.followDefaultTags(this.id, communityId, trx)
   },
 
   hasNoAvatar: function () {
@@ -279,17 +290,19 @@ module.exports = bookshelf.Model.extend(merge({
     return User.unseenThreadCount(this.id)
   },
 
-  communitiesSharedWithPost (post) {
-    return Promise.join(this.load('communities'), post.load('communities'))
-    .then(() => intersectionBy(post.relations.communities.models, this.relations.communities.models, 'id'))
+  async communitiesSharedWithPost (post) {
+    const myCommunities = await this.communities().fetch()
+    await post.load('communities')
+    return intersectionBy(post.relations.communities.models, myCommunities.models, 'id')
   },
 
-  communitiesSharedWithUser (user) {
-    return Promise.join(this.load('communities'), user.load('communities'))
-    .then(() => intersectionBy(user.relations.communities.models, this.relations.communities.models, 'id'))
+  async communitiesSharedWithUser (user) {
+    const myCommunities = await this.communities().fetch()
+    const theirCommunities = await user.communities().fetch()
+    return intersectionBy(myCommunities.models, theirCommunities.models, 'id')
   }
 
-}, HasSettings), {
+}, HasSettings, HasGroupMemberships), {
   AXOLOTL_ID: '13986',
 
   authenticate: Promise.method(function (email, password) {
@@ -329,7 +342,9 @@ module.exports = bookshelf.Model.extend(merge({
       updated_at: new Date(),
       settings: {
         digest_frequency,
-        signup_in_progress: true
+        signup_in_progress: true,
+        dm_notifications: 'both',
+        comment_notifications: 'both'
       },
       active: true
     }, omit(attributes, 'account', 'community'))
@@ -349,7 +364,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(() => new User(attributes).save({}, {transacting}))
     .tap(user => Promise.join(
       account && LinkedAccount.create(user.id, account, {transacting}),
-      community && Membership.create(user.id, community.id, {transacting}),
+      community && community.addMembers([user.id], {transacting}),
       community && user.markInvitationsUsed(community.id, transacting)
     ))
   },
@@ -365,7 +380,7 @@ module.exports = bookshelf.Model.extend(merge({
         })
       })
     } else {
-      q = User.where({id: id})
+      q = User.where({id})
     }
     return q.where('active', true).fetch(options)
   },
@@ -451,32 +466,20 @@ module.exports = bookshelf.Model.extend(merge({
     .then(user => user.removeSetting('viewedTooltips', true))
   },
 
-  unseenThreadCount: function (userId) {
+  unseenThreadCount: async function (userId) {
     const { raw } = bookshelf.knex
-    return User.where('id', userId).query()
+
+    const lastViewed = await User.where('id', userId).query()
     .select(raw("settings->'last_viewed_messages_at' as time"))
-    .then(rows => rows[0].time)
-    .then(lastViewed => Post.query(q => {
-      if (lastViewed) q.where('posts.updated_at', '>', new Date(lastViewed))
-      q.join('follows', 'posts.id', 'follows.post_id')
-      q.where({
-        'follows.user_id': userId,
-        type: Post.Type.THREAD
-      })
+    .then(rows => new Date(rows[0].time))
+
+    return GroupMembership.whereUnread(userId, Post, {afterTime: lastViewed})
+    .query(q => {
+      q.join('posts', 'groups.group_data_id', 'posts.id')
+      q.where('posts.type', Post.Type.THREAD)
       q.where('num_comments', '>', 0)
-      q.count()
-
-      q.leftJoin('posts_users', function () {
-        this.on('posts_users.post_id', 'posts.id')
-        .andOn('posts_users.user_id', raw(userId))
-      })
-
-      q.where(function () {
-        this.where('posts_users.id', null)
-        .orWhere('posts_users.last_read_at', '<', bookshelf.knex.raw('posts.updated_at'))
-      })
-    }).query())
-    .then(rows => Number(rows[0].count))
+    })
+    .count().then(c => Number(c))
   }
 })
 
@@ -501,4 +504,14 @@ function validateUserAttributes (attrs, { existingUser, transacting } = {}) {
 
   return User.isEmailUnique(attrs.email, oldEmail, {transacting})
   .then(unique => unique || Promise.reject(new Error('duplicate-email')))
+}
+
+export function addProtocol (url) {
+  if (isEmpty(url)) return url
+  const regex = /^(http:\/\/|https:\/\/)/
+  if (regex.test(url)) {
+    return url
+  } else {
+    return 'https://' + url
+  }
 }

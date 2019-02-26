@@ -56,6 +56,38 @@ ALTER SEQUENCE activity_id_seq OWNED BY activities.id;
 
 
 --
+-- Name: blocked_users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE blocked_users (
+    id integer NOT NULL,
+    user_id bigint,
+    blocked_user_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: blocked_users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE blocked_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: blocked_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE blocked_users_id_seq OWNED BY blocked_users.id;
+
+
+--
 -- Name: comment_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -161,7 +193,9 @@ CREATE TABLE communities (
     slack_team text,
     slack_configure_url text,
     active boolean DEFAULT true,
-    num_members integer DEFAULT 0
+    num_members integer DEFAULT 0,
+    hidden boolean DEFAULT false NOT NULL,
+    allow_community_invites boolean DEFAULT false
 );
 
 
@@ -468,6 +502,114 @@ CREATE TABLE follows (
     role integer,
     comment_id bigint
 );
+
+
+--
+-- Name: group_connections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE group_connections (
+    id bigint NOT NULL,
+    parent_group_id bigint NOT NULL,
+    parent_group_data_type integer NOT NULL,
+    child_group_id bigint NOT NULL,
+    child_group_data_type integer NOT NULL,
+    active boolean DEFAULT true,
+    role integer,
+    settings jsonb,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: group_connections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE group_connections_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_connections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE group_connections_id_seq OWNED BY group_connections.id;
+
+
+--
+-- Name: group_memberships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE group_memberships (
+    id bigint NOT NULL,
+    group_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    active boolean DEFAULT true,
+    role integer,
+    settings jsonb,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    new_post_count integer,
+    group_data_type integer NOT NULL,
+    project_role_id bigint
+);
+
+
+--
+-- Name: group_memberships_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE group_memberships_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_memberships_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE group_memberships_id_seq OWNED BY group_memberships.id;
+
+
+--
+-- Name: groups; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE groups (
+    id bigint NOT NULL,
+    group_data_type integer NOT NULL,
+    group_data_id bigint,
+    active boolean DEFAULT true,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: groups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE groups_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE groups_id_seq OWNED BY groups.id;
 
 
 --
@@ -917,7 +1059,8 @@ CREATE TABLE posts (
     created_from character varying(255),
     parent_post_id bigint,
     link_preview_id bigint,
-    is_project_request boolean DEFAULT false
+    is_project_request boolean DEFAULT false,
+    announcement boolean DEFAULT false
 );
 
 
@@ -995,6 +1138,101 @@ CREATE SEQUENCE posts_users_id_seq
 --
 
 ALTER SEQUENCE posts_users_id_seq OWNED BY posts_users.id;
+
+
+--
+-- Name: project_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE project_roles (
+    id bigint NOT NULL,
+    name character varying(255),
+    post_id bigint
+);
+
+
+--
+-- Name: project_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE project_roles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: project_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE project_roles_id_seq OWNED BY project_roles.id;
+
+
+--
+-- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE users_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE users (
+    id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
+    email character varying(255) NOT NULL,
+    name character varying(255),
+    avatar_url character varying(255),
+    first_name character varying(255),
+    last_name character varying(255),
+    last_login_at timestamp without time zone,
+    active boolean,
+    email_validated boolean,
+    created_at timestamp without time zone,
+    date_deactivated timestamp without time zone,
+    bio text,
+    banner_url character varying(255),
+    twitter_name character varying(255),
+    linkedin_url character varying(255),
+    facebook_url character varying(255),
+    work text,
+    intention text,
+    extra_info text,
+    new_notification_count integer DEFAULT 0,
+    updated_at timestamp with time zone,
+    settings jsonb DEFAULT '{}'::jsonb,
+    location character varying(255),
+    url character varying(255),
+    tagline character varying(255)
+);
+
+
+--
+-- Name: push_notification_testers; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW push_notification_testers AS
+ SELECT u.id AS user_id,
+    u.name,
+    (u.settings -> 'dm_notifications'::text),
+    d.id AS device_id,
+    d.created_at,
+    d.updated_at,
+    d.player_id,
+    d.platform,
+    d.tester
+   FROM (devices d
+     LEFT JOIN users u ON ((u.id = d.user_id)))
+  WHERE (d.player_id IS NOT NULL)
+  ORDER BY d.created_at;
 
 
 --
@@ -1289,51 +1527,6 @@ CREATE TABLE user_post_relevance (
 
 
 --
--- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE users_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: users; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE users (
-    id bigint DEFAULT nextval('users_seq'::regclass) NOT NULL,
-    email character varying(255) NOT NULL,
-    name character varying(255),
-    avatar_url character varying(255),
-    first_name character varying(255),
-    last_name character varying(255),
-    last_login_at timestamp without time zone,
-    active boolean,
-    email_validated boolean,
-    created_at timestamp without time zone,
-    date_deactivated timestamp without time zone,
-    bio text,
-    banner_url character varying(255),
-    twitter_name character varying(255),
-    linkedin_url character varying(255),
-    facebook_url character varying(255),
-    work text,
-    intention text,
-    extra_info text,
-    new_notification_count integer DEFAULT 0,
-    updated_at timestamp with time zone,
-    settings jsonb DEFAULT '{}'::jsonb,
-    location character varying(255),
-    url character varying(255),
-    tagline character varying(255)
-);
-
-
---
 -- Name: users_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1387,6 +1580,13 @@ ALTER TABLE ONLY activities ALTER COLUMN id SET DEFAULT nextval('activity_id_seq
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY blocked_users ALTER COLUMN id SET DEFAULT nextval('blocked_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY comments_tags ALTER COLUMN id SET DEFAULT nextval('comments_tags_id_seq'::regclass);
 
 
@@ -1430,6 +1630,27 @@ ALTER TABLE ONLY event_responses ALTER COLUMN id SET DEFAULT nextval('event_resp
 --
 
 ALTER TABLE ONLY flagged_items ALTER COLUMN id SET DEFAULT nextval('flagged_items_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections ALTER COLUMN id SET DEFAULT nextval('group_connections_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships ALTER COLUMN id SET DEFAULT nextval('group_memberships_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY groups ALTER COLUMN id SET DEFAULT nextval('groups_id_seq'::regclass);
 
 
 --
@@ -1500,6 +1721,13 @@ ALTER TABLE ONLY posts_tags ALTER COLUMN id SET DEFAULT nextval('posts_tags_id_s
 --
 
 ALTER TABLE ONLY posts_users ALTER COLUMN id SET DEFAULT nextval('posts_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY project_roles ALTER COLUMN id SET DEFAULT nextval('project_roles_id_seq'::regclass);
 
 
 --
@@ -1601,6 +1829,14 @@ ALTER TABLE ONLY activities
 
 
 --
+-- Name: blocked_users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY blocked_users
+    ADD CONSTRAINT blocked_users_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: comments_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1662,6 +1898,54 @@ ALTER TABLE ONLY tag_follows
 
 ALTER TABLE ONLY tag_follows
     ADD CONSTRAINT followed_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_connections_parent_group_id_child_group_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_parent_group_id_child_group_id_unique UNIQUE (parent_group_id, child_group_id);
+
+
+--
+-- Name: group_connections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_memberships_group_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_group_id_user_id_unique UNIQUE (group_id, user_id);
+
+
+--
+-- Name: group_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: groups_group_data_id_group_data_type_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY groups
+    ADD CONSTRAINT groups_group_data_id_group_data_type_unique UNIQUE (group_data_id, group_data_type);
+
+
+--
+-- Name: groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY groups
+    ADD CONSTRAINT groups_pkey PRIMARY KEY (id);
 
 
 --
@@ -1870,6 +2154,14 @@ ALTER TABLE ONLY posts_tags
 
 ALTER TABLE ONLY posts_users
     ADD CONSTRAINT posts_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: project_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY project_roles
+    ADD CONSTRAINT project_roles_pkey PRIMARY KEY (id);
 
 
 --
@@ -2276,6 +2568,22 @@ ALTER TABLE ONLY activities
 
 
 --
+-- Name: blocked_users_blocked_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY blocked_users
+    ADD CONSTRAINT blocked_users_blocked_user_id_foreign FOREIGN KEY (blocked_user_id) REFERENCES users(id);
+
+
+--
+-- Name: blocked_users_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY blocked_users
+    ADD CONSTRAINT blocked_users_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+
+
+--
 -- Name: comments_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2636,6 +2944,46 @@ ALTER TABLE ONLY follows
 
 
 --
+-- Name: group_connections_child_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_child_group_id_foreign FOREIGN KEY (child_group_id) REFERENCES groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_connections_parent_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_connections
+    ADD CONSTRAINT group_connections_parent_group_id_foreign FOREIGN KEY (parent_group_id) REFERENCES groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_memberships_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_group_id_foreign FOREIGN KEY (group_id) REFERENCES groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_memberships_project_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_project_role_id_foreign FOREIGN KEY (project_role_id) REFERENCES project_roles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_memberships_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY group_memberships
+    ADD CONSTRAINT group_memberships_user_id_foreign FOREIGN KEY (user_id) REFERENCES users(id);
+
+
+--
 -- Name: join_requests_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2780,6 +3128,14 @@ ALTER TABLE ONLY posts_users
 
 
 --
+-- Name: project_roles_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY project_roles
+    ADD CONSTRAINT project_roles_post_id_foreign FOREIGN KEY (post_id) REFERENCES posts(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: push_notifications_device_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2838,3 +3194,4 @@ ALTER TABLE ONLY communities_users
 --
 -- PostgreSQL database dump complete
 --
+

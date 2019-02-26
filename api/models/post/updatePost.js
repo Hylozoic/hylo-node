@@ -15,6 +15,7 @@ export default function updatePost (userId, id, params) {
       if (!post) throw new Error('Post not found')
       const updatableTypes = [
         Post.Type.OFFER,
+        Post.Type.PROJECT,
         Post.Type.REQUEST,
         Post.Type.DISCUSSION,
         null
@@ -30,9 +31,9 @@ export default function updatePost (userId, id, params) {
 export function afterUpdatingPost (post, opts) {
   const {
     params,
-    params: { requests, community_ids, tag, tagDescriptions },
+    params: { requests, community_ids, topicNames, memberIds },
     userId,
-    transacting
+    transacting    
   } = opts
 
   return post.ensureLoad(['communities'])
@@ -40,8 +41,9 @@ export function afterUpdatingPost (post, opts) {
     updateChildren(post, requests, transacting),
     updateCommunities(post, community_ids, transacting),
     updateAllMedia(post, params, transacting),
-    Tag.updateForPost(post, tag, tagDescriptions, userId, transacting),
+    Tag.updateForPost(post, topicNames, userId, transacting),
     updateFollowers(post, transacting)
   ]))
+  .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
   .then(() => updateNetworkMemberships(post, transacting))
 }

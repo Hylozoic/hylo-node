@@ -1,10 +1,11 @@
 /* eslint-disable camelcase */
 
 import { updateOrRemove } from '../../lib/util/knex'
-import { flatten, includes, isUndefined } from 'lodash'
+import { includes, isUndefined } from 'lodash'
 import {
-  differenceBy, filter, find, get, omitBy, pick, some, uniqBy
+  filter, omitBy, some, uniq
 } from 'lodash/fp'
+import { validateTopicName } from 'hylo-utils/validators'
 
 export const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w_-]+)/g
@@ -16,21 +17,7 @@ export const tagsInText = (text = '') => {
   return tags
 }
 
-const addToCommunity = ({ community_id, tag_id, user_id, description, is_default }, opts) =>
-  CommunityTag.where({community_id, tag_id}).fetch(opts)
-  .tap(comTag => comTag ||
-    CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
-    .catch(() => {}))
-    // the catch above is for the case where another user just created the
-    // CommunityTag (race condition): the save fails, but we don't care about
-    // the result
-  .then(comTag => comTag && comTag.save({updated_at: new Date()}))
-  .then(() => user_id &&
-    TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
-    .then(follow => follow ||
-      TagFollow.create({community_id, tag_id, user_id}, opts)))
-
-const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) => {
+const addToTaggable = (taggable, name, userId, opts) => {
   var association, getCommunities
   var isPost = taggable.tableName === 'posts'
   if (isPost) {
@@ -43,7 +30,7 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
     getCommunities = comment => comment.relations.post.relations.communities
   }
   const created_at = new Date()
-  const findTag = () => Tag.find(name, opts)
+  const findTag = () => Tag.find({ name }, opts)
   return taggable.load(association, opts).then(findTag)
   // create the tag -- if creation fails, find the existing one
   .then(tag => tag ||
@@ -51,24 +38,20 @@ const addToTaggable = (taggable, name, selected, tagDescriptions, userId, opts) 
   .tap(tag =>
     taggable.tags().attach(omitBy(isUndefined, {
       tag_id: tag.id,
-      created_at,
-      selected: isPost ? selected : undefined
+      created_at
     }), opts)
     // userId here is the id of the user making the edit, which is not always
     // the same as the user who created the taggable. we add the tag only to
     // those communities of which the user making the edit is a member.
-    .then(() => userId && Membership.where({active: true, user_id: userId})
-      .query().pluck('community_id'))
+    .then(() => userId && Group.pluckIdsForMember(userId, Community))
     .then(communityIds => {
       if (!communityIds) return
       const communities = filter(c => includes(communityIds, c.id),
         getCommunities(taggable).models)
-      return Promise.map(communities, com => addToCommunity({
+      return Promise.map(communities, com => Tag.addToCommunity({
         community_id: com.id,
         tag_id: tag.id,
-        user_id: taggable.get('user_id'),
-        description: get('description', tagDescriptions[tag.get('name')]),
-        is_default: get('is_default', tagDescriptions[tag.get('name')])
+        user_id: taggable.get('user_id')
       }, opts))
     }))
 }
@@ -77,36 +60,12 @@ const removeFromTaggable = (taggable, tag, opts) => {
   return taggable.tags().detach(tag.id, opts)
 }
 
-const updateForTaggable = ({ taggable, text, selectedTagName, tagDescriptions, userId, transacting }) => {
-  const lowerName = t => t.name.toLowerCase()
-  const tagDifference = differenceBy(t => pick(['name', 'selected'], t))
-
-  return taggable.getTagsInComments({transacting})
-  .then(childTags => {
-    var newTags = tagsInText(text).map(name => ({name, selected: false}))
-    newTags = newTags.concat(childTags.map(ct => ({name: ct.get('name'), selected: false})))
-    if (selectedTagName) {
-      const dupe = find(t => t.name === selectedTagName, newTags)
-      if (dupe) {
-        dupe.selected = true
-      } else {
-        newTags.push({name: selectedTagName, selected: true})
-      }
-    }
-    return taggable.load('tags', {transacting})
-    .then(() => {
-      const oldTags = taggable.relations.tags.map(t => ({
-        id: t.id,
-        name: t.get('name'),
-        selected: t.pivot.get('selected')
-      }))
-      const toAdd = uniqBy(lowerName, tagDifference(newTags, oldTags))
-      const toRemove = tagDifference(oldTags, newTags)
-      return Promise.all(flatten([
-        toRemove.map(tag => removeFromTaggable(taggable, tag, {transacting})),
-        toAdd.map(tag => addToTaggable(taggable, tag.name, tag.selected, tagDescriptions || {}, userId, {transacting}))
-      ]))
-    })
+const updateForTaggable = ({ taggable, tagNames, userId, transacting }) => {
+  return taggable.load('tags', {transacting})
+  .then(() => {
+    const toRemove = taggable.relations.tags.models
+    return Promise.map(toRemove, tag => removeFromTaggable(taggable, tag, {transacting}))
+    .then(() => Promise.map(uniq(tagNames), name => addToTaggable(taggable, name, userId, {transacting})))
   })
 }
 
@@ -146,61 +105,56 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
+  addToCommunity: ({ community_id, tag_id, user_id, description, is_default }, opts) =>
+  CommunityTag.where({community_id, tag_id}).fetch(opts)
+  .tap(comTag => comTag ||
+    CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
+    .catch(() => {}))
+    // the catch above is for the case where another user just created the
+    // CommunityTag (race condition): the save fails, but we don't care about
+    // the result
+  .then(comTag => comTag && comTag.save({updated_at: new Date()}))
+  .then(() => user_id &&
+    TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
+    .then(follow => follow ||
+      TagFollow.create({community_id, tag_id, user_id}, opts))),
+
   isValidTag: function (text) {
-    return !!text.match(/^[A-Za-z][\w-]+$/)
+    return !validateTopicName(text)
+  },
+
+  validate: function (text) {
+    return validateTopicName(text)
   },
 
   tagsInText,
 
-  find: function (id, options) {
-    if (!id) return Promise.resolve(null)
-    if (isNaN(Number(id))) {
-      return Tag.query(qb => qb.whereRaw('lower(name) = lower(?)', id))
-      .fetch(options)
+  find: function ({ id, name }, options) {
+    if (id) {
+      return Tag.where({ id }).fetch(options)
     }
-    return Tag.where({id: id}).fetch(options)
+    if (name) {
+      return Tag.query(qb => qb.whereRaw('lower(name) = lower(?)', name))
+        .fetch(options)
+    }
+    return Promise.resolve(null)
   },
 
   findOrCreate: function (name, options) {
-    return Tag.find(name, options)
+    return Tag.find({ name }, options)
     .then(tag => {
       if (tag) return tag
       return new Tag({name}).save(null, options)
     })
   },
 
-  updateForPost: function (post, selectedTagName, tagDescriptions, userId, trx) {
-    const text = post.get('name') + ' ' + post.get('description')
-
-    const getSelectedTagName = () =>
-      post.load('selectedTags')
-      .then(() => {
-        const selectedTag = post.relations.selectedTags.first()
-        return selectedTag ? selectedTag.get('name') : null
-      })
-
-    return (selectedTagName ? Promise.resolve(selectedTagName) : getSelectedTagName())
-    .then(selectedTagName => updateForTaggable({
+  updateForPost: function (post, tagNames, userId, trx) {
+    return updateForTaggable({
       taggable: post,
-      text,
-      selectedTagName,
-      tagDescriptions,
+      tagNames,
       userId,
       transacting: trx
-    }))
-  },
-
-  updateForComment: function (comment, tagDescriptions, userId, trx) {
-    return Post.find(comment.get('post_id'))
-    .then(() => updateForTaggable({
-      taggable: comment,
-      text: comment.get('text'),
-      tagDescriptions,
-      userId,
-      transacting: trx
-    }))
-    .then(() => Post.find(comment.get('post_id')))
-    .then(post => post && Tag.updateForPost(post, null, null, null, trx))
+    })
   },
 
   merge: (id1, id2) => {

@@ -5,6 +5,7 @@ import {
   createThread
 } from '../../../../api/models/post/findOrCreateThread'
 import setup from '../../../setup'
+import factories from '../../../setup/factories'
 
 describe('comment/createComment', () => {
   before(() => setup.clearDb())
@@ -12,17 +13,10 @@ describe('comment/createComment', () => {
   describe('pushMessageToSockets', () => {
     var user, user2, thread
 
-    before(function () {
-      user = new User({name: 'Oo Joy', email: 'oojoy@b.c'})
-      user2 = new User({name: 'Oo Boy', email: 'ooboy@c.d'})
-      return Promise.join(user.save(), user2.save())
-      .then(() => {
-        return createThread(user.id, [user2.id])
-        .then(t => {
-          thread = t
-          return thread.load('followers')
-        })
-      })
+    before(async () => {
+      user = await factories.user().save()
+      user2 = await factories.user().save()
+      thread = await createThread(user.id, [user2.id])
     })
 
     it('sends newThread event if first message', () => {

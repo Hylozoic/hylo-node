@@ -44,7 +44,7 @@ module.exports = {
     sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
       email,
       data,
-      version: 'user-edited text',
+      version: 'DEV-152',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
         reply_to: data.inviter_email
@@ -66,11 +66,14 @@ module.exports = {
   sendPostMentionNotification: sendEmailWithOptions('tem_wXiqtyNzAr8EF4fqBna5WQ'),
   sendJoinRequestNotification: sendEmailWithOptions('tem_9sW4aBxaLi5ve57bp7FGXZ'),
   sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
-  sendMessageDigest: sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK'),
+
+  sendMessageDigest: opts =>
+    sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK',
+      Object.assign({version: 'v2'}, opts)),
 
   sendCommentDigest: opts =>
     sendEmailWithOptions('tem_tP6JzrYzvvDXhgTNmtkxuW',
-      Object.assign({version: 'multiple'}, opts)),
+      Object.assign({version: 'v2'}, opts)),
 
   postReplyAddress: function (postId, userId) {
     var plaintext = format('%s%s|%s', process.env.MAILGUN_EMAIL_SALT, postId, userId)

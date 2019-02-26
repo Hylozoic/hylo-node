@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-expressions */
 import { createRequestHandler, makeMutations, makeQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
@@ -12,7 +13,7 @@ describe('graphql request handler', () => {
     community, network,
     post, post2, comment, media
 
-  before(() => {
+  before(async () => {
     handler = createRequestHandler()
 
     user = factories.user()
@@ -23,23 +24,22 @@ describe('graphql request handler', () => {
     post2 = factories.post({type: Post.Type.REQUEST})
     comment = factories.comment()
     media = factories.media()
-    return network.save()
-    .then(() => community.save({network_id: network.id}))
-    .then(() => user.save())
-    .then(() => user2.save())
-    .then(() => post.save({user_id: user.id}))
-    .then(() => post2.save())
-    .then(() => comment.save({post_id: post.id}))
-    .then(() => media.save({comment_id: comment.id}))
-    .then(() => Promise.all([
+    await network.save()
+    await community.save({network_id: network.id})
+    await user.save()
+    await user2.save()
+    await post.save({user_id: user.id})
+    await post2.save()
+    await comment.save({post_id: post.id})
+    await media.save({comment_id: comment.id})
+    return Promise.all([
       community.posts().attach(post),
       community.posts().attach(post2),
-      community.users().attach({
-        user_id: user.id,
-        active: true,
-        created_at: new Date(new Date().getTime() - 86400000)}),
-      community.users().attach({user_id: user2.id, active: true})
-    ]))
+      community.addMembers([user.id, user2.id]).then((memberships) => {
+        const earlier = new Date(new Date().getTime() - 86400000)
+        return memberships[0].save({created_at: earlier}, {patch: true})
+      })
+    ])
     .then(() => Promise.all([
       updateNetworkMemberships(post),
       updateNetworkMemberships(post2)
@@ -108,20 +108,18 @@ describe('graphql request handler', () => {
   describe('with a complex query', () => {
     var thread, message
 
-    before(() => {
+    before(async () => {
       thread = factories.post({type: Post.Type.THREAD})
+      await thread.save()
+      await comment.save({user_id: user2.id})
 
-      return thread.save()
-      .then(() => {
-        message = factories.comment({post_id: thread.id, user_id: user2.id})
-        return Promise.all([
-          comment.save({user_id: user2.id}),
-          message.save(),
-          post.followers().attach(user2),
-          thread.followers().attach(user)
-        ])
-        .then(() => thread.followers().attach(user2))
-      })
+      message = await factories.comment({
+        post_id: thread.id,
+        user_id: user2.id
+      }).save()
+
+      await post.addFollowers([user2.id])
+      await thread.addFollowers([user.id, user2.id])
     })
 
     beforeEach(() => {
@@ -625,10 +623,13 @@ describe('makeMutations', () => {
 })
 
 describe('makeQueries', () => {
-  let queries
+  let queries, user
 
-  before(() => {
-    queries = makeQueries('10', spy(() => Promise.resolve({})), spy(() => Promise.resolve([])))
+  before(async () => {
+    user = await factories.user().save()
+    const fetchOne = spy(() => Promise.resolve({}))
+    const fetchMany = spy(() => Promise.resolve([]))
+    queries = makeQueries(user.id, fetchOne, fetchMany)
   })
 
   describe('communityExists', () => {
@@ -658,7 +659,7 @@ describe('makeQueries', () => {
     it('resets new notification count if requested', () => {
       return queries.notifications(null, {resetCount: true})
       .then(() => {
-        expect(User.resetNewNotificationCount).to.have.been.called.with('10')
+        expect(User.resetNewNotificationCount).to.have.been.called.with(user.id)
       })
     })
 
@@ -667,6 +668,26 @@ describe('makeQueries', () => {
       .then(() => {
         expect(User.resetNewNotificationCount).not.to.have.been.called()
       })
+    })
+  })
+
+  describe('community', () => {
+    let community
+
+    beforeEach(async () => {
+      community = await factories.community().save()
+      await community.addGroupMembers([user])
+    })
+
+    it('updates last viewed time', async () => {
+      await queries.community(null, {
+        id: community.id,
+        updateLastViewed: true
+      })
+
+      const membership = await GroupMembership.forPair(user, community).fetch()
+      expect(new Date(membership.getSetting('lastReadAt')).getTime())
+      .to.be.closeTo(new Date().getTime(), 2000)
     })
   })
 })

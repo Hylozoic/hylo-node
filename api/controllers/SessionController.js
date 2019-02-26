@@ -188,29 +188,32 @@ module.exports = {
     res.ok({})
   },
 
-  createWithToken: function (req, res) {
-    var nextUrl = req.param('n') || Frontend.Route.userSettings() + '?expand=password'
-
-    return User.find(req.param('u')).then(function (user) {
-      if (!user) return res.status(422).send('No user id')
-
-      return Promise.join(user, user.checkToken(req.param('t')))
-    })
-    .spread((user, match) => {
+  createWithToken: async function (req, res) {
+    // Web links will go directly to the server and redirects from here,
+    // Native does a POST as an API call and this should not redirect
+    const shouldRedirect = req.method === 'GET'
+    const nextUrl = req.param('n') || Frontend.Route.evo.passwordSetting()
+    try {
+      const user = await User.find(req.param('u'))
+      if (!user) return res.status(422).send('Link expired')
+      const match = await user.checkToken(req.param('t'))
       if (match) {
         UserSession.login(req, user, 'password')
-        return res.redirect(nextUrl)
-      }
-
-      if (req.param('n')) {
-        // still redirect, to give the user a chance to log in manually
-        res.redirect(nextUrl)
+        return shouldRedirect
+          ? res.redirect(nextUrl)
+          : res.ok({success: true})
       } else {
-        res.status(422).send("Token doesn't match")
+        // still redirect, to give the user a chance to log in manually
+        // if a specific URL other than the default was the entry point
+        return shouldRedirect && req.param('n')
+          ? res.redirect(nextUrl)
+          : res.status(422).send('Link expired')
       }
-    })
-    .catch(res.serverError)
+    } catch (e) {
+      return res.serverError
+    }
   },
+
   // these are here for testing
   findUser,
   upsertLinkedAccount

@@ -18,7 +18,7 @@ const defaults = {
   connection: {
     host: url.hostname,
     port: url.port,
-    user: user,
+    user: user || 'postgres',
     password: password,
     database: url.pathname.substring(1)
   },
@@ -32,5 +32,35 @@ module.exports = {
   development: defaults,
   dummy: Object.assign({}, defaults, { seeds: { directory: './seeds/dummy' } }),
   staging: defaults,
-  production: merge({connection: {ssl: true}}, defaults)
+  production: merge({connection: {ssl: true}}, defaults),
+  docker: Object.assign({},
+    defaults,
+    {
+      connection: Object.assign({},
+        defaults.connection,
+        { user: 'hylo', password: 'hylo', port: '5300' }
+      )
+    }
+  ),
+  createUpdateTrigger: table => `
+    CREATE TRIGGER ${table}_updated_at
+    BEFORE UPDATE ON ${table}
+    FOR EACH ROW
+    EXECUTE PROCEDURE on_update_timestamp();
+  `,
+  dropUpdateTrigger: table => `
+    DROP TRIGGER IF EXISTS ${table}_updated_at ON ${table}
+  `,
+  createUpdateFunction: () => `
+    CREATE OR REPLACE FUNCTION on_update_timestamp()
+    RETURNS trigger AS $$
+    BEGIN
+      NEW.updated_at = now();
+      RETURN NEW;
+    END;
+    $$ language 'plpgsql';
+  `,
+  dropUpdateFunction: () => `
+    DROP FUNCTION IF EXISTS on_update_timestamp()
+  `
 }

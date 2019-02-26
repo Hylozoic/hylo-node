@@ -3,33 +3,32 @@
 import decode from 'ent/decode'
 import truncate from 'trunc-html'
 import { parse } from 'url'
-import { compact, some, sum } from 'lodash/fp'
+import { compact, some, sum, uniq } from 'lodash/fp'
 
-export const notifyAboutMessage = ({commentId}) =>
-  Comment.find(commentId, {withRelated: [
-    'post.followers', 'post.lastReads', 'media'
-  ]})
-  .then(comment => {
-    const { user_id, post_id, text } = comment.attributes
-    const { followers, lastReads } = comment.relations.post.relations
-    const recipients = followers.filter(u => u.id !== user_id)
-    const user = followers.find(u => u.id === user_id)
-    const alert = comment.relations.media.length !== 0
-      ? `${user.get('name')} sent an image`
-      : `${user.get('name')}: ${decode(truncate(text, 140).text).trim()}`
-    const path = parse(Frontend.Route.thread({id: post_id})).path
+export async function notifyAboutMessage ({ commentId }) {
+  const comment = await Comment.find(commentId, {withRelated: ['media']})
+  const post = await Post.find(comment.get('post_id'))
+  const followers = await post.followersWithPivots().fetch()
 
-    return Promise.map(recipients, user => {
-      // don't notify if the user has read the thread recently and respect the
-      // dm_notifications setting.
-      if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Push)) return
+  const { user_id, post_id, text } = comment.attributes
+  const recipients = followers.filter(u => u.id !== user_id)
+  const user = followers.find(u => u.id === user_id)
+  const alert = comment.relations.media.length !== 0
+    ? `${user.get('name')} sent an image`
+    : `${user.get('name')}: ${decode(truncate(text, 140).text).trim()}`
+  const path = parse(Frontend.Route.thread({id: post_id})).path
 
-      const lr = lastReads.find(r => r.get('user_id') === user.id)
-      if (!lr || comment.get('created_at') > lr.get('last_read_at')) {
-        return user.sendPushNotification(alert, path)
-      }
-    })
+  return Promise.map(recipients, async user => {
+    // don't notify if the user has read the thread recently and respect the
+    // dm_notifications setting.
+    if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Push)) return
+
+    const lastReadAt = user.pivot.getSetting('lastReadAt')
+    if (!lastReadAt || comment.get('created_at') > new Date(lastReadAt)) {
+      return user.sendPushNotification(alert, path)
+    }
   })
+}
 
 export const sendDigests = () => {
   const redis = RedisClient.create()
@@ -42,48 +41,63 @@ export const sendDigests = () => {
   .then(time =>
     Post.where('updated_at', '>', time)
     .fetchAll({withRelated: [
-      'followers',
-      'lastReads',
       {comments: q => {
         q.where('created_at', '>', time)
         q.orderBy('created_at', 'asc')
       }},
+      'user',
       'comments.user',
       'comments.media'
     ]}))
-  .then(posts => Promise.all(posts.map(post => {
-    const { comments, followers, lastReads } = post.relations
+  .then(posts => Promise.all(posts.map(async post => {
+    const { comments } = post.relations
     if (comments.length === 0) return []
+
+    const followers = await post.followersWithPivots().fetch()
 
     return Promise.map(followers.models, user => {
       // select comments not written by this user and newer than user's last
       // read time.
-      const r = lastReads.find(l => l.get('user_id') === user.id)
+      let lastReadAt = user.pivot.getSetting('lastReadAt')
+      if (lastReadAt) lastReadAt = new Date(lastReadAt)
+
       const filtered = comments.filter(c =>
-        c.get('created_at') > (r ? r.get('last_read_at') : 0) &&
+        c.get('created_at') > (lastReadAt || 0) &&
         c.get('user_id') !== user.id)
 
       if (filtered.length === 0) return
 
+      const presentComment = comment => {
+        const presented = {
+          name: comment.relations.user.get('name'),
+          avatar_url: comment.relations.user.get('avatar_url')
+        }
+        return comment.relations.media.length !== 0
+          ? Object.assign({}, presented, {image: comment.relations.media.first().pick('url', 'thumbnail_url')})
+          : Object.assign({}, presented, {text: comment.get('text')})
+      }
+
       if (post.get('type') === Post.Type.THREAD) {
         if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Email)) return
 
-        // here, we assume that all of the messages were sent by 1 other person,
-        // so this will have to change when we support group messaging
-        const other = filtered[0].relations.user
+        const others = filtered.map(comment => comment.relations.user)
 
-        const presentMessage = comment =>
-          comment.relations.media.length !== 0
-          ? {image: comment.relations.media.first().pick('url', 'thumbnail_url')}
-          : comment.get('text')
+        const otherNames = uniq(others.map(other => other.get('name')))
+
+        const otherAvatarUrls = others.map(other => other.get('avatar_url'))
+
+        var participantNames = otherNames.slice(0, otherNames.length - 1).join(', ') +
+        ' & ' + otherNames[otherNames.length - 1]
 
         return Email.sendMessageDigest({
           email: user.get('email'),
           data: {
-            other_person_avatar_url: other.get('avatar_url'),
-            other_person_name: other.get('name'),
+            count: filtered.length,
+            participant_avatars: otherAvatarUrls[0],
+            participant_names: participantNames,
+            other_names: otherNames,
             thread_url: Frontend.Route.thread(post),
-            messages: filtered.map(presentMessage)
+            messages: filtered.map(presentComment)
           },
           sender: {
             reply_to: Email.postReplyAddress(post.id, user.id)
@@ -92,18 +106,6 @@ export const sendDigests = () => {
       } else {
         if (!user.enabledNotification(Notification.TYPE.Comment, Notification.MEDIUM.Email)) return
 
-        const presentComment = comment => {
-          const attrs = {
-            text: RichText.qualifyLinks(comment.get('text')),
-            user: comment.relations.user.pick('name', 'avatar_url'),
-            url: Frontend.Route.post(post) + `#comment-${comment.id}`
-          }
-          if (comment.relations.media.length !== 0) {
-            attrs.image = comment.relations.media.first().pick('url', 'thumbnail_url')
-          }
-          return attrs
-        }
-
         const commentData = comments.map(presentComment)
         const hasMention = ({ text }) =>
           RichText.getUserMentions(text).includes(user.id)
@@ -111,8 +113,10 @@ export const sendDigests = () => {
         return Email.sendCommentDigest({
           email: user.get('email'),
           data: {
+            count: commentData.length,
             post_title: truncate(post.get('name'), 140).text,
-            post_url: Frontend.Route.post(post),
+            post_creator_avatar_url: post.relations.user.get('avatar_url'),
+            thread_url: Frontend.Route.post(post),
             comments: commentData,
             subject_prefix: some(hasMention, commentData)
               ? 'You were mentioned in'
@@ -130,4 +134,7 @@ export const sendDigests = () => {
   .then(sum)
 }
 
+// we keep track of the last time we sent comment digests in Redis, so that the
+// next time we send them, we can exclude any comments that were created before
+// the last send.
 sendDigests.REDIS_TIMESTAMP_KEY = 'Comment.sendDigests.lastSentAt'

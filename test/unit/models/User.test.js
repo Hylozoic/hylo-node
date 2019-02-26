@@ -1,6 +1,8 @@
-/* globals LastRead */
-require('../../setup')
+/* eslint-disable no-unused-expressions */
+
+import '../../setup'
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import factories from '../../setup/factories'
 import { wait } from '../../setup/helpers'
 import { times } from 'lodash'
@@ -56,8 +58,8 @@ describe('User', function () {
       community2.save()
     )
     .then(() => Promise.join(
-        cat.joinCommunity(community1),
-        cat.joinCommunity(community2)
+      cat.joinCommunity(community1),
+      cat.joinCommunity(community2)
     ))
     .then(() => cat.communities().fetch())
     .then(function (communities) {
@@ -68,15 +70,21 @@ describe('User', function () {
       expect(names[0]).to.equal('House')
       expect(names[1]).to.equal('Yard')
     })
+    .then(() => GroupMembership.forPair(cat, community1).fetch())
+    .then(membership => {
+      expect(membership).to.exist
+      const settings = membership.get('settings')
+      expect(settings.sendEmail).to.equal(true)
+      expect(settings.sendPushNotifications).to.equal(true)
+    })
   })
 
   it('can become moderator', function () {
     var street = new Community({name: 'Street', slug: 'street'})
 
     return street.save()
-    .then(() => cat.joinCommunity(street))
-    .then(() => Membership.setModeratorRole(cat.id, street.id))
-    .then(() => cat.memberships().query({where: {community_id: street.id}}).fetchOne())
+    .then(() => cat.joinCommunity(street, GroupMembership.Role.MODERATOR))
+    .then(() => GroupMembership.forPair(cat, street).fetch())
     .then(membership => {
       expect(membership).to.exist
       expect(membership.get('role')).to.equal(1)
@@ -96,6 +104,33 @@ describe('User', function () {
 
       user.setSanely({twitter_name: ' '})
       expect(user.get('twitter_name')).to.be.null
+    })
+
+    it("doesn't add url, facebook_url or linkedin_url if not provided", function () {
+      var user = new User()
+
+      user.setSanely({})
+
+      expect(user.get('url')).to.equal(undefined)
+      expect(user.get('facebook_url')).to.equal(undefined)
+      expect(user.get('linkedin_url')).to.equal(undefined)
+    })
+
+    it('adds protocol to url, facebook_url and linkedin_url', function () {
+      var user = new User()
+
+      user.setSanely({
+        url: 'myawesomesite.com',
+        facebook_url: 'www.facebook.com/user/123',
+        linkedin_url: 'linkedin.com/user/123'
+      })
+
+      expect(user.get('url')).to.equal('https://myawesomesite.com')
+      expect(user.get('facebook_url')).to.equal('https://www.facebook.com/user/123')
+      expect(user.get('linkedin_url')).to.equal('https://linkedin.com/user/123')
+
+      user.setSanely({linkedin_url: 'http://linkedin.com/user/123'})
+      expect(user.get('linkedin_url')).to.equal('http://linkedin.com/user/123')
     })
 
     it('preserves existing settings keys', () => {
@@ -217,6 +252,8 @@ describe('User', function () {
         expect(user.get('avatar_url')).to.equal(User.gravatar('foo@bar.com'))
         expect(user.get('created_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
         expect(user.get('settings').digest_frequency).to.equal('daily')
+        expect(user.get('settings').dm_notifications).to.equal('both')
+        expect(user.get('settings').comment_notifications).to.equal('both')
 
         return Promise.join(
           LinkedAccount.where({user_id: user.id}).fetch().then(function (account) {
@@ -224,9 +261,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('password')
             expect(bcrypt.compareSync('password!', account.get('provider_user_id'))).to.be.true
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -251,9 +287,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('google')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -286,9 +321,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('facebook')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -324,9 +358,8 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('linkedin')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          Membership.find(user.id, community.id).then(function (membership) {
-            expect(membership).to.exist
-          })
+          GroupMembership.forPair(user, community).fetch()
+          .then(membership => expect(membership).to.exist)
         )
       })
     })
@@ -351,26 +384,24 @@ describe('User', function () {
   describe('.unseenThreadCount', () => {
     var doge, post, post2
 
-    before(() => {
+    before(async () => {
       doge = factories.user()
       ;[ post, post2 ] = times(2, () => factories.post({type: Post.Type.THREAD}))
 
-      return doge.save()
-      .then(() => Promise.map([post, post2], p =>
-        p.save()
-        .then(() => Follow.create(cat.id, p.id))
-        .then(() => Follow.create(doge.id, p.id))))
+      await doge.save()
+      return Promise.map([post, post2], p =>
+        p.save().then(() => p.addFollowers([cat.id, doge.id])))
     })
 
-    it('works as expected', function () {
+    it('works as expected', async function () {
       this.timeout(5000)
 
-      const addMessages = (p, num = 1) =>
+      const addMessages = (p, num = 1, creator = doge) =>
         wait(100)
         .then(() => Promise.all(times(num, () =>
           Comment.forge({
             post_id: p.id,
-            user_id: doge.id,
+            user_id: creator.id,
             text: 'arf',
             active: true
           }).save())))
@@ -379,34 +410,36 @@ describe('User', function () {
           commentId: comments.slice(-1)[0].id
         }))
 
-      return User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
+      const n = await User.unseenThreadCount(cat.id)
+      expect(n).to.equal(0)
 
       // four messages but two threads
-      .then(() => addMessages(post, 2))
-      .then(() => addMessages(post2, 2))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2)))
-      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      await addMessages(post, 2)
+      await addMessages(post2, 2)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2))
+      await User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(0))
 
       // mark one thread as read
-      .then(() => LastRead.findOrCreate(cat.id, post.id))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1)))
-      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      await post.markAsRead(cat.id)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1))
 
       // another new message
-      .then(() => addMessages(post))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2)))
+      await addMessages(post)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(2))
 
       // dropdown was opened
-      .then(() => {
-        cat.addSetting({last_viewed_messages_at: new Date()})
-        return cat.save()
-      })
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0)))
+      await cat.addSetting({last_viewed_messages_at: new Date()}, true)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
 
       // new message after dropdown was opened
-      .then(() => addMessages(post2))
-      .then(() => User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1)))
-      .then(() => User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)))
+      await addMessages(post2)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(1))
+
+      // cat responds
+      await addMessages(post, 2, cat)
+      await addMessages(post2, 2, cat)
+      await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
+      await User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2))
     })
   })
 
@@ -433,6 +466,42 @@ describe('User', function () {
   describe('.gravatar', () => {
     it('handles a blank email', () => {
       expect(User.gravatar(null)).to.equal('https://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e?d=mm&s=140')
+    })
+  })
+
+  describe('#communitiesSharedWithUser', () => {
+    it('returns shared', async () => {
+      const user1 = await factories.user().save()
+      const user2 = await factories.user().save()
+      const community1 = await factories.community().save()
+      await community1.createGroup()
+      const community2 = await factories.community().save()
+      await community2.createGroup()
+      const community3 = await factories.community().save()
+      await community3.createGroup()
+      const community4 = await factories.community().save()
+      await community4.createGroup()
+      await Promise.join(
+        user1.joinCommunity(community1),
+        user1.joinCommunity(community2),
+        user1.joinCommunity(community3),
+        user2.joinCommunity(community2),
+        user2.joinCommunity(community3),
+        user2.joinCommunity(community4))
+      const sharedCommunities = await user1.communitiesSharedWithUser(user2)
+      expect(sharedCommunities.length).to.equal(2)
+      expect(sharedCommunities.map(c => c.id).sort()).to.deep.equal([community2.id, community3.id].sort())
+    })
+  })
+
+  describe('#intercomHash', () => {
+    it('returns an HMAC', async () => {
+      const user = await factories.user().save()
+      process.env.INTERCOM_KEY = '12345'
+      const hash = crypto.createHmac('sha256', process.env.INTERCOM_KEY)
+      .update(user.id)
+      .digest('hex')
+      expect(user.intercomHash()).to.equal(hash)
     })
   })
 })

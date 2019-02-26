@@ -3,9 +3,11 @@ import {
   commentFilter,
   communityTopicFilter,
   makeFilterToggle,
-  sharedCommunityMembership,
+  membershipFilter,
+  personFilter,
   sharedNetworkMembership,
-  activePost
+  activePost,
+  messageFilter
 } from './filters'
 import { myCommunityIds } from '../models/util/queryFilters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
@@ -15,6 +17,7 @@ import {
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
+import { isFollowing } from '../models/group/queryUtils'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -42,7 +45,8 @@ export default async function makeModels (userId, isAdmin) {
         'bio',
         'updated_at',
         'tagline',
-        'new_notification_count'
+        'new_notification_count',
+        'intercomHash'
       ],
       relations: [
         'communities',
@@ -52,25 +56,30 @@ export default async function makeModels (userId, isAdmin) {
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
+        blockedUsers: u => u.blockedUsers().fetch(),
         isAdmin: () => isAdmin || false,
         settings: u => mapKeys(camelCase, u.get('settings'))
       }
     },
 
     Membership: {
-      model: Membership,
+      model: GroupMembership,
       attributes: [
         'created_at'
       ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
         lastViewedAt: m =>
-          m.get('user_id') === userId ? m.get('last_viewed_at') : null,
+          m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
-          m.get('user_id') === userId ? m.get('new_post_count') : null
+          m.get('user_id') === userId ? m.get('new_post_count') : null,
+        community: m => m.groupData().fetch(),
+        hasModeratorRole: async m => {
+          const community = await m.groupData().fetch()
+          return GroupMembership.hasModeratorRole(userId, community)
+        }
       },
-      relations: ['community'],
-      filter: nonAdminFilter(sharedCommunityMembership('communities_users', userId))
+      filter: nonAdminFilter(membershipFilter(userId))
     },
 
     Person: {
@@ -97,7 +106,7 @@ export default async function makeModels (userId, isAdmin) {
         {skills: {querySet: true}},
         {votes: {querySet: true}}
       ],
-      filter: nonAdminFilter(sharedCommunityMembership('users', userId)),
+      filter: nonAdminFilter(personFilter(userId)),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
         searchQuerySet('users', {
@@ -118,14 +127,16 @@ export default async function makeModels (userId, isAdmin) {
         'fulfilled_at',
         'starts_at',
         'ends_at',
-        'location'
+        'location',
+        'announcement'
       ],
       getters: {
         title: p => p.get('name'),
         details: p => p.get('description'),
+        detailsText: p => p.getDetailsText(),
         public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
         commenters: (p, { first }) => p.getCommenters(first, userId),
-        commentersTotal: p => p.getCommentersTotal(),
+        commentersTotal: p => p.getCommentersTotal(userId),
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
@@ -136,15 +147,17 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         {user: {alias: 'creator'}},
         'followers',
+        {members: {querySet: true}},
         'linkPreview',
         'postMemberships',
         {media: {
           alias: 'attachments',
           arguments: ({ type }) => [type]
-        }}
+        }},
+        {tags: {alias: 'topics'}}
       ],
       filter: flow(
-        activePost,
+        activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
@@ -169,7 +182,9 @@ export default async function makeModels (userId, isAdmin) {
         'banner_url',
         'num_members',
         'postCount',
-        'location'
+        'location',
+        'hidden',
+        'allow_community_invites'
       ],
       relations: [
         'network',
@@ -215,11 +230,8 @@ export default async function makeModels (userId, isAdmin) {
         feedItems: (c, args) => c.feedItems(args),
         pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
         invitePath: c =>
-          Membership.hasModeratorRole(userId, c.id)
-          .then(isModerator => {
-            if (!isModerator) return null
-            return Frontend.Route.invitePath(c)
-          })
+          GroupMembership.hasModeratorRole(userId, c)
+          .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
       fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
@@ -231,6 +243,15 @@ export default async function makeModels (userId, isAdmin) {
           autocomplete,
           sort: sortBy
         })
+    },
+
+    Invitation: {
+      model: Invitation,
+      attributes: [
+        'email',
+        'created_at',
+        'last_sent_at'
+      ]
     },
 
     Comment: {
@@ -273,20 +294,19 @@ export default async function makeModels (userId, isAdmin) {
         {followers: {alias: 'participants'}},
         {comments: {alias: 'messages', typename: 'Message', querySet: true}}
       ],
-      filter: nonAdminFilter(relation => relation.query(q => {
+      filter: relation => relation.query(q =>
         q.where('posts.id', 'in',
-          Follow.query().select('post_id')
-          .where('user_id', userId))
-      }))
+          Group.pluckIdsForMember(userId, Post, isFollowing)))
     },
 
     Message: {
       model: Comment,
       attributes: ['created_at'],
       relations: [
-        {post: {alias: 'messageThread'}},
+        {post: {alias: 'messageThread', typename: 'MessageThread'}},
         {user: {alias: 'creator'}}
-      ]
+      ],
+      filter: messageFilter(userId)
     },
 
     Vote: {
@@ -352,9 +372,17 @@ export default async function makeModels (userId, isAdmin) {
       fetchMany: ({ first, order, offset = 0 }) =>
         Notification.where({
           'medium': Notification.MEDIUM.InApp,
-          'user_id': userId
+          'notifications.user_id': userId
         })
-        .orderBy('id', order)
+        .orderBy('id', order),
+      filter: (relation) => relation.query(q => {
+        q.join('activities', 'activities.id', 'notifications.activity_id')
+        q.join('posts', 'posts.id', 'activities.post_id')
+        q.join('comments', 'comments.id', 'activities.comment_id')
+        q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
+        q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+        q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      })
     },
 
     Activity: {
@@ -380,7 +408,13 @@ export default async function makeModels (userId, isAdmin) {
       ],
       relations: [ {otherUser: {alias: 'person'}} ],
       fetchMany: () => UserConnection,
-      filter: relation => relation.query(q => q.where('user_id', userId))
+      filter: relation => {
+        return relation.query(q => {
+          q.where('other_user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+          q.where('user_id', userId)
+          q.orderBy('created_at', 'desc')
+        })
+      }
     },
 
     Network: {

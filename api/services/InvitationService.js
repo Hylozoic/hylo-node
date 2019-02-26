@@ -8,7 +8,7 @@ module.exports = {
     .then(invitation => {
       if (!invitation) throw new Error('Invitation not found')
       const { community } = invitation.relations
-      return Membership.hasModeratorRole(userId, community.id)
+      return GroupMembership.hasModeratorRole(userId, community)
     })
   },
 
@@ -70,7 +70,7 @@ module.exports = {
     return Promise.join(
       userIds && User.where('id', 'in', userIds).fetchAll(),
       Community.find(communityId),
-      tagName && Tag.find(tagName),
+      tagName && Tag.find({ name: tagName }),
       (users, community, tag) => {
         let concatenatedEmails = emails.concat(map(u => u.get('email'), get('models', users)))
 
@@ -93,9 +93,18 @@ module.exports = {
             opts.subject = subject
           }
 
-          return Queue.classMethod('Invitation', 'createAndSend', opts)
-          .then(() => ({email}))
-          .catch(err => ({email, error: err.message}))
+          return Invitation.create(opts)
+            .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
+            .then(invitation => {
+              return Queue.classMethod('Invitation', 'createAndSend', {invitation})
+                .then(() => ({
+                  email,
+                  id: invitation.id,
+                  createdAt: invitation.created_at,
+                  lastSentAt: invitation.last_sent_at
+                }))
+                .catch(err => ({email, error: err.message}))
+            })
         })
       })
   },
@@ -155,28 +164,22 @@ module.exports = {
     }
   },
 
-  use: (userId, token, accessCode) => {
+  async use (userId, token, accessCode) {
+    const user = await User.find(userId)
     if (accessCode) {
-      var community
       return Community.queryByAccessCode(accessCode)
       .fetch()
-      .tap(c => { community = c })
-      .then(() => !!community && Membership.create(userId, community.id))
-      .catch(err => {
-        if (err.message && err.message.includes('duplicate key value')) {
-          // preexisting = true
-          return true
-        } else {
+      .then(community => {
+        return GroupMembership.forPair(user, community, {includeInactive: true}).fetch()
+        .then(existingMembership => {
+          if (existingMembership) return existingMembership.get('active')
+              ? existingMembership
+              : existingMembership.save({active: true}, {patch: true}).then(membership => membership)
+          if (!!community) return user.joinCommunity(community).then(membership => membership)
+        })
+        .catch(err => {
           throw new Error(err.message)
-        }
-      })
-      // we get here if the membership was created successfully, or it already existed
-      .then(ok => ok && Membership.find(userId, community.id, {includeInactive: true}))
-      .then(membership => {
-        if (membership && !membership.get('active')) {
-          return membership.save({active: true}, {patch: true})
-        }
-        return membership
+        })
       })
     }
 

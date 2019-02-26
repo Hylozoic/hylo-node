@@ -9,7 +9,7 @@ export default function createPost (userId, params) {
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'tag', 'tagDescriptions', 'imageUrls', 'fileUrls'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'imageUrls', 'fileUrls', 'announcement'),
       {children: params.requests, transacting}
     )))))
 }
@@ -25,7 +25,7 @@ export function afterCreatingPost (post, opts) {
     opts.community_ids && post.communities().attach(uniq(opts.community_ids), trxOpts),
 
     // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, userId, trxOpts),
+    post.addFollowers(followerIds, trxOpts),
 
     // Add creator to RSVPs
     post.get('type') === 'event' &&
@@ -55,53 +55,62 @@ export function afterCreatingPost (post, opts) {
 
     opts.children && updateChildren(post, opts.children, trx),
 
-    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx))
+    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx)),
+
   ]))
-  .then(() => Tag.updateForPost(post, opts.tag, opts.tagDescriptions, userId, trx))
+  .then(() => post.updateProjectMembers(opts.memberIds || [], trxOpts))
+  .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndCommunities(post, trx))
   .then(() => updateNetworkMemberships(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
 
-function updateTagsAndCommunities (post, trx) {
-  return post.load([
+async function updateTagsAndCommunities (post, trx) {
+  await post.load([
     'communities', 'linkPreview', 'networks', 'tags', 'user'
   ], {transacting: trx})
-  .then(() => {
-    const { tags, communities } = post.relations
-    const bumpCounts = [
-      TagFollow.query(q => {
-        q.whereIn('tag_id', tags.map('id'))
-        q.whereIn('community_id', communities.map('id'))
-        q.whereNot('user_id', post.get('user_id'))
-      }),
-      Membership.query(q => {
-        q.whereIn('community_id', communities.map('id'))
-        q.where('active', true)
-        q.whereNot('user_id', post.get('user_id'))
-      })
-    ].map(group => group.query().increment('new_post_count').transacting(trx))
 
-    // NOTE: the payload object is released to many users, so it cannot be
-    // subject to the usual permissions checks (which communities/networks
-    // the user is allowed to view, etc). This means we either omit the
-    // information, or (as below) we only post community data for the socket
-    // room it's being pushed to.
-    // TODO: eventually we will need to push to socket rooms for networks.
-    const payload = post.getNewPostSocketPayload()
-    const notifySockets = payload.communities.map(c => {
-      pushToSockets(
-        communityRoom(c.id),
-        'newPost',
-        Object.assign({}, payload, { communities: [ c ] })
-      )
-    })
+  const { tags, communities } = post.relations
 
-    const updateCommunityTags = CommunityTag.query(q => {
-      q.whereIn('tag_id', tags.map('id'))
-    }).query().update({updated_at: new Date()}).transacting(trx)
-
-    return Promise.all(bumpCounts.concat([notifySockets, updateCommunityTags]))
+  // NOTE: the payload object is released to many users, so it cannot be
+  // subject to the usual permissions checks (which communities/networks
+  // the user is allowed to view, etc). This means we either omit the
+  // information, or (as below) we only post community data for the socket
+  // room it's being pushed to.
+  // TODO: eventually we will need to push to socket rooms for networks.
+  const payload = post.getNewPostSocketPayload()
+  const notifySockets = payload.communities.map(c => {
+    pushToSockets(
+      communityRoom(c.id),
+      'newPost',
+      Object.assign({}, payload, { communities: [ c ] })
+    )
   })
+
+  const updateCommunityTags = CommunityTag.query(q => {
+    q.whereIn('tag_id', tags.map('id'))
+  }).query().update({updated_at: new Date()}).transacting(trx)
+
+  return Promise.all([
+    notifySockets,
+    updateCommunityTags,
+
+    TagFollow.query(q => {
+      q.whereIn('tag_id', tags.map('id'))
+      q.whereIn('community_id', communities.map('id'))
+      q.whereNot('user_id', post.get('user_id'))
+    }).query().increment('new_post_count').transacting(trx),
+
+    GroupMembership.query(q => {
+      const groupIds = Group.query(q2 => {
+        q2.whereIn('group_data_id', communities.map('id'))
+        q2.where('group_data_type', Group.DataType.COMMUNITY)
+      }).query().pluck('id')
+
+      q.whereIn('group_id', groupIds)
+      q.whereNot('group_memberships.user_id', post.get('user_id'))
+      q.where('group_memberships.active', true)
+    }).query().increment('new_post_count').transacting(trx)
+  ])
 }

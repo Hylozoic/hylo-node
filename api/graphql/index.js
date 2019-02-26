@@ -5,20 +5,31 @@ import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   addCommunityToNetwork,
-  addNetworkModeratorRole,
   addModerator,
+  addNetworkModeratorRole,
+  addPeopleToProjectRole,
   addSkill,
+  allowCommunityInvites,
+  blockUser,
   createComment,
   createCommunity,
   createInvitation,
+  createMessage,
   createPost,
+  createProject,
+  createProjectRole,
+  createTopic,
   deleteComment,
+  deleteCommunityTopic,
   deletePost,
+  deleteProjectRole,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
   flagInappropriateContent,
+  joinProject,
   leaveCommunity,
+  leaveProject,
   markActivityRead,
   markAllActivitiesRead,
   pinPost,
@@ -33,8 +44,11 @@ import {
   removeSkill,
   resendInvitation,
   subscribe,
+  unblockUser,
   unlinkAccount,
+  updateComment,
   updateCommunity,
+  updateCommunityHiddenSetting,
   updateCommunityTopic,
   updateMe,
   updateMembership,
@@ -85,13 +99,19 @@ async function createSchema (userId, isAdmin) {
 export function makeQueries (userId, fetchOne, fetchMany) {
   return {
     me: () => fetchOne('Me', userId),
-    community: (root, { id, slug, updateLastViewed }) => { // you can specify id or slug, but not both
-      return fetchOne('Community', slug || id, slug ? 'slug' : 'id')
-        .tap(community => {
-          if (community && updateLastViewed) {
-            return Membership.updateLastViewedAt(userId, community.id)
+    community: async (root, { id, slug, updateLastViewed }) => {
+      // you can specify id or slug, but not both
+      const response = await fetchOne('Community', slug || id, slug ? 'slug' : 'id')
+      if (updateLastViewed) {
+        const community = await Community.find(id || slug)
+        if (community) {
+          const membership = await GroupMembership.forPair(userId, community).fetch()
+          if (membership) {
+            await membership.addSetting({lastReadAt: new Date()}, true)
           }
-        })
+        }
+      }
+      return response
     },
     communityExists: (root, { slug }) => {
       if (Community.isSlugValid(slug)) {
@@ -150,7 +170,14 @@ export function makeMutations (userId, isAdmin) {
     addNetworkModeratorRole: (root, { personId, networkId }) =>
       addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
 
+    addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
+      addPeopleToProjectRole(userId, peopleIds, projectRoleId),
+
     addSkill: (root, { name }) => addSkill(userId, name),
+
+    allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
+
+    blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
 
     createComment: (root, { data }) => createComment(userId, data),
 
@@ -159,16 +186,25 @@ export function makeMutations (userId, isAdmin) {
     createInvitation: (root, {communityId, data}) =>
       createInvitation(userId, communityId, data),
 
-    createMessage: (root, { data }) => {
-      data.postId = data.messageThreadId
-      return createComment(userId, data)
-    },
+    createMessage: (root, { data }) => createMessage(userId, data),
 
     createPost: (root, { data }) => createPost(userId, data),
 
+    createProject: (root, { data }) => createProject(userId, data),
+
+    createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
+
+    joinProject: (root, { id }) => joinProject(id, userId),
+
+    createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
+
     deleteComment: (root, { id }) => deleteComment(userId, id),
 
+    deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
+
     deletePost: (root, { id }) => deletePost(userId, id),
+
+    deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
 
     expireInvitation: (root, {invitationId}) =>
       expireInvitation(userId, invitationId),
@@ -182,6 +218,8 @@ export function makeMutations (userId, isAdmin) {
       flagInappropriateContent(userId, data),
 
     leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
+
+    leaveProject: (root, { id }) => leaveProject(id, userId),
 
     markActivityRead: (root, { id }) => markActivityRead(userId, id),
 
@@ -204,8 +242,8 @@ export function makeMutations (userId, isAdmin) {
     removeMember: (root, { personId, communityId }) =>
       removeMember(userId, personId, communityId),
 
-    removeModerator: (root, { personId, communityId }) =>
-      removeModerator(userId, personId, communityId),
+    removeModerator: (root, { personId, communityId, isRemoveFromCommunity }) =>
+      removeModerator(userId, personId, communityId, isRemoveFromCommunity),
 
     removeNetworkModeratorRole: (root, { personId, networkId }) =>
       removeNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
@@ -221,11 +259,16 @@ export function makeMutations (userId, isAdmin) {
     subscribe: (root, { communityId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, communityId, isSubscribing),
 
+    unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
+
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
 
     updateCommunitySettings: (root, { id, changes }) =>
       updateCommunity(userId, id, changes),
+
+    updateCommunityHiddenSetting: (root, { id, hidden }) =>
+      updateCommunityHiddenSetting({ userId, isAdmin }, id, hidden),
 
     updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
 
@@ -236,6 +279,7 @@ export function makeMutations (userId, isAdmin) {
     updateNetwork: (root, args) => updateNetwork({ userId, isAdmin }, args),
 
     updatePost: (root, args) => updatePost(userId, args),
+    updateComment: (root, args) => updateComment(userId, args),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
@@ -267,12 +311,7 @@ export const createRequestHandler = () =>
     return {
       schema,
       graphiql: true,
-      formatError: process.env.NODE_ENV === 'development' ? error => ({
-        message: error.message,
-        locations: error.locations,
-        stack: error.stack,
-        path: error.path
-      }) : null
+      formatError: process.env.NODE_ENV === 'development' ? logError : null
     }
   })
 
@@ -306,4 +345,15 @@ function getTypeForInstance (instance, models) {
   }
 
   return modelToTypeMap[instance.tableName]
+}
+
+function logError (error) {
+  console.error(error.stack)
+
+  return {
+    message: error.message,
+    locations: error.locations,
+    stack: error.stack,
+    path: error.path
+  }
 }

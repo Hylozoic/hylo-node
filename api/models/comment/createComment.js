@@ -3,10 +3,9 @@ import { difference, uniq } from 'lodash'
 import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 import { refineOne, refineMany } from '../util/relations'
 
-export default function createComment (commenterId, opts = {}) {
-  let { text, post, parentComment } = opts
+export default async function createComment (commenterId, opts = {}) {
+  let { text, post } = opts
   text = sanitize(text)
-  const isReplyToPost = !parentComment
 
   var attrs = {
     text: text,
@@ -18,53 +17,35 @@ export default function createComment (commenterId, opts = {}) {
     created_from: opts.created_from || null
   }
 
-  if (!isReplyToPost) {
-    attrs.comment_id = parentComment.id
-  }
+  var existingFollowers, isThread
+  const mentioned = RichText.getUserMentions(text)
 
-  return (isReplyToPost ? post.load('followers') : parentComment.load('followers'))
-  .then(() => {
-    var existingFollowers, isThread
-    const mentioned = RichText.getUserMentions(text)
+  existingFollowers = await post.followers().fetch().then(f => f.pluck('id'))
+  isThread = post.get('type') === Post.Type.THREAD
 
-    if (isReplyToPost) {
-      existingFollowers = post.relations.followers.pluck('id')
-      isThread = post.get('type') === Post.Type.THREAD
-    } else {
-      existingFollowers = parentComment.relations.followers.pluck('id')
-      isThread = false
-    }
+  const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
 
-    const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
+  return bookshelf.transaction(trx =>
+    new Comment(attrs).save(null, {transacting: trx})
+    .tap(createMedia(opts.imageUrl, trx)))
+  .tap(createOrUpdateConnections(commenterId, existingFollowers))
+  .tap(comment => post.addFollowers(newFollowers))
+  .tap(comment => Promise.all([
+    notifySockets(comment, post, isThread),
 
-    return bookshelf.transaction(trx =>
-      new Comment(attrs).save(null, {transacting: trx})
-      .tap(comment => Tag.updateForComment(comment, opts.tagDescriptions, commenterId, trx))
-      .tap(createMedia(opts.imageUrl, trx)))
-    .tap(createOrUpdateConnections(commenterId, existingFollowers))
-    .tap(comment => isReplyToPost
-      ? post.addFollowers(newFollowers, commenterId)
-      : Promise.join(
-          comment.addFollowers(newFollowers, commenterId),
-          parentComment.addFollowers(newFollowers, commenterId)
-        ))
-    .tap(comment => Promise.all([
-      isReplyToPost && notifySockets(comment, post, isThread),
+    (isThread
+      ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
+      : comment.createActivities()),
 
-      (isThread
-        ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
-        : comment.createActivities()),
-
-      Queue.classMethod('Post', 'updateFromNewComment', {
-        postId: post.id,
-        commentId: comment.id
-      })
-    ])
-    .then(() => comment))
-  })
+    Queue.classMethod('Post', 'updateFromNewComment', {
+      postId: post.id,
+      commentId: comment.id
+    })
+  ])
+  .then(() => comment))
 }
 
-const createMedia = (url, transacting) => comment =>
+export const createMedia = (url, transacting) => comment =>
   url && Media.create({
     comment_id: comment.id,
     url,
@@ -77,9 +58,9 @@ function notifySockets (comment, post, isThread) {
   return pushCommentToSockets(comment)
 }
 
-export function pushMessageToSockets (message, thread) {
-  const { followers } = thread.relations
-  const userIds = followers.pluck('id')
+export async function pushMessageToSockets (message, thread) {
+  const followers = await thread.followers().fetch().then(x => x.models)
+  const userIds = followers.map(x => x.id)
   const excludingSender = userIds.filter(id => id !== message.get('user_id'))
 
   let response = refineOne(message,

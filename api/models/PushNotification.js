@@ -8,26 +8,27 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Device)
   },
 
-  send: function (options) {
+  send: async function (options) {
     const platform = this.getPlatform()
     const alert = this.get('alert')
     const path = this.get('path')
     const badgeNo = this.get('badge_no')
 
-    return this.load('device')
-    .then(() => {
-      const { device } = this.relations
-      const deviceToken = device.get('token')
-      const playerId = device.get('player_id')
-      const disabled = !process.env.PUSH_NOTIFICATIONS_ENABLED && (
-        !process.env.PUSH_NOTIFICATIONS_TESTING_ENABLED || !device.get('tester')
-      )
+    await this.load('device')
+    const { device } = this.relations
+    const deviceToken = device.get('token')
+    const playerId = device.get('player_id')
+    const disabled = !process.env.PUSH_NOTIFICATIONS_ENABLED && (
+      !process.env.PUSH_NOTIFICATIONS_TESTING_ENABLED || !device.get('tester')
+    )
 
-      return this.save({sent_at: new Date().toISOString(), disabled}, options)
-      .then(pn => disabled || OneSignal.notify({
+    await this.save({sent_at: new Date().toISOString(), disabled}, options)
+    if (!disabled) {
+      await OneSignal.notify({
         platform, deviceToken, playerId, alert, path, badgeNo
-      }))
-    })
+      })
+    }
+    return this
   },
 
   getPlatform: function () {
@@ -66,6 +67,13 @@ module.exports = bookshelf.Model.extend({
     return version === 'mention'
       ? `${person} mentioned you in "${postName}"`
       : `${person} posted "${postName}" in ${community.get('name')}`
+  },
+
+  textForAnnouncement: function (post) {
+    const person = post.relations.user.get('name')
+    const postName = decode(post.get('name'))
+
+    return `${person} sent an announcement titled "${postName}"`
   },
 
   textForJoinRequest: function (community, actor) {

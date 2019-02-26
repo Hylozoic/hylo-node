@@ -39,15 +39,13 @@ describe('afterUpdatingPost', () => {
     .then(() => post.addFollowers([u1.id]))
   })
 
-  it('adds new followers if there are new mentions', () => {
+  it('adds new followers if there are new mentions', async () => {
     const description = `hello <a data-user-id="${u2.id}">person</a>`
-    return post.save({description}, {patch: true})
-    .then(() => afterUpdatingPost(post, {params: {}}))
-    .then(() => post.load('followers'))
-    .then(() => {
-      expect(post.relations.followers.pluck('id').sort())
-      .to.deep.equal([u1.id, u2.id].sort())
-    })
+    await post.save({description}, {patch: true})
+    await afterUpdatingPost(post, {params: {}})
+
+    const followers = await post.followers().fetch()
+    expect(followers.pluck('id').sort()).to.deep.equal([u1.id, u2.id].sort())
   })
 
   it('does not remove existing images if the imageUrls param is absent')

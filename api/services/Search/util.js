@@ -13,11 +13,11 @@ export const filterAndSortPosts = curry((opts, q) => {
     throw new Error(`Cannot sort by "${sortBy}"`)
   }
 
-  const { DISCUSSION, REQUEST, OFFER } = Post.Type
+  const { DISCUSSION, REQUEST, OFFER, PROJECT } = Post.Type
 
   if (!type || type === 'all' || type === 'all+welcome') {
     q.where(q2 =>
-      q2.where('posts.type', 'in', [DISCUSSION, REQUEST, OFFER])
+      q2.where('posts.type', 'in', [DISCUSSION, REQUEST, OFFER, PROJECT])
       .orWhere('posts.type', null))
   } else if (type === DISCUSSION) {
     q.where(q2 =>
@@ -74,7 +74,7 @@ export const filterAndSortUsers = curry(({ autocomplete, search, sortBy }, q) =>
   }
 
   if (sortBy === 'join') {
-    q.orderBy('communities_users.created_at', 'desc')
+    q.orderBy('group_memberships.created_at', 'desc')
   } else {
     q.orderBy(sortBy || 'name', 'asc')
   }
