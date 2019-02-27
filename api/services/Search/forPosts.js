@@ -31,7 +31,7 @@ export default function forPosts (opts) {
     }
 
     if (opts.type === 'event' && opts.filter === 'future') {
-      qb.whereRaw('(posts.starts_at > now())')
+      qb.whereRaw('(posts.start_time > now())')
     }
 
     if (opts.type === 'project' && opts.filter === 'mine') {

@@ -261,8 +261,6 @@ where `Me` is the currently logged-in user. For example, to load all posts:
       },
       commentsTotal,
       createdAt,
-      startsAt,
-      endsAt,
       fulfilledAt
     }
   }

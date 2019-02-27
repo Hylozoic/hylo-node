@@ -14,6 +14,10 @@ export default {
     return this.hasMany(EventInvitation, 'event_id')
   },
 
+  userEventInvitation: function (userId) {
+    return this.eventInvitations().query({where: {user_id: userId}}).fetchOne()
+  },
+
   removeEventInvitees: async function (userIds, opts) {
     return Promise.map(userIds, async userId => {
       const invitation = await EventInvitation.find({userId, eventId: this.id})

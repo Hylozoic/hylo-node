@@ -125,8 +125,8 @@ export default async function makeModels (userId, isAdmin) {
         'created_at',
         'updated_at',
         'fulfilled_at',
-        'starts_at',
-        'ends_at',
+        'end_time',
+        'start_time',
         'location',
         'announcement'
       ],
@@ -140,7 +140,10 @@ export default async function makeModels (userId, isAdmin) {
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
-        myVote: p => p.userVote(userId).then(v => !!v)
+        myVote: p => p.userVote(userId).then(v => !!v),
+        myEventResponse: p => 
+          p.userEventInvitation(userId)
+          .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
       },
       relations: [
         {comments: {querySet: true}},

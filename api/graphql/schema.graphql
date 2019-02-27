@@ -220,8 +220,8 @@ type Post {
   updatedAt: String
   public: Boolean
   fulfilledAt: String
-  startsAt: String
-  endsAt: String
+  startTime: String
+  endTime: String
   location: String
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
@@ -244,6 +244,7 @@ type Post {
   topics: [Topic],
   topicsTotal: Int
   announcement: Boolean
+  myEventResponse: String
 }
 
 type PostMembership {
@@ -464,8 +465,6 @@ input PostInput {
   communityIds: [String]
   linkPreviewId: String
   public: Boolean
-  startsAt: String
-  endsAt: String
   location: String
   imageUrls: [String]
   fileUrls: [String]

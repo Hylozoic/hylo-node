@@ -18,11 +18,15 @@ export default function updatePost (userId, id, params) {
         Post.Type.PROJECT,
         Post.Type.REQUEST,
         Post.Type.DISCUSSION,
+        Post.Type.EVENT,        
         null
       ]
       if (!updatableTypes.includes(post.get('type'))) {
         throw new Error("This post can't be modified")
       }
+
+      console.log('updating post with attrs', attrs)
+
       return post.save(attrs, {patch: true, transacting})
       .tap(updatedPost => afterUpdatingPost(updatedPost, {params, userId, transacting}))
     })))
