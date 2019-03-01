@@ -49,7 +49,8 @@ module.exports.cors = {
   *                                                                          *
   ***************************************************************************/
 
-  origin: process.env.CORS_ORIGIN || 'https://www.hylo.com',
+  origin: '*',
+  // process.env.CORS_ORIGIN || 'https://www.hylo.com',
 
   /***************************************************************************
   *                                                                          *

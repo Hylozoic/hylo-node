@@ -21,7 +21,7 @@ export default function (app) {
   app.use('/admin/kue', kueUI.app)
 
   app.use('/noo/graphql', cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: '*',
     methods: 'GET, POST, PUT, DELETE, OPTIONS, HEAD',
     credentials: true
   }))
