@@ -25,8 +25,6 @@ export default function updatePost (userId, id, params) {
         throw new Error("This post can't be modified")
       }
 
-      console.log('updating post with attrs', attrs)
-
       return post.save(attrs, {patch: true, transacting})
       .tap(updatedPost => afterUpdatingPost(updatedPost, {params, userId, transacting}))
     })))
@@ -35,7 +33,7 @@ export default function updatePost (userId, id, params) {
 export function afterUpdatingPost (post, opts) {
   const {
     params,
-    params: { requests, community_ids, topicNames, memberIds },
+    params: { requests, community_ids, topicNames, memberIds, eventInviteeIds },
     userId,
     transacting    
   } = opts
@@ -49,5 +47,6 @@ export function afterUpdatingPost (post, opts) {
     updateFollowers(post, transacting)
   ]))
   .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
+  .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))  
   .then(() => updateNetworkMemberships(post, transacting))
 }
