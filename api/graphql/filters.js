@@ -99,8 +99,11 @@ export function communityTopicFilter (userId, {
   communityId
 }) {
   return q => {
+    if (communityId) {
+      q.where('communities_tags.community_id', communityId)
+    }
+
     if (autocomplete) {
-      q.join('tags', 'tags.id', 'communities_tags.tag_id')
       q.whereRaw('tags.name ilike ?', autocomplete + '%')
     }
 
@@ -108,9 +111,6 @@ export function communityTopicFilter (userId, {
       q.join('tag_follows', 'tag_follows.tag_id', 'communities_tags.tag_id')
       q.where('tag_follows.user_id', userId)
       q.whereRaw('tag_follows.community_id = communities_tags.community_id')
-      if (communityId) {
-        q.where('tag_follows.community_id', communityId)
-      }
     }
   }
 }

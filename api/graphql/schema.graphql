@@ -50,8 +50,8 @@ type CommunityTopic {
   id: ID
   topic: Topic
   community: Community
-  postsTotal: Int
-  followersTotal: Int
+  postsTotal(communitySlug: String, networkSlug: String): Int
+  followersTotal(communitySlug: String, networkSlug: String): Int
   isSubscribed: Boolean
   newPostCount: Int
   updatedAt: String
@@ -67,11 +67,13 @@ type TopicQuerySet {
 type Topic {
   id: ID
   name: String
-  postsTotal: Int
-  followersTotal: Int
+  postsTotal(communitySlug: String, networkSlug: String): Int
+  followersTotal(communitySlug: String, networkSlug: String): Int
   communityTopics(
     first: Int,
     offset: Int
+    communitySlug: String,
+    networkSlug: String
   ): CommunityTopicQuerySet
 }
 
@@ -393,24 +395,26 @@ type Query {
     filter: String
   ): PersonQuerySet
   topic(id: ID, name: String): Topic
-  communityTopic(topicName: String, communitySlug: String): CommunityTopic
+  communityTopic(topicName: String): CommunityTopic
   topics(
-    first: Int,
-    offset: Int,
+    communitySlug: String,
+    networkSlug: String,
     autocomplete: String,
-    name: String
+    sortBy: String,
+    first: Int,
+    offset: Int
   ): TopicQuerySet
   connections(
     first: Int,
     offset: Int
   ): PersonConnectionQuerySet
   communityTopics(
-    first: Int,
+    autocomplete: String,
+    subscribed: Boolean,
     sortBy: String,
     order: String,
-    offset: Int,
-    autocomplete: String,
-    subscribed: Boolean
+    first: Int,
+    offset: Int
   ): CommunityTopicQuerySet
   search(
     term: String,

@@ -2,13 +2,17 @@ import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
 import { countTotal } from '../../lib/util/knex'
 import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
+import { myCommunityIds } from '../models/util/queryFilters'
 import { transform } from 'lodash'
 import { flatten, flow, uniq, get } from 'lodash/fp'
 
 module.exports = {
   forPosts,
+
   forUsers,
+
   forSkills: opts => Skill.search(opts),
+
   forCommunities: function (opts) {
     return Community.query(qb => {
       if (opts.communities) {
@@ -50,13 +54,23 @@ module.exports = {
 
   forTags: function (opts) {
     return Tag.query(q => {
-      if (opts.communities) {
-        q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
-        q.whereIn('communities_tags.community_id', opts.communities)
+      q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
+      q.join('communities', 'communities.id', '=', 'communities_tags.community_id')
+      q.where('communities.active', true)
+
+      if (opts.communitySlug) {
+        q.where('communities.id', '=', opts.communitySlug)
       }
+
+      if (opts.networkSlug) {
+        q.join('networks', 'networks.id', 'communities.network_id')
+        q.where('networks.slug', '=', opts.networkSlug)
+      }
+
       if (opts.name) {
         q.where('tags.name', opts.name)
       }
+
       if (opts.autocomplete) {
         q.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
       }

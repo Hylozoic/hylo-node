@@ -353,14 +353,17 @@ export default async function makeModels (userId, isAdmin) {
       model: Tag,
       attributes: ['name'],
       getters: {
-        postsTotal: t => Tag.taggedPostCount(t.id),
-        followersTotal: t => Tag.followersCount(t.id)
+        postsTotal: (t, opts = {}) => Tag.taggedPostCount(t.id, opts),
+        followersTotal: (t, opts = {}) => Tag.followersCount(t.id, opts)
       },
-      relations: [
-        {communityTags: {alias: 'communityTopics', querySet: true}}
-      ],
-      fetchMany: ({ first, offset = 0, name, autocomplete }) =>
-        searchQuerySet('tags', {limit: first, offset, name, autocomplete})
+      relations: [{
+        communityTags: {
+          alias: 'communityTopics',
+          querySet: true
+        }
+      }],
+      fetchMany: ({ communitySlug, networkSlug, name, autocomplete, first, offset = 0 }) =>
+        searchQuerySet('tags', { userId, communitySlug, networkSlug, name, autocomplete, limit: first, offset })
     },
 
     Notification: {
