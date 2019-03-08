@@ -353,8 +353,10 @@ export default async function makeModels (userId, isAdmin) {
       model: Tag,
       attributes: ['name'],
       getters: {
-        postsTotal: (t, opts = {}) => Tag.taggedPostCount(t.id, opts),
-        followersTotal: (t, opts = {}) => Tag.followersCount(t.id, opts)
+        postsTotal: (t, opts = {}) =>
+          Tag.taggedPostCount(t.id, Object.assign({}, opts, { userId })),
+        followersTotal: (t, opts = {}) =>
+          Tag.followersCount(t.id, Object.assign({}, opts, { userId }))
       },
       relations: [{
         communityTags: {

@@ -395,7 +395,10 @@ type Query {
     filter: String
   ): PersonQuerySet
   topic(id: ID, name: String): Topic
-  communityTopic(topicName: String): CommunityTopic
+  communityTopic(
+    communitySlug: String,
+    topicName: String
+  ): CommunityTopic
   topics(
     communitySlug: String,
     networkSlug: String,

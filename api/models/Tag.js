@@ -6,6 +6,7 @@ import {
   filter, omitBy, some, uniq
 } from 'lodash/fp'
 import { validateTopicName } from 'hylo-utils/validators'
+import { myCommunityIds } from './util/queryFilters'
 
 export const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w_-]+)/g
@@ -180,7 +181,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   taggedPostCount: (tagId, options = {}) => {
-    const { communitySlug, networkSlug } = options
+    const { userId, communitySlug, networkSlug } = options
     const q = PostTag.query()
 
     q.select(bookshelf.knex.raw('count(distinct posts_tags.post_id) AS count'))
@@ -192,6 +193,9 @@ module.exports = bookshelf.Model.extend({
     q.where('posts_tags.tag_id', tagId)
     q.where('posts.active', true)
     q.where('communities.active', true)
+    if (userId) {
+      q.where('communities.id', 'in', myCommunityIds(userId))
+    }
     if (networkSlug) {
       q.join('networks', 'networks.id', 'communities.network_id')
       q.where('networks.slug', networkSlug)
@@ -208,10 +212,14 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  followersCount: (tagId, { communityId, communitySlug, networkSlug }) => {
+  followersCount: (tagId, { userId, communityId, communitySlug, networkSlug }) => {
     const q = TagFollow.query()
 
     q.join('communities', 'communities.id', 'tag_follows.community_id')
+
+    if (userId) {
+      q.where('communities.id', 'in', myCommunityIds(userId))
+    }
 
     if (communityId) {
       q.where('tag_follows.community_id', communityId)

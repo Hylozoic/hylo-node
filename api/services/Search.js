@@ -2,9 +2,9 @@ import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
 import { countTotal } from '../../lib/util/knex'
 import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
-import { myCommunityIds } from '../models/util/queryFilters'
 import { transform } from 'lodash'
 import { flatten, flow, uniq, get } from 'lodash/fp'
+import { myCommunityIds } from '../models/util/queryFilters'
 
 module.exports = {
   forPosts,
@@ -56,10 +56,11 @@ module.exports = {
     return Tag.query(q => {
       q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
       q.join('communities', 'communities.id', '=', 'communities_tags.community_id')
+      q.where('communities.id', 'in', myCommunityIds(opts.userId))
       q.where('communities.active', true)
 
       if (opts.communitySlug) {
-        q.where('communities.id', '=', opts.communitySlug)
+        q.where('communities.slug', '=', opts.communitySlug)
       }
 
       if (opts.networkSlug) {
