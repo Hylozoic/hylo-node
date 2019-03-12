@@ -73,7 +73,8 @@ TestSetup.prototype.createSchema = function () {
       if (command.startsWith('CREATE TABLE')) {
         this.tables.push(command.split(' ')[2])
       }
-      return bookshelf.knex.raw(command).transacting(trx)
+      // Adding back search path which schema dump turns off
+      return bookshelf.knex.raw(command + '; SET search_path = public, pg_catalog;').transacting(trx)
     })
   }) // transaction
 }
