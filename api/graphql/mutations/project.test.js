@@ -27,7 +27,7 @@ describe('createProject', () => {
     expect(project.get('type')).to.equal(Post.Type.PROJECT)
     const members = await project.members().fetch()
     expect(members.length).to.equal(2)
-    expect(members.map(m => m.id).sort()).to.deep.equal([user.id, user2.id])    
+    expect(members.map(m => m.id).sort()).to.deep.equal([user.id, user2.id].sort())    
   })
 })
 
