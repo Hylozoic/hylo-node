@@ -486,6 +486,7 @@ input CommentInput {
 input MessageInput {
   text: String
   messageThreadId: String
+  createdAt: String
 }
 
 input MessageThreadInput {
