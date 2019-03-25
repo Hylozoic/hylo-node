@@ -1,4 +1,5 @@
 import { uniq, difference } from 'lodash/fp'
+import moment from 'moment'
 
 export default {
   isEvent () {
@@ -44,6 +45,26 @@ export default {
 
     await this.removeEventInvitees(toRemove, opts)
     return this.addEventInvitees(toAdd, inviterId, opts)    
-  }
+  },
 
+  prettyEventDates: async function () {
+    const start = moment(startTime)
+    const end = moment(endTime)
+  
+    const from = start.format('ddd, MMM D [at] h:mmA')
+  
+    var to = ''
+  
+    if (endTime) {
+      if (end.month() !== start.month()) {
+        to = end.format(' - ddd, MMM D [at] h:mmA')
+      } else if (end.day() !== start.day()) {
+        to = end.format(' - ddd D [at] h:mmA')
+      } else {
+        to = end.format(' - h:mmA')
+      }
+    }
+  
+    return from + to
+  }
 }
