@@ -389,14 +389,15 @@ export default async function makeModels (userId, isAdmin) {
           'notifications.user_id': userId
         })
         .orderBy('id', order),
-      filter: (relation) => relation.query(q => {
-        q.join('activities', 'activities.id', 'notifications.activity_id')
-        q.join('posts', 'posts.id', 'activities.post_id')
-        q.join('comments', 'comments.id', 'activities.comment_id')
-        q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
-        q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-        q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      })
+      // TODO: fix this filter. Currently it filters out any notification without a comment
+      // filter: (relation) => relation.query(q => {
+      //   q.join('activities', 'activities.id', 'notifications.activity_id')
+      //   q.join('posts', 'posts.id', 'activities.post_id')
+      //   q.join('comments', 'comments.id', 'activities.comment_id')
+      //   q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      //   q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      //   q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      // })
     },
 
     Activity: {
