@@ -54,7 +54,7 @@ export default function forPosts (opts) {
     filterAndSortPosts({
       search: opts.term,
       sortBy: opts.sort,
-      topic: opts.tag,
+      topic: opts.topic,
       type: opts.type,
       showPinnedFirst: get(opts.communities, 'length') === 1
     }, qb)
