@@ -8,7 +8,7 @@ Thanks for checking out our code. The documentation below may be incomplete or i
 
 ### setup
 
-You need to install redis locally, then follow the steps to launch it on startup (on the default port of 6379). For OSX/MacOS:
+You need to install redis locally, then follow the steps to launch it on startup (on the default port of 6379). For OSX/MacOS: 
 
 ```shell
 brew install redis
