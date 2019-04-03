@@ -63,7 +63,7 @@ jobs:
         - v1-dep-
     # This is based on your 1.0 configuration file or project settings
     - run: |-
-        createdb -h localhost hylo_test
+        createdb -h localhost hylo_test -U testuser
         npm install -g codecov
         curl -o- -L https://yarnpkg.com/install.sh | bash
     # This is based on your 1.0 configuration file or project settings
