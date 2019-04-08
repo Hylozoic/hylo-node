@@ -60,6 +60,13 @@ module.exports = bookshelf.Model.extend(merge({
     return this.groupMembershipsForModel(Community)
   },
 
+  moderatedCommunityMemberships: function () {
+    return this.groupMembershipsForModel(Community)
+    .query(q => {
+      q.where('group_memberships.role', GroupMembership.Role.MODERATOR)
+    })
+  },
+
   posts: function () {
     return this.hasMany(Post).query(q => q.where(function () {
       this.where('type', null).orWhere('type', '!=', Post.Type.THREAD)
