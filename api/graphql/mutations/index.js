@@ -58,7 +58,8 @@ export {
   leaveProject
 } from './project'
 export {
-  respondToEvent
+  respondToEvent,
+  invitePeopleToEvent
 } from './event'
 export {
   blockUser,

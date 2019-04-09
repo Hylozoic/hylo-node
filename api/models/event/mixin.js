@@ -66,5 +66,15 @@ export default {
     }
   
     return from + to
+  },
+  
+  createInviteNotifications: async function(userId, inviteeIds) {
+    const invitees = inviteeIds.map(inviteeId => ({
+      reader_id: inviteeId,
+      post_id: this.id,
+      actor_id: userId,
+      reason: `eventInvitation`
+    }))
+    return Activity.saveForReasons(invitees)
   }
 }

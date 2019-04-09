@@ -579,6 +579,7 @@ type Mutation {
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
   joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
   leaveProject(id: ID): GenericResult

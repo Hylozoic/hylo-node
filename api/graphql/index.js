@@ -27,6 +27,7 @@ import {
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
   flagInappropriateContent,
+  invitePeopleToEvent,
   joinProject,
   leaveCommunity,
   leaveProject,
@@ -217,6 +218,9 @@ export function makeMutations (userId, isAdmin) {
 
     flagInappropriateContent: (root, { data }) =>
       flagInappropriateContent(userId, data),
+    
+    invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
+      invitePeopleToEvent(userId, eventId, inviteeIds),
 
     leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
 
