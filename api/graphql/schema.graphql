@@ -90,6 +90,8 @@ type Person {
   comments(first: Int, offset: Int, order: String): CommentQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
+  moderatedCommunityMemberships(first: Int, cursor: ID, order: String): [Membership]
+  moderatedCommunityMembershipsTotal: Int
   posts(
     first: Int,
     order: String,
