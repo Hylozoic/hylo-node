@@ -126,8 +126,8 @@ export default async function makeModels (userId, isAdmin) {
         'created_at',
         'updated_at',
         'fulfilled_at',
-        'starts_at',
-        'ends_at',
+        'end_time',
+        'start_time',
         'location',
         'announcement'
       ],
@@ -141,7 +141,10 @@ export default async function makeModels (userId, isAdmin) {
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
-        myVote: p => p.userVote(userId).then(v => !!v)
+        myVote: p => p.userVote(userId).then(v => !!v),
+        myEventResponse: p => 
+          p.userEventInvitation(userId)
+          .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
       },
       relations: [
         {comments: {querySet: true}},
@@ -149,6 +152,7 @@ export default async function makeModels (userId, isAdmin) {
         {user: {alias: 'creator'}},
         'followers',
         {members: {querySet: true}},
+        {eventInvitations: {querySet: true}},
         'linkPreview',
         'postMemberships',
         {media: {
@@ -252,6 +256,16 @@ export default async function makeModels (userId, isAdmin) {
         'email',
         'created_at',
         'last_sent_at'
+      ]
+    },
+
+    EventInvitation: {
+      model: EventInvitation,
+      attributes: [
+        'response'
+      ],
+      relations: [
+        {user: {alias: 'person'}}
       ]
     },
 
@@ -376,14 +390,15 @@ export default async function makeModels (userId, isAdmin) {
           'notifications.user_id': userId
         })
         .orderBy('id', order),
-      filter: (relation) => relation.query(q => {
-        q.join('activities', 'activities.id', 'notifications.activity_id')
-        q.join('posts', 'posts.id', 'activities.post_id')
-        q.join('comments', 'comments.id', 'activities.comment_id')
-        q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
-        q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-        q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      })
+      // TODO: fix this filter. Currently it filters out any notification without a comment
+      // filter: (relation) => relation.query(q => {
+      //   q.join('activities', 'activities.id', 'notifications.activity_id')
+      //   q.join('posts', 'posts.id', 'activities.post_id')
+      //   q.join('comments', 'comments.id', 'activities.comment_id')
+      //   q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      //   q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      //   q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      // })
     },
 
     Activity: {

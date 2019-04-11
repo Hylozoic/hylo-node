@@ -53,8 +53,6 @@ function convertGraphqlPostData (data) {
     description: data.details,
     link_preview_id: data.linkPreviewId,
     community_ids: data.communityIds,
-    starts_at: data.startsAt,
-    ends_at: data.endsAt,
     parent_post_id: data.parentPostId
   }, data))
 }

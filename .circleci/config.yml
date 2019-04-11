@@ -30,6 +30,9 @@ jobs:
     docker:
     - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
       command: /sbin/init
+    - image: circleci/postgres:11
+      environment:
+        POSTGRES_USER: postgres
     steps:
     # Machine Setup
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
@@ -60,7 +63,7 @@ jobs:
         - v1-dep-
     # This is based on your 1.0 configuration file or project settings
     - run: |-
-        createdb hylo_test
+        createdb -h localhost hylo_test -U postgres
         npm install -g codecov
         curl -o- -L https://yarnpkg.com/install.sh | bash
     # This is based on your 1.0 configuration file or project settings

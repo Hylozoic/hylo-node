@@ -52,6 +52,7 @@ module.exports = bookshelf.Model.extend({
   }, 
 
   send: function () {
+
     var action
     return this.shouldBeBlocked()
     .then(shouldBeBlocked => {
@@ -83,6 +84,8 @@ module.exports = bookshelf.Model.extend({
 
   sendPush: function () {
     switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
+      case 'eventInvitation':
+        return this.sendEventInvitationPush()
       case 'mention':
         return this.sendPostPush('mention')
       case 'commentMention':
@@ -102,6 +105,19 @@ module.exports = bookshelf.Model.extend({
       default:
         return Promise.resolve()
     }
+  },
+
+  sendEventInvitationPush: function () {
+    const post = this.post()
+    const actor = this.actor()
+    const communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
+    return Community.find(communityIds[0])
+      .then(community => {
+        var path = url.parse(Frontend.Route.post(post, community)).path
+        var alertText = PushNotification.textForEventInvitation(post, actor)
+        return this.reader().sendPushNotification(alertText, path)
+      })
   },
 
   sendPushAnnouncement: function (version) {
@@ -178,6 +194,8 @@ module.exports = bookshelf.Model.extend({
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestEmail()
+      case 'eventInvitation':
+        return this.sendEventInvitationEmail()
       default:
         return Promise.resolve()
     }
@@ -318,6 +336,44 @@ module.exports = bookshelf.Model.extend({
       })))
   },
 
+  sendEventInvitationEmail: function () {
+    var post = this.post()
+    var reader = this.reader()
+    var inviter = this.actor()
+    var description = RichText.qualifyLinks(post.get('description'))
+    var replyTo = Email.postReplyAddress(post.id, reader.id)
+
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
+    return Community.find(communityIds[0])
+    .then(community => reader.generateToken()
+      .then(token => Email.sendEventInvitationEmail({
+        email: reader.get('email'),
+        sender: {
+          address: replyTo,
+          reply_to: replyTo,
+          name: `${inviter.get('name')} (via Hylo)`
+        },
+        data: {
+          community_name: community.get('name'),
+          post_user_name: inviter.get('name'),
+          post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
+            inviter.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
+          post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.profile(inviter) + '?ctt=post_mention_email&cti=' + reader.id),
+          post_description: description,
+          post_title: decode(post.get('name')),
+          post_type: 'event',
+          post_date: post.prettyEventDates(),
+          post_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
+          unfollow_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email&cti=' + reader.id),
+          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
+        }
+      })))
+  },
+
   shouldBeBlocked: async function () {
     if (!this.get('user_id')) return Promise.resolve(false)
 
@@ -419,7 +475,7 @@ module.exports = bookshelf.Model.extend({
 
   priorityReason: function (reasons) {
     const orderedLabels = [
-      'announcement', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
+      'announcement', 'eventInvitation', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
       'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
     ]
 

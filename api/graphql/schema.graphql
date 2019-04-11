@@ -222,13 +222,14 @@ type Post {
   updatedAt: String
   public: Boolean
   fulfilledAt: String
-  startsAt: String
-  endsAt: String
+  startTime: String
+  endTime: String
   location: String
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
   members(first: Int, cursor: ID, order: String): PersonQuerySet
+  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
@@ -245,6 +246,7 @@ type Post {
   topics: [Topic],
   topicsTotal: Int
   announcement: Boolean
+  myEventResponse: String
 }
 
 type PostMembership {
@@ -304,6 +306,18 @@ type SearchResultQuerySet {
   total: Int
   hasMore: Boolean
   items: [SearchResult]
+}
+
+type EventInvitation {
+  id: ID
+  response: String
+  person: Person
+}
+
+type EventInvitationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [EventInvitation]
 }
 
 type MessageThreadQuerySet {
@@ -453,14 +467,15 @@ input PostInput {
   communityIds: [String]
   linkPreviewId: String
   public: Boolean
-  startsAt: String
-  endsAt: String
   location: String
   imageUrls: [String]
   fileUrls: [String]
   announcement: Boolean
   topicNames: [String]
   memberIds: [ID]
+  eventInviteeIds: [ID]  
+  startTime: String
+  endTime: String
 }
 
 input CommentInput {
@@ -566,6 +581,7 @@ type Mutation {
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
   joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
   leaveProject(id: ID): GenericResult
@@ -582,6 +598,7 @@ type Mutation {
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
   resendInvitation(invitationId: ID): GenericResult
+  respondToEvent(id: ID, response: String): GenericResult
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult

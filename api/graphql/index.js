@@ -27,6 +27,7 @@ import {
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
   flagInappropriateContent,
+  invitePeopleToEvent,
   joinProject,
   leaveCommunity,
   leaveProject,
@@ -43,6 +44,7 @@ import {
   removePost,
   removeSkill,
   resendInvitation,
+  respondToEvent,
   subscribe,
   unblockUser,
   unlinkAccount,
@@ -216,6 +218,9 @@ export function makeMutations (userId, isAdmin) {
 
     flagInappropriateContent: (root, { data }) =>
       flagInappropriateContent(userId, data),
+    
+    invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
+      invitePeopleToEvent(userId, eventId, inviteeIds),
 
     leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
 
@@ -255,6 +260,9 @@ export function makeMutations (userId, isAdmin) {
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),
+
+    respondToEvent: (root, {id, response}) =>
+      respondToEvent(userId, id, response),
 
     subscribe: (root, { communityId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, communityId, isSubscribing),
