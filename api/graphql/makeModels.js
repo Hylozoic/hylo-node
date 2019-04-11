@@ -101,6 +101,7 @@ export default async function makeModels (userId, isAdmin) {
       },
       relations: [
         'memberships',
+        'moderatedCommunityMemberships',
         {posts: {querySet: true}},
         {comments: {querySet: true}},
         {skills: {querySet: true}},
