@@ -58,7 +58,8 @@ export default async function makeModels (userId, isAdmin) {
       getters: {
         blockedUsers: u => u.blockedUsers().fetch(),
         isAdmin: () => isAdmin || false,
-        settings: u => mapKeys(camelCase, u.get('settings'))
+        settings: u => mapKeys(camelCase, u.get('settings')),
+        hasStripeAccount: u => u.hasStripeAccount()
       }
     },
 
@@ -129,7 +130,8 @@ export default async function makeModels (userId, isAdmin) {
         'end_time',
         'start_time',
         'location',
-        'announcement'
+        'announcement',
+        'accept_contributions'
       ],
       getters: {
         title: p => p.get('name'),

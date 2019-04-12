@@ -55,7 +55,8 @@ export {
   deleteProjectRole,
   addPeopleToProjectRole,
   joinProject,
-  leaveProject
+  leaveProject,
+  processStripeToken
 } from './project'
 export {
   respondToEvent,
@@ -63,7 +64,9 @@ export {
 } from './event'
 export {
   blockUser,
-  unblockUser
+  unblockUser,
+  updateStripeAccount,
+  registerStripeAccount
 } from './user'
 export { updateMembership } from './membership'
 

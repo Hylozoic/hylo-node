@@ -19,7 +19,9 @@ const TYPE = {
   JoinRequest: 'joinRequest',
   ApprovedJoinRequest: 'approvedJoinRequest',
   Message: 'message',
-  Announcement: 'announcement'
+  Announcement: 'announcement',
+  DonationTo: 'donation to',
+  DonationFrom: 'donation from'
 }
 
 const MEDIUM = {
@@ -50,6 +52,10 @@ module.exports = bookshelf.Model.extend({
   actor: function () {
     return this.relations.activity.relations.actor
   }, 
+
+  projectContribution: function () {
+    return this.relations.activity.relations.projectContribution
+  },
 
   send: function () {
 
@@ -102,6 +108,10 @@ module.exports = bookshelf.Model.extend({
         return this.sendApprovedJoinRequestPush()
       case 'announcement':
         return this.sendPushAnnouncement()
+      case 'donation to':
+        return this.sendPushDonationTo()
+      case 'donation from':
+        return this.sendPushDonationFrom()
       default:
         return Promise.resolve()
     }
@@ -186,6 +196,22 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  sendPushDonationTo: async function () {
+    await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    var projectContribution = this.projectContribution()
+    var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
+    var alertText = PushNotification.textForDonationTo(projectContribution)
+    return this.reader().sendPushNotification(alertText, path)
+  },
+
+  sendPushDonationFrom: async function () {
+    await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    var projectContribution = this.projectContribution()
+    var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
+    var alertText = PushNotification.textForDonationFrom(projectContribution)
+    return this.reader().sendPushNotification(alertText, path)
+  },
+
   sendEmail: function () {
     switch (Notification.priorityReason(this.relations.activity.get('meta').reasons)) {
       case 'mention':
@@ -194,6 +220,10 @@ module.exports = bookshelf.Model.extend({
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestEmail()
+      case 'donation to':
+        return this.sendDonationToEmail()
+      case 'donation from':
+        return this.sendDonationFromEmail()
       case 'eventInvitation':
         return this.sendEventInvitationEmail()
       default:
@@ -336,6 +366,52 @@ module.exports = bookshelf.Model.extend({
       })))
   },
 
+  sendDonationToEmail: async function () {
+    await this.load(['activity.actor', 'activity.post', 'activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    const projectContribution = this.projectContribution()
+    const project = this.post()
+    const actor = this.actor()
+    const reader = this.reader()
+    const token = await reader.generateToken()
+    return Email.sendDonationToEmail({
+      email: reader.get('email'),
+      sender: {name: project.get('name')},
+      data: {
+        project_title: project.get('name'),
+        project_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),        
+        contribution_amount: projectContribution.get('amount') / 100,
+        contributor_name: actor.get('name'),
+        contributor_avatar_url: actor.get('avatar_url'),
+        contributor_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+       }
+    })
+  },
+
+  sendDonationFromEmail: async function () {
+    await this.load(['activity.actor', 'activity.post', 'activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
+    const projectContribution = this.projectContribution()
+    const project = this.post()
+    const actor = this.actor()
+    const reader = this.reader()
+    const token = await reader.generateToken()
+    return Email.sendDonationFromEmail({
+      email: reader.get('email'),
+      sender: {name: project.get('name')},
+      data: {
+        project_title: project.get('name'),
+        project_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),        
+        contribution_amount: projectContribution.get('amount') / 100,
+        contributor_name: actor.get('name'),
+        contributor_avatar_url: actor.get('avatar_url'),
+        contributor_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+       }
+    })
+  },
+
   sendEventInvitationEmail: function () {
     var post = this.post()
     var reader = this.reader()
@@ -475,7 +551,7 @@ module.exports = bookshelf.Model.extend({
 
   priorityReason: function (reasons) {
     const orderedLabels = [
-      'announcement', 'eventInvitation', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
+      'donation to', 'donation from', 'announcement', 'eventInvitation', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
       'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
     ]
 

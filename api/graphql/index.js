@@ -34,8 +34,10 @@ import {
   markActivityRead,
   markAllActivitiesRead,
   pinPost,
+  processStripeToken,
   regenerateAccessCode,
   registerDevice,
+  registerStripeAccount,
   reinviteAll,
   removeCommunityFromNetwork,
   removeMember,
@@ -56,6 +58,7 @@ import {
   updateMembership,
   updateNetwork,
   updatePost,
+  updateStripeAccount,
   useInvitation,
   vote
 } from './mutations'
@@ -232,12 +235,18 @@ export function makeMutations (userId, isAdmin) {
 
     pinPost: (root, { postId, communityId }) =>
       pinPost(userId, postId, communityId),
-
+      
+    processStripeToken: (root, { postId, token, amount }) =>
+      processStripeToken(userId, postId, token, amount),
+      
     regenerateAccessCode: (root, { communityId }) =>
       regenerateAccessCode(userId, communityId),
 
     registerDevice: (root, { playerId, platform, version }) =>
       registerDevice(userId, { playerId, platform, version }),
+
+    registerStripeAccount: (root, { authorizationCode }) =>
+      registerStripeAccount(userId, authorizationCode),
 
     reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
 
@@ -288,6 +297,8 @@ export function makeMutations (userId, isAdmin) {
 
     updatePost: (root, args) => updatePost(userId, args),
     updateComment: (root, args) => updateComment(userId, args),
+
+    updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
