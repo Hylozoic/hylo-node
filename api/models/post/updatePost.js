@@ -18,11 +18,13 @@ export default function updatePost (userId, id, params) {
         Post.Type.PROJECT,
         Post.Type.REQUEST,
         Post.Type.DISCUSSION,
+        Post.Type.EVENT,        
         null
       ]
       if (!updatableTypes.includes(post.get('type'))) {
         throw new Error("This post can't be modified")
       }
+
       return post.save(attrs, {patch: true, transacting})
       .tap(updatedPost => afterUpdatingPost(updatedPost, {params, userId, transacting}))
     })))
@@ -31,7 +33,7 @@ export default function updatePost (userId, id, params) {
 export function afterUpdatingPost (post, opts) {
   const {
     params,
-    params: { requests, community_ids, topicNames, memberIds },
+    params: { requests, community_ids, topicNames, memberIds, eventInviteeIds },
     userId,
     transacting    
   } = opts
@@ -45,5 +47,6 @@ export function afterUpdatingPost (post, opts) {
     updateFollowers(post, transacting)
   ]))
   .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
+  .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))  
   .then(() => updateNetworkMemberships(post, transacting))
 }

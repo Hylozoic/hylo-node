@@ -10,5 +10,4 @@ module.exports = bookshelf.Model.extend({
   },
 
   MEMBER_ROLE_NAME: 'member'
-
 })

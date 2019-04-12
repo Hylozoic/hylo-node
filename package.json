@@ -166,6 +166,7 @@
       "Contribution",
       "Device",
       "Email",
+      "EventInvitation",
       "EventResponse",
       "FlaggedItem",
       "Frontend",

@@ -59,6 +59,10 @@ export {
   processStripeToken
 } from './project'
 export {
+  respondToEvent,
+  invitePeopleToEvent
+} from './event'
+export {
   blockUser,
   unblockUser,
   updateStripeAccount,

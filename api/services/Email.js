@@ -68,6 +68,7 @@ module.exports = {
   sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
   sendDonationToEmail: sendEmailWithOptions('tem_bhptVWGW6k67tpFtqRDWKTHQ'),  
   sendDonationFromEmail: sendEmailWithOptions('tem_TCgS9xJykShS9mJjwj9Kd3v6'),  
+  sendEventInvitationEmail: sendEmailWithOptions('tem_DxG3FjMdcvYh63rKvh7gDmmY'),
 
   sendMessageDigest: opts =>
     sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK',

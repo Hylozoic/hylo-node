@@ -9,7 +9,7 @@ export default function createPost (userId, params) {
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'imageUrls', 'fileUrls', 'announcement'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement'),
       {children: params.requests, transacting}
     )))))
 }
@@ -29,7 +29,7 @@ export function afterCreatingPost (post, opts) {
 
     // Add creator to RSVPs
     post.get('type') === 'event' &&
-      EventResponse.create(post.id, {responderId: userId, response: 'yes', transacting: trx}),
+      EventInvitation.create({userId, inviterId: userId, eventId: post.id, response: EventInvitation.RESPONSE.YES}, trxOpts),
 
     // Add media, if any
     // redux version
@@ -59,6 +59,7 @@ export function afterCreatingPost (post, opts) {
 
   ]))
   .then(() => post.updateProjectMembers(opts.memberIds || [], trxOpts))
+  .then(() => post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))  
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndCommunities(post, trx))
   .then(() => updateNetworkMemberships(post, trx))
