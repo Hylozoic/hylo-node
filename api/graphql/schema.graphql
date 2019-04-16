@@ -487,6 +487,7 @@ input CommentInput {
   imageUrl: String
   postId: String
   parentCommentId: String
+  createdAt: String
 }
 
 input MessageInput {
