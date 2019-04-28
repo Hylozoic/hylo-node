@@ -77,7 +77,7 @@ async function createSchema (userId, isAdmin) {
 
   const allResolvers = Object.assign({
     Query: makeQueries(userId, fetchOne, fetchMany),
-    Mutation: makeMutations(userId, isAdmin),
+    Mutation: makeMutations(userId, isAdmin, fetchOne, fetchMany),
 
     FeedItemContent: {
       __resolveType (data, context, info) {
@@ -164,7 +164,7 @@ export function makeQueries (userId, fetchOne, fetchMany) {
   }
 }
 
-export function makeMutations (userId, isAdmin) {
+export function makeMutations (userId, isAdmin, fetchOne, fetchMany) {
   return {
     addCommunityToNetwork: (root, { communityId, networkId }) =>
       addCommunityToNetwork({ userId, isAdmin }, { communityId, networkId }),
@@ -231,7 +231,10 @@ export function makeMutations (userId, isAdmin) {
 
     markActivityRead: (root, { id }) => markActivityRead(userId, id),
 
-    markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
+    markAllActivitiesRead: async (root) => {
+      await markAllActivitiesRead(userId)
+      return fetchMany('Notification', { first: 20, offset: 0, order: 'asc' })
+    },
 
     pinPost: (root, { postId, communityId }) =>
       pinPost(userId, postId, communityId),

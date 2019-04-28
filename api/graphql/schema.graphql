@@ -590,7 +590,7 @@ type Mutation {
   leaveCommunity(id: ID): ID
   leaveProject(id: ID): GenericResult
   markActivityRead(id: ID): Activity
-  markAllActivitiesRead: GenericResult
+  markAllActivitiesRead: NotificationQuerySet
   pinPost(postId: ID, communityId: ID): GenericResult
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
   regenerateAccessCode(communityId: ID): Community
