@@ -112,12 +112,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   contributionAmount: async function () {
-    throw new Error ('do we reach here')
-    if (!this.get('project_contribution_id')) return 'bag'
     await this.load('projectContribution')
-    console.log('project contribution id', this.get('project_contribution_id'))
-    return this.relations.projectContribution.get('amount')
-    // return this.relations.projectContribution && this.relations.projectContribution.get('amount')
+    return this.relations.projectContribution && this.relations.projectContribution.get('amount')
   }
 
 }, {
