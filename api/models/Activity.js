@@ -111,9 +111,10 @@ module.exports = bookshelf.Model.extend({
       }).save({}, {transacting: trx}))
   },
 
-  contributionAmount: async function () {
+  contributionAmount: async function () {    
     await this.load('projectContribution')
-    return this.relations.projectContribution && this.relations.projectContribution.get('amount')
+    if (!this.relations.projectContribution) return null
+    return this.relations.projectContribution.get('amount')
   }
 
 }, {
