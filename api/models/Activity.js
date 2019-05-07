@@ -58,7 +58,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   comment: function () {
-    console.log('comment is called')
     return this.belongsTo(Comment)
   },
 
