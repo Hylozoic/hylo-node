@@ -372,6 +372,7 @@ type CommunityExistsOutput {
 }
 
 type Query {
+  activity(id: ID): Activity
   communityExists(slug: String): CommunityExistsOutput
   me: Me
   person(id: ID): Person

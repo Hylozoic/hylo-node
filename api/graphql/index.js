@@ -103,6 +103,7 @@ async function createSchema (userId, isAdmin) {
 
 export function makeQueries (userId, fetchOne, fetchMany) {
   return {
+    activity: (root, { id }) => fetchOne('Activity', id),
     me: () => fetchOne('Me', userId),
     community: async (root, { id, slug, updateLastViewed }) => {
       // you can specify id or slug, but not both
