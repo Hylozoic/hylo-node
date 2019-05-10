@@ -579,6 +579,7 @@ type Mutation {
   createProjectRole(projectId: ID, roleName: String): GenericResult
   createTopic(topicName: String, communityId: ID): Topic
   deleteComment(id: ID): GenericResult
+  deleteCommunity(id: ID): GenericResult
   deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   deleteProjectRole(id: ID): GenericResult

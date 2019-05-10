@@ -72,3 +72,8 @@ export async function deleteCommunityTopic (userId, communityTopicId) {
   await underlyingDeleteCommunityTopic(communityTopic)
   return {success: true}
 }
+
+export async function deleteCommunity (userId, id) {
+  console.log('deleteCommunity', userId, id)
+  return {success: true}
+}
