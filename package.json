@@ -81,6 +81,7 @@
     "moment-timezone": "^0.5.0",
     "newrelic": "^1.35.1",
     "node-uuid": "^1.4.7",
+    "papaparse": "^4.6.3",
     "parse-redis-url": "0.0.1",
     "passport": "^0.2.1",
     "passport-facebook": "2.1.1",
