@@ -8,7 +8,8 @@ import {
   removeModerator,
   removeMember,
   regenerateAccessCode,
-  deleteCommunityTopic
+  deleteCommunityTopic,
+  deleteCommunity
  } from './community'
 
 describe('moderation', () => {
@@ -176,6 +177,24 @@ describe('deleteCommunityTopic', () => {
     await deleteCommunityTopic(user.id, communityTopic.id)
     const searched = await CommunityTag.where({id: communityTopic.id}).fetch()
     expect(searched).not.to.exist
+  })
+})
+
+
+describe('deleteCommunity', () => {
+  var user, community
+
+  before(async () => {
+    user = await factories.user().save()
+    community = await factories.community().save()
+    await user.joinCommunity(community, GroupMembership.Role.MODERATOR)
+  })
+
+  it('makes the community inactive', async () => {
+    await deleteCommunity(user.id, community.id)
+
+    const foundCommunity = await Community.find(community.id)
+    expect(foundCommunity.get('active')).to.be.false
   })
 })
 

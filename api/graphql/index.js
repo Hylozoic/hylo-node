@@ -20,6 +20,7 @@ import {
   createProjectRole,
   createTopic,
   deleteComment,
+  deleteCommunity,
   deleteCommunityTopic,
   deletePost,
   deleteProjectRole,
@@ -205,6 +206,8 @@ export function makeMutations (userId, isAdmin) {
     createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
+
+    deleteCommunity: (root, { id }) => deleteCommunity(userId, id),
 
     deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
 

@@ -72,3 +72,10 @@ export async function deleteCommunityTopic (userId, communityTopicId) {
   await underlyingDeleteCommunityTopic(communityTopic)
   return {success: true}
 }
+
+export async function deleteCommunity (userId, communityId) {
+  await getModeratedCommunity(userId, communityId)
+
+  await Community.deactivate(communityId)
+  return {success: true}
+}
