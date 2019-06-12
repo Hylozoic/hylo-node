@@ -30,6 +30,7 @@ type Me {
   intercomHash: String
   blockedUsers: [Person]
   blockedUsersTotal: Int
+  hasStripeAccount: Boolean
 }
 
 type UserSettings {
@@ -92,6 +93,8 @@ type Person {
   comments(first: Int, offset: Int, order: String): CommentQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
+  moderatedCommunityMemberships(first: Int, cursor: ID, order: String): [Membership]
+  moderatedCommunityMembershipsTotal: Int
   posts(
     first: Int,
     order: String,
@@ -222,13 +225,14 @@ type Post {
   updatedAt: String
   public: Boolean
   fulfilledAt: String
-  startsAt: String
-  endsAt: String
+  startTime: String
+  endTime: String
   location: String
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
   members(first: Int, cursor: ID, order: String): PersonQuerySet
+  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
@@ -245,6 +249,9 @@ type Post {
   topics: [Topic],
   topicsTotal: Int
   announcement: Boolean
+  acceptContributions: Boolean
+  totalContributions: Int
+  myEventResponse: String
 }
 
 type PostMembership {
@@ -306,6 +313,18 @@ type SearchResultQuerySet {
   items: [SearchResult]
 }
 
+type EventInvitation {
+  id: ID
+  response: String
+  person: Person
+}
+
+type EventInvitationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [EventInvitation]
+}
+
 type MessageThreadQuerySet {
   total: Int
   hasMore: Boolean
@@ -355,6 +374,7 @@ type CommunityExistsOutput {
 }
 
 type Query {
+  activity(id: ID): Activity
   communityExists(slug: String): CommunityExistsOutput
   me: Me
   person(id: ID): Person
@@ -458,14 +478,16 @@ input PostInput {
   communityIds: [String]
   linkPreviewId: String
   public: Boolean
-  startsAt: String
-  endsAt: String
   location: String
   imageUrls: [String]
   fileUrls: [String]
   announcement: Boolean
   topicNames: [String]
   memberIds: [ID]
+  acceptContributions: Boolean
+  eventInviteeIds: [ID]  
+  startTime: String
+  endTime: String
 }
 
 input CommentInput {
@@ -478,6 +500,7 @@ input CommentInput {
 input MessageInput {
   text: String
   messageThreadId: String
+  createdAt: String
 }
 
 input MessageThreadInput {
@@ -563,6 +586,7 @@ type Mutation {
   createProjectRole(projectId: ID, roleName: String): GenericResult
   createTopic(topicName: String, communityId: ID): Topic
   deleteComment(id: ID): GenericResult
+  deleteCommunity(id: ID): GenericResult
   deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   deleteProjectRole(id: ID): GenericResult
@@ -570,15 +594,18 @@ type Mutation {
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
   joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
   leaveProject(id: ID): GenericResult
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
   pinPost(postId: ID, communityId: ID): GenericResult
+  processStripeToken(postId: ID, token: String, amount: Int): GenericResult
   regenerateAccessCode(communityId: ID): Community
   registerDevice(playerId: String, platform: String, version: String): GenericResult
   reinviteAll(communityId: ID): GenericResult
+  registerStripeAccount(authorizationCode: String): GenericResult
   removeCommunityFromNetwork(communityId: ID, networkId: ID): Network
   removeMember(personId: ID, communityId: ID): Community
   removeModerator(personId: ID, communityId: ID, isRemoveFromCommunity: Boolean): Community
@@ -586,6 +613,7 @@ type Mutation {
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
   resendInvitation(invitationId: ID): GenericResult
+  respondToEvent(id: ID, response: String): GenericResult
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
@@ -597,6 +625,7 @@ type Mutation {
   updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
   updateNetwork(id: ID, data: NetworkInput): Network
   updatePost(id: ID, data: PostInput): Post
+  updateStripeAccount(accountId: String): GenericResult
   useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
   vote(postId: ID, isUpvote: Boolean): Post
 }
@@ -648,6 +677,7 @@ type Activity {
   action: String
   meta: ActivityMeta
   unread: Boolean
+  contributionAmount: Int
 }
 
 type NotificationQuerySet {

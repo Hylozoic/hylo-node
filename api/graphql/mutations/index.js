@@ -37,6 +37,7 @@ export {
   updateCommunity,
   addModerator,
   deleteCommunityTopic,
+  deleteCommunity,  
   removeModerator,
   removeMember,
   regenerateAccessCode,
@@ -55,11 +56,18 @@ export {
   deleteProjectRole,
   addPeopleToProjectRole,
   joinProject,
-  leaveProject
+  leaveProject,
+  processStripeToken
 } from './project'
 export {
+  respondToEvent,
+  invitePeopleToEvent
+} from './event'
+export {
   blockUser,
-  unblockUser
+  unblockUser,
+  updateStripeAccount,
+  registerStripeAccount
 } from './user'
 export { updateMembership } from './membership'
 

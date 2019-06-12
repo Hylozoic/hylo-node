@@ -99,6 +99,13 @@ module.exports = {
     return new Notification(attrs)
   },
 
+  stripeAccount: attrs => {
+    return new StripeAccount(merge({
+      stripe_account_external_id: faker.random.uuid(),
+      refresh_token: faker.random.uuid()
+    }, attrs))
+  },
+
   mock: {
     request: function () {
       return {

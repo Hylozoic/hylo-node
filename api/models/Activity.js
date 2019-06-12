@@ -65,6 +65,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Contribution, 'contribution_id')
   },
 
+  projectContribution: function () {
+    return this.belongsTo(ProjectContribution, 'project_contribution_id')
+  },
+
   post: function () {
     return this.belongsTo(Post)
   },
@@ -97,6 +101,7 @@ module.exports = bookshelf.Model.extend({
     }
     await this.load(relations, {transacting: trx})
     const notificationData = await Activity.generateNotificationMedia(this)
+
     return Promise.map(notificationData, medium =>
       new Notification({
         activity_id: this.id,
@@ -104,6 +109,12 @@ module.exports = bookshelf.Model.extend({
         medium,
         user_id: this.get('reader_id')
       }).save({}, {transacting: trx}))
+  },
+
+  contributionAmount: async function () {
+    await this.load('projectContribution')
+    if (!this.relations.projectContribution) return null
+    return this.relations.projectContribution.get('amount') 
   }
 
 }, {
@@ -117,8 +128,8 @@ module.exports = bookshelf.Model.extend({
     Announcement: 'announcement'
   },
 
-  find: function (id) {
-    return this.where({id}).fetch()
+  find: function (id, options) {
+    return this.where({id}).fetch(options)
   },
 
   filterInactiveContent: q => {
@@ -221,7 +232,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   communityIds: function (activity) {
-    if (activity.get('post_id')) {
+    if (activity.get('post_id')) {      
       return get(activity, 'relations.post.relations.communities', []).map(c => c.id)
     } else if (activity.get('comment_id')) {
       return get(activity, 'relations.comment.relations.post.relations.communities', []).map(c => c.id)
@@ -232,8 +243,12 @@ module.exports = bookshelf.Model.extend({
   },
 
   generateNotificationMedia: async function (activity) {
+    await activity.load('post.communities')
+
+    // TODO: rename 'notifications' to 'media'
     var notifications = []
     var communities = Activity.communityIds(activity)
+
     var user = activity.relations.reader
 
     const memberships = await user.groupMembershipsForModel(Community)
@@ -241,6 +256,7 @@ module.exports = bookshelf.Model.extend({
 
     const relevantMemberships = filter(memberships.models, mem =>
       includes(communities, mem.relations.group.get('group_data_id')))
+
     const membershipsPermitting = key =>
       filter(relevantMemberships, mem => mem.getSetting(key))
 

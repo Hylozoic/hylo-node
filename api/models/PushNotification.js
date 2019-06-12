@@ -76,11 +76,34 @@ module.exports = bookshelf.Model.extend({
     return `${person} sent an announcement titled "${postName}"`
   },
 
+  textForEventInvitation: function (post, actor) {
+    const postName = decode(post.get('name'))
+
+    return `${actor.get('name')} invited you to "${postName}"`
+  },
+
   textForJoinRequest: function (community, actor) {
     return `${actor.get('name')} asked to join ${community.get('name')}`
   },
 
   textForApprovedJoinRequest: function (community, actor) {
     return `${actor.get('name')} approved your request to join ${community.get('name')}`
+  },
+
+  textForDonationTo: function (contribution) {
+    const project = contribution.relations.project
+    const postName = decode(project.get('name'))
+    const amount = contribution.get('amount') / 100
+
+    return `You contributed $${amount} to "${postName}"`
+  },
+
+  textForDonationFrom: function (contribution) {
+    const actor = contribution.relations.user
+    const project = contribution.relations.project
+    const postName = decode(project.get('name'))
+
+    const amount = contribution.get('amount') / 100
+    return `${actor.get('name')} contributed $${amount} to "${postName}"`
   }
 })

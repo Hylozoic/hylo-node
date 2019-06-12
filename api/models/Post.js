@@ -11,6 +11,7 @@ import { refineMany, refineOne } from './util/relations'
 import { isFollowing } from './group/queryUtils'
 import html2text from '../../lib/htmlparser/html2text'
 import ProjectMixin from './project/mixin'
+import EventMixin from './event/mixin'
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -74,8 +75,16 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Vote)
   },
 
+  projectContributions: function () {
+    return this.hasMany(ProjectContribution)
+  },
+
   responders: function () {
     return this.belongsToMany(User).through(EventResponse)
+  },
+
+  invitees: function () {
+    return this.belongsToMany(User).through(EventInvitation)
   },
 
   userVote: function (userId) {
@@ -234,6 +243,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
       reason: 'mention'
     }))
 
+    const eventInvitations = await EventInvitation.query(qb => {
+      qb.where('event_id', this.id)
+    })
+    .fetchAll({transacting: trx})
+
+    const invitees = eventInvitations.map(eventInvitation => ({
+      reader_id: eventInvitation.get('user_id'),
+      post_id: this.id,
+      actor_id: eventInvitation.get('inviter_id'),
+      reason: `eventInvitation`
+    }))
+
     let members = await Promise.all(communities.map(async community => {
       const userIds = await community.users().fetch().then(u => u.pluck('id'))
       const newPosts = userIds.map(userId => ({
@@ -262,7 +283,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     members = flatten(members)
 
     const readers = filter(r => r.reader_id !== this.get('user_id'),
-      mentioned.concat(members).concat(tagFollowers))
+      mentioned.concat(members).concat(tagFollowers).concat(invitees))
 
     return Activity.saveForReasons(readers, trx)
   },
@@ -322,8 +343,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
         tags: topics
       }
     )
+  },
+
+  totalContributions: async function () {
+    await this.load('projectContributions')
+    return this.relations.projectContributions.models.reduce((total, contribution) => total + contribution.get('amount'), 0)
   }
-}, EnsureLoad, HasGroup, ProjectMixin), {
+}, EnsureLoad, HasGroup, ProjectMixin, EventMixin), {
   // Class Methods
 
   Type: {

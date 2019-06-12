@@ -59,5 +59,9 @@ module.exports.policies = {
     status: true,
     create: true,
     sendPasswordReset: true
+  },
+
+  PaymentController: {
+    registerStripe: ['sessionAuth']    
   }
 }

@@ -20,6 +20,7 @@ import {
   createProjectRole,
   createTopic,
   deleteComment,
+  deleteCommunity,
   deleteCommunityTopic,
   deletePost,
   deleteProjectRole,
@@ -27,14 +28,17 @@ import {
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
   flagInappropriateContent,
+  invitePeopleToEvent,
   joinProject,
   leaveCommunity,
   leaveProject,
   markActivityRead,
   markAllActivitiesRead,
   pinPost,
+  processStripeToken,
   regenerateAccessCode,
   registerDevice,
+  registerStripeAccount,
   reinviteAll,
   removeCommunityFromNetwork,
   removeMember,
@@ -43,6 +47,7 @@ import {
   removePost,
   removeSkill,
   resendInvitation,
+  respondToEvent,
   subscribe,
   unblockUser,
   unlinkAccount,
@@ -54,6 +59,7 @@ import {
   updateMembership,
   updateNetwork,
   updatePost,
+  updateStripeAccount,
   useInvitation,
   vote
 } from './mutations'
@@ -98,6 +104,7 @@ async function createSchema (userId, isAdmin) {
 
 export function makeQueries (userId, fetchOne, fetchMany) {
   return {
+    activity: (root, { id }) => fetchOne('Activity', id),
     me: () => fetchOne('Me', userId),
     community: async (root, { id, slug, updateLastViewed }) => {
       // you can specify id or slug, but not both
@@ -200,6 +207,8 @@ export function makeMutations (userId, isAdmin) {
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
 
+    deleteCommunity: (root, { id }) => deleteCommunity(userId, id),
+
     deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
 
     deletePost: (root, { id }) => deletePost(userId, id),
@@ -216,6 +225,9 @@ export function makeMutations (userId, isAdmin) {
 
     flagInappropriateContent: (root, { data }) =>
       flagInappropriateContent(userId, data),
+    
+    invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
+      invitePeopleToEvent(userId, eventId, inviteeIds),
 
     leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
 
@@ -227,12 +239,18 @@ export function makeMutations (userId, isAdmin) {
 
     pinPost: (root, { postId, communityId }) =>
       pinPost(userId, postId, communityId),
-
+      
+    processStripeToken: (root, { postId, token, amount }) =>
+      processStripeToken(userId, postId, token, amount),
+      
     regenerateAccessCode: (root, { communityId }) =>
       regenerateAccessCode(userId, communityId),
 
     registerDevice: (root, { playerId, platform, version }) =>
       registerDevice(userId, { playerId, platform, version }),
+
+    registerStripeAccount: (root, { authorizationCode }) =>
+      registerStripeAccount(userId, authorizationCode),
 
     reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
 
@@ -255,6 +273,9 @@ export function makeMutations (userId, isAdmin) {
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),
+
+    respondToEvent: (root, {id, response}) =>
+      respondToEvent(userId, id, response),
 
     subscribe: (root, { communityId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, communityId, isSubscribing),
@@ -280,6 +301,8 @@ export function makeMutations (userId, isAdmin) {
 
     updatePost: (root, args) => updatePost(userId, args),
     updateComment: (root, args) => updateComment(userId, args),
+
+    updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),

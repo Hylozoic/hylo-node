@@ -60,10 +60,21 @@ module.exports = bookshelf.Model.extend(merge({
     return this.groupMembershipsForModel(Community)
   },
 
+  moderatedCommunityMemberships: function () {
+    return this.groupMembershipsForModel(Community)
+    .query(q => {
+      q.where('group_memberships.role', GroupMembership.Role.MODERATOR)
+    })
+  },
+
   posts: function () {
     return this.hasMany(Post).query(q => q.where(function () {
       this.where('type', null).orWhere('type', '!=', Post.Type.THREAD)
     }))
+  },
+
+  stripeAccount: function () {
+    return this.belongsTo(StripeAccount)
   },
 
   votes: function () {
@@ -81,8 +92,8 @@ module.exports = bookshelf.Model.extend(merge({
     return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
   },
 
-  eventsRespondedTo: function () {
-    return this.belongsToMany(Post).through(EventResponse)
+  eventsInvitedTo: function () {
+    return this.belongsToMany(Post).through(EventInvitation)
   },
 
   sentInvitations: function () {
@@ -300,6 +311,27 @@ module.exports = bookshelf.Model.extend(merge({
     const myCommunities = await this.communities().fetch()
     const theirCommunities = await user.communities().fetch()
     return intersectionBy(myCommunities.models, theirCommunities.models, 'id')
+  },
+
+  async updateStripeAccount (accountId, refreshToken = '') {
+    await this.load('stripeAccount')
+    const existingAccount = this.relations.stripeAccount
+    const newAccount = await StripeAccount.forge({
+      stripe_account_external_id: accountId,
+      refresh_token: refreshToken
+    }).save()
+    return this.save({
+      stripe_account_id: newAccount.id
+    })
+    .then(() => {
+      if (existingAccount) {
+        return existingAccount.destroy()
+      }  
+    })    
+  },
+
+  hasStripeAccount () {
+    return !!this.get('stripe_account_id')
   }
 
 }, HasSettings, HasGroupMemberships), {

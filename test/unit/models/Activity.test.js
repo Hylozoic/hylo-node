@@ -4,7 +4,7 @@ const root = require('root-path')
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
-const makeGettable = obj => Object.assign({get: key => obj[key]}, obj)
+const makeGettable = obj => Object.assign({get: key => obj[key], load: () => {}}, obj)
 
 function mockUser (memberships) {
   return {
