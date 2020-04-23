@@ -28,6 +28,7 @@ import {
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
   flagInappropriateContent,
+  fulfillPost,
   invitePeopleToEvent,
   joinProject,
   leaveCommunity,
@@ -225,7 +226,9 @@ export function makeMutations (userId, isAdmin) {
 
     flagInappropriateContent: (root, { data }) =>
       flagInappropriateContent(userId, data),
-    
+
+    fulfillPost: (root, { postId }) => fulfillPost(userId, postId),
+
     invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
       invitePeopleToEvent(userId, eventId, inviteeIds),
 
@@ -239,10 +242,10 @@ export function makeMutations (userId, isAdmin) {
 
     pinPost: (root, { postId, communityId }) =>
       pinPost(userId, postId, communityId),
-      
+
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
-      
+
     regenerateAccessCode: (root, { communityId }) =>
       regenerateAccessCode(userId, communityId),
 
