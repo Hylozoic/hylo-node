@@ -46,6 +46,7 @@ export {
 export {
   createPost,
   fulfillPost,
+  unfulfillPost,
   updatePost,
   vote,
   deletePost,

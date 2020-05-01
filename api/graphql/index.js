@@ -51,6 +51,7 @@ import {
   respondToEvent,
   subscribe,
   unblockUser,
+  unfulfillPost,
   unlinkAccount,
   updateComment,
   updateCommunity,
@@ -284,6 +285,8 @@ export function makeMutations (userId, isAdmin) {
       subscribe(userId, topicId, communityId, isSubscribing),
 
     unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
+
+    unfulfillPost: (root, { postId }) => unfulfillPost(userId, postId),
 
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),

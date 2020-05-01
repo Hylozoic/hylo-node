@@ -25,6 +25,17 @@ export function fulfillPost (userId, postId) {
     .then(() => ({success: true}))
 }
 
+export function unfulfillPost (userId, postId) {
+  return Post.find(postId)
+    .then(post => {
+      if (post.get('user_id') !== userId) {
+        throw new Error("You don't have permission to modify this post")
+      }
+      return post.unfulfill()
+    })
+    .then(() => ({success: true}))
+}
+
 export function vote (userId, postId, isUpvote) {
   return Post.find(postId)
   .then(post => post.vote(userId, isUpvote))

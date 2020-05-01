@@ -611,6 +611,7 @@ type Mutation {
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
+  unfulfillPost(postId: ID): GenericResult
   updateComment(id: ID, data: CommentInput): Comment
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
