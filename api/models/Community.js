@@ -30,6 +30,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(User, 'leader_id')
   },
 
+  location: function () {
+    return this.belongsTo(Location)
+  },
+
   tagFollows: function () {
     return this.hasMany(TagFollow)
   },

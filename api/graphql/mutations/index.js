@@ -5,13 +5,13 @@ import underlyingFindOrCreateThread, {
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
 import convertGraphqlData from './convertGraphqlData'
 
-export { 
+export {
   createComment,
   createMessage,
   deleteComment,
   canDeleteComment,
   updateComment,
-  canUpdateComment 
+  canUpdateComment
 } from './comment'
 export {
   addCommunityToNetwork,
@@ -37,7 +37,7 @@ export {
   updateCommunity,
   addModerator,
   deleteCommunityTopic,
-  deleteCommunity,  
+  deleteCommunity,
   removeModerator,
   removeMember,
   regenerateAccessCode,
@@ -71,7 +71,13 @@ export {
 } from './user'
 export { updateMembership } from './membership'
 
-export function updateMe (userId, changes) {
+export async function updateMe (userId, changes) {
+  // TODO: should this move into user.validateAndSave?
+  if (changes.location) {
+    const location = await Location.create(convertGraphqlData(changes.location))
+    changes.location_id = location.id
+  }
+
   return User.find(userId)
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }

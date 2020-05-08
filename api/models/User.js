@@ -56,6 +56,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(LinkedAccount)
   },
 
+  location: function () {
+    return this.belongsTo(Location)
+  },
+
   memberships: function () {
     return this.groupMembershipsForModel(Community)
   },
@@ -230,7 +234,7 @@ module.exports = bookshelf.Model.extend(merge({
     // tags and password, which are used later)
     var whitelist = pick(changes, [
       'avatar_url', 'banner_url', 'bio', 'email', 'extra_info', 'facebook_url',
-      'intention', 'linkedin_url', 'location', 'name', 'password', 'settings',
+      'intention', 'linkedin_url', 'location_text', 'location_id', 'name', 'password', 'settings',
       'tagline', 'twitter_name', 'url', 'work', 'new_notification_count'
     ])
 
@@ -326,8 +330,8 @@ module.exports = bookshelf.Model.extend(merge({
     .then(() => {
       if (existingAccount) {
         return existingAccount.destroy()
-      }  
-    })    
+      }
+    })
   },
 
   hasStripeAccount () {
