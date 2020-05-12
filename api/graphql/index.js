@@ -26,6 +26,7 @@ import {
   deleteProjectRole,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
+  findOrCreateLocation,
   findOrCreateThread,
   flagInappropriateContent,
   invitePeopleToEvent,
@@ -223,9 +224,11 @@ export function makeMutations (userId, isAdmin) {
     findOrCreateLinkPreviewByUrl: (root, { data }) =>
       findOrCreateLinkPreviewByUrl(data),
 
+    findOrCreateLocation: (root, { data }) => findOrCreateLocation(data),
+
     flagInappropriateContent: (root, { data }) =>
       flagInappropriateContent(userId, data),
-    
+
     invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
       invitePeopleToEvent(userId, eventId, inviteeIds),
 
@@ -239,10 +242,10 @@ export function makeMutations (userId, isAdmin) {
 
     pinPost: (root, { postId, communityId }) =>
       pinPost(userId, postId, communityId),
-      
+
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
-      
+
     regenerateAccessCode: (root, { communityId }) =>
       regenerateAccessCode(userId, communityId),
 

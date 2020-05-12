@@ -313,6 +313,7 @@ type Location {
   createdAt: String
   fullText: String
   geometry: [Point]
+  id: ID
   locality: String
   neighborhood: String
   region: String
@@ -486,7 +487,7 @@ input MeInput {
   linkedinUrl: String
   facebookUrl: String
   locationText: String
-  location: LocationInput
+  locationId: ID
   tagline: String
   password: String
   settings: UserSettingsInput
@@ -501,7 +502,7 @@ input PostInput {
   linkPreviewId: String
   public: Boolean
   locationText: String
-  location: LocationInput
+  locationId: ID
   imageUrls: [String]
   fileUrls: [String]
   announcement: Boolean
@@ -579,6 +580,7 @@ input CommunityInput {
   slug: String
   description: String
   locationText: String
+  locationId: ID
   bannerUrl: String
   avatarUrl: String
   settings: CommunitySettingsInput
@@ -641,6 +643,7 @@ type Mutation {
   deleteProjectRole(id: ID): GenericResult
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
+  findOrCreateLocation(data: LocationInput): Location
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post

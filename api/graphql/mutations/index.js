@@ -14,6 +14,9 @@ export {
   canUpdateComment
 } from './comment'
 export {
+  findOrCreateLocation
+} from './location'
+export {
   addCommunityToNetwork,
   addNetworkModeratorRole,
   removeCommunityFromNetwork,
@@ -72,12 +75,6 @@ export {
 export { updateMembership } from './membership'
 
 export async function updateMe (userId, changes) {
-  // TODO: should this move into user.validateAndSave?
-  if (changes.location) {
-    const location = await Location.create(convertGraphqlData(changes.location))
-    changes.location_id = location.id
-  }
-
   return User.find(userId)
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }

@@ -168,7 +168,7 @@ module.exports = bookshelf.Model.extend(merge({
   update: function (changes) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code', 'location',
+      'welcome_message', 'leader_id', 'beta_access_code', 'location_text', 'location_id',
       'slack_hook_url', 'slack_team', 'slack_configure_url', 'active'
     ]
 
@@ -297,7 +297,7 @@ module.exports = bookshelf.Model.extend(merge({
     var attrs = defaults(
       pick(data,
         'name', 'description', 'slug', 'category',
-        'beta_access_code', 'banner_url', 'avatar_url', 'location', 'network_id'),
+        'beta_access_code', 'banner_url', 'avatar_url', 'location_id', 'location_text', 'network_id'),
       {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR})
 
     // eslint-disable-next-line camelcase
