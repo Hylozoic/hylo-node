@@ -74,7 +74,7 @@ export {
 } from './user'
 export { updateMembership } from './membership'
 
-export async function updateMe (userId, changes) {
+export function updateMe (userId, changes) {
   return User.find(userId)
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }

@@ -28,6 +28,7 @@ module.exports = bookshelf.Model.extend({
   parse(response) {
     const st = knexPostgis(bookshelf.knex)
 
+    // Convert geometry hex values into useful objects before returning to the client
     if (typeof response.center == 'string') {
       const b = new Buffer(response.center, 'hex')
       const parsedCenter = wkx.Geometry.parse(b)
@@ -56,10 +57,8 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-
   create (attrs, { transacting } = {}) {
     return this.forge(Object.assign({created_at: new Date(), updated_at: new Date()}, attrs))
-    .save({}, { transacting })
+      .save({}, { transacting })
   },
-
 })
