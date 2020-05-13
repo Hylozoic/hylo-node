@@ -28,6 +28,7 @@ import {
   findOrCreateLinkPreviewByUrl,
   findOrCreateThread,
   flagInappropriateContent,
+  fulfillPost,
   invitePeopleToEvent,
   joinProject,
   leaveCommunity,
@@ -50,6 +51,7 @@ import {
   respondToEvent,
   subscribe,
   unblockUser,
+  unfulfillPost,
   unlinkAccount,
   updateComment,
   updateCommunity,
@@ -225,7 +227,9 @@ export function makeMutations (userId, isAdmin) {
 
     flagInappropriateContent: (root, { data }) =>
       flagInappropriateContent(userId, data),
-    
+
+    fulfillPost: (root, { postId }) => fulfillPost(userId, postId),
+
     invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
       invitePeopleToEvent(userId, eventId, inviteeIds),
 
@@ -239,10 +243,10 @@ export function makeMutations (userId, isAdmin) {
 
     pinPost: (root, { postId, communityId }) =>
       pinPost(userId, postId, communityId),
-      
+
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
-      
+
     regenerateAccessCode: (root, { communityId }) =>
       regenerateAccessCode(userId, communityId),
 
@@ -281,6 +285,8 @@ export function makeMutations (userId, isAdmin) {
       subscribe(userId, topicId, communityId, isSubscribing),
 
     unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
+
+    unfulfillPost: (root, { postId }) => unfulfillPost(userId, postId),
 
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),

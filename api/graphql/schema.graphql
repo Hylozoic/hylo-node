@@ -478,7 +478,7 @@ input PostInput {
   topicNames: [String]
   memberIds: [ID]
   acceptContributions: Boolean
-  eventInviteeIds: [ID]  
+  eventInviteeIds: [ID]
   startTime: String
   endTime: String
 }
@@ -587,6 +587,7 @@ type Mutation {
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  fulfillPost(postId: ID): GenericResult
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
   joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
@@ -610,6 +611,7 @@ type Mutation {
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
+  unfulfillPost(postId: ID): GenericResult
   updateComment(id: ID, data: CommentInput): Comment
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
