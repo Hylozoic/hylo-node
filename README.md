@@ -96,7 +96,7 @@ cat migrations/schema.sql | psql hylo
 
 This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). If you're new, you can also use the dummy seed to truncate everything and populate a bunch of fake data including a test account login like so:
 
-You will also need to login to psql and run `CREATE EXTENSION postgis;`
+You will also need to login to run `psql hylo -c "CREATE EXTENSION postgis;"`
 
 ```shell
 NODE_ENV=dummy npm run knex seed:run
