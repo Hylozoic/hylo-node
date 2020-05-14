@@ -69,6 +69,7 @@
     "image-size": "^0.3.5",
     "jade": "^1.11.0",
     "knex": "0.12.1",
+    "knex-postgis": "^0.12.0",
     "kue": "^0.11.0",
     "kue-ui": "^0.1.0",
     "lodash": "4.13.1",
@@ -116,7 +117,8 @@
     "trunc-html": "^1.1.2",
     "unist-util-inspect": "^4.1.3",
     "unist-util-visit": "^1.3.1",
-    "validator": "^3.22.1"
+    "validator": "^3.22.1",
+    "wkx": "^0.5.0"
   },
   "scripts": {
     "start": "node --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 app.js",

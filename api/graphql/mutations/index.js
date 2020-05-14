@@ -14,6 +14,9 @@ export {
   canUpdateComment
 } from './comment'
 export {
+  findOrCreateLocation
+} from './location'
+export {
   addCommunityToNetwork,
   addNetworkModeratorRole,
   removeCommunityFromNetwork,

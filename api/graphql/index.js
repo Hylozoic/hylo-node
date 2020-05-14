@@ -26,6 +26,7 @@ import {
   deleteProjectRole,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
+  findOrCreateLocation,
   findOrCreateThread,
   flagInappropriateContent,
   fulfillPost,
@@ -224,6 +225,8 @@ export function makeMutations (userId, isAdmin) {
 
     findOrCreateLinkPreviewByUrl: (root, { data }) =>
       findOrCreateLinkPreviewByUrl(data),
+
+    findOrCreateLocation: (root, { data }) => findOrCreateLocation(data),
 
     flagInappropriateContent: (root, { data }) =>
       flagInappropriateContent(userId, data),

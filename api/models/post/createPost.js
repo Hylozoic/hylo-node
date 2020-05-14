@@ -9,7 +9,7 @@ export default function createPost (userId, params) {
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location_text', 'location_id'),
       {children: params.requests, transacting}
     )))))
 }
@@ -59,7 +59,7 @@ export function afterCreatingPost (post, opts) {
 
   ]))
   .then(() => post.updateProjectMembers(opts.memberIds || [], trxOpts))
-  .then(() => post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))  
+  .then(() => post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndCommunities(post, trx))
   .then(() => updateNetworkMemberships(post, trx))

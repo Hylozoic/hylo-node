@@ -15,7 +15,7 @@ export default function setupPostAttrs (userId, params) {
     accept_contributions: params.acceptContributions,
     start_time: params.startTime ? new Date(Number(params.startTime)) : null,
     end_time: params.endTime ? new Date(Number(params.endTime)) : null
-  }, pick(params, 'type', 'starts_at', 'ends_at', 'location', 'created_from'))
+  }, pick(params, 'type', 'starts_at', 'ends_at', 'location_id', 'location_text', 'created_from'))
 
   return Promise.resolve(attrs)
 }

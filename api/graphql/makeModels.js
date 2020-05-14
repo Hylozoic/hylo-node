@@ -41,7 +41,7 @@ export default async function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
-        'location',
+        'location_text',
         'bio',
         'updated_at',
         'tagline',
@@ -52,6 +52,7 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
+        'location',
         {skills: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
@@ -94,7 +95,7 @@ export default async function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
-        'location',
+        'location_text',
         'tagline'
       ],
       getters: {
@@ -103,6 +104,7 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         'memberships',
         'moderatedCommunityMemberships',
+        'location',
         {posts: {querySet: true}},
         {comments: {querySet: true}},
         {skills: {querySet: true}},
@@ -129,7 +131,7 @@ export default async function makeModels (userId, isAdmin) {
         'fulfilled_at',
         'end_time',
         'start_time',
-        'location',
+        'location_text',
         'announcement',
         'accept_contributions'
       ],
@@ -144,7 +146,7 @@ export default async function makeModels (userId, isAdmin) {
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
         myVote: p => p.userVote(userId).then(v => !!v),
-        myEventResponse: p => 
+        myEventResponse: p =>
           p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
       },
@@ -153,6 +155,7 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         {user: {alias: 'creator'}},
         'followers',
+        'location',
         {members: {querySet: true}},
         {eventInvitations: {querySet: true}},
         'linkPreview',
@@ -189,11 +192,12 @@ export default async function makeModels (userId, isAdmin) {
         'banner_url',
         'num_members',
         'postCount',
-        'location',
+        'location_text',
         'hidden',
         'allow_community_invites'
       ],
       relations: [
+        'location',
         'network',
         {moderators: {querySet: true}},
         {communityTags: {
@@ -297,6 +301,24 @@ export default async function makeModels (userId, isAdmin) {
         'image_width',
         'image_height',
         'status'
+      ]
+    },
+
+    Location: {
+      model: Location,
+      attributes: [
+        'accuracy',
+        'address_number',
+        'address_street',
+        'bbox',
+        'center',
+        'city',
+        'country',
+        'full_text',
+        'locality',
+        'neighborhood',
+        'region',
+        'postcode'
       ]
     },
 

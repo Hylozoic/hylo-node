@@ -11,7 +11,8 @@ type Me {
   hasDevice: Boolean
   isAdmin: Boolean
   linkedinUrl: String
-  location: String
+  locationText: String
+  location: Location
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
@@ -86,7 +87,8 @@ type Person {
   linkedinUrl: String
   facebookUrl: String
   url: String
-  location: String
+  locationText: String
+  location: Location
   tagline: String
   comments(first: Int, offset: Int, order: String): CommentQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
@@ -132,7 +134,8 @@ type Community {
   createdAt: String
   avatarUrl: String
   bannerUrl: String
-  location: String
+  locationText: String
+  location: Location
   settings: String
   invitePath: String
   network: Network
@@ -225,7 +228,8 @@ type Post {
   fulfilledAt: String
   startTime: String
   endTime: String
-  location: String
+  locationText: String
+  location: Location
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
@@ -296,6 +300,31 @@ type Comment {
   createdFrom: String
   attachments(type: String): [Attachment]
   attachmentsTotal: Int
+}
+
+type Location {
+  accuracy: String
+  addressNumber: String
+  addressStreet: String
+  bbox: [Point]
+  center: Point
+  city: String
+  country: String
+  createdAt: String
+  fullText: String
+  geometry: [Point]
+  id: ID
+  locality: String
+  neighborhood: String
+  region: String
+  postcode: String
+  updatedAt: String
+  wikidata: String
+}
+
+type Point {
+  lat: String
+  lng: String
 }
 
 union SearchResultContent = Person | Post | Comment
@@ -457,7 +486,8 @@ input MeInput {
   twitterName: String
   linkedinUrl: String
   facebookUrl: String
-  location: String
+  locationText: String
+  locationId: ID
   tagline: String
   password: String
   settings: UserSettingsInput
@@ -471,7 +501,8 @@ input PostInput {
   communityIds: [String]
   linkPreviewId: String
   public: Boolean
-  location: String
+  locationText: String
+  locationId: ID
   imageUrls: [String]
   fileUrls: [String]
   announcement: Boolean
@@ -504,6 +535,32 @@ input LinkPreviewInput {
   url: String
 }
 
+input LocationInput {
+  accuracy: String
+  addressNumber: String
+  addressStreet: String
+  bbox: [PointInput]
+  center: PointInput
+  city: String
+  country: String
+  createdAt: String
+  fullText: String
+  geometry: [PointInput]
+  lat: String
+  lng: String
+  locality: String
+  neighborhood: String
+  region: String
+  postcode: String
+  updatedAt: String
+  wikidata: String
+}
+
+input PointInput {
+  lat: String
+  lng: String
+}
+
 input MembershipInput {
   newPostCount: Int
   settings: MembershipSettingsInput
@@ -522,7 +579,8 @@ input CommunityInput {
   name: String
   slug: String
   description: String
-  location: String
+  locationText: String
+  locationId: ID
   bannerUrl: String
   avatarUrl: String
   settings: CommunitySettingsInput
@@ -585,6 +643,7 @@ type Mutation {
   deleteProjectRole(id: ID): GenericResult
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
+  findOrCreateLocation(data: LocationInput): Location
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   fulfillPost(postId: ID): GenericResult
