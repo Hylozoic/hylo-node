@@ -3,7 +3,7 @@
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { compact, flatten, some, uniq } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
-import { fulfillRequest, unfulfillRequest } from './post/request'
+import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
 import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
@@ -292,9 +292,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Activity.saveForReasons(readers, trx)
   },
 
-  fulfillRequest,
+  fulfill,
 
-  unfulfillRequest,
+  unfulfill,
 
   vote: function (userId, isUpvote) {
     return this.votes().query({where: {user_id: userId}}).fetchOne()

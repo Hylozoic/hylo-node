@@ -1,4 +1,4 @@
-export function fulfillRequest (opts = {}) {
+export function fulfill (opts = {}) {
   const { fulfilledAt, contributorIds } = opts
   return bookshelf.transaction(transacting => {
     const fulfill = (post) =>
@@ -15,7 +15,7 @@ export function fulfillRequest (opts = {}) {
   })
 }
 
-export function unfulfillRequest () {
+export function unfulfill () {
   return bookshelf.transaction(transacting => {
     const unfulfill = (post) =>
       post.save({fulfilled_at: null}, {patch: true, transacting})

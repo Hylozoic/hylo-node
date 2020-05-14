@@ -48,6 +48,8 @@ export {
 } from './community'
 export {
   createPost,
+  fulfillPost,
+  unfulfillPost,
   updatePost,
   vote,
   deletePost,
