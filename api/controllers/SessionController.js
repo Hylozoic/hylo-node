@@ -11,7 +11,7 @@ const findUser = function (service, email, id) {
 
     qb.where(function () {
       this.where({provider_user_id: id, 'linked_account.provider_key': service})
-      .orWhere('email', email)
+      .orWhereRaw('lower(email) = ?', email.toLowerCase())
     })
   }).fetchAll({withRelated: ['linkedAccounts']})
   .then(users => {
@@ -125,7 +125,7 @@ const setSessionFromParams = fn => (req, res) => {
 
 module.exports = {
   create: function (req, res) {
-    var email = req.param('email')
+    var email = req.param('email').toLowerCase()
     var password = req.param('password')
 
     return User.authenticate(email, password)
