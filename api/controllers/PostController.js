@@ -8,6 +8,7 @@ const PostController = {
     const namePrefixes = {
       offer: "I'd like to share",
       request: "I'm looking for",
+      resource: "I'd like to share",
       intention: "I'd like to create"
     }
 

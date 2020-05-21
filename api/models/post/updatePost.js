@@ -17,8 +17,9 @@ export default function updatePost (userId, id, params) {
         Post.Type.OFFER,
         Post.Type.PROJECT,
         Post.Type.REQUEST,
+        Post.Type.RESOURCE,
         Post.Type.DISCUSSION,
-        Post.Type.EVENT,        
+        Post.Type.EVENT,
         null
       ]
       if (!updatableTypes.includes(post.get('type'))) {
@@ -35,7 +36,7 @@ export function afterUpdatingPost (post, opts) {
     params,
     params: { requests, community_ids, topicNames, memberIds, eventInviteeIds },
     userId,
-    transacting    
+    transacting
   } = opts
 
   return post.ensureLoad(['communities'])
@@ -47,6 +48,6 @@ export function afterUpdatingPost (post, opts) {
     updateFollowers(post, transacting)
   ]))
   .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
-  .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))  
+  .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))
   .then(() => updateNetworkMemberships(post, transacting))
 }
