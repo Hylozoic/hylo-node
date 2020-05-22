@@ -56,6 +56,7 @@ export default function forPosts (opts) {
       sortBy: opts.sort,
       topic: opts.topic,
       type: opts.type,
+      boundingBox: opts.boundingBox,
       showPinnedFirst: get(opts.communities, 'length') === 1
     }, qb)
 

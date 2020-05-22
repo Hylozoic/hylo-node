@@ -170,8 +170,9 @@ export default async function makeModels (userId, isAdmin) {
         activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox }) =>
         searchQuerySet('posts', {
+          boundingBox,
           term: search,
           limit: first,
           offset,
@@ -227,8 +228,9 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic, filter }) =>
+          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
             relation.query(filterAndSortPosts({
+              boundingBox,
               search,
               sortBy,
               topic,
