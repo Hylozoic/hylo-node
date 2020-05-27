@@ -2,7 +2,7 @@ import addTermToQueryBuilder from './addTermToQueryBuilder'
 import { curry, includes, values } from 'lodash'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { search, sortBy = 'updated', topic, showPinnedFirst, type } = opts
+  const { search, sortBy = 'updated', topic, showPinnedFirst, type, boundingBox } = opts
   const sortColumns = {
     votes: 'num_votes',
     updated: 'posts.updated_at'
@@ -47,11 +47,17 @@ export const filterAndSortPosts = curry((opts, q) => {
     }
   }
 
+  if (boundingBox) {
+    q.join('locations', 'locations.id', '=', 'posts.location_id')
+    q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
+  }
+
   if (sort === 'posts.updated_at' && showPinnedFirst) {
     q.orderByRaw('communities_posts.pinned_at is null asc, communities_posts.pinned_at desc, posts.updated_at desc')
   } else if (sort) {
     q.orderBy(sort, 'desc')
   }
+
 })
 
 export const filterAndSortUsers = curry(({ autocomplete, search, sortBy }, q) => {

@@ -156,7 +156,8 @@ type Community {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
   memberCount: Int
   postCount: Int
@@ -430,7 +431,8 @@ type Query {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
   people(
     first: Int,
