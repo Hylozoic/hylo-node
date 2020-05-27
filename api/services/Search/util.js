@@ -13,11 +13,11 @@ export const filterAndSortPosts = curry((opts, q) => {
     throw new Error(`Cannot sort by "${sortBy}"`)
   }
 
-  const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT } = Post.Type
+  const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
 
   if (!type || type === 'all' || type === 'all+welcome') {
     q.where(q2 =>
-      q2.where('posts.type', 'in', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT])
+      q2.where('posts.type', 'in', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
       .orWhere('posts.type', null))
   } else if (type === DISCUSSION) {
     q.where(q2 =>

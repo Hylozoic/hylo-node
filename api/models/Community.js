@@ -91,7 +91,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   createStarterPosts: function (transacting) {
     var now = new Date()
-    var timeShift = {offer: 1, request: 2}
+    var timeShift = {offer: 1, request: 2, resource: 1}
     return Community.find('starter-posts', {withRelated: ['posts']})
     .tap(c => {
       if (!c) throw new Error('Starter posts community not found')
