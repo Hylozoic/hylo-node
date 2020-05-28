@@ -41,7 +41,7 @@ export default async function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
-        'location_text',
+        'location',
         'bio',
         'updated_at',
         'tagline',
@@ -52,7 +52,7 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
-        'location',
+        'locationObject',
         {skills: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
@@ -95,7 +95,7 @@ export default async function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
-        'location_text',
+        'location',
         'tagline'
       ],
       getters: {
@@ -104,7 +104,7 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         'memberships',
         'moderatedCommunityMemberships',
-        'location',
+        'locationObject',
         {posts: {querySet: true}},
         {comments: {querySet: true}},
         {skills: {querySet: true}},
@@ -131,7 +131,7 @@ export default async function makeModels (userId, isAdmin) {
         'fulfilled_at',
         'end_time',
         'start_time',
-        'location_text',
+        'location',
         'announcement',
         'accept_contributions'
       ],
@@ -155,7 +155,7 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         {user: {alias: 'creator'}},
         'followers',
-        'location',
+        'locationObject',
         {members: {querySet: true}},
         {eventInvitations: {querySet: true}},
         'linkPreview',
@@ -193,12 +193,12 @@ export default async function makeModels (userId, isAdmin) {
         'banner_url',
         'num_members',
         'postCount',
-        'location_text',
+        'location',
         'hidden',
         'allow_community_invites'
       ],
       relations: [
-        'location',
+        'locationObject',
         'network',
         {moderators: {querySet: true}},
         {communityTags: {

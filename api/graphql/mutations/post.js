@@ -77,6 +77,6 @@ function convertGraphqlPostData (data) {
     community_ids: data.communityIds,
     parent_post_id: data.parentPostId,
     location_id: data.locationId,
-    location_text: data.locationText
+    location: data.location
   }, data))
 }

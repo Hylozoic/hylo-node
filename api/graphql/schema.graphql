@@ -11,8 +11,8 @@ type Me {
   hasDevice: Boolean
   isAdmin: Boolean
   linkedinUrl: String
-  locationText: String
-  location: Location
+  location: String
+  locationObject: Location
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
@@ -87,8 +87,8 @@ type Person {
   linkedinUrl: String
   facebookUrl: String
   url: String
-  locationText: String
-  location: Location
+  location: String
+  locationObject: Location
   tagline: String
   comments(first: Int, offset: Int, order: String): CommentQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
@@ -134,8 +134,8 @@ type Community {
   createdAt: String
   avatarUrl: String
   bannerUrl: String
-  locationText: String
-  location: Location
+  location: String
+  locationObject: Location
   settings: String
   invitePath: String
   network: Network
@@ -229,8 +229,8 @@ type Post {
   fulfilledAt: String
   startTime: String
   endTime: String
-  locationText: String
-  location: Location
+  location: String
+  locationObject: Location
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
@@ -488,7 +488,7 @@ input MeInput {
   twitterName: String
   linkedinUrl: String
   facebookUrl: String
-  locationText: String
+  location: String
   locationId: ID
   tagline: String
   password: String
@@ -503,7 +503,7 @@ input PostInput {
   communityIds: [String]
   linkPreviewId: String
   public: Boolean
-  locationText: String
+  location: String
   locationId: ID
   imageUrls: [String]
   fileUrls: [String]
@@ -581,7 +581,7 @@ input CommunityInput {
   name: String
   slug: String
   description: String
-  locationText: String
+  location: String
   locationId: ID
   bannerUrl: String
   avatarUrl: String
