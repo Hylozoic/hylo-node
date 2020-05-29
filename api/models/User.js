@@ -56,8 +56,8 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(LinkedAccount)
   },
 
-  location: function () {
-    return this.belongsTo(Location)
+  locationObject: function () {
+    return this.belongsTo(Location, 'location_id')
   },
 
   memberships: function () {
@@ -234,7 +234,7 @@ module.exports = bookshelf.Model.extend(merge({
     // tags and password, which are used later)
     var whitelist = pick(changes, [
       'avatar_url', 'banner_url', 'bio', 'email', 'extra_info', 'facebook_url',
-      'intention', 'linkedin_url', 'location_text', 'location_id', 'name', 'password', 'settings',
+      'intention', 'linkedin_url', 'location', 'location_id', 'name', 'password', 'settings',
       'tagline', 'twitter_name', 'url', 'work', 'new_notification_count'
     ])
 

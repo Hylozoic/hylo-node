@@ -9,7 +9,7 @@ export default function createPost (userId, params) {
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location_text', 'location_id'),
+      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
       {children: params.requests, transacting}
     )))))
 }
