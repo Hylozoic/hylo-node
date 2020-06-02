@@ -139,7 +139,6 @@ type Community {
   settings: String
   invitePath: String
   network: Network
-  numMembers: Int
   hidden: Boolean
   members(
     first: Int,

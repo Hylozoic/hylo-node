@@ -191,7 +191,7 @@ export default async function makeModels (userId, isAdmin) {
         'created_at',
         'avatar_url',
         'banner_url',
-        'num_members',
+        'memberCount',
         'postCount',
         'location',
         'hidden',

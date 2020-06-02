@@ -141,6 +141,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberCount: function () {
+    // return this.get('num_members')
+    return this.users().fetch().then(x => x.length)
+  },
+
+  numMembers: function () {
     return this.get('num_members')
   },
 
