@@ -224,12 +224,12 @@ type Post {
   type: String
   createdAt: String
   updatedAt: String
-  public: Boolean
   fulfilledAt: String
   startTime: String
   endTime: String
   location: String
   locationObject: Location
+  isPublic: Boolean
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
@@ -501,7 +501,7 @@ input PostInput {
   type: String
   communityIds: [String]
   linkPreviewId: String
-  public: Boolean
+  isPublic: Boolean
   location: String
   locationId: ID
   imageUrls: [String]

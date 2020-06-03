@@ -133,13 +133,14 @@ export default async function makeModels (userId, isAdmin) {
         'start_time',
         'location',
         'announcement',
-        'accept_contributions'
+        'accept_contributions',
+        'is_public'
       ],
       getters: {
         title: p => p.get('name'),
         details: p => p.get('description'),
         detailsText: p => p.getDetailsText(),
-        public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
+        isPublic: p => p.get('is_public'),
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
         commentsTotal: p => p.get('num_comments'),

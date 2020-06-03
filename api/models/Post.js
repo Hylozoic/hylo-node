@@ -176,7 +176,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   isPublic: function () {
-    return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
+    // return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
+    return this.get('is_public')
   },
 
   isWelcome: function () {
