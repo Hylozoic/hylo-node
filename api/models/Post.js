@@ -176,7 +176,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   isPublic: function () {
-    // return this.get('visibility') === Post.Visibility.PUBLIC_READABLE
     return this.get('is_public')
   },
 
@@ -368,6 +367,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     THREAD: 'thread'
   },
 
+  // TODO Consider using Visibility property for more granular privacy
+  // as our work on Public Posts evolves
   Visibility: {
     DEFAULT: 0,
     PUBLIC_READABLE: 1

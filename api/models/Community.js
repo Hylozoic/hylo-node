@@ -141,11 +141,12 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberCount: function () {
-    // return this.get('num_members')
     return this.users().fetch().then(x => x.length)
   },
 
   numMembers: function () {
+    // FIXME investigate why num_members is not always accurate
+    // then remove memberCount and use num_members
     return this.get('num_members')
   },
 
