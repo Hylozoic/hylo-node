@@ -62,13 +62,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const actorId = this.get('user_id')
     const followers = await this.relations.post.followers().fetch()
     const mentionedIds = RichText.getUserMentions(this.get('text'))
+    const communityId = this.community().id
 
     const createActivity = reason => id => ({
       reader_id: id,
+      actor_id: actorId,
       comment_id: this.id,
       parent_comment_id: this.get('comment_id') || null,
       post_id: this.relations.post.id,
-      actor_id: actorId,
+      community_id: communityId,
       reason
     })
 
