@@ -763,7 +763,8 @@ type Network {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
 }
 
