@@ -171,7 +171,7 @@ export default async function makeModels (userId, isAdmin) {
         activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, isPublic }) =>
         searchQuerySet('posts', {
           boundingBox,
           term: search,
@@ -179,7 +179,8 @@ export default async function makeModels (userId, isAdmin) {
           offset,
           type: filter,
           sort: sortBy,
-          topic
+          topic,
+          is_public: isPublic
         })
     },
 

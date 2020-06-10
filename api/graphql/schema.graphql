@@ -431,7 +431,8 @@ type Query {
     search: String,
     filter: String,
     topic: ID,
-    boundingBox: [PointInput]
+    boundingBox: [PointInput],
+    isPublic: Boolean
   ): PostQuerySet
   people(
     first: Int,
