@@ -10,6 +10,7 @@ export default function (opts) {
 
     filterAndSortUsers({
       autocomplete: opts.autocomplete,
+      boundingBox: opts.boundingBox,
       search: opts.term,
       sortBy: opts.sort
     }, qb)

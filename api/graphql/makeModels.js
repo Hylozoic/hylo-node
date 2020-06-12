@@ -112,8 +112,9 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: nonAdminFilter(personFilter(userId)),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
+      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, filter }) =>
         searchQuerySet('users', {
+          boundingBox,
           term: search,
           limit: first,
           offset,
@@ -223,8 +224,8 @@ export default async function makeModels (userId, isAdmin) {
         {users: {
           alias: 'members',
           querySet: true,
-          filter: (relation, { autocomplete, search, sortBy }) =>
-            relation.query(filterAndSortUsers({ autocomplete, search, sortBy }))
+          filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
+            relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
         {posts: {
           querySet: true,
@@ -478,8 +479,8 @@ export default async function makeModels (userId, isAdmin) {
         {moderators: {querySet: true}},
         {members: {
           querySet: true,
-          filter: (relation, { autocomplete, search, sortBy }) =>
-            relation.query(filterAndSortUsers({ autocomplete, search, sortBy }))
+          filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
+            relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
         {posts: {
           querySet: true,
