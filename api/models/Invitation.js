@@ -123,7 +123,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return new Invitation({
       invited_by_id: opts.userId,
       community_id: opts.communityId,
-      email: opts.email,
+      email: opts.email.toLowerCase(),
       tag_id: opts.tagId,
       role: GroupMembership.Role[opts.moderator ? 'MODERATOR' : 'DEFAULT'],
       token: uuid.v4(),

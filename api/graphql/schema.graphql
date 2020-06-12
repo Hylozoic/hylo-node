@@ -12,6 +12,7 @@ type Me {
   isAdmin: Boolean
   linkedinUrl: String
   location: String
+  locationObject: Location
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
@@ -89,6 +90,7 @@ type Person {
   facebookUrl: String
   url: String
   location: String
+  locationObject: Location
   tagline: String
   comments(first: Int, offset: Int, order: String): CommentQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
@@ -102,7 +104,8 @@ type Person {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
@@ -135,6 +138,7 @@ type Community {
   avatarUrl: String
   bannerUrl: String
   location: String
+  locationObject: Location
   settings: String
   invitePath: String
   network: Network
@@ -155,7 +159,8 @@ type Community {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
   memberCount: Int
   postCount: Int
@@ -228,6 +233,7 @@ type Post {
   startTime: String
   endTime: String
   location: String
+  locationObject: Location
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
@@ -298,6 +304,31 @@ type Comment {
   createdFrom: String
   attachments(type: String): [Attachment]
   attachmentsTotal: Int
+}
+
+type Location {
+  accuracy: String
+  addressNumber: String
+  addressStreet: String
+  bbox: [Point]
+  center: Point
+  city: String
+  country: String
+  createdAt: String
+  fullText: String
+  geometry: [Point]
+  id: ID
+  locality: String
+  neighborhood: String
+  region: String
+  postcode: String
+  updatedAt: String
+  wikidata: String
+}
+
+type Point {
+  lat: String
+  lng: String
 }
 
 union SearchResultContent = Person | Post | Comment
@@ -403,7 +434,8 @@ type Query {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
   people(
     first: Int,
@@ -465,6 +497,7 @@ input MeInput {
   linkedinUrl: String
   facebookUrl: String
   location: String
+  locationId: ID
   tagline: String
   password: String
   settings: UserSettingsInput
@@ -479,13 +512,14 @@ input PostInput {
   linkPreviewId: String
   public: Boolean
   location: String
+  locationId: ID
   imageUrls: [String]
   fileUrls: [String]
   announcement: Boolean
   topicNames: [String]
   memberIds: [ID]
   acceptContributions: Boolean
-  eventInviteeIds: [ID]  
+  eventInviteeIds: [ID]
   startTime: String
   endTime: String
 }
@@ -511,6 +545,32 @@ input LinkPreviewInput {
   url: String
 }
 
+input LocationInput {
+  accuracy: String
+  addressNumber: String
+  addressStreet: String
+  bbox: [PointInput]
+  center: PointInput
+  city: String
+  country: String
+  createdAt: String
+  fullText: String
+  geometry: [PointInput]
+  lat: String
+  lng: String
+  locality: String
+  neighborhood: String
+  region: String
+  postcode: String
+  updatedAt: String
+  wikidata: String
+}
+
+input PointInput {
+  lat: String
+  lng: String
+}
+
 input MembershipInput {
   newPostCount: Int
   settings: MembershipSettingsInput
@@ -530,6 +590,7 @@ input CommunityInput {
   slug: String
   description: String
   location: String
+  locationId: ID
   bannerUrl: String
   avatarUrl: String
   settings: CommunitySettingsInput
@@ -592,8 +653,10 @@ type Mutation {
   deleteProjectRole(id: ID): GenericResult
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
+  findOrCreateLocation(data: LocationInput): Location
   findOrCreateThread(data: MessageThreadInput): MessageThread
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
+  fulfillPost(postId: ID): GenericResult
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
   joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
@@ -617,6 +680,7 @@ type Mutation {
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
+  unfulfillPost(postId: ID): GenericResult
   updateComment(id: ID, data: CommentInput): Comment
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
@@ -707,7 +771,8 @@ type Network {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
 }
 

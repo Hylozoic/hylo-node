@@ -3,7 +3,7 @@
 import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
 import { compact, flatten, some, uniq } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
-import { fulfillRequest, unfulfillRequest } from './post/request'
+import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
 import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
@@ -64,6 +64,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   comments: function () {
     return this.hasMany(Comment, 'post_id').query({where: {active: true}})
+  },
+
+  locationObject: function () {
+    return this.belongsTo(Location, 'location_id')
   },
 
   media: function (type) {
@@ -154,7 +158,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       var type = this.get('type')
       if (type) return type
       const tagNames = this.relations.tags.map(t => t.get('name'))
-      const typeNames = intersection(tagNames, ['request', 'offer'])
+      const typeNames = intersection(tagNames, ['request', 'offer', 'resource'])
       if (!isEmpty(typeNames)) {
         return typeNames[0]
       } else {
@@ -288,9 +292,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Activity.saveForReasons(readers, trx)
   },
 
-  fulfillRequest,
+  fulfill,
 
-  unfulfillRequest,
+  unfulfill,
 
   vote: function (userId, isUpvote) {
     return this.votes().query({where: {user_id: userId}}).fetchOne()
@@ -356,6 +360,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     WELCOME: 'welcome',
     REQUEST: 'request',
     OFFER: 'offer',
+    RESOURCE: 'resource',
     DISCUSSION: 'discussion',
     EVENT: 'event',
     PROJECT: 'project',
@@ -377,7 +382,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.query(q => {
       q.join('posts_tags', 'posts.id', 'posts_tags.post_id')
       q.join('tags', 'tags.id', 'posts_tags.tag_id')
-      q.whereIn('tags.name', ['request', 'offer'])
+      q.whereIn('tags.name', ['request', 'offer', 'resource'])
       q.groupBy('tags.name')
       q.where({user_id: user.id, active: true})
       q.select('tags.name')
@@ -487,10 +492,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   fixTypedPosts: () =>
     bookshelf.transaction(transacting =>
-      Tag.where('name', 'in', ['request', 'offer', 'intention'])
+      Tag.where('name', 'in', ['request', 'offer', 'resource', 'intention'])
       .fetchAll({transacting})
       .then(tags => Post.query(q => {
-        q.where('type', 'in', ['request', 'offer', 'intention'])
+        q.where('type', 'in', ['request', 'offer', 'resource', 'intention'])
       }).fetchAll({withRelated: ['selectedTags', 'tags'], transacting})
       .then(posts => Promise.each(posts.models, post => {
         const untype = () => post.save({type: null}, {patch: true, transacting})

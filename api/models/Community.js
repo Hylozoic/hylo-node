@@ -30,6 +30,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(User, 'leader_id')
   },
 
+  locationObject: function () {
+    return this.belongsTo(Location, 'location_id')
+  },
+
   tagFollows: function () {
     return this.hasMany(TagFollow)
   },
@@ -87,7 +91,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   createStarterPosts: function (transacting) {
     var now = new Date()
-    var timeShift = {offer: 1, request: 2}
+    var timeShift = {offer: 1, request: 2, resource: 1}
     return Community.find('starter-posts', {withRelated: ['posts']})
     .tap(c => {
       if (!c) throw new Error('Starter posts community not found')
@@ -164,7 +168,7 @@ module.exports = bookshelf.Model.extend(merge({
   update: function (changes) {
     var whitelist = [
       'banner_url', 'avatar_url', 'name', 'description', 'settings',
-      'welcome_message', 'leader_id', 'beta_access_code', 'location',
+      'welcome_message', 'leader_id', 'beta_access_code', 'location', 'location_id',
       'slack_hook_url', 'slack_team', 'slack_configure_url', 'active'
     ]
 
@@ -293,7 +297,7 @@ module.exports = bookshelf.Model.extend(merge({
     var attrs = defaults(
       pick(data,
         'name', 'description', 'slug', 'category',
-        'beta_access_code', 'banner_url', 'avatar_url', 'location', 'network_id'),
+        'beta_access_code', 'banner_url', 'avatar_url', 'location_id', 'location', 'network_id'),
       {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR})
 
     // eslint-disable-next-line camelcase

@@ -52,6 +52,7 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         'memberships',
         'posts',
+        'locationObject',
         {skills: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
@@ -103,6 +104,7 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         'memberships',
         'moderatedCommunityMemberships',
+        'locationObject',
         {posts: {querySet: true}},
         {comments: {querySet: true}},
         {skills: {querySet: true}},
@@ -144,7 +146,7 @@ export default async function makeModels (userId, isAdmin) {
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
         myVote: p => p.userVote(userId).then(v => !!v),
-        myEventResponse: p => 
+        myEventResponse: p =>
           p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
       },
@@ -153,6 +155,7 @@ export default async function makeModels (userId, isAdmin) {
         'communities',
         {user: {alias: 'creator'}},
         'followers',
+        'locationObject',
         {members: {querySet: true}},
         {eventInvitations: {querySet: true}},
         'linkPreview',
@@ -167,8 +170,9 @@ export default async function makeModels (userId, isAdmin) {
         activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox }) =>
         searchQuerySet('posts', {
+          boundingBox,
           term: search,
           limit: first,
           offset,
@@ -194,6 +198,7 @@ export default async function makeModels (userId, isAdmin) {
         'allow_community_invites'
       ],
       relations: [
+        'locationObject',
         'network',
         {moderators: {querySet: true}},
         {communityTags: {
@@ -223,8 +228,9 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic, filter }) =>
+          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
             relation.query(filterAndSortPosts({
+              boundingBox,
               search,
               sortBy,
               topic,
@@ -297,6 +303,24 @@ export default async function makeModels (userId, isAdmin) {
         'image_width',
         'image_height',
         'status'
+      ]
+    },
+
+    Location: {
+      model: Location,
+      attributes: [
+        'accuracy',
+        'address_number',
+        'address_street',
+        'bbox',
+        'center',
+        'city',
+        'country',
+        'full_text',
+        'locality',
+        'neighborhood',
+        'region',
+        'postcode'
       ]
     },
 

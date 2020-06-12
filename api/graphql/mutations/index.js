@@ -5,14 +5,17 @@ import underlyingFindOrCreateThread, {
 import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
 import convertGraphqlData from './convertGraphqlData'
 
-export { 
+export {
   createComment,
   createMessage,
   deleteComment,
   canDeleteComment,
   updateComment,
-  canUpdateComment 
+  canUpdateComment
 } from './comment'
+export {
+  findOrCreateLocation
+} from './location'
 export {
   addCommunityToNetwork,
   addNetworkModeratorRole,
@@ -37,7 +40,7 @@ export {
   updateCommunity,
   addModerator,
   deleteCommunityTopic,
-  deleteCommunity,  
+  deleteCommunity,
   removeModerator,
   removeMember,
   regenerateAccessCode,
@@ -45,6 +48,8 @@ export {
 } from './community'
 export {
   createPost,
+  fulfillPost,
+  unfulfillPost,
   updatePost,
   vote,
   deletePost,

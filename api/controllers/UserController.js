@@ -2,7 +2,7 @@ module.exports = {
   create: function (req, res) {
     const { name, email, password } = req.allParams()
 
-    return User.create({name, email, account: {type: 'password', password}})
+    return User.create({name, email: email ? email.toLowerCase() : null, account: {type: 'password', password}})
     .tap(user => Analytics.trackSignup(user.id, req))
     .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
     .then(user => {
@@ -26,7 +26,7 @@ module.exports = {
 
   sendPasswordReset: function (req, res) {
     var email = req.param('email')
-    return User.where('email', email).fetch().then(function (user) {
+    return User.query(q => q.whereRaw('lower(email) = ?', email.toLowerCase())).fetch().then(function (user) {
       if (!user) {
         return res.ok({})
       } else {

@@ -8,7 +8,7 @@ Thanks for checking out our code. The documentation below may be incomplete or i
 
 ### setup
 
-You need to install redis locally, then follow the steps to launch it on startup (on the default port of 6379). For OSX/MacOS: 
+You need to install redis locally, then follow the steps to launch it on startup (on the default port of 6379). For OSX/MacOS:
 
 ```shell
 brew install redis
@@ -95,6 +95,8 @@ cat migrations/schema.sql | psql hylo
 ```
 
 This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). If you're new, you can also use the dummy seed to truncate everything and populate a bunch of fake data including a test account login like so:
+
+You will also need to login to run `psql hylo -c "CREATE EXTENSION postgis;"`
 
 ```shell
 NODE_ENV=dummy npm run knex seed:run
@@ -266,23 +268,3 @@ where `Me` is the currently logged-in user. For example, to load all posts:
   }
 }
 ```
-
-## License
-
-    Hylo is a mobile and web application to help people do more together.
-    Hylo helps communities better understand who in their community has what skills,
-    and how they can create things together.
-    Copyright (C) 2017, Hylozoic, Inc.
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
