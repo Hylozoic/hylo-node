@@ -134,13 +134,14 @@ export default async function makeModels (userId, isAdmin) {
         'start_time',
         'location',
         'announcement',
-        'accept_contributions'
+        'accept_contributions',
+        'is_public'
       ],
       getters: {
         title: p => p.get('name'),
         details: p => p.get('description'),
         detailsText: p => p.getDetailsText(),
-        public: p => (p.get('visibility') === Post.Visibility.PUBLIC_READABLE) || null,
+        isPublic: p => p.get('is_public'),
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
         commentsTotal: p => p.get('num_comments'),
@@ -171,7 +172,7 @@ export default async function makeModels (userId, isAdmin) {
         activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, isPublic }) =>
         searchQuerySet('posts', {
           boundingBox,
           term: search,
@@ -179,7 +180,8 @@ export default async function makeModels (userId, isAdmin) {
           offset,
           type: filter,
           sort: sortBy,
-          topic
+          topic,
+          is_public: isPublic
         })
     },
 
@@ -192,7 +194,7 @@ export default async function makeModels (userId, isAdmin) {
         'created_at',
         'avatar_url',
         'banner_url',
-        'num_members',
+        'memberCount',
         'postCount',
         'location',
         'hidden',

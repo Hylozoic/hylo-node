@@ -140,7 +140,6 @@ type Community {
   settings: String
   invitePath: String
   network: Network
-  numMembers: Int
   hidden: Boolean
   members(
     boundingBox: [PointInput],
@@ -227,12 +226,12 @@ type Post {
   type: String
   createdAt: String
   updatedAt: String
-  public: Boolean
   fulfilledAt: String
   startTime: String
   endTime: String
   location: String
   locationObject: Location
+  isPublic: Boolean
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
@@ -434,7 +433,8 @@ type Query {
     search: String,
     filter: String,
     topic: ID,
-    boundingBox: [PointInput]
+    boundingBox: [PointInput],
+    isPublic: Boolean
   ): PostQuerySet
   people(
     boundingBox: [PointInput],
@@ -505,7 +505,7 @@ input PostInput {
   type: String
   communityIds: [String]
   linkPreviewId: String
-  public: Boolean
+  isPublic: Boolean
   location: String
   locationId: ID
   imageUrls: [String]

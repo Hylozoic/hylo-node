@@ -65,7 +65,9 @@ export const sharedNetworkMembership = curry((tableName, userId, relation) =>
           filterCommunities(q2, 'community_id', userId)
         }).query().select('post_id')
 
-        return q.where('posts.id', 'in', subq)
+        return q.where(q2 => {
+          q2.where('posts.id', 'in', subq).orWhere('posts.is_public', true)
+        })
       case 'votes':
         q.join('communities_posts', 'votes.post_id', 'communities_posts.post_id')
         return filterCommunities(q, 'communities_posts.community_id', userId)

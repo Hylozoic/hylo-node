@@ -24,19 +24,21 @@ module.exports = bookshelf.Model.extend({
   },
 
   async getMessageText (community) {
-    const link = await this.getContentLink(community)
-    return `${this.relations.user.get('name')} flagged a ${this.get('object_type')} in ${community.get('name')} for being ${this.get('category')}\n` +
+    const isPublic = !community ? true : false
+    const link = await this.getContentLink(community, isPublic)
+
+    return `${this.relations.user.get('name')} flagged a ${this.get('object_type')} in ${community ? community.get('name') : 'Public'} for being ${this.get('category')}\n` +
       `Message: ${this.get('reason')}\n` +
       `${link}\n\n`
   },
 
-  async getContentLink (community) {
+  async getContentLink (community, isPublic) {
     switch (this.get('object_type')) {
       case FlaggedItem.Type.POST:
-        return Frontend.Route.post(this.get('object_id'), community)
+        return Frontend.Route.post(this.get('object_id'), community, isPublic)
       case FlaggedItem.Type.COMMENT:
         const comment = await this.getObject()
-        return Frontend.Route.comment(comment, community)
+        return Frontend.Route.comment(comment, community, isPublic)
       case FlaggedItem.Type.MEMBER:
         return Frontend.Route.profile(this.get('object_id'))
       default:
