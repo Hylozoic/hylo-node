@@ -102,7 +102,8 @@ type Person {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
@@ -141,6 +142,7 @@ type Community {
   network: Network
   hidden: Boolean
   members(
+    boundingBox: [PointInput],
     first: Int,
     order: String,
     sortBy: String,
@@ -435,6 +437,7 @@ type Query {
     isPublic: Boolean
   ): PostQuerySet
   people(
+    boundingBox: [PointInput],
     first: Int,
     order: String,
     sortBy: String,
@@ -752,7 +755,7 @@ type Network {
   createdAt: String
   memberCount: Int
   communities(first: Int, offset: Int, order: String, sortBy: String, search: String): CommunityQuerySet
-  members(first: Int, offset: Int, order: String, sortBy: String, search: String): PersonQuerySet
+  members(boundingBox: [PointInput], first: Int, offset: Int, order: String, sortBy: String, search: String): PersonQuerySet
   moderators(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
   isModerator: Boolean
   isAdmin: Boolean
@@ -763,7 +766,8 @@ type Network {
     offset: Int,
     search: String,
     filter: String,
-    topic: ID
+    topic: ID,
+    boundingBox: [PointInput]
   ): PostQuerySet
 }
 
