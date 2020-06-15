@@ -21,7 +21,7 @@ export async function notifyModeratorsMember (flaggedItem) {
   const member = await flaggedItem.getObject()
   const user = flaggedItem.relations.user
   const communities = await user.communitiesSharedWithUser(member)
-  return sendToCommunities(flaggedItem, communities, isPublic = false)
+  return sendToCommunities(flaggedItem, communities, isPublic)
 }
 
 export async function sendToCommunities (flaggedItem, communities, isPublic) {
