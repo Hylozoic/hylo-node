@@ -486,8 +486,8 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic, filter }) =>
-            relation.query(filterAndSortPosts({ search, sortBy, topic, type: filter }))
+          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+            relation.query(filterAndSortPosts({ search, sortBy, topic, type: filter, boundingBox }))
         }},
         {communities: {
           querySet: true,
