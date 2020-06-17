@@ -198,7 +198,10 @@ export default async function makeModels (userId, isAdmin) {
         'postCount',
         'location',
         'hidden',
-        'allow_community_invites'
+        'allow_community_invites',
+        'is_public',
+        'is_auto_joinable',
+        'public_member_directory'
       ],
       relations: [
         'locationObject',

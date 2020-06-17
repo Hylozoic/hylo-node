@@ -141,6 +141,9 @@ type Community {
   invitePath: String
   network: Network
   hidden: Boolean
+  isPublic: Boolean
+  isAutoJoinable: Boolean
+  publicMemberDirectory: Boolean
   members(
     boundingBox: [PointInput],
     first: Int,
@@ -595,6 +598,9 @@ input CommunityInput {
   active: Boolean
   hidden: Boolean
   networkId: ID
+  isPublic: Boolean
+  isAutoJoinable: Boolean
+  publicMemberDirectory: Boolean
 }
 
 input CommunitySettingsInput {
