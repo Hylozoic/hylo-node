@@ -94,10 +94,15 @@ module.exports = {
       return url(`/m/${getModelId(user)}`)
     },
 
-    post: function (post, community) {
+    post: function (post, community, isPublic) {
       let communitySlug = getSlug(community)
+      let communityUrl = '/all'
 
-      let communityUrl = isEmpty(communitySlug) ? '/all' : `/c/${communitySlug}`
+      if (isPublic) {
+        communityUrl = '/public'
+      } else if (!isEmpty(communitySlug)) {
+        communityUrl = `/c/${communitySlug}`
+      }
 
       return url(`${communityUrl}/p/${getModelId(post)}`)
     },

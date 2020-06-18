@@ -3,6 +3,7 @@ import { countTotal } from '../../../lib/util/knex'
 import { filterAndSortPosts } from './util'
 
 export default function forPosts (opts) {
+
   return Post.query(qb => {
     qb.limit(opts.limit || 20)
     qb.offset(opts.offset)
@@ -49,6 +50,10 @@ export default function forPosts (opts) {
 
     if (opts.visibility) {
       qb.whereIn('visibility', opts.visibility)
+    }
+
+    if (opts.is_public) {
+      qb.whereIn('is_public', opts.is_public)
     }
 
     filterAndSortPosts({

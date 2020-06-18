@@ -60,7 +60,7 @@ export const filterAndSortPosts = curry((opts, q) => {
 
 })
 
-export const filterAndSortUsers = curry(({ autocomplete, search, sortBy }, q) => {
+export const filterAndSortUsers = curry(({ autocomplete, boundingBox, search, sortBy }, q) => {
   if (autocomplete) {
     addTermToQueryBuilder(autocomplete, q, {
       columns: ['users.name']
@@ -83,6 +83,11 @@ export const filterAndSortUsers = curry(({ autocomplete, search, sortBy }, q) =>
     q.orderBy('group_memberships.created_at', 'desc')
   } else {
     q.orderBy(sortBy || 'name', 'asc')
+  }
+
+  if (boundingBox) {
+    q.join('locations', 'locations.id', '=', 'users.location_id')
+    q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 })
 
