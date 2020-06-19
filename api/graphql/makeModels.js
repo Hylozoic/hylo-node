@@ -247,20 +247,23 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         feedItems: (c, args) => c.feedItems(args),
+        isPublic: c => c.get('is_public'),
         pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
         invitePath: c =>
           GroupMembership.hasModeratorRole(userId, c)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
-      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter, isPublic, boundingBox, }) =>
         searchQuerySet('communities', {
+          boundingBox,
           term: search,
           limit: first,
           offset,
           type: filter,
           autocomplete,
-          sort: sortBy
+          sort: sortBy,
+          is_public: isPublic
         })
     },
 

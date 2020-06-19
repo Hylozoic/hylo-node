@@ -53,7 +53,6 @@ function filterCommunities (q, idColumn, userId) {
   q.where(inner =>
     inner.where(idColumn, 'in', myCommunityIds(userId))
     .orWhere(idColumn, 'in', myNetworkCommunityIds(userId)))
-    .orWhere('is_public', true)
 }
 
 export const sharedNetworkMembership = curry((tableName, userId, relation) =>
