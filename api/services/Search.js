@@ -37,6 +37,10 @@ module.exports = {
         qb.orderBy(opts.sort || '', opts.order || 'asc')
       }
 
+      if (opts.is_public) {
+        qb.whereIn('is_public', opts.is_public)
+      }
+
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
       countTotal(qb, 'communities', opts.totalColumnName)

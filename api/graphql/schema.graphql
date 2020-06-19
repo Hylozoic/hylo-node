@@ -424,7 +424,9 @@ type Query {
     offset: Int,
     search: String,
     autocomplete: String,
-    filter: String
+    filter: String,
+    boundingBox: [PointInput],
+    isPublic: Boolean
   ): CommunityQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
