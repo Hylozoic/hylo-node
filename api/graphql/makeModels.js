@@ -112,7 +112,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: nonAdminFilter(personFilter(userId)),
       isDefaultTypeForTable: true,
-      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, filter }) =>
+      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, communityIds, filter }) =>
         searchQuerySet('users', {
           boundingBox,
           term: search,
@@ -120,6 +120,7 @@ export default async function makeModels (userId, isAdmin) {
           offset,
           type: filter,
           autocomplete,
+          communities: communityIds,
           sort: sortBy
         })
     },

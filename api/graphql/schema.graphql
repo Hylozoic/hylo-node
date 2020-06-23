@@ -444,6 +444,7 @@ type Query {
     offset: Int,
     search: String,
     autocomplete: String,
+    communityIds: [String],
     filter: String
   ): PersonQuerySet
   topic(id: ID, name: String): Topic
