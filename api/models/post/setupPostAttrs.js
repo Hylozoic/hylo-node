@@ -1,10 +1,11 @@
 import { merge, pick } from 'lodash'
 import { getOr } from 'lodash/fp'
 import { sanitize } from 'hylo-utils/text'
+import he from 'he';
 
 export default function setupPostAttrs (userId, params) {
   const attrs = merge({
-    name: sanitize(params.name),
+    name: sanitize(he.encode(params.name)),
     description: sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
