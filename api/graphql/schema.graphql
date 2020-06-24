@@ -419,6 +419,7 @@ type Query {
     order: String,
     sortBy: String,
     offset: Int,
+    communityIds: [String],
     search: String,
     autocomplete: String,
     filter: String

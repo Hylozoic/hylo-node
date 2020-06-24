@@ -251,8 +251,9 @@ export default async function makeModels (userId, isAdmin) {
           .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
-      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
+      fetchMany: ({ first, order, communityIds, sortBy, offset, search, autocomplete, filter }) =>
         searchQuerySet('communities', {
+          communities: communityIds,
           term: search,
           limit: first,
           offset,
