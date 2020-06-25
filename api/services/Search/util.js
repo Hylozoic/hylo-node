@@ -91,11 +91,18 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, search, so
   }
 })
 
-export const filterAndSortCommunities = curry(({ search, sortBy = 'name' }, q) => {
+export const filterAndSortCommunities = curry((opts, q) => {
+  const { search, sortBy = 'name', boundingBox } = opts
+
   if (search) {
     addTermToQueryBuilder(search, q, {
       columns: ['communities.name']
     })
+  }
+
+  if (boundingBox) {
+    q.join('locations', 'locations.id', '=', 'communities.location_id')
+    q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
   q.orderBy(sortBy)

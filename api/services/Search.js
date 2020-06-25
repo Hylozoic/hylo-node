@@ -2,6 +2,7 @@ import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
 import { countTotal } from '../../lib/util/knex'
 import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
+import { filterAndSortCommunities } from './Search/util'
 import { transform } from 'lodash'
 import { flatten, flow, uniq, get } from 'lodash/fp'
 
@@ -38,8 +39,13 @@ module.exports = {
       }
 
       if (opts.is_public) {
-        qb.whereIn('is_public', opts.is_public)
+        qb.where('is_public', opts.is_public)
       }
+
+      filterAndSortCommunities({
+        search: opts.term,
+        sortBy: opts.sort,
+        boundingBox: opts.boundingBox}, qb)
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination

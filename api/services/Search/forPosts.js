@@ -53,7 +53,7 @@ export default function forPosts (opts) {
     }
 
     if (opts.is_public) {
-      qb.whereIn('is_public', opts.is_public)
+      qb.where('is_public', opts.is_public)
     }
 
     filterAndSortPosts({
