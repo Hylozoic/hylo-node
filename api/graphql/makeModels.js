@@ -113,7 +113,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: nonAdminFilter(personFilter(userId)),
       isDefaultTypeForTable: true,
-      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, filter }) =>
+      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, communityIds, filter }) =>
         searchQuerySet('users', {
           boundingBox,
           term: search,
@@ -121,6 +121,7 @@ export default async function makeModels (userId, isAdmin) {
           offset,
           type: filter,
           autocomplete,
+          communities: communityIds,
           sort: sortBy
         })
     },
@@ -251,8 +252,9 @@ export default async function makeModels (userId, isAdmin) {
           .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
-      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter }) =>
+      fetchMany: ({ first, order, communityIds, sortBy, offset, search, autocomplete, filter }) =>
         searchQuerySet('communities', {
+          communities: communityIds,
           term: search,
           limit: first,
           offset,
