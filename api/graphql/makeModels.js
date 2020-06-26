@@ -18,6 +18,7 @@ import {
   filterAndSortUsers
 } from '../services/Search/util'
 import { isFollowing } from '../models/group/queryUtils'
+import he from 'he';
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -139,7 +140,7 @@ export default async function makeModels (userId, isAdmin) {
         'is_public'
       ],
       getters: {
-        title: p => p.get('name'),
+        title: p => he.decode(p.get('name')),
         details: p => p.get('description'),
         detailsText: p => p.getDetailsText(),
         isPublic: p => p.get('is_public'),
