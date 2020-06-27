@@ -422,6 +422,7 @@ type Query {
     order: String,
     sortBy: String,
     offset: Int,
+    communityIds: [String],
     search: String,
     autocomplete: String,
     filter: String,
@@ -449,6 +450,7 @@ type Query {
     offset: Int,
     search: String,
     autocomplete: String,
+    communityIds: [String],
     filter: String
   ): PersonQuerySet
   topic(id: ID, name: String): Topic

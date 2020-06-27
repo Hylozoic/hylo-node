@@ -18,6 +18,7 @@ import {
   filterAndSortUsers
 } from '../services/Search/util'
 import { isFollowing } from '../models/group/queryUtils'
+import he from 'he';
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -112,7 +113,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: nonAdminFilter(personFilter(userId)),
       isDefaultTypeForTable: true,
-      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, filter }) =>
+      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, communityIds, filter }) =>
         searchQuerySet('users', {
           boundingBox,
           term: search,
@@ -120,6 +121,7 @@ export default async function makeModels (userId, isAdmin) {
           offset,
           type: filter,
           autocomplete,
+          communities: communityIds,
           sort: sortBy
         })
     },
@@ -138,7 +140,7 @@ export default async function makeModels (userId, isAdmin) {
         'is_public'
       ],
       getters: {
-        title: p => p.get('name'),
+        title: p => he.decode(p.get('name')),
         details: p => p.get('description'),
         detailsText: p => p.getDetailsText(),
         isPublic: p => p.get('is_public'),
@@ -254,9 +256,10 @@ export default async function makeModels (userId, isAdmin) {
           .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
-      fetchMany: ({ first, order, sortBy, offset, search, autocomplete, filter, isPublic, boundingBox, }) =>
+      fetchMany: ({ first, order, sortBy, communityIds, offset, search, autocomplete, filter, isPublic, boundingBox, }) =>
         searchQuerySet('communities', {
           boundingBox,
+          communities: communityIds,
           term: search,
           limit: first,
           offset,
