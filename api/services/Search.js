@@ -28,15 +28,15 @@ module.exports = {
         qb.whereIn('communities.slug', opts.slug)
       }
 
-      if (opts.term) {
-        addTermToQueryBuilder(opts.term, qb, {
-          columns: ['communities.name']
-        })
-      }
-
-      if (opts.sort || opts.order) {
-        qb.orderBy(opts.sort || '', opts.order || 'asc')
-      }
+      // if (opts.term) {
+      //   addTermToQueryBuilder(opts.term, qb, {
+      //     columns: ['communities.name']
+      //   })
+      // }
+      //
+      // if (opts.sort || opts.order) {
+      //   qb.orderBy(opts.sort || '', opts.order || 'asc')
+      // }
 
       if (opts.is_public) {
         qb.where('is_public', opts.is_public)
@@ -54,7 +54,7 @@ module.exports = {
       qb.limit(opts.limit)
       qb.offset(opts.offset)
       qb.groupBy('communities.id')
-      qb.orderBy('communities.name', 'asc')
+      // qb.orderBy('communities.name', 'asc')
     })
   },
 
