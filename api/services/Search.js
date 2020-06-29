@@ -2,6 +2,7 @@ import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
 import { countTotal } from '../../lib/util/knex'
 import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
+import { filterAndSortCommunities } from './Search/util'
 import { transform } from 'lodash'
 import { flatten, flow, uniq, get } from 'lodash/fp'
 
@@ -27,15 +28,14 @@ module.exports = {
         qb.whereIn('communities.slug', opts.slug)
       }
 
-      if (opts.term) {
-        addTermToQueryBuilder(opts.term, qb, {
-          columns: ['communities.name']
-        })
+      if (opts.is_public) {
+        qb.where('is_public', opts.is_public)
       }
 
-      if (opts.sort || opts.order) {
-        qb.orderBy(opts.sort || '', opts.order || 'asc')
-      }
+      filterAndSortCommunities({
+        search: opts.term,
+        sortBy: opts.sort,
+        boundingBox: opts.boundingBox}, qb)
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
@@ -44,7 +44,6 @@ module.exports = {
       qb.limit(opts.limit)
       qb.offset(opts.offset)
       qb.groupBy('communities.id')
-      qb.orderBy('communities.name', 'asc')
     })
   },
 
