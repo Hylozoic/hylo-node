@@ -79,9 +79,9 @@ async function createSchema (userId, isAdmin) {
   const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
-  const allResolvers = Object.assign({
-    Query: makeQueries(userId, fetchOne, fetchMany),
-    Mutation: makeMutations(userId, isAdmin),
+  let allResolvers = Object.assign({
+    Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
+    Mutation: userId ? makeMutations(userId, isAdmin) : {},
 
     FeedItemContent: {
       __resolveType (data, context, info) {
@@ -101,11 +101,23 @@ async function createSchema (userId, isAdmin) {
 
   return makeExecutableSchema({
     typeDefs: [schemaText],
-    resolvers: requireUser(allResolvers, userId)
+    resolvers: allResolvers
   })
 }
 
-export function makeQueries (userId, fetchOne, fetchMany) {
+// Queries that non-logged in users can make
+export function makePublicQueries (userId, fetchOne, fetchMany) {
+  return {
+    // Can only access public communities and posts
+    communities: (root, args) => fetchMany('Community', Object.assign(args, { isPublic: true })),
+    posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true })),
+    checkInvitation: (root, { invitationToken, accessCode }) =>
+      InvitationService.check(userId, invitationToken, accessCode)
+  }
+}
+
+// Queries that logged in users can make
+export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   return {
     activity: (root, { id }) => fetchOne('Activity', id),
     me: () => fetchOne('Me', userId),
@@ -346,22 +358,6 @@ export const createRequestHandler = () =>
       formatError: process.env.NODE_ENV === 'development' ? logError : null
     }
   })
-
-function requireUser (resolvers, userId) {
-  if (userId) return resolvers
-
-  const error = () => {
-    throw new Error('not logged in')
-  }
-
-  return Object.assign({}, resolvers, {
-    Query: mapValues(resolvers.Query, (v, k) => {
-      if (k === 'checkInvitation') return v
-      return error
-    }),
-    Mutation: mapValues(resolvers.Mutation, () => error)
-  })
-}
 
 var modelToTypeMap
 

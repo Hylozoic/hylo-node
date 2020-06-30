@@ -149,10 +149,11 @@ export default async function makeModels (userId, isAdmin) {
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
-        myVote: p => p.userVote(userId).then(v => !!v),
+        myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
-          p.userEventInvitation(userId)
+          userId ? p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
+          : ''
       },
       relations: [
         {comments: {querySet: true}},
@@ -464,8 +465,10 @@ export default async function makeModels (userId, isAdmin) {
       fetchMany: () => UserConnection,
       filter: relation => {
         return relation.query(q => {
-          q.where('other_user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-          q.where('user_id', userId)
+          if (userId) {
+            q.where('other_user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+            q.where('user_id', userId)
+          }
           q.orderBy('created_at', 'desc')
         })
       }

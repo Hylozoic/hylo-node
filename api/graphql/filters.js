@@ -21,25 +21,27 @@ export const membershipFilter = userId => relation =>
   relation.query(q => sharesMembership(userId, q))
 
 export const personFilter = userId => relation => relation.query(q => {
-  // find all other memberships for users that share a network
-  const sharedMemberships = GroupMembership.query(q3 => {
-    filterCommunities(q3, 'groups.group_data_id', userId)
-    q3.join('groups', 'groups.id', 'group_memberships.group_id')
-    q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
-  })
+  if (userId) {
+    // find all other memberships for users that share a network
+    const sharedMemberships = GroupMembership.query(q3 => {
+      filterCommunities(q3, 'groups.group_data_id', userId)
+      q3.join('groups', 'groups.id', 'group_memberships.group_id')
+      q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
+    })
 
-  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
+    q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
 
-  // limit to users that are in those other memberships
+    // limit to users that are in those other memberships
 
-  const sharedConnections = UserConnection.query(ucq =>{
-    ucq.where('user_id', userId)
-  })
+    const sharedConnections = UserConnection.query(ucq =>{
+      ucq.where('user_id', userId)
+    })
 
-  q.where(inner =>
-    inner.where('users.id', User.AXOLOTL_ID)
-    .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id'))
-    .orWhere('users.id', 'in', sharedConnections.query().pluck('other_user_id')))
+    q.where(inner =>
+      inner.where('users.id', User.AXOLOTL_ID)
+      .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id'))
+      .orWhere('users.id', 'in', sharedConnections.query().pluck('other_user_id')))
+  }
 })
 
 export const messageFilter = userId => relation => relation.query(q => {
@@ -80,17 +82,22 @@ export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
   q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
   q.where({'comments.active': true})
-  q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-  q.where(q2 => {
-    const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
-    q2.where('comments.post_id', 'in', groupIds)
-    .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
-  })
+
+  if (userId) {
+    q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+    q.where(q2 => {
+      const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
+      q2.where('comments.post_id', 'in', groupIds)
+      .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
+    })
+  }
 })
 
 export const activePost = userId => relation => {
   return relation.query(q => {
-    q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+    if (userId) {
+      q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+    }
     q.where('posts.active', true)
   })
 }
