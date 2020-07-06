@@ -143,6 +143,9 @@ type Community {
   invitePath: String
   network: Network
   hidden: Boolean
+  isPublic: Boolean
+  isAutoJoinable: Boolean
+  publicMemberDirectory: Boolean
   members(
     boundingBox: [PointInput],
     first: Int,
@@ -421,9 +424,12 @@ type Query {
     order: String,
     sortBy: String,
     offset: Int,
+    communityIds: [String],
     search: String,
     autocomplete: String,
-    filter: String
+    filter: String,
+    boundingBox: [PointInput],
+    isPublic: Boolean
   ): CommunityQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
@@ -446,6 +452,7 @@ type Query {
     offset: Int,
     search: String,
     autocomplete: String,
+    communityIds: [String],
     filter: String
   ): PersonQuerySet
   topic(id: ID, name: String): Topic
@@ -602,6 +609,9 @@ input CommunityInput {
   active: Boolean
   hidden: Boolean
   networkId: ID
+  isPublic: Boolean
+  isAutoJoinable: Boolean
+  publicMemberDirectory: Boolean
 }
 
 input CommunitySettingsInput {
