@@ -279,6 +279,20 @@ export default async function makeModels (userId, isAdmin) {
       ]
     },
 
+    JoinRequest: {
+      model: JoinRequest,
+      attributes: [
+        'created_at',
+        'updated_at',
+      ],
+      getters: {
+        status: r => ({0: 'pending', 1: 'accepted', 2: 'rejected'}[r.get('status')])
+      },
+      relations: [
+        'community', 'user'
+      ]
+    },
+
     EventInvitation: {
       model: EventInvitation,
       attributes: [

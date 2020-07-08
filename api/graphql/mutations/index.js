@@ -36,6 +36,10 @@ export {
   reinviteAll,
   useInvitation
 } from './invitation'
+export { 
+  createJoinRequest,
+  joinCommunity,
+} from './join_request'
 export {
   updateCommunity,
   addModerator,

@@ -10,4 +10,12 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
 
+  create: function (opts) {
+    return new JoinRequest({
+      community_id: opts.communityId,
+      user_id: opts.userId,
+      created_at: new Date(),
+      status: 0,
+    }).save()
+  }
 })

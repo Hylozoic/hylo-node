@@ -204,6 +204,16 @@ type InvitationQuerySet {
   items: [Invitation]
 }
 
+type JoinRequest {
+  id: Int
+  user: Person
+  community: Community
+  createdAt: String
+  updatedAt: String
+  status: String
+  error: String
+}
+
 type PostQuerySet {
   total: Int
   hasMore: Boolean
@@ -646,6 +656,7 @@ type Mutation {
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
+  createJoinRequest(communityId: ID, userId: ID): CreatedRequest
   createMessage(data: MessageInput): Message
   createPost(data: PostInput): Post
   createProject(data: PostInput): Post
@@ -663,6 +674,7 @@ type Mutation {
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   fulfillPost(postId: ID): GenericResult
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
+  joinCommunity(communityId: ID, userId: ID): InvitationUseResult
   joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
   leaveProject(id: ID): GenericResult
@@ -725,6 +737,10 @@ type CreatedInvitations {
 
 type CheckInvitationResult {
   valid: Boolean
+}
+
+type CreatedRequest {
+  request: JoinRequest
 }
 
 type Notification {

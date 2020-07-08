@@ -14,6 +14,7 @@ import {
   createComment,
   createCommunity,
   createInvitation,
+  createJoinRequest,
   createMessage,
   createPost,
   createProject,
@@ -31,6 +32,7 @@ import {
   flagInappropriateContent,
   fulfillPost,
   invitePeopleToEvent,
+  joinCommunity,
   joinProject,
   leaveCommunity,
   leaveProject,
@@ -196,6 +198,8 @@ export function makeMutations (userId, isAdmin) {
     createInvitation: (root, {communityId, data}) =>
       createInvitation(userId, communityId, data),
 
+    createJoinRequest: (root, {communityId, userId}) => createJoinRequest(communityId, userId),
+
     createMessage: (root, { data }) => createMessage(userId, data),
 
     createPost: (root, { data }) => createPost(userId, data),
@@ -203,6 +207,8 @@ export function makeMutations (userId, isAdmin) {
     createProject: (root, { data }) => createProject(userId, data),
 
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
+
+    joinCommunity: (root, {communityId, userId}) => joinCommunity(communityId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
