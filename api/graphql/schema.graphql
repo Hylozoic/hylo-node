@@ -210,7 +210,7 @@ type JoinRequest {
   community: Community
   createdAt: String
   updatedAt: String
-  status: String
+  status: Int
 }
 
 type PostQuerySet {
@@ -438,7 +438,7 @@ type Query {
     boundingBox: [PointInput],
     isPublic: Boolean
   ): CommunityQuerySet
-  joinRequests(communityId: ID): JoinRequest
+  joinRequests(communityId: ID): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(

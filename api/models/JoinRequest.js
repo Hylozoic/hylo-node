@@ -29,7 +29,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   validate: function () {
-    if (!['pending', 'accepted', 'rejected'].includes(this.get('status'))) {
+    if (![0, 1, 2].includes(this.get('status'))) {
       return Promise.reject(new Error('Status is invalid'))
     }
 
