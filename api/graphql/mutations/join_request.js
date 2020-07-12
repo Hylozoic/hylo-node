@@ -18,3 +18,11 @@ export async function createJoinRequest (communityId, userId) {
   })
   .then(request => ({ request }))
 }
+
+export async function acceptJoinRequest (joinRequestId) {
+  return JoinRequest.query().where('id', joinRequestId).update({status: 1})
+}
+
+export async function declineJoinRequest (joinRequestId) {
+  return JoinRequest.query().where('id', joinRequestId).update({status: 2})
+}

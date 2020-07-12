@@ -36,8 +36,10 @@ export {
   reinviteAll,
   useInvitation
 } from './invitation'
-export { 
+export {
+  acceptJoinRequest,
   createJoinRequest,
+  declineJoinRequest,
   joinCommunity,
 } from './join_request'
 export {
