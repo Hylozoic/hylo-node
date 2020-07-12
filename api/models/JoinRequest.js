@@ -17,5 +17,23 @@ module.exports = bookshelf.Model.extend({
       created_at: new Date(),
       status: 0,
     }).save()
-  }
+  },
+
+  update: function (changes) {
+    const attributes = {
+      updated_at: new Date(),
+      status: changes.status
+    }
+    this.set(attributes)
+    return this.validate().then(() => this.save())
+  },
+
+  validate: function () {
+    if (!['pending', 'accepted', 'rejected'].includes(this.get('status'))) {
+      return Promise.reject(new Error('Status is invalid'))
+    }
+
+    return Promise.resolve()
+  },
+
 })

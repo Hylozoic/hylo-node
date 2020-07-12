@@ -4,6 +4,7 @@ import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
+  acceptJoinRequest,
   addCommunityToNetwork,
   addModerator,
   addNetworkModeratorRole,
@@ -20,6 +21,7 @@ import {
   createProject,
   createProjectRole,
   createTopic,
+  declineJoinRequest,
   deleteComment,
   deleteCommunity,
   deleteCommunityTopic,
@@ -136,6 +138,7 @@ export function makeQueries (userId, fetchOne, fetchMany) {
       }
       throw new Error('Slug is invalid')
     },
+    joinRequests: (root, args) => fetchMany('JoinRequest', args),
     communities: (root, args) => fetchMany('Community', args),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
