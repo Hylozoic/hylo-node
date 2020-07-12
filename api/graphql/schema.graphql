@@ -213,6 +213,12 @@ type JoinRequest {
   status: Int
 }
 
+type JoinRequestQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [JoinRequest]
+}
+
 type PostQuerySet {
   total: Int
   hasMore: Boolean
@@ -765,12 +771,6 @@ type Activity {
   meta: ActivityMeta
   unread: Boolean
   contributionAmount: Int
-}
-
-type JoinRequestQuerySet {
-  total: Int
-  hasMore: Boolean
-  items: [JoinRequest]
 }
 
 type NotificationQuerySet {

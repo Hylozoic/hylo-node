@@ -286,13 +286,8 @@ export default async function makeModels (userId, isAdmin) {
         'updated_at',
         'status'
       ],
-      // relations: [
-      //  'community', 'user'
-      // ],
-      fetchMany: ({ communityId }) => {
-        const output = JoinRequest.where({ 'community_id': communityId })
-        return output
-      }
+      relations: ['user' ],
+      fetchMany: ({ communityId }) => JoinRequest.where({ 'community_id': communityId })
     },
 
     EventInvitation: {
