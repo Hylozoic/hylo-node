@@ -652,7 +652,7 @@ input UserSettingsInput {
 }
 
 type Mutation {
-  acceptJoinRequest(joinRequestId: ID): JoinRequest
+  acceptJoinRequest(joinRequestId: ID, communityId: ID, userId: ID): JoinRequest
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network

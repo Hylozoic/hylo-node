@@ -19,21 +19,24 @@ module.exports = bookshelf.Model.extend({
     }).save()
   },
 
-  update: function (changes) {
+  find: async function (id) {
+    if (!id) return Promise.resolve(null)
+    return JoinRequest.where({id}).fetch()
+  },
+
+  update: function (id, changes) {
+    const { status } = changes;
+
+    if (![0, 1, 2].includes(status)) {
+      return Promise.reject(new Error('Status is invalid'))
+    }
+
     const attributes = {
       updated_at: new Date(),
       status: changes.status
     }
-    this.set(attributes)
-    return this.validate().then(() => this.save())
-  },
 
-  validate: function () {
-    if (![0, 1, 2].includes(this.get('status'))) {
-      return Promise.reject(new Error('Status is invalid'))
-    }
-
-    return Promise.resolve()
-  },
+    return JoinRequest.query().where({ id }).update(attributes)
+  }
 
 })

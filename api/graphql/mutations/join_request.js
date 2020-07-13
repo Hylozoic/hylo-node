@@ -1,12 +1,13 @@
 export async function joinCommunity (communityId, userId) {
   const user = await User.find(userId)
   const community = await Community.find(communityId)
+
   return GroupMembership.forPair(user, community, {includeInactive: true}).fetch()
     .then(existingMembership => {
       if (existingMembership) return existingMembership.get('active')
         ? existingMembership
-        : existingMembership.save({active: true}, {patch: true}).then(membership => { console.log('membership exists ==>', membership); return membership })
-      if (!!community) return user.joinCommunity(community).then(membership => { console.log('membership created ==>', membership); return membership })
+        : existingMembership.save({active: true}, {patch: true}).then(membership => membership)
+      if (!!community) return user.joinCommunity(community).then(membership => membership)
     })
     .catch(error => ({error: error.message}))
 }
@@ -19,10 +20,13 @@ export async function createJoinRequest (communityId, userId) {
   .then(request => ({ request }))
 }
 
-export async function acceptJoinRequest (joinRequestId) {
-  return JoinRequest.query().where('id', joinRequestId).update({status: 1})
+export async function acceptJoinRequest (joinRequestId, communityId, userId) {
+  await JoinRequest.update(joinRequestId, { status: 1 })
+  await joinCommunity(communityId, userId)
+  return await JoinRequest.find(joinRequestId)
 }
 
 export async function declineJoinRequest (joinRequestId) {
-  return JoinRequest.query().where('id', joinRequestId).update({status: 2})
+  await JoinRequest.update(joinRequestId, { status: 2 })
+  return await JoinRequest.find(joinRequestId)
 }

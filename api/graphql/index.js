@@ -176,7 +176,7 @@ export function makeQueries (userId, fetchOne, fetchMany) {
 
 export function makeMutations (userId, isAdmin) {
   return {
-    acceptJoinRequest: (root, {joinRequestId}) => acceptJoinRequest(joinRequestId),
+    acceptJoinRequest: (root, { joinRequestId, communityId, userId }) => acceptJoinRequest(joinRequestId, communityId, userId),
     
     addCommunityToNetwork: (root, { communityId, networkId }) =>
     addCommunityToNetwork({ userId, isAdmin }, { communityId, networkId }),
@@ -219,7 +219,7 @@ export function makeMutations (userId, isAdmin) {
     
     createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
     
-    declineJoinRequest: (root, args) => declineJoinRequest(args),
+    declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
     
     deleteComment: (root, { id }) => deleteComment(userId, id),
     
