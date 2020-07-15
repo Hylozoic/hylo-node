@@ -57,8 +57,9 @@ afterEach(() => nock.cleanAll())
 TestSetup.prototype.createSchema = function () {
   if (!this.initialized) throw new Error('not initialized')
   return bookshelf.transaction(trx => {
-    return bookshelf.knex.raw('drop schema public cascade').transacting(trx)
-    .then(() => bookshelf.knex.raw('create schema public').transacting(trx))
+    return bookshelf.knex.raw('DROP SCHEMA public CASCADE').transacting(trx)
+    .then(() => bookshelf.knex.raw('CREATE SCHEMA public').transacting(trx))
+    .then(() => bookshelf.knex.raw('CREATE EXTENSION postgis').transacting(trx))
     .then(() => {
       var script = fs.readFileSync(root('migrations/schema.sql')).toString()
       return script.split(/\n/)

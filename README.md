@@ -97,7 +97,7 @@ cat migrations/schema.sql | psql hylo
 
 This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). If you're new, you can also use the dummy seed to truncate everything and populate a bunch of fake data including a test account login like so:
 
-You will also need to login to run `psql hylo -c "CREATE EXTENSION postgis;"`
+You will also need to login to run `psql hylo_test -c "CREATE EXTENSION postgis;"`, on both the development database and your test database.
 
 ```shell
 NODE_ENV=dummy npm run knex seed:run
@@ -142,7 +142,6 @@ AWS_ACCESS_KEY_ID=foo
 UPLOADER_PATH_PREFIX=foo
 ```
 
-
 (Without the above Mailgun values, you'll see a failing test in the suite.) Since the test database was created above, `npm test` should work at this point.
 
 ### creating and running database migrations
@@ -156,6 +155,9 @@ knex migrate:make my_migration_name
 (You can either install knex globally with `npm install -g knex`, or run the version in your `node_modules` with `./node_modules/.bin/knex`.)
 
 Run migrations with `npm run migrate` and rollback the last one with `npm run rollback`.
+
+When your migration changes table structures run `migrations/dump_schema.sh > migrations/schema.sql` and commit the result with your migration to keep the test database up to date.
+
 
 ### loading database snapshots
 

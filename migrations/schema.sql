@@ -2,22 +2,38 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.5
--- Dumped by pg_dump version 10.5
+-- Dumped from database version 12.3
+-- Dumped by pg_dump version 12.3
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
+-- Modified this after running schema_dump
+SELECT pg_catalog.set_config('search_path', 'public, pg_catalog', false);
 SET check_function_bodies = false;
-SET search_path = public, pg_catalog;
+SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+-- Modified this with conditional after running schema_dump
+-- CREATE SCHEMA IF NOT EXISTS public;
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -
@@ -200,7 +216,11 @@ CREATE TABLE public.communities (
     active boolean DEFAULT true,
     num_members integer DEFAULT 0,
     hidden boolean DEFAULT false NOT NULL,
-    allow_community_invites boolean DEFAULT false
+    allow_community_invites boolean DEFAULT false,
+    location_id bigint,
+    is_public boolean DEFAULT false,
+    is_auto_joinable boolean DEFAULT false,
+    public_member_directory boolean DEFAULT false
 );
 
 
@@ -401,7 +421,6 @@ CREATE TABLE public.event_invitations (
 --
 
 CREATE SEQUENCE public.event_invitations_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -798,6 +817,50 @@ CREATE TABLE public.linked_account (
 
 
 --
+-- Name: locations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.locations (
+    id integer NOT NULL,
+    center public.geometry(Point,4326),
+    bbox public.geometry(Polygon,4326),
+    geometry public.geometry(Polygon,4326),
+    full_text character varying(255),
+    address_number character varying(255),
+    address_street character varying(255),
+    city character varying(255),
+    locality character varying(255),
+    region character varying(255),
+    neighborhood character varying(255),
+    postcode character varying(255),
+    country character varying(255),
+    accuracy character varying(255),
+    wikidata character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: locations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.locations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: locations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.locations_id_seq OWNED BY public.locations.id;
+
+
+--
 -- Name: media_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1103,7 +1166,9 @@ CREATE TABLE public.posts (
     announcement boolean DEFAULT false,
     start_time timestamp with time zone,
     end_time timestamp with time zone,
-    accept_contributions boolean DEFAULT false
+    accept_contributions boolean DEFAULT false,
+    location_id bigint,
+    is_public boolean DEFAULT false
 );
 
 
@@ -1202,7 +1267,6 @@ CREATE TABLE public.project_contributions (
 --
 
 CREATE SEQUENCE public.project_contributions_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1289,7 +1353,8 @@ CREATE TABLE public.users (
     location character varying(255),
     url character varying(255),
     tagline character varying(255),
-    stripe_account_id bigint
+    stripe_account_id bigint,
+    location_id bigint
 );
 
 
@@ -1790,6 +1855,13 @@ ALTER TABLE ONLY public.link_previews ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: locations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations ALTER COLUMN id SET DEFAULT nextval('public.locations_id_seq'::regclass);
+
+
+--
 -- Name: networks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2115,6 +2187,14 @@ ALTER TABLE ONLY public.link_previews
 
 ALTER TABLE ONLY public.link_previews
     ADD CONSTRAINT link_previews_url_unique UNIQUE (url);
+
+
+--
+-- Name: locations locations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
 
 
 --
@@ -2658,10 +2738,31 @@ CREATE INDEX ix_vote_user_13 ON public.votes USING btree (user_id);
 
 
 --
+-- Name: location_center_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX location_center_idx ON public.locations USING gist (center);
+
+
+--
 -- Name: notifications_pk_medium_0; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX notifications_pk_medium_0 ON public.notifications USING btree (id) WHERE (medium = 0);
+
+
+--
+-- Name: public_communities_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX public_communities_idx ON public.communities USING btree (is_public);
+
+
+--
+-- Name: public_posts_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX public_posts_idx ON public.posts USING btree (is_public);
 
 
 --
@@ -2766,6 +2867,14 @@ ALTER TABLE ONLY public.comments_tags
 
 ALTER TABLE ONLY public.comments_tags
     ADD CONSTRAINT comments_tags_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES public.tags(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: communities communities_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.communities
+    ADD CONSTRAINT communities_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id);
 
 
 --
@@ -3281,6 +3390,14 @@ ALTER TABLE ONLY public.posts_about_users
 
 
 --
+-- Name: posts posts_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id);
+
+
+--
 -- Name: posts_tags posts_tags_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3390,6 +3507,14 @@ ALTER TABLE ONLY public.user_external_data
 
 ALTER TABLE ONLY public.communities_users
     ADD CONSTRAINT users_community_deactivator_id_foreign FOREIGN KEY (deactivator_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users users_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id);
 
 
 --
