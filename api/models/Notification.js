@@ -58,7 +58,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   send: function () {
-
     var action
     return this.shouldBeBlocked()
     .then(shouldBeBlocked => {
@@ -220,6 +219,8 @@ module.exports = bookshelf.Model.extend({
         return this.sendJoinRequestEmail()
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestEmail()
+      case 'announcement':
+        return this.sendAnnouncementEmail()
       case 'donation to':
         return this.sendDonationToEmail()
       case 'donation from':
@@ -229,6 +230,42 @@ module.exports = bookshelf.Model.extend({
       default:
         return Promise.resolve()
     }
+  },
+
+  sendAnnouncementEmail: function () {
+    var post = this.post()
+    var reader = this.reader()
+    var user = post.relations.user
+    var description = RichText.qualifyLinks(post.get('description'))
+    var replyTo = Email.postReplyAddress(post.id, reader.id)
+
+    var communityIds = Activity.communityIds(this.relations.activity)
+    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
+    return Community.find(communityIds[0])
+    .then(community => reader.generateToken()
+      .then(token => Email.sendAnnouncementNotification({
+        email: reader.get('email'),
+        sender: {
+          address: replyTo,
+          reply_to: replyTo,
+          name: `${user.get('name')} (via Hylo)`
+        },
+        data: {
+          community_name: community.get('name'),
+          post_user_name: user.get('name'),
+          post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
+            user.get('avatar_url') + '?ctt=announcement_email&cti=' + reader.id),
+          post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.profile(user) + '?ctt=announcement_email&cti=' + reader.id),
+          post_description: description,
+          post_title: decode(post.get('name')),
+          post_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.post(post, community) + '?ctt=announcement_email&cti=' + reader.id),
+          unfollow_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.unfollow(post, community) + '?ctt=announcement_email&cti=' + reader.id),
+          tracking_pixel_url: Analytics.pixelUrl('Announcement', {userId: reader.id})
+        }
+      })))
   },
 
   sendPostMentionEmail: function () {
