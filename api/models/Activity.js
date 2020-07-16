@@ -243,7 +243,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   generateNotificationMedia: async function (activity) {
-    await activity.load('post.communities')
+    const reasons = activity.get('meta').reasons
+    if (!reasons.includes('approvedJoinRequest')) await activity.load('post.communities')
 
     // TODO: rename 'notifications' to 'media'
     var notifications = []

@@ -19,12 +19,16 @@ module.exports = bookshelf.Model.extend({
     }).save()
   },
 
+  sendNotification: function (activity, opts) { 
+    return Activity.saveForReasons([activity])
+  },
+
   find: async function (id) {
     if (!id) return Promise.resolve(null)
     return JoinRequest.where({id}).fetch()
   },
 
-  update: function (id, changes) {
+  update: function (id, changes, moderatorId) {
     const { status } = changes;
 
     if (![0, 1, 2].includes(status)) {
@@ -33,10 +37,28 @@ module.exports = bookshelf.Model.extend({
 
     const attributes = {
       updated_at: new Date(),
-      status: changes.status
+      status
     }
 
+    const isApproved = status === 1
+
     return JoinRequest.query().where({ id }).update(attributes)
+      .then(() => JoinRequest.find(id))
+      .tap(async request => {
+        if (isApproved) {
+          await request.load(['community', 'user'])
+          const { community, user } = request.relations;
+
+          const approvedMember = {
+            actor_id: moderatorId,
+            reader_id: user.id,
+            community_id: community.id,
+            reason: 'approvedJoinRequest'
+          }
+  
+          JoinRequest.sendNotification(approvedMember)
+        }
+      })
   }
 
 })

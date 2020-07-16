@@ -20,8 +20,8 @@ export async function createJoinRequest (communityId, userId) {
   .then(request => ({ request }))
 }
 
-export async function acceptJoinRequest (joinRequestId, communityId, userId) {
-  await JoinRequest.update(joinRequestId, { status: 1 })
+export async function acceptJoinRequest (joinRequestId, communityId, userId, moderatorId) {
+  await JoinRequest.update(joinRequestId, { status: 1 }, moderatorId)
   await joinCommunity(communityId, userId)
   return await JoinRequest.find(joinRequestId)
 }
