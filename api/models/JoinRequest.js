@@ -17,10 +17,29 @@ module.exports = bookshelf.Model.extend({
       created_at: new Date(),
       status: 0,
     }).save()
+    .tap(async request => {
+      JoinRequest.afterCreate(request)
+    })
   },
 
-  sendNotification: function (activity, opts) { 
-    return Activity.saveForReasons([activity])
+  afterCreate: async function (request) {
+    await request.load(['community', 'user'])
+    const { community, user } = request.relations
+
+    const moderators = await community.moderators().fetch()
+
+    const announcees = moderators.map(moderator => ({
+      actor_id: user.id,
+      reader_id: moderator.id,
+      community_id: community.id,
+      reason: 'joinRequest'
+    }))
+    
+    JoinRequest.sendNotification(announcees)
+  },
+
+  sendNotification: function (activities = [], opts) { 
+    return Activity.saveForReasons(activities)
   },
 
   find: async function (id) {
@@ -56,7 +75,7 @@ module.exports = bookshelf.Model.extend({
             reason: 'approvedJoinRequest'
           }
   
-          JoinRequest.sendNotification(approvedMember)
+          JoinRequest.sendNotification([approvedMember])
         }
       })
   }
