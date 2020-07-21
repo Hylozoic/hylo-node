@@ -58,6 +58,7 @@ import {
   updateCommunity,
   updateCommunityHiddenSetting,
   updateCommunityTopic,
+  updateCommunityTopicFollow,
   updateMe,
   updateMembership,
   updateNetwork,
@@ -206,7 +207,7 @@ export function makeMutations (userId, isAdmin) {
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
-    createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
+    createTopic: (root, { topicName, communityId, isDefault, isSubscribing }) => createTopic(userId, topicName, communityId, isDefault, isSubscribing),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
 
@@ -300,7 +301,9 @@ export function makeMutations (userId, isAdmin) {
     updateCommunityHiddenSetting: (root, { id, hidden }) =>
       updateCommunityHiddenSetting({ userId, isAdmin }, id, hidden),
 
-    updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
+    updateCommunityTopic: (root, { id, data }) => updateCommunityTopic(id, data),
+
+    updateCommunityTopicFollow: (root, args) => updateCommunityTopic(userId, args),
 
     updateMe: (root, { changes }) => updateMe(userId, changes),
 

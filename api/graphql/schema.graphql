@@ -54,8 +54,10 @@ type CommunityTopic {
   community: Community
   postsTotal(communitySlug: String, networkSlug: String): Int
   followersTotal(communitySlug: String, networkSlug: String): Int
+  isDefault: Boolean
   isSubscribed: Boolean
   newPostCount: Int
+  visibility: Int
   updatedAt: String
   createdAt: String
 }
@@ -75,7 +77,9 @@ type Topic {
     first: Int,
     offset: Int
     communitySlug: String,
-    networkSlug: String
+    isDefault: Boolean,
+    networkSlug: String,
+    visibility: [Int]
   ): CommunityTopicQuerySet
 }
 
@@ -177,7 +181,9 @@ type Community {
     order: String,
     offset: Int,
     autocomplete: String,
-    subscribed: Boolean
+    isDefault: Boolean,
+    subscribed: Boolean,
+    visibility: Int
   ): CommunityTopicQuerySet
   skills(
     first: Int,
@@ -464,6 +470,8 @@ type Query {
     communitySlug: String,
     networkSlug: String,
     autocomplete: String,
+    isDefault: Boolean,
+    visibility: [Int],
     sortBy: String,
     first: Int,
     offset: Int
@@ -474,7 +482,9 @@ type Query {
   ): PersonConnectionQuerySet
   communityTopics(
     autocomplete: String,
+    isDefault: Boolean,
     subscribed: Boolean,
+    visibility: [Int],
     sortBy: String,
     order: String,
     first: Int,
@@ -586,6 +596,11 @@ input MembershipInput {
 }
 
 input CommunityTopicInput {
+  isDefault: Boolean
+  visibility: Int
+}
+
+input CommunityTopicFollowInput {
   newPostCount: Int
 }
 
@@ -657,7 +672,7 @@ type Mutation {
   createPost(data: PostInput): Post
   createProject(data: PostInput): Post
   createProjectRole(projectId: ID, roleName: String): GenericResult
-  createTopic(topicName: String, communityId: ID): Topic
+  createTopic(topicName: String, communityId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   deleteComment(id: ID): GenericResult
   deleteCommunity(id: ID): GenericResult
   deleteCommunityTopic(id: ID): GenericResult
@@ -697,6 +712,7 @@ type Mutation {
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
+  updateCommunityTopicFollow(id: ID, data: CommunityTopicFollowInput): GenericResult
   updateMe(changes: MeInput): Me
   updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
   updateNetwork(id: ID, data: NetworkInput): Network

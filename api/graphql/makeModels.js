@@ -376,7 +376,7 @@ export default async function makeModels (userId, isAdmin) {
 
     CommunityTopic: {
       model: CommunityTag,
-      attributes: ['updated_at', 'created_at'],
+      attributes: ['is_default', 'visibility', 'updated_at', 'created_at'],
       getters: {
         postsTotal: ct => ct.postCount(),
         followersTotal: ct => ct.followerCount(),
@@ -414,11 +414,19 @@ export default async function makeModels (userId, isAdmin) {
       relations: [{
         communityTags: {
           alias: 'communityTopics',
-          querySet: true
+          querySet: true,
+          filter: (relation, { autocomplete, subscribed, isDefault, visibility }) =>
+            relation.query(communityTopicFilter(userId, {
+              autocomplete,
+              isDefault,
+              subscribed,
+              visibility
+            })
+          )
         }
       }],
-      fetchMany: ({ communitySlug, networkSlug, name, autocomplete, first, offset = 0 }) =>
-        searchQuerySet('tags', { userId, communitySlug, networkSlug, name, autocomplete, limit: first, offset })
+      fetchMany: ({ communitySlug, networkSlug, name, isDefault, visibility, autocomplete, first, offset = 0, sortBy }) =>
+        searchQuerySet('tags', { userId, communitySlug, networkSlug, name, autocomplete, isDefault, visibility, limit: first, offset, sort: sortBy })
     },
 
     Notification: {

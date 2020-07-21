@@ -52,7 +52,8 @@ const addToTaggable = (taggable, name, userId, opts) => {
       return Promise.map(communities, com => Tag.addToCommunity({
         community_id: com.id,
         tag_id: tag.id,
-        user_id: taggable.get('user_id')
+        user_id: taggable.get('user_id'),
+        isSubscribing: true
       }, opts))
     }))
 }
@@ -106,7 +107,7 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-  addToCommunity: ({ community_id, tag_id, user_id, description, is_default }, opts) =>
+  addToCommunity: ({ community_id, tag_id, user_id, description, is_default, isSubscribing }, opts) =>
     CommunityTag.where({community_id, tag_id}).fetch(opts)
     .tap(comTag => comTag ||
       CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
@@ -114,8 +115,8 @@ module.exports = bookshelf.Model.extend({
       // the catch above is for the case where another user just created the
       // CommunityTag (race condition): the save fails, but we don't care about
       // the result
-    .then(comTag => comTag && comTag.save({updated_at: new Date()}))
-    .then(() => user_id &&
+    .then(comTag => comTag && comTag.save({updated_at: new Date(), is_default}))
+    .then(() => user_id && isSubscribing &&
       TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
       .then(follow => follow ||
         TagFollow.create({community_id, tag_id, user_id}, opts))),
@@ -237,7 +238,7 @@ module.exports = bookshelf.Model.extend({
     q.where({ tag_id: tagId })
     q.where('communities.active', true)
     q.count()
-    
+
     return q.then(rows => Number(rows[0].count))
   },
 

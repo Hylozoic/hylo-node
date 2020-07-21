@@ -75,6 +75,22 @@ module.exports = {
         q.whereRaw('tags.name ilike ?', opts.autocomplete + '%')
       }
 
+      if (opts.isDefault) {
+        q.where('communities_tags.is_default', true)
+      }
+
+      if (opts.visibility) {
+        q.where('communities_tags.visibility', 'in', opts.visibility)
+      }
+
+      if (opts.sort) {
+        if (opts.sort === 'name') {
+          q.orderByRaw('lower(tags.name) ASC')
+        } else {
+          q.orderBy(opts.sort, 'asc')
+        }
+      }
+
       countTotal(q, 'tags', opts.totalColumnName)
 
       q.groupBy('tags.id')
