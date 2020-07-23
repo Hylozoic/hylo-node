@@ -1,15 +1,9 @@
 export async function joinCommunity (communityId, userId) {
   const user = await User.find(userId)
+  if(!user) throw new Error(`User id ${userId} not found`)
   const community = await Community.find(communityId)
-
-  return GroupMembership.forPair(user, community, {includeInactive: true}).fetch()
-    .then(existingMembership => {
-      if (existingMembership) return existingMembership.get('active')
-        ? existingMembership
-        : existingMembership.save({active: true}, {patch: true}).then(membership => membership)
-      if (!!community) return user.joinCommunity(community).then(membership => membership)
-    })
-    .catch(error => ({error: error.message}))
+  if(!community) throw new Error(`Community id ${communityId} not found`)
+  if (!!community) return user.joinCommunity(community).then(membership => membership)
 }
 
 export async function createJoinRequest (communityId, userId) {
