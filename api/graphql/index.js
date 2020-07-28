@@ -69,7 +69,8 @@ import {
   updatePost,
   updateStripeAccount,
   useInvitation,
-  vote
+  vote,
+  deleteSavedSearch
 } from './mutations'
 import InvitationService from '../services/InvitationService'
 import makeModels from './makeModels'
@@ -184,7 +185,8 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
     skills: (root, args) => fetchMany('Skill', args),
     checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode)
+      InvitationService.check(userId, invitationToken, accessCode),
+    savedSearches: (root, args) => fetchMany('SavedSearch', args),
   }
 }
 
@@ -244,6 +246,8 @@ export function makeMutations (userId, isAdmin) {
     deletePost: (root, { id }) => deletePost(userId, id),
 
     deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
+
+    deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
 
     expireInvitation: (root, {invitationId}) =>
       expireInvitation(userId, invitationId),

@@ -519,6 +519,7 @@ type Query {
     offset: Int
   ): SearchResultQuerySet
   network(id: ID, slug: String): Network
+  savedSearches(userId: ID): SavedSearchQuerySet
   skills(
     first: Int,
     offset: Int,
@@ -710,6 +711,7 @@ type Mutation {
   deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   deleteProjectRole(id: ID): GenericResult
+  deleteSavedSearch(id: ID): ID
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateLocation(data: LocationInput): Location
@@ -856,6 +858,25 @@ type SkillQuerySet {
   total: Int
   hasMore: Boolean
   items: [Skill]
+}
+
+type SavedSearch {
+  id: ID
+  name: String
+  updatedAt: String
+  createdAt: String
+  community: Community
+  network: Network
+  isPublic: Boolean
+  active: Boolean
+  searchText: String
+  postTypes: [String]
+}
+
+type SavedSearchQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [SavedSearch]
 }
 
 input InappropriateContentInput {
