@@ -270,6 +270,19 @@ export default async function makeModels (userId, isAdmin) {
         })
     },
 
+    CommunityTemplate: {
+      model: CommunityTemplate,
+      attributes: [
+        'name',
+        'display_name'
+      ],
+      relations: [
+        'communities',
+        'defaultTopics'
+      ],
+      fetchMany: () => CommunityTemplate
+    },
+
     Invitation: {
       model: Invitation,
       attributes: [

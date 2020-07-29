@@ -136,6 +136,7 @@ export function makeQueries (userId, fetchOne, fetchMany) {
       throw new Error('Slug is invalid')
     },
     communities: (root, args) => fetchMany('Community', args),
+    communityTemplates: (root, args) => CommunityTemplate.fetchAll(),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
       .tap(() => resetCount && User.resetNewNotificationCount(userId))

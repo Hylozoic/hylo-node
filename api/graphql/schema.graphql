@@ -42,6 +42,19 @@ type UserSettings {
   lastViewedMessagesAt: String
 }
 
+type CommunityTemplate {
+  id: ID
+  name: String
+  displayName: String
+  communities: CommunityQuerySet
+  communitiesTotal: Int
+  defaultTopics: [Topic]
+  defaultTopicsTotal: Int
+  newPostCount: Int
+  updatedAt: String
+  createdAt: String
+}
+
 type CommunityTopicQuerySet {
   total: Int
   hasMore: Boolean
@@ -437,6 +450,7 @@ type Query {
     boundingBox: [PointInput],
     isPublic: Boolean
   ): CommunityQuerySet
+  communityTemplates: [CommunityTemplate]
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
@@ -610,6 +624,7 @@ input InviteInput {
 }
 
 input CommunityInput {
+  communityTemplateId: ID
   name: String
   slug: String
   description: String
@@ -627,6 +642,7 @@ input CommunityInput {
   isPublic: Boolean
   isAutoJoinable: Boolean
   publicMemberDirectory: Boolean
+  defaultTopics: [String]
 }
 
 input CommunitySettingsInput {
