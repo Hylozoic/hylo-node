@@ -11,6 +11,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Post)
   },
 
+  comment: function () {
+    return this.belongsTo(Comment)
+  },
+
   updateMetadata: function (opts) {
     const isVideo = this.get('type') === 'video'
     var thumbnail_url = this.get('thumbnail_url')
@@ -66,11 +70,13 @@ module.exports = bookshelf.Model.extend({
       thumbnailSize && media.createThumbnail({ thumbnailSize, transacting }))
   },
 
-  createForPost: function ({postId, type, url, position = 0}, trx) {
+  createForSubject: function ({subjectId, subjectType, postId, commentId, type, url, position = 0}, trx) {
+    const [subjectIdKey, subjectIdValue] = makeSubjectIdKeyAndValue({subjectId, subjectType, postId, commentId})
+
     switch (type) {
       case 'image':
         return createAndAddSize({
-          post_id: postId,
+          [subjectIdKey]: subjectIdValue,
           url,
           type,
           position,
@@ -78,7 +84,7 @@ module.exports = bookshelf.Model.extend({
         })
       case 'file':
         return Media.create({
-          post_id: postId,
+          [subjectIdKey]: subjectIdValue,
           url,
           type,
           position,
@@ -88,7 +94,7 @@ module.exports = bookshelf.Model.extend({
         return this.generateThumbnailUrl(url)
         .then(thumbnail_url =>
           createAndAddSize({
-            post_id: postId,
+            [subjectIdKey]: subjectIdValue,
             transacting: trx,
             url,
             thumbnail_url,
@@ -143,4 +149,23 @@ const createAndAddSize = function (attrs) {
   }
 
   return Media.create(attrs)
+}
+
+export function makeSubjectIdKeyAndValue ({subjectId, subjectType, postId, commentId}) {
+  let subjectIdKey, subjectIdValue
+
+  if (subjectId && subjectType) {
+    subjectIdKey = `${subjectType.toLowerCase()}_id`
+    subjectIdValue = subjectId
+  }
+  if (commentId) {
+    subjectIdKey = `comment_id`
+    subjectIdValue = commentId
+  }
+  if (postId) {
+    subjectIdKey = `post_id`
+    subjectIdValue = postId
+  }
+
+  return [subjectIdKey, subjectIdValue]
 }
