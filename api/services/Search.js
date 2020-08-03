@@ -20,6 +20,11 @@ module.exports = {
         qb.whereRaw('communities.name ilike ?', opts.autocomplete + '%')
       }
 
+      if (opts.networkSlugs) {
+        qb.join('networks', 'communities.network_id', '=', 'networks.id')
+        qb.whereIn('networks.slug', opts.networkSlugs)
+      }
+
       if (opts.networks) {
         qb.whereIn('communities.network_id', opts.networks)
       }

@@ -175,7 +175,7 @@ export default async function makeModels (userId, isAdmin) {
         activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, isPublic }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, networkSlugs, isPublic }) =>
         searchQuerySet('posts', {
           boundingBox,
           term: search,
@@ -184,6 +184,7 @@ export default async function makeModels (userId, isAdmin) {
           type: filter,
           sort: sortBy,
           topic,
+          networkSlugs,
           is_public: isPublic
         })
     },
@@ -257,10 +258,11 @@ export default async function makeModels (userId, isAdmin) {
           .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
-      fetchMany: ({ first, order, sortBy, communityIds, offset, search, autocomplete, filter, isPublic, boundingBox, }) =>
+      fetchMany: ({ first, order, sortBy, communityIds, offset, search, autocomplete, filter, isPublic, boundingBox, networkSlugs }) =>
         searchQuerySet('communities', {
           boundingBox,
           communities: communityIds,
+          networkSlugs,
           term: search,
           limit: first,
           offset,
