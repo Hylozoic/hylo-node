@@ -52,9 +52,13 @@ function filterCommunities (q, idColumn, userId) {
   // the effect of using `where` like this is to wrap everything within its
   // callback in parentheses -- this is necessary to keep `or` from "leaking"
   // out to the rest of the query
-  q.where(inner =>
-    inner.where(idColumn, 'in', myCommunityIds(userId))
-    .orWhere(idColumn, 'in', myNetworkCommunityIds(userId)))
+  q.where(inner => {
+    inner.where(idColumn, 'in', myCommunityIds(userId)).orWhere(idColumn, 'in', myNetworkCommunityIds(userId))
+    if (idColumn === 'communities.id') {
+      // XXX: hack to make sure to show public communities on the map when logged in
+      inner.orWhere('communities.is_public', true)
+    }
+  })
 }
 
 export const sharedNetworkMembership = curry((tableName, userId, relation) =>
