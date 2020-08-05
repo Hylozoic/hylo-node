@@ -72,35 +72,22 @@ module.exports = bookshelf.Model.extend({
 
   createForSubject: function ({subjectId, subjectType, postId, commentId, type, url, position = 0}, trx) {
     const [subjectIdKey, subjectIdValue] = makeSubjectIdKeyAndValue({subjectId, subjectType, postId, commentId})
+    const mediaAttrs = {
+      [subjectIdKey]: subjectIdValue,
+      type,
+      url,
+      position,
+      transacting: trx
+    }
 
     switch (type) {
       case 'image':
-        return createAndAddSize({
-          [subjectIdKey]: subjectIdValue,
-          url,
-          type,
-          position,
-          transacting: trx
-        })
+        return createAndAddSize(mediaAttrs)
       case 'file':
-        return Media.create({
-          [subjectIdKey]: subjectIdValue,
-          url,
-          type,
-          position,
-          transacting: trx
-        })
+        return Media.create(mediaAttrs)
       case 'video':
         return this.generateThumbnailUrl(url)
-        .then(thumbnail_url =>
-          createAndAddSize({
-            [subjectIdKey]: subjectIdValue,
-            transacting: trx,
-            url,
-            thumbnail_url,
-            position,
-            type
-          }))
+        .then(thumbnail_url => createAndAddSize(Object.assign({}, mediaAttrs, { thumbnail_url })))
     }
   },
 

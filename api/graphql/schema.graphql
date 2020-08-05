@@ -533,9 +533,9 @@ input PostInput {
 
 input CommentInput {
   text: String
-  attachments: [AttachmentInput]
   postId: String
   parentCommentId: String
+  attachments: [AttachmentInput]
 }
 
 input MessageInput {
