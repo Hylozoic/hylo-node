@@ -113,6 +113,7 @@ async function createSchema (userId, isAdmin) {
 export function makePublicQueries (userId, fetchOne, fetchMany) {
   return {
     // Can only access public communities and posts
+    community: async (root, { id, slug }) => fetchOne('Community', slug || id, slug ? 'slug' : 'id', { isPublic: true }),
     communities: (root, args) => fetchMany('Community', Object.assign(args, { isPublic: true })),
     posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true })),
     checkInvitation: (root, { invitationToken, accessCode }) =>
@@ -189,52 +190,52 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
 export function makeMutations (userId, isAdmin) {
   return {
     acceptJoinRequest: (root, { joinRequestId, communityId, userId, moderatorId }) => acceptJoinRequest(joinRequestId, communityId, userId, moderatorId),
-    
+
     addCommunityToNetwork: (root, { communityId, networkId }) =>
     addCommunityToNetwork({ userId, isAdmin }, { communityId, networkId }),
-    
+
     addModerator: (root, { personId, communityId }) =>
     addModerator(userId, personId, communityId),
-    
+
     addNetworkModeratorRole: (root, { personId, networkId }) =>
     addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
-    
+
     addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
     addPeopleToProjectRole(userId, peopleIds, projectRoleId),
-    
+
     addSkill: (root, { name }) => addSkill(userId, name),
-    
+
     allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
-    
+
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
-    
+
     createComment: (root, { data }) => createComment(userId, data),
-    
+
     createCommunity: (root, { data }) => createCommunity(userId, data),
-    
+
     createInvitation: (root, {communityId, data}) =>
     createInvitation(userId, communityId, data),
-    
+
     createJoinRequest: (root, {communityId, userId}) => createJoinRequest(communityId, userId),
-    
+
     createMessage: (root, { data }) => createMessage(userId, data),
-    
+
     createPost: (root, { data }) => createPost(userId, data),
-    
+
     createProject: (root, { data }) => createProject(userId, data),
-    
+
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
-    
+
     joinCommunity: (root, {communityId, userId}) => joinCommunity(communityId, userId),
-    
+
     joinProject: (root, { id }) => joinProject(id, userId),
-    
+
     createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
-    
+
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
-    
+
     deleteComment: (root, { id }) => deleteComment(userId, id),
-    
+
     deleteCommunity: (root, { id }) => deleteCommunity(userId, id),
 
     deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),

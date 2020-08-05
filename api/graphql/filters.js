@@ -59,6 +59,11 @@ function filterCommunities (q, idColumn, userId) {
       inner.orWhere('communities.is_public', true)
     }
   })
+
+  // non authenticated queries can only see public communities
+  if (!userId && idColumn === 'communities.id') {
+    q.where('communities.is_public', true)
+  }
 }
 
 export const sharedNetworkMembership = curry((tableName, userId, relation) =>
@@ -103,6 +108,15 @@ export const activePost = userId => relation => {
       q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
     }
     q.where('posts.active', true)
+  })
+}
+
+export const authFilter = (userId, tableName) => relation => {
+  return relation.query(q => {
+    // non authenticated queries can only see public things
+    if (!userId) {
+      q.where(tableName + '.is_public', true)
+    }
   })
 }
 

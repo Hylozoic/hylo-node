@@ -7,6 +7,7 @@ import {
   personFilter,
   sharedNetworkMembership,
   activePost,
+  authFilter,
   messageFilter
 } from './filters'
 import { myCommunityIds } from '../models/util/queryFilters'
@@ -172,6 +173,7 @@ export default async function makeModels (userId, isAdmin) {
         {tags: {alias: 'topics'}}
       ],
       filter: flow(
+        authFilter(userId, 'posts'),
         activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
