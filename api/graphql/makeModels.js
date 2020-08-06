@@ -279,6 +279,17 @@ export default async function makeModels (userId, isAdmin) {
       ]
     },
 
+    JoinRequest: {
+      model: JoinRequest,
+      attributes: [
+        'created_at',
+        'updated_at',
+        'status'
+      ],
+      relations: ['user' ],
+      fetchMany: ({ communityId }) => JoinRequest.where({ 'community_id': communityId })
+    },
+
     EventInvitation: {
       model: EventInvitation,
       attributes: [
