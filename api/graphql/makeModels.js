@@ -428,6 +428,13 @@ export default async function makeModels (userId, isAdmin) {
       fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'active': true })
     },
 
+    SavedSearchTopic: {
+      model: SavedSearchTopic,
+      attributes: [
+        'id'
+      ]
+    },
+
     Skill: {
       model: Skill,
       attributes: ['name'],

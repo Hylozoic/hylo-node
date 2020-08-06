@@ -81,7 +81,7 @@ export {
   registerStripeAccount
 } from './user'
 export { updateMembership } from './membership'
-export { deleteSavedSearch } from './savedSearch'
+export { deleteSavedSearch, createSavedSearch } from './savedSearch'
 
 export function updateMe (userId, changes) {
   return User.find(userId)

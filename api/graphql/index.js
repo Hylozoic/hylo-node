@@ -20,6 +20,7 @@ import {
   createPost,
   createProject,
   createProjectRole,
+  createSavedSearch,
   createTopic,
   declineJoinRequest,
   deleteComment,
@@ -27,6 +28,7 @@ import {
   deleteCommunityTopic,
   deletePost,
   deleteProjectRole,
+  deleteSavedSearch,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
   findOrCreateLocation,
@@ -70,7 +72,7 @@ import {
   updateStripeAccount,
   useInvitation,
   vote,
-  deleteSavedSearch
+  
 } from './mutations'
 import InvitationService from '../services/InvitationService'
 import makeModels from './makeModels'
@@ -229,6 +231,8 @@ export function makeMutations (userId, isAdmin) {
 
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
 
+    createSavedSearch: (root, { data }) => createSavedSearch(data),
+    
     joinCommunity: (root, {communityId, userId}) => joinCommunity(communityId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),

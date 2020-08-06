@@ -679,6 +679,18 @@ input NetworkInput {
   moderatorIds: [String]
 }
 
+input SavedSearchInput {
+  boundingBox: [PointInput]
+  communitySlug: String
+  isPublic: Boolean
+  name: String
+  networkSlug: String
+  postTypes: [String]
+  searchText: String
+  topicIds: [ID]
+  userId: ID
+}
+
 input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
@@ -704,6 +716,7 @@ type Mutation {
   createPost(data: PostInput): Post
   createProject(data: PostInput): Post
   createProjectRole(projectId: ID, roleName: String): GenericResult
+  createSavedSearch(data: SavedSearchInput): SavedSearch
   createTopic(topicName: String, communityId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   declineJoinRequest(joinRequestId: ID): JoinRequest
   deleteComment(id: ID): GenericResult
@@ -871,6 +884,10 @@ type SavedSearch {
   active: Boolean
   searchText: String
   postTypes: [String]
+}
+
+type SavedSearchTopic {
+  id: ID
 }
 
 type SavedSearchQuerySet {
