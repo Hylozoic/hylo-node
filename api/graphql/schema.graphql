@@ -212,6 +212,21 @@ type InvitationQuerySet {
   items: [Invitation]
 }
 
+type JoinRequest {
+  id: Int
+  user: Person
+  community: Community
+  createdAt: String
+  updatedAt: String
+  status: Int
+}
+
+type JoinRequestQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [JoinRequest]
+}
+
 type PostQuerySet {
   total: Int
   hasMore: Boolean
@@ -437,6 +452,7 @@ type Query {
     boundingBox: [PointInput],
     isPublic: Boolean
   ): CommunityQuerySet
+  joinRequests(communityId: ID): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
@@ -658,6 +674,7 @@ input UserSettingsInput {
 }
 
 type Mutation {
+  acceptJoinRequest(joinRequestId: ID, communityId: ID, userId: ID, moderatorId: ID): JoinRequest
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
@@ -668,11 +685,13 @@ type Mutation {
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
+  createJoinRequest(communityId: ID, userId: ID): CreatedRequest
   createMessage(data: MessageInput): Message
   createPost(data: PostInput): Post
   createProject(data: PostInput): Post
   createProjectRole(projectId: ID, roleName: String): GenericResult
   createTopic(topicName: String, communityId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
+  declineJoinRequest(joinRequestId: ID): JoinRequest
   deleteComment(id: ID): GenericResult
   deleteCommunity(id: ID): GenericResult
   deleteCommunityTopic(id: ID): GenericResult
@@ -685,6 +704,7 @@ type Mutation {
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   fulfillPost(postId: ID): GenericResult
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
+  joinCommunity(communityId: ID, userId: ID): InvitationUseResult
   joinProject(id: ID): GenericResult
   leaveCommunity(id: ID): ID
   leaveProject(id: ID): GenericResult
@@ -748,6 +768,10 @@ type CreatedInvitations {
 
 type CheckInvitationResult {
   valid: Boolean
+}
+
+type CreatedRequest {
+  request: JoinRequest
 }
 
 type Notification {
