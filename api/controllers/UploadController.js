@@ -1,6 +1,6 @@
 import Busboy from 'busboy'
 import { upload } from '../../lib/uploader'
-import { getMediaTypeFromMimetype } from '../../models/Media'
+import { getMediaTypeFromMimetype } from '../../models/media/util'
 
 module.exports = {
   create: function (req, res) {
