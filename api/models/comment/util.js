@@ -1,3 +1,4 @@
+
 const delimiter = /-{3,}.Only.text.above.the.dashed.line.will.be.included.-{3,}(\.| )?/
 
 export const repairedText = comment => {
@@ -10,3 +11,20 @@ export const repairedText = comment => {
 
 export const repairText = comment =>
   comment.save({text: repairedText(comment)}, {patch: true})
+
+
+export function updateMedia (comment, attachments, transacting) {
+  if (!attachments) return
+
+  var media = comment.relations.media
+
+  return Promise.map(media, m => m.destroy({transacting}))
+  .then(() => Promise.map(attachments, (attachment, i) =>
+    Media.createForSubject({
+      subjectType: 'comment',
+      subjectId: comment.id,
+      type: attachment.type,
+      url: attachment.url,
+      position: i
+    }, transacting)))
+}

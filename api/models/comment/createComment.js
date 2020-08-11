@@ -1,5 +1,5 @@
 import { sanitize } from 'hylo-utils/text'
-import { difference, uniq } from 'lodash'
+import { flatten, difference, uniq } from 'lodash'
 import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 import { refineOne, refineMany } from '../util/relations'
 
@@ -27,7 +27,7 @@ export default async function createComment (commenterId, opts = {}) {
 
   return bookshelf.transaction(trx =>
     new Comment(attrs).save(null, {transacting: trx})
-    .tap(createMedia(opts.imageUrl, trx)))
+    .tap(createMedia(opts, trx)))
   .tap(createOrUpdateConnections(commenterId, existingFollowers))
   .tap(comment => post.addFollowers(newFollowers))
   .tap(comment => Promise.all([
@@ -45,13 +45,18 @@ export default async function createComment (commenterId, opts = {}) {
   .then(() => comment))
 }
 
-export const createMedia = (url, transacting) => comment =>
-  url && Media.create({
-    comment_id: comment.id,
-    url,
-    thumbnailSize: 128,
-    transacting
-  })
+export const createMedia = (opts, trx) => comment => {
+  return Promise.all(flatten([
+    opts.attachments && Promise.map(opts.attachments, (attachment, i) =>
+      Media.createForSubject({
+        subjectType: 'comment',
+        subjectId: comment.id,
+        type: attachment.attachmentType,
+        url: attachment.url,
+        position: i
+      }, trx)),
+  ]))
+}
 
 function notifySockets (comment, post, isThread) {
   if (isThread) return pushMessageToSockets(comment, post)

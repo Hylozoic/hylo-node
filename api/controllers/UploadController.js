@@ -30,7 +30,7 @@ module.exports = {
 
 const doUpload = (res, args, resolve) =>
   upload(args)
-  .then(url => resolve(res.ok({url})))
+  .then(uploadResult => resolve(res.ok(uploadResult)))
   .catch(err => {
     if (err.message.startsWith('Validation error')) {
       return resolve(res.status(422).send({error: err.message}))

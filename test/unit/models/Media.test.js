@@ -3,7 +3,7 @@ require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 
 describe('Media', () => {
-  describe('.createForPost', () => {
+  describe('.createForSubject', () => {
     var post
     beforeEach(() => {
       post = factories.post()
@@ -12,7 +12,7 @@ describe('Media', () => {
 
     it('works as expected', function () {
       this.timeout(5000)
-      return Media.createForPost({
+      return Media.createForSubject({
         postId: post.id, type: 'video', url: 'https://vimeo.com/70509133', position: 7
       })
       .tap(video => video.load('post'))
