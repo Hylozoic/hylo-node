@@ -86,6 +86,9 @@ module.exports = {
       if (opts.sort) {
         if (opts.sort === 'name') {
           q.orderByRaw('lower(tags.name) ASC')
+        } else if (opts.sort === 'num_followers') {
+          q.select(bookshelf.knex.raw('sum(communities_tags.num_followers) as num_followers'))
+          q.orderBy('num_followers', 'desc')
         } else {
           q.orderBy(opts.sort, 'asc')
         }
