@@ -521,6 +521,11 @@ type Query {
   checkInvitation(invitationToken: String, accessCode: String): CheckInvitationResult
 }
 
+input AttachmentInput {
+  url: String
+  attachmentType: String
+}
+
 input MeInput {
   name: String
   email: String
@@ -561,9 +566,9 @@ input PostInput {
 
 input CommentInput {
   text: String
-  imageUrl: String
   postId: String
   parentCommentId: String
+  attachments: [AttachmentInput]
 }
 
 input MessageInput {
