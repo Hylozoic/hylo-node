@@ -10,7 +10,7 @@ export async function topicMutationPermissionCheck (userId, communityId) {
   }
 }
 
-export async function createTopic (userId, topicName, communityId) {
+export async function createTopic (userId, topicName, communityId, isDefault, isSubscribing = true) {
   await topicMutationPermissionCheck(userId, communityId)
   const name = sanitize(topicName)
   const invalidReason = Tag.validate(name)
@@ -22,7 +22,9 @@ export async function createTopic (userId, topicName, communityId) {
   await Tag.addToCommunity({
     community_id: communityId,
     tag_id: topic.id,
-    user_id: userId
+    user_id: userId,
+    is_default: isDefault,
+    isSubscribing
   })
   return topic
 }

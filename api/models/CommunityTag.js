@@ -39,7 +39,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   followerCount: function () {
-    return Tag.followersCount(this.get('tag_id'), this.get('community_id'))
+    return Tag.followersCount(this.get('tag_id'), { communityId: this.get('community_id') })
   },
 
   consolidateFollowerCount: function () {

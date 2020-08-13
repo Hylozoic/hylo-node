@@ -107,7 +107,15 @@ export function findOrCreateLinkPreviewByUrl (data) {
   return underlyingFindLinkPreview(data.url)
 }
 
-export function updateCommunityTopic (userId, { id, data }) {
+export function updateCommunityTopic (id, data) {
+  const whitelist = mapKeys(pick(data, ['visibility', 'isDefault']), (v, k) => snakeCase(k))
+  if (isEmpty(whitelist)) return Promise.resolve(null)
+
+  return CommunityTag.query().where({id}).update(whitelist)
+  .then(() => ({success: true}))
+}
+
+export function updateCommunityTopicFollow (userId, { id, data }) {
   const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
