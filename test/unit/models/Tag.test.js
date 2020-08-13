@@ -250,7 +250,7 @@ describe('Tag', () => {
     })
 
     it('correctly counts the number of followers for a given community', function () {
-      return Tag.followersCount(t1.id, c2.id)
+      return Tag.followersCount(t1.id, { communityId: c2.id })
       .then(count => {
         expect(count).to.equal(0)
       })

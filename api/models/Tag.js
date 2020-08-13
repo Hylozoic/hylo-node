@@ -6,6 +6,7 @@ import {
   filter, omitBy, some, uniq
 } from 'lodash/fp'
 import { validateTopicName } from 'hylo-utils/validators'
+import { myCommunityIds } from './util/queryFilters'
 
 export const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w_-]+)/g
@@ -51,7 +52,8 @@ const addToTaggable = (taggable, name, userId, opts) => {
       return Promise.map(communities, com => Tag.addToCommunity({
         community_id: com.id,
         tag_id: tag.id,
-        user_id: taggable.get('user_id')
+        user_id: taggable.get('user_id'),
+        isSubscribing: true
       }, opts))
     }))
 }
@@ -105,19 +107,19 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-  addToCommunity: ({ community_id, tag_id, user_id, description, is_default }, opts) =>
-  CommunityTag.where({community_id, tag_id}).fetch(opts)
-  .tap(comTag => comTag ||
-    CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
-    .catch(() => {}))
-    // the catch above is for the case where another user just created the
-    // CommunityTag (race condition): the save fails, but we don't care about
-    // the result
-  .then(comTag => comTag && comTag.save({updated_at: new Date()}))
-  .then(() => user_id &&
-    TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
-    .then(follow => follow ||
-      TagFollow.create({community_id, tag_id, user_id}, opts))),
+  addToCommunity: ({ community_id, tag_id, user_id, description, is_default, isSubscribing }, opts) =>
+    CommunityTag.where({community_id, tag_id}).fetch(opts)
+    .tap(comTag => comTag ||
+      CommunityTag.create({community_id, tag_id, user_id, description, is_default}, opts)
+      .catch(() => {}))
+      // the catch above is for the case where another user just created the
+      // CommunityTag (race condition): the save fails, but we don't care about
+      // the result
+    .then(comTag => comTag && comTag.save({updated_at: new Date(), is_default}))
+    .then(() => user_id && isSubscribing &&
+      TagFollow.where({community_id, tag_id, user_id}).fetch(opts)
+      .then(follow => follow ||
+        TagFollow.create({community_id, tag_id, user_id}, opts))),
 
   isValidTag: function (text) {
     return !validateTopicName(text)
@@ -179,24 +181,65 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  taggedPostCount: tagId => {
-    return bookshelf.knex('posts_tags')
-    .join('posts', 'posts.id', 'posts_tags.post_id')
-    .where('posts.active', true)
-    .where({tag_id: tagId})
-    .count()
-    .then(rows => Number(rows[0].count))
+  taggedPostCount: (tagId, options = {}) => {
+    const { userId, communitySlug, networkSlug } = options
+    const q = PostTag.query()
+
+    q.select(bookshelf.knex.raw('count(distinct posts_tags.post_id) AS count'))
+    q.join('posts', 'posts.id', 'posts_tags.post_id')
+    q.join('tags', 'tags.id', 'posts_tags.tag_id')
+    q.join('communities_tags', 'communities_tags.tag_id', 'tags.id')
+    q.join('communities_posts', 'communities_posts.post_id', 'posts.id')
+    q.join('communities', 'communities.id', 'communities_posts.community_id')
+    q.where('posts_tags.tag_id', tagId)
+    q.where('posts.active', true)
+    q.where('communities.active', true)
+    if (userId) {
+      q.where('communities.id', 'in', myCommunityIds(userId))
+    }
+    if (networkSlug) {
+      q.join('networks', 'networks.id', 'communities.network_id')
+      q.where('networks.slug', networkSlug)
+    }
+    if (communitySlug) {
+      q.where('communities.slug', communitySlug)
+    }
+    q.groupBy('tags.id')
+
+    return q.then(rows => {
+      if (rows.length === 0) return 0
+
+      return Number(rows[0].count)
+    })
   },
 
-  followersCount: (tagId, communityId) => {
-    const query = communityId ? {
-      community_id: communityId,
-      tag_id: tagId
-    } : {tag_id: tagId}
-    return bookshelf.knex('tag_follows')
-    .where(query)
-    .count()
-    .then(rows => Number(rows[0].count))
+  followersCount: (tagId, { userId, communityId, communitySlug, networkSlug }) => {
+    const q = TagFollow.query()
+
+    q.join('communities', 'communities.id', 'tag_follows.community_id')
+
+    if (userId) {
+      q.where('communities.id', 'in', myCommunityIds(userId))
+    }
+
+    if (communityId) {
+      q.where('tag_follows.community_id', communityId)
+    }
+
+    if (communitySlug) {
+      q.where('communities.slug', communitySlug)
+    }
+
+    if (networkSlug) {
+      q.join('networks', 'networks.id', 'communities.network_id')
+      q.where('networks.slug', networkSlug)
+    }
+
+    q.where({ tag_id: tagId })
+    q.where('communities.active', true)
+    q.count()
+
+    return q.then(rows => Number(rows[0].count))
   },
 
   nonexistent: (names, communityIds) => {
