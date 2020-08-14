@@ -1,8 +1,7 @@
 /* eslint-disable camelcase */
 import GetImageSize from '../services/GetImageSize'
 import request from 'request'
-import { merge } from 'lodash'
-import { pick } from 'lodash/fp'
+import { createAndAddSize } from './media/util'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'media',
@@ -70,10 +69,11 @@ module.exports = bookshelf.Model.extend({
       thumbnailSize && media.createThumbnail({ thumbnailSize, transacting }))
   },
 
-  createForSubject: function ({subjectId, subjectType, postId, commentId, type, url, position = 0}, trx) {
-    const [subjectIdKey, subjectIdValue] = makeSubjectIdKeyAndValue({subjectId, subjectType, postId, commentId})
+  createForSubject: function ({subjectType, subjectId, type, url, position = 0}, trx) {
+    const subjectIdKey = `${subjectType.toLowerCase()}_id`
+
     const mediaAttrs = {
-      [subjectIdKey]: subjectIdValue,
+      [subjectIdKey]: subjectId,
       type,
       url,
       position,
@@ -125,34 +125,3 @@ module.exports = bookshelf.Model.extend({
     return Promise.resolve()
   }
 })
-
-const createAndAddSize = function (attrs) {
-  const url = attrs.type === 'image' ? attrs.url
-    : attrs.type === 'video' ? attrs.thumbnail_url : null
-
-  if (url) {
-    return GetImageSize(url).then(dimensions =>
-      Media.create(merge({}, attrs, pick(['width', 'height'], dimensions))))
-  }
-
-  return Media.create(attrs)
-}
-
-export function makeSubjectIdKeyAndValue ({subjectId, subjectType, postId, commentId}) {
-  let subjectIdKey, subjectIdValue
-
-  if (subjectId && subjectType) {
-    subjectIdKey = `${subjectType.toLowerCase()}_id`
-    subjectIdValue = subjectId
-  }
-  if (commentId) {
-    subjectIdKey = `comment_id`
-    subjectIdValue = commentId
-  }
-  if (postId) {
-    subjectIdKey = `post_id`
-    subjectIdValue = postId
-  }
-
-  return [subjectIdKey, subjectIdValue]
-}
