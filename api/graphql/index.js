@@ -62,6 +62,7 @@ import {
   updateCommunity,
   updateCommunityHiddenSetting,
   updateCommunityTopic,
+  updateCommunityTopicFollow,
   updateMe,
   updateMembership,
   updateNetwork,
@@ -162,9 +163,9 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
     people: (root, args) => fetchMany('Person', args),
-    topics: (root, args) => fetchMany('Topic', args),
     connections: (root, args) => fetchMany('PersonConnection', args),
     communityTopics: (root, args) => fetchMany('CommunityTopic', args),
+    topics: (root, args) => fetchMany('Topic', args),
     topic: (root, { id, name }) => // you can specify id or name, but not both
       fetchOne('Topic', name || id, name ? 'name' : 'id'),
     communityTopic: (root, { topicName, communitySlug }) =>
@@ -230,7 +231,7 @@ export function makeMutations (userId, isAdmin) {
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
-    createTopic: (root, { topicName, communityId }) => createTopic(userId, topicName, communityId),
+    createTopic: (root, { topicName, communityId, isDefault, isSubscribing }) => createTopic(userId, topicName, communityId, isDefault, isSubscribing),
 
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
 
@@ -326,7 +327,9 @@ export function makeMutations (userId, isAdmin) {
     updateCommunityHiddenSetting: (root, { id, hidden }) =>
       updateCommunityHiddenSetting({ userId, isAdmin }, id, hidden),
 
-    updateCommunityTopic: (root, args) => updateCommunityTopic(userId, args),
+    updateCommunityTopic: (root, { id, data }) => updateCommunityTopic(id, data),
+
+    updateCommunityTopicFollow: (root, args) => updateCommunityTopic(userId, args),
 
     updateMe: (root, { changes }) => updateMe(userId, changes),
 

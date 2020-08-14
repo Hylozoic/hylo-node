@@ -1,5 +1,6 @@
 import Busboy from 'busboy'
 import { upload } from '../../lib/uploader'
+import { getMediaTypeFromMimetype } from '../models/media/util'
 
 module.exports = {
   create: function (req, res) {
@@ -30,7 +31,19 @@ module.exports = {
 
 const doUpload = (res, args, resolve) =>
   upload(args)
-  .then(url => resolve(res.ok({url})))
+  .then(({ type, id, url, mimetype }) => {
+    const uploadResponse = {
+      type,
+      id,
+      url,
+      // Roughly, the frontend and graphql implemenations use
+      // 'attachment' and 'attachmentType' for what we call
+      // Media and Media.type here on in the backend.
+      attachmentType: getMediaTypeFromMimetype(mimetype)
+    }
+
+    return resolve(res.ok(uploadResponse))
+  })
   .catch(err => {
     if (err.message.startsWith('Validation error')) {
       return resolve(res.status(422).send({error: err.message}))

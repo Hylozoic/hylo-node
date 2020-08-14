@@ -33,30 +33,44 @@ export function afterCreatingPost (post, opts) {
 
     // Add media, if any
     // redux version
-    opts.imageUrl && Media.createForPost({
-      postId: post.id, type: 'image', url: opts.imageUrl
-    }, trx),
-
-    opts.videoUrl && Media.createForPost({
-      postId: post.id, type: 'video', url: opts.videoUrl
+    opts.imageUrl && Media.createForSubject({
+      subjectType: 'post',
+      subjectId: post.id,
+      type: 'image',
+      url: opts.imageUrl
     }, trx),
 
     // evo version
     opts.imageUrls && Promise.map(opts.imageUrls, (url, i) =>
-      Media.createForPost({
-        postId: post.id, type: 'image', url, position: i
+      Media.createForSubject({
+        subjectType: 'post',
+        subjectId: post.id,
+        type: 'image',
+        url,
+        position: i
       }, trx)),
 
     // evo version
     opts.fileUrls && Promise.map(opts.fileUrls, (url, i) =>
-      Media.createForPost({
-        postId: post.id, type: 'file', url, position: i
+      Media.createForSubject({
+        subjectType: 'post',
+        subjectId: post.id,
+        type: 'file',
+        url,
+        position: i
       }, trx)),
 
     opts.children && updateChildren(post, opts.children, trx),
 
-    opts.docs && Promise.map(opts.docs, doc => Media.createDoc(post.id, doc, trx)),
+    // google doc / video not currently used in evo
+    opts.videoUrl && Media.createForSubject({
+      subjectType: 'post',
+      subjectId: post.id,
+      type: 'video',
+      url: opts.videoUrl
+    }, trx),
 
+    opts.docs && Promise.map(opts.docs, (doc) => Media.createDoc(post.id, doc, trx)),
   ]))
   .then(() => post.updateProjectMembers(opts.memberIds || [], trxOpts))
   .then(() => post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))

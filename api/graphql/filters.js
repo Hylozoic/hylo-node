@@ -122,22 +122,33 @@ export const authFilter = (userId, tableName) => relation => {
 
 export function communityTopicFilter (userId, {
   autocomplete,
+  communityId,
+  isDefault,
   subscribed,
-  communityId
+  visibility
 }) {
   return q => {
+    if (communityId) {
+      q.where('communities_tags.community_id', communityId)
+    }
+
     if (autocomplete) {
       q.join('tags', 'tags.id', 'communities_tags.tag_id')
       q.whereRaw('tags.name ilike ?', autocomplete + '%')
+    }
+
+    if (isDefault) {
+      q.where('communities_tags.is_default', true)
     }
 
     if (subscribed) {
       q.join('tag_follows', 'tag_follows.tag_id', 'communities_tags.tag_id')
       q.where('tag_follows.user_id', userId)
       q.whereRaw('tag_follows.community_id = communities_tags.community_id')
-      if (communityId) {
-        q.where('tag_follows.community_id', communityId)
-      }
+    }
+
+    if (visibility) {
+      q.where('communities_tags.visibility', 'in', visibility)
     }
   }
 }
