@@ -7,6 +7,7 @@ import {
   personFilter,
   sharedNetworkMembership,
   activePost,
+  authFilter,
   messageFilter
 } from './filters'
 import { myCommunityIds } from '../models/util/queryFilters'
@@ -149,10 +150,11 @@ export default async function makeModels (userId, isAdmin) {
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
         type: p => p.getType(),
-        myVote: p => p.userVote(userId).then(v => !!v),
+        myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
-          p.userEventInvitation(userId)
+          userId ? p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
+          : ''
       },
       relations: [
         {comments: {querySet: true}},
@@ -171,10 +173,11 @@ export default async function makeModels (userId, isAdmin) {
         {tags: {alias: 'topics'}}
       ],
       filter: flow(
+        authFilter(userId, 'posts'),
         activePost(userId),
         nonAdminFilter(sharedNetworkMembership('posts', userId))),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, isPublic }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, networkSlugs, isPublic }) =>
         searchQuerySet('posts', {
           boundingBox,
           term: search,
@@ -183,6 +186,7 @@ export default async function makeModels (userId, isAdmin) {
           type: filter,
           sort: sortBy,
           topic,
+          networkSlugs,
           is_public: isPublic
         })
     },
@@ -256,10 +260,11 @@ export default async function makeModels (userId, isAdmin) {
           .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
       },
       filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
-      fetchMany: ({ first, order, sortBy, communityIds, offset, search, autocomplete, filter, isPublic, boundingBox, }) =>
+      fetchMany: ({ first, order, sortBy, communityIds, offset, search, autocomplete, filter, isPublic, boundingBox, networkSlugs }) =>
         searchQuerySet('communities', {
           boundingBox,
           communities: communityIds,
+          networkSlugs,
           term: search,
           limit: first,
           offset,
@@ -488,8 +493,10 @@ export default async function makeModels (userId, isAdmin) {
       fetchMany: () => UserConnection,
       filter: relation => {
         return relation.query(q => {
-          q.where('other_user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-          q.where('user_id', userId)
+          if (userId) {
+            q.where('other_user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+            q.where('user_id', userId)
+          }
           q.orderBy('created_at', 'desc')
         })
       }
