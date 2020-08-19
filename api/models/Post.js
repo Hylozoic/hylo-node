@@ -16,14 +16,17 @@ import EventMixin from './event/mixin'
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
   q.join('comments', 'comments.user_id', 'users.id')
-  q.where('users.id', 'NOT IN', BlockedUser.blockedFor(currentUserId))
+
   q.where({
     'comments.post_id': post.id,
     'comments.active': true
   })
+
   if (currentUserId) {
+    q.where('users.id', 'NOT IN', BlockedUser.blockedFor(currentUserId))
     q.orderBy(bookshelf.knex.raw(`case when user_id = ${currentUserId} then -1 else user_id end`))
   }
+
   q.groupBy('users.id', 'comments.user_id')
   if (limit) q.limit(limit)
 }

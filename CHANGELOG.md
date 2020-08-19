@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2020-08-17
+### Added
+- Allow for querying for public posts and communities without being an authenticated user
+
 ## [1.3.0] - 2020-08-14
 ### Added
 - Join Requests: Ability to create a join request, and for admins to accept or reject join requests. Notify admins about incoming join requests and users when their request was accepted.

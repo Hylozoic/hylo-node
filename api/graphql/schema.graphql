@@ -446,6 +446,7 @@ type Query {
     sortBy: String,
     offset: Int,
     communityIds: [String],
+    networkSlugs: [String],
     search: String,
     autocomplete: String,
     filter: String,
@@ -456,6 +457,7 @@ type Query {
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
+    networkSlugs: [String],
     first: Int,
     order: String,
     sortBy: String,

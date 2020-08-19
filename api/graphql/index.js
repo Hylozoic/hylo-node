@@ -84,9 +84,9 @@ async function createSchema (userId, isAdmin) {
   const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
-  const allResolvers = Object.assign({
-    Query: makeQueries(userId, fetchOne, fetchMany),
-    Mutation: makeMutations(userId, isAdmin),
+  let allResolvers = Object.assign({
+    Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
+    Mutation: userId ? makeMutations(userId, isAdmin) : {},
 
     FeedItemContent: {
       __resolveType (data, context, info) {
@@ -106,11 +106,24 @@ async function createSchema (userId, isAdmin) {
 
   return makeExecutableSchema({
     typeDefs: [schemaText],
-    resolvers: requireUser(allResolvers, userId)
+    resolvers: allResolvers
   })
 }
 
-export function makeQueries (userId, fetchOne, fetchMany) {
+// Queries that non-logged in users can make
+export function makePublicQueries (userId, fetchOne, fetchMany) {
+  return {
+    // Can only access public communities and posts
+    community: async (root, { id, slug }) => fetchOne('Community', slug || id, slug ? 'slug' : 'id', { isPublic: true }),
+    communities: (root, args) => fetchMany('Community', Object.assign(args, { isPublic: true })),
+    posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true })),
+    checkInvitation: (root, { invitationToken, accessCode }) =>
+      InvitationService.check(userId, invitationToken, accessCode)
+  }
+}
+
+// Queries that logged in users can make
+export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   return {
     activity: (root, { id }) => fetchOne('Activity', id),
     me: () => fetchOne('Me', userId),
@@ -178,44 +191,44 @@ export function makeQueries (userId, fetchOne, fetchMany) {
 export function makeMutations (userId, isAdmin) {
   return {
     acceptJoinRequest: (root, { joinRequestId, communityId, userId, moderatorId }) => acceptJoinRequest(joinRequestId, communityId, userId, moderatorId),
-    
+
     addCommunityToNetwork: (root, { communityId, networkId }) =>
     addCommunityToNetwork({ userId, isAdmin }, { communityId, networkId }),
-    
+
     addModerator: (root, { personId, communityId }) =>
     addModerator(userId, personId, communityId),
-    
+
     addNetworkModeratorRole: (root, { personId, networkId }) =>
     addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
-    
+
     addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
     addPeopleToProjectRole(userId, peopleIds, projectRoleId),
-    
+
     addSkill: (root, { name }) => addSkill(userId, name),
-    
+
     allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
-    
+
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
-    
+
     createComment: (root, { data }) => createComment(userId, data),
-    
+
     createCommunity: (root, { data }) => createCommunity(userId, data),
-    
+
     createInvitation: (root, {communityId, data}) =>
     createInvitation(userId, communityId, data),
-    
+
     createJoinRequest: (root, {communityId, userId}) => createJoinRequest(communityId, userId),
-    
+
     createMessage: (root, { data }) => createMessage(userId, data),
-    
+
     createPost: (root, { data }) => createPost(userId, data),
-    
+
     createProject: (root, { data }) => createProject(userId, data),
-    
+
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
-    
+
     joinCommunity: (root, {communityId, userId}) => joinCommunity(communityId, userId),
-    
+
     joinProject: (root, { id }) => joinProject(id, userId),
 
     createTopic: (root, { topicName, communityId, isDefault, isSubscribing }) => createTopic(userId, topicName, communityId, isDefault, isSubscribing),
@@ -223,7 +236,7 @@ export function makeMutations (userId, isAdmin) {
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
-    
+
     deleteCommunity: (root, { id }) => deleteCommunity(userId, id),
 
     deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
@@ -362,22 +375,6 @@ export const createRequestHandler = () =>
       formatError: process.env.NODE_ENV === 'development' ? logError : null
     }
   })
-
-function requireUser (resolvers, userId) {
-  if (userId) return resolvers
-
-  const error = () => {
-    throw new Error('not logged in')
-  }
-
-  return Object.assign({}, resolvers, {
-    Query: mapValues(resolvers.Query, (v, k) => {
-      if (k === 'checkInvitation') return v
-      return error
-    }),
-    Mutation: mapValues(resolvers.Mutation, () => error)
-  })
-}
 
 var modelToTypeMap
 
