@@ -1,4 +1,6 @@
 const passport = require('passport')
+const appleSigninAuth = require('apple-signin-auth')
+
 const rollbar = require('../../lib/rollbar')
 
 const findUser = function (service, email, id) {
@@ -160,27 +162,33 @@ module.exports = {
   // }),
 
   finishAppleOAuth: function (req, res, next) {
-    // finishOAuth ? this funciton needs to do the following:
-    // (NODE) verify token nonce according to docs
-    // (NODE) look for existing user in linked-accounts with auth token 
-    // (NODE) if doesn't find user it is assumed a new user (what about refresh token?!?!)
-    //     (NODE) server finds or creates new user with email address and name
-    //   (NODE) server receives and stores (or replaces) token for user in linked accounts?
-    // (NODE) creates session
-    // (NODE) RETURN success 
-    return passport.authenticate('apple', function(err, user, info) {
-      if (err) {
-          if (err == "AuthorizationError") {
-              res.send("Oops! Looks like you didn't allow the app to proceed. Please sign in again! <br /> \
-              <a href=\"/login\">Sign in with Apple</a>");
-          } else if (err == "TokenError") {
-              res.send("Oops! Couldn't get a valid token from Apple's servers! <br /> \
-              <a href=\"/login\">Sign in with Apple</a>")
-          }
-      } else {
-          res.json(user)
-      }
-    })(req, res, next)
+    // check nonce
+    const { nonce, identityToken, email } = req.body // appleAuthRequestResponse
+    // authorizationCode
+    // authorizedScopes
+    // email
+    // fullName
+    // identityToken
+    // nonce
+    // realUserStatus
+    // state
+    // user
+    const appleIdTokenClaims = await appleSigninAuth.verifyIdToken(identityToken, {
+      /** sha256 hex hash of raw nonce */
+      nonce: nonce
+        ? crypto.createHash('sha256').update(nonce).digest('hex')
+        : undefined
+    })
+    // if valid look for existing user in linked-accounts with auth token (find LinkedAccount based upon: provider_key: 'apple', provider_user_id: identityToken)
+    //   if user is found
+    //     server receives and stores (or replaces) token for user in linked accounts?
+    //   else and there email address and name available
+    //     server finds or creates new user with email address and name
+    const user = findUser('apple', email, identityToken)
+    //   creates session
+    //   RETURN success 
+
+    return appleIdTokenClaims
   },
 
   startGoogleOAuth: setSessionFromParams(function (req, res) {
