@@ -138,6 +138,51 @@ module.exports = {
     })
   },
 
+  // appleAuth: function (req, res, next) {
+  //   const appleAuthRequestResponse = req.body
+  //   // authorizationCode
+  //   // authorizedScopes
+  //   // email
+  //   // fullName
+  //   // identityToken
+  //   // nonce
+  //   // realUserStatus
+  //   // state
+  //   // user
+
+  //   console.log('!!!!!!! Session#apple -- req.body:', appleAuthRequestResponse)
+
+  //   res.status(200).send(appleAuthRequestResponse)
+  // },
+
+  // startAppleOAuth: setSessionFromParams(function (req, res) {
+  //   passport.authenticate('apple')(req, res)
+  // }),
+
+  finishAppleOAuth: function (req, res, next) {
+    // finishOAuth ? this funciton needs to do the following:
+    // (NODE) verify token nonce according to docs
+    // (NODE) look for existing user in linked-accounts with auth token 
+    // (NODE) if doesn't find user it is assumed a new user (what about refresh token?!?!)
+    //     (NODE) server finds or creates new user with email address and name
+    //   (NODE) server receives and stores (or replaces) token for user in linked accounts?
+    // (NODE) creates session
+    // (NODE) RETURN success 
+    return passport.authenticate('apple', function(err, user, info) {
+      if (err) {
+          if (err == "AuthorizationError") {
+              res.send("Oops! Looks like you didn't allow the app to proceed. Please sign in again! <br /> \
+              <a href=\"/login\">Sign in with Apple</a>");
+          } else if (err == "TokenError") {
+              res.send("Oops! Couldn't get a valid token from Apple's servers! <br /> \
+              <a href=\"/login\">Sign in with Apple</a>")
+          }
+      } else {
+          res.json(user)
+      }
+    })(req, res, next)
+  },
+
   startGoogleOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('google', {scope: 'email'})(req, res)
   }),
