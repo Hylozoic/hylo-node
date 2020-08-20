@@ -1,5 +1,6 @@
-const passport = require('passport')
-const appleSigninAuth = require('apple-signin-auth')
+import passport from 'passport'
+import appleSigninAuth from 'apple-signin-auth'
+import crypto from 'crypto'
 
 const rollbar = require('../../lib/rollbar')
 
@@ -140,55 +141,41 @@ module.exports = {
     })
   },
 
-  // appleAuth: function (req, res, next) {
-  //   const appleAuthRequestResponse = req.body
-  //   // authorizationCode
-  //   // authorizedScopes
-  //   // email
-  //   // fullName
-  //   // identityToken
-  //   // nonce
-  //   // realUserStatus
-  //   // state
-  //   // user
-
-  //   console.log('!!!!!!! Session#apple -- req.body:', appleAuthRequestResponse)
-
-  //   res.status(200).send(appleAuthRequestResponse)
-  // },
-
-  // startAppleOAuth: setSessionFromParams(function (req, res) {
-  //   passport.authenticate('apple')(req, res)
-  // }),
-
-  finishAppleOAuth: function (req, res, next) {
-    // check nonce
-    const { nonce, identityToken, email } = req.body // appleAuthRequestResponse
-    // authorizationCode
-    // authorizedScopes
-    // email
-    // fullName
-    // identityToken
-    // nonce
-    // realUserStatus
-    // state
-    // user
+  finishAppleOAuth: async function (req, res, next) {
+    // appleAuthRequestResponse (req.body) has at least these keys:
+    //  authorizationCode
+    //  authorizedScopes
+    //  email
+    //  fullName
+    //  identityToken
+    //  nonce
+    //  realUserStatus
+    //  state
+    //  user
+    const { nonce, user, identityToken, email, fullName } = req.body
+    //
+    // Check nonce or identityToken with nonce or audience (clientId) or both? See:
+    //    https://medium.com/@rossbulat/react-native-sign-in-with-apple-75733d3fbc3 (search "As a side note...")
     const appleIdTokenClaims = await appleSigninAuth.verifyIdToken(identityToken, {
       /** sha256 hex hash of raw nonce */
       nonce: nonce
         ? crypto.createHash('sha256').update(nonce).digest('hex')
         : undefined
     })
-    // if valid look for existing user in linked-accounts with auth token (find LinkedAccount based upon: provider_key: 'apple', provider_user_id: identityToken)
-    //   if user is found
-    //     server receives and stores (or replaces) token for user in linked accounts?
-    //   else and there email address and name available
-    //     server finds or creates new user with email address and name
-    const user = findUser('apple', email, identityToken)
-    //   creates session
-    //   RETURN success 
 
-    return appleIdTokenClaims
+    // Confirm that identityToken was verified:
+    if (appleIdTokenClaims.sub === user) {
+      upsertUser(req, 'apple', {
+        id: user,
+        email,
+        name: fullName.givenName + ' ' + fullName.familyName
+      })
+        .then(user => res.ok(user))
+        .catch(function (err) {
+          // 422 means 'well-formed but semantically invalid'
+          res.status(422).send(err.message)
+        })  
+    }
   },
 
   startGoogleOAuth: setSessionFromParams(function (req, res) {
