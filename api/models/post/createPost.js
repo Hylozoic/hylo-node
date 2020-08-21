@@ -11,7 +11,12 @@ export default function createPost (userId, params) {
     .tap(post => afterCreatingPost(post, merge(
       pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
       {children: params.requests, transacting}
-    )))))
+    )))).then(function(inserts) {
+      return inserts
+    }).catch(function(error) {
+      throw error
+    })
+  )
 }
 
 export function afterCreatingPost (post, opts) {
