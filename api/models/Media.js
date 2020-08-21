@@ -1,14 +1,17 @@
 /* eslint-disable camelcase */
 import GetImageSize from '../services/GetImageSize'
 import request from 'request'
-import { merge } from 'lodash'
-import { pick } from 'lodash/fp'
+import { createAndAddSize } from './media/util'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'media',
 
   post: function () {
     return this.belongsTo(Post)
+  },
+
+  comment: function () {
+    return this.belongsTo(Comment)
   },
 
   updateMetadata: function (opts) {
@@ -66,35 +69,25 @@ module.exports = bookshelf.Model.extend({
       thumbnailSize && media.createThumbnail({ thumbnailSize, transacting }))
   },
 
-  createForPost: function ({postId, type, url, position = 0}, trx) {
+  createForSubject: function ({subjectType, subjectId, type, url, position = 0}, trx) {
+    const subjectIdKey = `${subjectType.toLowerCase()}_id`
+
+    const mediaAttrs = {
+      [subjectIdKey]: subjectId,
+      type,
+      url,
+      position,
+      transacting: trx
+    }
+
     switch (type) {
       case 'image':
-        return createAndAddSize({
-          post_id: postId,
-          url,
-          type,
-          position,
-          transacting: trx
-        })
+        return createAndAddSize(mediaAttrs)
       case 'file':
-        return Media.create({
-          post_id: postId,
-          url,
-          type,
-          position,
-          transacting: trx
-        })
+        return Media.create(mediaAttrs)
       case 'video':
         return this.generateThumbnailUrl(url)
-        .then(thumbnail_url =>
-          createAndAddSize({
-            post_id: postId,
-            transacting: trx,
-            url,
-            thumbnail_url,
-            position,
-            type
-          }))
+        .then(thumbnail_url => createAndAddSize(Object.assign({}, mediaAttrs, { thumbnail_url })))
     }
   },
 
@@ -132,15 +125,3 @@ module.exports = bookshelf.Model.extend({
     return Promise.resolve()
   }
 })
-
-const createAndAddSize = function (attrs) {
-  const url = attrs.type === 'image' ? attrs.url
-    : attrs.type === 'video' ? attrs.thumbnail_url : null
-
-  if (url) {
-    return GetImageSize(url).then(dimensions =>
-      Media.create(merge({}, attrs, pick(['width', 'height'], dimensions))))
-  }
-
-  return Media.create(attrs)
-}

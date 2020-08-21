@@ -18,10 +18,6 @@ export default function validatePostData (userId, data) {
     throw new Error('too many topics in post, maximum 3')
   }
   
-  if (data.type === Post.Type.RESOURCE && !data.location_id) {
-    throw new Error('resources must have a location')
-  }
-
   return Group.allHaveMember(data.community_ids, userId, Community)
   .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
 }

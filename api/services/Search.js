@@ -24,6 +24,11 @@ module.exports = {
         qb.whereRaw('communities.name ilike ?', opts.autocomplete + '%')
       }
 
+      if (opts.networkSlugs) {
+        qb.join('networks', 'communities.network_id', '=', 'networks.id')
+        qb.whereIn('networks.slug', opts.networkSlugs)
+      }
+
       if (opts.networks) {
         qb.whereIn('communities.network_id', opts.networks)
       }
@@ -86,6 +91,9 @@ module.exports = {
       if (opts.sort) {
         if (opts.sort === 'name') {
           q.orderByRaw('lower(tags.name) ASC')
+        } else if (opts.sort === 'num_followers') {
+          q.select(bookshelf.knex.raw('sum(communities_tags.num_followers) as num_followers'))
+          q.orderBy('num_followers', 'desc')
         } else {
           q.orderBy(opts.sort, 'asc')
         }

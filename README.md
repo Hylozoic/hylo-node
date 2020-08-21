@@ -40,12 +40,17 @@ yarn install
 Create a `.env` file in the root directory. Values in square brackets are team specific and should be supplied:
 
 ```
+ADMIN_GOOGLE_CLIENT_ID=[ client id ]
+ADMIN_GOOGLE_CLIENT_SECRET=[ client secret ]
+AWS_S3_BUCKET=[ bucket name ]
+AWS_SECRET_ACCESS_KEY=[ secret access key ]
+AWS_ACCESS_KEY_ID=[ access key id ]
 COOKIE_NAME=[ any string without spaces ]
 COOKIE_SECRET=[ any string without spaces ]
+DATABASE_URL=postgres://localhost:5432/hylo
 DEBUG_SQL=true
 DOMAIN=localhost:3001
 EMAIL_SENDER=[ email ]
-ROLLBAR_SERVER_TOKEN=[ token ]
 FACEBOOK_APP_ID=[ app id ]
 FACEBOOK_APP_SECRET=[ app secret ]
 GOOGLE_CLIENT_ID=[ client id ]
@@ -55,22 +60,18 @@ LINKEDIN_API_KEY=[ api key ]
 LINKEDIN_API_SECRET=[ api secret ]
 MAILGUN_DOMAIN=[ domain ]
 MAILGUN_EMAIL_SALT=[ salt ]
+MAPBOX_TOKEN=[ key ]
 NEW_RELIC_LICENSE_KEY_DISABLED=[ key ]
 NODE_ENV=development
 PLAY_APP_SECRET=[ app secret ]
-AWS_S3_BUCKET=[ bucket name ]
-AWS_SECRET_ACCESS_KEY=[ secret access key ]
-AWS_ACCESS_KEY_ID=[ access key id ]
 PRETTY_JSON=true
 PROTOCOL=http
 REDIS_URL=redis://0.0.0.0:6379
+ROLLBAR_SERVER_TOKEN=[ token ]
 SEGMENT_KEY=[ key ]
 SENDWITHUS_KEY=[ key ]
-DATABASE_URL=postgres://localhost:5432/hylo
 SLACK_APP_CLIENT_ID=[ client id ]
 SLACK_APP_CLIENT_SECRET=[ client secret ]
-ADMIN_GOOGLE_CLIENT_ID=[ client id ]
-ADMIN_GOOGLE_CLIENT_SECRET=[ client secret ]
 UPLOADER_HOST=[ hostname ]
 UPLOADER_PATH_PREFIX=[ path ]
 ```

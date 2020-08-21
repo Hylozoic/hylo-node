@@ -37,6 +37,12 @@ export {
   useInvitation
 } from './invitation'
 export {
+  acceptJoinRequest,
+  createJoinRequest,
+  declineJoinRequest,
+  joinCommunity,
+} from './join_request'
+export {
   updateCommunity,
   addModerator,
   deleteCommunityTopic,

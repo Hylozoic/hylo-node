@@ -6,8 +6,12 @@ function updateMedia (post, type, urls, transacting) {
 
   return Promise.map(media, m => m.destroy({transacting}))
   .then(() => Promise.map(urls, (url, i) =>
-    Media.createForPost({
-      postId: post.id, type, url, position: i
+    Media.createForSubject({
+      subjectType: 'post',
+      subjectId: post.id,
+      type,
+      url,
+      position: i
     }, transacting)))
 }
 
