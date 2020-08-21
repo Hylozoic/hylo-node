@@ -76,6 +76,13 @@ export default function forPosts (opts) {
       qb.groupBy(['posts.id', 'communities_posts.post_id', 'communities_posts.pinned'])
     }
 
+    if (opts.networkSlugs && opts.networkSlugs.length > 0) {
+      qb.join('networks_posts', 'networks_posts.post_id', '=', 'posts.id')
+      qb.join('networks', 'networks_posts.network_id', '=', 'networks.id')
+      qb.whereIn('networks.slug', opts.networkSlugs)
+      qb.groupBy(['posts.id', 'networks_posts.post_id'])
+    }
+
     if (opts.networks) {
       qb.join('networks_posts', 'networks_posts.post_id', '=', 'posts.id')
       qb.whereIn('networks_posts.network_id', opts.networks)

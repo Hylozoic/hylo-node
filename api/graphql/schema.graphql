@@ -42,6 +42,19 @@ type UserSettings {
   lastViewedMessagesAt: String
 }
 
+type CommunityTemplate {
+  id: ID
+  name: String
+  displayName: String
+  communities: CommunityQuerySet
+  communitiesTotal: Int
+  defaultTopics: [Topic]
+  defaultTopicsTotal: Int
+  newPostCount: Int
+  updatedAt: String
+  createdAt: String
+}
+
 type CommunityTopicQuerySet {
   total: Int
   hasMore: Boolean
@@ -446,16 +459,19 @@ type Query {
     sortBy: String,
     offset: Int,
     communityIds: [String],
+    networkSlugs: [String],
     search: String,
     autocomplete: String,
     filter: String,
     boundingBox: [PointInput],
     isPublic: Boolean
   ): CommunityQuerySet
+  communityTemplates: [CommunityTemplate]
   joinRequests(communityId: ID): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
+    networkSlugs: [String],
     first: Int,
     order: String,
     sortBy: String,
@@ -631,6 +647,7 @@ input InviteInput {
 }
 
 input CommunityInput {
+  communityTemplateId: ID
   name: String
   slug: String
   description: String
@@ -648,6 +665,7 @@ input CommunityInput {
   isPublic: Boolean
   isAutoJoinable: Boolean
   publicMemberDirectory: Boolean
+  defaultTopics: [String]
 }
 
 input CommunitySettingsInput {

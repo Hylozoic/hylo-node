@@ -83,6 +83,10 @@ module.exports = bookshelf.Model.extend({
     .withPivot(['user_id', 'description'])
   },
 
+  communityTemplates: function () {
+    return this.belongsToMany(CommunityTemplate, 'blocked_users', 'tag_id', 'community_template_id')
+  },
+
   communityTags: function () {
     return this.hasMany(CommunityTag)
   },

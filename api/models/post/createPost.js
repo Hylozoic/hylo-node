@@ -11,7 +11,12 @@ export default function createPost (userId, params) {
     .tap(post => afterCreatingPost(post, merge(
       pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
       {children: params.requests, transacting}
-    )))))
+    )))).then(function(inserts) {
+      return inserts
+    }).catch(function(error) {
+      throw error
+    })
+  )
 }
 
 export function afterCreatingPost (post, opts) {
@@ -34,26 +39,40 @@ export function afterCreatingPost (post, opts) {
     // Add media, if any
     // redux version
     opts.imageUrl && Media.createForSubject({
-      postId: post.id, type: 'image', url: opts.imageUrl
+      subjectType: 'post',
+      subjectId: post.id,
+      type: 'image',
+      url: opts.imageUrl
     }, trx),
 
     // evo version
     opts.imageUrls && Promise.map(opts.imageUrls, (url, i) =>
       Media.createForSubject({
-        postId: post.id, type: 'image', url, position: i
+        subjectType: 'post',
+        subjectId: post.id,
+        type: 'image',
+        url,
+        position: i
       }, trx)),
 
     // evo version
     opts.fileUrls && Promise.map(opts.fileUrls, (url, i) =>
       Media.createForSubject({
-        postId: post.id, type: 'file', url, position: i
+        subjectType: 'post',
+        subjectId: post.id,
+        type: 'file',
+        url,
+        position: i
       }, trx)),
 
     opts.children && updateChildren(post, opts.children, trx),
 
     // google doc / video not currently used in evo
     opts.videoUrl && Media.createForSubject({
-      postId: post.id, type: 'video', url: opts.videoUrl
+      subjectType: 'post',
+      subjectId: post.id,
+      type: 'video',
+      url: opts.videoUrl
     }, trx),
 
     opts.docs && Promise.map(opts.docs, (doc) => Media.createDoc(post.id, doc, trx)),

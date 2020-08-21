@@ -13,7 +13,11 @@ describe('Media', () => {
     it('works as expected', function () {
       this.timeout(5000)
       return Media.createForSubject({
-        postId: post.id, type: 'video', url: 'https://vimeo.com/70509133', position: 7
+        subjectType: 'post',
+        subjectId: post.id,
+        type: 'video',
+        url: 'https://vimeo.com/70509133',
+        position: 7
       })
       .tap(video => video.load('post'))
       .then(video => {

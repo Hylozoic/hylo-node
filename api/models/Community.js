@@ -303,7 +303,7 @@ module.exports = bookshelf.Model.extend(merge({
   async create (userId, data) {
     var attrs = defaults(
       pick(data,
-        'name', 'description', 'slug', 'category',
+        'name', 'description', 'slug', 'category', 'community_template_id',
         'beta_access_code', 'banner_url', 'avatar_url', 'location_id', 'location', 'network_id'),
       {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR})
 
@@ -321,6 +321,18 @@ module.exports = bookshelf.Model.extend(merge({
     const memberships = await bookshelf.transaction(async trx => {
       await community.save(null, {transacting: trx})
       await community.createStarterPosts(trx)
+      if (data.default_topics) {
+        data.default_topics.forEach(async name => {
+          const topic = await Tag.findOrCreate(name, {transacting: trx})
+          await Tag.addToCommunity({
+            community_id: community.id,
+            tag_id: topic.id,
+            user_id: userId,
+            is_default: true,
+            isSubscribing: true
+          }, {transacting: trx})
+        })
+      }
       return community.addGroupMembers([userId],
         {role: GroupMembership.Role.MODERATOR}, {transacting: trx})
     })
