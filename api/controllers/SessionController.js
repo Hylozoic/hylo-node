@@ -189,7 +189,7 @@ module.exports = {
   startFacebookOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('facebook', {
       display: 'popup',
-      scope: ['email', 'public_profile', 'user_friends']
+      scope: ['email', 'public_profile']
     })(req, res)
   }),
 
