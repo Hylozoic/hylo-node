@@ -682,7 +682,8 @@ input NetworkInput {
 input SavedSearchInput {
   boundingBox: [PointInput]
   communitySlug: String
-  isPublic: Boolean
+  context: String
+  lastPostId: ID
   name: String
   networkSlug: String
   postTypes: [String]
@@ -880,7 +881,7 @@ type SavedSearch {
   createdAt: String
   community: Community
   network: Network
-  isPublic: Boolean
+  context: String
   active: Boolean
   searchText: String
   postTypes: [String]

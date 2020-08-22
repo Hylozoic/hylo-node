@@ -418,13 +418,14 @@ export default async function makeModels (userId, isAdmin) {
       attributes: [
         'created_at',
         'updated_at',
+        'community',
+        'context',
         'name',
-        'is_public',
+        'network',
         'active',
         'search_text',
         'post_types'
       ],
-      relations: ['community', 'network'],
       fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'active': true })
     },
 

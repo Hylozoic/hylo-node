@@ -5,9 +5,8 @@ exports.up = function(knex, Promise) {
 
     table.bigInteger('user_id').references('id').inTable('users').notNullable()
     table.string('name')
-    table.bigInteger('community_id').references('id').inTable('communities')
-    table.bigInteger('network_id').references('id').inTable('networks')
-    table.boolean('is_public')
+    table.string('context').notNullable()
+    table.bigInteger('context_id').comment('If context is \"community\" or \"network\", this represents the community or network id')
     table.boolean('active').defaultTo(true)
     table.string('search_text')
     table.specificType('post_types', 'character varying(255)[]')
