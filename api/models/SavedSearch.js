@@ -8,6 +8,14 @@ module.exports = bookshelf.Model.extend({
   network: async function () {
     return this.get('context') === 'network' ? await Network.find(this.get('context_id')) : null
   },
+  topics: async function () {
+    const searchId = this.id
+    const query = `select t.* from saved_search_topics sst
+    left join tags as t on sst.tag_id = t.id
+    where sst.saved_search_id = ${searchId}`
+    const result = await bookshelf.knex.raw(query)
+    return result.rows
+  }
 }, {
   create: async function (params) {
     const { boundingBox, communitySlug, context, lastPostId, name, networkSlug, postTypes, searchText, topicIds, userId } = params

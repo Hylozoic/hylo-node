@@ -884,11 +884,13 @@ type SavedSearch {
   context: String
   active: Boolean
   searchText: String
+  topics: [SavedSearchTopic]
   postTypes: [String]
 }
 
 type SavedSearchTopic {
   id: ID
+  name: String
 }
 
 type SavedSearchQuerySet {
