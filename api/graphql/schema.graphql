@@ -877,8 +877,7 @@ type SkillQuerySet {
 type SavedSearch {
   id: ID
   name: String
-  updatedAt: String
-  createdAt: String
+  boundingBox: [Point]
   community: Community
   network: Network
   context: String

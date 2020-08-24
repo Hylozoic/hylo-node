@@ -1,13 +1,27 @@
-import knexPostgis from 'knex-postgis';
+import knexPostgis from 'knex-postgis'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'saved_searches',
+
+  boundingBox: async function() {
+    const st = knexPostgis(bookshelf.knex)
+    const data = await bookshelf.knex('saved_searches').where({ id: this.id }).select(st.asGeoJSON('bounding_box', 4326))
+    const coordinates = JSON.parse(data[0].bounding_box).coordinates[0]
+    const boundingBox = [
+      {lat: coordinates[0][1], lng: coordinates[0][0]},
+      {lat: coordinates[2][1], lng: coordinates[2][0]}
+    ]
+    return boundingBox
+  },
+
   community: async function () {
     return this.get('context') === 'community' ? await Community.find(this.get('context_id')) : null
   },
+
   network: async function () {
     return this.get('context') === 'network' ? await Network.find(this.get('context_id')) : null
   },
+
   topics: async function () {
     const searchId = this.id
     const query = `select t.* from saved_search_topics sst
@@ -35,7 +49,7 @@ module.exports = bookshelf.Model.extend({
       context_id = network.id
     }
 
-    const st = knexPostgis(bookshelf.knex);
+    const st = knexPostgis(bookshelf.knex)
     const bounding_box = st.geomFromText('POLYGON((' + boundingBox[0].lng + ' ' + boundingBox[0].lat + ', ' + boundingBox[0].lng + ' ' + boundingBox[1].lat + ', ' + boundingBox[1].lng + ' ' + boundingBox[1].lat + ', ' + boundingBox[1].lng + ' ' + boundingBox[0].lat + ', ' + boundingBox[0].lng + ' ' + boundingBox[0].lat +  '))', 4326)
 
     const attributes = {
@@ -59,6 +73,6 @@ module.exports = bookshelf.Model.extend({
   
   delete: async function(id) {
     await SavedSearch.query().where({ id }).update({ active: false })
-    return id;
+    return id
   }
 })

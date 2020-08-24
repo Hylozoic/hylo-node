@@ -416,8 +416,7 @@ export default async function makeModels (userId, isAdmin) {
     SavedSearch: {
       model: SavedSearch,
       attributes: [
-        'created_at',
-        'updated_at',
+        'boundingBox',
         'community',
         'context',
         'name',
@@ -428,7 +427,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'active': true })
     },
-    
+
     Skill: {
       model: Skill,
       attributes: ['name'],
