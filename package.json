@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "analytics-node": "^1.2.0",
+    "apple-signin-auth": "^1.2.1",
     "async-repl": "ef4/async-repl",
     "aws-sdk": "^2.9.0",
     "babel": "^6.5.2",

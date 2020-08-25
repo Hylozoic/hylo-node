@@ -31,6 +31,7 @@ module.exports.routes = {
   'POST   /noo/login':                                    'SessionController.create',
   'GET    /noo/login/token':                              'SessionController.createWithToken',
   'POST   /noo/login/token':                              'SessionController.createWithToken',
+  'POST   /noo/login/apple/oauth':                        'SessionController.finishAppleOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
@@ -57,8 +58,8 @@ module.exports.routes = {
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
   'POST    /noo/mobile/logerror':                         'MobileAppController.logError',
 
-'GET     /noo/payment/registerStripe':                  'PaymentController.registerStripe',
-'POST    /noo/payment/registerStripe':                  'PaymentController.registerStripe',
+  'GET     /noo/payment/registerStripe':                  'PaymentController.registerStripe',
+  'POST    /noo/payment/registerStripe':                  'PaymentController.registerStripe',
 
   // websockets routes
   'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',

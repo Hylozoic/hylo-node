@@ -8,8 +8,9 @@ import cors from 'cors'
 import { cors as corsConfig } from './cors'
 
 export default function (app) {
-  app.use(bodyParser.urlencoded({extended: false}))
+  app.use(bodyParser.urlencoded({extended: true}))
   app.use(bodyParser.json())
+  app.enable('trust proxy')
 
   kueUI.setup({
     apiURL: '/admin/kue/api',

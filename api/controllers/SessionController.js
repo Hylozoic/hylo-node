@@ -1,4 +1,7 @@
-const passport = require('passport')
+import passport from 'passport'
+import appleSigninAuth from 'apple-signin-auth'
+import crypto from 'crypto'
+
 const rollbar = require('../../lib/rollbar')
 
 const findUser = function (service, email, id) {
@@ -138,6 +141,43 @@ module.exports = {
     })
   },
 
+  finishAppleOAuth: async function (req, res, next) {
+    // appleAuthRequestResponse (req.body) has at least these keys:
+    //  authorizationCode
+    //  authorizedScopes
+    //  email
+    //  fullName
+    //  identityToken
+    //  nonce
+    //  realUserStatus
+    //  state
+    //  user
+    const { nonce, user, identityToken, email, fullName } = req.body
+    //
+    // Check nonce or identityToken with nonce or audience (clientId) or both? See:
+    //    https://medium.com/@rossbulat/react-native-sign-in-with-apple-75733d3fbc3 (search "As a side note...")
+    const appleIdTokenClaims = await appleSigninAuth.verifyIdToken(identityToken, {
+      /** sha256 hex hash of raw nonce */
+      nonce: nonce
+        ? crypto.createHash('sha256').update(nonce).digest('hex')
+        : undefined
+    })
+
+    // Confirm that identityToken was verified:
+    if (appleIdTokenClaims.sub === user) {
+      upsertUser(req, 'apple', {
+        id: user,
+        email,
+        name: fullName.givenName + ' ' + fullName.familyName
+      })
+        .then(user => res.ok(user))
+        .catch(function (err) {
+          // 422 means 'well-formed but semantically invalid'
+          res.status(422).send(err.message)
+        })  
+    }
+  },
+
   startGoogleOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('google', {scope: 'email'})(req, res)
   }),
@@ -149,7 +189,7 @@ module.exports = {
   startFacebookOAuth: setSessionFromParams(function (req, res) {
     passport.authenticate('facebook', {
       display: 'popup',
-      scope: ['email', 'public_profile', 'user_friends']
+      scope: ['email', 'public_profile']
     })(req, res)
   }),
 
