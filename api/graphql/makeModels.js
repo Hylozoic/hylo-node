@@ -419,6 +419,7 @@ export default async function makeModels (userId, isAdmin) {
         'boundingBox',
         'community',
         'context',
+        'created_at',
         'name',
         'network',
         'active',

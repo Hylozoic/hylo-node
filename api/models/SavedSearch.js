@@ -55,6 +55,7 @@ module.exports = bookshelf.Model.extend({
     const attributes = {
       user_id: userId,
       name,
+      created_at: new Date(),
       context_id,
       context,
       active: true,
