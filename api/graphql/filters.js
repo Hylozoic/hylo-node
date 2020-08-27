@@ -89,15 +89,17 @@ export const sharedNetworkMembership = curry((tableName, userId, relation) =>
 
 export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
-  q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
   q.where({'comments.active': true})
 
   if (userId) {
+    q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
+    q.leftJoin('posts', 'communities_posts.post_id', 'posts.id')
     q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
     q.where(q2 => {
       const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
       q2.where('comments.post_id', 'in', groupIds)
       .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
+      .orWhere('posts.is_public', true)
     })
   }
 })
