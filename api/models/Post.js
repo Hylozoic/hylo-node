@@ -66,7 +66,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   comments: function () {
-    return this.hasMany(Comment, 'post_id').query({where: {active: true}})
+    return this.hasMany(Comment, 'post_id')
   },
 
   locationObject: function () {
