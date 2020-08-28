@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Anyone can see comments on public posts
 
+## [1.3.3] - 2020-08-25
+### Added
+- Session endpoint for support of "Sign in with Apple"
+
 ## [1.3.2] - 2020-08-19
 ### Added
 - Beta version of importing posts by CSV
