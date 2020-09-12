@@ -155,21 +155,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return html2text(this.get('description'))
   },
 
-  getType: function () {
-    return this.load('tags')
-    .then(() => {
-      var type = this.get('type')
-      if (type) return type
-      const tagNames = this.relations.tags.map(t => t.get('name'))
-      const typeNames = intersection(tagNames, ['request', 'offer', 'resource'])
-      if (!isEmpty(typeNames)) {
-        return typeNames[0]
-      } else {
-        return 'discussion'
-      }
-    })
-  },
-
   addFollowers: async function (userIds, opts) {
     return this.addGroupMembers(userIds, {settings: {following: true}}, opts)
   },
