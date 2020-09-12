@@ -71,7 +71,7 @@
     "hylo-utils": "Hylozoic/hylo-utils#c4db0b4",
     "image-size": "^0.3.5",
     "jade": "^1.11.0",
-    "knex": "0.12.1",
+    "knex": "0.19.5",
     "knex-postgis": "^0.12.0",
     "kue": "^0.11.0",
     "kue-ui": "^0.1.0",
