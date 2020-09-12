@@ -138,7 +138,8 @@ export default async function makeModels (userId, isAdmin) {
         'location',
         'announcement',
         'accept_contributions',
-        'is_public'
+        'is_public',
+        'type'
       ],
       getters: {
         title: p => he.decode(p.get('name')),
@@ -149,7 +150,6 @@ export default async function makeModels (userId, isAdmin) {
         commentersTotal: p => p.getCommentersTotal(userId),
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
-        type: p => p.getType(),
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
           userId ? p.userEventInvitation(userId)
