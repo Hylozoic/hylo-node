@@ -885,6 +885,7 @@ type SavedSearch {
   searchText: String
   topics: [SavedSearchTopic]
   postTypes: [String]
+  newPosts: [Post]
   createdAt: String
 }
 
