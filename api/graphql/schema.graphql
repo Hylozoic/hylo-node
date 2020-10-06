@@ -4,6 +4,8 @@ type Me {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  contactEmail: String
+  contactPhone: String
   communities(first: Int, cursor: ID, order: String): [Membership]
   communitiesTotal: Int
   email: String
@@ -534,7 +536,8 @@ input MeInput {
   avatarUrl: String
   bannerUrl: String
   bio: String
-  url: String
+  contactEmail: String
+  contactPhone: String
   twitterName: String
   linkedinUrl: String
   facebookUrl: String
@@ -544,6 +547,7 @@ input MeInput {
   password: String
   settings: UserSettingsInput
   newNotificationCount: Int
+  url: String
 }
 
 input PostInput {

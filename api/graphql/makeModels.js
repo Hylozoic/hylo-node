@@ -39,6 +39,8 @@ export default async function makeModels (userId, isAdmin) {
         'email',
         'avatar_url',
         'banner_url',
+        'contact_email',
+        'contact_phone',
         'twitter_name',
         'linkedin_url',
         'facebook_url',
