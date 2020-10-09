@@ -142,18 +142,7 @@ module.exports = {
   },
 
   finishAppleOAuth: async function (req, res, next) {
-    // appleAuthRequestResponse (req.body) has at least these keys:
-    //  authorizationCode
-    //  authorizedScopes
-    //  email
-    //  fullName
-    //  identityToken
-    //  nonce
-    //  realUserStatus
-    //  state
-    //  user
     const { nonce, user, identityToken, email, fullName } = req.body
-    //
     // Check nonce or identityToken with nonce or audience (clientId) or both? See:
     //    https://medium.com/@rossbulat/react-native-sign-in-with-apple-75733d3fbc3 (search "As a side note...")
     const appleIdTokenClaims = await appleSigninAuth.verifyIdToken(identityToken, {
