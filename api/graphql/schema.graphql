@@ -91,6 +91,8 @@ type Person {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  contactEmail: String
+  contactPhone: String
   twitterName: String
   linkedinUrl: String
   facebookUrl: String

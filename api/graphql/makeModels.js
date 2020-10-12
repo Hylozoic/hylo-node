@@ -95,6 +95,8 @@ export default async function makeModels (userId, isAdmin) {
         'avatar_url',
         'banner_url',
         'bio',
+        'contact_email',
+        'contact_phone',
         'twitter_name',
         'linkedin_url',
         'facebook_url',
