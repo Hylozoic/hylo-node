@@ -4,7 +4,7 @@ exports.up = function(knex, Promise) {
     table.increments().primary()
 
     table.bigInteger('tag_id').references('id').inTable('tags').notNullable()
-    table.bigInteger('saved_search_id').references('id').inTable('saved_searches').notNullable()
+    table.bigInteger('saved_search_id').references('id').inTable('saved_searches').index().notNullable()
 
     table.timestamp('created_at')
     table.timestamp('updated_at')

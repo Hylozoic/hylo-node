@@ -422,14 +422,14 @@ export default async function makeModels (userId, isAdmin) {
         'created_at',
         'name',
         'network',
-        'active',
+        'is_active',
         'search_text',
         'post_types'
       ],
       getters: {
         newPosts: s => s.newPosts()
       },
-      fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'active': true })
+      fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'is_active': true })
     },
 
     Skill: {

@@ -881,7 +881,7 @@ type SavedSearch {
   community: Community
   network: Network
   context: String
-  active: Boolean
+  isActive: Boolean
   searchText: String
   topics: [SavedSearchTopic]
   postTypes: [String]

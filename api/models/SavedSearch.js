@@ -137,7 +137,7 @@ module.exports = bookshelf.Model.extend({
       created_at: new Date(),
       context_id,
       context,
-      active: true,
+      is_active: true,
       search_text: searchText,
       post_types: postTypes,
       bounding_box,
@@ -152,7 +152,7 @@ module.exports = bookshelf.Model.extend({
   },
   
   delete: async function(id) {
-    await SavedSearch.query().where({ id }).update({ active: false })
+    await SavedSearch.query().where({ id }).update({ is_active: false })
     return id
   },
 
