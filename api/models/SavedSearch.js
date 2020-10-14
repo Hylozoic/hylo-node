@@ -108,6 +108,11 @@ module.exports = bookshelf.Model.extend({
     }
 
     return query
+  },
+
+  updateLastPost: async function(id, last_post_id) {
+    await SavedSearch.query().where({ id }).update({ last_post_id })
+    return id
   }
 }, {
   create: async function (params) {
@@ -153,19 +158,6 @@ module.exports = bookshelf.Model.extend({
   
   delete: async function(id) {
     await SavedSearch.query().where({ id }).update({ is_active: false })
-    return id
-  },
-
-
-
-  updateLastPost: async function(id, last_post_id) {
-    // Maybe move the below to the digest function
-    // const lastPostId = get(posts[0], 'id')
-    // if (lastPostId) {
-    //   await SavedSearch.updateLastPost(search_id, lastPostId)
-    //   return posts
-    // }
-    await SavedSearch.query().where({ id }).update({ last_post_id })
     return id
   }
 })

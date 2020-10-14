@@ -38,7 +38,7 @@ const daily = now => {
     case 3:
       sails.log.debug('Sending weekly digests')
       tasks.push(sendAndLogDigests('weekly'))
-      tasks.push(sendSavedSearchDigests())
+      tasks.push(sendSavedSearchDigests('weekly'))
       break
   }
   return tasks
@@ -56,7 +56,7 @@ const hourly = now => {
     case 12:
       sails.log.debug('Sending daily digests')
       tasks.push(sendAndLogDigests('daily'))
-      tasks.push(sendSavedSearchDigests())
+      tasks.push(sendSavedSearchDigests('daily'))
       break
     case 13:
       sails.log.debug('Resending invites')
