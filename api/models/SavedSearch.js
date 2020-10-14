@@ -7,10 +7,7 @@ module.exports = bookshelf.Model.extend({
     const st = knexPostgis(bookshelf.knex)
     const data = await bookshelf.knex('saved_searches').where({ id: this.id }).select(st.asGeoJSON('bounding_box', 4326))
     const coordinates = JSON.parse(data[0].bounding_box).coordinates[0]
-    const boundingBox = [
-      {lat: coordinates[0][1], lng: coordinates[0][0]},
-      {lat: coordinates[2][1], lng: coordinates[2][0]}
-    ]
+    const boundingBox = [coordinates[0][0], coordinates[0][1], coordinates[2][0], coordinates[2][1]]
     return boundingBox
   },
 
