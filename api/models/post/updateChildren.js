@@ -11,7 +11,7 @@ export default function updateChildren (post, children, trx) {
     const removed = filter(id => !includes(map('id', updated), id), existingIds)
     return Promise.all([
       // mark removed posts as inactive
-      some(removed) && Post.query().where('id', 'in', removed)
+      some(removed) && Post.query().whereIn('id', removed)
       .update('active', false).transacting(trx),
 
       // update name and description for updated requests

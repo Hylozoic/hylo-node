@@ -36,10 +36,10 @@ export function updateCommunities (network, newCommunityIds, transacting) {
     const communitiesToRemove = difference(currentCommunityIds, newCommunityIds)
     return Promise.all([
       // Add communities
-      some(communitiesToAdd) && Community.query().where('id', 'in', communitiesToAdd)
+      some(communitiesToAdd) && Community.query().whereIn('id', communitiesToAdd)
       .update('network_id', network.id).transacting(transacting),
       // Remove communities
-      some(communitiesToRemove) && Community.query().where('id', 'in', communitiesToRemove)
+      some(communitiesToRemove) && Community.query().whereIn('id', communitiesToRemove)
       .update('network_id', null).transacting(transacting)
     ])
   }

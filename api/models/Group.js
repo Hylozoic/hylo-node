@@ -48,7 +48,7 @@ module.exports = bookshelf.Model.extend({
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
 
     const existingMemberships = await this.memberships(true)
-    .query(q => q.where('user_id', 'in', userIds)).fetch()
+    .query(q => q.whereIn('user_id', userIds)).fetch()
 
     const updatedAttribs = Object.assign(
       {},
@@ -74,7 +74,7 @@ module.exports = bookshelf.Model.extend({
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingMemberships = await this.memberships(true)
-    .query(q => q.where('user_id', 'in', userIds)).fetch()
+    .query(q => q.whereIn('user_id', userIds)).fetch()
     const existingUserIds = existingMemberships.pluck('user_id')
     const newUserIds = difference(userIds, existingUserIds)
 
@@ -148,13 +148,12 @@ module.exports = bookshelf.Model.extend({
       ? typeOrModel
       : getDataTypeForModel(typeOrModel)
 
-    const { raw } = bookshelf.knex
     userIds = sortBy(userIds, Number)
     return this.query(q => {
       q.join('group_memberships', 'groups.id', 'group_memberships.group_id')
       q.where('group_memberships.active', true)
       q.groupBy('groups.id')
-      q.having(raw(`array_agg(user_id order by user_id) = ?`, [userIds]))
+      q.having(bookshelf.knex.raw(`array_agg(user_id order by user_id) = ?`, [userIds]))
       q.where('groups.group_data_type', type)
     })
   },

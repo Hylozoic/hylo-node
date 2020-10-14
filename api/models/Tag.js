@@ -195,7 +195,7 @@ module.exports = bookshelf.Model.extend({
     q.where('posts.active', true)
     q.where('communities.active', true)
     if (userId) {
-      q.where('communities.id', 'in', myCommunityIds(userId))
+      q.whereIn('communities.id', myCommunityIds(userId))
     }
     if (networkSlug) {
       q.join('networks', 'networks.id', 'communities.network_id')
@@ -219,7 +219,7 @@ module.exports = bookshelf.Model.extend({
     q.join('communities', 'communities.id', 'tag_follows.community_id')
 
     if (userId) {
-      q.where('communities.id', 'in', myCommunityIds(userId))
+      q.whereIn('communities.id', myCommunityIds(userId))
     }
 
     if (communityId) {
@@ -248,9 +248,9 @@ module.exports = bookshelf.Model.extend({
     const isCommunity = id => row => Number(row.community_id) === Number(id)
     const sameTag = name => row => row.name.toLowerCase() === name.toLowerCase()
 
-    return Tag.query().where('name', 'in', names)
+    return Tag.query().whereIn('name', names)
     .join('communities_tags', 'communities_tags.tag_id', 'tags.id')
-    .where('community_id', 'in', communityIds)
+    .whereIn('community_id', communityIds)
     .select(['tags.name', 'community_id'])
     .then(rows => {
       return names.reduce((m, n) => {

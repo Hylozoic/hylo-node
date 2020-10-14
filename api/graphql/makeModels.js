@@ -368,7 +368,7 @@ export default async function makeModels (userId, isAdmin) {
         {comments: {alias: 'messages', typename: 'Message', querySet: true}}
       ],
       filter: relation => relation.query(q =>
-        q.where('posts.id', 'in',
+        q.whereIn('posts.id',
           Group.pluckIdsForMember(userId, Post, isFollowing)))
     },
 
@@ -408,7 +408,7 @@ export default async function makeModels (userId, isAdmin) {
         {tag: {alias: 'topic'}}
       ],
       filter: nonAdminFilter(relation => relation.query(q => {
-        q.where('communities_tags.community_id', 'in', myCommunityIds(userId))
+        q.whereIn('communities_tags.community_id', myCommunityIds(userId))
       })),
       fetchMany: args => CommunityTag.query(communityTopicFilter(userId, args))
     },
@@ -466,9 +466,9 @@ export default async function makeModels (userId, isAdmin) {
       //   q.join('activities', 'activities.id', 'notifications.activity_id')
       //   q.join('posts', 'posts.id', 'activities.post_id')
       //   q.join('comments', 'comments.id', 'activities.comment_id')
-      //   q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      //   q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      //   q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      //   q.whereNotIn('activities.actor_id', BlockedUser.blockedFor(userId))
+      //   q.whereNotIn('posts.user_id', BlockedUser.blockedFor(userId))
+      //   q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
       // })
     },
 
@@ -498,7 +498,7 @@ export default async function makeModels (userId, isAdmin) {
       filter: relation => {
         return relation.query(q => {
           if (userId) {
-            q.where('other_user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+            q.whereNotIn('other_user_id', BlockedUser.blockedFor(userId))
             q.where('user_id', userId)
           }
           q.orderBy('created_at', 'desc')

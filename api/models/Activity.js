@@ -41,8 +41,8 @@ const removeForRelation = (model) => (id, trx) => {
   .then(ids => {
     // TODO: New Activity count needs to be decremented
     // if inApp medium is used-- see User#decNewNotificationCount
-    return Notification.where('activity_id', 'in', ids).destroy(trxOpt)
-    .then(() => Activity.where('id', 'in', ids).destroy(trxOpt))
+    return Notification.whereIn('activity_id', ids).destroy(trxOpt)
+    .then(() => Activity.whereIn('id', ids).destroy(trxOpt))
   })
 }
 

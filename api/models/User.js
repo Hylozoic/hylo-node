@@ -18,7 +18,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Comment)
     .query(q => {
       q.join('posts', 'posts.id', 'comments.post_id')
-      q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(this.id))
+      q.whereNotIn('posts.user_id', BlockedUser.blockedFor(this.id))
       q.where(function () {
         this.where('posts.type', '!=', Post.Type.THREAD)
         .orWhere('posts.type', null)
@@ -504,10 +504,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   unseenThreadCount: async function (userId) {
-    const { raw } = bookshelf.knex
-
     const lastViewed = await User.where('id', userId).query()
-    .select(raw("settings->'last_viewed_messages_at' as time"))
+    .select(bookshelf.knex.raw("settings->'last_viewed_messages_at' as time"))
     .then(rows => new Date(rows[0].time))
 
     return GroupMembership.whereUnread(userId, Post, {afterTime: lastViewed})

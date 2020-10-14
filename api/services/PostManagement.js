@@ -4,7 +4,7 @@ const removeComments = (postId, trx) =>
     if (ids.length === 0) return
 
     const remove = (table, column = 'comment_id') =>
-      trx(table).where(column, 'in', ids).del()
+      trx(table).whereIn(column, ids).del()
 
     return Promise.all([
       remove('thanks'),

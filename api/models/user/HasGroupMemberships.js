@@ -10,7 +10,7 @@ export default {
 
     if (where) subq = subq.where(where)
 
-    return model.collection().query(q => q.where('id', 'in', subq))
+    return model.collection().query(q => q.whereIn('id', subq))
   },
 
   groupMembershipsForModel (model) {
