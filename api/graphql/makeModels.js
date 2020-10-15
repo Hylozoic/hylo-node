@@ -426,9 +426,6 @@ export default async function makeModels (userId, isAdmin) {
         'search_text',
         'post_types'
       ],
-      getters: {
-        newPosts: s => s.newPosts()
-      },
       fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'is_active': true })
     },
 

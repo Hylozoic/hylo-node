@@ -71,8 +71,7 @@ import {
   updatePost,
   updateStripeAccount,
   useInvitation,
-  vote,
-  
+  vote
 } from './mutations'
 import InvitationService from '../services/InvitationService'
 import makeModels from './makeModels'
