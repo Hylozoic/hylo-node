@@ -90,6 +90,20 @@ module.exports = {
       return this.communitySettings(community) + '/invite#join_requests'
     },
 
+    mapPost: function (post, context, slug) {
+      let contextUrl = '/all'
+
+      if (context === 'public') {
+        contextUrl = '/public'
+      } else if (context === 'community') {
+        contextUrl = `/c/${slug}`
+      } else if (context === 'network') {
+        contextUrl = `/n/${slug}`
+      }
+
+      return url(`${contextUrl}/map/p/${getModelId(post)}`)
+    },
+
     profile: function (user) {
       return url(`/m/${getModelId(user)}`)
     },

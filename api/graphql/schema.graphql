@@ -519,6 +519,7 @@ type Query {
     offset: Int
   ): SearchResultQuerySet
   network(id: ID, slug: String): Network
+  savedSearches(userId: ID): SavedSearchQuerySet
   skills(
     first: Int,
     offset: Int,
@@ -678,6 +679,19 @@ input NetworkInput {
   moderatorIds: [String]
 }
 
+input SavedSearchInput {
+  boundingBox: [PointInput]
+  communitySlug: String
+  context: String
+  lastPostId: ID
+  name: String
+  networkSlug: String
+  postTypes: [String]
+  searchText: String
+  topicIds: [ID]
+  userId: ID
+}
+
 input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
@@ -703,6 +717,7 @@ type Mutation {
   createPost(data: PostInput): Post
   createProject(data: PostInput): Post
   createProjectRole(projectId: ID, roleName: String): GenericResult
+  createSavedSearch(data: SavedSearchInput): SavedSearch
   createTopic(topicName: String, communityId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   declineJoinRequest(joinRequestId: ID): JoinRequest
   deleteComment(id: ID): GenericResult
@@ -710,6 +725,7 @@ type Mutation {
   deleteCommunityTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   deleteProjectRole(id: ID): GenericResult
+  deleteSavedSearch(id: ID): ID
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
   findOrCreateLocation(data: LocationInput): Location
@@ -856,6 +872,32 @@ type SkillQuerySet {
   total: Int
   hasMore: Boolean
   items: [Skill]
+}
+
+type SavedSearch {
+  id: ID
+  name: String
+  boundingBox: [String]
+  community: Community
+  network: Network
+  context: String
+  isActive: Boolean
+  searchText: String
+  topics: [SavedSearchTopic]
+  postTypes: [String]
+  newPosts: [Post]
+  createdAt: String
+}
+
+type SavedSearchTopic {
+  id: ID
+  name: String
+}
+
+type SavedSearchQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [SavedSearch]
 }
 
 input InappropriateContentInput {

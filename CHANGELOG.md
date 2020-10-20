@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Add migrations, models, resolvers, and GraphQL schema changes for creating, deleting, and viewing saved searches
+- Add digest for saved searches
+
 ## Fixes
 - Member Profile > Recent Activity feed loading fixed
 
@@ -14,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Updates Passport Google Auth scheme to latest
+>>>>>>> dev
 
 ## [1.3.5] - 2020-09-12
 ### Changed

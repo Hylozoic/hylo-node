@@ -413,6 +413,22 @@ export default async function makeModels (userId, isAdmin) {
       fetchMany: args => CommunityTag.query(communityTopicFilter(userId, args))
     },
 
+    SavedSearch: {
+      model: SavedSearch,
+      attributes: [
+        'boundingBox',
+        'community',
+        'context',
+        'created_at',
+        'name',
+        'network',
+        'is_active',
+        'search_text',
+        'post_types'
+      ],
+      fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'is_active': true })
+    },
+
     Skill: {
       model: Skill,
       attributes: ['name'],
