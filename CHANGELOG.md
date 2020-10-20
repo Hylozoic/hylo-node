@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add migrations, models, resolvers, and GraphQL schema changes for creating, deleting, and viewing saved searches
 - Add digest for saved searches
 
+## Fixes
+- Member Profile > Recent Activity feed loading fixed
+
+## [1.3.6]
+### Added
+- Adds contactEmail and contactPhone to User and related graphql
+
+### Fixed
+- Updates Passport Google Auth scheme to latest
+>>>>>>> dev
+
 ## [1.3.5] - 2020-09-12
 ### Changed
 - Do less database queries when loading posts to speed things up
