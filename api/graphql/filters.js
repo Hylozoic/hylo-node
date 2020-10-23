@@ -10,8 +10,7 @@ export function makeFilterToggle (enabled) {
 
 // This does not include users connected by a network
 function sharesMembership (userId, q) {
-  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community)
-  .query().pluck('group_id')
+  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community, 'group_id').query()
 
   q.where('group_memberships.active', true)
   q.whereIn('group_memberships.group_id', subq)

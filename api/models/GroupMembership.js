@@ -97,8 +97,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
       : getDataTypeForModel(typeOrModel)
 
     const queryRoot = opts.multiple ? this.collection() : this
-
     return queryRoot.query(q => {
+      if (opts.select) q.select(opts.select)
+
       q.where('group_memberships.group_data_type', type)
       if (instanceId) {
         q.join('groups', 'groups.id', 'group_memberships.group_id')
@@ -128,7 +129,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return instance.addGroupMembers([userId], {role: this.Role.DEFAULT})
   },
 
-  forMember (userOrId, model) {
-    return this.forIds(userOrId, null, model, {multiple: true})
+  forMember (userOrId, model, select = '*') {
+    return this.forIds(userOrId, null, model, {multiple: true, select: select})
   }
 })
