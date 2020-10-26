@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 module.exports = bookshelf.Model.extend({
   tableName: 'event_invitations',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User, 'user_id')

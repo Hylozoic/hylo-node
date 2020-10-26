@@ -13,6 +13,7 @@ import {
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
+  requireFetch: false,
 
   group () {
     return this.belongsTo(Group)

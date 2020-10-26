@@ -1,5 +1,6 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'join_requests',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)
@@ -34,11 +35,11 @@ module.exports = bookshelf.Model.extend({
       community_id: community.id,
       reason: 'joinRequest'
     }))
-    
+
     JoinRequest.sendNotification(announcees)
   },
 
-  sendNotification: function (activities = [], opts) { 
+  sendNotification: function (activities = [], opts) {
     return Activity.saveForReasons(activities)
   },
 
@@ -74,7 +75,7 @@ module.exports = bookshelf.Model.extend({
             community_id: community.id,
             reason: 'approvedJoinRequest'
           }
-  
+
           JoinRequest.sendNotification([approvedMember])
         }
       })

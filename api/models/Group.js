@@ -13,6 +13,7 @@ export const GROUP_ATTR_UPDATE_WHITELIST = [
 
 module.exports = bookshelf.Model.extend({
   tableName: 'groups',
+  requireFetch: false,
 
   groupData () {
     // eslint-disable-next-line camelcase

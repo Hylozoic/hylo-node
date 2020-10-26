@@ -2,6 +2,7 @@
 
 module.exports = bookshelf.Model.extend({
   tableName: 'communities_tags',
+  requireFetch: false,
 
   owner: function () {
     return this.belongsTo(User, 'user_id')

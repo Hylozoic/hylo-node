@@ -5,6 +5,7 @@ const hash = Promise.promisify(bcrypt.hash, bcrypt)
 
 module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)

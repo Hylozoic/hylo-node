@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 module.exports = bookshelf.Model.extend({
   tableName: 'blocked_users',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User, 'user_id')
@@ -16,7 +17,7 @@ module.exports = bookshelf.Model.extend({
     if (blockedUserId === User.AXOLOTL_ID) {
       throw new Error('cannot block Hylo the Axolotl')
     }
-    
+
     if (userId === blockedUserId) {
       throw new Error('blocked_user_id cannot equal user_id')
     }

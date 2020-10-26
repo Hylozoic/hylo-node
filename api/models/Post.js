@@ -35,6 +35,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // Instance Methods
 
   tableName: 'posts',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)

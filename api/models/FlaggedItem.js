@@ -4,6 +4,7 @@ import { notifyModeratorsPost, notifyModeratorsMember, notifyModeratorsComment }
 
 module.exports = bookshelf.Model.extend({
   tableName: 'flagged_items',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User, 'user_id')

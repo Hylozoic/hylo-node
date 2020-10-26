@@ -2,6 +2,7 @@
 
 module.exports = bookshelf.Model.extend({
   tableName: 'tag_follows',
+  requireFetch: false,
 
   community: function () {
     return this.belongsTo(Community)

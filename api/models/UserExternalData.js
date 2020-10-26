@@ -1,6 +1,6 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'user_external_data'
-
+  tableName: 'user_external_data',
+  requireFetch: false
 }, {
   find: function (userId, type, opts) {
     return this.where({user_id: userId, type: type}).fetch(opts)

@@ -18,8 +18,8 @@ const parse = body => {
 }
 
 const LinkPreview = bookshelf.Model.extend({
-  tableName: 'link_previews'
-
+  tableName: 'link_previews',
+  requireFetch: false
 }, {
   parse,
 

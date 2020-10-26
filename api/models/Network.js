@@ -12,6 +12,7 @@ var networkIdsQuery = function (userId) {
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'networks',
+  requireFetch: false,
 
   communities: function () {
     return this.hasMany(Community).query({where: {'communities.active': true}})

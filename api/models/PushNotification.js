@@ -3,6 +3,7 @@ import truncate from 'trunc-html'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
+  requireFetch: false,
 
   device: function () {
     return this.belongsTo(Device)

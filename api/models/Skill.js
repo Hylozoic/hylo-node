@@ -2,6 +2,7 @@ import { myCommunityIds, myNetworkCommunityIds } from './util/queryFilters'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'skills',
+  requireFetch: false,
 
   users: function () {
     return this.belongsToMany(User, 'skills_users')

@@ -48,6 +48,7 @@ const removeForRelation = (model) => (id, trx) => {
 
 module.exports = bookshelf.Model.extend({
   tableName: 'activities',
+  requireFetch: false,
 
   actor: function () {
     return this.belongsTo(User, 'actor_id')
@@ -114,7 +115,7 @@ module.exports = bookshelf.Model.extend({
   contributionAmount: async function () {
     await this.load('projectContribution')
     if (!this.relations.projectContribution) return null
-    return this.relations.projectContribution.get('amount') 
+    return this.relations.projectContribution.get('amount')
   }
 
 }, {
@@ -232,7 +233,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   communityIds: function (activity) {
-    if (activity.get('post_id')) {      
+    if (activity.get('post_id')) {
       return get(activity, 'relations.post.relations.communities', []).map(c => c.id)
     } else if (activity.get('comment_id')) {
       return get(activity, 'relations.comment.relations.post.relations.communities', []).map(c => c.id)

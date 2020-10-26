@@ -12,6 +12,7 @@ const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_commu
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'communities',
+  requireFetch: false,
 
   creator: function () {
     return this.belongsTo(User, 'created_by_id')
