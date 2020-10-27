@@ -1,3 +1,5 @@
+scalar Date
+
 # The currently logged-in person.
 type Me {
   id: ID
@@ -28,7 +30,7 @@ type Me {
   tagline: String
   twitterName: String
   unseenThreadCount: Int
-  updatedAt: String
+  updatedAt: Date
   url: String
   intercomHash: String
   blockedUsers: [Person]
@@ -60,8 +62,8 @@ type CommunityTopic {
   isSubscribed: Boolean
   newPostCount: Int
   visibility: Int
-  updatedAt: String
-  createdAt: String
+  updatedAt: Date
+  createdAt: Date
 }
 
 type TopicQuerySet {
@@ -125,7 +127,7 @@ type Membership {
   id: ID
   role: Int
   hasModeratorRole: Boolean
-  createdAt: String
+  createdAt: Date
   lastViewedAt: String
   newPostCount: Int
   community: Community
@@ -142,7 +144,7 @@ type Community {
   name: String
   slug: String
   description: String
-  createdAt: String
+  createdAt: Date
   avatarUrl: String
   bannerUrl: String
   location: String
@@ -206,7 +208,7 @@ type PersonQuerySet {
 type Invitation {
   id: Int
   email: String
-  createdAt: String
+  createdAt: Date
   lastSentAt: String
   error: String
 }
@@ -220,8 +222,8 @@ type JoinRequest {
   id: Int
   user: Person
   community: Community
-  createdAt: String
-  updatedAt: String
+  createdAt: Date
+  updatedAt: Date
   status: Int
 }
 
@@ -254,11 +256,11 @@ type Post {
   details: String
   detailsText: String
   type: String
-  createdAt: String
-  updatedAt: String
-  fulfilledAt: String
-  startTime: String
-  endTime: String
+  createdAt: Date
+  updatedAt: Date
+  fulfilledAt: Date
+  startTime: Date
+  endTime: Date
   location: String
   locationObject: Location
   isPublic: Boolean
@@ -300,15 +302,15 @@ type Attachment {
   position: Int
   url: String
   thumbnailUrl: String
-  createdAt: String
+  createdAt: Date
 }
 
 type PersonConnection {
   id: ID
   person: Person
   type: String
-  createdAt: String
-  updatedAt: String
+  createdAt: Date
+  updatedAt: Date
 }
 
 type PersonConnectionQuerySet {
@@ -328,7 +330,7 @@ type Comment {
   text: String
   creator: Person
   post: Post
-  createdAt: String
+  createdAt: Date
   createdFrom: String
   attachments(type: String): [Attachment]
   attachmentsTotal: Int
@@ -342,7 +344,7 @@ type Location {
   center: Point
   city: String
   country: String
-  createdAt: String
+  createdAt: Date
   fullText: String
   geometry: [Point]
   id: ID
@@ -350,7 +352,7 @@ type Location {
   neighborhood: String
   region: String
   postcode: String
-  updatedAt: String
+  updatedAt: Date
   wikidata: String
 }
 
@@ -392,8 +394,8 @@ type MessageThreadQuerySet {
 
 type MessageThread {
   id: ID
-  createdAt: String
-  updatedAt: String
+  createdAt: Date
+  updatedAt: Date
   participants(first: Int, cursor: ID, order: String): [Person]
   participantsTotal: Int
   messages(first: Int, cursor: ID, order: String): MessageQuerySet
@@ -412,14 +414,14 @@ type Message {
   text: String
   creator: Person
   messageThread: MessageThread
-  createdAt: String
+  createdAt: Date
 }
 
 type Vote {
   id: ID
   post: Post
   voter: Person
-  createdAt: String
+  createdAt: Date
 }
 
 type VoteQuerySet {
@@ -582,7 +584,7 @@ input CommentInput {
 input MessageInput {
   text: String
   messageThreadId: String
-  createdAt: String
+  createdAt: Date
 }
 
 input MessageThreadInput {
@@ -601,7 +603,7 @@ input LocationInput {
   center: PointInput
   city: String
   country: String
-  createdAt: String
+  createdAt: Date
   fullText: String
   geometry: [PointInput]
   lat: String
@@ -610,7 +612,7 @@ input LocationInput {
   neighborhood: String
   region: String
   postcode: String
-  updatedAt: String
+  updatedAt: Date
   wikidata: String
 }
 
@@ -790,7 +792,7 @@ type CreatedRequest {
 type Notification {
   id: ID
   activity: Activity
-  createdAt: String
+  createdAt: Date
 }
 
 type ActivityMeta {
@@ -822,7 +824,7 @@ type Network {
   description: String
   avatarUrl: String
   bannerUrl: String
-  createdAt: String
+  createdAt: Date
   memberCount: Int
   communities(first: Int, offset: Int, order: String, sortBy: String, search: String): CommunityQuerySet
   members(boundingBox: [PointInput], first: Int, offset: Int, order: String, sortBy: String, search: String): PersonQuerySet
