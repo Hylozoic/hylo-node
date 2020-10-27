@@ -14,7 +14,7 @@ export const repairText = comment =>
 
 
 export function updateMedia (comment, attachments, transacting) {
-  if (!attachments) return
+  if (!attachments || attachments.length === 0) return
 
   var media = comment.relations.media
 
