@@ -1,5 +1,5 @@
 export function myCommunityIds (userId) {
-  return Group.pluckIdsForMember(userId, Community)
+  return Group.selectIdsForMember(userId, Community)
 }
 
 export function myNetworkCommunityIds (userId) {

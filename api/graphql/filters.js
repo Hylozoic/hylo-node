@@ -10,7 +10,7 @@ export function makeFilterToggle (enabled) {
 
 // This does not include users connected by a network
 function sharesMembership (userId, q) {
-  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community, 'group_id').query()
+  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community).query().select('group_id')
 
   q.where('group_memberships.active', true)
   q.whereIn('group_memberships.group_id', subq)
@@ -23,6 +23,7 @@ export const personFilter = userId => relation => relation.query(q => {
   if (userId) {
     // find all other memberships for users that share a network
     const sharedMemberships = GroupMembership.query(q3 => {
+      q3.select('user_id')
       filterCommunities(q3, 'groups.group_data_id', userId)
       q3.join('groups', 'groups.id', 'group_memberships.group_id')
       q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
@@ -33,13 +34,14 @@ export const personFilter = userId => relation => relation.query(q => {
     // limit to users that are in those other memberships
 
     const sharedConnections = UserConnection.query(ucq =>{
+      ucq.select('other_user_id')
       ucq.where('user_id', userId)
     })
 
     q.where(inner =>
       inner.where('users.id', User.AXOLOTL_ID)
-      .orWhereIn('users.id', sharedMemberships.query().pluck('user_id'))
-      .orWhereIn('users.id', sharedConnections.query().pluck('other_user_id')))
+      .orWhereIn('users.id', sharedMemberships.query())
+      .orWhereIn('users.id', sharedConnections.query()))
   }
 })
 
@@ -97,7 +99,7 @@ export const commentFilter = userId => relation => relation.query(q => {
     q.leftJoin('posts', 'communities_posts.post_id', 'posts.id')
     q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
     q.where(q2 => {
-      const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
+      const groupIds = Group.selectIdsForMember(userId, Post, isFollowing)
       q2.whereIn('comments.post_id', groupIds)
       .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
       .orWhere('posts.is_public', true)

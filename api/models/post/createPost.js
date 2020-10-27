@@ -124,9 +124,10 @@ async function updateTagsAndCommunities (post, trx) {
 
     GroupMembership.query(q => {
       const groupIds = Group.query(q2 => {
+        q2.select('id')
         q2.whereIn('group_data_id', communities.map('id'))
         q2.where('group_data_type', Group.DataType.COMMUNITY)
-      }).query().pluck('id')
+      }).query()
 
       q.whereIn('group_id', groupIds)
       q.whereNot('group_memberships.user_id', post.get('user_id'))

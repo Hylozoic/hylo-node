@@ -1,4 +1,4 @@
-import { difference, intersection, sortBy, pick, omitBy, isUndefined } from 'lodash'
+import { difference, intersection, map, sortBy, pick, omitBy, isUndefined } from 'lodash'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
@@ -59,7 +59,7 @@ module.exports = bookshelf.Model.extend({
 
     return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
   },
-  
+
   // if a group membership doesn't exist for a user id, create it.
   // make sure the group memberships have the passed-in role and settings
   // (merge on top of existing settings).
@@ -83,7 +83,7 @@ module.exports = bookshelf.Model.extend({
 
     const updatedMemberships = await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
     const newMemberships = []
- 
+
     for (let id of newUserIds) {
       const membership = await this.memberships().create(
         Object.assign({}, updatedAttribs, {
@@ -133,15 +133,21 @@ module.exports = bookshelf.Model.extend({
     return group.removeMembers(await group.members().fetch(), opts)
   },
 
-  pluckIdsForMember (userOrId, typeOrModel, where) {
+  selectIdsForMember (userOrId, typeOrModel, where) {
     return GroupMembership.forIds(userOrId, null, typeOrModel, {
       query: q => {
         if (where) q.where(where)
+        q.select('group_data_id')
         q.join('groups', 'groups.id', 'group_memberships.group_id')
         q.where('groups.active', true)
       },
       multiple: true
-    }).query().pluck('group_data_id')
+    }).query()
+  },
+
+  async pluckIdsForMember (userOrId, typeOrModel, where) {
+    const ids = await this.selectIdsForMember(userOrId, typeOrModel, where)
+    return map(ids, 'group_data_id')
   },
 
   havingExactMembers (userIds, typeOrModel) {
@@ -165,8 +171,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   async inSameGroup (userIds, typeOrModel) {
-    const groupIds = await Promise.all(userIds.map(id =>
-      this.pluckIdsForMember(id, typeOrModel)))
+    const groupIds = await Promise.all(userIds.map(id => this.pluckIdsForMember(id, typeOrModel)))
     return intersection(groupIds).length > 0
   }
 })
