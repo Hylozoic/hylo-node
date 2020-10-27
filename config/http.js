@@ -45,22 +45,18 @@ module.exports.http = {
   ***************************************************************************/
 
     order: [
-      'startRequestTimer',
       'cookieParser',
       'session',
       'passportInit',
       'passportSession',
       'compress',
-      'methodOverride',
       'poweredBy',
       'requestLogger',
       '$custom',
       'router',
       'www',
       'favicon',
-      '404',
-      'rollbar',
-      '500'
+      'rollbar'
     ]
 
   /***************************************************************************

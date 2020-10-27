@@ -28,7 +28,7 @@ module.exports = ({ statusCode, statusText, logData }) => function (data, option
 
   // If the user-agent wants JSON, always respond with JSON
   if (req.wantsJSON) {
-    return res.jsonx(data)
+    return res.json(data)
   }
 
   // If second argument is a string, we take that to mean it refers to a view.
@@ -55,7 +55,7 @@ module.exports = ({ statusCode, statusText, logData }) => function (data, option
           // Otherwise, if this was a more serious error, log to the console with the details.
           sails.log.warn(`res.error(${statusCode}) :: When attempting to render error page view, an error occured (sending JSON instead).  Details: `, err)
         }
-        return res.jsonx(data)
+        return res.json(data)
       }
 
       return res.send(html)

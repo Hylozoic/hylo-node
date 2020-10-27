@@ -32,7 +32,7 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
 
-  key: process.env.COOKIE_NAME, // cookie name, instead of sails.sid
+  name: process.env.COOKIE_NAME, // cookie name, instead of sails.sid
 
   cookie: {
     domain: process.env.COOKIE_DOMAIN,

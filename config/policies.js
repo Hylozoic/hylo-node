@@ -20,12 +20,16 @@
 
 module.exports.policies = {
   '*': false,
-  AdminController: ['isAdmin'],
-  MobileAppController: true,
-  NexudusController: true,
-  SessionController: true,
-  SubscriptionController: true,
-  UploadController: ['sessionAuth'],
+  AdminController: {
+    '*': 'isAdmin'
+  },
+  // MobileAppController: true,
+  // NexudusController: true,
+  // SessionController: true,
+  // SubscriptionController: true,
+  UploadController: {
+    '*': 'sessionAuth'
+  },
 
   AdminSessionController: {
     create:  true,
@@ -62,6 +66,6 @@ module.exports.policies = {
   },
 
   PaymentController: {
-    registerStripe: ['sessionAuth']    
+    registerStripe: ['sessionAuth']
   }
 }
