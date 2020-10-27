@@ -18,7 +18,7 @@ export function updateMedia (comment, attachments, transacting) {
 
   var media = comment.relations.media
 
-  return Promise.map(media, m => m.destroy({transacting}))
+  return media.invokeThen('destroy', { transacting })
   .then(() => Promise.map(attachments, (attachment, i) =>
     Media.createForSubject({
       subjectType: 'comment',
