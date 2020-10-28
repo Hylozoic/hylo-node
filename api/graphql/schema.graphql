@@ -172,6 +172,7 @@ type Community {
     filter: String,
     topic: ID,
     boundingBox: [PointInput]
+    creatorUserId: ID
   ): PostQuerySet
   memberCount: Int
   postCount: Int
@@ -455,6 +456,7 @@ type Query {
     autocomplete: String,
     filter: String,
     boundingBox: [PointInput],
+    creatorUserId: ID,
     isPublic: Boolean
   ): CommunityQuerySet
   joinRequests(communityId: ID): JoinRequestQuerySet
@@ -470,6 +472,7 @@ type Query {
     filter: String,
     topic: ID,
     boundingBox: [PointInput],
+    creatorUserId: ID,
     isPublic: Boolean
   ): PostQuerySet
   people(
@@ -854,6 +857,7 @@ type Network {
     filter: String,
     topic: ID,
     boundingBox: [PointInput]
+    creatorUserId: ID
   ): PostQuerySet
 }
 

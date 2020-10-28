@@ -2,7 +2,7 @@ import addTermToQueryBuilder from './addTermToQueryBuilder'
 import { curry, includes, values } from 'lodash'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { search, sortBy = 'updated', topic, showPinnedFirst, type, boundingBox } = opts
+  const { search, sortBy = 'updated', topic, showPinnedFirst, type, boundingBox, creatorUserId } = opts
   const sortColumns = {
     votes: 'num_votes',
     updated: 'posts.updated_at'
@@ -28,6 +28,10 @@ export const filterAndSortPosts = curry((opts, q) => {
       throw new Error(`unknown post type: "${type}"`)
     }
     q.where({'posts.type': opts.type})
+  }
+
+  if (creatorUserId) {
+    q.where({'user_id': creatorUserId})
   }
 
   if (search) {

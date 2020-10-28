@@ -244,14 +244,15 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+          filter: (relation, { search, sortBy, topic, filter, creatorUserId, boundingBox }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
               search,
               sortBy,
               topic,
               type: filter,
-              showPinnedFirst: true
+              showPinnedFirst: true,
+              creatorUserId
             }))
         }}
       ],
@@ -546,8 +547,15 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
-            relation.query(filterAndSortPosts({ search, sortBy, topic, type: filter, boundingBox }))
+          filter: (relation, { search, sortBy, topic, filter, creatorUserId, boundingBox }) =>
+            relation.query(filterAndSortPosts({
+              search,
+              sortBy,
+              topic,
+              type: filter,
+              boundingBox,
+              creatorUserId
+            }))
         }},
         {communities: {
           querySet: true,
