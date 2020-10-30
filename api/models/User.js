@@ -132,8 +132,11 @@ module.exports = bookshelf.Model.extend(merge({
           sendPushNotifications: true
         }},
       {transacting})
-    await Community.query().where('id', community.id)
-    .increment('num_members').transacting(transacting)
+    const q = Community.query()
+    if (transacting) {
+      q.transacting(transacting)
+    }
+    await q.where('id', community.id).increment('num_members')
     await this.followDefaultTags(community.id, transacting)
     await this.markInvitationsUsed(community.id, transacting)
     return memberships[0]
@@ -368,8 +371,7 @@ module.exports = bookshelf.Model.extend(merge({
     })
   }),
 
-  create: function (attributes, options = {}) {
-    const { transacting } = options
+  create: function (attributes) {
     const { account, community } = attributes
     const communityId = Number(get(community, 'id'))
     const digest_frequency = communityId === 2308 ? 'weekly' : 'daily' // eslint-disable-line camelcase
@@ -398,13 +400,18 @@ module.exports = bookshelf.Model.extend(merge({
       attributes.name = attributes.email.split('@')[0].replace(/[._]/g, ' ')
     }
 
-    return validateUserAttributes(attributes)
-    .then(() => new User(attributes).save({}, {transacting}))
-    .tap(user => Promise.join(
-      account && LinkedAccount.create(user.id, account, {transacting}),
-      community && community.addMembers([user.id], {transacting}),
-      community && user.markInvitationsUsed(community.id, transacting)
-    ))
+    return bookshelf.transaction(transacting =>
+      validateUserAttributes(attributes, { transacting })
+      .then(() => new User(attributes).save({}, {transacting}))
+      .then(async (user) => {
+        await Promise.join(
+          account && LinkedAccount.create(user.id, account, {transacting}),
+          community && community.addMembers([user.id], {transacting}),
+          community && user.markInvitationsUsed(community.id, transacting)
+        )
+        return user
+      })
+    )
   },
 
   find: function (id, options) {
