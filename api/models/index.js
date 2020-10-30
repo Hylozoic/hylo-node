@@ -6,12 +6,12 @@ import knexfile from '../../knexfile'
 import Promise from 'bluebird'
 
 export const init = () => {
+  // TODO: yes lets do this, i already made good progress on this
   // this could be removed, if desired, if all uses of bluebird's API were
   // removed from the models
   global.Promise = Promise
 
   global.bookshelf = Bookshelf(Knex(knexfile[process.env.NODE_ENV]))
-  // global.bookshelf.plugin('bookshelf-returning')
 
   return readdirSync(__dirname)
   .map(filename => {
