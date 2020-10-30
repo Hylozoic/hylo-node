@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.7]
+### Added
+- Add migrations, models, resolvers, and GraphQL schema changes for creating, deleting, and viewing saved searches
+- Add digest for saved searches
+
+## Fixed
+- Member Profile > Recent Activity feed loading fixed
+
 ## [1.3.6]
 ### Added
 - Adds contactEmail and contactPhone to User and related graphql

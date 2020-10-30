@@ -5,7 +5,8 @@ export const filterAndSortPosts = curry((opts, q) => {
   const { search, sortBy = 'updated', topic, showPinnedFirst, type, boundingBox } = opts
   const sortColumns = {
     votes: 'num_votes',
-    updated: 'posts.updated_at'
+    updated: 'posts.updated_at',
+    created: 'posts.created_at'
   }
 
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === sortBy)
