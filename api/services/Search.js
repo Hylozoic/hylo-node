@@ -126,9 +126,9 @@ module.exports = {
         }, {})
 
         return Promise.join(
-          ids.posts && Post.whereIn('id', ids.posts).fetchAll(),
-          ids.comments && Comment.whereIn('id', ids.comments).fetchAll(),
-          ids.people && User.whereIn('id', ids.people).fetchAll(),
+          ids.posts && Post.where('id', 'in', ids.posts).fetchAll(),
+          ids.comments && Comment.where('id', 'in', ids.comments).fetchAll(),
+          ids.people && User.where('id', 'in', ids.people).fetchAll(),
           (posts, comments, people) =>
             items.map(presentResult(posts, comments, people))
         )
