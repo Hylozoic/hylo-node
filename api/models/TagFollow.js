@@ -61,10 +61,18 @@ module.exports = bookshelf.Model.extend({
     }).fetch({transacting})
     .then(follow => follow ||
       new TagFollow(attrs).save(null, {transacting})
-      .tap(() => CommunityTag.query(q => {
-        q.where('community_id', communityId)
-        q.where('tag_id', tagId)
-      }).query().increment('num_followers').transacting(transacting)))
+      .then(async (tf) => {
+        const q = CommunityTag.query(q => {
+          q.where('community_id', communityId)
+          q.where('tag_id', tagId)
+        })
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        await q.query().increment('num_followers')
+        return tf
+      })
+     )
   },
 
   remove: function ({tagId, userId, communityId, transacting}) {

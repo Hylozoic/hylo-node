@@ -214,10 +214,13 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   markInvitationsUsed: function (communityId, trx) {
-    return Invitation.query()
-    .where('community_id', communityId)
+    const q = Invitation.query()
+    if (trx) {
+      q.transacting(trx)
+    }
+    return q.where('community_id', communityId)
     .whereRaw('lower(email) = lower(?)', this.get('email'))
-    .update({used_by_id: this.id}).transacting(trx)
+    .update({used_by_id: this.id})
   },
 
   setPassword: function (password, { transacting } = {}) {
