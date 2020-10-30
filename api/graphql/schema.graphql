@@ -571,8 +571,8 @@ input PostInput {
   memberIds: [ID]
   acceptContributions: Boolean
   eventInviteeIds: [ID]
-  startTime: String
-  endTime: String
+  startTime: Date
+  endTime: Date
 }
 
 input CommentInput {
@@ -618,8 +618,8 @@ input LocationInput {
 }
 
 input PointInput {
-  lat: String
-  lng: String
+  lat: Float
+  lng: Float
 }
 
 input MembershipInput {
@@ -888,7 +888,7 @@ type SavedSearch {
   topics: [SavedSearchTopic]
   postTypes: [String]
   newPosts: [Post]
-  createdAt: String
+  createdAt: Date
 }
 
 type SavedSearchTopic {
