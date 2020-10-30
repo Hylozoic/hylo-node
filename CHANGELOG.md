@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.3.8]
+### Added
+- Ability to sort posts by created_at date
+
 ### Fixed
 - Correct URL for access to user avatar images from Facebook
 - Try increasing knex connection pool size to fix server timeouts
