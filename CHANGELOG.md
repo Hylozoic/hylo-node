@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.8]
+### Added
+- Ability to sort posts by created_at date
+
+### Fixed
+- Correct URL for access to user avatar images from Facebook
+- Try increasing knex connection pool size to fix server timeouts
+
 ## [1.3.7]
 ### Added
 - Add migrations, models, resolvers, and GraphQL schema changes for creating, deleting, and viewing saved searches
