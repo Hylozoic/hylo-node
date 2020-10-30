@@ -22,6 +22,13 @@ const defaults = {
     password: password,
     database: url.pathname.substring(1)
   },
+  pool: {
+    // https://github.com/Vincit/objection.js/issues/1137
+    min: 5, // default 2
+    max: 30, // default 10
+    // https://github.com/knex/knex/issues/2820#issuecomment-481710112
+    propagateCreateError: false // default true (false NOT recommended)
+  },
   migrations: {
     tableName: 'knex_migrations'
   }

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - Correct URL for access to user avatar images from Facebook
+- Try increasing knex connection pool size to fix server timeouts
 
 ## [1.3.7]
 ### Added
