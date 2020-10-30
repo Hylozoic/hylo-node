@@ -20,13 +20,27 @@
 
 module.exports.policies = {
   '*': false,
+
   AdminController: {
     '*': 'isAdmin'
   },
-  // MobileAppController: true,
-  // NexudusController: true,
-  // SessionController: true,
-  // SubscriptionController: true,
+
+  MobileAppController: {
+    '*': true
+  },
+
+  NexudusController: {
+    '*': true
+  },
+
+  SessionController: {
+    '*': true
+  },
+
+  SubscriptionController: {
+    '*': true
+  },
+
   UploadController: {
     '*': 'sessionAuth'
   },
