@@ -485,6 +485,11 @@ type Query {
     communityIds: [String],
     filter: String
   ): PersonQuerySet
+  projects(
+    context: String,
+    contextId: ID,
+    viewerId: ID
+  ): PostQuerySet
   topic(id: ID, name: String): Topic
   communityTopic(
     communitySlug: String,

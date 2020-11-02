@@ -363,6 +363,26 @@ module.exports = bookshelf.Model.extend(Object.assign({
     PUBLIC_READABLE: 1
   },
 
+ projectsForContext: async function (context, contextId) {
+    let postIds
+    
+    switch (context) {
+      default: // For now, the only context is member profiles. Add to this once we show projects on group landing pages.
+        postIds = await this.query(q => {
+          q.select('posts.*')
+          q.from('group_memberships')
+          q.leftJoin('groups', 'group_memberships.group_id', 'groups.id')
+          q.leftJoin('posts', 'groups.group_data_id', 'posts.id')
+          q.whereNotNull('group_memberships.project_role_id')
+          q.andWhere('group_memberships.user_id', contextId)
+          q.andWhere('group_memberships.active', true)
+        }).query()
+          .then(rows => rows.map(r => r.id))
+    }
+
+    return Post.where('id', 'in', postIds).fetchAll()
+  },
+
   countForUser: function (user, type) {
     const attrs = {user_id: user.id, active: true}
     if (type) attrs.type = type
