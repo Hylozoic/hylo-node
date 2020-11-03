@@ -2,22 +2,33 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.5
--- Dumped by pg_dump version 10.5
+-- Dumped from database version 11.8
+-- Dumped by pg_dump version 11.8
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', 'public', false);
 SET check_function_bodies = false;
-SET search_path = public, pg_catalog;
+SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
+
+CREATE EXTENSION postgis;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -
@@ -200,7 +211,12 @@ CREATE TABLE public.communities (
     active boolean DEFAULT true,
     num_members integer DEFAULT 0,
     hidden boolean DEFAULT false NOT NULL,
-    allow_community_invites boolean DEFAULT false
+    allow_community_invites boolean DEFAULT false,
+    location_id bigint,
+    is_public boolean DEFAULT false,
+    is_auto_joinable boolean DEFAULT false,
+    public_member_directory boolean DEFAULT false,
+    community_template_id bigint
 );
 
 
@@ -229,7 +245,8 @@ CREATE TABLE public.communities_tags (
     user_id bigint,
     description text,
     is_default boolean DEFAULT false,
-    num_followers integer DEFAULT 0
+    num_followers integer DEFAULT 0,
+    visibility integer DEFAULT 1
 );
 
 
@@ -305,6 +322,72 @@ CREATE TABLE public.community_invites (
     expired_by_id bigint,
     expired_at timestamp with time zone
 );
+
+
+--
+-- Name: community_template_default_topics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.community_template_default_topics (
+    id integer NOT NULL,
+    community_template_id bigint,
+    tag_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: community_template_default_topics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.community_template_default_topics_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: community_template_default_topics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.community_template_default_topics_id_seq OWNED BY public.community_template_default_topics.id;
+
+
+--
+-- Name: community_templates; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.community_templates (
+    id integer NOT NULL,
+    name character varying(255),
+    display_name character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: community_templates_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.community_templates_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: community_templates_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.community_templates_id_seq OWNED BY public.community_templates.id;
 
 
 --
@@ -401,7 +484,6 @@ CREATE TABLE public.event_invitations (
 --
 
 CREATE SEQUENCE public.event_invitations_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -673,7 +755,8 @@ CREATE TABLE public.join_requests (
     user_id bigint,
     community_id bigint,
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    status integer
 );
 
 
@@ -795,6 +878,51 @@ CREATE TABLE public.linked_account (
     provider_user_id character varying(255),
     provider_key character varying(255)
 );
+
+
+--
+-- Name: locations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.locations (
+    id integer NOT NULL,
+    center public.geometry(Point,4326),
+    bbox public.geometry(Polygon,4326),
+    geometry public.geometry(Polygon,4326),
+    full_text character varying(255),
+    address_number character varying(255),
+    address_street character varying(255),
+    city character varying(255),
+    locality character varying(255),
+    region character varying(255),
+    neighborhood character varying(255),
+    postcode character varying(255),
+    country character varying(255),
+    accuracy character varying(255),
+    wikidata character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: locations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.locations_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: locations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.locations_id_seq OWNED BY public.locations.id;
 
 
 --
@@ -1103,7 +1231,9 @@ CREATE TABLE public.posts (
     announcement boolean DEFAULT false,
     start_time timestamp with time zone,
     end_time timestamp with time zone,
-    accept_contributions boolean DEFAULT false
+    accept_contributions boolean DEFAULT false,
+    location_id bigint,
+    is_public boolean DEFAULT false
 );
 
 
@@ -1202,7 +1332,6 @@ CREATE TABLE public.project_contributions (
 --
 
 CREATE SEQUENCE public.project_contributions_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1289,7 +1418,10 @@ CREATE TABLE public.users (
     location character varying(255),
     url character varying(255),
     tagline character varying(255),
-    stripe_account_id bigint
+    stripe_account_id bigint,
+    location_id bigint,
+    contact_email character varying(255),
+    contact_phone character varying(255)
 );
 
 
@@ -1347,6 +1479,86 @@ CREATE SEQUENCE public.queued_pushes_id_seq
 --
 
 ALTER SEQUENCE public.queued_pushes_id_seq OWNED BY public.push_notifications.id;
+
+
+--
+-- Name: saved_search_topics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.saved_search_topics (
+    id integer NOT NULL,
+    tag_id bigint NOT NULL,
+    saved_search_id bigint NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: saved_search_topics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.saved_search_topics_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: saved_search_topics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.saved_search_topics_id_seq OWNED BY public.saved_search_topics.id;
+
+
+--
+-- Name: saved_searches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.saved_searches (
+    id integer NOT NULL,
+    user_id bigint NOT NULL,
+    name character varying(255),
+    context character varying(255) NOT NULL,
+    context_id bigint,
+    is_active boolean DEFAULT true,
+    search_text character varying(255),
+    post_types character varying(255)[],
+    bounding_box public.geometry(Polygon,4326),
+    last_post_id bigint,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: COLUMN saved_searches.context_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.saved_searches.context_id IS 'If context is "community" or "network", this represents the community or network id';
+
+
+--
+-- Name: saved_searches_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.saved_searches_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: saved_searches_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.saved_searches_id_seq OWNED BY public.saved_searches.id;
 
 
 --
@@ -1720,6 +1932,20 @@ ALTER TABLE ONLY public.communities_users ALTER COLUMN id SET DEFAULT nextval('p
 
 
 --
+-- Name: community_template_default_topics id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_template_default_topics ALTER COLUMN id SET DEFAULT nextval('public.community_template_default_topics_id_seq'::regclass);
+
+
+--
+-- Name: community_templates id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_templates ALTER COLUMN id SET DEFAULT nextval('public.community_templates_id_seq'::regclass);
+
+
+--
 -- Name: devices id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1790,6 +2016,13 @@ ALTER TABLE ONLY public.link_previews ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: locations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations ALTER COLUMN id SET DEFAULT nextval('public.locations_id_seq'::regclass);
+
+
+--
 -- Name: networks id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1857,6 +2090,20 @@ ALTER TABLE ONLY public.project_roles ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.push_notifications ALTER COLUMN id SET DEFAULT nextval('public.queued_pushes_id_seq'::regclass);
+
+
+--
+-- Name: saved_search_topics id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_search_topics ALTER COLUMN id SET DEFAULT nextval('public.saved_search_topics_id_seq'::regclass);
+
+
+--
+-- Name: saved_searches id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_searches ALTER COLUMN id SET DEFAULT nextval('public.saved_searches_id_seq'::regclass);
 
 
 --
@@ -1979,6 +2226,22 @@ ALTER TABLE ONLY public.comments_tags
 
 ALTER TABLE ONLY public.communities_tags
     ADD CONSTRAINT communities_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: community_template_default_topics community_template_default_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_template_default_topics
+    ADD CONSTRAINT community_template_default_topics_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: community_templates community_templates_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_templates
+    ADD CONSTRAINT community_templates_pkey PRIMARY KEY (id);
 
 
 --
@@ -2115,6 +2378,14 @@ ALTER TABLE ONLY public.link_previews
 
 ALTER TABLE ONLY public.link_previews
     ADD CONSTRAINT link_previews_url_unique UNIQUE (url);
+
+
+--
+-- Name: locations locations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.locations
+    ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
 
 
 --
@@ -2318,6 +2589,22 @@ ALTER TABLE ONLY public.push_notifications
 
 
 --
+-- Name: saved_search_topics saved_search_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_search_topics
+    ADD CONSTRAINT saved_search_topics_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: saved_searches saved_searches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_searches
+    ADD CONSTRAINT saved_searches_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: skills skills_name_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2518,6 +2805,34 @@ ALTER TABLE ONLY public.communities_users
 
 
 --
+-- Name: auto_joinable_communities_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX auto_joinable_communities_idx ON public.communities USING btree (is_auto_joinable);
+
+
+--
+-- Name: communities_tags_community_id_visibility_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX communities_tags_community_id_visibility_index ON public.communities_tags USING btree (community_id, visibility);
+
+
+--
+-- Name: community_template_default_topics_community_template_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX community_template_default_topics_community_template_id_index ON public.community_template_default_topics USING btree (community_template_id);
+
+
+--
+-- Name: community_templates_name_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX community_templates_name_index ON public.community_templates USING btree (name);
+
+
+--
 -- Name: fk_community_created_by_1; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2658,10 +2973,59 @@ CREATE INDEX ix_vote_user_13 ON public.votes USING btree (user_id);
 
 
 --
+-- Name: join_requests_community_id_status_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX join_requests_community_id_status_index ON public.join_requests USING btree (community_id, status);
+
+
+--
+-- Name: location_center_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX location_center_idx ON public.locations USING gist (center);
+
+
+--
 -- Name: notifications_pk_medium_0; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX notifications_pk_medium_0 ON public.notifications USING btree (id) WHERE (medium = 0);
+
+
+--
+-- Name: public_communities_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX public_communities_idx ON public.communities USING btree (is_public);
+
+
+--
+-- Name: public_member_directory_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX public_member_directory_idx ON public.communities USING btree (public_member_directory);
+
+
+--
+-- Name: public_posts_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX public_posts_idx ON public.posts USING btree (is_public);
+
+
+--
+-- Name: saved_search_topics_saved_search_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX saved_search_topics_saved_search_id_index ON public.saved_search_topics USING btree (saved_search_id);
+
+
+--
+-- Name: saved_searches_user_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX saved_searches_user_id_index ON public.saved_searches USING btree (user_id);
 
 
 --
@@ -2769,6 +3133,22 @@ ALTER TABLE ONLY public.comments_tags
 
 
 --
+-- Name: communities communities_community_template_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.communities
+    ADD CONSTRAINT communities_community_template_id_foreign FOREIGN KEY (community_template_id) REFERENCES public.community_templates(id);
+
+
+--
+-- Name: communities communities_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.communities
+    ADD CONSTRAINT communities_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id);
+
+
+--
 -- Name: communities_tags communities_tags_community_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2822,6 +3202,22 @@ ALTER TABLE ONLY public.communities
 
 ALTER TABLE ONLY public.communities
     ADD CONSTRAINT community_network_id_foreign FOREIGN KEY (network_id) REFERENCES public.networks(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: community_template_default_topics community_template_default_topics_community_template_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_template_default_topics
+    ADD CONSTRAINT community_template_default_topics_community_template_id_foreign FOREIGN KEY (community_template_id) REFERENCES public.community_templates(id);
+
+
+--
+-- Name: community_template_default_topics community_template_default_topics_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.community_template_default_topics
+    ADD CONSTRAINT community_template_default_topics_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES public.tags(id);
 
 
 --
@@ -3281,6 +3677,14 @@ ALTER TABLE ONLY public.posts_about_users
 
 
 --
+-- Name: posts posts_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id);
+
+
+--
 -- Name: posts_tags posts_tags_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3345,6 +3749,38 @@ ALTER TABLE ONLY public.push_notifications
 
 
 --
+-- Name: saved_search_topics saved_search_topics_saved_search_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_search_topics
+    ADD CONSTRAINT saved_search_topics_saved_search_id_foreign FOREIGN KEY (saved_search_id) REFERENCES public.saved_searches(id);
+
+
+--
+-- Name: saved_search_topics saved_search_topics_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_search_topics
+    ADD CONSTRAINT saved_search_topics_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES public.tags(id);
+
+
+--
+-- Name: saved_searches saved_searches_last_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_searches
+    ADD CONSTRAINT saved_searches_last_post_id_foreign FOREIGN KEY (last_post_id) REFERENCES public.posts(id);
+
+
+--
+-- Name: saved_searches saved_searches_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.saved_searches
+    ADD CONSTRAINT saved_searches_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
 -- Name: skills_users skills_users_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3390,6 +3826,14 @@ ALTER TABLE ONLY public.user_external_data
 
 ALTER TABLE ONLY public.communities_users
     ADD CONSTRAINT users_community_deactivator_id_foreign FOREIGN KEY (deactivator_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users users_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id);
 
 
 --
