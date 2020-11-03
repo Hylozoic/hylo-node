@@ -108,30 +108,38 @@ async function updateTagsAndCommunities (post, trx) {
     )
   })
 
-  const updateCommunityTags = CommunityTag.query(q => {
+  const communityTagsQuery = CommunityTag.query(q => {
     q.whereIn('tag_id', tags.map('id'))
-  }).query().update({updated_at: new Date()}).transacting(trx)
+  }).query()
+
+  const tagFollowQuery = TagFollow.query(q => {
+    q.whereIn('tag_id', tags.map('id'))
+    q.whereIn('community_id', communities.map('id'))
+    q.whereNot('user_id', post.get('user_id'))
+  }).query()
+
+  const groupMembershipQuery = GroupMembership.query(q => {
+    const groupIds = Group.query(q2 => {
+      q2.select('id')
+      q2.whereIn('group_data_id', communities.map('id'))
+      q2.where('group_data_type', Group.DataType.COMMUNITY)
+    }).query()
+
+    q.whereIn('group_id', groupIds)
+    q.whereNot('group_memberships.user_id', post.get('user_id'))
+    q.where('group_memberships.active', true)
+  }).query()
+
+  if (trx) {
+    communityTagsQuery.transacting(trx)
+    tagFollowQuery.transacting(trx)
+    groupMembershipQuery.transacting(trx)
+  }
 
   return Promise.all([
     notifySockets,
-    updateCommunityTags,
-
-    TagFollow.query(q => {
-      q.whereIn('tag_id', tags.map('id'))
-      q.whereIn('community_id', communities.map('id'))
-      q.whereNot('user_id', post.get('user_id'))
-    }).query().increment('new_post_count').transacting(trx),
-
-    GroupMembership.query(q => {
-      const groupIds = Group.query(q2 => {
-        q2.select('id')
-        q2.whereIn('group_data_id', communities.map('id'))
-        q2.where('group_data_type', Group.DataType.COMMUNITY)
-      }).query()
-
-      q.whereIn('group_id', groupIds)
-      q.whereNot('group_memberships.user_id', post.get('user_id'))
-      q.where('group_memberships.active', true)
-    }).query().increment('new_post_count').transacting(trx)
+    communityTagsQuery.update({updated_at: new Date()}),
+    tagFollowQuery.increment('new_post_count'),
+    groupMembershipQuery.increment('new_post_count')
   ])
 }

@@ -36,8 +36,8 @@ describe('updateChildren', () => {
       // remove children[2] by omission
     ]
 
-    return updateChildren(post, childrenParam)
-    .then(() => post.load('children'))
+    return bookshelf.transaction(trx => updateChildren(post, childrenParam, trx))
+    .then(() => { return post.load(['children']);})
     .then(() => {
       const updated = post.relations.children
       expect(updated.length).to.equal(2)

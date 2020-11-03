@@ -69,11 +69,13 @@ TestSetup.prototype.createSchema = function () {
       .map(line => line.trim())
       .filter(line => line !== '')
     })
-    .each(command => {
-      if (command.startsWith('CREATE TABLE')) {
-        this.tables.push(command.split(' ')[2])
-      }
-      return bookshelf.knex.raw(command).transacting(trx)
+    .then(commands => {
+      return Promise.map(commands, command => {
+        if (command.startsWith('CREATE TABLE')) {
+          this.tables.push(command.split(' ')[2])
+        }
+        return trx.raw(command)
+      })
     })
   }) // transaction
 }

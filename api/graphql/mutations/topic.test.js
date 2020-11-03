@@ -77,7 +77,7 @@ describe('topic mutations', () => {
         user_id: u1.id
       }).save()
       await mutations.subscribe(u1.id, t.id, c1.id, false)
-      await u1.refresh({ withRelated: [ 'followedTags' ] })
+      u1 = await User.where({ id: u1.id }).fetch({ withRelated: ['followedTags'] })
       const hasFollow = u1.relations.followedTags.find({ id: t.id })
       expect(hasFollow).to.equal(undefined)
     })

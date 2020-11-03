@@ -85,10 +85,17 @@ module.exports = bookshelf.Model.extend({
     .fetch()
     .then(tagFollow => tagFollow &&
       tagFollow.destroy({transacting})
-      .tap(() => CommunityTag.query(q => {
-        q.where('community_id', attrs.community_id)
-        q.where('tag_id', attrs.tag_id)
-      }).query().decrement('num_followers').transacting(transacting)))
+      .then(() => {
+        const q = CommunityTag.query(q => {
+          q.where('community_id', attrs.community_id)
+          q.where('tag_id', attrs.tag_id)
+        })
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        return q.query().decrement('num_followers')
+      })
+    )
   },
 
   findFollowers: function (community_id, tag_id, limit = 3) {
