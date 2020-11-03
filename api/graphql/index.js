@@ -165,12 +165,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
     people: (root, args) => fetchMany('Person', args),
-    projects: (root, { context, contextId, viewerId }) => {
-      return Post.projectsForContext(context, contextId)
-        .then(({ models }) => {
-          return { items: models.filter(async p => {return await p.isVisibleToUser(p.id, viewerId) })}
-        })
-    },
+    projects: async (root, { context, contextId, viewerId }) => Post.projectsForContext(context, contextId, viewerId),
     connections: (root, args) => fetchMany('PersonConnection', args),
     communityTopics: (root, args) => fetchMany('CommunityTopic', args),
     topics: (root, args) => fetchMany('Topic', args),
