@@ -32,11 +32,21 @@ jobs:
     - image: circleci/postgres:11.9-postgis
       environment:
         POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: hylo
+        POSTGRES_DB: hylo_test
     steps:
     # Machine Setup
     #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
     # The following `checkout` command checks out your code to your working directory. In 1.0 we did this implicitly. In 2.0 you can choose where in the course of a job your code should be checked out.
     - checkout
+    # setup self referential env vars
+    - run: echo $HOME
+    - run: echo $CIRCLE_PROJECT_REPONAME
+    - run: echo $PATH
+    - run:
+        name: Update PATH Environment Variable at Runtime
+        command: |
+          export PATH=$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/node_modules/.bin
     # Prepare for artifact and test results  collection equivalent to how it was done on 1.0.
     # In many cases you can simplify this from what is generated here.
     # 'See docs on artifact collection here https://circleci.com/docs/2.0/artifacts/'
@@ -45,6 +55,11 @@ jobs:
     - run:
         working_directory: ~/Hylozoic/hylo-node
         command: nvm install 12.19.0 && nvm alias default 12.19.0
+    # Upgrade yarn
+    - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+    - run: sudo sh -c 'echo "deb https://dl.yarnpkg.com/debian/ stable main" >> /etc/apt/sources.list.d/yarn.list'
+    - run: sudo apt update
+    - run: sudo apt install yarn
     - run:
         working_directory: ~/Hylozoic/hylo-node
         command: 'sudo redis-cli ping >/dev/null 2>&1 || sudo service redis-server
@@ -63,7 +78,6 @@ jobs:
     # This is based on your 1.0 configuration file or project settings
     - run: sudo service postgresql start
     - run: |-
-        createdb -h localhost hylo_test -U postgres
         npm install -g codecov
         curl -o- -L https://yarnpkg.com/install.sh | bash
     # This is based on your 1.0 configuration file or project settings
