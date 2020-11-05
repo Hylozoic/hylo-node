@@ -82,10 +82,8 @@ describe('community digest v2', () => {
           model({
             id: 5,
             name: 'Do you have a dollar?',
+            type: 'request',
             relations: {
-              selectedTags: collection([
-                model({name: 'request'})
-              ]),
               user: u1
             }
           }),
@@ -101,10 +99,8 @@ describe('community digest v2', () => {
           model({
             id: 6,
             name: 'I have cookies!',
+            type: 'offer',
             relations: {
-              selectedTags: collection([
-                model({name: 'offer'})
-              ]),
               user: u2
             }
           }),
@@ -115,9 +111,6 @@ describe('community digest v2', () => {
             location: 'Home',
             starts_at: new Date('December 17, 1995 18:30:00'),
             relations: {
-              selectedTags: collection([
-                model({name: 'other'})
-              ]),
               user: u2
             }
           }),
@@ -126,9 +119,6 @@ describe('community digest v2', () => {
             name: 'A project with requests',
             type: 'project',
             relations: {
-              selectedTags: collection([
-                model({name: 'other'})
-              ]),
               user: u2,
               children: collection([
                 model({name: 'I need things'}),
@@ -169,6 +159,7 @@ describe('community digest v2', () => {
             comments: []
           }
         ],
+        resources: [],
         conversations: [
           {
             id: 7,
@@ -177,6 +168,31 @@ describe('community digest v2', () => {
             url: Frontend.Route.post({id: 7}, community),
             comments: [],
             link_preview: omit(linkPreview.attributes, 'id')
+          }
+        ],
+        events: [
+          {
+            id: 76,
+            title: 'An event',
+            location: 'Home',
+            when: '6pm - December 17, 1995',
+            user: u2.attributes,
+            url: Frontend.Route.post({id: 76}, community),
+            comments: []
+          }
+        ],
+        projects: [
+          {
+            id: 77,
+            title: 'A project with requests',
+            user: u2.attributes,
+            url: Frontend.Route.post({id: 77}, community),
+            comments: [],
+            requests: [
+              'I need things',
+              'and love',
+              'and more things'
+            ]
           }
         ],
         postsWithNewComments: [
@@ -211,31 +227,6 @@ describe('community digest v2', () => {
               name: 'Mr. Man'
             }
           }
-        ],
-        events: [
-          {
-            id: 76,
-            title: 'An event',
-            location: 'Home',
-            when: '6pm - December 17, 1995',
-            user: u2.attributes,
-            url: Frontend.Route.post({id: 76}, community),
-            comments: []
-          }
-        ],
-        projects: [
-          {
-            id: 77,
-            title: 'A project with requests',
-            user: u2.attributes,
-            url: Frontend.Route.post({id: 77}, community),
-            comments: [],
-            requests: [
-              'I need things',
-              'and love',
-              'and more things'
-            ]
-          }
         ]
       }
 
@@ -250,10 +241,8 @@ describe('community digest v2', () => {
             name: 'Foo!',
             description: '<p><a href="/u/21">Edward West</a> & ' +
               '<a href="/u/16325">Julia Pope</a> <a>#oakland</a></p>',
+            type: 'request',
             relations: {
-              selectedTags: collection([
-                model({name: 'request'})
-              ]),
               user: u1
             }
           })
@@ -262,7 +251,6 @@ describe('community digest v2', () => {
       }
 
       const prefix = Frontend.Route.prefix
-
       expect(formatData(community, data)).to.deep.equal({
         offers: [],
         conversations: [],
@@ -280,7 +268,8 @@ describe('community digest v2', () => {
         ],
         postsWithNewComments: [],
         projects: [],
-        events: []
+        events: [],
+        resources: []
       })
     })
 
@@ -294,6 +283,7 @@ describe('community digest v2', () => {
         postsWithNewComments: [],
         projects: [],
         events: [],
+        resources: [],
         no_new_activity: true
       })
     })
@@ -316,6 +306,7 @@ describe('community digest v2', () => {
         requests: [],
         events: [],
         projects: [],
+        resources: [],
         offers: [
           {
             id: 1,
@@ -468,6 +459,7 @@ describe('community digest v2', () => {
           postsWithNewComments: [],
           events: [],
           projects: [],
+          resources: [],
           conversations: [
             {
               id: post.id,

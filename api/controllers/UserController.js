@@ -6,6 +6,7 @@ module.exports = {
     .then(async (user) => {
       await Analytics.trackSignup(user.id, req)
       await req.param('login') && UserSession.login(req, user, 'password')
+      await user.refresh()
 
       if (req.param('resp') === 'user') {
         return res.ok({

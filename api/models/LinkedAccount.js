@@ -51,9 +51,14 @@ module.exports = bookshelf.Model.extend({
       if (avatarUrl && !avatarUrl.match(/gravatar/)) {
         attributes.avatar_url = avatarUrl
       }
-      return !isEmpty(attributes) && User.query().where('id', userId)
-      .update(attributes)
-      .transacting(transacting)
+      if (!isEmpty(attributes)) {
+        const q = User.query().where('id', userId)
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        return q.update(attributes)
+      }
+      return false
     })
   },
 

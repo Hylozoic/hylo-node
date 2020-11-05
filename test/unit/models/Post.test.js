@@ -119,7 +119,7 @@ describe('Post', function () {
     })
 
     it('is true if the post is public', () => {
-      return post.save({visibility: Post.Visibility.PUBLIC_READABLE}, {patch: true})
+      return post.save({ is_public: true }, { patch: true })
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })

@@ -65,7 +65,7 @@ describe('UserController', function () {
         return UserController.create(req, res)
         .then(() => {
           expect(res.statusCode).to.equal(422)
-          expect(res.body).to.equal(req.__('duplicate-email'))
+          expect(res.body).to.deep.equal({ error: 'duplicate-email' })
         })
       })
     })

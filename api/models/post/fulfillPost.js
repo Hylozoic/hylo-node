@@ -29,7 +29,7 @@ export function unfulfill () {
     const removeContributions = (post) =>
       Promise.map(
         post.relations.contributions.models,
-        c => c.destroy({transacting})
+        c => c.destroy({transacting, require: false})
       )
     return unfulfill(this).then(loadContributions)
       .tap(removeActivities)

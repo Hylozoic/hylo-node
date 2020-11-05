@@ -214,6 +214,8 @@ describe('Tag', () => {
       .then(() => Promise.all([
         k('posts_tags').insert({tag_id: t1.id, post_id: p1.id}),
         k('posts_tags').insert({tag_id: t1.id, post_id: p2.id}),
+        k('communities_posts').insert({community_id: c.id, post_id: p1.id}),
+        k('communities_posts').insert({community_id: c.id, post_id: p2.id}),
         k('communities_tags').insert({tag_id: t1.id, community_id: c.id})
       ]))
     })
@@ -227,23 +229,23 @@ describe('Tag', () => {
   })
 
   describe('.followersCount', () => {
-    var t1, c, c2
+    let t1, c1, c2
 
     beforeEach(() => {
       const k = bookshelf.knex
       t1 = new Tag({name: 't1'})
-      c = factories.community()
+      c1 = factories.community()
       c2 = factories.community()
 
       return Promise.all([t1, c1, c2].map(x => x.save()))
       .then(() => Promise.all([
-        k('communities_tags').insert({tag_id: t1.id, community_id: c.id}),
-        k('tag_follows').insert({tag_id: t1.id, community_id: c.id, user_id: u.id})
+        k('communities_tags').insert({tag_id: t1.id, community_id: c1.id}),
+        k('tag_follows').insert({tag_id: t1.id, community_id: c1.id, user_id: u.id})
       ]))
     })
 
     it('correctly counts the number of followers across the whole site', function () {
-      return Tag.followersCount(t1.id)
+      return Tag.followersCount(t1.id, {})
       .then(count => {
         expect(count).to.equal(1)
       })

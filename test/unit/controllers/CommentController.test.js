@@ -49,13 +49,11 @@ describe('CommentController', function () {
       req.params.To = Email.postReplyAddress(fixtures.p1.id, fixtures.u3.id)
 
       return CommentController.createFromEmail(req, res)
-      .then(function () {
+      .then(async () => {
         expect(Analytics.track).to.have.been.called()
         expect(res.ok).to.have.been.called()
-        return fixtures.p1.comments().fetch()
-      })
-      .then(function (comments) {
-        var comment = comments.find(c => c.get('post_id') === fixtures.p1.id)
+        const comments = await fixtures.p1.comments().fetch()
+        const comment = comments.last()
         expect(comment).to.exist
         expect(comment.get('text')).to.equal('<p>foo bar baz</p>\n')
         expect(comment.get('user_id')).to.equal(fixtures.u3.id)
@@ -69,7 +67,7 @@ describe('CommentController', function () {
       .then(() => CommentController.createFromEmail(req, res))
       .then(() => fixtures.p1.comments().fetch())
       .then(comments => {
-        var comment = comments.find(c => c.get('post_id') === fixtures.p1.id)
+        const comment = comments.last()
         expect(comment).to.exist
         expect(comment.get('text')).to.equal('foo bar baz')
       })

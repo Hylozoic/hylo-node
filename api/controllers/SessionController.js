@@ -41,8 +41,12 @@ const upsertUser = (req, service, profile) => {
     if (user) {
       return UserSession.login(req, user, service)
       // if this is a new account, link it to the user
-      .tap(() => hasLinkedAccount(user, service) ||
-        LinkedAccount.create(user.id, {type: service, profile}, {updateUser: true}))
+      .then(async (session) => {
+        if (!(await hasLinkedAccount(user, service))) {
+          await LinkedAccount.create(user.id, {type: service, profile}, {updateUser: true})
+        }
+        return session
+      })
     }
 
     const attrs = _.merge(_.pick(profile, 'email', 'name'), {
@@ -50,8 +54,11 @@ const upsertUser = (req, service, profile) => {
     })
 
     return User.create(attrs)
-    .tap(user => Analytics.trackSignup(user.id, req))
-    .tap(user => UserSession.login(req, user, service))
+    .then(async (user) => {
+      await Analytics.trackSignup(user.id, req)
+      await UserSession.login(req, user, service)
+      return user
+    })
   })
 }
 
@@ -132,10 +139,12 @@ module.exports = {
     var password = req.param('password')
 
     return User.authenticate(email, password)
-    .tap(user => UserSession.login(req, user, 'password'))
-    .tap(user => user.save({last_login_at: new Date()}, {patch: true}))
-    .tap(user => res.ok({}))
-    .catch(function (err) {
+    .then(async (user) => {
+      await UserSession.login(req, user, 'password')
+      await user.save({last_login_at: new Date()}, {patch: true})
+      await res.ok({})
+      return user
+    }).catch(function (err) {
       // 422 means 'well-formed but semantically invalid'
       res.status(422).send(err.message)
     })
@@ -163,7 +172,7 @@ module.exports = {
         .catch(function (err) {
           // 422 means 'well-formed but semantically invalid'
           res.status(422).send(err.message)
-        })  
+        })
     }
   },
 

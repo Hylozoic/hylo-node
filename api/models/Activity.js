@@ -35,14 +35,14 @@ const mergeByReader = activities => {
 }
 
 const removeForRelation = (model) => (id, trx) => {
-  const trxOpt = {transacting: trx}
+  const trxOpt = {transacting: trx, require: false}
   return Activity.where(`${model}_id`, id).query()
   .pluck('id').transacting(trx)
   .then(ids => {
     // TODO: New Activity count needs to be decremented
     // if inApp medium is used-- see User#decNewNotificationCount
-    return Notification.whereIn('activity_id', ids).destroy(trxOpt)
-    .then(() => Activity.whereIn('id', ids).destroy(trxOpt))
+    return Notification.where('activity_id', 'in', ids).destroy(trxOpt)
+    .then(() => Activity.where('id', 'in', ids).destroy(trxOpt))
   })
 }
 
