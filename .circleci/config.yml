@@ -50,6 +50,9 @@ jobs:
     # Prepare for artifact and test results  collection equivalent to how it was done on 1.0.
     # In many cases you can simplify this from what is generated here.
     # 'See docs on artifact collection here https://circleci.com/docs/2.0/artifacts/'
+    - run: echo 'echoing env vars'
+    - run: echo $CIRCLE_ARTIFACTS
+    - run: echo $CIRCLE_TEST_REPORTS
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     # This is based on your 1.0 configuration file or project settings
     - run:
@@ -60,12 +63,16 @@ jobs:
     - run: sudo sh -c 'echo "deb https://dl.yarnpkg.com/debian/ stable main" >> /etc/apt/sources.list.d/yarn.list'
     - run: sudo apt update
     - run: sudo apt install yarn
-    - run:
-        working_directory: ~/Hylozoic/hylo-node
-        command: 'sudo redis-cli ping >/dev/null 2>&1 || sudo service redis-server
-          start; '
+    # - run: curl -o- -L https://yarnpkg.com/install.sh | bash
     # Dependencies
     #   This would typically go in either a build or a build-and-test job when using workflows
+    - run: |-
+        wget http://download.redis.io/releases/redis-3.2.0.tar.gz
+        tar xzf redis-3.2.0.tar.gz
+        cd redis-3.2.0 && make
+    - run:
+        working_directory: ~/Hylozoic/hylo-node
+        command: 'sudo redis-cli ping >/dev/null 2>&1 || sudo service redis-server start; '
     # Restore the dependency cache
     - restore_cache:
         keys:
@@ -77,9 +84,7 @@ jobs:
         - v1-dep-
     # This is based on your 1.0 configuration file or project settings
     - run: sudo service postgresql start
-    - run: |-
-        npm install -g codecov
-        curl -o- -L https://yarnpkg.com/install.sh | bash
+    - run: npm install -g codecov
     # This is based on your 1.0 configuration file or project settings
     - run: yarn install
     # Save dependency cache
@@ -97,6 +102,7 @@ jobs:
         - ~/.gradle
         - ~/.cache/bower
         - ./node_modules
+        - redis-3.2.0
     # Test
     #   This would typically be a build job when using workflows, possibly combined with build
     # This is based on your 1.0 configuration file or project settings
