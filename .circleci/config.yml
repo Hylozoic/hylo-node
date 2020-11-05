@@ -29,7 +29,6 @@ jobs:
     # https://circleci.com/docs/2.0/circleci-images/
     docker:
     - image: circleci/build-image:ubuntu-14.04-XXL-upstart-1189-5614f37
-      command: /sbin/init
     - image: circleci/postgres:11.9-postgis
       environment:
         POSTGRES_USER: postgres
@@ -62,6 +61,7 @@ jobs:
         # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
         - v1-dep-
     # This is based on your 1.0 configuration file or project settings
+    - run: sudo service postgresql start
     - run: |-
         createdb -h localhost hylo_test -U postgres
         npm install -g codecov
