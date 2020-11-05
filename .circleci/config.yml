@@ -45,7 +45,7 @@ jobs:
     # This is based on your 1.0 configuration file or project settings
     - run:
         working_directory: ~/Hylozoic/hylo-node
-        command: nvm install 8.6.0 && nvm alias default 8.6.0
+        command: nvm install 12.19.0 && nvm alias default 12.19.0
     - run:
         working_directory: ~/Hylozoic/hylo-node
         command: 'sudo redis-cli ping >/dev/null 2>&1 || sudo service redis-server
@@ -58,7 +58,7 @@ jobs:
         # This branch if available
         - v1-dep-{{ .Branch }}-
         # Default branch if not
-        - v1-dep-master-
+        - v1-dep-dev-
         # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
         - v1-dep-
     # This is based on your 1.0 configuration file or project settings
@@ -126,4 +126,4 @@ workflows:
             - build
           filters:
             branches:
-              only: master           
+              only: master
