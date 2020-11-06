@@ -22,5 +22,6 @@
     {
       "url": "https://github.com/Hylozoic/heroku-buildpack-migrate"
     }
-  ]
+  ],
+  "stack": "heroku-18"
 }
