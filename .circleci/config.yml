@@ -77,9 +77,8 @@ jobs:
         - v1-dep-
     # This is based on your 1.0 configuration file or project settings
     - run: npm install -g codecov
-    - run: yarn install sharp --unsafe-perm
     # This is based on your 1.0 configuration file or project settings
-    - run: yarn install
+    - run: yarn config set unsafe-perm true && yarn
     # Save dependency cache
     - save_cache:
         key: v1-dep-{{ .Branch }}-{{ epoch }}
