@@ -96,8 +96,9 @@ export const commentFilter = userId => relation => relation.query(q => {
 
   if (userId) {
     q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
-    q.leftJoin('posts', 'communities_posts.post_id', 'posts.id')
+    q.join('posts', 'communities_posts.post_id', 'posts.id')
     q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
+
     q.where(q2 => {
       const groupIds = Group.selectIdsForMember(userId, Post, isFollowing)
       q2.whereIn('comments.post_id', groupIds)

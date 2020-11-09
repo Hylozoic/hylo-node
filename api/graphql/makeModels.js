@@ -146,7 +146,7 @@ export default async function makeModels (userId, isAdmin) {
         'type'
       ],
       getters: {
-        title: p => he.decode(p.get('name')),
+        title: p => p.get('name') ? he.decode(p.get('name')) : null,
         details: p => p.get('description'),
         detailsText: p => p.getDetailsText(),
         isPublic: p => p.get('is_public'),
