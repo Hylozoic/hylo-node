@@ -8,12 +8,12 @@ const findUser = function (service, email, id) {
   return User.query(function (qb) {
     qb.where('users.active', true)
 
-    qb.leftJoin('linked_account', function () {
-      this.on('linked_account.user_id', '=', 'users.id')
+    qb.leftJoin('linked_account', (q2) => {
+      q2.on('linked_account.user_id', '=', 'users.id')
     })
 
-    qb.where(function () {
-      this.where({provider_user_id: id, 'linked_account.provider_key': service})
+    qb.where(function (q3) {
+      q3.where({provider_user_id: id, 'linked_account.provider_key': service})
       .orWhereRaw('lower(email) = ?', email ? email.toLowerCase() : null)
     })
   }).fetchAll({withRelated: ['linkedAccounts']})
