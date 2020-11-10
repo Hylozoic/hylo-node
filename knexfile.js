@@ -39,7 +39,7 @@ module.exports = {
   development: defaults,
   dummy: Object.assign({}, defaults, { seeds: { directory: './seeds/dummy' } }),
   staging: defaults,
-  production: merge({connection: {ssl: true}}, defaults),
+  production: merge({connection: {ssl: { rejectUnauthorized: false }}}, defaults),
   docker: Object.assign({},
     defaults,
     {
