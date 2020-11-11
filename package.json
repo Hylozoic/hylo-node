@@ -46,7 +46,7 @@
     "bookshelf": "^1.2.0",
     "busboy": "^0.3.1",
     "cheerio": "0.19.0",
-    "connect-redis": "^5.0.0",
+    "@sailshq/connect-redis": "^3.2.0",
     "cors": "^2.8.4",
     "csv": "^5.3.2",
     "csv-parser": "^1.7.0",

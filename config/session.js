@@ -45,7 +45,7 @@ module.exports.session = {
   * session store that can be shared across multiple Sails.js servers        *
   ***************************************************************************/
 
-  adapter: 'redis',
+  adapter: '@sailshq/connect-redis',
 
   /***************************************************************************
   *                                                                          *
@@ -56,11 +56,8 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
 
-  host: redisInfo.host,
-  port: redisInfo.port,
+  url: process.env.REDIS_URL,
   ttl: 86400 * 60,
-  db: 0,
-  pass: redisInfo.password,
   prefix: 'sess:'
 
   /***************************************************************************
