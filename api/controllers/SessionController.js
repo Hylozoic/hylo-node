@@ -146,8 +146,8 @@ module.exports = {
       return user
     }).catch(function (err) {
       // 422 means 'well-formed but semantically invalid'
-      sails.log.error(err.stack)
-      res.status(422).send(err.message)
+      sails.log.info(err.stack)
+      res.status(422).send("yo" + err.message)
     })
   },
 
