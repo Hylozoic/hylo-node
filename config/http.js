@@ -16,6 +16,8 @@ import { magenta } from 'chalk'
 
 module.exports.http = {
 
+  trustProxy: process.env.PROTOCOL === 'https',
+
   /****************************************************************************
   *                                                                           *
   * Express middleware to use for every Sails request. To add custom          *

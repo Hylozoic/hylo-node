@@ -12,8 +12,6 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.session.html
  */
 
-var redisInfo = require('parse-redis-url')().parse(process.env.REDIS_URL);
-
 module.exports.session = {
 
   /***************************************************************************
@@ -36,7 +34,8 @@ module.exports.session = {
 
   cookie: {
     domain: process.env.COOKIE_DOMAIN,
-    maxAge: 60 * 86400000 // 60 days
+    maxAge: 60 * 86400000, // 60 days
+    secure: process.env.protocol === 'https'
   },
 
   /***************************************************************************
