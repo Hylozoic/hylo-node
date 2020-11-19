@@ -1,20 +1,21 @@
-require('../../setup')
+require("../../setup");
 
-describe('FullTextSearch', () => {
-  it('sets up, refreshes, and drops the materialied view', function () {
-    this.timeout(5000)
+describe("FullTextSearch", () => {
+  it("sets up, refreshes, and drops the materialied view", function () {
+    this.timeout(5000);
     return FullTextSearch.dropView()
-    .then(() => FullTextSearch.createView())
-    .then(() => FullTextSearch.refreshView())
-    .then(() => FullTextSearch.dropView())
-  })
+      .then(() => FullTextSearch.createView())
+      .then(() => FullTextSearch.refreshView())
+      .then(() => FullTextSearch.dropView());
+  });
 
-  describe('.searchInCommunities', () => {
-    it('produces the expected SQL', () => {
-      const opts = {limit: 10, offset: 20, term: 'zounds', type: 'person'}
-      const query = FullTextSearch.searchInCommunities([3, 5], opts).toString()
+  describe(".searchInCommunities", () => {
+    it("produces the expected SQL", () => {
+      const opts = { limit: 10, offset: 20, term: "zounds", type: "person" };
+      const query = FullTextSearch.searchInCommunities([3, 5], opts).toString();
 
-      expect(query).to.equal(`
+      expect(query).to.equal(
+        `
         select "search"."post_id", "search"."comment_id", "search"."user_id", "rank", "total"
         from (select post_id, comment_id, user_id,
             ts_rank_cd(document, to_tsquery('english', 'zounds:*')) as rank,
@@ -35,7 +36,10 @@ describe('FullTextSearch', () => {
         order by "rank" desc
         limit 10
         offset 20
-      `.replace(/(\n\s*)/g, ' ').trim())
-    })
-  })
-})
+      `
+          .replace(/(\n\s*)/g, " ")
+          .trim()
+      );
+    });
+  });
+});

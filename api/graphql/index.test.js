@@ -1,59 +1,66 @@
 /* eslint-disable no-unused-expressions */
-import { createRequestHandler, makeMutations, makeQueries } from './index'
-import '../../test/setup'
-import factories from '../../test/setup/factories'
-import { spyify, unspyify } from '../../test/setup/helpers'
-import { some, sortBy } from 'lodash/fp'
-import { updateNetworkMemberships } from '../models/post/util'
+import { createRequestHandler, makeMutations, makeQueries } from "./index";
+import "../../test/setup";
+import factories from "../../test/setup/factories";
+import { spyify, unspyify } from "../../test/setup/helpers";
+import { some, sortBy } from "lodash/fp";
+import { updateNetworkMemberships } from "../models/post/util";
 
-describe('graphql request handler', () => {
-  var handler,
-    req, res,
-    user, user2,
-    community, network,
-    post, post2, comment, media
+describe("graphql request handler", () => {
+  let handler,
+    req,
+    res,
+    user,
+    user2,
+    community,
+    network,
+    post,
+    post2,
+    comment,
+    media;
 
   before(async () => {
-    handler = createRequestHandler()
+    handler = createRequestHandler();
 
-    user = factories.user()
-    user2 = factories.user()
-    community = factories.community()
-    network = factories.network()
-    post = factories.post({type: Post.Type.DISCUSSION})
-    post2 = factories.post({type: Post.Type.REQUEST})
-    comment = factories.comment()
-    media = factories.media()
-    await network.save()
-    await community.save({network_id: network.id})
-    await user.save()
-    await user2.save()
-    await post.save({user_id: user.id})
-    await post2.save()
-    await comment.save({post_id: post.id})
-    await media.save({comment_id: comment.id})
+    user = factories.user();
+    user2 = factories.user();
+    community = factories.community();
+    network = factories.network();
+    post = factories.post({ type: Post.Type.DISCUSSION });
+    post2 = factories.post({ type: Post.Type.REQUEST });
+    comment = factories.comment();
+    media = factories.media();
+    await network.save();
+    await community.save({ network_id: network.id });
+    await user.save();
+    await user2.save();
+    await post.save({ user_id: user.id });
+    await post2.save();
+    await comment.save({ post_id: post.id });
+    await media.save({ comment_id: comment.id });
     return Promise.all([
       community.posts().attach(post),
       community.posts().attach(post2),
       community.addMembers([user.id, user2.id]).then((memberships) => {
-        const earlier = new Date(new Date().getTime() - 86400000)
-        return memberships[0].save({created_at: earlier}, {patch: true})
-      })
-    ])
-    .then(() => Promise.all([
-      updateNetworkMemberships(post),
-      updateNetworkMemberships(post2)
-    ]))
-  })
+        const earlier = new Date(new Date().getTime() - 86400000);
+        return memberships[0].save({ created_at: earlier }, { patch: true });
+      }),
+    ]).then(() =>
+      Promise.all([
+        updateNetworkMemberships(post),
+        updateNetworkMemberships(post2),
+      ])
+    );
+  });
 
   beforeEach(() => {
-    req = factories.mock.request()
-    req.method = 'POST'
-    req.session = {userId: user.id}
-    res = factories.mock.response()
-  })
+    req = factories.mock.request();
+    req.method = "POST";
+    req.session = { userId: user.id };
+    res = factories.mock.response();
+  });
 
-  describe('with a simple query', () => {
+  describe("with a simple query", () => {
     beforeEach(() => {
       req.body = {
         query: `{
@@ -71,56 +78,58 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
-    })
+        }`,
+      };
+    });
 
-    it('responds as expected', () => {
+    it("responds as expected", () => {
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
             me: {
-              name: user.get('name'),
+              name: user.get("name"),
               memberships: [
                 {
                   community: {
-                    name: community.get('name')
-                  }
-                }
+                    name: community.get("name"),
+                  },
+                },
               ],
               posts: [
                 {
-                  title: post.get('name'),
+                  title: post.get("name"),
                   communities: [
                     {
-                      name: community.get('name')
-                    }
-                  ]
-                }
-              ]
-            }
-          }
-        })
-      })
-    })
-  })
+                      name: community.get("name"),
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        });
+      });
+    });
+  });
 
-  describe('with a complex query', () => {
-    var thread, message
+  describe("with a complex query", () => {
+    let thread, message;
 
     before(async () => {
-      thread = factories.post({type: Post.Type.THREAD})
-      await thread.save()
-      await comment.save({user_id: user2.id})
+      thread = factories.post({ type: Post.Type.THREAD });
+      await thread.save();
+      await comment.save({ user_id: user2.id });
 
-      message = await factories.comment({
-        post_id: thread.id,
-        user_id: user2.id
-      }).save()
+      message = await factories
+        .comment({
+          post_id: thread.id,
+          user_id: user2.id,
+        })
+        .save();
 
-      await post.addFollowers([user2.id])
-      await thread.addFollowers([user.id, user2.id])
-    })
+      await post.addFollowers([user2.id]);
+      await thread.addFollowers([user.id, user2.id]);
+    });
 
     beforeEach(() => {
       req.body = {
@@ -170,48 +179,48 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
-    })
+        }`,
+      };
+    });
 
-    it('responds as expected', () => {
+    it("responds as expected", () => {
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
             me: {
-              name: user.get('name'),
+              name: user.get("name"),
               memberships: [
                 {
                   community: {
-                    name: community.get('name')
-                  }
-                }
+                    name: community.get("name"),
+                  },
+                },
               ],
               posts: [
                 {
-                  title: post.get('name'),
+                  title: post.get("name"),
                   communities: [
                     {
-                      name: community.get('name')
-                    }
+                      name: community.get("name"),
+                    },
                   ],
                   comments: {
                     items: [
                       {
-                        text: comment.get('text'),
+                        text: comment.get("text"),
                         creator: {
-                          name: user2.get('name')
-                        }
-                      }
-                    ]
+                          name: user2.get("name"),
+                        },
+                      },
+                    ],
                   },
                   followers: [
                     {
-                      name: user2.get('name')
-                    }
+                      name: user2.get("name"),
+                    },
                   ],
-                  followersTotal: 1
-                }
+                  followersTotal: 1,
+                },
               ],
               messageThreads: {
                 hasMore: false,
@@ -222,33 +231,33 @@ describe('graphql request handler', () => {
                     messages: {
                       items: [
                         {
-                          text: message.get('text'),
+                          text: message.get("text"),
                           creator: {
-                            name: user2.get('name')
-                          }
-                        }
-                      ]
+                            name: user2.get("name"),
+                          },
+                        },
+                      ],
                     },
                     participants: [
                       {
-                        name: user.get('name')
+                        name: user.get("name"),
                       },
                       {
-                        name: user2.get('name')
-                      }
+                        name: user2.get("name"),
+                      },
                     ],
-                    participantsTotal: 2
-                  }
-                ]
-              }
-            }
-          }
-        })
-      })
-    })
-  })
+                    participantsTotal: 2,
+                  },
+                ],
+              },
+            },
+          },
+        });
+      });
+    });
+  });
 
-  describe('querying Comment attachments', () => {
+  describe("querying Comment attachments", () => {
     beforeEach(() => {
       req.body = {
         query: `{
@@ -265,11 +274,11 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
-    })
+        }`,
+      };
+    });
 
-    it('responds as expected', () => {
+    it("responds as expected", () => {
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
@@ -277,29 +286,29 @@ describe('graphql request handler', () => {
               comments: {
                 items: [
                   {
-                    text: comment.get('text'),
+                    text: comment.get("text"),
                     attachments: [
                       {
                         id: media.id,
-                        type: media.get('type'),
-                        position: media.get('position'),
-                        url: media.get('url')
-                      }
-                    ]
-                  }
-                ]
-              }
-            }
-          }
-        })
-      })
-    })
-  })
+                        type: media.get("type"),
+                        position: media.get("position"),
+                        url: media.get("url"),
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        });
+      });
+    });
+  });
 
-  describe('without a logged-in user', () => {
+  describe("without a logged-in user", () => {
     beforeEach(() => {
-      req.session = {}
-    })
+      req.session = {};
+    });
 
     it('shows "not logged in" errors for most queries', () => {
       req.body = {
@@ -310,57 +319,53 @@ describe('graphql request handler', () => {
           community(id: 9) {
             name
           }
-        }`
-      }
+        }`,
+      };
 
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
             me: null,
-            community: null
+            community: null,
           },
           errors: [
             {
-              locations: [
-                {column: 11, line: 2}
-              ],
-              message: 'not logged in',
-              path: ['me']
+              locations: [{ column: 11, line: 2 }],
+              message: "not logged in",
+              path: ["me"],
             },
             {
-              locations: [
-                {column: 11, line: 5}
-              ],
-              message: 'not logged in',
-              path: ['community']
-            }
-          ]
-        })
-      })
-    })
+              locations: [{ column: 11, line: 5 }],
+              message: "not logged in",
+              path: ["community"],
+            },
+          ],
+        });
+      });
+    });
 
-    it('allows checkInvitation', () => {
+    it("allows checkInvitation", () => {
       req.body = {
         query: `{
           checkInvitation(invitationToken: "foo") {
             valid
           }
-        }`
-      }
+        }`,
+      };
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
             checkInvitation: {
-              valid: false
-            }
-          }
-        })
-      })
-    })
-  })
+              valid: false,
+            },
+          },
+        });
+      });
+    });
+  });
 
-  describe('querying community data', () => {
-    it('works as expected', () => {
+  describe("querying community data", () => {
+    it("works as expected", () => {
       req.body = {
         query: `{
           community(id: "${community.id}") {
@@ -376,33 +381,31 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
+        }`,
+      };
 
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
             community: {
-              slug: community.get('slug'),
+              slug: community.get("slug"),
               members: {
                 items: [
-                  {name: user2.get('name')},
-                  {name: user.get('name')}
-                ]
+                  { name: user2.get("name") },
+                  { name: user.get("name") },
+                ],
               },
               posts: {
-                items: [
-                  {title: post2.get('name')}
-                ]
-              }
-            }
-          }
-        })
-      })
-    })
+                items: [{ title: post2.get("name") }],
+              },
+            },
+          },
+        });
+      });
+    });
 
-    describe('with an invalid sort option', () => {
-      it('shows an error', () => {
+    describe("with an invalid sort option", () => {
+      it("shows an error", () => {
         req.body = {
           query: `{
             community(id: "${community.id}") {
@@ -412,33 +415,31 @@ describe('graphql request handler', () => {
                 }
               }
             }
-          }`
-        }
+          }`,
+        };
 
         return handler(req, res).then(() => {
           expectJSON(res, {
             data: {
               community: {
-                members: null
-              }
+                members: null,
+              },
             },
             errors: [
               {
-                locations: [
-                  {column: 15, line: 3}
-                ],
+                locations: [{ column: 15, line: 3 }],
                 message: 'Cannot sort by "height"',
-                path: ['community', 'members']
-              }
-            ]
-          })
-        })
-      })
-    })
-  })
+                path: ["community", "members"],
+              },
+            ],
+          });
+        });
+      });
+    });
+  });
 
-  describe('querying network data', () => {
-    it('works as expected', () => {
+  describe("querying network data", () => {
+    it("works as expected", () => {
       req.body = {
         query: `{
           network(id: "${network.id}") {
@@ -456,44 +457,43 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
+        }`,
+      };
 
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
             network: {
-              slug: network.get('slug'),
+              slug: network.get("slug"),
               isAdmin: false,
               isModerator: false,
               members: {
-                items: sortBy('name', [
-                  {name: user2.get('name')},
-                  {name: user.get('name')}
-                ])
+                items: sortBy("name", [
+                  { name: user2.get("name") },
+                  { name: user.get("name") },
+                ]),
               },
               posts: {
-                items: [
-                  {title: post2.get('name')}
-                ]
-              }
-            }
-          }
-        })
-      })
-    })
-  })
+                items: [{ title: post2.get("name") }],
+              },
+            },
+          },
+        });
+      });
+    });
+  });
 
-  describe('search', () => {
+  describe("search", () => {
     beforeEach(() => {
-      return FullTextSearch.dropView().catch(() => {})
-      .then(() => FullTextSearch.createView())
-    })
+      return FullTextSearch.dropView()
+        .catch(() => {})
+        .then(() => FullTextSearch.createView());
+    });
 
-    it('works', () => {
+    it("works", () => {
       req.body = {
         query: `{
-          search(term: "${post.get('name').substring(0, 4)}") {
+          search(term: "${post.get("name").substring(0, 4)}") {
             items {
               content {
                 __typename
@@ -503,8 +503,8 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
+        }`,
+      };
 
       return handler(req, res).then(() => {
         expectJSON(res, {
@@ -513,186 +513,196 @@ describe('graphql request handler', () => {
               items: [
                 {
                   content: {
-                    __typename: 'Post',
-                    title: post.get('name')
-                  }
-                }
-              ]
-            }
-          }
-        })
-      })
-    })
-  })
+                    __typename: "Post",
+                    title: post.get("name"),
+                  },
+                },
+              ],
+            },
+          },
+        });
+      });
+    });
+  });
 
-  describe('removeSkill', () => {
-    var skill1, skill2
+  describe("removeSkill", () => {
+    let skill1, skill2;
 
     before(() => {
-      skill1 = factories.skill()
-      skill2 = factories.skill()
-      return Promise.join(skill1.save(), skill2.save())
-    })
+      skill1 = factories.skill();
+      skill2 = factories.skill();
+      return Promise.join(skill1.save(), skill2.save());
+    });
 
     beforeEach(() => {
       return Promise.join(
         user.skills().detach(skill1),
         user.skills().detach(skill2)
-      ).then(() => Promise.join(
-        user.skills().attach(skill1),
-        user.skills().attach(skill2)
-      ))
-    })
+      ).then(() =>
+        Promise.join(user.skills().attach(skill1), user.skills().attach(skill2))
+      );
+    });
 
-    it('removes a skill with an id', () => {
+    it("removes a skill with an id", () => {
       req.body = {
         query: `mutation {
           removeSkill(id: ${skill1.id}) {
             success
           }
-        }`
-      }
+        }`,
+      };
       return handler(req, res)
-      .then(() => user.load('skills'))
-      .then(() => {
-        expectJSON(res, {
-          data: {
-            removeSkill: {
-              success: true
-            }
-          }
-        })
-        expect(user.relations.skills.length).to.equal(1)
-        expect(user.relations.skills.first().id).to.equal(skill2.id)
-      })
-    })
+        .then(() => user.load("skills"))
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              removeSkill: {
+                success: true,
+              },
+            },
+          });
+          expect(user.relations.skills.length).to.equal(1);
+          expect(user.relations.skills.first().id).to.equal(skill2.id);
+        });
+    });
 
-    it('removes a skill with a name', () => {
+    it("removes a skill with a name", () => {
       req.body = {
         query: `mutation {
-          removeSkill(name: "${skill2.get('name')}") {
+          removeSkill(name: "${skill2.get("name")}") {
             success
           }
-        }`
-      }
+        }`,
+      };
       return handler(req, res)
-      .then(() => user.load('skills'))
-      .then(() => {
-        expectJSON(res, {
-          data: {
-            removeSkill: {
-              success: true
-            }
-          }
-        })
-        expect(user.relations.skills.length).to.equal(1)
-        expect(user.relations.skills.first().id).to.equal(skill1.id)
-      })
-    })
-  })
-})
+        .then(() => user.load("skills"))
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              removeSkill: {
+                success: true,
+              },
+            },
+          });
+          expect(user.relations.skills.length).to.equal(1);
+          expect(user.relations.skills.first().id).to.equal(skill1.id);
+        });
+    });
+  });
+});
 
-describe('makeMutations', () => {
-  it('imports mutation functions correctly', () => {
+describe("makeMutations", () => {
+  it("imports mutation functions correctly", () => {
     // this test does not check the correctness of the functions used in
     // mutations; it only checks that they are actually functions (i.e. it fails
     // if there are any broken imports)
 
-    const mutations = makeMutations(11)
-    const root = {}
-    const args = {}
+    const mutations = makeMutations(11);
+    const root = {};
+    const args = {};
 
-    return Promise.each(Object.keys(mutations), key => {
-      const fn = mutations[key]
+    return Promise.each(Object.keys(mutations), (key) => {
+      const fn = mutations[key];
       return Promise.resolve()
-      .then(() => fn(root, args))
-      .catch(err => {
-        if (some(pattern => err.message.match(pattern), [
-          /is not a function/,
-          /is not defined/
-        ])) {
-          expect.fail(null, null, `Mutation "${key}" is not imported correctly: ${err.message}`)
-        }
+        .then(() => fn(root, args))
+        .catch((err) => {
+          if (
+            some((pattern) => err.message.match(pattern), [
+              /is not a function/,
+              /is not defined/,
+            ])
+          ) {
+            expect.fail(
+              null,
+              null,
+              `Mutation "${key}" is not imported correctly: ${err.message}`
+            );
+          }
 
-        // FIXME: the console.log below shows a number of places where we need
-        // more validation and/or are exposing SQL errors to the end-user
-        // console.log(`${key}: ${err.message}`)
-      })
-    })
-  })
-})
+          // FIXME: the console.log below shows a number of places where we need
+          // more validation and/or are exposing SQL errors to the end-user
+          // console.log(`${key}: ${err.message}`)
+        });
+    });
+  });
+});
 
-describe('makeQueries', () => {
-  let queries, user
+describe("makeQueries", () => {
+  let queries, user;
 
   before(async () => {
-    user = await factories.user().save()
-    const fetchOne = spy(() => Promise.resolve({}))
-    const fetchMany = spy(() => Promise.resolve([]))
-    queries = makeQueries(user.id, fetchOne, fetchMany)
-  })
+    user = await factories.user().save();
+    const fetchOne = spy(() => Promise.resolve({}));
+    const fetchMany = spy(() => Promise.resolve([]));
+    queries = makeQueries(user.id, fetchOne, fetchMany);
+  });
 
-  describe('communityExists', () => {
-    it('throws an error if slug is invalid', () => {
+  describe("communityExists", () => {
+    it("throws an error if slug is invalid", () => {
       expect(() => {
-        queries.communityExists(null, {slug: 'a b'})
-      }).to.throw()
-    })
+        queries.communityExists(null, { slug: "a b" });
+      }).to.throw();
+    });
 
-    it('returns true if the slug is in use', () => {
-      const community = factories.community()
-      return community.save()
-      .then(() => queries.communityExists(null, {slug: community.get('slug')}))
-      .then(result => expect(result.exists).to.be.true)
-    })
+    it("returns true if the slug is in use", () => {
+      const community = factories.community();
+      return community
+        .save()
+        .then(() =>
+          queries.communityExists(null, { slug: community.get("slug") })
+        )
+        .then((result) => expect(result.exists).to.be.true);
+    });
 
-    it('returns false if the slug is not in use', () => {
-      return queries.communityExists(null, {slug: 'sofadogtotherescue'})
-      .then(result => expect(result.exists).to.be.false)
-    })
-  })
+    it("returns false if the slug is not in use", () => {
+      return queries
+        .communityExists(null, { slug: "sofadogtotherescue" })
+        .then((result) => expect(result.exists).to.be.false);
+    });
+  });
 
-  describe('notifications', () => {
-    beforeEach(() => spyify(User, 'resetNewNotificationCount'))
-    afterEach(() => unspyify(User, 'query'))
+  describe("notifications", () => {
+    beforeEach(() => spyify(User, "resetNewNotificationCount"));
+    afterEach(() => unspyify(User, "query"));
 
-    it('resets new notification count if requested', () => {
-      return queries.notifications(null, {resetCount: true})
-      .then(() => {
-        expect(User.resetNewNotificationCount).to.have.been.called.with(user.id)
-      })
-    })
+    it("resets new notification count if requested", () => {
+      return queries.notifications(null, { resetCount: true }).then(() => {
+        expect(User.resetNewNotificationCount).to.have.been.called.with(
+          user.id
+        );
+      });
+    });
 
-    it('does not reset new notification count if not requested', () => {
-      return queries.notifications(null, {})
-      .then(() => {
-        expect(User.resetNewNotificationCount).not.to.have.been.called()
-      })
-    })
-  })
+    it("does not reset new notification count if not requested", () => {
+      return queries.notifications(null, {}).then(() => {
+        expect(User.resetNewNotificationCount).not.to.have.been.called();
+      });
+    });
+  });
 
-  describe('community', () => {
-    let community
+  describe("community", () => {
+    let community;
 
     beforeEach(async () => {
-      community = await factories.community().save()
-      await community.addGroupMembers([user])
-    })
+      community = await factories.community().save();
+      await community.addGroupMembers([user]);
+    });
 
-    it('updates last viewed time', async () => {
+    it("updates last viewed time", async () => {
       await queries.community(null, {
         id: community.id,
-        updateLastViewed: true
-      })
+        updateLastViewed: true,
+      });
 
-      const membership = await GroupMembership.forPair(user, community).fetch()
-      expect(new Date(membership.getSetting('lastReadAt')).getTime())
-      .to.be.closeTo(new Date().getTime(), 2000)
-    })
-  })
-})
+      const membership = await GroupMembership.forPair(user, community).fetch();
+      expect(
+        new Date(membership.getSetting("lastReadAt")).getTime()
+      ).to.be.closeTo(new Date().getTime(), 2000);
+    });
+  });
+});
 
-function expectJSON (res, expected) {
-  expect(res.body).to.exist
-  return expect(JSON.parse(res.body)).to.deep.equal(expected)
+function expectJSON(res, expected) {
+  expect(res.body).to.exist;
+  return expect(JSON.parse(res.body)).to.deep.equal(expected);
 }

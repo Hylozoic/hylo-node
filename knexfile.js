@@ -1,61 +1,59 @@
-const merge = require('lodash/merge')
-require('dotenv').load()
+const merge = require("lodash/merge");
+require("dotenv").load();
 
 if (!process.env.DATABASE_URL) {
-  throw new Error('process.env.DATABASE_URL must be set')
+  throw new Error("process.env.DATABASE_URL must be set");
 }
 
-const url = require('url').parse(process.env.DATABASE_URL)
-var user, password
+const url = require("url").parse(process.env.DATABASE_URL);
+let user, password;
 if (url.auth) {
-  const i = url.auth.indexOf(':')
-  user = url.auth.slice(0, i)
-  password = url.auth.slice(i + 1)
+  const i = url.auth.indexOf(":");
+  user = url.auth.slice(0, i);
+  password = url.auth.slice(i + 1);
 }
 
 const defaults = {
-  client: 'pg',
+  client: "pg",
   connection: {
     host: url.hostname,
     port: url.port,
-    user: user || 'postgres',
+    user: user || "postgres",
     password: password,
-    database: url.pathname.substring(1)
+    database: url.pathname.substring(1),
   },
   pool: {
     // https://github.com/Vincit/objection.js/issues/1137
     min: 5, // default 2
     max: 30, // default 10
     // https://github.com/knex/knex/issues/2820#issuecomment-481710112
-    propagateCreateError: false // default true (false NOT recommended)
+    propagateCreateError: false, // default true (false NOT recommended)
   },
   migrations: {
-    tableName: 'knex_migrations'
-  }
-}
+    tableName: "knex_migrations",
+  },
+};
 
 module.exports = {
   test: defaults,
   development: defaults,
-  dummy: Object.assign({}, defaults, { seeds: { directory: './seeds/dummy' } }),
+  dummy: Object.assign({}, defaults, { seeds: { directory: "./seeds/dummy" } }),
   staging: defaults,
-  production: merge({connection: {ssl: true}}, defaults),
-  docker: Object.assign({},
-    defaults,
-    {
-      connection: Object.assign({},
-        defaults.connection,
-        { user: 'hylo', password: 'hylo', port: '5300' }
-      )
-    }
-  ),
-  createUpdateTrigger: table => `
+  production: merge({ connection: { ssl: true } }, defaults),
+  docker: Object.assign({}, defaults, {
+    connection: Object.assign({}, defaults.connection, {
+      user: "hylo",
+      password: "hylo",
+      port: "5300",
+    }),
+  }),
+  createUpdateTrigger: (table) => `
     CREATE TRIGGER ${table}_updated_at
     BEFORE UPDATE ON ${table}
     FOR EACH ROW
     EXECUTE PROCEDURE on_update_timestamp();
   `,
-  dropUpdateTrigger: table => `
+  dropUpdateTrigger: (table) => `
     DROP TRIGGER IF EXISTS ${table}_updated_at ON ${table}
   `,
   createUpdateFunction: () => `
@@ -69,5 +67,5 @@ module.exports = {
   `,
   dropUpdateFunction: () => `
     DROP FUNCTION IF EXISTS on_update_timestamp()
-  `
-}
+  `,
+};

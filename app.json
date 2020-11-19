@@ -1,17 +1,11 @@
 {
   "name": "hylo-node",
-  "scripts": {
-  },
+  "scripts": {},
   "env": {
     "COOKIE_DOMAIN": ""
   },
-  "formation": {
-  },
-  "addons": [
-    "redisgreen",
-    "scheduler",
-    "heroku-postgresql"
-  ],
+  "formation": {},
+  "addons": ["redisgreen", "scheduler", "heroku-postgresql"],
   "buildpacks": [
     {
       "url": "https://github.com/mcollina/heroku-buildpack-graphicsmagick"

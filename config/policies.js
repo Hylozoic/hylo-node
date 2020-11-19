@@ -19,49 +19,49 @@
  */
 
 module.exports.policies = {
-  '*': false,
-  AdminController: ['isAdmin'],
+  "*": false,
+  AdminController: ["isAdmin"],
   MobileAppController: true,
   NexudusController: true,
   SessionController: true,
   SubscriptionController: true,
-  UploadController: ['sessionAuth'],
+  UploadController: ["sessionAuth"],
 
   AdminSessionController: {
-    create:  true,
-    oauth:   true,
-    destroy: true
+    create: true,
+    oauth: true,
+    destroy: true,
   },
 
   CommentController: {
     createFromEmail: true,
-    createBatchFromEmailForm: ['checkAndDecodeToken']
+    createBatchFromEmailForm: ["checkAndDecodeToken"],
   },
 
   CommunityController: {
-    subscribe:   ['isSocket', 'sessionAuth', 'checkAndSetMembership'],
-    unsubscribe: ['isSocket', 'sessionAuth', 'checkAndSetMembership']
+    subscribe: ["isSocket", "sessionAuth", "checkAndSetMembership"],
+    unsubscribe: ["isSocket", "sessionAuth", "checkAndSetMembership"],
   },
 
   PostController: {
-    updateLastRead:         ['sessionAuth', 'checkAndSetPost'],
-    subscribe:              ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    unsubscribe:            ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    typing:                 ['isSocket', 'sessionAuth', 'checkAndSetPost'],
-    createFromEmailForm:    ['checkAndDecodeToken'],
+    updateLastRead: ["sessionAuth", "checkAndSetPost"],
+    subscribe: ["isSocket", "sessionAuth", "checkAndSetPost"],
+    unsubscribe: ["isSocket", "sessionAuth", "checkAndSetPost"],
+    typing: ["isSocket", "sessionAuth", "checkAndSetPost"],
+    createFromEmailForm: ["checkAndDecodeToken"],
 
     // FIXME these two should go in UserController
-    subscribeToUpdates:     ['isSocket', 'sessionAuth'],
-    unsubscribeFromUpdates: ['isSocket', 'sessionAuth']
+    subscribeToUpdates: ["isSocket", "sessionAuth"],
+    unsubscribeFromUpdates: ["isSocket", "sessionAuth"],
   },
 
   UserController: {
     status: true,
     create: true,
-    sendPasswordReset: true
+    sendPasswordReset: true,
   },
 
   PaymentController: {
-    registerStripe: ['sessionAuth']    
-  }
-}
+    registerStripe: ["sessionAuth"],
+  },
+};

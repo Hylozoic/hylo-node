@@ -1,4 +1,4 @@
-import error from './error'
+import error from "./error";
 
 /**
  * 400 (Bad Request) Handler
@@ -17,4 +17,4 @@ import error from './error'
  * ```
  */
 
-module.exports = error({statusCode: 400, statusText: 'Bad Request'})
+module.exports = error({ statusCode: 400, statusText: "Bad Request" });

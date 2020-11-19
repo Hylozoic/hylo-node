@@ -1,6 +1,6 @@
-module.exports = function(req, res, next) {
+module.exports = function (req, res, next) {
   if (Admin.isSignedIn(req)) {
-    sails.log.debug('isAdmin: ' + req.user.email);
+    sails.log.debug("isAdmin: " + req.user.email);
     next();
   } else {
     if (res.forbidden) {
@@ -10,7 +10,7 @@ module.exports = function(req, res, next) {
       // (see http.js), it needs to fall back to the standard API
       // for http.ServerResponse
       res.statusCode = 403;
-      res.end('Forbidden');
+      res.end("Forbidden");
     }
   }
 };

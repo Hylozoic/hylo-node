@@ -12,71 +12,69 @@
  * Check out the `tasks` directory instead.
  */
 
-module.exports = function(grunt) {
+module.exports = function (grunt) {
+  // Load the include-all library in order to require all of our grunt
+  // configurations and task registrations dynamically.
+  let includeAll;
+  try {
+    includeAll = require("include-all");
+  } catch (e0) {
+    try {
+      includeAll = require("sails/node_modules/include-all");
+    } catch (e1) {
+      console.error("Could not find `include-all` module.");
+      console.error("Skipping grunt tasks...");
+      console.error("To fix this, please run:");
+      console.error("npm install include-all --save`");
+      console.error();
 
+      grunt.registerTask("default", []);
+      return;
+    }
+  }
 
-	// Load the include-all library in order to require all of our grunt
-	// configurations and task registrations dynamically.
-	var includeAll;
-	try {
-		includeAll = require('include-all');
-	} catch (e0) {
-		try {
-			includeAll = require('sails/node_modules/include-all');
-		}
-		catch(e1) {
-			console.error('Could not find `include-all` module.');
-			console.error('Skipping grunt tasks...');
-			console.error('To fix this, please run:');
-			console.error('npm install include-all --save`');
-			console.error();
+  /**
+   * Loads Grunt configuration modules from the specified
+   * relative path. These modules should export a function
+   * that, when run, should either load/configure or register
+   * a Grunt task.
+   */
+  function loadTasks(relPath) {
+    return (
+      includeAll({
+        dirname: require("path").resolve(__dirname, relPath),
+        filter: /(.+)\.js$/,
+      }) || {}
+    );
+  }
 
-			grunt.registerTask('default', []);
-			return;
-		}
-	}
+  /**
+   * Invokes the function from a Grunt configuration module with
+   * a single argument - the `grunt` object.
+   */
+  function invokeConfigFn(tasks) {
+    for (const taskName in tasks) {
+      if (tasks.hasOwnProperty(taskName)) {
+        tasks[taskName](grunt);
+      }
+    }
+  }
 
+  // Load task functions
+  const taskConfigurations = loadTasks("./tasks/config");
+  const registerDefinitions = {};
 
-	/**
-	 * Loads Grunt configuration modules from the specified
-	 * relative path. These modules should export a function
-	 * that, when run, should either load/configure or register
-	 * a Grunt task.
-	 */
-	function loadTasks(relPath) {
-		return includeAll({
-			dirname: require('path').resolve(__dirname, relPath),
-			filter: /(.+)\.js$/
-		}) || {};
-	}
+  // (ensure that a default task exists)
+  if (!registerDefinitions.default) {
+    registerDefinitions.default = function (grunt) {
+      grunt.registerTask("default", []);
+    };
+    registerDefinitions.prod = function (grunt) {
+      grunt.registerTask("prod", []);
+    };
+  }
 
-	/**
-	 * Invokes the function from a Grunt configuration module with
-	 * a single argument - the `grunt` object.
-	 */
-	function invokeConfigFn(tasks) {
-		for (var taskName in tasks) {
-			if (tasks.hasOwnProperty(taskName)) {
-				tasks[taskName](grunt);
-			}
-		}
-	}
-
-
-
-
-	// Load task functions
-	var taskConfigurations = loadTasks('./tasks/config'),
-		registerDefinitions = {};
-
-	// (ensure that a default task exists)
-	if (!registerDefinitions.default) {
-		registerDefinitions.default = function (grunt) { grunt.registerTask('default', []); };
-		registerDefinitions.prod = function (grunt) { grunt.registerTask('prod', []); };
-	}
-
-	// Run task functions to configure Grunt.
-	invokeConfigFn(taskConfigurations);
-	invokeConfigFn(registerDefinitions);
-
+  // Run task functions to configure Grunt.
+  invokeConfigFn(taskConfigurations);
+  invokeConfigFn(registerDefinitions);
 };

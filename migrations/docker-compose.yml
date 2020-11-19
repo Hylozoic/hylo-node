@@ -2,10 +2,10 @@ postgres:
   container_name: hylopg
   image: postgres:9.4
   ports:
-    - '5300:5432'
+    - "5300:5432"
   environment:
-    POSTGRES_USER: 'hylo'
-    POSTGRES_PASSWORD: 'hylo'
-    POSTGRES_DB: 'hylo'
+    POSTGRES_USER: "hylo"
+    POSTGRES_PASSWORD: "hylo"
+    POSTGRES_DB: "hylo"
   volumes:
     - .:/docker-entrypoint-initdb.d/

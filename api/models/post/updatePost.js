@@ -1,53 +1,67 @@
-import setupPostAttrs from './setupPostAttrs'
-import updateChildren from './updateChildren'
+import setupPostAttrs from "./setupPostAttrs";
+import updateChildren from "./updateChildren";
 import {
   updateCommunities,
   updateAllMedia,
   updateFollowers,
-  updateNetworkMemberships
-} from './util'
+  updateNetworkMemberships,
+} from "./util";
 
-export default function updatePost (userId, id, params) {
-  if (!id) throw new Error('updatePost called with no ID')
-  return setupPostAttrs(userId, params)
-  .then(attrs => bookshelf.transaction(transacting =>
-    Post.find(id).then(post => {
-      if (!post) throw new Error('Post not found')
-      const updatableTypes = [
-        Post.Type.OFFER,
-        Post.Type.PROJECT,
-        Post.Type.REQUEST,
-        Post.Type.RESOURCE,
-        Post.Type.DISCUSSION,
-        Post.Type.EVENT,
-        null
-      ]
-      if (!updatableTypes.includes(post.get('type'))) {
-        throw new Error("This post can't be modified")
-      }
+export default function updatePost(userId, id, params) {
+  if (!id) throw new Error("updatePost called with no ID");
+  return setupPostAttrs(userId, params).then((attrs) =>
+    bookshelf.transaction((transacting) =>
+      Post.find(id).then((post) => {
+        if (!post) throw new Error("Post not found");
+        const updatableTypes = [
+          Post.Type.OFFER,
+          Post.Type.PROJECT,
+          Post.Type.REQUEST,
+          Post.Type.RESOURCE,
+          Post.Type.DISCUSSION,
+          Post.Type.EVENT,
+          null,
+        ];
+        if (!updatableTypes.includes(post.get("type"))) {
+          throw new Error("This post can't be modified");
+        }
 
-      return post.save(attrs, {patch: true, transacting})
-      .tap(updatedPost => afterUpdatingPost(updatedPost, {params, userId, transacting}))
-    })))
+        return post
+          .save(attrs, { patch: true, transacting })
+          .tap((updatedPost) =>
+            afterUpdatingPost(updatedPost, { params, userId, transacting })
+          );
+      })
+    )
+  );
 }
 
-export function afterUpdatingPost (post, opts) {
+export function afterUpdatingPost(post, opts) {
   const {
     params,
     params: { requests, community_ids, topicNames, memberIds, eventInviteeIds },
     userId,
-    transacting
-  } = opts
+    transacting,
+  } = opts;
 
-  return post.ensureLoad(['communities'])
-  .then(() => Promise.all([
-    updateChildren(post, requests, transacting),
-    updateCommunities(post, community_ids, transacting),
-    updateAllMedia(post, params, transacting),
-    Tag.updateForPost(post, topicNames, userId, transacting),
-    updateFollowers(post, transacting)
-  ]))
-  .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
-  .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))
-  .then(() => updateNetworkMemberships(post, transacting))
+  return post
+    .ensureLoad(["communities"])
+    .then(() =>
+      Promise.all([
+        updateChildren(post, requests, transacting),
+        updateCommunities(post, community_ids, transacting),
+        updateAllMedia(post, params, transacting),
+        Tag.updateForPost(post, topicNames, userId, transacting),
+        updateFollowers(post, transacting),
+      ])
+    )
+    .then(
+      () => memberIds && post.updateProjectMembers(memberIds, { transacting })
+    )
+    .then(
+      () =>
+        eventInviteeIds &&
+        post.updateEventInvitees(eventInviteeIds, userId, { transacting })
+    )
+    .then(() => updateNetworkMemberships(post, transacting));
 }

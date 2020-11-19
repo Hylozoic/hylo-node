@@ -1,3 +1,3 @@
-export default function deleteCommunityTopic (communityTopic) {
-  return communityTopic.destroy()
+export default function deleteCommunityTopic(communityTopic) {
+  return communityTopic.destroy();
 }
