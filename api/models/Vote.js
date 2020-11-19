@@ -1,24 +1,28 @@
-module.exports = bookshelf.Model.extend({
-  tableName: 'votes',
+module.exports = bookshelf.Model.extend(
+  {
+    tableName: "votes",
 
-  post: function() {
-    return this.belongsTo(Post, 'post_id');
+    post: function () {
+      return this.belongsTo(Post, "post_id");
+    },
+
+    user: function () {
+      return this.belongsTo(User, "user_id");
+    },
   },
-
-  user: function() {
-    return this.belongsTo(User, "user_id")
+  {
+    /**
+     * @param userId User ID to check which posts they voted on
+     * @param postIds List of Post ID's to check against
+     * @returns a list of Vote's.
+     */
+    forUserInPosts: function (userId, postIds) {
+      return bookshelf
+        .knex("votes")
+        .where({
+          user_id: userId,
+        })
+        .whereIn("post_id", postIds);
+    },
   }
-
-}, {
-
-  /**
-   * @param userId User ID to check which posts they voted on
-   * @param postIds List of Post ID's to check against
-   * @returns a list of Vote's.
-   */
-  forUserInPosts: function(userId, postIds) {
-    return bookshelf.knex("votes").where({
-      user_id: userId
-    }).whereIn("post_id", postIds);
-  }
-});
+);

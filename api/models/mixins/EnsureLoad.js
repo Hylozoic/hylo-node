@@ -28,20 +28,22 @@ TODO: support multi-level loading, e.g. this.ensureLoad('person.jobs')
 
 */
 
-import { castArray } from 'lodash'
+import { castArray } from "lodash";
 
 export default {
-  ensureLoad (relations) {
-    const relationsToLoad = castArray(relations).filter(relation => {
-      const { relatedData: { type, foreignKey } } = this[relation]()
+  ensureLoad(relations) {
+    const relationsToLoad = castArray(relations).filter((relation) => {
+      const {
+        relatedData: { type, foreignKey },
+      } = this[relation]();
 
       // if there is no id value for a belongsTo, skip
-      if (type === 'belongsTo' && !this.get(foreignKey)) return false
+      if (type === "belongsTo" && !this.get(foreignKey)) return false;
 
       // otherwise, skip if data has already been loaded
-      return !this.relations[relation]
-    })
+      return !this.relations[relation];
+    });
 
-    return this.load(relationsToLoad)
-  }
-}
+    return this.load(relationsToLoad);
+  },
+};

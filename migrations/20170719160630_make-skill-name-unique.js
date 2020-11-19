@@ -1,11 +1,11 @@
 exports.up = function (knex, Promise) {
-  return knex.schema.alterTable('skills', table => {
-    table.unique('name')
-  })
-}
+  return knex.schema.alterTable("skills", (table) => {
+    table.unique("name");
+  });
+};
 
 exports.down = function (knex, Promise) {
-  return knex.schema.alterTable('skills', table => {
-    table.dropUnique('name')
-  })
-}
+  return knex.schema.alterTable("skills", (table) => {
+    table.dropUnique("name");
+  });
+};

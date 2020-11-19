@@ -1,4 +1,4 @@
-import error from './error'
+import error from "./error";
 
 /**
  * 403 (Forbidden) Handler
@@ -14,4 +14,4 @@ import error from './error'
  * ```
  */
 
-module.exports = error({statusCode: 403, statusText: 'Forbidden'})
+module.exports = error({ statusCode: 403, statusText: "Forbidden" });

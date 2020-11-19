@@ -1,48 +1,58 @@
-import { times } from 'lodash'
-const rootPath = require('root-path')
-require(rootPath('test/setup'))
-const factories = require(rootPath('test/setup/factories'))
-import updateChildren from './updateChildren'
+import { times } from "lodash";
+import updateChildren from "./updateChildren";
+const rootPath = require("root-path");
+require(rootPath("test/setup"));
+const factories = require(rootPath("test/setup/factories"));
 
-describe('updateChildren', () => {
-  var post, children
+describe("updateChildren", () => {
+  let post, children;
 
   before(() => {
-    post = factories.post()
-    children = times(3, () => factories.post())
-    return post.save()
-    .then(() => Promise.all(children.map(c =>
-      c.save({parent_post_id: post.id}))))
-  })
+    post = factories.post();
+    children = times(3, () => factories.post());
+    return post
+      .save()
+      .then(() =>
+        Promise.all(children.map((c) => c.save({ parent_post_id: post.id })))
+      );
+  });
 
-  it('creates, updates, and removes child posts', () => {
+  it("creates, updates, and removes child posts", () => {
     const childrenParam = [
-      { // ignore
-        id: 'new-foo',
-        name: ''
+      {
+        // ignore
+        id: "new-foo",
+        name: "",
       },
-      { // create
-        id: 'new-bar',
-        name: 'Yay!'
+      {
+        // create
+        id: "new-bar",
+        name: "Yay!",
       },
-      { // update
+      {
+        // update
         id: children[0].id,
-        name: 'Another!'
+        name: "Another!",
       },
-      { // remove
+      {
+        // remove
         id: children[1].id,
-        name: ''
-      }
+        name: "",
+      },
       // remove children[2] by omission
-    ]
+    ];
 
     return updateChildren(post, childrenParam)
-    .then(() => post.load('children'))
-    .then(() => {
-      const updated = post.relations.children
-      expect(updated.length).to.equal(2)
-      expect(updated.find(c => c.id !== children[0].id).get('name')).to.equal('Yay!')
-      expect(updated.find(c => c.id === children[0].id).get('name')).to.equal('Another!')
-    })
-  })
-})
+      .then(() => post.load("children"))
+      .then(() => {
+        const updated = post.relations.children;
+        expect(updated.length).to.equal(2);
+        expect(
+          updated.find((c) => c.id !== children[0].id).get("name")
+        ).to.equal("Yay!");
+        expect(
+          updated.find((c) => c.id === children[0].id).get("name")
+        ).to.equal("Another!");
+      });
+  });
+});

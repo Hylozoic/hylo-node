@@ -1,11 +1,11 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'posts_tags',
+  tableName: "posts_tags",
 
   post: function () {
-    return this.belongsTo(Post)
+    return this.belongsTo(Post);
   },
 
   tag: function () {
-    return this.belongsTo(Tag)
-  }
-})
+    return this.belongsTo(Tag);
+  },
+});

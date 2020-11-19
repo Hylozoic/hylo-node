@@ -17,7 +17,12 @@ type Me {
   locationObject: Location
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
-  messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
+  messageThreads(
+    first: Int
+    offset: Int
+    order: String
+    sortBy: String
+  ): MessageThreadQuerySet
   messageThreadsTotal: Int
   name: String
   newNotificationCount: Int
@@ -76,11 +81,11 @@ type Topic {
   postsTotal(communitySlug: String, networkSlug: String): Int
   followersTotal(communitySlug: String, networkSlug: String): Int
   communityTopics(
-    first: Int,
+    first: Int
     offset: Int
-    communitySlug: String,
-    isDefault: Boolean,
-    networkSlug: String,
+    communitySlug: String
+    isDefault: Boolean
+    networkSlug: String
     visibility: [Int]
   ): CommunityTopicQuerySet
 }
@@ -103,16 +108,20 @@ type Person {
   comments(first: Int, offset: Int, order: String): CommentQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
-  moderatedCommunityMemberships(first: Int, cursor: ID, order: String): [Membership]
+  moderatedCommunityMemberships(
+    first: Int
+    cursor: ID
+    order: String
+  ): [Membership]
   moderatedCommunityMembershipsTotal: Int
   posts(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    filter: String,
-    topic: ID,
+    first: Int
+    order: String
+    sortBy: String
+    offset: Int
+    search: String
+    filter: String
+    topic: ID
     boundingBox: [PointInput]
   ): PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
@@ -155,22 +164,22 @@ type Community {
   isAutoJoinable: Boolean
   publicMemberDirectory: Boolean
   members(
-    boundingBox: [PointInput],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
+    boundingBox: [PointInput]
+    first: Int
+    order: String
+    sortBy: String
+    offset: Int
+    search: String
     autocomplete: String
   ): PersonQuerySet
   posts(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    filter: String,
-    topic: ID,
+    first: Int
+    order: String
+    sortBy: String
+    offset: Int
+    search: String
+    filter: String
+    topic: ID
     boundingBox: [PointInput]
   ): PostQuerySet
   memberCount: Int
@@ -180,20 +189,16 @@ type Community {
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   communityTopics(
-    first: Int,
-    sortBy: String,
-    order: String,
-    offset: Int,
-    autocomplete: String,
-    isDefault: Boolean,
-    subscribed: Boolean,
+    first: Int
+    sortBy: String
+    order: String
+    offset: Int
+    autocomplete: String
+    isDefault: Boolean
+    subscribed: Boolean
     visibility: Int
   ): CommunityTopicQuerySet
-  skills(
-    first: Int,
-    offset: Int,
-    autocomplete: String
-  ): SkillQuerySet,
+  skills(first: Int, offset: Int, autocomplete: String): SkillQuerySet
   allowCommunityInvites: Boolean
 }
 
@@ -266,7 +271,11 @@ type Post {
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
   members(first: Int, cursor: ID, order: String): PersonQuerySet
-  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
+  eventInvitations(
+    first: Int
+    cursor: ID
+    order: String
+  ): EventInvitationQuerySet
   communities(first: Int, cursor: ID, order: String): [Community]
   communitiesTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
@@ -279,8 +288,8 @@ type Post {
   attachments(type: String): [Attachment]
   attachmentsTotal: Int
   postMemberships: [PostMembership]
-  postMembershipsTotal: Int,
-  topics: [Topic],
+  postMembershipsTotal: Int
+  topics: [Topic]
   topicsTotal: Int
   announcement: Boolean
   acceptContributions: Boolean
@@ -438,94 +447,87 @@ type Query {
   me: Me
   person(id: ID): Person
   notifications(
-    first: Int,
-    order: String,
-    offset: Int,
+    first: Int
+    order: String
+    offset: Int
     resetCount: Boolean
   ): NotificationQuerySet
   community(id: ID, slug: String, updateLastViewed: Boolean): Community
   communities(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    communityIds: [String],
-    networkSlugs: [String],
-    search: String,
-    autocomplete: String,
-    filter: String,
-    boundingBox: [PointInput],
+    first: Int
+    order: String
+    sortBy: String
+    offset: Int
+    communityIds: [String]
+    networkSlugs: [String]
+    search: String
+    autocomplete: String
+    filter: String
+    boundingBox: [PointInput]
     isPublic: Boolean
   ): CommunityQuerySet
   joinRequests(communityId: ID): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
-    networkSlugs: [String],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    filter: String,
-    topic: ID,
-    boundingBox: [PointInput],
+    networkSlugs: [String]
+    first: Int
+    order: String
+    sortBy: String
+    offset: Int
+    search: String
+    filter: String
+    topic: ID
+    boundingBox: [PointInput]
     isPublic: Boolean
   ): PostQuerySet
   people(
-    boundingBox: [PointInput],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    autocomplete: String,
-    communityIds: [String],
+    boundingBox: [PointInput]
+    first: Int
+    order: String
+    sortBy: String
+    offset: Int
+    search: String
+    autocomplete: String
+    communityIds: [String]
     filter: String
   ): PersonQuerySet
   topic(id: ID, name: String): Topic
-  communityTopic(
-    communitySlug: String,
-    topicName: String
-  ): CommunityTopic
+  communityTopic(communitySlug: String, topicName: String): CommunityTopic
   topics(
-    communitySlug: String,
-    networkSlug: String,
-    autocomplete: String,
-    isDefault: Boolean,
-    visibility: [Int],
-    sortBy: String,
-    first: Int,
+    communitySlug: String
+    networkSlug: String
+    autocomplete: String
+    isDefault: Boolean
+    visibility: [Int]
+    sortBy: String
+    first: Int
     offset: Int
   ): TopicQuerySet
-  connections(
-    first: Int,
-    offset: Int
-  ): PersonConnectionQuerySet
+  connections(first: Int, offset: Int): PersonConnectionQuerySet
   communityTopics(
-    autocomplete: String,
-    isDefault: Boolean,
-    subscribed: Boolean,
-    visibility: [Int],
-    sortBy: String,
-    order: String,
-    first: Int,
+    autocomplete: String
+    isDefault: Boolean
+    subscribed: Boolean
+    visibility: [Int]
+    sortBy: String
+    order: String
+    first: Int
     offset: Int
   ): CommunityTopicQuerySet
   search(
-    term: String,
-    type: String,
-    first: Int,
+    term: String
+    type: String
+    first: Int
     offset: Int
   ): SearchResultQuerySet
   network(id: ID, slug: String): Network
   savedSearches(userId: ID): SavedSearchQuerySet
-  skills(
-    first: Int,
-    offset: Int,
-    autocomplete: String
-  ): SkillQuerySet,
-  checkInvitation(invitationToken: String, accessCode: String): CheckInvitationResult
+  skills(first: Int, offset: Int, autocomplete: String): SkillQuerySet
+  checkInvitation(
+    invitationToken: String
+    accessCode: String
+  ): CheckInvitationResult
 }
 
 input AttachmentInput {
@@ -701,7 +703,12 @@ input UserSettingsInput {
 }
 
 type Mutation {
-  acceptJoinRequest(joinRequestId: ID, communityId: ID, userId: ID, moderatorId: ID): JoinRequest
+  acceptJoinRequest(
+    joinRequestId: ID
+    communityId: ID
+    userId: ID
+    moderatorId: ID
+  ): JoinRequest
   addCommunityToNetwork(communityId: ID, networkId: ID): Network
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
@@ -718,7 +725,12 @@ type Mutation {
   createProject(data: PostInput): Post
   createProjectRole(projectId: ID, roleName: String): GenericResult
   createSavedSearch(data: SavedSearchInput): SavedSearch
-  createTopic(topicName: String, communityId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
+  createTopic(
+    topicName: String
+    communityId: ID
+    isDefault: Boolean
+    isSubscribing: Boolean
+  ): Topic
   declineJoinRequest(joinRequestId: ID): JoinRequest
   deleteComment(id: ID): GenericResult
   deleteCommunity(id: ID): GenericResult
@@ -742,12 +754,20 @@ type Mutation {
   pinPost(postId: ID, communityId: ID): GenericResult
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
   regenerateAccessCode(communityId: ID): Community
-  registerDevice(playerId: String, platform: String, version: String): GenericResult
+  registerDevice(
+    playerId: String
+    platform: String
+    version: String
+  ): GenericResult
   reinviteAll(communityId: ID): GenericResult
   registerStripeAccount(authorizationCode: String): GenericResult
   removeCommunityFromNetwork(communityId: ID, networkId: ID): Network
   removeMember(personId: ID, communityId: ID): Community
-  removeModerator(personId: ID, communityId: ID, isRemoveFromCommunity: Boolean): Community
+  removeModerator(
+    personId: ID
+    communityId: ID
+    isRemoveFromCommunity: Boolean
+  ): Community
   removeNetworkModeratorRole(personId: ID, networkId: ID): Network
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
@@ -761,13 +781,24 @@ type Mutation {
   updateCommunitySettings(id: ID, changes: CommunityInput): Community
   updateCommunityHiddenSetting(id: ID, hidden: Boolean): Community
   updateCommunityTopic(id: ID, data: CommunityTopicInput): GenericResult
-  updateCommunityTopicFollow(id: ID, data: CommunityTopicFollowInput): GenericResult
+  updateCommunityTopicFollow(
+    id: ID
+    data: CommunityTopicFollowInput
+  ): GenericResult
   updateMe(changes: MeInput): Me
-  updateMembership(communityId: ID, slug: String, data: MembershipInput): Membership
+  updateMembership(
+    communityId: ID
+    slug: String
+    data: MembershipInput
+  ): Membership
   updateNetwork(id: ID, data: NetworkInput): Network
   updatePost(id: ID, data: PostInput): Post
   updateStripeAccount(accountId: String): GenericResult
-  useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
+  useInvitation(
+    userId: ID
+    invitationToken: String
+    accessCode: String
+  ): InvitationUseResult
   vote(postId: ID, isUpvote: Boolean): Post
 }
 
@@ -840,19 +871,37 @@ type Network {
   bannerUrl: String
   createdAt: String
   memberCount: Int
-  communities(first: Int, offset: Int, order: String, sortBy: String, search: String): CommunityQuerySet
-  members(boundingBox: [PointInput], first: Int, offset: Int, order: String, sortBy: String, search: String): PersonQuerySet
-  moderators(first: Int, offset: Int, order: String, sortBy: String): PersonQuerySet
+  communities(
+    first: Int
+    offset: Int
+    order: String
+    sortBy: String
+    search: String
+  ): CommunityQuerySet
+  members(
+    boundingBox: [PointInput]
+    first: Int
+    offset: Int
+    order: String
+    sortBy: String
+    search: String
+  ): PersonQuerySet
+  moderators(
+    first: Int
+    offset: Int
+    order: String
+    sortBy: String
+  ): PersonQuerySet
   isModerator: Boolean
   isAdmin: Boolean
   posts(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    filter: String,
-    topic: ID,
+    first: Int
+    order: String
+    sortBy: String
+    offset: Int
+    search: String
+    filter: String
+    topic: ID
     boundingBox: [PointInput]
   ): PostQuerySet
 }
@@ -901,8 +950,8 @@ type SavedSearchQuerySet {
 }
 
 input InappropriateContentInput {
-  category: String,
-  reason: String,
+  category: String
+  reason: String
   linkData: LinkDataInput
 }
 

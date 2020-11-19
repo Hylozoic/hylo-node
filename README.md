@@ -75,15 +75,16 @@ SLACK_APP_CLIENT_SECRET=[ client secret ]
 UPLOADER_HOST=[ hostname ]
 UPLOADER_PATH_PREFIX=[ path ]
 ```
-* `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
-* `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
-* `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
-* `DATABASE_URL`: set to your local DB instance
-* `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
-* `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in  [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
-* `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
-* `SLACK_APP_CLIENT_ID`: set up an app on Slack and reference its' client id, optional for dev installation
-* `SLACK_APP_CLIENT_SECRET`: reference the client secret from that same app on Slack, optional for dev installation
+
+- `ADMIN_GOOGLE_CLIENT_*`: To access the admin console. Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
+- `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
+- `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
+- `DATABASE_URL`: set to your local DB instance
+- `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
+- `ROLLBAR_SERVER_TOKEN`: use the `post_server_item` token in [Rollbar](https://rollbar.com/hylo_dev/Hylo/settings/access_tokens/)
+- `SENDWITHUS_KEY`: set up a test key in SendWithUs to send all email only to you (ask someone with admin rights to set this up)
+- `SLACK_APP_CLIENT_ID`: set up an app on Slack and reference its' client id, optional for dev installation
+- `SLACK_APP_CLIENT_SECRET`: reference the client secret from that same app on Slack, optional for dev installation
 
 ### populating the database
 
@@ -104,8 +105,7 @@ You will also need to login to run `psql hylo -c "CREATE EXTENSION postgis;"`
 NODE_ENV=dummy npm run knex seed:run
 ```
 
-*This will trash everything in your current `hylo` database, so make sure you really want to do that!* The script will ask for confirmation. By default the test user will be `test@hylo.com` with password `hylo`, configurable at the top of `seeds/dummy/dummy.js`.
-
+_This will trash everything in your current `hylo` database, so make sure you really want to do that!_ The script will ask for confirmation. By default the test user will be `test@hylo.com` with password `hylo`, configurable at the top of `seeds/dummy/dummy.js`.
 
 ### running the dev server
 
@@ -143,7 +143,6 @@ AWS_ACCESS_KEY_ID=foo
 UPLOADER_PATH_PREFIX=foo
 ```
 
-
 (Without the above Mailgun values, you'll see a failing test in the suite.) Since the test database was created above, `npm test` should work at this point.
 
 ### creating and running database migrations
@@ -172,11 +171,9 @@ createdb $LOCAL_DB_NAME -h localhost
 cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 ```
 
-
-
 ### design guidelines
 
-* GET methods on `FooController` should return instances of `Foo`. (See policies.js for some related FIXME's)
+- GET methods on `FooController` should return instances of `Foo`. (See policies.js for some related FIXME's)
 
 ### style guidelines
 
@@ -187,22 +184,33 @@ The [standard-formatter Atom package](https://atom.io/packages/standard-formatte
 ```javascript
 // yes
 return Do(() => {
-  amaze()
-  very()
+	amaze();
+	very();
 })
-.then(such)
-.tap(wow)
+	.then(such)
+	.tap(wow);
 
 // no
 return Do(() => {
-  amaze()
-  very()
+	amaze();
+	very();
 })
-  .then(such)
-  .tap(wow)
+	.then(such)
+	.tap(wow);
 ```
 
 The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is also very helpful.
+
+## Linter and Prettier
+
+To run ESLint and/or Prettier for the project, please do as the below command says -
+
+```javascript
+"eslint-fix": "eslint --fix --ignore-path .gitignore ." // This will run the linet + fix errors that it finds
+"eslint": "eslint --ignore-path .gitignore ." // This will run the linter and just check
+"prettier": "prettier --write ." // This will run Prettier, and will overwrite the existing code for better format
+"prettier-check": "prettier --check ." // THis will run Prettier, and just check if formatting is needed or not
+```
 
 ## GraphQL API
 

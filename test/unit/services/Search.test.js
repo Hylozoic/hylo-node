@@ -1,15 +1,17 @@
-import moment from 'moment-timezone'
-import { expectEqualQuery } from '../../setup/helpers'
-import setup from '../../setup'
+import moment from "moment-timezone";
+import { expectEqualQuery } from "../../setup/helpers";
+import setup from "../../setup";
 
-describe('Search', function () {
-  describe('.forPosts', function () {
-    it('produces the expected SQL for a complex query', function () {
-      var startTime = moment('2015-03-24 19:54:12-04:00')
-      var endTime = moment('2015-03-31 19:54:12-04:00')
-      var tz = moment.tz.guess()
-      var startTimeAsString = startTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
-      var endTimeAsString = endTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
+describe("Search", function () {
+  describe(".forPosts", function () {
+    it("produces the expected SQL for a complex query", function () {
+      const startTime = moment("2015-03-24 19:54:12-04:00");
+      const endTime = moment("2015-03-31 19:54:12-04:00");
+      const tz = moment.tz.guess();
+      const startTimeAsString = startTime
+        .tz(tz)
+        .format("YYYY-MM-DD HH:mm:ss.SSS");
+      const endTimeAsString = endTime.tz(tz).format("YYYY-MM-DD HH:mm:ss.SSS");
 
       const search = Search.forPosts({
         limit: 5,
@@ -17,14 +19,16 @@ describe('Search', function () {
         users: [42, 41],
         communities: [9, 12],
         follower: 37,
-        term: 'milk toast',
-        type: 'request',
+        term: "milk toast",
+        type: "request",
         start_time: startTime.toDate(),
         end_time: endTime.toDate(),
-        sort: 'posts.updated_at'
-      })
+        sort: "posts.updated_at",
+      });
 
-      expectEqualQuery(search, `select posts.*, count(*) over () as total, "communities_posts"."pinned"
+      expectEqualQuery(
+        search,
+        `select posts.*, count(*) over () as total, "communities_posts"."pinned"
         from "posts"
         inner join "follows" on "follows"."post_id" = "posts"."id"
         inner join "communities_posts" on "communities_posts"."post_id" = "posts"."id"
@@ -42,113 +46,152 @@ describe('Search', function () {
         group by "posts"."id", "communities_posts"."post_id", "communities_posts"."pinned"
         order by "posts"."updated_at" desc
         limit 5
-        offset 7`)
-    })
+        offset 7`
+      );
+    });
 
-    it('includes only basic post types by default', () => {
-      var query = Search.forPosts({communities: 9}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'resource\', \'project\', \'event\') or "posts"."type" is null)')
-    })
+    it("includes only basic post types by default", () => {
+      const query = Search.forPosts({ communities: 9 }).query().toString();
+      expect(query).to.contain(
+        "(\"posts\".\"type\" in ('discussion', 'request', 'offer', 'resource', 'project', 'event') or \"posts\".\"type\" is null)"
+      );
+    });
 
     it('includes only basic post types when type is "all"', () => {
-      var query = Search.forPosts({communities: 9, type: 'all'}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'resource\', \'project\', \'event\') or "posts"."type" is null)')
-    })
+      const query = Search.forPosts({ communities: 9, type: "all" })
+        .query()
+        .toString();
+      expect(query).to.contain(
+        "(\"posts\".\"type\" in ('discussion', 'request', 'offer', 'resource', 'project', 'event') or \"posts\".\"type\" is null)"
+      );
+    });
 
-    it('accepts an option to change the name of the total column', () => {
-      const query = Search.forPosts({totalColumnName: 'wowee'}).query().toString()
-      expect(query).to.contain('count(*) over () as wowee')
-    })
-  })
+    it("accepts an option to change the name of the total column", () => {
+      const query = Search.forPosts({ totalColumnName: "wowee" })
+        .query()
+        .toString();
+      expect(query).to.contain("count(*) over () as wowee");
+    });
+  });
 
-  describe('.forUsers', () => {
-    var cat, dog, catdog, house, mouse, mouseCommunity, network
+  describe(".forUsers", () => {
+    let cat, dog, catdog, house, mouse, mouseCommunity, network;
 
     before(() => {
-      cat = new User({name: 'Mister Cat', email: 'iam@cat.org', active: true})
-      dog = new User({name: 'Mister Dog', email: 'iam@dog.org', active: true})
-      mouse = new User({name: 'Mister Mouse', email: 'iam@mouse.org', active: true})
-      catdog = new User({name: 'Cat Dog', email: 'iam@catdog.org', active: true})
-      house = new Community({name: 'House', slug: 'House'})
-      mouseCommunity = new Community({name: 'MouseCommunity', slug: 'MouseCommunity'})
-      network = new Network({name: 'network', slug: 'network'})
+      cat = new User({
+        name: "Mister Cat",
+        email: "iam@cat.org",
+        active: true,
+      });
+      dog = new User({
+        name: "Mister Dog",
+        email: "iam@dog.org",
+        active: true,
+      });
+      mouse = new User({
+        name: "Mister Mouse",
+        email: "iam@mouse.org",
+        active: true,
+      });
+      catdog = new User({
+        name: "Cat Dog",
+        email: "iam@catdog.org",
+        active: true,
+      });
+      house = new Community({ name: "House", slug: "House" });
+      mouseCommunity = new Community({
+        name: "MouseCommunity",
+        slug: "MouseCommunity",
+      });
+      network = new Network({ name: "network", slug: "network" });
 
-      return setup.clearDb()
-      .then(() => cat.save())
-      .then(() => dog.save())
-      .then(() => catdog.save())
-      .then(() => mouse.save())
-      .then(() => network.save())
-      .then(() => mouseCommunity.save({network_id: network.id}))
-      .then(() => house.save())
-      .then(() => cat.joinCommunity(house))
-      .then(() => mouse.joinCommunity(mouseCommunity))
-      .then(() => FullTextSearch.dropView().catch(err => {})) // eslint-disable-line handle-callback-err
-      .then(() => FullTextSearch.createView())
-    })
+      return setup
+        .clearDb()
+        .then(() => cat.save())
+        .then(() => dog.save())
+        .then(() => catdog.save())
+        .then(() => mouse.save())
+        .then(() => network.save())
+        .then(() => mouseCommunity.save({ network_id: network.id }))
+        .then(() => house.save())
+        .then(() => cat.joinCommunity(house))
+        .then(() => mouse.joinCommunity(mouseCommunity))
+        .then(() => FullTextSearch.dropView().catch((err) => {})) // eslint-disable-line handle-callback-err
+        .then(() => FullTextSearch.createView());
+    });
 
-    function userSearchTests (key) {
-      it('finds members based on name', () => {
-        return Search.forUsers({[key]: 'mister'}).fetchAll().then(users => {
-          expect(users.length).to.equal(3)
-        })
-      })
+    function userSearchTests(key) {
+      it("finds members based on name", () => {
+        return Search.forUsers({ [key]: "mister" })
+          .fetchAll()
+          .then((users) => {
+            expect(users.length).to.equal(3);
+          });
+      });
 
-      it('doesn\'t find members by letters in the middle or end of their name', () => {
-        return Search.forUsers({[key]: 'ister'}).fetchAll().then(users => {
-          expect(users.length).to.equal(0)
-        })
-      })
+      it("doesn't find members by letters in the middle or end of their name", () => {
+        return Search.forUsers({ [key]: "ister" })
+          .fetchAll()
+          .then((users) => {
+            expect(users.length).to.equal(0);
+          });
+      });
 
-      it('finds members by the beginning letters of their first or last name', () => {
-        return Search.forUsers({[key]: 'Cat'}).fetchAll().then(users => {
-          expect(users.length).to.equal(2)
-        })
-      })
+      it("finds members by the beginning letters of their first or last name", () => {
+        return Search.forUsers({ [key]: "Cat" })
+          .fetchAll()
+          .then((users) => {
+            expect(users.length).to.equal(2);
+          });
+      });
     }
 
-    describe('for autocomplete', () => {
-      userSearchTests('autocomplete')
-    })
+    describe("for autocomplete", () => {
+      userSearchTests("autocomplete");
+    });
 
-    describe('with a term', () => {
-      userSearchTests('term')
-    })
+    describe("with a term", () => {
+      userSearchTests("term");
+    });
 
-    describe('for a community', () => {
-      it('finds members', () => {
-        return Search.forUsers({term: 'mister', communities: [house.id]}).fetchAll()
-        .then(users => {
-          expect(users.length).to.equal(1)
-          expect(users.first().get('name')).to.equal('Mister Cat')
-        })
-      })
+    describe("for a community", () => {
+      it("finds members", () => {
+        return Search.forUsers({ term: "mister", communities: [house.id] })
+          .fetchAll()
+          .then((users) => {
+            expect(users.length).to.equal(1);
+            expect(users.first().get("name")).to.equal("Mister Cat");
+          });
+      });
 
-      it('excludes inactive members', async () => {
-        await cat.leaveCommunity(house)
+      it("excludes inactive members", async () => {
+        await cat.leaveCommunity(house);
         const users = await Search.forUsers({
-          term: 'mister', communities: [house.id]
-        }).fetchAll()
-        expect(users.length).to.equal(0)
-      })
-    })
+          term: "mister",
+          communities: [house.id],
+        }).fetchAll();
+        expect(users.length).to.equal(0);
+      });
+    });
 
-    describe('for a network', () => {
-      it('finds members', () => {
-        return Search.forUsers({term: 'mister', network: network.id}).fetchAll()
-        .then(users => {
-          expect(users.length).to.equal(1)
-          expect(users.first().get('name')).to.equal('Mister Mouse')
-        })
-      })
+    describe("for a network", () => {
+      it("finds members", () => {
+        return Search.forUsers({ term: "mister", network: network.id })
+          .fetchAll()
+          .then((users) => {
+            expect(users.length).to.equal(1);
+            expect(users.first().get("name")).to.equal("Mister Mouse");
+          });
+      });
 
-      it('excludes inactive members', async () => {
-        await mouse.leaveCommunity(mouseCommunity)
+      it("excludes inactive members", async () => {
+        await mouse.leaveCommunity(mouseCommunity);
         const users = await Search.forUsers({
-          term: 'mister', network: network.id
-        }).fetchAll()
-        expect(users.length).to.equal(0)
-      })
-    })
-  })
-})
+          term: "mister",
+          network: network.id,
+        }).fetchAll();
+        expect(users.length).to.equal(0);
+      });
+    });
+  });
+});

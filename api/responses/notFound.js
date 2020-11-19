@@ -1,4 +1,4 @@
-import error from './error'
+import error from "./error";
 
 /**
  * 404 (Not Found) Handler
@@ -19,4 +19,4 @@ import error from './error'
  * automatically.
  */
 
-module.exports = error({statusCode: 404, statusText: 'Not Found'})
+module.exports = error({ statusCode: 404, statusText: "Not Found" });

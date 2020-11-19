@@ -1,6 +1,6 @@
 /* eslint spaced-comment: 0 */
 
-var path = require('path')
+const path = require("path");
 
 /**
  * Internationalization / Localization Settings
@@ -21,26 +21,26 @@ var path = require('path')
 
 module.exports.i18n = {
   /***************************************************************************
-  * Which locales are supported?                                             *
-  ***************************************************************************/
-  locales: ['en'], //, 'es', 'fr', 'de']
+   * Which locales are supported?                                             *
+   ***************************************************************************/
+  locales: ["en"], //, 'es', 'fr', 'de']
 
   /****************************************************************************
-  * What is the default locale for the site? Note that this setting will be   *
-  * overridden for any request that sends an "Accept-Language" header (i.e.   *
-  * most browsers), but it's still useful if you need to localize the         *
-  * response for requests made by non-browser clients (e.g. cURL).            *
-  ****************************************************************************/
-  defaultLocale: 'en',
+   * What is the default locale for the site? Note that this setting will be   *
+   * overridden for any request that sends an "Accept-Language" header (i.e.   *
+   * most browsers), but it's still useful if you need to localize the         *
+   * response for requests made by non-browser clients (e.g. cURL).            *
+   ****************************************************************************/
+  defaultLocale: "en",
 
   /****************************************************************************
-  * Automatically add new keys to locale (translation) files when they are    *
-  * encountered during a request?                                             *
-  ****************************************************************************/
+   * Automatically add new keys to locale (translation) files when they are    *
+   * encountered during a request?                                             *
+   ****************************************************************************/
   updateFiles: false,
 
   /****************************************************************************
-  * Path of directory to store locale (translation) files in.                 *
-  ****************************************************************************/
-  directory: path.join(__dirname, 'locales')
-}
+   * Path of directory to store locale (translation) files in.                 *
+   ****************************************************************************/
+  directory: path.join(__dirname, "locales"),
+};

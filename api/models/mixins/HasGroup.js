@@ -1,73 +1,74 @@
-import { getDataTypeForModel, getDataTypeForInstance } from '../group/DataType'
+import { getDataTypeForModel, getDataTypeForInstance } from "../group/DataType";
 
 export default {
-  async createGroup ({ transacting } = {}) {
+  async createGroup({ transacting } = {}) {
     return Group.forge({
       group_data_id: this.id,
       group_data_type: getDataTypeForInstance(this),
-      created_at: new Date()
-    }).save(null, {transacting})
+      created_at: new Date(),
+    }).save(null, { transacting });
   },
 
-  async group (opts) {
-    return await Group.find(this, opts) || this.createGroup(opts)
+  async group(opts) {
+    return (await Group.find(this, opts)) || this.createGroup(opts);
   },
 
-  async addGroupMembers (...args) {
-    const dbOpts = args[2]
-    return this.group(dbOpts).then(group => group.addMembers(...args))
+  async addGroupMembers(...args) {
+    const dbOpts = args[2];
+    return this.group(dbOpts).then((group) => group.addMembers(...args));
   },
 
-  async removeGroupMembers (...args) {
-    const dbOpts = args[1]
-    return this.group(dbOpts).then(group => group.removeMembers(...args))
+  async removeGroupMembers(...args) {
+    const dbOpts = args[1];
+    return this.group(dbOpts).then((group) => group.removeMembers(...args));
   },
 
-  async updateGroupMembers (...args) {
-    const dbOpts = args[1]
-    return this.group(dbOpts).then(group => group.updateMembers(...args))
+  async updateGroupMembers(...args) {
+    const dbOpts = args[1];
+    return this.group(dbOpts).then((group) => group.updateMembers(...args));
   },
 
-  queryByGroupConnection (model, direction = 'parent') {
+  queryByGroupConnection(model, direction = "parent") {
     // TODO we can infer the correct direction in most cases rather than
     // requiring it to be specified
-    const dataType = getDataTypeForModel(model)
-    const [ fromCol, toCol ] = direction === 'parent'
-      ? ['child_group_id', 'parent_group_id']
-      : ['parent_group_id', 'child_group_id']
+    const dataType = getDataTypeForModel(model);
+    const [fromCol, toCol] =
+      direction === "parent"
+        ? ["child_group_id", "parent_group_id"]
+        : ["parent_group_id", "child_group_id"];
 
     const subq = Group.query()
-    .join('group_connections as gc', 'groups.id', `gc.${fromCol}`)
-    .join('groups as g2', 'g2.id', `gc.${toCol}`)
-    .where({
-      'groups.group_data_id': this.id,
-      'groups.group_data_type': getDataTypeForInstance(this),
-      'g2.group_data_type': dataType,
-      'gc.active': true
-    })
-    .select('g2.group_data_id')
+      .join("group_connections as gc", "groups.id", `gc.${fromCol}`)
+      .join("groups as g2", "g2.id", `gc.${toCol}`)
+      .where({
+        "groups.group_data_id": this.id,
+        "groups.group_data_type": getDataTypeForInstance(this),
+        "g2.group_data_type": dataType,
+        "gc.active": true,
+      })
+      .select("g2.group_data_id");
 
-    return model.where('id', 'in', subq)
+    return model.where("id", "in", subq);
   },
 
-  groupMembers (where) {
+  groupMembers(where) {
     let subq = GroupMembership.query()
-    .join('groups', 'groups.id', 'group_memberships.group_id')
-    .where({
-      group_data_id: this.id,
-      'groups.group_data_type': getDataTypeForInstance(this),
-      'group_memberships.active': true
-    })
-    .select('user_id')
-    if (where) subq = subq.where(where)
+      .join("groups", "groups.id", "group_memberships.group_id")
+      .where({
+        group_data_id: this.id,
+        "groups.group_data_type": getDataTypeForInstance(this),
+        "group_memberships.active": true,
+      })
+      .select("user_id");
+    if (where) subq = subq.where(where);
 
-    return User.collection().query(q => {
-      q.where('id', 'in', subq)
-      q.where('users.active', true)
-    })
+    return User.collection().query((q) => {
+      q.where("id", "in", subq);
+      q.where("users.active", true);
+    });
   },
 
-  groupMembersWithPivots () {
+  groupMembersWithPivots() {
     // This method uses Bookshelf's `withPivot` to return instances with
     // join table columns attached.
     //
@@ -90,36 +91,38 @@ export default {
     // A good reference for proxies:
     // https://ponyfoo.com/articles/es6-proxies-in-depth
 
-    const queryCalls = []
-    const addQueryCall = cb => queryCalls.push(cb) && proxy
-    const tableName = User.forge().tableName
-    const tableNameFn = () => tableName
+    const queryCalls = [];
+    const addQueryCall = (cb) => queryCalls.push(cb) && proxy;
+    const tableName = User.forge().tableName;
+    const tableNameFn = () => tableName;
     const proxy = new Proxy(this, {
-      get (target, key) {
-        if (key === 'query') return addQueryCall
-        if (key === 'tableName') return tableNameFn
+      get(target, key) {
+        if (key === "query") return addQueryCall;
+        if (key === "tableName") return tableNameFn;
 
         // handle other keys here if it becomes necessary to fake any other
         // Bookshelf collection properties
 
-        if (typeof key === 'string' && key.startsWith('fetch')) {
+        if (typeof key === "string" && key.startsWith("fetch")) {
           return async (...args) => {
-            const group = await target.group()
-            let relation = group.members().withPivot(['created_at', 'role', 'settings'])
-            for (let cb of queryCalls) relation = relation.query(cb)
-            return relation[key](...args)
-          }
+            const group = await target.group();
+            let relation = group
+              .members()
+              .withPivot(["created_at", "role", "settings"]);
+            for (const cb of queryCalls) relation = relation.query(cb);
+            return relation[key](...args);
+          };
         }
-      }
-    })
+      },
+    });
 
-    return proxy
+    return proxy;
   },
 
-  async isFollowed (userId) {
-    const ms = await GroupMembership.forPair(userId, this).fetch()
-    return !!(ms && ms.getSetting('following'))
-  }
+  async isFollowed(userId) {
+    const ms = await GroupMembership.forPair(userId, this).fetch();
+    return !!(ms && ms.getSetting("following"));
+  },
 
   // proxy some instance methods of Group?
-}
+};

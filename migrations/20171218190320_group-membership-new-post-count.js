@@ -7,12 +7,13 @@ exports.up = function (knex, Promise) {
   // when a new post is created, we increment new_post_count for all groups that
   // it is part of. and we are currently on postgres 9.4, which doesn't have
   // a good way of doing this for values in JSONB columns.
-  return knex.schema.table('group_memberships', t => {
-    t.integer('new_post_count')
-  })
-}
+  return knex.schema.table("group_memberships", (t) => {
+    t.integer("new_post_count");
+  });
+};
 
 exports.down = function (knex, Promise) {
-  return knex.schema.table('group_memberships', t =>
-    t.dropColumn('new_post_count'))
-}
+  return knex.schema.table("group_memberships", (t) =>
+    t.dropColumn("new_post_count")
+  );
+};

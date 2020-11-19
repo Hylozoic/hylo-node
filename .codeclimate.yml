@@ -5,11 +5,11 @@ engines:
     enabled: true
     config:
       languages:
-      - javascript
+        - javascript
 ratings:
   paths:
-  - api/**
-  - lib/**
+    - api/**
+    - lib/**
 exclude_paths:
-- "**/*.test.js"
-- migrations
+  - "**/*.test.js"
+  - migrations

@@ -1,4 +1,5 @@
-exports.up = knex => knex.raw(`
+exports.up = (knex) =>
+  knex.raw(`
   DELETE FROM networks_posts
   WHERE id IN (
     SELECT id
@@ -10,6 +11,6 @@ exports.up = knex => knex.raw(`
     ) t
     WHERE t.row_num > 1
   )
-`)
+`);
 
-exports.down = knex => {}
+exports.down = (knex) => {};

@@ -1,13 +1,14 @@
-module.exports = bookshelf.Model.extend({
-  tableName: 'nexudus_accounts',
+module.exports = bookshelf.Model.extend(
+  {
+    tableName: "nexudus_accounts",
 
-  community: function () {
-    return this.belongsTo(Community)
+    community: function () {
+      return this.belongsTo(Community);
+    },
+
+    decryptedPassword: function () {
+      return this.get("password");
+    },
   },
-
-  decryptedPassword: function () {
-    return this.get('password')
-  }
-}, {
-
-})
+  {}
+);

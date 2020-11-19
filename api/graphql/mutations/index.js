@@ -1,9 +1,9 @@
-import { isEmpty, mapKeys, pick, snakeCase, size, trim } from 'lodash'
+import { isEmpty, mapKeys, pick, snakeCase, size, trim } from "lodash";
 import underlyingFindOrCreateThread, {
-  validateThreadData
-} from '../../models/post/findOrCreateThread'
-import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
-import convertGraphqlData from './convertGraphqlData'
+  validateThreadData,
+} from "../../models/post/findOrCreateThread";
+import underlyingFindLinkPreview from "../../models/linkPreview/findOrCreateByUrl";
+import convertGraphqlData from "./convertGraphqlData";
 
 export {
   createComment,
@@ -11,37 +11,32 @@ export {
   deleteComment,
   canDeleteComment,
   updateComment,
-  canUpdateComment
-} from './comment'
-export {
-  findOrCreateLocation
-} from './location'
+  canUpdateComment,
+} from "./comment";
+export { findOrCreateLocation } from "./location";
 export {
   addCommunityToNetwork,
   addNetworkModeratorRole,
   removeCommunityFromNetwork,
   removeNetworkModeratorRole,
   updateCommunityHiddenSetting,
-  updateNetwork
-} from './network'
-export { registerDevice } from './mobile'
-export {
-  createTopic,
-  subscribe
-} from './topic'
+  updateNetwork,
+} from "./network";
+export { registerDevice } from "./mobile";
+export { createTopic, subscribe } from "./topic";
 export {
   createInvitation,
   expireInvitation,
   resendInvitation,
   reinviteAll,
-  useInvitation
-} from './invitation'
+  useInvitation,
+} from "./invitation";
 export {
   acceptJoinRequest,
   createJoinRequest,
   declineJoinRequest,
   joinCommunity,
-} from './join_request'
+} from "./join_request";
 export {
   updateCommunity,
   addModerator,
@@ -50,8 +45,8 @@ export {
   removeModerator,
   removeMember,
   regenerateAccessCode,
-  createCommunity
-} from './community'
+  createCommunity,
+} from "./community";
 export {
   createPost,
   fulfillPost,
@@ -59,8 +54,8 @@ export {
   updatePost,
   vote,
   deletePost,
-  pinPost
-} from './post'
+  pinPost,
+} from "./post";
 export {
   createProject,
   createProjectRole,
@@ -68,137 +63,148 @@ export {
   addPeopleToProjectRole,
   joinProject,
   leaveProject,
-  processStripeToken
-} from './project'
-export {
-  respondToEvent,
-  invitePeopleToEvent
-} from './event'
+  processStripeToken,
+} from "./project";
+export { respondToEvent, invitePeopleToEvent } from "./event";
 export {
   blockUser,
   unblockUser,
   updateStripeAccount,
-  registerStripeAccount
-} from './user'
-export { updateMembership } from './membership'
-export { deleteSavedSearch, createSavedSearch } from './savedSearch'
+  registerStripeAccount,
+} from "./user";
+export { updateMembership } from "./membership";
+export { deleteSavedSearch, createSavedSearch } from "./savedSearch";
 
-export function updateMe (userId, changes) {
+export function updateMe(userId, changes) {
+  return User.find(userId).then((user) =>
+    user.validateAndSave(convertGraphqlData(changes))
+  );
+}
+
+export function allowCommunityInvites(communityId, data) {
+  return Community.query()
+    .where("id", communityId)
+    .update({ allow_community_invites: data })
+    .then(() => ({ success: true }));
+}
+
+export async function leaveCommunity(userId, communityId) {
+  const community = await Community.find(communityId);
+  const user = await User.find(userId);
+  return user.leaveCommunity(community);
+}
+
+export function findOrCreateThread(userId, data) {
+  return validateThreadData(userId, data).then(() =>
+    underlyingFindOrCreateThread(userId, data.participantIds)
+  );
+}
+
+export function findOrCreateLinkPreviewByUrl(data) {
+  return underlyingFindLinkPreview(data.url);
+}
+
+export function updateCommunityTopic(id, data) {
+  const whitelist = mapKeys(pick(data, ["visibility", "isDefault"]), (v, k) =>
+    snakeCase(k)
+  );
+  if (isEmpty(whitelist)) return Promise.resolve(null);
+
+  return CommunityTag.query()
+    .where({ id })
+    .update(whitelist)
+    .then(() => ({ success: true }));
+}
+
+export function updateCommunityTopicFollow(userId, { id, data }) {
+  const whitelist = mapKeys(pick(data, "newPostCount"), (v, k) => snakeCase(k));
+  if (isEmpty(whitelist)) return Promise.resolve(null);
+
+  return CommunityTag.where({ id })
+    .fetch()
+    .then((ct) => ct.tagFollow(userId).query().update(whitelist))
+    .then(() => ({ success: true }));
+}
+
+export function markActivityRead(userId, activityid) {
+  return Activity.find(activityid).then((a) => {
+    if (a.get("reader_id") !== userId) return;
+    return a.save({ unread: false });
+  });
+}
+
+export function markAllActivitiesRead(userId) {
+  return Activity.query()
+    .where("reader_id", userId)
+    .update({ unread: false })
+    .then(() => ({ success: true }));
+}
+
+export function unlinkAccount(userId, provider) {
   return User.find(userId)
-  .then(user => user.validateAndSave(convertGraphqlData(changes)))
+    .then((user) => {
+      if (!user) throw new Error(`Couldn't find user with id ${userId}`);
+      return user.unlinkAccount(provider);
+    })
+    .then(() => ({ success: true }));
 }
 
-export function allowCommunityInvites (communityId, data) {
-  return Community.query().where('id', communityId).update({allow_community_invites: data})
-  .then(() => ({success: true}))
-}
-
-export async function leaveCommunity (userId, communityId) {
-  const community = await Community.find(communityId)
-  const user = await User.find(userId)
-  return user.leaveCommunity(community)
-}
-
-export function findOrCreateThread (userId, data) {
-  return validateThreadData(userId, data)
-  .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
-}
-
-export function findOrCreateLinkPreviewByUrl (data) {
-  return underlyingFindLinkPreview(data.url)
-}
-
-export function updateCommunityTopic (id, data) {
-  const whitelist = mapKeys(pick(data, ['visibility', 'isDefault']), (v, k) => snakeCase(k))
-  if (isEmpty(whitelist)) return Promise.resolve(null)
-
-  return CommunityTag.query().where({id}).update(whitelist)
-  .then(() => ({success: true}))
-}
-
-export function updateCommunityTopicFollow (userId, { id, data }) {
-  const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
-  if (isEmpty(whitelist)) return Promise.resolve(null)
-
-  return CommunityTag.where({id}).fetch()
-  .then(ct => ct.tagFollow(userId).query().update(whitelist))
-  .then(() => ({success: true}))
-}
-
-export function markActivityRead (userId, activityid) {
-  return Activity.find(activityid)
-  .then(a => {
-    if (a.get('reader_id') !== userId) return
-    return a.save({unread: false})
-  })
-}
-
-export function markAllActivitiesRead (userId) {
-  return Activity.query().where('reader_id', userId).update({unread: false})
-  .then(() => ({success: true}))
-}
-
-export function unlinkAccount (userId, provider) {
-  return User.find(userId)
-  .then(user => {
-    if (!user) throw new Error(`Couldn't find user with id ${userId}`)
-    return user.unlinkAccount(provider)
-  })
-  .then(() => ({success: true}))
-}
-
-export async function addSkill (userId, name) {
-  name = trim(name)
+export async function addSkill(userId, name) {
+  name = trim(name);
   if (isEmpty(name)) {
-    throw new Error('Skill cannot be blank')
+    throw new Error("Skill cannot be blank");
   } else if (size(name) > 39) {
-    throw new Error('Skill must be less than 40 characters')
+    throw new Error("Skill must be less than 40 characters");
   }
-  let skill
+  let skill;
   try {
-    skill = await Skill.forge({name}).save()
+    skill = await Skill.forge({ name }).save();
   } catch (err) {
-    if (!err.message || !err.message.includes('duplicate')) {
-      throw err
+    if (!err.message || !err.message.includes("duplicate")) {
+      throw err;
     }
-    skill = await Skill.find(name)
+    skill = await Skill.find(name);
   }
 
   try {
-    await skill.users().attach(userId)
+    await skill.users().attach(userId);
   } catch (err) {
-    if (!err.message || !err.message.includes('duplicate')) {
-      throw err
+    if (!err.message || !err.message.includes("duplicate")) {
+      throw err;
     }
   }
 
-  return skill
+  return skill;
 }
 
-export function removeSkill (userId, skillIdOrName) {
+export function removeSkill(userId, skillIdOrName) {
   return Skill.find(skillIdOrName)
-  .then(skill => {
-    if (!skill) throw new Error(`Couldn't find skill with ID or name ${skillIdOrName}`)
-    return skill.users().detach(userId)
-  })
-  .then(() => ({success: true}))
+    .then((skill) => {
+      if (!skill)
+        throw new Error(`Couldn't find skill with ID or name ${skillIdOrName}`);
+      return skill.users().detach(userId);
+    })
+    .then(() => ({ success: true }));
 }
 
-export function flagInappropriateContent (userId, { category, reason, linkData }) {
-  let link
+export function flagInappropriateContent(
+  userId,
+  { category, reason, linkData }
+) {
+  let link;
   // TODO use FlaggedItem.Type
   switch (trim(linkData.type)) {
-    case 'post':
-      link = Frontend.Route.post(linkData.id, linkData.slug)
-      break
-    case 'comment':
-      link = Frontend.Route.thread(linkData.id)
-      break
-    case 'member':
-      link = Frontend.Route.profile(linkData.id)
-      break
+    case "post":
+      link = Frontend.Route.post(linkData.id, linkData.slug);
+      break;
+    case "comment":
+      link = Frontend.Route.thread(linkData.id);
+      break;
+    case "member":
+      link = Frontend.Route.profile(linkData.id);
+      break;
     default:
-      return Promise.reject(new Error('Invalid Link Type'))
+      return Promise.reject(new Error("Invalid Link Type"));
   }
 
   return FlaggedItem.create({
@@ -207,21 +213,26 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
     reason,
     link,
     object_id: linkData.id,
-    object_type: linkData.type
+    object_type: linkData.type,
   })
-  .tap(flaggedItem => Queue.classMethod('FlaggedItem', 'notifyModerators', {id: flaggedItem.id}))
-  .then(() => ({success: true}))
+    .tap((flaggedItem) =>
+      Queue.classMethod("FlaggedItem", "notifyModerators", {
+        id: flaggedItem.id,
+      })
+    )
+    .then(() => ({ success: true }));
 }
 
-export async function removePost (userId, postId, communityIdOrSlug) {
-  const community = await Community.find(communityIdOrSlug)
+export async function removePost(userId, postId, communityIdOrSlug) {
+  const community = await Community.find(communityIdOrSlug);
   return Promise.join(
     Post.find(postId),
     GroupMembership.hasModeratorRole(userId, community),
     (post, isModerator) => {
-      if (!post) throw new Error(`Couldn't find post with id ${postId}`)
-      if (!isModerator) throw new Error(`You don't have permission to remove this post`)
-      return post.removeFromCommunity(communityIdOrSlug)
-    })
-  .then(() => ({success: true}))
+      if (!post) throw new Error(`Couldn't find post with id ${postId}`);
+      if (!isModerator)
+        throw new Error("You don't have permission to remove this post");
+      return post.removeFromCommunity(communityIdOrSlug);
+    }
+  ).then(() => ({ success: true }));
 }
