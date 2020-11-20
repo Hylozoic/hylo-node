@@ -207,7 +207,7 @@ export function makeMutations (userId, isAdmin) {
     addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
     addPeopleToProjectRole(userId, peopleIds, projectRoleId),
 
-    addSkill: (root, { name }) => addSkill(userId, name),
+    addSkill: (root, { name, type }) => addSkill(userId, name, type),
 
     allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
 
@@ -231,7 +231,7 @@ export function makeMutations (userId, isAdmin) {
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
-    
+
     joinCommunity: (root, {communityId, userId}) => joinCommunity(communityId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),

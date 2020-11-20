@@ -147,7 +147,7 @@ export function unlinkAccount (userId, provider) {
   .then(() => ({success: true}))
 }
 
-export async function addSkill (userId, name) {
+export async function addSkill (userId, name, type) {
   name = trim(name)
   if (isEmpty(name)) {
     throw new Error('Skill cannot be blank')
@@ -165,7 +165,7 @@ export async function addSkill (userId, name) {
   }
 
   try {
-    await skill.users().attach(userId)
+    await skill.users().attach({ user_id: userId, type })
   } catch (err) {
     if (!err.message || !err.message.includes('duplicate')) {
       throw err

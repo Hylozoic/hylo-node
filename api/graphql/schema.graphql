@@ -27,6 +27,7 @@ type Me {
   postsTotal: Int
   settings: UserSettings
   skills(first: Int, cursor: ID): SkillQuerySet
+  skillsToLearn(first: Int, cursor: ID): SkillQuerySet
   tagline: String
   twitterName: String
   unseenThreadCount: Int
@@ -118,6 +119,7 @@ type Person {
     boundingBox: [PointInput]
   ): PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
+  skillsToLearn(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
   votesTotal: Int
   messageThreadId: ID
@@ -708,7 +710,7 @@ type Mutation {
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
-  addSkill(name: String): Skill
+  addSkill(name: String, type: Int): Skill
   allowCommunityInvites(communityId: ID, data: Boolean): Community
   blockUser(blockedUserId: ID): GenericResult
   createComment(data: CommentInput): Comment
@@ -868,6 +870,7 @@ type CommunityQuerySet {
 type Skill {
   id: ID
   name: String
+  type: Int
 }
 
 type SkillQuerySet {

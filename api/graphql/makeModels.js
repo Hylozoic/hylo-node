@@ -58,6 +58,7 @@ export default async function makeModels (userId, isAdmin) {
         'posts',
         'locationObject',
         {skills: {querySet: true}},
+        {skillsToLearn: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
@@ -114,6 +115,7 @@ export default async function makeModels (userId, isAdmin) {
         {posts: {querySet: true}},
         {comments: {querySet: true}},
         {skills: {querySet: true}},
+        {skillsToLearn: {querySet: true}},
         {votes: {querySet: true}}
       ],
       filter: nonAdminFilter(personFilter(userId)),
@@ -432,6 +434,9 @@ export default async function makeModels (userId, isAdmin) {
     Skill: {
       model: Skill,
       attributes: ['name'],
+      getters: {
+        type: s => s.pivot ? s.pivot.get('type') : null
+      },
       fetchMany: ({ autocomplete, first = 1000, offset = 0 }) =>
         searchQuerySet('skills', {
           autocomplete, first, offset, currentUserId: userId
