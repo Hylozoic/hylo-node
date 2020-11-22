@@ -4,13 +4,13 @@ All notable changes to Hylo Node (the Hylo server) will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-### Added
+## [1.4.0]
+### Changed
 - Catch-up tests
-
-### Fixed
 - Upgrade knex and bookshelf to latest versions including required updates to other dependencies
 - Update code for breaking API changes in knex and bookshelf upgrades
+
+### Fixed
 - CircleCI test running
 - Uploading images and don't destroy them when editing a comment
 
