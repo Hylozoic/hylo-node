@@ -9,6 +9,7 @@ import { findThread } from './post/findOrCreateThread'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
+  requireFetch: false,
 
   activity: function () {
     return this.hasMany(Activity, 'reader_id')
@@ -17,7 +18,9 @@ module.exports = bookshelf.Model.extend(merge({
   comments: function () {
     return this.hasMany(Comment)
     .query(q => {
-      q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(this.id))
+      // TODO: this breaks recent activity, but it is sketchy to take out here.
+      // q.join('posts', 'posts.id', 'comments.post_id')
+      q.whereNotIn('posts.user_id', BlockedUser.blockedFor(this.id))
       q.where(function () {
         this.where('posts.type', '!=', Post.Type.THREAD)
         .orWhere('posts.type', null)
@@ -130,8 +133,11 @@ module.exports = bookshelf.Model.extend(merge({
           sendPushNotifications: true
         }},
       {transacting})
-    await Community.query().where('id', community.id)
-    .increment('num_members').transacting(transacting)
+    const q = Community.query()
+    if (transacting) {
+      q.transacting(transacting)
+    }
+    await q.where('id', community.id).increment('num_members')
     await this.followDefaultTags(community.id, transacting)
     await this.markInvitationsUsed(community.id, transacting)
     return memberships[0]
@@ -210,10 +216,13 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   markInvitationsUsed: function (communityId, trx) {
-    return Invitation.query()
-    .where('community_id', communityId)
+    const q = Invitation.query()
+    if (trx) {
+      q.transacting(trx)
+    }
+    return q.where('community_id', communityId)
     .whereRaw('lower(email) = lower(?)', this.get('email'))
-    .update({used_by_id: this.id}).transacting(trx)
+    .update({used_by_id: this.id})
   },
 
   setPassword: function (password, { transacting } = {}) {
@@ -232,7 +241,7 @@ module.exports = bookshelf.Model.extend(merge({
     // TODO maybe throw an error if a non-whitelisted field is supplied (besides
     // tags and password, which are used later)
     var whitelist = pick(changes, [
-      'avatar_url', 'banner_url', 'bio', 'email', 'contact_email', 'contact_phone', 
+      'avatar_url', 'banner_url', 'bio', 'email', 'contact_email', 'contact_phone',
       'extra_info', 'facebook_url', 'intention', 'linkedin_url', 'location', 'location_id',
       'name', 'password', 'settings', 'tagline', 'twitter_name', 'url', 'work',
       'new_notification_count'
@@ -352,7 +361,8 @@ module.exports = bookshelf.Model.extend(merge({
     .then(function (user) {
       if (!user) throw new Error('email not found')
 
-      var account = user.relations.linkedAccounts.where({provider_key: 'password'})[0]
+      var account = user.relations.linkedAccounts.where({provider_key: 'password'}).first()
+
       if (!account) {
         var keys = user.relations.linkedAccounts.pluck('provider_key')
         throw new Error(`password account not found. available: [${keys.join(',')}]`)
@@ -366,8 +376,7 @@ module.exports = bookshelf.Model.extend(merge({
     })
   }),
 
-  create: function (attributes, options = {}) {
-    const { transacting } = options
+  create: function (attributes) {
     const { account, community } = attributes
     const communityId = Number(get(community, 'id'))
     const digest_frequency = communityId === 2308 ? 'weekly' : 'daily' // eslint-disable-line camelcase
@@ -396,13 +405,18 @@ module.exports = bookshelf.Model.extend(merge({
       attributes.name = attributes.email.split('@')[0].replace(/[._]/g, ' ')
     }
 
-    return validateUserAttributes(attributes)
-    .then(() => new User(attributes).save({}, {transacting}))
-    .tap(user => Promise.join(
-      account && LinkedAccount.create(user.id, account, {transacting}),
-      community && community.addMembers([user.id], {transacting}),
-      community && user.markInvitationsUsed(community.id, transacting)
-    ))
+    return bookshelf.transaction(transacting =>
+      validateUserAttributes(attributes, { transacting })
+      .then(() => new User(attributes).save({}, {transacting}))
+      .then(async (user) => {
+        await Promise.join(
+          account && LinkedAccount.create(user.id, account, {transacting}),
+          community && community.addMembers([user.id], {transacting}),
+          community && user.markInvitationsUsed(community.id, transacting)
+        )
+        return user
+      })
+    )
   },
 
   find: function (id, options) {
@@ -503,10 +517,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   unseenThreadCount: async function (userId) {
-    const { raw } = bookshelf.knex
-
     const lastViewed = await User.where('id', userId).query()
-    .select(raw("settings->'last_viewed_messages_at' as time"))
+    .select(bookshelf.knex.raw("settings->'last_viewed_messages_at' as time"))
     .then(rows => new Date(rows[0].time))
 
     return GroupMembership.whereUnread(userId, Post, {afterTime: lastViewed})

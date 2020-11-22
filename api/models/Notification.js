@@ -32,6 +32,7 @@ const MEDIUM = {
 
 module.exports = bookshelf.Model.extend({
   tableName: 'notifications',
+  requireFetch: false,
 
   activity: function () {
     return this.belongsTo(Activity)
@@ -51,7 +52,7 @@ module.exports = bookshelf.Model.extend({
 
   actor: function () {
     return this.relations.activity.relations.actor
-  }, 
+  },
 
   projectContribution: function () {
     return this.relations.activity.relations.projectContribution
@@ -416,7 +417,7 @@ module.exports = bookshelf.Model.extend({
       data: {
         project_title: project.get('name'),
         project_url: Frontend.Route.tokenLogin(reader, token,
-          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),        
+          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),
         contribution_amount: projectContribution.get('amount') / 100,
         contributor_name: actor.get('name'),
         contributor_avatar_url: actor.get('avatar_url'),
@@ -439,7 +440,7 @@ module.exports = bookshelf.Model.extend({
       data: {
         project_title: project.get('name'),
         project_url: Frontend.Route.tokenLogin(reader, token,
-          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),        
+          Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),
         contribution_amount: projectContribution.get('amount') / 100,
         contributor_name: actor.get('name'),
         contributor_avatar_url: actor.get('avatar_url'),
@@ -500,7 +501,7 @@ module.exports = bookshelf.Model.extend({
 
     if (includes(postCreatorId, blockedUserIds)
       || includes(commentCreatorId, blockedUserIds)
-      || includes(actorId, blockedUserIds)) {      
+      || includes(actorId, blockedUserIds)) {
       return Promise.resolve(true)
     }
     return Promise.resolve(false)
@@ -541,15 +542,14 @@ module.exports = bookshelf.Model.extend({
   },
 
   findUnsent: function (options = {}) {
-    const { raw } = bookshelf.knex
     return Notification.query(q => {
       q.where({sent_at: null})
       if (!options.includeOld) {
-        q.where('created_at', '>', raw("now() - interval '6 hour'"))
+        q.where('created_at', '>', bookshelf.knex.raw("now() - interval '6 hour'"))
       }
       q.where(function () {
         this.where('failed_at', null)
-        .orWhere('failed_at', '<', raw("now() - interval '1 hour'"))
+        .orWhere('failed_at', '<', bookshelf.knex.raw("now() - interval '1 hour'"))
       })
       q.limit(200)
     })

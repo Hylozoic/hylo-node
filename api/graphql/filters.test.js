@@ -24,10 +24,10 @@ const setupBlockedUserData = async () => {
   await u1.joinCommunity(community)
   await u2.joinCommunity(community)
   await u3.joinCommunity(community)
-  await u4.joinCommunity(community)                  
+  await u4.joinCommunity(community)
   await BlockedUser.create(u1.id, u2.id)
   await BlockedUser.create(u3.id, u1.id)
-  return {u1, u2, u3, u4, community} 
+  return {u1, u2, u3, u4, community}
 }
 
 describe('makeFilterToggle', () => {
@@ -77,8 +77,8 @@ describe('model filters', () => {
       const models = await makeModels(u1.id, false)
       const users = await models.Person.filter(User.collection()).fetch()
       expect(users.map('id')).to.deep.equal([u1.id, u4.id])
-    })  
-    
+    })
+
     it('includes people you share a connection with', async () => {
       const currentUser = await factories.user().save()
       const connectedUser = await factories.user().save()
@@ -89,12 +89,12 @@ describe('model filters', () => {
       const models = await makeModels(currentUser.id, false)
       const users = await models.Person.filter(User.collection()).fetch()
       expect(users.map('id')).to.deep.equal([connectedUser.id])
-    })  
+    })
 
     it.skip('filters down to people that share a community with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
-        where 
+        where
         ${blockedUserSqlFragment(42)}
         and
         ("users"."id" = '${User.AXOLOTL_ID}' or
@@ -127,16 +127,16 @@ describe('model filters', () => {
       await p1.save({active: true})
       await p1.communities().attach(community)
       await p2.save({active: true})
-      await p2.communities().attach(community)      
-      await p3.save({active: true})     
-      await p3.communities().attach(community)      
+      await p2.communities().attach(community)
+      await p3.save({active: true})
+      await p3.communities().attach(community)
     })
-  
+
     it('filters posts by blocked and blocking users', async () => {
       const models = await makeModels(u1.id, false)
       const posts = await models.Post.filter(Post.collection()).fetch()
       expect(posts.models.map(p => p.get('user_id'))).to.deep.equal([u4.id])
-    })    
+    })
 
     it.skip('filters down to active in-network posts', () => {
       const collection = models.Post.filter(Post.collection())

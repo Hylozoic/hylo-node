@@ -2,6 +2,7 @@
 
 module.exports = bookshelf.Model.extend({
   tableName: 'tag_follows',
+  requireFetch: false,
 
   community: function () {
     return this.belongsTo(Community)
@@ -60,10 +61,18 @@ module.exports = bookshelf.Model.extend({
     }).fetch({transacting})
     .then(follow => follow ||
       new TagFollow(attrs).save(null, {transacting})
-      .tap(() => CommunityTag.query(q => {
-        q.where('community_id', communityId)
-        q.where('tag_id', tagId)
-      }).query().increment('num_followers').transacting(transacting)))
+      .then(async (tf) => {
+        const q = CommunityTag.query(q => {
+          q.where('community_id', communityId)
+          q.where('tag_id', tagId)
+        })
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        await q.query().increment('num_followers')
+        return tf
+      })
+     )
   },
 
   remove: function ({tagId, userId, communityId, transacting}) {
@@ -76,10 +85,17 @@ module.exports = bookshelf.Model.extend({
     .fetch()
     .then(tagFollow => tagFollow &&
       tagFollow.destroy({transacting})
-      .tap(() => CommunityTag.query(q => {
-        q.where('community_id', attrs.community_id)
-        q.where('tag_id', attrs.tag_id)
-      }).query().decrement('num_followers').transacting(transacting)))
+      .then(() => {
+        const q = CommunityTag.query(q => {
+          q.where('community_id', attrs.community_id)
+          q.where('tag_id', attrs.tag_id)
+        })
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        return q.query().decrement('num_followers')
+      })
+    )
   },
 
   findFollowers: function (community_id, tag_id, limit = 3) {

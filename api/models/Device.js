@@ -1,5 +1,6 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'devices',
+  requireFetch: false,
 
   pushNotifications: function () {
     return this.hasMany(PushNotification)

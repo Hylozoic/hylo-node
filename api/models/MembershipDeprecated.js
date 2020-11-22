@@ -4,6 +4,7 @@ import HasSettings from './mixins/HasSettings'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'communities_users',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)
@@ -135,7 +136,7 @@ module.exports = bookshelf.Model.extend(merge({
     .where(query)
     .pluck('community_id')
   },
-  
+
   lastViewed: userId =>
     Membership.query(q => {
       q.where('user_id', userId)

@@ -1,7 +1,7 @@
 module.exports = function(req, res, next) {
   if (Admin.isSignedIn(req)) {
     sails.log.debug('isAdmin: ' + req.user.email);
-    next();
+    return next();
   } else {
     if (res.forbidden) {
       res.forbidden();

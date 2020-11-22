@@ -29,7 +29,7 @@ export default function (opts) {
     if (communities) {
       qb.join('group_memberships', 'group_memberships.user_id', 'users.id')
       qb.join('groups', 'groups.id', 'group_memberships.group_id')
-      qb.where('groups.group_data_id', 'in', opts.communities)
+      qb.whereIn('groups.group_data_id', opts.communities)
       qb.where({
         'groups.group_data_type': Group.DataType.COMMUNITY,
         'group_memberships.active': true

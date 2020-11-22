@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs'
-import graphqlHTTP from 'express-graphql'
+import { graphqlHTTP } from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
@@ -379,7 +379,7 @@ export const createRequestHandler = () =>
     return {
       schema,
       graphiql: true,
-      formatError: process.env.NODE_ENV === 'development' ? logError : null
+      customFormatErrorFn: process.env.NODE_ENV === 'development' ? logError : null
     }
   })
 

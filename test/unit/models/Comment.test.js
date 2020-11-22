@@ -52,7 +52,8 @@ describe('Comment', () => {
       u2 = factories.user({avatar_url: 'bar.png', settings: {dm_notifications: 'both'}})
       post = factories.post({type: Post.Type.THREAD, updated_at: now})
 
-      await Promise.join(u1.save(), u2.save(), post.save())
+      await Promise.join(u1.save(), u2.save())
+      await post.save({ user_id: u1.id })
       await post.addFollowers([u1.id, u2.id])
       ;[u1.id, u2.id].forEach(userId =>
         times(2, i => comments.push(factories.comment({

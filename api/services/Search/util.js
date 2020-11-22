@@ -18,7 +18,7 @@ export const filterAndSortPosts = curry((opts, q) => {
 
   if (!type || type === 'all' || type === 'all+welcome') {
     q.where(q2 =>
-      q2.where('posts.type', 'in', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
+      q2.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
       .orWhere('posts.type', null))
   } else if (type === DISCUSSION) {
     q.where(q2 =>
@@ -69,7 +69,7 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, search, so
   }
 
   if (search) {
-    q.where('users.id', 'in', FullTextSearch.search({
+    q.whereIn('users.id', FullTextSearch.search({
       term: search,
       type: 'person',
       subquery: true

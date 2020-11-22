@@ -12,8 +12,6 @@
  * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.session.html
  */
 
-var redisInfo = require('parse-redis-url')().parse(process.env.REDIS_URL);
-
 module.exports.session = {
 
   /***************************************************************************
@@ -32,11 +30,12 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
 
-  key: process.env.COOKIE_NAME, // cookie name, instead of sails.sid
+  name: process.env.COOKIE_NAME, // cookie name, instead of sails.sid
 
   cookie: {
     domain: process.env.COOKIE_DOMAIN,
-    maxAge: 60 * 86400000 // 60 days
+    maxAge: 60 * 86400000, // 60 days
+    secure: process.env.protocol === 'https'
   },
 
   /***************************************************************************
@@ -45,7 +44,7 @@ module.exports.session = {
   * session store that can be shared across multiple Sails.js servers        *
   ***************************************************************************/
 
-  adapter: 'redis',
+  adapter: '@sailshq/connect-redis',
 
   /***************************************************************************
   *                                                                          *
@@ -56,11 +55,8 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
 
-  host: redisInfo.host,
-  port: redisInfo.port,
+  url: process.env.REDIS_URL,
   ttl: 86400 * 60,
-  db: 0,
-  pass: redisInfo.password,
   prefix: 'sess:'
 
   /***************************************************************************

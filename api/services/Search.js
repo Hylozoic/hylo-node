@@ -60,7 +60,7 @@ module.exports = {
     return Tag.query(q => {
       q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
       q.join('communities', 'communities.id', '=', 'communities_tags.community_id')
-      q.where('communities.id', 'in', myCommunityIds(opts.userId))
+      q.whereIn('communities.id', myCommunityIds(opts.userId))
       q.where('communities.active', true)
 
       if (opts.communitySlug) {
@@ -85,7 +85,7 @@ module.exports = {
       }
 
       if (opts.visibility) {
-        q.where('communities_tags.visibility', 'in', opts.visibility)
+        q.whereIn('communities_tags.visibility', opts.visibility)
       }
 
       if (opts.sort) {

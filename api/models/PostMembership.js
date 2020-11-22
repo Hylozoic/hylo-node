@@ -1,5 +1,6 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'communities_posts',
+  requireFetch: false,
 
   post: function () {
     return this.belongsTo(Post)

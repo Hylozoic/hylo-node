@@ -25,7 +25,7 @@ module.exports.bootstrap = function (done) {
 
   if (process.env.DEBUG_MEMORY) {
     sails.log.info(red('memwatch: starting'))
-    var memwatch = require('memwatch-next')
+    var memwatch = require('@airbnb/node-memwatch')
 
     memwatch.on('leak', info => sails.log.info(red('memwatch: memory leak!'), info))
 

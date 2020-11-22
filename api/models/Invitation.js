@@ -3,6 +3,7 @@ import EnsureLoad from './mixins/EnsureLoad'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'community_invites',
+  requireFetch: false,
 
   community: function () {
     return this.belongsTo(Community)

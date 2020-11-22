@@ -126,7 +126,7 @@ describe('notifying moderators', () => {
     ]
 
     flaggedItem = model({
-      getObject: () => ({relations: {}}),
+      getObject: () => ({ relations: { post: { attributes: { is_public: false }}}, attributes: { is_public: false }}),
       getMessageText: c => `the message ${c.id}`,
       relations: {
         user: model({

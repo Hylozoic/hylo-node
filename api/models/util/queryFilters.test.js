@@ -8,7 +8,7 @@ describe('myCommunityIds', () => {
   it('produces the expected query clause', () => {
     const query = Post.query(q => {
       q.join('communities_posts', 'posts.id', 'communities_posts.community_id')
-      q.where('communities_posts.community_id', 'in', myCommunityIds('42'))
+      q.whereIn('communities_posts.community_id', myCommunityIds('42'))
     })
     expectEqualQuery(query, `select * from "posts"
       inner join "communities_posts"
@@ -22,7 +22,7 @@ describe('myNetworkCommunityIds', () => {
   it('produces the expected query clause', () => {
     const query = Post.query(q => {
       q.join('communities_posts', 'posts.id', 'communities_posts.community_id')
-      q.where('communities_posts.community_id', 'in', myNetworkCommunityIds('42'))
+      q.whereIn('communities_posts.community_id', myNetworkCommunityIds('42'))
     })
     expectEqualQuery(query, `select * from "posts"
       inner join "communities_posts"

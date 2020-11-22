@@ -25,27 +25,29 @@ export default async function createComment (commenterId, opts = {}) {
 
   const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
 
-  return bookshelf.transaction(trx =>
-    new Comment(attrs).save(null, {transacting: trx})
-    .tap(createMedia(opts, trx)))
-  .tap(createOrUpdateConnections(commenterId, existingFollowers))
-  .tap(comment => post.addFollowers(newFollowers))
-  .tap(comment => Promise.all([
-    notifySockets(comment, post, isThread),
+  return bookshelf.transaction(async (trx) => {
+    const comment = await new Comment(attrs).save(null, {transacting: trx})
+    await createMedia(comment, opts, trx)
+    return comment
+  }).then(async (comment) => {
+    await createOrUpdateConnections(commenterId, existingFollowers)
+    await post.addFollowers(newFollowers)
+    await notifySockets(comment, post, isThread)
+    if (isThread) {
+      await Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
+    } else {
+      await comment.createActivities()
+    }
 
-    (isThread
-      ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
-      : comment.createActivities()),
-
-    Queue.classMethod('Post', 'updateFromNewComment', {
+    await Queue.classMethod('Post', 'updateFromNewComment', {
       postId: post.id,
       commentId: comment.id
     })
-  ])
-  .then(() => comment))
+    return comment
+  })
 }
 
-export const createMedia = (opts, trx) => comment => {
+export const createMedia = (comment, opts, trx) => {
   return Promise.all(flatten([
     opts.attachments && Promise.map(opts.attachments, (attachment, i) =>
       Media.createForSubject({
@@ -112,7 +114,7 @@ function pushCommentToSockets (comment) {
   ))
 }
 
-const createOrUpdateConnections = (userId, existingFollowers) => comment => {
+const createOrUpdateConnections = (userId, existingFollowers) => {
   return existingFollowers
     .filter(f => f !== userId)
     .forEach(follower => UserConnection.createOrUpdate(userId, follower, 'message'))

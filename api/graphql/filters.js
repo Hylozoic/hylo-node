@@ -10,11 +10,10 @@ export function makeFilterToggle (enabled) {
 
 // This does not include users connected by a network
 function sharesMembership (userId, q) {
-  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community)
-  .query().pluck('group_id')
+  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community).query().select('group_id')
 
   q.where('group_memberships.active', true)
-  q.where('group_memberships.group_id', 'in', subq)
+  q.whereIn('group_memberships.group_id', subq)
 }
 
 export const membershipFilter = userId => relation =>
@@ -24,28 +23,30 @@ export const personFilter = userId => relation => relation.query(q => {
   if (userId) {
     // find all other memberships for users that share a network
     const sharedMemberships = GroupMembership.query(q3 => {
+      q3.select('user_id')
       filterCommunities(q3, 'groups.group_data_id', userId)
       q3.join('groups', 'groups.id', 'group_memberships.group_id')
       q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
     })
 
-    q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
+    q.whereNotIn('users.id', BlockedUser.blockedFor(userId))
 
     // limit to users that are in those other memberships
 
     const sharedConnections = UserConnection.query(ucq =>{
+      ucq.select('other_user_id')
       ucq.where('user_id', userId)
     })
 
     q.where(inner =>
       inner.where('users.id', User.AXOLOTL_ID)
-      .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id'))
-      .orWhere('users.id', 'in', sharedConnections.query().pluck('other_user_id')))
+      .orWhereIn('users.id', sharedMemberships.query())
+      .orWhereIn('users.id', sharedConnections.query()))
   }
 })
 
 export const messageFilter = userId => relation => relation.query(q => {
-  q.where('user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+  q.whereNotIn('user_id', BlockedUser.blockedFor(userId))
 })
 
 function filterCommunities (q, idColumn, userId) {
@@ -53,7 +54,9 @@ function filterCommunities (q, idColumn, userId) {
   // callback in parentheses -- this is necessary to keep `or` from "leaking"
   // out to the rest of the query
   q.where(inner => {
-    inner.where(idColumn, 'in', myCommunityIds(userId)).orWhere(idColumn, 'in', myNetworkCommunityIds(userId))
+    inner
+    .whereIn(idColumn, myCommunityIds(userId))
+    .orWhereIn(idColumn, myNetworkCommunityIds(userId))
     if (idColumn === 'communities.id') {
       // XXX: hack to make sure to show public communities on the map when logged in
       inner.orWhere('communities.is_public', true)
@@ -77,7 +80,7 @@ export const sharedNetworkMembership = curry((tableName, userId, relation) =>
         }).query().select('post_id')
 
         return q.where(q2 => {
-          q2.where('posts.id', 'in', subq).orWhere('posts.is_public', true)
+          q2.whereIn('posts.id', subq).orWhere('posts.is_public', true)
         })
       case 'votes':
         q.join('communities_posts', 'votes.post_id', 'communities_posts.post_id')
@@ -93,11 +96,12 @@ export const commentFilter = userId => relation => relation.query(q => {
 
   if (userId) {
     q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
-    q.leftJoin('posts', 'communities_posts.post_id', 'posts.id')
-    q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+    q.join('posts', 'communities_posts.post_id', 'posts.id')
+    q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
+
     q.where(q2 => {
-      const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
-      q2.where('comments.post_id', 'in', groupIds)
+      const groupIds = Group.selectIdsForMember(userId, Post, isFollowing)
+      q2.whereIn('comments.post_id', groupIds)
       .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
       .orWhere('posts.is_public', true)
     })
@@ -107,7 +111,7 @@ export const commentFilter = userId => relation => relation.query(q => {
 export const activePost = userId => relation => {
   return relation.query(q => {
     if (userId) {
-      q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      q.whereNotIn('posts.user_id', BlockedUser.blockedFor(userId))
     }
     q.where('posts.active', true)
   })
@@ -150,7 +154,7 @@ export function communityTopicFilter (userId, {
     }
 
     if (visibility) {
-      q.where('communities_tags.visibility', 'in', visibility)
+      q.whereIn('communities_tags.visibility', visibility)
     }
   }
 }

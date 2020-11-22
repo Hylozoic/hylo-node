@@ -3,9 +3,11 @@ module.exports = {
     const { name, email, password } = req.allParams()
 
     return User.create({name, email: email ? email.toLowerCase() : null, account: {type: 'password', password}})
-    .tap(user => Analytics.trackSignup(user.id, req))
-    .tap(user => req.param('login') && UserSession.login(req, user, 'password'))
-    .then(user => {
+    .then(async (user) => {
+      await Analytics.trackSignup(user.id, req)
+      await req.param('login') && UserSession.login(req, user, 'password')
+      await user.refresh()
+
       if (req.param('resp') === 'user') {
         return res.ok({
           name: user.get('name'),
@@ -16,7 +18,7 @@ module.exports = {
       }
     })
     .catch(function (err) {
-      res.status(422).send(req.__(err.message ? err.message : err))
+      res.status(422).send({ error: err.message ? err.message : err })
     })
   },
 

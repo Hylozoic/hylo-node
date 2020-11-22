@@ -13,6 +13,7 @@ import {
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
+  requireFetch: false,
 
   group () {
     return this.belongsTo(Group)
@@ -97,7 +98,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
       : getDataTypeForModel(typeOrModel)
 
     const queryRoot = opts.multiple ? this.collection() : this
-
     return queryRoot.query(q => {
       q.where('group_memberships.group_data_type', type)
       if (instanceId) {

@@ -170,7 +170,8 @@ module.exports = {
         headers: {},
         setHeader: spy((key, val) => {
           self.headers[key] = val
-        })
+        }),
+        end: setBody()
       }
       return self
     },

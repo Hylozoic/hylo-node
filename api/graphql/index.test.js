@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-expressions */
-import { createRequestHandler, makeMutations, makeQueries } from './index'
+import { createRequestHandler, makeMutations, makeAuthenticatedQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
 import { spyify, unspyify } from '../../test/setup/helpers'
@@ -48,6 +48,7 @@ describe('graphql request handler', () => {
 
   beforeEach(() => {
     req = factories.mock.request()
+    req.url = '/noo/graphql'
     req.method = 'POST'
     req.session = {userId: user.id}
     res = factories.mock.response()
@@ -318,23 +319,7 @@ describe('graphql request handler', () => {
           data: {
             me: null,
             community: null
-          },
-          errors: [
-            {
-              locations: [
-                {column: 11, line: 2}
-              ],
-              message: 'not logged in',
-              path: ['me']
-            },
-            {
-              locations: [
-                {column: 11, line: 5}
-              ],
-              message: 'not logged in',
-              path: ['community']
-            }
-          ]
+          }
         })
       })
     })
@@ -417,20 +402,12 @@ describe('graphql request handler', () => {
 
         return handler(req, res).then(() => {
           expectJSON(res, {
+            'errors[0].message': 'Cannot sort by "height"',
             data: {
               community: {
                 members: null
               }
-            },
-            errors: [
-              {
-                locations: [
-                  {column: 15, line: 3}
-                ],
-                message: 'Cannot sort by "height"',
-                path: ['community', 'members']
-              }
-            ]
+            }
           })
         })
       })
@@ -622,14 +599,14 @@ describe('makeMutations', () => {
   })
 })
 
-describe('makeQueries', () => {
+describe('makeAuthenticatedQueries', () => {
   let queries, user
 
   before(async () => {
     user = await factories.user().save()
     const fetchOne = spy(() => Promise.resolve({}))
     const fetchMany = spy(() => Promise.resolve([]))
-    queries = makeQueries(user.id, fetchOne, fetchMany)
+    queries = makeAuthenticatedQueries(user.id, fetchOne, fetchMany)
   })
 
   describe('communityExists', () => {
@@ -694,5 +671,5 @@ describe('makeQueries', () => {
 
 function expectJSON (res, expected) {
   expect(res.body).to.exist
-  return expect(JSON.parse(res.body)).to.deep.equal(expected)
+  return expect(JSON.parse(res.body)).to.deep.nested.include(expected)
 }

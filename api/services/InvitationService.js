@@ -68,7 +68,7 @@ module.exports = {
    */
   create: ({sessionUserId, communityId, tagName, userIds, emails = [], message, isModerator = false, subject}) => {
     return Promise.join(
-      userIds && User.where('id', 'in', userIds).fetchAll(),
+      userIds && User.whereIn('id', userIds).fetchAll(),
       Community.find(communityId),
       tagName && Tag.find({ name: tagName }),
       (users, community, tag) => {

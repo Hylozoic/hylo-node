@@ -1,5 +1,6 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'thanks',
+  requireFetch: false,
 
   comment: function () {
     return this.belongsTo(Comment)

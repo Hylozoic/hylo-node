@@ -5,11 +5,11 @@ import { updateMedia } from './util'
 export default async function updateComment (commenterId, id, params) {
   if (!id) throw new Error('updateComment called with no ID')
 
-  const comment = await Comment.find(id, {withRelated: 'post'})
+  const comment = await Comment.find(id, { withRelated: ['post', 'media'] })
 
   if (!comment) throw new Error('cannot find comment with ID', id)
 
-  let { text, attachments } = params  
+  let { text, attachments } = params
 
   text = sanitize(text)
 
@@ -21,6 +21,8 @@ export default async function updateComment (commenterId, id, params) {
 
   return bookshelf.transaction(trx =>
     comment.save(attrs, {transacting: trx})
-    .tap(updateMedia(comment, attachments, trx)))
-  .tap(comment => post.addFollowers(newFollowers))
+      .then(() => updateMedia(comment, attachments, trx))
+  )
+  .then(() => post.addFollowers(newFollowers))
+  .then(() => comment)
 }

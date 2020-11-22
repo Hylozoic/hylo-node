@@ -7,20 +7,32 @@ export async function joinCommunity (communityId, userId) {
 }
 
 export async function createJoinRequest (communityId, userId) {
-  return JoinRequest.create({
-    userId: userId,
-    communityId,
-  })
-  .then(request => ({ request }))
+  if (communityId && userId) {
+    return JoinRequest.create({
+      userId,
+      communityId,
+    })
+    .then(request => ({ request }))
+  } else {
+    throw new Error(`Invalid parameters to create join request`)
+  }
 }
 
 export async function acceptJoinRequest (joinRequestId, communityId, userId, moderatorId) {
-  await joinCommunity(communityId, userId)
-  await JoinRequest.update(joinRequestId, { status: 1 }, moderatorId)
-  return await JoinRequest.find(joinRequestId)
+  if (joinRequestId && communityId && userId && moderatorId) {
+    await joinCommunity(communityId, userId)
+    await JoinRequest.update(joinRequestId, { status: 1 }, moderatorId)
+    return await JoinRequest.find(joinRequestId)
+  } else {
+    throw new Error(`Invalid parameters to accept join request`)
+  }
 }
 
 export async function declineJoinRequest (joinRequestId) {
-  await JoinRequest.update(joinRequestId, { status: 2 })
-  return await JoinRequest.find(joinRequestId)
+  if (joinRequestId) {
+    await JoinRequest.update(joinRequestId, { status: 2 })
+    return await JoinRequest.find(joinRequestId)
+  } else {
+    throw new Error(`Invalid parameters to decline join request`)
+  }
 }

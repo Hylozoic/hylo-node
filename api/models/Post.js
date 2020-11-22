@@ -23,7 +23,7 @@ const commentersQuery = (limit, post, currentUserId) => q => {
   })
 
   if (currentUserId) {
-    q.where('users.id', 'NOT IN', BlockedUser.blockedFor(currentUserId))
+    q.whereNotIn('users.id', BlockedUser.blockedFor(currentUserId))
     q.orderBy(bookshelf.knex.raw(`case when user_id = ${currentUserId} then -1 else user_id end`))
   }
 
@@ -35,6 +35,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // Instance Methods
 
   tableName: 'posts',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)
@@ -441,8 +442,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Promise.all([
       Comment.query().where(where).orderBy('created_at', 'desc').limit(2)
       .pluck('id').then(ids => Promise.all([
-        Comment.query().where('id', 'in', ids).update('recent', true),
-        Comment.query().where('id', 'not in', ids)
+        Comment.query().whereIn('id', ids).update('recent', true),
+        Comment.query().whereNotIn('id', ids)
         .where({recent: true, post_id: postId})
         .update('recent', false)
       ])),
@@ -482,10 +483,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   fixTypedPosts: () =>
     bookshelf.transaction(transacting =>
-      Tag.where('name', 'in', ['request', 'offer', 'resource', 'intention'])
+      Tag.whereIn('name', ['request', 'offer', 'resource', 'intention'])
       .fetchAll({transacting})
       .then(tags => Post.query(q => {
-        q.where('type', 'in', ['request', 'offer', 'resource', 'intention'])
+        q.whereIn('type', ['request', 'offer', 'resource', 'intention'])
       }).fetchAll({withRelated: ['selectedTags', 'tags'], transacting})
       .then(posts => Promise.each(posts.models, post => {
         const untype = () => post.save({type: null}, {patch: true, transacting})

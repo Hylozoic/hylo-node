@@ -55,7 +55,7 @@ describe('network mutations', () => {
           { userId: user.id, isAdmin: true },
           { communityId: community.id, networkId: network.id }
         )
-        await community.fetch({ withRelated: [ 'network' ] })
+        community = await Community.where({id: community.id}).fetch({ withRelated: ['network']})
         expect(community.relations.network.id).to.equal(network.id)
       })
     })
@@ -76,7 +76,7 @@ describe('network mutations', () => {
 
   describe('moderators', () => {
     afterEach(() => {
-      return NetworkMembership.where('user_id', user.id).destroy()
+      return NetworkMembership.where('user_id', user.id).destroy({ require: false })
     })
 
     describe('addNetworkModeratorRole', () => {
@@ -105,6 +105,7 @@ describe('network mutations', () => {
           { isAdmin: true },
           { personId: user.id, networkId: network.id }
         )
+
         await network.fetch({ withRelated: [ 'moderators' ] })
         expect(network.relations.moderators.length).to.equal(0)
       })

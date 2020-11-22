@@ -4,7 +4,7 @@ import HasGroup from './mixins/HasGroup'
 var knex = bookshelf.knex
 
 var networkIdsQuery = function (userId) {
-  const communityIdsQuery = Group.pluckIdsForMember(userId, Community)
+  const communityIdsQuery = Group.selectIdsForMember(userId, Community)
 
   return knex.select().distinct('network_id').from('communities')
     .whereIn('id', communityIdsQuery).whereRaw('network_id is not null')
@@ -12,6 +12,7 @@ var networkIdsQuery = function (userId) {
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'networks',
+  requireFetch: false,
 
   communities: function () {
     return this.hasMany(Community).query({where: {'communities.active': true}})

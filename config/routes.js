@@ -11,10 +11,11 @@ module.exports.routes = {
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
 
-  'GET    /noo/network/:networkId':                       'NetworkController.findOne',
-  'POST   /noo/network':                                  'NetworkController.create',
-  'POST   /noo/network/validate':                         'NetworkController.validate',
-  'POST   /noo/network/:networkId':                       'NetworkController.update',
+  // TODO: these dont exist right now
+  // 'GET    /noo/network/:networkId':                       'NetworkController.findOne',
+  // 'POST   /noo/network':                                  'NetworkController.create',
+  // 'POST   /noo/network/validate':                         'NetworkController.validate',
+  // 'POST   /noo/network/:networkId':                       'NetworkController.update',
 
   'GET    /noo/admin/login':                              'AdminSessionController.create',
   'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',
@@ -47,8 +48,9 @@ module.exports.routes = {
   'GET    /noo/logout':                                   'SessionController.destroy',
   'DELETE /noo/session':                                  'SessionController.destroySession',
 
-  'POST   /noo/access-token':                             'AccessTokenController.create',
-  'DELETE /noo/access-token/revoke':                      'AccessTokenController.destroy',
+  // TODO: dont exist right now
+  // 'POST   /noo/access-token':                             'AccessTokenController.create',
+  // 'DELETE /noo/access-token/revoke':                      'AccessTokenController.destroy',
 
   'GET     /noo/nexudus':                                 'NexudusController.create',
 

@@ -11,7 +11,7 @@ describe('createProject', () => {
 
   before(function () {
     user = factories.user()
-    user2 = factories.user()    
+    user2 = factories.user()
     community = factories.community()
     return Promise.join(community.save(), user.save(), user2.save())
     .then(() => user.joinCommunity(community))
@@ -28,7 +28,7 @@ describe('createProject', () => {
     expect(project.get('type')).to.equal(Post.Type.PROJECT)
     const members = await project.members().fetch()
     expect(members.length).to.equal(2)
-    expect(members.map(m => m.id).sort()).to.deep.equal([user.id, user2.id].sort())    
+    expect(members.map(m => m.id).sort()).to.deep.equal([user.id, user2.id].sort())
   })
 })
 
@@ -109,7 +109,7 @@ describe('joinProject', () => {
     await joinProject(project.id, user.id)
     const members = await project.members().fetch()
     expect(members.length).to.equal(1)
-    expect(members.first().id).to.equal(user.id)    
+    expect(members.first().id).to.equal(user.id)
   })
 })
 

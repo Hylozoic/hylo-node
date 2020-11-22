@@ -47,7 +47,7 @@ export default {
     })
     .select('g2.group_data_id')
 
-    return model.where('id', 'in', subq)
+    return model.whereIn('id', subq)
   },
 
   groupMembers (where) {
@@ -62,7 +62,7 @@ export default {
     if (where) subq = subq.where(where)
 
     return User.collection().query(q => {
-      q.where('id', 'in', subq)
+      q.whereIn('id', subq)
       q.where('users.active', true)
     })
   },

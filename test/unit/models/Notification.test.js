@@ -1,6 +1,6 @@
 import ioClient from 'socket.io-client'
 import io from 'socket.io'
-import redis from 'socket.io-redis'
+import redis from '@sailshq/socket.io-redis'
 import url from 'url'
 
 import '../../setup'

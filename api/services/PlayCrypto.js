@@ -3,7 +3,7 @@ import crypto from 'crypto'
 const encryptionType = 'aes-128-ecb'
 
 function key () {
-  return new Buffer(process.env.PLAY_APP_SECRET.substring(0, 16), 'utf-8')
+  return Buffer.from(process.env.PLAY_APP_SECRET.substring(0, 16), 'utf-8')
 }
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
 
   decrypt: function (code) {
     var decipher = crypto.createDecipheriv(encryptionType, key(), '')
-    decipher.end(new Buffer(code, 'hex'))
+    decipher.end(Buffer.from(code, 'hex'))
     return decipher.read().toString()
   }
 }

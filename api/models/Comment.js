@@ -5,6 +5,7 @@ import EnsureLoad from './mixins/EnsureLoad'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'comments',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)

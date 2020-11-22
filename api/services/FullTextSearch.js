@@ -108,8 +108,8 @@ const searchInCommunities = (communityIds, opts) => {
     .orOn('communities_posts.post_id', 'comments.post_id')
   })
   .where(function () {
-    this.where('communities_users.community_id', 'in', communityIds)
-    .orWhere('communities_posts.community_id', 'in', communityIds)
+    this.whereIn('communities_users.community_id', communityIds)
+    .orWhereIn('communities_posts.community_id', communityIds)
   })
   .groupBy(columns)
   .orderBy('rank', 'desc')
