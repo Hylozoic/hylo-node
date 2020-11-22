@@ -6,13 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-* Catch-up tests
+- Catch-up tests
 
 ### Fixed
-* Upgrade knex and bookshelf to latest versions including required updates to other dependencies
-* Update code for breaking API changes in knex and bookshelf upgrades
-* CircleCI test running
-* Uploading images and don't destroy them when editing a comment
+- Upgrade knex and bookshelf to latest versions including required updates to other dependencies
+- Update code for breaking API changes in knex and bookshelf upgrades
+- CircleCI test running
+- Uploading images and don't destroy them when editing a comment
 
 ## [1.3.8]
 ### Added
