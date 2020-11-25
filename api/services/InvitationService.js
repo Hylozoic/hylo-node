@@ -36,11 +36,11 @@ module.exports = {
       !includeExpired && qb.whereNull('expired_by_id')
 
       qb.orderBy('created_at', 'desc')
-    }).fetchAll({withRelated: 'user'}))
+    }).fetchAll({withRelated: ['user']}))
     .then(invitations => ({
       total: invitations.length > 0 ? Number(invitations.first().get('total')) : 0,
       items: invitations.map(i => {
-        var user = i.relations.user.pick('id', 'name', 'avatar_url')
+        var user = i.relations.user
         if (isEmpty(user) && i.get('joined_user_id')) {
           user = {
             id: i.get('joined_user_id'),
@@ -49,7 +49,7 @@ module.exports = {
           }
         }
         return merge(i.pick('id', 'email', 'created_at', 'last_sent_at'), {
-          user: !isEmpty(user) ? user : null
+          user: !isEmpty(user) ? user.pick('id', 'name', 'avatar_url') : null
         })
       })
     }))
