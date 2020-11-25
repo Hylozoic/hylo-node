@@ -209,7 +209,7 @@ type Invitation {
   id: Int
   email: String
   createdAt: Date
-  lastSentAt: String
+  lastSentAt: Date
   error: String
 }
 type InvitationQuerySet {
