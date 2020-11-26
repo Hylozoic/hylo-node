@@ -79,6 +79,15 @@ module.exports = bookshelf.Model.extend(merge({
     }))
   },
 
+  projects: function () {
+    return this.hasMany(Post).query(q => q.leftJoin('groups', 'groups.group_data_id', 'posts.id')
+      .leftJoin('group_memberships', 'group_memberships.group_id', 'groups.id')
+      .whereNotNull('group_memberships.project_role_id')
+      .andWhere('group_memberships.user_id', this.id)
+      .andWhere('group_memberships.active', true)
+    )
+  },
+
   stripeAccount: function () {
     return this.belongsTo(StripeAccount)
   },

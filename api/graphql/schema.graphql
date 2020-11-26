@@ -117,6 +117,7 @@ type Person {
     topic: ID,
     boundingBox: [PointInput]
   ): PostQuerySet
+  projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
   votesTotal: Int
@@ -485,11 +486,6 @@ type Query {
     communityIds: [String],
     filter: String
   ): PersonQuerySet
-  projects(
-    context: String,
-    contextId: ID,
-    viewerId: ID
-  ): PostQuerySet
   topic(id: ID, name: String): Topic
   communityTopic(
     communitySlug: String,
