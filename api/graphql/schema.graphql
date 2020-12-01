@@ -117,6 +117,7 @@ type Person {
     topic: ID,
     boundingBox: [PointInput]
   ): PostQuerySet
+  projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
   votesTotal: Int
