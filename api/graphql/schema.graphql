@@ -104,6 +104,7 @@ type Person {
   locationObject: Location
   tagline: String
   comments(first: Int, offset: Int, order: String): CommentQuerySet
+  eventsAttending: PostQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   moderatedCommunityMemberships(first: Int, cursor: ID, order: String): [Membership]
