@@ -118,6 +118,7 @@ type Person {
     topic: ID,
     boundingBox: [PointInput]
   ): PostQuerySet
+  projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
   skillsToLearn(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
@@ -211,7 +212,7 @@ type Invitation {
   id: Int
   email: String
   createdAt: Date
-  lastSentAt: String
+  lastSentAt: Date
   error: String
 }
 type InvitationQuerySet {

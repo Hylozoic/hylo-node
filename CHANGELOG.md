@@ -4,6 +4,15 @@ All notable changes to Hylo Node (the Hylo server) will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Add projects to the User model and Person type
+
+## [1.4.1]
+
+### Fixed
+- Fixed bug that broke the Community invite page pending invites and the invite link
+
 ## [1.4.0]
 ### Changed
 - Catch-up tests
