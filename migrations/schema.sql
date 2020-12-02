@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.8
--- Dumped by pg_dump version 11.8
+-- Dumped from database version 11.9
+-- Dumped by pg_dump version 11.9
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1621,7 +1621,8 @@ ALTER SEQUENCE public.skills_id_seq OWNED BY public.skills.id;
 CREATE TABLE public.skills_users (
     id integer NOT NULL,
     skill_id bigint,
-    user_id bigint
+    user_id bigint,
+    type integer DEFAULT 0
 );
 
 
@@ -2629,11 +2630,11 @@ ALTER TABLE ONLY public.skills_users
 
 
 --
--- Name: skills_users skills_users_skill_id_user_id_unique; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: skills_users skills_users_skill_id_user_id_type_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.skills_users
-    ADD CONSTRAINT skills_users_skill_id_user_id_unique UNIQUE (skill_id, user_id);
+    ADD CONSTRAINT skills_users_skill_id_user_id_type_unique UNIQUE (skill_id, user_id, type);
 
 
 --

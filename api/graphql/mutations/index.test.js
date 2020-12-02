@@ -1,6 +1,8 @@
 import {
   addSkill,
+  addSkillToLearn,
   removeSkill,
+  removeSkillToLearn,
   flagInappropriateContent,
   allowCommunityInvites
 } from './index'
@@ -34,6 +36,11 @@ describe('mutations', () => {
   it('can add a skill', async () => {
     const skill = await addSkill(u1.id, 'New Skill')
     expect(skill.get('name')).to.equal('New Skill')
+  })
+
+  it('can add a skill to learn', async () => {
+    const skill = await addSkillToLearn(u1.id, 'New Skill To Learn')
+    expect(skill.get('name')).to.equal('New Skill To Learn')
   })
 
   it('sets allow community invites', async () => {
@@ -80,6 +87,27 @@ describe('mutations', () => {
     })
     .then(skills => {
       expect(skills.toJSON()).to.not.contain.a.thing.with.property('name', name)
+    })
+  })
+
+  it('removes a skill to learn from a user', () => {
+    let skillToRemove
+    let name = 'toBeRemoved'
+    return addSkillToLearn(u1.id, name)
+    .then(skill => {
+      skillToRemove = skill
+      return u1.skillsToLearn().fetch()
+    })
+    .then(skillsToLearn => {
+      expect(skillsToLearn.toJSON()).to.contain.a.thing.with.property('name', name)
+      return removeSkillToLearn(u1.id, skillToRemove.id)
+    })
+    .then(response => {
+      expect(response).to.have.property('success', true)
+      return u1.skillsToLearn().fetch()
+    })
+    .then(skillsToLearn => {
+      expect(skillsToLearn.toJSON()).to.not.contain.a.thing.with.property('name', name)
     })
   })
 

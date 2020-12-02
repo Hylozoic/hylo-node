@@ -10,6 +10,7 @@ import {
   addNetworkModeratorRole,
   addPeopleToProjectRole,
   addSkill,
+  addSkillToLearn,
   allowCommunityInvites,
   blockUser,
   createComment,
@@ -54,6 +55,7 @@ import {
   removeNetworkModeratorRole,
   removePost,
   removeSkill,
+  removeSkillToLearn,
   resendInvitation,
   respondToEvent,
   subscribe,
@@ -207,7 +209,8 @@ export function makeMutations (userId, isAdmin) {
     addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
     addPeopleToProjectRole(userId, peopleIds, projectRoleId),
 
-    addSkill: (root, { name, type }) => addSkill(userId, name, type),
+    addSkill: (root, { name }) => addSkill(userId, name),
+    addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
 
     allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
 
@@ -311,6 +314,7 @@ export function makeMutations (userId, isAdmin) {
       removePost(userId, postId, communityId || slug),
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
+    removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),
