@@ -11,14 +11,14 @@ const savedSearches = require('./lib/community/digest2/savedSearches')
 
 const sendAndLogDigests = type =>
   digest2.sendAllDigests(type)
-  .tap(results => sails.log.debug(`Sent digests to: ${results}`))
+  .then(results => { sails.log.debug(`Sent digests to: ${results}`); return results })
 
 const sendSavedSearchDigests = userId =>
   savedSearches.sendAllDigests(userId)
 
 const resendInvites = () =>
   Invitation.resendAllReady()
-  .tap(results => sails.log.debug(`Resent the following invites: ${results}`))
+  .then(results => { sails.log.debug(`Resent the following invites: ${results}`); return results })
 
 // Currently Nexudus updates are disabled
 // const updateFromNexudus = opts =>
