@@ -873,7 +873,6 @@ type CommunityQuerySet {
 type Skill {
   id: ID
   name: String
-  type: Int
 }
 
 type SkillQuerySet {

@@ -435,9 +435,6 @@ export default async function makeModels (userId, isAdmin) {
     Skill: {
       model: Skill,
       attributes: ['name'],
-      getters: {
-        type: s => s.pivot ? s.pivot.get('type') : null
-      },
       fetchMany: ({ autocomplete, first = 1000, offset = 0 }) =>
         searchQuerySet('skills', {
           autocomplete, first, offset, currentUserId: userId
