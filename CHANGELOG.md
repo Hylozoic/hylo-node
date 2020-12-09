@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.3]
+### Added
+- Add Skills to learn to users
+
 ## [1.4.2]
 ### Fixed
 - Fixed bug that prevented daily email digests from being sent
