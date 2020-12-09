@@ -5,10 +5,19 @@ module.exports = bookshelf.Model.extend({
   requireFetch: false,
 
   users: function () {
-    return this.belongsToMany(User, 'skills_users')
+    return this.belongsToMany(User, 'skills_users').query({ where: { type: Skill.Type.HAS } })
+  },
+
+  usersLearning: function () {
+    return this.belongsToMany(User, 'skills_users').query({ where: { type: Skill.Type.LEARNING } })
   }
 
 }, {
+
+  Type: {
+    HAS: 0,
+    LEARNING: 1
+  },
 
   find: function (nameOrId, opts = {}) {
     if (!nameOrId) return Promise.resolve(null)

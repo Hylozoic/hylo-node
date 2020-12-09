@@ -116,7 +116,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   skills: function () {
-    return this.belongsToMany(Skill, 'skills_users')
+    return this.belongsToMany(Skill, 'skills_users').query({ where: { type: Skill.Type.HAS } }).withPivot(['type'])
+  },
+
+  skillsToLearn: function () {
+    return this.belongsToMany(Skill, 'skills_users').query({ where: { type: Skill.Type.LEARNING } }).withPivot(['type'])
   },
 
   blockedUsers: function () {

@@ -27,6 +27,7 @@ type Me {
   postsTotal: Int
   settings: UserSettings
   skills(first: Int, cursor: ID): SkillQuerySet
+  skillsToLearn(first: Int, cursor: ID): SkillQuerySet
   tagline: String
   twitterName: String
   unseenThreadCount: Int
@@ -119,6 +120,7 @@ type Person {
   ): PostQuerySet
   projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
+  skillsToLearn(first: Int, cursor: ID): SkillQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
   votesTotal: Int
   messageThreadId: ID
@@ -709,7 +711,8 @@ type Mutation {
   addModerator(personId: ID, communityId: ID): Community
   addNetworkModeratorRole(personId: ID, networkId: ID): Network
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
-  addSkill(name: String): Skill
+  addSkill(name: String, type: Int): Skill
+  addSkillToLearn(name: String): Skill
   allowCommunityInvites(communityId: ID, data: Boolean): Community
   blockUser(blockedUserId: ID): GenericResult
   createComment(data: CommentInput): Comment
@@ -754,6 +757,7 @@ type Mutation {
   removeNetworkModeratorRole(personId: ID, networkId: ID): Network
   removePost(postId: ID, slug: String, communityId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
+  removeSkillToLearn(id: ID, name: String): GenericResult
   resendInvitation(invitationId: ID): GenericResult
   respondToEvent(id: ID, response: String): GenericResult
   subscribe(communityId: ID, topicId: ID, isSubscribing: Boolean): GenericResult

@@ -58,6 +58,7 @@ export default async function makeModels (userId, isAdmin) {
         'posts',
         'locationObject',
         {skills: {querySet: true}},
+        {skillsToLearn: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
@@ -115,6 +116,7 @@ export default async function makeModels (userId, isAdmin) {
         {projects: {querySet: true}},
         {comments: {querySet: true}},
         {skills: {querySet: true}},
+        {skillsToLearn: {querySet: true}},
         {votes: {querySet: true}}
       ],
       filter: nonAdminFilter(personFilter(userId)),

@@ -147,7 +147,7 @@ export function unlinkAccount (userId, provider) {
   .then(() => ({success: true}))
 }
 
-export async function addSkill (userId, name) {
+async function createSkill(name) {
   name = trim(name)
   if (isEmpty(name)) {
     throw new Error('Skill cannot be blank')
@@ -163,9 +163,28 @@ export async function addSkill (userId, name) {
     }
     skill = await Skill.find(name)
   }
+  return skill
+}
+
+export async function addSkill (userId, name) {
+  const skill = await createSkill(name)
 
   try {
-    await skill.users().attach(userId)
+    await skill.users().attach({ user_id: userId })
+  } catch (err) {
+    if (!err.message || !err.message.includes('duplicate')) {
+      throw err
+    }
+  }
+
+  return skill
+}
+
+export async function addSkillToLearn (userId, name) {
+  const skill = await createSkill(name)
+
+  try {
+    await skill.usersLearning().attach({ user_id: userId, type: Skill.Type.LEARNING })
   } catch (err) {
     if (!err.message || !err.message.includes('duplicate')) {
       throw err
@@ -179,7 +198,16 @@ export function removeSkill (userId, skillIdOrName) {
   return Skill.find(skillIdOrName)
   .then(skill => {
     if (!skill) throw new Error(`Couldn't find skill with ID or name ${skillIdOrName}`)
-    return skill.users().detach(userId)
+    return skill.users().detach({ user_id: userId, type: Skill.Type.HAS })
+  })
+  .then(() => ({success: true}))
+}
+
+export function removeSkillToLearn (userId, skillIdOrName) {
+  return Skill.find(skillIdOrName)
+  .then(skill => {
+    if (!skill) throw new Error(`Couldn't find skill with ID or name ${skillIdOrName}`)
+    return skill.usersLearning().detach({ user_id: userId, type: Skill.Type.LEARNING })
   })
   .then(() => ({success: true}))
 }
