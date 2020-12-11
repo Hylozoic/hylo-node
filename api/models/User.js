@@ -15,6 +15,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Activity, 'reader_id')
   },
 
+  affiliations: function () {
+    return this.hasMany(Affiliation).where('is_active', true)
+  },
+
   comments: function () {
     return this.hasMany(Comment)
     .query(q => {

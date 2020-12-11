@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Add eventsAttending to the User model and Person type
+- Add migration to create user_affiliations table and model/resolvers for Affiliation
 
 ## [1.4.3]
 ### Added

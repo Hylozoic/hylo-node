@@ -6,6 +6,10 @@ import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUr
 import convertGraphqlData from './convertGraphqlData'
 
 export {
+  createAffiliation,
+  deleteAffiliation
+} from './affiliation'
+export {
   createComment,
   createMessage,
   deleteComment,

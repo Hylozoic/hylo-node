@@ -17,6 +17,7 @@ type Me {
   linkedinUrl: String
   location: String
   locationObject: Location
+  affiliations: AffiliationQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
@@ -103,6 +104,7 @@ type Person {
   location: String
   locationObject: Location
   tagline: String
+  affiliations: AffiliationQuerySet
   comments(first: Int, offset: Int, order: String): CommentQuerySet
   eventsAttending: PostQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
@@ -534,6 +536,13 @@ type Query {
   checkInvitation(invitationToken: String, accessCode: String): CheckInvitationResult
 }
 
+input AffiliationInput {
+  role: String
+  preposition: String
+  orgName: String
+  url: String
+}
+
 input AttachmentInput {
   url: String
   attachmentType: String
@@ -716,6 +725,7 @@ type Mutation {
   addSkillToLearn(name: String): Skill
   allowCommunityInvites(communityId: ID, data: Boolean): Community
   blockUser(blockedUserId: ID): GenericResult
+  createAffiliation(data: AffiliationInput): Affiliation
   createComment(data: CommentInput): Comment
   createCommunity(data: CommunityInput): Membership
   createInvitation(communityId: ID, data: InviteInput): CreatedInvitations
@@ -727,6 +737,7 @@ type Mutation {
   createSavedSearch(data: SavedSearchInput): SavedSearch
   createTopic(topicName: String, communityId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   declineJoinRequest(joinRequestId: ID): JoinRequest
+  deleteAffiliation(id: ID): ID
   deleteComment(id: ID): GenericResult
   deleteCommunity(id: ID): GenericResult
   deleteCommunityTopic(id: ID): GenericResult
@@ -906,6 +917,24 @@ type SavedSearchQuerySet {
   total: Int
   hasMore: Boolean
   items: [SavedSearch]
+}
+
+type Affiliation {
+  id: ID
+  user: Person
+  role: String
+  preposition: String
+  orgName: String
+  url: String
+  isActive: Boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+type AffiliationQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Affiliation]
 }
 
 input InappropriateContentInput {
