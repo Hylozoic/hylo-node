@@ -100,7 +100,8 @@ export function allowCommunityInvites (communityId, data) {
 export async function leaveCommunity (userId, communityId) {
   const community = await Community.find(communityId)
   const user = await User.find(userId)
-  return user.leaveCommunity(community)
+  await user.leaveCommunity(community)
+  return communityId
 }
 
 export function findOrCreateThread (userId, data) {
