@@ -218,7 +218,7 @@ export function makeMutations (userId, isAdmin) {
 
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
 
-    createAffiliation: (root, {role, preposition, orgName, url}) => createAffiliation(userId, role, preposition, orgName, url),
+    createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
     createComment: (root, { data }) => createComment(userId, data),
 

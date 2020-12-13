@@ -7,9 +7,9 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
 
-  create: function (opts) {
+  create: async function (opts) {
     const { userId, role, preposition, orgName, url } = opts
-    return new Affiliation({
+    const affiliation = await this.forge({
       user_id: userId,
       created_at: new Date(),
       role,
@@ -17,6 +17,8 @@ module.exports = bookshelf.Model.extend({
       org_name: orgName,
       url
     }).save()
+
+    return affiliation
   },
 
   find: function (id) {

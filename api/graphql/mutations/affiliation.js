@@ -3,8 +3,8 @@ export async function canDeleteAffiliation (userId, affiliationId) {
   return affiliation.get('user_id') === userId
 }
 
-export async function createAffiliation (userId, role, preposition, orgName, url) {
-  if (communityId && userId) {
+export async function createAffiliation (userId, { role, preposition, orgName, url }) {
+  if (userId && role && preposition && orgName) {
     return Affiliation.create({
       userId,
       role,
@@ -12,7 +12,6 @@ export async function createAffiliation (userId, role, preposition, orgName, url
       orgName,
       url
     })
-    .then(affiliation => ({ affiliation }))
   } else {
     throw new Error(`Invalid parameters to create affiliation`)
   }
