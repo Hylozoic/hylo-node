@@ -26,3 +26,6 @@ latest.dump
 .nyc_output/
 startserver.sh
 .vscode
+# .devcontainer/datahome is for local data within the container, e.g. shell history
+.devcontainer/datahome/*
+!.devcontainer/datahome/.gitkeep
