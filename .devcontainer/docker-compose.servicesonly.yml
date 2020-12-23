@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  db:
+    extends:
+      file: docker-compose.yml
+      service: db
+    ports:
+      - "5432:5432"
+
+  redis:
+    extends:
+      file: docker-compose.yml
+      service: redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres-data:
