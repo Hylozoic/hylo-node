@@ -57,6 +57,7 @@ export default async function makeModels (userId, isAdmin) {
         'memberships',
         'posts',
         'locationObject',
+        {affiliations: {querySet: true}},
         {skills: {querySet: true}},
         {skillsToLearn: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
@@ -112,6 +113,7 @@ export default async function makeModels (userId, isAdmin) {
         'memberships',
         'moderatedCommunityMemberships',
         'locationObject',
+        {affiliations: {querySet: true}},
         {eventsAttending: {querySet: true}},
         {posts: {querySet: true}},
         {projects: {querySet: true}},
@@ -301,6 +303,20 @@ export default async function makeModels (userId, isAdmin) {
       ],
       relations: ['user' ],
       fetchMany: ({ communityId }) => JoinRequest.where({ 'community_id': communityId })
+    },
+
+    Affiliation: {
+      model: Affiliation,
+      attributes: [
+        'created_at',
+        'updated_at',
+        'role',
+        'preposition',
+        'org_name',
+        'url',
+        'is_active',
+      ],
+      relations: ['user']
     },
 
     EventInvitation: {
