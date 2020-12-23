@@ -13,6 +13,20 @@ repository in VSCode and select the `Reopen in container` option when it pops
 up. From there, `yarn run dev` should work immediately.
 
 
+# Running backend services via Docker
+
+Contributors who do not use VSCode may still wish to run the backend services
+via Docker to simplify configuration. You may do this by running the following
+command from the repo root:
+
+    docker-compose -f .devcontainer/docker-compose.servicesonly.yml up
+
+Once the DB & Redis are active, you can boot the Hylo web app with the usual
+`npm run dev` command.
+
+Note that this requires a minimum of Docker Compose v1.27 in order to run.
+
+
 # Initializing the database
 
 ```
