@@ -1,7 +1,7 @@
 {
   "name": "hylo-node",
   "private": true,
-  "version": "1.4.3",
+  "version": "1.4.4",
   "engines": {
     "node": "^12",
     "yarn": "^1.2.1"
