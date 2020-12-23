@@ -45,3 +45,9 @@ to talk to the Postgres and Redis servers running alongside hylo-node. The
 example file contains invalid values for OAuth clients (e.g. Google and
 Facebook), so be sure to fill in real values if you plan to use those
 integrations.
+
+If you have an existing configuration, the two configuration parameters to pay
+attention to are:
+
+    DATABASE_URL=postgres://postgres:postgres@localhost:5432/hylo
+    REDIS_URL=redis://localhost:6379
