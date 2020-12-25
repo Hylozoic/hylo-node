@@ -13,6 +13,7 @@ import {
   addSkillToLearn,
   allowCommunityInvites,
   blockUser,
+  createAffiliation,
   createComment,
   createCommunity,
   createInvitation,
@@ -24,6 +25,7 @@ import {
   createSavedSearch,
   createTopic,
   declineJoinRequest,
+  deleteAffiliation,
   deleteComment,
   deleteCommunity,
   deleteCommunityTopic,
@@ -216,6 +218,8 @@ export function makeMutations (userId, isAdmin) {
 
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
 
+    createAffiliation: (root, { data }) => createAffiliation(userId, data),
+
     createComment: (root, { data }) => createComment(userId, data),
 
     createCommunity: (root, { data }) => createCommunity(userId, data),
@@ -242,6 +246,8 @@ export function makeMutations (userId, isAdmin) {
     createTopic: (root, { topicName, communityId, isDefault, isSubscribing }) => createTopic(userId, topicName, communityId, isDefault, isSubscribing),
 
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
+
+    deleteAffiliation: (root, { id }) => deleteAffiliation(userId, id),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
 
