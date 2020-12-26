@@ -2,7 +2,7 @@ import { countTotal } from '../../../lib/util/knex'
 import { filterAndSortUsers } from './util'
 
 export default function (opts) {
-  const { communities, network } = opts
+  const { groups } = opts
   return User.query(function (qb) {
     qb.limit(opts.limit || 1000)
     qb.offset(opts.offset || 0)
@@ -16,7 +16,7 @@ export default function (opts) {
     }, qb)
 
     if (opts.sort === 'join') {
-      if (!communities || communities.length !== 1) {
+      if (!groups || groups.length !== 1) {
         throw new Error('When sorting by join date, you must specify exactly one community.')
       }
     }
@@ -26,26 +26,11 @@ export default function (opts) {
     // TODO perhaps the group-related code below can be refactored into
     // a more general-purpose form?
 
-    if (communities) {
+    if (groups) {
       qb.join('group_memberships', 'group_memberships.user_id', 'users.id')
       qb.join('groups', 'groups.id', 'group_memberships.group_id')
-      qb.whereIn('groups.group_data_id', opts.communities)
-      qb.where({
-        'groups.group_data_type': Group.DataType.COMMUNITY,
-        'group_memberships.active': true
-      })
-    }
-
-    if (network) {
-      qb.distinct()
-      qb.join('group_memberships', 'group_memberships.user_id', 'users.id')
-      qb.join('groups', 'groups.id', 'group_memberships.group_id')
-      qb.join('communities', 'communities.id', 'groups.group_data_id')
-      qb.where({
-        'groups.group_data_type': Group.DataType.COMMUNITY,
-        'group_memberships.active': true,
-        'communities.network_id': network
-      })
+      qb.whereIn('groups.group_data_id', opts.groups)
+      qb.where('group_memberships.active', true)
     }
 
     if (opts.start_time && opts.end_time) {
@@ -56,7 +41,7 @@ export default function (opts) {
       qb.whereNotIn('id', opts.exclude)
     }
 
-    if (network || (communities && communities.length > 1)) {
+    if (groups && groups.length > 1) {
       // prevent duplicates due to the joins
       if (opts.sort === 'join') {
         qb.groupBy(['users.id', 'group_memberships.created_at'])

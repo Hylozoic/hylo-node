@@ -27,9 +27,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Thank)
   },
 
-  community: async function () {
-    await this.relations.post.load(['communities'])
-    return this.relations.post.relations.communities.first()
+  group: async function () {
+    await this.relations.post.load(['groups'])
+    return this.relations.post.relations.groups.first()
   },
 
   tags: function () {
@@ -64,7 +64,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     await this.ensureLoad(toLoad)
     const actorId = this.get('user_id')
     const followers = await this.relations.post.followers().fetch()
-    const communityId = await this.community().id
+    const groupId = await this.group().id
     const mentionedIds = RichText.getUserMentions(this.get('text'))
 
     const createActivity = reason => id => ({
@@ -73,7 +73,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       comment_id: this.id,
       parent_comment_id: this.get('comment_id') || null,
       post_id: this.relations.post.id,
-      community_id: communityId,
+      group_id: groupId,
       reason
     })
 

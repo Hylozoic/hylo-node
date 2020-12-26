@@ -2,10 +2,9 @@ import forUsers from './Search/forUsers'
 import forPosts from './Search/forPosts'
 import { countTotal } from '../../lib/util/knex'
 import addTermToQueryBuilder from './Search/addTermToQueryBuilder'
-import { filterAndSortCommunities } from './Search/util'
+import { filterAndSortGroups } from './Search/util'
 import { transform } from 'lodash'
 import { flatten, flow, uniq, get } from 'lodash/fp'
-import { myCommunityIds } from '../models/util/queryFilters'
 
 module.exports = {
   forPosts,
@@ -14,62 +13,48 @@ module.exports = {
 
   forSkills: opts => Skill.search(opts),
 
-  forCommunities: function (opts) {
-    return Community.query(qb => {
-      if (opts.communities) {
-        qb.whereIn('communities.id', opts.communities)
+  forGroups: function (opts) {
+    return Group.query(qb => {
+      if (opts.groups) {
+        qb.whereIn('groups.id', opts.groups)
       }
 
       if (opts.autocomplete) {
-        qb.whereRaw('communities.name ilike ?', opts.autocomplete + '%')
-      }
-
-      if (opts.networkSlugs) {
-        qb.join('networks', 'communities.network_id', '=', 'networks.id')
-        qb.whereIn('networks.slug', opts.networkSlugs)
-      }
-
-      if (opts.networks) {
-        qb.whereIn('communities.network_id', opts.networks)
+        qb.whereRaw('groups.name ilike ?', opts.autocomplete + '%')
       }
 
       if (opts.slug) {
-        qb.whereIn('communities.slug', opts.slug)
+        qb.whereIn('groups.slug', opts.slug)
       }
 
       if (opts.is_public) {
-        qb.where('is_public', opts.is_public)
+        qb.where('groups.visibility', Group.Visibility.PUBLIC)
       }
 
-      filterAndSortCommunities({
+      filterAndSortGroups({
         search: opts.term,
         sortBy: opts.sort,
         boundingBox: opts.boundingBox}, qb)
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
-      countTotal(qb, 'communities', opts.totalColumnName)
+      countTotal(qb, 'groups', opts.totalColumnName)
 
       qb.limit(opts.limit)
       qb.offset(opts.offset)
-      qb.groupBy('communities.id')
+      qb.groupBy('groups.id')
     })
   },
 
   forTags: function (opts) {
     return Tag.query(q => {
-      q.join('communities_tags', 'communities_tags.tag_id', '=', 'tags.id')
-      q.join('communities', 'communities.id', '=', 'communities_tags.community_id')
-      q.whereIn('communities.id', myCommunityIds(opts.userId))
-      q.where('communities.active', true)
+      q.join('groups_tags', 'groups_tags.tag_id', '=', 'tags.id')
+      q.join('groups', 'groups.id', '=', 'groups_tags.group_id')
+      q.whereIn('groups.id', Group.selectIdsForMember(opts.userId))
+      q.where('groups.active', true)
 
-      if (opts.communitySlug) {
-        q.where('communities.slug', '=', opts.communitySlug)
-      }
-
-      if (opts.networkSlug) {
-        q.join('networks', 'networks.id', 'communities.network_id')
-        q.where('networks.slug', '=', opts.networkSlug)
+      if (opts.groupSlug) {
+        q.where('groups.slug', '=', opts.groupSlug)
       }
 
       if (opts.name) {
@@ -81,18 +66,18 @@ module.exports = {
       }
 
       if (opts.isDefault) {
-        q.where('communities_tags.is_default', true)
+        q.where('groups_tags.is_default', true)
       }
 
       if (opts.visibility) {
-        q.whereIn('communities_tags.visibility', opts.visibility)
+        q.whereIn('groups_tags.visibility', opts.visibility)
       }
 
       if (opts.sort) {
         if (opts.sort === 'name') {
           q.orderByRaw('lower(tags.name) ASC')
         } else if (opts.sort === 'num_followers') {
-          q.select(bookshelf.knex.raw('sum(communities_tags.num_followers) as num_followers'))
+          q.select(bookshelf.knex.raw('sum(groups_tags.num_followers) as num_followers'))
           q.orderBy('num_followers', 'desc')
         } else {
           q.orderBy(opts.sort, 'asc')
@@ -109,9 +94,9 @@ module.exports = {
   fullTextSearch: function (userId, args) {
     var items, total
     args.limit = args.first
-    return fetchAllCommunityIds(userId, args)
-    .then(communityIds =>
-      FullTextSearch.searchInCommunities(communityIds, args))
+    return fetchAllGroupIds(userId, args)
+    .then(groupIds =>
+      FullTextSearch.searchInGroups(groupIds, args))
       .then(items_ => {
         items = items_
         total = get('0.total', items)
@@ -137,16 +122,9 @@ module.exports = {
   }
 }
 
-const fetchAllCommunityIds = (userId, { communityIds, networkId }) => {
-  if (communityIds) return Promise.resolve(communityIds)
-  if (networkId) {
-    return Network.find(networkId, {withRelated: 'communities'})
-    .then(n => n.relations.communities.map(c => c.id))
-  }
-  return Promise.join(
-    Network.activeCommunityIds(userId),
-    Group.pluckIdsForMember(userId, Community)
-  ).then(flow(flatten, uniq))
+const fetchAllGroupIds = (userId, { groupIds }) => {
+  if (groupIds) return Promise.resolve(groupIds)
+  return Group.pluckIdsForMember(userId)
 }
 
 const obfuscate = text => Buffer.from(text).toString('hex')

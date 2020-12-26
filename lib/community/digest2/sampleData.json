@@ -1,10 +1,10 @@
 {
   "subject": "Stuff is happening in Sandbox!",
-  "community_avatar_url": "https://d3ngex8q79bk55.cloudfront.net/community/1/avatar/devAvatar.png",
-  "community_name": "Sandbox",
+  "group_avatar_url": "https://d3ngex8q79bk55.cloudfront.net/group/1/avatar/devAvatar.png",
+  "group_name": "Sandbox",
   "email_settings_url": "http://localhost:9000/settings?expand=account",
   "tracking_pixel_url": "TODO(tracking_pixel_url)",
-  "community_url": "http://localhost:9000/c/sandbox",
+  "group_url": "http://localhost:9000/g/sandbox",
   "form_action_url": "http://localhost:9000/noo/hook/postForm",
   "time_period": "last week",
   "recipient": {
@@ -26,7 +26,7 @@
       "id": 2,
       "user": {
         "name": "Motoko Kusanagi",
-        "avatar_url": "http://media.steampowered.com/steamcommunity/public/images/avatars/ff/ff652c5079d65d0c98d107586b7630e7275cde74_full.jpg"
+        "avatar_url": "http://media.steampowered.com/steamgroup/public/images/avatars/ff/ff652c5079d65d0c98d107586b7630e7275cde74_full.jpg"
       },
       "title": "Batou's been putting organic oil in the Tachikomas again!",
       "details": "<p>Someone make him stop!</p>",
@@ -80,7 +80,7 @@
           "text": "<p>It's all here: http://magic.foo.com/supplements</p>",
           "user": {
             "name": "Motoko",
-            "avatar_url": "http://media.steampowered.com/steamcommunity/public/images/avatars/ff/ff652c5079d65d0c98d107586b7630e7275cde74_full.jpg"
+            "avatar_url": "http://media.steampowered.com/steamgroup/public/images/avatars/ff/ff652c5079d65d0c98d107586b7630e7275cde74_full.jpg"
           }
         },
         {

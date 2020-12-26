@@ -5,7 +5,7 @@
   UserImport.import({
     url: 'http://foo.com/test.csv',
     headers: ['name', 'email', 'avatar_url'],
-    community: {id: 1}
+    group: {id: 1}
   })
 
 */
@@ -58,7 +58,7 @@ const runWithJSONStream = function (stream, options, rowAction) {
 
 export function createUser (attrs, options) {
   if (!attrs) return
-  const { verbose, community, dryRun } = options
+  const { verbose, group, dryRun } = options
   const { name, email } = attrs
 
   if (!validator.isEmail(email)) {
@@ -80,7 +80,7 @@ export function createUser (attrs, options) {
 
     // TODO handle skills as tags
     return User.create(_.merge(attrs, {
-      community: community,
+      group: group,
       settings: {
         digest_frequency: 'weekly'
       },
@@ -88,7 +88,7 @@ export function createUser (attrs, options) {
       updated_at: new Date()
     }))
     .tap(user => {
-      if (community && community.id === '9') {
+      if (group && group.id === '9') {
         return Email.sendSimpleEmail(
           user.get('email'), 'tem_GC822hsXScRMV23pddPNZM',
           {recipient_name: name.split(' ')[0]},
@@ -181,7 +181,7 @@ export const operations = {
         type: 'intention'
       })
       .then(post => Promise.join(
-        options.community.posts().attach(post.id),
+        options.group.posts().attach(post.id),
         post.followers().attach(user.id)
       ))
     })
@@ -189,7 +189,7 @@ export const operations = {
 }
 
 export const runImport = options => {
-  if (!options.community) throw new Error('No community specified')
+  if (!options.group) throw new Error('No group specified')
 
   const method = options.json ? runWithJSONStream : runWithCSVStream
   return method(getStream(options), options, row => {
@@ -212,11 +212,11 @@ if (require.main === module) {
   skiff.lift({
     log: {level: 'warn'},
     start: () =>
-      Community.find('impact-hub-baltimore')
-      .then(community => runImport({
+      Group.find('impact-hub-baltimore')
+      .then(group => runImport({
         json: true,
         filename: './nexudus.json',
-        community
+        group
       }))
       .then(skiff.lower)
   })

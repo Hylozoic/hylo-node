@@ -93,8 +93,8 @@ module.exports = {
     return {postId: ids[0], userId: ids[1]}
   },
 
-  postCreationAddress: function (communityId, userId, type) {
-    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, communityId, userId, type)
+  postCreationAddress: function (groupId, userId, type) {
+    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, groupId, userId, type)
     return format('create-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN)
   },
 
@@ -104,11 +104,11 @@ module.exports = {
     var plaintext = PlayCrypto.decrypt(match[1]).replace(salt, '')
     var decodedData = plaintext.split('|')
 
-    return {communityId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
+    return {groupId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
   },
 
-  formToken: function (communityId, userId) {
-    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, communityId, userId)
+  formToken: function (groupId, userId) {
+    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, groupId, userId)
     return PlayCrypto.encrypt(plaintext)
   },
 
@@ -117,7 +117,7 @@ module.exports = {
     var plaintext = PlayCrypto.decrypt(token).replace(salt, '')
     var decodedData = plaintext.split('|')
 
-    return {communityId: decodedData[0], userId: decodedData[1]}
+    return {groupId: decodedData[0], userId: decodedData[1]}
   }
 
 }

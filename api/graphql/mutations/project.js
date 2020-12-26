@@ -5,7 +5,7 @@ var stripe = require("stripe")(process.env.STRIPE_API_KEY);
 export function createProject (userId, data) {
   // add creator as a member of project on creation
   const memberIds = data.memberIds
-    ? uniq(data.memberIds.concat([userId])) 
+    ? uniq(data.memberIds.concat([userId]))
     : []
   const projectData = Object.assign({}, data, {type: Post.Type.PROJECT, memberIds})
   return createPost(userId, projectData)
@@ -73,14 +73,14 @@ export async function addPeopleToProjectRole (userId, peopleIds, projectRoleId) 
     throw new Error('No associated project')
   }
 
-  const checkForSharedCommunity = id =>
-    Group.inSameGroup([userId, id], Community)
+  const checkForSharedGroup = id =>
+    Group.inSameGroup([userId, id])
     .then(doesShare => {
       if (!doesShare) throw new Error(`no shared communities with user ${id}`)
     })
 
   return Promise.map(peopleIds, async id => {
-    await checkForSharedCommunity(id)
+    await checkForSharedGroup(id)
     var gm = await GroupMembership.forPair(id, project).fetch()
     if (!gm) {
       await project.addGroupMembers([id])
@@ -130,7 +130,7 @@ export async function createStripePaymentNotifications (contribution, creatorId)
 
 export async function processStripeToken (userId, projectId, token, amount) {
   const applicationFeeFraction = 0.01
-  const project = await Post.find(projectId)  
+  const project = await Post.find(projectId)
   if (!project) {
     throw new Error (`Can't find project with that id`)
   }

@@ -54,7 +54,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   }
 
   if (sort === 'posts.updated_at' && showPinnedFirst) {
-    q.orderByRaw('communities_posts.pinned_at is null asc, communities_posts.pinned_at desc, posts.updated_at desc')
+    q.orderByRaw('groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, posts.updated_at desc')
   } else if (sort) {
     q.orderBy(sort, 'desc')
   }
@@ -92,17 +92,17 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, search, so
   }
 })
 
-export const filterAndSortCommunities = curry((opts, q) => {
+export const filterAndSortGroups = curry((opts, q) => {
   const { search, sortBy = 'name', boundingBox } = opts
 
   if (search) {
     addTermToQueryBuilder(search, q, {
-      columns: ['communities.name']
+      columns: ['groups.name']
     })
   }
 
   if (boundingBox) {
-    q.join('locations', 'locations.id', '=', 'communities.location_id')
+    q.join('locations', 'locations.id', '=', 'groups.location_id')
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 

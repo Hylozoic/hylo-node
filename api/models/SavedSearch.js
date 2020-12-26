@@ -11,12 +11,8 @@ module.exports = bookshelf.Model.extend({
     return boundingBox
   },
 
-  community: async function () {
-    return this.get('context') === 'community' ? await Community.find(this.get('context_id')) : null
-  },
-
-  network: async function () {
-    return this.get('context') === 'network' ? await Network.find(this.get('context_id')) : null
+  group: async function () {
+    return this.get('context') === 'group' ? await Group.find(this.get('group_id')) : null
   },
 
   topics: async function () {
@@ -55,7 +51,7 @@ module.exports = bookshelf.Model.extend({
     ${topics.length > 0 ? `and p.tag_ids && (select tag_ids from search)` : ''}
     and CONCAT('{',p.type,'}')::varchar[] && (select post_types from search)
     ${contextQuery}
-    order by p.id desc 
+    order by p.id desc
     `
     const result = await bookshelf.knex.raw(query)
     const postIds = (result.rows || []).map(p => p.id)
@@ -70,13 +66,14 @@ module.exports = bookshelf.Model.extend({
 
     let query
 
+    // TODO: fix up to use groups
     switch (context) {
       case 'all':
         query = `
           and p.id in (select p.id from posts p
-          left join communities_posts cp on p.id = cp.post_id
-          left join communities_users cu on cu.community_id = cp.community_id
-          where cu.user_id=${userId}
+          left join groups_posts gp on p.id = gp.post_id
+          left join group_memberships gm on gm.group_id = gp.group_id
+          where gm.user_id=${userId}
           and p.id > ${lastPostId})
         `
         break
@@ -85,20 +82,11 @@ module.exports = bookshelf.Model.extend({
           and p.is_public = true
         `
         break
-      case 'community':
+      case 'group':
         query = `
           and p.id in (select p.id from posts p
-          left join communities_posts cp on p.id = cp.post_id
-          where cp.community_id=${this.get('context_id')}
-          and p.id > ${lastPostId})
-        `
-        break
-      case 'network':
-        query = `
-          and p.id in (select p.id from posts p
-          left join communities_posts cp on p.id = cp.post_id
-          left join communities c on c.id = cp.community_id
-          where c.network_id=${this.get('context_id')}
+          left join groups_posts gp on p.id = gp.post_id
+          where gp.group_id=${this.get('group_id')}
           and p.id > ${lastPostId})
         `
         break
@@ -113,21 +101,16 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
   create: async function (params) {
-    const { boundingBox, communitySlug, context, lastPostId, name, networkSlug, postTypes, searchText, topicIds, userId } = params
+    const { boundingBox, groupSlug, context, lastPostId, name, postTypes, searchText, topicIds, userId } = params
 
-    let community, network, context_id
+    let group, group_id
 
-    const validContexts = ['all', 'public', 'network', 'community']
+    const validContexts = ['all', 'public', 'group']
     if (!validContexts.includes(context)) throw new Error(`Invalid context: ${context}`)
 
-    if (context === 'community') {
-      community = await Community.find(communitySlug)
-      context_id = community.id
-    }
-
-    if (context === 'network') {
-      network = await Network.find(networkSlug)
-      context_id = network.id
+    if (context === 'group') {
+      group = await Group.find(groupSlug)
+      group_id = group.id
     }
 
     const st = knexPostgis(bookshelf.knex)
@@ -137,7 +120,7 @@ module.exports = bookshelf.Model.extend({
       user_id: userId,
       name,
       created_at: new Date(),
-      context_id,
+      group_id,
       context,
       is_active: true,
       search_text: searchText,
@@ -152,7 +135,7 @@ module.exports = bookshelf.Model.extend({
 
     return search
   },
-  
+
   delete: async function(id) {
     await SavedSearch.query().where({ id }).update({ is_active: false })
     return id

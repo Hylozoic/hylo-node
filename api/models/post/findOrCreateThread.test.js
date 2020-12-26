@@ -24,15 +24,15 @@ describe('findOrCreateThread', () => {
 })
 
 describe('validateThreadData', () => {
-  var user, userSharingCommunity, userNotInCommunity, community
+  var user, userSharingGroup, userNotInGroup, group
 
   before(async () => {
-    community = await factories.community().save()
+    group = await factories.group().save()
     user = await factories.user().save()
-    userSharingCommunity = await factories.user().save()
-    userNotInCommunity = await factories.user().save()
-    await user.joinCommunity(community)
-    await userSharingCommunity.joinCommunity(community)
+    userSharingGroup = await factories.user().save()
+    userNotInGroup = await factories.user().save()
+    await user.joinGroup(group)
+    await userSharingGroup.joinGroup(group)
   })
 
   it('fails if no participantIds are provided', () => {
@@ -40,14 +40,14 @@ describe('validateThreadData', () => {
     expect(fn).to.throw(/participantIds can't be empty/)
   })
   it('fails if there is a participantId for a user the creator shares no communities with', () => {
-    const data = {participantIds: [userSharingCommunity.id, userNotInCommunity.id]}
+    const data = {participantIds: [userSharingGroup.id, userNotInGroup.id]}
     return validateThreadData(user.id, data)
     .catch(function (e) {
-      expect(e.message).to.equal(`no shared communities with user ${userNotInCommunity.id}`)
+      expect(e.message).to.equal(`no shared communities with user ${userNotInGroup.id}`)
     })
   })
-  it('continue the promise chain if user shares community with all participants', () => {
-    const data = {participantIds: [userSharingCommunity.id]}
+  it('continue the promise chain if user shares group with all participants', () => {
+    const data = {participantIds: [userSharingGroup.id]}
     expect(validateThreadData(user.id, data)).to.respondTo('then')
   })
 })

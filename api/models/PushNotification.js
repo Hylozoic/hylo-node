@@ -61,13 +61,13 @@ module.exports = bookshelf.Model.extend({
       : `${person}: "${blurb}" (in "${postName}")`
   },
 
-  textForPost: function (post, community, userId, version) {
+  textForPost: function (post, group, userId, version) {
     const person = post.relations.user.get('name')
     const postName = decode(post.get('name'))
 
     return version === 'mention'
       ? `${person} mentioned you in "${postName}"`
-      : `${person} posted "${postName}" in ${community.get('name')}`
+      : `${person} posted "${postName}" in ${group.get('name')}`
   },
 
   textForAnnouncement: function (post) {
@@ -83,12 +83,12 @@ module.exports = bookshelf.Model.extend({
     return `${actor.get('name')} invited you to "${postName}"`
   },
 
-  textForJoinRequest: function (community, actor) {
-    return `${actor.get('name')} asked to join ${community.get('name')}`
+  textForJoinRequest: function (group, actor) {
+    return `${actor.get('name')} asked to join ${group.get('name')}`
   },
 
-  textForApprovedJoinRequest: function (community, actor) {
-    return `${actor.get('name')} approved your request to join ${community.get('name')}`
+  textForApprovedJoinRequest: function (group, actor) {
+    return `${actor.get('name')} approved your request to join ${group.get('name')}`
   },
 
   textForDonationTo: function (contribution) {

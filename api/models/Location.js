@@ -45,8 +45,8 @@ module.exports = bookshelf.Model.extend({
     return response
   },
 
-  communities: function () {
-    return this.hasMany(Community)
+  groups: function () {
+    return this.hasMany(Group)
   },
 
   posts: function () {

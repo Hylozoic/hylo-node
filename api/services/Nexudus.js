@@ -124,19 +124,19 @@ module.exports = {
     return new API(username, password, spaceId, opts)
   },
 
-  forCommunity: function (community_id, opts) {
-    return NexudusAccount.where({community_id}).fetch()
+  forGroup: function (group_id, opts) {
+    return NexudusAccount.where({group_id}).fetch()
     .then(a => this.forAccount(a, opts))
   },
 
   updateAllCommunities: function (options) {
     return NexudusAccount.where('autoupdate', true)
-    .fetchAll({withRelated: 'community'})
+    .fetchAll({withRelated: 'group'})
     .then(accounts => Promise.map(accounts.models, account => {
-      const { community } = account.relations
-      const api = this.forAccount(account, Object.assign({community}, options))
+      const { group } = account.relations
+      const api = this.forAccount(account, Object.assign({group}, options))
       return api.updateMembers()
-      .then(count => [account.get('community_id'), count])
+      .then(count => [account.get('group_id'), count])
     }))
   }
 }

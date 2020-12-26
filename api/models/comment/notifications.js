@@ -8,7 +8,7 @@ import { compact, some, sum, uniq } from 'lodash/fp'
 export async function notifyAboutMessage ({ commentId }) {
   const comment = await Comment.find(commentId, {withRelated: ['media']})
   const post = await Post.find(comment.get('post_id'))
-  const followers = await post.followersWithPivots().fetch()
+  const followers = await post.followers().fetch()
 
   const { user_id, post_id, text } = comment.attributes
   const recipients = followers.filter(u => u.id !== user_id)
@@ -23,7 +23,7 @@ export async function notifyAboutMessage ({ commentId }) {
     // dm_notifications setting.
     if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Push)) return
 
-    const lastReadAt = user.pivot.getSetting('lastReadAt')
+    const lastReadAt = user.pivot.get('last_read_at')
     if (!lastReadAt || comment.get('created_at') > new Date(lastReadAt)) {
       return user.sendPushNotification(alert, path)
     }
@@ -53,12 +53,12 @@ export const sendDigests = () => {
     const { comments } = post.relations
     if (comments.length === 0) return []
 
-    const followers = await post.followersWithPivots().fetch()
+    const followers = await post.followers().fetch()
 
     return Promise.map(followers.models, user => {
       // select comments not written by this user and newer than user's last
       // read time.
-      let lastReadAt = user.pivot.getSetting('lastReadAt')
+      let lastReadAt = user.pivot.get('last_read_at')
       if (lastReadAt) lastReadAt = new Date(lastReadAt)
 
       const filtered = comments.filter(c =>

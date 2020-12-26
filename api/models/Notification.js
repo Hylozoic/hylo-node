@@ -120,11 +120,11 @@ module.exports = bookshelf.Model.extend({
   sendEventInvitationPush: function () {
     const post = this.post()
     const actor = this.actor()
-    const communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-      .then(community => {
-        var path = url.parse(Frontend.Route.post(post, community)).path
+    const groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+      .then(group => {
+        var path = url.parse(Frontend.Route.post(post, group)).path
         var alertText = PushNotification.textForEventInvitation(post, actor)
         return this.reader().sendPushNotification(alertText, path)
       })
@@ -132,11 +132,11 @@ module.exports = bookshelf.Model.extend({
 
   sendPushAnnouncement: function (version) {
     var post = this.post()
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-      .then(community => {
-        var path = url.parse(Frontend.Route.post(post, community)).path
+    var groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+      .then(group => {
+        var path = url.parse(Frontend.Route.post(post, group)).path
         var alertText = PushNotification.textForAnnouncement(post)
         return this.reader().sendPushNotification(alertText, path)
       })
@@ -144,12 +144,12 @@ module.exports = bookshelf.Model.extend({
 
   sendPostPush: function (version) {
     var post = this.post()
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => {
-      var path = url.parse(Frontend.Route.post(post, community)).path
-      var alertText = PushNotification.textForPost(post, community, this.relations.activity.get('reader_id'), version)
+    var groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => {
+      var path = url.parse(Frontend.Route.post(post, group)).path
+      var alertText = PushNotification.textForPost(post, group, this.relations.activity.get('reader_id'), version)
       return this.reader().sendPushNotification(alertText, path)
     })
   },
@@ -175,23 +175,23 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendJoinRequestPush: function () {
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => {
-      var path = url.parse(Frontend.Route.communityJoinRequests(community)).path
-      var alertText = PushNotification.textForJoinRequest(community, this.actor())
+    var groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => {
+      var path = url.parse(Frontend.Route.groupJoinRequests(group)).path
+      var alertText = PushNotification.textForJoinRequest(group, this.actor())
       return this.reader().sendPushNotification(alertText, path)
     })
   },
 
   sendApprovedJoinRequestPush: function () {
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => {
-      var path = url.parse(Frontend.Route.community(community)).path
-      var alertText = PushNotification.textForApprovedJoinRequest(community, this.actor())
+    var groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => {
+      var path = url.parse(Frontend.Route.group(group)).path
+      var alertText = PushNotification.textForApprovedJoinRequest(group, this.actor())
       return this.reader().sendPushNotification(alertText, path)
     })
   },
@@ -240,10 +240,10 @@ module.exports = bookshelf.Model.extend({
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => reader.generateToken()
+    var groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => reader.generateToken()
       .then(token => Email.sendAnnouncementNotification({
         email: reader.get('email'),
         sender: {
@@ -252,7 +252,7 @@ module.exports = bookshelf.Model.extend({
           name: `${user.get('name')} (via Hylo)`
         },
         data: {
-          community_name: community.get('name'),
+          group_name: group.get('name'),
           post_user_name: user.get('name'),
           post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
             user.get('avatar_url') + '?ctt=announcement_email&cti=' + reader.id),
@@ -261,9 +261,9 @@ module.exports = bookshelf.Model.extend({
           post_description: description,
           post_title: decode(post.get('name')),
           post_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post, community) + '?ctt=announcement_email&cti=' + reader.id),
+            Frontend.Route.post(post, group) + '?ctt=announcement_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, community) + '?ctt=announcement_email&cti=' + reader.id),
+            Frontend.Route.unfollow(post, group) + '?ctt=announcement_email&cti=' + reader.id),
           tracking_pixel_url: Analytics.pixelUrl('Announcement', {userId: reader.id})
         }
       })))
@@ -276,10 +276,10 @@ module.exports = bookshelf.Model.extend({
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => reader.generateToken()
+    var groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => reader.generateToken()
       .then(token => Email.sendPostMentionNotification({
         email: reader.get('email'),
         sender: {
@@ -288,7 +288,7 @@ module.exports = bookshelf.Model.extend({
           name: `${user.get('name')} (via Hylo)`
         },
         data: {
-          community_name: community.get('name'),
+          group_name: group.get('name'),
           post_user_name: user.get('name'),
           post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
             user.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
@@ -300,7 +300,7 @@ module.exports = bookshelf.Model.extend({
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email&cti=' + reader.id),
+            Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
           tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
         }
       })))
@@ -328,10 +328,10 @@ module.exports = bookshelf.Model.extend({
       }
     }
 
-    const communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => reader.generateToken()
+    const groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => reader.generateToken()
       .then(token => Email.sendNewCommentNotification({
         version: version,
         email: reader.get('email'),
@@ -341,7 +341,7 @@ module.exports = bookshelf.Model.extend({
           name: `${commenter.get('name')} (via Hylo)`
         },
         data: {
-          community_name: community.get('name'),
+          group_name: group.get('name'),
           commenter_name: commenter.get('name'),
           commenter_avatar_url: commenter.get('avatar_url'),
           commenter_profile_url: Frontend.Route.tokenLogin(reader, token,
@@ -350,9 +350,9 @@ module.exports = bookshelf.Model.extend({
           post_label: postLabel,
           post_title: title,
           comment_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post, community) + '?ctt=comment_email&cti=' + reader.id + `#comment-${comment.id}`),
+            Frontend.Route.post(post, group) + '?ctt=comment_email&cti=' + reader.id + `#comment-${comment.id}`),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, community)),
+            Frontend.Route.unfollow(post, group)),
           tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})
         }
       })))
@@ -361,22 +361,22 @@ module.exports = bookshelf.Model.extend({
   sendJoinRequestEmail: function () {
     const actor = this.actor()
     const reader = this.reader()
-    const communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => reader.generateToken()
+    const groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => reader.generateToken()
       .then(token => Email.sendJoinRequestNotification({
         email: reader.get('email'),
-        sender: {name: community.get('name')},
+        sender: {name: group.get('name')},
         data: {
-          community_name: community.get('name'),
+          group_name: group.get('name'),
           requester_name: actor.get('name'),
           requester_avatar_url: actor.get('avatar_url'),
           requester_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(actor) +
             `?ctt=comment_email&cti=${reader.id}&check-join-requests=1`),
           settings_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.communityJoinRequests(community))
+            Frontend.Route.groupJoinRequests(group))
         }
       })))
   },
@@ -384,22 +384,22 @@ module.exports = bookshelf.Model.extend({
   sendApprovedJoinRequestEmail: function () {
     const actor = this.actor()
     const reader = this.reader()
-    const communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => reader.generateToken()
+    const groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => reader.generateToken()
       .then(token => Email.sendApprovedJoinRequestNotification({
         email: reader.get('email'),
-        sender: {name: community.get('name')},
+        sender: {name: group.get('name')},
         data: {
-          community_name: community.get('name'),
-          community_avatar_url: community.get('avatar_url'),
+          group_name: group.get('name'),
+          group_avatar_url: group.get('avatar_url'),
           approver_name: actor.get('name'),
           approver_avatar_url: actor.get('avatar_url'),
           approver_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
-          community_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.community(community))
+          group_url: Frontend.Route.tokenLogin(reader, token,
+            Frontend.Route.group(group))
         }
       })))
   },
@@ -457,10 +457,10 @@ module.exports = bookshelf.Model.extend({
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
-    var communityIds = Activity.communityIds(this.relations.activity)
-    if (isEmpty(communityIds)) throw new Error('no community ids in activity')
-    return Community.find(communityIds[0])
-    .then(community => reader.generateToken()
+    var groupIds = Activity.groupIds(this.relations.activity)
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+    .then(group => reader.generateToken()
       .then(token => Email.sendEventInvitationEmail({
         email: reader.get('email'),
         sender: {
@@ -469,7 +469,7 @@ module.exports = bookshelf.Model.extend({
           name: `${inviter.get('name')} (via Hylo)`
         },
         data: {
-          community_name: community.get('name'),
+          group_name: group.get('name'),
           post_user_name: inviter.get('name'),
           post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
             inviter.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
@@ -482,7 +482,7 @@ module.exports = bookshelf.Model.extend({
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, community) + '?ctt=post_mention_email&cti=' + reader.id),
+            Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
           tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
         }
       })))
@@ -509,7 +509,7 @@ module.exports = bookshelf.Model.extend({
 
   updateUserSocketRoom: function (userId) {
     const { activity } = this.relations
-    const { actor, comment, community, post } = activity.relations
+    const { actor, comment, group, post } = activity.relations
     const action = Notification.priorityReason(activity.get('meta').reasons)
 
     const payload = {
@@ -520,7 +520,7 @@ module.exports = bookshelf.Model.extend({
           action,
           actor: refineOne(actor, [ 'avatar_url', 'id', 'name' ]),
           comment: refineOne(comment, [ 'id', 'text' ]),
-          community: refineOne(community, [ 'id', 'name', 'slug' ]),
+          group: refineOne(group, [ 'id', 'name', 'slug' ]),
           post: refineOne(
             post,
             [ 'id', 'name', 'description' ],
@@ -562,7 +562,7 @@ module.exports = bookshelf.Model.extend({
     return Notification.findUnsent({withRelated: [
       'activity',
       'activity.post',
-      'activity.post.communities',
+      'activity.post.groups',
       'activity.post.user',
       'activity.comment',
       'activity.comment.media',
@@ -570,8 +570,8 @@ module.exports = bookshelf.Model.extend({
       'activity.comment.post',
       'activity.comment.post.user',
       'activity.comment.post.relatedUsers',
-      'activity.comment.post.communities',
-      'activity.community',
+      'activity.comment.post.groups',
+      'activity.group',
       'activity.reader',
       'activity.actor'
     ]})

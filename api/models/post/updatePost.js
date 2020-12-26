@@ -1,10 +1,9 @@
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
 import {
-  updateCommunities,
+  updateGroups,
   updateAllMedia,
-  updateFollowers,
-  updateNetworkMemberships
+  updateFollowers
 } from './util'
 
 export default function updatePost (userId, id, params) {
@@ -34,7 +33,7 @@ export default function updatePost (userId, id, params) {
 export function afterUpdatingPost (post, opts) {
   const {
     params,
-    params: { requests, community_ids, topicNames, memberIds, eventInviteeIds },
+    params: { requests, group_ids, topicNames, memberIds, eventInviteeIds },
     userId,
     transacting
   } = opts
@@ -42,12 +41,11 @@ export function afterUpdatingPost (post, opts) {
   return post.ensureLoad(['communities'])
   .then(() => Promise.all([
     updateChildren(post, requests, transacting),
-    updateCommunities(post, community_ids, transacting),
+    updateGroups(post, group_ids, transacting),
     updateAllMedia(post, params, transacting),
     Tag.updateForPost(post, topicNames, userId, transacting),
     updateFollowers(post, transacting)
   ]))
   .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
   .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))
-  .then(() => updateNetworkMemberships(post, transacting))
 }

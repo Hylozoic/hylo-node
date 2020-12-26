@@ -4,11 +4,11 @@ import { get, isEmpty, map, merge } from 'lodash/fp'
 
 module.exports = {
   checkPermission: (userId, invitationId) => {
-    return Invitation.find(invitationId, {withRelated: 'community'})
+    return Invitation.find(invitationId, {withRelated: 'group'})
     .then(invitation => {
       if (!invitation) throw new Error('Invitation not found')
-      const { community } = invitation.relations
-      return GroupMembership.hasModeratorRole(userId, community)
+      const { group } = invitation.relations
+      return GroupMembership.hasModeratorRole(userId, group)
     })
   },
 
@@ -16,15 +16,15 @@ module.exports = {
     return Invitation.find(invitationId)
   },
 
-  find: ({communityId, limit, offset, pendingOnly = false, includeExpired = false}) => {
-    return Community.find(communityId)
-    .then(community => Invitation.query(qb => {
+  find: ({groupId, limit, offset, pendingOnly = false, includeExpired = false}) => {
+    return Group.find(groupId)
+    .then(group => Invitation.query(qb => {
       qb.limit(limit || 20)
       qb.offset(offset || 0)
-      qb.where('community_id', community.get('id'))
-      qb.leftJoin('users', 'users.id', 'community_invites.used_by_id')
+      qb.where('group_id', group.get('id'))
+      qb.leftJoin('users', 'users.id', 'group_invites.used_by_id')
       qb.select(bookshelf.knex.raw(`
-        community_invites.*,
+        group_invites.*,
         count(*) over () as total,
         users.id as joined_user_id,
         users.name as joined_user_name,
@@ -58,7 +58,7 @@ module.exports = {
   /**
    *
    * @param sessionUserId
-   * @param communityId
+   * @param groupId
    * @param tagName {String}
    * @param userIds {String[]} list of userIds
    * @param emails {String[]} list of emails
@@ -66,12 +66,12 @@ module.exports = {
    * @param isModerator {Boolean} should invite as moderator (defaults: false)
    * @param subject
    */
-  create: ({sessionUserId, communityId, tagName, userIds, emails = [], message, isModerator = false, subject}) => {
+  create: ({sessionUserId, groupId, tagName, userIds, emails = [], message, isModerator = false, subject}) => {
     return Promise.join(
       userIds && User.whereIn('id', userIds).fetchAll(),
-      Community.find(communityId),
+      Group.find(groupId),
       tagName && Tag.find({ name: tagName }),
-      (users, community, tag) => {
+      (users, group, tag) => {
         let concatenatedEmails = emails.concat(map(u => u.get('email'), get('models', users)))
 
         return Promise.map(concatenatedEmails, email => {
@@ -82,7 +82,7 @@ module.exports = {
           const opts = {
             email,
             userId: sessionUserId,
-            communityId: community.id
+            groupId: group.id
           }
 
           if (tag) {
@@ -94,7 +94,7 @@ module.exports = {
           }
 
           return Invitation.create(opts)
-            .tap(i => i.refresh({withRelated: ['creator', 'community', 'tag']}))
+            .tap(i => i.refresh({withRelated: ['creator', 'group', 'tag']}))
             .then(invitation => {
               return Queue.classMethod('Invitation', 'createAndSend', {invitation})
                 .then(() => ({
@@ -112,15 +112,15 @@ module.exports = {
   /**
    *
    * @param sessionUserId logged in users ID
-   * @param communityId
+   * @param groupId
    * @param subject {String} the email subject
    * @param message {String} the email message text
    * @param moderator {Boolean} should invite as moderator
    * @returns {*}
    */
-  reinviteAll: ({sessionUserId, communityId, subject = '', message = '', isModerator = false}) => {
+  reinviteAll: ({sessionUserId, groupId, subject = '', message = '', isModerator = false}) => {
     return Queue.classMethod('Invitation', 'reinviteAll', {
-      communityId,
+      groupId,
       subject,
       message,
       moderator: isModerator,
@@ -148,7 +148,7 @@ module.exports = {
 
   check: (userId, token, accessCode) => {
     if (accessCode) {
-      return Community.queryByAccessCode(accessCode)
+      return Group.queryByAccessCode(accessCode)
       .count()
       .then(count => {
         return {valid: count !== '0'}
@@ -167,15 +167,15 @@ module.exports = {
   async use (userId, token, accessCode) {
     const user = await User.find(userId)
     if (accessCode) {
-      return Community.queryByAccessCode(accessCode)
+      return Group.queryByAccessCode(accessCode)
       .fetch()
-      .then(community => {
-        return GroupMembership.forPair(user, community, {includeInactive: true}).fetch()
+      .then(group => {
+        return GroupMembership.forPair(user, group, {includeInactive: true}).fetch()
         .then(existingMembership => {
           if (existingMembership) return existingMembership.get('active')
               ? existingMembership
               : existingMembership.save({active: true}, {patch: true}).then(membership => membership)
-          if (!!community) return user.joinCommunity(community).then(membership => membership)
+          if (!!group) return user.joinGroup(group).then(membership => membership)
         })
         .catch(err => {
           throw new Error(err.message)

@@ -1,6 +1,7 @@
 import moment from 'moment'
 import { merge, transform, sortBy } from 'lodash'
 
+// TODO: this is old and broken
 var rawMetricsQuery = startTime => Promise.props({
   community: Community.query(q => {
     q.select(['id', 'name', 'created_at', 'avatar_url'])

@@ -35,17 +35,17 @@ module.exports = bookshelf.Model.extend({
       }))
   },
 
-  queryForUser: function (userId, communityIds) {
+  queryForUser: function (userId, groupIds) {
     return Contribution.query(q => {
       q.orderBy('contributed_at')
       q.join('posts', 'posts.id', '=', 'contributions.post_id')
 
       q.where({'contributions.user_id': userId, 'posts.active': true})
 
-      if (communityIds) {
-        q.join('communities_posts', 'communities_posts.post_id', '=', 'posts.id')
-        q.join('communities', 'communities.id', '=', 'communities_posts.community_id')
-        q.whereIn('communities.id', communityIds)
+      if (groupIds) {
+        q.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+        q.join('groups', 'groups.id', '=', 'groups_posts.group_id')
+        q.whereIn('groups.id', groupIds)
       }
     })
   },

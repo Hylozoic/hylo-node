@@ -1,16 +1,16 @@
-export async function joinCommunity (communityId, userId) {
+export async function joinGroup (groupId, userId) {
   const user = await User.find(userId)
   if(!user) throw new Error(`User id ${userId} not found`)
-  const community = await Community.find(communityId)
-  if(!community) throw new Error(`Community id ${communityId} not found`)
-  if (!!community) return user.joinCommunity(community).then(membership => membership)
+  const group = await Group.find(groupId)
+  if(!group) throw new Error(`Group id ${groupId} not found`)
+  if (!!group) return user.joinGroup(group).then(membership => membership)
 }
 
-export async function createJoinRequest (communityId, userId) {
-  if (communityId && userId) {
+export async function createJoinRequest (groupId, userId) {
+  if (groupId && userId) {
     return JoinRequest.create({
       userId,
-      communityId,
+      groupId,
     })
     .then(request => ({ request }))
   } else {
@@ -18,9 +18,9 @@ export async function createJoinRequest (communityId, userId) {
   }
 }
 
-export async function acceptJoinRequest (joinRequestId, communityId, userId, moderatorId) {
-  if (joinRequestId && communityId && userId && moderatorId) {
-    await joinCommunity(communityId, userId)
+export async function acceptJoinRequest (joinRequestId, groupId, userId, moderatorId) {
+  if (joinRequestId && groupId && userId && moderatorId) {
+    await joinGroup(groupId, userId)
     await JoinRequest.update(joinRequestId, { status: 1 }, moderatorId)
     return await JoinRequest.find(joinRequestId)
   } else {

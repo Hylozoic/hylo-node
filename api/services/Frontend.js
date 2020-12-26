@@ -33,12 +33,12 @@ var getModelId = function (model) {
   return id
 }
 
-var getSlug = function (community) {
+var getSlug = function (group) {
   let slug
-  if (isString(community)) { // In case we passed just the slug in instead of community object
-    slug = community
-  } else if (community) {
-    slug = community.slug || community.get('slug')
+  if (isString(group)) { // In case we passed just the slug in instead of group object
+    slug = group
+  } else if (group) {
+    slug = group.slug || group.get('slug')
   }
 
   return slug
@@ -67,27 +67,27 @@ module.exports = {
 
     root: () => url('/app'),
 
-    community: function (community) {
-      return url('/c/%s', getSlug(community))
+    group: function (group) {
+      return url('/g/%s', getSlug(group))
     },
 
-    comment: function (comment, community) {
+    comment: function (comment, group) {
       // TODO: update to use comment specific url when implemented in frontend
-      let communitySlug = getSlug(community)
+      let groupSlug = getSlug(group)
 
-      let communityUrl = isEmpty(communitySlug) ? '/all' : `/c/${communitySlug}`
+      let groupUrl = isEmpty(groupSlug) ? '/all' : `/g/${groupSlug}`
 
       const postId = comment.relations.post.id
 
-      return url(`${communityUrl}/p/${postId}`)
+      return url(`${groupUrl}/p/${postId}`)
     },
 
-    communitySettings: function (community) {
-      return this.community(community) + '/settings'
+    groupSettings: function (group) {
+      return this.group(group) + '/settings'
     },
 
-    communityJoinRequests: function (community) {
-      return this.communitySettings(community) + '/invite#join_requests'
+    groupJoinRequests: function (group) {
+      return this.groupSettings(group) + '/invite#join_requests'
     },
 
     mapPost: function (post, context, slug) {
@@ -95,10 +95,8 @@ module.exports = {
 
       if (context === 'public') {
         contextUrl = '/public'
-      } else if (context === 'community') {
-        contextUrl = `/c/${slug}`
-      } else if (context === 'network') {
-        contextUrl = `/n/${slug}`
+      } else if (context === 'group') {
+        contextUrl = `/g/${slug}`
       }
 
       return url(`${contextUrl}/map/p/${getModelId(post)}`)
@@ -108,25 +106,25 @@ module.exports = {
       return url(`/m/${getModelId(user)}`)
     },
 
-    post: function (post, community, isPublic) {
-      let communitySlug = getSlug(community)
-      let communityUrl = '/all'
+    post: function (post, group, isPublic) {
+      let groupSlug = getSlug(group)
+      let groupUrl = '/all'
 
       if (isPublic) {
-        communityUrl = '/public'
-      } else if (!isEmpty(communitySlug)) {
-        communityUrl = `/c/${communitySlug}`
+        groupUrl = '/public'
+      } else if (!isEmpty(groupSlug)) {
+        groupUrl = `/g/${groupSlug}`
       }
 
-      return url(`${communityUrl}/p/${getModelId(post)}`)
+      return url(`${groupUrl}/p/${getModelId(post)}`)
     },
 
     thread: function (post) {
       return url(`/t/${getModelId(post)}`)
     },
 
-    unfollow: function (post, community) {
-      return this.post(post, community) + '?action=unfollow'
+    unfollow: function (post, group) {
+      return this.post(post, group) + '?action=unfollow'
     },
 
     userSettings: function () {
@@ -154,8 +152,8 @@ module.exports = {
       return url('/noo/hook/batchCommentForm')
     },
 
-    invitePath: function (community) {
-      return `/c/${getSlug(community)}/join/${community.get('beta_access_code')}`
+    invitePath: function (group) {
+      return `/g/${getSlug(group)}/join/${group.get('access_code')}`
     }
   }
 }

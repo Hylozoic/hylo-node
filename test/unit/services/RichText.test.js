@@ -18,7 +18,7 @@ describe('RichText', function () {
 
     it('links hashtags inside anchor tags', () => {
       const text = '<p><a>#hashtag</a></p>'
-      const communityUrl = `${prefix}/c/foo/tag/hashtag`
+      const communityUrl = `${prefix}/g/foo/tag/hashtag`
       const nonCommunityUrl = `${prefix}/tag/hashtag`
       const expected = url => `<p><a href="${url}">#hashtag</a></p>`
 

@@ -21,6 +21,7 @@ export default function forPosts (opts) {
       qb.whereNotIn('posts.user_id', opts.excludeUsers)
     }
 
+    // TODO: hmm, follows not being used anymore is this broken?
     if (opts.type === Post.Type.THREAD || opts.follower) {
       qb.join('follows', 'follows.post_id', '=', 'posts.id')
       if (opts.type === Post.Type.THREAD) {
@@ -62,31 +63,25 @@ export default function forPosts (opts) {
       topic: opts.topic,
       type: opts.type,
       boundingBox: opts.boundingBox,
-      showPinnedFirst: get(opts.communities, 'length') === 1
+      showPinnedFirst: get(opts.groups, 'length') === 1
     }, qb)
 
     if (opts.omit) {
       qb.whereNotIn('posts.id', opts.omit)
     }
 
-    if (opts.communities) {
-      qb.select('communities_posts.pinned')
-      qb.join('communities_posts', 'communities_posts.post_id', '=', 'posts.id')
-      qb.whereIn('communities_posts.community_id', opts.communities)
-      qb.groupBy(['posts.id', 'communities_posts.post_id', 'communities_posts.pinned'])
+    if (opts.groups) {
+      qb.select('groups_posts.pinned')
+      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+      qb.whereIn('groups_posts.group_id', opts.groups)
+      qb.groupBy(['posts.id', 'groups_posts.post_id', 'groups_posts.pinned'])
     }
 
-    if (opts.networkSlugs && opts.networkSlugs.length > 0) {
-      qb.join('networks_posts', 'networks_posts.post_id', '=', 'posts.id')
-      qb.join('networks', 'networks_posts.network_id', '=', 'networks.id')
-      qb.whereIn('networks.slug', opts.networkSlugs)
-      qb.groupBy(['posts.id', 'networks_posts.post_id'])
-    }
-
-    if (opts.networks) {
-      qb.join('networks_posts', 'networks_posts.post_id', '=', 'posts.id')
-      qb.whereIn('networks_posts.network_id', opts.networks)
-      qb.groupBy(['posts.id', 'networks_posts.post_id'])
+    if (opts.groupSlugs && opts.groupSlugs.length > 0) {
+      qb.select('groups_posts.pinned')
+      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+      qb.whereIn('groups_posts.slug', opts.groupSlugs)
+      qb.groupBy(['posts.id', 'groups_posts.post_id', 'groups_posts.pinned'])
     }
 
     if (opts.parent_post_id) {

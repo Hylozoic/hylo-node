@@ -7,12 +7,12 @@ export default {
   },
 
   members: function () {
-    return this.groupMembers(q => isProjectMember(q))
+    return this.followers().query(q => q.whereRaw('project_role_id is not null'))
   },
 
   addProjectMembers: async function (usersOrIds, opts) {
     // need to fetchId for ProjectRole
-    const projectRole =  await this.getOrCreateMemberProjectRole()
+    const projectRole =  await this.getOrCreateMemberProjectRole(opts)
     return this.addGroupMembers(usersOrIds, {
       project_role_id: projectRole.id,
       settings: {following: true}
@@ -27,11 +27,11 @@ export default {
   },
 
   updateProjectMembers: async function (userIds, opts) {
-    const members = await this.members().fetch()
+    const members = await this.members().fetch(opts)
     await this.removeGroupMembers(members, opts)
     const memberRole = await this.getOrCreateMemberProjectRole(opts)
     return Promise.map(uniq(userIds), async id => {
-      var gm = await GroupMembership.forPair(id, this, {includeInactive: true}).fetch(opts)
+      let gm = await GroupMembership.forPair(id, this, {includeInactive: true}).fetch(opts)
       if (!gm) {
         await this.addGroupMembers([id], {}, opts)
         gm = await GroupMembership.forPair(id, this).fetch(opts)

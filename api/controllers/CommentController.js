@@ -13,19 +13,19 @@ module.exports = {
     }
 
     return Promise.join(
-      Post.find(replyData.postId, {withRelated: 'communities'}),
+      Post.find(replyData.postId, {withRelated: 'groups'}),
       User.find(replyData.userId),
       (post, user) => {
         if (!post) return res.status(422).send('valid token, but post not found')
         if (!user) return res.status(422).send('valid token, but user not found')
 
-        const community = post.relations.communities.first()
+        const group = post.relations.groups.first()
         Analytics.track({
           userId: replyData.userId,
           event: 'Post: Comment: Add by Email',
           properties: {
             post_id: post.id,
-            community: community && community.get('name')
+            group: group && group.get('name')
           }
         })
 
@@ -38,7 +38,7 @@ module.exports = {
     )
   },
   createBatchFromEmailForm: function (req, res) {
-    const { communityId, userId } = res.locals.tokenData
+    const { groupId, userId } = res.locals.tokenData
 
     const replyText = postId => markdown(req.param(`post-${postId}`))
 
@@ -50,12 +50,12 @@ module.exports = {
 
     var failures = false
 
-    return Community.find(communityId)
-    .then(community => Promise.map(postIds, id => {
+    return Group.find(groupId)
+    .then(group => Promise.map(postIds, id => {
       if (isEmpty(replyText(id))) return
-      return Post.find(id, {withRelated: ['communities']})
+      return Post.find(id, {withRelated: ['groups']})
       .then(post => {
-        if (!post || !includes(communityId, post.relations.communities.pluck('id'))) {
+        if (!post || !includes(groupId, post.relations.groups.pluck('id'))) {
           failures = true
           return Promise.resolve()
         }
@@ -72,7 +72,7 @@ module.exports = {
             event: 'Post: Comment: Add by Email Form',
             properties: {
               post_id: post.id,
-              community: community && community.get('name')
+              group: group && group.get('name')
             }
           })
           return createComment(userId, {
@@ -94,7 +94,7 @@ module.exports = {
       } else {
         notification = 'Your comments have been added.'
       }
-      return res.redirect(Frontend.Route.community(community) +
+      return res.redirect(Frontend.Route.group(group) +
         `?notification=${notification}${failures ? '&error=true' : ''}`)
     }, res.serverError))
   }

@@ -78,7 +78,7 @@ describe('filterAndSortPosts', () => {
 
 describe('filterAndSortCommunities', () => {
   it('supports searching', () => {
-    const relation = Community.collection()
+    const relation = Group.collection()
     relation.query(q => {
       filterAndSortCommunities({search: 'foo'}, q)
     })

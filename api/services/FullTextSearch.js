@@ -94,22 +94,22 @@ const search = (opts) => {
   return query
 }
 
-const searchInCommunities = (communityIds, opts) => {
+const searchInGroups = (groupIds, opts) => {
   const alias = 'search'
   const columns = [`${alias}.post_id`, `${alias}.comment_id`, `${alias}.user_id`, 'rank', 'total']
 
   return bookshelf.knex
   .select(columns)
   .from(search(omit(opts, 'limit', 'offset')).as(alias))
-  .leftJoin('communities_users', 'communities_users.user_id', `${alias}.user_id`)
+  .leftJoin('group_memberships', 'group_memberships.user_id', `${alias}.user_id`)
   .leftJoin('comments', 'comments.id', `${alias}.comment_id`)
-  .leftJoin('communities_posts', function () {
-    this.on('communities_posts.post_id', `${alias}.post_id`)
-    .orOn('communities_posts.post_id', 'comments.post_id')
+  .leftJoin('groups_posts', function () {
+    this.on('groups_posts.post_id', `${alias}.post_id`)
+    .orOn('groups_posts.post_id', 'comments.post_id')
   })
   .where(function () {
-    this.whereIn('communities_users.community_id', communityIds)
-    .orWhereIn('communities_posts.community_id', communityIds)
+    this.whereIn('group_memberships.group_id', groupIds)
+    .orWhereIn('groups_posts.group_id', groupIds)
   })
   .groupBy(columns)
   .orderBy('rank', 'desc')
@@ -122,5 +122,5 @@ module.exports = {
   dropView,
   refreshView,
   search,
-  searchInCommunities
+  searchInGroups
 }

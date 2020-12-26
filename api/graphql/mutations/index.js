@@ -18,21 +18,21 @@ export {
   canUpdateComment
 } from './comment'
 export {
-  findOrCreateLocation
-} from './location'
+  respondToEvent,
+  invitePeopleToEvent
+} from './event'
 export {
-  addCommunityToNetwork,
-  addNetworkModeratorRole,
-  removeCommunityFromNetwork,
-  removeNetworkModeratorRole,
-  updateCommunityHiddenSetting,
-  updateNetwork
-} from './network'
-export { registerDevice } from './mobile'
-export {
-  createTopic,
-  subscribe
-} from './topic'
+  addGroupToParent,
+  addModerator,
+  createGroup,
+  deleteGroupTopic,
+  deleteGroup,
+  removeModerator,
+  removeMember,
+  regenerateAccessCode,
+  removeGroupFromParent,
+  updateGroup,
+} from './group'
 export {
   createInvitation,
   expireInvitation,
@@ -44,18 +44,13 @@ export {
   acceptJoinRequest,
   createJoinRequest,
   declineJoinRequest,
-  joinCommunity,
+  joinGroup,
 } from './join_request'
 export {
-  updateCommunity,
-  addModerator,
-  deleteCommunityTopic,
-  deleteCommunity,
-  removeModerator,
-  removeMember,
-  regenerateAccessCode,
-  createCommunity
-} from './community'
+  findOrCreateLocation
+} from './location'
+export { updateMembership } from './membership'
+export { registerDevice } from './mobile'
 export {
   createPost,
   fulfillPost,
@@ -74,34 +69,33 @@ export {
   leaveProject,
   processStripeToken
 } from './project'
+export { deleteSavedSearch, createSavedSearch } from './savedSearch'
 export {
-  respondToEvent,
-  invitePeopleToEvent
-} from './event'
+  createTopic,
+  subscribe
+} from './topic'
 export {
   blockUser,
   unblockUser,
   updateStripeAccount,
   registerStripeAccount
 } from './user'
-export { updateMembership } from './membership'
-export { deleteSavedSearch, createSavedSearch } from './savedSearch'
 
 export function updateMe (userId, changes) {
   return User.find(userId)
   .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }
 
-export function allowCommunityInvites (communityId, data) {
-  return Community.query().where('id', communityId).update({allow_community_invites: data})
+export function allowGroupInvites (groupId, data) {
+  return Group.query().where('id', groupId).update({allow_group_invites: data})
   .then(() => ({success: true}))
 }
 
-export async function leaveCommunity (userId, communityId) {
-  const community = await Community.find(communityId)
+export async function leaveGroup (userId, groupId) {
+  const group = await Group.find(groupId)
   const user = await User.find(userId)
-  await user.leaveCommunity(community)
-  return communityId
+  await user.leaveGroup(group)
+  return groupId
 }
 
 export function findOrCreateThread (userId, data) {
@@ -113,19 +107,19 @@ export function findOrCreateLinkPreviewByUrl (data) {
   return underlyingFindLinkPreview(data.url)
 }
 
-export function updateCommunityTopic (id, data) {
+export function updateGroupTopic (id, data) {
   const whitelist = mapKeys(pick(data, ['visibility', 'isDefault']), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
-  return CommunityTag.query().where({id}).update(whitelist)
+  return GroupTag.query().where({id}).update(whitelist)
   .then(() => ({success: true}))
 }
 
-export function updateCommunityTopicFollow (userId, { id, data }) {
+export function updateGroupTopicFollow (userId, { id, data }) {
   const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
-  return CommunityTag.where({id}).fetch()
+  return GroupTag.where({id}).fetch()
   .then(ct => ct.tagFollow(userId).query().update(whitelist))
   .then(() => ({success: true}))
 }
@@ -246,15 +240,15 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
   .then(() => ({success: true}))
 }
 
-export async function removePost (userId, postId, communityIdOrSlug) {
-  const community = await Community.find(communityIdOrSlug)
+export async function removePost (userId, postId, groupIdOrSlug) {
+  const group = await Group.find(groupIdOrSlug)
   return Promise.join(
     Post.find(postId),
-    GroupMembership.hasModeratorRole(userId, community),
+    GroupMembership.hasModeratorRole(userId, group),
     (post, isModerator) => {
       if (!post) throw new Error(`Couldn't find post with id ${postId}`)
       if (!isModerator) throw new Error(`You don't have permission to remove this post`)
-      return post.removeFromCommunity(communityIdOrSlug)
+      return post.removeFromGroup(groupIdOrSlug)
     })
   .then(() => ({success: true}))
 }

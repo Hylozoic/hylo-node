@@ -52,12 +52,12 @@ export function deletePost (userId, postId) {
   .then(() => ({success: true}))
 }
 
-export async function pinPost (userId, postId, communityId) {
-  const community = await Community.find(communityId)
-  return GroupMembership.hasModeratorRole(userId, community)
+export async function pinPost (userId, postId, groupId) {
+  const group = await Group.find(groupId)
+  return GroupMembership.hasModeratorRole(userId, group)
   .then(isModerator => {
-    if (!isModerator) throw new Error("You don't have permission to modify this community")
-    return PostMembership.find(postId, communityId)
+    if (!isModerator) throw new Error("You don't have permission to modify this group")
+    return PostMembership.find(postId, groupId)
     .then(postMembership => {
       if (!postMembership) throw new Error("Couldn't find postMembership")
       return postMembership.togglePinned()
@@ -74,7 +74,7 @@ function convertGraphqlPostData (data) {
     name: data.title,
     description: data.details,
     link_preview_id: data.linkPreviewId,
-    community_ids: data.communityIds,
+    group_ids: data.groupIds,
     parent_post_id: data.parentPostId,
     location_id: data.locationId,
     location: data.location,
