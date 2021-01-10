@@ -216,11 +216,19 @@ type Group {
     offset: Int,
     autocomplete: String
   ): SkillQuerySet,
+  widgets: [Widget]
 }
 
 type GroupSettings {
   allowGroupInvites: Boolean
   publicMemberDirectory: Boolean
+}
+
+type Widget {
+  id: Int
+  name: String
+  isVisible: Boolean
+  order: Int
 }
 
 type PersonQuerySet {

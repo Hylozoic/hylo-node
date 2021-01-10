@@ -562,6 +562,16 @@ export default async function makeModels (userId, isAdmin) {
         'post',
         'user'
       ]
+    },
+
+    Widget: {
+      model: Widget,
+      attributes: [
+        'id',
+        'name',
+        'is_visible',
+        'order'
+      ]
     }
   }
 }

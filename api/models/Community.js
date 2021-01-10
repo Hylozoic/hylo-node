@@ -86,6 +86,10 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
+  widgets: async function () {
+    return await Widget.fetchForCommunity(this.id)
+  },
+
   nexudusAccounts: function () {
     this.hasMany(NexudusAccount)
   },
