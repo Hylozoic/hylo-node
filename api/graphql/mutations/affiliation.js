@@ -5,16 +5,22 @@ export async function canDeleteAffiliation (userId, affiliationId) {
   return affiliation.get('user_id') === userId
 }
 
+export function formatUrl (url = '') {
+  const prefixRegex = /https?\:\/\//gi;
+  const prefix = url.match(prefixRegex)
+  if (!prefix) url = 'https://' + url
+  return url
+}
+
 export async function createAffiliation (userId, { role, preposition, orgName, url = '' }) {
-  const formattedUrl = 'https://' + url
-  if (url.length > 0 && !validator.isURL(formattedUrl)) throw new Error(`Please enter a valid URL.`)
+  if (url.length > 0 && !validator.isURL(formatUrl(url))) throw new Error(`Please enter a valid URL.`)
   if (userId && role && preposition && orgName) {
     return Affiliation.create({
       userId,
       role,
       preposition,
       orgName,
-      url: url.length > 0 ? formattedUrl : url
+      url: url.length > 0 ? formatUrl(url) : url
     })
   } else {
     throw new Error(`Invalid parameters to create affiliation`)
