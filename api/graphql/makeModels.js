@@ -347,6 +347,9 @@ export default async function makeModels (userId, isAdmin) {
           arguments: ({ type }) => [type]
         }}
       ],
+      getters: {
+        comment: (c) => c.comment().fetch()
+      },
       filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true
     },
