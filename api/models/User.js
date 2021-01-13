@@ -34,7 +34,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   communities: function () {
     return this.queryByGroupMembership(Community)
-    .query(q => q.where('active', true))
+    .query(q => q.where('communities.active', true))
   },
 
   contributions: function () {
@@ -110,7 +110,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.queryByGroupMembership(Post, {
       where: q => q.whereRaw(`(settings->>'following')::boolean = true`)
     })
-    .query(q => q.where('active', true))
+    .query(q => q.where('posts.active', true))
   },
 
   messageThreads: function () {
@@ -455,7 +455,7 @@ module.exports = bookshelf.Model.extend(merge({
     } else {
       q = User.where({id})
     }
-    return q.where('active', true).fetch(options)
+    return q.where('users.active', true).fetch(options)
   },
 
   named: function (name) {

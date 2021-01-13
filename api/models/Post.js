@@ -364,7 +364,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   countForUser: function (user, type) {
-    const attrs = {user_id: user.id, active: true}
+    const attrs = {user_id: user.id, 'posts.active': true}
     if (type) attrs.type = type
     return this.query().count().where(attrs).then(rows => rows[0].count)
   },
@@ -375,7 +375,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       q.join('tags', 'tags.id', 'posts_tags.tag_id')
       q.whereIn('tags.name', ['request', 'offer', 'resource'])
       q.groupBy('tags.name')
-      q.where({user_id: user.id, active: true})
+      q.where({user_id: user.id, 'posts.active': true})
       q.select('tags.name')
     }).query().count()
     .then(rows => rows.reduce((m, n) => {
@@ -407,7 +407,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   find: function (id, options) {
-    return Post.where({id, active: true}).fetch(options)
+    return Post.where({id, 'posts.active': true}).fetch(options)
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {
@@ -436,7 +436,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async updateFromNewComment ({ postId, commentId }) {
-    const where = {post_id: postId, active: true}
+    const where = {post_id: postId, 'posts.active': true}
     const now = new Date()
 
     return Promise.all([

@@ -45,7 +45,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   comments: function () {
-    return this.hasMany(Comment, 'comment_id').query({where: {active: true}})
+    return this.hasMany(Comment, 'comment_id').query({where: {'comments.active': true}})
   },
 
   media: function (type) {

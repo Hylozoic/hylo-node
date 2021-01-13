@@ -12,7 +12,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   activeUser: function () {
-    return this.belongsTo(User).query({where: {active: true}})
+    return this.belongsTo(User).query({where: {'users.active': true}})
   },
 
   updatePassword: function (password, { transacting } = {}) {
