@@ -41,7 +41,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   comment: function () {
-    return this.belongsTo(Comment)
+    return this.belongsTo(Comment).where('comments.active', true)
   },
 
   comments: function () {
