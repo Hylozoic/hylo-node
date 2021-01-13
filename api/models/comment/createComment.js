@@ -72,10 +72,11 @@ export async function pushMessageToSockets (message, thread) {
   const excludingSender = userIds.filter(id => id !== message.get('user_id'))
 
   let response = refineOne(message,
-    ['id', 'text', 'created_at', 'user_id', 'post_id'],
+    ['id', 'text', 'created_at', 'user_id', 'post_id', 'comment_id'],
     {
       user_id: 'creator',
-      post_id: 'messageThread'
+      post_id: 'messageThread',
+      comment_id: 'parentComment'
     }
   )
 
@@ -109,7 +110,8 @@ function pushCommentToSockets (comment) {
       refineOne(comment, ['id', 'text', 'created_at']),
       {
         creator: refineOne(comment.relations.user, ['id', 'name', 'avatar_url']),
-        post: comment.get('post_id')
+        post: comment.get('post_id'),
+        comment: comment.get('comment_id')
       }
     )
   ))
