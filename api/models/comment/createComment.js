@@ -4,7 +4,7 @@ import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 import { refineOne, refineMany } from '../util/relations'
 
 export default async function createComment (commenterId, opts = {}) {
-  let { text, post } = opts
+  let { text, post, parentComment } = opts
   text = sanitize(text)
 
   var attrs = {
@@ -13,6 +13,7 @@ export default async function createComment (commenterId, opts = {}) {
     recent: true,
     user_id: commenterId,
     post_id: post.id,
+    comment_id: parentComment.id,
     active: true,
     created_from: opts.created_from || null
   }
