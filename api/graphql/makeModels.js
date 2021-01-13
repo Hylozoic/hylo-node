@@ -337,6 +337,11 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         'post',
         {user: {alias: 'creator'}},
+        {comments: {
+          querySet: true,
+          filter: (relation) =>
+            relation.query(q => q.where('comments.active', true))
+        }},
         {media: {
           alias: 'attachments',
           arguments: ({ type }) => [type]

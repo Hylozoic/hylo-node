@@ -337,6 +337,7 @@ type Comment {
   creator: Person
   post: Post
   comment: Comment # parent comment of this one
+  comments(first: Int, cursor: ID, order: String): CommentQuerySet # child comments of this one
   createdAt: Date
   createdFrom: String
   attachments(type: String): [Attachment]
