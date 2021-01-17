@@ -1,4 +1,4 @@
-import { clone, difference, intersection, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
+import { clone, defaults, difference, flatten, intersection, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import DataType, {
@@ -12,6 +12,9 @@ export const GROUP_ATTR_UPDATE_WHITELIST = [
   'settings',
   'active'
 ]
+
+const DEFAULT_BANNER = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_group_banner.jpg'
+const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_group_avatar.png'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'groups',
@@ -116,6 +119,30 @@ module.exports = bookshelf.Model.extend(merge({
     return updatedMemberships.concat(newMemberships)
   },
 
+  createStarterPosts: function (transacting) {
+    var now = new Date()
+    var timeShift = {offer: 1, request: 2, resource: 3}
+    return Group.find('starter-posts', {withRelated: ['posts']})
+    .then(g => {
+      if (!g) throw new Error('Starter posts group not found')
+      return g
+    })
+    .then(g => g.relations.posts.models)
+    .then(posts => Promise.map(posts, post => {
+      if (post.get('type') === 'welcome') return
+
+      var newPost = post.copy()
+      var time = new Date(now - (timeShift[post.get('type')] || 0) * 1000)
+      // TODO: why are we attaching Ed West as a follower to every welcome post??
+      return newPost.save({created_at: time, updated_at: time}, {transacting})
+      .then(() => Promise.all(flatten([
+        this.posts().attach(newPost, {transacting}),
+        post.followers().fetch().then(followers =>
+          newPost.addFollowers(followers.map(f => f.id), {}, {transacting}))
+      ])))
+    }))
+  },
+
   async removeMembers (usersOrIds, { transacting } = {}) {
     return this.updateMembers(usersOrIds, {active: false}, {transacting})
   },
@@ -181,9 +208,9 @@ module.exports = bookshelf.Model.extend(merge({
     var attrs = defaults(
       pick(data,
         'name', 'description', 'slug', 'category', 'access_code', 'banner_url', 'avatar_url',
-        'location_id', 'location'
+        'location_id', 'location', 'group_data_type'
       ),
-      {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR}
+      {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR, 'group_data_type': 1}
     )
 
     // eslint-disable-next-line camelcase
@@ -194,18 +221,17 @@ module.exports = bookshelf.Model.extend(merge({
       access_code,
       created_at: new Date(),
       created_by_id: userId,
-      settings: { allow_community_invites: false, public_member_directory: false }
+      settings: { allow_group_invites: false, public_member_directory: false }
     }))
 
     const memberships = await bookshelf.transaction(async trx => {
-      await community.save(null, {transacting: trx})
-      await community.createStarterPosts(trx)
-      return community.addGroupMembers([userId],
+      await group.save(null, {transacting: trx})
+      await group.createStarterPosts(trx)
+      return group.addMembers([userId],
         {role: GroupMembership.Role.MODERATOR}, {transacting: trx})
     })
 
-    await Queue.classMethod('Community', 'notifyAboutCreate',
-      {communityId: community.id})
+    await Queue.classMethod('Group', 'notifyAboutCreate', { groupId: group.id })
 
     return memberships[0]
   },
@@ -219,14 +245,14 @@ module.exports = bookshelf.Model.extend(merge({
     return loop()
   },
 
-  find (idOrSlug, { transacting, active } = {}) {
-    if (!idOrSlug) return null
+  find (idOrSlug, opts = {}) {
+    if (!idOrSlug) return Promise.resolve(null)
 
     let where = isNaN(Number(idOrSlug))
-      ? (active ? {slug: idOrSlug, active: true} : {slug: idOrSlug})
-      : (active ? {id: idOrSlug, active: true} : {id: idOrSlug})
+      ? (opts.active ? {slug: idOrSlug, active: true} : {slug: idOrSlug})
+      : (opts.active ? {id: idOrSlug, active: true} : {id: idOrSlug})
 
-    return this.where(where).fetch({ transacting })
+    return this.where(where).fetch(opts)
   },
 
   // TODO: do we use this?
@@ -266,7 +292,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   // TODO: this is temporary to support current idea of Networks
-  // visibleNetworkCommunityIds (userId, rawQuery) {
+  // visibleNetworkGroupIds (userId, rawQuery) {
   //   const networkIds = Group.selectIdsForMember(userId, Group.DataType.NETWORK)
 
   //   const query = bookshelf.knex.select('child_groups.id')
@@ -274,7 +300,7 @@ module.exports = bookshelf.Model.extend(merge({
   //     .join('group_connections', 'child_groups.id', 'group_connections.child_group_id')
   //     .where(inner => {
   //       inner.whereIn('group_connections.parent_group_id', networkIds)
-  //       inner.andWhere('child_groups.group_data_type', Group.DataType.COMMUNITY)
+  //       inner.andWhere('child_groups.group_data_type', Group.DataType.GROUP)
   //       inner.andWhere('child_groups.visibility', '!=', Group.Visibility.HIDDEN)
   //     })
 
@@ -299,5 +325,10 @@ module.exports = bookshelf.Model.extend(merge({
   async inSameGroup (userIds) {
     const groupIds = await Promise.all(userIds.map(id => this.pluckIdsForMember(id)))
     return intersection(groupIds).length > 0
+  },
+
+  isSlugValid: function (slug) {
+    const regex = /^[0-9a-z-]{2,40}$/
+    return regex.test(slug)
   }
 })

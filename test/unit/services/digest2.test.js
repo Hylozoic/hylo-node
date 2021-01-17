@@ -406,7 +406,7 @@ describe('group digest v2', () => {
 
       post = await factories.post({created_at: six, user_id: u2.id}).save()
       await post.groups().attach(group.id)
-      await group.addGroupMembers([u1.id], {
+      await group.addMembers([u1.id], {
         settings: {sendEmail: true}
       })
     })
@@ -501,11 +501,11 @@ describe('getRecipients', () => {
       c.save()
     )
 
-    await c.addGroupMembers([uIn1, uOut1, uOut2, uOut4, uIn2], {
+    await c.addMembers([uIn1, uOut1, uOut2, uOut4, uIn2], {
       settings: {sendEmail: true}
     })
 
-    await c.addGroupMembers([uOut3], {settings: {sendEmail: false}})
+    await c.addMembers([uOut3], {settings: {sendEmail: false}})
     await c.removeGroupMembers([uOut2])
   })
 

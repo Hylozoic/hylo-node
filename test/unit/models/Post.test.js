@@ -106,16 +106,16 @@ describe('Post', function () {
   })
 
   describe('#isVisibleToUser', () => {
-    var post, c1, c2, user
+    var post, g1, g2, user
 
     beforeEach(() => {
       post = new Post({name: 'hello', active: true})
       user = factories.user({name: 'Cat'})
-      c1 = factories.community({active: true})
-      c2 = factories.community({active: true})
-      return Promise.join(post.save(), user.save(), c1.save(), c2.save())
-      .then(() => user.joinCommunity(c1))
-      .then(() => post.communities().attach(c2.id))
+      g1 = factories.group({active: true})
+      g2 = factories.group({active: true})
+      return Promise.join(post.save(), user.save(), g1.save(), g2.save())
+      .then(() => user.joinGroup(g1))
+      .then(() => post.communities().attach(g2.id))
     })
 
     it('is true if the post is public', () => {
@@ -124,33 +124,22 @@ describe('Post', function () {
       .then(visible => expect(visible).to.be.true)
     })
 
-    it('is false if the user is not connected by community', () => {
+    it('is false if the user is not connected by group', () => {
       return Post.isVisibleToUser(post.id, user.id)
       .then(visible => expect(visible).to.be.false)
     })
 
-    it('is true if the user and post share a community', () => {
-      return c2.addGroupMembers([user.id])
+    it('is true if the user and post share a group', () => {
+      return g2.addMembers([user.id])
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
 
-    it("is false if the user has a disabled membership in the post's community", async () => {
-      await c2.addGroupMembers([user.id])
-      await c2.removeGroupMembers([user.id])
+    it("is false if the user has a disabled membership in the post's group", async () => {
+      await g2.addMembers([user.id])
+      await g2.removeGroupMembers([user.id])
       const visible = await Post.isVisibleToUser(post.id, user.id)
       expect(visible).to.be.false
-    })
-
-    it('is true if the user and post share a network', () => {
-      var network = new Network()
-      return network.save()
-      .then(() => Promise.join(
-        c1.save({network_id: network.id}, {patch: true}),
-        c2.save({network_id: network.id}, {patch: true})
-      ))
-      .then(() => Post.isVisibleToUser(post.id, user.id))
-      .then(visible => expect(visible).to.be.true)
     })
 
     it('is true if the user is following the post', () => {
@@ -241,12 +230,12 @@ describe('Post', function () {
       u = await factories.user().save()
       u2 = await factories.user().save()
       u3 = await factories.user().save()
-      c = await factories.community().save()
-      await u2.joinCommunity(c)
-      await u3.joinCommunity(c)
+      c = await factories.group().save()
+      await u2.joinGroup(c)
+      await u3.joinGroup(c)
     })
 
-    it('creates activity for community members', () => {
+    it('creates activity for group members', () => {
       var post = factories.post({user_id: u.id})
       return post.save()
       .then(() => post.communities().attach(c.id))
@@ -288,7 +277,7 @@ describe('Post', function () {
       })
 
       return new Tag({name: 'FollowThisTag'}).save()
-      .tap(tag => u3.followedTags().attach({tag_id: tag.id, community_id: c.id}))
+      .tap(tag => u3.followedTags().attach({tag_id: tag.id, group_id: c.id}))
       .then(() => post.save())
       .then(() => Tag.updateForPost(post, ['FollowThisTag']))
       .then(() => post.communities().attach(c.id))

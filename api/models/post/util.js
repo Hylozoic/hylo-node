@@ -38,7 +38,7 @@ export async function updateFollowers (post, transacting) {
   const newMentionedIds = RichText.getUserMentions(post.get('description'))
   .filter(id => !followerIds.includes(id))
 
-  return post.addFollowers(newMentionedIds, {transacting})
+  return post.addFollowers(newMentionedIds, {}, {transacting})
   .then(follows => {
     const newFollowerIds = compact(follows).map(f => f.get('user_id'))
     // this check removes any ids that don't correspond to valid users, which
