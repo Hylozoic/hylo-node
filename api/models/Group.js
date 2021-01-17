@@ -13,8 +13,8 @@ export const GROUP_ATTR_UPDATE_WHITELIST = [
   'active'
 ]
 
-const DEFAULT_BANNER = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_group_banner.jpg'
-const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_group_avatar.png'
+const DEFAULT_BANNER = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
+const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'groups',

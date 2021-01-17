@@ -25,8 +25,8 @@ describe('Group', () => {
     const group = await Group.create(user.id, data)
 
     const savedGroup = await Group.find('comm1')
-    expect(savedGroup.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_group_banner.jpg')
-    expect(savedGroup.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_group_avatar.png')
+    expect(savedGroup.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg')
+    expect(savedGroup.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png')
   })
 
   describe('.find', () => {
