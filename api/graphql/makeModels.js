@@ -259,14 +259,12 @@ export default async function makeModels (userId, isAdmin) {
         }}
       ],
       getters: {
-        allowGroupInvites: g => g.get('settings').allow_group_invites,
         feedItems: (g, args) => g.feedItems(args),
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
-        publicMemberDirectory: g => g.get('settings').public_member_directory,
-        settings: g => mapKeys(camelCase, g.get('settings')),
+        settings: g => mapKeys(camelCase, g.get('settings'))
       },
       filter: nonAdminFilter(sharedGroupMembership('groups', userId)),
       fetchMany: ({ first, order, sortBy, groupIds, offset, search, autocomplete, filter, isPublic, boundingBox, parentSlugs }) =>

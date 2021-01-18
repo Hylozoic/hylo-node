@@ -147,7 +147,6 @@ type MembershipSettings {
 type Group {
   id: ID
   accessibility: Int
-  allowGroupInvites: Boolean
   avatarUrl: String
   bannerUrl: String
   createdAt: Date
@@ -157,9 +156,8 @@ type Group {
   locationObject: Location
   memberCount: Int
   name: String
-  settings: String
+  settings: GroupSettings
   postCount: Int
-  publicMemberDirectory: Boolean
   slug: String
   visibility: Int
   childGroups(
@@ -218,6 +216,11 @@ type Group {
     offset: Int,
     autocomplete: String
   ): SkillQuerySet,
+}
+
+type GroupSettings {
+  allowGroupInvites: Boolean
+  publicMemberDirectory: Boolean
 }
 
 type PersonQuerySet {
@@ -674,21 +677,20 @@ input InviteInput {
 }
 
 input GroupInput {
-  name: String
-  slug: String
+  accessibility: Int
+  active: Boolean
+  avatarUrl: String
+  bannerUrl: String
   description: String
   location: String
   locationId: ID
-  bannerUrl: String
-  avatarUrl: String
+  name: String
   settings: GroupSettingsInput
   slackHookUrl: String
   slackTeam: String
   slackConfigureUrl: String
-  active: Boolean
-  visibility: Boolean
-  accessibility: Boolean
-  publicMemberDirectory: Boolean
+  slug: String
+  visibility: Int
 }
 
 input GroupSettingsInput {
