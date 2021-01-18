@@ -6,10 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.5] - 2021-01-12
+### Added
+- URL is not required for affiliations
+- Docker environment setup option and instructions
+
 ## [1.4.4]
 ### Added
 - Add eventsAttending to the User model and Person type
-- Add migration to create user_affiliations table, model for Affiliation, and mutation resolvers to createAffiliation and deleteAffiliation
+- Add user_affiliations table, model for Affiliation, and mutation resolvers to createAffiliation and deleteAffiliation
 
 ## [1.4.3]
 ### Added
