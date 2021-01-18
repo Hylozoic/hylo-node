@@ -336,8 +336,8 @@ type Comment {
   text: String
   creator: Person
   post: Post
-  comment: Comment # parent comment of this one
-  comments(first: Int, cursor: ID, order: String): CommentQuerySet # child comments of this one
+  parentComment: Comment
+  childComments(first: Int, cursor: ID, order: String): CommentQuerySet
   createdAt: Date
   createdFrom: String
   attachments(type: String): [Attachment]
