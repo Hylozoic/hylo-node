@@ -55,7 +55,7 @@ exports.up = async function(knex) {
     })
 
     // Setup moderator roles
-    const moderators = await network.moderators()
+    const moderators = await network.moderators().fetch()
     await Promise.map(moderators.models, async (user) => {
       const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id }).fetch()
       const member = existingMembership || GroupMembership.forge({
