@@ -685,6 +685,7 @@ input GroupInput {
   location: String
   locationId: ID
   name: String
+  parentIds: [ID]
   settings: GroupSettingsInput
   slackHookUrl: String
   slackTeam: String
