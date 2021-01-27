@@ -13,7 +13,7 @@ export default async function createComment (commenterId, opts = {}) {
     recent: true,
     user_id: commenterId,
     post_id: post.id,
-    comment_id: parentComment.id,
+    comment_id: parentComment ? parentComment.id : null,
     active: true,
     created_from: opts.created_from || null
   }
