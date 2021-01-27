@@ -439,7 +439,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async updateFromNewComment ({ postId, commentId }) {
-    const where = {post_id: postId, 'posts.active': true}
+    const where = {post_id: postId, 'comments.active': true}
     const now = new Date()
 
     return Promise.all([
