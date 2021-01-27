@@ -48,7 +48,7 @@ module.exports = {
   Route: {
     evo: {
       passwordSetting: function () {
-        return url('/settings/password')
+        return url('/settings/account')
       },
 
       paymentSettings: function (opts = {}) {
