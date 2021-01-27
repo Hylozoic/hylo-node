@@ -111,7 +111,7 @@ function pushCommentToSockets (comment) {
       {
         creator: refineOne(comment.relations.user, ['id', 'name', 'avatar_url']),
         post: comment.get('post_id'),
-        comment: comment.get('comment_id')
+        parentComment: comment.get('comment_id')
       }
     )
   ))
