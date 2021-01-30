@@ -239,8 +239,8 @@ describe('group digest v2', () => {
           model({
             id: 1,
             name: 'Foo!',
-            description: '<p><a href="/u/21">Edward West</a> & ' +
-              '<a href="/u/16325">Julia Pope</a> <a>#oakland</a></p>',
+            description: '<p><a href="/members/21">Edward West</a> & ' +
+              '<a href="/members/16325">Julia Pope</a> <a>#oakland</a></p>',
             type: 'request',
             relations: {
               user: u1
@@ -258,9 +258,9 @@ describe('group digest v2', () => {
           {
             id: 1,
             title: 'Foo!',
-            details: `<p><a href="${prefix}/u/21">Edward West</a> &amp; ` +
-              `<a href="${prefix}/u/16325">Julia Pope</a> ` +
-              `<a href="${prefix}/g/foo/tag/oakland">#oakland</a></p>`,
+            details: `<p><a href="${prefix}/members/21">Edward West</a> &amp; ` +
+              `<a href="${prefix}/members/16325">Julia Pope</a> ` +
+              `<a href="${prefix}/grroups/foo/tag/oakland">#oakland</a></p>`,
             user: u1.attributes,
             url: Frontend.Route.post({id: 1}, group),
             comments: []
@@ -302,7 +302,7 @@ describe('group digest v2', () => {
       const data = {
         group_id: '77',
         group_name: 'foo',
-        group_url: 'https://www.hylo.com/g/foo',
+        group_url: 'https://www.hylo.com/groups/foo',
         requests: [],
         events: [],
         projects: [],
@@ -313,7 +313,7 @@ describe('group digest v2', () => {
             title: 'Hi',
             user: u4.attributes,
             comments: [],
-            url: 'https://www.hylo.com/p/1'
+            url: 'https://www.hylo.com/post/1'
           }
         ],
         conversations: [
@@ -322,12 +322,12 @@ describe('group digest v2', () => {
             title: 'Ya',
             user: u3.attributes,
             details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
-              `<a href="${prefix}/u/2?ya=1">Person</a></p>`,
+              `<a href="${prefix}/members/2?ya=1">Person</a></p>`,
             comments: [
               {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
-              {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/u/4">Bob</a>`}
+              {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4">Bob</a>`}
             ],
-            url: 'https://www.hylo.com/p/2'
+            url: 'https://www.hylo.com/post/2'
           }
         ]
       }
@@ -341,7 +341,7 @@ describe('group digest v2', () => {
               title: 'Hi',
               user: u4.attributes,
               reply_url: Email.postReplyAddress(1, user.id),
-              url: 'https://www.hylo.com/p/1' + ctParams
+              url: 'https://www.hylo.com/post/1' + ctParams
             }
           ],
           conversations: [
@@ -350,12 +350,12 @@ describe('group digest v2', () => {
               title: 'Ya',
               user: u3.attributes,
               details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
-                `<a href="${prefix}/u/2?ya=1${ctParams.replace('?', '&')}">Person</a></p>`,
+                `<a href="${prefix}/members/2?ya=1${ctParams.replace('?', '&')}">Person</a></p>`,
               reply_url: Email.postReplyAddress(2, user.id),
-              url: 'https://www.hylo.com/p/2' + ctParams,
+              url: 'https://www.hylo.com/post/2' + ctParams,
               comments: [
                 {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
-                {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/u/4${ctParams}">Bob</a>`}
+                {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4${ctParams}">Bob</a>`}
               ]
             }
           ],
@@ -369,7 +369,7 @@ describe('group digest v2', () => {
           form_token: Email.formToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, group: 'foo'}),
           subject: `New activity from ${u4.name} and ${u3.name}`,
-          group_url: 'https://www.hylo.com/g/foo' + ctParams
+          group_url: 'https://www.hylo.com/groups/foo' + ctParams
         }))
       })
     })
