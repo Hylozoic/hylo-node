@@ -82,10 +82,8 @@ export default async function makeModels (userId, isAdmin) {
         newPostCount: m =>
           m.get('user_id') === userId ? m.get('new_post_count') : null,
         community: m => m.groupData().fetch(),
-        hasModeratorRole: async m => {
-          const community = await m.groupData().fetch()
-          return GroupMembership.hasModeratorRole(userId, community)
-        }
+        person: m => m.user().fetch(),
+        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR)
       },
       filter: nonAdminFilter(membershipFilter(userId))
     },
