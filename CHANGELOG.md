@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.7] - 2021-02-01
+### Fixes
+- People incorrectly showing as a moderator when viewing a community
+
 ## [1.4.6] - 2021-01-31
 ### Fixes
 - Redirect URL corrected for password reset
