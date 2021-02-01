@@ -136,6 +136,7 @@ type Membership {
   lastViewedAt: String
   newPostCount: Int
   group: Group
+  person: Person
   settings: MembershipSettings
 }
 
