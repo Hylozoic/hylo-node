@@ -56,7 +56,7 @@ module.exports.policies = {
     createBatchFromEmailForm: ['checkAndDecodeToken']
   },
 
-  CommunityController: {
+  GroupController: {
     subscribe:   ['isSocket', 'sessionAuth', 'checkAndSetMembership'],
     unsubscribe: ['isSocket', 'sessionAuth', 'checkAndSetMembership']
   },

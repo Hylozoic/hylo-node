@@ -6,14 +6,14 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User)
   },
 
-  community: function () {
-    return this.belongsTo(Community)
+  group: function () {
+    return this.belongsTo(Group)
   }
 }, {
 
   create: function (opts) {
     return new JoinRequest({
-      community_id: opts.communityId,
+      group_id: opts.groupId,
       user_id: opts.userId,
       created_at: new Date(),
       status: 0,
@@ -24,15 +24,15 @@ module.exports = bookshelf.Model.extend({
   },
 
   afterCreate: async function (request) {
-    await request.load(['community', 'user'])
-    const { community, user } = request.relations
+    await request.load(['group', 'user'])
+    const { group, user } = request.relations
 
-    const moderators = await community.moderators().fetch()
+    const moderators = await group.moderators().fetch()
 
     const announcees = moderators.map(moderator => ({
       actor_id: user.id,
       reader_id: moderator.id,
-      community_id: community.id,
+      group_id: group.id,
       reason: 'joinRequest'
     }))
 
@@ -66,13 +66,13 @@ module.exports = bookshelf.Model.extend({
       .then(() => JoinRequest.find(id))
       .tap(async request => {
         if (isApproved) {
-          await request.load(['community', 'user'])
-          const { community, user } = request.relations;
+          await request.load(['group', 'user'])
+          const { group, user } = request.relations;
 
           const approvedMember = {
             actor_id: moderatorId,
             reader_id: user.id,
-            community_id: community.id,
+            group_id: group.id,
             reason: 'approvedJoinRequest'
           }
 

@@ -1,15 +1,15 @@
 /* eslint-disable camelcase */
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'communities_tags',
+  tableName: 'groups_tags',
   requireFetch: false,
 
   owner: function () {
     return this.belongsTo(User, 'user_id')
   },
 
-  community: function () {
-    return this.belongsTo(Community)
+  group: function () {
+    return this.belongsTo(Group)
   },
 
   tag: function () {
@@ -20,7 +20,7 @@ module.exports = bookshelf.Model.extend({
     return TagFollow.query(q => {
       q.where({
         user_id: userId,
-        community_id: this.get('community_id'),
+        group_id: this.get('group_id'),
         tag_id: this.get('tag_id')
       })
     })
@@ -36,11 +36,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   postCount: function () {
-    return CommunityTag.taggedPostCount(this.get('community_id'), this.get('tag_id'))
+    return GroupTag.taggedPostCount(this.get('group_id'), this.get('tag_id'))
   },
 
   followerCount: function () {
-    return Tag.followersCount(this.get('tag_id'), { communityId: this.get('community_id') })
+    return Tag.followersCount(this.get('tag_id'), { groupId: this.get('group_id') })
   },
 
   consolidateFollowerCount: function () {
@@ -58,26 +58,26 @@ module.exports = bookshelf.Model.extend({
     .save({}, {transacting})
   },
 
-  taggedPostCount (communityId, tagId) {
+  taggedPostCount (groupId, tagId) {
     return bookshelf.knex('posts_tags')
     .join('posts', 'posts.id', 'posts_tags.post_id')
-    .join('communities_posts', 'communities_posts.post_id', 'posts_tags.post_id')
+    .join('groups_posts', 'groups_posts.post_id', 'posts_tags.post_id')
     .where('posts.active', true)
-    .where({community_id: communityId, tag_id: tagId})
+    .where({group_id: groupId, tag_id: tagId})
     .count()
     .then(rows => Number(rows[0].count))
   },
 
-  defaults (communityId, trx) {
-    return CommunityTag.where({community_id: communityId, is_default: true})
+  defaults (groupId, trx) {
+    return GroupTag.where({group_id: groupId, is_default: true})
     .fetchAll({withRelated: 'tag', transacting: trx})
   },
 
-  findByTagAndCommunity (topicName, communitySlug) {
-    return CommunityTag.query(q => {
-      q.join('communities', 'communities.id', 'communities_tags.community_id')
-      q.where('communities.slug', communitySlug)
-      q.join('tags', 'tags.id', 'communities_tags.tag_id')
+  findByTagAndGroup (topicName, groupSlug) {
+    return GroupTag.query(q => {
+      q.join('groups', 'groups.id', 'groups_tags.group_id')
+      q.where('groups.slug', groupSlug)
+      q.join('tags', 'tags.id', 'groups_tags.tag_id')
       q.where('tags.name', topicName)
     }).fetch()
   }

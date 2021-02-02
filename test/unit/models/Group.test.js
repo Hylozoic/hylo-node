@@ -1,5 +1,14 @@
 import factories from '../../setup/factories'
 
+export function myGroupIdsSqlFragment (userId) {
+  return `(select "group_data_id" from "group_memberships"
+    inner join "groups"
+    on "groups"."id" = "group_memberships"."group_id"
+    and "group_memberships"."user_id" = '${userId}'
+    and "group_memberships"."active" = true
+    and "groups"."active" = true)`
+}
+
 describe('Group', () => {
   describe('addMembers', () => {
     let group, u1, u2, gm1
@@ -41,8 +50,8 @@ describe('Group', () => {
 
   describe('removeMembers', () => {
     it('removes child members', async () => {
-      const community = await factories.community().save()
-      const group = await community.createGroup()
+      const group = await factories.group().save()
+      const group = await group.createGroup()
       const user1 = await factories.user().save()
       const user2 = await factories.user().save()
       await group.addMembers([user1, user2])
@@ -54,8 +63,8 @@ describe('Group', () => {
 
   describe('updateMembers', () => {
     it('updates members', async () => {
-      const community = await factories.community().save()
-      const group = await community.createGroup()
+      const group = await factories.group().save()
+      const group = await group.createGroup()
       const user1 = await factories.user().save()
       const user2 = await factories.user().save()
       const projectRole = await ProjectRole.forge({name: 'test role'}).save()
@@ -74,14 +83,29 @@ describe('Group', () => {
 
   describe('deactivate', () => {
     it('deactivates all child members', async () => {
-      const community = await factories.community().save()
-      const group = await community.createGroup()
+      const group = await factories.group().save()
+      const group = await group.createGroup()
       const user1 = await factories.user().save()
       const user2 = await factories.user().save()
       await group.addMembers([user1, user2])
-      await Group.deactivate(community.id, Community)
+      await Group.deactivate(group.id, Group)
       const postDeactivationMembers = await group.members().fetch()
       expect(postDeactivationMembers.length).to.equal(0)
     })
   })
+
+  describe('selectIdsForMember', () => {
+    it('produces the expected query clause', () => {
+      const query = Post.query(q => {
+        q.join('groups_posts', 'posts.id', 'groups_posts.group_id')
+        q.whereIn('groups_posts.group_id', Group.selectIdsForMember('42'))
+      })
+      expectEqualQuery(query, `select * from "posts"
+        inner join "groups_posts"
+        on "posts"."id" = "groups_posts"."group_id"
+        where "groups_posts"."group_id" in
+        ${myGroupIdsSqlFragment('42')}`)
+    })
+  })
+
 })

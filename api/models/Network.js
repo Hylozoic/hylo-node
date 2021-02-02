@@ -38,15 +38,21 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async memberCount () {
-    const communityIds = await Community.where({
+    const communities = await Community.where({
       network_id: this.id,
       'communities.active': true
-    })
-    .query().pluck('id')
-
-    return GroupMembership.forIds(null, communityIds, Community).query()
-    .select(bookshelf.knex.raw('count(distinct user_id) as total'))
-    .then(rows => Number(rows[0].total))
+    }).query().select('id')
+    const communityIds = communities.map(c => c.id)
+    console.log("get network member count", communityIds)
+    const count = await GroupMembership.forIds(null, communityIds, Community, {
+      query: q => {
+        q.select(bookshelf.knex.raw('count(distinct user_id) as total'))
+      }
+    }).query()
+    // const count = await g.query()
+     // .then(rows => { console.log("got count", rows[0].total); return Number(rows[0].total)})
+    console.log("got count after", count)
+    return count[0].total
   },
 
   posts: function () {

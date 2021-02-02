@@ -30,12 +30,12 @@ export function validateThreadData (userId, data) {
   if (!(participantIds && participantIds.length)) {
     throw new Error("participantIds can't be empty")
   }
-  const checkForSharedCommunity = id =>
-    Group.inSameGroup([userId, id], Community)
+  const checkForSharedGroup = id =>
+    Group.inSameGroup([userId, id])
     .then(doesShare => {
       if (!doesShare) throw new Error(`no shared communities with user ${id}`)
     })
-  return Promise.all(map(checkForSharedCommunity, participantIds))
+  return Promise.all(map(checkForSharedGroup, participantIds))
 }
 
 function setupNewThreadAttrs (userId) {

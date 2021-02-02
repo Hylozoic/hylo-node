@@ -4,17 +4,16 @@ var factories = require(root('test/setup/factories'))
 var checkAndSetMembership = require(root('api/policies/checkAndSetMembership'))
 
 describe('checkAndSetMembership', () => {
-  var user, community, req, res
+  var user, group, req, res
 
   before(async () => {
-    const network = await factories.network().save()
-    community = await factories.community({network_id: network.id}).save()
+    group = await factories.group({ }).save()
     user = await factories.user().save()
   })
 
   beforeEach(() => {
     req = factories.mock.request()
-    req.params.communityId = community.id
+    req.params.groupId = group.id
     res = factories.mock.response()
   })
 
@@ -47,10 +46,10 @@ describe('checkAndSetMembership', () => {
     .then(() => expect(res.forbidden).to.have.been.called())
   })
 
-  it('returns true if the user is in the community', async () => {
+  it('returns true if the user is in the group', async () => {
     req.session.userId = user.id
     const next = spy()
-    await community.addGroupMembers([user.id])
+    await group.addMembers([user.id])
     return checkAndSetMembership(req, res, next)
     .then(() => expect(next).to.have.been.called())
   })

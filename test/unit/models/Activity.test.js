@@ -160,18 +160,18 @@ describe('Activity', function () {
       .then(() => Promise.props({
         u1: factories.user().save(),
         u2: factories.user().save(),
-        c1: factories.community().save(),
-        c2: factories.community().save(),
+        g1: factories.group().save(),
+        c2: factories.group().save(),
         p1: factories.post().save(),
         p2: factories.post().save()
       }))
       .then(props => { fixtures = props })
       .then(() => Promise.join(
-        fixtures.c1.posts().attach(fixtures.p1),
-        fixtures.c1.posts().attach(fixtures.p2),
+        fixtures.g1.posts().attach(fixtures.p1),
+        fixtures.g1.posts().attach(fixtures.p2),
         fixtures.c2.posts().attach(fixtures.p2),
-        fixtures.u1.joinCommunity(fixtures.c1),
-        fixtures.u1.joinCommunity(fixtures.c2)
+        fixtures.u1.joinGroup(fixtures.g1),
+        fixtures.u1.joinGroup(fixtures.c2)
       )))
 
     it('creates an in-app notification from a mention', () => {
@@ -191,8 +191,8 @@ describe('Activity', function () {
       })
     })
 
-    it('creates a push notification when the community setting is true', async () => {
-      await fixtures.c1.addGroupMembers([fixtures.u1.id], {
+    it('creates a push notification when the group setting is true', async () => {
+      await fixtures.g1.addMembers([fixtures.u1.id], {
         settings: {sendPushNotifications: true}
       })
       const activity = await Activity.createWithNotifications({
@@ -208,8 +208,8 @@ describe('Activity', function () {
       expect(notification.get('sent_at')).to.be.null
     })
 
-    it('creates an email notification when the community setting is true', () => {
-      return fixtures.c1.addGroupMembers([fixtures.u1.id], {
+    it('creates an email notification when the group setting is true', () => {
+      return fixtures.g1.addMembers([fixtures.u1.id], {
         settings: {sendEmail: true}
       })
       .then(() => Activity.createWithNotifications({
@@ -227,8 +227,8 @@ describe('Activity', function () {
       })
     })
 
-    it("doesn't create a push notification when the community setting is false", () => {
-      return fixtures.c1.addGroupMembers([fixtures.u1.id], {
+    it("doesn't create a push notification when the group setting is false", () => {
+      return fixtures.g1.addMembers([fixtures.u1.id], {
         settings: {sendPushNotifications: false}
       })
       .then(() => Activity.createWithNotifications({
@@ -245,8 +245,8 @@ describe('Activity', function () {
       })
     })
 
-    it("doesn't create an email when the community setting is false", () => {
-      return fixtures.c1.addGroupMembers([fixtures.u1.id], {
+    it("doesn't create an email when the group setting is false", () => {
+      return fixtures.g1.addMembers([fixtures.u1.id], {
         settings: {sendEmail: false}
       })
       .then(() => Activity.createWithNotifications({
@@ -264,14 +264,14 @@ describe('Activity', function () {
     })
 
     it("doesn't create in-app or email for new posts ", () => {
-      return fixtures.c1.addGroupMembers([fixtures.u1.id], {
+      return fixtures.g1.addMembers([fixtures.u1.id], {
         settings: {sendPushNotifications: true}
       })
       .then(() => Activity.createWithNotifications({
         post_id: fixtures.p1.id,
         reader_id: fixtures.u1.id,
         actor_id: fixtures.u2.id,
-        meta: {reasons: [`newPost: ${fixtures.c1.id}`]}
+        meta: {reasons: [`newPost: ${fixtures.g1.id}`]}
       }))
       .then(activity =>
         Promise.join(

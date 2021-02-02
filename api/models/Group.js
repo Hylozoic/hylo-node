@@ -1,4 +1,6 @@
-import { difference, intersection, map, sortBy, pick, omitBy, isUndefined } from 'lodash'
+import { clone, defaults, difference, flatten, intersection, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
+import randomstring from 'randomstring'
+import HasSettings from './mixins/HasSettings'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
@@ -11,54 +13,79 @@ export const GROUP_ATTR_UPDATE_WHITELIST = [
   'active'
 ]
 
-module.exports = bookshelf.Model.extend({
+const DEFAULT_BANNER = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg'
+const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png'
+
+module.exports = bookshelf.Model.extend(merge({
   tableName: 'groups',
   requireFetch: false,
 
-  groupData () {
-    // eslint-disable-next-line camelcase
-    const { group_data_type, group_data_id } = this.attributes
-    const model = getModelForDataType(group_data_type)
-    return model.query(q => q.where('id', group_data_id))
-  },
+  // ******** Getters ******* //
 
   childGroups () {
     return this.belongsToMany(Group)
-    .through(GroupConnection, 'parent_group_id', 'child_group_id')
+      .through(GroupConnection, 'parent_group_id', 'child_group_id')
   },
 
-  parentGroups () {
-    return this.belongsToMany(Group)
-    .through(GroupConnection, 'child_group_id', 'parent_group_id')
+  groupTags () {
+    return this.hasMany(GroupTag)
   },
 
-  members () {
+  locationObject () {
+    return this.belongsTo(Location, 'location_id')
+  },
+
+  members (where) {
     return this.belongsToMany(User).through(GroupMembership)
-    .query(q => q.where({
-      'group_memberships.active': true,
-      'users.active': true
-    }))
+    .query(q => {
+      q.where({
+        'group_memberships.active': true,
+        'users.active': true
+      })
+      if (where) {
+        q.where(where)
+      }
+    })
+    .withPivot(['created_at', 'role', 'settings'])
   },
 
   memberships (includeInactive = false) {
     return this.hasMany(GroupMembership)
-    .query(q => includeInactive ? q : q.where('group_memberships.active', true))
+      .query(q => includeInactive ? q : q.where('group_memberships.active', true))
   },
 
-  async updateMembers (usersOrIds, attrs, { transacting } = {}) {
-    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
-
-    const existingMemberships = await this.memberships(true)
-    .query(q => q.whereIn('user_id', userIds)).fetch()
-
-    const updatedAttribs = Object.assign(
-      {},
-      {settings: {}},
-      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
-    )
-
-    return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
+  memberCount: function () {
+    // TODO: investigate why num_members is not always accurate
+    // then remove memberCount and use num_members
+    // return this.get('num_members')
+    return this.members().fetch().then(x => x.length)
   },
+
+  moderators () {
+    return this.members({ role: GroupMembership.Role.MODERATOR })
+  },
+
+  parentGroups () {
+    return this.belongsToMany(Group)
+      .through(GroupConnection, 'child_group_id', 'parent_group_id')
+  },
+
+  posts () {
+    return this.belongsToMany(Post).through(PostMembership)
+      .query({ where: { 'posts.active': true } })
+  },
+
+  postCount: function () {
+    return Post.query(q => {
+      q.select(bookshelf.knex.raw('count(*)'))
+      q.join('groups_posts', 'posts.id', 'groups_posts.post_id')
+      q.where({'groups_posts.group_id': this.id, 'active': true})
+    })
+    .fetch()
+    .then(result => result.get('count'))
+  },
+
+  // ******** Setters ********** //
 
   // if a group membership doesn't exist for a user id, create it.
   // make sure the group memberships have the passed-in role and settings
@@ -75,13 +102,10 @@ module.exports = bookshelf.Model.extend({
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingMemberships = await this.memberships(true)
-    .query(q => q.whereIn('user_id', userIds)).fetch()
+      .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
     const existingUserIds = existingMemberships.pluck('user_id')
     const newUserIds = difference(userIds, existingUserIds)
-
-    await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
-
-    const updatedMemberships = await this.updateMembers(existingUserIds, updatedAttribs, {transacting})
+    const updatedMemberships = await this.updateMembers(existingUserIds, updatedAttribs, { transacting })
     const newMemberships = []
 
     for (let id of newUserIds) {
@@ -89,55 +113,179 @@ module.exports = bookshelf.Model.extend({
         Object.assign({}, updatedAttribs, {
           user_id: id,
           created_at: new Date(),
-          group_data_type: this.get('group_data_type')
-        }), {transacting})
+        }), { transacting })
       newMemberships.push(membership)
     }
     return updatedMemberships.concat(newMemberships)
+  },
+
+  createStarterPosts: function (transacting) {
+    var now = new Date()
+    var timeShift = {offer: 1, request: 2, resource: 3}
+    return Group.find('starter-posts', {withRelated: ['posts']})
+    .then(g => {
+      if (!g) throw new Error('Starter posts group not found')
+      return g
+    })
+    .then(g => g.relations.posts.models)
+    .then(posts => Promise.map(posts, post => {
+      if (post.get('type') === 'welcome') return
+
+      var newPost = post.copy()
+      var time = new Date(now - (timeShift[post.get('type')] || 0) * 1000)
+      // TODO: why are we attaching Ed West as a follower to every welcome post??
+      return newPost.save({created_at: time, updated_at: time}, {transacting})
+      .then(() => Promise.all(flatten([
+        this.posts().attach(newPost, {transacting}),
+        post.followers().fetch().then(followers =>
+          newPost.addFollowers(followers.map(f => f.id), {}, {transacting}))
+      ])))
+    }))
   },
 
   async removeMembers (usersOrIds, { transacting } = {}) {
     return this.updateMembers(usersOrIds, {active: false}, {transacting})
   },
 
-}, {
-  DataType,
+  async updateMembers (usersOrIds, attrs, { transacting } = {}) {
+    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
 
-  find (instanceOrId, { transacting } = {}) {
-    if (!instanceOrId) return null
+    const existingMemberships = await this.memberships(true)
+      .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
 
-    if (typeof instanceOrId === 'string' || typeof instanceOrId === 'number') {
-      return this.where('id', instanceOrId).fetch({transacting})
+    const updatedAttribs = Object.assign(
+      {},
+      {settings: {}},
+      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
+    )
+
+    return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
+  },
+
+  update: function (changes) {
+    var whitelist = [
+      'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url', 'description',
+      'location', 'location_id', 'name', 'settings', 'visibility'
+    ]
+
+    const attributes = pick(changes, whitelist)
+    const saneAttrs = clone(attributes)
+
+    if (attributes.settings) {
+      saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
     }
 
-    const type = getDataTypeForInstance(instanceOrId)
-    return this.findByIdAndType(instanceOrId.id, type, { transacting })
+    this.set(saneAttrs)
+    return this.validate().then(() => this.save())
   },
 
-  findByIdAndType (id, typeOrModel, { transacting } = {}) {
-    return this.whereIdAndType(id, typeOrModel).fetch({transacting})
+  validate: function () {
+    if (!trim(this.get('name'))) {
+      return Promise.reject(new Error('Name cannot be blank'))
+    }
+
+    return Promise.resolve()
+  },
+}, HasSettings), {
+  // ****** Class constants ****** //
+  //TODO: remove
+  DataType,
+
+  Visibility: {
+    HIDDEN: 0,
+    PROTECTED: 1,
+    PUBLIC: 2
   },
 
-  whereIdAndType (id, typeOrModel) {
-
-    const type = typeof typeOrModel === 'number'
-      ? typeOrModel
-      : getDataTypeForModel(typeOrModel)
-
-    return this.where({group_data_type: type, group_data_id: id})
+  Accessibility: {
+    CLOSED: 0,
+    RESTRICTED: 1,
+    OPEN: 2
   },
 
-  async deactivate (dataId, type, opts = {}) {
-    const group = await Group.whereIdAndType(dataId, type).fetch()
-    await group.save({active: false}, opts)
+  // ******* Class methods ******** //
+  async create (userId, data) {
+    var attrs = defaults(
+      pick(data,
+        'name', 'description', 'slug', 'category', 'access_code', 'banner_url', 'avatar_url',
+        'location_id', 'location', 'group_data_type'
+      ),
+      {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR, 'group_data_type': 1}
+    )
+
+    // eslint-disable-next-line camelcase
+    const access_code = attrs.access_code ||
+      await Group.getNewAccessCode()
+
+    const group = new Group(merge(attrs, {
+      access_code,
+      created_at: new Date(),
+      created_by_id: userId,
+      settings: { allow_group_invites: false, public_member_directory: false }
+    }))
+
+    const memberships = await bookshelf.transaction(async trx => {
+      await group.save(null, {transacting: trx})
+      if (data.parent_ids) {
+        for (const parentId of data.parent_ids) {
+          // TODO: check if we are allowed to make these parents or not, if they are restricted then create join requests
+          await group.parentGroups().attach(parentId, { transacting: trx })
+        }
+      }
+      await group.createStarterPosts(trx)
+      return group.addMembers([userId],
+        {role: GroupMembership.Role.MODERATOR}, {transacting: trx})
+    })
+
+    await Queue.classMethod('Group', 'notifyAboutCreate', { groupId: group.id })
+
+    return memberships[0]
+  },
+
+  getNewAccessCode: function () {
+    const test = code => Group.where({access_code: code}).count().then(Number)
+    const loop = () => {
+      const code = randomstring.generate({length: 10, charset: 'alphanumeric'})
+      return test(code).then(count => count ? loop() : code)
+    }
+    return loop()
+  },
+
+  find (idOrSlug, opts = {}) {
+    if (!idOrSlug) return Promise.resolve(null)
+
+    let where = isNaN(Number(idOrSlug))
+      ? (opts.active ? {slug: idOrSlug, active: true} : {slug: idOrSlug})
+      : (opts.active ? {id: idOrSlug, active: true} : {id: idOrSlug})
+
+    return this.where(where).fetch(opts)
+  },
+
+  // TODO: do we use this?
+  findActive (key, opts = {}) {
+    return this.find(key, merge({active: true}, opts))
+  },
+
+  async deactivate (id, opts = {}) {
+    const group = await Group.find(id).fetch()
+    await group.save({ active: false }, opts)
     return group.removeMembers(await group.members().fetch(), opts)
   },
 
-  selectIdsForMember (userOrId, typeOrModel, where) {
-    return GroupMembership.forIds(userOrId, null, typeOrModel, {
+  queryByAccessCode: function (accessCode) {
+    return this.query(qb => {
+      qb.whereRaw('lower(access_code) = lower(?)', accessCode)
+      qb.where('active', true)
+    })
+  },
+
+  selectIdsForMember (userOrId, where) {
+    return GroupMembership.forIds(userOrId, null, {
       query: q => {
         if (where) q.where(where)
-        q.select('group_data_id')
+
+        q.select('groups.id')
+
         q.join('groups', 'groups.id', 'group_memberships.group_id')
         q.where('groups.active', true)
       },
@@ -145,33 +293,48 @@ module.exports = bookshelf.Model.extend({
     }).query()
   },
 
-  async pluckIdsForMember (userOrId, typeOrModel, where) {
-    const ids = await this.selectIdsForMember(userOrId, typeOrModel, where)
-    return map(ids, 'group_data_id')
+  async pluckIdsForMember (userOrId, where) {
+    return await this.selectIdsForMember(userOrId, where).pluck('groups.id')
   },
 
-  havingExactMembers (userIds, typeOrModel) {
-    const type = typeof typeOrModel === 'number'
-      ? typeOrModel
-      : getDataTypeForModel(typeOrModel)
+  // TODO: this is temporary to support current idea of Networks
+  // visibleNetworkGroupIds (userId, rawQuery) {
+  //   const networkIds = Group.selectIdsForMember(userId, Group.DataType.NETWORK)
 
+  //   const query = bookshelf.knex.select('child_groups.id')
+  //     .from('groups as child_groups')
+  //     .join('group_connections', 'child_groups.id', 'group_connections.child_group_id')
+  //     .where(inner => {
+  //       inner.whereIn('group_connections.parent_group_id', networkIds)
+  //       inner.andWhere('child_groups.group_data_type', Group.DataType.GROUP)
+  //       inner.andWhere('child_groups.visibility', '!=', Group.Visibility.HIDDEN)
+  //     })
+
+  //   return rawQuery ? query : query.pluck('child_groups.id')
+  // },
+
+  havingExactMembers (userIds) {
     userIds = sortBy(userIds, Number)
     return this.query(q => {
       q.join('group_memberships', 'groups.id', 'group_memberships.group_id')
       q.where('group_memberships.active', true)
       q.groupBy('groups.id')
       q.having(bookshelf.knex.raw(`array_agg(user_id order by user_id) = ?`, [userIds]))
-      q.where('groups.group_data_type', type)
     })
   },
 
-  async allHaveMember (groupDataIds, userOrId, typeOrModel) {
-    const memberIds = await this.pluckIdsForMember(userOrId, typeOrModel)
+  async allHaveMember (groupDataIds, userOrId) {
+    const memberIds = await this.pluckIdsForMember(userOrId)
     return difference(groupDataIds, memberIds).length === 0
   },
 
-  async inSameGroup (userIds, typeOrModel) {
-    const groupIds = await Promise.all(userIds.map(id => this.pluckIdsForMember(id, typeOrModel)))
+  async inSameGroup (userIds) {
+    const groupIds = await Promise.all(userIds.map(id => this.pluckIdsForMember(id)))
     return intersection(groupIds).length > 0
+  },
+
+  isSlugValid: function (slug) {
+    const regex = /^[0-9a-z-]{2,40}$/
+    return regex.test(slug)
   }
 })

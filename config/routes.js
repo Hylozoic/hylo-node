@@ -64,8 +64,8 @@ module.exports.routes = {
   'POST    /noo/payment/registerStripe':                  'PaymentController.registerStripe',
 
   // websockets routes
-  'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',
-  'POST   /noo/community/:communityId/unsubscribe':       'CommunityController.unsubscribe',
+  'POST   /noo/group/:groupId/subscribe':                 'GroupController.subscribe',
+  'POST   /noo/group/:groupId/unsubscribe':               'GroupController.unsubscribe',
   'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // from comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',

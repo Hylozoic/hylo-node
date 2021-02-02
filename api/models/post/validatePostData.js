@@ -10,14 +10,14 @@ export default function validatePostData (userId, data) {
     throw new Error('not a valid type')
   }
 
-  if (isEmpty(data.community_ids)) {
+  if (isEmpty(data.group_ids)) {
     throw new Error('no communities specified')
   }
 
   if (data.topicNames && data.topicNames.length > 3) {
     throw new Error('too many topics in post, maximum 3')
   }
-  
-  return Group.allHaveMember(data.community_ids, userId, Community)
-  .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
+
+  return Group.allHaveMember(data.group_ids, userId)
+    .then(ok => ok ? Promise.resolve() : Promise.reject(new Error('unable to post to all those communities')))
 }

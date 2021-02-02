@@ -1,5 +1,4 @@
 import { curry } from 'lodash'
-import { myCommunityIds, myNetworkCommunityIds } from '../models/util/queryFilters'
 import { isFollowing } from '../models/group/queryUtils'
 import GroupDataType from '../models/group/DataType'
 
@@ -9,8 +8,9 @@ export function makeFilterToggle (enabled) {
 }
 
 // This does not include users connected by a network
+// TODO: is this right now?
 function sharesMembership (userId, q) {
-  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community).query().select('group_id')
+  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID]).query().select('group_id')
 
   q.where('group_memberships.active', true)
   q.whereIn('group_memberships.group_id', subq)
@@ -23,10 +23,8 @@ export const personFilter = userId => relation => relation.query(q => {
   if (userId) {
     // find all other memberships for users that share a network
     const sharedMemberships = GroupMembership.query(q3 => {
-      q3.select('user_id')
-      filterCommunities(q3, 'groups.group_data_id', userId)
-      q3.join('groups', 'groups.id', 'group_memberships.group_id')
-      q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
+      q3.select('group_memberships.user_id')
+      filterGroups(q3, 'group_memberships.group_id', userId)
     })
 
     q.whereNotIn('users.id', BlockedUser.blockedFor(userId))
@@ -35,7 +33,7 @@ export const personFilter = userId => relation => relation.query(q => {
 
     const sharedConnections = UserConnection.query(ucq =>{
       ucq.select('other_user_id')
-      ucq.where('user_id', userId)
+      ucq.where('user_connections.user_id', userId)
     })
 
     q.where(inner =>
@@ -46,63 +44,63 @@ export const personFilter = userId => relation => relation.query(q => {
 })
 
 export const messageFilter = userId => relation => relation.query(q => {
-  q.whereNotIn('user_id', BlockedUser.blockedFor(userId))
+  q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
 })
 
-function filterCommunities (q, idColumn, userId) {
+// Which groups can the user see
+function filterGroups (q, idColumn, userId) {
   // the effect of using `where` like this is to wrap everything within its
   // callback in parentheses -- this is necessary to keep `or` from "leaking"
   // out to the rest of the query
   q.where(inner => {
-    inner
-    .whereIn(idColumn, myCommunityIds(userId))
-    .orWhereIn(idColumn, myNetworkCommunityIds(userId))
-    if (idColumn === 'communities.id') {
-      // XXX: hack to make sure to show public communities on the map when logged in
-      inner.orWhere('communities.is_public', true)
+    inner.whereIn(idColumn, Group.selectIdsForMember(userId))
+
+    if (idColumn === 'groups.id') {
+      // XXX: hack to make sure to show public groups on the map when logged in
+      inner.orWhere('groups.visibility', Group.Visibility.PUBLIC)
     }
   })
 
-  // non authenticated queries can only see public communities
-  if (!userId && idColumn === 'communities.id') {
-    q.where('communities.is_public', true)
+  // non authenticated queries can only see public groups
+  if (!userId && idColumn === 'groups.id') {
+    q.where('groups.visibility', Group.Visibility.PUBLIC)
   }
 }
 
-export const sharedNetworkMembership = curry((tableName, userId, relation) =>
-  relation.query(q => {
+export const sharedGroupMembership = curry((tableName, userId, relation) => {
+  return relation.query(q => {
     switch (tableName) {
-      case 'communities':
-        return filterCommunities(q, 'communities.id', userId)
+      case 'groups':
+        return filterGroups(q, 'groups.id', userId)
       case 'posts':
         const subq = PostMembership.query(q2 => {
-          filterCommunities(q2, 'community_id', userId)
+          filterGroups(q2, 'group_id', userId)
         }).query().select('post_id')
 
         return q.where(q2 => {
           q2.whereIn('posts.id', subq).orWhere('posts.is_public', true)
         })
       case 'votes':
-        q.join('communities_posts', 'votes.post_id', 'communities_posts.post_id')
-        return filterCommunities(q, 'communities_posts.community_id', userId)
+        q.join('groups_posts', 'votes.post_id', 'groups_posts.post_id')
+        return filterGroups(q, 'groups_posts.group_id', userId)
       default:
-        throw new Error(`sharedNetworkMembership filter does not support ${tableName}`)
+        throw new Error(`sharedGroupMembership filter does not support ${tableName}`)
     }
-  }))
+  })})
 
 export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
   q.where({'comments.active': true})
 
   if (userId) {
-    q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
-    q.join('posts', 'communities_posts.post_id', 'posts.id')
+    q.leftJoin('groups_posts', 'comments.post_id', 'groups_posts.post_id')
+    q.join('posts', 'groups_posts.post_id', 'posts.id')
     q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
 
     q.where(q2 => {
-      const groupIds = Group.selectIdsForMember(userId, Post, isFollowing)
-      q2.whereIn('comments.post_id', groupIds)
-      .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
+      const followedPostIds = PostUser.followedPostIds(userId)
+      q2.whereIn('comments.post_id', followedPostIds)
+      .orWhere(q3 => filterGroups(q3, 'groups_posts.group_id', userId))
       .orWhere('posts.is_public', true)
     })
   }
@@ -126,35 +124,35 @@ export const authFilter = (userId, tableName) => relation => {
   })
 }
 
-export function communityTopicFilter (userId, {
+export function groupTopicFilter (userId, {
   autocomplete,
-  communityId,
+  groupId,
   isDefault,
   subscribed,
   visibility
 }) {
   return q => {
-    if (communityId) {
-      q.where('communities_tags.community_id', communityId)
+    if (groupId) {
+      q.where('groups_tags.group_id', groupId)
     }
 
     if (autocomplete) {
-      q.join('tags', 'tags.id', 'communities_tags.tag_id')
+      q.join('tags', 'tags.id', 'groups_tags.tag_id')
       q.whereRaw('tags.name ilike ?', autocomplete + '%')
     }
 
     if (isDefault) {
-      q.where('communities_tags.is_default', true)
+      q.where('groups_tags.is_default', true)
     }
 
     if (subscribed) {
-      q.join('tag_follows', 'tag_follows.tag_id', 'communities_tags.tag_id')
+      q.join('tag_follows', 'tag_follows.tag_id', 'groups_tags.tag_id')
       q.where('tag_follows.user_id', userId)
-      q.whereRaw('tag_follows.community_id = communities_tags.community_id')
+      q.whereRaw('tag_follows.group_id = groups_tags.group_id')
     }
 
     if (visibility) {
-      q.whereIn('communities_tags.visibility', visibility)
+      q.whereIn('groups_tags.visibility', visibility)
     }
   }
 }

@@ -13,7 +13,7 @@ describe('validateCommentCreateData', () => {
       post2.save(),
       user.save()
     ).then(function () {
-      return post.addFollowers([user.id], user.id)
+      return post.addFollowers([user.id])
     })
   })
 

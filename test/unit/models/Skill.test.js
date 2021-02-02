@@ -1,7 +1,7 @@
 import { expectEqualQuery } from '../../setup/helpers'
 import {
-  myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment
-} from '../../../api/models/util/queryFilters.test.helpers'
+  myGroupIdsSqlFragment
+} from './Group.test.js'
 
 describe('Skill.find', () => {
   it('returns nothing for a null id', () => {
@@ -24,12 +24,10 @@ describe('Skill.search', () => {
     expectEqualQuery(query, `select * from "skills"
       inner join "skills_users"
         on "skills_users"."skill_id" = "skills"."id"
-      inner join "communities_users"
-        on "communities_users"."user_id" = "skills_users"."user_id"
-      where name ilike 'go%' and (
-        "communities_users"."community_id" in ${myCommunityIdsSqlFragment(myId)}
-        or "communities_users"."community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
-      )
+      inner join "group_memberships"
+        on "group_memberships"."user_id" = "skills_users"."user_id"
+      where name ilike 'go%' and
+        "group_memberships"."group_id" in ${myGroupIdsSqlFragment(myId)}
       order by upper("name") asc
       limit 10
       offset 20`)

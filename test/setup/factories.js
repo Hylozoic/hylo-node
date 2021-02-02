@@ -12,11 +12,11 @@ module.exports = {
     }, attrs))
   },
 
-  community: attrs => {
-    return new Community(merge({
+  group: attrs => {
+    return new Group(merge({
       name: faker.random.words(6),
       slug: faker.lorem.slug(),
-      beta_access_code: faker.random.alphaNumeric(6)
+      access_code: faker.random.alphaNumeric(6)
     }, attrs))
   },
 

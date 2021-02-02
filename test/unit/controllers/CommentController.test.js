@@ -13,16 +13,16 @@ describe('CommentController', function () {
       u3: factories.user().save(),
       p1: factories.post().save(),
       p2: factories.post().save(),
-      c1: factories.community().save(),
+      g1: factories.group().save(),
       cm1: factories.comment().save()
     }))
     .then(props => {
       fixtures = props
     })
     .then(() => Promise.join(
-      fixtures.p1.communities().attach(fixtures.c1.id),
+      fixtures.p1.communities().attach(fixtures.g1.id),
       fixtures.p1.comments().create(fixtures.cm1),
-      fixtures.c1.addGroupMembers([fixtures.u1.id])
+      fixtures.g1.addMembers([fixtures.u1.id])
     )))
 
   beforeEach(() => {
@@ -83,14 +83,14 @@ describe('CommentController', function () {
       p3 = factories.post({user_id: fixtures.u1.id})
       res.serverError = spy()
       res.locals.tokenData = {
-        communityId: fixtures.c1.id,
+        groupId: fixtures.g1.id,
         userId: fixtures.u1.id
       }
       return Promise.join(p1.save(), p2.save(), p3.save())
       .then(() => Promise.join(
-        p1.communities().attach(fixtures.c1),
-        p2.communities().attach(fixtures.c1),
-        p3.communities().attach(fixtures.c1)))
+        p1.communities().attach(fixtures.g1),
+        p2.communities().attach(fixtures.g1),
+        p3.communities().attach(fixtures.g1)))
     })
 
     it('creates comments', () => {

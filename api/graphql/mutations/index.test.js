@@ -4,14 +4,14 @@ import {
   removeSkill,
   removeSkillToLearn,
   flagInappropriateContent,
-  allowCommunityInvites
+  allowGroupInvites
 } from './index'
 import root from 'root-path'
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
 describe('mutations', () => {
-  var u1, community, protocol, domain
+  var u1, group, protocol, domain
 
   before(() => {
     protocol = process.env.PROTOCOL
@@ -19,12 +19,12 @@ describe('mutations', () => {
     process.env.PROTOCOL = 'https'
     process.env.DOMAIN = 'www.hylo.com'
 
-    community = factories.community()
+    group = factories.group()
     u1 = factories.user()
     return Promise.join(
-      community.save(), u1.save())
+      group.save(), u1.save())
     .then(() => Promise.join(
-      u1.joinCommunity(community)
+      u1.joinGroup(group)
     ))
   })
 
@@ -43,11 +43,11 @@ describe('mutations', () => {
     expect(skill.get('name')).to.equal('New Skill To Learn')
   })
 
-  it('sets allow community invites', async () => {
-    const results = await allowCommunityInvites(u1.id, false)
+  it('sets allow group invites', async () => {
+    const results = await allowGroupInvites(u1.id, false)
     expect(results.success).to.equal(true)
 
-    const results2 = await allowCommunityInvites(u1.id, true)
+    const results2 = await allowGroupInvites(u1.id, true)
     expect(results2.success).to.equal(true)
   })
 

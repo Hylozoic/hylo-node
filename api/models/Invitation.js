@@ -2,11 +2,11 @@ import uuid from 'node-uuid'
 import EnsureLoad from './mixins/EnsureLoad'
 
 module.exports = bookshelf.Model.extend(Object.assign({
-  tableName: 'community_invites',
+  tableName: 'group_invites',
   requireFetch: false,
 
-  community: function () {
-    return this.belongsTo(Community)
+  group: function () {
+    return this.belongsTo(Group)
   },
 
   creator: function () {
@@ -44,18 +44,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // the tag follow already exists
   async use (userId, { transacting } = {}) {
     const user = await User.find(userId, {transacting})
-    const community = await this.community().fetch({transacting})
+    const group = await this.group().fetch({transacting})
     const role = Number(this.get('role'))
     const membership =
-      await GroupMembership.forPair(user, community).fetch({transacting}) ||
-      await user.joinCommunity(community, role, {transacting})
+      await GroupMembership.forPair(user, group).fetch({transacting}) ||
+      await user.joinGroup(group, role, {transacting})
 
     if (!this.isUsed() && this.get('tag_id')) {
       try {
         await TagFollow.add({
           tagId: this.get('tag_id'),
           userId,
-          communityId: this.get('community_id'),
+          groupId: this.get('group_id'),
           transacting
         })
       } catch (err) {
@@ -81,9 +81,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   send: function () {
-    return this.ensureLoad(['creator', 'community', 'tag'])
+    return this.ensureLoad(['creator', 'group', 'tag'])
     .then(() => {
-      const { creator, community } = this.relations
+      const { creator, group } = this.relations
       const email = this.get('email')
 
       const data = {
@@ -91,11 +91,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
         message: this.get('message'),
         inviter_name: creator.get('name'),
         inviter_email: creator.get('email'),
-        community_name: community.get('name'),
+        // TODO: change this data name in the email
+        group_name: group.get('name'),
         invite_link: Frontend.Route.useInvitation(this.get('token'), email),
         tracking_pixel_url: Analytics.pixelUrl('Invitation', {
           recipient: email,
-          community: community.get('name')
+          group: group.get('name')
         })
       }
       return this.save({
@@ -123,7 +124,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   create: function (opts) {
     return new Invitation({
       invited_by_id: opts.userId,
-      community_id: opts.communityId,
+      group_id: opts.groupId,
       email: opts.email.toLowerCase(),
       tag_id: opts.tagId,
       role: GroupMembership.Role[opts.moderator ? 'MODERATOR' : 'DEFAULT'],
@@ -142,9 +143,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   reinviteAll: function (opts) {
-    const { communityId } = opts
-    return Invitation.where({community_id: communityId, used_by_id: null, expired_by_id: null})
-    .fetchAll({withRelated: ['creator', 'community', 'tag']})
+    const { groupId } = opts
+    return Invitation.where({group_id: groupId, used_by_id: null, expired_by_id: null})
+    .fetchAll({withRelated: ['creator', 'group', 'tag']})
     .then(invitations =>
       Promise.map(invitations.models, invitation => invitation.send()))
   },
@@ -157,7 +158,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       q.whereNull('used_by_id')
       q.whereNull('expired_by_id')
     })
-    .fetchAll({withRelated: ['creator', 'community', 'tag']})
+    .fetchAll({withRelated: ['creator', 'group', 'tag']})
     .tap(invitations => Promise.map(invitations.models, i => i.send()))
     .then(invitations => invitations.pluck('id'))
   }

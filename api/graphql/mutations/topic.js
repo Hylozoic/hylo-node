@@ -1,17 +1,17 @@
 import { sanitize } from 'hylo-utils/text'
 
-export async function topicMutationPermissionCheck (userId, communityId) {
-  const community = await Community.find(communityId)
-  if (!community) {
-    throw new Error('That community does not exist.')
+export async function topicMutationPermissionCheck (userId, groupId) {
+  const group = await Group.find(groupId)
+  if (!group) {
+    throw new Error('That group does not exist.')
   }
-  if (!await GroupMembership.hasActiveMembership(userId, community)) {
-    throw new Error("You're not a member of that community.")
+  if (!await GroupMembership.hasActiveMembership(userId, group)) {
+    throw new Error("You're not a member of that group.")
   }
 }
 
-export async function createTopic (userId, topicName, communityId, isDefault, isSubscribing = true) {
-  await topicMutationPermissionCheck(userId, communityId)
+export async function createTopic (userId, topicName, groupId, isDefault, isSubscribing = true) {
+  await topicMutationPermissionCheck(userId, groupId)
   const name = sanitize(topicName)
   const invalidReason = Tag.validate(name)
   if (invalidReason) {
@@ -19,8 +19,8 @@ export async function createTopic (userId, topicName, communityId, isDefault, is
   }
 
   const topic = await Tag.findOrCreate(name)
-  await Tag.addToCommunity({
-    community_id: communityId,
+  await Tag.addToGroup({
+    group_id: groupId,
     tag_id: topic.id,
     user_id: userId,
     is_default: isDefault,
@@ -29,8 +29,8 @@ export async function createTopic (userId, topicName, communityId, isDefault, is
   return topic
 }
 
-export async function subscribe (userId, topicId, communityId, isSubscribing) {
-  await topicMutationPermissionCheck(userId, communityId)
-  await TagFollow.subscribe(topicId, userId, communityId, isSubscribing)
+export async function subscribe (userId, topicId, groupId, isSubscribing) {
+  await topicMutationPermissionCheck(userId, groupId)
+  await TagFollow.subscribe(topicId, userId, groupId, isSubscribing)
   return { success: true }
 }

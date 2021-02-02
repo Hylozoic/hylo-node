@@ -32,7 +32,7 @@ describe('afterCreatingPost', () => {
       post.save({}, {transacting: trx})
       .then(() =>
         afterCreatingPost(post, {
-          communities: [],
+          groups: [],
           videoUrl,
           children: [
             {
@@ -59,13 +59,13 @@ describe('afterCreatingPost', () => {
     })
   })
 
-  it('ignores duplicate community ids', () => {
-    const c = factories.community()
+  it('ignores duplicate group ids', () => {
+    const c = factories.group()
     return c.save()
     .then(() => post.save())
-    .then(() => afterCreatingPost(post, {community_ids: [c.id, c.id]}))
-    .then(() => post.load('communities'))
-    .then(() => expect(post.relations.communities.length).to.equal(1))
+    .then(() => afterCreatingPost(post, {group_ids: [c.id, c.id]}))
+    .then(() => post.load('groups'))
+    .then(() => expect(post.relations.groups.length).to.equal(1))
     .catch(err => {
       throw err
     })
