@@ -501,11 +501,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
           updated_at: commentId ? now : null
         }))),
 
-      // bump updated_at on the post's group
-      //TODO: fix
-      commentId && Group.whereIdAndType(postId, Post).query()
-      .update({updated_at: now}),
-
       // when creating a comment, mark post as read for the commenter
       commentId && Comment.where('id', commentId).query().pluck('user_id')
       .then(([ userId ]) => Post.find(postId)
@@ -517,10 +512,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     bookshelf.transaction(trx =>
       Promise.join(
         Activity.removeForPost(postId, trx),
-        Post.where('id', postId).query()
-        .update({active: false}).transacting(trx),
-        Group.whereIdAndType(postId, Post).query()
-        .update({active: false}).transacting(trx)
+        Post.where('id', postId).query().update({active: false}).transacting(trx)
       )),
 
   createActivities: (opts) =>
