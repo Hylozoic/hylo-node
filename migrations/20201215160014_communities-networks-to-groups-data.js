@@ -42,33 +42,29 @@ exports.up = async function(knex) {
 
     // Add group memberships for all users of sub communities
     await Promise.map(members.models, async (user) => {
-      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id }).fetch()
+      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id, group_data_type: NETWORK }).fetch()
       return existingMembership || await GroupMembership.forge({
         group_id: group.id,
         user_id: user.id,
-        group_data_type: NETWORK, // TODO: remove this since it is duplicate (not normalized)?
-        active: true,
+        group_data_type: NETWORK, // TODO: eventually remove this
         settings: { following: true },
         role: GroupMembership.Role.DEFAULT,
-        created_at: now,
-        updated_at: now
-      }).save()
+        created_at: now
+      }).save({ active: true, updated_at: now })
     })
 
     // Setup moderator roles
     const moderators = await network.moderators().fetch()
     await Promise.map(moderators.models, async (user) => {
-      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id }).fetch()
+      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id, group_data_type: NETWORK }).fetch()
       const member = existingMembership || GroupMembership.forge({
         group_id: group.id,
         user_id: user.id,
         group_data_type: NETWORK,
-        active: true,
         settings: { following: true },
         created_at: now,
-        updated_at: now,
       })
-      await member.save({ role: GroupMembership.Role.MODERATOR })
+      await member.save({ role: GroupMembership.Role.MODERATOR, active: true, updated_at: now })
     })
 
     // Add network posts to the new group
@@ -112,13 +108,11 @@ exports.up = async function(knex) {
     // Setup parent child relationship between network group and community group
     const network_id = community.attributes.network_id
     if (network_id && networkGroups[network_id]) {
-      await GroupConnection.forge({
-        parent_group_id: networkGroups[network_id].id,
-        child_group_id: group.id,
-        active: true,
-        created_at: now,
-        updated_at: now
-      }).save()
+      await knex.raw(`INSERT INTO group_connections (parent_group_id, child_group_id, active, created_at, updated_at)
+        VALUES(?, ?, true, ?, ?)
+        ON CONFLICT ON CONSTRAINT group_connections_parent_group_id_child_group_id_unique DO UPDATE SET active = true, updated_at = ?`,
+        [networkGroups[network_id].id, group.id, now, now, now]
+      )
 
       // Add all the tags connected to the sub groups to the parent network group
       await knex.raw(`INSERT INTO groups_tags
