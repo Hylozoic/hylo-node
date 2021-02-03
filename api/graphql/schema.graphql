@@ -507,6 +507,7 @@ type Query {
     boundingBox: [PointInput],
     isPublic: Boolean
   ): PostQuerySet
+  comment(id: ID): Comment
   people(
     boundingBox: [PointInput],
     first: Int,
