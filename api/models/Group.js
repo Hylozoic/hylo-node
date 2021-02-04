@@ -19,12 +19,25 @@ const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_commu
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'groups',
   requireFetch: false,
+  hasTimestamps: true,
 
   // ******** Getters ******* //
 
   childGroups () {
     return this.belongsToMany(Group)
-      .through(GroupConnection, 'parent_group_id', 'child_group_id')
+      .through(GroupRelationship, 'parent_group_id', 'child_group_id')
+      .query({ where: { 'group_relationships.active': true, 'groups.active': true } })
+      .orderBy('groups.name', 'asc')
+  },
+
+  groupRelationshipInvitesFrom () {
+    return this.hasMany(GroupRelationshipInvite, 'from_group_id')
+      .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
+  },
+
+  groupRelationshipInvitesTo () {
+    return this.hasMany(GroupRelationshipInvite, 'to_group_id')
+      .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
   },
 
   groupTags () {
@@ -67,7 +80,9 @@ module.exports = bookshelf.Model.extend(merge({
 
   parentGroups () {
     return this.belongsToMany(Group)
-      .through(GroupConnection, 'child_group_id', 'parent_group_id')
+      .through(GroupRelationship, 'child_group_id', 'parent_group_id')
+      .query({ where: { 'group_relationships.active': true, 'groups.active': true } })
+      .orderBy('groups.name', 'asc')
   },
 
   posts () {
@@ -86,6 +101,24 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   // ******** Setters ********** //
+
+  async addChild(childGroup, { transacting } = {}) {
+    const childGroupId = childGroup instanceof Group ? childGroup.id : childGroup
+    const existingChild = await GroupRelationship.where({ child_group_id: childGroupId, parent_group_id: this.id }).fetch({ transacting })
+    if (existingChild) {
+      return existingChild.save({ active: true }, { transacting })
+    }
+    return GroupRelationship.forge({ child_group_id: childGroupId, parent_group_id: this.id }).save({}, { transacting })
+  },
+
+  async addParent(parentGroup, { transacting } = {}) {
+    const parentGroupId = parentGroup instanceof Group ? parentGroup.id : parentGroup
+    const existingParent = await GroupRelationship.where({ parent_group_id: parentGroupId, child_group_id: this.id }).fetch({ transacting })
+    if (existingParent) {
+      return existingParent.save({ active: true }, { transacting })
+    }
+    return GroupRelationship.forge({ parent_group_id: parentGroup.id, child_group_id: this.id }).save({}, { transacting })
+  },
 
   // if a group membership doesn't exist for a user id, create it.
   // make sure the group memberships have the passed-in role and settings

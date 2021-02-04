@@ -98,7 +98,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  // TODO: can remove? its broken
   async hasModeratorRole (userOrId, group) {
     const gm = await this.forPair(userOrId, group).fetch()
     return gm && gm.hasRole(this.Role.MODERATOR)

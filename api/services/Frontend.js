@@ -91,11 +91,11 @@ module.exports = {
     },
 
     groupChildGroupInvite: function(group) {
-      return this.groupSettings(group) + '/groups#invites'
+      return this.groupSettings(group) + '/relationships#invites'
     },
 
     groupParentGroupJoinRequest: function(group) {
-      return this.groupSettings(group) + '/groups#join_requests'
+      return this.groupSettings(group) + '/relationships#join_requests'
     },
 
     mapPost: function (post, context, slug) {

@@ -91,6 +91,22 @@ module.exports = bookshelf.Model.extend({
     return `${actor.get('name')} approved your request to join ${group.get('name')}`
   },
 
+  textForGroupChildGroupInvite: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} invited your group ${childGroup.name} to join their group ${parentGroup.name}`
+  },
+
+  textForGroupChildGroupInviteAccepted: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} accepted your invite of their group ${childGroup.name} to join your group ${parentGroup.name}`
+  },
+
+  textForGroupParentGroupJoinRequest: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} is requesting to add their group ${childGroup.name} as a member of your group ${parentGroup.name}`
+  },
+
+  textForGroupParentGroupJoinRequestAccepted: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} accepted your request to add your group ${childGroup.name} as a member of their group ${parentGroup.name}`
+  },
+
   textForDonationTo: function (contribution) {
     const project = contribution.relations.project
     const postName = decode(project.get('name'))

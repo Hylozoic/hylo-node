@@ -2,14 +2,83 @@ import GroupService from '../../services/GroupService'
 import convertGraphqlData from './convertGraphqlData'
 import underlyingDeleteGroupTopic from '../../models/group/deleteGroupTopic'
 
-export async function updateGroup (userId, groupId, changes) {
-  const group = await getModeratedGroup(userId, groupId)
-  return group.update(convertGraphqlData(changes))
+// Util function
+async function getModeratedGroup (userId, groupId) {
+  const group = await Group.find(groupId)
+  if (!group) {
+    throw new Error('Group not found')
+  }
+
+  const isModerator = await GroupMembership.hasModeratorRole(userId, group)
+  if (!isModerator) {
+    throw new Error("You don't have permission to moderate this group")
+  }
+
+  return group
 }
+
+// Group Mutations
 
 export async function addModerator (userId, personId, groupId) {
   const group = await getModeratedGroup(userId, groupId)
   await GroupMembership.setModeratorRole(personId, group)
+  return group
+}
+
+export async function createGroup (userId, data) {
+  return Group.create(userId, convertGraphqlData(data))
+}
+
+export async function deleteGroup (userId, groupId) {
+  await getModeratedGroup(userId, groupId)
+
+  await Group.deactivate(groupId)
+  return {success: true}
+}
+
+export async function deleteGroupTopic (userId, groupTopicId) {
+  const groupTopic = await GroupTag.where({id: groupTopicId}).fetch()
+
+  await getModeratedGroup(userId, groupTopic.get('group_id'))
+
+  await underlyingDeleteGroupTopic(groupTopic)
+  return {success: true}
+}
+
+export async function deleteGroupRelationship (userId, parentId, childId) {
+  const groupRelationship = await GroupRelationship.forPair(parentId, childId).fetch()
+  if (!groupRelationship) {
+    return {success: true}
+  }
+  let childGroup, parentGroup
+  try {
+    childGroup = await getModeratedGroup(userId, groupRelationship.get('child_group_id'))
+  } catch(e) {}
+  try {
+    parentGroup = await getModeratedGroup(userId, groupRelationship.get('parent_group_id'))
+  } catch(e) {}
+
+  if (childGroup || parentGroup) {
+    // the logged in user is a moderator of one of the groups and so can delete the relationship
+    await groupRelationship.save({ active: false })
+    return {success: true}
+  }
+  throw new Error("You don't have permission to do this")
+  return {success: true}
+}
+
+export async function regenerateAccessCode (userId, groupId) {
+  const group = await getModeratedGroup(userId, groupId)
+  const code = await Group.getNewAccessCode()
+  return group.save({access_code: code}, {patch: true}) // eslint-disable-line camelcase
+}
+
+/**
+ * As a moderator, removes member from a group.
+ */
+export async function removeMember (loggedInUserId, userIdToRemove, groupId) {
+  const group = await getModeratedGroup(loggedInUserId, groupId)
+  await GroupService.removeMember(userIdToRemove, groupId)
   return group
 }
 
@@ -25,58 +94,88 @@ export async function removeModerator (userId, personId, groupId, isRemoveFromGr
   return group
 }
 
-/**
- * As a moderator, removes member from a group.
- */
-export async function removeMember (loggedInUserId, userIdToRemove, groupId) {
-  const group = await getModeratedGroup(loggedInUserId, groupId)
-  await GroupService.removeMember(userIdToRemove, groupId)
-  return group
-}
-
-export async function regenerateAccessCode (userId, groupId) {
+export async function updateGroup (userId, groupId, changes) {
   const group = await getModeratedGroup(userId, groupId)
-  const code = await Group.getNewAccessCode()
-  return group.save({access_code: code}, {patch: true}) // eslint-disable-line camelcase
+  return group.update(convertGraphqlData(changes))
 }
 
-export async function createGroup (userId, data) {
-  // TODO: fix this to work with multiple parents
-  // if (data.parentIds) {
-  //   const canModerate = await NetworkMembership.hasModeratorRole(userId, data.networkId)
-  //   if (!canModerate) {
-  //     throw new Error("You don't have permission to add a group to this network")
-  //   }
-  // }
-  return Group.create(userId, convertGraphqlData(data))
-}
-
-async function getModeratedGroup (userId, groupId) {
-  const group = await Group.find(groupId)
-  if (!group) {
+// ******* GroupRelationshipInvites ******** //
+export async function inviteGroupToGroup(userId, fromId, toId, type) {
+  const toGroup = await Group.find(toId)
+  if (!toGroup) {
     throw new Error('Group not found')
   }
 
-  const isModerator = await GroupMembership.hasModeratorRole(userId, group)
-  if (!isModerator) {
-    throw new Error("You don't have permission to moderate this group")
+  if (!Object.values(GroupRelationshipInvite.TYPE).includes(type)) {
+    throw new Error('Invalid group relationship type')
   }
 
-  return group
+  const fromGroup = await getModeratedGroup(userId, fromId)
+
+  if (await GroupRelationship.forPair(fromGroup, toGroup).fetch()) {
+    throw new Error('Groups are already related')
+  }
+
+  // If current user is a moderator of both the from group and the to group they can automatically join the groups together
+  if (await GroupMembership.hasModeratorRole(userId, toGroup)) {
+    if (type === GroupRelationshipInvite.TYPE.ParentToChild) {
+      return { success: true, groupRelationship: await fromGroup.addChild(toGroup) }
+    } if (type === GroupRelationshipInvite.TYPE.ChildToParent) {
+      return { success: true, groupRelationship: await fromGroup.addParent(toGroup) }
+    }
+  } else {
+    const existingInvite = GroupRelationshipInvite.forPair(fromGroup, toGroup).fetch()
+    if (existingInvite && existingInvite.status === GroupRelationshipInvite.STATUS.Pending) {
+      return { success: false, groupRelationshipInvite: existingInvite }
+    }
+    // If there's an existing processed invite then let's leave it and create a new one
+    // TODO: what if the last one was rejected, do we let them create a new one?
+    const invite = await GroupRelationshipInvite.create({
+      userId,
+      fromGroupId: fromId,
+      toGroupId: toId,
+      type
+    })
+    return { success: true, groupRelationshipInvite: invite }
+  }
 }
 
-export async function deleteGroupTopic (userId, groupTopicId) {
-  const groupTopic = await GroupTag.where({id: groupTopicId}).fetch()
-
-  await getModeratedGroup(userId, groupTopic.get('group_id'))
-
-  await underlyingDeleteGroupTopic(groupTopic)
-  return {success: true}
+export async function acceptGroupRelationshipInvite (userId, groupRelationshipInviteId) {
+  const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
+  if (invite) {
+    if (GroupMembership.hasModeratorRole(userId, invite.to_group_id)) {
+      const groupRelationship = await invite.accept(userId)
+      return { success: !!groupRelationship, groupRelationship }
+    } else {
+      throw new Error(`You do not have permission to do this`)
+    }
+  } else {
+    throw new Error(`Invalid parameters to accept invite`)
+  }
 }
 
-export async function deleteGroup (userId, groupId) {
-  await getModeratedGroup(userId, groupId)
+export async function cancelGroupRelationshipInvite (userId, groupRelationshipInviteId) {
+  const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
+  if (invite) {
+    if (GroupMembership.hasModeratorRole(userId, invite.from_group_id)) {
+      return { success: await invite.cancel(userId) }
+    } else {
+      throw new Error(`You do not have permission to do this`)
+    }
+  } else {
+    throw new Error(`Invalid parameters to cancel invite`)
+  }
+}
 
-  await Group.deactivate(groupId)
-  return {success: true}
+export async function rejectGroupRelationshipInvite (userId, groupRelationshipInviteId) {
+  const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
+  if (invite) {
+    if (GroupMembership.hasModeratorRole(userId, invite.to_group_id)) {
+      return { success: await invite.reject(userId) }
+    } else {
+      throw new Error(`You do not have permission to do this`)
+    }
+  } else {
+    throw new Error(`Invalid parameters to reject invite`)
+  }
 }

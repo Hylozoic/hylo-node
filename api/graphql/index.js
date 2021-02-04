@@ -4,14 +4,15 @@ import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
+  acceptGroupRelationshipInvite,
   acceptJoinRequest,
-  addGroupToParent,
   addModerator,
   addPeopleToProjectRole,
   addSkill,
   addSkillToLearn,
   allowGroupInvites,
   blockUser,
+  cancelGroupRelationshipInvite,
   createAffiliation,
   createComment,
   createGroup,
@@ -27,6 +28,7 @@ import {
   deleteAffiliation,
   deleteComment,
   deleteGroup,
+  deleteGroupRelationship,
   deleteGroupTopic,
   deletePost,
   deleteProjectRole,
@@ -37,6 +39,7 @@ import {
   findOrCreateThread,
   flagInappropriateContent,
   fulfillPost,
+  inviteGroupToGroup,
   invitePeopleToEvent,
   joinGroup,
   joinProject,
@@ -50,7 +53,7 @@ import {
   registerDevice,
   registerStripeAccount,
   reinviteAll,
-  removeGroupFromParent,
+  rejectGroupRelationshipInvite,
   removeMember,
   removeModerator,
   removePost,
@@ -190,10 +193,9 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
 
 export function makeMutations (userId, isAdmin) {
   return {
-    acceptJoinRequest: (root, { joinRequestId, groupId, userId, moderatorId }) => acceptJoinRequest(joinRequestId, groupId, userId, moderatorId),
+    acceptGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => acceptGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
-    addGroupToParent: (root, { childGroupId, parentGroupId }) =>
-      addGroupToParent({ userId, isAdmin }, { childGroupId, parentGroupId }),
+    acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
@@ -207,6 +209,8 @@ export function makeMutations (userId, isAdmin) {
     allowGroupInvites: (root, { groupId, data }) => allowGroupInvites(groupId, data),
 
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
+
+    cancelGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => cancelGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
@@ -243,6 +247,8 @@ export function makeMutations (userId, isAdmin) {
 
     deleteGroup: (root, { id }) => deleteGroup(userId, id),
 
+    deleteGroupRelationship: (root, { parentId, childId }) => deleteGroupRelationship(userId, parentId, childId),
+
     deleteGroupTopic: (root, { id }) => deleteGroupTopic(userId, id),
 
     deletePost: (root, { id }) => deletePost(userId, id),
@@ -265,6 +271,9 @@ export function makeMutations (userId, isAdmin) {
       flagInappropriateContent(userId, data),
 
     fulfillPost: (root, { postId }) => fulfillPost(userId, postId),
+
+    inviteGroupToJoinParent: (root, { parentId, childId }) =>
+      inviteGroupToGroup(userId, parentId, childId, GroupRelationshipInvite.TYPE.ParentToChild),
 
     invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
       invitePeopleToEvent(userId, eventId, inviteeIds),
@@ -294,8 +303,7 @@ export function makeMutations (userId, isAdmin) {
 
     reinviteAll: (root, {groupId}) => reinviteAll(userId, groupId),
 
-    removeGroupFromParent: (root, { childGroupId, parentGroupId }) =>
-      removeGroupFromParent({ userId, isAdmin }, { childGroupId, parentGroupId }),
+    rejectGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => rejectGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
     removeMember: (root, { personId, groupId }) =>
       removeMember(userId, personId, groupId),
@@ -308,6 +316,9 @@ export function makeMutations (userId, isAdmin) {
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
+
+    requestToAddGroupToParent: (root, { parentId, childId }) =>
+      inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent),
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),

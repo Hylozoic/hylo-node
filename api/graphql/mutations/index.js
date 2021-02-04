@@ -22,15 +22,18 @@ export {
   invitePeopleToEvent
 } from './event'
 export {
-  addGroupToParent,
+  acceptGroupRelationshipInvite,
   addModerator,
+  cancelGroupRelationshipInvite,
   createGroup,
-  deleteGroupTopic,
   deleteGroup,
+  deleteGroupRelationship,
+  deleteGroupTopic,
+  inviteGroupToGroup,
+  regenerateAccessCode,
+  rejectGroupRelationshipInvite,
   removeModerator,
   removeMember,
-  regenerateAccessCode,
-  removeGroupFromParent,
   updateGroup,
 } from './group'
 export {

@@ -218,6 +218,8 @@ export default async function makeModels (userId, isAdmin) {
         'locationObject',
         {childGroups: {querySet: true}},
         {parentGroups: {querySet: true}},
+        {groupRelationshipInvitesFrom: {querySet: true}},
+        {groupRelationshipInvitesTo: {querySet: true}},
         {moderators: {querySet: true}},
         {groupTags: {
           querySet: true,
@@ -278,6 +280,27 @@ export default async function makeModels (userId, isAdmin) {
           sort: sortBy,
           is_public: isPublic
         })
+    },
+
+    GroupRelationship: {
+      model: GroupRelationship,
+      attributes: [
+        'created_at',
+        'role',
+        'updated_at',
+      ],
+      relations: ['childGroup', 'parentGroup']
+    },
+
+    GroupRelationshipInvite: {
+      model: GroupRelationshipInvite,
+      attributes: [
+        'created_at',
+        'status',
+        'type',
+        'updated_at',
+      ],
+      relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 
     Invitation: {
