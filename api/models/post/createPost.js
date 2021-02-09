@@ -78,7 +78,7 @@ export function afterCreatingPost (post, opts) {
 
     opts.docs && Promise.map(opts.docs, (doc) => Media.createDoc(post.id, doc, trx)),
   ]))
-  .then(() => post.isProject() && post.updateProjectMembers(opts.memberIds || [], trxOpts))
+  .then(() => post.isProject() && post.setProjectMembers(opts.memberIds || [], trxOpts))
   .then(() => post.isEvent() && post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndGroups(post, trx))

@@ -241,7 +241,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   async addFollowers (usersOrIds, attrs = {}, { transacting } = {}) {
     const updatedAttribs = Object.assign(
       { active: true, following: true },
-      pick(omitBy(attrs, isUndefined), POSTS_USERS_ATTR_UPDATE_WHITELIST)
+      pick(POSTS_USERS_ATTR_UPDATE_WHITELIST, omitBy(isUndefined, attrs))
     )
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
@@ -251,7 +251,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const newUserIds = difference(userIds, existingUserIds)
     const updatedFollowers = await this.updateFollowers(existingUserIds, updatedAttribs, { transacting })
     const newFollowers = []
-
     for (let id of newUserIds) {
       const follower = await this.postUsers().create(
         Object.assign({}, updatedAttribs, {
@@ -272,8 +271,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingFollowers = await this.postUsers()
       .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
-    const updatedAttribs = pick(omitBy(attrs, isUndefined), POSTS_USERS_ATTR_UPDATE_WHITELIST)
-
+    const updatedAttribs = pick(POSTS_USERS_ATTR_UPDATE_WHITELIST, omitBy(isUndefined, attrs))
     return Promise.map(existingFollowers.models, postUser => postUser.updateAndSave(updatedAttribs, {transacting}))
   },
 

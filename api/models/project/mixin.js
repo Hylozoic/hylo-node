@@ -13,35 +13,23 @@ export default {
   addProjectMembers: async function (usersOrIds, opts) {
     // need to fetchId for ProjectRole
     const projectRole =  await this.getOrCreateMemberProjectRole(opts)
-    return this.addGroupMembers(usersOrIds, {
+    return this.addFollowers(usersOrIds, {
       project_role_id: projectRole.id,
-      settings: {following: true}
+      following: true
     }, opts)
   },
 
   removeProjectMembers: async function (usersOrIds, opts) {
-    return this.updateGroupMembers(usersOrIds, {
+    return this.updateFollowers(usersOrIds, {
       project_role_id: null,
-      settings: {following: false}
+      following: false
     }, opts)
   },
 
-  updateProjectMembers: async function (userIds, opts) {
+  setProjectMembers: async function (userIds, opts) {
     const members = await this.members().fetch(opts)
-    await this.removeGroupMembers(members, opts)
-    const memberRole = await this.getOrCreateMemberProjectRole(opts)
-    return Promise.map(uniq(userIds), async id => {
-      let gm = await GroupMembership.forPair(id, this, {includeInactive: true}).fetch(opts)
-      if (!gm) {
-        await this.addGroupMembers([id], {}, opts)
-        gm = await GroupMembership.forPair(id, this).fetch(opts)
-      }
-      gm.addSetting({following: true})
-      return gm.save({
-        project_role_id: memberRole.id,
-        active: true
-      }, opts)
-    })
+    await this.removeProjectMembers(members, opts)
+    await this.addProjectMembers(userIds, opts)
   },
 
   getOrCreateMemberProjectRole: async function (opts) {
