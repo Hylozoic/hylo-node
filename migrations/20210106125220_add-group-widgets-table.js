@@ -10,17 +10,13 @@ exports.up = async function(knex) {
     table.timestamp('created_at')
   })
 
-  const communities = await knex.raw(`
-    SELECT g.id FROM communities c
-    LEFT JOIN groups g on g.group_data_id = c.id
-    WHERE c.active=true and g.group_data_type=1
-  `)
-  const communityIds = communities.rows.map(r => r.id)
+  const groups = await knex.raw(`SELECT id from groups;`)
+  const groupIds = groups.rows.map(r => r.id)
   const widgetIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   const now = new Date().toISOString()
 
-  for (let i = 0; i < communityIds.length; i++) {
-    const id = communityIds[i]
+  for (let i = 0; i < groupIds.length; i++) {
+    const id = groupIds[i]
     let sql = 'INSERT INTO "public"."group_widgets"("group_id","widget_id", "order", "created_at") VALUES ' 
     widgetIds.forEach(w => sql = sql + `(${id}, ${w}, ${w}, '${now}'),`)
     sql = sql.replace(/,$/,';')

@@ -215,8 +215,8 @@ type Group {
     first: Int,
     offset: Int,
     autocomplete: String
-  ): SkillQuerySet,
-  widgets: [Widget]
+  ): SkillQuerySet
+  widgets: WidgetQuerySet
 }
 
 type GroupSettings {
@@ -224,11 +224,22 @@ type GroupSettings {
   publicMemberDirectory: Boolean
 }
 
+type GroupWidget {
+  group: Group
+  widget: Widget
+}
+
 type Widget {
   id: Int
   name: String
   isVisible: Boolean
   order: Int
+}
+
+type WidgetQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Widget]
 }
 
 type PersonQuerySet {
@@ -787,6 +798,7 @@ type Mutation {
   resendInvitation(invitationId: ID): GenericResult
   respondToEvent(id: ID, response: String): GenericResult
   subscribe(groupId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
+  toggleGroupWidgetVisibility(id: ID, isVisible: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
   unfulfillPost(postId: ID): GenericResult

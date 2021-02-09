@@ -33,6 +33,9 @@ export {
   removeGroupFromParent,
   updateGroup,
 } from './group'
+export { 
+  toggleGroupWidgetVisibility
+} from './group_widget'
 export {
   createInvitation,
   expireInvitation,

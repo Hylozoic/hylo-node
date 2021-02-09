@@ -3,14 +3,22 @@ import HasSettings from './mixins/HasSettings'
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_widgets',
 
-  community: async function () {
-    return await Community.find(this.get('group_id'))
+  group: function () {
+    return this.belongsTo(Group)
   },
 
   widget: function () {
     return this.belongsTo(Widget)
   }
 }, HasSettings), {
+
+  getVisibility: function(id) {
+    return GroupWidget.query().where({ id }).then((gw = []) => gw[0].is_visible)
+  },
+
+  getOrder: function(id) {
+    return GroupWidget.query().where({ id }).then((gw = []) => gw[0].order)
+  },
 
   createDefaultWidgetsForGroup: async function(group_id) {
     const widgets = await Widget.fetchAll()
@@ -41,8 +49,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     //TODO: fill in this function
   },
   
-  delete: async function(id) {
-    await GroupWidget.query().where({ id }).update({ is_visible: false })
+  toggleVisibility: async function(id, is_visible = true) {
+    await GroupWidget.query().where({ id }).update({ is_visible: !is_visible})
     return id
   }
 })

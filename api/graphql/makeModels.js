@@ -221,6 +221,7 @@ export default async function makeModels (userId, isAdmin) {
         {childGroups: {querySet: true}},
         {parentGroups: {querySet: true}},
         {moderators: {querySet: true}},
+        {widgets: {querySet: true}},
         {groupTags: {
           querySet: true,
           alias: 'groupTopics',
@@ -568,10 +569,14 @@ export default async function makeModels (userId, isAdmin) {
       model: Widget,
       attributes: [
         'id',
-        'name',
         'is_visible',
         'order'
-      ]
+      ],
+      getters: {
+        name: w => Widget.Name[w.get('name')],
+        isVisible: w => GroupWidget.getVisibility(w.id),
+        // order: w => GroupWidget.getOrder(w.id),
+      }
     }
   }
 }

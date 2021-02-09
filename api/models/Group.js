@@ -85,6 +85,11 @@ module.exports = bookshelf.Model.extend(merge({
     .then(result => result.get('count'))
   },
 
+  widgets: function () {
+    // return this.belongsToMany(Widget, 'group_widgets', 'group_id', 'widget_id', 'id', 'id').withPivot(['is_visible', 'order'])
+    return this.belongsToMany(Widget).through(GroupWidget).withPivot(['is_visible', 'order'])
+  },
+
   // ******** Setters ********** //
 
   // if a group membership doesn't exist for a user id, create it.
