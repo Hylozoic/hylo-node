@@ -103,6 +103,7 @@ export const commentFilter = userId => relation => relation.query(q => {
       .orWhere(q3 => filterGroups(q3, 'groups_posts.group_id', userId))
       .orWhere('posts.is_public', true)
     })
+    q.groupBy("comments.id")
   }
 })
 

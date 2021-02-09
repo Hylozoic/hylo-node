@@ -45,10 +45,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Activity)
   },
 
-  comments: function () {
-    return this.hasMany(Comment, 'post_id')
-  },
-
   contributions: function () {
     return this.hasMany(Contribution, 'post_id')
   },
