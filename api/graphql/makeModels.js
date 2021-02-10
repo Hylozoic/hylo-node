@@ -74,7 +74,8 @@ export default async function makeModels (userId, isAdmin) {
         'created_at'
       ],
       relations: [
-        { group: { alias: 'group' } }
+        { group: { alias: 'group' } },
+        { user: { alias: 'person' } }
       ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
@@ -82,10 +83,7 @@ export default async function makeModels (userId, isAdmin) {
           m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
           m.get('user_id') === userId ? m.get('new_post_count') : null,
-        hasModeratorRole: async m => {
-          const group = await m.group().fetch()
-          return GroupMembership.hasModeratorRole(userId, group)
-        }
+        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR)
       },
       filter: nonAdminFilter(membershipFilter(userId))
     },
@@ -335,11 +333,15 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         'post',
         {user: {alias: 'creator'}},
+        {childComments: { querySet: true }},
         {media: {
           alias: 'attachments',
           arguments: ({ type }) => [type]
         }}
       ],
+      getters: {
+        parentComment: (c) => c.parentComment().fetch()
+      },
       filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true
     },

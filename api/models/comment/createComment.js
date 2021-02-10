@@ -4,7 +4,7 @@ import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 import { refineOne, refineMany } from '../util/relations'
 
 export default async function createComment (commenterId, opts = {}) {
-  let { text, post } = opts
+  let { text, post, parentComment } = opts
   text = sanitize(text)
 
   var attrs = {
@@ -13,6 +13,7 @@ export default async function createComment (commenterId, opts = {}) {
     recent: true,
     user_id: commenterId,
     post_id: post.id,
+    comment_id: parentComment ? parentComment.id : null,
     active: true,
     created_from: opts.created_from || null
   }
@@ -71,10 +72,11 @@ export async function pushMessageToSockets (message, thread) {
   const excludingSender = userIds.filter(id => id !== message.get('user_id'))
 
   let response = refineOne(message,
-    ['id', 'text', 'created_at', 'user_id', 'post_id'],
+    ['id', 'text', 'created_at', 'user_id', 'post_id', 'comment_id'],
     {
       user_id: 'creator',
-      post_id: 'messageThread'
+      post_id: 'messageThread',
+      comment_id: 'parentComment'
     }
   )
 
@@ -108,7 +110,8 @@ function pushCommentToSockets (comment) {
       refineOne(comment, ['id', 'text', 'created_at']),
       {
         creator: refineOne(comment.relations.user, ['id', 'name', 'avatar_url']),
-        post: comment.get('post_id')
+        post: comment.get('post_id'),
+        parentComment: comment.get('comment_id')
       }
     )
   ))

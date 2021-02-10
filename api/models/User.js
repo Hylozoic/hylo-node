@@ -44,7 +44,7 @@ module.exports = bookshelf.Model.extend(merge({
   // },
 
   memberships() {
-    return this.hasMany(GroupMembership).where('active', true)
+    return this.hasMany(GroupMembership).where('group_memberships.active', true)
   },
 
   contributions: function () {
@@ -466,7 +466,7 @@ module.exports = bookshelf.Model.extend(merge({
     } else {
       q = User.where({id})
     }
-    return q.where('active', true).fetch(options)
+    return q.where('users.active', true).fetch(options)
   },
 
   named: function (name) {

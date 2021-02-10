@@ -231,6 +231,12 @@ module.exports = bookshelf.Model.extend(merge({
 
     const memberships = await bookshelf.transaction(async trx => {
       await group.save(null, {transacting: trx})
+      if (data.parent_ids) {
+        for (const parentId of data.parent_ids) {
+          // TODO: check if we are allowed to make these parents or not, if they are restricted then create join requests
+          await group.parentGroups().attach(parentId, { transacting: trx })
+        }
+      }
       await group.createStarterPosts(trx)
       return group.addMembers([userId],
         {role: GroupMembership.Role.MODERATOR}, {transacting: trx})

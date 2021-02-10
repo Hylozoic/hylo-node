@@ -45,10 +45,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Activity)
   },
 
-  comments: function () {
-    return this.hasMany(Comment, 'post_id')
-  },
-
   contributions: function () {
     return this.hasMany(Contribution, 'post_id')
   },
@@ -71,6 +67,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
   async isFollowed (userId) {
     const pu = await PostUser.find(this.id, userId)
     return !!(pu && pu.get('following'))
+  },
+
+  comments: function () {
+    return this.hasMany(Comment, 'post_id').query({ where: {
+      'comments.active': true,
+      'comments.comment_id': null
+    }})
   },
 
   linkPreview: function () {
@@ -234,7 +237,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   async addFollowers (usersOrIds, attrs = {}, { transacting } = {}) {
     const updatedAttribs = Object.assign(
       { active: true, following: true },
-      pick(omitBy(attrs, isUndefined), POSTS_USERS_ATTR_UPDATE_WHITELIST)
+      pick(POSTS_USERS_ATTR_UPDATE_WHITELIST, omitBy(isUndefined, attrs))
     )
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
@@ -244,7 +247,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const newUserIds = difference(userIds, existingUserIds)
     const updatedFollowers = await this.updateFollowers(existingUserIds, updatedAttribs, { transacting })
     const newFollowers = []
-
     for (let id of newUserIds) {
       const follower = await this.postUsers().create(
         Object.assign({}, updatedAttribs, {
@@ -265,8 +267,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingFollowers = await this.postUsers()
       .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
-    const updatedAttribs = pick(omitBy(attrs, isUndefined), POSTS_USERS_ATTR_UPDATE_WHITELIST)
-
+    const updatedAttribs = pick(POSTS_USERS_ATTR_UPDATE_WHITELIST, omitBy(isUndefined, attrs))
     return Promise.map(existingFollowers.models, postUser => postUser.updateAndSave(updatedAttribs, {transacting}))
   },
 
@@ -407,7 +408,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   countForUser: function (user, type) {
-    const attrs = {user_id: user.id, active: true}
+    const attrs = {user_id: user.id, 'posts.active': true}
     if (type) attrs.type = type
     return this.query().count().where(attrs).then(rows => rows[0].count)
   },
@@ -418,7 +419,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       q.join('tags', 'tags.id', 'posts_tags.tag_id')
       q.whereIn('tags.name', ['request', 'offer', 'resource'])
       q.groupBy('tags.name')
-      q.where({'posts.user_id': user.id, active: true})
+      q.where({'posts.user_id': user.id, 'posts.active': true})
       q.select('tags.name')
     }).query().count()
     .then(rows => rows.reduce((m, n) => {
@@ -452,7 +453,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   find: function (id, options) {
-    return Post.where({id, active: true}).fetch(options)
+    return Post.where({id, 'posts.active': true}).fetch(options)
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {
@@ -481,7 +482,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async updateFromNewComment ({ postId, commentId }) {
-    const where = {post_id: postId, active: true}
+    const where = {post_id: postId, 'comments.active': true}
     const now = new Date()
 
     return Promise.all([
@@ -501,11 +502,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
           updated_at: commentId ? now : null
         }))),
 
-      // bump updated_at on the post's group
-      //TODO: fix
-      commentId && Group.whereIdAndType(postId, Post).query()
-      .update({updated_at: now}),
-
       // when creating a comment, mark post as read for the commenter
       commentId && Comment.where('id', commentId).query().pluck('user_id')
       .then(([ userId ]) => Post.find(postId)
@@ -517,10 +513,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     bookshelf.transaction(trx =>
       Promise.join(
         Activity.removeForPost(postId, trx),
-        Post.where('id', postId).query()
-        .update({active: false}).transacting(trx),
-        Group.whereIdAndType(postId, Post).query()
-        .update({active: false}).transacting(trx)
+        Post.where('id', postId).query().update({active: false}).transacting(trx)
       )),
 
   createActivities: (opts) =>

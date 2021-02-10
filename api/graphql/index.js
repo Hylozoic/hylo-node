@@ -163,6 +163,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     messageThread: (root, { id }) => fetchOne('MessageThread', id),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
+    comment: (root, { id }) => fetchOne('Comment', id),
     people: (root, args) => fetchMany('Person', args),
     connections: (root, args) => fetchMany('PersonConnection', args),
     groupTopics: (root, args) => fetchMany('GroupTopic', args),

@@ -44,6 +44,9 @@ export function vote (userId, postId, isUpvote) {
 export function deletePost (userId, postId) {
   return Post.find(postId)
   .then(post => {
+    if (!post) {
+      throw new Error("Post does not exist")
+    }
     if (post.get('user_id') !== userId) {
       throw new Error("You don't have permission to modify this post")
     }

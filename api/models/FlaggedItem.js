@@ -14,9 +14,9 @@ module.exports = bookshelf.Model.extend({
     if (!this.get('object_id')) throw new Error('No object_id defined for Flagged Item')
     switch (this.get('object_type')) {
       case FlaggedItem.Type.POST:
-        return Post.find(this.get('object_id'), {withRelated: 'communities'})
+        return Post.find(this.get('object_id'), {withRelated: 'groups'})
       case FlaggedItem.Type.COMMENT:
-        return Comment.find(this.get('object_id'), {withRelated: 'post.communities'})
+        return Comment.find(this.get('object_id'), {withRelated: 'post.groups'})
       case FlaggedItem.Type.MEMBER:
         return User.find(this.get('object_id'))
       default:

@@ -40,7 +40,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   async memberCount () {
     const communities = await Community.where({
       network_id: this.id,
-      active: true
+      'communities.active': true
     }).query().select('id')
     const communityIds = communities.map(c => c.id)
     console.log("get network member count", communityIds)

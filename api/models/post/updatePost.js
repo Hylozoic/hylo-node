@@ -38,7 +38,7 @@ export function afterUpdatingPost (post, opts) {
     transacting
   } = opts
 
-  return post.ensureLoad(['communities'])
+  return post.ensureLoad(['groups'])
   .then(() => Promise.all([
     updateChildren(post, requests, transacting),
     updateGroups(post, group_ids, transacting),
@@ -46,6 +46,6 @@ export function afterUpdatingPost (post, opts) {
     Tag.updateForPost(post, topicNames, userId, transacting),
     updateFollowers(post, transacting)
   ]))
-  .then(() => memberIds && post.updateProjectMembers(memberIds, {transacting}))
+  .then(() => memberIds && post.setProjectMembers(memberIds, {transacting}))
   .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))
 }

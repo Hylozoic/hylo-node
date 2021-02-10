@@ -48,7 +48,7 @@ module.exports = {
   Route: {
     evo: {
       passwordSetting: function () {
-        return url('/settings/password')
+        return url('/settings/account')
       },
 
       paymentSettings: function (opts = {}) {
@@ -68,18 +68,18 @@ module.exports = {
     root: () => url('/app'),
 
     group: function (group) {
-      return url('/g/%s', getSlug(group))
+      return url('/groups/%s', getSlug(group))
     },
 
     comment: function (comment, group) {
       // TODO: update to use comment specific url when implemented in frontend
       let groupSlug = getSlug(group)
 
-      let groupUrl = isEmpty(groupSlug) ? '/all' : `/g/${groupSlug}`
+      let groupUrl = isEmpty(groupSlug) ? '/all' : `/groups/${groupSlug}`
 
       const postId = comment.relations.post.id
 
-      return url(`${groupUrl}/p/${postId}`)
+      return url(`${groupUrl}/post/${postId}`)
     },
 
     groupSettings: function (group) {
@@ -90,20 +90,28 @@ module.exports = {
       return this.groupSettings(group) + '/invite#join_requests'
     },
 
+    groupChildGroupInvite: function(group) {
+      return this.groupSettings(group) + '/groups#invites'
+    },
+
+    groupParentGroupJoinRequest: function(group) {
+      return this.groupSettings(group) + '/groups#join_requests'
+    },
+
     mapPost: function (post, context, slug) {
       let contextUrl = '/all'
 
       if (context === 'public') {
         contextUrl = '/public'
-      } else if (context === 'group') {
-        contextUrl = `/g/${slug}`
+      } else if (context === 'groups') {
+        contextUrl = `/groups/${slug}`
       }
 
-      return url(`${contextUrl}/map/p/${getModelId(post)}`)
+      return url(`${contextUrl}/map/post/${getModelId(post)}`)
     },
 
     profile: function (user) {
-      return url(`/m/${getModelId(user)}`)
+      return url(`/members/${getModelId(user)}`)
     },
 
     post: function (post, group, isPublic) {
@@ -113,14 +121,14 @@ module.exports = {
       if (isPublic) {
         groupUrl = '/public'
       } else if (!isEmpty(groupSlug)) {
-        groupUrl = `/g/${groupSlug}`
+        groupUrl = `/groups/${groupSlug}`
       }
 
       return url(`${groupUrl}/p/${getModelId(post)}`)
     },
 
     thread: function (post) {
-      return url(`/t/${getModelId(post)}`)
+      return url(`/messages/${getModelId(post)}`)
     },
 
     unfollow: function (post, group) {
@@ -153,7 +161,7 @@ module.exports = {
     },
 
     invitePath: function (group) {
-      return `/g/${getSlug(group)}/join/${group.get('access_code')}`
+      return `/groups/${getSlug(group)}/join/${group.get('access_code')}`
     }
   }
 }

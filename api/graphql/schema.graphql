@@ -136,6 +136,7 @@ type Membership {
   lastViewedAt: String
   newPostCount: Int
   group: Group
+  person: Person
   settings: MembershipSettings
 }
 
@@ -379,6 +380,8 @@ type Comment {
   text: String
   creator: Person
   post: Post
+  parentComment: Comment
+  childComments(first: Int, cursor: ID, order: String): CommentQuerySet
   createdAt: Date
   createdFrom: String
   attachments(type: String): [Attachment]
@@ -523,6 +526,7 @@ type Query {
     boundingBox: [PointInput],
     isPublic: Boolean
   ): PostQuerySet
+  comment(id: ID): Comment
   people(
     boundingBox: [PointInput],
     first: Int,
@@ -704,6 +708,7 @@ input GroupInput {
   location: String
   locationId: ID
   name: String
+  parentIds: [ID]
   settings: GroupSettingsInput
   slackHookUrl: String
   slackTeam: String

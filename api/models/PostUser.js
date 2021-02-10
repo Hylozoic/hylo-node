@@ -1,3 +1,5 @@
+import { isEmpty } from 'lodash'
+
 module.exports = bookshelf.Model.extend({
   tableName: 'posts_users',
   requireFetch: false,

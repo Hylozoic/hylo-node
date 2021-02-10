@@ -40,12 +40,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Activity)
   },
 
-  comment: function () {
-    return this.belongsTo(Comment)
+  parentComment: function () {
+    return this.belongsTo(Comment).where('comments.active', true)
   },
 
-  comments: function () {
-    return this.hasMany(Comment, 'comment_id').query({where: {active: true}})
+  childComments: function () {
+    return this.hasMany(Comment, 'comment_id').query({where: {'comments.active': true}})
   },
 
   media: function (type) {

@@ -42,39 +42,37 @@ exports.up = async function(knex) {
 
     // Add group memberships for all users of sub communities
     await Promise.map(members.models, async (user) => {
-      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id }).fetch()
+      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id, group_data_type: NETWORK }).fetch()
       return existingMembership || await GroupMembership.forge({
         group_id: group.id,
         user_id: user.id,
-        group_data_type: NETWORK, // TODO: remove this since it is duplicate (not normalized)?
-        active: true,
+        group_data_type: NETWORK, // TODO: eventually remove this
         settings: { following: true },
-        created_at: now,
-        updated_at: now
-      }).save()
+        role: GroupMembership.Role.DEFAULT,
+        created_at: now
+      }).save({ active: true, updated_at: now })
     })
 
     // Setup moderator roles
     const moderators = await network.moderators().fetch()
     await Promise.map(moderators.models, async (user) => {
-      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id }).fetch()
+      const existingMembership = await GroupMembership.where({ group_id: group.id, user_id: user.id, group_data_type: NETWORK }).fetch()
       const member = existingMembership || GroupMembership.forge({
         group_id: group.id,
         user_id: user.id,
         group_data_type: NETWORK,
-        active: true,
         settings: { following: true },
         created_at: now,
-        updated_at: now,
       })
-      await member.save({ role: GroupMembership.Role.MODERATOR })
+      await member.save({ role: GroupMembership.Role.MODERATOR, active: true, updated_at: now })
     })
 
     // Add network posts to the new group
-    const posts = await network.posts()
-    await Promise.map(posts.models, async (post) => {
-      await PostMembership.forge({ post_id: post.id, group_id: group.id }).save()
-    })
+    await knex.raw(`INSERT INTO groups_posts (post_id, group_id)
+      (SELECT post_id, ${group.id} from networks_posts WHERE network_id = ?)
+      ON CONFLICT ON CONSTRAINT groups_posts_group_id_post_id_unique DO NOTHING`,
+      [network.id]
+    )
     // TODO future: remove network_posts table
 
     await knex('saved_searches').where({ group_id: network.id, context: 'network' }).update({ group_id: group.id, context: 'group' })
@@ -110,14 +108,21 @@ exports.up = async function(knex) {
     // Setup parent child relationship between network group and community group
     const network_id = community.attributes.network_id
     if (network_id && networkGroups[network_id]) {
-      await GroupConnection.forge({
-        parent_group_id: networkGroups[network_id].id,
-        child_group_id: group.id,
-        active: true,
-        created_at: now,
-        updated_at: now
-      }).save()
-    }
+      await knex.raw(`INSERT INTO group_connections (parent_group_id, child_group_id, active, created_at, updated_at)
+        VALUES(?, ?, true, ?, ?)
+        ON CONFLICT ON CONSTRAINT group_connections_parent_group_id_child_group_id_unique DO UPDATE SET active = true, updated_at = ?`,
+        [networkGroups[network_id].id, group.id, now, now, now]
+      )
+
+      // Add all the tags connected to the sub groups to the parent network group
+      await knex.raw(`INSERT INTO groups_tags
+        (tag_id, group_id, user_id, created_at, updated_at)
+        (SELECT tag_id, ${networkGroups[network_id].id}, user_id, ?, ?
+         FROM groups_tags WHERE group_id = ${group.id})
+        ON CONFLICT ON CONSTRAINT groups_tags_group_id_tag_id_unique DO NOTHING`,
+        [new Date(), new Date()]
+      )
+    } // EO network to community group connections
 
     // Replace community ids with group ids
     await knex('activities').where({ community_id: community.id }).update({ group_id: group.id })
@@ -127,7 +132,7 @@ exports.up = async function(knex) {
     await knex('tag_follows').where({ community_id: community.id }).update({ group_id: group.id })
     await knex('join_requests').where({ community_id: community.id }).update({ group_id: group.id })
     await knex('saved_searches').where({ group_id: community.id, context: 'community' }).update({ group_id: group.id, context: 'group' })
-  }, { concurrency: 30 })
+  }, { concurrency: 30 }) // For each commmunity
 
   // Move post group_memberships into posts_users
   await knex.raw("INSERT INTO posts_users \
@@ -140,35 +145,6 @@ exports.up = async function(knex) {
   // Delete post groups and group memberships
   await knex('group_memberships').where('group_data_type', POST).del()
   await knex('groups').where('group_data_type', POST).del()
-
-  // make group_id columns not nullable
-  await knex.schema.alterTable('groups_posts', table => {
-    table.bigInteger('group_id').notNullable().alter()
-  })
-
-  await knex.schema.alterTable('groups_tags', table => {
-    table.bigInteger('group_id').notNullable().alter()
-  })
-
-  await knex.schema.alterTable('group_invites', table => {
-    table.bigInteger('group_id').notNullable().alter()
-  })
-
-  await knex.schema.alterTable('tag_follows', table => {
-    table.bigInteger('group_id').notNullable().alter()
-  })
-
-  await knex.schema.alterTable('join_requests', table => {
-    table.bigInteger('group_id').notNullable().alter()
-  })
-
-  // Add these foreign key constraints on group_id columns after we delete the old groups to make that way faster
-  await knex.raw('alter table activities add constraint activities_group_id_foreign foreign key (group_id) references groups(id) deferrable initially deferred')
-  await knex.raw('alter table groups_posts add constraint groups_posts_group_id_foreign foreign key (group_id) references groups(id) deferrable initially deferred')
-  await knex.raw('alter table groups_tags add constraint groups_tags_group_id_foreign foreign key (group_id) references groups(id) deferrable initially deferred')
-  await knex.raw('alter table group_invites add constraint group_invites_group_id_foreign foreign key (group_id) references groups(id) deferrable initially deferred')
-  await knex.raw('alter table tag_follows add constraint tag_follows_group_id_foreign foreign key (group_id) references groups(id) deferrable initially deferred')
-  await knex.raw('alter table join_requests add constraint join_requests_group_id_foreign foreign key (group_id) references groups(id) deferrable initially deferred')
 }
 
 exports.down = async function(knex) {
@@ -180,11 +156,12 @@ exports.down = async function(knex) {
   // Remove memberships in groups that were networks
   await knex('group_memberships').where('group_data_type', NETWORK).del()
 
-  // For each network remove the groups_posts we created
+  // For each network remove the groups_posts and groups_tags we created
   const networks = await Network.fetchAll()
   await Promise.map(networks.models, async (network) => {
     const group = await Group.where({ group_data_id: network.id, group_data_type: NETWORK }).fetch()
     await knex('groups_posts').where('group_id', group.id).del()
+    await knex('groups_tags').where('group_id', group.id).del()
     // XXX: not trying to create networks_posts for all groups that would be in the network
   })
 
@@ -205,11 +182,4 @@ exports.down = async function(knex) {
       FROM posts_users left join groups on groups.group_data_id = posts_users.post_id) \
     ON CONFLICT ON CONSTRAINT group_memberships_group_id_user_id_unique DO UPDATE SET settings = excluded.settings, project_role_id=excluded.project_role_id, active=excluded.active; \
   ")
-
-  await knex.raw('alter table activities drop constraint activities_group_id_foreign')
-  await knex.raw('alter table groups_posts drop constraint groups_posts_group_id_foreign')
-  await knex.raw('alter table groups_tags drop constraint groups_tags_group_id_foreign')
-  await knex.raw('alter table group_invites drop constraint group_invites_group_id_foreign')
-  await knex.raw('alter table tag_follows drop constraint tag_follows_group_id_foreign')
-  await knex.raw('alter table join_requests drop constraint join_requests_group_id_foreign')
 }
