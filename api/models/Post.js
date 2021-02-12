@@ -36,10 +36,11 @@ const commentersQuery = (limit, post, currentUserId) => q => {
 }
 
 module.exports = bookshelf.Model.extend(Object.assign({
-  // Instance Methods
-
   tableName: 'posts',
   requireFetch: false,
+  hasTimestamps: true,
+
+  // Instance Methods
 
   activities: function () {
     return this.hasMany(Activity)

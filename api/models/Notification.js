@@ -37,6 +37,7 @@ const MEDIUM = {
 module.exports = bookshelf.Model.extend({
   tableName: 'notifications',
   requireFetch: false,
+  hasTimestamps: true,
 
   activity: function () {
     return this.belongsTo(Activity)

@@ -3,6 +3,7 @@ import HasSettings from './mixins/HasSettings'
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_relationships',
   requireFetch: false,
+  hasTimestamps: true,
 
   parentGroup () {
     return this.belongsTo(Group, 'parent_group_id')

@@ -14,6 +14,7 @@ import {
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
   requireFetch: false,
+  hasTimestamps: true,
 
   group () {
     return this.belongsTo(Group)

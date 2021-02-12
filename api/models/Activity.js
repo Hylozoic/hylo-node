@@ -49,6 +49,7 @@ const removeForRelation = (model) => (id, trx) => {
 module.exports = bookshelf.Model.extend({
   tableName: 'activities',
   requireFetch: false,
+  hasTimestamps: true,
 
   actor: function () {
     return this.belongsTo(User, 'actor_id')

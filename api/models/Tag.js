@@ -73,6 +73,7 @@ const updateForTaggable = ({ taggable, tagNames, userId, transacting }) => {
 module.exports = bookshelf.Model.extend({
   tableName: 'tags',
   requireFetch: false,
+  hasTimestamps: true,
 
   memberships: function () {
     return this.hasMany(GroupTag)
