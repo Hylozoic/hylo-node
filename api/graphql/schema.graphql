@@ -484,7 +484,7 @@ type Query {
     order: String,
     sortBy: String,
     offset: Int,
-    groupIds: [String],
+    groupIds: [ID],
     parentSlugs: [String],
     search: String,
     autocomplete: String,
@@ -496,7 +496,7 @@ type Query {
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
-    parentSlugs: [String],
+    groupSlugs: [String],
     first: Int,
     order: String,
     sortBy: String,

@@ -268,7 +268,7 @@ export default async function makeModels (userId, isAdmin) {
       fetchMany: ({ first, order, sortBy, groupIds, offset, search, autocomplete, filter, isPublic, boundingBox, parentSlugs }) =>
         searchQuerySet('groups', {
           boundingBox,
-          groups: groupIds,
+          groupIds,
           parentSlugs,
           term: search,
           limit: first,
