@@ -100,46 +100,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
       reader_id: moderator.id,
       group_id: toGroup.id,
       other_group_id: fromGroup.id,
-      reason: 'groupRelationshipInvite'
+      reason: this.get('type') === GroupRelationshipInvite.TYPE.ParentToChild ? Activity.Reason.GroupChildGroupInvite : Activity.Reason.GroupParentGroupJoinRequest
     }))
 
     return Activity.saveForReasons(notifications)
   },
-
-  send: function () {
-    return this.ensureLoad(['createdBy', 'fromGroup', 'toGroup'])
-    .then(() => {
-      const { createdBy, group } = this.relations
-      // Send to all moderators of the
-      const email = this.get('email')
-
-      const data = {
-        subject: this.get('subject'),
-        message: this.get('message'),
-        inviter_name: creator.get('name'),
-        inviter_email: creator.get('email'),
-        // TODO: change this data name in the email
-        group_name: group.get('name'),
-        type: this.get('type'),
-        invite_link: Frontend.Route.useInvitation(this.get('token'), email),
-        tracking_pixel_url: Analytics.pixelUrl('Invitation', {
-          recipient: email,
-          group: group.get('name')
-        })
-      }
-      return this.save({
-        sent_count: this.get('sent_count') + 1,
-        last_sent_at: new Date()
-      })
-      .then(() => {
-        if (this.get('tag_id')) {
-          throw new Error('need to re-implement tag invitations')
-        } else {
-          return Email.sendGroupRelationshipInvite(email, data)
-        }
-      })
-    })
-  }
 
 }, EnsureLoad), {
 

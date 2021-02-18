@@ -275,13 +275,10 @@ module.exports = bookshelf.Model.extend(merge({
     return memberships[0]
   },
 
-  getNewAccessCode: function () {
-    const test = code => Group.where({access_code: code}).count().then(Number)
-    const loop = () => {
-      const code = randomstring.generate({length: 10, charset: 'alphanumeric'})
-      return test(code).then(count => count ? loop() : code)
-    }
-    return loop()
+  async deactivate (id, opts = {}) {
+    const group = await Group.find(id).fetch()
+    await group.save({ active: false }, opts)
+    return group.removeMembers(await group.members().fetch(), opts)
   },
 
   find (idOrSlug, opts = {}) {
@@ -294,15 +291,53 @@ module.exports = bookshelf.Model.extend(merge({
     return this.where(where).fetch(opts)
   },
 
-  // TODO: do we use this?
   findActive (key, opts = {}) {
     return this.find(key, merge({active: true}, opts))
   },
 
-  async deactivate (id, opts = {}) {
-    const group = await Group.find(id).fetch()
-    await group.save({ active: false }, opts)
-    return group.removeMembers(await group.members().fetch(), opts)
+  getNewAccessCode: function () {
+    const test = code => Group.where({access_code: code}).count().then(Number)
+    const loop = () => {
+      const code = randomstring.generate({length: 10, charset: 'alphanumeric'})
+      return test(code).then(count => count ? loop() : code)
+    }
+    return loop()
+  },
+
+  notifyAboutCreate: function (opts) {
+    return Group.find(opts.groupId, {withRelated: ['creator']})
+    .then(g => {
+      var creator = g.relations.creator
+      var recipient = process.env.NEW_GROUP_EMAIL
+      return Email.sendRawEmail(recipient, {
+        subject: "New Hylo Group Created: " + g.get('name'),
+        body: `Group
+          Name: ${g.get('name')}
+          URL: ${Frontend.Route.group(g)}
+          Creator Email: ${creator.get('email')}
+          Creator Name: ${creator.get('name')}
+          Creator URL: ${Frontend.Route.profile(creator)}
+        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
+      }, {
+        sender: {
+          name: 'Hylobot',
+          address: 'dev+bot@hylo.com'
+        }
+      })
+    })
+  },
+
+  notifySlack: function (groupId, post) {
+    return Group.find(groupId)
+    .then(group => {
+      if (!group || !group.get('slack_hook_url')) return
+      var slackMessage = Slack.textForNewPost(post, group)
+      return Slack.send(slackMessage, group.get('slack_hook_url'))
+    })
+  },
+
+  async pluckIdsForMember (userOrId, where) {
+    return await this.selectIdsForMember(userOrId, where).pluck('groups.id')
   },
 
   queryByAccessCode: function (accessCode) {
@@ -326,25 +361,10 @@ module.exports = bookshelf.Model.extend(merge({
     }).query()
   },
 
-  async pluckIdsForMember (userOrId, where) {
-    return await this.selectIdsForMember(userOrId, where).pluck('groups.id')
+  async allHaveMember (groupDataIds, userOrId) {
+    const memberIds = await this.pluckIdsForMember(userOrId)
+    return difference(groupDataIds, memberIds).length === 0
   },
-
-  // TODO: this is temporary to support current idea of Networks
-  // visibleNetworkGroupIds (userId, rawQuery) {
-  //   const networkIds = Group.selectIdsForMember(userId, Group.DataType.NETWORK)
-
-  //   const query = bookshelf.knex.select('child_groups.id')
-  //     .from('groups as child_groups')
-  //     .join('group_connections', 'child_groups.id', 'group_connections.child_group_id')
-  //     .where(inner => {
-  //       inner.whereIn('group_connections.parent_group_id', networkIds)
-  //       inner.andWhere('child_groups.group_data_type', Group.DataType.GROUP)
-  //       inner.andWhere('child_groups.visibility', '!=', Group.Visibility.HIDDEN)
-  //     })
-
-  //   return rawQuery ? query : query.pluck('child_groups.id')
-  // },
 
   havingExactMembers (userIds) {
     userIds = sortBy(userIds, Number)
@@ -354,11 +374,6 @@ module.exports = bookshelf.Model.extend(merge({
       q.groupBy('groups.id')
       q.having(bookshelf.knex.raw(`array_agg(user_id order by user_id) = ?`, [userIds]))
     })
-  },
-
-  async allHaveMember (groupDataIds, userOrId) {
-    const memberIds = await this.pluckIdsForMember(userOrId)
-    return difference(groupDataIds, memberIds).length === 0
   },
 
   async inSameGroup (userIds) {

@@ -20,8 +20,8 @@ const TYPE = {
   ApprovedJoinRequest: 'approvedJoinRequest', // A request to join a group is approved
   GroupChildGroupInvite: 'groupChildGroupInvite', // A child group is invited to join a parent group
   GroupChildGroupInviteAccepted: 'groupChildGroupInviteAccepted',
-  GroupParentGroupJoinRequest: 'groupParentGroupJoinRequest', // A child group is invited to join a parent group
-  GroupParentGroupJoinRequestAccepted: 'GroupParentGroupJoinRequestAccepted',
+  GroupParentGroupJoinRequest: 'groupParentGroupJoinRequest', // A child group is requesting to join a parent group
+  GroupParentGroupJoinRequestAccepted: 'groupParentGroupJoinRequestAccepted',
   Message: 'message',
   Announcement: 'announcement',
   DonationTo: 'donation to',
@@ -213,7 +213,7 @@ module.exports = bookshelf.Model.extend({
     const childGroup = await this.relations.activity.group().fetch()
     const parentGroup = await this.relations.activity.otherGroup().fetch()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
-    const path = url.parse(Frontend.Route.groupChildGroupInvite(childGroup)).path
+    const path = url.parse(Frontend.Route.groupRelationshipInvites(childGroup)).path
     const alertText = PushNotification.textForGroupChildGroupInvite(parentGroup, childGroup, this.actor())
     return this.reader().sendPushNotification(alertText, path)
   },
@@ -222,9 +222,9 @@ module.exports = bookshelf.Model.extend({
     const childGroup = await this.relations.activity.group().fetch()
     const parentGroup = await this.relations.activity.otherGroup().fetch()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
-    const path = url.parse(Frontend.Route.groupChildGroupInviteAccepted(childGroup)).path
+    const parentPath = url.parse(Frontend.Route.group(parentGroup)).path
     const alertText = PushNotification.textForGroupChildGroupInviteAccepted(parentGroup, childGroup, this.actor())
-    return this.reader().sendPushNotification(alertText, path)
+    return this.reader().sendPushNotification(alertText, parentPath)
   },
 
   sendGroupParentGroupJoinRequestPush: async function () {
@@ -475,13 +475,13 @@ module.exports = bookshelf.Model.extend({
         parent_group_name: parentGroup.get('name'),
         child_group_name: childGroup.get('name'),
         inviter_name: actor.get('name'),
-        inviter_avatar_url: actor.get('avatar_url'),
+        parent_group_avatar_url: parentGroup.get('avatar_url'),
         inviter_profile_url: Frontend.Route.tokenLogin(reader, token,
           Frontend.Route.profile(actor) +
           `?ctt=group_child_group_invite_email&cti=${reader.id}`),
         parent_group_url: Frontend.Route.tokenLogin(reader, token,
           Frontend.Route.group(parentGroup)),
-        settings_url: Frontend.Route.tokenLogin(reader, token,
+        child_group_settings_url: Frontend.Route.tokenLogin(reader, token,
           Frontend.Route.groupChildGroupInvite(childGroup))
       }
     })
@@ -747,7 +747,8 @@ module.exports = bookshelf.Model.extend({
   priorityReason: function (reasons) {
     const orderedLabels = [
       'donation to', 'donation from', 'announcement', 'eventInvitation', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
-      'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
+      'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest', 'groupChildGroupInvite', 'groupChildGroupInviteAccepted',
+      'groupParentGroupJoinRequest', 'groupParentGroupJoinRequestAccepted'
     ]
 
     const match = label => reasons.some(r => r.match(new RegExp('^' + label)))

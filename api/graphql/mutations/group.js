@@ -61,10 +61,9 @@ export async function deleteGroupRelationship (userId, parentId, childId) {
   if (childGroup || parentGroup) {
     // the logged in user is a moderator of one of the groups and so can delete the relationship
     await groupRelationship.save({ active: false })
-    return {success: true}
+    return { success: true }
   }
   throw new Error("You don't have permission to do this")
-  return {success: true}
 }
 
 export async function regenerateAccessCode (userId, groupId) {
@@ -143,7 +142,7 @@ export async function inviteGroupToGroup(userId, fromId, toId, type) {
 export async function acceptGroupRelationshipInvite (userId, groupRelationshipInviteId) {
   const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
   if (invite) {
-    if (GroupMembership.hasModeratorRole(userId, invite.to_group_id)) {
+    if (GroupMembership.hasModeratorRole(userId, invite.get('to_group_id'))) {
       const groupRelationship = await invite.accept(userId)
       return { success: !!groupRelationship, groupRelationship }
     } else {
@@ -157,7 +156,7 @@ export async function acceptGroupRelationshipInvite (userId, groupRelationshipIn
 export async function cancelGroupRelationshipInvite (userId, groupRelationshipInviteId) {
   const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
   if (invite) {
-    if (GroupMembership.hasModeratorRole(userId, invite.from_group_id)) {
+    if (GroupMembership.hasModeratorRole(userId, invite.get('from_group_id'))) {
       return { success: await invite.cancel(userId) }
     } else {
       throw new Error(`You do not have permission to do this`)
@@ -170,7 +169,7 @@ export async function cancelGroupRelationshipInvite (userId, groupRelationshipIn
 export async function rejectGroupRelationshipInvite (userId, groupRelationshipInviteId) {
   const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
   if (invite) {
-    if (GroupMembership.hasModeratorRole(userId, invite.to_group_id)) {
+    if (GroupMembership.hasModeratorRole(userId, invite.get('to_group_id'))) {
       return { success: await invite.reject(userId) }
     } else {
       throw new Error(`You do not have permission to do this`)
