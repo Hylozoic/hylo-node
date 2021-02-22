@@ -150,17 +150,6 @@ type Group {
   accessibility: Int
   avatarUrl: String
   bannerUrl: String
-  createdAt: Date
-  description: String
-  invitePath: String
-  location: String
-  locationObject: Location
-  memberCount: Int
-  name: String
-  settings: GroupSettings
-  postCount: Int
-  slug: String
-  visibility: Int
   childGroups(
     boundingBox: [PointInput],
     first: Int,
@@ -170,38 +159,10 @@ type Group {
     search: String,
     autocomplete: String
   ): GroupQuerySet
-  parentGroups(
-    boundingBox: [PointInput],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    autocomplete: String
-  ): GroupQuerySet
-  members(
-    boundingBox: [PointInput],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    autocomplete: String
-  ): PersonQuerySet
-  posts(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    filter: String,
-    topic: ID,
-    boundingBox: [PointInput]
-  ): PostQuerySet
+  createdAt: Date
+  description: String
   feedItems(first: Int, cursor: ID, order: String): [FeedItem]
   feedItemsTotal: Int
-  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
-  pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   groupTopics(
     first: Int,
     sortBy: String,
@@ -212,16 +173,75 @@ type Group {
     subscribed: Boolean,
     visibility: Int
   ): GroupTopicQuerySet
+  invitePath: String
+  location: String
+  locationObject: Location
+  members(
+    boundingBox: [PointInput],
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): PersonQuerySet
+  memberCount: Int
+  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  name: String
+  settings: GroupSettings
+  parentGroups(
+    boundingBox: [PointInput],
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): GroupQuerySet
+  pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
+  posts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String,
+    topic: ID,
+    boundingBox: [PointInput]
+  ): PostQuerySet
+  postCount: Int
+  questions: GroupQuestionQuerySet
   skills(
     first: Int,
     offset: Int,
     autocomplete: String
-  ): SkillQuerySet,
+  ): SkillQuerySet
+  slug: String
+  visibility: Int
 }
 
 type GroupSettings {
   allowGroupInvites: Boolean
   publicMemberDirectory: Boolean
+}
+
+type GroupQuestion {
+  id: Int
+  text: String
+  group: Group
+}
+
+type GroupQuestionAnswer {
+  id: Int
+  answer: String
+  question: GroupQuestion
+  user: Person
+}
+
+type GroupQuestionAnswerQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupQuestionAnswer]
 }
 
 type PersonQuerySet {
@@ -245,11 +265,12 @@ type InvitationQuerySet {
 
 type JoinRequest {
   id: Int
-  user: Person
-  group: Group
   createdAt: Date
-  updatedAt: Date
+  group: Group
+  questionAnswers: [GroupQuestionAnswer]
   status: Int
+  updatedAt: Date
+  user: Person
 }
 
 type JoinRequestQuerySet {
@@ -690,6 +711,7 @@ input GroupInput {
   locationId: ID
   name: String
   parentIds: [ID]
+  questions: [GroupQuestionInput]
   settings: GroupSettingsInput
   slackHookUrl: String
   slackTeam: String
@@ -703,9 +725,19 @@ input GroupSettingsInput {
   publicMemberDirectory: Boolean
 }
 
+input GroupQuestionInput {
+  id: Int
+  text: String
+}
+
 input MembershipSettingsInput {
   sendEmail: Boolean
   sendPushNotifications: Boolean
+}
+
+input QuestionAnswerInput {
+  questionId: Int
+  answer: String
 }
 
 input SavedSearchInput {
@@ -741,7 +773,7 @@ type Mutation {
   createComment(data: CommentInput): Comment
   createGroup(data: GroupInput): Membership
   createInvitation(groupId: ID, data: InviteInput): CreatedInvitations
-  createJoinRequest(groupId: ID, userId: ID): CreatedRequest
+  createJoinRequest(groupId: ID, questionAnswers: [QuestionAnswerInput]): CreatedRequest
   createMessage(data: MessageInput): Message
   createPost(data: PostInput): Post
   createProject(data: PostInput): Post
@@ -763,7 +795,7 @@ type Mutation {
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   fulfillPost(postId: ID): GenericResult
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
-  joinGroup(groupId: ID, userId: ID): InvitationUseResult
+  joinGroup(groupId: ID): InvitationUseResult
   joinProject(id: ID): GenericResult
   leaveGroup(id: ID): ID
   leaveProject(id: ID): GenericResult
@@ -864,6 +896,12 @@ type GroupQuerySet {
   total: Int
   hasMore: Boolean
   items: [Group]
+}
+
+type GroupQuestionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupQuestion]
 }
 
 type Skill {

@@ -85,6 +85,10 @@ module.exports = bookshelf.Model.extend(merge({
     .then(result => result.get('count'))
   },
 
+  questions () {
+    return this.hasMany(GroupQuestion)
+  },
+
   // ******** Setters ********** //
 
   // if a group membership doesn't exist for a user id, create it.
@@ -162,7 +166,7 @@ module.exports = bookshelf.Model.extend(merge({
     return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
   },
 
-  update: function (changes) {
+  update: async function (changes) {
     var whitelist = [
       'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url', 'description',
       'location', 'location_id', 'name', 'settings', 'visibility'
@@ -173,6 +177,15 @@ module.exports = bookshelf.Model.extend(merge({
 
     if (attributes.settings) {
       saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
+    }
+
+    if (changes.questions) {
+      await GroupQuestion.where({ group_id: this.id }).destroy({ require: false })
+      for (let q of changes.questions) {
+        if (trim(q.text)) {
+          await GroupQuestion.forge({ group_id: this.id, text: q.text }).save()
+        }
+      }
     }
 
     this.set(saneAttrs)

@@ -179,6 +179,8 @@
       "Group",
       "GroupConnection",
       "GroupMembership",
+      "GroupQuestion",
+      "GroupQuestionAnswer",
       "GroupTag",
       "Invitation",
       "JoinRequest",

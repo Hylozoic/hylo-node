@@ -41,13 +41,6 @@ export async function regenerateAccessCode (userId, groupId) {
 }
 
 export async function createGroup (userId, data) {
-  // TODO: fix this to work with multiple parents
-  // if (data.parentIds) {
-  //   const canModerate = await NetworkMembership.hasModeratorRole(userId, data.networkId)
-  //   if (!canModerate) {
-  //     throw new Error("You don't have permission to add a group to this network")
-  //   }
-  // }
   return Group.create(userId, convertGraphqlData(data))
 }
 

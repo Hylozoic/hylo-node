@@ -215,10 +215,7 @@ export default async function makeModels (userId, isAdmin) {
         'visibility',
       ],
       relations: [
-        'locationObject',
         {childGroups: {querySet: true}},
-        {parentGroups: {querySet: true}},
-        {moderators: {querySet: true}},
         {groupTags: {
           querySet: true,
           alias: 'groupTopics',
@@ -229,20 +226,14 @@ export default async function makeModels (userId, isAdmin) {
               groupId: relation.relatedData.parentId
             }))
         }},
-        {skills: {
-          querySet: true,
-          filter: (relation, { autocomplete }) =>
-            relation.query(q => {
-              if (autocomplete) {
-                q.whereRaw('skills.name ilike ?', autocomplete + '%')
-              }
-            })
-        }},
+        'locationObject',
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
             relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
+        {moderators: {querySet: true}},
+        {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
           filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
@@ -254,6 +245,16 @@ export default async function makeModels (userId, isAdmin) {
               type: filter,
               showPinnedFirst: true
             }))
+        }},
+        {questions: {querySet: true}},
+        {skills: {
+          querySet: true,
+          filter: (relation, { autocomplete }) =>
+            relation.query(q => {
+              if (autocomplete) {
+                q.whereRaw('skills.name ilike ?', autocomplete + '%')
+              }
+            })
         }}
       ],
       getters: {
@@ -280,6 +281,22 @@ export default async function makeModels (userId, isAdmin) {
         })
     },
 
+    GroupQuestion: {
+      model: GroupQuestion,
+      attributes: [
+        'text'
+      ],
+      relations: ['group'],
+    },
+
+    GroupQuestionAnswer: {
+      model: GroupQuestionAnswer,
+      attributes: [
+        'answer'
+      ],
+      relations: ['question', 'user'],
+    },
+
     Invitation: {
       model: Invitation,
       attributes: [
@@ -296,8 +313,13 @@ export default async function makeModels (userId, isAdmin) {
         'updated_at',
         'status'
       ],
-      relations: ['user' ],
-      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId })
+      relations: [
+        'user'
+      ],
+      getters: {
+        questionAnswers: jr => jr.questionAnswers().fetchAll()
+      },
+      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId, status: JoinRequest.STATUS.Pending })
     },
 
     Affiliation: {
