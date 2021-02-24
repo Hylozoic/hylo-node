@@ -11,10 +11,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   questionAnswers: function () {
-    return GroupQuestionAnswer.query(q => {
-      q.join('group_questions', 'group_questions.id', 'group_question_id')
-      q.where({ group_id: this.get('group_id'), user_id: this.get('user_id') })
-    })
+    return this.hasMany(JoinRequestQuestionAnswer)
   },
 
   accept: async function (moderatorId) {

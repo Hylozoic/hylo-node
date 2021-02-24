@@ -1,23 +1,21 @@
 export async function createJoinRequest (userId, groupId, questionAnswers = []) {
   if (groupId && userId) {
-    for (let qa of questionAnswers) {
-      const questionAnswer = (await GroupQuestionAnswer.where({ user_id: userId, group_question_id: qa.questionId }).fetch()) ||
-        new GroupQuestionAnswer({ user_id: userId, group_question_id: qa.questionId })
-      await questionAnswer.save({ answer: qa.answer })
-    }
-
     const pendingRequest = await JoinRequest.where({ user_id: userId, group_id: groupId, status: JoinRequest.STATUS.Pending}).fetch()
     if (pendingRequest) {
       return { request: pendingRequest }
     }
     // If there's an existing processed request then let's leave it and create a new one
     // Maybe they left the group and want back in? Or maybe initial request was rejected
-    console.log("creating new one")
     return JoinRequest.create({
       userId,
       groupId,
     })
-    .then(request => ({ request }))
+    .then(async (request) => {
+      for (let qa of questionAnswers) {
+        await JoinRequestQuestionAnswer.forge({ join_request_id: request.id, question_id: qa.questionId, answer: qa.answer }).save()
+      }
+      return request
+    })
   } else {
     throw new Error(`Invalid parameters to create join request`)
   }

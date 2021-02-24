@@ -210,7 +210,7 @@ type Group {
     boundingBox: [PointInput]
   ): PostQuerySet
   postCount: Int
-  questions: GroupQuestionQuerySet
+  joinQuestions: GroupJoinQuestionQuerySet
   skills(
     first: Int,
     offset: Int,
@@ -222,26 +222,8 @@ type Group {
 
 type GroupSettings {
   allowGroupInvites: Boolean
+  askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
-}
-
-type GroupQuestion {
-  id: Int
-  text: String
-  group: Group
-}
-
-type GroupQuestionAnswer {
-  id: Int
-  answer: String
-  question: GroupQuestion
-  user: Person
-}
-
-type GroupQuestionAnswerQuerySet {
-  total: Int
-  hasMore: Boolean
-  items: [GroupQuestionAnswer]
 }
 
 type PersonQuerySet {
@@ -267,7 +249,7 @@ type JoinRequest {
   id: Int
   createdAt: Date
   group: Group
-  questionAnswers: [GroupQuestionAnswer]
+  questionAnswers: [JoinRequestQuestionAnswer]
   status: Int
   updatedAt: Date
   user: Person
@@ -277,6 +259,18 @@ type JoinRequestQuerySet {
   total: Int
   hasMore: Boolean
   items: [JoinRequest]
+}
+
+type JoinRequestQuestionAnswer {
+  id: Int
+  answer: String
+  question: Question
+  user: Person
+}
+
+type Question {
+  id: Int
+  text: String
 }
 
 type PostQuerySet {
@@ -711,7 +705,7 @@ input GroupInput {
   locationId: ID
   name: String
   parentIds: [ID]
-  questions: [GroupQuestionInput]
+  joinQuestions: [QuestionInput]
   settings: GroupSettingsInput
   slackHookUrl: String
   slackTeam: String
@@ -722,11 +716,13 @@ input GroupInput {
 
 input GroupSettingsInput {
   allowGroupInvites: Boolean
+  askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
 }
 
-input GroupQuestionInput {
+input QuestionInput {
   id: Int
+  questionId: Int
   text: String
 }
 
@@ -898,10 +894,16 @@ type GroupQuerySet {
   items: [Group]
 }
 
-type GroupQuestionQuerySet {
+type GroupJoinQuestion {
+  id: Int
+  questionId: Int
+  text: String
+}
+
+type GroupJoinQuestionQuerySet {
   total: Int
   hasMore: Boolean
-  items: [GroupQuestion]
+  items: [GroupJoinQuestion]
 }
 
 type Skill {

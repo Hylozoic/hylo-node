@@ -246,7 +246,7 @@ export default async function makeModels (userId, isAdmin) {
               showPinnedFirst: true
             }))
         }},
-        {questions: {querySet: true}},
+        {joinQuestions: {querySet: true}},
         {skills: {
           querySet: true,
           filter: (relation, { autocomplete }) =>
@@ -281,20 +281,12 @@ export default async function makeModels (userId, isAdmin) {
         })
     },
 
-    GroupQuestion: {
-      model: GroupQuestion,
+    GroupJoinQuestion: {
+      model: GroupJoinQuestion,
       attributes: [
+        'questionId',
         'text'
-      ],
-      relations: ['group'],
-    },
-
-    GroupQuestionAnswer: {
-      model: GroupQuestionAnswer,
-      attributes: [
-        'answer'
-      ],
-      relations: ['question', 'user'],
+      ]
     },
 
     Invitation: {
@@ -317,9 +309,24 @@ export default async function makeModels (userId, isAdmin) {
         'user'
       ],
       getters: {
-        questionAnswers: jr => jr.questionAnswers().fetchAll()
+        questionAnswers: jr => jr.questionAnswers().fetch()
       },
       fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId, status: JoinRequest.STATUS.Pending })
+    },
+
+    JoinRequestQuestionAnswer: {
+      model: JoinRequestQuestionAnswer,
+      attributes: [
+        'answer'
+      ],
+      relations: ['question'],
+    },
+
+    Question: {
+      model: Question,
+      attributes: [
+        'text'
+      ]
     },
 
     Affiliation: {

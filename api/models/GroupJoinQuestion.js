@@ -1,5 +1,5 @@
 module.exports = bookshelf.Model.extend(Object.assign({
-  tableName: 'group_questions',
+  tableName: 'group_join_questions',
   requireFetch: false,
   hasTimestamps: true,
 
@@ -7,9 +7,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(Group)
   },
 
-  answers () {
-    return this.hasMany(GroupQuestionAnswer)
-  },
+  question () {
+    return this.belongsTo(Question)
+  }
 
 }), {
 

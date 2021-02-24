@@ -1,14 +1,14 @@
 module.exports = bookshelf.Model.extend(Object.assign({
-  tableName: 'group_question_answers',
+  tableName: 'join_request_question_answers',
   requireFetch: false,
   hasTimestamps: true,
 
   question () {
-    return this.belongsTo(GroupQuestion)
+    return this.belongsTo(Question)
   },
 
-  user () {
-    return this.belongsTo(User)
+  joinRequest () {
+    return this.belongsTo(JoinRequest)
   },
 
 }), {
