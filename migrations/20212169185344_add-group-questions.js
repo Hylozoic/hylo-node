@@ -39,9 +39,9 @@ exports.up = async function(knex) {
 }
 
 exports.down = async function(knex) {
-  await knex.schema.dropTable('questions')
-  await knex.schema.dropTable('group_join_questions')
   await knex.schema.dropTable('join_request_question_answers')
+  await knex.schema.dropTable('group_join_questions')
+  await knex.schema.dropTable('questions')
 
   return knex.schema.alterTable('join_requests', table => {
     table.dropColumn('processed_by_id')
