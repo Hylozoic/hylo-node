@@ -82,7 +82,6 @@ export function afterCreatingPost (post, opts) {
   .then(() => post.isEvent() && post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndGroups(post, trx))
-  // .then(() => updateGroupMemberships(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
