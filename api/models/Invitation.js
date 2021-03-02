@@ -4,6 +4,7 @@ import EnsureLoad from './mixins/EnsureLoad'
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_invites',
   requireFetch: false,
+  hasTimestamps: ['created_at', null],
 
   group: function () {
     return this.belongsTo(Group)

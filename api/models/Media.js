@@ -6,6 +6,7 @@ import { createAndAddSize } from './media/util'
 module.exports = bookshelf.Model.extend({
   tableName: 'media',
   requireFetch: false,
+  hasTimestamps: ['created_at', null],
 
   post: function () {
     return this.belongsTo(Post)

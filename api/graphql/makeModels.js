@@ -216,6 +216,10 @@ export default async function makeModels (userId, isAdmin) {
       ],
       relations: [
         {childGroups: {querySet: true}},
+        {parentGroups: {querySet: true}},
+        {groupRelationshipInvitesFrom: {querySet: true}},
+        {groupRelationshipInvitesTo: {querySet: true}},
+        {moderators: {querySet: true}},
         {groupTags: {
           querySet: true,
           alias: 'groupTopics',
@@ -287,6 +291,27 @@ export default async function makeModels (userId, isAdmin) {
         'questionId',
         'text'
       ]
+    },
+
+    GroupRelationship: {
+      model: GroupRelationship,
+      attributes: [
+        'created_at',
+        'role',
+        'updated_at',
+      ],
+      relations: ['childGroup', 'parentGroup']
+    },
+
+    GroupRelationshipInvite: {
+      model: GroupRelationshipInvite,
+      attributes: [
+        'created_at',
+        'status',
+        'type',
+        'updated_at',
+      ],
+      relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 
     Invitation: {

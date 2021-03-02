@@ -2,6 +2,7 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'event_invitations',
   requireFetch: false,
+  hasTimestamps: true,
 
   user: function () {
     return this.belongsTo(User, 'user_id')

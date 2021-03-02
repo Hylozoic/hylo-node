@@ -14,6 +14,7 @@ import {
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
   requireFetch: false,
+  hasTimestamps: true,
 
   group () {
     return this.belongsTo(Group)
@@ -65,6 +66,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   forPair (userOrId, groupOrId, opts = {}) {
     const userId = userOrId instanceof User ? userOrId.id : userOrId
     const groupId = groupOrId instanceof Group ? groupOrId.id : groupOrId
+
     if (!userId) {
       throw new Error("Can't call forPair without a user or user id")
     }
@@ -98,7 +100,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  // TODO: can remove? its broken
   async hasModeratorRole (userOrId, groupOrId) {
     const gm = await this.forPair(userOrId, groupOrId).fetch()
     return gm && gm.hasRole(this.Role.MODERATOR)

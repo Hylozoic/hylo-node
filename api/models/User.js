@@ -9,6 +9,7 @@ import { findThread } from './post/findOrCreateThread'
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
   requireFetch: false,
+  hasTimestamps: true,
 
   activity: function () {
     return this.hasMany(Activity, 'reader_id')
