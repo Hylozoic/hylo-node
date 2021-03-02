@@ -1,6 +1,7 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'join_requests',
   requireFetch: false,
+  hasTimestamps: true,
 
   user: function () {
     return this.belongsTo(User)

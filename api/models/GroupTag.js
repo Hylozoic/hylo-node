@@ -3,6 +3,7 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'groups_tags',
   requireFetch: false,
+  hasTimestamps: true,
 
   owner: function () {
     return this.belongsTo(User, 'user_id')

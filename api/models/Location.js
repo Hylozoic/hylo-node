@@ -5,6 +5,7 @@ var Buffer = require('buffer').Buffer;
 module.exports = bookshelf.Model.extend({
   tableName: 'locations',
   requireFetch: false,
+  hasTimestamps: true,
 
   format(attributes) {
     const st = knexPostgis(bookshelf.knex);

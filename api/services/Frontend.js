@@ -67,10 +67,6 @@ module.exports = {
 
     root: () => url('/app'),
 
-    group: function (group) {
-      return url('/groups/%s', getSlug(group))
-    },
-
     comment: function (comment, group) {
       // TODO: update to use comment specific url when implemented in frontend
       let groupSlug = getSlug(group)
@@ -82,6 +78,10 @@ module.exports = {
       return url(`${groupUrl}/post/${postId}`)
     },
 
+    group: function (group) {
+      return url('/groups/%s', getSlug(group))
+    },
+
     groupSettings: function (group) {
       return this.group(group) + '/settings'
     },
@@ -90,12 +90,16 @@ module.exports = {
       return this.groupSettings(group) + '/invite#join_requests'
     },
 
-    groupChildGroupInvite: function(group) {
-      return this.groupSettings(group) + '/groups#invites'
+    groupRelationshipInvites: function(group) {
+      return this.groupSettings(group) + '/relationships#invites'
     },
 
-    groupParentGroupJoinRequest: function(group) {
-      return this.groupSettings(group) + '/groups#join_requests'
+    groupRelationshipJoinRequests: function(group) {
+      return this.groupSettings(group) + '/relationships#join_requests'
+    },
+
+    invitePath: function (group) {
+      return url(`/groups/${getSlug(group)}/join/${group.get('access_code')}`)
     },
 
     mapPost: function (post, context, slug) {
@@ -158,10 +162,6 @@ module.exports = {
 
     emailBatchCommentForm: function () {
       return url('/noo/hook/batchCommentForm')
-    },
-
-    invitePath: function (group) {
-      return `/groups/${getSlug(group)}/join/${group.get('access_code')}`
     }
   }
 }

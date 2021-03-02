@@ -14,6 +14,7 @@ import {
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
   requireFetch: false,
+  hasTimestamps: true,
 
   group () {
     return this.belongsTo(Group)
@@ -62,17 +63,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  forPair (userOrId, group, opts = {}) {
+  forPair (userOrId, groupOrId, opts = {}) {
     const userId = userOrId instanceof User ? userOrId.id : userOrId
+    const groupId = groupOrId instanceof Group ? groupOrId.id : groupOrId
+
     if (!userId) {
       throw new Error("Can't call forPair without a user or user id")
     }
-    if (!group) {
-      throw new Error("Can't call forPair without an instance")
+    if (!groupId) {
+      throw new Error("Can't call forPair without a group or group id")
     }
 
-    // TODO: remove hack for group data type here
-    return this.forIds(userId, group.id, opts)
+    return this.forIds(userId, groupId, opts)
   },
 
   // `usersOrIds` can be a single user or id, a list of either, or null
@@ -98,9 +100,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  // TODO: can remove? its broken
-  async hasModeratorRole (userOrId, group) {
-    const gm = await this.forPair(userOrId, group).fetch()
+  async hasModeratorRole (userOrId, groupOrId) {
+    const gm = await this.forPair(userOrId, groupOrId).fetch()
     return gm && gm.hasRole(this.Role.MODERATOR)
   },
 

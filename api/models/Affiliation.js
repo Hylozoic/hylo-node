@@ -1,6 +1,7 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'user_affiliations',
   requireFetch: false,
+  hasTimestamps: true,
 
   user: function () {
     return this.belongsTo(User)

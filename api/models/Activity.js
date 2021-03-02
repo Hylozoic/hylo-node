@@ -49,6 +49,7 @@ const removeForRelation = (model) => (id, trx) => {
 module.exports = bookshelf.Model.extend({
   tableName: 'activities',
   requireFetch: false,
+  hasTimestamps: true,
 
   actor: function () {
     return this.belongsTo(User, 'actor_id')
@@ -80,6 +81,10 @@ module.exports = bookshelf.Model.extend({
 
   group: function () {
     return this.belongsTo(Group)
+  },
+
+  otherGroup: function () {
+    return this.belongsTo(Group, 'other_group_id')
   },
 
   notifications: function () {
@@ -126,7 +131,11 @@ module.exports = bookshelf.Model.extend({
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow', // someone leaves your post
-    Announcement: 'announcement'
+    Announcement: 'announcement',
+    ApprovedJoinRequest: 'approvedJoinRequest',
+    JoinRequest: 'joinRequest',
+    GroupChildGroupInvite: 'groupChildGroupInvite',
+    GroupParentGroupJoinRequest: 'groupParentGroupJoinRequest'
   },
 
   find: function (id, options) {
@@ -165,7 +174,7 @@ module.exports = bookshelf.Model.extend({
       actor_id: comment.get('user_id'),
       comment_id: comment.id,
       post_id: comment.get('post_id'),
-      action: action,
+      meta: {reasons: [action]},
       created_at: comment.get('created_at')
     })
   },
@@ -245,7 +254,7 @@ module.exports = bookshelf.Model.extend({
 
   generateNotificationMedia: async function (activity) {
     const reasons = activity.get('meta').reasons || []
-    const isJoinRequestRelated = ['approvedJoinRequest', 'joinRequest'].includes(reasons[0])
+    const isJoinRequestRelated = [this.Reason.ApprovedJoinRequest, this.Reason.JoinRequest].includes(reasons[0])
     if (!isJoinRequestRelated) await activity.load('post.groups')
 
     // TODO: rename 'notifications' to 'media'

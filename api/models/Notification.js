@@ -16,8 +16,12 @@ const TYPE = {
   Follow: 'follow', // someone follows your post
   Unfollow: 'unfollow', // someone leaves your post
   Welcome: 'welcome', // a welcome post
-  JoinRequest: 'joinRequest',
-  ApprovedJoinRequest: 'approvedJoinRequest',
+  JoinRequest: 'joinRequest', // Someone asks to join a group
+  ApprovedJoinRequest: 'approvedJoinRequest', // A request to join a group is approved
+  GroupChildGroupInvite: 'groupChildGroupInvite', // A child group is invited to join a parent group
+  GroupChildGroupInviteAccepted: 'groupChildGroupInviteAccepted',
+  GroupParentGroupJoinRequest: 'groupParentGroupJoinRequest', // A child group is requesting to join a parent group
+  GroupParentGroupJoinRequestAccepted: 'groupParentGroupJoinRequestAccepted',
   Message: 'message',
   Announcement: 'announcement',
   DonationTo: 'donation to',
@@ -33,6 +37,7 @@ const MEDIUM = {
 module.exports = bookshelf.Model.extend({
   tableName: 'notifications',
   requireFetch: false,
+  hasTimestamps: true,
 
   activity: function () {
     return this.belongsTo(Activity)
@@ -106,6 +111,14 @@ module.exports = bookshelf.Model.extend({
         return this.sendJoinRequestPush()
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestPush()
+      case 'groupChildGroupInvite':
+        return this.sendGroupChildGroupInvitePush()
+      case 'groupChildGroupInviteAccepted':
+        return this.sendGroupChildGroupInviteAcceptedPush()
+      case 'groupParentGroupJoinRequest':
+        return this.sendGroupParentGroupJoinRequestPush()
+      case 'groupParentGroupJoinRequestAccepted':
+        return this.sendGroupParentGroupJoinRequestAcceptedPush()
       case 'announcement':
         return this.sendPushAnnouncement()
       case 'donation to':
@@ -196,6 +209,42 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  sendGroupChildGroupInvitePush: async function () {
+    const childGroup = await this.relations.activity.group().fetch()
+    const parentGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
+    const path = url.parse(Frontend.Route.groupRelationshipInvites(childGroup)).path
+    const alertText = PushNotification.textForGroupChildGroupInvite(parentGroup, childGroup, this.actor())
+    return this.reader().sendPushNotification(alertText, path)
+  },
+
+  sendGroupChildGroupInviteAcceptedPush: async function () {
+    const childGroup = await this.relations.activity.group().fetch()
+    const parentGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
+    const parentPath = url.parse(Frontend.Route.group(parentGroup)).path
+    const alertText = PushNotification.textForGroupChildGroupInviteAccepted(parentGroup, childGroup, this.actor())
+    return this.reader().sendPushNotification(alertText, parentPath)
+  },
+
+  sendGroupParentGroupJoinRequestPush: async function () {
+    const parentGroup = await this.relations.activity.group().fetch()
+    const childGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
+    const path = url.parse(Frontend.Route.groupParentGroupJoinRequest(parentGroup)).path
+    const alertText = PushNotification.textForGroupParentGroupJoinRequest(parentGroup, childGroup, this.actor())
+    return this.reader().sendPushNotification(alertText, path)
+  },
+
+  sendGroupParentGroupJoinRequestAcceptedPush: async function () {
+    const parentGroup = await this.relations.activity.group().fetch()
+    const childGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
+    const path = url.parse(Frontend.Route.groupParentGroupJoinRequestAccepted(parentGroup)).path
+    const alertText = PushNotification.textForGroupParentGroupJoinRequestAccepted(parentGroup, childGroup, this.actor())
+    return this.reader().sendPushNotification(alertText, path)
+  },
+
   sendPushDonationTo: async function () {
     await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
     var projectContribution = this.projectContribution()
@@ -228,6 +277,14 @@ module.exports = bookshelf.Model.extend({
         return this.sendDonationFromEmail()
       case 'eventInvitation':
         return this.sendEventInvitationEmail()
+      case 'groupChildGroupInvite':
+        return this.sendGroupChildGroupInviteEmail()
+      case 'groupChildGroupInviteAccepted':
+        return this.sendGroupChildGroupInviteAcceptedEmail()
+      case 'groupParentGroupJoinRequest':
+        return this.sendGroupParentGroupJoinRequestEmail()
+      case 'groupParentGroupJoinRequestAccepted':
+        return this.sendGroupParentGroupJoinRequestAcceptedEmail()
       default:
         return Promise.resolve()
     }
@@ -374,7 +431,7 @@ module.exports = bookshelf.Model.extend({
           requester_avatar_url: actor.get('avatar_url'),
           requester_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(actor) +
-            `?ctt=comment_email&cti=${reader.id}&check-join-requests=1`),
+            `?ctt=join_request_email&cti=${reader.id}&check-join-requests=1`),
           settings_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.groupJoinRequests(group))
         }
@@ -397,11 +454,111 @@ module.exports = bookshelf.Model.extend({
           approver_name: actor.get('name'),
           approver_avatar_url: actor.get('avatar_url'),
           approver_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
+            Frontend.Route.profile(actor) + '?ctt=approved_join_request_email&cti=' + reader.id),
           group_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.group(group))
         }
       })))
+  },
+
+  sendGroupChildGroupInviteEmail: async function () {
+    const actor = this.actor()
+    const reader = this.reader()
+    const childGroup = await this.relations.activity.group().fetch()
+    const parentGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing group in activity')
+    const token = reader.generateToken()
+    Email.sendGroupChildGroupInviteNotification({
+      email: reader.get('email'),
+      sender: { name: actor.get('name') + ' from ' + parentGroup.get('name') },
+      data: {
+        parent_group_name: parentGroup.get('name'),
+        child_group_name: childGroup.get('name'),
+        inviter_name: actor.get('name'),
+        parent_group_avatar_url: parentGroup.get('avatar_url'),
+        inviter_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) +
+          `?ctt=group_child_group_invite_email&cti=${reader.id}`),
+        parent_group_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.group(parentGroup)),
+        child_group_settings_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.groupChildGroupInvite(childGroup))
+      }
+    })
+  },
+
+  sendGroupChildGroupInviteAcceptedEmail: async function () {
+    const actor = this.actor()
+    const reader = this.reader()
+    const childGroup = await this.relations.activity.group().fetch()
+    const parentGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing group in activity')
+    const token = reader.generateToken()
+    Email.sendGroupChildGroupInviteAcceptedNotification({
+      email: reader.get('email'),
+      sender: { name: actor.get('name') + ' from ' + childGroup.get('name') },
+      data: {
+        parent_group_name: group.get('name'),
+        child_group_name: group.get('name'),
+        accepter_name: actor.get('name'),
+        accepter_avatar_url: actor.get('avatar_url'),
+        accepter_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) +
+          `?ctt=group_child_group_invite_accepted_email&cti=${reader.id}`),
+        group_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.group(childGroup))
+      }
+    })
+  },
+
+  sendGroupParentGroupJoinRequestEmail: async function () {
+    const actor = this.actor()
+    const reader = this.reader()
+    const parentGroup = await this.relations.activity.group().fetch()
+    const childGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing group in activity')
+    const token = reader.generateToken()
+    Email.sendGroupParentGroupJoinRequestNotification({
+      email: reader.get('email'),
+      sender: { name: actor.get('name') + ' from ' + childGroup.get('name') },
+      data: {
+        parent_group_name: group.get('name'),
+        child_group_name: group.get('name'),
+        requester_name: actor.get('name'),
+        requester_avatar_url: actor.get('avatar_url'),
+        requester_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) +
+          `?ctt=group_parent_group_join_request_email&cti=${reader.id}`),
+        child_group_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.group(childGroup)),
+        settings_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.groupParentGroupJoinRequest(parentGroup))
+      }
+    })
+  },
+
+  sendGroupParentGroupJoinRequestAcceptedEmail: async function () {
+    const actor = this.actor()
+    const reader = this.reader()
+    const parentGroup = await this.relations.activity.group().fetch()
+    const childGroup = await this.relations.activity.otherGroup().fetch()
+    if (!childGroup || !parentGroup) throw new Error('Missing group in activity')
+    const token = reader.generateToken()
+    Email.sendGroupParentGroupJoinRequestAcceptedNotification({
+      email: reader.get('email'),
+      sender: { name: actor.get('name') + ' from ' + parentGroup.get('name') },
+      data: {
+        parent_group_name: group.get('name'),
+        child_group_name: group.get('name'),
+        accepter_name: actor.get('name'),
+        accepter_avatar_url: actor.get('avatar_url'),
+        accepter_profile_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.profile(actor) +
+          `?ctt=group_parent_group_join_request_accepted_email&cti=${reader.id}`),
+        group_url: Frontend.Route.tokenLogin(reader, token,
+          Frontend.Route.group(childGroup))
+      }
+    })
   },
 
   sendDonationToEmail: async function () {
@@ -494,6 +651,7 @@ module.exports = bookshelf.Model.extend({
     const blockedUserIds = (await BlockedUser.blockedFor(this.get('user_id'))).rows.map(r => r.user_id)
     if (blockedUserIds.length === 0) return Promise.resolve(false)
 
+      // TODO: add , 'activity.actor', 'activity.reader'
     await this.load(['activity', 'activity.post', 'activity.post.user', 'activity.comment', 'activity.comment.user'])
     const postCreatorId = get('relations.activity.relations.post.relations.user.id', this)
     const commentCreatorId = get('relations.activity.relations.comment.relations.user.id', this)
@@ -589,7 +747,8 @@ module.exports = bookshelf.Model.extend({
   priorityReason: function (reasons) {
     const orderedLabels = [
       'donation to', 'donation from', 'announcement', 'eventInvitation', 'mention', 'commentMention', 'newComment', 'newContribution', 'tag',
-      'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest'
+      'newPost', 'follow', 'followAdd', 'unfollow', 'joinRequest', 'approvedJoinRequest', 'groupChildGroupInvite', 'groupChildGroupInviteAccepted',
+      'groupParentGroupJoinRequest', 'groupParentGroupJoinRequestAccepted'
     ]
 
     const match = label => reasons.some(r => r.match(new RegExp('^' + label)))
