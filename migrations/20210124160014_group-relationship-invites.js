@@ -32,7 +32,7 @@ exports.up = async function(knex) {
   await knex('group_relationships').update({ settings: '{}' })
 
   return knex.schema.table('activities', async (table) => {
-    table.bigInteger('other_group_id')
+    table.bigInteger('other_group_id').references('id').inTable('groups')
     table.dropColumn('action')
   })
 }
