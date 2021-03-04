@@ -14,7 +14,7 @@ export async function createJoinRequest (userId, groupId, questionAnswers = []) 
       for (let qa of questionAnswers) {
         await JoinRequestQuestionAnswer.forge({ join_request_id: request.id, question_id: qa.questionId, answer: qa.answer }).save()
       }
-      return request
+      return { request }
     })
   } else {
     throw new Error(`Invalid parameters to create join request`)
