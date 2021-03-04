@@ -56,6 +56,15 @@ export default async function makeModels (userId, isAdmin) {
         'posts',
         'locationObject',
         {affiliations: {querySet: true}},
+        {joinRequests: {
+          querySet: true,
+          filter: (relation, { status }) =>
+            relation.query(q => {
+              if (status) {
+                q.where('status', status)
+              }
+            })
+        }},
         {skills: {querySet: true}},
         {skillsToLearn: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
@@ -331,6 +340,7 @@ export default async function makeModels (userId, isAdmin) {
         'status'
       ],
       relations: [
+        'group',
         'user'
       ],
       getters: {

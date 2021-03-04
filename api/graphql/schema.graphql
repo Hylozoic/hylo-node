@@ -3,6 +3,7 @@ scalar Date
 # The currently logged-in person.
 type Me {
   id: ID
+  affiliations: AffiliationQuerySet
   avatarUrl: String
   bannerUrl: String
   bio: String
@@ -14,10 +15,10 @@ type Me {
   facebookUrl: String
   hasDevice: Boolean
   isAdmin: Boolean
+  joinRequests(status: Int): JoinRequestQuerySet
   linkedinUrl: String
   location: String
   locationObject: Location
-  affiliations: AffiliationQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
