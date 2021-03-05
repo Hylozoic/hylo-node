@@ -32,18 +32,6 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
-  // queryByGroupMembership (model, { where } = {}) {
-
-  //   let subq = this.groupMemberships()
-  //   .query()
-  //   .join('groups', 'groups.id', 'group_memberships.group_id')
-  //   .select('groups.id')
-
-  //   if (where) subq = subq.where(where)
-  //   const collection = type === Group.DataType.POST ? model.collection() : Group.collection()
-  //   return Group.collection.query(q => q.whereIn('id', subq))
-  // },
-
   memberships() {
     return this.hasMany(GroupMembership).where('group_memberships.active', true)
   },

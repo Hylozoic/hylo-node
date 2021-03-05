@@ -59,7 +59,6 @@ function filterGroups (q, idColumn, userId) {
     inner.orWhereIn(idColumn, GroupRelationship.query().select('parent_group_id').whereIn('child_group_id', selectIdsForMember))
 
     if (idColumn === 'groups.id') {
-      // XXX: hack to make sure to show public groups on the map when logged in
       inner.orWhere('groups.visibility', Group.Visibility.PUBLIC)
     }
   })

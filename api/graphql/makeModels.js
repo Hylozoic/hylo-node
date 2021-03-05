@@ -445,8 +445,7 @@ export default async function makeModels (userId, isAdmin) {
         newPostCount: ct => ct.newPostCount(userId)
       },
       relations: [
-        // TODO: remove alias
-        { group: { alias: 'group' } },
+        'group',
         { tag: { alias: 'topic'}}
       ],
       filter: nonAdminFilter(relation => relation.query(q => {
