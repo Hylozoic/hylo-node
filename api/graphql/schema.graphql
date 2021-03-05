@@ -789,6 +789,7 @@ type Mutation {
   allowGroupInvites(groupId: ID, data: Boolean): Group
   blockUser(blockedUserId: ID): GenericResult
   cancelGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
+  cancelJoinRequest(joinRequestId: ID): GenericResult
   createAffiliation(data: AffiliationInput): Affiliation
   createComment(data: CommentInput): Comment
   createGroup(data: GroupInput): Membership

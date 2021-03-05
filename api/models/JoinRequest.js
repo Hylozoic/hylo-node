@@ -41,7 +41,8 @@ module.exports = bookshelf.Model.extend({
   STATUS: {
     Pending: 0,
     Accepted: 1,
-    Rejected: 2
+    Rejected: 2,
+    Canceled: 3
   },
 
   create: function (opts) {

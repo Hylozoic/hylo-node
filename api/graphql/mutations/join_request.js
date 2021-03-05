@@ -34,6 +34,20 @@ export async function acceptJoinRequest (userId, joinRequestId) {
   }
 }
 
+export async function cancelJoinRequest (userId, joinRequestId) {
+  const joinRequest = await JoinRequest.find(joinRequestId)
+  if (joinRequest) {
+    if (joinRequest.get('user_id') === userId) {
+      await joinRequest.save({ status: JoinRequest.STATUS.Canceled })
+      return { success: true }
+    } else {
+      throw new Error(`You do not have permission to do this`)
+    }
+  } else {
+    throw new Error(`Invalid parameters to cancel join request`)
+  }
+}
+
 export async function declineJoinRequest (userId, joinRequestId) {
   const joinRequest = await JoinRequest.find(joinRequestId)
   if (joinRequest) {

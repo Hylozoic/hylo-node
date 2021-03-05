@@ -13,6 +13,7 @@ import {
   allowGroupInvites,
   blockUser,
   cancelGroupRelationshipInvite,
+  cancelJoinRequest,
   createAffiliation,
   createComment,
   createGroup,
@@ -211,6 +212,8 @@ export function makeMutations (userId, isAdmin) {
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
 
     cancelGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => cancelGroupRelationshipInvite(userId, groupRelationshipInviteId),
+
+    cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
 
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
