@@ -530,7 +530,7 @@ type Query {
     boundingBox: [PointInput],
     isPublic: Boolean
   ): GroupQuerySet
-  joinRequests(groupId: ID): JoinRequestQuerySet
+  joinRequests(groupId: ID, status: Int): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
