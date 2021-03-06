@@ -77,9 +77,9 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
-  // groupMemberships: function () {
-  //   return GroupMembership.forMember(this.id)
-  // },
+  joinRequests: function () {
+    return this.hasMany(JoinRequest)
+  },
 
   moderatedGroupMemberships: function () {
     return this.memberships()

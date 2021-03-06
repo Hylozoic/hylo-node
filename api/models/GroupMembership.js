@@ -95,8 +95,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  async hasActiveMembership (userOrId, group) {
-    const gm = await this.forPair(userOrId, group).fetch()
+  async hasActiveMembership (userOrId, groupOrId) {
+    const gm = await this.forPair(userOrId, groupOrId).fetch()
     return !!gm && gm.get('active')
   },
 

@@ -3,6 +3,7 @@ scalar Date
 # The currently logged-in person.
 type Me {
   id: ID
+  affiliations: AffiliationQuerySet
   avatarUrl: String
   bannerUrl: String
   bio: String
@@ -14,10 +15,10 @@ type Me {
   facebookUrl: String
   hasDevice: Boolean
   isAdmin: Boolean
+  joinRequests(status: Int): JoinRequestQuerySet
   linkedinUrl: String
   location: String
   locationObject: Location
-  affiliations: AffiliationQuerySet
   memberships(first: Int, cursor: ID, order: String): [Membership]
   membershipsTotal: Int
   messageThreads(first: Int, offset: Int, order: String, sortBy: String): MessageThreadQuerySet
@@ -150,17 +151,6 @@ type Group {
   accessibility: Int
   avatarUrl: String
   bannerUrl: String
-  createdAt: Date
-  description: String
-  invitePath: String
-  location: String
-  locationObject: Location
-  memberCount: Int
-  name: String
-  settings: GroupSettings
-  postCount: Int
-  slug: String
-  visibility: Int
   childGroups(
     boundingBox: [PointInput],
     first: Int,
@@ -170,6 +160,36 @@ type Group {
     search: String,
     autocomplete: String
   ): GroupQuerySet
+  createdAt: Date
+  description: String
+  feedItems(first: Int, cursor: ID, order: String): [FeedItem]
+  feedItemsTotal: Int
+  groupTopics(
+    first: Int,
+    sortBy: String,
+    order: String,
+    offset: Int,
+    autocomplete: String,
+    isDefault: Boolean,
+    subscribed: Boolean,
+    visibility: Int
+  ): GroupTopicQuerySet
+  invitePath: String
+  location: String
+  locationObject: Location
+  members(
+    boundingBox: [PointInput],
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): PersonQuerySet
+  memberCount: Int
+  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  name: String
+  settings: GroupSettings
   parentGroups(
     boundingBox: [PointInput],
     first: Int,
@@ -181,15 +201,7 @@ type Group {
   ): GroupQuerySet
   groupRelationshipInvitesFrom: GroupRelationshipInviteQuerySet
   groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
-  members(
-    boundingBox: [PointInput],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    autocomplete: String
-  ): PersonQuerySet
+  pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   posts(
     first: Int,
     order: String,
@@ -200,29 +212,20 @@ type Group {
     topic: ID,
     boundingBox: [PointInput]
   ): PostQuerySet
-  feedItems(first: Int, cursor: ID, order: String): [FeedItem]
-  feedItemsTotal: Int
-  moderators(first: Int, cursor: ID, order: String): PersonQuerySet
-  pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
-  groupTopics(
-    first: Int,
-    sortBy: String,
-    order: String,
-    offset: Int,
-    autocomplete: String,
-    isDefault: Boolean,
-    subscribed: Boolean,
-    visibility: Int
-  ): GroupTopicQuerySet
+  postCount: Int
+  joinQuestions: GroupJoinQuestionQuerySet
   skills(
     first: Int,
     offset: Int,
     autocomplete: String
-  ): SkillQuerySet,
+  ): SkillQuerySet
+  slug: String
+  visibility: Int
 }
 
 type GroupSettings {
   allowGroupInvites: Boolean
+  askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
 }
 
@@ -267,17 +270,30 @@ type InvitationQuerySet {
 
 type JoinRequest {
   id: Int
-  user: Person
-  group: Group
   createdAt: Date
-  updatedAt: Date
+  group: Group
+  questionAnswers: [JoinRequestQuestionAnswer]
   status: Int
+  updatedAt: Date
+  user: Person
 }
 
 type JoinRequestQuerySet {
   total: Int
   hasMore: Boolean
   items: [JoinRequest]
+}
+
+type JoinRequestQuestionAnswer {
+  id: Int
+  answer: String
+  question: Question
+  user: Person
+}
+
+type Question {
+  id: Int
+  text: String
 }
 
 type PostQuerySet {
@@ -514,7 +530,7 @@ type Query {
     boundingBox: [PointInput],
     isPublic: Boolean
   ): GroupQuerySet
-  joinRequests(groupId: ID): JoinRequestQuerySet
+  joinRequests(groupId: ID, status: Int): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
@@ -712,6 +728,7 @@ input GroupInput {
   locationId: ID
   name: String
   parentIds: [ID]
+  joinQuestions: [QuestionInput]
   settings: GroupSettingsInput
   slackHookUrl: String
   slackTeam: String
@@ -722,12 +739,24 @@ input GroupInput {
 
 input GroupSettingsInput {
   allowGroupInvites: Boolean
+  askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
+}
+
+input QuestionInput {
+  id: Int
+  questionId: Int
+  text: String
 }
 
 input MembershipSettingsInput {
   sendEmail: Boolean
   sendPushNotifications: Boolean
+}
+
+input QuestionAnswerInput {
+  questionId: Int
+  answer: String
 }
 
 input SavedSearchInput {
@@ -760,11 +789,12 @@ type Mutation {
   allowGroupInvites(groupId: ID, data: Boolean): Group
   blockUser(blockedUserId: ID): GenericResult
   cancelGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
+  cancelJoinRequest(joinRequestId: ID): GenericResult
   createAffiliation(data: AffiliationInput): Affiliation
   createComment(data: CommentInput): Comment
   createGroup(data: GroupInput): Membership
   createInvitation(groupId: ID, data: InviteInput): CreatedInvitations
-  createJoinRequest(groupId: ID, userId: ID): CreatedRequest
+  createJoinRequest(groupId: ID, questionAnswers: [QuestionAnswerInput]): CreatedRequest
   createMessage(data: MessageInput): Message
   createPost(data: PostInput): Post
   createProject(data: PostInput): Post
@@ -788,7 +818,7 @@ type Mutation {
   fulfillPost(postId: ID): GenericResult
   inviteGroupToJoinParent(parentId: ID, childId: ID): CreatedGroupRelationshipInvite
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
-  joinGroup(groupId: ID, userId: ID): InvitationUseResult
+  joinGroup(groupId: ID): InvitationUseResult
   joinProject(id: ID): GenericResult
   leaveGroup(id: ID): ID
   leaveProject(id: ID): GenericResult
@@ -901,6 +931,18 @@ type GroupQuerySet {
   total: Int
   hasMore: Boolean
   items: [Group]
+}
+
+type GroupJoinQuestion {
+  id: Int
+  questionId: Int
+  text: String
+}
+
+type GroupJoinQuestionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupJoinQuestion]
 }
 
 type GroupRelationshipInviteQuerySet {

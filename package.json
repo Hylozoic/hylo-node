@@ -178,6 +178,8 @@
       "FullTextSearch",
       "Group",
       "GroupMembership",
+      "GroupQuestion",
+      "GroupQuestionAnswer",
       "GroupRelationship",
       "GroupRelationshipInvite",
       "GroupTag",

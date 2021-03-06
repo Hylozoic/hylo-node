@@ -13,6 +13,7 @@ import {
   allowGroupInvites,
   blockUser,
   cancelGroupRelationshipInvite,
+  cancelJoinRequest,
   createAffiliation,
   createComment,
   createGroup,
@@ -212,6 +213,8 @@ export function makeMutations (userId, isAdmin) {
 
     cancelGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => cancelGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
+    cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
+
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
     createComment: (root, { data }) => createComment(userId, data),
@@ -221,7 +224,7 @@ export function makeMutations (userId, isAdmin) {
     createInvitation: (root, {groupId, data}) =>
       createInvitation(userId, groupId, data),
 
-    createJoinRequest: (root, {groupId, userId}) => createJoinRequest(groupId, userId),
+    createJoinRequest: (root, {groupId, questionAnswers}) => createJoinRequest(userId, groupId, questionAnswers),
 
     createMessage: (root, { data }) => createMessage(userId, data),
 
@@ -233,13 +236,13 @@ export function makeMutations (userId, isAdmin) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
-    joinGroup: (root, {groupId, userId}) => joinGroup(groupId, userId),
+    joinGroup: (root, {groupId}) => joinGroup(groupId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
     createTopic: (root, { topicName, groupId, isDefault, isSubscribing }) => createTopic(userId, topicName, groupId, isDefault, isSubscribing),
 
-    declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
+    declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(userId, joinRequestId),
 
     deleteAffiliation: (root, { id }) => deleteAffiliation(userId, id),
 

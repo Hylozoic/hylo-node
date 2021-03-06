@@ -32,8 +32,8 @@ module.exports = {
       }
 
       if (opts.parentSlugs) {
-        qb.join('group_connections', 'groups.id', '=', 'group_connections.child_group_id')
-        qb.join('groups as parent_groups', 'parent_groups.id', '=', 'group_connections.parent_group_id')
+        qb.join('group_relationships', 'groups.id', '=', 'group_relationships.child_group_id')
+        qb.join('groups as parent_groups', 'parent_groups.id', '=', 'group_relationships.parent_group_id')
         qb.whereIn('parent_groups.slug', opts.parentSlugs)
       }
 

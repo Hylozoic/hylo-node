@@ -56,6 +56,15 @@ export default async function makeModels (userId, isAdmin) {
         'posts',
         'locationObject',
         {affiliations: {querySet: true}},
+        {joinRequests: {
+          querySet: true,
+          filter: (relation, { status }) =>
+            relation.query(q => {
+              if (status) {
+                q.where('status', status)
+              }
+            })
+        }},
         {skills: {querySet: true}},
         {skillsToLearn: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
@@ -215,7 +224,6 @@ export default async function makeModels (userId, isAdmin) {
         'visibility',
       ],
       relations: [
-        'locationObject',
         {childGroups: {querySet: true}},
         {parentGroups: {querySet: true}},
         {groupRelationshipInvitesFrom: {querySet: true}},
@@ -231,20 +239,14 @@ export default async function makeModels (userId, isAdmin) {
               groupId: relation.relatedData.parentId
             }))
         }},
-        {skills: {
-          querySet: true,
-          filter: (relation, { autocomplete }) =>
-            relation.query(q => {
-              if (autocomplete) {
-                q.whereRaw('skills.name ilike ?', autocomplete + '%')
-              }
-            })
-        }},
+        'locationObject',
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
             relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
+        {moderators: {querySet: true}},
+        {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
           filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
@@ -256,6 +258,16 @@ export default async function makeModels (userId, isAdmin) {
               type: filter,
               showPinnedFirst: true
             }))
+        }},
+        {joinQuestions: {querySet: true}},
+        {skills: {
+          querySet: true,
+          filter: (relation, { autocomplete }) =>
+            relation.query(q => {
+              if (autocomplete) {
+                q.whereRaw('skills.name ilike ?', autocomplete + '%')
+              }
+            })
         }}
       ],
       getters: {
@@ -280,6 +292,14 @@ export default async function makeModels (userId, isAdmin) {
           sort: sortBy,
           is_public: isPublic
         })
+    },
+
+    GroupJoinQuestion: {
+      model: GroupJoinQuestion,
+      attributes: [
+        'questionId',
+        'text'
+      ]
     },
 
     GroupRelationship: {
@@ -319,8 +339,29 @@ export default async function makeModels (userId, isAdmin) {
         'updated_at',
         'status'
       ],
-      relations: ['user' ],
-      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId })
+      relations: [
+        'group',
+        'user'
+      ],
+      getters: {
+        questionAnswers: jr => jr.questionAnswers().fetch()
+      },
+      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId, status: JoinRequest.STATUS.Pending })
+    },
+
+    JoinRequestQuestionAnswer: {
+      model: JoinRequestQuestionAnswer,
+      attributes: [
+        'answer'
+      ],
+      relations: ['question'],
+    },
+
+    Question: {
+      model: Question,
+      attributes: [
+        'text'
+      ]
     },
 
     Affiliation: {

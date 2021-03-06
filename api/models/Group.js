@@ -44,6 +44,13 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(GroupTag)
   },
 
+  joinQuestions () {
+    return this.hasMany(GroupJoinQuestion).query(q => {
+      q.select(['questions.text', 'questions.id as questionId'])
+      q.join('questions', 'group_join_questions.question_id', 'questions.id')
+    })
+  },
+
   locationObject () {
     return this.belongsTo(Location, 'location_id')
   },
@@ -195,7 +202,7 @@ module.exports = bookshelf.Model.extend(merge({
     return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
   },
 
-  update: function (changes) {
+  update: async function (changes) {
     var whitelist = [
       'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url', 'description',
       'location', 'location_id', 'name', 'settings', 'visibility'
@@ -208,8 +215,19 @@ module.exports = bookshelf.Model.extend(merge({
       saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
     }
 
+    if (changes.join_questions) {
+      const questions = await Promise.map(changes.join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
+        return (await Question.where({ text: trim(jq.text) }).fetch()) || (await Question.forge({ text: trim(jq.text) }).save())
+      })
+      await GroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false })
+      for (let q of questions) {
+        await GroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save()
+      }
+    }
+
     this.set(saneAttrs)
-    return this.validate().then(() => this.save())
+    await this.validate().then(() => this.save())
+    return this
   },
 
   validate: function () {

@@ -45,6 +45,7 @@ export {
 } from './invitation'
 export {
   acceptJoinRequest,
+  cancelJoinRequest,
   createJoinRequest,
   declineJoinRequest,
   joinGroup,
