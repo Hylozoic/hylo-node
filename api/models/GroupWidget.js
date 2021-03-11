@@ -50,7 +50,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
   
   toggleVisibility: async function(id, is_visible = true) {
-    await GroupWidget.query().where({ id }).update({ is_visible: !is_visible})
-    return id
+    return await GroupWidget.where({ id }).query().update({ is_visible: !is_visible })
   }
 })

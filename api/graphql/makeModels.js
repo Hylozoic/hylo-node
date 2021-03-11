@@ -255,7 +255,11 @@ export default async function makeModels (userId, isAdmin) {
               type: filter,
               showPinnedFirst: true
             }))
-        }}
+        }},
+        {events: {querySet: true}},
+        {projects: {querySet: true}},
+        {announcements: {querySet: true}},
+        {offersAndRequests: {querySet: true}},
       ],
       getters: {
         feedItems: (g, args) => g.feedItems(args),
@@ -576,8 +580,7 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         name: w => Widget.Name[w.get('name')],
-        isVisible: w => GroupWidget.getVisibility(w.id),
-        // order: w => GroupWidget.getOrder(w.id),
+        isVisible: w => GroupWidget.getVisibility(w.id)
       }
     }
   }

@@ -319,7 +319,10 @@ export function makeMutations (userId, isAdmin) {
     subscribe: (root, { groupId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, groupId, isSubscribing),
 
-    toggleGroupWidgetVisibility: (root, { id, isVisible }) => toggleGroupWidgetVisibility(id, isVisible),
+    toggleGroupWidgetVisibility: (root, data) => {
+      const { id, isVisible } = data
+      toggleGroupWidgetVisibility(id, isVisible)
+    },
 
     unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
 

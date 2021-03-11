@@ -148,6 +148,7 @@ type MembershipSettings {
 type Group {
   id: ID
   accessibility: Int
+  announcements: PostQuerySet
   avatarUrl: String
   bannerUrl: String
   createdAt: Date
@@ -218,6 +219,9 @@ type Group {
     autocomplete: String
   ): SkillQuerySet
   widgets: WidgetQuerySet
+  events: PostQuerySet
+  offersAndRequests: PostQuerySet
+  projects: PostQuerySet
 }
 
 type GroupSettings {

@@ -21,10 +21,19 @@ module.exports = bookshelf.Model.extend(merge({
   requireFetch: false,
 
   // ******** Getters ******* //
+  announcements: function () {
+    return this.belongsToMany(Post).through(PostMembership)
+      .query({ where: { 'posts.active': true, 'posts.announcement': true } })
+  },
 
   childGroups () {
     return this.belongsToMany(Group)
       .through(GroupConnection, 'parent_group_id', 'child_group_id')
+  },
+
+  events () {
+    return this.belongsToMany(Post).through(PostMembership)
+      .query({ where: { 'posts.type': 'event' } })
   },
 
   groupTags () {
@@ -65,6 +74,11 @@ module.exports = bookshelf.Model.extend(merge({
     return this.members({ role: GroupMembership.Role.MODERATOR })
   },
 
+  offersAndRequests () {
+    return this.belongsToMany(Post).through(PostMembership)
+      .query({ where: { 'posts.type': 'offer' }, orWhere: { 'posts.type': 'request' } })
+  },
+
   parentGroups () {
     return this.belongsToMany(Group)
       .through(GroupConnection, 'child_group_id', 'parent_group_id')
@@ -83,6 +97,11 @@ module.exports = bookshelf.Model.extend(merge({
     })
     .fetch()
     .then(result => result.get('count'))
+  },
+
+  projects () {
+    return this.belongsToMany(Post).through(PostMembership)
+      .query({ where: { 'posts.type': 'project' } })
   },
 
   widgets: function () {
