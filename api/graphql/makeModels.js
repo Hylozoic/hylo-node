@@ -169,7 +169,7 @@ export default async function makeModels (userId, isAdmin) {
         votesTotal: p => p.get('num_votes'),
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
-          userId ? p.userEventInvitation(userId)
+          userId && p.isEvent() ? p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
           : ''
       },
