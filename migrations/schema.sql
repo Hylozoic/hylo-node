@@ -16,6 +16,7 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+CREATE EXTENSION postgis;
 
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
@@ -27,8 +28,6 @@ COMMENT ON SCHEMA public IS 'standard public schema';
 SET default_tablespace = '';
 
 SET default_with_oids = false;
-
-CREATE EXTENSION postgis;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -
