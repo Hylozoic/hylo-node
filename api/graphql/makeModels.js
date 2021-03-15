@@ -246,6 +246,7 @@ export default async function makeModels (userId, isAdmin) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
+          arguments: () => [userId],
           filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
