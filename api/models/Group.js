@@ -371,9 +371,9 @@ module.exports = bookshelf.Model.extend(merge({
         if (where) q.where(where)
 
         q.select('groups.id')
-
         q.join('groups', 'groups.id', 'group_memberships.group_id')
         q.where('groups.active', true)
+        q.andWhere('group_memberships.active', true)
       },
       multiple: true
     }).query()

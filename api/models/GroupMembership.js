@@ -113,7 +113,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return group.addMembers([userId], {role: this.Role.DEFAULT})
   },
 
-  // TODO: remove?
   forMember (userOrId) {
     return this.forIds(userOrId, null, {multiple: true})
   }

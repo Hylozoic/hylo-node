@@ -1,14 +1,14 @@
 import searchQuerySet from './searchQuerySet'
 import {
   commentFilter,
+  groupFilter,
   groupTopicFilter,
   makeFilterToggle,
   membershipFilter,
+  messageFilter,
   personFilter,
-  sharedGroupMembership,
-  activePost,
-  authFilter,
-  messageFilter
+  postFilter,
+  voteFilter
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
@@ -189,10 +189,7 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {tags: {alias: 'topics'}}
       ],
-      filter: flow(
-        authFilter(userId, 'posts'),
-        activePost(userId),
-        nonAdminFilter(sharedGroupMembership('posts', userId))),
+      filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, groupSlugs, isPublic }) =>
         searchQuerySet('posts', {
@@ -271,14 +268,13 @@ export default async function makeModels (userId, isAdmin) {
         }}
       ],
       getters: {
-        feedItems: (g, args) => g.feedItems(args),
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
-      filter: nonAdminFilter(sharedGroupMembership('groups', userId)),
+      filter: nonAdminFilter(groupFilter(userId)),
       fetchMany: ({ first, order, sortBy, groupIds, offset, search, autocomplete, filter, isPublic, boundingBox, parentSlugs }) =>
         searchQuerySet('groups', {
           boundingBox,
@@ -473,7 +469,7 @@ export default async function makeModels (userId, isAdmin) {
         'post',
         {user: {alias: 'voter'}}
       ],
-      filter: nonAdminFilter(sharedGroupMembership('votes', userId))
+      filter: nonAdminFilter(voteFilter('votes', userId))
     },
 
     GroupTopic: {

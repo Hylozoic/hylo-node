@@ -162,8 +162,6 @@ type Group {
   ): GroupQuerySet
   createdAt: Date
   description: String
-  feedItems(first: Int, cursor: ID, order: String): [FeedItem]
-  feedItemsTotal: Int
   groupTopics(
     first: Int,
     sortBy: String,
