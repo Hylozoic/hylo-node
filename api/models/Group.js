@@ -120,7 +120,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   posts (userId) {
-    return this.viewPosts(userId)
+    return this.belongsToMany(Post).through(PostMembership)
+      .query({ where: { 'posts.active': true } })
+    // XXX: this doesnt work as a non relationship right now because of places where we eagerly load posts using withRelated
+    // e.g. when creating a new group
+    //return this.viewPosts(userId)
   },
 
   postCount: function () {
