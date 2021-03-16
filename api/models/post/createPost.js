@@ -25,7 +25,6 @@ export function afterCreatingPost (post, opts) {
   const followerIds = uniq(mentioned.concat(userId))
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
-  console.log("adfter create, group_ids = ", post.id, userId, opts.group_ids)
 
   return Promise.all(flatten([
     opts.group_ids && post.groups().attach(uniq(opts.group_ids), trxOpts),
@@ -93,7 +92,6 @@ async function updateTagsAndGroups (post, trx) {
 
   const { tags, groups } = post.relations
 
-  console.log("update tags and groups")
   // NOTE: the payload object is released to many users, so it cannot be
   // subject to the usual permissions checks (which groups
   // the user is allowed to view, etc). This means we either omit the

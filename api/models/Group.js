@@ -44,6 +44,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(GroupTag)
   },
 
+  isHidden() {
+    return this.get('visibility') === Group.Visibility.HIDDEN
+  },
+
   joinQuestions () {
     return this.hasMany(GroupJoinQuestion).query(q => {
       q.select(['questions.text', 'questions.id as questionId'])

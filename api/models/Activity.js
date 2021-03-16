@@ -135,7 +135,9 @@ module.exports = bookshelf.Model.extend({
     ApprovedJoinRequest: 'approvedJoinRequest',
     JoinRequest: 'joinRequest',
     GroupChildGroupInvite: 'groupChildGroupInvite',
-    GroupParentGroupJoinRequest: 'groupParentGroupJoinRequest'
+    GroupChildGroupInviteAccepted: 'groupChildGroupInviteAccepted',
+    GroupParentGroupJoinRequest: 'groupParentGroupJoinRequest',
+    GroupParentGroupJoinRequestAccepted: 'groupParentGroupJoinRequestAccepted'
   },
 
   find: function (id, options) {

@@ -572,7 +572,8 @@ export default async function makeModels (userId, isAdmin) {
         'actor',
         'post',
         'comment',
-        'group'
+        'group',
+        'otherGroup'
       ],
       getters: {
         action: a => Notification.priorityReason(a.get('meta').reasons)

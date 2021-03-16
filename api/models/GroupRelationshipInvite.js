@@ -70,18 +70,21 @@ module.exports = bookshelf.Model.extend(Object.assign({
       throw new Error('Not permitted to do this')
     }
     const fromGroup = await this.fromGroup().fetch({ transacting })
+    const parentGroup = (this.get('type') === GroupRelationshipInvite.TYPE.ParentToChild) ? fromGroup : toGroup
+    const childGroup = (this.get('type') === GroupRelationshipInvite.TYPE.ParentToChild) ? toGroup : fromGroup
 
     await this.save({ processed_by_id: userId, processed_at: new Date(), status: status },
       { patch: true, transacting })
 
     if (status === GroupRelationshipInvite.STATUS.Accepted) {
-      let relationship = await GroupRelationship.forPair(fromGroup, toGroup).fetch({ transacting })
+      let relationship = await GroupRelationship.forPair(parentGroup, childGroup).fetch({ transacting })
       if (relationship) {
         // If an old relationship existed then just re-activate it
         await relationship.save({ active: true }, { transacting })
       } else {
-        relationship = await fromGroup.addChild(toGroup, { transacting })
+        relationship = await parentGroup.addChild(childGroup, { transacting })
       }
+      await Queue.classMethod('GroupRelationshipInvite', 'createAcceptNotifications', { inviteId: this.id, actorId: userId })
 
       return relationship
     }
@@ -98,8 +101,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const notifications = moderators.map(moderator => ({
       actor_id: createdBy.id,
       reader_id: moderator.id,
-      group_id: toGroup.id,
-      other_group_id: fromGroup.id,
+      group_id: fromGroup.id,
+      other_group_id: toGroup.id,
       reason: this.get('type') === GroupRelationshipInvite.TYPE.ParentToChild ? Activity.Reason.GroupChildGroupInvite : Activity.Reason.GroupParentGroupJoinRequest
     }))
 
@@ -135,6 +138,49 @@ module.exports = bookshelf.Model.extend(Object.assign({
       invite.afterCreate()
       return invite
     })
+  },
+
+  createAcceptNotifications: function({ inviteId, actorId }) {
+    return GroupRelationshipInvite.find(inviteId).then(invite => invite &&
+      bookshelf.transaction(async (transacting) => {
+        await invite.load(['fromGroup', 'toGroup'], { transacting })
+        const { fromGroup, toGroup } = invite.relations
+        const parentToChild = invite.get('type') === GroupRelationshipInvite.TYPE.ParentToChild
+        const childToParent = invite.get('type') === GroupRelationshipInvite.TYPE.ChildToParent
+
+        // If child group is hidden then only tell moderators of the parent about it joining the parent, otherwise tell all the parent's members about it
+        const fromMembers = (childToParent && fromGroup.isHidden()) ? await fromGroup.moderators().fetch({ transacting }) : await fromGroup.members().fetch({ transacting })
+        const toMembers = (parentToChild && toGroup.isHidden()) ? await toGroup.moderators().fetch({ transacting }) : await toGroup.members().fetch({ transacting })
+
+        // TODO: don't send a notification to the actorId...
+
+        const reason = parentToChild ? Activity.Reason.GroupChildGroupInviteAccepted : Activity.Reason.GroupParentGroupJoinRequestAccepted
+        const fromGroupActivities = fromMembers.map(member => {
+          return {
+            reader_id: member.id,
+            actor_id: actorId,
+            group_id: fromGroup.id,
+            other_group_id: toGroup.id,
+            reason: `${reason}:${parentToChild ? 'parent' : 'child'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}`
+          }
+        })
+        const toGroupActivities = toMembers.map(member => {
+          return {
+            reader_id: member.id,
+            actor_id: actorId,
+            group_id: fromGroup.id,
+            other_group_id: toGroup.id,
+            reason: `${reason}:${parentToChild ? 'child' : 'parent'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}`
+          }
+        })
+        return Activity.saveForReasons(fromGroupActivities.concat(toGroupActivities), transacting)
+      })
+    )
+  },
+
+  find: async function (id) {
+    if (!id) return Promise.resolve(null)
+    return GroupRelationshipInvite.where({ id }).fetch()
   },
 
   forPair: function (fromGroup, toGroup) {

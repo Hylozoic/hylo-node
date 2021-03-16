@@ -913,6 +913,7 @@ type Activity {
   comment: Comment
   post: Post
   group: Group
+  otherGroup: Group
   action: String
   meta: ActivityMeta
   unread: Boolean

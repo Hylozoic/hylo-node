@@ -82,12 +82,16 @@ module.exports = {
       return url('/groups/%s', getSlug(group))
     },
 
+    groupRelationships: function (group) {
+      return this.group(group) + '/groups'
+    },
+
     groupSettings: function (group) {
       return this.group(group) + '/settings'
     },
 
     groupJoinRequests: function (group) {
-      return this.groupSettings(group) + '/invite#join_requests'
+      return this.groupSettings(group) + '/requests'
     },
 
     groupRelationshipInvites: function(group) {

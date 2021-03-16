@@ -47,7 +47,7 @@ exports.up = async function(knex) {
         group_id: group.id,
         user_id: user.id,
         group_data_type: NETWORK, // TODO: eventually remove this
-        settings: { following: true },
+        settings: { sendEmail: true, sendPushNotifications: true },
         role: GroupMembership.Role.DEFAULT,
         created_at: now
       }).save({ active: true, updated_at: now })
@@ -61,7 +61,7 @@ exports.up = async function(knex) {
         group_id: group.id,
         user_id: user.id,
         group_data_type: NETWORK,
-        settings: { following: true },
+        settings: { sendEmail: true, sendPushNotifications: true },
         created_at: now,
       })
       await member.save({ role: GroupMembership.Role.MODERATOR, active: true, updated_at: now })
