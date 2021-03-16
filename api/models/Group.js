@@ -23,6 +23,29 @@ module.exports = bookshelf.Model.extend(merge({
 
   // ******** Getters ******* //
 
+  // The full tree of child groups + grandchild groups, etc. includes the root group too
+  allChildGroups () {
+    return Group.collection().query(q => {
+      q.where('groups.active', true)
+
+      // Learned from https://persagen.com/2018/06/06/postgresql_trees_recursive_cte.html
+      q.whereRaw(`groups.id in (
+        WITH RECURSIVE group_nodes(id, child, all_child_ids) AS (
+            SELECT id, child_group_id, ARRAY[child_group_id]
+            FROM group_relationships WHERE parent_group_id = ? and active = true
+        UNION ALL
+            SELECT child_nodes.id, child_nodes.child_group_id, all_child_ids||child_nodes.child_group_id
+            FROM group_relationships child_nodes
+            JOIN group_nodes n
+              ON n.child = child_nodes.parent_group_id
+              AND child_nodes.active = true
+              AND child_nodes.child_group_id <> ALL (all_child_ids)
+        )
+        select distinct unnest(all_child_ids) as child_id from group_nodes order by child_id
+      )`, [this.id])
+    })
+  },
+
   childGroups () {
     return this.belongsToMany(Group)
       .through(GroupRelationship, 'parent_group_id', 'child_group_id')
@@ -96,9 +119,8 @@ module.exports = bookshelf.Model.extend(merge({
       .orderBy('groups.name', 'asc')
   },
 
-  posts () {
-    return this.belongsToMany(Post).through(PostMembership)
-      .query({ where: { 'posts.active': true } })
+  posts (userId) {
+    return this.viewPosts(userId)
   },
 
   postCount: function () {
@@ -109,6 +131,25 @@ module.exports = bookshelf.Model.extend(merge({
     })
     .fetch()
     .then(result => result.get('count'))
+  },
+
+  // The posts to show in the stream for a particular user
+  // includes the direct posts to this group + posts to child groups the user is a member of
+  // TODO: show public posts from child groups too? but what about from hidden groups?
+  viewPosts (userId) {
+    const treeOfGroupsForMember = this.allChildGroups().query(q => {
+      q.select('groups.id')
+      q.join('group_memberships', 'group_memberships.group_id', 'groups.id')
+      q.where('group_memberships.user_id', userId)
+    })
+
+    return Post.collection().query(q => {
+      q.join('groups_posts', 'groups_posts.post_id', 'posts.id')
+      q.where(q2 => {
+        q2.where('groups_posts.group_id', this.id)
+        q2.orWhereIn('groups_posts.group_id', treeOfGroupsForMember.query())
+      })
+    })
   },
 
   // ******** Setters ********** //
