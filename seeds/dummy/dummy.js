@@ -248,6 +248,9 @@ function fakeGroup (knex) {
       created_at: faker.date.past(),
       created_by_id: users[0].id,
       location: faker.address.country(),
+      visibility: 1,
+      accessibility: 1,
+      settings: { allow_group_invites: false, public_member_directory: false },
       slack_hook_url: faker.internet.url(),
       slack_team: faker.internet.url(),
       slack_configure_url: faker.internet.url()
