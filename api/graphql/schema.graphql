@@ -816,7 +816,7 @@ type Mutation {
   fulfillPost(postId: ID): GenericResult
   inviteGroupToJoinParent(parentId: ID, childId: ID): CreatedGroupRelationshipInvite
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
-  joinGroup(groupId: ID): InvitationUseResult
+  joinGroup(groupId: ID): Membership
   joinProject(id: ID): GenericResult
   leaveGroup(id: ID): ID
   leaveProject(id: ID): GenericResult

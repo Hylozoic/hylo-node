@@ -30,6 +30,7 @@ export {
   deleteGroupRelationship,
   deleteGroupTopic,
   inviteGroupToGroup,
+  joinGroup,
   regenerateAccessCode,
   rejectGroupRelationshipInvite,
   removeModerator,
@@ -47,8 +48,7 @@ export {
   acceptJoinRequest,
   cancelJoinRequest,
   createJoinRequest,
-  declineJoinRequest,
-  joinGroup,
+  declineJoinRequest
 } from './join_request'
 export {
   findOrCreateLocation

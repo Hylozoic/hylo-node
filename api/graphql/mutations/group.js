@@ -66,6 +66,18 @@ export async function deleteGroupRelationship (userId, parentId, childId) {
   throw new Error("You don't have permission to do this")
 }
 
+export async function joinGroup (groupId, userId) {
+  const user = await User.find(userId)
+  if(!user) throw new Error(`User id ${userId} not found`)
+  const group = await Group.find(groupId)
+  if(!group) throw new Error(`Group id ${groupId} not found`)
+  // TODO: what about hidden groups? can you use this
+  if (group.get('accessibility') !== Group.Accessibility.OPEN) {
+    throw new Error(`You do not have permisson to do that`)
+  }
+  return user.joinGroup(group)
+}
+
 export async function regenerateAccessCode (userId, groupId) {
   const group = await getModeratedGroup(userId, groupId)
   const code = await Group.getNewAccessCode()
