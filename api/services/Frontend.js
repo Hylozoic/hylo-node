@@ -103,7 +103,7 @@ module.exports = {
     },
 
     invitePath: function (group) {
-      return url(`/groups/${getSlug(group)}/join/${group.get('access_code')}`)
+      return `/groups/${getSlug(group)}/join/${group.get('access_code')}`
     },
 
     mapPost: function (post, context, slug) {
