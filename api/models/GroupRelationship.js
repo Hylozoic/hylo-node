@@ -21,4 +21,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     if (!parentId || !childId) return null
     return GroupRelationship.where({ parent_group_id: parentId, child_group_id: childId, active: true })
   },
+
+  childIdsFor (groupIds) {
+    const parentGroupIds = Array.isArray(groupIds) ? groupIds : [groupIds]
+    return GroupRelationship.query().select('child_group_id').where('group_relationships.active', true).whereIn('parent_group_id', parentGroupIds)
+  },
+
+  parentIdsFor (groupIds) {
+    const childGroupIds = Array.isArray(groupIds) ? groupIds : [groupIds]
+    return GroupRelationship.query().select('parent_group_id').where('group_relationships.active', true).whereIn('child_group_id', childGroupIds)
+  }
 })

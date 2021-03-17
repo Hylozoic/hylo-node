@@ -31,23 +31,27 @@ export const groupFilter = userId => relation => {
       // the effect of using `where` like this is to wrap everything within its
       // callback in parentheses -- this is necessary to keep `or` from "leaking"
       // out to the rest of the query
-      q.where(inner => {
+      q.where(q2 => {
         const selectIdsForMember = Group.selectIdsForMember(userId)
-        const parentGroupIds = GroupRelationship.query().select('parent_group_id').whereIn('child_group_id', selectIdsForMember)
-        const childGroupIds = GroupRelationship.query().select('child_group_id').whereIn('parent_group_id', selectIdsForMember)
+        const parentGroupIds = GroupRelationship.parentIdsFor(selectIdsForMember)
+        const childGroupIds = GroupRelationship.childIdsFor(selectIdsForMember)
+        const selectModeratedGroupIds = Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR })
+        const childrenOfModeratedGroupIds = GroupRelationship.childIdsFor(selectModeratedGroupIds)
 
         // Can see groups you are a member of...
-        inner.whereIn('groups.id', selectIdsForMember)
-        // + their parents and children that are not hidden...
-        inner.orWhere(q3 => {
+        q2.whereIn('groups.id', selectIdsForMember)
+        // + their parent group
+        q2.orWhereIn('groups.id', parentGroupIds)
+        // + child groups that are not hidden, except moderators of a group can see its hidden children
+        q2.orWhere(q3 => {
           q3.where(q4 => {
-            q4.whereIn('groups.id', parentGroupIds)
-            q4.orWhereIn('groups.id', childGroupIds)
+            q4.whereIn('groups.id', childGroupIds)
+            q4.andWhere('groups.visibility', '!=', Group.Visibility.HIDDEN)
           })
-          q3.andWhere('groups.visibility', '!=', Group.Visibility.HIDDEN)
+          q3.orWhereIn('groups.id', childrenOfModeratedGroupIds)
         })
         // + all public groups
-        inner.orWhere('groups.visibility', Group.Visibility.PUBLIC)
+        q2.orWhere('groups.visibility', Group.Visibility.PUBLIC)
       })
     }
   })
