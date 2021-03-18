@@ -34,7 +34,8 @@ export {
   updateGroup,
 } from './group'
 export { 
-  toggleGroupWidgetVisibility
+  toggleGroupWidgetVisibility,
+  updateWidgetSettings
 } from './group_widget'
 export {
   createInvitation,

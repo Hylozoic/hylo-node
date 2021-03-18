@@ -72,6 +72,7 @@ import {
   updateMembership,
   updatePost,
   updateStripeAccount,
+  updateWidgetSettings,
   useInvitation,
   vote
 } from './mutations'
@@ -350,6 +351,8 @@ export function makeMutations (userId, isAdmin) {
     updateComment: (root, args) => updateComment(userId, args),
 
     updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
+
+    updateWidgetSettings: (root, { id, data }) => updateWidgetSettings(id, data),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),

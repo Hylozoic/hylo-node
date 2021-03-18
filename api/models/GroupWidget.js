@@ -1,4 +1,5 @@
 import HasSettings from './mixins/HasSettings'
+import { isEmpty } from 'lodash'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_widgets',
@@ -20,6 +21,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return GroupWidget.query().where({ id }).then((gw = []) => gw[0].order)
   },
 
+  getSettings: async function(id) {
+    const widget = await GroupWidget.query().where({ id })
+    return widget[0].settings
+  },
+
   createDefaultWidgetsForGroup: async function(group_id) {
     const widgets = await Widget.fetchAll()
     for (let i = 0; i < this.widgets.length; i++) {
@@ -29,8 +35,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   create: async function (params) {
-    // Will need to account for when people try to add a widget that already exists 
-    // in that case, just mark is_active as true
     const { group_id, widget_id, order } = params
 
     const attributes = {
@@ -45,8 +49,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return groupWidget
   },
 
-  update: async function () {
-    //TODO: fill in this function
+  updateSettings: async function (id, settings = {}) {
+    return await GroupWidget.where({ id }).query().update({ settings })
   },
   
   toggleVisibility: async function(id, is_visible = true) {

@@ -580,7 +580,8 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         name: w => Widget.Name[w.get('name')],
-        isVisible: w => GroupWidget.getVisibility(w.id)
+        isVisible: w => GroupWidget.getVisibility(w.id),
+        settings: async w => await GroupWidget.getSettings(w.id)
       }
     }
   }

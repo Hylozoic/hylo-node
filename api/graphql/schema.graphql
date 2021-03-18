@@ -239,6 +239,12 @@ type Widget {
   name: String
   isVisible: Boolean
   order: Int
+  settings: WidgetSettings
+}
+
+type WidgetSettings {
+  text: String
+  title: String
 }
 
 type WidgetQuerySet {
@@ -751,6 +757,11 @@ input UserSettingsInput {
   lastViewedMessagesAt: String
 }
 
+input WidgetSettingsInput {
+  text: String
+  title: String
+}
+
 type Mutation {
   acceptJoinRequest(joinRequestId: ID, groupId: ID, userId: ID, moderatorId: ID): JoinRequest
   addGroupToParent(groupId: ID, parentId: ID): Group
@@ -819,7 +830,8 @@ type Mutation {
   updateMe(changes: MeInput): Me
   updateMembership(groupId: ID, slug: String, data: MembershipInput): Membership
   updatePost(id: ID, data: PostInput): Post
-  updateStripeAccount(accountId: String): GenericResult
+  updateStripeAccount(accountId: String): GenericResult,
+  updateWidgetSettings(id: ID, data: WidgetSettingsInput): GenericResult,
   useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
   vote(postId: ID, isUpvote: Boolean): Post
 }
