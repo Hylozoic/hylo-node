@@ -100,6 +100,7 @@ type Person {
   linkedinUrl: String
   facebookUrl: String
   url: String
+  lastActiveAt: String
   location: String
   locationObject: Location
   tagline: String
@@ -180,6 +181,15 @@ type Group {
     search: String,
     autocomplete: String
   ): GroupQuerySet
+  activeMembers(
+    boundingBox: [PointInput],
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): PersonQuerySet
   members(
     boundingBox: [PointInput],
     first: Int,
@@ -321,6 +331,7 @@ type Post {
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
+  activeMembers(first: Int, cursor: ID, order: String): PersonQuerySet
   members(first: Int, cursor: ID, order: String): PersonQuerySet
   eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
   groups(first: Int, cursor: ID, order: String): [Group]

@@ -44,6 +44,20 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
+  activeMembers (where) {
+    return this.belongsToMany(User).through(GroupMembership)
+    .query(q => {
+      q.where({
+        'group_memberships.active': true,
+        'users.active': true
+      })
+      if (where) {
+        q.where(where)
+      }
+    })
+    .withPivot(['created_at', 'role', 'settings'])
+  },
+
   members (where) {
     return this.belongsToMany(User).through(GroupMembership)
     .query(q => {

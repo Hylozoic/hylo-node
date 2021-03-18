@@ -101,6 +101,7 @@ export default async function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
+        'last_active_at',
         'location',
         'tagline'
       ],
@@ -219,7 +220,7 @@ export default async function makeModels (userId, isAdmin) {
         {childGroups: {querySet: true}},
         {parentGroups: {querySet: true}},
         {moderators: {querySet: true}},
-        {widgets: {querySet: true}},
+        {widgets: {querySet: true }},
         {groupTags: {
           querySet: true,
           alias: 'groupTopics',
@@ -239,6 +240,7 @@ export default async function makeModels (userId, isAdmin) {
               }
             })
         }},
+        {activeMembers: { querySet: true }},
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
