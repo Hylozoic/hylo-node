@@ -1,14 +1,14 @@
 import searchQuerySet from './searchQuerySet'
 import {
   commentFilter,
+  groupFilter,
   groupTopicFilter,
   makeFilterToggle,
   membershipFilter,
+  messageFilter,
   personFilter,
-  sharedGroupMembership,
-  activePost,
-  authFilter,
-  messageFilter
+  postFilter,
+  voteFilter
 } from './filters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
@@ -56,6 +56,15 @@ export default async function makeModels (userId, isAdmin) {
         'posts',
         'locationObject',
         {affiliations: {querySet: true}},
+        {joinRequests: {
+          querySet: true,
+          filter: (relation, { status }) =>
+            relation.query(q => {
+              if (status) {
+                q.where('status', status)
+              }
+            })
+        }},
         {skills: {querySet: true}},
         {skillsToLearn: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
@@ -161,7 +170,7 @@ export default async function makeModels (userId, isAdmin) {
         votesTotal: p => p.get('num_votes'),
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
-          userId ? p.userEventInvitation(userId)
+          userId && p.isEvent() ? p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
           : ''
       },
@@ -181,10 +190,7 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {tags: {alias: 'topics'}}
       ],
-      filter: flow(
-        authFilter(userId, 'posts'),
-        activePost(userId),
-        nonAdminFilter(sharedGroupMembership('posts', userId))),
+      filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
       fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, groupSlugs, isPublic }) =>
         searchQuerySet('posts', {
@@ -216,9 +222,10 @@ export default async function makeModels (userId, isAdmin) {
         'visibility',
       ],
       relations: [
-        'locationObject',
         {childGroups: {querySet: true}},
         {parentGroups: {querySet: true}},
+        {groupRelationshipInvitesFrom: {querySet: true}},
+        {groupRelationshipInvitesTo: {querySet: true}},
         {moderators: {querySet: true}},
         {widgets: {querySet: true }},
         {groupTags: {
@@ -231,23 +238,18 @@ export default async function makeModels (userId, isAdmin) {
               groupId: relation.relatedData.parentId
             }))
         }},
-        {skills: {
-          querySet: true,
-          filter: (relation, { autocomplete }) =>
-            relation.query(q => {
-              if (autocomplete) {
-                q.whereRaw('skills.name ilike ?', autocomplete + '%')
-              }
-            })
-        }},
         {activeMembers: { querySet: true }},
+        'locationObject',
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
             relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
+        {moderators: {querySet: true}},
+        {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
+          arguments: () => [userId],
           filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
@@ -262,20 +264,29 @@ export default async function makeModels (userId, isAdmin) {
         {projects: {querySet: true}},
         {announcements: {querySet: true}},
         {offersAndRequests: {querySet: true}},
+        {joinQuestions: {querySet: true}},
+        {skills: {
+          querySet: true,
+          filter: (relation, { autocomplete }) =>
+            relation.query(q => {
+              if (autocomplete) {
+                q.whereRaw('skills.name ilike ?', autocomplete + '%')
+              }
+            })
+        }}
       ],
       getters: {
-        feedItems: (g, args) => g.feedItems(args),
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
-      filter: nonAdminFilter(sharedGroupMembership('groups', userId)),
+      filter: nonAdminFilter(groupFilter(userId)),
       fetchMany: ({ first, order, sortBy, groupIds, offset, search, autocomplete, filter, isPublic, boundingBox, parentSlugs }) =>
         searchQuerySet('groups', {
           boundingBox,
-          groups: groupIds,
+          groupIds,
           parentSlugs,
           term: search,
           limit: first,
@@ -285,6 +296,35 @@ export default async function makeModels (userId, isAdmin) {
           sort: sortBy,
           is_public: isPublic
         })
+    },
+
+    GroupJoinQuestion: {
+      model: GroupJoinQuestion,
+      attributes: [
+        'questionId',
+        'text'
+      ]
+    },
+
+    GroupRelationship: {
+      model: GroupRelationship,
+      attributes: [
+        'created_at',
+        'role',
+        'updated_at',
+      ],
+      relations: ['childGroup', 'parentGroup']
+    },
+
+    GroupRelationshipInvite: {
+      model: GroupRelationshipInvite,
+      attributes: [
+        'created_at',
+        'status',
+        'type',
+        'updated_at',
+      ],
+      relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 
     Invitation: {
@@ -303,8 +343,29 @@ export default async function makeModels (userId, isAdmin) {
         'updated_at',
         'status'
       ],
-      relations: ['user' ],
-      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId })
+      relations: [
+        'group',
+        'user'
+      ],
+      getters: {
+        questionAnswers: jr => jr.questionAnswers().fetch()
+      },
+      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId, status: JoinRequest.STATUS.Pending })
+    },
+
+    JoinRequestQuestionAnswer: {
+      model: JoinRequestQuestionAnswer,
+      attributes: [
+        'answer'
+      ],
+      relations: ['question'],
+    },
+
+    Question: {
+      model: Question,
+      attributes: [
+        'text'
+      ]
     },
 
     Affiliation: {
@@ -416,7 +477,7 @@ export default async function makeModels (userId, isAdmin) {
         'post',
         {user: {alias: 'voter'}}
       ],
-      filter: nonAdminFilter(sharedGroupMembership('votes', userId))
+      filter: nonAdminFilter(voteFilter('votes', userId))
     },
 
     GroupTopic: {
@@ -429,8 +490,7 @@ export default async function makeModels (userId, isAdmin) {
         newPostCount: ct => ct.newPostCount(userId)
       },
       relations: [
-        // TODO: remove alias
-        { group: { alias: 'group' } },
+        'group',
         { tag: { alias: 'topic'}}
       ],
       filter: nonAdminFilter(relation => relation.query(q => {
@@ -520,7 +580,8 @@ export default async function makeModels (userId, isAdmin) {
         'actor',
         'post',
         'comment',
-        'group'
+        'group',
+        'otherGroup'
       ],
       getters: {
         action: a => Notification.priorityReason(a.get('meta').reasons)

@@ -2,6 +2,7 @@ import knexPostgis from 'knex-postgis';
 
 module.exports = bookshelf.Model.extend({
   tableName: 'saved_search_topics',
+  hasTimestamps: true
 }, {
   create: function (params) {
     const { tag_id, saved_search_id } = params

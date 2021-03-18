@@ -15,8 +15,8 @@ module.exports = {
 
   forGroups: function (opts) {
     return Group.query(qb => {
-      if (opts.groups) {
-        qb.whereIn('groups.id', opts.groups)
+      if (opts.groupIds) {
+        qb.whereIn('groups.id', opts.groupIds)
       }
 
       if (opts.autocomplete) {
@@ -29,6 +29,12 @@ module.exports = {
 
       if (opts.is_public) {
         qb.where('groups.visibility', Group.Visibility.PUBLIC)
+      }
+
+      if (opts.parentSlugs) {
+        qb.join('group_relationships', 'groups.id', '=', 'group_relationships.child_group_id')
+        qb.join('groups as parent_groups', 'parent_groups.id', '=', 'group_relationships.parent_group_id')
+        qb.whereIn('parent_groups.slug', opts.parentSlugs)
       }
 
       filterAndSortGroups({

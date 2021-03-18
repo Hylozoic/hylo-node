@@ -12,7 +12,7 @@ export default {
   },
 
   eventInvitations: function () {
-    return this.hasMany(EventInvitation, 'event_id')
+    return this.isEvent() ? this.hasMany(EventInvitation, 'event_id') : false
   },
 
   userEventInvitation: function (userId) {
@@ -35,26 +35,26 @@ export default {
         inviterId,
         eventId: this.id
       }, opts)
-    })   
+    })
   },
 
   updateEventInvitees: async function (userIds, inviterId, opts) {
     const eventInviteeIds = (await this.eventInvitees().fetch()).pluck('id')
     const toRemove = difference(eventInviteeIds, userIds)
-    const toAdd = difference(userIds, eventInviteeIds)    
+    const toAdd = difference(userIds, eventInviteeIds)
 
     await this.removeEventInvitees(toRemove, opts)
-    return this.addEventInvitees(toAdd, inviterId, opts)    
+    return this.addEventInvitees(toAdd, inviterId, opts)
   },
 
   prettyEventDates: async function () {
     const start = moment(startTime)
     const end = moment(endTime)
-  
+
     const from = start.format('ddd, MMM D [at] h:mmA')
-  
+
     var to = ''
-  
+
     if (endTime) {
       if (end.month() !== start.month()) {
         to = end.format(' - ddd, MMM D [at] h:mmA')
@@ -64,10 +64,10 @@ export default {
         to = end.format(' - h:mmA')
       }
     }
-  
+
     return from + to
   },
-  
+
   createInviteNotifications: async function(userId, inviteeIds) {
     const invitees = inviteeIds.map(inviteeId => ({
       reader_id: inviteeId,

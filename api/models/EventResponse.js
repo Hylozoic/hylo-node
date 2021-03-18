@@ -1,6 +1,7 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'event_responses',
   requireFetch: false,
+  hasTimestamps: true,
 
   post: function () {
     return this.belongsTo(Post)

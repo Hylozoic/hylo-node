@@ -55,21 +55,3 @@ export async function updateFollowers (post, transacting) {
     return Activity.saveForReasons(reasons, transacting)
   })
 }
-
-//TODO: fix this
-// export function updateGroupMemberships (post, transacting) {
-//   const opts = {transacting}
-//   console.log("update network memberships")
-//   return post.load(['groups'], opts)
-//   .then(() => {
-//     const newIds = compact(uniq(post.relations.groups.map(g => Number(g.get('network_id'))))).sort()
-//     const oldIds = post.relations.networks.pluck('id').sort()
-//     if (!isEqual(newIds, oldIds)) {
-//       const ns = post.networks()
-//       return Promise.join(
-//         Promise.map(difference(newIds, oldIds), id => ns.attach(id, opts)),
-//         Promise.map(difference(oldIds, newIds), id => ns.detach(id, opts))
-//       )
-//     }
-//   })
-// }

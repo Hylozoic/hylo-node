@@ -19,6 +19,7 @@ const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_commu
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'groups',
   requireFetch: false,
+  hasTimestamps: true,
 
   // ******** Getters ******* //
   announcements: function () {
@@ -26,9 +27,44 @@ module.exports = bookshelf.Model.extend(merge({
       .query({ where: { 'posts.active': true, 'posts.announcement': true } })
   },
 
+  // The full tree of child groups + grandchild groups, etc. includes the root group too
+  allChildGroups () {
+    return Group.collection().query(q => {
+      q.where('groups.active', true)
+
+      // Learned from https://persagen.com/2018/06/06/postgresql_trees_recursive_cte.html
+      q.whereRaw(`groups.id in (
+        WITH RECURSIVE group_nodes(id, child, all_child_ids) AS (
+            SELECT id, child_group_id, ARRAY[child_group_id]
+            FROM group_relationships WHERE parent_group_id = ? and active = true
+        UNION ALL
+            SELECT child_nodes.id, child_nodes.child_group_id, all_child_ids||child_nodes.child_group_id
+            FROM group_relationships child_nodes
+            JOIN group_nodes n
+              ON n.child = child_nodes.parent_group_id
+              AND child_nodes.active = true
+              AND child_nodes.child_group_id <> ALL (all_child_ids)
+        )
+        select distinct unnest(all_child_ids) as child_id from group_nodes order by child_id
+      )`, [this.id])
+    })
+  },
+
   childGroups () {
     return this.belongsToMany(Group)
-      .through(GroupConnection, 'parent_group_id', 'child_group_id')
+      .through(GroupRelationship, 'parent_group_id', 'child_group_id')
+      .query({ where: { 'group_relationships.active': true, 'groups.active': true } })
+      .orderBy('groups.name', 'asc')
+  },
+
+  groupRelationshipInvitesFrom () {
+    return this.hasMany(GroupRelationshipInvite, 'from_group_id')
+      .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
+  },
+
+  groupRelationshipInvitesTo () {
+    return this.hasMany(GroupRelationshipInvite, 'to_group_id')
+      .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
   },
 
   events () {
@@ -38,6 +74,17 @@ module.exports = bookshelf.Model.extend(merge({
 
   groupTags () {
     return this.hasMany(GroupTag)
+  },
+
+  isHidden() {
+    return this.get('visibility') === Group.Visibility.HIDDEN
+  },
+
+  joinQuestions () {
+    return this.hasMany(GroupJoinQuestion).query(q => {
+      q.select(['questions.text', 'questions.id as questionId'])
+      q.join('questions', 'group_join_questions.question_id', 'questions.id')
+    })
   },
 
   locationObject () {
@@ -95,12 +142,17 @@ module.exports = bookshelf.Model.extend(merge({
 
   parentGroups () {
     return this.belongsToMany(Group)
-      .through(GroupConnection, 'child_group_id', 'parent_group_id')
+      .through(GroupRelationship, 'child_group_id', 'parent_group_id')
+      .query({ where: { 'group_relationships.active': true, 'groups.active': true } })
+      .orderBy('groups.name', 'asc')
   },
 
-  posts () {
+  posts (userId) {
     return this.belongsToMany(Post).through(PostMembership)
       .query({ where: { 'posts.active': true } })
+    // XXX: this doesnt work as a non relationship right now because of places where we eagerly load posts using withRelated
+    // e.g. when creating a new group
+    //return this.viewPosts(userId)
   },
 
   postCount: function () {
@@ -119,11 +171,47 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   widgets: function () {
-    // return this.belongsToMany(Widget, 'group_widgets', 'group_id', 'widget_id', 'id', 'id').withPivot(['is_visible', 'order'])
     return this.belongsToMany(Widget).through(GroupWidget).withPivot(['is_visible', 'order'])
+  },
+  
+  // The posts to show in the stream for a particular user
+  // includes the direct posts to this group + posts to child groups the user is a member of
+  // TODO: show public posts from child groups too? but what about from hidden groups?
+  viewPosts (userId) {
+    const treeOfGroupsForMember = this.allChildGroups().query(q => {
+      q.select('groups.id')
+      q.join('group_memberships', 'group_memberships.group_id', 'groups.id')
+      q.where('group_memberships.user_id', userId)
+    })
+
+    return Post.collection().query(q => {
+      q.join('groups_posts', 'groups_posts.post_id', 'posts.id')
+      q.where(q2 => {
+        q2.where('groups_posts.group_id', this.id)
+        q2.orWhereIn('groups_posts.group_id', treeOfGroupsForMember.query())
+      })
+    })
   },
 
   // ******** Setters ********** //
+
+  async addChild(childGroup, { transacting } = {}) {
+    const childGroupId = childGroup instanceof Group ? childGroup.id : childGroup
+    const existingChild = await GroupRelationship.where({ child_group_id: childGroupId, parent_group_id: this.id }).fetch({ transacting })
+    if (existingChild) {
+      return existingChild.save({ active: true }, { transacting })
+    }
+    return GroupRelationship.forge({ child_group_id: childGroupId, parent_group_id: this.id }).save({}, { transacting })
+  },
+
+  async addParent(parentGroup, { transacting } = {}) {
+    const parentGroupId = parentGroup instanceof Group ? parentGroup.id : parentGroup
+    const existingParent = await GroupRelationship.where({ parent_group_id: parentGroupId, child_group_id: this.id }).fetch({ transacting })
+    if (existingParent) {
+      return existingParent.save({ active: true }, { transacting })
+    }
+    return GroupRelationship.forge({ parent_group_id: parentGroup.id, child_group_id: this.id }).save({}, { transacting })
+  },
 
   // if a group membership doesn't exist for a user id, create it.
   // make sure the group memberships have the passed-in role and settings
@@ -200,7 +288,7 @@ module.exports = bookshelf.Model.extend(merge({
     return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
   },
 
-  update: function (changes) {
+  update: async function (changes) {
     var whitelist = [
       'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url', 'description',
       'location', 'location_id', 'name', 'settings', 'visibility'
@@ -213,8 +301,19 @@ module.exports = bookshelf.Model.extend(merge({
       saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
     }
 
+    if (changes.join_questions) {
+      const questions = await Promise.map(changes.join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
+        return (await Question.where({ text: trim(jq.text) }).fetch()) || (await Question.forge({ text: trim(jq.text) }).save())
+      })
+      await GroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false })
+      for (let q of questions) {
+        await GroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save()
+      }
+    }
+
     this.set(saneAttrs)
-    return this.validate().then(() => this.save())
+    await this.validate().then(() => this.save())
+    return this
   },
 
   validate: function () {
@@ -280,13 +379,10 @@ module.exports = bookshelf.Model.extend(merge({
     return memberships[0]
   },
 
-  getNewAccessCode: function () {
-    const test = code => Group.where({access_code: code}).count().then(Number)
-    const loop = () => {
-      const code = randomstring.generate({length: 10, charset: 'alphanumeric'})
-      return test(code).then(count => count ? loop() : code)
-    }
-    return loop()
+  async deactivate (id, opts = {}) {
+    const group = await Group.find(id).fetch()
+    await group.save({ active: false }, opts)
+    return group.removeMembers(await group.members().fetch(), opts)
   },
 
   find (idOrSlug, opts = {}) {
@@ -299,15 +395,53 @@ module.exports = bookshelf.Model.extend(merge({
     return this.where(where).fetch(opts)
   },
 
-  // TODO: do we use this?
   findActive (key, opts = {}) {
     return this.find(key, merge({active: true}, opts))
   },
 
-  async deactivate (id, opts = {}) {
-    const group = await Group.find(id).fetch()
-    await group.save({ active: false }, opts)
-    return group.removeMembers(await group.members().fetch(), opts)
+  getNewAccessCode: function () {
+    const test = code => Group.where({access_code: code}).count().then(Number)
+    const loop = () => {
+      const code = randomstring.generate({length: 10, charset: 'alphanumeric'})
+      return test(code).then(count => count ? loop() : code)
+    }
+    return loop()
+  },
+
+  notifyAboutCreate: function (opts) {
+    return Group.find(opts.groupId, {withRelated: ['creator']})
+    .then(g => {
+      var creator = g.relations.creator
+      var recipient = process.env.NEW_GROUP_EMAIL
+      return Email.sendRawEmail(recipient, {
+        subject: "New Hylo Group Created: " + g.get('name'),
+        body: `Group
+          Name: ${g.get('name')}
+          URL: ${Frontend.Route.group(g)}
+          Creator Email: ${creator.get('email')}
+          Creator Name: ${creator.get('name')}
+          Creator URL: ${Frontend.Route.profile(creator)}
+        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
+      }, {
+        sender: {
+          name: 'Hylobot',
+          address: 'dev+bot@hylo.com'
+        }
+      })
+    })
+  },
+
+  notifySlack: function (groupId, post) {
+    return Group.find(groupId)
+    .then(group => {
+      if (!group || !group.get('slack_hook_url')) return
+      var slackMessage = Slack.textForNewPost(post, group)
+      return Slack.send(slackMessage, group.get('slack_hook_url'))
+    })
+  },
+
+  async pluckIdsForMember (userOrId, where) {
+    return await this.selectIdsForMember(userOrId, where).pluck('groups.id')
   },
 
   queryByAccessCode: function (accessCode) {
@@ -320,36 +454,19 @@ module.exports = bookshelf.Model.extend(merge({
   selectIdsForMember (userOrId, where) {
     return GroupMembership.forIds(userOrId, null, {
       query: q => {
-        if (where) q.where(where)
-
         q.select('groups.id')
-
         q.join('groups', 'groups.id', 'group_memberships.group_id')
         q.where('groups.active', true)
+        if (where) q.where(where)
       },
       multiple: true
     }).query()
   },
 
-  async pluckIdsForMember (userOrId, where) {
-    return await this.selectIdsForMember(userOrId, where).pluck('groups.id')
+  async allHaveMember (groupDataIds, userOrId) {
+    const memberIds = await this.pluckIdsForMember(userOrId)
+    return difference(groupDataIds, memberIds).length === 0
   },
-
-  // TODO: this is temporary to support current idea of Networks
-  // visibleNetworkGroupIds (userId, rawQuery) {
-  //   const networkIds = Group.selectIdsForMember(userId, Group.DataType.NETWORK)
-
-  //   const query = bookshelf.knex.select('child_groups.id')
-  //     .from('groups as child_groups')
-  //     .join('group_connections', 'child_groups.id', 'group_connections.child_group_id')
-  //     .where(inner => {
-  //       inner.whereIn('group_connections.parent_group_id', networkIds)
-  //       inner.andWhere('child_groups.group_data_type', Group.DataType.GROUP)
-  //       inner.andWhere('child_groups.visibility', '!=', Group.Visibility.HIDDEN)
-  //     })
-
-  //   return rawQuery ? query : query.pluck('child_groups.id')
-  // },
 
   havingExactMembers (userIds) {
     userIds = sortBy(userIds, Number)
@@ -359,11 +476,6 @@ module.exports = bookshelf.Model.extend(merge({
       q.groupBy('groups.id')
       q.having(bookshelf.knex.raw(`array_agg(user_id order by user_id) = ?`, [userIds]))
     })
-  },
-
-  async allHaveMember (groupDataIds, userOrId) {
-    const memberIds = await this.pluckIdsForMember(userOrId)
-    return difference(groupDataIds, memberIds).length === 0
   },
 
   async inSameGroup (userIds) {

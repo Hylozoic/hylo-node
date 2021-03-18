@@ -9,6 +9,7 @@ import { findThread } from './post/findOrCreateThread'
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
   requireFetch: false,
+  hasTimestamps: true,
 
   activity: function () {
     return this.hasMany(Activity, 'reader_id')
@@ -30,18 +31,6 @@ module.exports = bookshelf.Model.extend(merge({
       })
     })
   },
-
-  // queryByGroupMembership (model, { where } = {}) {
-
-  //   let subq = this.groupMemberships()
-  //   .query()
-  //   .join('groups', 'groups.id', 'group_memberships.group_id')
-  //   .select('groups.id')
-
-  //   if (where) subq = subq.where(where)
-  //   const collection = type === Group.DataType.POST ? model.collection() : Group.collection()
-  //   return Group.collection.query(q => q.whereIn('id', subq))
-  // },
 
   memberships() {
     return this.hasMany(GroupMembership).where('group_memberships.active', true)
@@ -88,9 +77,9 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
-  // groupMemberships: function () {
-  //   return GroupMembership.forMember(this.id)
-  // },
+  joinRequests: function () {
+    return this.hasMany(JoinRequest)
+  },
 
   moderatedGroupMemberships: function () {
     return this.memberships()

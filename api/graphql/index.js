@@ -4,14 +4,16 @@ import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
+  acceptGroupRelationshipInvite,
   acceptJoinRequest,
-  addGroupToParent,
   addModerator,
   addPeopleToProjectRole,
   addSkill,
   addSkillToLearn,
   allowGroupInvites,
   blockUser,
+  cancelGroupRelationshipInvite,
+  cancelJoinRequest,
   createAffiliation,
   createComment,
   createGroup,
@@ -27,6 +29,7 @@ import {
   deleteAffiliation,
   deleteComment,
   deleteGroup,
+  deleteGroupRelationship,
   deleteGroupTopic,
   deletePost,
   deleteProjectRole,
@@ -37,6 +40,7 @@ import {
   findOrCreateThread,
   flagInappropriateContent,
   fulfillPost,
+  inviteGroupToGroup,
   invitePeopleToEvent,
   joinGroup,
   joinProject,
@@ -50,7 +54,7 @@ import {
   registerDevice,
   registerStripeAccount,
   reinviteAll,
-  removeGroupFromParent,
+  rejectGroupRelationshipInvite,
   removeMember,
   removeModerator,
   removePost,
@@ -192,10 +196,9 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
 
 export function makeMutations (userId, isAdmin) {
   return {
-    acceptJoinRequest: (root, { joinRequestId, groupId, userId, moderatorId }) => acceptJoinRequest(joinRequestId, groupId, userId, moderatorId),
+    acceptGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => acceptGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
-    addGroupToParent: (root, { childGroupId, parentGroupId }) =>
-      addGroupToParent({ userId, isAdmin }, { childGroupId, parentGroupId }),
+    acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
@@ -210,6 +213,10 @@ export function makeMutations (userId, isAdmin) {
 
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
 
+    cancelGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => cancelGroupRelationshipInvite(userId, groupRelationshipInviteId),
+
+    cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
+
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
     createComment: (root, { data }) => createComment(userId, data),
@@ -219,7 +226,7 @@ export function makeMutations (userId, isAdmin) {
     createInvitation: (root, {groupId, data}) =>
       createInvitation(userId, groupId, data),
 
-    createJoinRequest: (root, {groupId, userId}) => createJoinRequest(groupId, userId),
+    createJoinRequest: (root, {groupId, questionAnswers}) => createJoinRequest(userId, groupId, questionAnswers),
 
     createMessage: (root, { data }) => createMessage(userId, data),
 
@@ -231,19 +238,21 @@ export function makeMutations (userId, isAdmin) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
-    joinGroup: (root, {groupId, userId}) => joinGroup(groupId, userId),
+    joinGroup: (root, {groupId}) => joinGroup(groupId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
     createTopic: (root, { topicName, groupId, isDefault, isSubscribing }) => createTopic(userId, topicName, groupId, isDefault, isSubscribing),
 
-    declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
+    declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(userId, joinRequestId),
 
     deleteAffiliation: (root, { id }) => deleteAffiliation(userId, id),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
 
     deleteGroup: (root, { id }) => deleteGroup(userId, id),
+
+    deleteGroupRelationship: (root, { parentId, childId }) => deleteGroupRelationship(userId, parentId, childId),
 
     deleteGroupTopic: (root, { id }) => deleteGroupTopic(userId, id),
 
@@ -267,6 +276,9 @@ export function makeMutations (userId, isAdmin) {
       flagInappropriateContent(userId, data),
 
     fulfillPost: (root, { postId }) => fulfillPost(userId, postId),
+
+    inviteGroupToJoinParent: (root, { parentId, childId }) =>
+      inviteGroupToGroup(userId, parentId, childId, GroupRelationshipInvite.TYPE.ParentToChild),
 
     invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
       invitePeopleToEvent(userId, eventId, inviteeIds),
@@ -296,8 +308,7 @@ export function makeMutations (userId, isAdmin) {
 
     reinviteAll: (root, {groupId}) => reinviteAll(userId, groupId),
 
-    removeGroupFromParent: (root, { childGroupId, parentGroupId }) =>
-      removeGroupFromParent({ userId, isAdmin }, { childGroupId, parentGroupId }),
+    rejectGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => rejectGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
     removeMember: (root, { personId, groupId }) =>
       removeMember(userId, personId, groupId),
@@ -310,6 +321,9 @@ export function makeMutations (userId, isAdmin) {
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
+
+    requestToAddGroupToParent: (root, { parentId, childId }) =>
+      inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent),
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),

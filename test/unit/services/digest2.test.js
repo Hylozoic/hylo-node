@@ -452,7 +452,7 @@ describe('group digest v2', () => {
           tracking_pixel_url: Analytics.pixelUrl('Digest', {
             userId: u1.id,
             group: group.get('name'),
-            'Email Version': 'v4'
+            'Email Version': 'Holonic Architecture'
           }),
           email_settings_url: Frontend.Route.userSettings() + clickthroughParams + '&expand=account'
         })

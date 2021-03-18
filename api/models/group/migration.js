@@ -88,21 +88,21 @@ export async function updateGroupMemberships ({ model, parent, getSettings, sele
   return rows.length
 }
 
-export async function makeGroupConnectionsM2M ({ model, filter, child, parent }) {
+export async function makeGroupRelationshipsM2M ({ model, filter, child, parent }) {
   const {
     foreignKey: childFk, target: childModel
   } = getRelatedData(model, child)
   const {
     foreignKey: parentFk, target: parentModel
   } = getRelatedData(model, parent)
-  return makeGroupConnections({
+  return makeGroupRelationships({
     model, filter, childFk, childModel, parentFk, parentModel
   })
 }
 
-export async function makeGroupConnectionsFk ({ model, parent, filter }) {
+export async function makeGroupRelationshipsFk ({ model, parent, filter }) {
   const { foreignKey, target } = getRelatedData(model, parent)
-  return makeGroupConnections({
+  return makeGroupRelationships({
     model,
     filter,
     childFk: 'id',
@@ -112,7 +112,7 @@ export async function makeGroupConnectionsFk ({ model, parent, filter }) {
   })
 }
 
-async function makeGroupConnections ({ model, filter, childModel, childFk, parentModel, parentFk }) {
+async function makeGroupRelationships ({ model, filter, childModel, childFk, parentModel, parentFk }) {
   const query = filter ? model.query(filter).query() : model.query()
   const rows = await query.select(childFk, parentFk)
   const rowsToInsert = compact(await Promise.all(rows.map(async row => {
@@ -126,7 +126,7 @@ async function makeGroupConnections ({ model, filter, childModel, childFk, paren
     })
   })))
 
-  await bookshelf.knex.batchInsert('group_connections', rowsToInsert)
+  await bookshelf.knex.batchInsert('group_relationships', rowsToInsert)
   return rowsToInsert.length
 }
 
@@ -147,24 +147,24 @@ async function seed () { // eslint-disable-line no-unused-vars
   console.log('Topic:', await makeGroups(Tag))
   console.log('Comment:', await makeGroups(Comment))
 
-  console.log('PostMembership:', await makeGroupConnectionsM2M({
+  console.log('PostMembership:', await makeGroupRelationshipsM2M({
     model: PostMembership,
     child: 'post',
     parent: 'community'
   }))
 
-  console.log('Community.network_id:', await makeGroupConnectionsFk({
+  console.log('Community.network_id:', await makeGroupRelationshipsFk({
     model: Community,
     parent: 'network'
   }))
 
-  console.log('PostTag', await makeGroupConnectionsM2M({
+  console.log('PostTag', await makeGroupRelationshipsM2M({
     model: PostTag,
     parent: 'post',
     child: 'tag'
   }))
 
-  console.log('CommentTag', await makeGroupConnectionsM2M({
+  console.log('CommentTag', await makeGroupRelationshipsM2M({
     model: CommentTag,
     parent: 'comment',
     child: 'tag'

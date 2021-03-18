@@ -36,10 +36,11 @@ const commentersQuery = (limit, post, currentUserId) => q => {
 }
 
 module.exports = bookshelf.Model.extend(Object.assign({
-  // Instance Methods
-
   tableName: 'posts',
   requireFetch: false,
+  hasTimestamps: true,
+
+  // Instance Methods
 
   activities: function () {
     return this.hasMany(Activity)
@@ -440,14 +441,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const userGroupIds = await Group.pluckIdsForMember(userId)
     if (intersection(postGroupIds, userGroupIds).length > 0) return true
     if (await post.isFollowed(userId)) return true
-
-    // TODO: check this, maybe should be is this post in a child group that you can see? no...
-    // const sharesNetwork = await Community.query()
-    // .whereIn('id', pcids).pluck('network_id')
-    // .then(networkIds =>
-    //   Promise.map(compact(uniq(networkIds)), id =>
-    //     Network.containsUser(id, userId)))
-    // .then(results => some(results))
 
     return false
   },

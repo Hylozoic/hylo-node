@@ -2,6 +2,7 @@ import knexPostgis from 'knex-postgis'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'saved_searches',
+  hasTimestamps: true,
 
   boundingBox: async function() {
     const st = knexPostgis(bookshelf.knex)

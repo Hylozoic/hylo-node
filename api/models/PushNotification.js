@@ -91,6 +91,46 @@ module.exports = bookshelf.Model.extend({
     return `${actor.get('name')} approved your request to join ${group.get('name')}`
   },
 
+  textForGroupChildGroupInvite: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} invited your group ${childGroup.name} to join their group ${parentGroup.name}`
+  },
+
+  textForGroupChildGroupInviteAcceptedParentModerator: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} accepted your invite of their group ${childGroup.name} to join your group ${parentGroup.name}`
+  },
+
+  textForGroupChildGroupInviteAcceptedParentMember: function (parentGroup, childGroup, actor) {
+    return `The group ${childGroup.name} just joined your group ${parentGroup.name}!`
+  },
+
+  textForGroupChildGroupInviteAcceptedChildModerator: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} accepted an invite for your group ${childGroup.name} to join group ${parentGroup.name}`
+  },
+
+  textForGroupChildGroupInviteAcceptedChildMember: function (parentGroup, childGroup, actor) {
+    return `Your group ${childGroup.name} has joined ${parentGroup.name}. You can now join ${parentGroup.name}!`
+  },
+
+  textForGroupParentGroupJoinRequest: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} is requesting to add their group ${childGroup.name} as a member of your group ${parentGroup.name}`
+  },
+
+  textForGroupParentGroupJoinRequestAcceptedParentModerator: function (parentGroup, childGroup, actor) {
+    return `${actor.get('name')} accepted a request to add ${childGroup.name} to your group ${parentGroup.name}`
+  },
+
+  textForGroupParentGroupJoinRequestAcceptedParentMember: function (parentGroup, childGroup, actor) {
+    return `Group ${childGroup.name} has joined your group ${parentGroup.name}`
+  },
+
+  textForGroupParentGroupJoinRequestAcceptedChildModerator: function (parentGroup, childGroup, actor) {
+    return `Your group ${childGroup.name} has been accepted as a member of ${parentGroup.name} by ${actor.get('name')}`
+  },
+
+  textForGroupParentGroupJoinRequestAcceptedChildMember: function (parentGroup, childGroup, actor) {
+    return `Your group ${childGroup.name} has joined group ${parentGroup.name}`
+  },
+
   textForDonationTo: function (contribution) {
     const project = contribution.relations.project
     const postName = decode(project.get('name'))

@@ -63,25 +63,22 @@ export default function forPosts (opts) {
       topic: opts.topic,
       type: opts.type,
       boundingBox: opts.boundingBox,
-      showPinnedFirst: get(opts.groups, 'length') === 1
+      showPinnedFirst: get(opts.groupIds, 'length') === 1
     }, qb)
 
     if (opts.omit) {
       qb.whereNotIn('posts.id', opts.omit)
     }
 
-    if (opts.groups) {
-      qb.select('groups_posts.pinned')
+    if (opts.groupIds) {
       qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
-      qb.whereIn('groups_posts.group_id', opts.groups)
-      qb.groupBy(['posts.id', 'groups_posts.post_id', 'groups_posts.pinned'])
-    }
-
-    if (opts.groupSlugs && opts.groupSlugs.length > 0) {
-      qb.select('groups_posts.pinned')
+      qb.whereIn('groups_posts.group_id', opts.groupIds)
+      qb.groupBy(['posts.id', 'groups_posts.post_id'])
+    } else if (opts.groupSlugs && opts.groupSlugs.length > 0) {
       qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
-      qb.whereIn('groups_posts.slug', opts.groupSlugs)
-      qb.groupBy(['posts.id', 'groups_posts.post_id', 'groups_posts.pinned'])
+      qb.join('groups', 'groups_posts.group_id', '=', 'groups.id')
+      qb.whereIn('groups.slug', opts.groupSlugs)
+      qb.groupBy(['posts.id', 'groups_posts.post_id'])
     }
 
     if (opts.parent_post_id) {

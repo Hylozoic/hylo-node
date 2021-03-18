@@ -22,15 +22,19 @@ export {
   invitePeopleToEvent
 } from './event'
 export {
-  addGroupToParent,
+  acceptGroupRelationshipInvite,
   addModerator,
+  cancelGroupRelationshipInvite,
   createGroup,
-  deleteGroupTopic,
   deleteGroup,
+  deleteGroupRelationship,
+  deleteGroupTopic,
+  inviteGroupToGroup,
+  joinGroup,
+  regenerateAccessCode,
+  rejectGroupRelationshipInvite,
   removeModerator,
   removeMember,
-  regenerateAccessCode,
-  removeGroupFromParent,
   updateGroup,
 } from './group'
 export { 
@@ -46,9 +50,9 @@ export {
 } from './invitation'
 export {
   acceptJoinRequest,
+  cancelJoinRequest,
   createJoinRequest,
-  declineJoinRequest,
-  joinGroup,
+  declineJoinRequest
 } from './join_request'
 export {
   findOrCreateLocation

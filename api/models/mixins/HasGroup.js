@@ -38,7 +38,7 @@ export default {
     return this.group(dbOpts).then(group => group.updateMembers(...args))
   },
 
-  queryByGroupConnection (model, direction = 'parent') {
+  queryByGroupRelationship (model, direction = 'parent') {
     // TODO we can infer the correct direction in most cases rather than
     // requiring it to be specified
     const dataType = getDataTypeForModel(model)
