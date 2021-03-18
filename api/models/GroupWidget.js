@@ -1,5 +1,4 @@
 import HasSettings from './mixins/HasSettings'
-import { isEmpty } from 'lodash'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_widgets',
