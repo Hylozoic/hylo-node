@@ -185,7 +185,7 @@ type Group {
     offset: Int,
     search: String,
     autocomplete: String
-  ): GroupQuerySet
+  ): PersonQuerySet
   activeMembers(
     boundingBox: [PointInput],
     first: Int,
