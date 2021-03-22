@@ -53,6 +53,10 @@ module.exports = bookshelf.Model.extend(merge({
       .orderBy('groups.name', 'asc')
   },
 
+  creator: function () {
+    return this.belongsTo(User, 'created_by_id')
+  },
+
   groupRelationshipInvitesFrom () {
     return this.hasMany(GroupRelationshipInvite, 'from_group_id')
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
