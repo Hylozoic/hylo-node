@@ -1,19 +1,43 @@
 {
   "name": "hylo-node",
+  "description": "Hylo Server",
+  "keywords": [],
+  "author": "Tibet Sprague <tibet@hylo.com>",
+  "license": "GNU AFFERO GENERAL PUBLIC LICENSE v3",
   "private": true,
   "version": "1.4.7",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/Hylozoic/hylo-node.git"
+  },
   "engines": {
     "node": "^12",
     "yarn": "^1.2.1"
   },
-  "description": "Hylo Server",
-  "keywords": [],
   "nyc": {
     "sourceMap": false,
     "instrument": false,
     "require": [
       "babel-register"
     ]
+  },
+  "main": "app.js",
+  "scripts": {
+    "start": "node --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 app.js",
+    "console": "node console.js",
+    "cron": "node cron.js",
+    "worker": "node --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 worker.js",
+    "migrate": "node migrations/scripts/updateMigrationsTable.js && node ./node_modules/.bin/knex migrate:latest",
+    "migrate-up": "node migrations/scripts/updateMigrationsTable.js && node ./node_modules/.bin/knex migrate:up",
+    "rollback": "node ./node_modules/.bin/knex migrate:rollback",
+    "migrate-make": "node ./node_modules/.bin/knex migrate:make",
+    "debug": "node-debug app.js",
+    "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
+    "dump": "pg_dump -Osxn public hylo | sed -e 's/; Tablespace: $//' > migrations/schema.sql",
+    "test": "[ \"$NODE_ENV\" != production ] && mocha -r test/setup/core -r babel-core/register",
+    "cover": "./node_modules/.bin/nyc --cache -a -r lcov ./node_modules/.bin/mocha -r test/setup/core --require babel-core/register -R dot",
+    "knex": "knex",
+    "update-migrations": "node ./migrations/scripts/updateMigrationsTable"
   },
   "devDependencies": {
     "babel-plugin-istanbul": "^2.0.3",
@@ -124,30 +148,6 @@
     "validator": "^3.22.1",
     "wkx": "^0.5.0"
   },
-  "scripts": {
-    "start": "node --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 app.js",
-    "console": "node console.js",
-    "cron": "node cron.js",
-    "worker": "node --optimize_for_size --max_old_space_size=$MAX_OLD_SPACE_SIZE --gc_interval=100 worker.js",
-    "migrate": "node migrations/scripts/updateMigrationsTable.js && node ./node_modules/.bin/knex migrate:latest",
-    "migrate-up": "node migrations/scripts/updateMigrationsTable.js && node ./node_modules/.bin/knex migrate:up",
-    "rollback": "node ./node_modules/.bin/knex migrate:rollback",
-    "migrate-make": "node ./node_modules/.bin/knex migrate:make",
-    "debug": "node-debug app.js",
-    "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
-    "dump": "pg_dump -Osxn public hylo | sed -e 's/; Tablespace: $//' > migrations/schema.sql",
-    "test": "[ \"$NODE_ENV\" != production ] && mocha -r test/setup/core -r babel-core/register",
-    "cover": "./node_modules/.bin/nyc --cache -a -r lcov ./node_modules/.bin/mocha -r test/setup/core --require babel-core/register -R dot",
-    "knex": "knex",
-    "update-migrations": "node ./migrations/scripts/updateMigrationsTable"
-  },
-  "main": "app.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/Hylozoic/hylo-node.git"
-  },
-  "author": "Lawrence Wang <l@lw.io>",
-  "license": "",
   "standard": {
     "global": [
       "after",
