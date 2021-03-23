@@ -8,6 +8,8 @@ Thanks for checking out our code. The documentation below may be incomplete or i
 
 ### setup
 
+Use nvm to install the correct version of node. Once installed you can just do `nvm install` to ensure the correct version is installed and then `nvm use`
+
 You need to install redis locally, then follow the steps to launch it on startup (on the default port of 6379). For OSX/MacOS:
 
 ```shell
@@ -87,21 +89,18 @@ UPLOADER_PATH_PREFIX=[ path ]
 
 ### populating the database
 
-If a local Postgres server is running and your user has create database privileges, you should be able to:
+Make sure you have Postgres running with PostGIS installed and your user has create database privileges, then you should be able to:
 
 ```shell
 createdb hylo -h localhost
 createdb hylo_test -h localhost
 cat migrations/schema.sql | psql hylo
-./node_modules/.bin/knex seed:run
+yarn knex seed:run
 ```
-
 This is only necessary if you're creating a fresh instance and aren't going to be loading a database snapshot (see below for that process). If you're new, you can also use the dummy seed to truncate everything and populate a bunch of fake data including a test account login like so:
 
-You will also need to login to run `psql hylo -c "CREATE EXTENSION postgis;"`
-
 ```shell
-NODE_ENV=dummy npm run knex seed:run
+NODE_ENV=dummy yarn knex seed:run
 ```
 
 *This will trash everything in your current `hylo` database, so make sure you really want to do that!* The script will ask for confirmation. By default the test user will be `test@hylo.com` with password `hylo`, configurable at the top of `seeds/dummy/dummy.js`.
@@ -110,16 +109,16 @@ NODE_ENV=dummy npm run knex seed:run
 ### running the dev server
 
 ```shell
-npm run dev
+yarn dev
 ```
 
-This reads the `.env` file you created above, using [dotenv](http://www.npmjs.org/package/dotenv), and starts two processes managed by `foreman`: one web server process and one background job worker process, as listed in `Procfile.dev`. If you want to run only one of the processes, pass its name in `Procfile.dev` as an argument, e.g. `npm run dev -- web`.
+This reads the `.env` file you created above, using [dotenv](http://www.npmjs.org/package/dotenv), and starts two processes managed by `foreman`: one web server process and one background job worker process, as listed in `Procfile.dev`. If you want to run only one of the processes, pass its name in `Procfile.dev` as an argument, e.g. `yarn dev -- web`.
 
 Now visit [localhost:3001](http://localhost:3001).
 
 ### running tests
 
-Run `npm test` or `npm run cover`. The tests should use a different database (see below), because it creates and drops the database schema on each run.
+Run `yarn test` or `yarn cover`. The tests should use a different database (see below), because it creates and drops the database schema on each run.
 
 Create a file called `.env.test` to set environment variables for the test environment.
 
@@ -142,7 +141,6 @@ PLAY_APP_SECRET=quxgrault12345678
 AWS_ACCESS_KEY_ID=foo
 UPLOADER_PATH_PREFIX=foo
 ```
-
 
 (Without the above Mailgun values, you'll see a failing test in the suite.) Since the test database was created above, `npm test` should work at this point.
 
@@ -171,7 +169,6 @@ dropdb $LOCAL_DB_NAME -h localhost
 createdb $LOCAL_DB_NAME -h localhost
 cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 ```
-
 
 
 ### design guidelines

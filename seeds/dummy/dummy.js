@@ -73,8 +73,8 @@ exports.seed = (knex) => warning()
     {name: 'regeneration'}
   ]))
   .then(() => seed('tags', knex))
-  .then(() => knex('groups').insert({ name: 'starter-posts', slug: 'starter-posts', group_data_type: 1 }))
-  .then(() => knex('groups').insert({ name: group, slug: groupSlug, group_data_type: 1 }))
+  .then(() => knex('groups').insert(fakeGroupData('starter-posts', 'starter-posts')))
+  .then(() => knex('groups').insert(fakeGroupData(group, groupSlug)))
   .then(() => seed('groups', knex))
   .then(() => seed('posts', knex))
   .then(() => Promise.all([
@@ -231,30 +231,33 @@ function fakeThread (groupId, knex) {
     )
 }
 
+function fakeGroupData(name, slug, created_by_id) {
+  return {
+    name,
+    group_data_type: 1,
+    avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png',
+    access_code: faker.random.uuid(),
+    description: faker.lorem.paragraph(),
+    slug: slug,
+    banner_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg',
+    created_at: faker.date.past(),
+    created_by_id,
+    location: faker.address.country(),
+    visibility: 1,
+    accessibility: 1,
+    settings: { allow_group_invites: false, public_member_directory: false },
+    slack_hook_url: faker.internet.url(),
+    slack_team: faker.internet.url(),
+    slack_configure_url: faker.internet.url()
+  }
+}
+
 function fakeGroup (knex) {
   const name = faker.random.words()
 
   return Promise.all([
     sample('users', true, knex)
-  ])
-    .then(([ users ]) => ({
-      name,
-      group_data_type: 1,
-      avatar_url: faker.internet.avatar(),
-      access_code: faker.random.uuid(),
-      description: faker.lorem.paragraph(),
-      slug: faker.helpers.slugify(name).toLowerCase(),
-      banner_url: faker.internet.url(),
-      created_at: faker.date.past(),
-      created_by_id: users[0].id,
-      location: faker.address.country(),
-      visibility: 1,
-      accessibility: 1,
-      settings: { allow_group_invites: false, public_member_directory: false },
-      slack_hook_url: faker.internet.url(),
-      slack_team: faker.internet.url(),
-      slack_configure_url: faker.internet.url()
-    }))
+  ]).then(([ users ]) => fakeGroupData(name, faker.helpers.slugify(name).toLowerCase(), users[0].id))
 }
 
 function fakeMembership (user_id, knex) {

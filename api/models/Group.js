@@ -57,6 +57,10 @@ module.exports = bookshelf.Model.extend(merge({
       .orderBy('groups.name', 'asc')
   },
 
+  creator: function () {
+    return this.belongsTo(User, 'created_by_id')
+  },
+
   groupRelationshipInvitesFrom () {
     return this.hasMany(GroupRelationshipInvite, 'from_group_id')
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
@@ -344,8 +348,8 @@ module.exports = bookshelf.Model.extend(merge({
   async create (userId, data) {
     var attrs = defaults(
       pick(data,
-        'name', 'description', 'slug', 'category', 'access_code', 'banner_url', 'avatar_url',
-        'location_id', 'location', 'group_data_type'
+        'accessibility', 'description', 'slug', 'category', 'access_code', 'banner_url', 'avatar_url',
+        'location_id', 'location', 'group_data_type', 'name', 'visibility'
       ),
       {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR, 'group_data_type': 1}
     )
