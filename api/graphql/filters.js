@@ -138,10 +138,9 @@ export const postFilter = (userId, isAdmin) => relation => {
       q.where(tableName + '.is_public', true)
     } else if (!isAdmin) {
       // Only show posts that are public or posted to a group the user is a member of
-      q.join('groups_posts as gp', 'gp.post_id', 'posts.id')
       q.where(q3 => {
         const selectIdsForMember = Group.selectIdsForMember(userId)
-        q3.whereIn('gp.group_id', selectIdsForMember).orWhere('posts.is_public', true)
+        q3.whereIn('groups_posts.group_id', selectIdsForMember).orWhere('posts.is_public', true)
       })
 
       // Don't show posts from blocked users

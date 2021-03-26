@@ -71,20 +71,15 @@ export default function forPosts (opts) {
       qb.whereNotIn('posts.id', opts.omit)
     }
 
+    qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
     if (opts.onlyMyGroups) {
-      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
       const selectIdsForMember = Group.selectIdsForMember(opts.currentUserId)
       qb.whereIn('groups_posts.group_id', selectIdsForMember)
-      qb.groupBy(['posts.id', 'groups_posts.post_id'])
     } else if (opts.groupIds) {
-      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
       qb.whereIn('groups_posts.group_id', opts.groupIds)
-      qb.groupBy(['posts.id', 'groups_posts.post_id'])
     } else if (opts.groupSlugs && opts.groupSlugs.length > 0) {
-      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
       qb.join('groups', 'groups_posts.group_id', '=', 'groups.id')
       qb.whereIn('groups.slug', opts.groupSlugs)
-      qb.groupBy(['posts.id', 'groups_posts.post_id'])
     }
 
     if (opts.parent_post_id) {
