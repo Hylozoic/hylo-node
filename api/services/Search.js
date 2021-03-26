@@ -31,6 +31,11 @@ module.exports = {
         qb.where('groups.visibility', opts.visibility)
       }
 
+      if (opts.onlyMine) {
+        const selectIdsForMember = Group.selectIdsForMember(opts.currentUserId)
+        qb.whereIn('groups.id', selectIdsForMember)
+      }
+
       if (opts.parentSlugs) {
         qb.join('group_relationships', 'groups.id', '=', 'group_relationships.child_group_id')
         qb.join('groups as parent_groups', 'parent_groups.id', '=', 'group_relationships.parent_group_id')

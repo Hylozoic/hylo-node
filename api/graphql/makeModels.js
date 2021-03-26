@@ -290,18 +290,20 @@ export default async function makeModels (userId, isAdmin) {
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
       filter: nonAdminFilter(groupFilter(userId)),
-      fetchMany: ({ autocomplete, boundingBox, filter, first, groupIds, offset, onlyPublic, order, parentSlugs, search, sortBy }) =>
+      fetchMany: ({ autocomplete, boundingBox, context, filter, first, groupIds, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
         searchQuerySet('groups', {
           autocomplete,
           boundingBox,
+          currentUserId: userId,
           groupIds,
           limit: first,
           offset,
-          onlyPublic,
+          onlyMine: context === 'all',
           parentSlugs,
           sort: sortBy,
           term: search,
-          type: filter
+          type: filter,
+          visibility: context === 'public' ? Group.Visibility.PUBLIC : visibility
         })
     },
 

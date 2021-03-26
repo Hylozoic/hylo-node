@@ -536,7 +536,8 @@ type Query {
     order: String,
     parentSlugs: [String],
     search: String,
-    sortBy: String
+    sortBy: String,
+    visibility: Int
   ): GroupQuerySet
   joinRequests(groupId: ID, status: Int): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
