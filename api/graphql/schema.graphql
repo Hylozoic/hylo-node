@@ -47,6 +47,8 @@ type UserSettings {
   commentNotifications: String
   signupInProgress: Boolean
   lastViewedMessagesAt: String
+  streamViewMode: String
+  streamSortBy: String
 }
 
 type GroupTopicQuerySet {
@@ -775,6 +777,8 @@ input UserSettingsInput {
   commentNotifications: String
   signupInProgress: Boolean
   lastViewedMessagesAt: String
+  streamViewMode: String
+  streamSortBy: String
 }
 
 type Mutation {
