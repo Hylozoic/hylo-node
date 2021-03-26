@@ -27,8 +27,8 @@ module.exports = {
         qb.whereIn('groups.slug', opts.slug)
       }
 
-      if (opts.is_public) {
-        qb.where('groups.visibility', Group.Visibility.PUBLIC)
+      if (opts.visibility) {
+        qb.where('groups.visibility', opts.visibility)
       }
 
       if (opts.parentSlugs) {

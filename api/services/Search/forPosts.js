@@ -54,8 +54,8 @@ export default function forPosts (opts) {
       qb.whereIn('visibility', opts.visibility)
     }
 
-    if (opts.is_public) {
-      qb.where('is_public', opts.is_public)
+    if (opts.onlyPublic) {
+      qb.where('is_public', opts.onlyPublic)
     }
 
     filterAndSortPosts({
@@ -71,7 +71,12 @@ export default function forPosts (opts) {
       qb.whereNotIn('posts.id', opts.omit)
     }
 
-    if (opts.groupIds) {
+    if (opts.onlyMyGroups) {
+      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+      const selectIdsForMember = Group.selectIdsForMember(opts.currentUserId)
+      qb.whereIn('groups_posts.group_id', selectIdsForMember)
+      qb.groupBy(['posts.id', 'groups_posts.post_id'])
+    } else if (opts.groupIds) {
       qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
       qb.whereIn('groups_posts.group_id', opts.groupIds)
       qb.groupBy(['posts.id', 'groups_posts.post_id'])
