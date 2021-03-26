@@ -5,6 +5,7 @@ import { filterAndSortPosts } from './util'
 export default function forPosts (opts) {
 
   return Post.query(qb => {
+    qb.distinct()
     qb.limit(opts.limit || 20)
     qb.offset(opts.offset)
     qb.where({'posts.active': true})

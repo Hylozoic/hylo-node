@@ -106,7 +106,6 @@ export const messageFilter = userId => relation => relation.query(q => {
   q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
 })
 
-
 export const personFilter = userId => relation => relation.query(q => {
   if (userId) {
     q.whereNotIn('users.id', BlockedUser.blockedFor(userId))
