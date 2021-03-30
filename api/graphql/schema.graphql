@@ -197,6 +197,7 @@ type Group {
     search: String,
     autocomplete: String
   ): GroupQuerySet
+  prerequisiteGroups(onlyNotMember: Boolean): GroupQuerySet
   groupRelationshipInvitesFrom: GroupRelationshipInviteQuerySet
   groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
@@ -229,11 +230,16 @@ type GroupSettings {
 
 type GroupRelationship {
   id: ID
-  createdAt: Date
-  updatedAt: Date
-  role: Int
   childGroup: Group
+  createdAt: Date
   parentGroup: Group
+  role: Int
+  settings: GroupRelationshipSettings
+  updatedAt: Date
+}
+
+type GroupRelationshipSettings {
+  isPrerequisite: Boolean
 }
 
 type GroupRelationshipInvite {
@@ -727,6 +733,7 @@ input GroupInput {
   name: String
   parentIds: [ID]
   joinQuestions: [QuestionInput]
+  prerequisiteGroupIds: [ID]
   settings: GroupSettingsInput
   slackHookUrl: String
   slackTeam: String

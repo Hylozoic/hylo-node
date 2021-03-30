@@ -120,15 +120,22 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Group)
       .through(GroupRelationship, 'child_group_id', 'parent_group_id')
       .query({ where: { 'group_relationships.active': true, 'groups.active': true } })
+      .withPivot(['settings'])
       .orderBy('groups.name', 'asc')
+  },
+
+  parentGroupRelationships () {
+    return this.hasMany(GroupRelationship, 'child_group_id')
+      .query({ where: { 'active': true } })
+  },
+
+  prerequisiteGroups () {
+    return this.parentGroups().query({ whereRaw: "(group_relationships.settings->>'isPrerequisite')::boolean = true" })
   },
 
   posts (userId) {
     return this.belongsToMany(Post).through(PostMembership)
       .query({ where: { 'posts.active': true } })
-    // XXX: this doesnt work as a non relationship right now because of places where we eagerly load posts using withRelated
-    // e.g. when creating a new group
-    //return this.viewPosts(userId)
   },
 
   postCount: function () {
@@ -276,6 +283,17 @@ module.exports = bookshelf.Model.extend(merge({
       for (let q of questions) {
         await GroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save()
       }
+    }
+
+    if (changes.prerequisite_group_ids) {
+      // Go through all parent groups and reset which ones are prerequisites
+      const parentRelationships = await this.parentGroupRelationships().fetch()
+      await Promise.map(parentRelationships.models, async (relationship) => {
+        const isNowPrereq = changes.prerequisite_group_ids.includes(relationship.get('parent_group_id'))
+        if (relationship.getSetting('isPrerequisite') !== isNowPrereq) {
+          await relationship.addSetting({ isPrerequisite: isNowPrereq}, true)
+        }
+      })
     }
 
     this.set(saneAttrs)

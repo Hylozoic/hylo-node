@@ -223,6 +223,19 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         {childGroups: {querySet: true}},
         {parentGroups: {querySet: true}},
+        {prerequisiteGroups: {
+          querySet: true,
+          filter: (relation, { onlyNotMember }) =>
+            relation.query(q => {
+              if (onlyNotMember) {
+                // Only return prerequisite groups that the current user is not yet a member of
+                q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
+                  'group_memberships.user_id': userId,
+                  'group_memberships.active': true
+                }))
+              }
+            })
+        }},
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
         {moderators: {querySet: true}},

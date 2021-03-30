@@ -75,6 +75,14 @@ export async function joinGroup (groupId, userId) {
   if (group.get('accessibility') !== Group.Accessibility.OPEN) {
     throw new Error(`You do not have permisson to do that`)
   }
+  // Make sure user is first a member of all prerequisite groups
+  const prerequisiteGroups = await group.prerequisiteGroups().fetch()
+  await Promise.map(prerequisiteGroups.models, async (prereq) => {
+    const isMemberOfPrereq = await GroupMembership.forPair(userId, prereq.id).fetch()
+    if (!isMemberOfPrereq) {
+      throw new Error(`You must be a member of group ${prereq.get('name')} first`)
+    }
+  })
   return user.joinGroup(group)
 }
 
