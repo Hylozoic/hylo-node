@@ -82,6 +82,11 @@ export default function forPosts (opts) {
       qb.whereIn('groups.slug', opts.groupSlugs)
     }
 
+    if (get(opts.groupIds, 'length') !== 1) {
+      // If not looking at a single group then hide axolotl welcome posts
+      qb.where('posts.user_id', '!=', User.AXOLOTL_ID)
+    }
+
     if (opts.parent_post_id) {
       qb.where('parent_post_id', opts.parent_post_id)
       qb.where('is_project_request', false)

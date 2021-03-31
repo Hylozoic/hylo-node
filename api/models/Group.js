@@ -154,7 +154,10 @@ module.exports = bookshelf.Model.extend(merge({
       q.join('groups_posts', 'groups_posts.post_id', 'posts.id')
       q.where(q2 => {
         q2.where('groups_posts.group_id', this.id)
-        q2.orWhereIn('groups_posts.group_id', treeOfGroupsForMember.query())
+        q2.orWhere(q3 => {
+          q3.whereIn('groups_posts.group_id', treeOfGroupsForMember.query())
+          q3.andWhere('posts.user_id', '!=', User.AXOLOTL_ID)
+        })
       })
     })
   },
