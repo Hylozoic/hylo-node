@@ -54,8 +54,8 @@ export default function forPosts (opts) {
       qb.whereIn('visibility', opts.visibility)
     }
 
-    if (opts.is_public) {
-      qb.where('is_public', opts.is_public)
+    if (opts.onlyPublic) {
+      qb.where('is_public', opts.onlyPublic)
     }
 
     filterAndSortPosts({
@@ -71,15 +71,20 @@ export default function forPosts (opts) {
       qb.whereNotIn('posts.id', opts.omit)
     }
 
-    if (opts.groupIds) {
-      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+    qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+    if (opts.onlyMyGroups) {
+      const selectIdsForMember = Group.selectIdsForMember(opts.currentUserId)
+      qb.whereIn('groups_posts.group_id', selectIdsForMember)
+    } else if (opts.groupIds) {
       qb.whereIn('groups_posts.group_id', opts.groupIds)
-      qb.groupBy(['posts.id', 'groups_posts.post_id'])
     } else if (opts.groupSlugs && opts.groupSlugs.length > 0) {
-      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
       qb.join('groups', 'groups_posts.group_id', '=', 'groups.id')
       qb.whereIn('groups.slug', opts.groupSlugs)
-      qb.groupBy(['posts.id', 'groups_posts.post_id'])
+    }
+
+    if (get(opts.groupIds, 'length') !== 1) {
+      // If not looking at a single group then hide axolotl welcome posts
+      qb.where('posts.user_id', '!=', User.AXOLOTL_ID)
     }
 
     if (opts.parent_post_id) {

@@ -219,6 +219,16 @@ type Group {
     autocomplete: String
   ): SkillQuerySet
   slug: String
+  viewPosts(
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    filter: String,
+    topic: ID,
+    boundingBox: [PointInput]
+  ): PostQuerySet
   visibility: Int
 }
 
@@ -522,32 +532,33 @@ type Query {
   ): NotificationQuerySet
   group(id: ID, slug: String, updateLastViewed: Boolean): Group
   groups(
+    autocomplete: String,
+    boundingBox: [PointInput],
+    context: String,
+    filter: String,
     first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
     groupIds: [ID],
+    offset: Int,
+    order: String,
     parentSlugs: [String],
     search: String,
-    autocomplete: String,
-    filter: String,
-    boundingBox: [PointInput],
-    isPublic: Boolean
+    sortBy: String,
+    visibility: Int
   ): GroupQuerySet
   joinRequests(groupId: ID, status: Int): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
-    groupSlugs: [String],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    filter: String,
-    topic: ID,
     boundingBox: [PointInput],
-    isPublic: Boolean
+    context: String
+    filter: String,
+    first: Int,
+    groupSlugs: [String],
+    offset: Int,
+    order: String,
+    search: String,
+    sortBy: String,
+    topic: ID,
   ): PostQuerySet
   comment(id: ID): Comment
   people(

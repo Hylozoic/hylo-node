@@ -191,17 +191,19 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, groupSlugs, isPublic }) =>
+      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, groupSlugs, context }) =>
         searchQuerySet('posts', {
           boundingBox,
-          term: search,
+          currentUserId: userId,
+          groupSlugs,
           limit: first,
           offset,
-          type: filter,
+          onlyMyGroups: context === 'all',
+          onlyPublic: context === 'public',
           sort: sortBy,
+          term: search,
           topic,
-          groupSlugs,
-          is_public: isPublic
+          type: filter
         })
     },
 
@@ -259,6 +261,18 @@ export default async function makeModels (userId, isAdmin) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
+          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+            relation.query(filterAndSortPosts({
+              boundingBox,
+              search,
+              sortBy,
+              topic,
+              type: filter,
+              showPinnedFirst: true
+            }))
+        }},
+        {viewPosts: {
+          querySet: true,
           arguments: () => [userId],
           filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
             relation.query(filterAndSortPosts({
@@ -289,18 +303,20 @@ export default async function makeModels (userId, isAdmin) {
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
       filter: nonAdminFilter(groupFilter(userId)),
-      fetchMany: ({ first, order, sortBy, groupIds, offset, search, autocomplete, filter, isPublic, boundingBox, parentSlugs }) =>
+      fetchMany: ({ autocomplete, boundingBox, context, filter, first, groupIds, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
         searchQuerySet('groups', {
+          autocomplete,
           boundingBox,
+          currentUserId: userId,
           groupIds,
-          parentSlugs,
-          term: search,
           limit: first,
           offset,
-          type: filter,
-          autocomplete,
+          onlyMine: context === 'all',
+          parentSlugs,
           sort: sortBy,
-          is_public: isPublic
+          term: search,
+          type: filter,
+          visibility: context === 'public' ? Group.Visibility.PUBLIC : visibility
         })
     },
 
