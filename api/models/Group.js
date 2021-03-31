@@ -141,9 +141,8 @@ module.exports = bookshelf.Model.extend(merge({
     .then(result => result.get('count'))
   },
 
-  // The posts to show in the stream for a particular user
+  // The posts to show for a particular user viewing a group's stream or map
   // includes the direct posts to this group + posts to child groups the user is a member of
-  // TODO: show public posts from child groups too? but what about from hidden groups?
   viewPosts (userId) {
     const treeOfGroupsForMember = this.allChildGroups().query(q => {
       q.select('groups.id')
