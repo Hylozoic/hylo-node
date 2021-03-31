@@ -49,6 +49,7 @@ type UserSettings {
   lastViewedMessagesAt: String
   streamViewMode: String
   streamSortBy: String
+  streamPostType: String
 }
 
 type GroupTopicQuerySet {
@@ -779,6 +780,7 @@ input UserSettingsInput {
   lastViewedMessagesAt: String
   streamViewMode: String
   streamSortBy: String
+  streamPostType: String
 }
 
 type Mutation {
