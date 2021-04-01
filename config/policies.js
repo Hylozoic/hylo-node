@@ -45,6 +45,10 @@ module.exports.policies = {
     '*': 'sessionAuth'
   },
 
+  ExportController: {
+    '*': 'sessionAuth'
+  },
+
   AdminSessionController: {
     create:  true,
     oauth:   true,
