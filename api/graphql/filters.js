@@ -24,6 +24,8 @@ export const commentFilter = userId => relation => relation.query(q => {
 // Which groups are visible to the user?
 export const groupFilter = userId => relation => {
   return relation.query(q => {
+    q.where('groups.active', true)
+
     // non authenticated queries can only see public groups
     if (!userId) {
       q.where('groups.visibility', Group.Visibility.PUBLIC)
