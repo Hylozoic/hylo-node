@@ -42,11 +42,12 @@ type Me {
 }
 
 type UserSettings {
+  alreadySeenTour: Boolean
+  commentNotifications: String
   digestFrequency: String
   dmNotifications: String
-  commentNotifications: String
-  signupInProgress: Boolean
   lastViewedMessagesAt: String
+  signupInProgress: Boolean
 }
 
 type GroupTopicQuerySet {
@@ -783,11 +784,12 @@ input SavedSearchInput {
 }
 
 input UserSettingsInput {
+  alreadySeenTour: Boolean
+  commentNotifications: String
   digestFrequency: String
   dmNotifications: String
-  commentNotifications: String
-  signupInProgress: Boolean
   lastViewedMessagesAt: String
+  signupInProgress: Boolean
 }
 
 type Mutation {
