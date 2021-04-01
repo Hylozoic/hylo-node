@@ -360,9 +360,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   async deactivate (id, opts = {}) {
-    const group = await Group.find(id).fetch()
-    await group.save({ active: false }, opts)
-    return group.removeMembers(await group.members().fetch(), opts)
+    const group = await Group.find(id)
+    if (group) {
+      await group.save({ active: false }, opts)
+      return group.removeMembers(await group.members().fetch(), opts)
+    }
   },
 
   find (idOrSlug, opts = {}) {
