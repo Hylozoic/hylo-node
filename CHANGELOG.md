@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 - Show posts in the public stream for new users that have no groups
 - Fix comment count on posts
+- All My Groups post stream no longer shows public posts from groups you are a not a member of
 
 ## [1.4.7] - 2021-02-01
 ### Fixes
