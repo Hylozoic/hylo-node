@@ -119,7 +119,9 @@ type Person {
     search: String,
     filter: String,
     topic: ID,
-    boundingBox: [PointInput]
+    boundingBox: [PointInput],
+    groupSlugs: [String],
+    context: String
   ): PostQuerySet
   projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet

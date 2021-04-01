@@ -133,6 +133,11 @@ export const postFilter = (userId, isAdmin) => relation => {
     // Always only show active posts
     q.where('posts.active', true)
 
+    // If we are loading posts through a group then groups_posts already joined, otherwise we need it
+    if (!relation.relatedData || relation.relatedData.parentTableName !== 'groups') {
+      q.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+    }
+
     if (!userId) {
       // non authenticated queries can only see public posts
       q.where(tableName + '.is_public', true)
