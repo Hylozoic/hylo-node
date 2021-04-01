@@ -151,7 +151,6 @@ module.exports = bookshelf.Model.extend(merge({
     })
 
     return Post.collection().query(q => {
-      q.join('groups_posts', 'groups_posts.post_id', 'posts.id')
       q.where(q2 => {
         q2.where('groups_posts.group_id', this.id)
         q2.orWhere(q3 => {
