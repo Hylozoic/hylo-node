@@ -56,6 +56,11 @@ module.exports = bookshelf.Model.extend(merge({
       .where('group_memberships.active', true)
   },
 
+  groupInvitesPending: function () {
+    return this.hasMany(Invitation, 'email', 'email')
+      .query({ where: { 'used_at': null, 'expired_at': null } })
+  },
+
   inAppNotifications: function () {
     return this.hasMany(Notification)
     .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
