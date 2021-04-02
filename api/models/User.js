@@ -58,7 +58,8 @@ module.exports = bookshelf.Model.extend(merge({
 
   groupInvitesPending: function () {
     return this.hasMany(Invitation, 'email', 'email')
-      .query({ where: { 'used_at': null, 'expired_at': null } })
+      .query({ where: { 'used_by_id': null, 'expired_by_id': null } })
+      .orderBy('created_at', 'desc')
   },
 
   inAppNotifications: function () {
@@ -250,7 +251,7 @@ module.exports = bookshelf.Model.extend(merge({
     }
     return q.where('group_id', groupId)
     .whereRaw('lower(email) = lower(?)', this.get('email'))
-    .update({used_by_id: this.id})
+    .update({ used_by_id: this.id, used_at: new Date() })
   },
 
   setPassword: function (password, { transacting } = {}) {
