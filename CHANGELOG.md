@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group relationship invites/requests. Groups can request to join other groups or invigte a group to join them, and these invites/requests can be canceled, accepted or rejected by moderators of the other group.
 - Join questions: groups can now have questions that must be answered when a person is requesting to join the group
 - People can cancel their request to join a group
-- Comments can ve nested undearneath other comments
+- Comments can be nested undearneath other comments
 
 ### Changed
 - Networks with communities in them have been converted into Groups with Sub-groups inside them
@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 - Show posts in the public stream for new users that have no groups
 - Fix comment count on posts
+- All My Groups post stream no longer shows public posts from groups you are a not a member of
 
 ## [1.4.7] - 2021-02-01
 ### Fixes

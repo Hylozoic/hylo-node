@@ -384,7 +384,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(function (user) {
       if (!user) throw new Error('email not found')
 
-      var account = user.relations.linkedAccounts.where({provider_key: 'password'}).first()
+      var account = user.relations.linkedAccounts.find(a => a.get('provider_key') === 'password')
 
       if (!account) {
         var keys = user.relations.linkedAccounts.pluck('provider_key')
