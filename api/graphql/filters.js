@@ -164,7 +164,7 @@ export const voteFilter = userId => relation => {
     q.where('posts.active', true)
     q.andWhere(q2 => {
       const selectIdsForMember = Group.selectIdsForMember(userId)
-      q.whereIn(groups_posts.group_id, selectIdsForMember)
+      q.whereIn('groups_posts.group_id', selectIdsForMember)
       q.orWhere('posts.is_public', true)
     })
   })
