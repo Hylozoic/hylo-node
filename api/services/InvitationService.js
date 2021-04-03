@@ -5,10 +5,11 @@ import { get, isEmpty, map, merge } from 'lodash/fp'
 module.exports = {
   checkPermission: (userId, invitationId) => {
     return Invitation.find(invitationId, {withRelated: 'group'})
-    .then(invitation => {
+    .then(async (invitation) => {
       if (!invitation) throw new Error('Invitation not found')
       const { group } = invitation.relations
-      return GroupMembership.hasModeratorRole(userId, group)
+      const user = await User.find(userId)
+      return user.get('email') === invitation.get('email') || GroupMembership.hasModeratorRole(userId, group)
     })
   },
 
