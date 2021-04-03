@@ -33,7 +33,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships() {
-    return this.hasMany(GroupMembership).where('group_memberships.active', true)
+    return this.hasMany(GroupMembership)
+      .query(q => q.leftJoin('groups', 'groups.id', 'group_memberships.group_id')
+        .where('group_memberships.active', true)
+        .where('groups.active', true)
+      )
   },
 
   contributions: function () {
