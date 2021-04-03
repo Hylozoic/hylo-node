@@ -5,13 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.0.0] - 2021-04-02
 ### Added
-- Holonic Architecture! You can now add infinitely nested groups within groups within groups. And groups can have multiple "parent groups" too.
+- __Holonic Architecture__: You can now add infinitely nested groups within groups within groups. And groups can have multiple "parent groups" too.
 - People can see groups that they are a member of, or that are public, or that are a parent group of a group they are a member of, or are a child group of a group they are a member of unless the child group has set itself as "Hidden"
 - Looking at a group's stream will show you all the posts to that group + all the posts to any descendant groups that you are also a member of (this feature temporarily disabled)
 - When looking at the map for a group you will see the group itself on the map plus all descendant groups
-- Group relationship invites/requests. Groups can request to join other groups or invigte a group to join them, and these invites/requests can be canceled, accepted or rejected by moderators of the other group.
-- Join questions: groups can now have questions that must be answered when a person is requesting to join the group
+- __Group relationship invites/requests__: Groups can request to join other groups or invigte a group to join them, and these invites/requests can be canceled, accepted or rejected by moderators of the other group.
+- __Join questions__: groups can now have questions that must be answered when a person is requesting to join the group
 - People can cancel their request to join a group
 - Comments can be nested undearneath other comments
 
