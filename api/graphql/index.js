@@ -122,12 +122,12 @@ async function createSchema (userId, isAdmin) {
 // Queries that non-logged in users can make
 export function makePublicQueries (userId, fetchOne, fetchMany) {
   return {
-    // Can only access public communities and posts
-    group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id', { isPublic: true }),
-    groups: (root, args) => fetchMany('Group', Object.assign(args, { isPublic: true })),
-    posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true })),
     checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode)
+      InvitationService.check(userId, invitationToken, accessCode),
+    // Can only access public communities and posts
+    group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id', { visibility: Group.Visibility.PUBLIC }),
+    groups: (root, args) => fetchMany('Group', Object.assign(args, { visibility: Group.Visibility.PUBLIC })),
+    posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true }))
   }
 }
 
@@ -135,7 +135,10 @@ export function makePublicQueries (userId, fetchOne, fetchMany) {
 export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   return {
     activity: (root, { id }) => fetchOne('Activity', id),
-    me: () => fetchOne('Me', userId),
+    checkInvitation: (root, { invitationToken, accessCode }) =>
+      InvitationService.check(userId, invitationToken, accessCode),
+    comment: (root, { id }) => fetchOne('Comment', id),
+    connections: (root, args) => fetchMany('PersonConnection', args),
     group: async (root, { id, slug, updateLastViewed }) => {
       // you can specify id or slug, but not both
       const group = await fetchOne('Group', slug || id, slug ? 'slug' : 'id')
@@ -158,25 +161,22 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       }
       throw new Error('Slug is invalid')
     },
-    joinRequests: (root, args) => fetchMany('JoinRequest', args),
+    groupTopic: (root, { topicName, groupSlug }) =>
+      GroupTag.findByTagAndGroup(topicName, groupSlug),
+    groupTopics: (root, args) => fetchMany('GroupTopic', args),
     groups: (root, args) => fetchMany('Group', args),
+    joinRequests: (root, args) => fetchMany('JoinRequest', args),
+    me: () => fetchOne('Me', userId),
+    messageThread: (root, { id }) => fetchOne('MessageThread', id),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
       .tap(() => resetCount && User.resetNewNotificationCount(userId))
     },
+    people: (root, args) => fetchMany('Person', args),
     person: (root, { id }) => fetchOne('Person', id),
-    messageThread: (root, { id }) => fetchOne('MessageThread', id),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
-    comment: (root, { id }) => fetchOne('Comment', id),
-    people: (root, args) => fetchMany('Person', args),
-    connections: (root, args) => fetchMany('PersonConnection', args),
-    groupTopics: (root, args) => fetchMany('GroupTopic', args),
-    topics: (root, args) => fetchMany('Topic', args),
-    topic: (root, { id, name }) => // you can specify id or name, but not both
-      fetchOne('Topic', name || id, name ? 'name' : 'id'),
-    groupTopic: (root, { topicName, groupSlug }) =>
-      GroupTag.findByTagAndGroup(topicName, groupSlug),
+    savedSearches: (root, args) => fetchMany('SavedSearch', args),
     search: (root, args) => {
       if (!args.first) args.first = 20
       return Search.fullTextSearch(userId, args)
@@ -188,9 +188,9 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       })
     },
     skills: (root, args) => fetchMany('Skill', args),
-    checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode),
-    savedSearches: (root, args) => fetchMany('SavedSearch', args),
+    topic: (root, { id, name }) => // you can specify id or name, but not both
+      fetchOne('Topic', name || id, name ? 'name' : 'id'),
+    topics: (root, args) => fetchMany('Topic', args)
   }
 }
 

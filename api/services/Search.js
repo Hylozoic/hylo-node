@@ -27,8 +27,13 @@ module.exports = {
         qb.whereIn('groups.slug', opts.slug)
       }
 
-      if (opts.is_public) {
-        qb.where('groups.visibility', Group.Visibility.PUBLIC)
+      if (opts.visibility) {
+        qb.where('groups.visibility', opts.visibility)
+      }
+
+      if (opts.onlyMine) {
+        const selectIdsForMember = Group.selectIdsForMember(opts.currentUserId)
+        qb.whereIn('groups.id', selectIdsForMember)
       }
 
       if (opts.parentSlugs) {

@@ -24,6 +24,8 @@ export const commentFilter = userId => relation => relation.query(q => {
 // Which groups are visible to the user?
 export const groupFilter = userId => relation => {
   return relation.query(q => {
+    q.where('groups.active', true)
+
     // non authenticated queries can only see public groups
     if (!userId) {
       q.where('groups.visibility', Group.Visibility.PUBLIC)
@@ -106,7 +108,6 @@ export const messageFilter = userId => relation => relation.query(q => {
   q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
 })
 
-
 export const personFilter = userId => relation => relation.query(q => {
   if (userId) {
     q.whereNotIn('users.id', BlockedUser.blockedFor(userId))
@@ -134,15 +135,19 @@ export const postFilter = (userId, isAdmin) => relation => {
     // Always only show active posts
     q.where('posts.active', true)
 
+    // If we are loading posts through a group then groups_posts already joined, otherwise we need it
+    if (!relation.relatedData || relation.relatedData.parentTableName !== 'groups') {
+      q.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+    }
+
     if (!userId) {
       // non authenticated queries can only see public posts
       q.where(tableName + '.is_public', true)
     } else if (!isAdmin) {
       // Only show posts that are public or posted to a group the user is a member of
-      q.join('groups_posts as gp', 'gp.post_id', 'posts.id')
       q.where(q3 => {
         const selectIdsForMember = Group.selectIdsForMember(userId)
-        q3.whereIn('gp.group_id', selectIdsForMember).orWhere('posts.is_public', true)
+        q3.whereIn('groups_posts.group_id', selectIdsForMember).orWhere('posts.is_public', true)
       })
 
       // Don't show posts from blocked users
@@ -159,7 +164,7 @@ export const voteFilter = userId => relation => {
     q.where('posts.active', true)
     q.andWhere(q2 => {
       const selectIdsForMember = Group.selectIdsForMember(userId)
-      q.whereIn(groups_posts.group_id, selectIdsForMember)
+      q.whereIn('groups_posts.group_id', selectIdsForMember)
       q.orWhere('posts.is_public', true)
     })
   })

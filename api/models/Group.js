@@ -170,17 +170,15 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   projects () {
-    return this.belongsToMany(Post).through(PostMembership)
-      .query({ where: { 'posts.type': 'project' } })
+    return this.posts().query({ where: { 'posts.type': 'project' } })
   },
 
   widgets: function () {
     return this.belongsToMany(Widget).through(GroupWidget).withPivot(['is_visible', 'order'])
   },
-  
-  // The posts to show in the stream for a particular user
+
+  // The posts to show for a particular user viewing a group's stream or map
   // includes the direct posts to this group + posts to child groups the user is a member of
-  // TODO: show public posts from child groups too? but what about from hidden groups?
   viewPosts (userId) {
     const treeOfGroupsForMember = this.allChildGroups().query(q => {
       q.select('groups.id')
@@ -189,10 +187,12 @@ module.exports = bookshelf.Model.extend(merge({
     })
 
     return Post.collection().query(q => {
-      q.join('groups_posts', 'groups_posts.post_id', 'posts.id')
       q.where(q2 => {
         q2.where('groups_posts.group_id', this.id)
-        q2.orWhereIn('groups_posts.group_id', treeOfGroupsForMember.query())
+        q2.orWhere(q3 => {
+          q3.whereIn('groups_posts.group_id', treeOfGroupsForMember.query())
+          q3.andWhere('posts.user_id', '!=', User.AXOLOTL_ID)
+        })
       })
     })
   },
@@ -351,12 +351,17 @@ module.exports = bookshelf.Model.extend(merge({
         'accessibility', 'description', 'slug', 'category', 'access_code', 'banner_url', 'avatar_url',
         'location_id', 'location', 'group_data_type', 'name', 'visibility'
       ),
-      {'banner_url': DEFAULT_BANNER, 'avatar_url': DEFAULT_AVATAR, 'group_data_type': 1}
+      {
+        'accessibility': Group.Accessibility.RESTRICTED,
+        'avatar_url': DEFAULT_AVATAR,
+        'banner_url': DEFAULT_BANNER,
+        'group_data_type': 1,
+        'visibility': Group.Visibility.PROTECTED
+      }
     )
 
     // eslint-disable-next-line camelcase
-    const access_code = attrs.access_code ||
-      await Group.getNewAccessCode()
+    const access_code = attrs.access_code || await Group.getNewAccessCode()
 
     const group = new Group(merge(attrs, {
       access_code,
@@ -369,13 +374,19 @@ module.exports = bookshelf.Model.extend(merge({
       await group.save(null, {transacting: trx})
       if (data.parent_ids) {
         for (const parentId of data.parent_ids) {
-          // TODO: check if we are allowed to make these parents or not, if they are restricted then create join requests
-          await group.parentGroups().attach(parentId, { transacting: trx })
+          // Only allow for adding parent groups that the creator is a moderator of or that are Open
+          const parentGroup = await GroupMembership.forIds(userId, parentId, {
+            query: q => { q.select(['group_memberships.*'], ['groups.accessibility'], ['groups.visibility'])}
+          }).fetch({ transacting: trx })
+          if (parentGroup.get('role') === GroupMembership.Role.MODERATOR
+               || parentGroup.get('accessibility') === Group.Accessibility.OPEN) {
+            await group.parentGroups().attach(parentId, { transacting: trx })
+          }
         }
       }
       await group.createStarterPosts(trx)
       return group.addMembers([userId],
-        {role: GroupMembership.Role.MODERATOR}, {transacting: trx})
+        {role: GroupMembership.Role.MODERATOR}, { transacting: trx })
     })
 
     await Queue.classMethod('Group', 'notifyAboutCreate', { groupId: group.id })
@@ -384,9 +395,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   async deactivate (id, opts = {}) {
-    const group = await Group.find(id).fetch()
-    await group.save({ active: false }, opts)
-    return group.removeMembers(await group.members().fetch(), opts)
+    const group = await Group.find(id)
+    if (group) {
+      await group.save({ active: false }, opts)
+      return group.removeMembers(await group.members().fetch(), opts)
+    }
   },
 
   find (idOrSlug, opts = {}) {
