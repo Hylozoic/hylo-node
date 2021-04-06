@@ -158,7 +158,6 @@ module.exports = bookshelf.Model.extend(merge({
     })
 
     return Post.collection().query(q => {
-      q.join('groups_posts', 'groups_posts.post_id', 'posts.id')
       q.where(q2 => {
         q2.where('groups_posts.group_id', this.id)
         q2.orWhere(q3 => {
@@ -378,9 +377,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   async deactivate (id, opts = {}) {
-    const group = await Group.find(id).fetch()
-    await group.save({ active: false }, opts)
-    return group.removeMembers(await group.members().fetch(), opts)
+    const group = await Group.find(id)
+    if (group) {
+      await group.save({ active: false }, opts)
+      return group.removeMembers(await group.members().fetch(), opts)
+    }
   },
 
   find (idOrSlug, opts = {}) {

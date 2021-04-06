@@ -71,7 +71,6 @@ export default function forPosts (opts) {
       qb.whereNotIn('posts.id', opts.omit)
     }
 
-    qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
     if (opts.onlyMyGroups) {
       const selectIdsForMember = Group.selectIdsForMember(opts.currentUserId)
       qb.whereIn('groups_posts.group_id', selectIdsForMember)

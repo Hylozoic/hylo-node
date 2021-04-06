@@ -7,13 +7,18 @@ type Me {
   avatarUrl: String
   bannerUrl: String
   bio: String
+  blockedUsers: [Person]
+  blockedUsersTotal: Int
   contactEmail: String
   contactPhone: String
   groups(first: Int, cursor: ID, order: String): [Membership]
   groupsTotal: Int
+  groupInvitesPending: InvitationQuerySet
   email: String
   facebookUrl: String
   hasDevice: Boolean
+  hasStripeAccount: Boolean
+  intercomHash: String
   isAdmin: Boolean
   joinRequests(status: Int): JoinRequestQuerySet
   linkedinUrl: String
@@ -35,18 +40,15 @@ type Me {
   unseenThreadCount: Int
   updatedAt: Date
   url: String
-  intercomHash: String
-  blockedUsers: [Person]
-  blockedUsersTotal: Int
-  hasStripeAccount: Boolean
 }
 
 type UserSettings {
+  alreadySeenTour: Boolean
+  commentNotifications: String
   digestFrequency: String
   dmNotifications: String
-  commentNotifications: String
-  signupInProgress: Boolean
   lastViewedMessagesAt: String
+  signupInProgress: Boolean
 }
 
 type GroupTopicQuerySet {
@@ -119,7 +121,9 @@ type Person {
     search: String,
     filter: String,
     topic: ID,
-    boundingBox: [PointInput]
+    boundingBox: [PointInput],
+    groupSlugs: [String],
+    context: String
   ): PostQuerySet
   projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
@@ -271,11 +275,15 @@ type PersonQuerySet {
 
 type Invitation {
   id: Int
-  email: String
   createdAt: Date
-  lastSentAt: Date
+  creator: Person
+  email: String
   error: String
+  group: Group
+  lastSentAt: Date
+  token: String
 }
+
 type InvitationQuerySet {
   total: Int
   hasMore: Boolean
@@ -788,11 +796,12 @@ input SavedSearchInput {
 }
 
 input UserSettingsInput {
+  alreadySeenTour: Boolean
+  commentNotifications: String
   digestFrequency: String
   dmNotifications: String
-  commentNotifications: String
-  signupInProgress: Boolean
   lastViewedMessagesAt: String
+  signupInProgress: Boolean
 }
 
 type Mutation {
@@ -868,7 +877,7 @@ type Mutation {
   updateMembership(groupId: ID, slug: String, data: MembershipInput): Membership
   updatePost(id: ID, data: PostInput): Post
   updateStripeAccount(accountId: String): GenericResult
-  useInvitation(userId: ID, invitationToken: String, accessCode: String): InvitationUseResult,
+  useInvitation(invitationToken: String, accessCode: String): InvitationUseResult,
   vote(postId: ID, isUpvote: Boolean): Post
 }
 
