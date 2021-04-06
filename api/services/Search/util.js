@@ -2,7 +2,7 @@ import addTermToQueryBuilder from './addTermToQueryBuilder'
 import { curry, includes, values } from 'lodash'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { search, sortBy = 'updated', topic, showPinnedFirst, type, boundingBox } = opts
+  const { isAnnouncement, isFuture, offersAndRequests, search, sortBy = 'updated', topic, showPinnedFirst, type, boundingBox } = opts
   const sortColumns = {
     votes: 'num_votes',
     updated: 'posts.updated_at',
@@ -15,6 +15,20 @@ export const filterAndSortPosts = curry((opts, q) => {
   }
 
   const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
+
+  if (isAnnouncement) {
+    q.where('announcement', true)
+  }
+
+  if (isFuture) {
+    q.where('posts.start_time', '>=', Date.now())
+  }
+
+  if (offersAndRequests) {
+    q.where(q2 =>
+      q2.whereIn('posts.type', 'offer').orWhere('posts.type', 'request')
+    )
+  }
 
   if (!type || type === 'all' || type === 'all+welcome') {
     q.where(q2 =>

@@ -22,10 +22,6 @@ module.exports = bookshelf.Model.extend(merge({
   hasTimestamps: true,
 
   // ******** Getters ******* //
-  announcements: function () {
-    return this.belongsToMany(Post).through(PostMembership)
-      .query({ where: { 'posts.active': true, 'posts.announcement': true } })
-  },
 
   // The full tree of child groups + grandchild groups, etc. includes the root group too
   allChildGroups () {
@@ -69,11 +65,6 @@ module.exports = bookshelf.Model.extend(merge({
   groupRelationshipInvitesTo () {
     return this.hasMany(GroupRelationshipInvite, 'to_group_id')
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
-  },
-
-  events () {
-    return this.belongsToMany(Post).through(PostMembership)
-      .query({ where: { 'posts.type': 'event' } })
   },
 
   groupTags () {
@@ -139,11 +130,6 @@ module.exports = bookshelf.Model.extend(merge({
     return this.members({ role: GroupMembership.Role.MODERATOR })
   },
 
-  offersAndRequests () {
-    return this.belongsToMany(Post).through(PostMembership)
-      .query({ where: { 'posts.type': 'offer' }, orWhere: { 'posts.type': 'request' } })
-  },
-
   parentGroups () {
     return this.belongsToMany(Group)
       .through(GroupRelationship, 'child_group_id', 'parent_group_id')
@@ -167,10 +153,6 @@ module.exports = bookshelf.Model.extend(merge({
     })
     .fetch()
     .then(result => result.get('count'))
-  },
-
-  projects () {
-    return this.posts().query({ where: { 'posts.type': 'project' } })
   },
 
   widgets: function () {

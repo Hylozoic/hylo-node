@@ -265,9 +265,12 @@ export default async function makeModels (userId, isAdmin) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+          filter: (relation, { search, sortBy, topic, filter, offersAndRequests, isAnnouncement, isFuture, boundingBox }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
+              isAnnouncement,
+              isFuture,
+              offersAndRequests,
               search,
               sortBy,
               topic,
@@ -275,10 +278,6 @@ export default async function makeModels (userId, isAdmin) {
               showPinnedFirst: true
             }))
         }},
-        {events: {querySet: true}},
-        {projects: {querySet: true}},
-        {announcements: {querySet: true}},
-        {offersAndRequests: {querySet: true}},
         {joinQuestions: {querySet: true}},
         {skills: {
           querySet: true,
