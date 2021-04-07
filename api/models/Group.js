@@ -141,6 +141,21 @@ module.exports = bookshelf.Model.extend(merge({
     .then(result => result.get('count'))
   },
 
+  skills: function () {
+    return Skill.collection().query(q => {
+      q.join('skills_users', 'skills_users.skill_id', 'skills.id')
+      q.join('group_memberships', 'group_memberships.user_id', 'skills_users.user_id')
+      q.where({
+        'group_memberships.group_id': this.id,
+        'group_memberships.active': true
+      })
+    })
+  },
+
+  suggestedSkills: function () {
+    return this.belongsToMany(Skill, 'groups_suggested_skills')
+  },
+
   // The posts to show for a particular user viewing a group's stream or map
   // includes the direct posts to this group + posts to child groups the user is a member of
   viewPosts (userId) {

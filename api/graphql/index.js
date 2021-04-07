@@ -10,6 +10,7 @@ import {
   addPeopleToProjectRole,
   addSkill,
   addSkillToLearn,
+  addSuggestedSkillToGroup,
   allowGroupInvites,
   blockUser,
   cancelGroupRelationshipInvite,
@@ -60,6 +61,7 @@ import {
   removePost,
   removeSkill,
   removeSkillToLearn,
+  removeSuggestedSkillFromGroup,
   resendInvitation,
   respondToEvent,
   subscribe,
@@ -206,6 +208,7 @@ export function makeMutations (userId, isAdmin) {
 
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
+    addSuggestedSkillToGroup: (root, { groupId, name }) => addSuggestedSkillToGroup(userId, groupId, name),
 
     allowGroupInvites: (root, { groupId, data }) => allowGroupInvites(groupId, data),
 
@@ -319,6 +322,7 @@ export function makeMutations (userId, isAdmin) {
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
+    removeSuggestedSkillFromGroup: (root, { groupId, id, name }) => removeSuggestedSkillFromGroup(userId, groupId, id || name),
 
     requestToAddGroupToParent: (root, { parentId, childId }) =>
       inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent),

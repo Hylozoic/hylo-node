@@ -197,6 +197,25 @@ export async function addSkillToLearn (userId, name) {
   return skill
 }
 
+export async function addSuggestedSkillToGroup (userId, groupId, name) {
+  const group = await Group.find(groupId)
+  if (!group) throw new Error(`Invalid group`)
+  const isModerator = GroupMembership.hasModeratorRole(userId, group)
+  if (!isModerator) throw new Error(`You don't have permission`)
+
+  const skill = await createSkill(name)
+
+  try {
+    await group.suggestedSkills().attach({ skill_id: skill.id })
+  } catch (err) {
+    if (!err.message || !err.message.includes('duplicate')) {
+      throw err
+    }
+  }
+
+  return skill
+}
+
 export function removeSkill (userId, skillIdOrName) {
   return Skill.find(skillIdOrName)
   .then(skill => {
@@ -213,6 +232,20 @@ export function removeSkillToLearn (userId, skillIdOrName) {
     return skill.usersLearning().detach({ user_id: userId, type: Skill.Type.LEARNING })
   })
   .then(() => ({success: true}))
+}
+
+export async function removeSuggestedSkillFromGroup (userId, groupId, skillIdOrName) {
+  const group = await Group.find(groupId)
+  if (!group) throw new Error(`Invalid group`)
+  const isModerator = GroupMembership.hasModeratorRole(userId, group)
+  if (!isModerator) throw new Error(`You don't have permission`)
+
+  return Skill.find(skillIdOrName)
+    .then(skill => {
+      if (!skill) throw new Error(`Couldn't find skill with ID or name ${skillIdOrName}`)
+      return group.suggestedSkills().detach({ skill_id: skill.id })
+    })
+    .then(() => ({success: true}))
 }
 
 export function flagInappropriateContent (userId, { category, reason, linkData }) {

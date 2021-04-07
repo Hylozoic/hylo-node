@@ -2,6 +2,10 @@ module.exports = bookshelf.Model.extend({
   tableName: 'skills',
   requireFetch: false,
 
+  groupsSuggesting: function () {
+    return this.belongsToMany(Group, 'groups_suggested_skills')
+  },
+
   users: function () {
     return this.belongsToMany(User, 'skills_users').query({ where: { type: Skill.Type.HAS } })
   },
