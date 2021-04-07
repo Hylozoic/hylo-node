@@ -61,7 +61,7 @@ export default async function makeModels (userId, isAdmin) {
           querySet: true,
           filter: (relation, { status }) =>
             relation.query(q => {
-              if (status) {
+              if (typeof status !== 'undefined') {
                 q.where('status', status)
               }
             })
