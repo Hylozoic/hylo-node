@@ -157,13 +157,28 @@ module.exports = bookshelf.Model.extend(merge({
     .digest('hex')
   },
 
-  joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
+  joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
+    // Do we need to show this user the join form when they first see the group?
+    let showJoinForm = false
+    if (fromInvitation) {
+      if (group.hasSetting('askJoinQuestions', true)) {
+        const joinQuestions = await group.joinQuestions().fetch()
+        showJoinForm = joinQuestions.length > 0
+      }
+      if (!showJoinForm && group.hasSetting('showSuggestedSkills', true)) {
+        const suggestedSkills = await group.suggestedSkills().fetch()
+        showJoinForm = suggestedSkills.length > 0
+      }
+    }
+
     const memberships = await group.addMembers([this.id],
       {
         role,
         settings: {
           sendEmail: true,
-          sendPushNotifications: true
+          sendPushNotifications: true,
+          showJoinForm,
+          suggestedSkills
         }},
       {transacting})
     const q = Group.query()

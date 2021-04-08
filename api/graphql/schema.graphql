@@ -148,6 +148,7 @@ type Membership {
 type MembershipSettings {
   sendPushNotifications: Boolean
   sendEmail: Boolean
+  showJoinForm: Boolean
 }
 
 type Group {

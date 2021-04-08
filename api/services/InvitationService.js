@@ -176,7 +176,7 @@ module.exports = {
           if (existingMembership) return existingMembership.get('active')
               ? existingMembership
               : existingMembership.save({active: true}, {patch: true}).then(membership => membership)
-          if (!!group) return user.joinGroup(group).then(membership => membership)
+          if (!!group) return user.joinGroup(group, GroupMembership.Role.DEFAULT, true).then(membership => membership)
         })
         .catch(err => {
           throw new Error(err.message)
