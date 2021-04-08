@@ -53,6 +53,16 @@ module.exports = bookshelf.Model.extend(merge({
       .orderBy('groups.name', 'asc')
   },
 
+  comments: function () {
+    return Comment.collection().query(q => {
+      q.join('groups_posts', 'groups_posts.post_id', 'comments.post_id')
+      q.where({
+        'groups_posts.group_id': this.id,
+        'comments.active': true
+      })
+    })
+  },
+
   creator: function () {
     return this.belongsTo(User, 'created_by_id')
   },
