@@ -13,7 +13,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   group: async function () {
-    return this.get('context') === 'group' ? await Group.find(this.get('group_id')) : null
+    return this.get('context') === 'groups' ? await Group.find(this.get('group_id')) : null
   },
 
   topics: async function () {
@@ -83,7 +83,7 @@ module.exports = bookshelf.Model.extend({
           and p.is_public = true
         `
         break
-      case 'group':
+      case 'groups':
         query = `
           and p.id in (select p.id from posts p
           left join groups_posts gp on p.id = gp.post_id
@@ -106,10 +106,10 @@ module.exports = bookshelf.Model.extend({
 
     let group, group_id
 
-    const validContexts = ['all', 'public', 'group']
+    const validContexts = ['all', 'public', 'groups']
     if (!validContexts.includes(context)) throw new Error(`Invalid context: ${context}`)
 
-    if (context === 'group') {
+    if (context === 'groups') {
       group = await Group.find(groupSlug)
       group_id = group.id
     }
