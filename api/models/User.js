@@ -161,13 +161,13 @@ module.exports = bookshelf.Model.extend(merge({
     // Do we need to show this user the join form when they first see the group?
     let showJoinForm = false
     if (fromInvitation) {
-      if (group.hasSetting('askJoinQuestions', true)) {
+      if (group.hasSetting('ask_join_questions', true)) {
         const joinQuestions = await group.joinQuestions().fetch()
-        showJoinForm = joinQuestions.length > 0
+        showJoinForm = joinQuestions.models.length > 0
       }
-      if (!showJoinForm && group.hasSetting('showSuggestedSkills', true)) {
+      if (!showJoinForm && group.hasSetting('show_suggested_skills', true)) {
         const suggestedSkills = await group.suggestedSkills().fetch()
-        showJoinForm = suggestedSkills.length > 0
+        showJoinForm = suggestedSkills.models.length > 0
       }
     }
 
@@ -177,8 +177,7 @@ module.exports = bookshelf.Model.extend(merge({
         settings: {
           sendEmail: true,
           sendPushNotifications: true,
-          showJoinForm,
-          suggestedSkills
+          showJoinForm
         }},
       {transacting})
     const q = Group.query()
