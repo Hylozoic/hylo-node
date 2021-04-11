@@ -1,4 +1,5 @@
 import stringify from 'csv-stringify'
+import { groupFilter } from '../graphql/filters'
 
 // Toplevel API entrypoint to check auth & route to desired exporter flow based on parameters
 module.exports = {
@@ -59,19 +60,19 @@ async function exportMembers(groupId, req, res) {
       // affiliations
       u.affiliations().fetch()
         .then(affils => {
-          results[idx].affiliations = accumulatePivotCell(affils, renderAffiliation)
+          results[idx]['affiliations'] = accumulatePivotCell(affils, renderAffiliation)
         }),
 
       // skills
       u.skills().fetch()
         .then(skills => {
-          results[idx].skills = accumulatePivotCell(skills, renderSkill)
+          results[idx]['skills'] = accumulatePivotCell(skills, renderSkill)
         }),
 
       // skills to learn
       u.skillsToLearn().fetch()
         .then(skills => {
-          results[idx].skills_to_learn = accumulatePivotCell(skills, renderSkill)
+          results[idx]['skills_to_learn'] = accumulatePivotCell(skills, renderSkill)
         }),
 
       // Join request questions & answers
@@ -86,8 +87,14 @@ async function exportMembers(groupId, req, res) {
             )))
         )))
         .then(data => {
-          results[idx].join_request_questions = accumulatePivotCell(data && data[0] || [], renderJoinRequestAnswer)
-        })
+          results[idx]['join_request_questions'] = accumulatePivotCell(data && data[0] || [], renderJoinRequestAnswer)
+        }),
+
+      // other groups the requesting member has acccess to
+      groupFilter(req.session.userId)(u.groups()).fetch()
+        .then(groups => {
+          results[idx]['groups'] = accumulatePivotCell(groups, renderGroup)
+        }),
 
     ])
   }))
@@ -99,8 +106,8 @@ async function exportMembers(groupId, req, res) {
     'twitter_url', 'facebook_url', 'linkedin_url',
     'skills', 'skills_to_learn',
     'join_request_questions',
-    // :TODO: groups the person is a part of (that the moderator can see)
-    'affiliations'
+    'affiliations',
+    'groups'
   ])
 }
 
@@ -133,4 +140,8 @@ function renderSkill(s) {
 
 function renderJoinRequestAnswer(s) {
   return `${s[0].get('text')} ${s[1].get('answer')}`
+}
+
+function renderGroup(g) {
+  return `${g.get('name')} (${Frontend.Route.group(g)})`
 }
