@@ -82,18 +82,25 @@ async function exportMembers(groupId, req, res) {
         }),
 
       // Join request questions & answers
-      u.joinRequests().where({ group_id: groupId, status: JoinRequest.STATUS.Accepted }).fetch()
-        .then(jrs => Promise.all(jrs.map(jr =>
-          jr.questionAnswers().fetch()
+      u.joinRequests()
+        .where({ group_id: groupId, status: JoinRequest.STATUS.Accepted })
+        .orderBy('created_at', 'DESC')
+        .fetchOne()
+        .then(jr => {
+          if (!jr) {
+            return null
+          }
+          return jr.questionAnswers().fetch()
             .then(qas => Promise.all(qas.map(qa =>
               Promise.all([
                 qa.question().fetch(),
                 Promise.resolve(qa)
               ])
             )))
-        )))
+        })
         .then(data => {
-          results[idx]['join_request_questions'] = accumulatePivotCell(data && data[0] || [], renderJoinRequestAnswer)
+          if (!data) return
+          results[idx]['join_request_questions'] = accumulatePivotCell(data, renderJoinRequestAnswer)
         }),
 
       // other groups the requesting member has acccess to
