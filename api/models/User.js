@@ -158,26 +158,13 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
-    // Do we need to show this user the join form when they first see the group?
-    let showJoinForm = false
-    if (fromInvitation) {
-      if (group.hasSetting('ask_join_questions', true)) {
-        const joinQuestions = await group.joinQuestions().fetch()
-        showJoinForm = joinQuestions.models.length > 0
-      }
-      if (!showJoinForm && group.hasSetting('show_suggested_skills', true)) {
-        const suggestedSkills = await group.suggestedSkills().fetch()
-        showJoinForm = suggestedSkills.models.length > 0
-      }
-    }
-
     const memberships = await group.addMembers([this.id],
       {
         role,
         settings: {
           sendEmail: true,
           sendPushNotifications: true,
-          showJoinForm
+          showJoinForm: fromInvitation
         }},
       {transacting})
     const q = Group.query()
