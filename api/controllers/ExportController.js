@@ -49,13 +49,19 @@ async function exportMembers(groupId, req, res) {
   await Promise.all(users.map((u, idx) => {
     // pluck core user data into results
     results.push(u.pick([
-      'name', 'contact_email', 'contact_phone', 'location', 'avatar_url', 'tagline', 'bio',
+      'name', 'contact_email', 'contact_phone', 'avatar_url', 'tagline', 'bio',
       'url', 'twitter_url', 'facebook_url', 'linkedin_url'
     ]))
 
     // return combined promise to load all dependent user data and
     // assign final child query results back onto matching result objects upon completion
     return Promise.all([
+
+      // location (full details)
+      u.locationObject().fetch()
+        .then(location => {
+          results[idx]['location'] = renderLocation(location)
+        }),
 
       // affiliations
       u.affiliations().fetch()
@@ -129,6 +135,16 @@ function accumulatePivotCell(records, renderValue) {
 }
 
 // formatting for individual sub-cell record types
+
+function renderLocation(l) {
+  if (l === null) {
+    return ''
+  }
+  const geometry = l.get('center')  // :TODO: make this work for polygonal locations, if needed
+  const lat = geometry.lat
+  const lng = geometry.lng
+  return `${l.get('full_text')}${lat && lng ? ` (${lat.toFixed(3)},${lng.toFixed(3)})` : ''}`
+}
 
 function renderAffiliation(a) {
   return `${a.get('role')} ${a.get('preposition')} ${a.get('org_name')} ${a.get('url') ? `(${a.get('url')})` : ''}`
