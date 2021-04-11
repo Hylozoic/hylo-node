@@ -56,11 +56,12 @@ export default async function makeModels (userId, isAdmin) {
         'posts',
         'locationObject',
         {affiliations: {querySet: true}},
+        {groupInvitesPending: {querySet: true}},
         {joinRequests: {
           querySet: true,
           filter: (relation, { status }) =>
             relation.query(q => {
-              if (status) {
+              if (typeof status !== 'undefined') {
                 q.where('status', status)
               }
             })
@@ -339,10 +340,16 @@ export default async function makeModels (userId, isAdmin) {
     Invitation: {
       model: Invitation,
       attributes: [
-        'email',
+        'id',
         'created_at',
-        'last_sent_at'
-      ]
+        'email',
+        'last_sent_at',
+        'token'
+      ],
+      relations: [
+        'creator',
+        'group'
+      ],
     },
 
     JoinRequest: {

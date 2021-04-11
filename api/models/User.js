@@ -33,7 +33,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships() {
-    return this.hasMany(GroupMembership).where('group_memberships.active', true)
+    return this.hasMany(GroupMembership)
+      .query(q => q.leftJoin('groups', 'groups.id', 'group_memberships.group_id')
+        .where('group_memberships.active', true)
+        .where('groups.active', true)
+      )
   },
 
   contributions: function () {
@@ -54,6 +58,12 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Group).through(GroupMembership)
       .where('groups.active', true)
       .where('group_memberships.active', true)
+  },
+
+  groupInvitesPending: function () {
+    return this.hasMany(Invitation, 'email', 'email')
+      .query({ where: { 'used_by_id': null, 'expired_by_id': null } })
+      .orderBy('created_at', 'desc')
   },
 
   inAppNotifications: function () {
@@ -245,7 +255,7 @@ module.exports = bookshelf.Model.extend(merge({
     }
     return q.where('group_id', groupId)
     .whereRaw('lower(email) = lower(?)', this.get('email'))
-    .update({used_by_id: this.id})
+    .update({ used_by_id: this.id, used_at: new Date() })
   },
 
   setPassword: function (password, { transacting } = {}) {
