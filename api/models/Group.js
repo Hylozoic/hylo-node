@@ -126,6 +126,21 @@ module.exports = bookshelf.Model.extend(merge({
     return this.members({ role: GroupMembership.Role.MODERATOR })
   },
 
+  // Return # of prereq groups userId is not a member of yet
+  // This is used on front-end to figure out if user can see all prereqs or not
+  async numPrerequisitesLeft(userId) {
+    const prerequisiteGroups = await this.prerequisiteGroups().fetch()
+    let num = prerequisiteGroups.models.length
+    console.log("moopppp", prerequisiteGroups.models, "num = ", num)
+    await Promise.map(prerequisiteGroups.models, async (prereq) => {
+      const isMemberOfPrereq = await GroupMembership.forPair(userId, prereq.id).fetch()
+      if (isMemberOfPrereq) {
+        num = num - 1
+      }
+    })
+    return num
+  },
+
   parentGroups () {
     return this.belongsToMany(Group)
       .through(GroupRelationship, 'child_group_id', 'parent_group_id')

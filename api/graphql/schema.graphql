@@ -191,6 +191,7 @@ type Group {
   memberCount: Int
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
   name: String
+  numPrerequisitesLeft: Int
   settings: GroupSettings
   parentGroups(
     boundingBox: [PointInput],

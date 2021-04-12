@@ -300,6 +300,8 @@ export default async function makeModels (userId, isAdmin) {
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+        // Get number of prerequisite groups that current user is not a member of yet
+        numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
