@@ -156,7 +156,10 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   widgets: function () {
-    return this.belongsToMany(Widget).through(GroupWidget).withPivot(['is_visible', 'order'])
+    return this.hasMany(GroupWidget).query(q => {
+      q.select(['widgets.name'])
+      q.join('widgets', 'widgets.id', 'group_widgets.widget_id')
+    })
   },
 
   // The posts to show for a particular user viewing a group's stream or map

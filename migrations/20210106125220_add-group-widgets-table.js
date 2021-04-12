@@ -3,7 +3,7 @@ exports.up = async function(knex) {
     table.increments().primary()
     table.bigInteger('group_id').references('id').inTable('groups').index().notNullable()
     table.bigInteger('widget_id').references('id').inTable('widgets').notNullable()
-    table.jsonb('settings')
+    table.jsonb('settings').defaultTo('{}')
     table.boolean('is_visible').defaultTo(true)
     table.integer('order')
 
@@ -17,7 +17,7 @@ exports.up = async function(knex) {
 
   for (let i = 0; i < groupIds.length; i++) {
     const id = groupIds[i]
-    let sql = 'INSERT INTO "public"."group_widgets"("group_id","widget_id", "order", "created_at") VALUES ' 
+    let sql = 'INSERT INTO "public"."group_widgets"("group_id","widget_id", "order", "created_at") VALUES '
     widgetIds.forEach(w => sql = sql + `(${id}, ${w}, ${w}, '${now}'),`)
     sql = sql.replace(/,$/,';')
     await knex.raw(sql)

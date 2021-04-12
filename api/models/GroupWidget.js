@@ -3,6 +3,17 @@ import HasSettings from './mixins/HasSettings'
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_widgets',
 
+  name: async function () {
+    if (this.get('name')) {
+      return this.get('name')
+    }
+    if (this.relations.widget) {
+      return this.relations.widget.name
+    }
+    const w = await this.widget().fetch()
+    return w ? w.get('name') : null
+  },
+
   group: function () {
     return this.belongsTo(Group)
   },
@@ -11,19 +22,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(Widget)
   }
 }, HasSettings), {
-
-  getVisibility: function(id) {
-    return GroupWidget.query().where({ id }).then((gw = []) => gw[0].is_visible)
-  },
-
-  getOrder: function(id) {
-    return GroupWidget.query().where({ id }).then((gw = []) => gw[0].order)
-  },
-
-  getSettings: async function(id) {
-    const widget = await GroupWidget.query().where({ id })
-    return widget[0].settings
-  },
 
   createDefaultWidgetsForGroup: async function(group_id) {
     const widgets = await Widget.fetchAll()
@@ -48,11 +46,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return groupWidget
   },
 
-  updateSettings: async function (id, settings = {}) {
-    return await GroupWidget.where({ id }).query().update({ settings })
-  },
-  
-  toggleVisibility: async function(id, is_visible = true) {
-    return await GroupWidget.where({ id }).query().update({ is_visible: !is_visible })
+  update: async function (id, changes = {}) {
+    const gw = await GroupWidget.where({ id }).fetch()
+    return gw.save(changes)
   }
 })

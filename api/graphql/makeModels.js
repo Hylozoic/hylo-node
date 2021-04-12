@@ -656,18 +656,25 @@ export default async function makeModels (userId, isAdmin) {
       ]
     },
 
+    GroupWidget: {
+      model: GroupWidget,
+      attributes: [
+        'id',
+        'is_visible',
+        'name',
+        'order'
+      ],
+      getters: {
+        settings: gw => mapKeys(camelCase, gw.get('settings'))
+      }
+    },
+
     Widget: {
       model: Widget,
       attributes: [
         'id',
-        'is_visible',
-        'order'
-      ],
-      getters: {
-        name: w => Widget.Name[w.get('name')],
-        isVisible: w => GroupWidget.getVisibility(w.id),
-        settings: async w => await GroupWidget.getSettings(w.id)
-      }
+        'name'
+      ]
     }
   }
 }

@@ -233,7 +233,7 @@ type Group {
     offset: Int,
     autocomplete: String
   ): SkillQuerySet
-  widgets: WidgetQuerySet
+  widgets: GroupWidgetQuerySet
   events: PostQuerySet
   offersAndRequests: PostQuerySet
   projects: PostQuerySet
@@ -258,27 +258,27 @@ type GroupSettings {
 }
 
 type GroupWidget {
-  group: Group
-  widget: Widget
+  id: Int
+  name: String
+  isVisible: Boolean
+  order: Int
+  settings: GroupWidgetSettings
+}
+
+type GroupWidgetSettings {
+  text: String
+  title: String
+}
+
+type GroupWidgetQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupWidget]
 }
 
 type Widget {
   id: Int
   name: String
-  isVisible: Boolean
-  order: Int
-  settings: WidgetSettings
-}
-
-type WidgetSettings {
-  text: String
-  title: String
-}
-
-type WidgetQuerySet {
-  total: Int
-  hasMore: Boolean
-  items: [Widget]
 }
 
 type GroupRelationship {
@@ -838,7 +838,12 @@ input UserSettingsInput {
   signupInProgress: Boolean
 }
 
-input WidgetSettingsInput {
+input GroupWidgetInput {
+  isVisible: Boolean
+  settings: GroupWidgetSettingsInput
+}
+
+input GroupWidgetSettingsInput {
   text: String
   title: String
 }
@@ -904,7 +909,6 @@ type Mutation {
   resendInvitation(invitationId: ID): GenericResult
   respondToEvent(id: ID, response: String): GenericResult
   subscribe(groupId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
-  toggleGroupWidgetVisibility(id: ID, isVisible: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
   unfulfillPost(postId: ID): GenericResult
@@ -916,8 +920,8 @@ type Mutation {
   updateMe(changes: MeInput): Me
   updateMembership(groupId: ID, slug: String, data: MembershipInput): Membership
   updatePost(id: ID, data: PostInput): Post
-  updateStripeAccount(accountId: String): GenericResult,
-  updateWidgetSettings(id: ID, data: WidgetSettingsInput): GenericResult
+  updateStripeAccount(accountId: String): GenericResult
+  updateWidget(id: ID, changes: GroupWidgetInput): GroupWidget
   useInvitation(invitationToken: String, accessCode: String): InvitationUseResult
   vote(postId: ID, isUpvote: Boolean): Post
 }

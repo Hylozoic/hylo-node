@@ -76,7 +76,7 @@ import {
   updateMembership,
   updatePost,
   updateStripeAccount,
-  updateWidgetSettings,
+  updateWidget,
   useInvitation,
   vote
 } from './mutations'
@@ -334,11 +334,6 @@ export function makeMutations (userId, isAdmin) {
     subscribe: (root, { groupId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, groupId, isSubscribing),
 
-    toggleGroupWidgetVisibility: (root, data) => {
-      const { id, isVisible } = data
-      toggleGroupWidgetVisibility(id, isVisible)
-    },
-
     unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
 
     unfulfillPost: (root, { postId }) => unfulfillPost(userId, postId),
@@ -366,7 +361,7 @@ export function makeMutations (userId, isAdmin) {
 
     updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
 
-    updateWidgetSettings: (root, { id, data }) => updateWidgetSettings(id, data),
+    updateWidget: (root, { id, changes }) => updateWidget(id, changes),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),

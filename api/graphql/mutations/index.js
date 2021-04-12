@@ -37,10 +37,6 @@ export {
   removeMember,
   updateGroup,
 } from './group'
-export { 
-  toggleGroupWidgetVisibility,
-  updateWidgetSettings
-} from './group_widget'
 export {
   createInvitation,
   expireInvitation,
@@ -259,4 +255,8 @@ export async function removePost (userId, postId, groupIdOrSlug) {
       return post.removeFromGroup(groupIdOrSlug)
     })
   .then(() => ({success: true}))
+}
+
+export function updateWidget (id, changes) {
+  return GroupWidget.update(id, convertGraphqlData(changes))
 }
