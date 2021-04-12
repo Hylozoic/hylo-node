@@ -216,6 +216,7 @@ type Group {
   groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   posts(
+    isAnnouncement: Boolean,
     first: Int,
     order: String,
     sortBy: String,
