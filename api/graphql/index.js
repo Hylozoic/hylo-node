@@ -389,7 +389,7 @@ export const createRequestHandler = () =>
     // query to find the policies which should be tested, and run them to allow
     // or deny access to those paths
 
-    // await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
+    await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
 
     const schema = await createSchema(req.session.userId, Admin.isSignedIn(req))
     return {
