@@ -71,10 +71,18 @@ export async function joinGroup (groupId, userId) {
   if(!user) throw new Error(`User id ${userId} not found`)
   const group = await Group.find(groupId)
   if(!group) throw new Error(`Group id ${groupId} not found`)
-  // TODO: what about hidden groups? can you use this
+  // TODO: what about hidden groups? can you join them? for now we are going with yes if not closed
   if (group.get('accessibility') !== Group.Accessibility.OPEN) {
     throw new Error(`You do not have permisson to do that`)
   }
+  // Make sure user is first a member of all prerequisite groups
+  const prerequisiteGroups = await group.prerequisiteGroups().fetch()
+  await Promise.map(prerequisiteGroups.models, async (prereq) => {
+    const isMemberOfPrereq = await GroupMembership.forPair(userId, prereq.id).fetch()
+    if (!isMemberOfPrereq) {
+      throw new Error(`You must be a member of group ${prereq.get('name')} first`)
+    }
+  })
   return user.joinGroup(group)
 }
 

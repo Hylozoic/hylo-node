@@ -227,6 +227,19 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         {childGroups: {querySet: true}},
         {parentGroups: {querySet: true}},
+        {prerequisiteGroups: {
+          querySet: true,
+          filter: (relation, { onlyNotMember }) =>
+            relation.query(q => {
+              if (onlyNotMember) {
+                // Only return prerequisite groups that the current user is not yet a member of
+                q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
+                  'group_memberships.user_id': userId,
+                  'group_memberships.active': true
+                }))
+              }
+            })
+        }},
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
         {moderators: {querySet: true}},
@@ -293,6 +306,8 @@ export default async function makeModels (userId, isAdmin) {
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+        // Get number of prerequisite groups that current user is not a member of yet
+        numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
