@@ -252,29 +252,30 @@ export default async function makeModels (userId, isAdmin) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+          filter: (relation, { boundingBox, filter, isAnnouncement, isFulfilled, isFuture, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
+              isAnnouncement,
+              isFulfilled,
+              isFuture,
               search,
+              showPinnedFirst: true,
               sortBy,
               topic,
-              type: filter,
-              showPinnedFirst: true
+              type: filter
             }))
         }},
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { search, sortBy, topic, filter, isAnnouncement, isFuture, boundingBox }) =>
+          filter: (relation, { boundingBox, filter, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
-              isAnnouncement,
-              isFuture,
               search,
+              showPinnedFirst: true,
               sortBy,
               topic,
-              type: filter,
-              showPinnedFirst: true
+              type: filter
             }))
         }},
         {joinQuestions: {querySet: true}},

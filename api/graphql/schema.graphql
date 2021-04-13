@@ -216,6 +216,7 @@ type Group {
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   posts(
     isAnnouncement: Boolean,
+    isFulfilled: Boolean,
     first: Int,
     order: String,
     sortBy: String,
@@ -235,14 +236,14 @@ type Group {
   widgets: GroupWidgetQuerySet
   slug: String
   viewPosts(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
+    boundingBox: [PointInput],
     filter: String,
-    topic: ID,
-    boundingBox: [PointInput]
+    first: Int,
+    offset: Int,
+    order: String,
+    search: String,
+    sortBy: String,
+    topic: ID
   ): PostQuerySet
   visibility: Int
 }
