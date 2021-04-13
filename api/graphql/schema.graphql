@@ -217,6 +217,7 @@ type Group {
   posts(
     isAnnouncement: Boolean,
     isFulfilled: Boolean,
+    isFuture: Boolean,
     first: Int,
     order: String,
     sortBy: String,

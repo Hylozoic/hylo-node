@@ -27,7 +27,10 @@ export const filterAndSortPosts = curry((opts, q) => {
   }
 
   if (isFuture) {
-    q.where('posts.start_time', '>=', Date.now())
+    q.where(q2 =>
+      q.where('posts.start_time', '>=', Date.now())
+      .orWhere('posts.end_time', '>=', Date.now())
+    )
   }
 
   if (!type || type === 'all' || type === 'all+welcome') {
