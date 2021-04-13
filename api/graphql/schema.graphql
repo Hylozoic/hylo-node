@@ -261,6 +261,7 @@ type GroupWidget {
   isVisible: Boolean
   order: Int
   settings: GroupWidgetSettings
+  group: Group
 }
 
 type GroupWidgetSettings {

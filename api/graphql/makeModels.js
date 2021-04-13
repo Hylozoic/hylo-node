@@ -666,7 +666,8 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         settings: gw => mapKeys(camelCase, gw.get('settings'))
-      }
+      },
+      relations: ['group']
     },
 
     Widget: {
