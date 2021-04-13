@@ -162,7 +162,7 @@ function renderSkill(s) {
 }
 
 function renderJoinRequestAnswer(s) {
-  return `${s[0].get('text')} ${s[1].get('answer')}`
+  return `${s[0].get('text')}: ${s[1].get('answer')}`
 }
 
 function renderGroup(g) {
