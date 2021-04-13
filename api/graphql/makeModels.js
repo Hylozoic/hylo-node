@@ -111,6 +111,7 @@ export default async function makeModels (userId, isAdmin) {
         'linkedin_url',
         'facebook_url',
         'url',
+        'last_active_at',
         'location',
         'tagline'
       ],
@@ -229,6 +230,7 @@ export default async function makeModels (userId, isAdmin) {
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
         {moderators: {querySet: true}},
+        {widgets: {querySet: true }},
         {groupTags: {
           querySet: true,
           alias: 'groupTopics',
@@ -239,37 +241,41 @@ export default async function makeModels (userId, isAdmin) {
               groupId: relation.relatedData.parentId
             }))
         }},
+        {activeMembers: { querySet: true }},
         'locationObject',
         {members: {
           querySet: true,
-          filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
+          filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
             relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
         {moderators: {querySet: true}},
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+          filter: (relation, { boundingBox, filter, isAnnouncement, isFulfilled, isFuture, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
+              isAnnouncement,
+              isFulfilled,
+              isFuture,
               search,
+              showPinnedFirst: true,
               sortBy,
               topic,
-              type: filter,
-              showPinnedFirst: true
+              type: filter
             }))
         }},
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+          filter: (relation, { boundingBox, filter, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
               search,
+              showPinnedFirst: true,
               sortBy,
               topic,
-              type: filter,
-              showPinnedFirst: true
+              type: filter
             }))
         }},
         {joinQuestions: {querySet: true}},
@@ -647,6 +653,28 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         'post',
         'user'
+      ]
+    },
+
+    GroupWidget: {
+      model: GroupWidget,
+      attributes: [
+        'id',
+        'is_visible',
+        'name',
+        'order'
+      ],
+      getters: {
+        settings: gw => mapKeys(camelCase, gw.get('settings'))
+      },
+      relations: ['group']
+    },
+
+    Widget: {
+      model: Widget,
+      attributes: [
+        'id',
+        'name'
       ]
     }
   }

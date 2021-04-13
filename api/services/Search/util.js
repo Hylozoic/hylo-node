@@ -2,7 +2,7 @@ import addTermToQueryBuilder from './addTermToQueryBuilder'
 import { curry, includes, values } from 'lodash'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { search, sortBy = 'updated', topic, showPinnedFirst, type, boundingBox } = opts
+  const { boundingBox, isAnnouncement, isFulfilled, isFuture, search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
   const sortColumns = {
     votes: 'num_votes',
     updated: 'posts.updated_at',
@@ -16,6 +16,23 @@ export const filterAndSortPosts = curry((opts, q) => {
 
   const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
 
+  if (isAnnouncement) {
+    q.where('announcement', true)
+  }
+
+  if (isFulfilled === true) {
+    q.whereNotNull('posts.fulfilled_at')
+  } else if (isFulfilled === false) {
+    q.whereNull('posts.fulfilled_at')
+  }
+
+  if (isFuture) {
+    q.where(q2 =>
+      q.where('posts.start_time', '>=', Date.now())
+      .orWhere('posts.end_time', '>=', Date.now())
+    )
+  }
+
   if (!type || type === 'all' || type === 'all+welcome') {
     q.where(q2 =>
       q2.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
@@ -24,6 +41,10 @@ export const filterAndSortPosts = curry((opts, q) => {
     q.where(q2 =>
       q2.where({'posts.type': null})
       .orWhere({'posts.type': DISCUSSION}))
+  } else if (type === 'offersAndRequests') {
+    q.where(q2 =>
+      q2.where('posts.type', OFFER).orWhere('posts.type', REQUEST)
+    )
   } else {
     if (!includes(values(Post.Type), type)) {
       throw new Error(`unknown post type: "${type}"`)
@@ -61,7 +82,7 @@ export const filterAndSortPosts = curry((opts, q) => {
 
 })
 
-export const filterAndSortUsers = curry(({ autocomplete, boundingBox, search, sortBy }, q) => {
+export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, search, sortBy }, q) => {
   if (autocomplete) {
     addTermToQueryBuilder(autocomplete, q, {
       columns: ['users.name']
@@ -76,14 +97,14 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, search, so
     }))
   }
 
-  if (sortBy && !['name', 'location', 'join'].includes(sortBy)) {
+  if (sortBy && !['name', 'location', 'join', 'last_active_at'].includes(sortBy)) {
     throw new Error(`Cannot sort by "${sortBy}"`)
   }
 
   if (sortBy === 'join') {
-    q.orderBy('group_memberships.created_at', 'desc')
+    q.orderBy('group_memberships.created_at', order || 'desc')
   } else {
-    q.orderBy(sortBy || 'name', 'asc')
+    q.orderBy(sortBy || 'name', order || 'asc')
   }
 
   if (boundingBox) {

@@ -103,6 +103,7 @@ type Person {
   linkedinUrl: String
   facebookUrl: String
   url: String
+  lastActiveAt: String
   location: String
   locationObject: Location
   tagline: String
@@ -188,6 +189,15 @@ type Group {
     search: String,
     autocomplete: String
   ): PersonQuerySet
+  activeMembers(
+    boundingBox: [PointInput],
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): PersonQuerySet
   memberCount: Int
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
   name: String
@@ -205,6 +215,9 @@ type Group {
   groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   posts(
+    isAnnouncement: Boolean,
+    isFulfilled: Boolean,
+    isFuture: Boolean,
     first: Int,
     order: String,
     sortBy: String,
@@ -221,16 +234,17 @@ type Group {
     offset: Int,
     autocomplete: String
   ): SkillQuerySet
+  widgets: GroupWidgetQuerySet
   slug: String
   viewPosts(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
+    boundingBox: [PointInput],
     filter: String,
-    topic: ID,
-    boundingBox: [PointInput]
+    first: Int,
+    offset: Int,
+    order: String,
+    search: String,
+    sortBy: String,
+    topic: ID
   ): PostQuerySet
   visibility: Int
 }
@@ -239,6 +253,31 @@ type GroupSettings {
   allowGroupInvites: Boolean
   askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
+}
+
+type GroupWidget {
+  id: Int
+  name: String
+  isVisible: Boolean
+  order: Int
+  settings: GroupWidgetSettings
+  group: Group
+}
+
+type GroupWidgetSettings {
+  text: String
+  title: String
+}
+
+type GroupWidgetQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupWidget]
+}
+
+type Widget {
+  id: Int
+  name: String
 }
 
 type GroupRelationship {
@@ -346,6 +385,7 @@ type Post {
   creator: Person
   followers(first: Int, cursor: ID, order: String): [Person]
   followersTotal: Int
+  activeMembers(first: Int, cursor: ID, order: String): PersonQuerySet
   members(first: Int, cursor: ID, order: String): PersonQuerySet
   eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
   groups(first: Int, cursor: ID, order: String): [Group]
@@ -797,6 +837,16 @@ input UserSettingsInput {
   signupInProgress: Boolean
 }
 
+input GroupWidgetInput {
+  isVisible: Boolean
+  settings: GroupWidgetSettingsInput
+}
+
+input GroupWidgetSettingsInput {
+  text: String
+  title: String
+}
+
 type Mutation {
   acceptGroupRelationshipInvite(groupRelationshipInviteId: ID): AcceptGroupRelationshipInviteResult
   acceptJoinRequest(joinRequestId: ID): JoinRequest
@@ -870,7 +920,8 @@ type Mutation {
   updateMembership(groupId: ID, slug: String, data: MembershipInput): Membership
   updatePost(id: ID, data: PostInput): Post
   updateStripeAccount(accountId: String): GenericResult
-  useInvitation(invitationToken: String, accessCode: String): InvitationUseResult,
+  updateWidget(id: ID, changes: GroupWidgetInput): GroupWidget
+  useInvitation(invitationToken: String, accessCode: String): InvitationUseResult
   vote(postId: ID, isUpvote: Boolean): Post
 }
 

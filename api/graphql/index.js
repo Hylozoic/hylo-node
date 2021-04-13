@@ -63,6 +63,7 @@ import {
   resendInvitation,
   respondToEvent,
   subscribe,
+  toggleGroupWidgetVisibility,
   unblockUser,
   unfulfillPost,
   unlinkAccount,
@@ -75,6 +76,7 @@ import {
   updateMembership,
   updatePost,
   updateStripeAccount,
+  updateWidget,
   useInvitation,
   vote
 } from './mutations'
@@ -359,6 +361,8 @@ export function makeMutations (userId, isAdmin) {
 
     updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
 
+    updateWidget: (root, { id, changes }) => updateWidget(id, changes),
+
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
 
@@ -384,6 +388,8 @@ export const createRequestHandler = () =>
     // ideally we would be able to associate paths with policies, analyze the
     // query to find the policies which should be tested, and run them to allow
     // or deny access to those paths
+
+    await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
 
     const schema = await createSchema(req.session.userId, Admin.isSignedIn(req))
     return {

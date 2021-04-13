@@ -151,6 +151,13 @@ module.exports = bookshelf.Model.extend(merge({
     .then(result => result.get('count'))
   },
 
+  widgets: function () {
+    return this.hasMany(GroupWidget).query(q => {
+      q.select(['widgets.name'])
+      q.join('widgets', 'widgets.id', 'group_widgets.widget_id')
+    })
+  },
+
   // The posts to show for a particular user viewing a group's stream or map
   // includes the direct posts to this group + posts to child groups the user is a member of
   viewPosts (userId) {
