@@ -49,6 +49,9 @@ type UserSettings {
   dmNotifications: String
   lastViewedMessagesAt: String
   signupInProgress: Boolean
+  streamViewMode: String
+  streamSortBy: String
+  streamPostType: String
 }
 
 type GroupTopicQuerySet {
@@ -835,6 +838,9 @@ input UserSettingsInput {
   dmNotifications: String
   lastViewedMessagesAt: String
   signupInProgress: Boolean
+  streamViewMode: String
+  streamSortBy: String
+  streamPostType: String
 }
 
 input GroupWidgetInput {
