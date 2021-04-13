@@ -157,13 +157,14 @@ module.exports = bookshelf.Model.extend(merge({
     .digest('hex')
   },
 
-  joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, { transacting } = {}) {
+  joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
     const memberships = await group.addMembers([this.id],
       {
         role,
         settings: {
           sendEmail: true,
-          sendPushNotifications: true
+          sendPushNotifications: true,
+          showJoinForm: fromInvitation
         }},
       {transacting})
     const q = Group.query()

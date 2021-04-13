@@ -300,7 +300,8 @@ export default async function makeModels (userId, isAdmin) {
                 q.whereRaw('skills.name ilike ?', autocomplete + '%')
               }
             })
-        }}
+        }},
+        {suggestedSkills: {querySet: true}},
       ],
       getters: {
         invitePath: g =>

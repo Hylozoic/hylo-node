@@ -150,8 +150,9 @@ type Membership {
 }
 
 type MembershipSettings {
-  sendPushNotifications: Boolean
   sendEmail: Boolean
+  showJoinForm: Boolean
+  sendPushNotifications: Boolean
 }
 
 type Group {
@@ -241,6 +242,7 @@ type Group {
   ): SkillQuerySet
   widgets: GroupWidgetQuerySet
   slug: String
+  suggestedSkills: SkillQuerySet
   viewPosts(
     boundingBox: [PointInput],
     filter: String,
@@ -258,6 +260,7 @@ type GroupSettings {
   allowGroupInvites: Boolean
   askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
+  showSuggestedSkills: Boolean
 }
 
 type GroupWidget {
@@ -809,6 +812,7 @@ input GroupSettingsInput {
   allowGroupInvites: Boolean
   askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
+  showSuggestedSkills: Boolean
 }
 
 input QuestionInput {
@@ -819,6 +823,7 @@ input QuestionInput {
 
 input MembershipSettingsInput {
   sendEmail: Boolean
+  showJoinForm: Boolean
   sendPushNotifications: Boolean
 }
 
@@ -868,6 +873,7 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   addSkill(name: String, type: Int): Skill
   addSkillToLearn(name: String): Skill
+  addSuggestedSkillToGroup(groupId: ID, name: String): Skill
   allowGroupInvites(groupId: ID, data: Boolean): Group
   blockUser(blockedUserId: ID): GenericResult
   cancelGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
@@ -918,6 +924,7 @@ type Mutation {
   removePost(postId: ID, slug: String, groupId: ID): GenericResult
   removeSkill(id: ID, name: String): GenericResult
   removeSkillToLearn(id: ID, name: String): GenericResult
+  removeSuggestedSkillFromGroup(groupId: ID, id: ID, name: String): GenericResult
   requestToAddGroupToParent(parentId: ID, childId: ID): CreatedGroupRelationshipInvite
   resendInvitation(invitationId: ID): GenericResult
   respondToEvent(id: ID, response: String): GenericResult

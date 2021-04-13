@@ -173,11 +173,19 @@ module.exports = bookshelf.Model.extend(merge({
     .then(result => result.get('count'))
   },
 
-  widgets: function () {
-    return this.hasMany(GroupWidget).query(q => {
-      q.select(['widgets.name'])
-      q.join('widgets', 'widgets.id', 'group_widgets.widget_id')
+  skills: function () {
+    return Skill.collection().query(q => {
+      q.join('skills_users', 'skills_users.skill_id', 'skills.id')
+      q.join('group_memberships', 'group_memberships.user_id', 'skills_users.user_id')
+      q.where({
+        'group_memberships.group_id': this.id,
+        'group_memberships.active': true
+      })
     })
+  },
+
+  suggestedSkills: function () {
+    return this.belongsToMany(Skill, 'groups_suggested_skills')
   },
 
   // The posts to show for a particular user viewing a group's stream or map
@@ -197,6 +205,13 @@ module.exports = bookshelf.Model.extend(merge({
           q3.andWhere('posts.user_id', '!=', User.AXOLOTL_ID)
         })
       })
+    })
+  },
+
+  widgets: function () {
+    return this.hasMany(GroupWidget).query(q => {
+      q.select(['widgets.name'])
+      q.join('widgets', 'widgets.id', 'group_widgets.widget_id')
     })
   },
 

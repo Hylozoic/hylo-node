@@ -49,7 +49,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const role = Number(this.get('role'))
     const membership =
       await GroupMembership.forPair(user, group).fetch({transacting}) ||
-      await user.joinGroup(group, role, {transacting})
+      await user.joinGroup(group, role, true, {transacting})
 
     if (!this.isUsed() && this.get('tag_id')) {
       try {
