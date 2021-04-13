@@ -245,7 +245,7 @@ export default async function makeModels (userId, isAdmin) {
         'locationObject',
         {members: {
           querySet: true,
-          filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
+          filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
             relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
         {moderators: {querySet: true}},
@@ -265,12 +265,11 @@ export default async function makeModels (userId, isAdmin) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { search, sortBy, topic, filter, offersAndRequests, isAnnouncement, isFuture, boundingBox }) =>
+          filter: (relation, { search, sortBy, topic, filter, isAnnouncement, isFuture, boundingBox }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
               isAnnouncement,
               isFuture,
-              offersAndRequests,
               search,
               sortBy,
               topic,

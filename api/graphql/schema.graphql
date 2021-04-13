@@ -154,7 +154,6 @@ type MembershipSettings {
 type Group {
   id: ID
   accessibility: Int
-  announcements: PostQuerySet
   avatarUrl: String
   bannerUrl: String
   childGroups(
@@ -234,9 +233,6 @@ type Group {
     autocomplete: String
   ): SkillQuerySet
   widgets: GroupWidgetQuerySet
-  events: PostQuerySet
-  offersAndRequests: PostQuerySet
-  projects: PostQuerySet
   slug: String
   viewPosts(
     first: Int,
