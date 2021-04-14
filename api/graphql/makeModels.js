@@ -363,6 +363,9 @@ export default async function makeModels (userId, isAdmin) {
         'type',
         'updated_at',
       ],
+      getters: {
+        questionAnswers: i => i.questionAnswers().fetch()
+      },
       relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 

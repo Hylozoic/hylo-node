@@ -8,7 +8,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   joinRequest () {
-    return this.belongsTo(GroupRelationshipInvite)
+    return this.belongsTo(GroupRelationshipInvite, 'join_request_id')
   }
 
 }), {

@@ -306,12 +306,13 @@ type GroupRelationshipSettings {
 
 type GroupRelationshipInvite {
   id: ID
+  createdAt: Date
+  createdBy: Person
   fromGroup: Group
+  questionAnswers: [JoinRequestQuestionAnswer]
+  status: Int
   toGroup: Group
   type: Int
-  status: Int
-  createdBy: Person
-  createdAt: Date
   updatedAt: Date
 }
 
@@ -929,7 +930,7 @@ type Mutation {
   removeSkill(id: ID, name: String): GenericResult
   removeSkillToLearn(id: ID, name: String): GenericResult
   removeSuggestedSkillFromGroup(groupId: ID, id: ID, name: String): GenericResult
-  requestToAddGroupToParent(parentId: ID, childId: ID): CreatedGroupRelationshipInvite
+  requestToAddGroupToParent(parentId: ID, childId: ID, questionAnswers: [QuestionAnswerInput]): CreatedGroupRelationshipInvite
   resendInvitation(invitationId: ID): GenericResult
   respondToEvent(id: ID, response: String): GenericResult
   subscribe(groupId: ID, topicId: ID, isSubscribing: Boolean): GenericResult

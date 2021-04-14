@@ -19,6 +19,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User, 'processed_by_id')
   },
 
+  questionAnswers: function () {
+    return this.hasMany(GroupToGroupJoinRequestQuestionAnswer, 'join_request_id')
+  },
+
   toGroup: function () {
     return this.belongsTo(Group, 'to_group_id')
   },
