@@ -158,6 +158,15 @@ type MembershipSettings {
 type Group {
   id: ID
   accessibility: Int
+  activeMembers(
+    boundingBox: [PointInput],
+    first: Int,
+    order: String,
+    sortBy: String,
+    offset: Int,
+    search: String,
+    autocomplete: String
+  ): PersonQuerySet
   avatarUrl: String
   bannerUrl: String
   childGroups(
@@ -171,6 +180,9 @@ type Group {
   ): GroupQuerySet
   createdAt: Date
   description: String
+  groupRelationshipInvitesFrom: GroupRelationshipInviteQuerySet
+  groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
+  groupToGroupJoinQuestions: GroupToGroupJoinQuestionQuerySet
   groupTopics(
     first: Int,
     sortBy: String,
@@ -182,18 +194,10 @@ type Group {
     visibility: Int
   ): GroupTopicQuerySet
   invitePath: String
+  joinQuestions: GroupJoinQuestionQuerySet
   location: String
   locationObject: Location
   members(
-    boundingBox: [PointInput],
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    autocomplete: String
-  ): PersonQuerySet
-  activeMembers(
     boundingBox: [PointInput],
     first: Int,
     order: String,
@@ -206,7 +210,6 @@ type Group {
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
   name: String
   numPrerequisitesLeft: Int
-  settings: GroupSettings
   parentGroups(
     boundingBox: [PointInput],
     first: Int,
@@ -216,10 +219,8 @@ type Group {
     search: String,
     autocomplete: String
   ): GroupQuerySet
-  prerequisiteGroups(onlyNotMember: Boolean): GroupQuerySet
-  groupRelationshipInvitesFrom: GroupRelationshipInviteQuerySet
-  groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
+  prerequisiteGroups(onlyNotMember: Boolean): GroupQuerySet
   posts(
     isAnnouncement: Boolean,
     isFulfilled: Boolean,
@@ -234,13 +235,12 @@ type Group {
     boundingBox: [PointInput]
   ): PostQuerySet
   postCount: Int
-  joinQuestions: GroupJoinQuestionQuerySet
+  settings: GroupSettings
   skills(
     first: Int,
     offset: Int,
     autocomplete: String
   ): SkillQuerySet
-  widgets: GroupWidgetQuerySet
   slug: String
   suggestedSkills: SkillQuerySet
   viewPosts(
@@ -254,10 +254,12 @@ type Group {
     topic: ID
   ): PostQuerySet
   visibility: Int
+  widgets: GroupWidgetQuerySet
 }
 
 type GroupSettings {
   allowGroupInvites: Boolean
+  askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
@@ -794,11 +796,12 @@ input GroupInput {
   avatarUrl: String
   bannerUrl: String
   description: String
+  groupToGroupJoinQuestions: [QuestionInput]
+  joinQuestions: [QuestionInput]
   location: String
   locationId: ID
   name: String
   parentIds: [ID]
-  joinQuestions: [QuestionInput]
   prerequisiteGroupIds: [ID]
   settings: GroupSettingsInput
   slackHookUrl: String
@@ -810,6 +813,7 @@ input GroupInput {
 
 input GroupSettingsInput {
   allowGroupInvites: Boolean
+  askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
@@ -1034,6 +1038,18 @@ type GroupJoinQuestionQuerySet {
   total: Int
   hasMore: Boolean
   items: [GroupJoinQuestion]
+}
+
+type GroupToGroupJoinQuestion {
+  id: Int
+  questionId: Int
+  text: String
+}
+
+type GroupToGroupJoinQuestionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupToGroupJoinQuestion]
 }
 
 type GroupRelationshipInviteQuerySet {
