@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- __New group home page__: Add queries to support new group landing page with customizable widgets that show announcements, recent posts, open requests and offers, upcoming events, recently active projects, recenty active members, sub-groups, and a customizable welcome message.
+- __Prerequisite group__: Adding these to a group means the prerequisite groups have to be joined by a user before they can join the original group.
+- Remember the current user's settings for the stream across sessions.
+- Export member directory for a Group to a CSV.
+- Suggested skills & interests for a group that can be setup by a group moderator.
+- Setting to track whether a user has seen a group's join form or not, when they come through an invitation they have not.
+- Tracking when users were last active on the platform.
 
 ## [2.0.2] - 2021-04-08
 ### Fixed
