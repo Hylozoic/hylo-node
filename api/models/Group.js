@@ -267,6 +267,14 @@ module.exports = bookshelf.Model.extend(merge({
     return updatedMemberships.concat(newMemberships)
   },
 
+  createInitialWidgets: async function (transacting) {
+    const widgetIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    Promise.map(widgetIds, async (widget_id) => {
+      await GroupWidget.create({ group_id: this.id, widget_id, order: widget_id }, { transacting })
+    })
+  },
+
   createStarterPosts: function (transacting) {
     var now = new Date()
     var timeShift = {offer: 1, request: 2, resource: 3}
@@ -414,6 +422,7 @@ module.exports = bookshelf.Model.extend(merge({
         }
       }
       await group.createStarterPosts(trx)
+      await group.createInitialWidgets(trx)
       return group.addMembers([userId],
         {role: GroupMembership.Role.MODERATOR}, { transacting: trx })
     })

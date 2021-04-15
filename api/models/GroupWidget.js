@@ -31,7 +31,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     }
   },
 
-  create: async function (params) {
+  create: async function (params, opts) {
     const { group_id, widget_id, order } = params
 
     const attributes = {
@@ -41,8 +41,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       created_at: new Date()
     }
 
-    const groupWidget = await this.forge(attributes).save()
-
+    const groupWidget = await this.forge(attributes).save({}, opts)
     return groupWidget
   },
 
