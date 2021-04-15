@@ -118,8 +118,7 @@ export async function updateGroup (userId, groupId, changes) {
   return group.update(convertGraphqlData(changes))
 }
 
-// ******* GroupRelationshipInvites ******** //
-export async function inviteGroupToGroup(userId, fromId, toId, type) {
+export async function inviteGroupToGroup(userId, fromId, toId, type, questionAnswers = []) {
   const toGroup = await Group.find(toId)
   if (!toGroup) {
     throw new Error('Group not found')
@@ -155,6 +154,9 @@ export async function inviteGroupToGroup(userId, fromId, toId, type) {
       toGroupId: toId,
       type
     })
+    for (let qa of questionAnswers) {
+      await GroupToGroupJoinRequestQuestionAnswer.forge({ join_request_id: invite.id, question_id: qa.questionId, answer: qa.answer }).save()
+    }
     return { success: true, groupRelationshipInvite: invite }
   }
 }

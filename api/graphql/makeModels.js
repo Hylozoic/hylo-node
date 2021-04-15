@@ -225,25 +225,10 @@ export default async function makeModels (userId, isAdmin) {
         'visibility',
       ],
       relations: [
+        {activeMembers: { querySet: true }},
         {childGroups: {querySet: true}},
-        {parentGroups: {querySet: true}},
-        {prerequisiteGroups: {
-          querySet: true,
-          filter: (relation, { onlyNotMember }) =>
-            relation.query(q => {
-              if (onlyNotMember) {
-                // Only return prerequisite groups that the current user is not yet a member of
-                q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
-                  'group_memberships.user_id': userId,
-                  'group_memberships.active': true
-                }))
-              }
-            })
-        }},
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
-        {moderators: {querySet: true}},
-        {widgets: {querySet: true }},
         {groupTags: {
           querySet: true,
           alias: 'groupTopics',
@@ -254,14 +239,15 @@ export default async function makeModels (userId, isAdmin) {
               groupId: relation.relatedData.parentId
             }))
         }},
-        {activeMembers: { querySet: true }},
+        {groupToGroupJoinQuestions: {querySet: true}},
+        {joinQuestions: {querySet: true}},
         'locationObject',
+        {moderators: {querySet: true}},
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
             relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
         }},
-        {moderators: {querySet: true}},
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
@@ -278,6 +264,29 @@ export default async function makeModels (userId, isAdmin) {
               type: filter
             }))
         }},
+        {prerequisiteGroups: {
+          querySet: true,
+          filter: (relation, { onlyNotMember }) =>
+            relation.query(q => {
+              if (onlyNotMember) {
+                // Only return prerequisite groups that the current user is not yet a member of
+                q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
+                  'group_memberships.user_id': userId,
+                  'group_memberships.active': true
+                }))
+              }
+            })
+        }},
+        {skills: {
+          querySet: true,
+          filter: (relation, { autocomplete }) =>
+            relation.query(q => {
+              if (autocomplete) {
+                q.whereRaw('skills.name ilike ?', autocomplete + '%')
+              }
+            })
+        }},
+        {suggestedSkills: {querySet: true}},
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
@@ -291,17 +300,7 @@ export default async function makeModels (userId, isAdmin) {
               type: filter
             }))
         }},
-        {joinQuestions: {querySet: true}},
-        {skills: {
-          querySet: true,
-          filter: (relation, { autocomplete }) =>
-            relation.query(q => {
-              if (autocomplete) {
-                q.whereRaw('skills.name ilike ?', autocomplete + '%')
-              }
-            })
-        }},
-        {suggestedSkills: {querySet: true}},
+        {widgets: {querySet: true }}
       ],
       getters: {
         invitePath: g =>
@@ -338,6 +337,14 @@ export default async function makeModels (userId, isAdmin) {
       ]
     },
 
+    GroupToGroupJoinQuestion: {
+      model: GroupToGroupJoinQuestion,
+      attributes: [
+        'questionId',
+        'text'
+      ]
+    },
+
     GroupRelationship: {
       model: GroupRelationship,
       attributes: [
@@ -356,6 +363,9 @@ export default async function makeModels (userId, isAdmin) {
         'type',
         'updated_at',
       ],
+      getters: {
+        questionAnswers: i => i.questionAnswers().fetch()
+      },
       relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 

@@ -81,6 +81,13 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(GroupTag)
   },
 
+  groupToGroupJoinQuestions () {
+    return this.hasMany(GroupToGroupJoinQuestion).query(q => {
+      q.select(['questions.text', 'questions.id as questionId'])
+      q.join('questions', 'group_to_group_join_questions.question_id', 'questions.id')
+    })
+  },
+
   isHidden() {
     return this.get('visibility') === Group.Visibility.HIDDEN
   },
@@ -131,7 +138,6 @@ module.exports = bookshelf.Model.extend(merge({
   async numPrerequisitesLeft(userId) {
     const prerequisiteGroups = await this.prerequisiteGroups().fetch()
     let num = prerequisiteGroups.models.length
-    console.log("moopppp", prerequisiteGroups.models, "num = ", num)
     await Promise.map(prerequisiteGroups.models, async (prereq) => {
       const isMemberOfPrereq = await GroupMembership.forPair(userId, prereq.id).fetch()
       if (isMemberOfPrereq) {
@@ -329,6 +335,16 @@ module.exports = bookshelf.Model.extend(merge({
 
     if (attributes.settings) {
       saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
+    }
+
+    if (changes.group_to_group_join_questions) {
+      const questions = await Promise.map(changes.group_to_group_join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
+        return (await Question.where({ text: trim(jq.text) }).fetch()) || (await Question.forge({ text: trim(jq.text) }).save())
+      })
+      await GroupToGroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false })
+      for (let q of questions) {
+        await GroupToGroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save()
+      }
     }
 
     if (changes.join_questions) {

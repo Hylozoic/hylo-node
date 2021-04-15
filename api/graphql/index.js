@@ -326,8 +326,8 @@ export function makeMutations (userId, isAdmin) {
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
     removeSuggestedSkillFromGroup: (root, { groupId, id, name }) => removeSuggestedSkillFromGroup(userId, groupId, id || name),
 
-    requestToAddGroupToParent: (root, { parentId, childId }) =>
-      inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent),
+    requestToAddGroupToParent: (root, { parentId, childId, questionAnswers }) =>
+      inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent, questionAnswers),
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),
