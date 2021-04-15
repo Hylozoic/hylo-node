@@ -138,7 +138,6 @@ module.exports = bookshelf.Model.extend(merge({
   async numPrerequisitesLeft(userId) {
     const prerequisiteGroups = await this.prerequisiteGroups().fetch()
     let num = prerequisiteGroups.models.length
-    console.log("moopppp", prerequisiteGroups.models, "num = ", num)
     await Promise.map(prerequisiteGroups.models, async (prereq) => {
       const isMemberOfPrereq = await GroupMembership.forPair(userId, prereq.id).fetch()
       if (isMemberOfPrereq) {
