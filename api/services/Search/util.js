@@ -1,5 +1,6 @@
-import addTermToQueryBuilder from './addTermToQueryBuilder'
 import { curry, includes, values } from 'lodash'
+import moment from 'moment'
+import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {
   const { boundingBox, isAnnouncement, isFulfilled, isFuture, search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
@@ -17,7 +18,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
 
   if (isAnnouncement) {
-    q.where('announcement', true)
+    q.where('announcement', true).andWhere('posts.created_at', '>=', moment().subtract(1, 'month').toDate())
   }
 
   if (isFulfilled === true) {
