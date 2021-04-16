@@ -64,6 +64,7 @@ export default function forPosts (opts) {
       topic: opts.topic,
       type: opts.type,
       boundingBox: opts.boundingBox,
+      order: opts.order,
       showPinnedFirst: get(opts.groupIds, 'length') === 1
     }, qb)
 

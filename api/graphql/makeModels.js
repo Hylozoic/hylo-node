@@ -202,6 +202,7 @@ export default async function makeModels (userId, isAdmin) {
           offset,
           onlyMyGroups: context === 'all',
           onlyPublic: context === 'public',
+          order,
           sort: sortBy,
           term: search,
           topic,
@@ -251,12 +252,13 @@ export default async function makeModels (userId, isAdmin) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { boundingBox, filter, isAnnouncement, isFulfilled, isFuture, search, sortBy, topic }) =>
+          filter: (relation, { boundingBox, filter, isAnnouncement, isFulfilled, isFuture, order, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
               isAnnouncement,
               isFulfilled,
               isFuture,
+              order,
               search,
               showPinnedFirst: true,
               sortBy,

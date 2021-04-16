@@ -3,11 +3,12 @@ import moment from 'moment'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { boundingBox, isAnnouncement, isFulfilled, isFuture, search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
+  const { boundingBox, isAnnouncement, isFulfilled, isFuture, order, search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
   const sortColumns = {
     votes: 'num_votes',
     updated: 'posts.updated_at',
-    created: 'posts.created_at'
+    created: 'posts.created_at',
+    start_time: 'posts.start_time'
   }
 
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === sortBy)
@@ -29,8 +30,8 @@ export const filterAndSortPosts = curry((opts, q) => {
 
   if (isFuture) {
     q.where(q2 =>
-      q.where('posts.start_time', '>=', Date.now())
-      .orWhere('posts.end_time', '>=', Date.now())
+      q2.where('posts.start_time', '>=', moment().toDate())
+      .orWhere('posts.end_time', '>=', moment().toDate())
     )
   }
 
@@ -78,7 +79,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   if (sort === 'posts.updated_at' && showPinnedFirst) {
     q.orderByRaw('groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, posts.updated_at desc')
   } else if (sort) {
-    q.orderBy(sort, 'desc')
+    q.orderBy(sort, order || 'desc')
   }
 
 })
