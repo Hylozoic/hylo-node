@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.1] - 2021-04-21
+### Fixed
+- For open requests and offers widget on grop landing page don't show posts past their end time
+
 ## [3.0.0] - 2021-04-16
 ### Added
 - __New group home page__: Add queries to support new group landing page with customizable widgets that show announcements, recent posts, open requests and offers, upcoming events, recently active projects, recenty active members, sub-groups, and a customizable welcome message.
