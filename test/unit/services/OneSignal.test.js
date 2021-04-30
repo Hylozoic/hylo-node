@@ -7,7 +7,7 @@ describe('OneSignal.notify', () => {
     json: {
       app_id: 'fake_app_id',
       contents: {en: 'hello'},
-      data: {path: '/p/1'},
+      data: {path: '/post/1'},
       include_ios_tokens: ['foo'],
       ios_badgeCount: 7,
       ios_badgeType: 'SetTo'
@@ -20,7 +20,7 @@ describe('OneSignal.notify', () => {
     json: {
       app_id: 'fake_app_id',
       contents: {en: 'hello'},
-      data: {path: '/p/1'},
+      data: {path: '/post/1'},
       include_player_ids: ['foo'],
       ios_badgeCount: 7,
       ios_badgeType: 'SetTo'
@@ -40,7 +40,7 @@ describe('OneSignal.notify', () => {
       platform: 'ios_macos',
       deviceToken: 'foo',
       alert: 'hello',
-      path: '/p/1',
+      path: '/post/1',
       badgeNo: 7,
       appId: 'fake_app_id'
     })
@@ -52,7 +52,7 @@ describe('OneSignal.notify', () => {
       platform: 'ios',
       playerId: 'foo',
       alert: 'hello',
-      path: '/p/1',
+      path: '/post/1',
       badgeNo: 7,
       appId: 'fake_app_id'
     })
@@ -64,7 +64,7 @@ describe('OneSignal.notify', () => {
       platform: 'android',
       deviceToken: 'foo',
       alert: 'hello',
-      path: '/p/1',
+      path: '/post/1',
       badgeNo: 7,
       appId: 'fake_app_id'
     })
@@ -72,7 +72,7 @@ describe('OneSignal.notify', () => {
       json: {
         app_id: 'fake_app_id',
         contents: {en: 'hello'},
-        data: {alert: 'hello', path: '/p/1'},
+        data: {alert: 'hello', path: '/post/1'},
         include_android_reg_ids: ['foo']
       },
       method: 'POST',
@@ -85,7 +85,7 @@ describe('OneSignal.notify', () => {
       platform: 'android',
       playerId: 'foo',
       alert: 'hello',
-      path: '/p/1',
+      path: '/post/1',
       badgeNo: 7,
       appId: 'fake_app_id'
     })
@@ -93,7 +93,7 @@ describe('OneSignal.notify', () => {
       json: {
         app_id: 'fake_app_id',
         contents: {en: 'hello'},
-        data: {alert: 'hello', path: '/p/1'},
+        data: {alert: 'hello', path: '/post/1'},
         include_player_ids: ['foo']
       },
       method: 'POST',

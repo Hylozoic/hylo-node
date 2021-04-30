@@ -132,7 +132,7 @@ module.exports = {
         groupUrl = `/groups/${groupSlug}`
       }
 
-      return url(`${groupUrl}/p/${getModelId(post)}`)
+      return url(`${groupUrl}/post/${getModelId(post)}`)
     },
 
     thread: function (post) {

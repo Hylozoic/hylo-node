@@ -6,7 +6,7 @@ describe('FlaggedItem', () => {
   const item = {
     category: 'abusive',
     reason: 'Said wombats were not cute. Just mean.',
-    link: 'https://www.hylo.com/c/wombats/p/12345'
+    link: 'https://www.hylo.com/c/wombats/post/12345'
   }
 
   describe('create', () => {
@@ -60,7 +60,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.POST,
         object_id: post.id,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
       const object = await flaggedItem.getObject()
       expect(object.id).to.equal(post.id)
@@ -72,7 +72,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.MEMBER,
         object_id: user.id,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
       const object = await flaggedItem.getObject()
       expect(object.id).to.equal(user.id)
@@ -84,7 +84,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.COMMENT,
         object_id: comment.id,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
       const object = await flaggedItem.getObject()
       expect(object.id).to.equal(comment.id)
@@ -120,7 +120,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.POST,
         object_id: post.id,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1',
+        link: 'www.hylo.com/post/1',
         reason,
         user_id: user.id
       })
@@ -158,7 +158,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.POST,
         object_id: post.id,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
       const link = await flaggedItem.getContentLink(community)
       expect(link).to.equal(Frontend.Route.post(post.id, community))
@@ -169,7 +169,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.MEMBER,
         object_id: user.id,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
       const link = await flaggedItem.getContentLink(community)
       expect(link).to.equal(Frontend.Route.profile(user.id, community))
@@ -180,7 +180,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.COMMENT,
         object_id: comment.id,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
       const link = await flaggedItem.getContentLink(community)
       expect(link).to.equal(Frontend.Route.post(commentParent.id, community))
@@ -217,7 +217,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.POST,
         object_id: 1,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
 
       await FlaggedItem.notifyModerators({id: flaggedItem.id})
@@ -230,7 +230,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.COMMENT,
         object_id: 1,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
 
       await FlaggedItem.notifyModerators({id: flaggedItem.id})
@@ -243,7 +243,7 @@ describe('FlaggedItem', () => {
         object_type: FlaggedItem.Type.MEMBER,
         object_id: 1,
         category: FlaggedItem.Category.SPAM,
-        link: 'www.hylo.com/p/1'
+        link: 'www.hylo.com/post/1'
       })
 
       await FlaggedItem.notifyModerators({id: flaggedItem.id})
