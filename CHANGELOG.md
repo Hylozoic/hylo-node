@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.2] - 2021-04-30
+Fix post URLs in emails
+
 ## [3.0.1] - 2021-04-21
 ### Fixed
 - For open requests and offers widget on grop landing page don't show posts past their end time
