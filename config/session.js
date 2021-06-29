@@ -9,7 +9,7 @@
  * and auto-save to `req.session` with Socket.io the same way you would with Express.
  *
  * For more information on configuring the session, check out:
- * http://sailsjs.org/#/documentation/reference/sails.config/sails.config.session.html
+ * https://sailsjs.com/documentation/reference/configuration/sails-config-session
  */
 
 module.exports.session = {
@@ -35,7 +35,8 @@ module.exports.session = {
   cookie: {
     domain: process.env.COOKIE_DOMAIN,
     maxAge: 60 * 86400000, // 60 days
-    secure: process.env.protocol === 'https'
+    secure: process.env.protocol === 'https',
+    sameSite: 'None'
   },
 
   /***************************************************************************

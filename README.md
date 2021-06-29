@@ -78,7 +78,6 @@ UPLOADER_HOST=[ hostname ]
 UPLOADER_PATH_PREFIX=[ path ]
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
-* `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
 * `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 * `DATABASE_URL`: set to your local DB instance
 * `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
@@ -115,6 +114,34 @@ yarn dev
 This reads the `.env` file you created above, using [dotenv](http://www.npmjs.org/package/dotenv), and starts two processes managed by `foreman`: one web server process and one background job worker process, as listed in `Procfile.dev`. If you want to run only one of the processes, pass its name in `Procfile.dev` as an argument, e.g. `yarn dev -- web`.
 
 Now visit [localhost:3001](http://localhost:3001).
+
+### developing locally with SSL (for testing iFrame embedding)
+
+Create a local certificate and make sure your computer trusts it.
+Here are some up to date instructions for macOS: https://deliciousbrains.com/ssl-certificate-authority-for-local-https-development/
+
+Create a directory `config/ssl` and copy the .crt, key and .pem (CA certificate) files to it. Assuming the names are localhost.crt, localhost.key and localhost.pem then add a file at `config/local.js` with the contents:
+
+```
+var fs = require('fs')
+var path = require('path')
+
+module.exports = {
+
+  /**** Setup an SSL certificate for local development with SSL (so we can test iFrame embedding) ***/
+  ssl: process.env.PROTOCOL === 'https' ? {
+    ca: fs.readFileSync(path.resolve(__dirname, './ssl/localhost.pem')),
+    key: fs.readFileSync(path.resolve(__dirname, './ssl/localhost.key')),
+    cert: fs.readFileSync(path.resolve(__dirname, './ssl/localhost.crt'))
+  } : false
+
+}
+```
+
+Change your `.env` file to have:
+```
+PROTOCOL=https
+```
 
 ### running tests
 

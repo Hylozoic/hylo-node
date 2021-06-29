@@ -1,6 +1,7 @@
 .env
 .env.test
 config/local.js
+config/ssl
 node_modules/
 bower_components/
 .tmp
