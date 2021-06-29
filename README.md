@@ -78,7 +78,6 @@ UPLOADER_HOST=[ hostname ]
 UPLOADER_PATH_PREFIX=[ path ]
 ```
 * `ADMIN_GOOGLE_CLIENT_*`: To access the admin console.  Get these values from the [hylo-admin Google project](https://console.developers.google.com/project/hylo-admin).
-* `ASSET_HOST_URL`: The host for static assets. In development, this is the [hylo-frontend](https://github.com/Hylozoic/hylo-frontend) server, which listens at `localhost:1337` by default.
 * `DEBUG_SQL`: set to `true` if you want to output the SQL used within knex/bookshelf
 * `DATABASE_URL`: set to your local DB instance
 * `PLAY_APP_SECRET`: set to a string over length 16 to avoid the code erroring. real value only needed for running in production environment
@@ -121,7 +120,7 @@ Now visit [localhost:3001](http://localhost:3001).
 Create a local certificate and make sure your computer trusts it.
 Here are some up to date instructions for macOS: https://deliciousbrains.com/ssl-certificate-authority-for-local-https-development/
 
-Create a directory `config/ssl` and copy the .crt, key and .pem (CA certificate) files to it. Assuming the names are localhost.crt, localhost.key and localhostCA.pem then add a file at `config/local.js` with the contents:
+Create a directory `config/ssl` and copy the .crt, key and .pem (CA certificate) files to it. Assuming the names are localhost.crt, localhost.key and localhost.pem then add a file at `config/local.js` with the contents:
 
 ```
 var fs = require('fs')
