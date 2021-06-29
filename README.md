@@ -116,6 +116,34 @@ This reads the `.env` file you created above, using [dotenv](http://www.npmjs.or
 
 Now visit [localhost:3001](http://localhost:3001).
 
+### developing locally with SSL (for testing iFrame embedding)
+
+Create a local certificate and make sure your computer trusts it.
+Here are some up to date instructions for macOS: https://deliciousbrains.com/ssl-certificate-authority-for-local-https-development/
+
+Create a directory `config/ssl` and copy the .crt, key and .pem (CA certificate) files to it. Assuming the names are localhost.crt, localhost.key and localhostCA.pem then add a file at `config/local.js` with the contents:
+
+```
+var fs = require('fs')
+var path = require('path')
+
+module.exports = {
+
+  /**** Setup an SSL certificate for local development with SSL (so we can test iFrame embedding) ***/
+  ssl: process.env.PROTOCOL === 'https' ? {
+    ca: fs.readFileSync(path.resolve(__dirname, './ssl/localhost.pem')),
+    key: fs.readFileSync(path.resolve(__dirname, './ssl/localhost.key')),
+    cert: fs.readFileSync(path.resolve(__dirname, './ssl/localhost.crt'))
+  } : false
+
+}
+```
+
+Change your `.env` file to have:
+```
+PROTOCOL=https
+```
+
 ### running tests
 
 Run `yarn test` or `yarn cover`. The tests should use a different database (see below), because it creates and drops the database schema on each run.
