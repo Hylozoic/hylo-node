@@ -245,6 +245,7 @@ type Group {
   suggestedSkills: SkillQuerySet
   viewPosts(
     boundingBox: [PointInput],
+    isFuture: Boolean,
     filter: String,
     first: Int,
     offset: Int,

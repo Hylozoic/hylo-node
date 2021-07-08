@@ -292,9 +292,10 @@ export default async function makeModels (userId, isAdmin) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { boundingBox, filter, search, sortBy, topic }) =>
+          filter: (relation, { boundingBox, filter, isFuture, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
               boundingBox,
+              isFuture,
               search,
               showPinnedFirst: true,
               sortBy,

@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.3] - 2021-07-08
+### Added
+- Support local development with SSL
+- Support isFuture parameter when loading a group's viewPosts which includes posts from child groups
+
 ## [3.0.2] - 2021-04-30
-Fix post URLs in emails
+### Fixed
+- Post URLs in emails
 
 ## [3.0.1] - 2021-04-21
 ### Fixed
