@@ -35,8 +35,8 @@ module.exports.session = {
   cookie: {
     domain: process.env.COOKIE_DOMAIN,
     maxAge: 60 * 86400000, // 60 days
-    secure: process.env.protocol === 'https',
-    sameSite: 'None'
+    secure: process.env.PROTOCOL === 'https',
+    sameSite: process.env.PROTOCOL === 'https' ? 'None' : 'Lax'
   },
 
   /***************************************************************************
