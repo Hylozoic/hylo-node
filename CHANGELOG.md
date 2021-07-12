@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.0.3] - 2021-07-08
 ### Added
+- Enable cookies to work when Hylo is embedded in an iFrame
 - Support local development with SSL
 - Support isFuture parameter when loading a group's viewPosts which includes posts from child groups
 
