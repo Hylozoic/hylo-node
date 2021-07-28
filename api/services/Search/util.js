@@ -3,15 +3,15 @@ import moment from 'moment'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { boundingBox, isAnnouncement, isFulfilled, isFuture, order, search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
+  const { afterTime, beforeTime, boundingBox, isAnnouncement, isFulfilled, order = 'desc', search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
   const sortColumns = {
-    votes: 'num_votes',
+    votes: 'posts.num_votes',
     updated: 'posts.updated_at',
     created: 'posts.created_at',
     start_time: 'posts.start_time'
   }
 
-  const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === sortBy)
+  const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy)
   if (!sort) {
     throw new Error(`Cannot sort by "${sortBy}"`)
   }
@@ -35,10 +35,17 @@ export const filterAndSortPosts = curry((opts, q) => {
     })
   }
 
-  if (isFuture) {
+  if (afterTime) {
     q.where(q2 =>
-      q2.where('posts.start_time', '>=', moment().toDate())
-      .orWhere('posts.end_time', '>=', moment().toDate())
+      q2.where('posts.start_time', '>=', afterTime)
+      .orWhere('posts.end_time', '>=', afterTime)
+    )
+  }
+
+  if (beforeTime) {
+    q.where(q2 =>
+      q2.where('posts.start_time', '<', beforeTime)
+      .andWhere('posts.end_time', '<', beforeTime)
     )
   }
 

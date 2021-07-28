@@ -139,6 +139,7 @@ export default async function makeModels (userId, isAdmin) {
           term: search,
           limit: first,
           offset,
+          order,
           type: filter,
           autocomplete,
           groups: groupIds,
@@ -247,17 +248,18 @@ export default async function makeModels (userId, isAdmin) {
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
-            relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
+            relation.query(filterAndSortUsers({ autocomplete, boundingBox, order, search, sortBy }))
         }},
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { boundingBox, filter, isAnnouncement, isFulfilled, isFuture, order, search, sortBy, topic }) =>
+          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
+              afterTime,
+              beforeTime,
               boundingBox,
               isAnnouncement,
               isFulfilled,
-              isFuture,
               order,
               search,
               showPinnedFirst: true,
@@ -292,10 +294,12 @@ export default async function makeModels (userId, isAdmin) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { boundingBox, filter, isFuture, search, sortBy, topic }) =>
+          filter: (relation, { afterTime, beforeTime, boundingBox, filter, order, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
+              afterTime,
+              beforeTime,
               boundingBox,
-              isFuture,
+              order,
               search,
               showPinnedFirst: true,
               sortBy,
@@ -324,6 +328,7 @@ export default async function makeModels (userId, isAdmin) {
           limit: first,
           offset,
           onlyMine: context === 'all',
+          order,
           parentSlugs,
           sort: sortBy,
           term: search,

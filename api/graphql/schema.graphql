@@ -222,9 +222,10 @@ type Group {
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   prerequisiteGroups(onlyNotMember: Boolean): GroupQuerySet
   posts(
+    afterTime: Date,
+    beforeTime: Date,
     isAnnouncement: Boolean,
     isFulfilled: Boolean,
-    isFuture: Boolean,
     first: Int,
     order: String,
     sortBy: String,
@@ -244,8 +245,9 @@ type Group {
   slug: String
   suggestedSkills: SkillQuerySet
   viewPosts(
+    afterTime: Date,
+    beforeTime: Date,
     boundingBox: [PointInput],
-    isFuture: Boolean,
     filter: String,
     first: Int,
     offset: Int,
