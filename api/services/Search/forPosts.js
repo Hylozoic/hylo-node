@@ -58,15 +58,11 @@ export default function forPosts (opts) {
       qb.where('is_public', opts.onlyPublic)
     }
 
-    filterAndSortPosts({
+    filterAndSortPosts(Object.assign({}, opts, {
       search: opts.term,
       sortBy: opts.sort,
-      topic: opts.topic,
-      type: opts.type,
-      boundingBox: opts.boundingBox,
-      order: opts.order,
       showPinnedFirst: get(opts.groupIds, 'length') === 1
-    }, qb)
+    }), qb)
 
     if (opts.omit) {
       qb.whereNotIn('posts.id', opts.omit)

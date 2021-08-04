@@ -610,6 +610,8 @@ type Query {
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
+    afterTime: Date,
+    beforeTime: Date,
     boundingBox: [PointInput],
     context: String
     filter: String,

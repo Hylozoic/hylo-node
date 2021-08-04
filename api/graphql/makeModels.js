@@ -194,8 +194,10 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, groupSlugs, context }) =>
+      fetchMany: ({ afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, offset, order, sortBy, search, topic }) =>
         searchQuerySet('posts', {
+          afterTime,
+          beforeTime,
           boundingBox,
           currentUserId: userId,
           groupSlugs,
