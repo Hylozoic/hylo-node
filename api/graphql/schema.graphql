@@ -118,16 +118,18 @@ type Person {
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
   moderatedGroupMembershipsTotal: Int
   posts(
-    first: Int,
-    order: String,
-    sortBy: String,
-    offset: Int,
-    search: String,
-    filter: String,
-    topic: ID,
+    afterTime: Date,
+    beforeTime: Date,
     boundingBox: [PointInput],
+    context: String,
+    filter: String,
+    first: Int,
     groupSlugs: [String],
-    context: String
+    offset: Int,
+    order: String,
+    search: String,
+    sortBy: String,
+    topic: ID
   ): PostQuerySet
   projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
