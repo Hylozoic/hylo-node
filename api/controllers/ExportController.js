@@ -125,23 +125,30 @@ async function exportMembers(groupId, req, email) {
     'join_request_questions',
     'affiliations',
     'groups'
-  ], email)
+  ], email, groupId)
 
 
 }
 
 // toplevel output function for specific endpoints to complete with
-function output(data, columns, email) {
-  // res.setHeader('Content-Type', 'text/csv')
-  // res.setHeader('Content-Disposition', 'attachment; filename=\"' + 'download-' + Date.now() + '.csv\"')
-
+function output(data, columns, email, groupId) {
   stringify(data, {
     header: true,
     columns
   }, (err, output) => {
+    const partialGroupId = groupId.slice(0,7)
+    const formattedDate = new Date().toISOString().slice(0,10)
+    const buff = Buffer.from(output)
+    const base64output = buff.toString('base64')
+
     Queue.classMethod('Email', 'sendExportMembersList', {
       email:  email,
-      data: output
+      files: [
+        {
+          id: `members-export-${partialGroupId}-${formattedDate}.csv`,
+          data: base64output
+      }
+      ]
     })
   })
 
