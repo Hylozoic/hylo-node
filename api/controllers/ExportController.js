@@ -145,12 +145,11 @@ function output(data, columns, email, groupName, questions) {
     questionsArray.forEach((question) => {
       if (!answers) {
         user[`${question.text}`] = '-'
-
       } else {
         const foundAnswer = answers.find((answer) => `${question.id}` === `${answer.question_id}`)
-      user[`${question.text}`] = foundAnswer
-        ? user[`${question.text}`] = foundAnswer.answer
-        :user[`${question.text}`] = '-'
+        user[`${question.text}`] = foundAnswer
+          ? user[`${question.text}`] = foundAnswer.answer
+          :user[`${question.text}`] = '-'
       }
     })
     return user
