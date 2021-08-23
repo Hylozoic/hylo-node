@@ -4,10 +4,10 @@ var skiff = require('./lib/skiff') // this must be required first
 var moment = require('moment-timezone')
 var rollbar = require('./lib/rollbar')
 var sails = skiff.sails
-var digest2 = require('./lib/community/digest2')
+var digest2 = require('./lib/group/digest2')
 var Promise = require('bluebird')
 var { red } = require('chalk')
-const savedSearches = require('./lib/community/digest2/savedSearches')
+const savedSearches = require('./lib/group/digest2/savedSearches')
 
 const sendAndLogDigests = type =>
   digest2.sendAllDigests(type)

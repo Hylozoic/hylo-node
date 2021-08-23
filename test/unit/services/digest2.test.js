@@ -260,7 +260,7 @@ describe('group digest v2', () => {
             title: 'Foo!',
             details: `<p><a href="${prefix}/members/21">Edward West</a> &amp; ` +
               `<a href="${prefix}/members/16325">Julia Pope</a> ` +
-              `<a href="${prefix}/grroups/foo/tag/oakland">#oakland</a></p>`,
+              `<a href="${prefix}/groups/foo/tag/oakland">#oakland</a></p>`,
             user: u1.attributes,
             url: Frontend.Route.post({id: 1}, group),
             comments: []
@@ -400,9 +400,7 @@ describe('group digest v2', () => {
         avatar_url: 'av1'
       }).save()
       u2 = await factories.user({avatar_url: 'av2'}).save()
-      group = await factories.group({
-        daily_digest: true, avatar_url: 'foo'
-      }).save()
+      group = await factories.group({ avatar_url: 'foo' }).save()
 
       post = await factories.post({created_at: six, user_id: u2.id}).save()
       await post.groups().attach(group.id)
@@ -478,7 +476,7 @@ describe('group digest v2', () => {
 })
 
 describe('getRecipients', () => {
-  var c, uIn1, uOut1, uOut2, uOut3, uOut4, uOut5, uIn2
+  var g, uIn1, uOut1, uOut2, uOut3, uOut4, uOut5, uIn2
 
   before(async () => {
     const settings = {digest_frequency: 'daily'}
@@ -489,7 +487,7 @@ describe('getRecipients', () => {
     uOut4 = factories.user({settings: {digest_frequency: 'weekly'}}) // digest_frequency = 'weekly'
     uOut5 = factories.user({settings})                               // not in the group
     uIn2 = factories.user({settings})
-    c = factories.group()
+    g = factories.group()
     await Promise.join(
       uIn1.save(),
       uOut1.save(),
@@ -498,19 +496,19 @@ describe('getRecipients', () => {
       uOut4.save(),
       uOut5.save(),
       uIn2.save(),
-      c.save()
+      g.save()
     )
 
-    await c.addMembers([uIn1, uOut1, uOut2, uOut4, uIn2], {
+    await g.addMembers([uIn1, uOut1, uOut2, uOut4, uIn2], {
       settings: {sendEmail: true}
     })
 
-    await c.addMembers([uOut3], {settings: {sendEmail: false}})
-    await c.removeGroupMembers([uOut2])
+    await g.addMembers([uOut3], {settings: {sendEmail: false}})
+    await g.removeMembers([uOut2])
   })
 
   it('only returns active members with email turned on and the right digest type', () => {
-    return getRecipients(c.id, 'daily')
+    return getRecipients(g.id, 'daily')
     .then(models => {
       expect(models.length).to.equal(2)
       expect(models.map(m => m.id).sort())
