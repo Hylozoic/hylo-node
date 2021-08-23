@@ -50,7 +50,7 @@ async function exportMembers(groupId, req, res) {
     // pluck core user data into results
     results.push(u.pick([
       'name', 'contact_email', 'contact_phone', 'avatar_url', 'tagline', 'bio',
-      'url', 'twitter_url', 'facebook_url', 'linkedin_url'
+      'url', 'twitter_name', 'facebook_url', 'linkedin_url'
     ]))
 
     // return combined promise to load all dependent user data and
@@ -116,7 +116,7 @@ async function exportMembers(groupId, req, res) {
   output(res, results, [
     'name', 'contact_email', 'contact_phone', 'location', 'avatar_url', 'tagline', 'bio',
     { key: 'url', header: 'personal_url' },
-    'twitter_url', 'facebook_url', 'linkedin_url',
+    'twitter_name', 'facebook_url', 'linkedin_url',
     'skills', 'skills_to_learn',
     'join_request_questions',
     'affiliations',
