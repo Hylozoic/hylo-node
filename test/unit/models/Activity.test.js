@@ -8,7 +8,7 @@ const makeGettable = obj => Object.assign({get: key => obj[key], load: () => {}}
 
 function mockUser (memberships) {
   return {
-    groupMembershipsForModel () {
+    memberships () {
       return {
         fetch: () => Promise.resolve({
           models: memberships.map(attrs => {
@@ -40,7 +40,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}]
+              groups: [{id: 1}]
             }
           },
           reader: mockUser(memberships)
@@ -69,7 +69,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}, {id: 2}]
+              groups: [{id: 1}, {id: 2}]
             }
           },
           reader: mockUser(memberships)
@@ -97,7 +97,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}, {id: 2}]
+              groups: [{id: 1}, {id: 2}]
             }
           },
           reader: mockUser(memberships)
@@ -112,7 +112,7 @@ describe('Activity', function () {
       expect(actual).to.deep.equal(expected)
     })
 
-    it('returns a push and an email for different communities', async () => {
+    it('returns a push and an email for different groups', async () => {
       const memberships = [
         {
           settings: {sendEmail: true},
@@ -134,7 +134,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}, {id: 2}]
+              groups: [{id: 1}, {id: 2}]
             }
           },
           reader: mockUser(memberships)

@@ -50,8 +50,8 @@ describe('InvitationService', () => {
     })
   })
 
-  describe('use', () => {
-    before(() => {
+  describe('use', function () {
+    before(function () {
       invitation = factories.invitation()
       return invitation.save({
         invited_by_id: inviter.get('id'),
@@ -59,7 +59,7 @@ describe('InvitationService', () => {
       })
     })
 
-    it('should join the invitee to group if access_code is valid', () => {
+    it('should join the invitee to group if access_code is valid', function () {
       const accessCode = group.get('access_code')
       return InvitationService.use(invitee.get('id'), null, accessCode)
       .then(membership =>
@@ -70,7 +70,7 @@ describe('InvitationService', () => {
       )
     })
 
-    it('should join the invitee to group if token is valid', () => {
+    it('should join the invitee to group if token is valid', function () {
       const userId = invitee.get('id')
       const token = invitation.get('token')
       return InvitationService.use(userId, token, null)
@@ -82,7 +82,7 @@ describe('InvitationService', () => {
       )
     })
 
-    it('should join the invitee to group by accessCode if both an accessCode and token are provided', () => {
+    it('should join the invitee to group by accessCode if both an accessCode and token are provided', function () {
       const userId = invitee.get('id')
       const token = invitation.get('token')
       const accessCode = group.get('access_code')

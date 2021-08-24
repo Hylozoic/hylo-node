@@ -1,9 +1,9 @@
-import { makeFilterToggle, sharedGroupMembership } from './filters'
+import { makeFilterToggle } from './filters'
 import makeModels from './makeModels'
 import { expectEqualQuery } from '../../test/setup/helpers'
 import {
   myGroupIdsSqlFragment
-} from '../test/unit/models/Group.test.js'
+} from '../../test/unit/models/Group.test'
 import factories from '../../test/setup/factories'
 
 const myId = '42'
@@ -15,19 +15,19 @@ const setupBlockedUserData = async () => {
   const u2 = factories.user()
   const u3 = factories.user()
   const u4 = factories.user()
-  const community = factories.community()
+  const group = factories.group()
   await u1.save()
   await u2.save()
   await u3.save()
   await u4.save()
-  await community.save()
-  await u1.joinCommunity(community)
-  await u2.joinCommunity(community)
-  await u3.joinCommunity(community)
-  await u4.joinCommunity(community)
+  await group.save()
+  await u1.joinGroup(group)
+  await u2.joinGroup(group)
+  await u3.joinGroup(group)
+  await u4.joinGroup(group)
   await BlockedUser.create(u1.id, u2.id)
   await BlockedUser.create(u3.id, u1.id)
-  return {u1, u2, u3, u4, community}
+  return {u1, u2, u3, u4, group}
 }
 
 export function blockedUserSqlFragment (userId) {
@@ -58,8 +58,7 @@ describe('makeFilterToggle', () => {
 describe('model filters', () => {
   before(async () => {
     sharedMemberships = `"group_memberships"
-      where "group_memberships"."active" = true
-      and "group_memberships"."group_id" in (
+      where "group_memberships"."group_id" in (
         select "group_id" from "group_memberships"
         and "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
         and "group_memberships"."active" = true
@@ -69,7 +68,7 @@ describe('model filters', () => {
   })
 
   describe('Membership', () => {
-    it('filters down to memberships for communities the user is in', () => {
+    it('filters down to memberships for groups the user is in', () => {
       const collection = models.Membership.filter(GroupMembership.collection())
       expectEqualQuery(collection, `select * from ${sharedMemberships}`)
     })
@@ -102,7 +101,7 @@ describe('model filters', () => {
       expect(users.map('id')).to.deep.equal([connectedUser.id])
     })
 
-    it.skip('filters down to people that share a community with the user', () => {
+    it.skip('filters down to people that share a group with the user', () => {
       const collection = models.Person.filter(User.collection())
       expectEqualQuery(collection, `select * from "users"
         where
@@ -119,7 +118,7 @@ describe('model filters', () => {
   })
 
   describe('Post', () => {
-    var u1, u2, u3, u4, community;
+    var u1, u2, u3, u4, group;
 
     before(async () => {
       const blockedUserData = await setupBlockedUserData()
@@ -127,16 +126,16 @@ describe('model filters', () => {
       u2 = blockedUserData.u2
       u3 = blockedUserData.u3
       u4 = blockedUserData.u4
-      community = blockedUserData.community
+      group = blockedUserData.group
       const p1 = factories.post({user_id: u2.id})
       const p2 = factories.post({user_id: u3.id})
       const p3 = factories.post({user_id: u4.id})
       await p1.save({active: true})
-      await p1.communities().attach(community)
+      await p1.groups().attach(group)
       await p2.save({active: true})
-      await p2.communities().attach(community)
+      await p2.groups().attach(group)
       await p3.save({active: true})
-      await p3.communities().attach(community)
+      await p3.groups().attach(group)
     })
 
     it('filters posts by blocked and blocking users', async () => {
@@ -181,10 +180,3 @@ describe('model filters', () => {
   })
 })
 
-describe('sharedGroupMembership', () => {
-  it('supports a limited set of tables', () => {
-    expect(() => {
-      sharedGroupMembership('foo', 42, Post.collection())
-    }).to.throw(/does not support foo/)
-  })
-})

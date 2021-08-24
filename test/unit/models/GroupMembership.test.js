@@ -10,7 +10,7 @@ describe('GroupMembership', () => {
     let c, u
 
     before(async () => {
-      c = await factories.community().save()
+      c = await factories.group().save()
       u = await factories.user().save()
     })
 
@@ -19,7 +19,7 @@ describe('GroupMembership', () => {
     })
 
     it('should throw if no instance', () => {
-      expect(() => GroupMembership.forPair(u)).to.throw(/without an instance/)
+      expect(() => GroupMembership.forPair(u)).to.throw(/without a group/)
     })
 
     it('should invoke forIds with the correct ids and model', async () => {
@@ -35,9 +35,9 @@ describe('GroupMembership', () => {
 
     before(async () => {
       u = await factories.user().save()
-      c1 = await factories.community().save()
-      c2 = await factories.community().save()
-      gm = await u.joinCommunity(c1)
+      c1 = await factories.group().save()
+      c2 = await factories.group().save()
+      gm = await u.joinGroup(c1)
     })
 
     it('returns true if user is a member', async () => {

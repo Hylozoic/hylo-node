@@ -18,12 +18,6 @@ module.exports = async function checkAndSetMembership (req, res, next) {
   const membership = await GroupMembership.forPair(userId, group).fetch()
   if (membership) return next()
 
-  // TODO: remove
-  // if (community.get('network_id') && req.session.userId) {
-  //   const inNetwork = await Network.containsUser(community.get('network_id'), req.session.userId)
-  //   if (inNetwork) return next()
-  // }
-
   sails.log.debug(`policy: checkAndSetMembership: fail. user ${req.session.userId}, group ${group.id}`)
   res.forbidden()
 }

@@ -4,24 +4,24 @@ const factories = require(root('test/setup/factories'))
 import { spyify, unspyify } from '../../../setup/helpers'
 
 describe('post/request', () => {
-  let author, contributor1, contributor2, post, community, fulfilledAt
+  let author, contributor1, contributor2, post, group, fulfilledAt
 
   beforeEach(() => {
     fulfilledAt = new Date()
     return setup.clearDb().then(() => Promise.props({
       author: factories.user().save(),
-      community: factories.community().save(),
+      group: factories.group().save(),
       post: factories.post().save(),
       contributor1: factories.user().save(),
       contributor2: factories.user().save()
     }))
     .tap(fixtures => Promise.all([
         fixtures.post.save('user_id', fixtures.author.get('id')),
-        fixtures.post.communities().attach(fixtures.community)
+        fixtures.post.groups().attach(fixtures.group)
       ])
     )
     .then(fixtures => {
-      return { author, contributor1, contributor2, post, community } = fixtures
+      return { author, contributor1, contributor2, post, group } = fixtures
     })
   })
 

@@ -101,30 +101,28 @@ describe('moderation', () => {
 
   describe('regenerateAccessCode', () => {
     it('works', async () => {
-      const code = group.get('acess_code')
+      const code = group.get('access_code')
       await regenerateAccessCode(user.id, group.id)
       await group.refresh()
-      expect(group.get('acess_code')).not.to.equal(code)
+      expect(group.get('access_code')).not.to.equal(code)
     })
   })
 })
 
 describe('createGroup', () => {
-  let user, starterGroup, starterPost, network
+  let user, starterGroup, starterPost
 
   before(async () => {
     user = await factories.user().save()
-    network = await factories.network().save()
     starterGroup = await factories.group({slug: 'starter-posts'}).save()
     starterPost = await factories.post().save()
     await starterGroup.posts().attach(starterPost.id)
-    await NetworkMembership.addModerator(user.id, network.id)
   })
 
   it('returns the new moderator membership', async () => {
     const membership = await createGroup(user.id, {
       name: 'Foo',
-      slug: 'foo',
+      slug: 'foob',
       description: 'Here be foo'
     })
 
@@ -132,28 +130,21 @@ describe('createGroup', () => {
     expect(membership.get('role')).to.equal(GroupMembership.Role.MODERATOR)
     const group = await membership.groupData().fetch()
     expect(group).to.exist
-    expect(group.get('slug')).to.equal('foo')
+    expect(group.get('slug')).to.equal('foob')
     const post = await group.posts().fetchOne()
     expect(post).to.exist
     expect(post.get('name')).to.equal(starterPost.get('name'))
   })
 
-  it("rejects if can't moderate network", () => {
-    const data = {name: 'goose', slug: 'goose', networkId: network.id + 1}
-    return createGroup(user.id, data)
-    .then(() => expect.fail('should reject'))
-    .catch(e => expect(e.message).to.match(/don't have permission/))
-  })
-
-  it('creates group in network if user can moderate', () => {
-    const data = {name: 'goose', slug: 'goose', networkId: network.id}
+  it('creates sub-group in the group if user can moderate', () => {
+    const data = {name: 'goose', slug: 'goose', parentIds: [starterGroup.id]}
     return createGroup(user.id, data)
     .then(membership => {
       return membership.groupData().fetch()
     })
     .then(group => {
       expect(group).to.exist
-      expect(Number(group.get('network_id'))).to.equal(network.id)
+      expect(Number(group.childGroups().length)).to.equal(1)
     })
   })
 })

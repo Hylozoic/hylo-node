@@ -44,11 +44,13 @@ describe('mutations', () => {
   })
 
   it('sets allow group invites', async () => {
-    const results = await allowGroupInvites(u1.id, false)
+    const results = await allowGroupInvites(group.id, true)
     expect(results.success).to.equal(true)
+    expect(group.getSetting('allow_group_invites')).to.equal(true)
 
-    const results2 = await allowGroupInvites(u1.id, true)
+    const results2 = await allowGroupInvites(group.id, false)
     expect(results2.success).to.equal(true)
+    expect(group.getSetting('allow_group_invites')).to.equal(false)
   })
 
   it('fails when adding a skill with 0 length', async () => {

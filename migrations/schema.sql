@@ -701,6 +701,108 @@ ALTER SEQUENCE public.group_relationship_invites_id_seq OWNED BY public.group_re
 
 
 --
+-- Name: group_to_group_join_questions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_to_group_join_questions (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    question_id bigint NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: group_to_group_join_questions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.group_to_group_join_questions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_to_group_join_questions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.group_to_group_join_questions_id_seq OWNED BY public.group_to_group_join_questions.id;
+
+
+--
+-- Name: group_to_group_join_request_question_answers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_to_group_join_request_question_answers (
+    id integer NOT NULL,
+    question_id bigint NOT NULL,
+    join_request_id bigint NOT NULL,
+    answer text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: group_to_group_join_request_question_answers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.group_to_group_join_request_question_answers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_to_group_join_request_question_answers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.group_to_group_join_request_question_answers_id_seq OWNED BY public.group_to_group_join_request_question_answers.id;
+
+
+--
+-- Name: group_widgets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_widgets (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    widget_id bigint NOT NULL,
+    settings jsonb,
+    is_visible boolean DEFAULT true,
+    "order" integer,
+    created_at timestamp with time zone
+);
+
+
+--
+-- Name: group_widgets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.group_widgets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_widgets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.group_widgets_id_seq OWNED BY public.group_widgets.id;
+
+
+--
 -- Name: groups; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -760,6 +862,38 @@ CREATE TABLE public.groups_posts (
     pinned_at timestamp with time zone,
     group_id bigint NOT NULL
 );
+
+
+--
+-- Name: groups_suggested_skills; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.groups_suggested_skills (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    skill_id bigint NOT NULL,
+    created_at timestamp with time zone
+);
+
+
+--
+-- Name: groups_suggested_skills_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.groups_suggested_skills_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: groups_suggested_skills_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.groups_suggested_skills_id_seq OWNED BY public.groups_suggested_skills.id;
 
 
 --
@@ -1487,7 +1621,8 @@ CREATE TABLE public.users (
     stripe_account_id bigint,
     location_id bigint,
     contact_email character varying(255),
-    contact_phone character varying(255)
+    contact_phone character varying(255),
+    last_active_at timestamp with time zone
 );
 
 
@@ -2022,6 +2157,37 @@ CREATE TABLE public.votes (
 
 
 --
+-- Name: widgets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.widgets (
+    id integer NOT NULL,
+    name character varying(255),
+    created_at timestamp with time zone
+);
+
+
+--
+-- Name: widgets_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.widgets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: widgets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.widgets_id_seq OWNED BY public.widgets.id;
+
+
+--
 -- Name: activities id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2106,6 +2272,27 @@ ALTER TABLE ONLY public.group_relationships ALTER COLUMN id SET DEFAULT nextval(
 
 
 --
+-- Name: group_to_group_join_questions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_questions ALTER COLUMN id SET DEFAULT nextval('public.group_to_group_join_questions_id_seq'::regclass);
+
+
+--
+-- Name: group_to_group_join_request_question_answers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_request_question_answers ALTER COLUMN id SET DEFAULT nextval('public.group_to_group_join_request_question_answers_id_seq'::regclass);
+
+
+--
+-- Name: group_widgets id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_widgets ALTER COLUMN id SET DEFAULT nextval('public.group_widgets_id_seq'::regclass);
+
+
+--
 -- Name: groups id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2117,6 +2304,13 @@ ALTER TABLE ONLY public.groups ALTER COLUMN id SET DEFAULT nextval('public.group
 --
 
 ALTER TABLE ONLY public.groups_posts ALTER COLUMN id SET DEFAULT nextval('public.post_community_id_seq'::regclass);
+
+
+--
+-- Name: groups_suggested_skills id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_suggested_skills ALTER COLUMN id SET DEFAULT nextval('public.groups_suggested_skills_id_seq'::regclass);
 
 
 --
@@ -2309,6 +2503,13 @@ ALTER TABLE ONLY public.user_external_data ALTER COLUMN id SET DEFAULT nextval('
 
 
 --
+-- Name: widgets id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.widgets ALTER COLUMN id SET DEFAULT nextval('public.widgets_id_seq'::regclass);
+
+
+--
 -- Name: users pk_users; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2486,6 +2687,30 @@ ALTER TABLE ONLY public.group_relationship_invites
 
 
 --
+-- Name: group_to_group_join_questions group_to_group_join_questions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_questions
+    ADD CONSTRAINT group_to_group_join_questions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_to_group_join_request_question_answers group_to_group_join_request_question_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_request_question_answers
+    ADD CONSTRAINT group_to_group_join_request_question_answers_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_widgets group_widgets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_widgets
+    ADD CONSTRAINT group_widgets_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: groups groups_access_code_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2523,6 +2748,14 @@ ALTER TABLE ONLY public.groups_posts
 
 ALTER TABLE ONLY public.groups
     ADD CONSTRAINT groups_slug_unique UNIQUE (slug);
+
+
+--
+-- Name: groups_suggested_skills groups_suggested_skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_suggested_skills
+    ADD CONSTRAINT groups_suggested_skills_pkey PRIMARY KEY (id);
 
 
 --
@@ -3030,6 +3263,14 @@ ALTER TABLE ONLY public.communities_users
 
 
 --
+-- Name: widgets widgets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.widgets
+    ADD CONSTRAINT widgets_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: communities_tags_community_id_visibility_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3041,6 +3282,13 @@ CREATE INDEX communities_tags_community_id_visibility_index ON public.groups_tag
 --
 
 CREATE INDEX fk_community_created_by_1 ON public.communities USING btree (created_by_id);
+
+
+--
+-- Name: group_invites_email_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX group_invites_email_index ON public.group_invites USING btree (email);
 
 
 --
@@ -3062,6 +3310,34 @@ CREATE INDEX group_join_questions_group_id_index ON public.group_join_questions 
 --
 
 CREATE INDEX group_relationship_invites_from_group_id_to_group_id_index ON public.group_relationship_invites USING btree (from_group_id, to_group_id);
+
+
+--
+-- Name: group_to_group_join_questions_group_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX group_to_group_join_questions_group_id_index ON public.group_to_group_join_questions USING btree (group_id);
+
+
+--
+-- Name: group_to_group_join_request_question_answers_join_request_id_in; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX group_to_group_join_request_question_answers_join_request_id_in ON public.group_to_group_join_request_question_answers USING btree (join_request_id);
+
+
+--
+-- Name: group_widgets_group_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX group_widgets_group_id_index ON public.group_widgets USING btree (group_id);
+
+
+--
+-- Name: groups_suggested_skills_group_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX groups_suggested_skills_group_id_index ON public.groups_suggested_skills USING btree (group_id);
 
 
 --
@@ -3860,6 +4136,54 @@ ALTER TABLE ONLY public.group_relationship_invites
 
 
 --
+-- Name: group_to_group_join_questions group_to_group_join_questions_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_questions
+    ADD CONSTRAINT group_to_group_join_questions_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
+
+
+--
+-- Name: group_to_group_join_questions group_to_group_join_questions_question_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_questions
+    ADD CONSTRAINT group_to_group_join_questions_question_id_foreign FOREIGN KEY (question_id) REFERENCES public.questions(id);
+
+
+--
+-- Name: group_to_group_join_request_question_answers group_to_group_join_request_question_answers_join_request_id_fo; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_request_question_answers
+    ADD CONSTRAINT group_to_group_join_request_question_answers_join_request_id_fo FOREIGN KEY (join_request_id) REFERENCES public.group_relationship_invites(id);
+
+
+--
+-- Name: group_to_group_join_request_question_answers group_to_group_join_request_question_answers_question_id_foreig; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_to_group_join_request_question_answers
+    ADD CONSTRAINT group_to_group_join_request_question_answers_question_id_foreig FOREIGN KEY (question_id) REFERENCES public.questions(id);
+
+
+--
+-- Name: group_widgets group_widgets_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_widgets
+    ADD CONSTRAINT group_widgets_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
+
+
+--
+-- Name: group_widgets group_widgets_widget_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_widgets
+    ADD CONSTRAINT group_widgets_widget_id_foreign FOREIGN KEY (widget_id) REFERENCES public.widgets(id);
+
+
+--
 -- Name: groups groups_created_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3881,6 +4205,22 @@ ALTER TABLE ONLY public.groups
 
 ALTER TABLE ONLY public.groups_posts
     ADD CONSTRAINT groups_posts_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: groups_suggested_skills groups_suggested_skills_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_suggested_skills
+    ADD CONSTRAINT groups_suggested_skills_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
+
+
+--
+-- Name: groups_suggested_skills groups_suggested_skills_skill_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_suggested_skills
+    ADD CONSTRAINT groups_suggested_skills_skill_id_foreign FOREIGN KEY (skill_id) REFERENCES public.skills(id);
 
 
 --

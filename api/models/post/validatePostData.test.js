@@ -4,8 +4,8 @@ describe('validatePostData', () => {
   var user, inGroup, notInGroup
 
   before(function () {
-    inGroup = new Group({slug: 'foo', name: 'Foo'})
-    notInGroup = new Group({slug: 'bar', name: 'Bar'})
+    inGroup = new Group({slug: 'foo', name: 'Foo', group_data_type: 1 })
+    notInGroup = new Group({slug: 'bar', name: 'Bar', group_data_type: 1 })
     user = new User({name: 'Cat', email: 'a@b.c'})
     return Promise.join(
       inGroup.save(),

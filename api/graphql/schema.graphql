@@ -946,7 +946,6 @@ type Mutation {
   unfulfillPost(postId: ID): GenericResult
   updateComment(id: ID, data: CommentInput): Comment
   updateGroupSettings(id: ID, changes: GroupInput): Group
-  updateGroupHiddenSetting(id: ID, hidden: Boolean): Group
   updateGroupTopic(id: ID, data: GroupTopicInput): GenericResult
   updateGroupTopicFollow(id: ID, data: GroupTopicFollowInput): GenericResult
   updateMe(changes: MeInput): Me

@@ -20,7 +20,7 @@ describe('CommentController', function () {
       fixtures = props
     })
     .then(() => Promise.join(
-      fixtures.p1.communities().attach(fixtures.g1.id),
+      fixtures.p1.groups().attach(fixtures.g1.id),
       fixtures.p1.comments().create(fixtures.cm1),
       fixtures.g1.addMembers([fixtures.u1.id])
     )))
@@ -88,9 +88,9 @@ describe('CommentController', function () {
       }
       return Promise.join(p1.save(), p2.save(), p3.save())
       .then(() => Promise.join(
-        p1.communities().attach(fixtures.g1),
-        p2.communities().attach(fixtures.g1),
-        p3.communities().attach(fixtures.g1)))
+        p1.groups().attach(fixtures.g1),
+        p2.groups().attach(fixtures.g1),
+        p3.groups().attach(fixtures.g1)))
     })
 
     it('creates comments', () => {

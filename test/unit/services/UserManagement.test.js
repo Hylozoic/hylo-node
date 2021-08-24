@@ -11,7 +11,7 @@ describe('UserManagement', () => {
     .then(() => Device.forge({user_id: user.id}).save())
   })
 
-  describe('removeUser', () => {
+  describe.skip('removeUser', () => {
     it('works', () => {
       return UserManagement.removeUser(user.id)
       .then(() => User.find(user.id))
@@ -19,7 +19,7 @@ describe('UserManagement', () => {
     })
   })
 
-  describe('mergeUsers', () => {
+  describe.skip('mergeUsers', () => {
     var user2, post
 
     beforeEach(() => {

@@ -260,7 +260,7 @@ describe('group digest v2', () => {
             title: 'Foo!',
             details: `<p><a href="${prefix}/members/21">Edward West</a> &amp; ` +
               `<a href="${prefix}/members/16325">Julia Pope</a> ` +
-              `<a href="${prefix}/groups/foo/tag/oakland">#oakland</a></p>`,
+              `<a href="${prefix}/groups/foo/topics/oakland">#oakland</a></p>`,
             user: u1.attributes,
             url: Frontend.Route.post({id: 1}, group),
             comments: []

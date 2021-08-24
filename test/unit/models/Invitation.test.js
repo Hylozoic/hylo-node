@@ -15,22 +15,22 @@ describe('Invitation', function () {
   })
 
   describe('#use', function () {
-    var user, community, tag, invitation1, invitation2, inviter
+    var user, group, tag, invitation1, invitation2, inviter
 
     before(async () => {
       inviter = await factories.user().save()
       user = await factories.user().save()
-      community = await factories.community().save()
+      group = await factories.group().save()
       tag = await new Tag({name: 'taginvitationtest'}).save()
       invitation1 = await Invitation.create({
         userId: inviter.id,
-        communityId: community.id,
+        groupId: group.id,
         email: 'foo@comcom.com',
         moderator: true
       })
       invitation2 = await Invitation.create({
         userId: inviter.id,
-        communityId: community.id,
+        groupId: group.id,
         email: 'foo@comcom.com',
         moderator: true,
         tag_id: tag.id
@@ -41,7 +41,7 @@ describe('Invitation', function () {
       await bookshelf.transaction(trx => invitation1.use(user.id, {transacting: trx}))
       expect(invitation1.get('used_by_id')).to.equal(user.id)
       expect(invitation1.get('used_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
-      const isModerator = await GroupMembership.hasModeratorRole(user, community)
+      const isModerator = await GroupMembership.hasModeratorRole(user, group)
       expect(isModerator).to.be.true
     })
 
@@ -49,7 +49,7 @@ describe('Invitation', function () {
       return bookshelf.transaction(trx => invitation2.use(user.id, {transacting: trx}))
       .then(TagFollow.where({
         user_id: user.id,
-        community_id: community.id,
+        group_id: group.id,
         tag_id: tag.id
       }).fetch())
       .then(tagFollow => expect(tagFollow).to.exist)
@@ -57,28 +57,28 @@ describe('Invitation', function () {
   })
 
   describe('.reinviteAll', () => {
-    var community, c2, user, inviter
+    var group, c2, user, inviter
     before(() => {
-      community = factories.community()
-      c2 = factories.community()
+      group = factories.group()
+      c2 = factories.group()
       user = factories.user()
       inviter = factories.user()
       spyify(Email, 'sendInvitation', () => Promise.resolve({}))
-      return Promise.join(inviter.save(), user.save(), community.save(), c2.save())
+      return Promise.join(inviter.save(), user.save(), group.save(), c2.save())
       .then(() => {
         return Promise.join(
           Invitation.create({
-            communityId: community.id,
+            groupId: group.id,
             userId: inviter.id,
             email: 'foo@bar.com'
           }),
           Invitation.create({
-            communityId: community.id,
+            groupId: group.id,
             userId: inviter.id,
             email: 'bar@baz.com'
           }),
           Invitation.create({
-            communityId: c2.id,
+            groupId: c2.id,
             userId: inviter.id,
             email: 'baz@foo.com'
           })
@@ -91,7 +91,7 @@ describe('Invitation', function () {
     it('calls Email.sendInvitation twice', () => {
       return Invitation.reinviteAll({
         userId: inviter.id,
-        communityId: community.id
+        groupId: group.id
       })
       .then(() => {
         expect(Email.sendInvitation).to.have.been.called.exactly(2)
@@ -100,9 +100,9 @@ describe('Invitation', function () {
   })
 
   describe('createAndSend', () => {
-    var community, user, inviter, invEmail, invData
+    var group, user, inviter, invEmail, invData
     before(() => {
-      community = factories.community()
+      group = factories.group()
       user = factories.user()
       inviter = factories.user()
       spyify(Email, 'sendInvitation', (email, data) => {
@@ -110,7 +110,7 @@ describe('Invitation', function () {
         invData = data
         return Promise.resolve({})
       })
-      return Promise.join(inviter.save(), user.save(), community.save())
+      return Promise.join(inviter.save(), user.save(), group.save())
     })
 
     after(() => unspyify(Email, 'sendInvitation'))
@@ -121,7 +121,7 @@ describe('Invitation', function () {
       const email = 'foo@comcom.com'
       const invitation = await Invitation.create({
         userId: inviter.id,
-        communityId: community.id,
+        groupId: group.id,
         email,
         moderator: true,
         subject,
@@ -129,7 +129,7 @@ describe('Invitation', function () {
       })
       // console.log('invitation in test', invitation)
       return Invitation.createAndSend({invitation})
-      .then(() => Invitation.where({email: email, community_id: community.id}).fetch())
+      .then(() => Invitation.where({email: email, group_id: group.id}).fetch())
       .then(invitation => {
         expect(invitation).to.exist
         expect(invitation.get('subject')).to.equal(subject)
@@ -143,22 +143,22 @@ describe('Invitation', function () {
           message,
           inviter_name: inviter.get('name'),
           inviter_email: inviter.get('email'),
-          community_name: community.get('name')
+          group_name: group.get('name')
         })
       })
     })
   })
 
   describe('.resendAllReady', () => {
-    var community, c2, inviter, user
+    var group, c2, inviter, user
     before(() => {
-      community = factories.community()
-      c2 = factories.community()
+      group = factories.group()
+      c2 = factories.group()
       inviter = factories.user()
       user = factories.user()
       const day = 1000 * 60 * 60 * 24
       const now = new Date()
-      return Promise.join(inviter.save(), community.save(), c2.save(), user.save())
+      return Promise.join(inviter.save(), group.save(), c2.save(), user.save())
       .then(() => {
         const attributes = [
           {
@@ -191,7 +191,7 @@ describe('Invitation', function () {
 
         const userId = inviter.id
         return Promise.map(attributes, ({ email, sent_count, last_sent_at, used_by_id }) =>
-          Invitation.create({communityId: community.id, userId, email})
+          Invitation.create({groupId: group.id, userId, email})
           .then(i => i.save({sent_count, last_sent_at, used_by_id}, {patch: true})))
       })
     })
@@ -201,7 +201,7 @@ describe('Invitation', function () {
       const now = new Date().getTime()
 
       return Invitation.resendAllReady()
-      .then(() => Invitation.where({community_id: community.id}).fetchAll())
+      .then(() => Invitation.where({group_id: group.id}).fetchAll())
       .then(invitations => {
         const expected = sortBy('email', [
           {

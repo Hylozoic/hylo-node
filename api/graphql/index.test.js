@@ -4,13 +4,13 @@ import '../../test/setup'
 import factories from '../../test/setup/factories'
 import { spyify, unspyify } from '../../test/setup/helpers'
 import { some, sortBy } from 'lodash/fp'
-import { updateNetworkMemberships } from '../models/post/util'
+import { updateFollowers } from '../models/post/util'
 
 describe('graphql request handler', () => {
   var handler,
     req, res,
     user, user2,
-    group, network,
+    group,
     post, post2, comment, media
 
   before(async () => {
@@ -19,13 +19,10 @@ describe('graphql request handler', () => {
     user = factories.user()
     user2 = factories.user()
     group = factories.group()
-    network = factories.network()
     post = factories.post({type: Post.Type.DISCUSSION})
     post2 = factories.post({type: Post.Type.REQUEST})
     comment = factories.comment()
     media = factories.media()
-    await network.save()
-    await group.save({network_id: network.id})
     await user.save()
     await user2.save()
     await post.save({user_id: user.id})
@@ -41,8 +38,8 @@ describe('graphql request handler', () => {
       })
     ])
     .then(() => Promise.all([
-      updateNetworkMemberships(post),
-      updateNetworkMemberships(post2)
+      updateFollowers(post),
+      updateFollowers(post2)
     ]))
   })
 
@@ -409,53 +406,6 @@ describe('graphql request handler', () => {
               }
             }
           })
-        })
-      })
-    })
-  })
-
-  describe('querying network data', () => {
-    it('works as expected', () => {
-      req.body = {
-        query: `{
-          network(id: "${network.id}") {
-            slug
-            isModerator
-            isAdmin
-            members(first: 2, sortBy: "name") {
-              items {
-                name
-              }
-            }
-            posts(first: 1, filter: "${Post.Type.REQUEST}") {
-              items {
-                title
-              }
-            }
-          }
-        }`
-      }
-
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            network: {
-              slug: network.get('slug'),
-              isAdmin: false,
-              isModerator: false,
-              members: {
-                items: sortBy('name', [
-                  {name: user2.get('name')},
-                  {name: user.get('name')}
-                ])
-              },
-              posts: {
-                items: [
-                  {title: post2.get('name')}
-                ]
-              }
-            }
-          }
         })
       })
     })

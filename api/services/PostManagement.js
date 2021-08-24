@@ -27,7 +27,7 @@ export const removePost = postId => {
       remove('user_post_relevance'),
       remove('posts_tags'),
       remove('posts_users'),
-      remove('communities_posts'),
+      remove('groups_posts'),
       unset('posts', 'parent_post_id')
     ])
     .then(() => trx('posts').where('id', postId).del())
