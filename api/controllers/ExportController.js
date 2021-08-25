@@ -47,7 +47,11 @@ async function exportMembers(groupId, req, email) {
                   .members()
                   .fetch()
 
+  const group = await new Group({ id: groupId })
+                  .fetch()
+
   const results = []
+  const questions = {}
 
   // iterate over all group members
   await Promise.all(users.map((u, idx) => {
@@ -104,7 +108,7 @@ async function exportMembers(groupId, req, email) {
         })
         .then(data => {
           if (!data) return
-          results[idx]['join_request_questions'] = accumulatePivotCell(data, renderJoinRequestAnswer)
+          results[idx]['join_request_answers'] = accumulateJoinRequestQA(data, questions)
         }),
 
       // other groups the requesting member has acccess to
@@ -122,30 +126,48 @@ async function exportMembers(groupId, req, email) {
     { key: 'url', header: 'personal_url' },
     'twitter_url', 'facebook_url', 'linkedin_url',
     'skills', 'skills_to_learn',
-    'join_request_questions',
     'affiliations',
     'groups'
-  ], email, groupId)
-
-
+  ], email, group.get('name'), questions)
 }
 
 // toplevel output function for specific endpoints to complete with
-function output(data, columns, email, groupId) {
-  stringify(data, {
+function output(data, columns, email, groupName, questions) {
+  // Add each question as a column in the results
+  const questionsArray = Object.values(questions)
+  questionsArray.forEach((question) => {
+    columns.push(`${question.text}`)
+  })
+
+  // Add rows for each user to match their answers with the added question colums
+  const transformedData = data.map((user) => {
+    const answers = user.join_request_answers
+    questionsArray.forEach((question) => {
+      if (!answers) {
+        user[`${question.text}`] = '-'
+      } else {
+        const foundAnswer = answers.find((answer) => `${question.id}` === `${answer.question_id}`)
+        user[`${question.text}`] = foundAnswer
+          ? user[`${question.text}`] = foundAnswer.answer
+          :user[`${question.text}`] = '-'
+      }
+    })
+    return user
+  })
+  
+  stringify(transformedData, {
     header: true,
     columns
   }, (err, output) => {
-    const partialGroupId = groupId.slice(0,7)
     const formattedDate = new Date().toISOString().slice(0,10)
     const buff = Buffer.from(output)
     const base64output = buff.toString('base64')
-
+ 
     Queue.classMethod('Email', 'sendExportMembersList', {
       email:  email,
       files: [
         {
-          id: `members-export-${partialGroupId}-${formattedDate}.csv`,
+          id: `members-export-${groupName}-${formattedDate}.csv`,
           data: base64output
       }
       ]
@@ -157,6 +179,17 @@ function output(data, columns, email, groupId) {
 // reduce helper to format lists of records into single CSV cells
 function accumulatePivotCell(records, renderValue) {
   return records.reduce((joined, a) => joined ? (joined + `,${renderValue(a)}`) : renderValue(a), null)
+}
+
+const accumulateJoinRequestQA = (records, questions) => {
+  // an array of question/answer pairs
+  if (records[0] && records[0][0]){
+    records.forEach((record) => {
+      const question = record[0].toJSON()
+      questions[question.id] = question  
+    })
+  }
+  return records.reduce((accum, record) => accum.concat(renderJoinRequestAnswersToJSON(record)), [])
 }
 
 // formatting for individual sub-cell record types
@@ -180,8 +213,9 @@ function renderSkill(s) {
   return s.get('name')
 }
 
-function renderJoinRequestAnswer(s) {
-  return `${s[0].get('text')}: ${s[1].get('answer')}`
+function renderJoinRequestAnswersToJSON(QApair) {
+  if (QApair.length === 0) {return []}
+  return [QApair[1].toJSON()]
 }
 
 function renderGroup(g) {
