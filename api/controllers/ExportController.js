@@ -6,6 +6,9 @@ module.exports = {
   groupData: async function (req, res) {
     const p = req.allParams()
 
+    const user = await new User({id: req.session.userId} )
+                  .fetch({ columns: ['email']})
+
     if (!p.groupId) {
       throw new Error("Please specify group ID")
     }
@@ -27,7 +30,8 @@ module.exports = {
 
     // process specified datasets
     if (p.datasets.includes('members')) {
-      return exportMembers(p.groupId, req, res)
+      exportMembers(p.groupId, req, user.get('email'))
+      return res.ok({})
     }
 
     // got to the end and nothing output/exited, throw error
@@ -38,7 +42,7 @@ module.exports = {
 /**
  * Group members export by Group ID
  */
-async function exportMembers(groupId, req, res) {
+async function exportMembers(groupId, req, email) {
   const users = await new Group({ id: groupId })
                   .members()
                   .fetch()
@@ -113,7 +117,7 @@ async function exportMembers(groupId, req, res) {
   }))
 
   // send data as CSV response
-  output(res, results, [
+  output(results, [
     'name', 'contact_email', 'contact_phone', 'location', 'avatar_url', 'tagline', 'bio',
     { key: 'url', header: 'personal_url' },
     'twitter_url', 'facebook_url', 'linkedin_url',
@@ -121,19 +125,33 @@ async function exportMembers(groupId, req, res) {
     'join_request_questions',
     'affiliations',
     'groups'
-  ])
+  ], email, groupId)
+
+
 }
 
 // toplevel output function for specific endpoints to complete with
-function output(res, data, columns) {
-  res.setHeader('Content-Type', 'text/csv')
-  res.setHeader('Content-Disposition', 'attachment; filename=\"' + 'download-' + Date.now() + '.csv\"')
-
+function output(data, columns, email, groupId) {
   stringify(data, {
     header: true,
     columns
+  }, (err, output) => {
+    const partialGroupId = groupId.slice(0,7)
+    const formattedDate = new Date().toISOString().slice(0,10)
+    const buff = Buffer.from(output)
+    const base64output = buff.toString('base64')
+
+    Queue.classMethod('Email', 'sendExportMembersList', {
+      email:  email,
+      files: [
+        {
+          id: `members-export-${partialGroupId}-${formattedDate}.csv`,
+          data: base64output
+      }
+      ]
+    })
   })
-    .pipe(res)
+
 }
 
 // reduce helper to format lists of records into single CSV cells
@@ -144,9 +162,10 @@ function accumulatePivotCell(records, renderValue) {
 // formatting for individual sub-cell record types
 
 function renderLocation(l) {
-  if (l === null) {
+  if (l === null || l.get('center') === null) {
     return ''
   }
+
   const geometry = l.get('center')  // :TODO: make this work for polygonal locations, if needed
   const lat = geometry.lat
   const lng = geometry.lng
