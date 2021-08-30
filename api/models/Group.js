@@ -428,17 +428,22 @@ module.exports = bookshelf.Model.extend(merge({
       if (data.parent_ids) {
         for (const parentId of data.parent_ids) {
           // Only allow for adding parent groups that the creator is a moderator of or that are Open
-          const parentGroup = await GroupMembership.forIds(userId, parentId, {
-            query: q => { q.select(['group_memberships.*'], ['groups.accessibility'], ['groups.visibility'])}
+          const parentGroupMembership = await GroupMembership.forIds(userId, parentId, {
+            query: q => { q.select('group_memberships.*', 'groups.accessibility as accessibility', 'groups.visibility as visibility')}
           }).fetch({ transacting: trx })
-          if (parentGroup.get('role') === GroupMembership.Role.MODERATOR
-               || parentGroup.get('accessibility') === Group.Accessibility.OPEN) {
+
+          if (parentGroupMembership &&
+              (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR
+                || parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN)) {
             await group.parentGroups().attach(parentId, { transacting: trx })
           }
         }
       }
+
       await group.createStarterPosts(trx)
+
       await group.createInitialWidgets(trx)
+
       return group.addMembers([userId],
         {role: GroupMembership.Role.MODERATOR}, { transacting: trx })
     })
