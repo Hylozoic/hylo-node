@@ -13,7 +13,7 @@ describe('updateGroups', () => {
       g1 = factories.group()
       g2 = factories.group()
       g3 = factories.group()
-      post = factories.post({ groups: [] })
+      post = factories.post()
       return Promise.join(
         g1.save(),
         g2.save(),
@@ -25,7 +25,8 @@ describe('updateGroups', () => {
       ))
     }))
 
-  it('updates the post groups', () => {
+  it('updates the post groups', async () => {
+    await post.load('groups')
     return updateGroups(post, [g2.id, g3.id])
     .then(() => Promise.join(
       PostMembership.find(post.id, g1.id),

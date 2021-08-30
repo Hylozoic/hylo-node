@@ -237,15 +237,13 @@ describe('User', function () {
     })
 
     it('works with a password', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo@bar.com',
-          group: group,
-          account: {type: 'password', password: 'password!'},
-          name: 'foo bar'
-        }, {transacting: trx})
+      return User.create({
+        email: 'foo@bar.com',
+        account: {type: 'password', password: 'password!'},
+        name: 'foo bar'
       })
-      .then(function (user) {
+      .then(async function (user) {
+        await group.addMembers([user.id])
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('name')).to.equal('foo bar')
@@ -268,14 +266,13 @@ describe('User', function () {
     })
 
     it('works with google', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo2.moo2_wow@bar.com',
-          group: group,
-          account: {type: 'google', profile: {id: 'foo'}}
-        }, {transacting: trx})
+      return User.create({
+        email: 'foo2.moo2_wow@bar.com',
+        account: {type: 'google', profile: {id: 'foo'}}
       })
-      .then(function (user) {
+      .then(async function (user) {
+        await group.addMembers([user.id])
+
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('name')).to.equal('foo2 moo2 wow')
@@ -294,21 +291,19 @@ describe('User', function () {
     })
 
     it('works with facebook', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo3@bar.com',
-          group: group,
-          account: {
-            type: 'facebook',
-            profile: {
-              id: 'foo',
-              profileUrl: 'http://www.facebook.com/foo'
-            }
+      return User.create({
+        email: 'foo3@bar.com',
+        account: {
+          type: 'facebook',
+          profile: {
+            id: 'foo',
+            profileUrl: 'http://www.facebook.com/foo'
           }
-        }, {transacting: trx})
+        }
       })
-      .then(user => User.find(user.id))
-      .then(user => {
+      .then(async (user) => {
+        await group.addMembers([user.id])
+
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo')
@@ -328,24 +323,22 @@ describe('User', function () {
     })
 
     it('works with linkedin', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo4@bar.com',
-          group: group,
-          account: {
-            type: 'linkedin',
-            profile: {
-              id: 'foo',
-              photos: [{value: catPic}],
-              _json: {
-                publicProfileUrl: 'https://www.linkedin.com/in/foobar'
-              }
+      return User.create({
+        email: 'foo4@bar.com',
+        account: {
+          type: 'linkedin',
+          profile: {
+            id: 'foo',
+            photos: [{value: catPic}],
+            _json: {
+              publicProfileUrl: 'https://www.linkedin.com/in/foobar'
             }
           }
-        }, {transacting: trx})
+        }
       })
-      .then(user => User.find(user.id))
-      .then(user => {
+      .then(async (user) => {
+        await group.addMembers([user.id])
+
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('linkedin_url')).to.equal('https://www.linkedin.com/in/foobar')

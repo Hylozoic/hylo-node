@@ -107,12 +107,12 @@ describe('Comment', () => {
         })
       })
 
-      it('respects lastReadAt', async () => {
-        const ms1 = await GroupMembership.forPair(u1, post).fetch()
-        await ms1.addSetting({lastReadAt: new Date(now - 4.5 * 60000)}, true)
+      it('respects last_read_at', async () => {
+        const pu1 = await PostUser.find(post.id, u1.id)
+        await pu1.save({ last_read_at: new Date(now - 4.5 * 60000) })
 
-        const ms2 = await GroupMembership.forPair(u2, post).fetch()
-        await ms2.addSetting({lastReadAt: now}, true)
+        const pu2 = await PostUser.find(post.id, u2.id)
+        await pu2.save({ last_read_at: now })
 
         return Comment.sendDigests()
         .then(count => {

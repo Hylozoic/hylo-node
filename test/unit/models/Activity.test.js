@@ -29,7 +29,7 @@ describe('Activity', function () {
         {
           settings: {},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         }
       ]
@@ -58,7 +58,7 @@ describe('Activity', function () {
         {
           settings: {sendEmail: true},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         }
       ]
@@ -86,7 +86,7 @@ describe('Activity', function () {
         {
           settings: {sendPushNotifications: true},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         }
       ]
@@ -117,13 +117,13 @@ describe('Activity', function () {
         {
           settings: {sendEmail: true},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         },
         {
           settings: {sendPushNotifications: true},
           relations: {
-            group: {group_data_id: 2}
+            group: {id: 2}
           }
         }
       ]
@@ -306,7 +306,7 @@ describe('Activity', function () {
       expect(activity.get('comment_id')).to.equal('4')
       expect(activity.get('actor_id')).to.equal('5')
       expect(activity.get('post_id')).to.equal('6')
-      expect(activity.get('action')).to.equal('comment')
+      expect(activity.get('meta')).to.deep.equal({"reasons": ["comment"]})
     })
 
     it('sets action = "mention" for mentions', function () {
@@ -316,7 +316,7 @@ describe('Activity', function () {
       expect(activity.get('comment_id')).to.equal('4')
       expect(activity.get('actor_id')).to.equal('5')
       expect(activity.get('post_id')).to.equal('6')
-      expect(activity.get('action')).to.equal('mention')
+      expect(activity.get('meta')).to.deep.equal({"reasons": ["mention"]})
     })
   })
 })

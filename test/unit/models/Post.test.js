@@ -163,7 +163,7 @@ describe('Post', function () {
 
     it('works', () => {
       var now = new Date()
-      return Post.createdInTimeRange(new Date(now - 10000), now)
+      return Post.createdInTimeRange(new Date(now - 10000), now).query(q => q.orderBy('id', 'desc'))
       .fetch().then(p => {
         expect(p).to.exist
         expect(p.id).to.equal(post.id)
@@ -341,8 +341,7 @@ describe('Post', function () {
       await factories.comment({post_id: post.id, created_at: later}).save()
 
       await post.addFollowers([user.id])
-      await post.markAsRead()
-
+      await post.markAsRead(user.id)
       return post.save({ updated_at: later }, {patch: true})
     })
 

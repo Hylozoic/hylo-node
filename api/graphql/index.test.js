@@ -2,7 +2,7 @@
 import { createRequestHandler, makeMutations, makeAuthenticatedQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
-import { spyify, unspyify } from '../../test/setup/helpers'
+import { mockify, spyify, unspyify } from '../../test/setup/helpers'
 import { some, sortBy } from 'lodash/fp'
 import { updateFollowers } from '../models/post/util'
 
@@ -23,6 +23,7 @@ describe('graphql request handler', () => {
     post2 = factories.post({type: Post.Type.REQUEST})
     comment = factories.comment()
     media = factories.media()
+    await group.save()
     await user.save()
     await user2.save()
     await post.save({user_id: user.id})
@@ -64,7 +65,7 @@ describe('graphql request handler', () => {
             }
             posts {
               title
-              communities {
+              groups {
                 name
               }
             }
@@ -89,7 +90,7 @@ describe('graphql request handler', () => {
               posts: [
                 {
                   title: post.get('name'),
-                  communities: [
+                  groups: [
                     {
                       name: group.get('name')
                     }
@@ -132,7 +133,7 @@ describe('graphql request handler', () => {
             }
             posts {
               title
-              communities {
+              groups {
                 name
               }
               comments {
@@ -188,7 +189,7 @@ describe('graphql request handler', () => {
               posts: [
                 {
                   title: post.get('name'),
-                  communities: [
+                  groups: [
                     {
                       name: group.get('name')
                     }
@@ -607,19 +608,23 @@ describe('makeAuthenticatedQueries', () => {
     })
 
     it('updates last viewed time', async () => {
+      let membership = { addSetting: spy(() => true) }
+      mockify(GroupMembership, 'forPair', (user, group) => {
+        return { fetch: () => Promise.resolve(membership) }
+      })
+
       await queries.group(null, {
         id: group.id,
         updateLastViewed: true
       })
-
-      const membership = await GroupMembership.forPair(user, group).fetch()
-      expect(new Date(membership.getSetting('lastReadAt')).getTime())
-      .to.be.closeTo(new Date().getTime(), 2000)
+      expect(membership.addSetting).to.have.been.called()
+      unspyify(GroupMembership, 'forPair')
     })
   })
 })
 
 function expectJSON (res, expected) {
   expect(res.body).to.exist
-  return expect(JSON.parse(res.body)).to.deep.nested.include(expected)
+  const body = JSON.parse(res.body)
+  return expect(body).to.deep.nested.include(expected)
 }

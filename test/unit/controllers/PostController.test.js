@@ -54,7 +54,7 @@ describe('PostController', () => {
 
       return PostController.createFromEmailForm(req, res)
       .then(() => {
-        const postId = res.redirected.match(/p\/(\d+)/)[1]
+        const postId = res.redirected.match(/post\/(\d+)/)[1]
         return Post.find(postId, {withRelated: ['tags', 'groups']})
       })
       .then(post => {

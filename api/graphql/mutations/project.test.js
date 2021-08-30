@@ -70,7 +70,7 @@ describe('deleteProjectRole', () => {
   })
 })
 
-describe('addPeopleToProjectRole', () => {
+describe.skip('addPeopleToProjectRole', () => {
   var user, user2, group, projectRole, project
 
   before(async function () {

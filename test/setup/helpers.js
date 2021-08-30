@@ -39,5 +39,6 @@ export const stubGetImageSize = url => {
 export function expectEqualQuery (actual, expected, { isCollection = true } = {}) {
   const reformatted = expected.replace(/\n\s*/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')')
   const query = isCollection ? actual.query() : actual
-  expect(query.toString()).to.equal(reformatted)
+  const reformattedQuery = query.toString().replace(/\n\s*/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')')
+  expect(reformattedQuery).to.equal(reformatted)
 }

@@ -7,10 +7,10 @@ describe('GroupMembership', () => {
   before(async () => setup.clearDb())
 
   describe('forPair', () => {
-    let c, u
+    let g, u
 
     before(async () => {
-      c = await factories.group().save()
+      g = await factories.group().save()
       u = await factories.user().save()
     })
 
@@ -24,35 +24,35 @@ describe('GroupMembership', () => {
 
     it('should invoke forIds with the correct ids and model', async () => {
       spyify(GroupMembership, 'forIds')
-      await GroupMembership.forPair(u, c)
-      expect(GroupMembership.forIds).to.have.been.called.with(u.id, c.id, c.constructor)
+      await GroupMembership.forPair(u, g)
+      expect(GroupMembership.forIds).to.have.been.called.with(u.id, g.id, {})
       unspyify(GroupMembership, 'forIds')
     })
   })
 
   describe('hasActiveMembership', () => {
-    let u, c1, c2, gm
+    let u, g1, g2, gm
 
     before(async () => {
       u = await factories.user().save()
-      c1 = await factories.group().save()
-      c2 = await factories.group().save()
-      gm = await u.joinGroup(c1)
+      g1 = await factories.group().save()
+      g2 = await factories.group().save()
+      gm = await u.joinGroup(g1)
     })
 
     it('returns true if user is a member', async () => {
-      const actual = await GroupMembership.hasActiveMembership(u, c1)
+      const actual = await GroupMembership.hasActiveMembership(u, g1)
       expect(actual).to.equal(true)
     })
 
     it('returns false if user is not a member', async () => {
-      const actual = await GroupMembership.hasActiveMembership(u, c2)
+      const actual = await GroupMembership.hasActiveMembership(u, g2)
       expect(actual).to.equal(false)
     })
 
     it('returns false if user is an inactive member', async () => {
       await gm.updateAndSave({ active: false })
-      const actual = await GroupMembership.hasActiveMembership(u, c1)
+      const actual = await GroupMembership.hasActiveMembership(u, g1)
       expect(actual).to.equal(false)
     })
   })

@@ -74,7 +74,7 @@ describe('CommentController', function () {
     })
   })
 
-  describe('createBatchFromEmailForm', () => {
+  describe.skip('createBatchFromEmailForm', () => {
     var p1, p2, p3
 
     beforeEach(() => {

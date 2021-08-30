@@ -31,7 +31,7 @@ const setupBlockedUserData = async () => {
 }
 
 export function blockedUserSqlFragment (userId) {
-  return `"users"."id" not in (
+  return `(
     SELECT user_id
     FROM blocked_users
     WHERE blocked_user_id = '${userId}'
@@ -60,7 +60,7 @@ describe('model filters', () => {
     sharedMemberships = `"group_memberships"
       where "group_memberships"."group_id" in (
         select "group_id" from "group_memberships"
-        and "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
+        where "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
         and "group_memberships"."active" = true
       )`
 
@@ -101,19 +101,19 @@ describe('model filters', () => {
       expect(users.map('id')).to.deep.equal([connectedUser.id])
     })
 
-    it.skip('filters down to people that share a group with the user', () => {
+    it('filters down to people that share a group with the user', () => {
       const collection = models.Person.filter(User.collection())
+
       expectEqualQuery(collection, `select * from "users"
         where
-        ${blockedUserSqlFragment(42)}
+        "users"."id" not in ${blockedUserSqlFragment(myId)}
         and
         ("users"."id" = '${User.AXOLOTL_ID}' or
           "users"."id" in
-            (select "user_id"
+            (select "group_memberships"."user_id"
             from "group_memberships"
-            inner join "groups"
-              on "groups"."id" = "group_memberships"."group_id"
-            where "groups"."id" in ${myGroupIdsSqlFragment(42)}))`)
+            where "group_memberships"."group_id" in ${myGroupIdsSqlFragment(myId)})
+          or "users"."id" in (select "other_user_id" from "user_connections" where "user_connections"."user_id" = '${myId}'))`)
     })
   })
 
@@ -144,38 +144,40 @@ describe('model filters', () => {
       expect(posts.models.map(p => p.get('user_id'))).to.deep.equal([u4.id])
     })
 
-    it.skip('filters down to active in-network posts', () => {
+    it('filters down to active posts in the right groups ', () => {
       const collection = models.Post.filter(Post.collection())
+
       expectEqualQuery(collection, `select * from "posts"
+        inner join "groups_posts" on "groups_posts"."post_id" = "posts"."id"
         where "posts"."active" = true
-        and "posts"."id" in (
-          select "post_id" from "groups_posts"
-          where "group_id" in ${myGroupIdsSqlFragment(myId)}
-        )`)
+        and ("groups_posts"."group_id" in
+          ${myGroupIdsSqlFragment(myId)}
+          or "posts"."is_public" = true
+        )
+        and "posts"."user_id" not in ${blockedUserSqlFragment(myId)}`)
     })
   })
 
   describe('Comment', () => {
-    it.skip('filters down to active comments on in-network posts or followed posts', () => {
+    it('filters down to active comments on posts in the right groups or followed posts', () => {
       const collection = models.Comment.filter(Comment.collection())
+
       expectEqualQuery(collection, `select distinct * from "comments"
         left join "groups_posts"
           on "comments"."post_id" = "groups_posts"."post_id"
+        inner join "posts" on "groups_posts"."post_id" = "posts"."id"
         where "comments"."active" = true
+        and "comments"."user_id" not in ${blockedUserSqlFragment(myId)}
         and (
           "comments"."post_id" in (
-            select "group_data_id" from "group_memberships"
-            inner join "groups"
-              on "groups"."id" = "group_memberships"."group_id"
-            where "group_memberships"."group_data_type" = 0
-            and "group_memberships"."user_id" = '${myId}'
-            and "group_memberships"."active" = true
-            and ((group_memberships.settings->>'following')::boolean = true)
-            and "groups"."active" = true
-          ) or (
-            "groups_posts"."group_id" in ${myGroupIdsSqlFragment(myId)}
+            select "post_id" from "posts_users"
+            where "posts_users"."user_id" = '${myId}'
+            and "posts_users"."following" = true
+            and "posts_users"."active" = true
           )
-        )`)
+          or "groups_posts"."group_id" in ${myGroupIdsSqlFragment(myId)}
+          or "posts"."is_public" = true
+        ) group by "comments"."id"`)
     })
   })
 })

@@ -10,7 +10,7 @@ import root from 'root-path'
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
-describe('mutations', () => {
+describe('mutations/index', () => {
   var u1, group, protocol, domain
 
   before(() => {
@@ -46,10 +46,12 @@ describe('mutations', () => {
   it('sets allow group invites', async () => {
     const results = await allowGroupInvites(group.id, true)
     expect(results.success).to.equal(true)
+    await group.refresh()
     expect(group.getSetting('allow_group_invites')).to.equal(true)
 
     const results2 = await allowGroupInvites(group.id, false)
     expect(results2.success).to.equal(true)
+    await group.refresh()
     expect(group.getSetting('allow_group_invites')).to.equal(false)
   })
 

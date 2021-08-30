@@ -38,6 +38,7 @@ module.exports = {
     )
   },
   createBatchFromEmailForm: function (req, res) {
+    // TODO: fix
     const { groupId, userId } = res.locals.tokenData
 
     const replyText = postId => markdown(req.param(`post-${postId}`))

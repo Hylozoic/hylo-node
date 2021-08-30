@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 import setup from '../../setup'
 import factories from '../../setup/factories'
-import { expectEqualQuery, mockify, unspyify } from '../../setup/helpers'
+import { expectEqualQuery, mockify, spyify, unspyify } from '../../setup/helpers'
 
 export function myGroupIdsSqlFragment (userId) {
   return `(select "groups"."id" from "group_memberships"
@@ -28,10 +28,7 @@ describe('Group', function() {
     }
 
     const user = await new User({name: 'username', email: 'john@foo.com', active: true}).save()
-    await new Group({slug: 'starter-posts', name: 'starter-posts', access_code: 'aasdfkjh3##Sasdfsdfedss', group_data_type: 1}).save()
-
     const group = await Group.create(user.id, data)
-
     const savedGroup = await Group.find('comm1')
     expect(savedGroup.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg')
     expect(savedGroup.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png')
@@ -75,20 +72,11 @@ describe('Group', function() {
   })
 
   describe('.deactivate', function() {
-    before(function() {
-      mockify(Group, 'deactivate')
-    })
-
-    after(function() {
-      unspyify(Group, 'deactivate')
-    })
-
     it('sets active to false and calls Group.deactivate', async function() {
-      const group = await factories.group({active: true}).save()
+      const group = await factories.group({ active: true }).save()
       await Group.deactivate(group.id)
       await group.refresh()
       expect(group.get('active')).to.equal(false)
-      expect(Group.deactivate).to.have.been.called.with(group.id, Group)
     })
 
     it('deactivates all child members', async function() {
@@ -96,7 +84,7 @@ describe('Group', function() {
       const user1 = await factories.user().save()
       const user2 = await factories.user().save()
       await group.addMembers([user1, user2])
-      await Group.deactivate(group.id, Group)
+      await Group.deactivate(group.id)
       const postDeactivationMembers = await group.members().fetch()
       expect(postDeactivationMembers.length).to.equal(0)
     })
