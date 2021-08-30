@@ -1,7 +1,7 @@
 /* globals _ */
 /* eslint-disable camelcase */
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
-import { compact, flatten, some, uniq } from 'lodash'
+import { compact, flatten, some, sortBy, uniq } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -427,6 +427,16 @@ module.exports = bookshelf.Model.extend(Object.assign({
       m[n.name] = n.count
       return m
     }, {}))
+  },
+
+  havingExactFollowers (userIds) {
+    userIds = sortBy(userIds, Number)
+    return this.query(q => {
+      q.join('posts_users', 'posts.id', 'posts_users.post_id')
+      q.where('posts_users.active', true)
+      q.groupBy('posts.id')
+      q.having(bookshelf.knex.raw(`array_agg(posts_users.user_id order by posts_users.user_id) = ?`, [userIds]))
+    })
   },
 
   isVisibleToUser: async function (postId, userId) {
