@@ -266,7 +266,7 @@ module.exports = bookshelf.Model.extend(merge({
       const membership = await this.memberships().create(
         Object.assign({}, updatedAttribs, {
           user_id: id,
-          created_at: new Date(),
+          created_at: new Date()
         }), { transacting })
       newMemberships.push(membership)
     }
@@ -274,16 +274,16 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   createInitialWidgets: async function (transacting) {
-    const widgetIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-    Promise.map(widgetIds, async (widget_id) => {
-      await GroupWidget.create({ group_id: this.id, widget_id, order: widget_id }, { transacting })
+    const initialWidgets = await Widget.query(q => q.whereIn('id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).fetchAll({ transacting })
+    Promise.map(initialWidgets.models, async (widget) => {
+      await GroupWidget.create({ group_id: this.id, widget_id: widget.id, order: widget.id }, { transacting })
     })
   },
 
   createStarterPosts: function (transacting) {
     var now = new Date()
     var timeShift = {offer: 1, request: 2, resource: 3}
+
     return Group.find('starter-posts', {withRelated: ['posts']})
     .then(g => {
       if (!g) throw new Error('Starter posts group not found')
@@ -292,7 +292,6 @@ module.exports = bookshelf.Model.extend(merge({
     .then(g => g.relations.posts.models)
     .then(posts => Promise.map(posts, post => {
       if (post.get('type') === 'welcome') return
-
       var newPost = post.copy()
       var time = new Date(now - (timeShift[post.get('type')] || 0) * 1000)
       // TODO: why are we attaching Ed West as a follower to every welcome post??
@@ -300,7 +299,8 @@ module.exports = bookshelf.Model.extend(merge({
       .then(() => Promise.all(flatten([
         this.posts().attach(newPost, {transacting}),
         post.followers().fetch().then(followers =>
-          newPost.addFollowers(followers.map(f => f.id), {}, {transacting}))
+          newPost.addFollowers(followers.map(f => f.id), {}, {transacting})
+        )
       ])))
     }))
   },
