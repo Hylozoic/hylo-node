@@ -102,6 +102,7 @@ const generateRemoveQueries = function (userId, knex) {
     ['follows', 'user_id'],
     ['group_invites', 'invited_by_id'],
     ['group_invites', 'used_by_id'],
+    ['group_memberships', 'user_id'],
     ['linked_account', 'user_id'],
     ['posts_about_users', 'user_id'],
     ['posts_users', 'user_id'],
