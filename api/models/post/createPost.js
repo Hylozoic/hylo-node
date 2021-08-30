@@ -117,12 +117,7 @@ async function updateTagsAndGroups (post, trx) {
   }).query()
 
   const groupMembershipQuery = GroupMembership.query(q => {
-    const groupIds = Group.query(q2 => {
-      q2.select('id')
-      q2.whereIn('group_data_id', groups.map('id'))
-    }).query()
-
-    q.whereIn('group_id', groupIds)
+    q.whereIn('group_id', groups.map('id'))
     q.whereNot('group_memberships.user_id', post.get('user_id'))
     q.where('group_memberships.active', true)
   }).query()
