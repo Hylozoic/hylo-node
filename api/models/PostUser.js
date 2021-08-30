@@ -28,7 +28,26 @@ module.exports = bookshelf.Model.extend({
 
   followedPostIds: function (userId) {
     return PostUser.query().select('post_id')
-      .where({ 'posts_users.user_id': userId, following: true, 'posts_users.active': true })
+      .where({ 'posts_users.user_id': userId, 'posts_users.following': true, 'posts_users.active': true })
+  },
+
+  whereUnread (userId, { afterTime } = {}) {
+    return this.query(q => {
+      q.join('posts', 'posts.id', 'posts_users.post_id')
+
+      q.where({
+        'posts_users.user_id': userId,
+        'posts_users.active': true,
+        'posts_users.following': true
+      })
+
+      if (afterTime) q.where('posts.updated_at', '>', afterTime)
+
+      q.where(q2 => {
+        q2.whereNull("posts_users.last_read_at")
+          .orWhereRaw(`posts_users.last_read_at < posts.updated_at`)
+      })
+    })
   }
 
 })

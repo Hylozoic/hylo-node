@@ -97,12 +97,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   posts: function () {
-    return this.belongsToMany(Post).through(PostUser).query(q => q.where(function () {
-      this.where('type', null).orWhere('type', '!=', Post.Type.THREAD)
-    }))
+    return this.hasMany(Post).query(q => q.where('type', '!=', Post.Type.THREAD))
   },
 
   projects: function () {
+    // TODO: fix
     return this.hasMany(Post).query(q => q.leftJoin('groups', 'groups.group_data_id', 'posts.id')
       .leftJoin('group_memberships', 'group_memberships.group_id', 'groups.id')
       .whereNotNull('group_memberships.project_role_id')
@@ -120,7 +119,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   followedPosts () {
-    return this.belongsToMany(Post).through(PostUser).query(q => q.where({'following': true, 'posts_users.active': true}))
+    return this.belongsToMany(Post).through(PostUser).query(q => q.where({'posts_users.following': true, 'posts_users.active': true}))
   },
 
   messageThreads: function () {
@@ -555,9 +554,8 @@ module.exports = bookshelf.Model.extend(merge({
     .select(bookshelf.knex.raw("settings->'last_viewed_messages_at' as time"))
     .then(rows => new Date(rows[0].time))
 
-    return GroupMembership.whereUnread(userId, Post, {afterTime: lastViewed})
+    return PostUser.whereUnread(userId, { afterTime: lastViewed })
     .query(q => {
-      q.join('posts', 'groups.group_data_id', 'posts.id')
       q.where('posts.type', Post.Type.THREAD)
       q.where('num_comments', '>', 0)
     })
