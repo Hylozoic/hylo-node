@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.5] - 2021-08-31
+### Changed
+- Exporting group data now happens in a background worker and is sent to user by email.
+- Exported group data now breaks out join questions into individual columns in the CSV.
+
+### Fixed
+- Fixed export of Twitter Name in group data export
+- When looking up a chat thread with multiple people make sure to find any existing thread with those same people. So that when creating a group chat we pull up the previous chats with that same group instead of creating a new chat thread.
+- Correctly track unread message count on chat threads.
+- Correcly track new unread post counts/bubbles for groups in navigation drawer.
+
 ## [3.0.4] - 2021-08-04
 ### Changed
 - Replaced isFuture filter on posts with afterTime and beforeTime
