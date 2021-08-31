@@ -6,6 +6,9 @@ module.exports = {
   groupData: async function (req, res) {
     const p = req.allParams()
 
+    const user = await new User({id: req.session.userId} )
+                  .fetch({ columns: ['email']})
+
     if (!p.groupId) {
       throw new Error("Please specify group ID")
     }
@@ -27,7 +30,8 @@ module.exports = {
 
     // process specified datasets
     if (p.datasets.includes('members')) {
-      return exportMembers(p.groupId, req, res)
+      exportMembers(p.groupId, req, user.get('email'))
+      return res.ok({})
     }
 
     // got to the end and nothing output/exited, throw error
@@ -38,12 +42,16 @@ module.exports = {
 /**
  * Group members export by Group ID
  */
-async function exportMembers(groupId, req, res) {
+async function exportMembers(groupId, req, email) {
   const users = await new Group({ id: groupId })
                   .members()
                   .fetch()
 
+  const group = await new Group({ id: groupId })
+                  .fetch()
+
   const results = []
+  const questions = {}
 
   // iterate over all group members
   await Promise.all(users.map((u, idx) => {
@@ -100,7 +108,7 @@ async function exportMembers(groupId, req, res) {
         })
         .then(data => {
           if (!data) return
-          results[idx]['join_request_questions'] = accumulatePivotCell(data, renderJoinRequestAnswer)
+          results[idx]['join_request_answers'] = accumulateJoinRequestQA(data, questions)
         }),
 
       // other groups the requesting member has acccess to
@@ -113,27 +121,59 @@ async function exportMembers(groupId, req, res) {
   }))
 
   // send data as CSV response
-  output(res, results, [
+  output(results, [
     'name', 'contact_email', 'contact_phone', 'location', 'avatar_url', 'tagline', 'bio',
     { key: 'url', header: 'personal_url' },
     'twitter_name', 'facebook_url', 'linkedin_url',
     'skills', 'skills_to_learn',
-    'join_request_questions',
     'affiliations',
     'groups'
-  ])
+  ], email, group.get('name'), questions)
 }
 
 // toplevel output function for specific endpoints to complete with
-function output(res, data, columns) {
-  res.setHeader('Content-Type', 'text/csv')
-  res.setHeader('Content-Disposition', 'attachment; filename=\"' + 'download-' + Date.now() + '.csv\"')
+function output(data, columns, email, groupName, questions) {
+  // Add each question as a column in the results
+  const questionsArray = Object.values(questions)
+  questionsArray.forEach((question) => {
+    columns.push(`${question.text}`)
+  })
 
-  stringify(data, {
+  // Add rows for each user to match their answers with the added question colums
+  const transformedData = data.map((user) => {
+    const answers = user.join_request_answers
+    questionsArray.forEach((question) => {
+      if (!answers) {
+        user[`${question.text}`] = '-'
+      } else {
+        const foundAnswer = answers.find((answer) => `${question.id}` === `${answer.question_id}`)
+        user[`${question.text}`] = foundAnswer
+          ? user[`${question.text}`] = foundAnswer.answer
+          :user[`${question.text}`] = '-'
+      }
+    })
+    return user
+  })
+  
+  stringify(transformedData, {
     header: true,
     columns
+  }, (err, output) => {
+    const formattedDate = new Date().toISOString().slice(0,10)
+    const buff = Buffer.from(output)
+    const base64output = buff.toString('base64')
+ 
+    Queue.classMethod('Email', 'sendExportMembersList', {
+      email:  email,
+      files: [
+        {
+          id: `members-export-${groupName}-${formattedDate}.csv`,
+          data: base64output
+      }
+      ]
+    })
   })
-    .pipe(res)
+
 }
 
 // reduce helper to format lists of records into single CSV cells
@@ -141,12 +181,24 @@ function accumulatePivotCell(records, renderValue) {
   return records.reduce((joined, a) => joined ? (joined + `,${renderValue(a)}`) : renderValue(a), null)
 }
 
+const accumulateJoinRequestQA = (records, questions) => {
+  // an array of question/answer pairs
+  if (records[0] && records[0][0]){
+    records.forEach((record) => {
+      const question = record[0].toJSON()
+      questions[question.id] = question  
+    })
+  }
+  return records.reduce((accum, record) => accum.concat(renderJoinRequestAnswersToJSON(record)), [])
+}
+
 // formatting for individual sub-cell record types
 
 function renderLocation(l) {
-  if (l === null) {
+  if (l === null || l.get('center') === null) {
     return ''
   }
+
   const geometry = l.get('center')  // :TODO: make this work for polygonal locations, if needed
   const lat = geometry.lat
   const lng = geometry.lng
@@ -161,8 +213,9 @@ function renderSkill(s) {
   return s.get('name')
 }
 
-function renderJoinRequestAnswer(s) {
-  return `${s[0].get('text')}: ${s[1].get('answer')}`
+function renderJoinRequestAnswersToJSON(QApair) {
+  if (QApair.length === 0) {return []}
+  return [QApair[1].toJSON()]
 }
 
 function renderGroup(g) {

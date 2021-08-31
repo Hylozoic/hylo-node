@@ -28,7 +28,8 @@ const sendEmailWithOptions = curry((templateId, opts) =>
     recipient: {address: opts.email},
     email_data: opts.data,
     version_name: opts.version,
-    sender: opts.sender // expects {name, address}
+    sender: opts.sender, // expects {name, address}
+    files: opts.files
   })))
 
 module.exports = {
@@ -74,6 +75,7 @@ module.exports = {
   sendGroupChildGroupInviteAcceptedNotification: sendEmailWithOptions('tem_CWcM3KrQVcQkvHbwVmWXwyvR'),
   sendGroupParentGroupJoinRequestNotification: sendEmailWithOptions('tem_PrBkcV4WTwwdKm4MyPK7kVJB'),
   sendGroupParentGroupJoinRequestAcceptedNotification: sendEmailWithOptions('tem_KcSfYRQCh4pgTGF7pcPjStqP'),
+  sendExportMembersList: sendEmailWithOptions('tem_GQPPQmq4dPrQWxkWdDKVcKWT'),
 
   sendMessageDigest: opts =>
     sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK',
