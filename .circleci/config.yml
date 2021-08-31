@@ -33,8 +33,6 @@ jobs:
         POSTGRES_USER: postgres
         POSTGRES_PASSWORD: hylo
         POSTGRES_DB: hylo_test
-        FACEBOOK_CLIENT_TOKEN: zzzzzz
-        REDIS_URL: redis://localhost:6379
     - image: redis
     steps:
     # Machine Setup
