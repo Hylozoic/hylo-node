@@ -7,8 +7,8 @@ describe('checkAndSetPost', function () {
     return setup.clearDb().then(function () {
       return Promise.props({
         u1: new User({name: 'U1', email: 'a@b.c'}).save(),
-        g1: new Group({name: 'G1', slug: 'g1'}).save(),
-        g2: new Group({name: 'G2', slug: 'g2'}).save(),
+        g1: new Group({name: 'G1', slug: 'g1', group_data_type: 1}).save(),
+        g2: new Group({name: 'G2', slug: 'g2', group_data_type: 1}).save(),
         p1: new Post({name: 'P1', active: true}).save(),
         p2: new Post({name: 'P2', active: true}).save()
       })

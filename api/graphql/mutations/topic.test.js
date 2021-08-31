@@ -45,8 +45,8 @@ describe('topic mutations', () => {
 
     it('adds the topic to the group', async () => {
       const topic = await mutations.createTopic(u1.id, 'wombats', c1.id)
-      await topic.refresh({ withRelated: [ 'communities' ] })
-      const group = topic.relations.communities.first()
+      await topic.refresh({ withRelated: [ 'groups' ] })
+      const group = topic.relations.groups.first()
       expect(group.id).to.equal(c1.id)
     })
   })

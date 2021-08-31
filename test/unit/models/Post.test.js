@@ -115,7 +115,7 @@ describe('Post', function () {
       g2 = factories.group({active: true})
       return Promise.join(post.save(), user.save(), g1.save(), g2.save())
       .then(() => user.joinGroup(g1))
-      .then(() => post.communities().attach(g2.id))
+      .then(() => post.groups().attach(g2.id))
     })
 
     it('is true if the post is public', () => {
@@ -137,7 +137,7 @@ describe('Post', function () {
 
     it("is false if the user has a disabled membership in the post's group", async () => {
       await g2.addMembers([user.id])
-      await g2.removeGroupMembers([user.id])
+      await g2.removeMembers([user.id])
       const visible = await Post.isVisibleToUser(post.id, user.id)
       expect(visible).to.be.false
     })
@@ -163,7 +163,7 @@ describe('Post', function () {
 
     it('works', () => {
       var now = new Date()
-      return Post.createdInTimeRange(new Date(now - 10000), now)
+      return Post.createdInTimeRange(new Date(now - 10000), now).query(q => q.orderBy('id', 'desc'))
       .fetch().then(p => {
         expect(p).to.exist
         expect(p.id).to.equal(post.id)
@@ -199,7 +199,6 @@ describe('Post', function () {
 
     beforeEach(async () => {
       post = await factories.post().save()
-      await post.createGroup()
       const activity = await new Activity({post_id: post.id}).save()
       await new Notification({activity_id: activity.id}).save()
       const comment = await factories.comment({post_id: post.id}).save()
@@ -207,7 +206,7 @@ describe('Post', function () {
       await new Notification({activity_id: activity2.id}).save()
     })
 
-    it('handles notifications, comments, activity, and group', async () => {
+    it('handles notifications, comments, activity', async () => {
       await Post.deactivate(post.id)
       await post.refresh()
       await post.load([
@@ -220,7 +219,6 @@ describe('Post', function () {
       expect(post.relations.activities.length).to.equal(0)
       expect(post.relations.comments.first().activities.length).to.equal(0)
       expect(post.get('active')).to.be.false
-      expect(await Group.find(post).then(g => g.get('active'))).to.be.false
     })
   })
 
@@ -238,7 +236,7 @@ describe('Post', function () {
     it('creates activity for group members', () => {
       var post = factories.post({user_id: u.id})
       return post.save()
-      .then(() => post.communities().attach(c.id))
+      .then(() => post.groups().attach(c.id))
       .then(() => post.createActivities())
       .then(() => Activity.where({post_id: post.id}).fetchAll())
       .then(activities => {
@@ -258,7 +256,7 @@ describe('Post', function () {
         description: `<p>Yo <a data-user-id="${u3.id}">u3</a>, how goes it</p>`
       })
       return post.save()
-      .then(() => post.communities().attach(c.id))
+      .then(() => post.groups().attach(c.id))
       .then(() => post.createActivities())
       .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
       .then(activities => {
@@ -280,7 +278,7 @@ describe('Post', function () {
       .tap(tag => u3.followedTags().attach({tag_id: tag.id, group_id: c.id}))
       .then(() => post.save())
       .then(() => Tag.updateForPost(post, ['FollowThisTag']))
-      .then(() => post.communities().attach(c.id))
+      .then(() => post.groups().attach(c.id))
       .then(() => post.createActivities())
       .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
       .then(activities => {
@@ -315,12 +313,9 @@ describe('Post', function () {
       await post.refresh()
       expect(post.get('num_comments')).to.equal(1)
 
-      const gm = await GroupMembership.forPair(user, post).fetch()
-      const group = await gm.group().fetch()
       const timestamps = [
         post.get('updated_at'),
-        new Date(gm.getSetting('lastReadAt')),
-        group.get('updated_at')
+        await post.lastReadAtForUser(user.id)
       ]
       const now = new Date().getTime()
       for (let date of timestamps) {
@@ -346,10 +341,8 @@ describe('Post', function () {
       await factories.comment({post_id: post.id, created_at: later}).save()
 
       await post.addFollowers([user.id])
-      const gm = await GroupMembership.forPair(user, post).fetch()
-      await gm.addSetting({lastReadAt: lastReadDate}, true)
-
-      return post.save({updated_at: later}, {patch: true})
+      await post.markAsRead(user.id)
+      return post.save({ updated_at: later }, {patch: true})
     })
 
     it('returns the number of unread messages (comments)', () => {

@@ -8,7 +8,7 @@ const makeGettable = obj => Object.assign({get: key => obj[key], load: () => {}}
 
 function mockUser (memberships) {
   return {
-    groupMembershipsForModel () {
+    memberships () {
       return {
         fetch: () => Promise.resolve({
           models: memberships.map(attrs => {
@@ -29,7 +29,7 @@ describe('Activity', function () {
         {
           settings: {},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         }
       ]
@@ -40,7 +40,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}]
+              groups: [{id: 1}]
             }
           },
           reader: mockUser(memberships)
@@ -58,7 +58,7 @@ describe('Activity', function () {
         {
           settings: {sendEmail: true},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         }
       ]
@@ -69,7 +69,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}, {id: 2}]
+              groups: [{id: 1}, {id: 2}]
             }
           },
           reader: mockUser(memberships)
@@ -86,7 +86,7 @@ describe('Activity', function () {
         {
           settings: {sendPushNotifications: true},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         }
       ]
@@ -97,7 +97,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}, {id: 2}]
+              groups: [{id: 1}, {id: 2}]
             }
           },
           reader: mockUser(memberships)
@@ -112,18 +112,18 @@ describe('Activity', function () {
       expect(actual).to.deep.equal(expected)
     })
 
-    it('returns a push and an email for different communities', async () => {
+    it('returns a push and an email for different groups', async () => {
       const memberships = [
         {
           settings: {sendEmail: true},
           relations: {
-            group: {group_data_id: 1}
+            group: {id: 1}
           }
         },
         {
           settings: {sendPushNotifications: true},
           relations: {
-            group: {group_data_id: 2}
+            group: {id: 2}
           }
         }
       ]
@@ -134,7 +134,7 @@ describe('Activity', function () {
         relations: {
           post: {
             relations: {
-              communities: [{id: 1}, {id: 2}]
+              groups: [{id: 1}, {id: 2}]
             }
           },
           reader: mockUser(memberships)
@@ -306,7 +306,7 @@ describe('Activity', function () {
       expect(activity.get('comment_id')).to.equal('4')
       expect(activity.get('actor_id')).to.equal('5')
       expect(activity.get('post_id')).to.equal('6')
-      expect(activity.get('action')).to.equal('comment')
+      expect(activity.get('meta')).to.deep.equal({"reasons": ["comment"]})
     })
 
     it('sets action = "mention" for mentions', function () {
@@ -316,7 +316,7 @@ describe('Activity', function () {
       expect(activity.get('comment_id')).to.equal('4')
       expect(activity.get('actor_id')).to.equal('5')
       expect(activity.get('post_id')).to.equal('6')
-      expect(activity.get('action')).to.equal('mention')
+      expect(activity.get('meta')).to.deep.equal({"reasons": ["mention"]})
     })
   })
 })

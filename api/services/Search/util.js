@@ -11,7 +11,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     start_time: 'posts.start_time'
   }
 
-  const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy)
+  const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy || v === sortBy)
   if (!sort) {
     throw new Error(`Cannot sort by "${sortBy}"`)
   }

@@ -1,6 +1,9 @@
+import decode from 'ent/decode'
+import { compact } from 'lodash'
+import truncate from 'trunc-html'
+
 import { notifyAboutMessage } from '../../../../api/models/comment/notifications'
 import factories from '../../../setup/factories'
-import { compact } from 'lodash'
 
 describe('notifyAboutMessage', () => {
   let comment, device
@@ -30,6 +33,6 @@ describe('notifyAboutMessage', () => {
     expect(compact(results).length).to.equal(1)
     const sent = results.find(x => x && x[0])[0]
     expect(sent.get('device_id')).to.equal(device.id)
-    expect(sent.get('alert')).to.contain(comment.get('text'))
+    expect(sent.get('alert')).to.contain(decode(truncate(comment.get('text'), 140).text).trim())
   })
 })

@@ -10,16 +10,16 @@ module.exports = {
                   .fetch({ columns: ['email']})
 
     if (!p.groupId) {
-      throw new Error("Please specify group ID")
+      return res.status(400).send({ error: "Please specify group ID" })
     }
     if (!p.datasets || !p.datasets.length) {
-      throw new Error("Please specify datasets to export")
+      return res.status(400).send({ error: "Please specify datasets to export" })
     }
 
     // auth check
     let ok = false
     try {
-      ok = GroupMembership.hasModeratorRole(req.session.userId, p.groupId)
+      ok = await GroupMembership.hasModeratorRole(req.session.userId, p.groupId)
     } catch (err) {
       return res.status(422).send({ error: err.message ? err.message : err })
     }
@@ -58,7 +58,7 @@ async function exportMembers(groupId, req, email) {
     // pluck core user data into results
     results.push(u.pick([
       'name', 'contact_email', 'contact_phone', 'avatar_url', 'tagline', 'bio',
-      'url', 'twitter_url', 'facebook_url', 'linkedin_url'
+      'url', 'twitter_name', 'facebook_url', 'linkedin_url'
     ]))
 
     // return combined promise to load all dependent user data and
@@ -124,7 +124,7 @@ async function exportMembers(groupId, req, email) {
   output(results, [
     'name', 'contact_email', 'contact_phone', 'location', 'avatar_url', 'tagline', 'bio',
     { key: 'url', header: 'personal_url' },
-    'twitter_url', 'facebook_url', 'linkedin_url',
+    'twitter_name', 'facebook_url', 'linkedin_url',
     'skills', 'skills_to_learn',
     'affiliations',
     'groups'

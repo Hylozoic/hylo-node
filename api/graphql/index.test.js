@@ -2,15 +2,15 @@
 import { createRequestHandler, makeMutations, makeAuthenticatedQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
-import { spyify, unspyify } from '../../test/setup/helpers'
+import { mockify, spyify, unspyify } from '../../test/setup/helpers'
 import { some, sortBy } from 'lodash/fp'
-import { updateNetworkMemberships } from '../models/post/util'
+import { updateFollowers } from '../models/post/util'
 
 describe('graphql request handler', () => {
   var handler,
     req, res,
     user, user2,
-    group, network,
+    group,
     post, post2, comment, media
 
   before(async () => {
@@ -19,13 +19,11 @@ describe('graphql request handler', () => {
     user = factories.user()
     user2 = factories.user()
     group = factories.group()
-    network = factories.network()
     post = factories.post({type: Post.Type.DISCUSSION})
     post2 = factories.post({type: Post.Type.REQUEST})
     comment = factories.comment()
     media = factories.media()
-    await network.save()
-    await group.save({network_id: network.id})
+    await group.save()
     await user.save()
     await user2.save()
     await post.save({user_id: user.id})
@@ -41,8 +39,8 @@ describe('graphql request handler', () => {
       })
     ])
     .then(() => Promise.all([
-      updateNetworkMemberships(post),
-      updateNetworkMemberships(post2)
+      updateFollowers(post),
+      updateFollowers(post2)
     ]))
   })
 
@@ -67,7 +65,7 @@ describe('graphql request handler', () => {
             }
             posts {
               title
-              communities {
+              groups {
                 name
               }
             }
@@ -92,7 +90,7 @@ describe('graphql request handler', () => {
               posts: [
                 {
                   title: post.get('name'),
-                  communities: [
+                  groups: [
                     {
                       name: group.get('name')
                     }
@@ -135,7 +133,7 @@ describe('graphql request handler', () => {
             }
             posts {
               title
-              communities {
+              groups {
                 name
               }
               comments {
@@ -191,7 +189,7 @@ describe('graphql request handler', () => {
               posts: [
                 {
                   title: post.get('name'),
-                  communities: [
+                  groups: [
                     {
                       name: group.get('name')
                     }
@@ -414,53 +412,6 @@ describe('graphql request handler', () => {
     })
   })
 
-  describe('querying network data', () => {
-    it('works as expected', () => {
-      req.body = {
-        query: `{
-          network(id: "${network.id}") {
-            slug
-            isModerator
-            isAdmin
-            members(first: 2, sortBy: "name") {
-              items {
-                name
-              }
-            }
-            posts(first: 1, filter: "${Post.Type.REQUEST}") {
-              items {
-                title
-              }
-            }
-          }
-        }`
-      }
-
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            network: {
-              slug: network.get('slug'),
-              isAdmin: false,
-              isModerator: false,
-              members: {
-                items: sortBy('name', [
-                  {name: user2.get('name')},
-                  {name: user.get('name')}
-                ])
-              },
-              posts: {
-                items: [
-                  {title: post2.get('name')}
-                ]
-              }
-            }
-          }
-        })
-      })
-    })
-  })
-
   describe('search', () => {
     beforeEach(() => {
       return FullTextSearch.dropView().catch(() => {})
@@ -657,19 +608,23 @@ describe('makeAuthenticatedQueries', () => {
     })
 
     it('updates last viewed time', async () => {
+      let membership = { addSetting: spy(() => true) }
+      mockify(GroupMembership, 'forPair', (user, group) => {
+        return { fetch: () => Promise.resolve(membership) }
+      })
+
       await queries.group(null, {
         id: group.id,
         updateLastViewed: true
       })
-
-      const membership = await GroupMembership.forPair(user, group).fetch()
-      expect(new Date(membership.getSetting('lastReadAt')).getTime())
-      .to.be.closeTo(new Date().getTime(), 2000)
+      expect(membership.addSetting).to.have.been.called()
+      unspyify(GroupMembership, 'forPair')
     })
   })
 })
 
 function expectJSON (res, expected) {
   expect(res.body).to.exist
-  return expect(JSON.parse(res.body)).to.deep.nested.include(expected)
+  const body = JSON.parse(res.body)
+  return expect(body).to.deep.nested.include(expected)
 }

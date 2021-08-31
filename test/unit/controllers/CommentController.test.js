@@ -20,7 +20,7 @@ describe('CommentController', function () {
       fixtures = props
     })
     .then(() => Promise.join(
-      fixtures.p1.communities().attach(fixtures.g1.id),
+      fixtures.p1.groups().attach(fixtures.g1.id),
       fixtures.p1.comments().create(fixtures.cm1),
       fixtures.g1.addMembers([fixtures.u1.id])
     )))
@@ -78,8 +78,8 @@ describe('CommentController', function () {
     var p1, p2, p3
 
     beforeEach(() => {
-      p1 = factories.post({user_id: fixtures.u1.id})
-      p2 = factories.post({user_id: fixtures.u2.id})
+      p1 = factories.post({user_id: fixtures.u1.id, created_at: new Date('2020-12-12 00:00:00')})
+      p2 = factories.post({user_id: fixtures.u2.id, created_at: new Date('2020-12-12 00:00:00')})
       p3 = factories.post({user_id: fixtures.u1.id})
       res.serverError = spy()
       res.locals.tokenData = {
@@ -88,9 +88,9 @@ describe('CommentController', function () {
       }
       return Promise.join(p1.save(), p2.save(), p3.save())
       .then(() => Promise.join(
-        p1.communities().attach(fixtures.g1),
-        p2.communities().attach(fixtures.g1),
-        p3.communities().attach(fixtures.g1)))
+        p1.groups().attach(fixtures.g1),
+        p2.groups().attach(fixtures.g1),
+        p3.groups().attach(fixtures.g1)))
     })
 
     it('creates comments', () => {

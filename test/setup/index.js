@@ -50,8 +50,6 @@ before(function (done) {
   })
 })
 
-after(skiff.lower)
-
 afterEach(() => nock.cleanAll())
 
 TestSetup.prototype.createSchema = function () {

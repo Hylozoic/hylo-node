@@ -16,7 +16,9 @@ module.exports = {
     return new Group(merge({
       name: faker.random.words(6),
       slug: faker.lorem.slug(),
-      access_code: faker.random.alphaNumeric(6)
+      access_code: faker.random.alphaNumeric(6),
+      group_data_type: 1,
+      settings: {}
     }, attrs))
   },
 
@@ -55,13 +57,6 @@ module.exports = {
       type: 'message',
       created_at: new Date(),
       updated_at: new Date()
-    }, attrs))
-  },
-
-  network: attrs => {
-    return new Network(merge({
-      name: faker.company.companyName(),
-      slug: faker.lorem.slug(5)
     }, attrs))
   },
 

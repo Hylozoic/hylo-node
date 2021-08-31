@@ -91,8 +91,9 @@ export function updateMe (userId, changes) {
 }
 
 export function allowGroupInvites (groupId, data) {
-  return Group.query().where('id', groupId).update({allow_group_invites: data})
-  .then(() => ({success: true}))
+  return Group.where('id', groupId).fetch()
+    .then(g => g.addSetting({ allow_group_invites: data }, true))
+    .then(() => ({ success: true }))
 }
 
 export async function leaveGroup (userId, groupId) {

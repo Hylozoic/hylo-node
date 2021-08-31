@@ -29,7 +29,7 @@ export default function (opts) {
     if (groups) {
       qb.join('group_memberships', 'group_memberships.user_id', 'users.id')
       qb.join('groups', 'groups.id', 'group_memberships.group_id')
-      qb.whereIn('groups.group_data_id', opts.groups)
+      qb.whereIn('groups.id', opts.groups)
       qb.where('group_memberships.active', true)
     }
 

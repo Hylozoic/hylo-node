@@ -1,10 +1,7 @@
 import HasSettings from './mixins/HasSettings'
 import { isEmpty } from 'lodash'
 import {
-  isFollowing,
-  queryForMember,
-  whereId,
-  whereUserId
+  whereId
 } from './group/queryUtils'
 import {
   getDataTypeForModel,
@@ -47,22 +44,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     MODERATOR: 1
   },
 
-  whereUnread (userId, model, { afterTime } = {}) {
-    return this.query(q => {
-      q.join('groups', 'groups.id', 'group_memberships.group_id')
-      if (afterTime) q.where('groups.updated_at', '>', afterTime)
-      queryForMember(q, userId, model)
-      isFollowing(q)
-
-      q.where(q2 => {
-        q2.whereRaw("(group_memberships.settings->>'lastReadAt') is null")
-        .orWhereRaw(`(group_memberships.settings->>'lastReadAt')
-          ::timestamp without time zone at time zone 'utc'
-          < groups.updated_at`)
-      })
-    })
-  },
-
   forPair (userOrId, groupOrId, opts = {}) {
     const userId = userOrId instanceof User ? userOrId.id : userOrId
     const groupId = groupOrId instanceof Group ? groupOrId.id : groupOrId
@@ -87,7 +68,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       }
 
       if (usersOrIds) {
-        whereUserId(q, usersOrIds)
+        whereId(q, usersOrIds, 'group_memberships.user_id')
       }
 
       if (!opts.includeInactive) q.where('group_memberships.active', true)

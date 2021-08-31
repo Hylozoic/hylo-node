@@ -1,5 +1,4 @@
 import { curry } from 'lodash'
-import { isFollowing } from '../models/group/queryUtils'
 import GroupDataType from '../models/group/DataType'
 
 export const commentFilter = userId => relation => relation.query(q => {

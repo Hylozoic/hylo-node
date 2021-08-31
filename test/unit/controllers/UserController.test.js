@@ -23,7 +23,7 @@ describe('UserController', function () {
       UserSession.login = spy(UserSession.login)
       User.create = spy(User.create)
 
-      group = new Group({access_code: 'foo', name: 'foo', slug: 'foo'})
+      group = new Group({access_code: 'foo', name: 'foo', slug: 'foo', group_data_type: 1 })
       return group.save()
     })
 

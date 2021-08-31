@@ -71,7 +71,6 @@ import {
   unlinkAccount,
   updateComment,
   updateGroup,
-  updateGroupHiddenSetting,
   updateGroupTopic,
   updateGroupTopicFollow,
   updateMe,
@@ -347,9 +346,6 @@ export function makeMutations (userId, isAdmin) {
 
     updateGroupSettings: (root, { id, changes }) =>
       updateGroup(userId, id, changes),
-
-    updateGroupHiddenSetting: (root, { id, hidden }) =>
-      updateGroupHiddenSetting({ userId, isAdmin }, id, hidden),
 
     updateGroupTopic: (root, { id, data }) => updateGroupTopic(id, data),
 

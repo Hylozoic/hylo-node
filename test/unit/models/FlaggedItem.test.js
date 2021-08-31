@@ -103,14 +103,14 @@ describe('FlaggedItem', () => {
   })
 
   describe('getMessageText', () => {
-    var post, user, community
+    var post, user, group
 
     before(() => {
       post = factories.post()
-      community = factories.community()
+      group = factories.group()
       user = factories.user()
       return Promise.join(
-        post.save(), community.save(), user.save()
+        post.save(), group.save(), user.save()
       )
     })
 
@@ -126,10 +126,10 @@ describe('FlaggedItem', () => {
       })
       await flaggedItem.load('user')
       const expected = [
-        `${user.get('name')} flagged a ${FlaggedItem.Type.POST} in ${community.get('name')} for being ${FlaggedItem.Category.SPAM}`,
+        `${user.get('name')} flagged a ${FlaggedItem.Type.POST} in ${group.get('name')} for being ${FlaggedItem.Category.SPAM}`,
         `Message: ${reason}`
       ]
-      const message = await flaggedItem.getMessageText(community)
+      const message = await flaggedItem.getMessageText(group)
       const lines = message.split('\n')
       expect(lines[0]).to.equal(expected[0])
       expect(lines[1]).to.equal(expected[1])
@@ -137,16 +137,16 @@ describe('FlaggedItem', () => {
   })
 
   describe('getContentLink', () => {
-    var post, comment, commentParent, user, community
+    var post, comment, commentParent, user, group
 
     before(() => {
       post = factories.post()
       commentParent = factories.post()
       comment = factories.comment()
       user = factories.user()
-      community = factories.community()
+      group = factories.group()
       return Promise.join(
-        post.save(), comment.save(), user.save(), community.save(), commentParent.save()
+        post.save(), comment.save(), user.save(), group.save(), commentParent.save()
       )
       .then(() => {
         commentParent.comments().create(comment)
@@ -160,8 +160,8 @@ describe('FlaggedItem', () => {
         category: FlaggedItem.Category.SPAM,
         link: 'www.hylo.com/post/1'
       })
-      const link = await flaggedItem.getContentLink(community)
-      expect(link).to.equal(Frontend.Route.post(post.id, community))
+      const link = await flaggedItem.getContentLink(group)
+      expect(link).to.equal(Frontend.Route.post(post.id, group))
     })
 
     it('makes a user link', async () => {
@@ -171,8 +171,8 @@ describe('FlaggedItem', () => {
         category: FlaggedItem.Category.SPAM,
         link: 'www.hylo.com/post/1'
       })
-      const link = await flaggedItem.getContentLink(community)
-      expect(link).to.equal(Frontend.Route.profile(user.id, community))
+      const link = await flaggedItem.getContentLink(group)
+      expect(link).to.equal(Frontend.Route.profile(user.id, group))
     })
 
     it('makes a comment link', async () => {
@@ -182,8 +182,8 @@ describe('FlaggedItem', () => {
         category: FlaggedItem.Category.SPAM,
         link: 'www.hylo.com/post/1'
       })
-      const link = await flaggedItem.getContentLink(community)
-      expect(link).to.equal(Frontend.Route.post(commentParent.id, community))
+      const link = await flaggedItem.getContentLink(group)
+      expect(link).to.equal(Frontend.Route.post(commentParent.id, group))
     })
 
     it('throws an error when object_type is bad', () => {
@@ -191,7 +191,7 @@ describe('FlaggedItem', () => {
         object_type: 'unsupported type',
         object_id: 1
       }).save()
-      .then(flaggedItem => flaggedItem.getContentLink(community))
+      .then(flaggedItem => flaggedItem.getContentLink(group))
       .then(() => expect.fail('should reject'))
       .catch(e => expect(e.message).to.match(/Unsupported type for Flagged Item/))
     })

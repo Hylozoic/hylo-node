@@ -3,12 +3,12 @@ import factories from '../../../setup/factories'
 import mockRequire from 'mock-require'
 const model = factories.mock.model
 
-describe('sendToCommunities', () => {
+describe('sendToGroups', () => {
   var argUserIds,
     argText,
-    sendToCommunities,
+    sendToGroups,
     oldHyloAdmins,
-    communities,
+    groups,
     modIds1,
     modIds2,
     g1,
@@ -23,7 +23,7 @@ describe('sendToCommunities', () => {
         return 'Bob the result'
       })
     })
-    sendToCommunities = mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').sendToCommunities
+    sendToGroups = mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').sendToGroups
     oldHyloAdmins = process.env.HYLO_ADMINS
     process.env.HYLO_ADMINS = '11,22'
   })
@@ -40,7 +40,7 @@ describe('sendToCommunities', () => {
     await g1.addMembers([u1, u2], {role: GroupMembership.Role.MODERATOR})
     await g2.addMembers([u2, u3], {role: GroupMembership.Role.MODERATOR})
 
-    communities = [g1, g2]
+    groups = [g1, g2]
     modIds1 = [u1.id, u2.id]
     modIds2 = [u2.id, u3.id]
   })
@@ -56,7 +56,7 @@ describe('sendToCommunities', () => {
       getMessageText: c => Promise.resolve(`${message} ${c.id}`)
     })
 
-    return sendToCommunities(flaggedItem, communities)
+    return sendToGroups(flaggedItem, groups)
     .then(result => {
       expect(argUserIds.sort()).to.deep.equal(modIds1.concat(modIds2).sort())
       expect(argText).to.deep.equal([`${message} ${g1.id}`, `${message} ${g2.id}`])
@@ -76,7 +76,7 @@ describe('sendToCommunities', () => {
     var expectedUserIds = modIds1.concat(modIds2).concat(hyloAdminIds).sort()
     expectedText.push(`${message} ${g1.id}`)
 
-    return sendToCommunities(flaggedItem, communities)
+    return sendToGroups(flaggedItem, groups)
     .then(result => {
       expect(argUserIds.sort()).to.deep.equal(expectedUserIds)
       expect(argText).to.deep.equal(expectedText)
@@ -84,7 +84,7 @@ describe('sendToCommunities', () => {
   })
 })
 
-// for these it would be less redundant to just mock sendToCommunities and test
+// for these it would be less redundant to just mock sendToGroups and test
 // that it was called with the right args. However, you can't do that with mock-require
 // because it is in the same file as the functions we're testing
 
@@ -110,7 +110,7 @@ describe('notifying moderators', () => {
     modIds1 = [1, 2]
     modIds2 = [2, 3]
 
-    const mockCommunities = [
+    const mockGroups = [
       model({
         id: 1,
         moderators: () => ({
@@ -130,8 +130,8 @@ describe('notifying moderators', () => {
       getMessageText: c => `the message ${c.id}`,
       relations: {
         user: model({
-          communitiesSharedWithPost: () => mockCommunities,
-          communitiesSharedWithUser: () => mockCommunities
+          groupsSharedWithPost: () => mockGroups,
+          groupsSharedWithUser: () => mockGroups
         })
       }
     })
