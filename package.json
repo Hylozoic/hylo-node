@@ -35,7 +35,7 @@
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
     "dump": "pg_dump -Osxn public hylo | sed -e 's/; Tablespace: $//' > migrations/schema.sql",
     "test": "[ \"$NODE_ENV\" != production ] && mocha -r test/setup/core -r babel-core/register --exit",
-    "cover": "./node_modules/.bin/nyc --cache -a -r lcov ./node_modules/.bin/mocha -r test/setup/core --require babel-core/register -R dot",
+    "cover": "./node_modules/.bin/nyc --cache -a -r lcov ./node_modules/.bin/mocha -r test/setup/core --require babel-core/register -R dot --exit",
     "knex": "knex",
     "update-migrations": "node ./migrations/scripts/updateMigrationsTable"
   },
