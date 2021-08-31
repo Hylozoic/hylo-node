@@ -74,12 +74,12 @@ describe('CommentController', function () {
     })
   })
 
-  describe.skip('createBatchFromEmailForm', () => {
+  describe('createBatchFromEmailForm', () => {
     var p1, p2, p3
 
     beforeEach(() => {
-      p1 = factories.post({user_id: fixtures.u1.id})
-      p2 = factories.post({user_id: fixtures.u2.id})
+      p1 = factories.post({user_id: fixtures.u1.id, created_at: new Date('2020-12-12 00:00:00')})
+      p2 = factories.post({user_id: fixtures.u2.id, created_at: new Date('2020-12-12 00:00:00')})
       p3 = factories.post({user_id: fixtures.u1.id})
       res.serverError = spy()
       res.locals.tokenData = {

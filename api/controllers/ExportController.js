@@ -10,16 +10,16 @@ module.exports = {
                   .fetch({ columns: ['email']})
 
     if (!p.groupId) {
-      throw new Error("Please specify group ID")
+      return res.status(400).send({ error: "Please specify group ID" })
     }
     if (!p.datasets || !p.datasets.length) {
-      throw new Error("Please specify datasets to export")
+      return res.status(400).send({ error: "Please specify datasets to export" })
     }
 
     // auth check
     let ok = false
     try {
-      ok = GroupMembership.hasModeratorRole(req.session.userId, p.groupId)
+      ok = await GroupMembership.hasModeratorRole(req.session.userId, p.groupId)
     } catch (err) {
       return res.status(422).send({ error: err.message ? err.message : err })
     }

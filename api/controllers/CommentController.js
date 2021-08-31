@@ -37,6 +37,7 @@ module.exports = {
       }
     )
   },
+
   createBatchFromEmailForm: function (req, res) {
     // TODO: fix
     const { groupId, userId } = res.locals.tokenData
@@ -60,31 +61,39 @@ module.exports = {
           failures = true
           return Promise.resolve()
         }
+        if (post && (new Date() - post.get('created_at') < 5 * 60000)) return
+
         return Comment.where({
           user_id: userId,
           post_id: post.id,
           text: replyText(post.id)
         }).fetch()
         .then(comment => {
-          if (post && (new Date() - post.get('created_at') < 5 * 60000)) return
+          // comment with this text already exists
+          if (comment) return
 
-          Analytics.track({
-            userId,
-            event: 'Post: Comment: Add by Email Form',
-            properties: {
-              post_id: post.id,
-              group: group && group.get('name')
-            }
-          })
           return createComment(userId, {
             text: replyText(post.id),
             post,
             created_from: 'email batch form'
           })
-          .then(() => Post.updateFromNewComment({
-            postId: post.id,
-            commentId: comment.id
-          }))
+          .then((newComment) => {
+            Analytics.track({
+              userId,
+              event: 'Post: Comment: Add by Email Form',
+              properties: {
+                post_id: post.id,
+                group: group && group.get('name'),
+                comment_id: newComment.id
+              }
+            })
+
+            // TODO: then this function is getting called twice, that ok?
+            return Post.updateFromNewComment({
+              postId: post.id,
+              commentId: comment.id
+            })
+          })
         })
       })
     })
