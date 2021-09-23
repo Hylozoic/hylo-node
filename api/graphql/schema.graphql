@@ -1,4 +1,5 @@
 scalar Date
+scalar JSON
 
 # The currently logged-in person.
 type Me {
@@ -260,6 +261,26 @@ type Group {
   ): PostQuerySet
   visibility: Int
   widgets: GroupWidgetQuerySet
+  type: String
+  groupExtensions: GroupExtensionQuerySet
+}
+
+type GroupExtension {
+  id: ID
+  type: String
+  active: Boolean
+  data: JSON
+} 
+
+type Extension {
+  id: ID
+  type: String
+}
+
+type GroupExtensionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupExtension]
 }
 
 type GroupSettings {
@@ -608,6 +629,13 @@ type Query {
     sortBy: String,
     visibility: Int
   ): GroupQuerySet
+  groupExtension(
+    id: ID
+  ): GroupExtension
+  groupExtensions(
+    extensionIds: [ID],
+    groupIds: [ID]
+  ): GroupExtensionQuerySet
   joinRequests(groupId: ID, status: Int): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post

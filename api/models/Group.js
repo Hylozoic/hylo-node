@@ -81,6 +81,11 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(GroupTag)
   },
 
+  groupExtensions: function () {
+    return this.belongsToMany(Extension).through(GroupExtension).where('group_extensions.active', true)
+    .withPivot(['data'])
+  },
+
   groupToGroupJoinQuestions () {
     return this.hasMany(GroupToGroupJoinQuestion).query(q => {
       q.select(['questions.text', 'questions.id as questionId'])
