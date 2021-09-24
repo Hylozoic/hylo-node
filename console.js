@@ -4,7 +4,7 @@
  * n.b.: hella copy-pasted from sails/bin/sails-console.js
  */
 
-require('babel-register')
+require("@babel/register")
 const _ = require('lodash')
 const fs = require('fs')
 const sails = require('sails')

@@ -1,5 +1,5 @@
 /* globals FollowDeprecated, LastReadDeprecated */
-require('babel-register')
+require("@babel/register")
 const models = require('../api/models')
 const {
   makeGroups, makeGroupMemberships, updateGroupMemberships

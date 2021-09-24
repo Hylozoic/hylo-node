@@ -1,5 +1,5 @@
 /* globals Network, Group, Community */
-require('babel-register')
+require("@babel/register")
 const Promise = require('bluebird')
 const models = require('../api/models')
 const { merge, pick } = require('lodash')
