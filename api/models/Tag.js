@@ -88,6 +88,10 @@ module.exports = bookshelf.Model.extend({
     return this.hasMany(GroupTag)
   },
 
+  groupTemplates: function () {
+    return this.belongsToMany(GroupTemplate, 'group_templates_default_tags', 'tag_id', 'group_template_id')
+  },
+
   posts: function () {
     return this.belongsToMany(Post).through(PostTag).withPivot('selected')
   },

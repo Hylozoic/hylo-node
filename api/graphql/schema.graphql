@@ -54,6 +54,19 @@ type UserSettings {
   streamPostType: String
 }
 
+type GroupTemplate {
+  id: ID
+  name: String
+  displayName: String
+  groups: GroupQuerySet
+  groupsTotal: Int
+  defaultTopics: [Topic]
+  defaultTopicsTotal: Int
+  newPostCount: Int
+  updatedAt: String
+  createdAt: String
+}
+
 type GroupTopicQuerySet {
   total: Int
   hasMore: Boolean
@@ -608,6 +621,7 @@ type Query {
     sortBy: String,
     visibility: Int
   ): GroupQuerySet
+  groupTemplates: [GroupTemplate]
   joinRequests(groupId: ID, status: Int): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
@@ -804,6 +818,7 @@ input GroupInput {
   avatarUrl: String
   bannerUrl: String
   description: String
+  groupTemplateId: ID
   groupToGroupJoinQuestions: [QuestionInput]
   joinQuestions: [QuestionInput]
   location: String

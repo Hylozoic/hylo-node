@@ -339,6 +339,19 @@ export default async function makeModels (userId, isAdmin) {
         })
     },
 
+    GroupTemplate: {
+      model: GroupTemplate,
+      attributes: [
+        'name',
+        'display_name'
+      ],
+      relations: [
+        'groups',
+        'defaultTopics'
+      ],
+      fetchMany: () => GroupTemplate
+    },
+
     GroupJoinQuestion: {
       model: GroupJoinQuestion,
       attributes: [

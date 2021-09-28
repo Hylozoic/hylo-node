@@ -165,6 +165,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     groupTopic: (root, { topicName, groupSlug }) =>
       GroupTag.findByTagAndGroup(topicName, groupSlug),
     groupTopics: (root, args) => fetchMany('GroupTopic', args),
+    groupTemplates: (root, args) => GroupTemplate.fetchAll(),
     groups: (root, args) => fetchMany('Group', args),
     joinRequests: (root, args) => fetchMany('JoinRequest', args),
     me: () => fetchOne('Me', userId),

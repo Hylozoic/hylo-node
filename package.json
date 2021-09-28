@@ -186,6 +186,7 @@
       "GroupRelationship",
       "GroupRelationshipInvite",
       "GroupTag",
+      "GroupTemplate",
       "Invitation",
       "JoinRequest",
       "LinkedAccount",
