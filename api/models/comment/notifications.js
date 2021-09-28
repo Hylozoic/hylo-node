@@ -30,12 +30,12 @@ export async function notifyAboutMessage ({ commentId }) {
   })
 }
 
-export const sendDigests = () => {
-  const redis = RedisClient.create()
+export const sendDigests = async () => {
+  const redis = await RedisClient.create()
   const now = new Date()
   const fallbackTime = () => new Date(now - 10 * 60000)
 
-  return redis.getAsync(sendDigests.REDIS_TIMESTAMP_KEY)
+  return redis.get(sendDigests.REDIS_TIMESTAMP_KEY)
   .then(i => i ? new Date(Number(i)) : fallbackTime())
   .catch(() => fallbackTime())
   .then(time =>
@@ -130,7 +130,10 @@ export const sendDigests = () => {
     })
     .then(sends => compact(sends).length)
   })))
-  .tap(() => redis.setAsync(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime()))
+  .then((posts) => {
+    redis.set(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime())
+    return posts
+  })
   .then(sum)
 }
 

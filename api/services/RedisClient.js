@@ -1,9 +1,10 @@
-import redis from 'redis'
-Promise.promisifyAll(redis.RedisClient.prototype)
-Promise.promisifyAll(redis.Multi.prototype)
+import { createClient } from 'redis'
 
 module.exports = {
-  create: function () {
-    return redis.createClient(process.env.REDIS_URL)
+  create: async function () {
+    const client = createClient(process.env.REDIS_URL)
+    client.on('error', (err) => console.log('Redis Client Error', err));
+    await client.connect();
+    return client
   }
 }
