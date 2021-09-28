@@ -4,7 +4,7 @@ import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 import { refineOne, refineMany } from '../util/relations'
 
 export default async function createComment (commenterId, opts = {}) {
-  let { text, post } = opts
+  let { text, post, parentComment } = opts
   text = sanitize(text)
 
   var attrs = {
@@ -13,6 +13,7 @@ export default async function createComment (commenterId, opts = {}) {
     recent: true,
     user_id: commenterId,
     post_id: post.id,
+    comment_id: parentComment ? parentComment.id : null,
     active: true,
     created_from: opts.created_from || null
   }
@@ -25,27 +26,29 @@ export default async function createComment (commenterId, opts = {}) {
 
   const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
 
-  return bookshelf.transaction(trx =>
-    new Comment(attrs).save(null, {transacting: trx})
-    .tap(createMedia(opts, trx)))
-  .tap(createOrUpdateConnections(commenterId, existingFollowers))
-  .tap(comment => post.addFollowers(newFollowers))
-  .tap(comment => Promise.all([
-    notifySockets(comment, post, isThread),
+  return bookshelf.transaction(async (trx) => {
+    const comment = await new Comment(attrs).save(null, {transacting: trx})
+    await createMedia(comment, opts, trx)
+    return comment
+  }).then(async (comment) => {
+    await createOrUpdateConnections(commenterId, existingFollowers)
+    await post.addFollowers(newFollowers)
+    await notifySockets(comment, post, isThread)
+    if (isThread) {
+      await Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
+    } else {
+      await comment.createActivities()
+    }
 
-    (isThread
-      ? Queue.classMethod('Comment', 'notifyAboutMessage', {commentId: comment.id})
-      : comment.createActivities()),
-
-    Queue.classMethod('Post', 'updateFromNewComment', {
+    await Queue.classMethod('Post', 'updateFromNewComment', {
       postId: post.id,
       commentId: comment.id
     })
-  ])
-  .then(() => comment))
+    return comment
+  })
 }
 
-export const createMedia = (opts, trx) => comment => {
+export const createMedia = (comment, opts, trx) => {
   return Promise.all(flatten([
     opts.attachments && Promise.map(opts.attachments, (attachment, i) =>
       Media.createForSubject({
@@ -69,10 +72,11 @@ export async function pushMessageToSockets (message, thread) {
   const excludingSender = userIds.filter(id => id !== message.get('user_id'))
 
   let response = refineOne(message,
-    ['id', 'text', 'created_at', 'user_id', 'post_id'],
+    ['id', 'text', 'created_at', 'user_id', 'post_id', 'comment_id'],
     {
       user_id: 'creator',
-      post_id: 'messageThread'
+      post_id: 'messageThread',
+      comment_id: 'parentComment'
     }
   )
 
@@ -106,13 +110,14 @@ function pushCommentToSockets (comment) {
       refineOne(comment, ['id', 'text', 'created_at']),
       {
         creator: refineOne(comment.relations.user, ['id', 'name', 'avatar_url']),
-        post: comment.get('post_id')
+        post: comment.get('post_id'),
+        parentComment: comment.get('comment_id')
       }
     )
   ))
 }
 
-const createOrUpdateConnections = (userId, existingFollowers) => comment => {
+const createOrUpdateConnections = (userId, existingFollowers) => {
   return existingFollowers
     .filter(f => f !== userId)
     .forEach(follower => UserConnection.createOrUpdate(userId, follower, 'message'))

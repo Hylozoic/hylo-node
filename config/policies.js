@@ -20,12 +20,34 @@
 
 module.exports.policies = {
   '*': false,
-  AdminController: ['isAdmin'],
-  MobileAppController: true,
-  NexudusController: true,
-  SessionController: true,
-  SubscriptionController: true,
-  UploadController: ['sessionAuth'],
+
+  AdminController: {
+    '*': 'isAdmin'
+  },
+
+  MobileAppController: {
+    '*': true
+  },
+
+  NexudusController: {
+    '*': true
+  },
+
+  SessionController: {
+    '*': true
+  },
+
+  SubscriptionController: {
+    '*': true
+  },
+
+  UploadController: {
+    '*': 'sessionAuth'
+  },
+
+  ExportController: {
+    '*': 'sessionAuth'
+  },
 
   AdminSessionController: {
     create:  true,
@@ -38,7 +60,7 @@ module.exports.policies = {
     createBatchFromEmailForm: ['checkAndDecodeToken']
   },
 
-  CommunityController: {
+  GroupController: {
     subscribe:   ['isSocket', 'sessionAuth', 'checkAndSetMembership'],
     unsubscribe: ['isSocket', 'sessionAuth', 'checkAndSetMembership']
   },
@@ -62,6 +84,6 @@ module.exports.policies = {
   },
 
   PaymentController: {
-    registerStripe: ['sessionAuth']    
+    registerStripe: ['sessionAuth']
   }
 }

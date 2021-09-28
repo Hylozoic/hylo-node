@@ -1,12 +1,13 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'posts_users',
+  requireFetch: false,
 
   post: function () {
     return this.belongsTo(Post)
   },
 
   user: function () {
-    return this.belongsTo(User).query({where: {active: true}})
+    return this.belongsTo(User).query({where: {'users.active': true}})
   },
 
   setToNow: function (trx) {

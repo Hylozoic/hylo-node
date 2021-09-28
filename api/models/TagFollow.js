@@ -2,9 +2,11 @@
 
 module.exports = bookshelf.Model.extend({
   tableName: 'tag_follows',
+  requireFetch: false,
+  hasTimestamps: true,
 
-  community: function () {
-    return this.belongsTo(Community)
+  group: function () {
+    return this.belongsTo(Group)
   },
 
   tag: function () {
@@ -22,69 +24,84 @@ module.exports = bookshelf.Model.extend({
   },
 
   // toggle is used by hylo-redux
-  toggle: function (tagId, userId, communityId) {
+  toggle: function (tagId, userId, groupId) {
     return TagFollow.where({
-      community_id: communityId,
+      group_id: groupId,
       tag_id: tagId,
       user_id: userId
     }).fetch()
     .then(tagFollow => tagFollow
-      ? TagFollow.remove({tagId, userId, communityId})
-      : TagFollow.add({tagId, userId, communityId}))
+      ? TagFollow.remove({tagId, userId, groupId})
+      : TagFollow.add({tagId, userId, groupId}))
   },
 
   // subscribe is used by hylo-evo
-  subscribe: function (tagId, userId, communityId, isSubscribing) {
-    return TagFollow.where({community_id: communityId, tag_id: tagId, user_id: userId})
+  subscribe: function (tagId, userId, groupId, isSubscribing) {
+    return TagFollow.where({group_id: groupId, tag_id: tagId, user_id: userId})
     .fetch()
     .then(tagFollow => {
       if (tagFollow && !isSubscribing) {
-        return TagFollow.remove({tagId, userId, communityId})
+        return TagFollow.remove({tagId, userId, groupId})
       } else if (!tagFollow && isSubscribing) {
-        return TagFollow.add({tagId, userId, communityId})
+        return TagFollow.add({tagId, userId, groupId})
       }
     })
   },
 
-  add: function ({tagId, userId, communityId, transacting}) {
+  add: function ({tagId, userId, groupId, transacting}) {
     const attrs = {
       tag_id: tagId,
-      community_id: communityId,
+      group_id: groupId,
       user_id: userId
     }
 
     return TagFollow.where({
-      community_id: communityId,
+      group_id: groupId,
       tag_id: tagId,
       user_id: userId
     }).fetch({transacting})
     .then(follow => follow ||
       new TagFollow(attrs).save(null, {transacting})
-      .tap(() => CommunityTag.query(q => {
-        q.where('community_id', communityId)
-        q.where('tag_id', tagId)
-      }).query().increment('num_followers').transacting(transacting)))
+      .then(async (tf) => {
+        const q = GroupTag.query(q => {
+          q.where('group_id', groupId)
+          q.where('tag_id', tagId)
+        })
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        await q.query().increment('num_followers')
+        return tf
+      })
+     )
   },
 
-  remove: function ({tagId, userId, communityId, transacting}) {
+  remove: function ({tagId, userId, groupId, transacting}) {
     const attrs = {
       tag_id: tagId,
-      community_id: communityId,
+      group_id: groupId,
       user_id: userId
     }
     return TagFollow.where(attrs)
     .fetch()
     .then(tagFollow => tagFollow &&
       tagFollow.destroy({transacting})
-      .tap(() => CommunityTag.query(q => {
-        q.where('community_id', attrs.community_id)
-        q.where('tag_id', attrs.tag_id)
-      }).query().decrement('num_followers').transacting(transacting)))
+      .then(() => {
+        const q = GroupTag.query(q => {
+          q.where('group_id', attrs.group_id)
+          q.where('tag_id', attrs.tag_id)
+        })
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        return q.query().decrement('num_followers')
+      })
+    )
   },
 
-  findFollowers: function (community_id, tag_id, limit = 3) {
+  findFollowers: function (group_id, tag_id, limit = 3) {
     return TagFollow.query(q => {
-      q.where({community_id, tag_id})
+      q.where({group_id, tag_id})
       q.limit(limit)
     })
     .fetchAll({withRelated: ['user', 'user.tags']})

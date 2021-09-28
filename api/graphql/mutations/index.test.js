@@ -1,15 +1,17 @@
 import {
   addSkill,
+  addSkillToLearn,
   removeSkill,
+  removeSkillToLearn,
   flagInappropriateContent,
-  allowCommunityInvites
+  allowGroupInvites
 } from './index'
 import root from 'root-path'
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
-describe('mutations', () => {
-  var u1, community, protocol, domain
+describe('mutations/index', () => {
+  var u1, group, protocol, domain
 
   before(() => {
     protocol = process.env.PROTOCOL
@@ -17,12 +19,12 @@ describe('mutations', () => {
     process.env.PROTOCOL = 'https'
     process.env.DOMAIN = 'www.hylo.com'
 
-    community = factories.community()
+    group = factories.group()
     u1 = factories.user()
     return Promise.join(
-      community.save(), u1.save())
+      group.save(), u1.save())
     .then(() => Promise.join(
-      u1.joinCommunity(community)
+      u1.joinGroup(group)
     ))
   })
 
@@ -36,12 +38,21 @@ describe('mutations', () => {
     expect(skill.get('name')).to.equal('New Skill')
   })
 
-  it('sets allow community invites', async () => {
-    const results = await allowCommunityInvites(u1.id, false)
-    expect(results.success).to.equal(true)
+  it('can add a skill to learn', async () => {
+    const skill = await addSkillToLearn(u1.id, 'New Skill To Learn')
+    expect(skill.get('name')).to.equal('New Skill To Learn')
+  })
 
-    const results2 = await allowCommunityInvites(u1.id, true)
+  it('sets allow group invites', async () => {
+    const results = await allowGroupInvites(group.id, true)
+    expect(results.success).to.equal(true)
+    await group.refresh()
+    expect(group.getSetting('allow_group_invites')).to.equal(true)
+
+    const results2 = await allowGroupInvites(group.id, false)
     expect(results2.success).to.equal(true)
+    await group.refresh()
+    expect(group.getSetting('allow_group_invites')).to.equal(false)
   })
 
   it('fails when adding a skill with 0 length', async () => {
@@ -80,6 +91,27 @@ describe('mutations', () => {
     })
     .then(skills => {
       expect(skills.toJSON()).to.not.contain.a.thing.with.property('name', name)
+    })
+  })
+
+  it('removes a skill to learn from a user', () => {
+    let skillToRemove
+    let name = 'toBeRemoved'
+    return addSkillToLearn(u1.id, name)
+    .then(skill => {
+      skillToRemove = skill
+      return u1.skillsToLearn().fetch()
+    })
+    .then(skillsToLearn => {
+      expect(skillsToLearn.toJSON()).to.contain.a.thing.with.property('name', name)
+      return removeSkillToLearn(u1.id, skillToRemove.id)
+    })
+    .then(response => {
+      expect(response).to.have.property('success', true)
+      return u1.skillsToLearn().fetch()
+    })
+    .then(skillsToLearn => {
+      expect(skillsToLearn.toJSON()).to.not.contain.a.thing.with.property('name', name)
     })
   })
 

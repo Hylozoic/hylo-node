@@ -7,8 +7,8 @@ describe('checkAndSetPost', function () {
     return setup.clearDb().then(function () {
       return Promise.props({
         u1: new User({name: 'U1', email: 'a@b.c'}).save(),
-        c1: new Community({name: 'C1', slug: 'c1'}).save(),
-        c2: new Community({name: 'C2', slug: 'c2'}).save(),
+        g1: new Group({name: 'G1', slug: 'g1', group_data_type: 1}).save(),
+        g2: new Group({name: 'G2', slug: 'g2', group_data_type: 1}).save(),
         p1: new Post({name: 'P1', active: true}).save(),
         p2: new Post({name: 'P2', active: true}).save()
       })
@@ -16,11 +16,11 @@ describe('checkAndSetPost', function () {
     .then(function (props) {
       fixtures = props
       return Promise.props({
-        pc1: props.c1.posts().attach(props.p1.id),
-        pc2: props.c2.posts().attach(props.p2.id)
+        pg1: props.g1.posts().attach(props.p1.id),
+        pg2: props.g2.posts().attach(props.p2.id)
       })
     })
-    .then(() => fixtures.c1.addGroupMembers([fixtures.u1.id]))
+    .then(() => fixtures.g1.addMembers([fixtures.u1.id]))
   })
 
   describe('with a userId', function () {
@@ -48,7 +48,7 @@ describe('checkAndSetPost', function () {
       .then(() => expect(res.notFound).to.have.been.called())
     })
 
-    it('allows access to a joined community', () => {
+    it('allows access to a joined group', () => {
       req.param = function (name) {
         if (name === 'postId') return fixtures.p1.id
       }

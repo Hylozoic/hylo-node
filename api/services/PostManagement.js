@@ -4,7 +4,7 @@ const removeComments = (postId, trx) =>
     if (ids.length === 0) return
 
     const remove = (table, column = 'comment_id') =>
-      trx(table).where(column, 'in', ids).del()
+      trx(table).whereIn(column, ids).del()
 
     return Promise.all([
       remove('thanks'),
@@ -27,7 +27,7 @@ export const removePost = postId => {
       remove('user_post_relevance'),
       remove('posts_tags'),
       remove('posts_users'),
-      remove('communities_posts'),
+      remove('groups_posts'),
       unset('posts', 'parent_post_id')
     ])
     .then(() => trx('posts').where('id', postId).del())

@@ -2,7 +2,7 @@ import { getDataTypeForModel, getDataTypeForInstance } from '../group/DataType'
 
 export default {
   async createGroup ({ transacting } = {}) {
-    return Group.forge({
+    return await Group.forge({
       group_data_id: this.id,
       group_data_type: getDataTypeForInstance(this),
       created_at: new Date()
@@ -10,7 +10,17 @@ export default {
   },
 
   async group (opts) {
-    return await Group.find(this, opts) || this.createGroup(opts)
+    console.log("getting group", opts)
+    if (this._group) {
+      console.log("already have group", this._group)
+      await this._group.refresh()
+      return this._group
+    }
+    this._group = await Group.find(this, opts)
+    if (!this._group) {
+      this._group = await this.createGroup(opts)
+    }
+    return this._group
   },
 
   async addGroupMembers (...args) {
@@ -24,11 +34,11 @@ export default {
   },
 
   async updateGroupMembers (...args) {
-    const dbOpts = args[1]
+    const dbOpts = args[2]
     return this.group(dbOpts).then(group => group.updateMembers(...args))
   },
 
-  queryByGroupConnection (model, direction = 'parent') {
+  queryByGroupRelationship (model, direction = 'parent') {
     // TODO we can infer the correct direction in most cases rather than
     // requiring it to be specified
     const dataType = getDataTypeForModel(model)
@@ -47,7 +57,7 @@ export default {
     })
     .select('g2.group_data_id')
 
-    return model.where('id', 'in', subq)
+    return model.whereIn('id', subq)
   },
 
   groupMembers (where) {
@@ -62,7 +72,7 @@ export default {
     if (where) subq = subq.where(where)
 
     return User.collection().query(q => {
-      q.where('id', 'in', subq)
+      q.whereIn('id', subq)
       q.where('users.active', true)
     })
   },

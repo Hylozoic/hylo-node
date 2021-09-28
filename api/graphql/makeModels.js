@@ -1,24 +1,22 @@
 import searchQuerySet from './searchQuerySet'
 import {
   commentFilter,
-  communityTopicFilter,
+  groupFilter,
+  groupTopicFilter,
   makeFilterToggle,
   membershipFilter,
+  messageFilter,
   personFilter,
-  sharedNetworkMembership,
-  activePost,
-  authFilter,
-  messageFilter
+  postFilter,
+  voteFilter
 } from './filters'
-import { myCommunityIds } from '../models/util/queryFilters'
 import { flow, mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
 import {
-  filterAndSortCommunities,
+  filterAndSortGroups,
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
-import { isFollowing } from '../models/group/queryUtils'
 import he from 'he';
 
 // this defines what subset of attributes and relations in each Bookshelf model
@@ -39,6 +37,8 @@ export default async function makeModels (userId, isAdmin) {
         'email',
         'avatar_url',
         'banner_url',
+        'contact_email',
+        'contact_phone',
         'twitter_name',
         'linkedin_url',
         'facebook_url',
@@ -51,11 +51,23 @@ export default async function makeModels (userId, isAdmin) {
         'intercomHash'
       ],
       relations: [
-        'communities',
+        'groups',
         'memberships',
         'posts',
         'locationObject',
+        {affiliations: {querySet: true}},
+        {groupInvitesPending: {querySet: true}},
+        {joinRequests: {
+          querySet: true,
+          filter: (relation, { status }) =>
+            relation.query(q => {
+              if (typeof status !== 'undefined') {
+                q.where('status', status)
+              }
+            })
+        }},
         {skills: {querySet: true}},
+        {skillsToLearn: {querySet: true}},
         {messageThreads: {typename: 'MessageThread', querySet: true}}
       ],
       getters: {
@@ -71,17 +83,17 @@ export default async function makeModels (userId, isAdmin) {
       attributes: [
         'created_at'
       ],
+      relations: [
+        { group: { alias: 'group' } },
+        { user: { alias: 'person' } }
+      ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
         lastViewedAt: m =>
           m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
           m.get('user_id') === userId ? m.get('new_post_count') : null,
-        community: m => m.groupData().fetch(),
-        hasModeratorRole: async m => {
-          const community = await m.groupData().fetch()
-          return GroupMembership.hasModeratorRole(userId, community)
-        }
+        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR)
       },
       filter: nonAdminFilter(membershipFilter(userId))
     },
@@ -93,10 +105,13 @@ export default async function makeModels (userId, isAdmin) {
         'avatar_url',
         'banner_url',
         'bio',
+        'contact_email',
+        'contact_phone',
         'twitter_name',
         'linkedin_url',
         'facebook_url',
         'url',
+        'last_active_at',
         'location',
         'tagline'
       ],
@@ -105,24 +120,29 @@ export default async function makeModels (userId, isAdmin) {
       },
       relations: [
         'memberships',
-        'moderatedCommunityMemberships',
+        'moderatedGroupMemberships',
         'locationObject',
+        {affiliations: {querySet: true}},
+        {eventsAttending: {querySet: true}},
         {posts: {querySet: true}},
+        {projects: {querySet: true}},
         {comments: {querySet: true}},
         {skills: {querySet: true}},
+        {skillsToLearn: {querySet: true}},
         {votes: {querySet: true}}
       ],
       filter: nonAdminFilter(personFilter(userId)),
       isDefaultTypeForTable: true,
-      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, communityIds, filter }) =>
+      fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, groupIds, filter }) =>
         searchQuerySet('users', {
           boundingBox,
           term: search,
           limit: first,
           offset,
+          order,
           type: filter,
           autocomplete,
-          communities: communityIds,
+          groups: groupIds,
           sort: sortBy
         })
     },
@@ -138,10 +158,11 @@ export default async function makeModels (userId, isAdmin) {
         'location',
         'announcement',
         'accept_contributions',
-        'is_public'
+        'is_public',
+        'type'
       ],
       getters: {
-        title: p => he.decode(p.get('name')),
+        title: p => p.get('name') ? he.decode(p.get('name')) : null,
         details: p => p.get('description'),
         detailsText: p => p.getDetailsText(),
         isPublic: p => p.get('is_public'),
@@ -149,16 +170,15 @@ export default async function makeModels (userId, isAdmin) {
         commentersTotal: p => p.getCommentersTotal(userId),
         commentsTotal: p => p.get('num_comments'),
         votesTotal: p => p.get('num_votes'),
-        type: p => p.getType(),
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
-          userId ? p.userEventInvitation(userId)
+          userId && p.isEvent() ? p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
           : ''
       },
       relations: [
         {comments: {querySet: true}},
-        'communities',
+        'groups',
         {user: {alias: 'creator'}},
         'followers',
         'locationObject',
@@ -172,56 +192,96 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {tags: {alias: 'topics'}}
       ],
-      filter: flow(
-        authFilter(userId, 'posts'),
-        activePost(userId),
-        nonAdminFilter(sharedNetworkMembership('posts', userId))),
+      filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
-      fetchMany: ({ first, order, sortBy, offset, search, filter, topic, boundingBox, networkSlugs, isPublic }) =>
+      fetchMany: ({ afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, offset, order, sortBy, search, topic }) =>
         searchQuerySet('posts', {
+          afterTime,
+          beforeTime,
           boundingBox,
-          term: search,
+          currentUserId: userId,
+          groupSlugs,
           limit: first,
           offset,
-          type: filter,
+          onlyMyGroups: context === 'all',
+          onlyPublic: context === 'public',
+          order,
           sort: sortBy,
+          term: search,
           topic,
-          networkSlugs,
-          is_public: isPublic
+          type: filter
         })
     },
 
-    Community: {
-      model: Community,
+    Group: {
+      model: Group,
       attributes: [
-        'name',
-        'slug',
-        'description',
-        'created_at',
+        'accessibility',
         'avatar_url',
         'banner_url',
-        'memberCount',
-        'postCount',
+        'created_at',
+        'description',
         'location',
-        'hidden',
-        'allow_community_invites',
-        'is_public',
-        'is_auto_joinable',
-        'public_member_directory'
+        'memberCount',
+        'name',
+        'postCount',
+        'slug',
+        'visibility',
       ],
       relations: [
-        'locationObject',
-        'network',
-        {moderators: {querySet: true}},
-        {communityTags: {
+        {activeMembers: { querySet: true }},
+        {childGroups: {querySet: true}},
+        {groupRelationshipInvitesFrom: {querySet: true}},
+        {groupRelationshipInvitesTo: {querySet: true}},
+        {groupTags: {
           querySet: true,
-          alias: 'communityTopics',
+          alias: 'groupTopics',
           filter: (relation, { autocomplete, subscribed }) =>
-            relation.query(communityTopicFilter(userId, {
+            relation.query(groupTopicFilter(userId, {
               autocomplete,
               subscribed,
-              communityId: relation.relatedData.parentId
+              groupId: relation.relatedData.parentId
             }))
+        }},
+        {groupToGroupJoinQuestions: {querySet: true}},
+        {joinQuestions: {querySet: true}},
+        'locationObject',
+        {moderators: {querySet: true}},
+        {members: {
+          querySet: true,
+          filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
+            relation.query(filterAndSortUsers({ autocomplete, boundingBox, order, search, sortBy }))
+        }},
+        {parentGroups: {querySet: true}},
+        {posts: {
+          querySet: true,
+          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic }) =>
+            relation.query(filterAndSortPosts({
+              afterTime,
+              beforeTime,
+              boundingBox,
+              isAnnouncement,
+              isFulfilled,
+              order,
+              search,
+              showPinnedFirst: true,
+              sortBy,
+              topic,
+              type: filter
+            }))
+        }},
+        {prerequisiteGroups: {
+          querySet: true,
+          filter: (relation, { onlyNotMember }) =>
+            relation.query(q => {
+              if (onlyNotMember) {
+                // Only return prerequisite groups that the current user is not yet a member of
+                q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
+                  'group_memberships.user_id': userId,
+                  'group_memberships.active': true
+                }))
+              }
+            })
         }},
         {skills: {
           querySet: true,
@@ -232,69 +292,119 @@ export default async function makeModels (userId, isAdmin) {
               }
             })
         }},
-        {users: {
-          alias: 'members',
+        {suggestedSkills: {querySet: true}},
+        {viewPosts: {
           querySet: true,
-          filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
-            relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
-        }},
-        {posts: {
-          querySet: true,
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
+          arguments: () => [userId],
+          filter: (relation, { afterTime, beforeTime, boundingBox, filter, order, search, sortBy, topic }) =>
             relation.query(filterAndSortPosts({
+              afterTime,
+              beforeTime,
               boundingBox,
+              order,
               search,
+              showPinnedFirst: true,
               sortBy,
               topic,
-              type: filter,
-              showPinnedFirst: true
+              type: filter
             }))
-        }}
+        }},
+        {widgets: {querySet: true }}
       ],
       getters: {
-        feedItems: (c, args) => c.feedItems(args),
-        isPublic: c => c.get('is_public'),
-        pendingInvitations: (c, { first }) => InvitationService.find({communityId: c.id, pendingOnly: true}),
-        invitePath: c =>
-          GroupMembership.hasModeratorRole(userId, c)
-          .then(isModerator => isModerator ? Frontend.Route.invitePath(c) : null)
+        invitePath: g =>
+          GroupMembership.hasModeratorRole(userId, g)
+          .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+        // Get number of prerequisite groups that current user is not a member of yet
+        numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
+        pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
+        settings: g => mapKeys(camelCase, g.get('settings'))
       },
-      filter: nonAdminFilter(sharedNetworkMembership('communities', userId)),
-      fetchMany: ({ first, order, sortBy, communityIds, offset, search, autocomplete, filter, isPublic, boundingBox, networkSlugs }) =>
-        searchQuerySet('communities', {
+      filter: nonAdminFilter(groupFilter(userId)),
+      fetchMany: ({ autocomplete, boundingBox, context, filter, first, groupIds, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
+        searchQuerySet('groups', {
+          autocomplete,
           boundingBox,
-          communities: communityIds,
-          networkSlugs,
-          term: search,
+          currentUserId: userId,
+          groupIds,
           limit: first,
           offset,
-          type: filter,
-          autocomplete,
+          onlyMine: context === 'all',
+          order,
+          parentSlugs,
           sort: sortBy,
-          is_public: isPublic
+          term: search,
+          type: filter,
+          visibility: context === 'public' ? Group.Visibility.PUBLIC : visibility
         })
     },
 
-    CommunityTemplate: {
-      model: CommunityTemplate,
+    GroupTemplate: {
+      model: GroupTemplate,
       attributes: [
         'name',
         'display_name'
       ],
       relations: [
-        'communities',
+        'groups',
         'defaultTopics'
       ],
-      fetchMany: () => CommunityTemplate
+      fetchMany: () => GroupTemplate
+    },
+
+    GroupJoinQuestion: {
+      model: GroupJoinQuestion,
+      attributes: [
+        'questionId',
+        'text'
+      ]
+    },
+
+    GroupToGroupJoinQuestion: {
+      model: GroupToGroupJoinQuestion,
+      attributes: [
+        'questionId',
+        'text'
+      ]
+    },
+
+    GroupRelationship: {
+      model: GroupRelationship,
+      attributes: [
+        'created_at',
+        'role',
+        'updated_at',
+      ],
+      relations: ['childGroup', 'parentGroup']
+    },
+
+    GroupRelationshipInvite: {
+      model: GroupRelationshipInvite,
+      attributes: [
+        'created_at',
+        'status',
+        'type',
+        'updated_at',
+      ],
+      getters: {
+        questionAnswers: i => i.questionAnswers().fetch()
+      },
+      relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 
     Invitation: {
       model: Invitation,
       attributes: [
-        'email',
+        'id',
         'created_at',
-        'last_sent_at'
-      ]
+        'email',
+        'last_sent_at',
+        'token'
+      ],
+      relations: [
+        'creator',
+        'group'
+      ],
     },
 
     JoinRequest: {
@@ -304,8 +414,43 @@ export default async function makeModels (userId, isAdmin) {
         'updated_at',
         'status'
       ],
-      relations: ['user' ],
-      fetchMany: ({ communityId }) => JoinRequest.where({ 'community_id': communityId })
+      relations: [
+        'group',
+        'user'
+      ],
+      getters: {
+        questionAnswers: jr => jr.questionAnswers().fetch()
+      },
+      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId, status: JoinRequest.STATUS.Pending })
+    },
+
+    JoinRequestQuestionAnswer: {
+      model: JoinRequestQuestionAnswer,
+      attributes: [
+        'answer'
+      ],
+      relations: ['question'],
+    },
+
+    Question: {
+      model: Question,
+      attributes: [
+        'text'
+      ]
+    },
+
+    Affiliation: {
+      model: Affiliation,
+      attributes: [
+        'created_at',
+        'updated_at',
+        'role',
+        'preposition',
+        'org_name',
+        'url',
+        'is_active',
+      ],
+      relations: ['user']
     },
 
     EventInvitation: {
@@ -326,11 +471,15 @@ export default async function makeModels (userId, isAdmin) {
       relations: [
         'post',
         {user: {alias: 'creator'}},
+        {childComments: { querySet: true }},
         {media: {
           alias: 'attachments',
           arguments: ({ type }) => [type]
         }}
       ],
+      getters: {
+        parentComment: (c) => c.parentComment().fetch()
+      },
       filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true
     },
@@ -377,8 +526,7 @@ export default async function makeModels (userId, isAdmin) {
         {comments: {alias: 'messages', typename: 'Message', querySet: true}}
       ],
       filter: relation => relation.query(q =>
-        q.where('posts.id', 'in',
-          Group.pluckIdsForMember(userId, Post, isFollowing)))
+        q.whereIn('posts.id', PostUser.followedPostIds(userId)))
     },
 
     Message: {
@@ -400,11 +548,11 @@ export default async function makeModels (userId, isAdmin) {
         'post',
         {user: {alias: 'voter'}}
       ],
-      filter: nonAdminFilter(sharedNetworkMembership('votes', userId))
+      filter: nonAdminFilter(voteFilter('votes', userId))
     },
 
-    CommunityTopic: {
-      model: CommunityTag,
+    GroupTopic: {
+      model: GroupTag,
       attributes: ['is_default', 'visibility', 'updated_at', 'created_at'],
       getters: {
         postsTotal: ct => ct.postCount(),
@@ -413,13 +561,28 @@ export default async function makeModels (userId, isAdmin) {
         newPostCount: ct => ct.newPostCount(userId)
       },
       relations: [
-        'community',
-        {tag: {alias: 'topic'}}
+        'group',
+        { tag: { alias: 'topic'}}
       ],
       filter: nonAdminFilter(relation => relation.query(q => {
-        q.where('communities_tags.community_id', 'in', myCommunityIds(userId))
+        q.whereIn('groups_tags.group_id', Group.selectIdsForMember(userId))
       })),
-      fetchMany: args => CommunityTag.query(communityTopicFilter(userId, args))
+      fetchMany: args => GroupTag.query(groupTopicFilter(userId, args))
+    },
+
+    SavedSearch: {
+      model: SavedSearch,
+      attributes: [
+        'boundingBox',
+        'group',
+        'context',
+        'created_at',
+        'name',
+        'is_active',
+        'search_text',
+        'post_types'
+      ],
+      fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'is_active': true })
     },
 
     Skill: {
@@ -441,11 +604,11 @@ export default async function makeModels (userId, isAdmin) {
           Tag.followersCount(t.id, Object.assign({}, opts, { userId }))
       },
       relations: [{
-        communityTags: {
-          alias: 'communityTopics',
+        groupTags: {
+          alias: 'groupTopics',
           querySet: true,
           filter: (relation, { autocomplete, subscribed, isDefault, visibility }) =>
-            relation.query(communityTopicFilter(userId, {
+            relation.query(groupTopicFilter(userId, {
               autocomplete,
               isDefault,
               subscribed,
@@ -454,8 +617,8 @@ export default async function makeModels (userId, isAdmin) {
           )
         }
       }],
-      fetchMany: ({ communitySlug, networkSlug, name, isDefault, visibility, autocomplete, first, offset = 0, sortBy }) =>
-        searchQuerySet('tags', { userId, communitySlug, networkSlug, name, autocomplete, isDefault, visibility, limit: first, offset, sort: sortBy })
+      fetchMany: ({ groupSlug, name, isDefault, visibility, autocomplete, first, offset = 0, sortBy }) =>
+        searchQuerySet('tags', { userId, groupSlug, name, autocomplete, isDefault, visibility, limit: first, offset, sort: sortBy })
     },
 
     Notification: {
@@ -475,9 +638,9 @@ export default async function makeModels (userId, isAdmin) {
       //   q.join('activities', 'activities.id', 'notifications.activity_id')
       //   q.join('posts', 'posts.id', 'activities.post_id')
       //   q.join('comments', 'comments.id', 'activities.comment_id')
-      //   q.where('activities.actor_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      //   q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-      //   q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+      //   q.whereNotIn('activities.actor_id', BlockedUser.blockedFor(userId))
+      //   q.whereNotIn('posts.user_id', BlockedUser.blockedFor(userId))
+      //   q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
       // })
     },
 
@@ -488,7 +651,8 @@ export default async function makeModels (userId, isAdmin) {
         'actor',
         'post',
         'comment',
-        'community'
+        'group',
+        'otherGroup'
       ],
       getters: {
         action: a => Notification.priorityReason(a.get('meta').reasons)
@@ -507,47 +671,12 @@ export default async function makeModels (userId, isAdmin) {
       filter: relation => {
         return relation.query(q => {
           if (userId) {
-            q.where('other_user_id', 'NOT IN', BlockedUser.blockedFor(userId))
+            q.whereNotIn('other_user_id', BlockedUser.blockedFor(userId))
             q.where('user_id', userId)
           }
           q.orderBy('created_at', 'desc')
         })
       }
-    },
-
-    Network: {
-      model: Network,
-      attributes: [
-        'name',
-        'slug',
-        'description',
-        'created_at',
-        'avatar_url',
-        'banner_url',
-        'memberCount'
-      ],
-      getters: {
-        isModerator: n => NetworkMembership.hasModeratorRole(userId, n.id),
-        isAdmin: n => NetworkMembership.hasAdminRole(userId, n.id)
-      },
-      relations: [
-        {moderators: {querySet: true}},
-        {members: {
-          querySet: true,
-          filter: (relation, { autocomplete, boundingBox, search, sortBy }) =>
-            relation.query(filterAndSortUsers({ autocomplete, boundingBox, search, sortBy }))
-        }},
-        {posts: {
-          querySet: true,
-          filter: (relation, { search, sortBy, topic, filter, boundingBox }) =>
-            relation.query(filterAndSortPosts({ search, sortBy, topic, type: filter, boundingBox }))
-        }},
-        {communities: {
-          querySet: true,
-          filter: (relation, { search, sortBy }) =>
-            relation.query(filterAndSortCommunities({ search, sortBy }))
-        }}
-      ]
     },
 
     Attachment: {
@@ -564,7 +693,37 @@ export default async function makeModels (userId, isAdmin) {
     PostMembership: {
       model: PostMembership,
       relations: [
-        'community'
+        'group'
+      ]
+    },
+
+    PostUser: {
+      model: PostUser,
+      relations: [
+        'post',
+        'user'
+      ]
+    },
+
+    GroupWidget: {
+      model: GroupWidget,
+      attributes: [
+        'id',
+        'is_visible',
+        'name',
+        'order'
+      ],
+      getters: {
+        settings: gw => mapKeys(camelCase, gw.get('settings'))
+      },
+      relations: ['group']
+    },
+
+    Widget: {
+      model: Widget,
+      attributes: [
+        'id',
+        'name'
       ]
     }
   }

@@ -27,7 +27,7 @@ export const wait = (millis, callback) =>
     resolve(callback ? callback() : null), millis))
 
 // this is data for a 1x1 png
-const pixel = new Buffer('89504e470d0a1a0a0000000d494844520000000100000001010300000025db56ca00000003504c5445ff4d005c35387f0000000174524e53ccd23456fd0000000a49444154789c636200000006000336377ca80000000049454e44ae426082', 'hex')
+const pixel = Buffer.from('89504e470d0a1a0a0000000d494844520000000100000001010300000025db56ca00000003504c5445ff4d005c35387f0000000174524e53ccd23456fd0000000a49444154789c636200000006000336377ca80000000049454e44ae426082', 'hex')
 
 export const stubGetImageSize = url => {
   const u = require('url').parse(url)
@@ -39,5 +39,6 @@ export const stubGetImageSize = url => {
 export function expectEqualQuery (actual, expected, { isCollection = true } = {}) {
   const reformatted = expected.replace(/\n\s*/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')')
   const query = isCollection ? actual.query() : actual
-  expect(query.toString()).to.equal(reformatted)
+  const reformattedQuery = query.toString().replace(/\n\s*/g, ' ').replace(/\( /g, '(').replace(/ \)/g, ')')
+  expect(reformattedQuery).to.equal(reformatted)
 }

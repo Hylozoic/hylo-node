@@ -52,7 +52,8 @@ describe('Comment', () => {
       u2 = factories.user({avatar_url: 'bar.png', settings: {dm_notifications: 'both'}})
       post = factories.post({type: Post.Type.THREAD, updated_at: now})
 
-      await Promise.join(u1.save(), u2.save(), post.save())
+      await Promise.join(u1.save(), u2.save())
+      await post.save({ user_id: u1.id })
       await post.addFollowers([u1.id, u2.id])
       ;[u1.id, u2.id].forEach(userId =>
         times(2, i => comments.push(factories.comment({
@@ -61,7 +62,7 @@ describe('Comment', () => {
           created_at: new Date(now - (5 - i) * 60000)
         }))))
       await Promise.all(comments.map(c => c.save()))
-      await RedisClient.create().delAsync(Comment.sendDigests.REDIS_TIMESTAMP_KEY)
+      await (await RedisClient.create()).del(Comment.sendDigests.REDIS_TIMESTAMP_KEY)
     })
 
     afterEach(() => setup.clearDb())
@@ -106,12 +107,12 @@ describe('Comment', () => {
         })
       })
 
-      it('respects lastReadAt', async () => {
-        const ms1 = await GroupMembership.forPair(u1, post).fetch()
-        await ms1.addSetting({lastReadAt: new Date(now - 4.5 * 60000)}, true)
+      it('respects last_read_at', async () => {
+        const pu1 = await PostUser.find(post.id, u1.id)
+        await pu1.save({ last_read_at: new Date(now - 4.5 * 60000) })
 
-        const ms2 = await GroupMembership.forPair(u2, post).fetch()
-        await ms2.addSetting({lastReadAt: now}, true)
+        const pu2 = await PostUser.find(post.id, u2.id)
+        await pu2.save({ last_read_at: now })
 
         return Comment.sendDigests()
         .then(count => {

@@ -1,20 +1,24 @@
 /* globals Nexudus */
-require('babel-register')
+require("@babel/register")
 var skiff = require('./lib/skiff') // this must be required first
 var moment = require('moment-timezone')
 var rollbar = require('./lib/rollbar')
 var sails = skiff.sails
-var digest2 = require('./lib/community/digest2')
+var digest2 = require('./lib/group/digest2')
 var Promise = require('bluebird')
 var { red } = require('chalk')
+const savedSearches = require('./lib/group/digest2/savedSearches')
 
 const sendAndLogDigests = type =>
   digest2.sendAllDigests(type)
-  .tap(results => sails.log.debug(`Sent digests to: ${results}`))
+  .then(results => { sails.log.debug(`Sent digests to: ${results}`); return results })
+
+const sendSavedSearchDigests = userId =>
+  savedSearches.sendAllDigests(userId)
 
 const resendInvites = () =>
   Invitation.resendAllReady()
-  .tap(results => sails.log.debug(`Resent the following invites: ${results}`))
+  .then(results => { sails.log.debug(`Resent the following invites: ${results}`); return results })
 
 // Currently Nexudus updates are disabled
 // const updateFromNexudus = opts =>
@@ -34,6 +38,7 @@ const daily = now => {
     case 3:
       sails.log.debug('Sending weekly digests')
       tasks.push(sendAndLogDigests('weekly'))
+      tasks.push(sendSavedSearchDigests('weekly'))
       break
   }
   return tasks
@@ -51,6 +56,7 @@ const hourly = now => {
     case 12:
       sails.log.debug('Sending daily digests')
       tasks.push(sendAndLogDigests('daily'))
+      tasks.push(sendSavedSearchDigests('daily'))
       break
     case 13:
       sails.log.debug('Resending invites')

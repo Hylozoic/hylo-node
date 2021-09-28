@@ -1,6 +1,6 @@
 import { isEmpty, mapKeys, pick, snakeCase } from 'lodash'
 
-export async function updateMembership (userId, { communityId, data, data: { settings } }) {
+export async function updateMembership (userId, { groupId, data, data: { settings } }) {
   const whitelist = mapKeys(pick(data, [
     'newPostCount'
   ]), (v, k) => snakeCase(k))
@@ -8,8 +8,8 @@ export async function updateMembership (userId, { communityId, data, data: { set
   if (data.lastReadAt) settings.lastReadAt = data.lastReadAt
   if (isEmpty(settings) && isEmpty(whitelist)) return Promise.resolve(null)
 
-  const membership = await GroupMembership.forIds(userId, communityId, Community).fetch()
-  if (!membership) throw new Error("Couldn't find membership for community with id", communityId)
+  const membership = await GroupMembership.forIds(userId, groupId).fetch()
+  if (!membership) throw new Error("Couldn't find membership for group with id", groupId)
   if (!isEmpty(settings)) membership.addSetting(settings)
   if (!isEmpty(whitelist)) membership.set(whitelist)
   if (membership.changed) await membership.save()

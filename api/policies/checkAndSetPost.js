@@ -10,7 +10,7 @@ module.exports = function checkAndSetPost (req, res, next) {
     return fail(`post id "${postId}" is invalid`, 'badRequest')
   }
 
-  return Post.find(postId, {withRelated: 'communities'})
+  return Post.find(postId, {withRelated: 'groups'})
   .then(post => {
     if (!post) return fail(`post ${postId} not found`, 'notFound')
 

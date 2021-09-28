@@ -12,7 +12,7 @@ export default function updateChildren (post, children, trx) {
     return Promise.all([
       // mark removed posts as inactive
       some(removed) && Post.query().where('id', 'in', removed)
-      .update('active', false).transacting(trx),
+        .update('active', false).transacting(trx),
 
       // update name and description for updated requests
       Promise.map(updated, child =>

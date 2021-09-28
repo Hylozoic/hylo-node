@@ -12,6 +12,7 @@ const DEFAULT_AVATAR = 'https://d3ngex8q79bk55.cloudfront.net/misc/default_commu
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'communities',
+  requireFetch: false,
 
   creator: function () {
     return this.belongsTo(User, 'created_by_id')
@@ -158,7 +159,7 @@ module.exports = bookshelf.Model.extend(merge({
     return Post.query(q => {
       q.select(bookshelf.knex.raw('count(*)'))
       q.join('communities_posts', 'posts.id', 'communities_posts.post_id')
-      q.where({'communities_posts.community_id': this.id, 'active': true})
+      q.where({'communities_posts.community_id': this.id, 'posts.active': true})
     })
     .fetch()
     .then(result => result.get('count'))
@@ -214,8 +215,8 @@ module.exports = bookshelf.Model.extend(merge({
     if (!key) return Promise.resolve(null)
 
     let where = isNaN(Number(key))
-      ? (opts.active ? {slug: key, active: true} : {slug: key})
-      : (opts.active ? {id: key, active: true} : {id: key})
+      ? (opts.active ? {slug: key, 'communities.active': true} : {slug: key})
+      : (opts.active ? {id: key, 'communities.active': true} : {id: key})
     return this.where(where).fetch(opts)
   },
 
@@ -226,7 +227,7 @@ module.exports = bookshelf.Model.extend(merge({
   queryByAccessCode: function (accessCode) {
     return this.query(qb => {
       qb.whereRaw('lower(beta_access_code) = lower(?)', accessCode)
-      qb.where('active', true)
+      qb.where('communities.active', true)
     })
   },
 

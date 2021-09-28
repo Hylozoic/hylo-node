@@ -1,154 +1,171 @@
 import { curry } from 'lodash'
-import { myCommunityIds, myNetworkCommunityIds } from '../models/util/queryFilters'
-import { isFollowing } from '../models/group/queryUtils'
 import GroupDataType from '../models/group/DataType'
+
+export const commentFilter = userId => relation => relation.query(q => {
+  q.distinct()
+  q.where({'comments.active': true})
+
+  if (userId) {
+    q.leftJoin('groups_posts', 'comments.post_id', 'groups_posts.post_id')
+    q.join('posts', 'groups_posts.post_id', 'posts.id')
+    q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
+
+    q.where(q2 => {
+      const followedPostIds = PostUser.followedPostIds(userId)
+      q2.whereIn('comments.post_id', followedPostIds)
+      .orWhereIn('groups_posts.group_id', Group.selectIdsForMember(userId))
+      .orWhere('posts.is_public', true)
+    })
+    q.groupBy("comments.id")
+  }
+})
+
+// Which groups are visible to the user?
+export const groupFilter = userId => relation => {
+  return relation.query(q => {
+    q.where('groups.active', true)
+
+    // non authenticated queries can only see public groups
+    if (!userId) {
+      q.where('groups.visibility', Group.Visibility.PUBLIC)
+    } else {
+      // the effect of using `where` like this is to wrap everything within its
+      // callback in parentheses -- this is necessary to keep `or` from "leaking"
+      // out to the rest of the query
+      q.where(q2 => {
+        const selectIdsForMember = Group.selectIdsForMember(userId)
+        const parentGroupIds = GroupRelationship.parentIdsFor(selectIdsForMember)
+        const childGroupIds = GroupRelationship.childIdsFor(selectIdsForMember)
+        const selectModeratedGroupIds = Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR })
+        const childrenOfModeratedGroupIds = GroupRelationship.childIdsFor(selectModeratedGroupIds)
+
+        // Can see groups you are a member of...
+        q2.whereIn('groups.id', selectIdsForMember)
+        // + their parent group
+        q2.orWhereIn('groups.id', parentGroupIds)
+        // + child groups that are not hidden, except moderators of a group can see its hidden children
+        q2.orWhere(q3 => {
+          q3.where(q4 => {
+            q4.whereIn('groups.id', childGroupIds)
+            q4.andWhere('groups.visibility', '!=', Group.Visibility.HIDDEN)
+          })
+          q3.orWhereIn('groups.id', childrenOfModeratedGroupIds)
+        })
+        // + all public groups
+        q2.orWhere('groups.visibility', Group.Visibility.PUBLIC)
+      })
+    }
+  })
+}
+
+export function groupTopicFilter (userId, {
+  autocomplete,
+  groupId,
+  isDefault,
+  subscribed,
+  visibility
+}) {
+  return q => {
+    if (groupId) {
+      q.where('groups_tags.group_id', groupId)
+    }
+
+    if (autocomplete) {
+      q.join('tags', 'tags.id', 'groups_tags.tag_id')
+      q.whereRaw('tags.name ilike ?', autocomplete + '%')
+    }
+
+    if (isDefault) {
+      q.where('groups_tags.is_default', true)
+    }
+
+    if (subscribed) {
+      q.join('tag_follows', 'tag_follows.tag_id', 'groups_tags.tag_id')
+      q.where('tag_follows.user_id', userId)
+      q.whereRaw('tag_follows.group_id = groups_tags.group_id')
+    }
+
+    if (visibility) {
+      q.whereIn('groups_tags.visibility', visibility)
+    }
+  }
+}
 
 export function makeFilterToggle (enabled) {
   return filterFn => relation =>
     enabled ? filterFn(relation) : relation
 }
 
-// This does not include users connected by a network
-function sharesMembership (userId, q) {
-  const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID], Community)
-  .query().pluck('group_id')
-
-  q.where('group_memberships.active', true)
-  q.where('group_memberships.group_id', 'in', subq)
-}
-
 export const membershipFilter = userId => relation =>
-  relation.query(q => sharesMembership(userId, q))
+  relation.query(q => {
+    // XXX: why are we passing in AXOLOTL_ID? wouldnt that return all memberships the AXOLOTL has too?
+    const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID]).query().select('group_id')
+    q.whereIn('group_memberships.group_id', subq)
+  })
+
+export const messageFilter = userId => relation => relation.query(q => {
+  q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
+})
 
 export const personFilter = userId => relation => relation.query(q => {
   if (userId) {
-    // find all other memberships for users that share a network
+    q.whereNotIn('users.id', BlockedUser.blockedFor(userId))
+
+    // limit to users that are in those other memberships or are connected some other way
+
+    // find all other memberships of users that are in shared groups
     const sharedMemberships = GroupMembership.query(q3 => {
-      filterCommunities(q3, 'groups.group_data_id', userId)
-      q3.join('groups', 'groups.id', 'group_memberships.group_id')
-      q3.where('group_memberships.group_data_type', GroupDataType.COMMUNITY)
+      q3.select('group_memberships.user_id')
+      q3.whereIn('group_memberships.group_id', Group.selectIdsForMember(userId))
     })
-
-    q.where('users.id', 'NOT IN', BlockedUser.blockedFor(userId))
-
-    // limit to users that are in those other memberships
-
     const sharedConnections = UserConnection.query(ucq =>{
-      ucq.where('user_id', userId)
+      ucq.select('other_user_id')
+      ucq.where('user_connections.user_id', userId)
     })
-
     q.where(inner =>
       inner.where('users.id', User.AXOLOTL_ID)
-      .orWhere('users.id', 'in', sharedMemberships.query().pluck('user_id'))
-      .orWhere('users.id', 'in', sharedConnections.query().pluck('other_user_id')))
+      .orWhereIn('users.id', sharedMemberships.query())
+      .orWhereIn('users.id', sharedConnections.query()))
   }
 })
 
-export const messageFilter = userId => relation => relation.query(q => {
-  q.where('user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-})
-
-function filterCommunities (q, idColumn, userId) {
-  // the effect of using `where` like this is to wrap everything within its
-  // callback in parentheses -- this is necessary to keep `or` from "leaking"
-  // out to the rest of the query
-  q.where(inner => {
-    inner.where(idColumn, 'in', myCommunityIds(userId)).orWhere(idColumn, 'in', myNetworkCommunityIds(userId))
-    if (idColumn === 'communities.id') {
-      // XXX: hack to make sure to show public communities on the map when logged in
-      inner.orWhere('communities.is_public', true)
-    }
-  })
-
-  // non authenticated queries can only see public communities
-  if (!userId && idColumn === 'communities.id') {
-    q.where('communities.is_public', true)
-  }
-}
-
-export const sharedNetworkMembership = curry((tableName, userId, relation) =>
-  relation.query(q => {
-    switch (tableName) {
-      case 'communities':
-        return filterCommunities(q, 'communities.id', userId)
-      case 'posts':
-        const subq = PostMembership.query(q2 => {
-          filterCommunities(q2, 'community_id', userId)
-        }).query().select('post_id')
-
-        return q.where(q2 => {
-          q2.where('posts.id', 'in', subq).orWhere('posts.is_public', true)
-        })
-      case 'votes':
-        q.join('communities_posts', 'votes.post_id', 'communities_posts.post_id')
-        return filterCommunities(q, 'communities_posts.community_id', userId)
-      default:
-        throw new Error(`sharedNetworkMembership filter does not support ${tableName}`)
-    }
-  }))
-
-export const commentFilter = userId => relation => relation.query(q => {
-  q.distinct()
-  q.leftJoin('communities_posts', 'comments.post_id', 'communities_posts.post_id')
-  q.where({'comments.active': true})
-
-  if (userId) {
-    q.where('comments.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-    q.where(q2 => {
-      const groupIds = Group.pluckIdsForMember(userId, Post, isFollowing)
-      q2.where('comments.post_id', 'in', groupIds)
-      .orWhere(q3 => filterCommunities(q3, 'communities_posts.community_id', userId))
-    })
-  }
-})
-
-export const activePost = userId => relation => {
+export const postFilter = (userId, isAdmin) => relation => {
   return relation.query(q => {
-    if (userId) {
-      q.where('posts.user_id', 'NOT IN', BlockedUser.blockedFor(userId))
-    }
+    // Always only show active posts
     q.where('posts.active', true)
-  })
-}
 
-export const authFilter = (userId, tableName) => relation => {
-  return relation.query(q => {
-    // non authenticated queries can only see public things
+    // If we are loading posts through a group then groups_posts already joined, otherwise we need it
+    if (!relation.relatedData || relation.relatedData.parentTableName !== 'groups') {
+      q.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+    }
+
     if (!userId) {
+      // non authenticated queries can only see public posts
       q.where(tableName + '.is_public', true)
+    } else if (!isAdmin) {
+      // Only show posts that are public or posted to a group the user is a member of
+      q.where(q3 => {
+        const selectIdsForMember = Group.selectIdsForMember(userId)
+        q3.whereIn('groups_posts.group_id', selectIdsForMember).orWhere('posts.is_public', true)
+      })
+
+      // Don't show posts from blocked users
+      q.whereNotIn('posts.user_id', BlockedUser.blockedFor(userId))
     }
   })
 }
 
-export function communityTopicFilter (userId, {
-  autocomplete,
-  communityId,
-  isDefault,
-  subscribed,
-  visibility
-}) {
-  return q => {
-    if (communityId) {
-      q.where('communities_tags.community_id', communityId)
-    }
-
-    if (autocomplete) {
-      q.join('tags', 'tags.id', 'communities_tags.tag_id')
-      q.whereRaw('tags.name ilike ?', autocomplete + '%')
-    }
-
-    if (isDefault) {
-      q.where('communities_tags.is_default', true)
-    }
-
-    if (subscribed) {
-      q.join('tag_follows', 'tag_follows.tag_id', 'communities_tags.tag_id')
-      q.where('tag_follows.user_id', userId)
-      q.whereRaw('tag_follows.community_id = communities_tags.community_id')
-    }
-
-    if (visibility) {
-      q.where('communities_tags.visibility', 'in', visibility)
-    }
-  }
+// Only can see votes from active posts that are public or are in a group that the person is a member of
+export const voteFilter = userId => relation => {
+  return relation.query(q => {
+    q.join('groups_posts', 'votes.post_id', 'groups_posts.post_id')
+    q.join('posts', 'posts.id', 'groups_posts.post_id')
+    q.where('posts.active', true)
+    q.andWhere(q2 => {
+      const selectIdsForMember = Group.selectIdsForMember(userId)
+      q.whereIn('groups_posts.group_id', selectIdsForMember)
+      q.orWhere('posts.is_public', true)
+    })
+  })
 }
+

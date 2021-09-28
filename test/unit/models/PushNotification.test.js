@@ -19,7 +19,7 @@ describe('PushNotification', () => {
 
     pushNotification = new PushNotification({
       alert: 'hi',
-      path: '/p',
+      path: '/post',
       badge_no: 7,
       platform: 'ios_macos'
     })
@@ -115,7 +115,7 @@ describe('PushNotification', () => {
         deviceToken: 'foo',
         playerId: null,
         alert: 'hi',
-        path: '/p',
+        path: '/post',
         badgeNo: 7
       })
     })
@@ -134,7 +134,7 @@ describe('PushNotification', () => {
         deviceToken: null,
         playerId: 'bar',
         alert: 'hi',
-        path: '/p',
+        path: '/post',
         badgeNo: 7
       })
     })

@@ -1,4 +1,4 @@
-require('babel-register')
+require("@babel/register")
 const FullTextSearch = require('../api/services/FullTextSearch')
 
 exports.up = function (knex) {

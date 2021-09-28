@@ -4,7 +4,7 @@ import { joinRoom, leaveRoom } from '../services/Websockets'
 
 const PostController = {
   createFromEmailForm: function (req, res) {
-    const { tokenData: { userId, communityId } } = res.locals
+    const { tokenData: { userId, groupId } } = res.locals
     const namePrefixes = {
       offer: "I'd like to share",
       request: "I'm looking for",
@@ -20,12 +20,12 @@ const PostController = {
     const attributes = {
       created_from: 'email_form',
       name: `${namePrefixes[type]} ${req.param('name')}`,
-      community_ids: [communityId],
+      group_ids: [groupId],
       topicNames: [type],
       description: req.param('description')
     }
 
-    let community
+    let group
     return Post.where({name: attributes.name, user_id: userId}).fetch()
     .then(post => {
       if (post && (new Date() - post.get('created_at') < 5 * 60000)) {
@@ -33,11 +33,11 @@ const PostController = {
         return true
       }
     })
-    .then(stop => stop || Community.find(communityId)
-      .then(c => {
-        community = c
-        if (!c.get('active')) {
-          const message = 'Your post was not created. That community no longer exists.'
+    .then(stop => stop || Group.find(groupId)
+      .then(g => {
+        group = g
+        if (!g.get('active')) {
+          const message = 'Your post was not created. That group no longer exists.'
           res.redirect(Frontend.Route.root() + `?notification=${encodeURIComponent(message)}&error=1`)
           return true
         }
@@ -46,9 +46,9 @@ const PostController = {
       .tap(() => Analytics.track({
         userId,
         event: 'Add Post by Email Form',
-        properties: {community: community.get('name')}
+        properties: {group: group.get('name')}
       }))
-      .then(post => res.redirect(Frontend.Route.post(post, community))))
+      .then(post => res.redirect(Frontend.Route.post(post, group))))
     .catch(res.serverError)
   },
 

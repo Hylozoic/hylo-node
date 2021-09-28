@@ -1,15 +1,15 @@
 import { flatten, merge, pick, uniq } from 'lodash'
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
-import { updateNetworkMemberships } from './util'
-import { communityRoom, pushToSockets } from '../../services/Websockets'
+import { updateMemberships } from './util'
+import { groupRoom, pushToSockets } from '../../services/Websockets'
 
 export default function createPost (userId, params) {
   return setupPostAttrs(userId, merge(Post.newPostAttrs(), params))
   .then(attrs => bookshelf.transaction(transacting =>
     Post.create(attrs, { transacting })
     .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'community_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
+      pick(params, 'group_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
       {children: params.requests, transacting}
     )))).then(function(inserts) {
       return inserts
@@ -27,10 +27,10 @@ export function afterCreatingPost (post, opts) {
   const trxOpts = pick(opts, 'transacting')
 
   return Promise.all(flatten([
-    opts.community_ids && post.communities().attach(uniq(opts.community_ids), trxOpts),
+    opts.group_ids && post.groups().attach(uniq(opts.group_ids), trxOpts),
 
     // Add mentioned users and creator as followers
-    post.addFollowers(followerIds, trxOpts),
+    post.addFollowers(followerIds, {}, trxOpts),
 
     // Add creator to RSVPs
     post.get('type') === 'event' &&
@@ -77,60 +77,61 @@ export function afterCreatingPost (post, opts) {
 
     opts.docs && Promise.map(opts.docs, (doc) => Media.createDoc(post.id, doc, trx)),
   ]))
-  .then(() => post.updateProjectMembers(opts.memberIds || [], trxOpts))
-  .then(() => post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
+  .then(() => post.isProject() && post.setProjectMembers(opts.memberIds || [], trxOpts))
+  .then(() => post.isEvent() && post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
-  .then(() => updateTagsAndCommunities(post, trx))
-  .then(() => updateNetworkMemberships(post, trx))
+  .then(() => updateTagsAndGroups(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
   .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
 }
 
-async function updateTagsAndCommunities (post, trx) {
+async function updateTagsAndGroups (post, trx) {
   await post.load([
-    'communities', 'linkPreview', 'networks', 'tags', 'user'
+    'groups', 'linkPreview', 'tags', 'user'
   ], {transacting: trx})
 
-  const { tags, communities } = post.relations
+  const { tags, groups } = post.relations
 
   // NOTE: the payload object is released to many users, so it cannot be
-  // subject to the usual permissions checks (which communities/networks
+  // subject to the usual permissions checks (which groups
   // the user is allowed to view, etc). This means we either omit the
-  // information, or (as below) we only post community data for the socket
+  // information, or (as below) we only post group data for the socket
   // room it's being pushed to.
-  // TODO: eventually we will need to push to socket rooms for networks.
   const payload = post.getNewPostSocketPayload()
-  const notifySockets = payload.communities.map(c => {
+  const notifySockets = payload.groups.map(c => {
     pushToSockets(
-      communityRoom(c.id),
+      groupRoom(c.id),
       'newPost',
-      Object.assign({}, payload, { communities: [ c ] })
+      Object.assign({}, payload, { groups: [ c ] })
     )
   })
 
-  const updateCommunityTags = CommunityTag.query(q => {
+  const groupTagsQuery = GroupTag.query(q => {
     q.whereIn('tag_id', tags.map('id'))
-  }).query().update({updated_at: new Date()}).transacting(trx)
+  }).query()
+
+  const tagFollowQuery = TagFollow.query(q => {
+    q.whereIn('tag_id', tags.map('id'))
+    q.whereIn('group_id', groups.map('id'))
+    q.whereNot('user_id', post.get('user_id'))
+  }).query()
+
+  const groupMembershipQuery = GroupMembership.query(q => {
+    q.whereIn('group_id', groups.map('id'))
+    q.whereNot('group_memberships.user_id', post.get('user_id'))
+    q.where('group_memberships.active', true)
+  }).query()
+
+  if (trx) {
+    groupTagsQuery.transacting(trx)
+    tagFollowQuery.transacting(trx)
+    groupMembershipQuery.transacting(trx)
+  }
 
   return Promise.all([
     notifySockets,
-    updateCommunityTags,
-
-    TagFollow.query(q => {
-      q.whereIn('tag_id', tags.map('id'))
-      q.whereIn('community_id', communities.map('id'))
-      q.whereNot('user_id', post.get('user_id'))
-    }).query().increment('new_post_count').transacting(trx),
-
-    GroupMembership.query(q => {
-      const groupIds = Group.query(q2 => {
-        q2.whereIn('group_data_id', communities.map('id'))
-        q2.where('group_data_type', Group.DataType.COMMUNITY)
-      }).query().pluck('id')
-
-      q.whereIn('group_id', groupIds)
-      q.whereNot('group_memberships.user_id', post.get('user_id'))
-      q.where('group_memberships.active', true)
-    }).query().increment('new_post_count').transacting(trx)
+    groupTagsQuery.update({updated_at: new Date()}),
+    tagFollowQuery.increment('new_post_count'),
+    groupMembershipQuery.increment('new_post_count')
   ])
 }

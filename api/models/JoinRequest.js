@@ -1,83 +1,81 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'join_requests',
+  requireFetch: false,
+  hasTimestamps: true,
 
   user: function () {
     return this.belongsTo(User)
   },
 
-  community: function () {
-    return this.belongsTo(Community)
+  group: function () {
+    return this.belongsTo(Group)
+  },
+
+  questionAnswers: function () {
+    return this.hasMany(JoinRequestQuestionAnswer)
+  },
+
+  accept: async function (moderatorId) {
+    const user = await this.user().fetch()
+    const group = await this.group().fetch()
+    if (user && group) {
+      user.joinGroup(group)
+
+      // TODO: add tracking of who did the approving in the join_request
+      await this.save({ status: JoinRequest.STATUS.Accepted }).then(async request => {
+        const approvedMember = {
+          actor_id: moderatorId,
+          reader_id: user.id,
+          group_id: group.id,
+          reason: 'approvedJoinRequest'
+        }
+
+        Activity.saveForReasons([approvedMember])
+      })
+      return this
+    }
+    throw new Error("Invalid join request")
   }
 }, {
 
+  STATUS: {
+    Pending: 0,
+    Accepted: 1,
+    Rejected: 2,
+    Canceled: 3
+  },
+
   create: function (opts) {
     return new JoinRequest({
-      community_id: opts.communityId,
+      group_id: opts.groupId,
       user_id: opts.userId,
       created_at: new Date(),
-      status: 0,
+      status: this.STATUS.Pending,
     }).save()
-    .tap(async request => {
+    .then(async request => {
       JoinRequest.afterCreate(request)
+      return request
     })
   },
 
   afterCreate: async function (request) {
-    await request.load(['community', 'user'])
-    const { community, user } = request.relations
+    await request.load(['group', 'user'])
+    const { group, user } = request.relations
 
-    const moderators = await community.moderators().fetch()
+    const moderators = await group.moderators().fetch()
 
     const announcees = moderators.map(moderator => ({
       actor_id: user.id,
       reader_id: moderator.id,
-      community_id: community.id,
+      group_id: group.id,
       reason: 'joinRequest'
     }))
-    
-    JoinRequest.sendNotification(announcees)
-  },
 
-  sendNotification: function (activities = [], opts) { 
-    return Activity.saveForReasons(activities)
+    Activity.saveForReasons(announcees)
   },
 
   find: async function (id) {
     if (!id) return Promise.resolve(null)
     return JoinRequest.where({id}).fetch()
-  },
-
-  update: function (id, changes, moderatorId) {
-    const { status } = changes;
-
-    if (![0, 1, 2].includes(status)) {
-      return Promise.reject(new Error('Status is invalid'))
-    }
-
-    const attributes = {
-      updated_at: new Date(),
-      status
-    }
-
-    const isApproved = status === 1
-
-    return JoinRequest.query().where({ id }).update(attributes)
-      .then(() => JoinRequest.find(id))
-      .tap(async request => {
-        if (isApproved) {
-          await request.load(['community', 'user'])
-          const { community, user } = request.relations;
-
-          const approvedMember = {
-            actor_id: moderatorId,
-            reader_id: user.id,
-            community_id: community.id,
-            reason: 'approvedJoinRequest'
-          }
-  
-          JoinRequest.sendNotification([approvedMember])
-        }
-      })
   }
-
 })

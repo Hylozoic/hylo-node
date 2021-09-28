@@ -5,13 +5,14 @@ const hash = Promise.promisify(bcrypt.hash, bcrypt)
 
 module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)
   },
 
   activeUser: function () {
-    return this.belongsTo(User).query({where: {active: true}})
+    return this.belongsTo(User).query({where: {'users.active': true}})
   },
 
   updatePassword: function (password, { transacting } = {}) {
@@ -50,9 +51,14 @@ module.exports = bookshelf.Model.extend({
       if (avatarUrl && !avatarUrl.match(/gravatar/)) {
         attributes.avatar_url = avatarUrl
       }
-      return !isEmpty(attributes) && User.query().where('id', userId)
-      .update(attributes)
-      .transacting(transacting)
+      if (!isEmpty(attributes)) {
+        const q = User.query().where('id', userId)
+        if (transacting) {
+          q.transacting(transacting)
+        }
+        return q.update(attributes)
+      }
+      return false
     })
   },
 
@@ -61,7 +67,7 @@ module.exports = bookshelf.Model.extend({
       case 'facebook':
         return {
           facebook_url: profile.profileUrl || get(profile, '_json.link'),
-          avatar_url: `https://graph.facebook.com/${profile.id}/picture?type=large`
+          avatar_url: `https://graph.facebook.com/${profile.id}/picture?type=large&access_token=${process.env.FACEBOOK_APP_ID}|${process.env.FACEBOOK_CLIENT_TOKEN}`
         }
       case 'linkedin':
         return {

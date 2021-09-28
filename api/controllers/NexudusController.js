@@ -7,7 +7,7 @@ var generateToken = function (token, key, date, hash) {
   var checkHash = md5(checkString)
   if (hash !== checkHash) {
     throw new Error(format('bad hash: expected %s, got %s', hash, checkHash))
-  }  
+  }
   return md5(token + secret)
 }
 
@@ -17,14 +17,14 @@ module.exports = {
     var params = req.allParams()
     var email = params.e
     var token = generateToken(params.t, params.a, params.d, params.h)
-    
+
     Nexudus.fetchUsers(params.a, token)
     .tap(results => Email.sendRawEmail('robbie@hylo.com', {
       subject: format('Nexudus user records (%s) for %s', results.length, email)
     }, {
       files: [{
         id: 'users.json',
-        data: new Buffer(JSON.stringify(results, null, '  ')).toString('base64')
+        data: Buffer.from(JSON.stringify(results, null, '  ')).toString('base64')
       }]
     }))
     .tap(results => res.ok(format('Sent %s records to Hylo.', results.length)))

@@ -1,12 +1,14 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'event_responses',
+  requireFetch: false,
+  hasTimestamps: true,
 
   post: function () {
     return this.belongsTo(Post)
   },
 
   user: function () {
-    return this.belongsTo(User).query({where: {active: true}})
+    return this.belongsTo(User).query({where: {'users.active': true}})
   }
 }, {
   create: function (postId, options) {

@@ -11,10 +11,11 @@ module.exports.routes = {
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
 
-  'GET    /noo/network/:networkId':                       'NetworkController.findOne',
-  'POST   /noo/network':                                  'NetworkController.create',
-  'POST   /noo/network/validate':                         'NetworkController.validate',
-  'POST   /noo/network/:networkId':                       'NetworkController.update',
+  // TODO: these dont exist right now
+  // 'GET    /noo/network/:networkId':                       'NetworkController.findOne',
+  // 'POST   /noo/network':                                  'NetworkController.create',
+  // 'POST   /noo/network/validate':                         'NetworkController.validate',
+  // 'POST   /noo/network/:networkId':                       'NetworkController.update',
 
   'GET    /noo/admin/login':                              'AdminSessionController.create',
   'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',
@@ -31,6 +32,7 @@ module.exports.routes = {
   'POST   /noo/login':                                    'SessionController.create',
   'GET    /noo/login/token':                              'SessionController.createWithToken',
   'POST   /noo/login/token':                              'SessionController.createWithToken',
+  'POST   /noo/login/apple/oauth':                        'SessionController.finishAppleOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
   'GET    /noo/login/facebook':                           'SessionController.startFacebookOAuth',
@@ -46,8 +48,9 @@ module.exports.routes = {
   'GET    /noo/logout':                                   'SessionController.destroy',
   'DELETE /noo/session':                                  'SessionController.destroySession',
 
-  'POST   /noo/access-token':                             'AccessTokenController.create',
-  'DELETE /noo/access-token/revoke':                      'AccessTokenController.destroy',
+  // TODO: dont exist right now
+  // 'POST   /noo/access-token':                             'AccessTokenController.create',
+  // 'DELETE /noo/access-token/revoke':                      'AccessTokenController.destroy',
 
   'GET     /noo/nexudus':                                 'NexudusController.create',
 
@@ -57,17 +60,19 @@ module.exports.routes = {
   'GET     /noo/mobile/auto-update-info':                 'MobileAppController.updateInfo',
   'POST    /noo/mobile/logerror':                         'MobileAppController.logError',
 
-'GET     /noo/payment/registerStripe':                  'PaymentController.registerStripe',
-'POST    /noo/payment/registerStripe':                  'PaymentController.registerStripe',
+  'GET     /noo/payment/registerStripe':                  'PaymentController.registerStripe',
+  'POST    /noo/payment/registerStripe':                  'PaymentController.registerStripe',
 
   // websockets routes
-  'POST   /noo/community/:communityId/subscribe':         'CommunityController.subscribe',
-  'POST   /noo/community/:communityId/unsubscribe':       'CommunityController.unsubscribe',
+  'POST   /noo/group/:groupId/subscribe':                 'GroupController.subscribe',
+  'POST   /noo/group/:groupId/unsubscribe':               'GroupController.unsubscribe',
   'POST   /noo/post/:postId/subscribe':                   'PostController.subscribe', // to comments
   'POST   /noo/post/:postId/unsubscribe':                 'PostController.unsubscribe', // from comments
   'POST   /noo/post/:postId/typing':                      'PostController.typing',
   'POST   /noo/threads/subscribe':                        'PostController.subscribeToUpdates',
   'POST   /noo/threads/unsubscribe':                      'PostController.unsubscribeFromUpdates',
 
-  'POST   /noo/upload':                                   'UploadController.create'
+  'POST   /noo/upload':                                   'UploadController.create',
+
+  'GET    /noo/export/group':                             'ExportController.groupData'
 }

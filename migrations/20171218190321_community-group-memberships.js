@@ -1,4 +1,4 @@
-require('babel-register')
+require("@babel/register")
 const models = require('../api/models')
 const DataType = require('../api/models/group/DataType').default
 const {

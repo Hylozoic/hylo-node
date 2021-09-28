@@ -56,14 +56,14 @@ export function postRoom (postId) {
   return `posts/${postId}`
 }
 
-export function communityRoom (communityId) {
-  return `communities/${communityId}`
+export function groupRoom (groupId) {
+  return `groups/${groupId}`
 }
 
 const roomTypes = {
   user: userRoom,
   post: postRoom,
-  community: communityRoom
+  group: groupRoom
 }
 
 const emptyResponse = res => err => err ? res.serverError(err) : res.ok({})

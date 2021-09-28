@@ -1,12 +1,13 @@
 module.exports = bookshelf.Model.extend({
-  tableName: 'communities_posts',
+  tableName: 'groups_posts',
+  requireFetch: false,
 
   post: function () {
     return this.belongsTo(Post)
   },
 
-  community: function () {
-    return this.belongsTo(Community)
+  group: function () {
+    return this.belongsTo(Group)
   },
 
   pinned: function () {
@@ -21,15 +22,15 @@ module.exports = bookshelf.Model.extend({
     }
   }
 }, {
-  find: function (postId, communityIdOrSlug, options) {
-    const fetch = cid =>
-      PostMembership.where({post_id: postId, community_id: cid}).fetch(options)
+  find: function (postId, groupIdOrSlug, options) {
+    const fetch = gid =>
+      PostMembership.where({post_id: postId, group_id: gid}).fetch(options)
 
-    if (isNaN(Number(communityIdOrSlug))) {
-      return Community.find(communityIdOrSlug)
-      .then(c => c && fetch(c.id, options))
+    if (isNaN(Number(groupIdOrSlug))) {
+      return Group.find(groupIdOrSlug)
+      .then(g => g && fetch(g.id, options))
     }
 
-    return fetch(communityIdOrSlug)
+    return fetch(groupIdOrSlug)
   }
 })

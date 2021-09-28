@@ -1,5 +1,6 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'networks_users',
+  requireFetch: false,
 
   user: function () {
     return this.belongsTo(User)

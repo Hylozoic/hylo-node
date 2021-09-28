@@ -1,16 +1,16 @@
 /* eslint-disable no-unused-expressions */
-import { createRequestHandler, makeMutations, makeQueries } from './index'
+import { createRequestHandler, makeMutations, makeAuthenticatedQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
-import { spyify, unspyify } from '../../test/setup/helpers'
+import { mockify, spyify, unspyify } from '../../test/setup/helpers'
 import { some, sortBy } from 'lodash/fp'
-import { updateNetworkMemberships } from '../models/post/util'
+import { updateFollowers } from '../models/post/util'
 
 describe('graphql request handler', () => {
   var handler,
     req, res,
     user, user2,
-    community, network,
+    group,
     post, post2, comment, media
 
   before(async () => {
@@ -18,14 +18,12 @@ describe('graphql request handler', () => {
 
     user = factories.user()
     user2 = factories.user()
-    community = factories.community()
-    network = factories.network()
+    group = factories.group()
     post = factories.post({type: Post.Type.DISCUSSION})
     post2 = factories.post({type: Post.Type.REQUEST})
     comment = factories.comment()
     media = factories.media()
-    await network.save()
-    await community.save({network_id: network.id})
+    await group.save()
     await user.save()
     await user2.save()
     await post.save({user_id: user.id})
@@ -33,21 +31,22 @@ describe('graphql request handler', () => {
     await comment.save({post_id: post.id})
     await media.save({comment_id: comment.id})
     return Promise.all([
-      community.posts().attach(post),
-      community.posts().attach(post2),
-      community.addMembers([user.id, user2.id]).then((memberships) => {
+      group.posts().attach(post),
+      group.posts().attach(post2),
+      group.addMembers([user.id, user2.id]).then((memberships) => {
         const earlier = new Date(new Date().getTime() - 86400000)
         return memberships[0].save({created_at: earlier}, {patch: true})
       })
     ])
     .then(() => Promise.all([
-      updateNetworkMemberships(post),
-      updateNetworkMemberships(post2)
+      updateFollowers(post),
+      updateFollowers(post2)
     ]))
   })
 
   beforeEach(() => {
     req = factories.mock.request()
+    req.url = '/noo/graphql'
     req.method = 'POST'
     req.session = {userId: user.id}
     res = factories.mock.response()
@@ -60,13 +59,13 @@ describe('graphql request handler', () => {
           me {
             name
             memberships {
-              community {
+              group {
                 name
               }
             }
             posts {
               title
-              communities {
+              groups {
                 name
               }
             }
@@ -83,17 +82,17 @@ describe('graphql request handler', () => {
               name: user.get('name'),
               memberships: [
                 {
-                  community: {
-                    name: community.get('name')
+                  group: {
+                    name: group.get('name')
                   }
                 }
               ],
               posts: [
                 {
                   title: post.get('name'),
-                  communities: [
+                  groups: [
                     {
-                      name: community.get('name')
+                      name: group.get('name')
                     }
                   ]
                 }
@@ -128,13 +127,13 @@ describe('graphql request handler', () => {
           me {
             name
             memberships {
-              community {
+              group {
                 name
               }
             }
             posts {
               title
-              communities {
+              groups {
                 name
               }
               comments {
@@ -182,17 +181,17 @@ describe('graphql request handler', () => {
               name: user.get('name'),
               memberships: [
                 {
-                  community: {
-                    name: community.get('name')
+                  group: {
+                    name: group.get('name')
                   }
                 }
               ],
               posts: [
                 {
                   title: post.get('name'),
-                  communities: [
+                  groups: [
                     {
-                      name: community.get('name')
+                      name: group.get('name')
                     }
                   ],
                   comments: {
@@ -307,7 +306,7 @@ describe('graphql request handler', () => {
           me {
             name
           }
-          community(id: 9) {
+          group(id: 9) {
             name
           }
         }`
@@ -317,24 +316,8 @@ describe('graphql request handler', () => {
         expectJSON(res, {
           data: {
             me: null,
-            community: null
-          },
-          errors: [
-            {
-              locations: [
-                {column: 11, line: 2}
-              ],
-              message: 'not logged in',
-              path: ['me']
-            },
-            {
-              locations: [
-                {column: 11, line: 5}
-              ],
-              message: 'not logged in',
-              path: ['community']
-            }
-          ]
+            group: null
+          }
         })
       })
     })
@@ -359,11 +342,11 @@ describe('graphql request handler', () => {
     })
   })
 
-  describe('querying community data', () => {
+  describe('querying group data', () => {
     it('works as expected', () => {
       req.body = {
         query: `{
-          community(id: "${community.id}") {
+          group(id: "${group.id}") {
             slug
             members(first: 2, sortBy: "join") {
               items {
@@ -382,8 +365,8 @@ describe('graphql request handler', () => {
       return handler(req, res).then(() => {
         expectJSON(res, {
           data: {
-            community: {
-              slug: community.get('slug'),
+            group: {
+              slug: group.get('slug'),
               members: {
                 items: [
                   {name: user2.get('name')},
@@ -405,7 +388,7 @@ describe('graphql request handler', () => {
       it('shows an error', () => {
         req.body = {
           query: `{
-            community(id: "${community.id}") {
+            group(id: "${group.id}") {
               members(first: 2, sortBy: "height") {
                 items {
                   name
@@ -417,68 +400,13 @@ describe('graphql request handler', () => {
 
         return handler(req, res).then(() => {
           expectJSON(res, {
+            'errors[0].message': 'Cannot sort by "height"',
             data: {
-              community: {
+              group: {
                 members: null
               }
-            },
-            errors: [
-              {
-                locations: [
-                  {column: 15, line: 3}
-                ],
-                message: 'Cannot sort by "height"',
-                path: ['community', 'members']
-              }
-            ]
+            }
           })
-        })
-      })
-    })
-  })
-
-  describe('querying network data', () => {
-    it('works as expected', () => {
-      req.body = {
-        query: `{
-          network(id: "${network.id}") {
-            slug
-            isModerator
-            isAdmin
-            members(first: 2, sortBy: "name") {
-              items {
-                name
-              }
-            }
-            posts(first: 1, filter: "${Post.Type.REQUEST}") {
-              items {
-                title
-              }
-            }
-          }
-        }`
-      }
-
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            network: {
-              slug: network.get('slug'),
-              isAdmin: false,
-              isModerator: false,
-              members: {
-                items: sortBy('name', [
-                  {name: user2.get('name')},
-                  {name: user.get('name')}
-                ])
-              },
-              posts: {
-                items: [
-                  {title: post2.get('name')}
-                ]
-              }
-            }
-          }
         })
       })
     })
@@ -622,32 +550,32 @@ describe('makeMutations', () => {
   })
 })
 
-describe('makeQueries', () => {
+describe('makeAuthenticatedQueries', () => {
   let queries, user
 
   before(async () => {
     user = await factories.user().save()
     const fetchOne = spy(() => Promise.resolve({}))
     const fetchMany = spy(() => Promise.resolve([]))
-    queries = makeQueries(user.id, fetchOne, fetchMany)
+    queries = makeAuthenticatedQueries(user.id, fetchOne, fetchMany)
   })
 
-  describe('communityExists', () => {
+  describe('groupExists', () => {
     it('throws an error if slug is invalid', () => {
       expect(() => {
-        queries.communityExists(null, {slug: 'a b'})
+        queries.groupExists(null, {slug: 'a b'})
       }).to.throw()
     })
 
     it('returns true if the slug is in use', () => {
-      const community = factories.community()
-      return community.save()
-      .then(() => queries.communityExists(null, {slug: community.get('slug')}))
+      const group = factories.group()
+      return group.save()
+      .then(() => queries.groupExists(null, {slug: group.get('slug')}))
       .then(result => expect(result.exists).to.be.true)
     })
 
     it('returns false if the slug is not in use', () => {
-      return queries.communityExists(null, {slug: 'sofadogtotherescue'})
+      return queries.groupExists(null, {slug: 'sofadogtotherescue'})
       .then(result => expect(result.exists).to.be.false)
     })
   })
@@ -671,28 +599,32 @@ describe('makeQueries', () => {
     })
   })
 
-  describe('community', () => {
-    let community
+  describe('group', () => {
+    let group
 
     beforeEach(async () => {
-      community = await factories.community().save()
-      await community.addGroupMembers([user])
+      group = await factories.group().save()
+      await group.addMembers([user])
     })
 
     it('updates last viewed time', async () => {
-      await queries.community(null, {
-        id: community.id,
-        updateLastViewed: true
+      let membership = { addSetting: spy(() => true) }
+      mockify(GroupMembership, 'forPair', (user, group) => {
+        return { fetch: () => Promise.resolve(membership) }
       })
 
-      const membership = await GroupMembership.forPair(user, community).fetch()
-      expect(new Date(membership.getSetting('lastReadAt')).getTime())
-      .to.be.closeTo(new Date().getTime(), 2000)
+      await queries.group(null, {
+        id: group.id,
+        updateLastViewed: true
+      })
+      expect(membership.addSetting).to.have.been.called()
+      unspyify(GroupMembership, 'forPair')
     })
   })
 })
 
 function expectJSON (res, expected) {
   expect(res.body).to.exist
-  return expect(JSON.parse(res.body)).to.deep.equal(expected)
+  const body = JSON.parse(res.body)
+  return expect(body).to.deep.nested.include(expected)
 }

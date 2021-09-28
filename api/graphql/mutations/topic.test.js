@@ -6,22 +6,22 @@ describe('topic mutations', () => {
   let c1, c2, u1, u2
 
   before(async () => {
-    c1 = await factories.community().save()
-    c2 = await factories.community().save()
+    c1 = await factories.group().save()
+    c2 = await factories.group().save()
     u1 = await factories.user().save()
     u2 = await factories.user().save()
-    await u1.joinCommunity(c1)
+    await u1.joinGroup(c1)
   })
 
   after(async () => setup.clearDb())
 
   describe('topicMutationPermissionCheck', () => {
-    it('rejects when community does not exist', async () => {
+    it('rejects when group does not exist', async () => {
       const check = mutations.topicMutationPermissionCheck(u1.id, 9999)
-      await expect(check).to.be.rejectedWith(/community does not exist/)
+      await expect(check).to.be.rejectedWith(/group does not exist/)
     })
 
-    it('rejects when not a member of the community', async () => {
+    it('rejects when not a member of the group', async () => {
       const check = mutations.topicMutationPermissionCheck(u1.id, c2.id)
       await expect(check).to.be.rejectedWith(/not a member/)
     })
@@ -43,11 +43,11 @@ describe('topic mutations', () => {
       await expect(actual).to.be.rejectedWith(/must not contain whitespace/)
     })
 
-    it('adds the topic to the community', async () => {
+    it('adds the topic to the group', async () => {
       const topic = await mutations.createTopic(u1.id, 'wombats', c1.id)
-      await topic.refresh({ withRelated: [ 'communities' ] })
-      const community = topic.relations.communities.first()
-      expect(community.id).to.equal(c1.id)
+      await topic.refresh({ withRelated: [ 'groups' ] })
+      const group = topic.relations.groups.first()
+      expect(group.id).to.equal(c1.id)
     })
   })
 
@@ -56,8 +56,8 @@ describe('topic mutations', () => {
 
     beforeEach(async () => {
       t = await factories.tag().save()
-      await Tag.addToCommunity({
-        community_id: c1.id,
+      await Tag.addToGroup({
+        group_id: c1.id,
         tag_id: t.id,
         user_id: u2.id
       })
@@ -72,12 +72,12 @@ describe('topic mutations', () => {
 
     it('removes the user from the topic if isSubscribing falsy', async () => {
       await new TagFollow({
-        community_id: c1.id,
+        group_id: c1.id,
         tag_id: t.id,
         user_id: u1.id
       }).save()
       await mutations.subscribe(u1.id, t.id, c1.id, false)
-      await u1.refresh({ withRelated: [ 'followedTags' ] })
+      u1 = await User.where({ id: u1.id }).fetch({ withRelated: ['followedTags'] })
       const hasFollow = u1.relations.followedTags.find({ id: t.id })
       expect(hasFollow).to.equal(undefined)
     })

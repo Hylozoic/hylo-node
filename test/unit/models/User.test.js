@@ -49,28 +49,28 @@ describe('User', function () {
     .then(dog => expect(dog).not.to.exist)
   })
 
-  it('can join communities', function () {
-    var community1 = new Community({name: 'House', slug: 'house'})
-    var community2 = new Community({name: 'Yard', slug: 'yard'})
+  it('can join groups', function () {
+    var group1 = new Group({name: 'House', slug: 'house', group_data_type: 1})
+    var group2 = new Group({name: 'Yard', slug: 'yard', group_data_type: 1})
 
     return Promise.join(
-      community1.save(),
-      community2.save()
+      group1.save(),
+      group2.save()
     )
     .then(() => Promise.join(
-      cat.joinCommunity(community1),
-      cat.joinCommunity(community2)
+      cat.joinGroup(group1),
+      cat.joinGroup(group2)
     ))
-    .then(() => cat.communities().fetch())
-    .then(function (communities) {
-      expect(communities).to.exist
-      expect(communities.models).to.exist
-      expect(communities.models).not.to.be.empty
-      var names = communities.models.map(c => c.get('name')).sort()
+    .then(() => cat.groups().fetch())
+    .then(function (groups) {
+      expect(groups).to.exist
+      expect(groups.models).to.exist
+      expect(groups.models).not.to.be.empty
+      var names = groups.models.map(c => c.get('name')).sort()
       expect(names[0]).to.equal('House')
       expect(names[1]).to.equal('Yard')
     })
-    .then(() => GroupMembership.forPair(cat, community1).fetch())
+    .then(() => GroupMembership.forPair(cat, group1).fetch())
     .then(membership => {
       expect(membership).to.exist
       const settings = membership.get('settings')
@@ -80,10 +80,10 @@ describe('User', function () {
   })
 
   it('can become moderator', function () {
-    var street = new Community({name: 'Street', slug: 'street'})
+    var street = new Group({name: 'Street', slug: 'street', group_data_type: 1})
 
     return street.save()
-    .then(() => cat.joinCommunity(street, GroupMembership.Role.MODERATOR))
+    .then(() => cat.joinGroup(street, GroupMembership.Role.MODERATOR))
     .then(() => GroupMembership.forPair(cat, street).fetch())
     .then(membership => {
       expect(membership).to.exist
@@ -159,25 +159,25 @@ describe('User', function () {
     })
   })
 
-  describe('#communitiesSharedWithPost', () => {
+  describe('#groupsSharedWithPost', () => {
     var user, post, c1, c2, c3, c4
     before(() => {
       user = factories.user()
       post = factories.post()
-      c1 = factories.community()
-      c2 = factories.community()
-      c3 = factories.community()
-      c4 = factories.community()
+      c1 = factories.group()
+      c2 = factories.group()
+      c3 = factories.group()
+      c4 = factories.group()
       return Promise.join(
         user.save(), post.save(), c1.save(), c2.save(), c3.save(), c4.save())
-      .then(() => post.communities().attach([c1, c2, c3]))
-      .then(() => user.joinCommunity(c2))
-      .then(() => user.joinCommunity(c3))
-      .then(() => user.joinCommunity(c4))
+      .then(() => post.groups().attach([c1, c2, c3]))
+      .then(() => user.joinGroup(c2))
+      .then(() => user.joinGroup(c3))
+      .then(() => user.joinGroup(c4))
     })
 
-    it('returns the shared communities', () => {
-      return user.communitiesSharedWithPost(post)
+    it('returns the shared groups', () => {
+      return user.groupsSharedWithPost(post)
       .then(cs => {
         expect(cs.length).to.equal(2)
         expect(cs.map(c => c.id).sort()).to.deep.equal([c2.id, c3.id].sort())
@@ -208,17 +208,17 @@ describe('User', function () {
 
   describe('.create', function () {
     var catPic = 'http://i.imgur.com/Kwe1K7k.jpg'
-    var community
+    var group
 
     before(function () {
-      community = new Community({name: 'foo', slug: 'foo'})
-      return community.save()
+      group = new Group({name: 'foo', slug: 'foo', group_data_type: 1})
+      return group.save()
     })
 
     it('rejects an invalid email address', () => {
       return User.create({
         email: 'foo@bar@com',
-        community,
+        group,
         account: {type: 'password', password: 'password'},
         name: 'foo bar'
       })
@@ -229,7 +229,7 @@ describe('User', function () {
     it('rejects a blank email address', () => {
       return User.create({
         email: null,
-        community,
+        group,
         account: {type: 'password', password: 'password'}
       })
       .then(user => expect.fail())
@@ -237,15 +237,13 @@ describe('User', function () {
     })
 
     it('works with a password', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo@bar.com',
-          community: community,
-          account: {type: 'password', password: 'password!'},
-          name: 'foo bar'
-        }, {transacting: trx})
+      return User.create({
+        email: 'foo@bar.com',
+        account: {type: 'password', password: 'password!'},
+        name: 'foo bar'
       })
-      .then(function (user) {
+      .then(async function (user) {
+        await group.addMembers([user.id])
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('name')).to.equal('foo bar')
@@ -261,21 +259,20 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('password')
             expect(bcrypt.compareSync('password!', account.get('provider_user_id'))).to.be.true
           }),
-          GroupMembership.forPair(user, community).fetch()
+          GroupMembership.forPair(user, group).fetch()
           .then(membership => expect(membership).to.exist)
         )
       })
     })
 
     it('works with google', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo2.moo2_wow@bar.com',
-          community: community,
-          account: {type: 'google', profile: {id: 'foo'}}
-        }, {transacting: trx})
+      return User.create({
+        email: 'foo2.moo2_wow@bar.com',
+        account: {type: 'google', profile: {id: 'foo'}}
       })
-      .then(function (user) {
+      .then(async function (user) {
+        await group.addMembers([user.id])
+
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('name')).to.equal('foo2 moo2 wow')
@@ -287,32 +284,30 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('google')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          GroupMembership.forPair(user, community).fetch()
+          GroupMembership.forPair(user, group).fetch()
           .then(membership => expect(membership).to.exist)
         )
       })
     })
 
     it('works with facebook', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo3@bar.com',
-          community: community,
-          account: {
-            type: 'facebook',
-            profile: {
-              id: 'foo',
-              profileUrl: 'http://www.facebook.com/foo'
-            }
+      return User.create({
+        email: 'foo3@bar.com',
+        account: {
+          type: 'facebook',
+          profile: {
+            id: 'foo',
+            profileUrl: 'http://www.facebook.com/foo'
           }
-        }, {transacting: trx})
+        }
       })
-      .then(user => User.find(user.id))
-      .then(user => {
+      .then(async (user) => {
+        await group.addMembers([user.id])
+
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('facebook_url')).to.equal('http://www.facebook.com/foo')
-        expect(user.get('avatar_url')).to.equal('https://graph.facebook.com/foo/picture?type=large')
+        expect(user.get('avatar_url')).to.equal('https://graph.facebook.com/foo/picture?type=large&access_token=186895474801147|zzzzzz')
         expect(user.get('settings').digest_frequency).to.equal('daily')
 
         return Promise.join(
@@ -321,31 +316,29 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('facebook')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          GroupMembership.forPair(user, community).fetch()
+          GroupMembership.forPair(user, group).fetch()
           .then(membership => expect(membership).to.exist)
         )
       })
     })
 
     it('works with linkedin', function () {
-      return bookshelf.transaction(function (trx) {
-        return User.create({
-          email: 'foo4@bar.com',
-          community: community,
-          account: {
-            type: 'linkedin',
-            profile: {
-              id: 'foo',
-              photos: [{value: catPic}],
-              _json: {
-                publicProfileUrl: 'https://www.linkedin.com/in/foobar'
-              }
+      return User.create({
+        email: 'foo4@bar.com',
+        account: {
+          type: 'linkedin',
+          profile: {
+            id: 'foo',
+            photos: [{value: catPic}],
+            _json: {
+              publicProfileUrl: 'https://www.linkedin.com/in/foobar'
             }
           }
-        }, {transacting: trx})
+        }
       })
-      .then(user => User.find(user.id))
-      .then(user => {
+      .then(async (user) => {
+        await group.addMembers([user.id])
+
         expect(user.id).to.exist
         expect(user.get('active')).to.be.true
         expect(user.get('linkedin_url')).to.equal('https://www.linkedin.com/in/foobar')
@@ -358,7 +351,7 @@ describe('User', function () {
             expect(account.get('provider_key')).to.equal('linkedin')
             expect(account.get('provider_user_id')).to.equal('foo')
           }),
-          GroupMembership.forPair(user, community).fetch()
+          GroupMembership.forPair(user, group).fetch()
           .then(membership => expect(membership).to.exist)
         )
       })
@@ -366,11 +359,11 @@ describe('User', function () {
   })
 
   describe('#followDefaultTags', function () {
-    it('creates TagFollows for the default tags of a community', () => {
-      var c1 = factories.community()
+    it('creates TagFollows for the default tags of a group', () => {
+      var c1 = factories.group()
       return c1.save()
       .then(() => Tag.forge({name: 'hello'}).save())
-      .then(tag => CommunityTag.create({tag_id: tag.id, community_id: c1.id, is_default: true}))
+      .then(tag => GroupTag.create({tag_id: tag.id, group_id: c1.id, is_default: true}))
       .then(() => User.followDefaultTags(cat.id, c1.id))
       .then(() => cat.load('followedTags'))
       .then(() => {
@@ -457,7 +450,7 @@ describe('User', function () {
       }).save())
     })
 
-    it('does not include messages', () => {
+    it.skip('does not include messages', () => {
       return cat.comments().fetch()
       .then(comments => expect(comments.length).to.equal(1))
     })
@@ -469,28 +462,24 @@ describe('User', function () {
     })
   })
 
-  describe('#communitiesSharedWithUser', () => {
+  describe('#groupsSharedWithUser', () => {
     it('returns shared', async () => {
       const user1 = await factories.user().save()
       const user2 = await factories.user().save()
-      const community1 = await factories.community().save()
-      await community1.createGroup()
-      const community2 = await factories.community().save()
-      await community2.createGroup()
-      const community3 = await factories.community().save()
-      await community3.createGroup()
-      const community4 = await factories.community().save()
-      await community4.createGroup()
+      const group1 = await factories.group().save()
+      const group2 = await factories.group().save()
+      const group3 = await factories.group().save()
+      const group4 = await factories.group().save()
       await Promise.join(
-        user1.joinCommunity(community1),
-        user1.joinCommunity(community2),
-        user1.joinCommunity(community3),
-        user2.joinCommunity(community2),
-        user2.joinCommunity(community3),
-        user2.joinCommunity(community4))
-      const sharedCommunities = await user1.communitiesSharedWithUser(user2)
-      expect(sharedCommunities.length).to.equal(2)
-      expect(sharedCommunities.map(c => c.id).sort()).to.deep.equal([community2.id, community3.id].sort())
+        user1.joinGroup(group1),
+        user1.joinGroup(group2),
+        user1.joinGroup(group3),
+        user2.joinGroup(group2),
+        user2.joinGroup(group3),
+        user2.joinGroup(group4))
+      const sharedGroups = await user1.groupsSharedWithUser(user2)
+      expect(sharedGroups.length).to.equal(2)
+      expect(sharedGroups.map(c => c.id).sort()).to.deep.equal([group2.id, group3.id].sort())
     })
   })
 

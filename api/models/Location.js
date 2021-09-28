@@ -4,6 +4,8 @@ var Buffer = require('buffer').Buffer;
 
 module.exports = bookshelf.Model.extend({
   tableName: 'locations',
+  requireFetch: false,
+  hasTimestamps: true,
 
   format(attributes) {
     const st = knexPostgis(bookshelf.knex);
@@ -30,13 +32,13 @@ module.exports = bookshelf.Model.extend({
 
     // Convert geometry hex values into useful objects before returning to the client
     if (typeof response.center == 'string') {
-      const b = new Buffer(response.center, 'hex')
+      const b = Buffer.from(response.center, 'hex')
       const parsedCenter = wkx.Geometry.parse(b)
       response.center = {lng: parsedCenter.x, lat: parsedCenter.y}
     }
 
     if (typeof response.bbox == 'string') {
-      const b = new Buffer(response.bbox, 'hex');
+      const b = Buffer.from(response.bbox, 'hex');
       const parsedBbox = wkx.Geometry.parse(b);
       response.bbox = parsedBbox.exteriorRing.map(point => {return { lng: point.x, lat: point.y }})
     }
@@ -44,8 +46,8 @@ module.exports = bookshelf.Model.extend({
     return response
   },
 
-  communities: function () {
-    return this.hasMany(Community)
+  groups: function () {
+    return this.hasMany(Group)
   },
 
   posts: function () {

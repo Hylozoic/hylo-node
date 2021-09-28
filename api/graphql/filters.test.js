@@ -1,9 +1,9 @@
-import { makeFilterToggle, sharedNetworkMembership } from './filters'
+import { makeFilterToggle } from './filters'
 import makeModels from './makeModels'
 import { expectEqualQuery } from '../../test/setup/helpers'
 import {
-  myCommunityIdsSqlFragment, myNetworkCommunityIdsSqlFragment, blockedUserSqlFragment
-} from '../models/util/queryFilters.test.helpers'
+  myGroupIdsSqlFragment
+} from '../../test/unit/models/Group.test'
 import factories from '../../test/setup/factories'
 
 const myId = '42'
@@ -15,19 +15,31 @@ const setupBlockedUserData = async () => {
   const u2 = factories.user()
   const u3 = factories.user()
   const u4 = factories.user()
-  const community = factories.community()
+  const group = factories.group()
   await u1.save()
   await u2.save()
   await u3.save()
   await u4.save()
-  await community.save()
-  await u1.joinCommunity(community)
-  await u2.joinCommunity(community)
-  await u3.joinCommunity(community)
-  await u4.joinCommunity(community)                  
+  await group.save()
+  await u1.joinGroup(group)
+  await u2.joinGroup(group)
+  await u3.joinGroup(group)
+  await u4.joinGroup(group)
   await BlockedUser.create(u1.id, u2.id)
   await BlockedUser.create(u3.id, u1.id)
-  return {u1, u2, u3, u4, community} 
+  return {u1, u2, u3, u4, group}
+}
+
+export function blockedUserSqlFragment (userId) {
+  return `(
+    SELECT user_id
+    FROM blocked_users
+    WHERE blocked_user_id = '${userId}'
+    UNION
+    SELECT blocked_user_id
+    FROM blocked_users
+    WHERE user_id = '${userId}'
+  )`
 }
 
 describe('makeFilterToggle', () => {
@@ -46,11 +58,9 @@ describe('makeFilterToggle', () => {
 describe('model filters', () => {
   before(async () => {
     sharedMemberships = `"group_memberships"
-      where "group_memberships"."active" = true
-      and "group_memberships"."group_id" in (
+      where "group_memberships"."group_id" in (
         select "group_id" from "group_memberships"
-        where "group_memberships"."group_data_type" = ${Group.DataType.COMMUNITY}
-        and "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
+        where "group_memberships"."user_id" in ('${myId}', '${User.AXOLOTL_ID}')
         and "group_memberships"."active" = true
       )`
 
@@ -58,7 +68,7 @@ describe('model filters', () => {
   })
 
   describe('Membership', () => {
-    it('filters down to memberships for communities the user is in', () => {
+    it('filters down to memberships for groups the user is in', () => {
       const collection = models.Membership.filter(GroupMembership.collection())
       expectEqualQuery(collection, `select * from ${sharedMemberships}`)
     })
@@ -77,8 +87,8 @@ describe('model filters', () => {
       const models = await makeModels(u1.id, false)
       const users = await models.Person.filter(User.collection()).fetch()
       expect(users.map('id')).to.deep.equal([u1.id, u4.id])
-    })  
-    
+    })
+
     it('includes people you share a connection with', async () => {
       const currentUser = await factories.user().save()
       const connectedUser = await factories.user().save()
@@ -89,30 +99,26 @@ describe('model filters', () => {
       const models = await makeModels(currentUser.id, false)
       const users = await models.Person.filter(User.collection()).fetch()
       expect(users.map('id')).to.deep.equal([connectedUser.id])
-    })  
+    })
 
-    it.skip('filters down to people that share a community with the user', () => {
+    it('filters down to people that share a group with the user', () => {
       const collection = models.Person.filter(User.collection())
+
       expectEqualQuery(collection, `select * from "users"
-        where 
-        ${blockedUserSqlFragment(42)}
+        where
+        "users"."id" not in ${blockedUserSqlFragment(myId)}
         and
         ("users"."id" = '${User.AXOLOTL_ID}' or
           "users"."id" in
-            (select "user_id"
+            (select "group_memberships"."user_id"
             from "group_memberships"
-            inner join "groups"
-              on "groups"."id" = "group_memberships"."group_id"
-            where ("groups"."group_data_id" in
-              ${myCommunityIdsSqlFragment(42)}
-                  or "groups"."group_data_id" in
-                ${myNetworkCommunityIdsSqlFragment(42)})
-                        and "group_memberships"."group_data_type" = 1))`)
+            where "group_memberships"."group_id" in ${myGroupIdsSqlFragment(myId)})
+          or "users"."id" in (select "other_user_id" from "user_connections" where "user_connections"."user_id" = '${myId}'))`)
     })
   })
 
   describe('Post', () => {
-    var u1, u2, u3, u4, community;
+    var u1, u2, u3, u4, group;
 
     before(async () => {
       const blockedUserData = await setupBlockedUserData()
@@ -120,69 +126,59 @@ describe('model filters', () => {
       u2 = blockedUserData.u2
       u3 = blockedUserData.u3
       u4 = blockedUserData.u4
-      community = blockedUserData.community
+      group = blockedUserData.group
       const p1 = factories.post({user_id: u2.id})
       const p2 = factories.post({user_id: u3.id})
       const p3 = factories.post({user_id: u4.id})
       await p1.save({active: true})
-      await p1.communities().attach(community)
+      await p1.groups().attach(group)
       await p2.save({active: true})
-      await p2.communities().attach(community)      
-      await p3.save({active: true})     
-      await p3.communities().attach(community)      
+      await p2.groups().attach(group)
+      await p3.save({active: true})
+      await p3.groups().attach(group)
     })
-  
+
     it('filters posts by blocked and blocking users', async () => {
       const models = await makeModels(u1.id, false)
       const posts = await models.Post.filter(Post.collection()).fetch()
       expect(posts.models.map(p => p.get('user_id'))).to.deep.equal([u4.id])
-    })    
+    })
 
-    it.skip('filters down to active in-network posts', () => {
+    it('filters down to active posts in the right groups ', () => {
       const collection = models.Post.filter(Post.collection())
+
       expectEqualQuery(collection, `select * from "posts"
+        inner join "groups_posts" on "groups_posts"."post_id" = "posts"."id"
         where "posts"."active" = true
-        and "posts"."id" in (
-          select "post_id" from "communities_posts"
-          where (
-            "community_id" in ${myCommunityIdsSqlFragment(myId)}
-            or "community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
-          )
-        )`)
+        and ("groups_posts"."group_id" in
+          ${myGroupIdsSqlFragment(myId)}
+          or "posts"."is_public" = true
+        )
+        and "posts"."user_id" not in ${blockedUserSqlFragment(myId)}`)
     })
   })
 
   describe('Comment', () => {
-    it.skip('filters down to active comments on in-network posts or followed posts', () => {
+    it('filters down to active comments on posts in the right groups or followed posts', () => {
       const collection = models.Comment.filter(Comment.collection())
+
       expectEqualQuery(collection, `select distinct * from "comments"
-        left join "communities_posts"
-          on "comments"."post_id" = "communities_posts"."post_id"
+        left join "groups_posts"
+          on "comments"."post_id" = "groups_posts"."post_id"
+        inner join "posts" on "groups_posts"."post_id" = "posts"."id"
         where "comments"."active" = true
+        and "comments"."user_id" not in ${blockedUserSqlFragment(myId)}
         and (
           "comments"."post_id" in (
-            select "group_data_id" from "group_memberships"
-            inner join "groups"
-              on "groups"."id" = "group_memberships"."group_id"
-            where "group_memberships"."group_data_type" = 0
-            and "group_memberships"."user_id" = '${myId}'
-            and "group_memberships"."active" = true
-            and ((group_memberships.settings->>'following')::boolean = true)
-            and "groups"."active" = true
+            select "post_id" from "posts_users"
+            where "posts_users"."user_id" = '${myId}'
+            and "posts_users"."following" = true
+            and "posts_users"."active" = true
           )
-          or ((
-            "communities_posts"."community_id" in ${myCommunityIdsSqlFragment(myId)}
-            or "communities_posts"."community_id" in ${myNetworkCommunityIdsSqlFragment(myId)}
-          ))
-        )`)
+          or "groups_posts"."group_id" in ${myGroupIdsSqlFragment(myId)}
+          or "posts"."is_public" = true
+        ) group by "comments"."id"`)
     })
   })
 })
 
-describe('sharedNetworkMembership', () => {
-  it('supports a limited set of tables', () => {
-    expect(() => {
-      sharedNetworkMembership('foo', 42, Post.collection())
-    }).to.throw(/does not support foo/)
-  })
-})

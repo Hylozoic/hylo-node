@@ -17,7 +17,7 @@ const isTopic = activity => {
 }
 
 const mergeByReader = activities => {
-  const fields = ['actor_id', 'community_id']
+  const fields = ['actor_id', 'group_id']
   const merged = activities.reduce((acc, activity) => {
     const current = acc[activity.reader_id]
     if (acc[activity.reader_id]) {
@@ -35,7 +35,7 @@ const mergeByReader = activities => {
 }
 
 const removeForRelation = (model) => (id, trx) => {
-  const trxOpt = {transacting: trx}
+  const trxOpt = {transacting: trx, require: false}
   return Activity.where(`${model}_id`, id).query()
   .pluck('id').transacting(trx)
   .then(ids => {
@@ -48,6 +48,8 @@ const removeForRelation = (model) => (id, trx) => {
 
 module.exports = bookshelf.Model.extend({
   tableName: 'activities',
+  requireFetch: false,
+  hasTimestamps: true,
 
   actor: function () {
     return this.belongsTo(User, 'actor_id')
@@ -77,8 +79,12 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(Comment, 'parent_comment_id')
   },
 
-  community: function () {
-    return this.belongsTo(Community)
+  group: function () {
+    return this.belongsTo(Group)
+  },
+
+  otherGroup: function () {
+    return this.belongsTo(Group, 'other_group_id')
   },
 
   notifications: function () {
@@ -88,16 +94,16 @@ module.exports = bookshelf.Model.extend({
   createNotifications: async function (trx) {
     const relations = ['reader']
     if (this.get('post_id')) {
-      relations.splice(0, 0, 'post', 'post.communities')
+      relations.splice(0, 0, 'post', 'post.groups')
     }
     if (this.get('contribution_id')) {
       relations.splice(0, 0, 'contribution', 'contribution.post', 'contribution.user')
     }
     if (this.get('comment_id')) {
-      relations.splice(0, 0, 'comment', 'comment.post', 'comment.post.communities')
+      relations.splice(0, 0, 'comment', 'comment.post', 'comment.post.groups')
     }
-    if (this.get('community_id')) {
-      relations.push('community')
+    if (this.get('group_id')) {
+      relations.push('group')
     }
     await this.load(relations, {transacting: trx})
     const notificationData = await Activity.generateNotificationMedia(this)
@@ -114,7 +120,7 @@ module.exports = bookshelf.Model.extend({
   contributionAmount: async function () {
     await this.load('projectContribution')
     if (!this.relations.projectContribution) return null
-    return this.relations.projectContribution.get('amount') 
+    return this.relations.projectContribution.get('amount')
   }
 
 }, {
@@ -125,7 +131,13 @@ module.exports = bookshelf.Model.extend({
     FollowAdd: 'followAdd', // you are added as a follower
     Follow: 'follow', // someone follows your post
     Unfollow: 'unfollow', // someone leaves your post
-    Announcement: 'announcement'
+    Announcement: 'announcement',
+    ApprovedJoinRequest: 'approvedJoinRequest',
+    JoinRequest: 'joinRequest',
+    GroupChildGroupInvite: 'groupChildGroupInvite',
+    GroupChildGroupInviteAccepted: 'groupChildGroupInviteAccepted',
+    GroupParentGroupJoinRequest: 'groupParentGroupJoinRequest',
+    GroupParentGroupJoinRequestAccepted: 'groupParentGroupJoinRequestAccepted'
   },
 
   find: function (id, options) {
@@ -144,11 +156,11 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
-  joinWithCommunity: (communityId, q) => {
-    q.where('communities_posts.community_id', communityId)
-    .join('communities_posts', function () {
-      this.on('comments.post_id', 'communities_posts.post_id')
-      .orOn('posts.id', 'communities_posts.post_id')
+  joinWithGroup: (groupId, q) => {
+    q.where('groups_posts.group_id', groupId)
+    .join('groups_posts', function () {
+      this.on('comments.post_id', 'groups_posts.post_id')
+      .orOn('posts.id', 'groups_posts.post_id')
     })
   },
 
@@ -164,7 +176,7 @@ module.exports = bookshelf.Model.extend({
       actor_id: comment.get('user_id'),
       comment_id: comment.id,
       post_id: comment.get('post_id'),
-      action: action,
+      meta: {reasons: [action]},
       created_at: comment.get('created_at')
     })
   },
@@ -231,33 +243,32 @@ module.exports = bookshelf.Model.extend({
     .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
   },
 
-  communityIds: function (activity) {
-    if (activity.get('post_id')) {      
-      return get(activity, 'relations.post.relations.communities', []).map(c => c.id)
+  groupIds: function (activity) {
+    if (activity.get('post_id')) {
+      return get(activity, 'relations.post.relations.groups', []).map(c => c.id)
     } else if (activity.get('comment_id')) {
-      return get(activity, 'relations.comment.relations.post.relations.communities', []).map(c => c.id)
-    } else if (activity.get('community_id')) {
-      return [activity.relations.community.id]
+      return get(activity, 'relations.comment.relations.post.relations.groups', []).map(c => c.id)
+    } else if (activity.get('group_id')) {
+      return [activity.relations.group.id]
     }
     return []
   },
 
   generateNotificationMedia: async function (activity) {
     const reasons = activity.get('meta').reasons || []
-    const isJoinRequestRelated = ['approvedJoinRequest', 'joinRequest'].includes(reasons[0])
-    if (!isJoinRequestRelated) await activity.load('post.communities')
+    const isJoinRequestRelated = [this.Reason.ApprovedJoinRequest, this.Reason.JoinRequest].includes(reasons[0])
+    if (!isJoinRequestRelated) await activity.load('post.groups')
 
     // TODO: rename 'notifications' to 'media'
     var notifications = []
-    var communities = Activity.communityIds(activity)
+    var groups = Activity.groupIds(activity)
 
     var user = activity.relations.reader
 
-    const memberships = await user.groupMembershipsForModel(Community)
-    .fetch({withRelated: 'group'})
+    const memberships = await user.memberships().fetch({withRelated: 'group'})
 
     const relevantMemberships = filter(memberships.models, mem =>
-      includes(communities, mem.relations.group.get('group_data_id')))
+      includes(groups, mem.relations.group.id))
 
     const membershipsPermitting = key =>
       filter(relevantMemberships, mem => mem.getSetting(key))

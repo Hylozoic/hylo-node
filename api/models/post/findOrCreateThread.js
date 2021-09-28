@@ -3,11 +3,9 @@ import { map, uniq } from 'lodash/fp'
 import { isFollowing } from '../group/queryUtils'
 
 export function findThread (userIds) {
-  const subquery = Group.havingExactMembers(userIds, Post)
-  .query(isFollowing)
-  .query().select('group_data_id')
-
-  return Post.query(q => q.whereIn('id', subquery).where({type: Post.Type.THREAD})).fetch()
+  return Post.havingExactFollowers(userIds)
+    .query(q => q.where("posts_users.following", true).where({ type: Post.Type.THREAD }))
+    .fetch()
 }
 
 export default function findOrCreateThread (userId, participantIds) {
@@ -30,12 +28,12 @@ export function validateThreadData (userId, data) {
   if (!(participantIds && participantIds.length)) {
     throw new Error("participantIds can't be empty")
   }
-  const checkForSharedCommunity = id =>
-    Group.inSameGroup([userId, id], Community)
+  const checkForSharedGroup = id =>
+    Group.inSameGroup([userId, id])
     .then(doesShare => {
       if (!doesShare) throw new Error(`no shared communities with user ${id}`)
     })
-  return Promise.all(map(checkForSharedCommunity, participantIds))
+  return Promise.all(map(checkForSharedGroup, participantIds))
 }
 
 function setupNewThreadAttrs (userId) {

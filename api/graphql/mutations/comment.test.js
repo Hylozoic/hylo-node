@@ -13,7 +13,7 @@ describe('validateCommentCreateData', () => {
       post2.save(),
       user.save()
     ).then(function () {
-      return post.addFollowers([user.id], user.id)
+      return post.addFollowers([user.id])
     })
   })
 
@@ -38,11 +38,10 @@ describe('validateCommentCreateData', () => {
 })
 
 describe('canDeleteComment', () => {
-  var u1, u2, u3, c, community
+  var u1, u2, u3, c, group
 
   before(async () => {
-    community = await factories.community().save()
-    await community.createGroup()
+    group = await factories.group().save()
     u1 = await factories.user().save() // creator
     u2 = await factories.user().save() // moderator
     u3 = await factories.user().save() // neither
@@ -51,12 +50,12 @@ describe('canDeleteComment', () => {
     await Promise.join(
       c.save({user_id: u1.id}),
       p.comments().create(c),
-      p.communities().attach(community),
-      u1.joinCommunity(community),
-      u2.joinCommunity(community),
-      u3.joinCommunity(community)
+      p.groups().attach(group),
+      u1.joinGroup(group),
+      u2.joinGroup(group),
+      u3.joinGroup(group)
     )
-    return GroupMembership.setModeratorRole(u2.id, community)
+    return GroupMembership.setModeratorRole(u2.id, group)
   })
 
   it('allows the creator to delete', () => {
@@ -66,7 +65,7 @@ describe('canDeleteComment', () => {
     })
   })
 
-  it('allows a moderator of one of the comments communities to delete', () => {
+  it('allows a moderator of one of the comments groups to delete', () => {
     return canDeleteComment(u2.id, c)
     .then(canDelete => {
       expect(canDelete).to.be.true

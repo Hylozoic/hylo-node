@@ -106,51 +106,40 @@ describe('Post', function () {
   })
 
   describe('#isVisibleToUser', () => {
-    var post, c1, c2, user
+    var post, g1, g2, user
 
     beforeEach(() => {
       post = new Post({name: 'hello', active: true})
       user = factories.user({name: 'Cat'})
-      c1 = factories.community({active: true})
-      c2 = factories.community({active: true})
-      return Promise.join(post.save(), user.save(), c1.save(), c2.save())
-      .then(() => user.joinCommunity(c1))
-      .then(() => post.communities().attach(c2.id))
+      g1 = factories.group({active: true})
+      g2 = factories.group({active: true})
+      return Promise.join(post.save(), user.save(), g1.save(), g2.save())
+      .then(() => user.joinGroup(g1))
+      .then(() => post.groups().attach(g2.id))
     })
 
     it('is true if the post is public', () => {
-      return post.save({visibility: Post.Visibility.PUBLIC_READABLE}, {patch: true})
+      return post.save({ is_public: true }, { patch: true })
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
 
-    it('is false if the user is not connected by community', () => {
+    it('is false if the user is not connected by group', () => {
       return Post.isVisibleToUser(post.id, user.id)
       .then(visible => expect(visible).to.be.false)
     })
 
-    it('is true if the user and post share a community', () => {
-      return c2.addGroupMembers([user.id])
+    it('is true if the user and post share a group', () => {
+      return g2.addMembers([user.id])
       .then(() => Post.isVisibleToUser(post.id, user.id))
       .then(visible => expect(visible).to.be.true)
     })
 
-    it("is false if the user has a disabled membership in the post's community", async () => {
-      await c2.addGroupMembers([user.id])
-      await c2.removeGroupMembers([user.id])
+    it("is false if the user has a disabled membership in the post's group", async () => {
+      await g2.addMembers([user.id])
+      await g2.removeMembers([user.id])
       const visible = await Post.isVisibleToUser(post.id, user.id)
       expect(visible).to.be.false
-    })
-
-    it('is true if the user and post share a network', () => {
-      var network = new Network()
-      return network.save()
-      .then(() => Promise.join(
-        c1.save({network_id: network.id}, {patch: true}),
-        c2.save({network_id: network.id}, {patch: true})
-      ))
-      .then(() => Post.isVisibleToUser(post.id, user.id))
-      .then(visible => expect(visible).to.be.true)
     })
 
     it('is true if the user is following the post', () => {
@@ -174,7 +163,7 @@ describe('Post', function () {
 
     it('works', () => {
       var now = new Date()
-      return Post.createdInTimeRange(new Date(now - 10000), now)
+      return Post.createdInTimeRange(new Date(now - 10000), now).query(q => q.orderBy('id', 'desc'))
       .fetch().then(p => {
         expect(p).to.exist
         expect(p.id).to.equal(post.id)
@@ -210,7 +199,6 @@ describe('Post', function () {
 
     beforeEach(async () => {
       post = await factories.post().save()
-      await post.createGroup()
       const activity = await new Activity({post_id: post.id}).save()
       await new Notification({activity_id: activity.id}).save()
       const comment = await factories.comment({post_id: post.id}).save()
@@ -218,7 +206,7 @@ describe('Post', function () {
       await new Notification({activity_id: activity2.id}).save()
     })
 
-    it('handles notifications, comments, activity, and group', async () => {
+    it('handles notifications, comments, activity', async () => {
       await Post.deactivate(post.id)
       await post.refresh()
       await post.load([
@@ -231,7 +219,6 @@ describe('Post', function () {
       expect(post.relations.activities.length).to.equal(0)
       expect(post.relations.comments.first().activities.length).to.equal(0)
       expect(post.get('active')).to.be.false
-      expect(await Group.find(post).then(g => g.get('active'))).to.be.false
     })
   })
 
@@ -241,15 +228,15 @@ describe('Post', function () {
       u = await factories.user().save()
       u2 = await factories.user().save()
       u3 = await factories.user().save()
-      c = await factories.community().save()
-      await u2.joinCommunity(c)
-      await u3.joinCommunity(c)
+      c = await factories.group().save()
+      await u2.joinGroup(c)
+      await u3.joinGroup(c)
     })
 
-    it('creates activity for community members', () => {
+    it('creates activity for group members', () => {
       var post = factories.post({user_id: u.id})
       return post.save()
-      .then(() => post.communities().attach(c.id))
+      .then(() => post.groups().attach(c.id))
       .then(() => post.createActivities())
       .then(() => Activity.where({post_id: post.id}).fetchAll())
       .then(activities => {
@@ -269,7 +256,7 @@ describe('Post', function () {
         description: `<p>Yo <a data-user-id="${u3.id}">u3</a>, how goes it</p>`
       })
       return post.save()
-      .then(() => post.communities().attach(c.id))
+      .then(() => post.groups().attach(c.id))
       .then(() => post.createActivities())
       .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
       .then(activities => {
@@ -288,10 +275,10 @@ describe('Post', function () {
       })
 
       return new Tag({name: 'FollowThisTag'}).save()
-      .tap(tag => u3.followedTags().attach({tag_id: tag.id, community_id: c.id}))
+      .tap(tag => u3.followedTags().attach({tag_id: tag.id, group_id: c.id}))
       .then(() => post.save())
       .then(() => Tag.updateForPost(post, ['FollowThisTag']))
-      .then(() => post.communities().attach(c.id))
+      .then(() => post.groups().attach(c.id))
       .then(() => post.createActivities())
       .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
       .then(activities => {
@@ -326,12 +313,9 @@ describe('Post', function () {
       await post.refresh()
       expect(post.get('num_comments')).to.equal(1)
 
-      const gm = await GroupMembership.forPair(user, post).fetch()
-      const group = await gm.group().fetch()
       const timestamps = [
         post.get('updated_at'),
-        new Date(gm.getSetting('lastReadAt')),
-        group.get('updated_at')
+        await post.lastReadAtForUser(user.id)
       ]
       const now = new Date().getTime()
       for (let date of timestamps) {
@@ -357,10 +341,8 @@ describe('Post', function () {
       await factories.comment({post_id: post.id, created_at: later}).save()
 
       await post.addFollowers([user.id])
-      const gm = await GroupMembership.forPair(user, post).fetch()
-      await gm.addSetting({lastReadAt: lastReadDate}, true)
-
-      return post.save({updated_at: later}, {patch: true})
+      await post.markAsRead(user.id)
+      return post.save({ updated_at: later }, {patch: true})
     })
 
     it('returns the number of unread messages (comments)', () => {

@@ -1,17 +1,21 @@
 /* globals _ */
 /* eslint-disable camelcase */
-import { filter, isNull, omitBy, uniqBy, isEmpty, intersection } from 'lodash/fp'
-import { compact, flatten, some, uniq } from 'lodash'
+import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
+import { compact, flatten, some, sortBy, uniq } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
-import HasGroup from './mixins/HasGroup'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
-import { isFollowing } from './group/queryUtils'
 import html2text from '../../lib/htmlparser/html2text'
 import ProjectMixin from './project/mixin'
 import EventMixin from './event/mixin'
+
+export const POSTS_USERS_ATTR_UPDATE_WHITELIST = [
+  'project_role_id',
+  'following',
+  'active'
+]
 
 const commentersQuery = (limit, post, currentUserId) => q => {
   q.select('users.*', 'comments.user_id')
@@ -23,7 +27,7 @@ const commentersQuery = (limit, post, currentUserId) => q => {
   })
 
   if (currentUserId) {
-    q.where('users.id', 'NOT IN', BlockedUser.blockedFor(currentUserId))
+    q.whereNotIn('users.id', BlockedUser.blockedFor(currentUserId))
     q.orderBy(bookshelf.knex.raw(`case when user_id = ${currentUserId} then -1 else user_id end`))
   }
 
@@ -32,41 +36,49 @@ const commentersQuery = (limit, post, currentUserId) => q => {
 }
 
 module.exports = bookshelf.Model.extend(Object.assign({
+  tableName: 'posts',
+  requireFetch: false,
+  hasTimestamps: true,
+
   // Instance Methods
 
-  tableName: 'posts',
-
-  user: function () {
-    return this.belongsTo(User)
-  },
-
-  communities: function () {
-    return this.belongsToMany(Community).through(PostMembership)
-    .query({where: {'communities.active': true}})
-  },
-
-  networks: function () {
-    return this.belongsToMany(Network).through(PostNetworkMembership)
-  },
-
-  followers: function () {
-    return this.groupMembers(q => isFollowing(q))
-  },
-
-  followersWithPivots: function () {
-    return this.groupMembersWithPivots().query(q => isFollowing(q))
+  activities: function () {
+    return this.hasMany(Activity)
   },
 
   contributions: function () {
     return this.hasMany(Contribution, 'post_id')
   },
 
-  postMemberships: function () {
-    return this.hasMany(PostMembership, 'post_id')
+  followers: function () {
+    return this.belongsToMany(User).through(PostUser)
+      .withPivot(['last_read_at'])
+      .where({ following: true, 'posts_users.active': true })
+  },
+
+  groups: function () {
+    return this.belongsToMany(Group).through(PostMembership)
+      .query({where: {'groups.active': true }})
+  },
+
+  invitees: function () {
+    return this.belongsToMany(User).through(EventInvitation)
+  },
+
+  async isFollowed (userId) {
+    const pu = await PostUser.find(this.id, userId)
+    return !!(pu && pu.get('following'))
   },
 
   comments: function () {
-    return this.hasMany(Comment, 'post_id').query({where: {active: true}})
+    return this.hasMany(Comment, 'post_id').query({ where: {
+      'comments.active': true,
+      'comments.comment_id': null
+    }})
+  },
+
+  linkPreview: function () {
+    return this.belongsTo(LinkPreview)
   },
 
   locationObject: function () {
@@ -78,8 +90,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return type ? relation.query({where: {type}}) : relation
   },
 
-  votes: function () {
-    return this.hasMany(Vote)
+  // TODO: rename postGroups?
+  postMemberships: function () {
+    return this.hasMany(PostMembership, 'post_id')
+  },
+
+  postUsers: function () {
+    return this.hasMany(PostUser, 'post_id')
   },
 
   projectContributions: function () {
@@ -90,20 +107,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsToMany(User).through(EventResponse)
   },
 
-  invitees: function () {
-    return this.belongsToMany(User).through(EventInvitation)
-  },
-
-  userVote: function (userId) {
-    return this.votes().query({where: {user_id: userId}}).fetchOne()
-  },
-
   relatedUsers: function () {
     return this.belongsToMany(User, 'posts_about_users')
-  },
-
-  tags: function () {
-    return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
   },
 
   // should only be one of these per post
@@ -112,6 +117,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .query({where: {selected: true}})
   },
 
+  tags: function () {
+    return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
+  },
+
+  user: function () {
+    return this.belongsTo(User)
+  },
+
+  userVote: function (userId) {
+    return this.votes().query({where: {user_id: userId}}).fetchOne()
+  },
+
+  votes: function () {
+    return this.hasMany(Vote)
+  },
+
+  // TODO: this is confusing and we are not using, remove for now?
   children: function () {
     return this.hasMany(Post, 'parent_post_id')
     .query({where: {active: true}})
@@ -119,14 +141,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   parent: function () {
     return this.belongsTo(Post, 'parent_post_id')
-  },
-
-  activities: function () {
-    return this.hasMany(Activity)
-  },
-
-  linkPreview: function () {
-    return this.belongsTo(LinkPreview)
   },
 
   getTagsInComments: function (opts) {
@@ -155,27 +169,36 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return html2text(this.get('description'))
   },
 
-  getType: function () {
-    return this.load('tags')
-    .then(() => {
-      var type = this.get('type')
-      if (type) return type
-      const tagNames = this.relations.tags.map(t => t.get('name'))
-      const typeNames = intersection(tagNames, ['request', 'offer', 'resource'])
-      if (!isEmpty(typeNames)) {
-        return typeNames[0]
-      } else {
-        return 'discussion'
+  // Emulate the graphql request for a post in the feed so the feed can be
+  // updated via socket. Some fields omitted, linkPreview for example.
+  // TODO: if we were in a position to avoid duplicating the graphql layer
+  // here, that'd be grand.
+  getNewPostSocketPayload: function () {
+    const { groups, linkPreview, tags, user } = this.relations
+
+    const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
+    const topics = refineMany(tags, [ 'id', 'name' ])
+
+    return Object.assign({},
+      refineOne(
+        this,
+        [ 'created_at', 'description', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
+        { 'description': 'details', 'name': 'title', 'num_votes': 'votesTotal' }
+      ),
+      {
+        // Shouldn't have commenters immediately after creation
+        commenters: [],
+        commentsTotal: 0,
+        groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
+        creator,
+        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
+        topics,
+
+        // TODO: Once legacy site is decommissioned, these are no longer required.
+        creatorId: creator.id,
+        tags: topics
       }
-    })
-  },
-
-  addFollowers: async function (userIds, opts) {
-    return this.addGroupMembers(userIds, {settings: {following: true}}, opts)
-  },
-
-  removeFollowers: async function (userIds, opts) {
-    return this.updateGroupMembers(userIds, {settings: {following: false}}, opts)
+    )
   },
 
   isPublic: function () {
@@ -190,6 +213,17 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('type') === Post.Type.THREAD
   },
 
+  async lastReadAtForUser (userId) {
+    const pu = await this.postUsers()
+      .query(q => q.where('user_id', userId)).fetchOne()
+    return new Date((pu && pu.get('last_read_at')) || 0)
+  },
+
+  totalContributions: async function () {
+    await this.load('projectContributions')
+    return this.relations.projectContributions.models.reduce((total, contribution) => total + contribution.get('amount'), 0)
+  },
+
   unreadCountForUser: function (userId) {
     return this.lastReadAtForUser(userId)
     .then(date => {
@@ -199,15 +233,49 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  async markAsRead (userId) {
-    const gm = await GroupMembership.forPair(userId, this).fetch()
-    return gm.addSetting({lastReadAt: new Date()}, true)
+  // ****** Setters ******//
+
+  async addFollowers (usersOrIds, attrs = {}, { transacting } = {}) {
+    const updatedAttribs = Object.assign(
+      { active: true, following: true },
+      pick(POSTS_USERS_ATTR_UPDATE_WHITELIST, omitBy(isUndefined, attrs))
+    )
+
+    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
+    const existingFollowers = await this.postUsers()
+      .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
+    const existingUserIds = existingFollowers.pluck('user_id')
+    const newUserIds = difference(userIds, existingUserIds)
+    const updatedFollowers = await this.updateFollowers(existingUserIds, updatedAttribs, { transacting })
+    const newFollowers = []
+    for (let id of newUserIds) {
+      const follower = await this.postUsers().create(
+        Object.assign({}, updatedAttribs, {
+          user_id: id,
+          created_at: new Date(),
+        }), { transacting })
+      newFollowers.push(follower)
+    }
+    return updatedFollowers.concat(newFollowers)
   },
 
-  async lastReadAtForUser (userId) {
-    const user = await this.groupMembersWithPivots()
-    .query(q => q.where('users.id', userId)).fetchOne()
-    return new Date((user && user.pivot.getSetting('lastReadAt')) || 0)
+  async removeFollowers (usersOrIds, { transacting } = {}) {
+    return this.updateFollowers(usersOrIds, { active: false }, { transacting })
+  },
+
+  async updateFollowers (usersOrIds, attrs, { transacting } = {}) {
+    if (usersOrIds.length == 0) return []
+    const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
+    const existingFollowers = await this.postUsers()
+      .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
+    const updatedAttribs = pick(POSTS_USERS_ATTR_UPDATE_WHITELIST, omitBy(isUndefined, attrs))
+    return Promise.map(existingFollowers.models, postUser => postUser.updateAndSave(updatedAttribs, {transacting}))
+  },
+
+  async markAsRead (userId) {
+    const pu = await this.postUsers()
+      .query(q => q.where('user_id', userId)).fetchOne()
+    return pu.save({ last_read_at: new Date() })
   },
 
   pushTypingToSockets: function (userId, userName, isTyping, socketToExclude) {
@@ -225,12 +293,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   createActivities: async function (trx) {
-    await this.load(['communities', 'tags'], {transacting: trx})
-    const { tags, communities } = this.relations
+    await this.load(['groups', 'tags'], {transacting: trx})
+    const { tags, groups } = this.relations
 
     const tagFollows = await TagFollow.query(qb => {
       qb.whereIn('tag_id', tags.map('id'))
-      qb.whereIn('community_id', communities.map('id'))
+      qb.whereIn('group_id', groups.map('id'))
     })
     .fetchAll({withRelated: ['tag'], transacting: trx})
 
@@ -238,7 +306,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       reader_id: tagFollow.get('user_id'),
       post_id: this.id,
       actor_id: this.get('user_id'),
-      community_id: tagFollow.get('community_id'),
+      group_id: tagFollow.get('group_id'),
       reason: `tag: ${tagFollow.relations.tag.get('name')}`
     }))
 
@@ -262,24 +330,24 @@ module.exports = bookshelf.Model.extend(Object.assign({
       reason: `eventInvitation`
     }))
 
-    let members = await Promise.all(communities.map(async community => {
-      const userIds = await community.users().fetch().then(u => u.pluck('id'))
+    let members = await Promise.all(groups.map(async group => {
+      const userIds = await group.members().fetch().then(u => u.pluck('id'))
       const newPosts = userIds.map(userId => ({
         reader_id: userId,
         post_id: this.id,
         actor_id: this.get('user_id'),
-        community_id: community.id,
-        reason: `newPost: ${community.id}`
+        group_id: group.id,
+        reason: `newPost: ${group.id}`
       }))
 
-      const isModerator = await GroupMembership.hasModeratorRole(this.get('user_id'), community)
+      const isModerator = await GroupMembership.hasModeratorRole(this.get('user_id'), group)
       if (this.get('announcement') && isModerator) {
         const announcees = userIds.map(userId => ({
           reader_id: userId,
           post_id: this.id,
           actor_id: this.get('user_id'),
-          community_id: community.id,
-          reason: `announcement: ${community.id}`
+          group_id: group.id,
+          reason: `announcement: ${group.id}`
         }))
         return newPosts.concat(announcees)
       }
@@ -315,48 +383,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
     .then(() => this)
   },
 
-  removeFromCommunity: function (idOrSlug) {
+  removeFromGroup: function (idOrSlug) {
     return PostMembership.find(this.id, idOrSlug)
-    .then(membership => membership.destroy())
-  },
-
-  // Emulate the graphql request for a post in the feed so the feed can be
-  // updated via socket. Some fields omitted, linkPreview for example.
-  // TODO: if we were in a position to avoid duplicating the graphql layer
-  // here, that'd be grand.
-  getNewPostSocketPayload: function () {
-    const { communities, linkPreview, tags, user } = this.relations
-
-    const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
-    const topics = refineMany(tags, [ 'id', 'name' ])
-
-    return Object.assign({},
-      refineOne(
-        this,
-        [ 'created_at', 'description', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
-        { 'description': 'details', 'name': 'title', 'num_votes': 'votesTotal' }
-      ),
-      {
-        // Shouldn't have commenters immediately after creation
-        commenters: [],
-        commentsTotal: 0,
-        communities: refineMany(communities, [ 'id', 'name', 'slug' ]),
-        creator,
-        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
-        topics,
-
-        // TODO: Once legacy site is decommissioned, these are no longer required.
-        creatorId: creator.id,
-        tags: topics
-      }
-    )
-  },
-
-  totalContributions: async function () {
-    await this.load('projectContributions')
-    return this.relations.projectContributions.models.reduce((total, contribution) => total + contribution.get('amount'), 0)
+      .then(membership => membership.destroy())
   }
-}, EnsureLoad, HasGroup, ProjectMixin, EventMixin), {
+}, EnsureLoad, ProjectMixin, EventMixin), {
   // Class Methods
 
   Type: {
@@ -378,7 +409,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   countForUser: function (user, type) {
-    const attrs = {user_id: user.id, active: true}
+    const attrs = {user_id: user.id, 'posts.active': true}
     if (type) attrs.type = type
     return this.query().count().where(attrs).then(rows => rows[0].count)
   },
@@ -389,7 +420,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       q.join('tags', 'tags.id', 'posts_tags.tag_id')
       q.whereIn('tags.name', ['request', 'offer', 'resource'])
       q.groupBy('tags.name')
-      q.where({user_id: user.id, active: true})
+      q.where({'posts.user_id': user.id, 'posts.active': true})
       q.select('tags.name')
     }).query().count()
     .then(rows => rows.reduce((m, n) => {
@@ -398,30 +429,34 @@ module.exports = bookshelf.Model.extend(Object.assign({
     }, {}))
   },
 
+  havingExactFollowers (userIds) {
+    userIds = sortBy(userIds, Number)
+    return this.query(q => {
+      q.join('posts_users', 'posts.id', 'posts_users.post_id')
+      q.where('posts_users.active', true)
+      q.groupBy('posts.id')
+      q.having(bookshelf.knex.raw(`array_agg(posts_users.user_id order by posts_users.user_id) = ?`, [userIds]))
+    })
+  },
+
   isVisibleToUser: async function (postId, userId) {
     if (!postId || !userId) return Promise.resolve(false)
 
     const post = await Post.find(postId)
+
     if (post.isPublic()) return true
 
-    const pcids = await PostMembership.query()
-    .where({post_id: postId}).pluck('community_id')
-    const ucids = await Group.pluckIdsForMember(userId, Community)
-    if (intersection(pcids, ucids).length > 0) return true
+    const postGroupIds = await PostMembership.query()
+      .where({ post_id: postId }).pluck('group_id')
+    const userGroupIds = await Group.pluckIdsForMember(userId)
+    if (intersection(postGroupIds, userGroupIds).length > 0) return true
     if (await post.isFollowed(userId)) return true
 
-    const sharesNetwork = await Community.query()
-    .whereIn('id', pcids).pluck('network_id')
-    .then(networkIds =>
-      Promise.map(compact(uniq(networkIds)), id =>
-        Network.containsUser(id, userId)))
-    .then(results => some(results))
-
-    return sharesNetwork
+    return false
   },
 
   find: function (id, options) {
-    return Post.where({id, active: true}).fetch(options)
+    return Post.where({id, 'posts.active': true}).fetch(options)
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {
@@ -450,14 +485,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async updateFromNewComment ({ postId, commentId }) {
-    const where = {post_id: postId, active: true}
+    const where = {post_id: postId, 'comments.active': true}
     const now = new Date()
 
     return Promise.all([
       Comment.query().where(where).orderBy('created_at', 'desc').limit(2)
       .pluck('id').then(ids => Promise.all([
-        Comment.query().where('id', 'in', ids).update('recent', true),
-        Comment.query().where('id', 'not in', ids)
+        Comment.query().whereIn('id', ids).update('recent', true),
+        Comment.query().whereNotIn('id', ids)
         .where({recent: true, post_id: postId})
         .update('recent', false)
       ])),
@@ -470,10 +505,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
           updated_at: commentId ? now : null
         }))),
 
-      // bump updated_at on the post's group
-      commentId && Group.whereIdAndType(postId, Post).query()
-      .update({updated_at: now}),
-
       // when creating a comment, mark post as read for the commenter
       commentId && Comment.where('id', commentId).query().pluck('user_id')
       .then(([ userId ]) => Post.find(postId)
@@ -485,10 +516,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     bookshelf.transaction(trx =>
       Promise.join(
         Activity.removeForPost(postId, trx),
-        Post.where('id', postId).query()
-        .update({active: false}).transacting(trx),
-        Group.whereIdAndType(postId, Post).query()
-        .update({active: false}).transacting(trx)
+        Post.where('id', postId).query().update({active: false}).transacting(trx)
       )),
 
   createActivities: (opts) =>
@@ -497,10 +525,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   fixTypedPosts: () =>
     bookshelf.transaction(transacting =>
-      Tag.where('name', 'in', ['request', 'offer', 'resource', 'intention'])
+      Tag.whereIn('name', ['request', 'offer', 'resource', 'intention'])
       .fetchAll({transacting})
       .then(tags => Post.query(q => {
-        q.where('type', 'in', ['request', 'offer', 'resource', 'intention'])
+        q.whereIn('type', ['request', 'offer', 'resource', 'intention'])
       }).fetchAll({withRelated: ['selectedTags', 'tags'], transacting})
       .then(posts => Promise.each(posts.models, post => {
         const untype = () => post.save({type: null}, {patch: true, transacting})
@@ -520,11 +548,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
       }))
       .then(promises => promises.length))),
 
+  // TODO: does this work?
   notifySlack: ({ postId }) =>
-    Post.find(postId, {withRelated: ['communities', 'user', 'relatedUsers']})
+    Post.find(postId, {withRelated: ['groups', 'user', 'relatedUsers']})
     .then(post => {
       if (!post) return
-      const slackCommunities = post.relations.communities.filter(c => c.get('slack_hook_url'))
-      return Promise.map(slackCommunities, c => Community.notifySlack(c.id, post))
+      const slackCommunities = post.relations.groups.filter(c => c.get('slack_hook_url'))
+      return Promise.map(slackCommunities, c => Group.notifySlack(c.id, post))
     })
 })

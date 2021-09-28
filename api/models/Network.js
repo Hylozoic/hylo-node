@@ -4,7 +4,7 @@ import HasGroup from './mixins/HasGroup'
 var knex = bookshelf.knex
 
 var networkIdsQuery = function (userId) {
-  const communityIdsQuery = Group.pluckIdsForMember(userId, Community)
+  const communityIdsQuery = Group.selectIdsForMember(userId, Community)
 
   return knex.select().distinct('network_id').from('communities')
     .whereIn('id', communityIdsQuery).whereRaw('network_id is not null')
@@ -12,6 +12,7 @@ var networkIdsQuery = function (userId) {
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'networks',
+  requireFetch: false,
 
   communities: function () {
     return this.hasMany(Community).query({where: {'communities.active': true}})
@@ -37,15 +38,21 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async memberCount () {
-    const communityIds = await Community.where({
+    const communities = await Community.where({
       network_id: this.id,
-      active: true
-    })
-    .query().pluck('id')
-
-    return GroupMembership.forIds(null, communityIds, Community).query()
-    .select(bookshelf.knex.raw('count(distinct user_id) as total'))
-    .then(rows => Number(rows[0].total))
+      'communities.active': true
+    }).query().select('id')
+    const communityIds = communities.map(c => c.id)
+    console.log("get network member count", communityIds)
+    const count = await GroupMembership.forIds(null, communityIds, Community, {
+      query: q => {
+        q.select(bookshelf.knex.raw('count(distinct user_id) as total'))
+      }
+    }).query()
+    // const count = await g.query()
+     // .then(rows => { console.log("got count", rows[0].total); return Number(rows[0].total)})
+    console.log("got count after", count)
+    return count[0].total
   },
 
   posts: function () {

@@ -1,4 +1,4 @@
-import { filterAndSortPosts, filterAndSortCommunities } from './util'
+import { filterAndSortPosts, filterAndSortGroups } from './util'
 import { expectEqualQuery } from '../../../test/setup/helpers'
 
 describe('filterAndSortPosts', () => {
@@ -76,16 +76,16 @@ describe('filterAndSortPosts', () => {
   })
 })
 
-describe('filterAndSortCommunities', () => {
+describe('filterAndSortGroups', () => {
   it('supports searching', () => {
-    const relation = Community.collection()
+    const relation = Group.collection()
     relation.query(q => {
-      filterAndSortCommunities({search: 'foo'}, q)
+      filterAndSortGroups({search: 'foo'}, q)
     })
 
-    expectEqualQuery(relation, `select * from "communities"
+    expectEqualQuery(relation, `select * from "groups"
       where (
-        ((to_tsvector('english', communities.name) @@ to_tsquery('foo:*')))
+        ((to_tsvector('english', groups.name) @@ to_tsquery('foo:*')))
       )
       order by "name" asc`)
   })

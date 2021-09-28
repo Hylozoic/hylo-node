@@ -3,7 +3,7 @@ const Promise = require('bluebird')
 import { curry, merge } from 'lodash'
 import { format } from 'util'
 
-const sendEmail = opts => 
+const sendEmail = opts =>
   new Promise((resolve, reject) =>
     api.send(opts, (err, resp) => err ? reject(err) : resolve(resp)))
 
@@ -28,7 +28,8 @@ const sendEmailWithOptions = curry((templateId, opts) =>
     recipient: {address: opts.email},
     email_data: opts.data,
     version_name: opts.version,
-    sender: opts.sender // expects {name, address}
+    sender: opts.sender, // expects {name, address}
+    files: opts.files
   })))
 
 module.exports = {
@@ -44,7 +45,7 @@ module.exports = {
     sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
       email,
       data,
-      version: 'DEV-152',
+      version: 'Holonic architecture',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
         reply_to: data.inviter_email
@@ -67,9 +68,14 @@ module.exports = {
   sendPostMentionNotification: sendEmailWithOptions('tem_wXiqtyNzAr8EF4fqBna5WQ'),
   sendJoinRequestNotification: sendEmailWithOptions('tem_9sW4aBxaLi5ve57bp7FGXZ'),
   sendApprovedJoinRequestNotification: sendEmailWithOptions('tem_eMJADwteU3zPyjmuCAAYVK'),
-  sendDonationToEmail: sendEmailWithOptions('tem_bhptVWGW6k67tpFtqRDWKTHQ'),  
-  sendDonationFromEmail: sendEmailWithOptions('tem_TCgS9xJykShS9mJjwj9Kd3v6'),  
+  sendDonationToEmail: sendEmailWithOptions('tem_bhptVWGW6k67tpFtqRDWKTHQ'),
+  sendDonationFromEmail: sendEmailWithOptions('tem_TCgS9xJykShS9mJjwj9Kd3v6'),
   sendEventInvitationEmail: sendEmailWithOptions('tem_DxG3FjMdcvYh63rKvh7gDmmY'),
+  sendGroupChildGroupInviteNotification: sendEmailWithOptions('tem_vwd7DKxrGrXPX8Wq63VkTvMd'),
+  sendGroupChildGroupInviteAcceptedNotification: sendEmailWithOptions('tem_CWcM3KrQVcQkvHbwVmWXwyvR'),
+  sendGroupParentGroupJoinRequestNotification: sendEmailWithOptions('tem_PrBkcV4WTwwdKm4MyPK7kVJB'),
+  sendGroupParentGroupJoinRequestAcceptedNotification: sendEmailWithOptions('tem_KcSfYRQCh4pgTGF7pcPjStqP'),
+  sendExportMembersList: sendEmailWithOptions('tem_GQPPQmq4dPrQWxkWdDKVcKWT'),
 
   sendMessageDigest: opts =>
     sendEmailWithOptions('tem_xwQCfpdRT9K6hvrRFqDdhBRK',
@@ -93,8 +99,8 @@ module.exports = {
     return {postId: ids[0], userId: ids[1]}
   },
 
-  postCreationAddress: function (communityId, userId, type) {
-    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, communityId, userId, type)
+  postCreationAddress: function (groupId, userId, type) {
+    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, groupId, userId, type)
     return format('create-%s@%s', PlayCrypto.encrypt(plaintext), process.env.MAILGUN_DOMAIN)
   },
 
@@ -104,11 +110,11 @@ module.exports = {
     var plaintext = PlayCrypto.decrypt(match[1]).replace(salt, '')
     var decodedData = plaintext.split('|')
 
-    return {communityId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
+    return {groupId: decodedData[0], userId: decodedData[1], type: decodedData[2]}
   },
 
-  formToken: function (communityId, userId) {
-    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, communityId, userId)
+  formToken: function (groupId, userId) {
+    var plaintext = format('%s%s|%s|', process.env.MAILGUN_EMAIL_SALT, groupId, userId)
     return PlayCrypto.encrypt(plaintext)
   },
 
@@ -117,7 +123,7 @@ module.exports = {
     var plaintext = PlayCrypto.decrypt(token).replace(salt, '')
     var decodedData = plaintext.split('|')
 
-    return {communityId: decodedData[0], userId: decodedData[1]}
+    return {groupId: decodedData[0], userId: decodedData[1]}
   }
 
 }

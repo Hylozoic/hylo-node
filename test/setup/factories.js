@@ -12,11 +12,13 @@ module.exports = {
     }, attrs))
   },
 
-  community: attrs => {
-    return new Community(merge({
+  group: attrs => {
+    return new Group(merge({
       name: faker.random.words(6),
       slug: faker.lorem.slug(),
-      beta_access_code: faker.random.alphaNumeric(6)
+      access_code: faker.random.alphaNumeric(6),
+      group_data_type: 1,
+      settings: {}
     }, attrs))
   },
 
@@ -55,13 +57,6 @@ module.exports = {
       type: 'message',
       created_at: new Date(),
       updated_at: new Date()
-    }, attrs))
-  },
-
-  network: attrs => {
-    return new Network(merge({
-      name: faker.company.companyName(),
-      slug: faker.lorem.slug(5)
     }, attrs))
   },
 
@@ -170,7 +165,8 @@ module.exports = {
         headers: {},
         setHeader: spy((key, val) => {
           self.headers[key] = val
-        })
+        }),
+        end: setBody()
       }
       return self
     },

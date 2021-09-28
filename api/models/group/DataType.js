@@ -19,8 +19,8 @@ export default GroupDataType
 export function getModelForDataType (dataType) {
   switch (dataType) {
     case POST: return Post
-    case COMMUNITY: return Community
-    case NETWORK: return Network
+    case COMMUNITY: return Group
+    case NETWORK: return Group
     case TOPIC: return Tag
     case COMMENT: return Comment
   }

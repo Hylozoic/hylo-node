@@ -19,9 +19,9 @@ export const qualifyLinks = (text, recipient, token, slug) => {
     var url = $this.attr('href') || ''
     if (Tag.isValidTag(tag)) {
       if (slug) {
-        url = `${Frontend.Route.prefix}/c/${slug}/tag/${tag}`
+        url = `${Frontend.Route.prefix}/groups/${slug}/topics/${tag}`
       } else {
-        url = `${Frontend.Route.prefix}/tag/${tag}`
+        url = `${Frontend.Route.prefix}/topics/${tag}`
       }
     } else if (!url.match(/^https?:\/\//)) {
       url = Frontend.Route.prefix + url

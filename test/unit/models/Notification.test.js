@@ -1,6 +1,6 @@
 import ioClient from 'socket.io-client'
 import io from 'socket.io'
-import redis from 'socket.io-redis'
+import redis from '@sailshq/socket.io-redis'
 import url from 'url'
 
 import '../../setup'
@@ -19,12 +19,12 @@ const relations = [
   'activity',
   'activity.post',
   'activity.post.user',
-  'activity.post.communities',
+  'activity.post.groups',
   'activity.comment',
   'activity.comment.user',
   'activity.comment.post',
-  'activity.comment.post.communities',
-  'activity.community',
+  'activity.comment.post.groups',
+  'activity.group',
   'activity.reader',
   'activity.actor'
 ]
@@ -41,7 +41,7 @@ const preloadNotification = (activity, medium) =>
     .then(n => n.load(relations))
 
 describe('Notification', function () {
-  let activities, activity, actor, comment, community, device, post, reader
+  let activities, activity, actor, comment, group, device, post, reader
 
   before(() => {
     return factories.user({avatar_url: 'http://joe.com/headshot.jpg', name: 'Joe'}).save()
@@ -50,9 +50,9 @@ describe('Notification', function () {
       .then(p => { post = p })
       .then(() => new Comment({text: 'hi', user_id: actor.id, post_id: post.id}).save())
       .then(c => { comment = c })
-      .then(() => factories.community({name: 'My Community', slug: 'my-community'}).save())
-      .then(c => { community = c })
-      .then(() => community.posts().attach(post))
+      .then(() => factories.group({name: 'My Group', slug: 'my-group'}).save())
+      .then(c => { group = c })
+      .then(() => group.posts().attach(post))
       .then(() => factories.user({email: 'readersemail@hylo.com'}).save())
       .then(u => { reader = u })
       .then(() => new Device({
@@ -72,7 +72,7 @@ describe('Notification', function () {
             meta: {reasons: ['approvedJoinRequest']},
             reader_id: reader.id,
             actor_id: actor.id,
-            community_id: community.id
+            group_id: group.id
           },
           newComment: {
             comment_id: comment.id,
@@ -90,7 +90,7 @@ describe('Notification', function () {
             meta: {reasons: ['joinRequest']},
             reader_id: reader.id,
             actor_id: actor.id,
-            community_id: community.id
+            group_id: group.id
           },
           mention: {
             post_id: post.id,
@@ -100,10 +100,10 @@ describe('Notification', function () {
           },
           newPost: {
             post_id: post.id,
-            meta: {reasons: [`newPost: ${community.id}`]},
+            meta: {reasons: [`newPost: ${group.id}`]},
             reader_id: reader.id,
             actor_id: actor.id,
-            community_id: community.id
+            group_id: group.id
           }
         }
       })
@@ -122,7 +122,7 @@ describe('Notification', function () {
         .then(pns => {
           expect(pns.length).to.equal(1)
           var pn = pns.first()
-          expect(pn.get('alert')).to.equal('Joe posted "My Post" in My Community')
+          expect(pn.get('alert')).to.equal('Joe posted "My Post" in My Group')
         })
     })
 
@@ -180,7 +180,7 @@ describe('Notification', function () {
         .then(pns => {
           expect(pns.length).to.equal(1)
           var pn = pns.first()
-          expect(pn.get('alert')).to.equal('Joe asked to join My Community')
+          expect(pn.get('alert')).to.equal('Joe asked to join My Group')
         })
     })
 
@@ -191,7 +191,7 @@ describe('Notification', function () {
         .then(pns => {
           expect(pns.length).to.equal(1)
           var pn = pns.first()
-          expect(pn.get('alert')).to.equal('Joe approved your request to join My Community')
+          expect(pn.get('alert')).to.equal('Joe approved your request to join My Group')
         })
     })
 
@@ -206,7 +206,7 @@ describe('Notification', function () {
         })
 
         expect(opts.data).to.contain({
-          community_name: 'My Community',
+          group_name: 'My Group',
           post_user_name: 'Joe',
           post_description: 'The body of the post',
           post_title: 'My Post'
@@ -250,11 +250,11 @@ describe('Notification', function () {
         })
 
         expect(opts.sender).to.contain({
-          name: 'My Community'
+          name: 'My Group'
         })
 
         expect(opts.data).to.contain({
-          community_name: 'My Community',
+          group_name: 'My Group',
           requester_name: 'Joe'
         })
       })
@@ -274,11 +274,11 @@ describe('Notification', function () {
         })
 
         expect(opts.sender).to.contain({
-          name: 'My Community'
+          name: 'My Group'
         })
 
         expect(opts.data).to.contain({
-          community_name: 'My Community',
+          group_name: 'My Group',
           approver_name: 'Joe'
         })
       })
@@ -323,11 +323,11 @@ describe('Notification', function () {
   })
 
   describe('sendCommentNotificationEmail', () => {
-    var args, community
+    var args, group
     beforeEach(() => {
       spyify(Email, 'sendNewCommentNotification', x => { args = x })
-      community = factories.community()
-      return community.save()
+      group = factories.group()
+      return group.save()
     })
 
     afterEach(() => unspyify(Email, 'sendNewCommentNotification'))
@@ -346,7 +346,7 @@ describe('Notification', function () {
                 post: model({
                   name: 'hello world',
                   relations: {
-                    communities: [community]
+                    groups: [group]
                   }
                 }),
                 user: model({
@@ -474,14 +474,14 @@ describe('Notification', function () {
         notification.updateUserSocketRoom(reader.id)
       })
 
-      it('updates socket room with the correct community', done => {
+      it('updates socket room with the correct group', done => {
         socketClient.on('newNotification', data => {
           const expected = {
-            id: community.id,
-            name: 'My Community',
-            slug: 'my-community'
+            id: group.id,
+            name: 'My Group',
+            slug: 'my-group'
           }
-          const actual = data.activity.community
+          const actual = data.activity.group
           expect(actual).to.deep.equal(expected)
           done()
         })
@@ -566,18 +566,18 @@ describe('Notification', function () {
     })
   })
   describe('sendPushAnnouncement', () => {
-    var post, notification, reader, community, activity, user, alertText, path
+    var post, notification, reader, group, activity, user, alertText, path
 
     before(async () => {
       reader = await factories.user().save()
       user = await factories.user().save()
-      community = await factories.community().save()
+      group = await factories.group().save()
       post = await factories.post({user_id: user.id}).save()
-      await community.posts().attach(post)
+      await group.posts().attach(post)
       activity = await factories.activity({post_id: post.id, reader_id: reader.id}).save()
       notification = await factories.notification({activity_id: activity.id}).save()
       await post.load('user')
-      await notification.load(['activity', 'activity.post.communities', 'activity.reader', 'activity.post.user'])
+      await notification.load(['activity', 'activity.post.groups', 'activity.reader', 'activity.post.user'])
       notification.relations.activity.relations.reader.sendPushNotification = spy((inAlertText, inPath) => {
         alertText = inAlertText
         path = inPath
@@ -588,7 +588,7 @@ describe('Notification', function () {
       await notification.sendPushAnnouncement()
       expect(notification.relations.activity.relations.reader.sendPushNotification).to.have.been.called()
       expect(alertText).to.equal(PushNotification.textForAnnouncement(post))
-      expect(path).to.equal(url.parse(Frontend.Route.post(post, community)).path)
+      expect(path).to.equal(url.parse(Frontend.Route.post(post, group)).path)
     })
   })
 })

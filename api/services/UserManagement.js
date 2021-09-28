@@ -36,10 +36,9 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['comments', 'deactivated_by_id'],
     ['follows', 'added_by_id'],
     ['thanks', 'user_id'],
-    ['community_invites', 'invited_by_id'],
-    ['community_invites', 'used_by_id'],
+    ['group_invites', 'invited_by_id'],
+    ['group_invites', 'used_by_id'],
     ['user_external_data', 'user_id'],
-    ['communities', 'leader_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -49,13 +48,13 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
   // updates where we have to avoid duplicate records
   ;[
     // table name, user id column, column with unique value
-    ['communities_users', 'user_id', 'community_id'],
+    ['group_memberships', 'user_id', 'group_id'],
     ['contributions', 'user_id', 'post_id'],
     ['follows', 'user_id', 'post_id'],
     ['linked_account', 'user_id', 'provider_user_id'],
     ['votes', 'user_id', 'post_id'],
     ['tag_follows', 'user_id', 'tag_id'],
-    ['communities_tags', 'user_id', 'tag_id'],
+    ['groups_tags', 'user_id', 'tag_id'],
     ['thanks', 'thanked_by_id', 'comment_id'],
     ['posts_users', 'user_id', 'post_id']
   ].forEach(args => {
@@ -77,9 +76,9 @@ const generateRemoveQueries = function (userId, knex) {
   // clear columns without deleting rows
   ;[
     ['comments', 'deactivated_by_id'],
-    ['communities', 'created_by_id'],
+    ['groups', 'created_by_id'],
     ['follows', 'added_by_id'],
-    ['communities_tags', 'user_id']
+    ['groups_tags', 'user_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -97,24 +96,23 @@ const generateRemoveQueries = function (userId, knex) {
   // deletes
   ;[
     // table, user id column
-    ['devices', 'user_id'],
-    ['communities_users', 'user_id'],
-    ['community_invites', 'invited_by_id'],
-    ['community_invites', 'used_by_id'],
-    ['contributions', 'user_id'],
-    ['follows', 'user_id'],
-    ['linked_account', 'user_id'],
-    ['user_post_relevance', 'user_id'],
-    ['activities', 'reader_id'],
-    ['activities', 'actor_id'],
-    ['votes', 'user_id'],
     ['comments', 'user_id'],
-    ['user_external_data', 'user_id'],
-    ['tag_follows', 'user_id'],
+    ['contributions', 'user_id'],
+    ['devices', 'user_id'],
+    ['follows', 'user_id'],
+    ['group_invites', 'invited_by_id'],
+    ['group_invites', 'used_by_id'],
+    ['group_memberships', 'user_id'],
+    ['linked_account', 'user_id'],
     ['posts_about_users', 'user_id'],
     ['posts_users', 'user_id'],
+    ['tag_follows', 'user_id'],
     ['thanks', 'thanked_by_id'],
-    ['users', 'id']
+    ['user_connections', 'user_id'],
+    ['user_external_data', 'user_id'],
+    ['user_post_relevance', 'user_id'],
+    ['users', 'id'],
+    ['votes', 'user_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]

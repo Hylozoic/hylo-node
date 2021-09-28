@@ -13,7 +13,7 @@ describe('UserController', function () {
   })
 
   describe('.create', function () {
-    var community
+    var group
 
     beforeEach(function () {
       Object.assign(res, {
@@ -23,8 +23,8 @@ describe('UserController', function () {
       UserSession.login = spy(UserSession.login)
       User.create = spy(User.create)
 
-      community = new Community({beta_access_code: 'foo', name: 'foo', slug: 'foo'})
-      return community.save()
+      group = new Group({access_code: 'foo', name: 'foo', slug: 'foo', group_data_type: 1 })
+      return group.save()
     })
 
     it('works with a username and password', function () {
@@ -53,7 +53,7 @@ describe('UserController', function () {
     var u1, u2
 
     beforeEach(function () {
-      u1 = factories.user({settings: {leftNavIsOpen: true, currentCommunityId: '7'}})
+      u1 = factories.user({settings: {leftNavIsOpen: true, currentGroupId: '7'}})
       u2 = factories.user()
       return Promise.join(u1.save(), u2.save())
     })
@@ -65,7 +65,7 @@ describe('UserController', function () {
         return UserController.create(req, res)
         .then(() => {
           expect(res.statusCode).to.equal(422)
-          expect(res.body).to.equal(req.__('duplicate-email'))
+          expect(res.body).to.deep.equal({ error: 'duplicate-email' })
         })
       })
     })

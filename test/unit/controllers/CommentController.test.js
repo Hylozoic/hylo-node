@@ -13,16 +13,16 @@ describe('CommentController', function () {
       u3: factories.user().save(),
       p1: factories.post().save(),
       p2: factories.post().save(),
-      c1: factories.community().save(),
+      g1: factories.group().save(),
       cm1: factories.comment().save()
     }))
     .then(props => {
       fixtures = props
     })
     .then(() => Promise.join(
-      fixtures.p1.communities().attach(fixtures.c1.id),
+      fixtures.p1.groups().attach(fixtures.g1.id),
       fixtures.p1.comments().create(fixtures.cm1),
-      fixtures.c1.addGroupMembers([fixtures.u1.id])
+      fixtures.g1.addMembers([fixtures.u1.id])
     )))
 
   beforeEach(() => {
@@ -49,13 +49,11 @@ describe('CommentController', function () {
       req.params.To = Email.postReplyAddress(fixtures.p1.id, fixtures.u3.id)
 
       return CommentController.createFromEmail(req, res)
-      .then(function () {
+      .then(async () => {
         expect(Analytics.track).to.have.been.called()
         expect(res.ok).to.have.been.called()
-        return fixtures.p1.comments().fetch()
-      })
-      .then(function (comments) {
-        var comment = comments.find(c => c.get('post_id') === fixtures.p1.id)
+        const comments = await fixtures.p1.comments().fetch()
+        const comment = comments.last()
         expect(comment).to.exist
         expect(comment.get('text')).to.equal('<p>foo bar baz</p>\n')
         expect(comment.get('user_id')).to.equal(fixtures.u3.id)
@@ -69,7 +67,7 @@ describe('CommentController', function () {
       .then(() => CommentController.createFromEmail(req, res))
       .then(() => fixtures.p1.comments().fetch())
       .then(comments => {
-        var comment = comments.find(c => c.get('post_id') === fixtures.p1.id)
+        const comment = comments.last()
         expect(comment).to.exist
         expect(comment.get('text')).to.equal('foo bar baz')
       })
@@ -80,19 +78,19 @@ describe('CommentController', function () {
     var p1, p2, p3
 
     beforeEach(() => {
-      p1 = factories.post({user_id: fixtures.u1.id})
-      p2 = factories.post({user_id: fixtures.u2.id})
+      p1 = factories.post({user_id: fixtures.u1.id, created_at: new Date('2020-12-12 00:00:00')})
+      p2 = factories.post({user_id: fixtures.u2.id, created_at: new Date('2020-12-12 00:00:00')})
       p3 = factories.post({user_id: fixtures.u1.id})
       res.serverError = spy()
       res.locals.tokenData = {
-        communityId: fixtures.c1.id,
+        groupId: fixtures.g1.id,
         userId: fixtures.u1.id
       }
       return Promise.join(p1.save(), p2.save(), p3.save())
       .then(() => Promise.join(
-        p1.communities().attach(fixtures.c1),
-        p2.communities().attach(fixtures.c1),
-        p3.communities().attach(fixtures.c1)))
+        p1.groups().attach(fixtures.g1),
+        p2.groups().attach(fixtures.g1),
+        p3.groups().attach(fixtures.g1)))
     })
 
     it('creates comments', () => {

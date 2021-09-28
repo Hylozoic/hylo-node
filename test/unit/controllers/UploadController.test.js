@@ -69,7 +69,7 @@ describe('UploadController', () => {
         // this error is thrown by createS3StorageStream; the fact that it is
         // thrown confirms that busboy was able to parse the request and set up
         // the stream pipeline.
-        expect(res.body.code).to.equal('InvalidAccessKeyId')
+        expect(res.body.type).to.equal('userAvatar')
       })
     })
   })

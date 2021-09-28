@@ -1,13 +1,25 @@
-import { myCommunityIds, myNetworkCommunityIds } from './util/queryFilters'
-
 module.exports = bookshelf.Model.extend({
   tableName: 'skills',
+  requireFetch: false,
+
+  groupsSuggesting: function () {
+    return this.belongsToMany(Group, 'groups_suggested_skills')
+  },
 
   users: function () {
-    return this.belongsToMany(User, 'skills_users')
+    return this.belongsToMany(User, 'skills_users').query({ where: { type: Skill.Type.HAS } })
+  },
+
+  usersLearning: function () {
+    return this.belongsToMany(User, 'skills_users').query({ where: { type: Skill.Type.LEARNING } })
   }
 
 }, {
+
+  Type: {
+    HAS: 0,
+    LEARNING: 1
+  },
 
   find: function (nameOrId, opts = {}) {
     if (!nameOrId) return Promise.resolve(null)
@@ -29,11 +41,8 @@ module.exports = bookshelf.Model.extend({
         q.whereRaw('name ilike ?', autocomplete + '%')
       }
       q.join('skills_users', 'skills_users.skill_id', 'skills.id')
-      q.join('communities_users', 'communities_users.user_id', 'skills_users.user_id')
-      q.where(function () {
-        this.whereIn('communities_users.community_id', myCommunityIds(currentUserId))
-        .orWhereIn('communities_users.community_id', myNetworkCommunityIds(currentUserId))
-      })
+      q.join('group_memberships', 'group_memberships.user_id', 'skills_users.user_id')
+      q.whereIn('group_memberships.group_id', Group.selectIdsForMember(currentUserId))
     })
   }
 })

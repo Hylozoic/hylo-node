@@ -1,42 +1,51 @@
 import { readFileSync } from 'fs'
-import graphqlHTTP from 'express-graphql'
+import { graphqlHTTP } from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
+  acceptGroupRelationshipInvite,
   acceptJoinRequest,
-  addCommunityToNetwork,
   addModerator,
-  addNetworkModeratorRole,
   addPeopleToProjectRole,
   addSkill,
-  allowCommunityInvites,
+  addSkillToLearn,
+  addSuggestedSkillToGroup,
+  allowGroupInvites,
   blockUser,
+  cancelGroupRelationshipInvite,
+  cancelJoinRequest,
+  createAffiliation,
   createComment,
-  createCommunity,
+  createGroup,
   createInvitation,
   createJoinRequest,
   createMessage,
   createPost,
   createProject,
   createProjectRole,
+  createSavedSearch,
   createTopic,
   declineJoinRequest,
+  deleteAffiliation,
   deleteComment,
-  deleteCommunity,
-  deleteCommunityTopic,
+  deleteGroup,
+  deleteGroupRelationship,
+  deleteGroupTopic,
   deletePost,
   deleteProjectRole,
+  deleteSavedSearch,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
   findOrCreateLocation,
   findOrCreateThread,
   flagInappropriateContent,
   fulfillPost,
+  inviteGroupToGroup,
   invitePeopleToEvent,
-  joinCommunity,
+  joinGroup,
   joinProject,
-  leaveCommunity,
+  leaveGroup,
   leaveProject,
   markActivityRead,
   markAllActivitiesRead,
@@ -46,28 +55,29 @@ import {
   registerDevice,
   registerStripeAccount,
   reinviteAll,
-  removeCommunityFromNetwork,
+  rejectGroupRelationshipInvite,
   removeMember,
   removeModerator,
-  removeNetworkModeratorRole,
   removePost,
   removeSkill,
+  removeSkillToLearn,
+  removeSuggestedSkillFromGroup,
   resendInvitation,
   respondToEvent,
   subscribe,
+  toggleGroupWidgetVisibility,
   unblockUser,
   unfulfillPost,
   unlinkAccount,
   updateComment,
-  updateCommunity,
-  updateCommunityHiddenSetting,
-  updateCommunityTopic,
-  updateCommunityTopicFollow,
+  updateGroup,
+  updateGroupTopic,
+  updateGroupTopicFollow,
   updateMe,
   updateMembership,
-  updateNetwork,
   updatePost,
   updateStripeAccount,
+  updateWidget,
   useInvitation,
   vote
 } from './mutations'
@@ -113,12 +123,12 @@ async function createSchema (userId, isAdmin) {
 // Queries that non-logged in users can make
 export function makePublicQueries (userId, fetchOne, fetchMany) {
   return {
-    // Can only access public communities and posts
-    community: async (root, { id, slug }) => fetchOne('Community', slug || id, slug ? 'slug' : 'id', { isPublic: true }),
-    communities: (root, args) => fetchMany('Community', Object.assign(args, { isPublic: true })),
-    posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true })),
     checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode)
+      InvitationService.check(userId, invitationToken, accessCode),
+    // Can only access public communities and posts
+    group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id', { visibility: Group.Visibility.PUBLIC }),
+    groups: (root, args) => fetchMany('Group', Object.assign(args, { visibility: Group.Visibility.PUBLIC })),
+    posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true }))
   }
 }
 
@@ -126,24 +136,24 @@ export function makePublicQueries (userId, fetchOne, fetchMany) {
 export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   return {
     activity: (root, { id }) => fetchOne('Activity', id),
-    me: () => fetchOne('Me', userId),
-    community: async (root, { id, slug, updateLastViewed }) => {
+    checkInvitation: (root, { invitationToken, accessCode }) =>
+      InvitationService.check(userId, invitationToken, accessCode),
+    comment: (root, { id }) => fetchOne('Comment', id),
+    connections: (root, args) => fetchMany('PersonConnection', args),
+    group: async (root, { id, slug, updateLastViewed }) => {
       // you can specify id or slug, but not both
-      const response = await fetchOne('Community', slug || id, slug ? 'slug' : 'id')
-      if (updateLastViewed) {
-        const community = await Community.find(id || slug)
-        if (community) {
-          const membership = await GroupMembership.forPair(userId, community).fetch()
-          if (membership) {
-            await membership.addSetting({lastReadAt: new Date()}, true)
-          }
+      const group = await fetchOne('Group', slug || id, slug ? 'slug' : 'id')
+      if (updateLastViewed && group) {
+        const membership = await GroupMembership.forPair(userId, group).fetch()
+        if (membership) {
+          await membership.addSetting({ lastReadAt: new Date() }, true)
         }
       }
-      return response
+      return group
     },
-    communityExists: (root, { slug }) => {
-      if (Community.isSlugValid(slug)) {
-        return Community.where(bookshelf.knex.raw('slug = ?', slug))
+    groupExists: (root, { slug }) => {
+      if (Group.isSlugValid(slug)) {
+        return Group.where(bookshelf.knex.raw('slug = ?', slug))
         .count()
         .then(count => {
           if (count > 0) return {exists: true}
@@ -152,25 +162,23 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       }
       throw new Error('Slug is invalid')
     },
+    groupTopic: (root, { topicName, groupSlug }) =>
+      GroupTag.findByTagAndGroup(topicName, groupSlug),
+    groupTopics: (root, args) => fetchMany('GroupTopic', args),
+    groupTemplates: (root, args) => GroupTemplate.fetchAll(),
+    groups: (root, args) => fetchMany('Group', args),
     joinRequests: (root, args) => fetchMany('JoinRequest', args),
-    communities: (root, args) => fetchMany('Community', args),
-    communityTemplates: (root, args) => CommunityTemplate.fetchAll(),
+    me: () => fetchOne('Me', userId),
+    messageThread: (root, { id }) => fetchOne('MessageThread', id),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
       .tap(() => resetCount && User.resetNewNotificationCount(userId))
     },
+    people: (root, args) => fetchMany('Person', args),
     person: (root, { id }) => fetchOne('Person', id),
-    messageThread: (root, { id }) => fetchOne('MessageThread', id),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
-    people: (root, args) => fetchMany('Person', args),
-    connections: (root, args) => fetchMany('PersonConnection', args),
-    communityTopics: (root, args) => fetchMany('CommunityTopic', args),
-    topics: (root, args) => fetchMany('Topic', args),
-    topic: (root, { id, name }) => // you can specify id or name, but not both
-      fetchOne('Topic', name || id, name ? 'name' : 'id'),
-    communityTopic: (root, { topicName, communitySlug }) =>
-      CommunityTag.findByTagAndCommunity(topicName, communitySlug),
+    savedSearches: (root, args) => fetchMany('SavedSearch', args),
     search: (root, args) => {
       if (!args.first) args.first = 20
       return Search.fullTextSearch(userId, args)
@@ -181,44 +189,47 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
         return presentQuerySet(models, merge(args, {total}))
       })
     },
-    network: (root, { id, slug }) =>  // you can specify id or slug, but not both
-      fetchOne('Network', slug || id, slug ? 'slug' : 'id'),
     skills: (root, args) => fetchMany('Skill', args),
-    checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode)
+    topic: (root, { id, name }) => // you can specify id or name, but not both
+      fetchOne('Topic', name || id, name ? 'name' : 'id'),
+    topics: (root, args) => fetchMany('Topic', args)
   }
 }
 
 export function makeMutations (userId, isAdmin) {
   return {
-    acceptJoinRequest: (root, { joinRequestId, communityId, userId, moderatorId }) => acceptJoinRequest(joinRequestId, communityId, userId, moderatorId),
+    acceptGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => acceptGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
-    addCommunityToNetwork: (root, { communityId, networkId }) =>
-    addCommunityToNetwork({ userId, isAdmin }, { communityId, networkId }),
+    acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
-    addModerator: (root, { personId, communityId }) =>
-    addModerator(userId, personId, communityId),
-
-    addNetworkModeratorRole: (root, { personId, networkId }) =>
-    addNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
+    addModerator: (root, { personId, groupId }) =>
+      addModerator(userId, personId, groupId),
 
     addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
-    addPeopleToProjectRole(userId, peopleIds, projectRoleId),
+      addPeopleToProjectRole(userId, peopleIds, projectRoleId),
 
     addSkill: (root, { name }) => addSkill(userId, name),
+    addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
+    addSuggestedSkillToGroup: (root, { groupId, name }) => addSuggestedSkillToGroup(userId, groupId, name),
 
-    allowCommunityInvites: (root, { communityId, data }) => allowCommunityInvites(communityId, data),
+    allowGroupInvites: (root, { groupId, data }) => allowGroupInvites(groupId, data),
 
     blockUser: (root, { blockedUserId }) => blockUser(userId, blockedUserId),
 
+    cancelGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => cancelGroupRelationshipInvite(userId, groupRelationshipInviteId),
+
+    cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
+
+    createAffiliation: (root, { data }) => createAffiliation(userId, data),
+
     createComment: (root, { data }) => createComment(userId, data),
 
-    createCommunity: (root, { data }) => createCommunity(userId, data),
+    createGroup: (root, { data }) => createGroup(userId, data),
 
-    createInvitation: (root, {communityId, data}) =>
-    createInvitation(userId, communityId, data),
+    createInvitation: (root, {groupId, data}) =>
+      createInvitation(userId, groupId, data),
 
-    createJoinRequest: (root, {communityId, userId}) => createJoinRequest(communityId, userId),
+    createJoinRequest: (root, {groupId, questionAnswers}) => createJoinRequest(userId, groupId, questionAnswers),
 
     createMessage: (root, { data }) => createMessage(userId, data),
 
@@ -228,23 +239,31 @@ export function makeMutations (userId, isAdmin) {
 
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
 
-    joinCommunity: (root, {communityId, userId}) => joinCommunity(communityId, userId),
+    createSavedSearch: (root, { data }) => createSavedSearch(data),
+
+    joinGroup: (root, {groupId}) => joinGroup(groupId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
-    createTopic: (root, { topicName, communityId, isDefault, isSubscribing }) => createTopic(userId, topicName, communityId, isDefault, isSubscribing),
+    createTopic: (root, { topicName, groupId, isDefault, isSubscribing }) => createTopic(userId, topicName, groupId, isDefault, isSubscribing),
 
-    declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(joinRequestId),
+    declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(userId, joinRequestId),
+
+    deleteAffiliation: (root, { id }) => deleteAffiliation(userId, id),
 
     deleteComment: (root, { id }) => deleteComment(userId, id),
 
-    deleteCommunity: (root, { id }) => deleteCommunity(userId, id),
+    deleteGroup: (root, { id }) => deleteGroup(userId, id),
 
-    deleteCommunityTopic: (root, { id }) => deleteCommunityTopic(userId, id),
+    deleteGroupRelationship: (root, { parentId, childId }) => deleteGroupRelationship(userId, parentId, childId),
+
+    deleteGroupTopic: (root, { id }) => deleteGroupTopic(userId, id),
 
     deletePost: (root, { id }) => deletePost(userId, id),
 
     deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
+
+    deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
 
     expireInvitation: (root, {invitationId}) =>
       expireInvitation(userId, invitationId),
@@ -261,10 +280,13 @@ export function makeMutations (userId, isAdmin) {
 
     fulfillPost: (root, { postId }) => fulfillPost(userId, postId),
 
+    inviteGroupToJoinParent: (root, { parentId, childId }) =>
+      inviteGroupToGroup(userId, parentId, childId, GroupRelationshipInvite.TYPE.ParentToChild),
+
     invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
       invitePeopleToEvent(userId, eventId, inviteeIds),
 
-    leaveCommunity: (root, { id }) => leaveCommunity(userId, id),
+    leaveGroup: (root, { id }) => leaveGroup(userId, id),
 
     leaveProject: (root, { id }) => leaveProject(id, userId),
 
@@ -272,14 +294,14 @@ export function makeMutations (userId, isAdmin) {
 
     markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
 
-    pinPost: (root, { postId, communityId }) =>
-      pinPost(userId, postId, communityId),
+    pinPost: (root, { postId, groupId }) =>
+      pinPost(userId, postId, groupId),
 
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
 
-    regenerateAccessCode: (root, { communityId }) =>
-      regenerateAccessCode(userId, communityId),
+    regenerateAccessCode: (root, { groupId }) =>
+      regenerateAccessCode(userId, groupId),
 
     registerDevice: (root, { playerId, platform, version }) =>
       registerDevice(userId, { playerId, platform, version }),
@@ -287,24 +309,25 @@ export function makeMutations (userId, isAdmin) {
     registerStripeAccount: (root, { authorizationCode }) =>
       registerStripeAccount(userId, authorizationCode),
 
-    reinviteAll: (root, {communityId}) => reinviteAll(userId, communityId),
+    reinviteAll: (root, {groupId}) => reinviteAll(userId, groupId),
 
-    removeCommunityFromNetwork: (root, { communityId, networkId }) =>
-      removeCommunityFromNetwork({ userId, isAdmin }, { communityId, networkId }),
+    rejectGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => rejectGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
-    removeMember: (root, { personId, communityId }) =>
-      removeMember(userId, personId, communityId),
+    removeMember: (root, { personId, groupId }) =>
+      removeMember(userId, personId, groupId),
 
-    removeModerator: (root, { personId, communityId, isRemoveFromCommunity }) =>
-      removeModerator(userId, personId, communityId, isRemoveFromCommunity),
+    removeModerator: (root, { personId, groupId, isRemoveFromGroup }) =>
+      removeModerator(userId, personId, groupId, isRemoveFromGroup),
 
-    removeNetworkModeratorRole: (root, { personId, networkId }) =>
-      removeNetworkModeratorRole({ userId, isAdmin }, { personId, networkId }),
-
-    removePost: (root, { postId, communityId, slug }) =>
-      removePost(userId, postId, communityId || slug),
+    removePost: (root, { postId, groupId, slug }) =>
+      removePost(userId, postId, groupId || slug),
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
+    removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
+    removeSuggestedSkillFromGroup: (root, { groupId, id, name }) => removeSuggestedSkillFromGroup(userId, groupId, id || name),
+
+    requestToAddGroupToParent: (root, { parentId, childId, questionAnswers }) =>
+      inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent, questionAnswers),
 
     resendInvitation: (root, {invitationId}) =>
       resendInvitation(userId, invitationId),
@@ -312,8 +335,8 @@ export function makeMutations (userId, isAdmin) {
     respondToEvent: (root, {id, response}) =>
       respondToEvent(userId, id, response),
 
-    subscribe: (root, { communityId, topicId, isSubscribing }) =>
-      subscribe(userId, topicId, communityId, isSubscribing),
+    subscribe: (root, { groupId, topicId, isSubscribing }) =>
+      subscribe(userId, topicId, groupId, isSubscribing),
 
     unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
 
@@ -322,26 +345,24 @@ export function makeMutations (userId, isAdmin) {
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
 
-    updateCommunitySettings: (root, { id, changes }) =>
-      updateCommunity(userId, id, changes),
+    updateGroupSettings: (root, { id, changes }) =>
+      updateGroup(userId, id, changes),
 
-    updateCommunityHiddenSetting: (root, { id, hidden }) =>
-      updateCommunityHiddenSetting({ userId, isAdmin }, id, hidden),
+    updateGroupTopic: (root, { id, data }) => updateGroupTopic(id, data),
 
-    updateCommunityTopic: (root, { id, data }) => updateCommunityTopic(id, data),
-
-    updateCommunityTopicFollow: (root, args) => updateCommunityTopic(userId, args),
+    // TODO: need this and the one above?
+    updateGroupTopicFollow: (root, args) => updateGroupTopic(userId, args),
 
     updateMe: (root, { changes }) => updateMe(userId, changes),
 
     updateMembership: (root, args) => updateMembership(userId, args),
 
-    updateNetwork: (root, args) => updateNetwork({ userId, isAdmin }, args),
-
     updatePost: (root, args) => updatePost(userId, args),
     updateComment: (root, args) => updateComment(userId, args),
 
     updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
+
+    updateWidget: (root, { id, changes }) => updateWidget(id, changes),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
@@ -369,11 +390,15 @@ export const createRequestHandler = () =>
     // query to find the policies which should be tested, and run them to allow
     // or deny access to those paths
 
+    if (req.session.userId) {
+      await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
+    }
+
     const schema = await createSchema(req.session.userId, Admin.isSignedIn(req))
     return {
       schema,
       graphiql: true,
-      formatError: process.env.NODE_ENV === 'development' ? logError : null
+      customFormatErrorFn: process.env.NODE_ENV === 'development' ? logError : null
     }
   })
 

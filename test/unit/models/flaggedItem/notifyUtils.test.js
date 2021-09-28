@@ -3,16 +3,16 @@ import factories from '../../../setup/factories'
 import mockRequire from 'mock-require'
 const model = factories.mock.model
 
-describe('sendToCommunities', () => {
+describe('sendToGroups', () => {
   var argUserIds,
     argText,
-    sendToCommunities,
+    sendToGroups,
     oldHyloAdmins,
-    communities,
+    groups,
     modIds1,
     modIds2,
-    c1,
-    c2
+    g1,
+    g2
 
   before(() => {
     mockRequire.stopAll()
@@ -23,7 +23,7 @@ describe('sendToCommunities', () => {
         return 'Bob the result'
       })
     })
-    sendToCommunities = mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').sendToCommunities
+    sendToGroups = mockRequire.reRequire('../../../../api/models/flaggedItem/notifyUtils').sendToGroups
     oldHyloAdmins = process.env.HYLO_ADMINS
     process.env.HYLO_ADMINS = '11,22'
   })
@@ -32,15 +32,15 @@ describe('sendToCommunities', () => {
     argUserIds = []
     argText = []
 
-    c1 = await factories.community().save()
-    c2 = await factories.community().save()
+    g1 = await factories.group().save()
+    g2 = await factories.group().save()
     const u1 = await factories.user().save()
     const u2 = await factories.user().save()
     const u3 = await factories.user().save()
-    await c1.addGroupMembers([u1, u2], {role: GroupMembership.Role.MODERATOR})
-    await c2.addGroupMembers([u2, u3], {role: GroupMembership.Role.MODERATOR})
+    await g1.addMembers([u1, u2], {role: GroupMembership.Role.MODERATOR})
+    await g2.addMembers([u2, u3], {role: GroupMembership.Role.MODERATOR})
 
-    communities = [c1, c2]
+    groups = [g1, g2]
     modIds1 = [u1.id, u2.id]
     modIds2 = [u2.id, u3.id]
   })
@@ -49,17 +49,17 @@ describe('sendToCommunities', () => {
     process.env.HYLO_ADMINS = oldHyloAdmins
   })
 
-  it('sends a message from axolotl to the community moderators', () => {
+  it('sends a message from axolotl to the group moderators', () => {
     const message = 'this is the message being sent to'
     const flaggedItem = model({
       category: FlaggedItem.Category.SPAM,
       getMessageText: c => Promise.resolve(`${message} ${c.id}`)
     })
 
-    return sendToCommunities(flaggedItem, communities)
+    return sendToGroups(flaggedItem, groups)
     .then(result => {
       expect(argUserIds.sort()).to.deep.equal(modIds1.concat(modIds2).sort())
-      expect(argText).to.deep.equal([`${message} ${c1.id}`, `${message} ${c2.id}`])
+      expect(argText).to.deep.equal([`${message} ${g1.id}`, `${message} ${g2.id}`])
     })
   })
 
@@ -70,13 +70,13 @@ describe('sendToCommunities', () => {
       getMessageText: c => Promise.resolve(`${message} ${c.id}`)
     })
 
-    var expectedText = [`${message} ${c1.id}`, `${message} ${c2.id}`]
+    var expectedText = [`${message} ${g1.id}`, `${message} ${g2.id}`]
 
     const hyloAdminIds = process.env.HYLO_ADMINS.split(',').map(id => Number(id))
     var expectedUserIds = modIds1.concat(modIds2).concat(hyloAdminIds).sort()
-    expectedText.push(`${message} ${c1.id}`)
+    expectedText.push(`${message} ${g1.id}`)
 
-    return sendToCommunities(flaggedItem, communities)
+    return sendToGroups(flaggedItem, groups)
     .then(result => {
       expect(argUserIds.sort()).to.deep.equal(expectedUserIds)
       expect(argText).to.deep.equal(expectedText)
@@ -84,7 +84,7 @@ describe('sendToCommunities', () => {
   })
 })
 
-// for these it would be less redundant to just mock sendToCommunities and test
+// for these it would be less redundant to just mock sendToGroups and test
 // that it was called with the right args. However, you can't do that with mock-require
 // because it is in the same file as the functions we're testing
 
@@ -110,7 +110,7 @@ describe('notifying moderators', () => {
     modIds1 = [1, 2]
     modIds2 = [2, 3]
 
-    const mockCommunities = [
+    const mockGroups = [
       model({
         id: 1,
         moderators: () => ({
@@ -126,12 +126,12 @@ describe('notifying moderators', () => {
     ]
 
     flaggedItem = model({
-      getObject: () => ({relations: {}}),
+      getObject: () => ({ relations: { post: { attributes: { is_public: false }}}, attributes: { is_public: false }}),
       getMessageText: c => `the message ${c.id}`,
       relations: {
         user: model({
-          communitiesSharedWithPost: () => mockCommunities,
-          communitiesSharedWithUser: () => mockCommunities
+          groupsSharedWithPost: () => mockGroups,
+          groupsSharedWithUser: () => mockGroups
         })
       }
     })

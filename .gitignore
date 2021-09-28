@@ -1,6 +1,7 @@
 .env
 .env.test
 config/local.js
+config/ssl
 node_modules/
 bower_components/
 .tmp
@@ -26,3 +27,6 @@ latest.dump
 .nyc_output/
 startserver.sh
 .vscode
+# .devcontainer/datahome is for local data within the container, e.g. shell history
+.devcontainer/datahome/*
+!.devcontainer/datahome/.gitkeep

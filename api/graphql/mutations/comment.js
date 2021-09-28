@@ -6,9 +6,9 @@ import { includes } from 'lodash/fp'
 
 export function canDeleteComment (userId, comment) {
   if (comment.get('user_id') === userId) return Promise.resolve(true)
-  return comment.load('post.communities')
+  return comment.load('post.groups')
   .then(comment => Promise.any(
-    comment.relations.post.relations.communities.map(c =>
+    comment.relations.post.relations.groups.map(c =>
       GroupMembership.hasModeratorRole(userId, c))
   ))
 }

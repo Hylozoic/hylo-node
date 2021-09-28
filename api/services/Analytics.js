@@ -27,7 +27,7 @@ instance.pixelUrl = function (emailName, props) {
     data.anonymousId = uuid.v4()
   }
 
-  var encodedData = new Buffer(JSON.stringify(data), 'utf8').toString('base64')
+  var encodedData = Buffer.from(JSON.stringify(data), 'utf8').toString('base64')
   return prefix + encodedData
 }
 
