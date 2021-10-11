@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.6] - 2021-10-11
+### Added
+- Handle image EXIF rotation data
+
+### Fixed
+- Redis connection errors
+
 ## [3.0.5] - 2021-08-31
 ### Changed
 - Exporting group data now happens in a background worker and is sent to user by email.
