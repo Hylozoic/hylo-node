@@ -31,25 +31,26 @@ export async function notifyAboutMessage ({ commentId }) {
 }
 
 export const sendDigests = async () => {
-  const redis = await RedisClient.create()
+  const redisClient = await RedisClient.create()
   const now = new Date()
   const fallbackTime = () => new Date(now - 10 * 60000)
 
-  return redis.get(sendDigests.REDIS_TIMESTAMP_KEY)
-  .then(i => i ? new Date(Number(i)) : fallbackTime())
-  .catch(() => fallbackTime())
-  .then(time =>
-    Post.where('updated_at', '>', time)
+  let lastDigestAt = await redisClient.get(sendDigests.REDIS_TIMESTAMP_KEY)
+
+  lastDigestAt = lastDigestAt ? new Date(Number(lastDigestAt)) : fallbackTime()
+
+  const posts = await Post.where('updated_at', '>', lastDigestAt)
     .fetchAll({withRelated: [
       {comments: q => {
-        q.where('created_at', '>', time)
+        q.where('created_at', '>', lastDigestAt)
         q.orderBy('created_at', 'asc')
       }},
       'user',
       'comments.user',
       'comments.media'
-    ]}))
-  .then(posts => Promise.all(posts.map(async post => {
+    ]})
+
+  await Promise.all(posts.map(async post => {
     const { comments } = post.relations
     if (comments.length === 0) return []
 
@@ -129,12 +130,10 @@ export const sendDigests = async () => {
       }
     })
     .then(sends => compact(sends).length)
-  })))
-  .then((posts) => {
-    redis.set(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime())
-    return posts
-  })
-  .then(sum)
+  }))
+
+  await redisClient.set(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime().toString())
+  return sum(posts)
 }
 
 // we keep track of the last time we sent comment digests in Redis, so that the
