@@ -183,6 +183,7 @@ type Group {
   ): GroupQuerySet
   createdAt: Date
   description: String
+  groupExtensions: GroupExtensionQuerySet
   groupRelationshipInvitesFrom: GroupRelationshipInviteQuerySet
   groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
   groupToGroupJoinQuestions: GroupToGroupJoinQuestionQuerySet
@@ -247,6 +248,7 @@ type Group {
   ): SkillQuerySet
   slug: String
   suggestedSkills: SkillQuerySet
+  type: String
   viewPosts(
     afterTime: Date,
     beforeTime: Date,
@@ -261,15 +263,13 @@ type Group {
   ): PostQuerySet
   visibility: Int
   widgets: GroupWidgetQuerySet
-  type: String
-  groupExtensions: GroupExtensionQuerySet
 }
 
 type GroupExtension {
   id: ID
-  type: String
   active: Boolean
   data: JSON
+  type: String
 } 
 
 type Extension {
