@@ -62,7 +62,7 @@ describe('Comment', () => {
           created_at: new Date(now - (5 - i) * 60000)
         }))))
       await Promise.all(comments.map(c => c.save()))
-      await RedisClient.create().delAsync(Comment.sendDigests.REDIS_TIMESTAMP_KEY)
+      await (await RedisClient.create()).del(Comment.sendDigests.REDIS_TIMESTAMP_KEY)
     })
 
     afterEach(() => setup.clearDb())

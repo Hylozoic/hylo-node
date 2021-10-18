@@ -1,4 +1,4 @@
-require('babel-register') // this must be first
+require("@babel/register") // this must be first
 const skiff = require('./lib/skiff') // this must be second
 require('./config/kue') // this must be third
 
