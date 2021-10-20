@@ -152,6 +152,9 @@
     "wkx": "^0.5.0"
   },
   "standard": {
+    "ignore": [
+      "node_modules/**"
+     ],
     "global": [
       "after",
       "afterEach",

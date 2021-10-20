@@ -16,19 +16,19 @@ export default {
   },
 
   userEventInvitation: function (userId) {
-    return this.eventInvitations().query({where: {user_id: userId}}).fetchOne()
+    return this.eventInvitations().query({ where: { user_id: userId } }).fetchOne()
   },
 
   removeEventInvitees: async function (userIds, opts) {
     return Promise.map(userIds, async userId => {
-      const invitation = await EventInvitation.find({userId, eventId: this.id})
+      const invitation = await EventInvitation.find({ userId, eventId: this.id })
       return invitation.destroy(opts)
     })
   },
 
   addEventInvitees: async function (userIds, inviterId, opts) {
     return Promise.map(uniq(userIds), async userId => {
-      const invitation = await EventInvitation.find({userId, eventId: this.id})
+      const invitation = await EventInvitation.find({ userId, eventId: this.id })
       if (invitation) return
       return EventInvitation.create({
         userId,
@@ -47,13 +47,14 @@ export default {
     return this.addEventInvitees(toAdd, inviterId, opts)
   },
 
-  prettyEventDates: async function () {
+  prettyEventDates: function (startTime, endTime) {
+    if (!startTime && !endTime) return null
     const start = moment(startTime)
     const end = moment(endTime)
 
     const from = start.format('ddd, MMM D [at] h:mmA')
 
-    var to = ''
+    let to = ''
 
     if (endTime) {
       if (end.month() !== start.month()) {
@@ -68,12 +69,12 @@ export default {
     return from + to
   },
 
-  createInviteNotifications: async function(userId, inviteeIds) {
+  createInviteNotifications: async function (userId, inviteeIds) {
     const invitees = inviteeIds.map(inviteeId => ({
       reader_id: inviteeId,
       post_id: this.id,
       actor_id: userId,
-      reason: `eventInvitation`
+      reason: 'eventInvitation'
     }))
     return Activity.saveForReasons(invitees)
   }
