@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.7] - 2021-10-20
+### Added
+- Add additional valid hosts for sockets config to accomodate mobile
+
 ## [3.0.6] - 2021-10-11
 ### Added
 - Handle image EXIF rotation data
