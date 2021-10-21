@@ -46,6 +46,8 @@ module.exports = {
       "http://staging.hylo.com",
       "https://api-staging.hylo.com",
       "https://hylo-evo-staging.herokuapp.com",
+      "http://localhost:9000",
+      "https://localhost:9000",
       "http://localhost:3000",
       "https://localhost:3000",
       "http://localhost:3001",
