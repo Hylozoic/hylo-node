@@ -608,17 +608,15 @@ describe('makeAuthenticatedQueries', () => {
     })
 
     it('updates last viewed time', async () => {
-      let membership = { addSetting: spy(() => true) }
-      mockify(GroupMembership, 'forPair', (user, group) => {
-        return { fetch: () => Promise.resolve(membership) }
+      mockify(GroupMembership, 'updateLastViewedAt', (user, group) => {
+         return true
       })
-
       await queries.group(null, {
         id: group.id,
         updateLastViewed: true
       })
-      expect(membership.addSetting).to.have.been.called()
-      unspyify(GroupMembership, 'forPair')
+      expect(GroupMembership.updateLastViewedAt).to.have.been.called()
+      unspyify(GroupMembership, 'updateLastViewedAt')
     })
   })
 })

@@ -56,4 +56,22 @@ describe('GroupMembership', () => {
       expect(actual).to.equal(false)
     })
   })
+
+  describe('updateLastViewedAt', () => {
+    let u, g1, gm
+
+    before(async () => {
+      u = await factories.user().save()
+      g1 = await factories.group().save()
+      gm = await u.joinGroup(g1)
+    })
+
+    it('resets the new post count', async () => {
+      await gm.save({ new_post_count: 1 })
+      await GroupMembership.updateLastViewedAt(u, g1)
+      await gm.refresh()
+      expect(gm.get('new_post_count')).to.equal(0)
+    })
+  })
+
 })
