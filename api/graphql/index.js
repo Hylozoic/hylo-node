@@ -145,10 +145,8 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       // you can specify id or slug, but not both
       const group = await fetchOne('Group', slug || id, slug ? 'slug' : 'id')
       if (updateLastViewed && group) {
-        const membership = await GroupMembership.forPair(userId, group).fetch()
-        if (membership) {
-          await membership.addSetting({ lastReadAt: new Date() }, true)
-        }
+        // Resets new post count to 0
+        await GroupMembership.updateLastViewedAt(userId, group)
       }
       return group
     },
@@ -350,8 +348,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
 
     updateGroupTopic: (root, { id, data }) => updateGroupTopic(id, data),
 
-    // TODO: need this and the one above?
-    updateGroupTopicFollow: (root, args) => updateGroupTopic(userId, args),
+    updateGroupTopicFollow: (root, args) => updateGroupTopicFollow(userId, args),
 
     updateMe: (root, { changes }) => updateMe(sessionId, userId, changes),
 

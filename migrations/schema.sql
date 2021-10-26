@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 11.9
--- Dumped by pg_dump version 11.9
+-- Dumped from database version 13.4
+-- Dumped by pg_dump version 13.4
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -27,7 +27,7 @@ COMMENT ON SCHEMA public IS 'standard public schema';
 
 SET default_tablespace = '';
 
-SET default_with_oids = false;
+SET default_table_access_method = heap;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -
@@ -123,12 +123,12 @@ CREATE TABLE public.comments (
     id bigint DEFAULT nextval('public.comment_seq'::regclass) NOT NULL,
     user_id bigint,
     post_id bigint,
-    created_at timestamp without time zone,
+    created_at timestamp with time zone,
     text text,
     active boolean,
     deactivated_reason character varying(255),
     deactivated_by_id bigint,
-    deactivated_at timestamp without time zone,
+    deactivated_at timestamp with time zone,
     recent boolean,
     created_from character varying(255),
     comment_id bigint
@@ -308,7 +308,7 @@ CREATE TABLE public.contributions (
     id bigint DEFAULT nextval('public.contributor_seq'::regclass) NOT NULL,
     post_id bigint NOT NULL,
     user_id bigint NOT NULL,
-    contributed_at timestamp without time zone NOT NULL
+    contributed_at timestamp with time zone NOT NULL
 );
 
 
@@ -517,7 +517,7 @@ CREATE SEQUENCE public.follower_seq
 CREATE TABLE public.follows (
     id bigint DEFAULT nextval('public.follower_seq'::regclass) NOT NULL,
     post_id bigint,
-    added_at timestamp without time zone,
+    added_at timestamp with time zone,
     user_id bigint,
     added_by_id bigint,
     role integer,
@@ -567,11 +567,11 @@ ALTER SEQUENCE public.group_connections_id_seq OWNED BY public.group_relationshi
 CREATE TABLE public.group_invites (
     id bigint DEFAULT nextval('public.community_invite_seq'::regclass) NOT NULL,
     community_id bigint,
-    created_at timestamp without time zone NOT NULL,
+    created_at timestamp with time zone NOT NULL,
     invited_by_id bigint NOT NULL,
     used_by_id bigint,
     token text NOT NULL,
-    used_at timestamp without time zone,
+    used_at timestamp with time zone,
     email text NOT NULL,
     role smallint DEFAULT 0,
     tag_id bigint,
@@ -631,7 +631,7 @@ CREATE TABLE public.group_memberships (
     settings jsonb,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    new_post_count integer,
+    new_post_count integer DEFAULT 0,
     group_data_type integer,
     project_role_id bigint
 );
@@ -1143,7 +1143,7 @@ CREATE TABLE public.media (
     type character varying(255),
     url character varying(255),
     thumbnail_url character varying(255),
-    created_at timestamp without time zone,
+    created_at timestamp with time zone,
     post_id bigint,
     name character varying(255),
     width integer,
@@ -1407,16 +1407,16 @@ CREATE TABLE public.posts (
     name text,
     description text,
     type character varying(255),
-    created_at timestamp without time zone,
+    created_at timestamp with time zone,
     user_id bigint,
     num_votes integer,
     num_comments integer,
     active boolean,
     deactivated_by_id bigint,
-    deactivated_at timestamp without time zone,
+    deactivated_at timestamp with time zone,
     deactivated_reason character varying(255),
-    fulfilled_at timestamp without time zone,
-    updated_at timestamp without time zone,
+    fulfilled_at timestamp with time zone,
+    updated_at timestamp with time zone,
     visibility integer DEFAULT 0,
     starts_at timestamp with time zone,
     ends_at timestamp with time zone,
@@ -1599,11 +1599,11 @@ CREATE TABLE public.users (
     avatar_url character varying(255),
     first_name character varying(255),
     last_name character varying(255),
-    last_login_at timestamp without time zone,
+    last_login_at timestamp with time zone,
     active boolean,
     email_validated boolean,
-    created_at timestamp without time zone,
-    date_deactivated timestamp without time zone,
+    created_at timestamp with time zone,
+    date_deactivated timestamp with time zone,
     bio text,
     banner_url character varying(255),
     twitter_name character varying(255),
@@ -1955,7 +1955,7 @@ CREATE SEQUENCE public.thank_you_seq
 CREATE TABLE public.thanks (
     id bigint DEFAULT nextval('public.thank_you_seq'::regclass) NOT NULL,
     comment_id bigint NOT NULL,
-    date_thanked timestamp without time zone NOT NULL,
+    date_thanked timestamp with time zone NOT NULL,
     user_id bigint NOT NULL,
     thanked_by_id bigint NOT NULL
 );
@@ -2152,7 +2152,7 @@ CREATE TABLE public.votes (
     id bigint DEFAULT nextval('public.vote_seq'::regclass) NOT NULL,
     user_id bigint,
     post_id bigint,
-    date_voted timestamp without time zone
+    date_voted timestamp with time zone
 );
 
 
