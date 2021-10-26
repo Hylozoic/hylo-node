@@ -1,3 +1,4 @@
+/* globals RedisClient */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import validator from 'validator'
@@ -262,10 +263,10 @@ module.exports = bookshelf.Model.extend(merge({
     .update({ used_by_id: this.id, used_at: new Date() })
   },
 
-  setPassword: function (password, { transacting } = {}) {
+  setPassword: function (password, sessionId, { transacting } = {}) {
     return LinkedAccount.where({user_id: this.id, provider_key: 'password'})
     .fetch({transacting}).then(account => account
-      ? account.updatePassword(password, {transacting})
+      ? account.updatePassword(password, sessionId, {transacting})
       : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
   },
 
@@ -274,7 +275,7 @@ module.exports = bookshelf.Model.extend(merge({
     .then(() => this.relations.devices.length > 0)
   },
 
-  validateAndSave: function (changes) {
+  validateAndSave: function (sessionId, changes) {
     // TODO maybe throw an error if a non-whitelisted field is supplied (besides
     // tags and password, which are used later)
     var whitelist = pick(changes, [
@@ -292,7 +293,7 @@ module.exports = bookshelf.Model.extend(merge({
       .then(() => this.refresh({transacting}))
       .then(() => this.setSanely(omit(whitelist, 'password')))
       .then(() => Promise.all([
-        changes.password && this.setPassword(changes.password, {transacting}),
+        changes.password && this.setPassword(changes.password, sessionId, {transacting}),
         !isEmpty(this.changed) && this.save(
           Object.assign({updated_at: new Date()}, this.changed),
           {patch: true, transacting}
@@ -412,6 +413,15 @@ module.exports = bookshelf.Model.extend(merge({
       })
     })
   }),
+
+  clearSessionsFor: async function({ userId, sessionId }) {
+    const redisClient = await RedisClient.create()
+    for await (const key of redisClient.scanIterator({ MATCH: `sess:${userId}:*` })) {
+      if (key !== "sess:" + sessionId) {
+        await redisClient.del(key)
+      }
+    }
+  },
 
   create: function (attributes) {
     const { account, group } = attributes
