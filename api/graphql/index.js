@@ -347,7 +347,6 @@ export function makeMutations (userId, isAdmin) {
 
     updateGroupTopic: (root, { id, data }) => updateGroupTopic(id, data),
 
-    // TODO: need this and the one above?
     updateGroupTopicFollow: (root, args) => updateGroupTopicFollow(userId, args),
 
     updateMe: (root, { changes }) => updateMe(userId, changes),
