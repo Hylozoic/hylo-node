@@ -119,6 +119,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Vote)
   },
 
+  postUsers: function () {
+    return this.hasMany(PostUser, 'user_id')
+  },
+
   followedPosts () {
     return this.belongsToMany(Post).through(PostUser).query(q => q.where({'posts_users.following': true, 'posts_users.active': true}))
   },

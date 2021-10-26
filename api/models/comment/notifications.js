@@ -50,7 +50,7 @@ export const sendDigests = async () => {
       'comments.media'
     ]})
 
-  await Promise.all(posts.map(async post => {
+  const numSends = await Promise.all(posts.map(async post => {
     const { comments } = post.relations
     if (comments.length === 0) return []
 
@@ -133,7 +133,7 @@ export const sendDigests = async () => {
   }))
 
   await redisClient.set(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime().toString())
-  return sum(posts)
+  return sum(numSends)
 }
 
 // we keep track of the last time we sent comment digests in Redis, so that the
