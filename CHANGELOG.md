@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.8] - 2021-10-26
+### Added
+- Display dates for events in email notifications
+
+### Changed
+- When someone changes their password log out all other sessions for that user
+- When someone logs in or signs up reset their session token to address session fixation
+
+### Fixed
+- Resetting of unread counts when viewing a group and a topic
+
 ## [3.0.7] - 2021-10-20
 ### Added
 - Add additional valid hosts for sockets config to accomodate mobile
