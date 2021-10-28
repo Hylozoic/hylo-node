@@ -16,11 +16,6 @@ const kue = require('kue')
 // use the classMethod job to run any class method that takes a single hash argument.
 //
 const jobDefinitions = {
-  test: Promise.method(function (job) {
-    console.log(new Date().toString().magenta)
-    throw new Error('whoops!')
-  }),
-
   classMethod: function (job) {
     const { id, data, data: { className, methodName } } = job
     sails.log.debug(`Job ${id}: ${className}.${methodName}`)
