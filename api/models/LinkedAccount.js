@@ -15,14 +15,10 @@ module.exports = bookshelf.Model.extend({
     return this.belongsTo(User).query({where: {'users.active': true}})
   },
 
-  updatePassword: function (password, sessionId, { transacting } = {}) {
+  updatePassword: function (password, { transacting } = {}) {
     return hash(password, 10)
     .then(provider_user_id =>
-      this.save({provider_user_id}, {patch: true, transacting})
-    ).then(() => {
-      // Log out of all other sessions for this user
-      Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
-    })
+      this.save({provider_user_id}, {patch: true, transacting}))
   }
 
 }, {

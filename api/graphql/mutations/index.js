@@ -85,9 +85,9 @@ export {
   registerStripeAccount
 } from './user'
 
-export function updateMe (sessionId, userId, changes) {
+export function updateMe (userId, changes) {
   return User.find(userId)
-  .then(user => user.validateAndSave(sessionId, convertGraphqlData(changes)))
+  .then(user => user.validateAndSave(convertGraphqlData(changes)))
 }
 
 export function allowGroupInvites (groupId, data) {

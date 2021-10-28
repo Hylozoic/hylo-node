@@ -2,18 +2,12 @@ import { omitBy, isNil } from 'lodash/fp'
 
 module.exports = {
   // logic for setting up the session when a user logs in
-  login: async function (req, user, providerKey) {
-    // So when an anonmyous person logs in we generate a new session for them (handles session fixation)
-    req.userId = user.id
-    const regenerateSession = Promise.promisify(req.session.regenerate, req.session)
-    const session = await regenerateSession()
-
+  login: function (req, user, providerKey) {
     req.session.authenticated = true
     req.session.userId = user.id
     req.session.userProvider = providerKey
-    req.session.version = this.version
-
     req.rollbar_person = user.pick('id', 'name', 'email')
+    req.session.version = this.version
 
     if (providerKey === 'admin' || providerKey === 'token') return
 
