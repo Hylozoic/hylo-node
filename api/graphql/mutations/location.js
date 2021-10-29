@@ -16,8 +16,7 @@ export function findLocation (data) {
         country: data.country || null
       }
     }
-  }
-  if (data.full_text) {
+  } else if (data.full_text) {
     query = {
       where: {
         full_text: data.full_text
