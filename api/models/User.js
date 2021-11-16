@@ -161,6 +161,15 @@ module.exports = bookshelf.Model.extend(merge({
     .digest('hex')
   },
 
+  reactivate: function () {
+    return this.set({ active: true })
+  },
+
+  deactivate: async function (sessionId) {
+    await User.clearSessionsFor({sessionId, userId: this.id})
+    return this.set({ active: false })
+  },
+
   joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
     const memberships = await group.addMembers([this.id],
       {
@@ -465,7 +474,7 @@ module.exports = bookshelf.Model.extend(merge({
       })
     )
   },
-
+  
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
     let q

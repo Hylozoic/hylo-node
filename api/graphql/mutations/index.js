@@ -35,7 +35,7 @@ export {
   rejectGroupRelationshipInvite,
   removeModerator,
   removeMember,
-  updateGroup,
+  updateGroup
 } from './group'
 export {
   createInvitation,
@@ -82,7 +82,9 @@ export {
   blockUser,
   unblockUser,
   updateStripeAccount,
-  registerStripeAccount
+  registerStripeAccount,
+  deactivateUser,
+  reactivateUser
 } from './user'
 
 export function updateMe (sessionId, userId, changes) {

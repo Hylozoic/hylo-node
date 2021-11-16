@@ -3,6 +3,7 @@ scalar Date
 # The currently logged-in person.
 type Me {
   id: ID
+  active: Boolean
   affiliations: AffiliationQuerySet
   avatarUrl: String
   bannerUrl: String
@@ -901,6 +902,8 @@ type Mutation {
   createProjectRole(projectId: ID, roleName: String): GenericResult
   createSavedSearch(data: SavedSearchInput): SavedSearch
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
+  deactivateMe(id: ID): GenericResult
+  reactivateMe(id: ID): GenericResult
   declineJoinRequest(joinRequestId: ID): JoinRequest
   deleteAffiliation(id: ID): ID
   deleteComment(id: ID): GenericResult

@@ -7,9 +7,23 @@ export function blockUser (userId, blockedUserId) {
 
 export async function unblockUser (userId, blockedUserId) {
   const blockedUser = await BlockedUser.find(userId, blockedUserId)
-  if (!blockedUser) throw new Error("user is not blocked")
+  if (!blockedUser) throw new Error('user is not blocked')
   return blockedUser.destroy()
-  .then(() => ({success: true}))
+  .then(() => ( {success: true }))
+}
+
+export async function deactivateUser ({ userId, sessionId }) {
+  const user = await User.find(userId)
+
+  await user.deactivate(sessionId)
+  return { success: true }
+}
+
+export async function reactivateUser ({ userId }) {
+  const user = await User.find(userId)
+
+  await user.reactivate()
+  return { success: true }
 }
 
 export async function updateStripeAccount (userId, accountId) {
