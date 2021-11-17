@@ -26,7 +26,8 @@ import {
   createProjectRole,
   createSavedSearch,
   createTopic,
-  deactiveUser,
+  deactivateUser,
+  deleteUser,
   declineJoinRequest,
   deleteAffiliation,
   deleteComment,
@@ -57,7 +58,7 @@ import {
   registerStripeAccount,
   reinviteAll,
   rejectGroupRelationshipInvite,
-  reactiveUser,
+  reactivateUser,
   removeMember,
   removeModerator,
   removePost,
@@ -246,7 +247,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
 
     createTopic: (root, { topicName, groupId, isDefault, isSubscribing }) => createTopic(userId, topicName, groupId, isDefault, isSubscribing),
 
-    deactivateMe: (root, { sessionId, userId }) => deactiveUser({ sessionId, userId }),
+    deactivateMe: (root, { sessionId, userId }) => deactivateUser({ sessionId, userId }),
 
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(userId, joinRequestId),
 
@@ -301,7 +302,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
 
-    reactivateMe: (root, { userId }) => reactiveUser({ userId }),
+    reactivateMe: (root, { userId }) => reactivateUser({ userId }),
 
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),
