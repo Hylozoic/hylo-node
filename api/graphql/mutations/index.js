@@ -65,10 +65,10 @@ export {
   pinPost
 } from './post'
 export {
+  addPeopleToProjectRole,
   createProject,
   createProjectRole,
   deleteProjectRole,
-  addPeopleToProjectRole,
   joinProject,
   leaveProject,
   processStripeToken
@@ -80,11 +80,11 @@ export {
 } from './topic'
 export {
   blockUser,
-  unblockUser,
-  updateStripeAccount,
-  registerStripeAccount,
   deactivateUser,
-  reactivateUser
+  reactivateUser,
+  registerStripeAccount,
+  unblockUser,
+  updateStripeAccount
 } from './user'
 
 export function updateMe (sessionId, userId, changes) {

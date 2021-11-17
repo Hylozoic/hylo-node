@@ -162,12 +162,12 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   reactivate: function () {
-    return this.set({ active: true })
+    return this.save({ active: true })
   },
 
   deactivate: async function (sessionId) {
-    await User.clearSessionsFor({sessionId, userId: this.id})
-    return this.set({ active: false })
+    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
+    return this.save({ active: false })
   },
 
   joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
