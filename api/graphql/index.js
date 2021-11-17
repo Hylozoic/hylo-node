@@ -27,7 +27,6 @@ import {
   createSavedSearch,
   createTopic,
   deactivateUser,
-  deleteUser,
   declineJoinRequest,
   deleteAffiliation,
   deleteComment,
