@@ -81,6 +81,7 @@ export {
 export {
   blockUser,
   deactivateUser,
+  deleteUser,
   reactivateUser,
   registerStripeAccount,
   unblockUser,

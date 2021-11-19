@@ -903,7 +903,7 @@ type Mutation {
   createSavedSearch(data: SavedSearchInput): SavedSearch
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   deactivateMe(id: ID): GenericResult
-  reactivateMe(id: ID): GenericResult
+  deleteMe(id: ID): GenericResult
   declineJoinRequest(joinRequestId: ID): JoinRequest
   deleteAffiliation(id: ID): ID
   deleteComment(id: ID): GenericResult
@@ -929,6 +929,7 @@ type Mutation {
   markAllActivitiesRead: GenericResult
   pinPost(postId: ID, groupId: ID): GenericResult
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
+  reactivateMe(id: ID): GenericResult
   regenerateAccessCode(groupId: ID): Group
   registerDevice(playerId: String, platform: String, version: String): GenericResult
   reinviteAll(groupId: ID): GenericResult

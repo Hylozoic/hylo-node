@@ -2,7 +2,7 @@ import request from 'request'
 
 export function blockUser (userId, blockedUserId) {
   return BlockedUser.create(userId, blockedUserId)
-  .then(() => ({success: true}))
+  .then(() => ({ success: true }))
 }
 
 export async function unblockUser (userId, blockedUserId) {
@@ -14,15 +14,21 @@ export async function unblockUser (userId, blockedUserId) {
 
 export async function deactivateUser ({ userId, sessionId }) {
   const user = await User.find(userId)
-
   await user.deactivate(sessionId)
   return { success: true }
 }
 
 export async function reactivateUser ({ userId }) {
+  const user = await User.find(userId, {}, false)
+  await user.reactivate()
+  return { success: true }
+}
+
+export async function deleteUser ({ userId, sessionId }) {
+  // do we need to check permissions in some way in the backend about this sort of action? Or are we handling that just in just the front-end for now?
   const user = await User.find(userId)
 
-  await user.reactivate()
+  await user.sanelyDeleteUser({ sessionId })
   return { success: true }
 }
 

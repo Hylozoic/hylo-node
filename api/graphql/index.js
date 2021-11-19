@@ -27,6 +27,7 @@ import {
   createSavedSearch,
   createTopic,
   deactivateUser,
+  deleteUser,
   declineJoinRequest,
   deleteAffiliation,
   deleteComment,
@@ -240,13 +241,13 @@ export function makeMutations (sessionId, userId, isAdmin) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
-    joinGroup: (root, {groupId}) => joinGroup(groupId, userId),
+    joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
     createTopic: (root, { topicName, groupId, isDefault, isSubscribing }) => createTopic(userId, topicName, groupId, isDefault, isSubscribing),
 
-    deactivateMe: (root, { sessionId, userId }) => deactivateUser({ sessionId, userId }),
+    deactivateMe: (root, { id }) => deactivateUser({ sessionId, userId: id }),
 
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(userId, joinRequestId),
 
@@ -259,6 +260,8 @@ export function makeMutations (sessionId, userId, isAdmin) {
     deleteGroupRelationship: (root, { parentId, childId }) => deleteGroupRelationship(userId, parentId, childId),
 
     deleteGroupTopic: (root, { id }) => deleteGroupTopic(userId, id),
+
+    deleteMe: (root, {id}) => deleteUser({ sessionId, userId: id }),
 
     deletePost: (root, { id }) => deletePost(userId, id),
 
@@ -301,7 +304,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
 
-    reactivateMe: (root, { userId }) => reactivateUser({ userId }),
+    reactivateMe: (root, { id }) => reactivateUser({ userId: id }),
 
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),
