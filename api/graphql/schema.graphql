@@ -903,7 +903,7 @@ type Mutation {
   createSavedSearch(data: SavedSearchInput): SavedSearch
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   deactivateMe(id: ID): GenericResult
-  deleteMe(id: ID): GenericResult
+  deleteMe(): GenericResult
   declineJoinRequest(joinRequestId: ID): JoinRequest
   deleteAffiliation(id: ID): ID
   deleteComment(id: ID): GenericResult
