@@ -247,7 +247,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
 
     createTopic: (root, { topicName, groupId, isDefault, isSubscribing }) => createTopic(userId, topicName, groupId, isDefault, isSubscribing),
 
-    deactivateMe: (root, { id }) => deactivateUser({ sessionId, userId: id }),
+    deactivateMe: (root) => deactivateUser({ sessionId, userId }),
 
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(userId, joinRequestId),
 
@@ -261,7 +261,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
 
     deleteGroupTopic: (root, { id }) => deleteGroupTopic(userId, id),
 
-    deleteMe: (root, {id}) => deleteUser({ sessionId, userId: id }),
+    deleteMe: (root) => deleteUser({ sessionId, userId }),
 
     deletePost: (root, { id }) => deletePost(userId, id),
 
@@ -304,7 +304,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
 
-    reactivateMe: (root, { id }) => reactivateUser({ userId: id }),
+    reactivateMe: (root) => reactivateUser({ userId }),
 
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),

@@ -25,9 +25,7 @@ export async function reactivateUser ({ userId }) {
 }
 
 export async function deleteUser ({ userId, sessionId }) {
-  // do we need to check permissions in some way in the backend about this sort of action? Or are we handling that just in just the front-end for now?
   const user = await User.find(userId)
-
   await user.sanelyDeleteUser({ sessionId })
   return { success: true }
 }

@@ -185,7 +185,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     const query = `
     BEGIN;
-    UPDATE posts SET name = 'Post by deleted user', description = '', active = false, location = NULL, location_id = NULL WHERE user_id = ${this.id};
+    UPDATE posts SET name = 'Post by deleted user', description = '', location = NULL, location_id = NULL WHERE user_id = ${this.id};
     UPDATE posts_users SET user_id = ${deletedUserId} WHERE user_id = ${this.id};
     DELETE FROM user_connections WHERE (user_id = ${this.id}) OR (other_user_id = ${this.id});
 
