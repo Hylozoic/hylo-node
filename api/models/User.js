@@ -1,6 +1,7 @@
 /* globals RedisClient */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
 import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
@@ -217,6 +218,15 @@ module.exports = bookshelf.Model.extend(merge({
 
   generateTokenContents: function () {
     return `crumbly:${this.id}:${this.get('email')}:${this.get('created_at')}`
+  },
+
+  generateJWT: function () {
+    return jwt.sign({
+      iss: 'https://hylo.com',
+      aud: 'https://hylo.com',
+      sub: this.id,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4) // 4 hour expiration
+    }, process.env.JWT_SECRET);
   },
 
   generateToken: function () {
@@ -459,7 +469,14 @@ module.exports = bookshelf.Model.extend(merge({
         await Promise.join(
           account && LinkedAccount.create(user.id, account, {transacting}),
           group && group.addMembers([user.id], {transacting}),
-          group && user.markInvitationsUsed(group.id, transacting)
+          group && user.markInvitationsUsed(group.id, transacting),
+          // TODO: we will use this when we shortly add API calls to create users, so we can confirm their email
+          // !user.get('email_validated') && Queue.classMethod('Email', 'sendEmailVerification', {
+          //   email: user.get('email'),
+          //   templateData: {
+          //     verify_url: Frontend.Route.verifyEmail(user.generateJWT())
+          //   }
+          // })
         )
         return user
       })

@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.4
--- Dumped by pg_dump version 13.4
+-- Dumped from database version 13.5
+-- Dumped by pg_dump version 14.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -2114,6 +2114,38 @@ CREATE TABLE public.user_post_relevance (
 
 
 --
+-- Name: user_verification_codes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.user_verification_codes (
+    id integer NOT NULL,
+    email character varying(255) NOT NULL,
+    code character varying(6) NOT NULL,
+    created_at timestamp with time zone
+);
+
+
+--
+-- Name: user_verification_codes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.user_verification_codes_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: user_verification_codes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.user_verification_codes_id_seq OWNED BY public.user_verification_codes.id;
+
+
+--
 -- Name: users_community_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -2500,6 +2532,13 @@ ALTER TABLE ONLY public.user_connections ALTER COLUMN id SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY public.user_external_data ALTER COLUMN id SET DEFAULT nextval('public.user_external_data_id_seq'::regclass);
+
+
+--
+-- Name: user_verification_codes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_verification_codes ALTER COLUMN id SET DEFAULT nextval('public.user_verification_codes_id_seq'::regclass);
 
 
 --
@@ -3255,6 +3294,14 @@ ALTER TABLE ONLY public.user_post_relevance
 
 
 --
+-- Name: user_verification_codes user_verification_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.user_verification_codes
+    ADD CONSTRAINT user_verification_codes_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: communities_users users_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3541,6 +3588,13 @@ CREATE INDEX saved_search_topics_saved_search_id_index ON public.saved_search_to
 --
 
 CREATE INDEX saved_searches_user_id_index ON public.saved_searches USING btree (user_id);
+
+
+--
+-- Name: user_verification_codes_email_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX user_verification_codes_email_index ON public.user_verification_codes USING btree (email);
 
 
 --

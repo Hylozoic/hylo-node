@@ -116,3 +116,30 @@ var linkedinTokenStrategy = new LinkedInTokenStrategy({
   done(null, formatProfile(profile))
 })
 passport.use(linkedinTokenStrategy)
+
+
+//**** JWT login for email verification, password reset... ****//
+import { ExtractJwt, Strategy as JwtStrategy } from 'passport-jwt'
+
+let opts = {}
+opts.jwtFromRequest = ExtractJwt.fromExtractors([ ExtractJwt.fromAuthHeaderAsBearerToken(), ExtractJwt.fromUrlQueryParameter('token') ])
+opts.secretOrKey = process.env.JWT_SECRET
+// TODO: should this be something like accounts.hylo.com?
+// We use https:// because that's what OpenID requires, just in case that matters
+opts.issuer = 'https://hylo.com'
+// What other audiences might we have?
+opts.audience = 'https://hylo.com'
+algorithms: ['HS256'], // We probably will want to switch to assymetric RSA based tokens soon but for now this is easy (https://stackoverflow.com/questions/49562581/when-to-use-rs256-for-jwt)
+opts.jsonWebTokenOptions = {
+  maxAge: '4h' // 4 hours because right now we only use these tokens for password reset and email verification and want to quickly invalidate, could even be quicker
+}
+// TODO: For OpenID Connect Discoverability we will want this file available: https://accounts.google.com/.well-known/openid-configuration
+passport.use(new JwtStrategy(opts, (jwt_payload, done) => {
+  User.find(jwt_payload.sub).then(user => {
+    if (user) {
+      return done(null, user)
+    } else {
+      return done(null, false, "User not found")
+    }
+  })
+}))

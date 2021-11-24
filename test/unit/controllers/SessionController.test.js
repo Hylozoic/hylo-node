@@ -165,6 +165,65 @@ describe('SessionController', function () {
     })
   })
 
+  describe('.createWithJWT', () => {
+    var user, token
+
+    before(async () => {
+      user = factories.user()
+      await user.save({created_at: new Date()})
+        .then(() => user.generateJWT())
+        .then(t => token = t)
+      req.url = `https://hylo.com?u=${user.id}&token=${token}`
+    })
+
+    it('for valid JWT and GET it will redirect', () => {
+      _.extend(req.params, {u: user.id, token})
+      req.method = 'GET'
+      req.session.authenticated = true
+
+      return SessionController.createWithJWT(req, res)
+      .then(() => {
+        expect(res.redirect).to.have.been.called()
+        expect(res.redirected).to.equal(Frontend.Route.evo.passwordSetting())
+      })
+    })
+
+    it("for valid JWT and POST returns success", () => {
+      _.extend(req.params, {u: user.id, token})
+      req.method = 'POST'
+      req.session.authenticated = true
+
+      return SessionController.createWithJWT(req, res)
+      .then(() => {
+        expect(res.ok).to.have.been.called()
+      })
+    })
+
+    it('for invalid token and GET it will still redirect', () => {
+      req.method = 'GET'
+      req.session.authenticated = false
+
+      return SessionController.createWithJWT(req, res)
+      .then(() => {
+        expect(res.redirect).to.have.been.called()
+        expect(res.redirected).to.equal(Frontend.Route.evo.passwordSetting())
+      })
+    })
+
+    it('for invalid token and POST it returns error', () => {
+      let error
+      res.send = spy(function (msg) { error = msg })
+      req.method = 'POST'
+      req.session.authenticated = false
+
+      return SessionController.createWithJWT(req, res)
+      .then(() => {
+        expect(res.send).to.have.been.called()
+        expect(error).to.equal('Invalid link, please try again')
+      })
+    })
+  })
+
   describe('.finishFacebookOAuth', () => {
     var req, res, origPassportAuthenticate
 
@@ -238,6 +297,10 @@ describe('SessionController', function () {
         passport.authenticate = spy((strategy, callback) => () => callback(null, profile))
       })
 
+      afterEach(() => {
+        passport.authenticate = origPassportAuthenticate
+      })
+
       it('sets an error in the view parameters', () => {
         return SessionController.finishFacebookOAuth(req, res)
         .then(() => {
@@ -254,6 +317,10 @@ describe('SessionController', function () {
         passport.authenticate = spy(function (strategy, callback) {
           return () => callback(null, null)
         })
+      })
+
+      afterEach(() => {
+        passport.authenticate = origPassportAuthenticate
       })
 
       it('sets an error in the view parameters', () => {
