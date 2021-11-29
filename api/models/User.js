@@ -205,7 +205,7 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM contributions WHERE user_id = ${this.id};
     DELETE FROM devices WHERE user_id = ${this.id};
     DELETE FROM group_invites WHERE used_by_id = ${this.id};
-    DELETE FROM group_invites WHERE invited_by_id = ${this.id};
+    UPDATE group_invites SET invited_by_id =  ${deletedUserId} WHERE invited_by_id = ${this.id};
     DELETE FROM group_memberships WHERE user_id = ${this.id};
     DELETE FROM communities_users WHERE user_id = ${this.id};
     DELETE FROM linked_account WHERE user_id = ${this.id};
