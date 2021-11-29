@@ -161,6 +161,72 @@ module.exports = bookshelf.Model.extend(merge({
     .digest('hex')
   },
 
+  reactivate: function () {
+    return this.save({ active: true })
+  },
+
+  deactivate: async function (sessionId) {
+    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
+    return this.save({ active: false })
+  },
+
+  sanelyDeleteUser: async function ({ sessionId, transacting = {} }) {
+    const deletedUserResult = await bookshelf.knex.raw('select id from users where email = "deleted@hylo.com"')
+    const deletedUserId = deletedUserResult.rows[0].id
+    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
+    /* 
+      ### List of things to be done on account deletion ###
+
+      - zero out content of their posts and comments
+      - change the ownership of their posts and comments to the deletedUser record
+      - remove other references to their user_id
+      - delete their user record!
+    */
+
+    const query = `
+    BEGIN;
+    UPDATE posts SET name = 'Post by deleted user', description = '', location = NULL, location_id = NULL WHERE user_id = ${this.id};
+    UPDATE posts_users SET user_id = ${deletedUserId} WHERE user_id = ${this.id};
+    DELETE FROM user_connections WHERE (user_id = ${this.id}) OR (other_user_id = ${this.id});
+
+    UPDATE groups SET created_by_id = ${deletedUserId} WHERE created_by_id = ${this.id};
+    UPDATE comments SET deactivated_by_id = ${deletedUserId} WHERE deactivated_by_id = ${this.id};
+    UPDATE comments SET text = 'Comment by deleted user' WHERE user_id = ${this.id};
+
+    UPDATE follows set added_by_id = ${deletedUserId} WHERE added_by_id = ${this.id};
+    UPDATE groups_tags set user_id = ${deletedUserId} WHERE user_id = ${this.id};
+    DELETE FROM thanks WHERE comment_id in (select id from comments WHERE user_id = ${this.id});
+    DELETE FROM thanks WHERE thanked_by_id = ${this.id};
+    DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
+    DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
+    DELETE FROM activities WHERE actor_id = ${this.id};
+    DELETE FROM activities WHERE reader_id = ${this.id};
+
+    DELETE FROM contributions WHERE user_id = ${this.id};
+    DELETE FROM devices WHERE user_id = ${this.id};
+    DELETE FROM group_invites WHERE used_by_id = ${this.id};
+    UPDATE group_invites SET invited_by_id =  ${deletedUserId} WHERE invited_by_id = ${this.id};
+    DELETE FROM group_memberships WHERE user_id = ${this.id};
+    DELETE FROM communities_users WHERE user_id = ${this.id};
+    DELETE FROM linked_account WHERE user_id = ${this.id};
+    DELETE FROM join_request_question_answers WHERE join_request_id in (select id from join_requests WHERE user_id = ${this.id});
+    DELETE FROM join_requests WHERE user_id = ${this.id};
+    DELETE FROM skills_users WHERE user_id = ${this.id};
+    DELETE FROM posts_about_users WHERE user_id = ${this.id};
+
+    DELETE FROM tag_follows WHERE user_id = ${this.id};
+    DELETE FROM user_external_data WHERE user_id = ${this.id};
+    DELETE FROM user_post_relevance WHERE user_id = ${this.id};
+    DELETE FROM posts_tags WHERE post_id in (select id from posts WHERE user_id = ${this.id});
+    DELETE FROM groups_posts WHERE post_id in (select id from posts WHERE user_id = ${this.id});
+    DELETE FROM votes WHERE user_id = ${this.id};
+    DELETE FROM users WHERE id = ${this.id};
+
+    COMMIT;
+    `
+    return bookshelf.knex.raw(query)
+  },
+
   joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
     const memberships = await group.addMembers([this.id],
       {
@@ -169,8 +235,9 @@ module.exports = bookshelf.Model.extend(merge({
           sendEmail: true,
           sendPushNotifications: true,
           showJoinForm: fromInvitation
-        }},
-      {transacting})
+        }
+      },
+      { transacting })
     const q = Group.query()
     if (transacting) {
       q.transacting(transacting)
@@ -465,25 +532,25 @@ module.exports = bookshelf.Model.extend(merge({
       })
     )
   },
-
-  find: function (id, options) {
+  
+  find: function (id, options, active = true) {
     if (!id) return Promise.resolve(null)
     let q
     if (isNaN(Number(id))) {
       q = User.query(q => {
         q.where(function () {
           this.whereRaw('lower(email) = lower(?)', id)
-          .orWhere({name: id})
+          .orWhere({ name: id })
         })
       })
     } else {
-      q = User.where({id})
+      q = User.where({ id })
     }
-    return q.where('users.active', true).fetch(options)
+    return q.where('users.active', active).fetch(options)
   },
 
   named: function (name) {
-    return User.where({name: name}).fetch()
+    return User.where({ name }).fetch()
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {

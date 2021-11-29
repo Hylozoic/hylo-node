@@ -26,6 +26,8 @@ import {
   createProjectRole,
   createSavedSearch,
   createTopic,
+  deactivateUser,
+  deleteUser,
   declineJoinRequest,
   deleteAffiliation,
   deleteComment,
@@ -56,6 +58,7 @@ import {
   registerStripeAccount,
   reinviteAll,
   rejectGroupRelationshipInvite,
+  reactivateUser,
   removeMember,
   removeModerator,
   removePost,
@@ -65,7 +68,6 @@ import {
   resendInvitation,
   respondToEvent,
   subscribe,
-  toggleGroupWidgetVisibility,
   unblockUser,
   unfulfillPost,
   unlinkAccount,
@@ -86,7 +88,7 @@ import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
-import { mapValues, merge, reduce } from 'lodash'
+import { merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -95,7 +97,7 @@ async function createSchema (session, isAdmin) {
   const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
-  let allResolvers = Object.assign({
+  const allResolvers = Object.assign({
     Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
     Mutation: userId ? makeMutations(session.id, userId, isAdmin) : {},
 
@@ -239,11 +241,13 @@ export function makeMutations (sessionId, userId, isAdmin) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
-    joinGroup: (root, {groupId}) => joinGroup(groupId, userId),
+    joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
     createTopic: (root, { topicName, groupId, isDefault, isSubscribing }) => createTopic(userId, topicName, groupId, isDefault, isSubscribing),
+
+    deactivateMe: (root) => deactivateUser({ sessionId, userId }),
 
     declineJoinRequest: (root, { joinRequestId }) => declineJoinRequest(userId, joinRequestId),
 
@@ -256,6 +260,8 @@ export function makeMutations (sessionId, userId, isAdmin) {
     deleteGroupRelationship: (root, { parentId, childId }) => deleteGroupRelationship(userId, parentId, childId),
 
     deleteGroupTopic: (root, { id }) => deleteGroupTopic(userId, id),
+
+    deleteMe: (root) => deleteUser({ sessionId, userId }),
 
     deletePost: (root, { id }) => deletePost(userId, id),
 
@@ -298,6 +304,8 @@ export function makeMutations (sessionId, userId, isAdmin) {
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
 
+    reactivateMe: (root) => reactivateUser({ userId }),
+
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),
 
@@ -307,7 +315,7 @@ export function makeMutations (sessionId, userId, isAdmin) {
     registerStripeAccount: (root, { authorizationCode }) =>
       registerStripeAccount(userId, authorizationCode),
 
-    reinviteAll: (root, {groupId}) => reinviteAll(userId, groupId),
+    reinviteAll: (root, { groupId }) => reinviteAll(userId, groupId),
 
     rejectGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => rejectGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
@@ -399,7 +407,7 @@ export const createRequestHandler = () =>
     }
   })
 
-var modelToTypeMap
+let modelToTypeMap
 
 function getTypeForInstance (instance, models) {
   if (!modelToTypeMap) {
