@@ -106,9 +106,9 @@ const finishOAuth = function (strategy, req, res, next) {
       return resolve(res.view('popupDone', {
         error,
         provider,
-        context: req.session.authContext || 'oauth',
+        context: req.session.authContext || 'login',
         layout: null,
-        returnDomain: req.session.returnDomain
+        returnDomain: req.session.returnDomain || (process.env.PROTOCOL + '://' + process.env.DOMAIN)
       }))
     }
 
