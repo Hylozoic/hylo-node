@@ -547,7 +547,8 @@ module.exports = bookshelf.Model.extend(merge({
     } else {
       q = User.where({ id })
     }
-    return q.where('users.active', active).fetch(options)
+    if (active) return q.where('users.active', active).fetch(options)
+    return q.fetch(options)
   },
 
   named: function (name) {
