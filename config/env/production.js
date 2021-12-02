@@ -42,10 +42,16 @@ module.exports = {
     onlyAllowOrigins: [
       "https://www.hylo.com",
       "https://hylo.com",
+      "https://api.hylo.com",
       "http://staging.hylo.com",
+      "https://api-staging.hylo.com",
       "https://hylo-evo-staging.herokuapp.com",
+      "http://localhost:9000",
+      "https://localhost:9000",
       "http://localhost:3000",
-      "https://localhost:3000"
+      "https://localhost:3000",
+      "http://localhost:3001",
+      "https://localhost:3001"
     ]
   }
 };

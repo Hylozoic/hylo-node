@@ -35,7 +35,7 @@ export {
   rejectGroupRelationshipInvite,
   removeModerator,
   removeMember,
-  updateGroup,
+  updateGroup
 } from './group'
 export {
   createInvitation,
@@ -65,10 +65,10 @@ export {
   pinPost
 } from './post'
 export {
+  addPeopleToProjectRole,
   createProject,
   createProjectRole,
   deleteProjectRole,
-  addPeopleToProjectRole,
   joinProject,
   leaveProject,
   processStripeToken
@@ -80,14 +80,17 @@ export {
 } from './topic'
 export {
   blockUser,
+  deactivateUser,
+  deleteUser,
+  reactivateUser,
+  registerStripeAccount,
   unblockUser,
-  updateStripeAccount,
-  registerStripeAccount
+  updateStripeAccount
 } from './user'
 
-export function updateMe (userId, changes) {
+export function updateMe (sessionId, userId, changes) {
   return User.find(userId)
-  .then(user => user.validateAndSave(convertGraphqlData(changes)))
+  .then(user => user.validateAndSave(sessionId, convertGraphqlData(changes)))
 }
 
 export function allowGroupInvites (groupId, data) {

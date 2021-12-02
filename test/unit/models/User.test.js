@@ -11,7 +11,7 @@ describe('User', function () {
   var cat
 
   before(function () {
-    cat = new User({name: 'Cat', email: 'Iam@cat.org', active: true})
+    cat = new User({ name: 'Cat', email: 'Iam@cat.org', active: true })
     return cat.save()
   })
 
@@ -50,8 +50,8 @@ describe('User', function () {
   })
 
   it('can join groups', function () {
-    var group1 = new Group({name: 'House', slug: 'house', group_data_type: 1})
-    var group2 = new Group({name: 'Yard', slug: 'yard', group_data_type: 1})
+    let group1 = new Group({ name: 'House', slug: 'house', group_data_type: 1 })
+    let group2 = new Group({ name: 'Yard', slug: 'yard', group_data_type: 1 })
 
     return Promise.join(
       group1.save(),
@@ -80,7 +80,7 @@ describe('User', function () {
   })
 
   it('can become moderator', function () {
-    var street = new Group({name: 'Street', slug: 'street', group_data_type: 1})
+    const street = new Group({ name: 'Street', slug: 'street', group_data_type: 1 })
 
     return street.save()
     .then(() => cat.joinGroup(street, GroupMembership.Role.MODERATOR))
@@ -374,8 +374,28 @@ describe('User', function () {
     })
   })
 
+  describe('.deactivate and .reactivate', () => {
+    before(function () {
+      User.clearSessionsFor = () => {}
+    })
+
+    it('deactivates and reactivates a user', () => {
+      return User.create({
+        email: 'belle@grace.net',
+        account: { type: 'password', password: 'password!' },
+        name: 'Belle Graceful'
+      })
+      .then(async function (user) {
+        await user.deactivate('wacca wacca')
+        expect(user.get('active')).to.be.false
+        await user.reactivate()
+        expect(user.get('active')).to.be.true
+      })
+    })
+  })
+
   describe('.unseenThreadCount', () => {
-    var doge, post, post2
+    let doge, post, post2
 
     before(async () => {
       doge = factories.user()

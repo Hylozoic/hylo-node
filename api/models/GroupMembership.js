@@ -96,5 +96,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   forMember (userOrId) {
     return this.forIds(userOrId, null, {multiple: true})
-  }
+  },
+
+  async updateLastViewedAt(userOrId, groupOrId) {
+    const membership = await GroupMembership.forPair(userOrId, groupOrId).fetch()
+    if (membership) {
+      membership.addSetting({ lastReadAt: new Date() })
+      await membership.save({ new_post_count: 0 })
+      return membership
+    }
+    return false
+  },
 })

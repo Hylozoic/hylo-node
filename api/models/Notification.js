@@ -326,7 +326,7 @@ module.exports = bookshelf.Model.extend({
     var user = post.relations.user
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
-
+  
     var groupIds = Activity.groupIds(this.relations.activity)
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
@@ -352,7 +352,8 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.post(post, group) + '?ctt=announcement_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.unfollow(post, group) + '?ctt=announcement_email&cti=' + reader.id),
-          tracking_pixel_url: Analytics.pixelUrl('Announcement', {userId: reader.id})
+          tracking_pixel_url: Analytics.pixelUrl('Announcement', { userId: reader.id }),
+          post_date: post.prettyEventDates(post.get('start_time'), post.get('end_time'))
         }
       })))
   },
@@ -677,12 +678,12 @@ module.exports = bookshelf.Model.extend({
           post_description: description,
           post_title: decode(post.get('name')),
           post_type: 'event',
-          post_date: post.prettyEventDates(),
+          post_date: post.prettyEventDates(post.get('start_time'), post.get('end_time')),
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
-          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
+          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', { userId: reader.id })
         }
       })))
   },
