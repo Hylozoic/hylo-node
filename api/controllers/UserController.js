@@ -7,7 +7,9 @@ module.exports = {
     return User.create({name, email: email ? email.toLowerCase() : null, email_validated, account: {type: 'password', password}})
     .then(async (user) => {
       await Analytics.trackSignup(user.id, req)
-      await req.param('login') && UserSession.login(req, user, 'password')
+      if (req.param('login')) {
+        await UserSession.login(req, user, 'password')
+      }
       await user.refresh()
 
       if (req.param('resp') === 'user') {
