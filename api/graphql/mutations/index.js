@@ -35,7 +35,7 @@ export {
   rejectGroupRelationshipInvite,
   removeModerator,
   removeMember,
-  updateGroup,
+  updateGroup
 } from './group'
 export {
   createInvitation,
@@ -65,10 +65,10 @@ export {
   pinPost
 } from './post'
 export {
+  addPeopleToProjectRole,
   createProject,
   createProjectRole,
   deleteProjectRole,
-  addPeopleToProjectRole,
   joinProject,
   leaveProject,
   processStripeToken
@@ -80,9 +80,12 @@ export {
 } from './topic'
 export {
   blockUser,
+  deactivateUser,
+  deleteUser,
+  reactivateUser,
+  registerStripeAccount,
   unblockUser,
-  updateStripeAccount,
-  registerStripeAccount
+  updateStripeAccount
 } from './user'
 
 export function updateMe (sessionId, userId, changes) {
