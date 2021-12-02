@@ -15,7 +15,7 @@ exports.up = async function (knex) {
   `)
 
   return knex.raw(`
-    UPDATE group_widgets SET context = 'landing' WHERE context = NULL;
+    UPDATE group_widgets SET context = 'landing' WHERE context IS NULL;
   `)
 }
 
