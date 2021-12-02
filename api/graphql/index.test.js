@@ -413,9 +413,9 @@ describe('graphql request handler', () => {
   })
 
   describe('search', () => {
-    beforeEach(() => {
-      return FullTextSearch.dropView().catch(() => {})
-      .then(() => FullTextSearch.createView())
+    beforeEach(async () => {
+      await FullTextSearch.dropView()
+      await FullTextSearch.createView()
     })
 
     it('works', () => {
