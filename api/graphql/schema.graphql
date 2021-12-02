@@ -297,6 +297,7 @@ type GroupWidget {
   name: String
   isVisible: Boolean
   order: Int
+  context: String
   settings: GroupWidgetSettings
   group: Group
 }
