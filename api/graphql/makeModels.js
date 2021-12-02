@@ -720,7 +720,8 @@ export default async function makeModels (userId, isAdmin) {
         'id',
         'is_visible',
         'name',
-        'order'
+        'order',
+        'context'
       ],
       getters: {
         settings: gw => mapKeys(camelCase, gw.get('settings'))
