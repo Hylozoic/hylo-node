@@ -30,7 +30,7 @@ module.exports = {
       })
     }
 
-    return user.save({last_login_at: new Date()}, { patch: true, autoRefresh: true })
+    return user.save({ last_login_at: new Date(), active: true }, { patch: true, autoRefresh: true })
   },
 
   isLoggedIn: function (req) {

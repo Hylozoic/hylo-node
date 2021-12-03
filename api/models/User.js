@@ -534,7 +534,7 @@ module.exports = bookshelf.Model.extend(merge({
     )
   },
   
-  find: function (id, options, active = true) {
+  find: function (id, options, activeFilter = true) {
     if (!id) return Promise.resolve(null)
     let q
     if (isNaN(Number(id))) {
@@ -547,7 +547,8 @@ module.exports = bookshelf.Model.extend(merge({
     } else {
       q = User.where({ id })
     }
-    return q.where('users.active', active).fetch(options)
+    if (activeFilter) return q.where('users.active', true).fetch(options)
+    return q.fetch(options)
   },
 
   named: function (name) {

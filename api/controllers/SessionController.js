@@ -6,8 +6,6 @@ const rollbar = require('../../lib/rollbar')
 
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
-    qb.where('users.active', true)
-
     qb.leftJoin('linked_account', (q2) => {
       q2.on('linked_account.user_id', '=', 'users.id')
     })
@@ -43,7 +41,7 @@ const upsertUser = (req, service, profile) => {
       // if this is a new account, link it to the user
       .then(async (session) => {
         if (!(await hasLinkedAccount(user, service))) {
-          await LinkedAccount.create(user.id, {type: service, profile}, {updateUser: true})
+          await LinkedAccount.create(user.id, { type: service, profile }, { updateUser: true })
         }
         return session
       })
@@ -141,7 +139,6 @@ module.exports = {
     return User.authenticate(email, password)
     .then(async (user) => {
       await UserSession.login(req, user, 'password')
-      await user.save({last_login_at: new Date()}, {patch: true})
       await res.ok({})
       return user
     }).catch(function (err) {
