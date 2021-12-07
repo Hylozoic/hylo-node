@@ -11,7 +11,10 @@ exports.up = async function (knex) {
     (15,E'opportunities_to_collaborate','${now}'),
     (16,E'farm_map','${now}'),
     (17,E'moderators','${now}'),
-    (18,E'privacy_settings','${now}')
+    (18,E'privacy_settings','${now}'),
+    (19,E'mission','${now}'),
+    (20,E'topics','${now}'),
+    (21,E'join','${now}');
   `)
 
   return knex.raw(`
