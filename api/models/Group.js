@@ -1,4 +1,4 @@
-import { clone, defaults, difference, flatten, intersection, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
+import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
 import HasSettings from './mixins/HasSettings'
 import DataType, {
@@ -336,6 +336,8 @@ module.exports = bookshelf.Model.extend(merge({
     if (attributes.settings) {
       saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
     }
+
+    saneAttrs.location_id = isEmpty(saneAttrs.location_id) ? null : saneAttrs.location_id
 
     if (changes.group_to_group_join_questions) {
       const questions = await Promise.map(changes.group_to_group_join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
