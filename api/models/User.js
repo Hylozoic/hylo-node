@@ -171,7 +171,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   sanelyDeleteUser: async function ({ sessionId, transacting = {} }) {
-    const deletedUserResult = await bookshelf.knex.raw('select id from users where email = "deleted@hylo.com"')
+    const deletedUserResult = await bookshelf.knex.raw('select id from users where email = \'deleted@hylo.com\'')
     const deletedUserId = deletedUserResult.rows[0].id
     Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
     /* 
