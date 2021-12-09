@@ -2,6 +2,7 @@
 import GetImageSize from '../services/GetImageSize'
 import request from 'request'
 import { createAndAddSize } from './media/util'
+import { deleteS3Objects } from '../../lib/uploader/storage'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'media',
@@ -18,7 +19,7 @@ module.exports = bookshelf.Model.extend({
 
   updateMetadata: function (opts) {
     const isVideo = this.get('type') === 'video'
-    var thumbnail_url = this.get('thumbnail_url')
+    let thumbnail_url = this.get('thumbnail_url')
 
     return Promise.resolve(isVideo && Media.generateThumbnailUrl(this.get('url')))
     .then(url => {
@@ -27,7 +28,7 @@ module.exports = bookshelf.Model.extend({
       const urlToMeasure = isVideo ? url : this.get('url')
       return GetImageSize(urlToMeasure)
       .then(({ width, height }) =>
-        this.save({width, height, thumbnail_url}, Object.assign({patch: true}, opts)))
+        this.save({ width, height, thumbnail_url }, Object.assign({patch: true}, opts)))
     })
   },
 
@@ -102,6 +103,10 @@ module.exports = bookshelf.Model.extend({
       thumbnail_url: doc.thumbnail_url,
       transacting: trx
     })
+  },
+
+  deleteMediaByUrl: ({ urls }) => {
+    deleteS3Objects(urls)
   },
 
   findMediaUrlsForUser: (userId) => {

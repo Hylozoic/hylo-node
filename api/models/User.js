@@ -171,19 +171,30 @@ module.exports = bookshelf.Model.extend(merge({
     return this.save({ active: false })
   },
 
+  deleteUserMedia: async function () {
+    const userId = this.get('id')
+    const userUrls = [this.get('banner_url'), this.get('avatar_url')]
+
+    const mediaUrls = await Media.findMediaUrlsForUser(userId)
+    const urls = mediaUrls.concat(userUrls)
+    Queue.classMethod('Media', 'deleteMediaByUrl', { urls })
+  },
+
   sanelyDeleteUser: async function ({ sessionId, transacting = {} }) {
-    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
     /* 
       ### List of things to be done on account deletion ###
 
+      - Look up urls for all their possible uploads
+      - drop urls from external sources
+      - iterate through urls to delete each upload
+
       - zero out content of their posts and comments
-      - change the ownership of their posts and comments to the deletedUser record
       - remove other references to their user_id
-      - delete their user record!
+      - wipe their user record!
     */
 
-    // look up their uploads and delete
-    // Banner url, avatar url, user_external_data ???, and the media table?
+    await this.deleteUserMedia()
+    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
 
     const query = `
     BEGIN;
@@ -554,7 +565,7 @@ module.exports = bookshelf.Model.extend(merge({
       })
     )
   },
-  
+
   find: function (id, options, activeFilter = true) {
     if (!id) return Promise.resolve(null)
     let q
