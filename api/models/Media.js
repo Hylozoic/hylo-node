@@ -104,6 +104,14 @@ module.exports = bookshelf.Model.extend({
     })
   },
 
+  findMediaUrlsForUser: (userId) => {
+    const query = `media.comment_id in (select id from comments where user_id = ${userId}) OR media.post_id in (select id from posts where user_id = ${userId});`
+
+    return Media.query(q => q.whereRaw(query))
+      .fetchAll()
+      .then(medias => medias.map(media => [media.get('url'), media.get('thumbnail_url')]).flat())
+  },
+
   generateThumbnailUrl: videoUrl => {
     if (!videoUrl || videoUrl === '') return Promise.resolve()
 
