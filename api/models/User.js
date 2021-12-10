@@ -207,10 +207,8 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM thanks WHERE thanked_by_id = ${this.id};
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
-    DELETE FROM notifications WHERE activity_id in (select id from activities WHERE parent_comment_id in (select id from comments where user_id = ${this.id}));
     DELETE FROM activities WHERE actor_id = ${this.id};
     DELETE FROM activities WHERE reader_id = ${this.id};
-    DELETE from activities WHERE parent_comment_id in (select id from comments where user_id = ${this.id});
 
     DELETE FROM contributions WHERE user_id = ${this.id};
     DELETE FROM devices WHERE user_id = ${this.id};
