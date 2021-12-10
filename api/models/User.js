@@ -1,6 +1,7 @@
 /* globals RedisClient */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import uuid from 'node-uuid'
 import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
@@ -170,43 +171,48 @@ module.exports = bookshelf.Model.extend(merge({
     return this.save({ active: false })
   },
 
+  deleteUserMedia: async function () {
+    const userId = this.get('id')
+    const userUrls = [this.get('banner_url'), this.get('avatar_url')]
+
+    const mediaUrls = await Media.findMediaUrlsForUser(userId)
+    const urls = mediaUrls.concat(userUrls)
+    Queue.classMethod('Media', 'deleteMediaByUrl', { urls })
+  },
+
   sanelyDeleteUser: async function ({ sessionId, transacting = {} }) {
-    const deletedUserResult = await bookshelf.knex.raw('select id from users where email = \'deleted@hylo.com\'')
-    const deletedUserId = deletedUserResult.rows[0].id
-    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
     /* 
       ### List of things to be done on account deletion ###
 
+      - Look up urls for all their possible uploads
+      - drop urls from external sources
+      - iterate through urls to delete each upload
+
       - zero out content of their posts and comments
-      - change the ownership of their posts and comments to the deletedUser record
       - remove other references to their user_id
-      - delete their user record!
+      - wipe their user record!
     */
+
+    await this.deleteUserMedia()
+    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
 
     const query = `
     BEGIN;
     UPDATE posts SET name = 'Post by deleted user', description = '', location = NULL, location_id = NULL WHERE user_id = ${this.id};
-    UPDATE posts_users SET user_id = ${deletedUserId} WHERE user_id = ${this.id};
     DELETE FROM user_connections WHERE (user_id = ${this.id}) OR (other_user_id = ${this.id});
 
-    UPDATE groups SET created_by_id = ${deletedUserId} WHERE created_by_id = ${this.id};
-    UPDATE comments SET deactivated_by_id = ${deletedUserId} WHERE deactivated_by_id = ${this.id};
     UPDATE comments SET text = 'Comment by deleted user' WHERE user_id = ${this.id};
 
-    UPDATE follows set added_by_id = ${deletedUserId} WHERE added_by_id = ${this.id};
-    UPDATE groups_tags set user_id = ${deletedUserId} WHERE user_id = ${this.id};
     DELETE FROM thanks WHERE comment_id in (select id from comments WHERE user_id = ${this.id});
     DELETE FROM thanks WHERE thanked_by_id = ${this.id};
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
     DELETE FROM activities WHERE actor_id = ${this.id};
     DELETE FROM activities WHERE reader_id = ${this.id};
-    DELETE from activities WHERE parent_comment_id in (select id from comments where user_id = ${this.id});
 
     DELETE FROM contributions WHERE user_id = ${this.id};
     DELETE FROM devices WHERE user_id = ${this.id};
     DELETE FROM group_invites WHERE used_by_id = ${this.id};
-    UPDATE group_invites SET invited_by_id =  ${deletedUserId} WHERE invited_by_id = ${this.id};
     DELETE FROM group_memberships WHERE user_id = ${this.id};
     DELETE FROM communities_users WHERE user_id = ${this.id};
     DELETE FROM linked_account WHERE user_id = ${this.id};
@@ -221,7 +227,31 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM posts_tags WHERE post_id in (select id from posts WHERE user_id = ${this.id});
     DELETE FROM groups_posts WHERE post_id in (select id from posts WHERE user_id = ${this.id});
     DELETE FROM votes WHERE user_id = ${this.id};
-    DELETE FROM users WHERE id = ${this.id};
+
+    UPDATE users SET 
+    active = false, 
+    settings = NULL, 
+    name = 'Deleted User', 
+    avatar_url = NULL, 
+    bio = NULL, 
+    banner_url = NULL,
+    location = NULL,
+    url = NULL,
+    tagline = NULL,
+    stripe_account_id = NULL,
+    location_id = NULL,
+    contact_email = NULL,
+    contact_phone = NULL,
+    email = '${uuid.v4()}@hylo.com',
+    first_name = NULL,
+    last_name = NULL,
+    twitter_name = NULL,
+    linkedin_url = NULL,
+    facebook_url = NULL,
+    work = NULL,
+    intention = NULL,
+    extra_info = NULL
+    WHERE id = ${this.id};
 
     COMMIT;
     `
@@ -533,7 +563,7 @@ module.exports = bookshelf.Model.extend(merge({
       })
     )
   },
-  
+
   find: function (id, options, activeFilter = true) {
     if (!id) return Promise.resolve(null)
     let q
