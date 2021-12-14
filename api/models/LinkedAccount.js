@@ -48,7 +48,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateUser: function (userId, { type, profile, transacting } = {}) {
-    return User.find(userId, {transacting})
+    return User.find(userId, { transacting }, false)
     .then(user => {
       var avatarUrl = user.get('avatar_url')
       var attributes = this.socialMediaAttributes(type, profile)
