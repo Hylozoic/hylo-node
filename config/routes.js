@@ -6,16 +6,13 @@
 
 module.exports.routes = {
   'GET    /noo/user/status':                              'UserController.status',
+  'POST   /noo/user/send-email-verification':             'UserController.sendEmailVerification',
+  'GET    /noo/user/verify-email':                        'UserController.verifyEmailByToken',
+  'POST   /noo/user/verify-email':                        'UserController.verifyEmailByCode',
   'POST   /noo/user/password':                            'UserController.sendPasswordReset',
   'POST   /noo/user':                                     'UserController.create',
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
-
-  // TODO: these dont exist right now
-  // 'GET    /noo/network/:networkId':                       'NetworkController.findOne',
-  // 'POST   /noo/network':                                  'NetworkController.create',
-  // 'POST   /noo/network/validate':                         'NetworkController.validate',
-  // 'POST   /noo/network/:networkId':                       'NetworkController.update',
 
   'GET    /noo/admin/login':                              'AdminSessionController.create',
   'GET    /noo/admin/login/oauth':                        'AdminSessionController.oauth',
@@ -32,6 +29,7 @@ module.exports.routes = {
   'POST   /noo/login':                                    'SessionController.create',
   'GET    /noo/login/token':                              'SessionController.createWithToken',
   'POST   /noo/login/token':                              'SessionController.createWithToken',
+  'GET    /noo/login/jwt':                                'SessionController.createWithJWT',
   'POST   /noo/login/apple/oauth':                        'SessionController.finishAppleOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',

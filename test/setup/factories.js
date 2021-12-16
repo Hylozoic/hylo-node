@@ -60,6 +60,12 @@ module.exports = {
     }, attrs))
   },
 
+  userVerificationCode: attrs => {
+    return new UserVerificationCode(merge({
+      created_at: new Date()
+    }, attrs))
+  },
+
   tag: attrs => {
     return new Tag(merge({
       name: faker.random.words(3).replace(/ /g, '-').toLowerCase()
@@ -167,10 +173,14 @@ module.exports = {
         }),
         locals: {},
         headers: {},
+        cookies: {},
         setHeader: spy((key, val) => {
           self.headers[key] = val
         }),
-        end: setBody()
+        end: setBody(),
+        cookie: spy((key, val) => {
+          self.cookies[key] = val
+        })
       }
       return self
     },

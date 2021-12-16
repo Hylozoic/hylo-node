@@ -4,6 +4,8 @@ import crypto from 'crypto'
 
 const rollbar = require('../../lib/rollbar')
 
+import checkJWT from '../policies/checkJWT'
+
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
     qb.leftJoin('linked_account', (q2) => {
@@ -48,7 +50,8 @@ const upsertUser = (req, service, profile) => {
     }
 
     const attrs = _.merge(_.pick(profile, 'email', 'name'), {
-      account: {type: service, profile}
+      account: {type: service, profile},
+      email_validated: true // When using oAuth email is already verified
     })
 
     return User.create(attrs)
@@ -101,9 +104,9 @@ const finishOAuth = function (strategy, req, res, next) {
       return resolve(res.view('popupDone', {
         error,
         provider,
-        context: req.session.authContext || 'oauth',
+        context: req.session.authContext || 'login',
         layout: null,
-        returnDomain: req.session.returnDomain
+        returnDomain: req.session.returnDomain || (process.env.PROTOCOL + '://' + process.env.DOMAIN)
       }))
     }
 
@@ -223,6 +226,26 @@ module.exports = {
     res.ok({})
   },
 
+  createWithJWT: async function (req, res) {
+    // Web links will go directly to the server and redirects from here,
+    // Native does a POST as an API call and this should not redirect
+    const shouldRedirect = req.method === 'GET'
+    const nextUrl = req.param('n') || Frontend.Route.evo.passwordSetting()
+
+    if (req.session.authenticated) {
+      return shouldRedirect
+        ? res.redirect(nextUrl)
+        : res.ok({success: true})
+    } else {
+      // still redirect, to give the user a chance to log in manually
+      // if a specific URL other than the default was the entry point
+      return shouldRedirect && req.param('n')
+        ? res.redirect(nextUrl)
+        : res.status(422).send('Invalid link, please try again')
+    }
+  },
+
+  // TODO: remove once we are all switched to JWTs
   createWithToken: async function (req, res) {
     // Web links will go directly to the server and redirects from here,
     // Native does a POST as an API call and this should not redirect

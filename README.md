@@ -39,7 +39,7 @@ npm install -g foreman yarn
 yarn install
 ```
 
-Create a `.env` file in the root directory. Values in square brackets are team specific and should be supplied:
+Create a `.env` file in the root directory by copying .env.example. Values below are team specific and should be supplied as needed:
 
 ```
 ADMIN_GOOGLE_CLIENT_ID=[ client id ]
@@ -49,26 +49,19 @@ AWS_SECRET_ACCESS_KEY=[ secret access key ]
 AWS_ACCESS_KEY_ID=[ access key id ]
 COOKIE_NAME=[ any string without spaces ]
 COOKIE_SECRET=[ any string without spaces ]
-DATABASE_URL=postgres://localhost:5432/hylo
-DEBUG_SQL=true
-DOMAIN=localhost:3001
 EMAIL_SENDER=[ email ]
 FACEBOOK_APP_ID=[ app id ]
 FACEBOOK_APP_SECRET=[ app secret ]
 GOOGLE_CLIENT_ID=[ client id ]
 GOOGLE_CLIENT_SECRET=[ client secret ]
 HYLO_ADMINS=[ your user id ]
+JWT_SECRET=[a string without spaces]
 LINKEDIN_API_KEY=[ api key ]
 LINKEDIN_API_SECRET=[ api secret ]
 MAILGUN_DOMAIN=[ domain ]
 MAILGUN_EMAIL_SALT=[ salt ]
 MAPBOX_TOKEN=[ key ]
-NEW_RELIC_LICENSE_KEY_DISABLED=[ key ]
-NODE_ENV=development
 PLAY_APP_SECRET=[ app secret ]
-PRETTY_JSON=true
-PROTOCOL=http
-REDIS_URL=redis://0.0.0.0:6379
 ROLLBAR_SERVER_TOKEN=[ token ]
 SEGMENT_KEY=[ key ]
 SENDWITHUS_KEY=[ key ]

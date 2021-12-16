@@ -34,6 +34,7 @@ module.exports.policies = {
   },
 
   SessionController: {
+    createWithJWT: ['checkJWT'],
     '*': true
   },
 
@@ -80,7 +81,10 @@ module.exports.policies = {
   UserController: {
     status: true,
     create: true,
-    sendPasswordReset: true
+    sendPasswordReset: true,
+    sendEmailVerification: true,
+    verifyEmailByCode: true,
+    verifyEmailByToken: true
   },
 
   PaymentController: {

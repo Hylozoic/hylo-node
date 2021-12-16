@@ -2,6 +2,7 @@ var root = require('root-path')
 var setup = require(root('test/setup'))
 var factories = require(root('test/setup/factories'))
 var UserController = require(root('api/controllers/UserController'))
+import jwt from 'jsonwebtoken'
 
 describe('UserController', function () {
   var req, res
@@ -70,4 +71,99 @@ describe('UserController', function () {
       })
     })
   })
+
+  describe('.sendEmailVerification', function () {
+    let u1
+
+    beforeEach(function () {
+      u1 = factories.user()
+      return u1.save()
+    })
+
+    it ('checks if user with email already exists', () => {
+      req.params.email = u1.get('email')
+      return UserController.sendEmailVerification(req, res).then(function () {
+        expect(res.statusCode).to.equal(422)
+        expect(res.body).to.deep.equal({ error: "duplicate-email" })
+      })
+    })
+
+    it ('creates a user verification code', () => {
+      req.params.email = 'new@email.com'
+      UserVerificationCode.create = spy(UserVerificationCode.create)
+      Queue.classMethod = spy(Queue.classMethod)
+
+      return UserController.sendEmailVerification(req, res).then(function () {
+        expect(res.ok).to.have.been.called()
+        expect(UserVerificationCode.create).to.have.been.called()
+        expect(Queue.classMethod).to.have.been.called()
+      })
+    })
+  })
+
+  describe('.verifyEmailByCode', function () {
+    let code
+    beforeEach(async () => {
+      code = await UserVerificationCode.create('new@email.com')
+    })
+
+    it ('returns forbidden on invalid code', () => {
+      req.params.email = code.get('email')
+      req.params.code = '12345'
+      return UserController.verifyEmailByCode(req, res).then(function () {
+        expect(res.forbidden).to.have.been.called()
+        expect(res.body).to.deep.equal({ error: 'invalid code' })
+      })
+    })
+
+    it ('sets cookie on valid code', async () => {
+      req.params.email = code.get('email')
+      req.params.code = code.get('code')
+      return UserController.verifyEmailByCode(req, res).then(function () {
+        expect(res.ok).to.have.been.called()
+        expect(res.body).to.equal(code.get('email'))
+        expect(res.cookies.verifiedEmail).to.equal(code.get('email'))
+      })
+    })
+  })
+
+  describe('.verifyEmailByToken', function () {
+    let code
+
+    beforeEach(async () => {
+      code = await UserVerificationCode.create('new@email.com')
+    })
+
+    it ('returns error on invalid token', () => {
+      req.params.token = jwt.sign({
+        iss: 'https://hylo.com/moo',
+        aud: 'https://hylo.com',
+        sub: code.get('email'),
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
+        code: code.get('code')
+      }, process.env.JWT_SECRET);
+
+      return UserController.verifyEmailByToken(req, res).then(function () {
+        expect(res.redirect).to.have.been.called()
+        expect(res.redirected).to.equal(Frontend.Route.signup('invalid-link'))
+      })
+    })
+
+    it ('sets cookie on valid token', async () => {
+      req.params.token = jwt.sign({
+        iss: 'https://hylo.com',
+        aud: 'https://hylo.com',
+        sub: code.get('email'),
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
+        code: code.get('code')
+      }, process.env.JWT_SECRET);
+
+      return UserController.verifyEmailByToken(req, res).then(function () {
+        expect(res.redirect).to.have.been.called()
+        expect(res.redirected).to.equal(Frontend.Route.signupFinish())
+        expect(res.cookies.verifiedEmail).to.equal(code.get('email'))
+      })
+    })
+  })
+
 })
