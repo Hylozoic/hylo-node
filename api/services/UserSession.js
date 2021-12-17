@@ -7,14 +7,14 @@ module.exports = {
     req.userId = user.id
     console.log("user id ", req.userId)
     const regenerateSession = Promise.promisify(req.session.regenerate, req.session)
-    console.log("session ", req.session)
+    console.log("session ", req.session, req.session.id)
     const session = await regenerateSession()
-console.log("session2 ", req.session)
+console.log("session2 ", req.session, req.session.id)
     req.session.authenticated = true
     req.session.userId = user.id
     req.session.userProvider = providerKey
     req.session.version = this.version
-console.log("session3 ", req.session)
+console.log("session3 ", req.session, req.session.id)
     req.rollbar_person = user.pick('id', 'name', 'email')
 
     if (providerKey === 'admin' || providerKey === 'token') return
