@@ -27,7 +27,6 @@ module.exports.session = {
 
   genid: function(req) {
     // use UUIDs for session IDs prefixed by userId so we can find and clear all sessions for this user on password change
-    console.log("gen new id = ", req.userId)
     return (req.userId || 'anon') + ":" + uuid.v4()
   },
 

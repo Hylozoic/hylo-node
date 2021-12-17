@@ -4,17 +4,16 @@ module.exports = {
   // logic for setting up the session when a user logs in
   login: async function (req, user, providerKey) {
     // So when an anonmyous person logs in we generate a new session for them (handles session fixation)
-    req.userId = user.id
-    console.log("user id ", req.userId)
-    const regenerateSession = Promise.promisify(req.session.regenerate, req.session)
-    console.log("session ", req.session, req.session.id)
-    const session = await regenerateSession()
-console.log("session2 ", req.session, req.session.id)
+    // XXX: not working on production for some reason
+    // req.userId = user.id
+    // const regenerateSession = Promise.promisify(req.session.regenerate, req.session)
+    // const session = await regenerateSession()
+
     req.session.authenticated = true
     req.session.userId = user.id
     req.session.userProvider = providerKey
     req.session.version = this.version
-console.log("session3 ", req.session, req.session.id)
+
     req.rollbar_person = user.pick('id', 'name', 'email')
 
     if (providerKey === 'admin' || providerKey === 'token') return
