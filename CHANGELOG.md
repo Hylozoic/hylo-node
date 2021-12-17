@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.1.0] - 2021-12-17
+
+### Added
+- New signup/registration flow that includes email verification, password confirmation and in general better security practices
+- Make it possible for people to deactivate or delete their account
+
 ## [3.0.8] - 2021-10-26
 ### Added
 - Display dates for events in email notifications
