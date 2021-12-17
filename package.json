@@ -5,7 +5,7 @@
   "author": "Tibet Sprague <tibet@hylo.com>",
   "license": "GNU AFFERO GENERAL PUBLIC LICENSE v3",
   "private": true,
-  "version": "3.0.8",
+  "version": "3.1.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/Hylozoic/hylo-node.git"
@@ -99,6 +99,7 @@
     "hylo-utils": "Hylozoic/hylo-utils#c4db0b4",
     "image-size": "^0.3.5",
     "jade": "^1.11.0",
+    "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.6",
     "knex-postgis": "^0.12.0",
     "kue": "^0.11.6",
@@ -118,6 +119,7 @@
     "passport-facebook-token": "3.3.0",
     "passport-google-oauth": "^2.0.0",
     "passport-google-token": "^0.1.1",
+    "passport-jwt": "^4.0.0",
     "passport-linkedin-oauth2": "^1.2.1",
     "passport-linkedin-token-oauth2": "^0.1.3",
     "performance-now": "^2.1.0",
@@ -218,6 +220,7 @@
       "UserConnection",
       "UserExternalData",
       "UserSession",
+      "UserVerificationCode",
       "Validation",
       "Vote"
     ]

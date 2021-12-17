@@ -1,5 +1,7 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
+import uuid from 'node-uuid'
 import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { validateUser } from 'hylo-utils/validators'
@@ -160,6 +162,101 @@ module.exports = bookshelf.Model.extend(merge({
     .digest('hex')
   },
 
+  reactivate: function () {
+    return this.save({ active: true })
+  },
+
+  deactivate: async function (sessionId) {
+    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
+    return this.save({ active: false })
+  },
+
+  deleteUserMedia: async function () {
+    const userId = this.get('id')
+    const userUrls = [this.get('banner_url'), this.get('avatar_url')]
+
+    const mediaUrls = await Media.findMediaUrlsForUser(userId)
+    const urls = mediaUrls.concat(userUrls)
+    Queue.classMethod('Media', 'deleteMediaByUrl', { urls })
+  },
+
+  sanelyDeleteUser: async function ({ sessionId, transacting = {} }) {
+    /* 
+      ### List of things to be done on account deletion ###
+
+      - Look up urls for all their possible uploads
+      - drop urls from external sources
+      - iterate through urls to delete each upload
+
+      - zero out content of their posts and comments
+      - remove other references to their user_id
+      - wipe their user record!
+    */
+
+    await this.deleteUserMedia()
+    Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
+
+    const query = `
+    BEGIN;
+    UPDATE posts SET name = 'Post by deleted user', description = '', location = NULL, location_id = NULL WHERE user_id = ${this.id};
+    DELETE FROM user_connections WHERE (user_id = ${this.id}) OR (other_user_id = ${this.id});
+
+    UPDATE comments SET text = 'Comment by deleted user' WHERE user_id = ${this.id};
+
+    DELETE FROM thanks WHERE comment_id in (select id from comments WHERE user_id = ${this.id});
+    DELETE FROM thanks WHERE thanked_by_id = ${this.id};
+    DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
+    DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
+    DELETE FROM activities WHERE actor_id = ${this.id};
+    DELETE FROM activities WHERE reader_id = ${this.id};
+
+    DELETE FROM contributions WHERE user_id = ${this.id};
+    DELETE FROM devices WHERE user_id = ${this.id};
+    DELETE FROM group_invites WHERE used_by_id = ${this.id};
+    DELETE FROM group_memberships WHERE user_id = ${this.id};
+    DELETE FROM communities_users WHERE user_id = ${this.id};
+    DELETE FROM linked_account WHERE user_id = ${this.id};
+    DELETE FROM join_request_question_answers WHERE join_request_id in (select id from join_requests WHERE user_id = ${this.id});
+    DELETE FROM join_requests WHERE user_id = ${this.id};
+    DELETE FROM skills_users WHERE user_id = ${this.id};
+    DELETE FROM posts_about_users WHERE user_id = ${this.id};
+
+    DELETE FROM tag_follows WHERE user_id = ${this.id};
+    DELETE FROM user_external_data WHERE user_id = ${this.id};
+    DELETE FROM user_post_relevance WHERE user_id = ${this.id};
+    DELETE FROM posts_tags WHERE post_id in (select id from posts WHERE user_id = ${this.id});
+    DELETE FROM votes WHERE user_id = ${this.id};
+
+    UPDATE users SET 
+    active = false, 
+    settings = NULL, 
+    name = 'Deleted User', 
+    avatar_url = NULL, 
+    bio = NULL, 
+    banner_url = NULL,
+    location = NULL,
+    url = NULL,
+    tagline = NULL,
+    stripe_account_id = NULL,
+    location_id = NULL,
+    contact_email = NULL,
+    contact_phone = NULL,
+    email = '${uuid.v4()}@hylo.com',
+    first_name = NULL,
+    last_name = NULL,
+    twitter_name = NULL,
+    linkedin_url = NULL,
+    facebook_url = NULL,
+    work = NULL,
+    intention = NULL,
+    extra_info = NULL
+    WHERE id = ${this.id};
+
+    COMMIT;
+    `
+    return bookshelf.knex.raw(query)
+  },
+
   joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
     const memberships = await group.addMembers([this.id],
       {
@@ -168,8 +265,9 @@ module.exports = bookshelf.Model.extend(merge({
           sendEmail: true,
           sendPushNotifications: true,
           showJoinForm: fromInvitation
-        }},
-      {transacting})
+        }
+      },
+      { transacting })
     const q = Group.query()
     if (transacting) {
       q.transacting(transacting)
@@ -216,6 +314,15 @@ module.exports = bookshelf.Model.extend(merge({
 
   generateTokenContents: function () {
     return `crumbly:${this.id}:${this.get('email')}:${this.get('created_at')}`
+  },
+
+  generateJWT: function () {
+    return jwt.sign({
+      iss: 'https://hylo.com',
+      aud: 'https://hylo.com',
+      sub: this.id,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4) // 4 hour expiration
+    }, process.env.JWT_SECRET);
   },
 
   generateToken: function () {
@@ -449,31 +556,39 @@ module.exports = bookshelf.Model.extend(merge({
         await Promise.join(
           account && LinkedAccount.create(user.id, account, {transacting}),
           group && group.addMembers([user.id], {transacting}),
-          group && user.markInvitationsUsed(group.id, transacting)
+          group && user.markInvitationsUsed(group.id, transacting),
+          // TODO: we will use this when we shortly add API calls to create users, so we can confirm their email
+          // !user.get('email_validated') && Queue.classMethod('Email', 'sendEmailVerification', {
+          //   email: user.get('email'),
+          //   templateData: {
+          //     verify_url: Frontend.Route.verifyEmail(user.generateJWT())
+          //   }
+          // })
         )
         return user
       })
     )
   },
 
-  find: function (id, options) {
+  find: function (id, options, activeFilter = true) {
     if (!id) return Promise.resolve(null)
     let q
     if (isNaN(Number(id))) {
       q = User.query(q => {
         q.where(function () {
           this.whereRaw('lower(email) = lower(?)', id)
-          .orWhere({name: id})
+          .orWhere({ name: id })
         })
       })
     } else {
-      q = User.where({id})
+      q = User.where({ id })
     }
-    return q.where('users.active', true).fetch(options)
+    if (activeFilter) return q.where('users.active', true).fetch(options)
+    return q.fetch(options)
   },
 
   named: function (name) {
-    return User.where({name: name}).fetch()
+    return User.where({ name }).fetch()
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {

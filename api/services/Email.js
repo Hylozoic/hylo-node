@@ -41,6 +41,9 @@ module.exports = {
   sendPasswordReset: opts =>
     sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData),
 
+  sendEmailVerification: opts =>
+    sendSimpleEmail(opts.email, 'tem_tt6gJkFMgjThCHHR6MwpPPrT', opts.templateData),
+
   sendInvitation: (email, data) =>
     sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
       email,

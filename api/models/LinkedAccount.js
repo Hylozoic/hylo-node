@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt'
 import Promise from 'bluebird'
 import { get, isEmpty, merge, pick } from 'lodash'
 const hash = Promise.promisify(bcrypt.hash, bcrypt)
+import { validateUser } from 'hylo-utils/validators'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
@@ -23,6 +24,11 @@ module.exports = bookshelf.Model.extend({
 
 }, {
   create: function (userId, { type, profile, password, token }, { transacting, updateUser } = {}) {
+    if (type === 'password') {
+      const invalidReason = validateUser.password(password)
+      if (invalidReason) return Promise.reject(new Error(invalidReason))
+    }
+
     return (() =>
       type === 'password'
         ? hash(password, 10)
@@ -44,7 +50,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   updateUser: function (userId, { type, profile, transacting } = {}) {
-    return User.find(userId, {transacting})
+    return User.find(userId, { transacting }, false)
     .then(user => {
       var avatarUrl = user.get('avatar_url')
       var attributes = this.socialMediaAttributes(type, profile)
