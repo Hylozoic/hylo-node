@@ -1,3 +1,5 @@
+const uuid = require('node-uuid')
+
 /**
  * Session Configuration
  * (sails.config.session)
@@ -22,6 +24,11 @@ module.exports.session = {
   *                                                                          *
   ***************************************************************************/
   secret: process.env.COOKIE_SECRET,
+
+  genid: function(req) {
+    // use UUIDs for session IDs prefixed by userId so we can find and clear all sessions for this user on password change
+    return (req.userId || 'anon') + ":" + uuid.v4()
+  },
 
   /***************************************************************************
   *                                                                          *

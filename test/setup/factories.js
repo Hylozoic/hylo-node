@@ -116,7 +116,11 @@ module.exports = {
         param: function (name) {
           return this.params[name]
         },
-        session: {},
+        session: {
+          regenerate: function(callback) {
+            callback()
+          }
+        },
         query: {},
         body: {},
         params: {},

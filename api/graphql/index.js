@@ -92,13 +92,14 @@ import { merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
-async function createSchema (userId, isAdmin) {
+async function createSchema (session, isAdmin) {
+  const userId = session.userId
   const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   const allResolvers = Object.assign({
     Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
-    Mutation: userId ? makeMutations(userId, isAdmin) : {},
+    Mutation: userId ? makeMutations(session.id, userId, isAdmin) : {},
 
     FeedItemContent: {
       __resolveType (data, context, info) {
@@ -195,7 +196,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   }
 }
 
-export function makeMutations (userId, isAdmin) {
+export function makeMutations (sessionId, userId, isAdmin) {
   return {
     acceptGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => acceptGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
@@ -357,7 +358,7 @@ export function makeMutations (userId, isAdmin) {
 
     updateGroupTopicFollow: (root, args) => updateGroupTopicFollow(userId, args),
 
-    updateMe: (root, { changes }) => updateMe(userId, changes),
+    updateMe: (root, { changes }) => updateMe(sessionId, userId, changes),
 
     updateMembership: (root, args) => updateMembership(userId, args),
 
@@ -398,7 +399,7 @@ export const createRequestHandler = () =>
       await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
     }
 
-    const schema = await createSchema(req.session.userId, Admin.isSignedIn(req))
+    const schema = await createSchema(req.session, Admin.isSignedIn(req))
     return {
       schema,
       graphiql: true,
