@@ -89,7 +89,7 @@ module.exports = {
       return res.ok(email)
     }
 
-    return res.forbidden({ error: 'invalid code' })
+    return res.status(403).json({ error: 'invalid code' });
   },
 
   verifyEmailByToken: async function (req, res) {
