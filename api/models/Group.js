@@ -204,7 +204,9 @@ module.exports = bookshelf.Model.extend(merge({
     })
 
     return Post.collection().query(q => {
-      q.where(q2 => {
+      q.join('users', 'posts.user_id', 'users.id')
+      q.where('users.active', true)
+      q.andWhere(q2 => {
         q2.where('groups_posts.group_id', this.id)
         q2.orWhere(q3 => {
           q3.whereIn('groups_posts.group_id', treeOfGroupsForMember.query())
