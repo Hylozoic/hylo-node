@@ -4,10 +4,11 @@ All notable changes to Hylo Node (the Hylo server) will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.1.1] - 2022-01-04
+### Fixed
+- Issue with deleting when user has used mobile app
 
 ## [3.1.0] - 2021-12-17
-
 ### Added
 - New signup/registration flow that includes email verification, password confirmation and in general better security practices
 - Make it possible for people to deactivate or delete their account
