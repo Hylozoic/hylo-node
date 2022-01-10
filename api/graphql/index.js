@@ -163,6 +163,8 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       }
       throw new Error('Slug is invalid')
     },
+    groupExtension: (root, args) => fetchOne('GroupExtension', args),
+    groupExtensions: (root, args) => fetchMany('GroupExtension', args),
     groupTopic: (root, { topicName, groupSlug }) =>
       GroupTag.findByTagAndGroup(topicName, groupSlug),
     groupTopics: (root, args) => fetchMany('GroupTopic', args),

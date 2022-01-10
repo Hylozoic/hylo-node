@@ -11,7 +11,7 @@ describe('graphql request handler', () => {
     req, res,
     user, user2,
     group,
-    post, post2, comment, media
+    post, post2, comment, media, groupExtension, extension
 
   before(async () => {
     handler = createRequestHandler()
@@ -23,6 +23,8 @@ describe('graphql request handler', () => {
     post2 = factories.post({type: Post.Type.REQUEST})
     comment = factories.comment()
     media = factories.media()
+    extension = factories.extension({type: 'test'})
+
     await group.save()
     await user.save()
     await user2.save()
@@ -30,6 +32,10 @@ describe('graphql request handler', () => {
     await post2.save()
     await comment.save({post_id: post.id})
     await media.save({comment_id: comment.id})
+    await extension.save()
+
+    groupExtension = factories.groupExtension({group_id: group.id, extension_id: extension.id, active: true, data: {'key-test': 'value-test'}})
+    await groupExtension.save()
     return Promise.all([
       group.posts().attach(post),
       group.posts().attach(post2),
@@ -42,6 +48,11 @@ describe('graphql request handler', () => {
       updateFollowers(post),
       updateFollowers(post2)
     ]))
+  })
+
+  after(async function() {
+    await groupExtension.destroy()
+    await extension.destroy()
   })
 
   beforeEach(() => {
@@ -358,6 +369,13 @@ describe('graphql request handler', () => {
                 title
               }
             }
+            groupExtensions{
+              items{
+                id
+                type
+                data
+              }
+            }
           }
         }`
       }
@@ -376,6 +394,16 @@ describe('graphql request handler', () => {
               posts: {
                 items: [
                   {title: post2.get('name')}
+                ]
+              },
+              groupExtensions: {
+                items: [
+                  {
+                    type:'test', 
+                    data: {
+                      "key-test": "value-test"
+                      }, 
+                    id: groupExtension.id.toString()}
                 ]
               }
             }

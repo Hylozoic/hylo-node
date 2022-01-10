@@ -227,6 +227,7 @@ export default async function makeModels (userId, isAdmin) {
         'postCount',
         'slug',
         'visibility',
+        'type'
       ],
       relations: [
         {activeMembers: { querySet: true }},
@@ -309,7 +310,8 @@ export default async function makeModels (userId, isAdmin) {
               type: filter
             }))
         }},
-        {widgets: {querySet: true }}
+        {widgets: {querySet: true }},
+        {groupExtensions: {querySet: true }}
       ],
       getters: {
         invitePath: g =>
@@ -692,13 +694,34 @@ export default async function makeModels (userId, isAdmin) {
       ]
     },
 
+    GroupExtension: {
+      model: GroupExtension,
+      attributes:[
+        'id',
+        'active',
+        'type',
+      ],
+      getters:{
+        data: groupExtension => groupExtension.pivot && groupExtension.pivot.get('data'),
+      }
+    },
+
+    Extension: {
+      model: Extension,
+      attributes: [
+        'id',
+        'type'
+      ]
+    },
+
     GroupWidget: {
       model: GroupWidget,
       attributes: [
         'id',
         'is_visible',
         'name',
-        'order'
+        'order',
+        'context'
       ],
       getters: {
         settings: gw => mapKeys(camelCase, gw.get('settings'))

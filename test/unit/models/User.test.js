@@ -406,7 +406,7 @@ describe('User', function () {
         p.save().then(() => p.addFollowers([cat.id, doge.id])))
     })
 
-    it('works as expected', async function () {
+    it('works as expected', async function () { // TODO: figure out why this test is failing
       this.timeout(5000)
 
       const addMessages = (p, num = 1, creator = doge) =>
@@ -452,7 +452,7 @@ describe('User', function () {
       await addMessages(post, 2, cat)
       await addMessages(post2, 2, cat)
       await User.unseenThreadCount(cat.id).then(n => expect(n).to.equal(0))
-      await User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2))
+      await User.unseenThreadCount(doge.id).then(n => expect(n).to.equal(2)) // this test was failing for me?
     })
   })
 
