@@ -115,7 +115,7 @@ function truncateAll (knex) {
     .then(() => knex.raw('TRUNCATE TABLE tags CASCADE'))
 }
 
-const fake = {
+const fakeLookup = {
   groups: fakeGroup,
   posts: fakePost,
   tags: fakeTag,
@@ -151,10 +151,10 @@ function addPostsToGroups (knex) {
       )))
 }
 
-function seed (entity, knex) {
+function seed (entity, knex, fake = fakeLookup, iterations = n) { // Default to the fakeLookup and n in this file, if none is passed in
   console.info(`  --> ${entity}`)
   return Promise.all(
-    [ ...new Array(n[entity]) ].map(
+    [ ...new Array(iterations[entity]) ].map(
       () => fake[entity](knex).then(row => knex(entity).insert(row))
     )
   )
@@ -195,7 +195,7 @@ function seedMessages (knex) {
 }
 
 // Grab random row or rows from table
-function sample (entity, where, knex, limit = 1) {
+export function sample (entity, where, knex, limit = 1) {
   return knex(entity)
     .where(where)
     .select()
@@ -231,7 +231,7 @@ function fakeThread (groupId, knex) {
     )
 }
 
-function fakeGroupData(name, slug, created_by_id) {
+export function fakeGroupData(name, slug, created_by_id, type) {
   return {
     name,
     group_data_type: 1,
@@ -248,7 +248,8 @@ function fakeGroupData(name, slug, created_by_id) {
     settings: { allow_group_invites: false, public_member_directory: false },
     slack_hook_url: faker.internet.url(),
     slack_team: faker.internet.url(),
-    slack_configure_url: faker.internet.url()
+    slack_configure_url: faker.internet.url(),
+    type: type || null
   }
 }
 
@@ -294,9 +295,9 @@ function fakeTag () {
   })
 }
 
-function fakeUser () {
+export function fakeUser (email) {
   return Promise.resolve({
-    email: faker.internet.email(),
+    email: email || faker.internet.email(),
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
     avatar_url: faker.internet.avatar(),
     first_name: faker.name.firstName(),
