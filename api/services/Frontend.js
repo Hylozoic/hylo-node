@@ -135,6 +135,14 @@ module.exports = {
       return url(`${groupUrl}/post/${getModelId(post)}`)
     },
 
+    signup: (error) => {
+      return url('/signup?error=%s', error)
+    },
+
+    signupFinish: () => {
+      return url('/signup/finish')
+    },
+
     thread: function (post) {
       return url(`/messages/${getModelId(post)}`)
     },
@@ -145,6 +153,11 @@ module.exports = {
 
     userSettings: function () {
       return url('/settings')
+    },
+
+    jwtLogin: function (user, token, nextUrl) {
+      return url('/noo/login/jwt?u=%s&token=%s&n=%s',
+        user.id, token, encodeURIComponent(nextUrl || ''))
     },
 
     tokenLogin: function (user, token, nextUrl) {
@@ -158,6 +171,10 @@ module.exports = {
 
     useInvitation: function (token, email) {
       return url('/h/use-invitation?token=%s&email=%s', token, email)
+    },
+
+    verifyEmail: function(token) {
+      return url('/noo/user/verify-email?token=%s', token)
     },
 
     emailPostForm: function () {

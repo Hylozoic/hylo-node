@@ -1,6 +1,7 @@
 /* globals RedisClient */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
+import jwt from 'jsonwebtoken'
 import uuid from 'node-uuid'
 import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
@@ -207,6 +208,7 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM thanks WHERE thanked_by_id = ${this.id};
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
+    DELETE FROM push_notifications WHERE device_id in (select id from devices WHERE user_id = ${this.id});
     DELETE FROM activities WHERE actor_id = ${this.id};
     DELETE FROM activities WHERE reader_id = ${this.id};
 
@@ -225,7 +227,6 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM user_external_data WHERE user_id = ${this.id};
     DELETE FROM user_post_relevance WHERE user_id = ${this.id};
     DELETE FROM posts_tags WHERE post_id in (select id from posts WHERE user_id = ${this.id});
-    DELETE FROM groups_posts WHERE post_id in (select id from posts WHERE user_id = ${this.id});
     DELETE FROM votes WHERE user_id = ${this.id};
 
     UPDATE users SET 
@@ -315,6 +316,15 @@ module.exports = bookshelf.Model.extend(merge({
 
   generateTokenContents: function () {
     return `crumbly:${this.id}:${this.get('email')}:${this.get('created_at')}`
+  },
+
+  generateJWT: function () {
+    return jwt.sign({
+      iss: 'https://hylo.com',
+      aud: 'https://hylo.com',
+      sub: this.id,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4) // 4 hour expiration
+    }, process.env.JWT_SECRET);
   },
 
   generateToken: function () {
@@ -557,7 +567,14 @@ module.exports = bookshelf.Model.extend(merge({
         await Promise.join(
           account && LinkedAccount.create(user.id, account, {transacting}),
           group && group.addMembers([user.id], {transacting}),
-          group && user.markInvitationsUsed(group.id, transacting)
+          group && user.markInvitationsUsed(group.id, transacting),
+          // TODO: we will use this when we shortly add API calls to create users, so we can confirm their email
+          // !user.get('email_validated') && Queue.classMethod('Email', 'sendEmailVerification', {
+          //   email: user.get('email'),
+          //   templateData: {
+          //     verify_url: Frontend.Route.verifyEmail(user.generateJWT())
+          //   }
+          // })
         )
         return user
       })

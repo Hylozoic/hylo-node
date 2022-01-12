@@ -10,6 +10,10 @@ export default function forPosts (opts) {
     qb.offset(opts.offset)
     qb.where({'posts.active': true})
 
+    // Only find posts by active users
+    qb.join('users', 'posts.user_id', '=', 'users.id')
+    qb.where('users.active', true)
+
     // this counts total rows matching the criteria, disregarding limit,
     // which is useful for pagination
     countTotal(qb, 'posts', opts.totalColumnName)
