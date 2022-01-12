@@ -195,7 +195,7 @@ function seedMessages (knex) {
 }
 
 // Grab random row or rows from table
-export function sample (entity, where, knex, limit = 1) {
+function sample (entity, where, knex, limit = 1) {
   return knex(entity)
     .where(where)
     .select()
@@ -231,7 +231,7 @@ function fakeThread (groupId, knex) {
     )
 }
 
-export function fakeGroupData(name, slug, created_by_id, type) {
+function fakeGroupData(name, slug, created_by_id, type) {
   return {
     name,
     group_data_type: 1,
@@ -295,7 +295,7 @@ function fakeTag () {
   })
 }
 
-export function fakeUser (email) {
+function fakeUser (email) {
   return Promise.resolve({
     email: email || faker.internet.email(),
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
