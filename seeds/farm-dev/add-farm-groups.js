@@ -43,7 +43,7 @@ ${err.message}
 const n = {
   groups: 24,
   posts: 80,
-  users: 1
+  users: 50
 }
 
 const fake = {
@@ -145,7 +145,7 @@ function generateFakeFarmData (index) {
   const renting = Math.random() > 0.8 ? null : Math.random() > 0.5
 
   if (sampledProductCategories.some((item) => ['pasture', 'dairy', 'rangeland', 'aquaculture'].includes(item))) {
-    animal_count = Math.random() * 1000 * Math.random() + 8
+    animal_count = Math.round(Math.random() * 1000 * Math.random()) + 8
     animal_types = sampleArray(ANIMAL_LIST, Math.round(Math.random() * 6) + 1)
     let animalAllocation = animal_count
     animal_count_by_type = {}
@@ -184,7 +184,7 @@ function generateFakeFarmData (index) {
     farm_management_system: null, // left null
     farmos_url: Math.random() > 0.5 ? null : `${faker.random.word()}@${faker.random.word()}.com`,
     farm_outline: Math.random() > 0.6 ? null : generateFakeGeometry(),
-    farm_physical_address: `${faker.address.streetAddress}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
+    farm_physical_address: `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
     farm_types: sampleArray(FARM_TYPES, Math.round(Math.random() * 2) + 1),
     flexible: null, // leave null
     goals: Math.random() > 0.6 ? [] : sampleArray(FARM_GOALS, Math.round(Math.random() * 3) + 1),
@@ -226,7 +226,7 @@ function sampleArray (array, sampleAmount) {
   return Object.keys(sampledResults)
 }
 
-function allocateLandUseByProduct (products) { // write a test for this one
+function allocateLandUseByProduct (products) {
   if (products.length === 1) return { [products[0]]: 0.9 }
   const results = {}
   let allocation = 9
