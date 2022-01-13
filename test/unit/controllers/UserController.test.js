@@ -111,7 +111,7 @@ describe('UserController', function () {
       req.params.email = code.get('email')
       req.params.code = '12345'
       return UserController.verifyEmailByCode(req, res).then(function () {
-        expect(res.forbidden).to.have.been.called()
+        expect(res.status).to.have.been.called.with(403)
         expect(res.body).to.deep.equal({ error: 'invalid code' })
       })
     })

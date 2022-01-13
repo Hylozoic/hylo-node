@@ -157,6 +157,7 @@ module.exports = {
           self.body = err
         }),
         badRequest: setBody(),
+        json: setBody(),
         notFound: setBody(),
         forbidden: setBody(),
         status: spy(value => {
