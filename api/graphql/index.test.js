@@ -19,29 +19,30 @@ describe('graphql request handler', () => {
     user = factories.user()
     user2 = factories.user()
     group = factories.group()
-    post = factories.post({type: Post.Type.DISCUSSION})
-    post2 = factories.post({type: Post.Type.REQUEST})
+    post = factories.post({ type: Post.Type.DISCUSSION})
+    post2 = factories.post({ type: Post.Type.REQUEST })
     comment = factories.comment()
     media = factories.media()
-    extension = factories.extension({type: 'test'})
+    const earlier = new Date(new Date().getTime() - 86400000)
+    extension = factories.extension({ type: 'test', created_at: earlier, updated_at: earlier })
 
     await group.save()
     await user.save()
     await user2.save()
-    await post.save({user_id: user.id})
+    await post.save({ user_id: user.id })
     await post2.save()
-    await comment.save({post_id: post.id})
-    await media.save({comment_id: comment.id})
+    await comment.save({ post_id: post.id })
+    await media.save({ comment_id: comment.id })
     await extension.save()
 
-    groupExtension = factories.groupExtension({group_id: group.id, extension_id: extension.id, active: true, data: {'key-test': 'value-test'}})
+    groupExtension = factories.groupExtension({ group_id: group.id, extension_id: extension.id, active: true, data: { 'key-test': 'value-test' } })
     await groupExtension.save()
     return Promise.all([
       group.posts().attach(post),
       group.posts().attach(post2),
       group.addMembers([user.id, user2.id]).then((memberships) => {
         const earlier = new Date(new Date().getTime() - 86400000)
-        return memberships[0].save({created_at: earlier}, {patch: true})
+        return memberships[0].save({ created_at: earlier }, {patch: true})
       })
     ])
     .then(() => Promise.all([
