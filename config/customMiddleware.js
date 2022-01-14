@@ -6,11 +6,16 @@ import isAdmin from '../api/policies/isAdmin'
 import accessTokenAuth from '../api/policies/accessTokenAuth'
 import cors from 'cors'
 import { cors as corsConfig } from './cors'
+import oidc from '../api/services/OpenIDConnect'
 
 export default function (app) {
+  app.enable('trust proxy')
+
+  // XXX: has to come before bodyParser?
+  app.use('/noo/oauth', oidc.callback())
+
   app.use(bodyParser.urlencoded({extended: true}))
   app.use(bodyParser.json())
-  app.enable('trust proxy')
 
   kueUI.setup({
     apiURL: '/admin/kue/api',

@@ -5,6 +5,10 @@
  */
 
 module.exports.routes = {
+  // for OIDC
+  // XXX: unclear if its ok to redirect like this, can we somehow directly call the oidc-provider discovery function here?
+  'GET    /.well-known/openid-configuration':             '/noo/oauth/.well-known/openid-configuration',
+
   'GET    /noo/user/status':                              'UserController.status',
   'POST   /noo/user/send-email-verification':             'UserController.sendEmailVerification',
   'GET    /noo/user/verify-email':                        'UserController.verifyEmailByToken',
@@ -73,4 +77,5 @@ module.exports.routes = {
   'POST   /noo/upload':                                   'UploadController.create',
 
   'GET    /noo/export/group':                             'ExportController.groupData'
+
 }

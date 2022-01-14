@@ -22,6 +22,77 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(Affiliation).where('is_active', true)
   },
 
+  /**
+    * For OIDC
+    * @param use - can either be "id_token" or "userinfo", depending on
+    *   where the specific claims are intended to be put in.
+    * @param scope - the intended scope, while oidc-provider will mask
+    *   claims depending on the scope automatically you might want to skip
+    *   loading some claims from external resources etc. based on this detail
+    *   or not return them in id tokens but only userinfo and so on.
+    * @param claims {object} - the part of the claims authorization parameter for either
+    *   "id_token" or "userinfo" (depends on the "use" param)
+    * @param rejected {Array[String]} - claim names that were rejected by the end-user, you might
+    *   want to skip loading some claims from external resources or through db projection
+    */
+  async claims(use, scope, claims, rejected) { // eslint-disable-line no-unused-vars
+    // TODO: allow people to ask for specific claims https://github.com/panva/node-oidc-provider/blob/main/docs/README.md#featuresclaimsparameter
+    // TODO: need to handle the use parameter?
+    // TODO: track specific claims that are rejected by the user, but allow others
+
+    let returnData = {
+      sub: this.accountId, // it is essential to always return a sub claim
+    }
+
+    if (scope.includes('address')) {
+      const loc = await this.locationObject().fetch()
+      returnData['address'] = {
+        country: loc.get('country'),
+        formatted: this.get('location'),
+        locality: loc.get('city'),
+        postal_code: loc.get('postcode'),
+        region: loc.get('region'),
+        street_address: loc.get('address_number') + ' ' + loc.get('address_street')
+      }
+    }
+
+    if (scope.includes('profile')) {
+      returnData = Object.assign(returnData, {
+        birthdate: null,
+        family_name: null,
+        gender: null,
+        given_name: null,
+        locale: null,
+        middle_name: null,
+        name: this.get('name'),
+        nickname: null,
+        picture: this.get('avatar_url'),
+        preferred_username: null,
+        profile: Frontend.Route.profile(this),
+        updated_at: this.get('updated_at'),
+        website: null,
+        zoneinfo: null
+      })
+    }
+
+    if (scope.includes('email')) {
+      returnData = Object.assign(returnData, {
+        email: this.get('email'),
+        email_verified: this.get('email_validated')
+      })
+    }
+
+    if (scope.includes('phone')) {
+      returnData = Object.assign(returnData, {
+        phone_number: this.get('contact_phone'),
+        phone_number_verified: false
+      })
+    }
+
+    console.log("returning data for user", returnData)
+    return returnData
+  },
+
   comments: function () {
     return this.hasMany(Comment)
     .query(q => {

@@ -136,6 +136,11 @@ Change your `.env` file to have:
 PROTOCOL=https
 ```
 
+### Setting up as OpenID Connect provider
+- Run `yarn generate-rsa-key-base64`
+- Copy generated base64 string to .env file: `OIDC_JWK_KEYS=base64key`
+- You can add multipke keys by separating them with a comma
+
 ### running tests
 
 Run `yarn test` or `yarn cover`. The tests should use a different database (see below), because it creates and drops the database schema on each run.
