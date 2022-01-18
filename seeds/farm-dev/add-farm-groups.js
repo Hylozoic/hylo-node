@@ -185,11 +185,18 @@ function generateFakeFarmData (index) {
     farmos_url: Math.random() > 0.5 ? null : `${faker.random.word()}@${faker.random.word()}.com`,
     farm_outline: Math.random() > 0.6 ? null : generateFakeGeometry(),
     farm_physical_address: `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
+    farm_region_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
     farm_types: sampleArray(FARM_TYPES, Math.round(Math.random() * 2) + 1),
     flexible: null, // leave null
     goals: Math.random() > 0.6 ? [] : sampleArray(FARM_GOALS, Math.round(Math.random() * 3) + 1),
     hardiness_zone: Math.random() > 0.9 ? null : sample(HARDINESS_ZONES),
     indigenous_territory: Math.random() > 0.6 ? null : [...new Array(Math.round(Math.random() * 2) + 1)].map((el) => 'to be implemented'),
+    land_ownership: {
+      rent: Math.random() > 0.6 ? null : renting ? Math.random() * 99 + 1 : 0,
+      share_farm: Math.random() > 0.8 ? null : Math.random() * 99 + 1,
+      pastoral_lease: Math.random() > 0.8 ? null : Math.random() * 99 + 1,
+      native_title: Math.random() > 0.8 ? null : Math.random() * 99 + 1
+    },
     land_use_percentage_by_product: Math.random() > 0.6 ? {} : allocateLandUseByProduct(sampledProductCategories),
     mailing_address: Math.random() > 0.6 ? null : `${faker.address.streetAddress}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
     management_plans_current: Math.random() > 0.9 ? null : managementPartitions[0],
@@ -202,7 +209,6 @@ function generateFakeFarmData (index) {
     products_details: Math.random() > 0.85 ? [] : generateProducts(index),
     products_value_added: Math.random() > 0.5 ? [] : [...new Array(Math.round(Math.random() * 15) + 1)].map((el) => faker.random.word()),
     rain_unit_preference: Math.random() > 0.8 ? null : Math.random() > 0.5 ? 'inches' : 'millimeters',
-    rent_acreage_percentage: Math.random() > 0.8 ? null : renting ? Math.random() * 99 + 1 : 0,
     renting,
     schema_version: '0.1',
     soil_composition: Math.random() > 0.8
@@ -256,10 +262,9 @@ function generateProducts (index) {
   return sampledProducts
 }
 
-function generateFakeGeometry () {
+function generateFakeGeometry (sideLength = 0.002) {
   const fakeLat = faker.address.latitude(-119, -122)
   const fakeLng = faker.address.longitude(42, 38)
-  const sideLength = 0.002
   return {
     type: 'FeatureCollection',
     features: [
