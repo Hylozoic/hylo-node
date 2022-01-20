@@ -66,7 +66,7 @@ export default {
       }
     }
 
-    return from + to + " UTC timezone"
+    return from + to + " UTC"
   },
 
   createInviteNotifications: async function (userId, inviteeIds) {
