@@ -11,7 +11,7 @@
     "url": "git://github.com/Hylozoic/hylo-node.git"
   },
   "engines": {
-    "node": "^14.17.6",
+    "node": "^16",
     "yarn": "^1.2.1"
   },
   "nyc": {
