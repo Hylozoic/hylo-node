@@ -53,16 +53,17 @@ jobs:
     - run: echo 'echoing env vars'
     - run: echo $CIRCLE_ARTIFACTS
     - run: echo $CIRCLE_TEST_REPORTS
+    - run: echo `node --version`
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
-    # This is based on your 1.0 configuration file or project settings
-    - run:
-        working_directory: ~/Hylozoic/hylo-node
-        command: nvm install && nvm alias default `node --version`
+    # # This is based on your 1.0 configuration file or project settings
+    # - run:
+    #     working_directory: ~/Hylozoic/hylo-node
+    #     command: nvm install && nvm alias default `node --version`
     # Upgrade yarn
     - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
     - run: sudo sh -c 'echo "deb https://dl.yarnpkg.com/debian/ stable main" >> /etc/apt/sources.list.d/yarn.list'
-    - run: sudo apt update
-    - run: sudo apt install yarn
+    # - run: sudo apt update
+    # - run: sudo apt install yarn
     # - run: curl -o- -L https://yarnpkg.com/install.sh | bash
     # Dependencies
     #   This would typically go in either a build or a build-and-test job when using workflows
@@ -116,24 +117,24 @@ jobs:
         path: coverage
     - store_artifacts:
         path: /tmp/circleci-test-results
-  deploy:
-    docker:
-      - image: buildpack-deps:trusty
-    steps:
-      - checkout
-      - run:
-          name: Deploy Master to Heroku
-          command: |
-            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git master
+  # deploy:
+  #   docker:
+  #     - image: buildpack-deps:trusty
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Deploy Master to Heroku
+  #         command: |
+  #           git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME.git master
 
 workflows:
   version: 2
   build-deploy:
     jobs:
       - build
-      - deploy:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+      # - deploy:
+      #     requires:
+      #       - build
+      #     filters:
+      #       branches:
+      #         only: master
