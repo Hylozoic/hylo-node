@@ -66,7 +66,7 @@ export default {
       }
     }
 
-    return from + to
+    return from + to + " UTC"
   },
 
   createInviteNotifications: async function (userId, inviteeIds) {

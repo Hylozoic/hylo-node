@@ -453,7 +453,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   getMessageThreadWith (userId) {
-    return findThread(this.id, [userId])
+    return findThread([this.id, userId])
   },
 
   unseenThreadCount () {
