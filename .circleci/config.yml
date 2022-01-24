@@ -16,6 +16,8 @@ jobs:
         POSTGRES_DB: hylo_test
     - image: redis
     steps:
+    # The following `checkout` command checks out your code to your working directory.
+    - checkout
     # Note: Uncomment or add to the commented list of echos for debugging purposes
     # setup self referential env vars
     # Debugging 
