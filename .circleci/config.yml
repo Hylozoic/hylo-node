@@ -16,33 +16,26 @@ jobs:
         POSTGRES_DB: hylo_test
     - image: redis
     steps:
-    # Machine Setup
-    #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
-    # The following `checkout` command checks out your code to your working directory.
-    - checkout
+    # Note: Uncomment or add to the commented list of echos for debugging purposes
     # setup self referential env vars
-    - run: echo $HOME
-    - run: echo $CIRCLE_PROJECT_REPONAME
-    - run: echo $PATH
+    # Debugging 
+    # - run: echo $HOME
+    # - run: echo $CIRCLE_PROJECT_REPONAME
+    # - run: echo $PATH
     - run:
         name: Update PATH Environment Variable at Runtime
         command: |
           export PATH=$PATH:$HOME/$CIRCLE_PROJECT_REPONAME/node_modules/.bin
-    # Prepare for artifact and test results  collection equivalent to how it was done on 1.0.
-    # In many cases you can simplify this from what is generated here.
-    # 'See docs on artifact collection here https://circleci.com/docs/2.0/artifacts/'
-    # Note: Uncomment or add to this list of echos for debugging purposes
+    # Note: Uncomment or add to the commented list of echo's for debugging purposes
     # - run: echo 'echoing env vars'
     # - run: echo $CIRCLE_ARTIFACTS
     # - run: echo $CIRCLE_TEST_REPORTS
     # - run: echo `node --version`
     - run: mkdir -p $CIRCLE_ARTIFACTS $CIRCLE_TEST_REPORTS
     - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-    # Dependencies
-    # #   This would typically go in either a build or a build-and-test job when using workflows
-    # Restore the dependency cache
     - restore_cache:
           key: v1-deps-{{ checksum "yarn.lock" }}
+    # This would typically go in either a build or a build-and-test job when using workflows
     - run: yarn global add codecov
     - run: yarn config set unsafe-perm true && yarn
     # Save dependency cache
@@ -55,9 +48,6 @@ jobs:
     - run: codecov
     # Deployment in CircleCI 2.0 are better handled through workflows.
     # See the documentation for more information https://circleci.com/docs/2.0/workflows/
-    # Teardown
-    #   If you break your build into multiple jobs with workflows, you will probably want to do the parts of this that are relevant in each
-    # Save test results
     - store_test_results:
         path: /tmp/circleci-test-results
     # Save artifacts
