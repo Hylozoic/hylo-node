@@ -59,23 +59,23 @@ jobs:
     # - run:
     #     working_directory: ~/Hylozoic/hylo-node
     #     command: nvm install && nvm alias default `node --version`
-    # Upgrade yarn
-    - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-    - run: sudo sh -c 'echo "deb https://dl.yarnpkg.com/debian/ stable main" >> /etc/apt/sources.list.d/yarn.list'
+    # # Upgrade yarn
+    # - run: curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+    # - run: sudo sh -c 'echo "deb https://dl.yarnpkg.com/debian/ stable main" >> /etc/apt/sources.list.d/yarn.list'
     # - run: sudo apt update
     # - run: sudo apt install yarn
     # - run: curl -o- -L https://yarnpkg.com/install.sh | bash
     # Dependencies
-    #   This would typically go in either a build or a build-and-test job when using workflows
-    # Restore the dependency cache
-    - restore_cache:
-        keys:
-        # This branch if available
-        - v1-dep-{{ .Branch }}-
-        # Default branch if not
-        - v1-dep-dev-
-        # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
-        - v1-dep-
+    # #   This would typically go in either a build or a build-and-test job when using workflows
+    # # Restore the dependency cache
+    # - restore_cache:
+    #     keys:
+    #     # This branch if available
+    #     - v1-dep-{{ .Branch }}-
+    #     # Default branch if not
+    #     - v1-dep-dev-
+    #     # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
+    #     - v1-dep-
     # This is based on your 1.0 configuration file or project settings
     - run: npm install -g codecov
     # This is based on your 1.0 configuration file or project settings
