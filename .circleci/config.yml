@@ -41,13 +41,13 @@ jobs:
     # #   This would typically go in either a build or a build-and-test job when using workflows
     # Restore the dependency cache
     - restore_cache:
-        key: v1-deps-{{ checksum "yarn.lock" }}
+          key: v1-deps-{{ checksum "yarn.lock" }}
     - run: yarn global add codecov
     - run: yarn config set unsafe-perm true && yarn
     # Save dependency cache
     - save_cache:
-      key: v1-deps-{{ checksum "yarn.lock" }}
-      paths: 
+        key: v1-deps-{{ checksum "yarn.lock" }}
+        paths: 
         - node_modules   
     # Test
     - run: yarn cover --forbid-only
