@@ -623,6 +623,5 @@ describe('makeAuthenticatedQueries', () => {
 
 function expectJSON (res, expected) {
   expect(res.body).to.exist
-  const body = JSON.parse(res.body)
-  return expect(body).to.deep.nested.include(expected)
+  return expect(res.body).to.deep.nested.include(expected)
 }
