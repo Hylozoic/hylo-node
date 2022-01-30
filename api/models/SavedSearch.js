@@ -102,7 +102,7 @@ module.exports = bookshelf.Model.extend({
   }
 }, {
   create: async function (params) {
-    const { boundingBox, groupSlug, context, lastPostId, name, postTypes, searchText, topicIds, userId } = params
+    const { boundingBox, groupSlug, context, name, postTypes, searchText, topicIds, userId } = params
 
     let group, group_id
 
@@ -116,6 +116,10 @@ module.exports = bookshelf.Model.extend({
 
     const st = knexPostgis(bookshelf.knex)
     const bounding_box = st.geomFromText('POLYGON((' + boundingBox[0].lng + ' ' + boundingBox[0].lat + ', ' + boundingBox[0].lng + ' ' + boundingBox[1].lat + ', ' + boundingBox[1].lng + ' ' + boundingBox[1].lat + ', ' + boundingBox[1].lng + ' ' + boundingBox[0].lat + ', ' + boundingBox[0].lng + ' ' + boundingBox[0].lat +  '))', 4326)
+    const last_post_id = await Post.query(q => {
+      q.select('id')
+      q.orderBy('id', 'DESC')
+    }).fetch().then(p => p.get('id'))
 
     const attributes = {
       user_id: userId,
@@ -127,7 +131,7 @@ module.exports = bookshelf.Model.extend({
       search_text: searchText,
       post_types: postTypes,
       bounding_box,
-      last_post_id: lastPostId,
+      last_post_id
     }
 
     const search = await this.forge(attributes).save()
