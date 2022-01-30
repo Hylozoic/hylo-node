@@ -1,9 +1,24 @@
-import { curry, includes, values } from 'lodash'
+import { curry, includes, isEmpty, values } from 'lodash'
 import moment from 'moment'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { afterTime, beforeTime, boundingBox, isAnnouncement, isFulfilled, order = 'desc', search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
+  const {
+    afterTime,
+    beforeTime,
+    boundingBox,
+    isAnnouncement,
+    isFulfilled,
+    order = 'desc',
+    search,
+    showPinnedFirst,
+    sortBy = 'updated',
+    topic,
+    topics = [],
+    type ,
+    types
+  } = opts
+
   const sortColumns = {
     votes: 'posts.num_votes',
     updated: 'posts.updated_at',
@@ -49,39 +64,34 @@ export const filterAndSortPosts = curry((opts, q) => {
     )
   }
 
-  if (!type || type === 'all' || type === 'all+welcome') {
-    q.where(q2 =>
-      q2.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
-      .orWhere('posts.type', null))
-  } else if (type === DISCUSSION) {
-    q.where(q2 =>
-      q2.where({'posts.type': null})
-      .orWhere({'posts.type': DISCUSSION}))
-  } else if (type === 'offersAndRequests') {
-    q.where(q2 =>
-      q2.where('posts.type', OFFER).orWhere('posts.type', REQUEST)
-    )
+  if (types) {
+    q.whereIn('posts.type', types)
+  } else if (!type || type === 'all' || type === 'all+welcome') {
+    q.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
   } else {
     if (!includes(values(Post.Type), type)) {
       throw new Error(`unknown post type: "${type}"`)
     }
-    q.where({'posts.type': opts.type})
+    q.where({'posts.type': type})
   }
 
-  if (search) {
+  if (!isEmpty(search)) {
     addTermToQueryBuilder(search, q, {
       columns: ['posts.name', 'posts.description']
     })
   }
 
   if (topic) {
-    if (/^\d+$/.test(topic)) { // topic ID
-      q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
-      q.where('posts_tags.tag_id', topic)
+    topics = topics.concat(topic)
+  }
+
+  if (!isEmpty(topics)) {
+    q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
+    if (/^\d+$/.test(topics[0])) { // topic ID
+      q.whereIn('posts_tags.tag_id', topics)
     } else { // topic name
-      q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
       q.join('tags', 'posts_tags.tag_id', 'tags.id')
-      q.where('tags.name', topic)
+      q.whereIn('tags.name', topics)
     }
   }
 
@@ -117,10 +127,16 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
     throw new Error(`Cannot sort by "${sortBy}"`)
   }
 
+  if (order && !['asc', 'desc'].includes(order.toLowerCase())) {
+    throw new Error(`Cannot use sort order "${order}"`)
+  }
+
   if (sortBy === 'join') {
     q.orderBy('group_memberships.created_at', order || 'desc')
+  } else if (!sortBy || sortBy === 'name') {
+    q.orderByRaw(`lower("name") ${order || 'asc'}`)
   } else {
-    q.orderBy(sortBy || 'name', order || 'asc')
+    q.orderBy(sortBy, order || 'asc')
   }
 
   if (boundingBox) {
