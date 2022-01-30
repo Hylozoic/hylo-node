@@ -90,16 +90,38 @@ import { inspect } from 'util'
 import { red } from 'chalk'
 import { merge, reduce } from 'lodash'
 
+const createSession = (userId, fetchOne, fetchMany, { req }) => async (root, { email, password }) => {
+  try {
+    const isLoggedIn = await UserSession.isLoggedIn(req)
+    if (isLoggedIn) {
+      return {
+        me: fetchOne('Me', userId),
+        error: 'already logged-in'
+      }
+    }
+    const user = await User.authenticate(email, password)
+    await UserSession.login(req, user, 'password')
+    return {
+      me: fetchOne('Me', user.id)
+    }
+  } catch(err) {
+    return {
+      error: err.message
+    }
+  }
+}
+
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
-async function createSchema (session, isAdmin) {
-  const userId = session.userId
+async function createSchema (expressContext, isAdmin) {
+  const session = expressContext?.req?.session
+  const userId = session?.userId
   const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   const allResolvers = Object.assign({
-    Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
-    Mutation: userId ? makeMutations(session.id, userId, isAdmin) : {},
+    Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany, expressContext) : makePublicQueries(userId, fetchOne, fetchMany, expressContext),
+    Mutation: userId ? makeMutations(session?.id, userId, isAdmin) : {},
 
     FeedItemContent: {
       __resolveType (data, context, info) {
@@ -124,8 +146,9 @@ async function createSchema (session, isAdmin) {
 }
 
 // Queries that non-logged in users can make
-export function makePublicQueries (userId, fetchOne, fetchMany) {
+export function makePublicQueries (userId, fetchOne, fetchMany, expressContext) {
   return {
+    createSession: createSession(userId, fetchOne, fetchMany, expressContext),
     checkInvitation: (root, { invitationToken, accessCode }) =>
       InvitationService.check(userId, invitationToken, accessCode),
     // Can only access public communities and posts
@@ -136,8 +159,9 @@ export function makePublicQueries (userId, fetchOne, fetchMany) {
 }
 
 // Queries that logged in users can make
-export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
+export function makeAuthenticatedQueries (userId, fetchOne, fetchMany, expressContext) {
   return {
+    createSession: createSession(userId, fetchOne, fetchMany, expressContext),
     activity: (root, { id }) => fetchOne('Activity', id),
     checkInvitation: (root, { invitationToken, accessCode }) =>
       InvitationService.check(userId, invitationToken, accessCode),
@@ -399,10 +423,11 @@ export const createRequestHandler = () =>
       await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
     }
 
-    const schema = await createSchema(req.session, Admin.isSignedIn(req))
+    const schema = await createSchema({ req, res }, Admin.isSignedIn(req))
     return {
       schema,
       graphiql: true,
+      context: { req, res },
       customFormatErrorFn: process.env.NODE_ENV === 'development' ? logError : null
     }
   })

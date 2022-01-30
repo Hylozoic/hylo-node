@@ -679,6 +679,7 @@ type Query {
     autocomplete: String
   ): SkillQuerySet,
   checkInvitation(invitationToken: String, accessCode: String): CheckInvitationResult
+  createSession(email: String, password: String): CreateSessionResult
 }
 
 input AffiliationInput {
@@ -959,6 +960,11 @@ type Mutation {
   updateWidget(id: ID, changes: GroupWidgetInput): GroupWidget
   useInvitation(invitationToken: String, accessCode: String): InvitationUseResult
   vote(postId: ID, isUpvote: Boolean): Post
+}
+
+type CreateSessionResult {
+  me: Me
+  error: String
 }
 
 type InvitationUseResult {
