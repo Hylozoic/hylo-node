@@ -48,12 +48,12 @@ describe('Search', function () {
 
     it('includes only basic post types by default', () => {
       var query = Search.forPosts({groups: 9}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\') or "posts"."type" is null)')
+      expect(query).to.contain('"posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\')')
     })
 
     it('includes only basic post types when type is "all"', () => {
       var query = Search.forPosts({groups: 9, type: 'all'}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\') or "posts"."type" is null)')
+      expect(query).to.contain('"posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\')')
     })
 
     it('accepts an option to change the name of the total column', () => {

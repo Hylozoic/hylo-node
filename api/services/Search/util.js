@@ -14,10 +14,11 @@ export const filterAndSortPosts = curry((opts, q) => {
     showPinnedFirst,
     sortBy = 'updated',
     topic,
-    topics = [],
-    type ,
+    type,
     types
   } = opts
+
+  let { topics = [] } = opts
 
   const sortColumns = {
     votes: 'posts.num_votes',
@@ -134,7 +135,7 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
   if (sortBy === 'join') {
     q.orderBy('group_memberships.created_at', order || 'desc')
   } else if (!sortBy || sortBy === 'name') {
-    q.orderByRaw(`lower("name") ${order || 'asc'}`)
+    q.orderByRaw(`lower("users"."name") ${order || 'asc'}`)
   } else {
     q.orderBy(sortBy, order || 'asc')
   }
