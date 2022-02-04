@@ -1,5 +1,7 @@
 var Cheerio = require('cheerio')
 
+// TODO: DraftJS - Convert below to expect and parse ContentState
+
 // returns a set of unique ids of any @mentions found in the text
 export const getUserMentions = text => {
   if (!text) return []

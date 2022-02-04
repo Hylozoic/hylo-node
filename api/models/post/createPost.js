@@ -21,6 +21,7 @@ export default function createPost (userId, params) {
 
 export function afterCreatingPost (post, opts) {
   const userId = post.get('user_id')
+  // TODO: DraftJS
   const mentioned = RichText.getUserMentions(post.get('description'))
   const followerIds = uniq(mentioned.concat(userId))
   const trx = opts.transacting

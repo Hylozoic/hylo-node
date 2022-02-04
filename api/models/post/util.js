@@ -35,6 +35,7 @@ export function updateGroups (post, newIds, trx) {
 
 export async function updateFollowers (post, transacting) {
   const followerIds = await post.followers().fetch().then(f => f.pluck('id'))
+  // TODO: DraftJS
   const newMentionedIds = RichText.getUserMentions(post.get('description'))
   .filter(id => !followerIds.includes(id))
 

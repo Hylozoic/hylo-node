@@ -2,12 +2,14 @@ import validatePostData from '../../models/post/validatePostData'
 import underlyingCreatePost from '../../models/post/createPost'
 import underlyingUpdatePost from '../../models/post/updatePost'
 
+// TODO: DraftJS
 export function createPost (userId, data) {
   return convertGraphqlPostData(data)
   .tap(convertedData => validatePostData(userId, convertedData))
   .then(validatedData => underlyingCreatePost(userId, validatedData))
 }
 
+// TODO: DraftJS
 export function updatePost (userId, { id, data }) {
   return convertGraphqlPostData(data)
   .tap(convertedData => validatePostData(userId, convertedData))

@@ -324,6 +324,7 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var user = post.relations.user
+    // TODO: DraftJS - Convert RichText.qualify to expect and parse ContentState (maybe only RichText work)
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
   
@@ -362,6 +363,7 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var user = post.relations.user
+    // TODO: DraftJS
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
@@ -653,6 +655,7 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var inviter = this.actor()
+    // TODO: DraftJS
     var description = RichText.qualifyLinks(post.get('description'))
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
@@ -725,6 +728,7 @@ module.exports = bookshelf.Model.extend({
           otherGroup: refineOne(otherGroup, [ 'id', 'name', 'slug' ]),
           post: refineOne(
             post,
+            // TODO: DraftJS
             [ 'id', 'name', 'description' ],
             { description: 'details', name: 'title' }
           )

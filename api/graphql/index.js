@@ -86,6 +86,7 @@ import {
 import InvitationService from '../services/InvitationService'
 import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
+import GraphQLJSON, { GraphQLJSONObject } from 'graphql-type-json'
 import { inspect } from 'util'
 import { red } from 'chalk'
 import { merge, reduce } from 'lodash'
@@ -98,7 +99,9 @@ async function createSchema (session, isAdmin) {
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   const allResolvers = Object.assign({
-    Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
+    Query: userId
+      ? makeAuthenticatedQueries(userId, fetchOne, fetchMany)
+      : makePublicQueries(userId, fetchOne, fetchMany),
     Mutation: userId ? makeMutations(session.id, userId, isAdmin) : {},
 
     FeedItemContent: {
@@ -114,7 +117,10 @@ async function createSchema (session, isAdmin) {
       __resolveType (data, context, info) {
         return getTypeForInstance(data, models)
       }
-    }
+    },
+
+    JSON: GraphQLJSON,
+    JSONObject: GraphQLJSONObject
   }, resolvers)
 
   return makeExecutableSchema({

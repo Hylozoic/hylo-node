@@ -59,6 +59,7 @@ describe('PostController', () => {
       })
       .then(post => {
         expect(post.get('name')).to.equal("I&#x27;m looking for a penguin")
+        // TODO: DraftJS
         expect(post.get('description')).to.equal('I just love the tuxedo')
         expect(post.get('user_id')).to.equal(fixtures.u1.id)
         expect(post.get('created_from')).to.equal('email_form')

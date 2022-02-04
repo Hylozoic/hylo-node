@@ -1,3 +1,6 @@
+// TODO: DraftJS
+import { contentState as hyloContentState } from 'hylo-shared'
+
 import searchQuerySet from './searchQuerySet'
 import {
   commentFilter,
@@ -10,14 +13,14 @@ import {
   postFilter,
   voteFilter
 } from './filters'
-import { flow, mapKeys, camelCase } from 'lodash/fp'
+import { flow, mapKeys, camelCase, isString } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
 import {
   filterAndSortGroups,
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
-import he from 'he';
+import he from 'he'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -163,8 +166,13 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         title: p => p.get('name') ? he.decode(p.get('name')) : null,
-        details: p => p.get('description'),
-        detailsText: p => p.getDetailsText(),
+        details: p => {
+          // TODO: DraftJS - This will all be moved to conversion routine, contentStateFromHTML will do all the work
+          // This should be moved to description_raw shortly... Works for now for testing display
+          // const descriptionHTML = isString(p.get('description_html')) ? p.get('description_html') : ''
+          return hyloContentState.fromHTML(p.get('description_html'))
+        },
+        detailsHTML: p => p.get('description_html'),
         isPublic: p => p.get('is_public'),
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),

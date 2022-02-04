@@ -1,13 +1,12 @@
 /* globals _ */
 /* eslint-disable camelcase */
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
-import { compact, flatten, some, sortBy, uniq } from 'lodash'
+import { flatten, sortBy } from 'lodash'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
-import html2text from '../../lib/htmlparser/html2text'
 import ProjectMixin from './project/mixin'
 import EventMixin from './event/mixin'
 
@@ -165,10 +164,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  getDetailsText: async function () {
-    return html2text(this.get('description'))
-  },
-
   // Emulate the graphql request for a post in the feed so the feed can be
   // updated via socket. Some fields omitted, linkPreview for example.
   // TODO: if we were in a position to avoid duplicating the graphql layer
@@ -182,6 +177,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Object.assign({},
       refineOne(
         this,
+        // TODO: DraftJS - Sockets to send correct description field/s
         [ 'created_at', 'description', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
         { 'description': 'details', 'name': 'title', 'num_votes': 'votesTotal' }
       ),
@@ -309,7 +305,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       group_id: tagFollow.get('group_id'),
       reason: `tag: ${tagFollow.relations.tag.get('name')}`
     }))
-
+    // TODO: DraftJS - Handle this for activities / notifications
     const mentions = RichText.getUserMentions(this.get('description'))
     const mentioned = mentions.map(userId => ({
       reader_id: userId,

@@ -1,4 +1,6 @@
 scalar Date
+scalar JSON
+scalar JSONObject
 
 # The currently logged-in person.
 type Me {
@@ -393,8 +395,8 @@ type Interstitial {
 type Post {
   id: ID
   title: String
-  details: String
-  detailsText: String
+  details: JSONObject
+  detailsHTML: String
   type: String
   createdAt: Date
   updatedAt: Date
@@ -715,7 +717,7 @@ input MeInput {
 
 input PostInput {
   title: String
-  details: String
+  details: JSONObject
   type: String
   groupIds: [String]
   linkPreviewId: String

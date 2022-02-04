@@ -4,13 +4,6 @@ const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
 describe('Post', function () {
-  it('getDetailsText', async () => {
-    await setup.clearDb()
-    const post = await factories.post({description: `<p>hello <a data-user-id="334" data-entity-type='mention'>John Doe</a> #MOO</p>`}).save()
-    const text = await post.getDetailsText()
-    expect(text).to.equal('hello [John Doe:334] #MOO\n')
-  })
-
   describe('#addFollowers', function () {
     var u1, u2, post
 
@@ -188,6 +181,7 @@ describe('Post', function () {
       .then(() => {
         expect(p2.id).to.exist
         expect(p2.id).not.to.equal(post.id)
+        // TODO: DraftJS
         expect(p2.get('description')).to.equal('foo')
         expect(p2.get('name')).to.equal(post.get('name'))
       })
