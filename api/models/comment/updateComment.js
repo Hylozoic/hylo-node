@@ -1,5 +1,5 @@
 import { difference, uniq } from 'lodash'
-import { sanitize } from 'hylo-utils/text'
+import HyloShared from 'hylo-shared'
 import { updateMedia } from './util'
 
 export default async function updateComment (commenterId, id, params) {
@@ -11,7 +11,7 @@ export default async function updateComment (commenterId, id, params) {
 
   let { text, attachments } = params
 
-  text = sanitize(text)
+  text = HyloShared.text.sanitize(text)
 
   const attrs = { text }
   const post = comment.relations.post

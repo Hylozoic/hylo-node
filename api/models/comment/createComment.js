@@ -1,11 +1,11 @@
-import { sanitize } from 'hylo-utils/text'
+import HyloShared from 'hylo-shared'
 import { flatten, difference, uniq } from 'lodash'
 import { postRoom, pushToSockets, userRoom } from '../../services/Websockets'
 import { refineOne, refineMany } from '../util/relations'
 
 export default async function createComment (commenterId, opts = {}) {
   let { text, post, parentComment } = opts
-  text = sanitize(text)
+  text = HyloShared.text.sanitize(text)
 
   var attrs = {
     text: text,

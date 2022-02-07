@@ -1,4 +1,4 @@
-import { sanitize } from 'hylo-utils/text'
+import HyloShared from 'hylo-shared'
 
 export async function topicMutationPermissionCheck (userId, groupId) {
   const group = await Group.find(groupId)
@@ -12,7 +12,7 @@ export async function topicMutationPermissionCheck (userId, groupId) {
 
 export async function createTopic (userId, topicName, groupId, isDefault, isSubscribing = true) {
   await topicMutationPermissionCheck(userId, groupId)
-  const name = sanitize(topicName)
+  const name = HyloShared.text.sanitize(topicName)
   const invalidReason = Tag.validate(name)
   if (invalidReason) {
     throw new Error(invalidReason)

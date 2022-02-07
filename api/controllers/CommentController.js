@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { isEmpty } from 'lodash'
 import { flow, filter, map, includes } from 'lodash/fp'
-import { markdown } from 'hylo-utils/text'
+import HyloShared from 'hylo-shared'
 import createComment from '../models/comment/createComment'
 
 module.exports = {
@@ -42,7 +42,7 @@ module.exports = {
     // TODO: fix
     const { groupId, userId } = res.locals.tokenData
 
-    const replyText = postId => markdown(req.param(`post-${postId}`))
+    const replyText = postId => HyloShared.text.markdown(req.param(`post-${postId}`))
 
     const postIds = flow(
       Object.keys,

@@ -1,5 +1,5 @@
 import { values, isEmpty, trim } from 'lodash'
-import { validateFlaggedItem } from 'hylo-utils/validators'
+import HyloShared from 'hylo-shared'
 import { notifyModeratorsPost, notifyModeratorsMember, notifyModeratorsComment } from './flaggedItem/notifyUtils'
 
 module.exports = bookshelf.Model.extend({
@@ -83,11 +83,11 @@ module.exports = bookshelf.Model.extend({
       reason = 'N/A'
     }
 
-    const invalidReason = validateFlaggedItem.reason(reason)
+    const invalidReason = HyloShared.validators.validateFlaggedItem.reason(reason)
     if (invalidReason) return Promise.reject(new Error(invalidReason))
 
     if (process.env.NODE_ENV !== 'development') {
-      const invalidLink = validateFlaggedItem.link(link)
+      const invalidLink = HyloShared.validators.validateFlaggedItem.link(link)
       if (invalidLink) return Promise.reject(new Error(invalidLink))
     }
 
