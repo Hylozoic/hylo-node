@@ -10,6 +10,7 @@ describe('filterAndSortPosts', () => {
       query = q
       spy.on(q, 'join')
       spy.on(q, 'where')
+      spy.on(q, 'whereIn')
     })
   })
 
@@ -34,7 +35,7 @@ describe('filterAndSortPosts', () => {
   it('allows topic IDs', () => {
     filterAndSortPosts({topic: '122'}, query)
     expect(query.join).to.have.been.called.with('posts_tags', 'posts_tags.post_id', 'posts.id')
-    expect(query.where).to.have.been.called.with('posts_tags.tag_id', '122')
+    expect(query.whereIn).to.have.been.called.with('posts_tags.tag_id', ['122'])
   })
 
   it('allows topic names', () => {
@@ -46,7 +47,7 @@ describe('filterAndSortPosts', () => {
     expect(query.join.__spy.calls[1]).to.deep.equal([
       'tags', 'posts_tags.tag_id', 'tags.id'
     ])
-    expect(query.where).to.have.been.called.with('tags.name', 'design')
+    expect(query.whereIn).to.have.been.called.with('tags.name', ['design'])
   })
 
   it('rejects bad type values', () => {
@@ -58,20 +59,7 @@ describe('filterAndSortPosts', () => {
   it('includes basic types when filter is blank', () => {
     filterAndSortPosts({}, query)
     expectEqualQuery(relation, `select * from "posts"
-      where (
-        "posts"."type" in ('discussion', 'request', 'offer', 'project', 'event', 'resource')
-        or "posts"."type" is null
-      )
-      order by "posts"."updated_at" desc`)
-  })
-
-  it('includes null-typed posts as discussions', () => {
-    filterAndSortPosts({type: 'discussion'}, query)
-    expectEqualQuery(relation, `select * from "posts"
-      where (
-        "posts"."type" is null
-        or ("posts"."type" = 'discussion')
-      )
+      where "posts"."type" in ('discussion', 'request', 'offer', 'project', 'event', 'resource')
       order by "posts"."updated_at" desc`)
   })
 })

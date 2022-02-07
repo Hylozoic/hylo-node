@@ -194,13 +194,14 @@ export default async function makeModels (userId, isAdmin) {
       ],
       filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
-      fetchMany: ({ afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, offset, order, sortBy, search, topic }) =>
+      fetchMany: ({ afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, isFulfilled, offset, order, sortBy, search, topic, topics, types }) =>
         searchQuerySet('posts', {
           afterTime,
           beforeTime,
           boundingBox,
           currentUserId: userId,
           groupSlugs,
+          isFulfilled,
           limit: first,
           offset,
           onlyMyGroups: context === 'all',
@@ -209,7 +210,9 @@ export default async function makeModels (userId, isAdmin) {
           sort: sortBy,
           term: search,
           topic,
-          type: filter
+          topics,
+          type: filter,
+          types
         })
     },
 
@@ -255,7 +258,7 @@ export default async function makeModels (userId, isAdmin) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic }) =>
+          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
               afterTime,
               beforeTime,
@@ -267,7 +270,9 @@ export default async function makeModels (userId, isAdmin) {
               showPinnedFirst: true,
               sortBy,
               topic,
-              type: filter
+              topics,
+              type: filter,
+              types
             }))
         }},
         {prerequisiteGroups: {
@@ -296,17 +301,20 @@ export default async function makeModels (userId, isAdmin) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { afterTime, beforeTime, boundingBox, filter, order, search, sortBy, topic }) =>
+          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
               afterTime,
               beforeTime,
               boundingBox,
+              isFulfilled,
               order,
               search,
               showPinnedFirst: true,
               sortBy,
               topic,
-              type: filter
+              topics,
+              type: filter,
+              types
             }))
         }},
         {widgets: {querySet: true }}
