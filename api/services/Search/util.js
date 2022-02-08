@@ -146,12 +146,12 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
   }
 })
 
-export const filterAndSortGroups = curry((opts, q) => {
-  const { search, sortBy = 'name', boundingBox } = opts
+export const filterAndSortGroups = curry((opts, q) => { // TODO
+  const { search, sortBy = 'name', boundingBox, order } = opts
 
   if (search) {
     addTermToQueryBuilder(search, q, {
-      columns: ['groups.name']
+      columns: ['groups.name', 'groups.description']
     })
   }
 
@@ -160,5 +160,5 @@ export const filterAndSortGroups = curry((opts, q) => {
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
-  q.orderBy(sortBy)
+  q.orderBy(sortBy || 'name', order || 'asc')
 })

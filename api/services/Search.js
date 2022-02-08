@@ -14,6 +14,7 @@ module.exports = {
   forSkills: opts => Skill.search(opts),
 
   forGroups: function (opts) {
+    console.log(opts, 'OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOWWWWWWWWWWWWWWWWWWWW')
     return Group.query(qb => {
       if (opts.groupIds) {
         qb.whereIn('groups.id', opts.groupIds)
@@ -42,10 +43,15 @@ module.exports = {
         qb.whereIn('parent_groups.slug', opts.parentSlugs)
       }
 
+      /*
+        join locations table, location field as distance...
+      */
+
       filterAndSortGroups({
         search: opts.term,
         sortBy: opts.sort,
-        boundingBox: opts.boundingBox}, qb)
+        boundingBox: opts.boundingBox
+      }, qb)
 
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
