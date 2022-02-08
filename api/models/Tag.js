@@ -5,7 +5,7 @@ import { includes, isUndefined } from 'lodash'
 import {
   filter, omitBy, some, uniq
 } from 'lodash/fp'
-import HyloShared from 'hylo-shared'
+import { Validators } from 'hylo-shared'
 
 export const tagsInText = (text = '') => {
   const re = /(?:^| |>)#([A-Za-z][\w_-]+)/g
@@ -123,11 +123,11 @@ module.exports = bookshelf.Model.extend({
         TagFollow.create({group_id, tag_id, user_id}, opts))),
 
   isValidTag: function (text) {
-    return !HyloShared.validators.validateTopicName(text)
+    return !Validators.validateTopicName(text)
   },
 
   validate: function (text) {
-    return HyloShared.validators.validateTopicName(text)
+    return Validators.validateTopicName(text)
   },
 
   tagsInText,

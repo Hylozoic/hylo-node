@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import HyloShared from 'hylo-shared'
+import { TextHelpers } from 'hylo-shared'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'
 import EnsureLoad from './mixins/EnsureLoad'
 
@@ -138,7 +138,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
 
     const finalText = cutoff ? lines.slice(0, cutoff).join('\n') : text
-    return opts.useMarkdown ? HyloShared.text.markdown(finalText || '') : finalText
+    return opts.useMarkdown ? TextHelpers.markdown(finalText || '') : finalText
   },
 
   notifyAboutMessage,

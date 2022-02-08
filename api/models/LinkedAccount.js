@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt'
 import Promise from 'bluebird'
-import { get, isEmpty, merge, pick } from 'lodash'
+import { get, isEmpty } from 'lodash'
+import { Validators } from 'hylo-shared'
 const hash = Promise.promisify(bcrypt.hash, bcrypt)
-import HyloShared from 'hylo-shared'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'linked_account',
@@ -29,7 +29,7 @@ module.exports = bookshelf.Model.extend({
 }, {
   create: function (userId, { type, profile, password, token }, { transacting, updateUser } = {}) {
     if (type === 'password') {
-      const invalidReason = HyloShared.text.validateUser.password(password)
+      const invalidReason = Validators.validateUser.password(password)
       if (invalidReason) return Promise.reject(new Error(invalidReason))
     }
 

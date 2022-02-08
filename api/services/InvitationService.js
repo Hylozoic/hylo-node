@@ -1,5 +1,5 @@
 import validator from 'validator'
-import HyloShared from 'hylo-shared'
+import { TextHelpers } from 'hylo-shared'
 import { get, isEmpty, map, merge } from 'lodash/fp'
 
 module.exports = {
@@ -89,7 +89,7 @@ module.exports = {
           if (tag) {
             opts.tagId = tag.id
           } else {
-            opts.message = HyloShared.text.markdown(message)
+            opts.message = TextHelpers.markdown(message)
             opts.moderator = isModerator
             opts.subject = subject
           }

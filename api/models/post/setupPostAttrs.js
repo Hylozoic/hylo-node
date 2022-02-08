@@ -1,12 +1,12 @@
 import { merge, pick } from 'lodash'
 import { getOr } from 'lodash/fp'
-import HyloShared from 'hylo-shared'
-import he from 'he';
+import { TextHelpers } from 'hylo-shared'
+import he from 'he'
 
 export default function setupPostAttrs (userId, params) {
   const attrs = merge({
-    name: HyloShared.text.sanitize(he.encode(params.name)),
-    description: HyloShared.text.sanitize(params.description),
+    name: TextHelpers.sanitize(he.encode(params.name)),
+    description: TextHelpers.sanitize(params.description),
     user_id: userId,
     visibility: params.public ? Post.Visibility.PUBLIC_READABLE : Post.Visibility.DEFAULT,
     link_preview_id: params.link_preview_id || getOr(null, 'id', params.linkPreview),
