@@ -1,5 +1,4 @@
 import { difference, uniq } from 'lodash'
-import { TextHelpers } from 'hylo-shared'
 import { updateMedia } from './util'
 
 export default async function updateComment (commenterId, id, params) {
@@ -10,8 +9,6 @@ export default async function updateComment (commenterId, id, params) {
   if (!comment) throw new Error('cannot find comment with ID', id)
 
   let { text, attachments } = params
-
-  text = TextHelpers.sanitize(text)
 
   const attrs = { text }
   const post = comment.relations.post

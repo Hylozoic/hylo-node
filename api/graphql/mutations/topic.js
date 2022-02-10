@@ -1,5 +1,3 @@
-import { TextHelpers } from 'hylo-shared'
-
 export async function topicMutationPermissionCheck (userId, groupId) {
   const group = await Group.find(groupId)
   if (!group) {
@@ -12,13 +10,12 @@ export async function topicMutationPermissionCheck (userId, groupId) {
 
 export async function createTopic (userId, topicName, groupId, isDefault, isSubscribing = true) {
   await topicMutationPermissionCheck(userId, groupId)
-  const name = TextHelpers.sanitize(topicName)
-  const invalidReason = Tag.validate(name)
+  const invalidReason = Tag.validate(topicName)
   if (invalidReason) {
     throw new Error(invalidReason)
   }
 
-  const topic = await Tag.findOrCreate(name)
+  const topic = await Tag.findOrCreate(topicName)
   await Tag.addToGroup({
     group_id: groupId,
     tag_id: topic.id,
