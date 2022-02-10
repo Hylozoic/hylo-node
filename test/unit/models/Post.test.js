@@ -4,7 +4,7 @@ const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
 describe('Post', function () {
-  it('getDetailsText', async () => {
+  it('detailsText', async () => {
     await setup.clearDb()
     const post = await factories.post({description: `<p>hello <a data-user-id="334" data-entity-type='mention'>John Doe</a> #MOO</p>`}).save()
     const text = await post.getDetailsText()
@@ -188,7 +188,7 @@ describe('Post', function () {
       .then(() => {
         expect(p2.id).to.exist
         expect(p2.id).not.to.equal(post.id)
-        expect(p2.get('description')).to.equal('foo')
+        expect(p2.details()).to.equal('foo')
         expect(p2.get('name')).to.equal(post.get('name'))
       })
     })

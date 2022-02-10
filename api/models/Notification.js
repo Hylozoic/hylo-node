@@ -324,7 +324,7 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var user = post.relations.user
-    var description = RichText.qualifyLinks(post.get('description'))
+    var description = RichText.qualifyLinks(post.details())
     var replyTo = Email.postReplyAddress(post.id, reader.id)
   
     var groupIds = Activity.groupIds(this.relations.activity)
@@ -362,7 +362,7 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var user = post.relations.user
-    var description = RichText.qualifyLinks(post.get('description'))
+    var description = RichText.qualifyLinks(post.details())
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
     var groupIds = Activity.groupIds(this.relations.activity)
@@ -653,7 +653,7 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var inviter = this.actor()
-    var description = RichText.qualifyLinks(post.get('description'))
+    var description = RichText.qualifyLinks(post.details())
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
     var groupIds = Activity.groupIds(this.relations.activity)

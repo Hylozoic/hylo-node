@@ -52,7 +52,7 @@ describe('afterCreatingPost', () => {
       const child = post.relations.children.first()
       expect(child).to.exist
       expect(child.get('name')).to.equal('bob')
-      expect(child.get('description')).to.equal('is your uncle')
+      expect(child.details()).to.equal('is your uncle')
 
       expect(Queue.classMethod).to.have.been.called
       .with('Post', 'createActivities', {postId: post.id})

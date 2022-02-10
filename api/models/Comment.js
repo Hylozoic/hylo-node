@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { TextHelpers } from 'hylo-shared'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -17,7 +16,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   text: function () {
-    return this.get('text')
+    // TODO: Confirm that this is always ran through graphql resolvers
+    console.log('!!! running Comment#text getter')
+    return TextHelpers.sanitize(this.get('text'))
   },
 
   mentions: function () {

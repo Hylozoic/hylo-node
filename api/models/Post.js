@@ -1,7 +1,7 @@
 /* globals _ */
-/* eslint-disable camelcase */
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
-import { compact, flatten, some, sortBy, uniq } from 'lodash'
+import { flatten, sortBy } from 'lodash'
+import { TextHelpers } from 'hylo-shared'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -41,6 +41,50 @@ module.exports = bookshelf.Model.extend(Object.assign({
   hasTimestamps: true,
 
   // Instance Methods
+
+  // Simple attribute getters
+
+  details: function () {
+    // TODO: Confirm that this is always ran through graphql resolvers
+    console.log('!!! running Post#details getter')
+    return TextHelpers.sanitize(this.get('description'))
+  },
+
+  // Deprecated for #details
+  description: function () {
+    console.log('Deprecation warning: Post#description called but has been replaced by Post#details')
+    return this.details()
+  },
+
+  detailsText: async function () {
+    return html2text(this.details())
+  },
+
+  title: function () {
+    return this.get('name')
+  },
+
+  isPublic: function () {
+    return this.get('is_public')
+  },
+
+  isWelcome: function () {
+    return this.get('type') === Post.Type.WELCOME
+  },
+
+  isThread: function () {
+    this.get('type') === Post.Type.THREAD
+  },
+
+  commentsTotal: function () {
+    return this.get('num_comments')
+  },
+
+  votesTotal: function () {
+    return this.get('num_votes')
+  },
+
+  // Relations
 
   activities: function () {
     return this.hasMany(Activity)
@@ -165,10 +209,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
-  getDetailsText: async function () {
-    return html2text(this.get('description'))
-  },
-
   // Emulate the graphql request for a post in the feed so the feed can be
   // updated via socket. Some fields omitted, linkPreview for example.
   // TODO: if we were in a position to avoid duplicating the graphql layer
@@ -179,6 +219,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
     const topics = refineMany(tags, [ 'id', 'name' ])
 
+    // TODO: Sanitization -- sanitize details here if not passing through `text` getter
     return Object.assign({},
       refineOne(
         this,
@@ -199,18 +240,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
         tags: topics
       }
     )
-  },
-
-  isPublic: function () {
-    return this.get('is_public')
-  },
-
-  isWelcome: function () {
-    return this.get('type') === Post.Type.WELCOME
-  },
-
-  isThread: function () {
-    return this.get('type') === Post.Type.THREAD
   },
 
   async lastReadAtForUser (userId) {
@@ -310,7 +339,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       reason: `tag: ${tagFollow.relations.tag.get('name')}`
     }))
 
-    const mentions = RichText.getUserMentions(this.get('description'))
+    const mentions = RichText.getUserMentions(this.details())
     const mentioned = mentions.map(userId => ({
       reader_id: userId,
       post_id: this.id,
