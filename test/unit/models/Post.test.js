@@ -7,7 +7,7 @@ describe('Post', function () {
   it('detailsText', async () => {
     await setup.clearDb()
     const post = await factories.post({description: `<p>hello <a data-user-id="334" data-entity-type='mention'>John Doe</a> #MOO</p>`}).save()
-    const text = await post.getDetailsText()
+    const text = await post.detailsText()
     expect(text).to.equal('hello [John Doe:334] #MOO\n')
   })
 

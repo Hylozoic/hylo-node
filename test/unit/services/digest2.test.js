@@ -239,7 +239,7 @@ describe('group digest v2', () => {
           model({
             id: 1,
             name: 'Foo!',
-            description: '<p><a href="/members/21">Edward West</a> & ' +
+            details: () => '<p><a href="/members/21">Edward West</a> & ' +
               '<a href="/members/16325">Julia Pope</a> <a>#oakland</a></p>',
             type: 'request',
             relations: {
