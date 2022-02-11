@@ -14,8 +14,17 @@ module.exports = {
   forSkills: opts => Skill.search(opts),
 
   forGroups: function (opts) {
-    console.log(opts, 'OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOWWWWWWWWWWWWWWWWWWWW')
     return Group.query(qb => {
+      if (opts.coord) {
+        qb.with('nearest_groups', bookshelf.knex.raw(`
+        SELECT groups.id, ST_Distance(t.x, locations.center) AS nearest 
+         FROM (SELECT ST_GeographyFromText('SRID=4326;POINT(${opts.coord.lng} ${opts.coord.lat})')) AS t(x), groups
+         INNER JOIN locations
+         ON groups.location_id = locations.id
+         WHERE ST_DWithin(t.x, locations.center, 30000000)`))
+        qb.join('nearest_groups', 'groups.id', '=', 'nearest_groups.id')
+      }
+
       if (opts.groupIds) {
         qb.whereIn('groups.id', opts.groupIds)
       }
@@ -43,23 +52,19 @@ module.exports = {
         qb.whereIn('parent_groups.slug', opts.parentSlugs)
       }
 
-      /*
-        join locations table, location field as distance...
-      */
-
       filterAndSortGroups({
         search: opts.term,
         sortBy: opts.sort,
         boundingBox: opts.boundingBox
       }, qb)
-
       // this counts total rows matching the criteria, disregarding limit,
       // which is useful for pagination
       countTotal(qb, 'groups', opts.totalColumnName)
-
       qb.limit(opts.limit)
       qb.offset(opts.offset)
-      qb.groupBy('groups.id')
+      if (!opts.coord) {
+        qb.groupBy('groups.id')
+      }
     })
   },
 
@@ -109,7 +114,7 @@ module.exports = {
   },
 
   fullTextSearch: function (userId, args) {
-    var items, total
+    let items, total
     args.limit = args.first
     return fetchAllGroupIds(userId, args)
     .then(groupIds =>
@@ -118,12 +123,12 @@ module.exports = {
         items = items_
         total = get('0.total', items)
 
-        var ids = transform(items, (ids, item) => {
-          var type = item.post_id ? 'posts'
+        const ids = transform(items, (ids, item) => {
+          const type = item.post_id ? 'posts'
             : item.comment_id ? 'comments' : 'people'
 
           if (!ids[type]) ids[type] = []
-          var id = item.post_id || item.comment_id || item.user_id
+          const id = item.post_id || item.comment_id || item.user_id
           ids[type].push(id)
         }, {})
 

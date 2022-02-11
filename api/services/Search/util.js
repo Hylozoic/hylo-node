@@ -159,6 +159,9 @@ export const filterAndSortGroups = curry((opts, q) => { // TODO
     q.join('locations', 'locations.id', '=', 'groups.location_id')
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
-
-  q.orderBy(sortBy || 'name', order || 'asc')
+  // if (sortBy !== 'nearest') {
+    q.orderBy(sortBy || 'name', order || 'asc')
+  // } else {
+    // q.orderBy('nearest', order || 'asc')
+  // }
 })
