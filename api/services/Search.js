@@ -21,7 +21,7 @@ module.exports = {
          FROM (SELECT ST_GeographyFromText('SRID=4326;POINT(${opts.coord.lng} ${opts.coord.lat})')) AS t(x), groups
          INNER JOIN locations
          ON groups.location_id = locations.id
-         WHERE ST_DWithin(t.x, locations.center, 30000000)`))
+         WHERE ST_DWithin(t.x, locations.center, 10000000)`))
         qb.join('nearest_groups', 'groups.id', '=', 'nearest_groups.id')
       }
 
@@ -38,7 +38,7 @@ module.exports = {
       }
 
       if (opts.visibility) {
-        qb.where('groups.visibility', opts.visibility)
+        qb.whereIn('groups.visibility', opts.visibility)
       }
 
       if (opts.onlyMine) {
@@ -62,7 +62,7 @@ module.exports = {
       countTotal(qb, 'groups', opts.totalColumnName)
       qb.limit(opts.limit)
       qb.offset(opts.offset)
-      if (!opts.coord) {
+      if (!opts.coord && !opts.sort === 'size') {
         qb.groupBy('groups.id')
       }
     })

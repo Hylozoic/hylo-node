@@ -146,7 +146,7 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
   }
 })
 
-export const filterAndSortGroups = curry((opts, q) => { // TODO
+export const filterAndSortGroups = curry((opts, q) => {
   const { search, sortBy = 'name', boundingBox, order } = opts
 
   if (search) {
@@ -159,9 +159,13 @@ export const filterAndSortGroups = curry((opts, q) => { // TODO
     q.join('locations', 'locations.id', '=', 'groups.location_id')
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
-  // if (sortBy !== 'nearest') {
-    q.orderBy(sortBy || 'name', order || 'asc')
-  // } else {
-    // q.orderBy('nearest', order || 'asc')
-  // }
+
+  if (sortBy === 'size') {
+    q.with('member_count', bookshelf.knex.raw(`
+      SELECT group_id, COUNT(group_id) as size from group_memberships GROUP BY group_id
+    `))
+    q.join('member_count', 'groups.id', '=', 'member_count.group_id')
+  }
+
+  q.orderBy(sortBy || 'name', order || sortBy === 'size' ? 'desc' : 'asc')
 })
