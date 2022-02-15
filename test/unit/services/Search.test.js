@@ -80,13 +80,13 @@ describe('Search', function () {
         offset 20`)
     })
 
-    it('includes nearest if coord is passed in', () => {
+    it('includes nearest if nearCoord is passed in', () => {
       var query = Search.forGroups({
         limit: 10,
         offset: 20,
         term: 'milk toast',
         sort: 'nearest',
-        coord: {lat: 45, lng: 45}
+        nearCoord: {lat: 45, lng: 45}
       }).query().toString()
       expect(query).to.contain('SELECT groups.id, ST_Distance(t.x, locations.center) AS nearest')
     })

@@ -15,10 +15,10 @@ module.exports = {
 
   forGroups: function (opts) {
     return Group.query(qb => {
-      if (opts.coord) {
+      if (opts.nearCoord) {
         qb.with('nearest_groups', bookshelf.knex.raw(`
         SELECT groups.id, ST_Distance(t.x, locations.center) AS nearest 
-         FROM (SELECT ST_GeographyFromText('SRID=4326;POINT(${opts.coord.lng} ${opts.coord.lat})')) AS t(x), groups
+         FROM (SELECT ST_GeographyFromText('SRID=4326;POINT(${opts.nearCoord.lng} ${opts.nearCoord.lat})')) AS t(x), groups
          INNER JOIN locations
          ON groups.location_id = locations.id
          WHERE ST_DWithin(t.x, locations.center, 10000000)`))
@@ -62,7 +62,7 @@ module.exports = {
       countTotal(qb, 'groups', opts.totalColumnName)
       qb.limit(opts.limit)
       qb.offset(opts.offset)
-      if (!opts.coord && !opts.sort === 'size') {
+      if (!opts.nearCoord && !opts.sort === 'size') { // Because they are using CTEs and WITH statements, queries ordered by size or nearness don't like this group-by statement
         qb.groupBy('groups.id')
       }
     })
