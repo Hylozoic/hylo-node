@@ -14,12 +14,12 @@ const types = [
   "ReplayDetection",
   "PushedAuthorizationRequest",
   "Grant",
-].reduce((map, name, i) => ({ ...map, [name]: i + 1 }), {})
+]
 
 class DbAdapter {
   constructor(name) {
     this.name = name
-    this.type = types[name]
+    this.type = name
     this.cleaned = bookshelf.knex.table(oidc_payloads).where("expires_at", "<", new Date()).delete().then(() => this)
   }
 

@@ -3,7 +3,7 @@ exports.up = function (knex) {
     if (!b)
       await knex.schema.createTable("oidc_payloads", t => {
         t.string("id");
-        t.integer("type");
+        t.string("type");
         t.jsonb("payload");
         t.string("grant_id");
         t.string("user_code");
