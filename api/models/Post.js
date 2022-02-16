@@ -45,9 +45,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // Simple attribute getters
 
   details: function () {
-    // TODO: Confirm that this is always ran through graphql resolvers
-    console.log('!!! running Post#details getter')
-    return TextHelpers.sanitize(this.get('description'))
+    // This should be always used when accessing this attribute
+    return TextHelpers.sanitizeHTML(this.get('description'))
   },
 
   // Deprecated for #details
@@ -73,7 +72,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   isThread: function () {
-    this.get('type') === Post.Type.THREAD
+    return this.get('type') === Post.Type.THREAD
   },
 
   commentsTotal: function () {

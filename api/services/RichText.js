@@ -12,7 +12,7 @@ export const getUserMentions = text => {
 export const qualifyLinks = (text, recipient, token, slug) => {
   if (!text) return text
 
-  var $ = Cheerio.load(text)
+  var $ = Cheerio.load(text, null, false)
   $('a').each(function () {
     const $this = $(this)
     const tag = $this.text().replace(/^#/, '')

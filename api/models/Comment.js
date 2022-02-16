@@ -16,9 +16,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   text: function () {
-    // TODO: Confirm that this is always ran through graphql resolvers
-    console.log('!!! running Comment#text getter')
-    return TextHelpers.sanitize(this.get('text'))
+    // This should be always used when accessing this attribute
+    return TextHelpers.sanitizeHTML(this.get('text'))
   },
 
   mentions: function () {

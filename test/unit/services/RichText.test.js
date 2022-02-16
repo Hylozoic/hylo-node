@@ -6,12 +6,12 @@ describe('RichText', function () {
   describe('.qualifyLinks', function () {
     it('turns data-user-id links into fully-qualified links', function () {
       var text = '<p>#hashtag, #anotherhashtag, https://www.metafilter.com/wooooo</p>' +
-        '<p>a paragraph, and of course <a href="/members/5942" data-user-id="5942">@Minda Myers</a>&#xA0;' +
-        '<a href="/members/8781" data-user-id="8781">@Ray Hylo</a>&#xA0;#boom.</p><p>danke</p>'
+        '<p>a paragraph, and of course <a href="/members/5942" data-user-id="5942">@Minda Myers</a>&nbsp;' +
+        '<a href="/members/8781" data-user-id="8781">@Ray Hylo</a>&nbsp;#boom.</p><p>danke</p>'
 
       var expected = '<p>#hashtag, #anotherhashtag, https://www.metafilter.com/wooooo</p>' +
-      `<p>a paragraph, and of course <a href="${prefix}/members/5942" data-user-id="5942">@Minda Myers</a>&#xA0;` +
-      `<a href="${prefix}/members/8781" data-user-id="8781">@Ray Hylo</a>&#xA0;#boom.</p><p>danke</p>`
+      `<p>a paragraph, and of course <a href="${prefix}/members/5942" data-user-id="5942">@Minda Myers</a>&nbsp;` +
+      `<a href="${prefix}/members/8781" data-user-id="8781">@Ray Hylo</a>&nbsp;#boom.</p><p>danke</p>`
 
       expect(RichText.qualifyLinks(text)).to.equal(expected)
     })
