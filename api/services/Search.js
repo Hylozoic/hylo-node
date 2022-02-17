@@ -38,7 +38,7 @@ module.exports = {
       }
 
       if (opts.visibility) {
-        qb.whereIn('groups.visibility', opts.visibility)
+        qb.where('groups.visibility', opts.visibility)
       }
 
       if (opts.onlyMine) {
