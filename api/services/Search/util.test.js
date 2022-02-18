@@ -68,13 +68,9 @@ describe('filterAndSortGroups', () => {
   it('supports searching', () => {
     const relation = Group.collection()
     relation.query(q => {
-      filterAndSortGroups({search: 'foo'}, q)
+      filterAndSortGroups({ search: 'foo' }, q)
     })
 
-    expectEqualQuery(relation, `select * from "groups"
-      where (
-        ((to_tsvector('english', groups.name) @@ to_tsquery('foo:*')))
-      )
-      order by "name" asc`)
+    expectEqualQuery(relation, `select * from "groups" where (((to_tsvector('english', groups.name) @@ to_tsquery('foo:*')) or (to_tsvector('english', groups.description) @@ to_tsquery('foo:*')))) order by "name" asc`)
   })
 })
