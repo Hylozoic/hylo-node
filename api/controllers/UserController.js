@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { getPublicKeyFromPem } from '../../lib/util'
 
 module.exports = {
   create: function (req, res) {
@@ -111,7 +112,9 @@ module.exports = {
         res.cookie('verifiedEmail', email, { maxAge: 1000 * 60 * 60 * 4 });
         return res.redirect(Frontend.Route.signupFinish())
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error("Error verifying token:", e.message)
+    }
 
     return res.redirect(Frontend.Route.signup('invalid-link'))
   }

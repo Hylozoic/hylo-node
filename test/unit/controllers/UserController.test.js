@@ -141,7 +141,7 @@ describe('UserController', function () {
         sub: code.get('email'),
         exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
         code: code.get('code')
-      }, process.env.JWT_SECRET);
+      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
 
       return UserController.verifyEmailByToken(req, res).then(function () {
         expect(res.redirect).to.have.been.called()
@@ -151,12 +151,12 @@ describe('UserController', function () {
 
     it ('sets cookie on valid token', async () => {
       req.params.token = jwt.sign({
-        iss: 'https://hylo.com',
+        iss: process.env.PROTOCOL + "://" + process.env.DOMAIN,
         aud: 'https://hylo.com',
         sub: code.get('email'),
         exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
         code: code.get('code')
-      }, process.env.JWT_SECRET);
+      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
 
       return UserController.verifyEmailByToken(req, res).then(function () {
         expect(res.redirect).to.have.been.called()
