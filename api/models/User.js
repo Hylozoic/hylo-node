@@ -70,7 +70,7 @@ module.exports = bookshelf.Model.extend(merge({
         preferred_username: null,
         profile: Frontend.Route.profile(this),
         updated_at: this.get('updated_at'),
-        website: null,
+        website: this.get('url'),
         zoneinfo: null
       })
     }
@@ -389,12 +389,14 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   generateJWT: function () {
+    const privateKey = Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64')
+
     return jwt.sign({
-      iss: 'https://hylo.com',
+      iss: process.env.PROTOCOL + '://' + process.env.DOMAIN,
       aud: 'https://hylo.com',
       sub: this.id,
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4) // 4 hour expiration
-    }, process.env.JWT_SECRET);
+    }, privateKey, { algorithm: 'RS256' })
   },
 
   generateToken: function () {

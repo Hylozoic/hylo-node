@@ -39,13 +39,15 @@ module.exports = {
     }
 
     const code = await UserVerificationCode.create(email)
+    const privateKey = Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64')
+
     const token = jwt.sign({
-      iss: 'https://hylo.com',
+      iss: process.env.PROTOCOL + '://' + process.env.DOMAIN,
       aud: 'https://hylo.com',
       sub: email,
       exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
       code: code.get('code')
-    }, process.env.JWT_SECRET);
+    }, privateKey, { algorithm: 'RS256' });
 
     Queue.classMethod('Email', 'sendEmailVerification', {
       email,
@@ -96,7 +98,11 @@ module.exports = {
     let { token } = req.allParams()
     const verify = Promise.promisify(jwt.verify, jwt)
     try {
-      const decoded = await jwt.verify(token, process.env.JWT_SECRET, { audience: 'https://hylo.com', issuer: 'https://hylo.com' })
+      const decoded = await jwt.verify(
+        token,
+        getPublicKeyFromPem(process.env.OIDC_KEYS.split(',')[0]),
+        { audience: 'https://hylo.com', issuer: process.env.PROTOCOL + '://' + process.env.DOMAIN }
+      )
       const email = decoded.sub
       const code = decoded.code
 

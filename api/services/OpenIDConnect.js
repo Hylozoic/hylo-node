@@ -13,8 +13,8 @@ const configuration = {
     address: ['address'],
     email: ['email', 'email_verified'],
     phone: ['phone_number'], // 'phone_number_verified'
-    profile: ['name', 'picture', 'updated_at']
-              // 'birthdate', 'family_name', 'gender', 'given_name', 'locale', 'middle_name', 'nickname', 'preferred_username', 'profile', 'website', 'zoneinfo'
+    profile: ['name', 'picture', 'updated_at', 'website']
+              // 'birthdate', 'family_name', 'gender', 'given_name', 'locale', 'middle_name', 'nickname', 'preferred_username', 'profile', 'zoneinfo'
   },
   clients: [],
   // This seems to be needed? but maybe we want something client based like:
@@ -62,7 +62,7 @@ const configuration = {
     },
   },
   jwks: {
-    keys: process.env.OIDC_JWK_KEYS ? process.env.OIDC_JWK_KEYS.split(',').map(k => rsaPemToJwk(Buffer.from(k, 'base64').toString('ascii'), {}, 'private')) : []
+    keys: process.env.OIDC_KEYS ? process.env.OIDC_KEYS.split(',').map(k => rsaPemToJwk(Buffer.from(k, 'base64').toString('ascii'), {}, 'private')) : []
   },
   pkce: {
     required: true

@@ -136,9 +136,9 @@ Change your `.env` file to have:
 PROTOCOL=https
 ```
 
-### Setting up as OpenID Connect provider
+### Setting up to handle auth with JWTs and become an OpenID Connect provider
 - Run `yarn generate-rsa-key-base64`
-- Copy generated base64 string to .env file: `OIDC_JWK_KEYS=base64key`
+- Copy generated base64 string to .env file: `OIDC_KEYS=base64key`
 - You can add multiple keys by separating them with a comma (to rotate keys in the future)
 
 ### running tests
