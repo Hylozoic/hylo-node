@@ -141,7 +141,7 @@ export const postFilter = (userId, isAdmin) => relation => {
 
     if (!userId) {
       // non authenticated queries can only see public posts
-      q.where(tableName + '.is_public', true)
+      q.where('posts.is_public', true)
     } else if (!isAdmin) {
       // Only show posts that are public or posted to a group the user is a member of
       q.where(q3 => {
