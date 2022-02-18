@@ -603,7 +603,6 @@ CREATE TABLE public.group_join_questions (
 --
 
 CREATE SEQUENCE public.group_join_questions_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -685,7 +684,6 @@ CREATE TABLE public.group_relationship_invites (
 --
 
 CREATE SEQUENCE public.group_relationship_invites_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -718,7 +716,6 @@ CREATE TABLE public.group_to_group_join_questions (
 --
 
 CREATE SEQUENCE public.group_to_group_join_questions_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -752,7 +749,6 @@ CREATE TABLE public.group_to_group_join_request_question_answers (
 --
 
 CREATE SEQUENCE public.group_to_group_join_request_question_answers_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -775,7 +771,7 @@ CREATE TABLE public.group_widgets (
     id integer NOT NULL,
     group_id bigint NOT NULL,
     widget_id bigint NOT NULL,
-    settings jsonb,
+    settings jsonb DEFAULT '{}'::jsonb,
     is_visible boolean DEFAULT true,
     "order" integer,
     created_at timestamp with time zone
@@ -787,7 +783,6 @@ CREATE TABLE public.group_widgets (
 --
 
 CREATE SEQUENCE public.group_widgets_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -881,7 +876,6 @@ CREATE TABLE public.groups_suggested_skills (
 --
 
 CREATE SEQUENCE public.groups_suggested_skills_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -927,7 +921,6 @@ CREATE TABLE public.join_request_question_answers (
 --
 
 CREATE SEQUENCE public.join_request_question_answers_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1344,6 +1337,22 @@ ALTER SEQUENCE public.notifications_id_seq OWNED BY public.notifications.id;
 
 
 --
+-- Name: oidc_payloads; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.oidc_payloads (
+    id character varying(255) NOT NULL,
+    type character varying(255) NOT NULL,
+    payload jsonb,
+    grant_id character varying(255),
+    user_code character varying(255),
+    uid character varying(255),
+    expires_at timestamp with time zone,
+    consumed_at timestamp with time zone
+);
+
+
+--
 -- Name: org_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1679,7 +1688,6 @@ CREATE TABLE public.questions (
 --
 
 CREATE SEQUENCE public.questions_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -2204,7 +2212,6 @@ CREATE TABLE public.widgets (
 --
 
 CREATE SEQUENCE public.widgets_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -2907,6 +2914,14 @@ ALTER TABLE ONLY public.nexudus_accounts
 
 ALTER TABLE ONLY public.notifications
     ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: oidc_payloads oidc_payloads_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.oidc_payloads
+    ADD CONSTRAINT oidc_payloads_pkey PRIMARY KEY (id, type);
 
 
 --
@@ -4610,7 +4625,7 @@ ALTER TABLE ONLY public.communities_users
 --
 
 ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id);
+    ADD CONSTRAINT users_location_id_foreign FOREIGN KEY (location_id) REFERENCES public.locations(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
