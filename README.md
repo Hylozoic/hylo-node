@@ -139,7 +139,7 @@ PROTOCOL=https
 ### Setting up as OpenID Connect provider
 - Run `yarn generate-rsa-key-base64`
 - Copy generated base64 string to .env file: `OIDC_JWK_KEYS=base64key`
-- You can add multipke keys by separating them with a comma
+- You can add multiple keys by separating them with a comma (to rotate keys in the future)
 
 ### running tests
 
