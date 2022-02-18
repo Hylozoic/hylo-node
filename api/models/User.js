@@ -41,7 +41,7 @@ module.exports = bookshelf.Model.extend(merge({
     // TODO: track specific claims that are rejected by the user, but allow others
 
     let returnData = {
-      sub: this.accountId, // it is essential to always return a sub claim
+      sub: this.accountId || this.id // it is essential to always return a sub claim
     }
 
     if (scope.includes('address')) {
@@ -89,7 +89,6 @@ module.exports = bookshelf.Model.extend(merge({
       })
     }
 
-    console.log("returning data for user", returnData)
     return returnData
   },
 
