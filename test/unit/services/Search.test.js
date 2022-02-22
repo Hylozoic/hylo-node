@@ -48,17 +48,57 @@ describe('Search', function () {
 
     it('includes only basic post types by default', () => {
       var query = Search.forPosts({groups: 9}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\') or "posts"."type" is null)')
+      expect(query).to.contain('"posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\')')
     })
 
     it('includes only basic post types when type is "all"', () => {
       var query = Search.forPosts({groups: 9, type: 'all'}).query().toString()
-      expect(query).to.contain('("posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\') or "posts"."type" is null)')
+      expect(query).to.contain('"posts"."type" in (\'discussion\', \'request\', \'offer\', \'project\', \'event\', \'resource\')')
     })
 
     it('accepts an option to change the name of the total column', () => {
       const query = Search.forPosts({totalColumnName: 'wowee'}).query().toString()
       expect(query).to.contain('count(*) over () as wowee')
+    })
+  })
+
+  describe('.forGroups', function () {
+    it('produces the expected SQL for a complex query', function () {
+      const search = Search.forGroups({
+        limit: 10,
+        offset: 20,
+        term: 'milk toast',
+        sort: 'name'
+      })
+
+      expectEqualQuery(search, `select groups.*, count(*) over () as total
+        from "groups"
+        where (((to_tsvector('english', groups.name) @@ to_tsquery('milk:* & toast:*'))
+        or (to_tsvector('english', groups.description) @@ to_tsquery('milk:* & toast:*'))))
+        order by "name" asc
+        limit 10
+        offset 20`)
+    })
+
+    it('includes nearest if nearCoord is passed in', () => {
+      var query = Search.forGroups({
+        limit: 10,
+        offset: 20,
+        term: 'milk toast',
+        sort: 'nearest',
+        nearCoord: {lat: 45, lng: 45}
+      }).query().toString()
+      expect(query).to.contain('SELECT groups.id, ST_Distance(t.x, locations.center) AS nearest')
+    })
+
+    it('includes group membership count if sorting by size', () => {
+      var query = Search.forGroups({
+        limit: 10,
+        offset: 20,
+        term: 'milk toast',
+        sort: 'size',
+      }).query().toString()
+      expect(query).to.contain('SELECT group_id, COUNT(group_id) as size from group_memberships GROUP BY group_id')
     })
   })
 

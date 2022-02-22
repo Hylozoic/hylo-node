@@ -127,11 +127,14 @@ type Person {
     filter: String,
     first: Int,
     groupSlugs: [String],
+    isFulfilled: Boolean,
     offset: Int,
     order: String,
     search: String,
     sortBy: String,
-    topic: ID
+    topic: ID,
+    topics: [ID],
+    types: [String]
   ): PostQuerySet
   projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
@@ -229,16 +232,18 @@ type Group {
   posts(
     afterTime: Date,
     beforeTime: Date,
+    boundingBox: [PointInput],
+    filter: String,
+    first: Int,
     isAnnouncement: Boolean,
     isFulfilled: Boolean,
-    first: Int,
-    order: String,
-    sortBy: String,
     offset: Int,
+    order: String,
     search: String,
-    filter: String,
+    sortBy: String,
     topic: ID,
-    boundingBox: [PointInput]
+    topics: [ID],
+    types: [String]
   ): PostQuerySet
   postCount: Int
   settings: GroupSettings
@@ -254,13 +259,16 @@ type Group {
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
+    isFulfilled: Boolean,
     filter: String,
     first: Int,
     offset: Int,
     order: String,
     search: String,
     sortBy: String,
-    topic: ID
+    topic: ID,
+    topics: [ID],
+    types: [String]
   ): PostQuerySet
   visibility: Int
   widgets: GroupWidgetQuerySet
@@ -624,6 +632,7 @@ type Query {
     filter: String,
     first: Int,
     groupIds: [ID],
+    nearCoord: PointInput,
     offset: Int,
     order: String,
     parentSlugs: [String],
@@ -649,11 +658,14 @@ type Query {
     filter: String,
     first: Int,
     groupSlugs: [String],
+    isFulfilled: Boolean,
     offset: Int,
     order: String,
     search: String,
     sortBy: String,
     topic: ID,
+    topics: [ID],
+    types: [String]
   ): PostQuerySet
   comment(id: ID): Comment
   people(
@@ -878,7 +890,6 @@ input SavedSearchInput {
   boundingBox: [PointInput]
   groupSlug: String
   context: String
-  lastPostId: ID
   name: String
   postTypes: [String]
   searchText: String

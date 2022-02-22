@@ -1,9 +1,25 @@
-import { curry, includes, values } from 'lodash'
+import { curry, includes, isEmpty, values } from 'lodash'
 import moment from 'moment'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {
-  const { afterTime, beforeTime, boundingBox, isAnnouncement, isFulfilled, order = 'desc', search, showPinnedFirst, sortBy = 'updated', topic, type } = opts
+  const {
+    afterTime,
+    beforeTime,
+    boundingBox,
+    isAnnouncement,
+    isFulfilled,
+    order = 'desc',
+    search,
+    showPinnedFirst,
+    sortBy = 'updated',
+    topic,
+    type,
+    types
+  } = opts
+
+  let { topics = [] } = opts
+
   const sortColumns = {
     votes: 'posts.num_votes',
     updated: 'posts.updated_at',
@@ -49,39 +65,34 @@ export const filterAndSortPosts = curry((opts, q) => {
     )
   }
 
-  if (!type || type === 'all' || type === 'all+welcome') {
-    q.where(q2 =>
-      q2.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
-      .orWhere('posts.type', null))
-  } else if (type === DISCUSSION) {
-    q.where(q2 =>
-      q2.where({'posts.type': null})
-      .orWhere({'posts.type': DISCUSSION}))
-  } else if (type === 'offersAndRequests') {
-    q.where(q2 =>
-      q2.where('posts.type', OFFER).orWhere('posts.type', REQUEST)
-    )
+  if (types) {
+    q.whereIn('posts.type', types)
+  } else if (!type || type === 'all' || type === 'all+welcome') {
+    q.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
   } else {
     if (!includes(values(Post.Type), type)) {
       throw new Error(`unknown post type: "${type}"`)
     }
-    q.where({'posts.type': opts.type})
+    q.where({'posts.type': type})
   }
 
-  if (search) {
+  if (!isEmpty(search)) {
     addTermToQueryBuilder(search, q, {
       columns: ['posts.name', 'posts.description']
     })
   }
 
   if (topic) {
-    if (/^\d+$/.test(topic)) { // topic ID
-      q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
-      q.where('posts_tags.tag_id', topic)
+    topics = topics.concat(topic)
+  }
+
+  if (!isEmpty(topics)) {
+    q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
+    if (/^\d+$/.test(topics[0])) { // topic ID
+      q.whereIn('posts_tags.tag_id', topics)
     } else { // topic name
-      q.join('posts_tags', 'posts_tags.post_id', 'posts.id')
       q.join('tags', 'posts_tags.tag_id', 'tags.id')
-      q.where('tags.name', topic)
+      q.whereIn('tags.name', topics)
     }
   }
 
@@ -117,10 +128,16 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
     throw new Error(`Cannot sort by "${sortBy}"`)
   }
 
+  if (order && !['asc', 'desc'].includes(order.toLowerCase())) {
+    throw new Error(`Cannot use sort order "${order}"`)
+  }
+
   if (sortBy === 'join') {
     q.orderBy('group_memberships.created_at', order || 'desc')
+  } else if (!sortBy || sortBy === 'name') {
+    q.orderByRaw(`lower("users"."name") ${order || 'asc'}`)
   } else {
-    q.orderBy(sortBy || 'name', order || 'asc')
+    q.orderBy(sortBy, order || 'asc')
   }
 
   if (boundingBox) {
@@ -130,11 +147,11 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
 })
 
 export const filterAndSortGroups = curry((opts, q) => {
-  const { search, sortBy = 'name', boundingBox } = opts
+  const { search, sortBy = 'name', boundingBox, order } = opts
 
   if (search) {
     addTermToQueryBuilder(search, q, {
-      columns: ['groups.name']
+      columns: ['groups.name', 'groups.description']
     })
   }
 
@@ -143,5 +160,12 @@ export const filterAndSortGroups = curry((opts, q) => {
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
-  q.orderBy(sortBy)
+  if (sortBy === 'size') {
+    q.with('member_count', bookshelf.knex.raw(`
+      SELECT group_id, COUNT(group_id) as size from group_memberships GROUP BY group_id
+    `))
+    q.join('member_count', 'groups.id', '=', 'member_count.group_id')
+  }
+
+  q.orderBy(sortBy || 'name', order || sortBy === 'size' ? 'desc' : 'asc')
 })
