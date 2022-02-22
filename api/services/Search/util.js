@@ -147,11 +147,12 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
 })
 
 export const filterAndSortGroups = curry((opts, q) => {
+  
   const { search, sortBy = 'name', boundingBox, order } = opts
 
   if (search) {
     addTermToQueryBuilder(search, q, {
-      columns: ['groups.name', 'groups.description']
+      columns: ['groups.name', 'groups.description', 'groups.location']
     })
   }
 
