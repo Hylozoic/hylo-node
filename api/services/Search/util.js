@@ -151,7 +151,7 @@ export const filterAndSortGroups = curry((opts, q) => {
 
   if (search) {
     addTermToQueryBuilder(search, q, {
-      columns: ['groups.name', 'groups.description']
+      columns: ['groups.name', 'groups.description', 'groups.location']
     })
   }
 
