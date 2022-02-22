@@ -147,6 +147,7 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
 })
 
 export const filterAndSortGroups = curry((opts, q) => {
+  
   const { search, sortBy = 'name', boundingBox, order } = opts
 
   if (search) {
