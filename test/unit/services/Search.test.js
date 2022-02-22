@@ -74,7 +74,8 @@ describe('Search', function () {
       expectEqualQuery(search, `select groups.*, count(*) over () as total
         from "groups"
         where (((to_tsvector('english', groups.name) @@ to_tsquery('milk:* & toast:*'))
-        or (to_tsvector('english', groups.description) @@ to_tsquery('milk:* & toast:*'))))
+        or (to_tsvector('english', groups.description) @@ to_tsquery('milk:* & toast:*'))
+        or (to_tsvector('english', groups.location) @@ to_tsquery('milk:* & toast:*'))))
         order by "name" asc
         limit 10
         offset 20`)
