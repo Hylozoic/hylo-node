@@ -97,7 +97,6 @@ const search = (opts) => {
 const searchInGroups = (groupIds, opts) => {
   const alias = 'search'
   const columns = [`${alias}.post_id`, `${alias}.comment_id`, `${alias}.user_id`, 'rank', 'total']
-
   return bookshelf.knex
   .select(columns)
   .from(search(omit(opts, 'limit', 'offset')).as(alias))
