@@ -147,11 +147,12 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
 })
 
 export const filterAndSortGroups = curry((opts, q) => {
-  const { search, sortBy = 'name', boundingBox } = opts
+  
+  const { search, sortBy = 'name', boundingBox, order } = opts
 
   if (search) {
     addTermToQueryBuilder(search, q, {
-      columns: ['groups.name']
+      columns: ['groups.name', 'groups.description', 'groups.location']
     })
   }
 
@@ -160,5 +161,12 @@ export const filterAndSortGroups = curry((opts, q) => {
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
-  q.orderBy(sortBy)
+  if (sortBy === 'size') {
+    q.with('member_count', bookshelf.knex.raw(`
+      SELECT group_id, COUNT(group_id) as size from group_memberships GROUP BY group_id
+    `))
+    q.join('member_count', 'groups.id', '=', 'member_count.group_id')
+  }
+
+  q.orderBy(sortBy || 'name', order || sortBy === 'size' ? 'desc' : 'asc')
 })

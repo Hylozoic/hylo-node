@@ -610,6 +610,7 @@ type Query {
     filter: String,
     first: Int,
     groupIds: [ID],
+    nearCoord: PointInput,
     offset: Int,
     order: String,
     parentSlugs: [String],

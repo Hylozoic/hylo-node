@@ -4,6 +4,17 @@ All notable changes to Hylo Node (the Hylo server) will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.3] - 2022-02-22
+
+### Added
+- Location to group search fields
+- Ability to search for groups by distance from a coordinate
+- Ability to query posts by whether they are fulfilled or not
+- Ability to query posts by multiple types or topics at once
+
+### Changed
+- Saved search finds last post id on creation so front-end doesn't need to pass it in
+
 ## [3.1.2] - 2022-01-24
 ### Changed
 - Update to node 16 and Heroku-20
