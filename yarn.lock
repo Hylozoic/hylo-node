@@ -5813,10 +5813,10 @@ https-proxy-agent@^5.0.0:
     agent-base "6"
     debug "4"
 
-hylo-shared@^1.6.3:
-  version "1.6.6"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.6.6.tgz#20c8b9098f99a11eac8b4dfb5e300bd768e64fbf"
-  integrity sha512-WdlzqhiPkFbvv2e1ZlLWVnoPVjWqAz2+520vm4GqEOsckX0HV8f3aeitCCmgrIP0WjjiNcH0sJhBCz+V/US21w==
+hylo-shared@^1.6.7:
+  version "1.6.7"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.6.7.tgz#786beca94be8c33afa1aa6fa0dc86ba25c067092"
+  integrity sha512-jtdku7XbKkmMhydkk2DugYCzmit7mB6xtRPtGT2Y5w734YaHyNyhJDHom1LgIQ6g+Dqc5FV9ZZ7zN0phGAFr4g==
   dependencies:
     cheerio "^1.0.0-rc.10"
     html-to-text "^8.1.0"
