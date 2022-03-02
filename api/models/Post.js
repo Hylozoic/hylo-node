@@ -7,7 +7,6 @@ import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
 import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
-import html2text from '../../lib/htmlparser/html2text'
 import ProjectMixin from './project/mixin'
 import EventMixin from './event/mixin'
 
@@ -49,14 +48,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return TextHelpers.sanitizeHTML(this.get('description'))
   },
 
-  // Deprecated for #details
   description: function () {
-    console.log('Deprecation warning: Post#description called but has been replaced by Post#details')
+    console.warn('Deprecation warning: Post#description called but has been replaced by Post#details')
     return this.details()
-  },
-
-  detailsText: async function () {
-    return html2text(this.details())
   },
 
   title: function () {
