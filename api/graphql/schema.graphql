@@ -632,6 +632,7 @@ type Query {
     filter: String,
     first: Int,
     groupIds: [ID],
+    groupType: String,
     nearCoord: PointInput,
     offset: Int,
     order: String,
