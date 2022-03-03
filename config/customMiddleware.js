@@ -4,6 +4,7 @@ import kue from 'kue'
 import kueUI from 'kue-ui'
 import isAdmin from '../api/policies/isAdmin'
 import accessTokenAuth from '../api/policies/accessTokenAuth'
+import checkClientCredentials from '../api/policies/checkClientCredentials'
 import cors from 'cors'
 import { cors as corsConfig } from './cors'
 import oidc from '../api/services/OpenIDConnect'
@@ -31,6 +32,8 @@ export default function (app) {
     methods: 'GET, POST, PUT, DELETE, OPTIONS, HEAD',
     credentials: true
   }))
-  app.use('/noo/graphql', accessTokenAuth)
+
+  app.use('/noo/graphql', accessTokenAuth) // TODO: remove once all our URLs use JWTs
+  app.use('/noo/graphql', checkClientCredentials) // To auth API calls
   app.use('/noo/graphql', createRequestHandler())
 }

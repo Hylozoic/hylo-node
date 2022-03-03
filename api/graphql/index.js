@@ -25,6 +25,7 @@ import {
   createProject,
   createProjectRole,
   createSavedSearch,
+  createSession,
   createTopic,
   deactivateUser,
   deleteUser,
@@ -59,6 +60,7 @@ import {
   reinviteAll,
   rejectGroupRelationshipInvite,
   reactivateUser,
+  register,
   removeMember,
   removeModerator,
   removePost,
@@ -81,6 +83,7 @@ import {
   updateStripeAccount,
   updateWidget,
   useInvitation,
+  verifyEmail,
   vote
 } from './mutations'
 import InvitationService from '../services/InvitationService'
@@ -88,38 +91,57 @@ import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
-import { merge, reduce } from 'lodash'
+import { merge, reduce, omit } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
-async function createSchema (session, isAdmin) {
+async function createSchema (expressContext) {
+  const { req } = expressContext
+  const session = req.session
   const userId = session.userId
+  const isAdmin = Admin.isSignedIn(req)
   const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
-  const allResolvers = Object.assign({
-    Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
-    Mutation: userId ? makeMutations(session.id, userId, isAdmin) : {},
+  let allResolvers
+  if (req.api_client) {
+    // TODO: check scope here, just api:write, just api_read, or both?
+    allResolvers = {
+      Query: {},
+      Mutation: makeApiMutations()
+    }
+  } else if (!userId) {
+    allResolvers = {
+      Query: makePublicQueries(userId, fetchOne, fetchMany),
+      Mutation: makePublicMutations(expressContext, fetchOne)
+    }
+  } else {
+    // authenticated users
 
-    FeedItemContent: {
-      __resolveType (data, context, info) {
-        if (data instanceof bookshelf.Model) {
-          return info.schema.getType('Post')
+    allResolvers = {
+      Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
+      Mutation: makeMutations(expressContext, userId, isAdmin, fetchOne),
+
+      FeedItemContent: {
+        __resolveType (data, context, info) {
+          if (data instanceof bookshelf.Model) {
+            return info.schema.getType('Post')
+          }
+          throw new Error('Post is the only implemented FeedItemContent type')
         }
-        throw new Error('Post is the only implemented FeedItemContent type')
-      }
-    },
+      },
 
-    SearchResultContent: {
-      __resolveType (data, context, info) {
-        return getTypeForInstance(data, models)
+      SearchResultContent: {
+        __resolveType (data, context, info) {
+          return getTypeForInstance(data, models)
+        }
       }
     }
-  }, resolvers)
+  }
 
   return makeExecutableSchema({
     typeDefs: [schemaText],
-    resolvers: allResolvers
+    resolvers: Object.assign(allResolvers, resolvers)
   })
 }
 
@@ -198,7 +220,17 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   }
 }
 
-export function makeMutations (sessionId, userId, isAdmin) {
+export function makePublicMutations ({ req, res }, fetchOne) {
+  return {
+    createSession: createSession(null, fetchOne, { req, res }),
+    register: (root, { name, password }) => register({ req, res }, { name, password }),
+    verifyEmail: (root, { code, token, email}) => verifyEmail({ req, res }, { code, email, token })
+  }
+}
+
+export function makeMutations ({ req, res }, userId, isAdmin, fetchOne) {
+  const sessionId = req.session.id
+
   return {
     acceptGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => acceptGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
@@ -242,6 +274,8 @@ export function makeMutations (sessionId, userId, isAdmin) {
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
+
+    createSession: createSession(userId, fetchOne, { req, res }),
 
     joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 
@@ -311,6 +345,8 @@ export function makeMutations (sessionId, userId, isAdmin) {
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),
 
+    register: (root, { name, password }) => register({ req, res }, { name, password }),
+
     registerDevice: (root, { playerId, platform, version }) =>
       registerDevice(userId, { playerId, platform, version }),
 
@@ -374,7 +410,15 @@ export function makeMutations (sessionId, userId, isAdmin) {
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
 
+    verifyEmail: (root, { code, token, email}) => verifyEmail({ req, res }, { code, email, token}),
+
     vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
+  }
+}
+
+export function makeApiMutations () {
+  return {
+    createGroup: (root, { asUserId, data }) => createGroup(asUserId, data)
   }
 }
 
@@ -401,7 +445,7 @@ export const createRequestHandler = () =>
       await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
     }
 
-    const schema = await createSchema(req.session, Admin.isSignedIn(req))
+    const schema = await createSchema({ req, res })
     return {
       schema,
       graphiql: true,

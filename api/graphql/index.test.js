@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-expressions */
+import jwt from 'jsonwebtoken'
 import { createRequestHandler, makeMutations, makeAuthenticatedQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
@@ -547,33 +548,149 @@ describe('graphql request handler', () => {
       })
     })
   })
-})
 
-describe('makeMutations', () => {
-  it('imports mutation functions correctly', () => {
-    // this test does not check the correctness of the functions used in
-    // mutations; it only checks that they are actually functions (i.e. it fails
-    // if there are any broken imports)
+  describe('verifyEmail', function () {
+    let code
 
-    const mutations = makeMutations(11)
-    const root = {}
-    const args = {}
+    beforeEach(async () => {
+      code = await UserVerificationCode.create(user.get('email'))
+    })
 
-    return Promise.each(Object.keys(mutations), key => {
-      const fn = mutations[key]
-      return Promise.resolve()
-      .then(() => fn(root, args))
-      .catch(err => {
-        if (some(pattern => err.message.match(pattern), [
-          /is not a function/,
-          /is not defined/
-        ])) {
-          expect.fail(null, null, `Mutation "${key}" is not imported correctly: ${err.message}`)
-        }
+    it ('works', () => {
+       req.body = {
+        query: `mutation {
+          verifyEmail(code: "${code.get('code')}", email: "${user.get('email')}") {
+            id
+            emailValidated
+          }
+        }`
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: {
+                id: user.id,
+                emailValidated: true
+              }
+            }
+          })
+          // expect(user.get('email_validated')).to.be.true
+          expect(req.session.userId).to.equal(user.id)
+       })
+     })
 
-        // FIXME: the console.log below shows a number of places where we need
-        // more validation and/or are exposing SQL errors to the end-user
-        // console.log(`${key}: ${err.message}`)
+     it ('throws error on invalid code', () => {
+       req.body = {
+        query: `mutation {
+          verifyEmail(code: "booop", email: "${user.get('email')}") {
+            id
+            emailValidated
+          }
+        }`
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: null,
+            },
+            'errors[0].message': 'invalid code',
+          })
+          // expect(res.status).to.have.been.called.with(403)
+          //expect(res.body).to.deep.equal({ error: 'invalid code' })
+        })
+    })
+
+    it ('returns error on invalid token', () => {
+      const token = jwt.sign({
+        iss: 'https://hylo.com/moo', // Bad iss here makes bad token
+        aud: 'https://hylo.com',
+        sub: code.get('email'),
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
+        code: code.get('code')
+      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
+
+      req.body = {
+        query: `mutation {
+          verifyEmail(token: "${token}", email: "${user.get('email')}") {
+            id
+            emailValidated
+          }
+        }`
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: null
+            },
+            'errors[0].message': 'invalid-link',
+          })
+          // expect(res.status).to.have.been.called.with(403)
+          // expect(res.body).to.deep.equal({ error: 'invalid-link' })
+        })
+    })
+
+    it ('validates email and creates user session on valid token', async () => {
+      const token = jwt.sign({
+        iss: process.env.PROTOCOL + "://" + process.env.DOMAIN,
+        aud: 'https://hylo.com',
+        sub: code.get('email'),
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
+        code: code.get('code')
+      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
+
+      req.body = {
+        query: `mutation {
+          verifyEmail(token: "${token}", email: "${user.get('email')}") {
+            id
+            emailValidated
+          }
+        }`
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: {
+                id: user.id,
+                emailValidated: true
+              }
+            }
+          })
+          // expect(user.get('email_validated')).to.be.true
+          expect(req.session.userId).to.equal(user.id)
+       })
+    })
+  })
+
+  describe('makeMutations', () => {
+    it('imports mutation functions correctly', () => {
+      // this test does not check the correctness of the functions used in
+      // mutations; it only checks that they are actually functions (i.e. it fails
+      // if there are any broken imports)
+
+      const mutations = makeMutations({ req, res }, 11, false, () => {})
+      const root = {}
+      const args = {}
+
+      return Promise.each(Object.keys(mutations), key => {
+        const fn = mutations[key]
+        return Promise.resolve()
+        .then(() => fn(root, args))
+        .catch(err => {
+          if (some(pattern => err.message.match(pattern), [
+            /is not a function/,
+            /is not defined/
+          ])) {
+            expect.fail(null, null, `Mutation "${key}" is not imported correctly: ${err.message}`)
+          }
+
+          // FIXME: the console.log below shows a number of places where we need
+          // more validation and/or are exposing SQL errors to the end-user
+          // console.log(`${key}: ${err.message}`)
+        })
       })
     })
   })

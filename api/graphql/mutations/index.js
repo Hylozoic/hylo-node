@@ -80,12 +80,15 @@ export {
 } from './topic'
 export {
   blockUser,
+  createSession,
   deactivateUser,
   deleteUser,
   reactivateUser,
+  register,
   registerStripeAccount,
   unblockUser,
-  updateStripeAccount
+  updateStripeAccount,
+  verifyEmail
 } from './user'
 
 export function updateMe (sessionId, userId, changes) {

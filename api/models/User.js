@@ -450,6 +450,11 @@ module.exports = bookshelf.Model.extend(merge({
       : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
   },
 
+  hasRegistered: function () {
+    return this.load('linkedAccounts')
+      .then(() => this.relations.linkedAccounts.length > 0)
+  },
+
   hasDevice: function () {
     return this.load('devices')
     .then(() => this.relations.devices.length > 0)
@@ -605,15 +610,13 @@ module.exports = bookshelf.Model.extend(merge({
 
   create: function (attributes) {
     const { account, group } = attributes
-    const groupId = Number(get(group, 'id'))
-    const digest_frequency = groupId === 2308 ? 'weekly' : 'daily' // eslint-disable-line camelcase
 
     attributes = merge({
       avatar_url: User.gravatar(attributes.email),
       created_at: new Date(),
       updated_at: new Date(),
       settings: {
-        digest_frequency,
+        digest_frequency: 'daily',
         signup_in_progress: true,
         dm_notifications: 'both',
         comment_notifications: 'both'
@@ -628,25 +631,14 @@ module.exports = bookshelf.Model.extend(merge({
       )
     }
 
-    if (!attributes.name && attributes.email) {
-      attributes.name = attributes.email.split('@')[0].replace(/[._]/g, ' ')
-    }
-
     return bookshelf.transaction(transacting =>
       validateUserAttributes(attributes, { transacting })
       .then(() => new User(attributes).save({}, {transacting}))
       .then(async (user) => {
         await Promise.join(
           account && LinkedAccount.create(user.id, account, {transacting}),
-          group && group.addMembers([user.id], {transacting}),
-          group && user.markInvitationsUsed(group.id, transacting),
-          // TODO: we will use this when we shortly add API calls to create users, so we can confirm their email
-          // !user.get('email_validated') && Queue.classMethod('Email', 'sendEmailVerification', {
-          //   email: user.get('email'),
-          //   templateData: {
-          //     verify_url: Frontend.Route.verifyEmail(user.generateJWT())
-          //   }
-          // })
+          group && group.addMembers([user.id], {}, {transacting}),
+          group && user.markInvitationsUsed(group.id, transacting)
         )
         return user
       })

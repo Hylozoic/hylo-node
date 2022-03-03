@@ -7,7 +7,7 @@ import rsaPemToJwk from 'rsa-pem-to-jwk'
 
 const configuration = {
   adapter: knexAdapter,
-  scopes: ['address', 'email', 'phone', 'profile'],
+  scopes: ['address', 'email', 'phone', 'profile', 'api:read', 'api:write'],
   claims: {
     openid: ['sub'],
     address: ['address'],
@@ -38,7 +38,13 @@ const configuration = {
     }
   },
   extraClientMetadata: {
-    properties: ['name']
+    properties: [
+      'email', // The email address for the client
+      'invite_subject', // The email subject of invite messages sent to users created by this client
+      'invite_message', // The email body of invite messages sent to users created by this client
+      'name', // The name of the API client
+      'role' // Can give a client super powers by giving them a role of 'super'
+    ]
   },
   findAccount: async (ctx, id, token) => {
     const user = await User.find(id)
@@ -49,8 +55,33 @@ const configuration = {
     return null
   },
   features: {
+    // Enable client_credentials flow for machine to machine API access
+    clientCredentials: { enabled: true },
     // disable the packaged interactions
-    devInteractions: { enabled: false }
+    devInteractions: { enabled: false },
+    // Enable token introspection
+    introspection: { enabled: true },
+    issAuthResp: {
+      ack: 'draft-04',
+      enabled: true
+    },
+    // Turning on resource indicators also needed for machine to machine API access
+    resourceIndicators: {
+      enabled: true,
+      getResourceServerInfo: async (ctx, resourceIndicator, client) => {
+        return {
+          // Super clients get write access
+          scope: 'api:read' + (client.role.includes("super") ? ' api:write' : ''),
+          // TODO: check audience based on the client, stored as client metadata?
+          // audience: 'resource-server-audience-value',
+          accessTokenTTL: 2 * 60 * 60, // 2 hours
+          accessTokenFormat: 'jwt',
+          jwt: {
+            sign: { alg: 'RS256' },
+          },
+        }
+      }
+    }
   },
   // let's tell oidc-provider where our own interactions will be
   // setting a nested route is just good practice so that users
@@ -89,6 +120,12 @@ const configuration = {
         return token.resourceServer.accessTokenTTL || 60 * 60 // 1 hour in seconds
       }
       return 60 * 60 // 1 hour in seconds
+    },
+    ClientCredentials: function ClientCredentialsTTL(ctx, token, client) {
+      if (token.resourceServer) {
+        return token.resourceServer.accessTokenTTL || 10 * 60; // 10 minutes in seconds
+      }
+      return 10 * 60; // 10 minutes in seconds
     },
     IdToken: 3600, // 1 hour
     Interaction: 1800, // 30 minutes expiration for interaction artifacts

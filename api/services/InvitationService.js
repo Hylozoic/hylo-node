@@ -69,7 +69,7 @@ module.exports = {
    */
   create: ({sessionUserId, groupId, tagName, userIds, emails = [], message, isModerator = false, subject}) => {
     return Promise.join(
-      userIds && User.whereIn('id', userIds).fetchAll(),
+      userIds && User.query(q => q.whereIn('id', userIds)).fetchAll(),
       Group.find(groupId),
       tagName && Tag.find({ name: tagName }),
       (users, group, tag) => {

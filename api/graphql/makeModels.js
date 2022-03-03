@@ -31,22 +31,24 @@ export default async function makeModels (userId, isAdmin) {
       model: User,
       attributes: [
         'id',
-        'name',
-        'email',
         'avatar_url',
         'banner_url',
+        'bio',
+        'email',
         'contact_email',
         'contact_phone',
-        'twitter_name',
+        'email_validated',
+        'hasRegistered',
+        'intercomHash',
         'linkedin_url',
-        'facebook_url',
-        'url',
         'location',
-        'bio',
-        'updated_at',
-        'tagline',
+        'facebook_url',
+        'name',
         'new_notification_count',
-        'intercomHash'
+        'tagline',
+        'twitter_name',
+        'updated_at',
+        'url'
       ],
       relations: [
         'groups',
@@ -70,9 +72,9 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         blockedUsers: u => u.blockedUsers().fetch(),
+        hasStripeAccount: u => u.hasStripeAccount(),
         isAdmin: () => isAdmin || false,
-        settings: u => mapKeys(camelCase, u.get('settings')),
-        hasStripeAccount: u => u.hasStripeAccount()
+        settings: u => mapKeys(camelCase, u.get('settings'))
       }
     },
 

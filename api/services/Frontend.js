@@ -173,8 +173,8 @@ module.exports = {
       return url('/h/use-invitation?token=%s&email=%s', token, email)
     },
 
-    verifyEmail: function(token) {
-      return url('/noo/user/verify-email?token=%s', token)
+    verifyEmail: function(email, token) {
+      return url('/signup/verify-email?email=%s&token=%s', email, token)
     },
 
     emailPostForm: function () {

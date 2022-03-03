@@ -1,4 +1,48 @@
+import jwt from 'jsonwebtoken'
 import request from 'request'
+import { getPublicKeyFromPem } from '../../../lib/util'
+
+export const createSession = (userId, fetchOne, { req }) => async (root, { email, password }) => {
+  try {
+    const isLoggedIn = await UserSession.isLoggedIn(req)
+    if (isLoggedIn) {
+      return {
+        me: fetchOne('Me', userId),
+        error: 'already logged-in'
+      }
+    }
+    const user = await User.authenticate(email, password)
+    await UserSession.login(req, user, 'password')
+    return {
+      me: fetchOne('Me', user.id)
+    }
+  } catch(err) {
+    throw new Error(err.message)
+  }
+}
+
+export async function register({ req }, { name, password }) {
+  let user = await User.find(req.session.userId, {}, false)
+  if (!user) {
+    throw new Error("Not authorized")
+  }
+  if (!user.get('email_validated')) {
+    throw new Error("Email not validated")
+  }
+
+  return bookshelf.transaction(transacting =>
+    user.save({ name, active: true }, { transacting }).then(async (user) => {
+      await UserSession.login(req, user, 'password', { transacting }) // XXX: this does another save of the user, ideally we just do one of those
+      await LinkedAccount.create(user.id, { type: 'password', password }, { transacting })
+      await Analytics.trackSignup(user.id, req)
+      return user
+    })
+    .catch(function (err) {
+      console.log("Error registering user", err.message)
+      throw err
+    })
+  )
+}
 
 export function blockUser (userId, blockedUserId) {
   return BlockedUser.create(userId, blockedUserId)
@@ -57,4 +101,38 @@ export async function registerStripeAccount (userId, authorizationCode) {
     }
   })
   return Promise.resolve({success: true})
+}
+
+export async function verifyEmail({ req, res }, { code, email, token }) {
+  let identifier = email
+
+  if (token) {
+    const verify = Promise.promisify(jwt.verify, jwt)
+    try {
+      const decoded = await jwt.verify(
+        token,
+        getPublicKeyFromPem(process.env.OIDC_KEYS.split(',')[0]),
+        { audience: 'https://hylo.com', issuer: process.env.PROTOCOL + '://' + process.env.DOMAIN }
+      )
+
+      identifier = decoded.sub
+      code = decoded.code
+    } catch (e) {
+      console.error("Error verifying token:", e.message)
+      throw new Error('invalid-link')
+    }
+  }
+
+  const user = await User.find(identifier, {}, false)
+
+  // XXX: Don't need the code when verifying by JWT link but we still want to expire the code when the JWT is used
+  if (!user || (code && !await UserVerificationCode.verify(user.get('email'), code))) {
+    throw new Error(token ? 'invalid-link' : 'invalid code')
+  }
+
+  await user.save({ email_validated: true })
+
+  req.session.userId = user.id
+
+  return user
 }

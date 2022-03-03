@@ -9,12 +9,10 @@ module.exports.routes = {
   // XXX: unclear if its ok to redirect like this, can we somehow directly call the oidc-provider discovery function here?
   'GET    /.well-known/openid-configuration':             '/noo/oauth/.well-known/openid-configuration',
 
-  'GET    /noo/user/status':                              'UserController.status',
-  'POST   /noo/user/send-email-verification':             'UserController.sendEmailVerification',
-  'GET    /noo/user/verify-email':                        'UserController.verifyEmailByToken',
-  'POST   /noo/user/verify-email':                        'UserController.verifyEmailByCode',
-  'POST   /noo/user/password':                            'UserController.sendPasswordReset',
   'POST   /noo/user':                                     'UserController.create',
+  'POST   /noo/user/password':                            'UserController.sendPasswordReset',
+  'POST   /noo/user/send-email-verification':             'UserController.sendEmailVerification',
+  'GET    /noo/user/status':                              'UserController.status',
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
 

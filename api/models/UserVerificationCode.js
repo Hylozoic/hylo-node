@@ -27,6 +27,7 @@ module.exports = bookshelf.Model.extend({
         if ((new Date()) - row.get('created_at') < 4 * 60 * 60000) {
           valid = true
         }
+        // TODO: dont destroy until user is created? or if we have user table already being used then we can destroy
         await row.destroy({ transacting })
       }
       return valid

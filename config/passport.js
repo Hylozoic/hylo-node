@@ -135,7 +135,7 @@ opts.jsonWebTokenOptions = {
   maxAge: '4h'
 }
 passport.use(new JwtStrategy(opts, (jwt_payload, done) => {
-  User.find(jwt_payload.sub).then(user => {
+  User.find(jwt_payload.sub, {}, false).then(user => {
     if (user) {
       return done(null, user)
     } else {

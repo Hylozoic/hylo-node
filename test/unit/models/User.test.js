@@ -267,6 +267,7 @@ describe('User', function () {
 
     it('works with google', function () {
       return User.create({
+        name: 'foo2 moo2 wow',
         email: 'foo2.moo2_wow@bar.com',
         account: {type: 'google', profile: {id: 'foo'}}
       })
