@@ -37,6 +37,10 @@ module.exports = {
         qb.whereIn('groups.slug', opts.slug)
       }
 
+      if (opts.groupType) {
+        qb.where('groups.type', opts.groupType)
+      }
+
       if (opts.visibility) {
         qb.where('groups.visibility', opts.visibility)
       }
