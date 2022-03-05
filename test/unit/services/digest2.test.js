@@ -295,7 +295,7 @@ describe('group digest v2', () => {
     })
   })
 
-  describe.only('personalizeData', () => {
+  describe('personalizeData', () => {
     var user
 
     before(() => {
