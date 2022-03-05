@@ -295,7 +295,7 @@ describe('group digest v2', () => {
     })
   })
 
-  describe('personalizeData', () => {
+  describe.only('personalizeData', () => {
     var user
 
     before(() => {
@@ -319,7 +319,7 @@ describe('group digest v2', () => {
             title: 'Hi',
             user: u4.attributes,
             comments: [],
-            url: 'https://www.hylo.com/post/1'
+            url: 'https://www.hylo.com/all/post/1'
           }
         ],
         conversations: [
@@ -333,7 +333,7 @@ describe('group digest v2', () => {
               {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
               {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4">Bob</a>`}
             ],
-            url: 'https://www.hylo.com/post/2'
+            url: 'https://www.hylo.com/all/post/2'
           }
         ]
       }
@@ -347,7 +347,7 @@ describe('group digest v2', () => {
               title: 'Hi',
               user: u4.attributes,
               reply_url: Email.postReplyAddress(1, user.id),
-              url: 'https://www.hylo.com/post/1?' + ctParams
+              url: 'https://www.hylo.com/all/post/1?' + ctParams
             }
           ],
           conversations: [
@@ -358,7 +358,7 @@ describe('group digest v2', () => {
               details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
                 `<a href="${prefix}/members/2?ya=1&amp;${ctParams.replace(/\&/g, '&amp;')}">Person</a></p>`,
               reply_url: Email.postReplyAddress(2, user.id),
-              url: 'https://www.hylo.com/post/2?' + ctParams,
+              url: 'https://www.hylo.com/all/post/2?' + ctParams,
               comments: [
                 {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
                 {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4?${ctParams.replace(/\&/g, '&amp;')}">Bob</a>`}
