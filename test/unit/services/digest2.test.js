@@ -7,6 +7,7 @@ import factories from '../../setup/factories'
 import { spyify, unspyify } from '../../setup/helpers'
 import { merge, omit } from 'lodash'
 require('../../setup')
+
 const model = factories.mock.model
 const collection = factories.mock.collection
 
@@ -51,29 +52,29 @@ describe('group digest v2', () => {
         comments: [
           model({
             id: 12,
-            text: 'I have two!',
+            text: () => 'I have two!',
             post_id: 5,
             relations: {
               user: u3,
-              post: model({id: 5, name: 'Old Post, New Comments', relations: {user: u4}})
+              post: model({id: 5, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           }),
           model({
             id: 13,
-            text: 'No, you are wrong',
+            text: () => 'No, you are wrong',
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
+              post: model({id: 8, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           }),
           model({
             id: 13,
-            text: 'No, you are still wrong',
+            text: () => 'No, you are still wrong',
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
+              post: model({id: 8, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           })
 
@@ -82,6 +83,7 @@ describe('group digest v2', () => {
           model({
             id: 5,
             name: 'Do you have a dollar?',
+            details: () => {},
             type: 'request',
             relations: {
               user: u1
@@ -90,6 +92,7 @@ describe('group digest v2', () => {
           model({
             id: 7,
             name: 'Kapow!',
+            details: () => {},
             relations: {
               selectedTags: collection([]),
               linkPreview,
@@ -99,6 +102,7 @@ describe('group digest v2', () => {
           model({
             id: 6,
             name: 'I have cookies!',
+            details: () => {},
             type: 'offer',
             relations: {
               user: u2
@@ -107,6 +111,7 @@ describe('group digest v2', () => {
           model({
             id: 76,
             name: 'An event',
+            details: () => {},
             type: 'event',
             location: 'Home',
             starts_at: new Date('December 17, 1995 18:30:00'),
@@ -117,6 +122,7 @@ describe('group digest v2', () => {
           model({
             id: 77,
             name: 'A project with requests',
+            details: () => {},
             type: 'project',
             relations: {
               user: u2,
@@ -260,7 +266,7 @@ describe('group digest v2', () => {
             title: 'Foo!',
             details: `<p><a href="${prefix}/members/21">Edward West</a> &amp; ` +
               `<a href="${prefix}/members/16325">Julia Pope</a> ` +
-              `<a href="${prefix}/groups/foo/topics/oakland">#oakland</a></p>`,
+              `<a href="${prefix}/groups/foo/topics/oakland" data-search="#oakland" class="hashtag">#oakland</a></p>`,
             user: u1.attributes,
             url: Frontend.Route.post({id: 1}, group),
             comments: []
