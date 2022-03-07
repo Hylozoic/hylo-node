@@ -56,6 +56,21 @@ module.exports = {
         qb.whereIn('parent_groups.slug', opts.parentSlugs)
       }
 
+      // so more params will be passed in, which is fine
+      // then we will have to join group extensions to all groups, fine
+      // then pick out the different points
+      
+      /* 
+        product_catogories or product_details + animals_types
+        certifications_current + management_plans
+        types
+      */
+
+      if (opts.farm){
+        // join group extensions table
+        // 
+      }
+
       filterAndSortGroups({
         search: opts.term,
         sortBy: opts.sort,
