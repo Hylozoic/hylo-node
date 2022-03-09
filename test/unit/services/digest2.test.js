@@ -7,6 +7,7 @@ import factories from '../../setup/factories'
 import { spyify, unspyify } from '../../setup/helpers'
 import { merge, omit } from 'lodash'
 require('../../setup')
+
 const model = factories.mock.model
 const collection = factories.mock.collection
 
@@ -51,29 +52,29 @@ describe('group digest v2', () => {
         comments: [
           model({
             id: 12,
-            text: 'I have two!',
+            text: () => 'I have two!',
             post_id: 5,
             relations: {
               user: u3,
-              post: model({id: 5, name: 'Old Post, New Comments', relations: {user: u4}})
+              post: model({id: 5, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           }),
           model({
             id: 13,
-            text: 'No, you are wrong',
+            text: () => 'No, you are wrong',
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
+              post: model({id: 8, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           }),
           model({
             id: 13,
-            text: 'No, you are still wrong',
+            text: () => 'No, you are still wrong',
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', relations: {user: u4}})
+              post: model({id: 8, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           })
 
@@ -82,6 +83,7 @@ describe('group digest v2', () => {
           model({
             id: 5,
             name: 'Do you have a dollar?',
+            details: () => {},
             type: 'request',
             relations: {
               user: u1
@@ -90,6 +92,7 @@ describe('group digest v2', () => {
           model({
             id: 7,
             name: 'Kapow!',
+            details: () => {},
             relations: {
               selectedTags: collection([]),
               linkPreview,
@@ -99,6 +102,7 @@ describe('group digest v2', () => {
           model({
             id: 6,
             name: 'I have cookies!',
+            details: () => {},
             type: 'offer',
             relations: {
               user: u2
@@ -107,6 +111,7 @@ describe('group digest v2', () => {
           model({
             id: 76,
             name: 'An event',
+            details: () => {},
             type: 'event',
             location: 'Home',
             starts_at: new Date('December 17, 1995 18:30:00'),
@@ -117,6 +122,7 @@ describe('group digest v2', () => {
           model({
             id: 77,
             name: 'A project with requests',
+            details: () => {},
             type: 'project',
             relations: {
               user: u2,
@@ -239,7 +245,7 @@ describe('group digest v2', () => {
           model({
             id: 1,
             name: 'Foo!',
-            description: '<p><a href="/members/21">Edward West</a> & ' +
+            details: () => '<p><a href="/members/21">Edward West</a> & ' +
               '<a href="/members/16325">Julia Pope</a> <a>#oakland</a></p>',
             type: 'request',
             relations: {
@@ -260,7 +266,7 @@ describe('group digest v2', () => {
             title: 'Foo!',
             details: `<p><a href="${prefix}/members/21">Edward West</a> &amp; ` +
               `<a href="${prefix}/members/16325">Julia Pope</a> ` +
-              `<a href="${prefix}/groups/foo/topics/oakland">#oakland</a></p>`,
+              `<a href="${prefix}/groups/foo/topics/oakland" data-search="#oakland" class="hashtag">#oakland</a></p>`,
             user: u1.attributes,
             url: Frontend.Route.post({id: 1}, group),
             comments: []
@@ -313,7 +319,7 @@ describe('group digest v2', () => {
             title: 'Hi',
             user: u4.attributes,
             comments: [],
-            url: 'https://www.hylo.com/post/1'
+            url: 'https://www.hylo.com/all/post/1'
           }
         ],
         conversations: [
@@ -327,13 +333,13 @@ describe('group digest v2', () => {
               {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
               {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4">Bob</a>`}
             ],
-            url: 'https://www.hylo.com/post/2'
+            url: 'https://www.hylo.com/all/post/2'
           }
         ]
       }
 
       return personalizeData(user, data).then(newData => {
-        const ctParams = `?ctt=digest_email&cti=${user.id}&ctcn=foo`
+        const ctParams = `ctt=digest_email&cti=${user.id}&ctcn=foo`
         expect(newData).to.deep.equal(merge({}, data, {
           offers: [
             {
@@ -341,7 +347,7 @@ describe('group digest v2', () => {
               title: 'Hi',
               user: u4.attributes,
               reply_url: Email.postReplyAddress(1, user.id),
-              url: 'https://www.hylo.com/post/1' + ctParams
+              url: 'https://www.hylo.com/all/post/1?' + ctParams
             }
           ],
           conversations: [
@@ -350,12 +356,12 @@ describe('group digest v2', () => {
               title: 'Ya',
               user: u3.attributes,
               details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
-                `<a href="${prefix}/members/2?ya=1${ctParams.replace('?', '&')}">Person</a></p>`,
+                `<a href="${prefix}/members/2?ya=1&amp;${ctParams.replace(/\&/g, '&amp;')}">Person</a></p>`,
               reply_url: Email.postReplyAddress(2, user.id),
-              url: 'https://www.hylo.com/post/2' + ctParams,
+              url: 'https://www.hylo.com/all/post/2?' + ctParams,
               comments: [
                 {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
-                {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4${ctParams}">Bob</a>`}
+                {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4?${ctParams.replace(/\&/g, '&amp;')}">Bob</a>`}
               ]
             }
           ],
@@ -363,13 +369,13 @@ describe('group digest v2', () => {
             name: user.get('name'),
             avatar_url: user.get('avatar_url')
           },
-          email_settings_url: Frontend.Route.userSettings() + ctParams + '&expand=account',
+          email_settings_url: Frontend.Route.userSettings() + '?' + ctParams + '&expand=account',
           post_creation_action_url: Frontend.Route.emailPostForm(),
           reply_action_url: Frontend.Route.emailBatchCommentForm(),
           form_token: Email.formToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, group: 'foo'}),
           subject: `New activity from ${u4.name} and ${u3.name}`,
-          group_url: 'https://www.hylo.com/groups/foo' + ctParams
+          group_url: 'https://www.hylo.com/groups/foo?' + ctParams
         }))
       })
     })
