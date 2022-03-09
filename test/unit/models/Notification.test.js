@@ -157,7 +157,7 @@ describe('Notification', function () {
           .then(pns => {
             expect(pns.length).to.equal(1)
             var pn = pns.first()
-            expect(pn.get('alert')).to.equal(`Joe: "${comment.get('text')}" (in "My Post")`)
+            expect(pn.get('alert')).to.equal(`Joe: "${comment.text()}" (in "My Post")`)
           })
       })
 
@@ -341,7 +341,9 @@ describe('Notification', function () {
           relations: {
             comment: model({
               id: 5,
-              text: 'I have an opinion',
+              // Reinforcing that Comment#text() should always be
+              // called instead of Comment.get('text')
+              text: () => 'I have an opinion',
               relations: {
                 post: model({
                   name: 'hello world',

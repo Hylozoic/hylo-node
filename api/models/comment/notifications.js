@@ -1,21 +1,22 @@
 /* eslint-disable camelcase */
 /* globals RedisClient */
-import decode from 'ent/decode'
-import truncate from 'trunc-html'
 import { parse } from 'url'
 import { compact, some, sum, uniq } from 'lodash/fp'
+import { TextHelpers } from 'hylo-shared'
+
+const MAX_PUSH_NOTIFICATION_LENGTH = 140
 
 export async function notifyAboutMessage ({ commentId }) {
   const comment = await Comment.find(commentId, {withRelated: ['media']})
   const post = await Post.find(comment.get('post_id'))
   const followers = await post.followers().fetch()
 
-  const { user_id, post_id, text } = comment.attributes
+  const { user_id, post_id } = comment.attributes
   const recipients = followers.filter(u => u.id !== user_id)
   const user = followers.find(u => u.id === user_id)
   const alert = comment.relations.media.length !== 0
     ? `${user.get('name')} sent an image`
-    : `${user.get('name')}: ${decode(truncate(text, 140).text).trim()}`
+    : `${user.get('name')}: ${TextHelpers.presentHTMLToText(comment.text(), { truncate: MAX_PUSH_NOTIFICATION_LENGTH })}`
   const path = parse(Frontend.Route.thread({id: post_id})).path
 
   return Promise.map(recipients, async user => {
@@ -75,7 +76,7 @@ export const sendDigests = async () => {
         }
         return comment.relations.media.length !== 0
           ? Object.assign({}, presented, {image: comment.relations.media.first().pick('url', 'thumbnail_url')})
-          : Object.assign({}, presented, {text: comment.get('text')})
+          : Object.assign({}, presented, {text: comment.text()})
       }
 
       if (post.get('type') === Post.Type.THREAD) {
@@ -115,7 +116,7 @@ export const sendDigests = async () => {
           email: user.get('email'),
           data: {
             count: commentData.length,
-            post_title: truncate(post.get('name'), 140).text,
+            post_title: TextHelpers.truncateText(post.get('name'), 140),
             post_creator_avatar_url: post.relations.user.get('avatar_url'),
             thread_url: Frontend.Route.post(post),
             comments: commentData,

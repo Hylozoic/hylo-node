@@ -1,4 +1,3 @@
-import { markdown } from 'hylo-utils/text'
 var root = require('root-path')
 require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
