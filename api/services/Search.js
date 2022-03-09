@@ -56,19 +56,24 @@ module.exports = {
         qb.whereIn('parent_groups.slug', opts.parentSlugs)
       }
 
-      // so more params will be passed in, which is fine
-      // then we will have to join group extensions to all groups, fine
-      // then pick out the different points
-      
-      /* 
-        product_catogories or product_details + animals_types
-        certifications_current + management_plans
-        types
-      */
+      if (opts.farmQuery && (opts.farmQuery.productCategories !== '' || opts.farmQuery.farmType !== '' || opts.farmQuery.certOrManagementPlan !== '')){
+        const { productCategories, farmType, certOrManagementPlan } = opts.farmQuery
+        qb.join('group_extensions', 'groups.id', '=', 'group_extensions.group_id')
+        qb.join('extensions', 'group_extensions.extension_id', '=', 'extensions.id')
+        qb.whereRaw('extensions.type = \'farm-onboarding\'')
 
-      if (opts.farm){
-        // join group extensions table
-        // 
+        if (farmType !== '') {
+          qb.whereRaw(`group_extensions.data @> '{"farm_types": ["${farmType}"]}'`)
+        }
+
+        if (productCategories !== '') {
+          qb.whereRaw(`group_extensions.data @> '{"product_categories": ["${productCategories}"]}'`)
+        }
+
+        if (certOrManagementPlan !== '') {
+          qb.whereRaw(`group_extensions.data @> '{"management_plans_current": ["${certOrManagementPlan}"]}' OR group_extensions.data @> '{"certifications_current": ["${certOrManagementPlan}"]}'`)
+        }
+
       }
 
       filterAndSortGroups({

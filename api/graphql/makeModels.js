@@ -331,11 +331,12 @@ export default async function makeModels (userId, isAdmin) {
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
       filter: nonAdminFilter(groupFilter(userId)),
-      fetchMany: ({ autocomplete, boundingBox, context, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
+      fetchMany: ({ autocomplete, boundingBox, context, farmQuery, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
         searchQuerySet('groups', {
           autocomplete,
           boundingBox,
           currentUserId: userId,
+          farmQuery,
           groupIds,
           groupType,
           limit: first,
