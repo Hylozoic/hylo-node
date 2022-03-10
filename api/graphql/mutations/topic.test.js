@@ -33,7 +33,7 @@ describe('topic mutations', () => {
   })
 
   describe('createTopic', () => {
-    // validation is mostly tested in hylo-utils, so this just left here to show willing...
+    // validation is mostly tested in hylo-shared, so this just left here to show willing...
     it('rejects on invalid topic names', async () => {
       const actual = mutations.createTopic(
         u1.id,

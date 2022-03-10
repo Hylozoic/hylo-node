@@ -55,7 +55,7 @@ describe('CommentController', function () {
         const comments = await fixtures.p1.comments().fetch()
         const comment = comments.last()
         expect(comment).to.exist
-        expect(comment.get('text')).to.equal('<p>foo bar baz</p>\n')
+        expect(comment.text()).to.equal('<p>foo bar baz</p>\n')
         expect(comment.get('user_id')).to.equal(fixtures.u3.id)
         expect(comment.get('created_from')).to.equal('email')
       })
@@ -69,7 +69,7 @@ describe('CommentController', function () {
       .then(comments => {
         const comment = comments.last()
         expect(comment).to.exist
-        expect(comment.get('text')).to.equal('foo bar baz')
+        expect(comment.text()).to.equal('foo bar baz')
       })
     })
   })
