@@ -1,7 +1,6 @@
 import { flatten, merge, pick, uniq } from 'lodash'
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
-import { updateMemberships } from './util'
 import { groupRoom, pushToSockets } from '../../services/Websockets'
 
 export default function createPost (userId, params) {
@@ -21,7 +20,7 @@ export default function createPost (userId, params) {
 
 export function afterCreatingPost (post, opts) {
   const userId = post.get('user_id')
-  const mentioned = RichText.getUserMentions(post.get('description'))
+  const mentioned = RichText.getUserMentions(post.details())
   const followerIds = uniq(mentioned.concat(userId))
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')

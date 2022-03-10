@@ -1,6 +1,3 @@
-import { curry } from 'lodash'
-import GroupDataType from '../models/group/DataType'
-
 export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
   q.where({'comments.active': true})

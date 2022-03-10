@@ -209,7 +209,7 @@ describe('graphql request handler', () => {
                   comments: {
                     items: [
                       {
-                        text: comment.get('text'),
+                        text: comment.text(),
                         creator: {
                           name: user2.get('name')
                         }
@@ -288,7 +288,7 @@ describe('graphql request handler', () => {
               comments: {
                 items: [
                   {
-                    text: comment.get('text'),
+                    text: comment.text(),
                     attachments: [
                       {
                         id: media.id,

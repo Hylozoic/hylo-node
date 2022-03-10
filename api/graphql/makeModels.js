@@ -10,14 +10,12 @@ import {
   postFilter,
   voteFilter
 } from './filters'
-import { flow, mapKeys, camelCase } from 'lodash/fp'
+import { mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
 import {
-  filterAndSortGroups,
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
-import he from 'he';
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -162,14 +160,8 @@ export default async function makeModels (userId, isAdmin) {
         'type'
       ],
       getters: {
-        title: p => p.get('name') ? he.decode(p.get('name')) : null,
-        details: p => p.get('description'),
-        detailsText: p => p.getDetailsText(),
-        isPublic: p => p.get('is_public'),
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
-        commentsTotal: p => p.get('num_comments'),
-        votesTotal: p => p.get('num_votes'),
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
           userId && p.isEvent() ? p.userEventInvitation(userId)
