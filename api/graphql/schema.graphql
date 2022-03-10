@@ -628,6 +628,7 @@ type Query {
     autocomplete: String,
     boundingBox: [PointInput],
     context: String,
+    farmQuery: JSON,
     filter: String,
     first: Int,
     groupIds: [ID],
