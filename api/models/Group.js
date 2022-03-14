@@ -81,6 +81,11 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(GroupTag)
   },
 
+  groupExtensions: function () {
+    return this.belongsToMany(Extension).through(GroupExtension).where('group_extensions.active', true)
+    .withPivot(['data'])
+  },
+
   groupToGroupJoinQuestions () {
     return this.hasMany(GroupToGroupJoinQuestion).query(q => {
       q.select(['questions.text', 'questions.id as questionId'])
@@ -276,9 +281,10 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   createInitialWidgets: async function (transacting) {
-    const initialWidgets = await Widget.query(q => q.whereIn('id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])).fetchAll({ transacting })
+    // In the future this will have to look up the template of whatever group is being created and add widgets based on that
+    const initialWidgets = await Widget.query(q => q.whereIn('id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 20, 21])).fetchAll({ transacting })
     Promise.map(initialWidgets.models, async (widget) => {
-      await GroupWidget.create({ group_id: this.id, widget_id: widget.id, order: widget.id }, { transacting })
+      await GroupWidget.create({ group_id: this.id, widget_id: widget.id, order: widget.id, context: widget.id > 10 ? 'group_profile' : 'landing' }, { transacting })
     })
   },
 

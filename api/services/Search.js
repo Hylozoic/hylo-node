@@ -37,6 +37,10 @@ module.exports = {
         qb.whereIn('groups.slug', opts.slug)
       }
 
+      if (opts.groupType) {
+        qb.where('groups.type', opts.groupType)
+      }
+
       if (opts.visibility) {
         qb.where('groups.visibility', opts.visibility)
       }
@@ -50,6 +54,25 @@ module.exports = {
         qb.join('group_relationships', 'groups.id', '=', 'group_relationships.child_group_id')
         qb.join('groups as parent_groups', 'parent_groups.id', '=', 'group_relationships.parent_group_id')
         qb.whereIn('parent_groups.slug', opts.parentSlugs)
+      }
+
+      if (opts.farmQuery && (opts.farmQuery.productCategories !== '' || opts.farmQuery.farmType !== '' || opts.farmQuery.certOrManagementPlan !== '')) {
+        const { productCategories, farmType, certOrManagementPlan } = opts.farmQuery
+        qb.join('group_extensions', 'groups.id', '=', 'group_extensions.group_id')
+        qb.join('extensions', 'group_extensions.extension_id', '=', 'extensions.id')
+        qb.whereRaw('extensions.type = \'farm-onboarding\'')
+
+        if (farmType !== '') {
+          qb.whereRaw(`group_extensions.data @> '{"farm_types": ["${farmType}"]}'`)
+        }
+
+        if (productCategories !== '') {
+          qb.whereRaw(`group_extensions.data @> '{"product_categories": ["${productCategories}"]}'`)
+        }
+
+        if (certOrManagementPlan !== '') {
+          qb.whereRaw(`group_extensions.data @> '{"management_plans_current": ["${certOrManagementPlan}"]}' OR group_extensions.data @> '{"certifications_current": ["${certOrManagementPlan}"]}'`)
+        }
       }
 
       filterAndSortGroups({
