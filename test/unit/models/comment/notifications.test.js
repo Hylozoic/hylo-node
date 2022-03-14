@@ -1,8 +1,6 @@
-import decode from 'ent/decode'
+import { TextHelpers } from 'hylo-shared'
 import { compact } from 'lodash'
-import truncate from 'trunc-html'
-
-import { notifyAboutMessage } from '../../../../api/models/comment/notifications'
+import { notifyAboutMessage, MAX_PUSH_NOTIFICATION_LENGTH } from '../../../../api/models/comment/notifications'
 import factories from '../../../setup/factories'
 
 describe('notifyAboutMessage', () => {
@@ -33,6 +31,8 @@ describe('notifyAboutMessage', () => {
     expect(compact(results).length).to.equal(1)
     const sent = results.find(x => x && x[0])[0]
     expect(sent.get('device_id')).to.equal(device.id)
-    expect(sent.get('alert')).to.contain(decode(truncate(comment.get('text'), 140).text).trim())
+    expect(sent.get('alert')).to.contain(
+      TextHelpers.presentHTMLToText(comment.text(), MAX_PUSH_NOTIFICATION_LENGTH)
+    )
   })
 })

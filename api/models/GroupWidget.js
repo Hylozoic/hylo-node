@@ -32,12 +32,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   create: async function (params, opts) {
-    const { group_id, widget_id, order } = params
+    const { group_id, widget_id, order, context } = params
 
     const attributes = {
       group_id,
       widget_id,
       order,
+      context,
       created_at: new Date()
     }
 

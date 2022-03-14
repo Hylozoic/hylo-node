@@ -10,14 +10,12 @@ import {
   postFilter,
   voteFilter
 } from './filters'
-import { flow, mapKeys, camelCase } from 'lodash/fp'
+import { mapKeys, camelCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
 import {
-  filterAndSortGroups,
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
-import he from 'he';
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -162,14 +160,8 @@ export default async function makeModels (userId, isAdmin) {
         'type'
       ],
       getters: {
-        title: p => p.get('name') ? he.decode(p.get('name')) : null,
-        details: p => p.get('description'),
-        detailsText: p => p.getDetailsText(),
-        isPublic: p => p.get('is_public'),
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
-        commentsTotal: p => p.get('num_comments'),
-        votesTotal: p => p.get('num_votes'),
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
           userId && p.isEvent() ? p.userEventInvitation(userId)
@@ -230,6 +222,7 @@ export default async function makeModels (userId, isAdmin) {
         'postCount',
         'slug',
         'visibility',
+        'type'
       ],
       relations: [
         {activeMembers: { querySet: true }},
@@ -317,7 +310,8 @@ export default async function makeModels (userId, isAdmin) {
               types
             }))
         }},
-        {widgets: {querySet: true }}
+        {widgets: {querySet: true }},
+        {groupExtensions: {querySet: true }}
       ],
       getters: {
         invitePath: g =>
@@ -329,14 +323,16 @@ export default async function makeModels (userId, isAdmin) {
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
       filter: nonAdminFilter(groupFilter(userId)),
-      fetchMany: ({ autocomplete, boundingBox, context, filter, first, groupIds, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
+      fetchMany: ({ autocomplete, boundingBox, context, farmQuery, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
         searchQuerySet('groups', {
           autocomplete,
           boundingBox,
           currentUserId: userId,
-          nearCoord,
+          farmQuery,
           groupIds,
+          groupType,
           limit: first,
+          nearCoord,
           offset,
           onlyMine: context === 'all',
           order,
@@ -701,13 +697,34 @@ export default async function makeModels (userId, isAdmin) {
       ]
     },
 
+    GroupExtension: {
+      model: GroupExtension,
+      attributes:[
+        'id',
+        'active',
+        'type',
+      ],
+      getters:{
+        data: groupExtension => groupExtension.pivot && groupExtension.pivot.get('data'),
+      }
+    },
+
+    Extension: {
+      model: Extension,
+      attributes: [
+        'id',
+        'type'
+      ]
+    },
+
     GroupWidget: {
       model: GroupWidget,
       attributes: [
         'id',
         'is_visible',
         'name',
-        'order'
+        'order',
+        'context'
       ],
       getters: {
         settings: gw => mapKeys(camelCase, gw.get('settings'))

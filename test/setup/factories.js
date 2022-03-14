@@ -107,6 +107,14 @@ module.exports = {
     }, attrs))
   },
 
+  groupExtension: attrs => {
+    return new GroupExtension(attrs)
+  },
+
+  extension: attrs => {
+    return new Extension(attrs)
+  },
+
   mock: {
     request: function () {
       return {

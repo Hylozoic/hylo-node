@@ -1,4 +1,3 @@
-import uuid from 'node-uuid'
 import EnsureLoad from './mixins/EnsureLoad'
 
 module.exports = bookshelf.Model.extend(Object.assign({

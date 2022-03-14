@@ -1,5 +1,5 @@
 import decode from 'ent/decode'
-import truncate from 'trunc-html'
+import { TextHelpers } from 'hylo-shared'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
@@ -53,7 +53,7 @@ module.exports = bookshelf.Model.extend({
     if (media && media.length !== 0) {
       return `${person} sent an image`
     }
-    const blurb = decode(truncate(comment.get('text'), 140).text).trim()
+    const blurb = TextHelpers.presentHTMLToText(comment.text(), { truncate: 140 })
     const postName = comment.relations.post.get('name')
 
     return version === 'mention'

@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken'
 import uuid from 'node-uuid'
 import validator from 'validator'
 import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
-import { validateUser } from 'hylo-utils/validators'
+import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
 
@@ -767,12 +767,12 @@ module.exports = bookshelf.Model.extend(merge({
 
 function validateUserAttributes (attrs, { existingUser, transacting } = {}) {
   if (has(attrs, 'password')) {
-    const invalidReason = validateUser.password(attrs.password)
+    const invalidReason = Validators.validateUser.password(attrs.password)
     if (invalidReason) return Promise.reject(new Error(invalidReason))
   }
 
   if (has(attrs, 'name')) {
-    const invalidReason = validateUser.name(attrs.name)
+    const invalidReason = Validators.validateUser.name(attrs.name)
     if (invalidReason) return Promise.reject(new Error(invalidReason))
   }
 
