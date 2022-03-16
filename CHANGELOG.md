@@ -4,6 +4,11 @@ All notable changes to Hylo Node (the Hylo server) will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+- num_members updated correctly in 10minute cron job and returned as Group.memberCount again
+
 ## [3.1.4] - 2022-03-08
 
 ### Changed
