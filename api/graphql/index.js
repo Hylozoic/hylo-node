@@ -25,7 +25,7 @@ import {
   createProject,
   createProjectRole,
   createSavedSearch,
-  createSession,
+  login,
   createTopic,
   deactivateUser,
   deleteUser,
@@ -50,6 +50,7 @@ import {
   joinProject,
   leaveGroup,
   leaveProject,
+  logout,
   markActivityRead,
   markAllActivitiesRead,
   pinPost,
@@ -69,6 +70,8 @@ import {
   removeSuggestedSkillFromGroup,
   resendInvitation,
   respondToEvent,
+  sendEmailVerification,
+  sendPasswordReset,
   subscribe,
   unblockUser,
   unfulfillPost,
@@ -91,7 +94,7 @@ import makeModels from './makeModels'
 import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
-import { merge, reduce, omit } from 'lodash'
+import { merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -220,18 +223,26 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   }
 }
 
-export function makePublicMutations ({ req, res }, fetchOne) {
+export function makePublicMutations (expressContext, fetchOne) {
   return {
-    createSession: createSession(null, fetchOne, { req, res }),
-    register: (root, { name, password }) => register({ req, res }, { name, password }),
-    verifyEmail: (root, { code, token, email}) => verifyEmail({ req, res }, { code, email, token })
+    login: login(fetchOne, expressContext),
+    logout: logout(expressContext),
+    sendEmailVerification,
+    sendPasswordReset,
+    register: register(fetchOne, expressContext),
+    verifyEmail: verifyEmail(fetchOne, expressContext)
   }
 }
 
-export function makeMutations ({ req, res }, userId, isAdmin, fetchOne) {
+export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
+  const { req, res } = expressContext
   const sessionId = req.session.id
 
   return {
+    // Currently injecting all Public Mutations here so those resolvers remain
+    // available between auth'd and non-auth'd sessions
+    ...makePublicMutations(expressContext, fetchOne),
+
     acceptGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => acceptGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
@@ -274,8 +285,6 @@ export function makeMutations ({ req, res }, userId, isAdmin, fetchOne) {
     createProjectRole: (root, { projectId, roleName }) => createProjectRole(userId, projectId, roleName),
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
-
-    createSession: createSession(userId, fetchOne, { req, res }),
 
     joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 
@@ -345,8 +354,6 @@ export function makeMutations ({ req, res }, userId, isAdmin, fetchOne) {
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),
 
-    register: (root, { name, password }) => register({ req, res }, { name, password }),
-
     registerDevice: (root, { playerId, platform, version }) =>
       registerDevice(userId, { playerId, platform, version }),
 
@@ -409,8 +416,6 @@ export function makeMutations ({ req, res }, userId, isAdmin, fetchOne) {
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
-
-    verifyEmail: (root, { code, token, email}) => verifyEmail({ req, res }, { code, email, token}),
 
     vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
   }

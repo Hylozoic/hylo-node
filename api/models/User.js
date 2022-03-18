@@ -1,13 +1,13 @@
 /* globals RedisClient */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-import jwt from 'jsonwebtoken'
 import uuid from 'node-uuid'
 import validator from 'validator'
-import { get, has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
+import { has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
+import { generateHyloJWT } from '../../lib/HyloJWT'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
@@ -389,14 +389,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   generateJWT: function () {
-    const privateKey = Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64')
-
-    return jwt.sign({
-      iss: process.env.PROTOCOL + '://' + process.env.DOMAIN,
-      aud: 'https://hylo.com',
-      sub: this.id,
-      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4) // 4 hour expiration
-    }, privateKey, { algorithm: 'RS256' })
+    return generateHyloJWT(this.id)
   },
 
   generateToken: function () {
@@ -645,20 +638,24 @@ module.exports = bookshelf.Model.extend(merge({
     )
   },
 
-  find: function (id, options, activeFilter = true) {
-    if (!id) return Promise.resolve(null)
+  find: function (idEmailOrName, options, activeFilter = true) {
+    if (!idEmailOrName) return Promise.resolve(null)
+
     let q
-    if (isNaN(Number(id))) {
+
+    if (isNaN(Number(idEmailOrName))) {
       q = User.query(q => {
         q.where(function () {
-          this.whereRaw('lower(email) = lower(?)', id)
-          .orWhere({ name: id })
+          this.whereRaw('lower(email) = lower(?)', idEmailOrName)
+          .orWhere({ name: idEmailOrName })
         })
       })
     } else {
-      q = User.where({ id })
+      q = User.where({ id: idEmailOrName })
     }
+
     if (activeFilter) return q.where('users.active', true).fetch(options)
+
     return q.fetch(options)
   },
 

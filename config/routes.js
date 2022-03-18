@@ -10,9 +10,6 @@ module.exports.routes = {
   'GET    /.well-known/openid-configuration':             '/noo/oauth/.well-known/openid-configuration',
 
   'POST   /noo/user':                                     'UserController.create',
-  'POST   /noo/user/password':                            'UserController.sendPasswordReset',
-  'POST   /noo/user/send-email-verification':             'UserController.sendEmailVerification',
-  'GET    /noo/user/status':                              'UserController.status',
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
 

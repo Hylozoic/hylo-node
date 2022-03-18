@@ -80,12 +80,15 @@ export {
 } from './topic'
 export {
   blockUser,
-  createSession,
   deactivateUser,
   deleteUser,
+  login,
+  logout,
   reactivateUser,
   register,
   registerStripeAccount,
+  sendEmailVerification,
+  sendPasswordReset,
   unblockUser,
   updateStripeAccount,
   verifyEmail

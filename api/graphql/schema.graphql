@@ -944,7 +944,6 @@ type Mutation {
   createProject(data: PostInput): Post
   createProjectRole(projectId: ID, roleName: String): GenericResult
   createSavedSearch(data: SavedSearchInput): SavedSearch
-  createSession(email: String, password: String): CreateSessionResult
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   deactivateMe(id: ID): GenericResult
   deleteMe: GenericResult
@@ -969,6 +968,8 @@ type Mutation {
   joinProject(id: ID): GenericResult
   leaveGroup(id: ID): ID
   leaveProject(id: ID): GenericResult
+  login(email: String, password: String): SignupResult
+  logout: GenericResult,
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
   pinPost(postId: ID, groupId: ID): GenericResult
@@ -977,7 +978,7 @@ type Mutation {
   regenerateAccessCode(groupId: ID): Group
   registerDevice(playerId: String, platform: String, version: String): GenericResult
   reinviteAll(groupId: ID): GenericResult
-  register(name: String, password: String): Me
+  register(name: String, password: String): SignupResult
   registerStripeAccount(authorizationCode: String): GenericResult
   rejectGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
   removeMember(personId: ID, groupId: ID): Group
@@ -989,6 +990,8 @@ type Mutation {
   requestToAddGroupToParent(parentId: ID, childId: ID, questionAnswers: [QuestionAnswerInput]): CreatedGroupRelationshipInvite
   resendInvitation(invitationId: ID): GenericResult
   respondToEvent(id: ID, response: String): GenericResult
+  sendEmailVerification(email: String!): GenericResult,
+  sendPasswordReset(email: String!): GenericResult,
   subscribe(groupId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
@@ -1003,11 +1006,11 @@ type Mutation {
   updateStripeAccount(accountId: String): GenericResult
   updateWidget(id: ID, changes: GroupWidgetInput): GroupWidget
   useInvitation(invitationToken: String, accessCode: String): InvitationUseResult
-  verifyEmail(code: String, email: String, token: String): Me
+  verifyEmail(code: String, email: String!, token: String): SignupResult
   vote(postId: ID, isUpvote: Boolean): Post
 }
 
-type CreateSessionResult {
+type SignupResult {
   me: Me
   error: String
 }

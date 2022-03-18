@@ -61,7 +61,10 @@ describe('graphql request handler', () => {
     req = factories.mock.request()
     req.url = '/noo/graphql'
     req.method = 'POST'
-    req.session = {userId: user.id}
+    req.session = {
+      userId: user.id,
+      destroy: () => {}
+    }
     res = factories.mock.response()
   })
 
@@ -549,29 +552,108 @@ describe('graphql request handler', () => {
     })
   })
 
-  describe('verifyEmail', function () {
-    let code
-
-    beforeEach(async () => {
-      code = await UserVerificationCode.create(user.get('email'))
+  describe('sendEmailVerification', function () {
+    it('returns `success: true` if new user', async () => {
+      req.body = {
+        query: `
+          mutation {
+            sendEmailVerification(email: "person@blah.com") {
+              success
+            }
+          }
+        `
+      }
+      await handler(req, res)
+      
+      expectJSON(res, {
+        data: {
+          sendEmailVerification: {
+            success: true
+          }
+        }
+      })
     })
 
-    it ('works', () => {
-       req.body = {
-        query: `mutation {
-          verifyEmail(code: "${code.get('code')}", email: "${user.get('email')}") {
-            id
-            emailValidated
+    it('returns `success: true` if existing user with an unverified email', async () => {
+      const testUser = await factories.user().save()
+      req.body = {
+        query: `
+          mutation {
+            sendEmailVerification(email: "${testUser.get('email')}") {
+              success
+            }
           }
-        }`
+        `
+      }
+      await handler(req, res)
+      
+      expectJSON(res, {
+        data: {
+          sendEmailVerification: {
+            success: true
+          }
+        }
+      })
+    })
+
+    it('returns `success: false` if existing user with and already verified email', async () => {
+      const testUser = await factories.user({
+        'email_validated': true
+      }).save()
+      req.body = {
+        query: `
+          mutation {
+            sendEmailVerification(email: "${testUser.get('email')}") {
+              success
+            }
+          }
+        `
+      }
+      await handler(req, res)
+      
+      expectJSON(res, {
+        data: {
+          sendEmailVerification: {
+            success: false
+          }
+        }
+      })
+    })
+  })
+
+  describe('verifyEmail', function () {
+    let code, token
+
+    beforeEach(async () => {
+      const userVerificationCode = await UserVerificationCode.create(user.get('email'))
+      code = userVerificationCode.code
+      token = userVerificationCode.token
+    })
+
+    it('works', () => {
+      req.body = {
+        query: `
+          mutation {
+            verifyEmail(code: "${code}", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+              error
+            }
+          }
+        `
       }
       return handler(req, res)
         .then(() => {
           expectJSON(res, {
             data: {
               verifyEmail: {
-                id: user.id,
-                emailValidated: true
+                me: {
+                  id: user.id,
+                  emailValidated: true
+                },
+                error: null
               }
             }
           })
@@ -580,88 +662,95 @@ describe('graphql request handler', () => {
        })
      })
 
-     it ('throws error on invalid code', () => {
+     it('returns an error on invalid code', () => {
        req.body = {
-        query: `mutation {
-          verifyEmail(code: "booop", email: "${user.get('email')}") {
-            id
-            emailValidated
+        query: `
+          mutation {
+            verifyEmail(code: "booop", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+              error
+            }
           }
-        }`
-      }
-      return handler(req, res)
-        .then(() => {
-          expectJSON(res, {
-            data: {
-              verifyEmail: null,
-            },
-            'errors[0].message': 'invalid code',
-          })
-          // expect(res.status).to.have.been.called.with(403)
-          //expect(res.body).to.deep.equal({ error: 'invalid code' })
-        })
-    })
-
-    it ('returns error on invalid token', () => {
-      const token = jwt.sign({
-        iss: 'https://hylo.com/moo', // Bad iss here makes bad token
-        aud: 'https://hylo.com',
-        sub: code.get('email'),
-        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
-        code: code.get('code')
-      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
-
-      req.body = {
-        query: `mutation {
-          verifyEmail(token: "${token}", email: "${user.get('email')}") {
-            id
-            emailValidated
-          }
-        }`
-      }
-      return handler(req, res)
-        .then(() => {
-          expectJSON(res, {
-            data: {
-              verifyEmail: null
-            },
-            'errors[0].message': 'invalid-link',
-          })
-          // expect(res.status).to.have.been.called.with(403)
-          // expect(res.body).to.deep.equal({ error: 'invalid-link' })
-        })
-    })
-
-    it ('validates email and creates user session on valid token', async () => {
-      const token = jwt.sign({
-        iss: process.env.PROTOCOL + "://" + process.env.DOMAIN,
-        aud: 'https://hylo.com',
-        sub: code.get('email'),
-        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
-        code: code.get('code')
-      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
-
-      req.body = {
-        query: `mutation {
-          verifyEmail(token: "${token}", email: "${user.get('email')}") {
-            id
-            emailValidated
-          }
-        }`
+        `
       }
       return handler(req, res)
         .then(() => {
           expectJSON(res, {
             data: {
               verifyEmail: {
-                id: user.id,
-                emailValidated: true
+                me: null,
+                error: 'Invalid code, please try again'
               }
             }
           })
-          // expect(user.get('email_validated')).to.be.true
-          expect(req.session.userId).to.equal(user.id)
-       })
+        })
+    })
+
+    it('returns error on invalid token', () => {
+      const testToken = jwt.sign({
+        iss: 'https://hylo.com/moo', // Bad iss here makes bad token
+        aud: 'https://hylo.com',
+        sub: code,
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
+        code
+      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
+
+      req.body = {
+        query: `
+          mutation {
+            verifyEmail(token: "${testToken}", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+              error
+            }
+          }
+        `
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: {
+                me: null,
+                error: 'Link expired, please start over'
+              }
+            }
+          })
+        })
+    })
+
+    it('validates email and creates user session on valid token', async () => {
+      req.body = {
+        query: `
+          mutation {
+            verifyEmail(token: "${token}", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+            }
+          }
+        `
+      }
+
+      await handler(req, res)
+
+      expectJSON(res, {
+        data: {
+          verifyEmail: {
+            me: {
+              id: user.id,
+              emailValidated: true
+            }
+          }
+        }
+      })
+      expect(req.session.userId).to.equal(user.id)
     })
   })
 

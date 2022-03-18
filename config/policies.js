@@ -79,10 +79,7 @@ module.exports.policies = {
   },
 
   UserController: {
-    create: ['checkClientCredentials'],
-    sendPasswordReset: true,
-    sendEmailVerification: true,
-    status: true
+    create: ['checkClientCredentials']
   },
 
   PaymentController: {
