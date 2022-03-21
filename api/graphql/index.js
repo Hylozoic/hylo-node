@@ -120,7 +120,6 @@ async function createSchema (expressContext) {
     }
   } else {
     // authenticated users
-
     allResolvers = {
       Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
       Mutation: makeMutations(expressContext, userId, isAdmin, fetchOne),

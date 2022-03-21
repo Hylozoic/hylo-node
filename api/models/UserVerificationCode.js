@@ -14,16 +14,10 @@ module.exports = bookshelf.Model.extend({
     const code = parseInt(bytes.toString('hex'), 16).toString().substr(0,6)
     const token = generateHyloJWT(email, { code })
 
-    await new UserVerificationCode({
-      email,
-      code,
-      created_at: new Date()
-    }).save(null, pick(options, 'transacting'))
+    await new UserVerificationCode({ email, code, created_at: new Date() })
+      .save(null, pick(options, 'transacting'))
 
-    return {
-      code,
-      token
-    }
+    return { code, token }
   },
 
   verify: async function ({ email: providedEmail, token, code: providedCode }) {
@@ -31,8 +25,8 @@ module.exports = bookshelf.Model.extend({
       // XXX: Don't need the code when verifying by JWT link but we still want to
       // expire the code when the JWT is used
       const decodedToken = token && decodeHyloJWT(token)
-      const email = providedEmail || decodedToken?.sub
-      const code = providedCode || decodedToken?.code
+      const email = decodedToken?.sub || providedEmail
+      const code = decodedToken?.code || providedCode
       const row = await UserVerificationCode.where({ email, code }).fetch({ transacting })
       let valid = false
 

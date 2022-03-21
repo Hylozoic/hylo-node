@@ -6,20 +6,10 @@ export const sendEmailVerification = async (_, { email }) => {
   try {
     let user = await User.find(email, {}, false)
 
-    // Email already validated: 
-    // send failure without error to not reveal account existence
-    if (user?.get('email_validated')) {
-      return { success: false }
-    }
-
-    // User is new or exists without a validated email:
-    // send verification email
     if (!user) {
       user = await User.create({ email, active: false })
     }
 
-    // TODO: Check here if a non-expired UserVerificationCode already exists for this user
-    //       if so extend expiration for another 4 hours and resend that code?
     const { code, token } = await UserVerificationCode.create(email)
 
     Queue.classMethod('Email', 'sendEmailVerification', {
@@ -33,20 +23,16 @@ export const sendEmailVerification = async (_, { email }) => {
 
     return { success: true }
   } catch (error) {
-    return { success: false }
+    return { success: false, error: error.message }
   }
 }
 
-export const verifyEmail = (fetchOne, { req }) => async (_, { code, email, token }) => {
+export const verifyEmail = (fetchOne, { req }) => async (_, { email, code, token }) => {
   try {
-    const codeVerified = await UserVerificationCode.verify({
-      email,
-      code,
-      token
-    })
+    const codeVerified = await UserVerificationCode.verify({ email, code, token })
 
     if (!codeVerified) {
-      return { error: 'Invalid code, please try again' }
+      throw new Error('Invalid code, please try again')
     }
 
     const user = await User.find(email, {}, false)
@@ -55,11 +41,10 @@ export const verifyEmail = (fetchOne, { req }) => async (_, { code, email, token
 
     req.session.userId = user.id
 
-    return {
-      me: fetchOne('Me', user.id)
-    }
+    return { me: fetchOne('Me', user.id) }
   } catch (error) {
-    return { error: 'Link expired, please start over' }
+    // Use a generic message?: 'Link expired, please start over' 
+    return { error: error.message }
   }
 }
 
@@ -68,11 +53,11 @@ export const register = (fetchOne, { req }) => async (_, { name, password }) => 
     const user = await User.find(req.session.userId, {}, false)
 
     if (!user) {
-      return { error: 'Not authorized' }
+      throw new Error('Not authorized')
     }
 
     if (!user.get('email_validated')) {
-      return { error: 'Email not validated' }
+      throw new Error('Email not validated')
     }
 
     await bookshelf.transaction(async transacting => {
@@ -84,11 +69,8 @@ export const register = (fetchOne, { req }) => async (_, { name, password }) => 
 
     return { me: fetchOne('Me', user.id) }
   } catch (error) {
-    return {
-      // Maybe better to keep it simple and return generic message:
-      // error: 'Error registering user'
-      error: error.message
-    }
+    // Use a generic message?: 'Error registering user'
+    return { error: error.message }
   }
 }
 
@@ -98,19 +80,23 @@ export const login = (fetchOne, { req }) => async (_, { email, password }) => {
   try {
     const isLoggedIn = await UserSession.isLoggedIn(req)
 
+    // Based upon current front-end implemenations this should never run,
+    // wondering if it might be better to logout and authenticate with the
+    // provided credentials.
     if (isLoggedIn) {
       return {
         me: fetchOne('Me', req.session.userId),
         error: 'already logged-in'
       }
     }
+
     const user = await User.authenticate(email, password)
-    
+
     await UserSession.login(req, user, 'password')
     
     return { me: fetchOne('Me', user.id) }
-  } catch(err) {
-    return { error: err.message }
+  } catch(error) {
+    return { error: error.message }
   }
 }
 
@@ -123,21 +109,25 @@ export const logout = ({ req }) => async () => {
 // Other User resolvers
 
 export const sendPasswordReset = async (_, { email }) => {
-  const user = await User.query(q => q.whereRaw('lower(email) = ?', email.toLowerCase())).fetch()
-  
-  if (user) {
-    const nextUrl = Frontend.Route.evo.passwordSetting()
-    const token = user.generateJWT()
+  try {
+    const user = await User.query(q => q.whereRaw('lower(email) = ?', email.toLowerCase())).fetch()
+    
+    if (user) {
+      const nextUrl = Frontend.Route.evo.passwordSetting()
+      const token = user.generateJWT()
 
-    Queue.classMethod('Email', 'sendPasswordReset', {
-      email: user.get('email'),
-      templateData: {
-        login_url: Frontend.Route.jwtLogin(user, token, nextUrl)
-      }
-    })
+      Queue.classMethod('Email', 'sendPasswordReset', {
+        email: user.get('email'),
+        templateData: {
+          login_url: Frontend.Route.jwtLogin(user, token, nextUrl)
+        }
+      })
+    }
+
+    return { success: true }
+  } catch (error) {
+    return { succcess: false }
   }
-
-  return { success: true }
 }
 
 export async function deactivateUser ({ userId, sessionId }) {

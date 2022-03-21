@@ -94,9 +94,9 @@ export {
   verifyEmail
 } from './user'
 
-export function updateMe (sessionId, userId, changes) {
-  return User.find(userId)
-  .then(user => user.validateAndSave(sessionId, convertGraphqlData(changes)))
+export async function updateMe (sessionId, userId, changes) {
+  const user = await User.find(userId)
+  return user.validateAndSave(sessionId, convertGraphqlData(changes))
 }
 
 export function allowGroupInvites (groupId, data) {
