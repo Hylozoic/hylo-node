@@ -596,7 +596,7 @@ describe('graphql request handler', () => {
       })
     })
 
-    it('returns `success: false` if existing user with and already verified email', async () => {
+    it('returns `success: true` if existing user with an already verified email', async () => {
       const testUser = await factories.user({
         'email_validated': true
       }).save()
@@ -614,7 +614,7 @@ describe('graphql request handler', () => {
       expectJSON(res, {
         data: {
           sendEmailVerification: {
-            success: false
+            success: true
           }
         }
       })
@@ -717,7 +717,7 @@ describe('graphql request handler', () => {
             data: {
               verifyEmail: {
                 me: null,
-                error: 'Link expired, please start over'
+                error: 'jwt issuer invalid. expected: http://localhost:3000'
               }
             }
           })
