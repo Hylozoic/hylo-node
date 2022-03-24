@@ -1,6 +1,6 @@
-import knexPostgis from 'knex-postgis';
-import wkx from 'wkx';
-var Buffer = require('buffer').Buffer;
+import knexPostgis from 'knex-postgis'
+import wkx from 'wkx'
+var Buffer = require('buffer').Buffer
 
 module.exports = bookshelf.Model.extend({
   tableName: 'locations',
