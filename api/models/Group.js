@@ -1,5 +1,7 @@
+import knexPostgis from 'knex-postgis'
 import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
+import wkx from 'wkx'
 import HasSettings from './mixins/HasSettings'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
@@ -20,6 +22,31 @@ module.exports = bookshelf.Model.extend(merge({
   tableName: 'groups',
   requireFetch: false,
   hasTimestamps: true,
+
+  format(attributes) {
+    const st = knexPostgis(bookshelf.knex);
+
+    // Make sure geometry column goes into the database correctly, converting from GeoJSON
+    const { geo_shape } = attributes
+    if (geo_shape) {
+      attributes.geo_shape = st.geomFromGeoJSON(geo_shape)
+    }
+
+    return attributes
+  },
+
+  parse(response) {
+    const st = knexPostgis(bookshelf.knex)
+
+    // Convert geometry hex values into GeoJSON before returning to the client
+    if (typeof response.geo_shape === 'string') {
+      const b = Buffer.from(response.geo_shape, 'hex')
+      const parsedGeo = wkx.Geometry.parse(b)
+      response.geo_shape = parsedGeo.toGeoJSON()
+    }
+
+    return response
+  },
 
   // ******** Getters ******* //
 
@@ -340,7 +367,7 @@ module.exports = bookshelf.Model.extend(merge({
   update: async function (changes) {
     var whitelist = [
       'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url', 'description',
-      'location', 'location_id', 'name', 'settings', 'visibility'
+      'geo_shape', 'location', 'location_id', 'name', 'settings', 'visibility'
     ]
 
     const attributes = pick(changes, whitelist)

@@ -216,6 +216,7 @@ export default async function makeModels (userId, isAdmin) {
         'banner_url',
         'created_at',
         'description',
+        'geo_shape',
         'location',
         'memberCount',
         'name',
