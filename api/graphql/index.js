@@ -151,7 +151,7 @@ async function createSchema (expressContext) {
 export function makePublicQueries (userId, fetchOne, fetchMany) {
   return {
     checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode),
+      InvitationService.check(invitationToken, accessCode),
     // Can only access public communities and posts
     group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id', { visibility: Group.Visibility.PUBLIC }),
     groups: (root, args) => fetchMany('Group', Object.assign(args, { visibility: Group.Visibility.PUBLIC })),
@@ -164,7 +164,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   return {
     activity: (root, { id }) => fetchOne('Activity', id),
     checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode),
+      InvitationService.check(invitationToken, accessCode),
     comment: (root, { id }) => fetchOne('Comment', id),
     connections: (root, args) => fetchMany('PersonConnection', args),
     group: async (root, { id, slug, updateLastViewed }) => {

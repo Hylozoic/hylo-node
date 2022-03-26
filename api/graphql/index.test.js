@@ -662,7 +662,7 @@ describe('graphql request handler', () => {
        })
      })
 
-     it('returns an error on invalid code', () => {
+     it('returns invalid-code error when code is not valid', () => {
        req.body = {
         query: `
           mutation {
@@ -682,14 +682,14 @@ describe('graphql request handler', () => {
             data: {
               verifyEmail: {
                 me: null,
-                error: 'Invalid code, please try again'
+                error: 'invalid-code'
               }
             }
           })
         })
     })
 
-    it('returns error on invalid token', () => {
+    it('returns invalid-token error when token is bad ', () => {
       const testToken = jwt.sign({
         iss: 'https://hylo.com/moo', // Bad iss here makes bad token
         aud: 'https://hylo.com',
@@ -717,7 +717,7 @@ describe('graphql request handler', () => {
             data: {
               verifyEmail: {
                 me: null,
-                error: 'jwt issuer invalid. expected: http://localhost:3000'
+                error: 'invalid-token'
               }
             }
           })

@@ -147,7 +147,7 @@ module.exports = {
     })
   },
 
-  check: (userId, token, accessCode) => {
+  check: (token, accessCode) => {
     if (accessCode) {
       return Group.queryByAccessCode(accessCode)
       .count()

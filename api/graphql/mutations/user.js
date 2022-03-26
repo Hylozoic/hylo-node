@@ -43,8 +43,7 @@ export const verifyEmail = (fetchOne, { req }) => async (_, { email, code, token
 
     return { me: fetchOne('Me', user.id) }
   } catch (error) {
-    // Use a generic message?: 'Link expired, please start over' 
-    return { error: error.message }
+    return { error: token ? 'invalid-link' : 'invalid-code' }
   }
 }
 
