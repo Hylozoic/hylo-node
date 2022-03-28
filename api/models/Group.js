@@ -279,8 +279,13 @@ module.exports = bookshelf.Model.extend(merge({
     const updatedAttribs = Object.assign(
       {},
       {
+        active: true,
         role: GroupMembership.Role.DEFAULT,
-        active: true
+        settings: {
+          sendEmail: true,
+          sendPushNotifications: true,
+          showJoinForm: false
+        }
       },
       pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
     )
