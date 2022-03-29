@@ -68,11 +68,11 @@ const hourly = now => {
 }
 
 const every10minutes = now => {
-  sails.log.debug('Refreshing full-text search index')
+  sails.log.debug('Refreshing full-text search index, sending comment digests, updating member counts')
   return [
     FullTextSearch.refreshView(),
-    Comment.sendDigests()
-    .then(count => sails.log.debug(`Sent ${count} message digests`))
+    Comment.sendDigests().then(count => sails.log.debug(`Sent ${count} message digests`)),
+    Group.updateAllMemberCounts()
   ]
 }
 

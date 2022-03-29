@@ -216,12 +216,14 @@ export default async function makeModels (userId, isAdmin) {
         'banner_url',
         'created_at',
         'description',
+        'geo_shape',
         'location',
         'memberCount',
         'name',
         'postCount',
         'slug',
         'visibility',
+        'type'
       ],
       relations: [
         {activeMembers: { querySet: true }},
@@ -309,7 +311,8 @@ export default async function makeModels (userId, isAdmin) {
               types
             }))
         }},
-        {widgets: {querySet: true }}
+        {widgets: {querySet: true }},
+        {groupExtensions: {querySet: true }}
       ],
       getters: {
         invitePath: g =>
@@ -321,14 +324,16 @@ export default async function makeModels (userId, isAdmin) {
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
       filter: nonAdminFilter(groupFilter(userId)),
-      fetchMany: ({ autocomplete, boundingBox, context, filter, first, groupIds, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
+      fetchMany: ({ autocomplete, boundingBox, context, farmQuery, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
         searchQuerySet('groups', {
           autocomplete,
           boundingBox,
           currentUserId: userId,
-          nearCoord,
+          farmQuery,
           groupIds,
+          groupType,
           limit: first,
+          nearCoord,
           offset,
           onlyMine: context === 'all',
           order,
@@ -693,13 +698,34 @@ export default async function makeModels (userId, isAdmin) {
       ]
     },
 
+    GroupExtension: {
+      model: GroupExtension,
+      attributes:[
+        'id',
+        'active',
+        'type',
+      ],
+      getters:{
+        data: groupExtension => groupExtension.pivot && groupExtension.pivot.get('data'),
+      }
+    },
+
+    Extension: {
+      model: Extension,
+      attributes: [
+        'id',
+        'type'
+      ]
+    },
+
     GroupWidget: {
       model: GroupWidget,
       attributes: [
         'id',
         'is_visible',
         'name',
-        'order'
+        'order',
+        'context'
       ],
       getters: {
         settings: gw => mapKeys(camelCase, gw.get('settings'))

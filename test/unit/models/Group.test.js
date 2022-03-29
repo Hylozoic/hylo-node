@@ -34,6 +34,14 @@ describe('Group', function() {
     expect(savedGroup.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png')
   })
 
+  
+  it('sets default type to "group"', function(){
+    var group = new Group({slug: 'meep', name: 'schboobie', access_code: 'meeeeep!', group_data_type: 1})
+    return group.save().then(function() {
+      expect(group.get('type')).to.equal('group')
+    })
+  })
+
   describe('.find', function() {
     it('ignores a blank id', function() {
       return Group.find(null).then(i => expect(i).to.be.null)

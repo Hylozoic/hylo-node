@@ -828,7 +828,8 @@ CREATE TABLE public.groups (
     num_members integer,
     slack_hook_url text,
     slack_team text,
-    slack_configure_url text
+    slack_configure_url text,
+    "type" text DEFAULT 'group'::text
 );
 
 
@@ -4620,6 +4621,35 @@ ALTER TABLE ONLY public.users
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_stripe_account_id_foreign FOREIGN KEY (stripe_account_id) REFERENCES public.stripe_accounts(id);
 
+
+/* Table 'extensions' */
+CREATE TABLE public.extensions (
+id serial NOT NULL,
+"type" text NOT NULL,
+created_at timestamp without time zone NOT NULL,
+updated_at timestamp without time zone NOT NULL,
+PRIMARY KEY(id));
+
+/* Table 'group_extensions' */
+CREATE TABLE public.group_extensions (
+id serial NOT NULL,
+group_id bigserial NOT NULL,
+extension_id bigint NOT NULL,
+"data" jsonb,
+active boolean DEFAULT true,
+created_at timestamp without time zone NOT NULL,
+updated_at timestamp without time zone NOT NULL,
+PRIMARY KEY(id));
+
+/* Relation 'groups-group_extensions' */
+ALTER TABLE public.group_extensions ADD CONSTRAINT "groups-group_extensions"
+FOREIGN KEY (group_id)
+REFERENCES public."groups"(id);
+
+/* Relation 'extensions-group_extensions' */
+ALTER TABLE public.group_extensions ADD CONSTRAINT "extensions-group_extensions"
+FOREIGN KEY (extension_id)
+REFERENCES public.extensions(id);
 
 --
 -- PostgreSQL database dump complete

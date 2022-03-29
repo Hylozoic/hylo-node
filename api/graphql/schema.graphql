@@ -1,4 +1,5 @@
 scalar Date
+scalar JSON
 
 # The currently logged-in person.
 type Me {
@@ -186,6 +187,8 @@ type Group {
   ): GroupQuerySet
   createdAt: Date
   description: String
+  geoShape: JSON
+  groupExtensions: GroupExtensionQuerySet
   groupRelationshipInvitesFrom: GroupRelationshipInviteQuerySet
   groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
   groupToGroupJoinQuestions: GroupToGroupJoinQuestionQuerySet
@@ -252,6 +255,7 @@ type Group {
   ): SkillQuerySet
   slug: String
   suggestedSkills: SkillQuerySet
+  type: String
   viewPosts(
     afterTime: Date,
     beforeTime: Date,
@@ -271,6 +275,24 @@ type Group {
   widgets: GroupWidgetQuerySet
 }
 
+type GroupExtension {
+  id: ID
+  active: Boolean
+  data: JSON
+  type: String
+} 
+
+type Extension {
+  id: ID
+  type: String
+}
+
+type GroupExtensionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupExtension]
+}
+
 type GroupSettings {
   allowGroupInvites: Boolean
   askGroupToGroupJoinQuestions: Boolean
@@ -284,6 +306,7 @@ type GroupWidget {
   name: String
   isVisible: Boolean
   order: Int
+  context: String
   settings: GroupWidgetSettings
   group: Group
 }
@@ -606,9 +629,11 @@ type Query {
     autocomplete: String,
     boundingBox: [PointInput],
     context: String,
+    farmQuery: JSON,
     filter: String,
     first: Int,
     groupIds: [ID],
+    groupType: String,
     nearCoord: PointInput,
     offset: Int,
     order: String,
@@ -617,6 +642,13 @@ type Query {
     sortBy: String,
     visibility: Int
   ): GroupQuerySet
+  groupExtension(
+    id: ID
+  ): GroupExtension
+  groupExtensions(
+    extensionIds: [ID],
+    groupIds: [ID]
+  ): GroupExtensionQuerySet
   joinRequests(groupId: ID, status: Int): JoinRequestQuerySet
   messageThread(id: ID): MessageThread
   post(id: ID): Post
@@ -816,6 +848,7 @@ input GroupInput {
   avatarUrl: String
   bannerUrl: String
   description: String
+  geoShape: String
   groupToGroupJoinQuestions: [QuestionInput]
   joinQuestions: [QuestionInput]
   location: String

@@ -274,7 +274,6 @@ module.exports = bookshelf.Model.extend(merge({
     if (transacting) {
       q.transacting(transacting)
     }
-    await q.where('id', group.id).increment('num_members')
     await this.followDefaultTags(group.id, transacting)
     await this.markInvitationsUsed(group.id, transacting)
     return memberships[0]
@@ -282,7 +281,6 @@ module.exports = bookshelf.Model.extend(merge({
 
   leaveGroup: async function (group) {
     await group.removeMembers([this.id])
-    await Group.query().where('id', group.id).decrement('num_members')
   },
 
   // sanitize certain values before storing them
