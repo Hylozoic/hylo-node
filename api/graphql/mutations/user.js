@@ -1,4 +1,5 @@
 import request from 'request'
+import { decodeHyloJWT } from '../../../lib/HyloJWT'
 
 // Sign-up Related
 
@@ -27,12 +28,16 @@ export const sendEmailVerification = async (_, { email }) => {
   }
 }
 
-export const verifyEmail = (fetchOne, { req }) => async (_, { email, code, token }) => {
+export const verifyEmail = (fetchOne, { req }) => async (_, { email: providedEmail, code: providedCode, token }) => {
   try {
-    const codeVerified = await UserVerificationCode.verify({ email, code, token })
+    const decodedToken = token && decodeHyloJWT(token)
+    const email = decodedToken?.sub || providedEmail
+    const code = decodedToken?.code || providedCode
 
-    if (!codeVerified) {
-      throw new Error('Invalid code, please try again')
+    // XXX: Don't need the code when verifying by JWT link but we still want to
+    // expire the code if it does exist when the JWT is used
+    if (code && !(await UserVerificationCode.verify({ email, code }))) {
+      return { error: token ? 'invalid-link' : 'invalid-code' }
     }
 
     const user = await User.find(email, {}, false)

@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { pick } from 'lodash'
-import { decodeHyloJWT, generateHyloJWT } from '../../lib/HyloJWT'
+import { generateHyloJWT } from '../../lib/HyloJWT'
 
 module.exports = bookshelf.Model.extend({
   tableName: 'user_verification_codes',
@@ -20,13 +20,8 @@ module.exports = bookshelf.Model.extend({
     return { code, token }
   },
 
-  verify: async function ({ email: providedEmail, token, code: providedCode }) {
+  verify: async function ({ email, code }) {
     return bookshelf.transaction(async (transacting) => {
-      // XXX: Don't need the code when verifying by JWT link but we still want to
-      // expire the code when the JWT is used
-      const decodedToken = token && decodeHyloJWT(token)
-      const email = decodedToken?.sub || providedEmail
-      const code = decodedToken?.code || providedCode
       const row = await UserVerificationCode.where({ email, code }).fetch({ transacting })
       let valid = false
 

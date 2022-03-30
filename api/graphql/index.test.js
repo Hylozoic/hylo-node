@@ -689,7 +689,7 @@ describe('graphql request handler', () => {
         })
     })
 
-    it('returns invalid-token error when token is bad ', () => {
+    it('returns invalid-link error when token is bad ', () => {
       const testToken = jwt.sign({
         iss: 'https://hylo.com/moo', // Bad iss here makes bad token
         aud: 'https://hylo.com',
@@ -717,7 +717,7 @@ describe('graphql request handler', () => {
             data: {
               verifyEmail: {
                 me: null,
-                error: 'invalid-token'
+                error: 'invalid-link'
               }
             }
           })
