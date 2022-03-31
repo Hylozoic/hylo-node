@@ -198,7 +198,7 @@ function generateFakeFarmData (index) {
       native_title: Math.random() > 0.8 ? null : Math.random() * 99 + 1
     },
     land_use_percentage_by_product: Math.random() > 0.6 ? {} : allocateLandUseByProduct(sampledProductCategories),
-    mailing_address: Math.random() > 0.6 ? null : `${faker.address.streetAddress}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
+    mailing_address: Math.random() > 0.6 ? null : `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
     management_plans_current: Math.random() > 0.9 ? null : managementPartitions[0],
     management_plans_future: Math.random() > 0.9 ? null : managementPartitions[1],
     management_software: null,
