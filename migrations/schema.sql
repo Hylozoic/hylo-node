@@ -430,6 +430,38 @@ ALTER SEQUENCE public.event_responses_id_seq OWNED BY public.event_responses.id;
 
 
 --
+-- Name: extensions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.extensions (
+    id integer NOT NULL,
+    type text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: extensions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.extensions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: extensions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.extensions_id_seq OWNED BY public.extensions.id;
+
+
+--
 -- Name: flagged_items; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -558,6 +590,41 @@ CREATE SEQUENCE public.group_connections_id_seq
 --
 
 ALTER SEQUENCE public.group_connections_id_seq OWNED BY public.group_relationships.id;
+
+
+--
+-- Name: group_extensions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_extensions (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    extension_id bigint NOT NULL,
+    data jsonb,
+    active boolean DEFAULT true,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: group_extensions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.group_extensions_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: group_extensions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.group_extensions_id_seq OWNED BY public.group_extensions.id;
 
 
 --
@@ -774,7 +841,8 @@ CREATE TABLE public.group_widgets (
     settings jsonb DEFAULT '{}'::jsonb,
     is_visible boolean DEFAULT true,
     "order" integer,
-    created_at timestamp with time zone
+    created_at timestamp with time zone,
+    context character varying(255)
 );
 
 
@@ -824,7 +892,8 @@ CREATE TABLE public.groups (
     slack_hook_url text,
     slack_team text,
     slack_configure_url text,
-    "type" text DEFAULT 'group'::text
+    type text,
+    geo_shape public.geometry(Polygon,4326)
 );
 
 
@@ -2277,10 +2346,24 @@ ALTER TABLE ONLY public.event_responses ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: extensions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extensions ALTER COLUMN id SET DEFAULT nextval('public.extensions_id_seq'::regclass);
+
+
+--
 -- Name: flagged_items id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.flagged_items ALTER COLUMN id SET DEFAULT nextval('public.flagged_items_id_seq'::regclass);
+
+
+--
+-- Name: group_extensions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_extensions ALTER COLUMN id SET DEFAULT nextval('public.group_extensions_id_seq'::regclass);
 
 
 --
@@ -2662,6 +2745,14 @@ ALTER TABLE ONLY public.event_responses
 
 
 --
+-- Name: extensions extensions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.extensions
+    ADD CONSTRAINT extensions_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: flagged_items flagged_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2699,6 +2790,14 @@ ALTER TABLE ONLY public.group_relationships
 
 ALTER TABLE ONLY public.group_relationships
     ADD CONSTRAINT group_connections_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: group_extensions group_extensions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_extensions
+    ADD CONSTRAINT group_extensions_pkey PRIMARY KEY (id);
 
 
 --
@@ -3345,6 +3444,13 @@ CREATE INDEX communities_tags_community_id_visibility_index ON public.groups_tag
 --
 
 CREATE INDEX fk_community_created_by_1 ON public.communities USING btree (created_by_id);
+
+
+--
+-- Name: group_extensions_group_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX group_extensions_group_id_index ON public.group_extensions USING btree (group_id);
 
 
 --
@@ -4118,6 +4224,22 @@ ALTER TABLE ONLY public.group_relationships
 
 
 --
+-- Name: group_extensions group_extensions_extension_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_extensions
+    ADD CONSTRAINT group_extensions_extension_id_foreign FOREIGN KEY (extension_id) REFERENCES public.extensions(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_extensions group_extensions_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_extensions
+    ADD CONSTRAINT group_extensions_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: group_invites group_invites_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4636,35 +4758,6 @@ ALTER TABLE ONLY public.users
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_stripe_account_id_foreign FOREIGN KEY (stripe_account_id) REFERENCES public.stripe_accounts(id);
 
-
-/* Table 'extensions' */
-CREATE TABLE public.extensions (
-id serial NOT NULL,
-"type" text NOT NULL,
-created_at timestamp without time zone NOT NULL,
-updated_at timestamp without time zone NOT NULL,
-PRIMARY KEY(id));
-
-/* Table 'group_extensions' */
-CREATE TABLE public.group_extensions (
-id serial NOT NULL,
-group_id bigserial NOT NULL,
-extension_id bigint NOT NULL,
-"data" jsonb,
-active boolean DEFAULT true,
-created_at timestamp without time zone NOT NULL,
-updated_at timestamp without time zone NOT NULL,
-PRIMARY KEY(id));
-
-/* Relation 'groups-group_extensions' */
-ALTER TABLE public.group_extensions ADD CONSTRAINT "groups-group_extensions"
-FOREIGN KEY (group_id)
-REFERENCES public."groups"(id);
-
-/* Relation 'extensions-group_extensions' */
-ALTER TABLE public.group_extensions ADD CONSTRAINT "extensions-group_extensions"
-FOREIGN KEY (extension_id)
-REFERENCES public.extensions(id);
 
 --
 -- PostgreSQL database dump complete

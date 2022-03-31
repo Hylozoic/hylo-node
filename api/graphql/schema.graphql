@@ -857,6 +857,7 @@ input GroupInput {
   bannerUrl: String
   description: String
   groupToGroupJoinQuestions: [QuestionInput]
+  groupExtensions: [GroupExtensionInput]
   joinQuestions: [QuestionInput]
   location: String
   locationId: ID
@@ -877,6 +878,11 @@ input GroupSettingsInput {
   askJoinQuestions: Boolean
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
+}
+
+input GroupExtensionInput {
+  data: JSON
+  type: String
 }
 
 input QuestionInput {

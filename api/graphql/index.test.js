@@ -376,7 +376,6 @@ describe('graphql request handler', () => {
             }
             groupExtensions{
               items{
-                id
                 type
                 data
               }
@@ -407,8 +406,8 @@ describe('graphql request handler', () => {
                     type:'test', 
                     data: {
                       "key-test": "value-test"
-                      }, 
-                    id: groupExtension.id.toString()}
+                    }
+                  }
                 ]
               }
             }
