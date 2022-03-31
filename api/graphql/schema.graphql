@@ -217,6 +217,7 @@ type Group {
     autocomplete: String
   ): PersonQuerySet
   memberCount: Int
+  memberships: MembershipQuerySet
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
   name: String
   numPrerequisitesLeft: Int
@@ -352,6 +353,12 @@ type GroupRelationshipInvite {
   toGroup: Group
   type: Int
   updatedAt: Date
+}
+
+type MembershipQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Membership]
 }
 
 type PersonQuerySet {
@@ -936,7 +943,7 @@ type Mutation {
   cancelJoinRequest(joinRequestId: ID): GenericResult
   createAffiliation(data: AffiliationInput): Affiliation
   createComment(data: CommentInput): Comment
-  createGroup(data: GroupInput, asUserId: ID): Membership
+  createGroup(data: GroupInput, asUserId: ID): Group
   createInvitation(groupId: ID, data: InviteInput): CreatedInvitations
   createJoinRequest(groupId: ID, questionAnswers: [QuestionAnswerInput]): CreatedRequest
   createMessage(data: MessageInput): Message

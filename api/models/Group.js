@@ -123,6 +123,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships (includeInactive = false) {
+    // TODO: need to check if person is active too?
     return this.hasMany(GroupMembership)
       .query(q => includeInactive ? q : q.where('group_memberships.active', true))
   },
@@ -460,7 +461,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     await Queue.classMethod('Group', 'notifyAboutCreate', { groupId: group.id })
 
-    return memberships[0]
+    return group
   },
 
   async deactivate (id, opts = {}) {

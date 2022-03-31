@@ -245,6 +245,7 @@ export default async function makeModels (userId, isAdmin) {
         {joinQuestions: {querySet: true}},
         'locationObject',
         {moderators: {querySet: true}},
+        {memberships: {querySet: true}},
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
@@ -274,7 +275,7 @@ export default async function makeModels (userId, isAdmin) {
           querySet: true,
           filter: (relation, { onlyNotMember }) =>
             relation.query(q => {
-              if (onlyNotMember) {
+              if (onlyNotMember && userId) {
                 // Only return prerequisite groups that the current user is not yet a member of
                 q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
                   'group_memberships.user_id': userId,
