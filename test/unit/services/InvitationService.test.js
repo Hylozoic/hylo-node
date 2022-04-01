@@ -45,6 +45,15 @@ describe('InvitationService', () => {
         expect(result.valid).to.equal(true)
       )
     })
+
+    it('should not be valid if accessCode is invalid, even if token is valid', () => {
+      const token = invitation.get('token')
+      const accessCode = 'badaccesscode'
+      return InvitationService.check(token, accessCode)
+      .then(result =>
+        expect(result.valid).to.equal(false)
+      )
+    })
   })
 
   describe('use', function () {

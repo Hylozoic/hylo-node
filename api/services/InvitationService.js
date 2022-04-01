@@ -150,18 +150,18 @@ module.exports = {
   check: (token, accessCode) => {
     if (accessCode) {
       return Group.queryByAccessCode(accessCode)
-      .count()
-      .then(count => {
-        return {valid: count !== '0'}
-      })
-    }
+        .count()
+        .then(count => {
+          return {valid: count !== '0'}
+        })
+      }
     if (token) {
       return Invitation.query()
-      .where({token, used_by_id: null})
-      .count()
-      .then(result => {
-        return {valid: result[0].count !== '0'}
-      })
+        .where({ token, used_by_id: null, expired_by_id: null })
+        .count()
+        .then(result => {
+          return { valid: result[0].count !== '0' }
+        })
     }
   },
 
