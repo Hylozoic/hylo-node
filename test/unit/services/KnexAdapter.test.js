@@ -1,6 +1,6 @@
 var root = require('root-path')
 var setup = require(root('test/setup'))
-var DbAdapter = require(root('api/services/oidc/knexAdapter'))
+var DbAdapter = require(root('api/services/oidc/KnexAdapter'))
 
 describe('OIDCKnexAdapter', function () {
   let adapter

@@ -2,11 +2,11 @@
 // https://github.com/panva/node-oidc-provider/blob/main/docs/README.md
 
 import { Provider } from 'oidc-provider'
-import knexAdapter from './oidc/knexAdapter'
+import KnexAdapter from './oidc/KnexAdapter'
 import rsaPemToJwk from 'rsa-pem-to-jwk'
 
 const configuration = {
-  adapter: knexAdapter,
+  adapter: KnexAdapter,
   scopes: ['address', 'email', 'phone', 'profile', 'api:read', 'api:write'],
   claims: {
     openid: ['sub'],
