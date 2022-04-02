@@ -79,9 +79,9 @@ function fakeLocation (knex) {
   const address_street = faker.address.streetName()
   const country = faker.address.country()
   const locality = 'California'
-  const address_number = faker.random.number({ min: 1, max: 1000 })
-  const fakeLat = faker.address.latitude(-119, -122)
-  const fakeLng = faker.address.longitude(42, 38)
+  const address_number = faker.datatype.number({ min: 1, max: 1000 })
+  const fakeLat = faker.address.latitude(42, 38) // TODO: is this the right syntax???
+  const fakeLng = faker.address.longitude(-119, -122)
   const center = st.geomFromText('POINT(' + fakeLng + ' ' + fakeLat + ')', 4326)
   const full_text = `${address_number} ${address_street}, ${city}, ${locality}, ${country}`
   const region = faker.address.county()
@@ -117,7 +117,7 @@ function addlocationsToUsers (knex) {
 function addlocationsToGroups (knex) {
   console.info('  --> farm group locations')
   return knex('groups').select('id')
-    .whereRaw('groups.type = \'farm\'')
+    .whereRaw('groups.type = \'farm\' and groups.name ILIKE \'% farm\'')
     .then(groups => Promise.all(groups.map(({ id }) => updateLocationId(id, knex, 'groups'))))
 }
 
@@ -160,14 +160,25 @@ function fakeMembership (user_id, knex) {
 }
 
 function fakePost (knex) {
+  const type = ['discussion', 'resource', 'project', 'event', 'offer', 'request'][faker.datatype.number({ min: 0, max: 5 })]
+  let starts_at, ends_at
+  if (type !== 'discussion') {
+    starts_at = faker.date.soon(faker.datatype.number({ min: 1, max: 20 }))
+    ends_at = faker.date.future(faker.datatype.number({ min: 1, max: 2 }))
+  }
+
   return sampleDB('users', knex.raw('users.email ILIKE \'%@farm-demo.com\''), knex) // select only farm-demo users to create these specific posts for
     .then(([user]) => ({
       name: faker.lorem.sentence(),
-      type: ['discussion', 'resource', 'project'][faker.random.number({min: 0, max: 2})],
+      type,
       description: `fake-farm: ${faker.lorem.paragraph()}`,
       created_at: faker.date.past(),
       user_id: user.id,
-      active: true
+      active: true,
+      visibility: 2,
+      is_public: true,
+      starts_at,
+      ends_at
     }))
 }
 
@@ -175,8 +186,7 @@ function addPostsToGroups (knex) {
   console.info('  --> farm groups_posts')
   return knex('posts')
     .select(['id as post_id', 'user_id'])
-    .whereNull('type')
-    .whereRaw('user_id in (select users.id as user_id from users where users.email ILIKE \'%@farm-demo.com\')') // select farm demo users only
+    .whereRaw('user_id in (select users.id as user_id from users where users.email ILIKE \'%@farm-demo.com\')')
     .then(posts => Promise.all(
       posts.map(({ post_id, user_id }) => knex('group_memberships')
         .where('group_memberships.user_id', user_id)
@@ -284,7 +294,7 @@ function generateFakeFarmData (index) {
     management_plans_future: Math.random() > 0.9 ? null : managementPartitions[1],
     management_plans_current_detail: Math.random() > 0.2 ? null : faker.random.word(),
     management_plans_future_detail: Math.random() > 0.2 ? null : faker.random.word(),
-    organizational_id: faker.random.uuid(),
+    organizational_id: faker.datatype.uuid(),
     motivations: Math.random() > 0.8 ? null : sampleArray(FARM_MOTIVATIONS, Math.round(Math.random() * 5)),
     preferred_contact_method: Math.random() > 0.8 ? null : sample(PREFERRED_CONTACT_METHODS).value,
     product_categories: sampledProductCategories,
@@ -341,8 +351,8 @@ function generateProducts (index) {
 }
 
 function generateFakeGeometry (sideLength = 0.002) {
-  const fakeLat = faker.address.latitude(-119, -122)
-  const fakeLng = faker.address.longitude(42, 38)
+  const fakeLat = faker.address.latitude(42, 38)
+  const fakeLng = faker.address.longitude(-119, -122)
   return {
     type: 'FeatureCollection',
     features: [
@@ -395,7 +405,7 @@ function fakeGroupData (name, slug, created_by_id, type) {
     name,
     group_data_type: 1,
     avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png',
-    access_code: faker.random.uuid(),
+    access_code: faker.datatype.uuid(),
     description: faker.lorem.paragraph(),
     slug: slug,
     banner_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg',

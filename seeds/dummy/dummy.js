@@ -236,7 +236,7 @@ function fakeGroupData(name, slug, created_by_id, type) {
     name,
     group_data_type: 1,
     avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png',
-    access_code: faker.random.uuid(),
+    access_code: faker.datatype.uuid(),
     description: faker.lorem.paragraph(),
     slug: slug,
     banner_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg',
