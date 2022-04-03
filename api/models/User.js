@@ -443,9 +443,9 @@ module.exports = bookshelf.Model.extend(merge({
       : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
   },
 
-  hasRegistered: function () {
-    return this.load('linkedAccounts')
-      .then(() => this.relations.linkedAccounts.length > 0)
+  hasRegistered: async function () {
+    await this.load('linkedAccounts')
+    return !!this.relations.linkedAccounts.find(a => a.get('provider_key') === 'password')
   },
 
   hasDevice: function () {
