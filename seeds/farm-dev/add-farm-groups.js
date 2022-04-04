@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 const { sample, partition } = require('lodash')
+const knexPostgis = require('knex-postgis')
 const faker = require('faker')
 const {
   ANIMAL_LIST,
@@ -17,12 +18,16 @@ const {
 } = require('../../lib/constants')
 const uuid = require('node-uuid')
 
-exports.seed = (knex) => seed('users', knex)
+exports.seed = (knex) => seed('locations', knex)
+  .then(() => seed('users', knex))
   .then(() => seed('groups', knex))
   .then(() => seed('posts', knex))
   .then(() => addUsersToGroups(knex))
   .then(() => addPostsToGroups(knex))
   .then(() => addFarmExtensionToGroups(knex))
+  .then(() => addlocationsToUsers(knex))
+  .then(() => addlocationsToGroups(knex))
+  .then(() => addlocationsToPosts(knex))
   .catch(err => {
     let report = err.message
     if (err.message.includes('unique constraint')) {
@@ -43,17 +48,19 @@ ${err.message}
 const n = {
   groups: 24,
   posts: 80,
-  users: 50
+  users: 50,
+  locations: 200
 }
 
 const fake = {
   groups: fakeGroup,
   posts: fakePost,
-  users: fakeUser
+  users: fakeUser,
+  locations: fakeLocation
 }
 
 function seed (entity, knex) {
-  console.info(`  --> ${entity}`)
+  console.info(`  --> ${entity}`, n[entity], fake[entity])
   return Promise.all(
     [...new Array(n[entity])].map(
       () => fake[entity](knex).then(row => knex(entity).insert(row))
@@ -66,11 +73,69 @@ function moderatorOrMember () {
   return Math.random() > 0.5 ? 1 : 0 // for farms, half the members will be moderators, on average
 }
 
+function fakeLocation (knex) {
+  const st = knexPostgis(knex)
+  const city = faker.address.city()
+  const address_street = faker.address.streetName()
+  const country = faker.address.country()
+  const locality = 'California'
+  const address_number = faker.datatype.number({ min: 1, max: 1000 })
+  const fakeLat = faker.address.latitude(42, 38) // TODO: is this the right syntax???
+  const fakeLng = faker.address.longitude(-119, -122)
+  const center = st.geomFromText('POINT(' + fakeLng + ' ' + fakeLat + ')', 4326)
+  const full_text = `${address_number} ${address_street}, ${city}, ${locality}, ${country}`
+  const region = faker.address.county()
+
+  return Promise.resolve({
+    center,
+    full_text,
+    address_street,
+    address_number,
+    city,
+    locality,
+    region,
+    country,
+    neighborhood: 'fakesville',
+    created_at: knex.fn.now()
+  })
+}
+
 function addUsersToGroups (knex) {
   console.info('  --> farm group_memberships')
   return knex('users').select('id')
     .whereRaw('users.email ILIKE \'%@farm-demo.com\'')
     .then(users => Promise.all(users.map(({ id }) => fakeMembership(id, knex))))
+}
+
+function addlocationsToUsers (knex) {
+  console.info('  --> user locations')
+  return knex('users').select('id')
+    .whereRaw('users.email ILIKE \'%@farm-demo.com\'')
+    .then(users => Promise.all(users.map(({ id }) => updateLocationId(id, knex, 'users'))))
+}
+
+function addlocationsToGroups (knex) {
+  console.info('  --> farm group locations')
+  return knex('groups').select('id')
+    .whereRaw('groups.type = \'farm\' and groups.name ILIKE \'% farm\'')
+    .then(groups => Promise.all(groups.map(({ id }) => updateLocationId(id, knex, 'groups'))))
+}
+
+function addlocationsToPosts (knex) {
+  console.info('  --> farm post locations')
+  return knex('posts').select('id')
+    .whereRaw('posts.description ILIKE \'fake-farm%\'')
+    .then(posts => Promise.all(posts.map(({ id }) => updateLocationId(id, knex, 'posts'))))
+}
+
+function updateLocationId (id, knex, table) {
+  return sampleDB('locations', knex.raw('locations.neighborhood = \'fakesville\''), knex)
+    .then(([location]) => knex(table)
+      .where(`${table}.id`, '=', id)
+      .update({
+        location_id: location.id
+      })
+    )
 }
 
 function fakeGroup (knex) {
@@ -95,13 +160,25 @@ function fakeMembership (user_id, knex) {
 }
 
 function fakePost (knex) {
+  const type = ['discussion', 'resource', 'project', 'event', 'offer', 'request'][faker.datatype.number({ min: 0, max: 5 })]
+  let starts_at, ends_at
+  if (type !== 'discussion') {
+    starts_at = faker.date.soon(faker.datatype.number({ min: 1, max: 20 }))
+    ends_at = faker.date.future(faker.datatype.number({ min: 1, max: 2 }))
+  }
+
   return sampleDB('users', knex.raw('users.email ILIKE \'%@farm-demo.com\''), knex) // select only farm-demo users to create these specific posts for
     .then(([user]) => ({
       name: faker.lorem.sentence(),
-      description: faker.lorem.paragraph(),
+      type,
+      description: `fake-farm: ${faker.lorem.paragraph()}`,
       created_at: faker.date.past(),
       user_id: user.id,
-      active: true
+      active: true,
+      visibility: 2,
+      is_public: true,
+      starts_at,
+      ends_at
     }))
 }
 
@@ -109,8 +186,7 @@ function addPostsToGroups (knex) {
   console.info('  --> farm groups_posts')
   return knex('posts')
     .select(['id as post_id', 'user_id'])
-    .whereNull('type')
-    .whereRaw('user_id in (select users.id as user_id from users where users.email ILIKE \'%@farm-demo.com\')') // select farm demo users only
+    .whereRaw('user_id in (select users.id as user_id from users where users.email ILIKE \'%@farm-demo.com\')')
     .then(posts => Promise.all(
       posts.map(({ post_id, user_id }) => knex('group_memberships')
         .where('group_memberships.user_id', user_id)
@@ -138,24 +214,27 @@ async function addFarmExtensionToGroups (knex) {
 }
 
 function generateFakeFarmData (index) {
-  let animal_count = null
-  let animal_types = null
-  let animal_count_by_type = null
+  let animals_total = null
+  let products_animals = null
+  let animals_detail = null
   const sampledProductCategories = sampleArray(PRODUCT_CATAGORIES, Math.round(Math.random() * 5) + 1)
   const renting = Math.random() > 0.8 ? null : Math.random() > 0.5
+  const share_farm = Math.random() > 0.8 ? null : Math.random() > 0.5
+  const pastoral_lease = Math.random() > 0.8 ? null : Math.random() > 0.5
+  const native_land_title = Math.random() > 0.8 ? null : Math.random() > 0.5
 
   if (sampledProductCategories.some((item) => ['pasture', 'dairy', 'rangeland', 'aquaculture'].includes(item))) {
-    animal_count = Math.round(Math.random() * 1000 * Math.random()) + 8
-    animal_types = sampleArray(ANIMAL_LIST, Math.round(Math.random() * 6) + 1)
-    let animalAllocation = animal_count
-    animal_count_by_type = {}
-    animal_types.forEach((animal) => {
-      animal_count_by_type[animal] = 1
+    animals_total = Math.round(Math.random() * 1000 * Math.random()) + 8
+    products_animals = sampleArray(ANIMAL_LIST, Math.round(Math.random() * 6) + 1)
+    let animalAllocation = animals_total
+    animals_detail = {}
+    products_animals.forEach((animal) => {
+      animals_detail[animal] = 1
       --animalAllocation
     })
     for (let i = 0; i < animalAllocation; i++) {
-      const winner = sample(animal_types)
-      animal_count_by_type[winner] += 1
+      const winner = sample(products_animals)
+      animals_detail[winner] += 1
     }
   }
 
@@ -165,60 +244,67 @@ function generateFakeFarmData (index) {
   const certificationsPartitions = partition(certificationsSample, (el) => Math.random() > 0.5)
 
   return {
-    acres: Math.random() > 0.85 ? null : Math.random() * 1000 * Math.random() + 1,
-    animal_count,
-    animal_count_by_type,
-    animal_types,
-    area_unit_preference: Math.random() > 0.85 ? null : Math.random() > 0.5 ? 'hectares' : 'acres',
+    area_total_hectares: Math.random() > 0.85 ? null : Math.random() * 1000 * Math.random() + 0.1,
+    animals_total,
+    animals_detail,
+    products_animals,
     average_annual_rainfall: Math.random() > 0.85 ? null : Math.random() * 1500 * Math.random() + 1,
     average_annual_temperature: Math.random() > 0.9 ? null : Math.random() * 24 * Math.random() + 4,
-    certifications_current: Math.random() > 0.9 ? null : certificationsPartitions[0],
-    certifications_desired: Math.random() > 0.9 ? null : certificationsPartitions[1],
+    bio: Math.random() > 0.8 ? null : faker.lorem.paragraph(),
+    certifications_current_detail: Math.random() > 0.9 ? null : certificationsPartitions[0],
+    certifications_current: 'yes',
+    certifications_desired_detail: Math.random() > 0.9 ? null : certificationsPartitions[1],
+    certifications_desired: 'yes',
     climate_zone: Math.random() > 0.85 ? null : sample(CLIMATE_ZONES).value,
-    collaboration_interest: Math.random() > 0.9 ? [] : sampleArray(COLLABORATION_INTERESTS, Math.round(Math.random() * 4)),
+    conditions_details: null, // left null for now
+    county: Math.random() > 0.6 ? null : faker.address.county(),
+    interest: Math.random() > 0.9 ? [] : sampleArray(COLLABORATION_INTERESTS, Math.round(Math.random() * 4)),
     company: Math.random() > 0.5 ? faker.random.word() + faker.random.word() + ' LLC' : null,
     equity_practices: [...new Array(Math.round(Math.random() * 6) + 1)].map((el) => 'to be implemented'),
-    farm_cell_phone: Math.random() > 0.85 ? null : faker.phone.phoneNumber('(###) ###-####'),
-    farm_email: Math.random() > 0.85 ? null : `${faker.random.word()}@${faker.random.word()}.com`,
+    phone: Math.random() > 0.85 ? null : faker.phone.phoneNumber('(###) ###-####'),
+    email: Math.random() > 0.85 ? null : `${faker.random.word()}@${faker.random.word()}.com`,
+    name: `${faker.name.firstName()} ${faker.name.lastName()}`,
     farm_leadership_experience: Math.random() > 0.85 ? null : Math.random() * 19 + 1,
-    farm_management_system: null, // left null
-    farmos_url: Math.random() > 0.5 ? null : `${faker.random.word()}@${faker.random.word()}.com`,
-    farm_outline: Math.random() > 0.6 ? null : generateFakeGeometry(),
-    farm_physical_address: `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
-    farm_region_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
-    farm_types: sampleArray(FARM_TYPES, Math.round(Math.random() * 2) + 1),
-    flexible: null, // leave null
+    area: Math.random() > 0.6 ? null : generateFakeGeometry(),
+    location: `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
+    community_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
+    types: sampleArray(FARM_TYPES, Math.round(Math.random() * 2) + 1),
+    flexible: null, // left null
     goals: Math.random() > 0.6 ? [] : sampleArray(FARM_GOALS, Math.round(Math.random() * 3) + 1),
     hardiness_zone: Math.random() > 0.9 ? null : sample(HARDINESS_ZONES),
+    immediate_data_source: faker.random.word(),
     indigenous_territory: Math.random() > 0.6 ? null : [...new Array(Math.round(Math.random() * 2) + 1)].map((el) => 'to be implemented'),
-    land_ownership: {
-      rent: Math.random() > 0.6 ? null : renting ? Math.random() * 99 + 1 : 0,
-      share_farm: Math.random() > 0.8 ? null : Math.random() * 99 + 1,
-      pastoral_lease: Math.random() > 0.8 ? null : Math.random() * 99 + 1,
-      native_title: Math.random() > 0.8 ? null : Math.random() * 99 + 1
+    land_other: {
+      rent: renting,
+      share_farm,
+      pastoral_lease,
+      native_land_title
     },
-    land_use_percentage_by_product: Math.random() > 0.6 ? {} : allocateLandUseByProduct(sampledProductCategories),
-    mailing_address: Math.random() > 0.6 ? null : `${faker.address.streetAddress}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
+    land_other_detail: {
+      rent: Math.random() > 0.6 ? null : renting ? Math.random() * 99 + 1 : 0,
+      share_farm: Math.random() > 0.8 ? null : share_farm ? Math.random() * 99 + 1: 0,
+      pastoral_lease: Math.random() > 0.8 ? null : pastoral_lease ? Math.random() * 99 + 1 : 0,
+      native_land_title: Math.random() > 0.8 ? null : native_land_title ? Math.random() * 99 + 1 : 0
+    },
+    land_type_details: Math.random() > 0.6 ? {} : allocateLandUseByProduct(sampledProductCategories),
+    mailing_address: Math.random() > 0.6 ? null : `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
     management_plans_current: Math.random() > 0.9 ? null : managementPartitions[0],
     management_plans_future: Math.random() > 0.9 ? null : managementPartitions[1],
-    management_software: null,
-    mission: Math.random() > 0.8 ? null : faker.lorem.paragraph(),
+    management_plans_current_detail: Math.random() > 0.2 ? null : faker.random.word(),
+    management_plans_future_detail: Math.random() > 0.2 ? null : faker.random.word(),
+    organizational_id: faker.datatype.uuid(),
     motivations: Math.random() > 0.8 ? null : sampleArray(FARM_MOTIVATIONS, Math.round(Math.random() * 5)),
     preferred_contact_method: Math.random() > 0.8 ? null : sample(PREFERRED_CONTACT_METHODS).value,
     product_categories: sampledProductCategories,
     products_details: Math.random() > 0.85 ? [] : generateProducts(index),
     products_value_added: Math.random() > 0.5 ? [] : [...new Array(Math.round(Math.random() * 15) + 1)].map((el) => faker.random.word()),
-    rain_unit_preference: Math.random() > 0.8 ? null : Math.random() > 0.5 ? 'inches' : 'millimeters',
-    renting,
-    schema_version: '0.1',
-    soil_composition: Math.random() > 0.8
-      ? {}
-      : {
-          sandy: Math.round(Math.random() * 5),
-          clay: Math.round(Math.random() * 5)
-        },
-    temperature_unit_preference: Math.random() > 0.5 ? 'celsius' : 'fahrenheit',
+    records_software: null, // left null
+    records_system: null, // left null
+    role: null, // left null
+    schema_version: '0.2',
+    social: `${faker.random.word()}.com`,
     unique_id: uuid.v4(),
+    units: Math.random() > 0.85 ? null : Math.random() > 0.5 ? 'imperial' : 'metric',
     website: Math.random() > 0.8 ? null : `${faker.random.word()}-farm.com`
   }
 }
@@ -263,8 +349,8 @@ function generateProducts (index) {
 }
 
 function generateFakeGeometry (sideLength = 0.002) {
-  const fakeLat = faker.address.latitude(-119, -122)
-  const fakeLng = faker.address.longitude(42, 38)
+  const fakeLat = faker.address.latitude(42, 38)
+  const fakeLng = faker.address.longitude(-119, -122)
   return {
     type: 'FeatureCollection',
     features: [
@@ -317,7 +403,7 @@ function fakeGroupData (name, slug, created_by_id, type) {
     name,
     group_data_type: 1,
     avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png',
-    access_code: faker.random.uuid(),
+    access_code: faker.datatype.uuid(),
     description: faker.lorem.paragraph(),
     slug: slug,
     banner_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg',
