@@ -177,7 +177,7 @@ module.exports = {
   },
 
   startGoogleOAuth: setSessionFromParams(function (req, res) {
-    passport.authenticate('google', {scope: 'email'})(req, res)
+    passport.authenticate('google', {scope: ['email', 'profile']})(req, res)
   }),
 
   finishGoogleOAuth: function (req, res, next) {
