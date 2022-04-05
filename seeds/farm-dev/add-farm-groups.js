@@ -249,7 +249,7 @@ function generateFakeFarmData (index) {
   const management_plans_current_detail = Math.random() > 0.92 ? null : managementPartitions[0]
   const certifications_current_detail = Math.random() > 0.92 ? null : certificationsPartitions[0]
   const product_detail = Math.random() > 0.85 ? [] : generateProducts(index)
-  const open_to_public = Math.random() > 0.95
+  const open_to_public = Math.random() > 0.25
   const public_offerings = open_to_public ? sampleArray(PUBLIC_OFFERINGS, Math.round(Math.random() * 4)) : []
   const goals = Math.random() > 0.8 ? [] : sampleArray(FARM_GOALS, Math.round(Math.random() * 3) + 1)
   const location = {
