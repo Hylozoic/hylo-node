@@ -252,6 +252,21 @@ function generateFakeFarmData (index) {
   const open_to_public = Math.random() > 0.95
   const public_offerings = open_to_public ? sampleArray(PUBLIC_OFFERINGS, Math.round(Math.random() * 4)) : []
   const goals = Math.random() > 0.8 ? [] : sampleArray(FARM_GOALS, Math.round(Math.random() * 3) + 1)
+  const location = {
+    address_line1: faker.address.streetAddress(),
+    postal_code: faker.address.zipCode('#####'),
+    country: faker.address.countryCode(),
+    locality: faker.address.city(),
+    administrative_area: faker.address.state()
+  }
+  const mailing_address = {
+    address_line1: faker.address.streetAddress(),
+    postal_code: faker.address.zipCode('#####'),
+    country: faker.address.countryCode(),
+    locality: faker.address.city(),
+    administrative_area: faker.address.state()
+  }
+
 
   const flexible = {
     hylo: {
@@ -287,7 +302,7 @@ function generateFakeFarmData (index) {
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
     farm_leadership_experience: Math.random() > 0.85 ? null : Math.random() * 19 + 1,
     area: Math.random() > 0.6 ? null : generateFakeGeometry(),
-    location: `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
+    location,
     community_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
     types,
     flexible,
@@ -310,7 +325,7 @@ function generateFakeFarmData (index) {
       native_land_title: Math.random() > 0.8 ? null : native_land_title ? Math.random() * 99 + 1 : 0
     },
     land_type_details: Math.random() > 0.6 ? {} : allocateLandUseByProduct(sampledProductCategories),
-    mailing_address: Math.random() > 0.6 ? null : `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
+    mailing_address: Math.random() > 0.6 ? null : mailing_address,
     management_plans_current: 'yes',
     management_plans_future: 'yes',
     management_plans_current_detail,
