@@ -12,9 +12,11 @@ const {
   FARM_PRODUCT_LIST,
   FARM_TYPES,
   HARDINESS_ZONES,
+  LOCATION_PRIVACY,
   MANAGEMENT_PLANS,
   PREFERRED_CONTACT_METHODS,
-  PRODUCT_CATAGORIES
+  PRODUCT_CATAGORIES,
+  PUBLIC_OFFERINGS,
 } = require('../../lib/constants')
 const uuid = require('node-uuid')
 
@@ -242,6 +244,25 @@ function generateFakeFarmData (index) {
   const certificationsSample = sampleArray(FARM_CERTIFICATIONS, Math.round(Math.random() * 7))
   const managementPartitions = partition(managementSample, (el) => Math.random() > 0.5)
   const certificationsPartitions = partition(certificationsSample, (el) => Math.random() > 0.5)
+  const interest = Math.random() > 0.9 ? [] : sampleArray(COLLABORATION_INTERESTS, Math.round(Math.random() * 4))
+  const types = sampleArray(FARM_TYPES, Math.round(Math.random() * 2) + 1)
+  const management_plans_current_detail = Math.random() > 0.92 ? null : managementPartitions[0]
+  const certifications_current_detail = Math.random() > 0.92 ? null : certificationsPartitions[0]
+  const product_detail = Math.random() > 0.85 ? [] : generateProducts(index)
+  const open_to_public = Math.random() > 0.95
+  const public_offerings = open_to_public ? sampleArray(PUBLIC_OFFERINGS, Math.round(Math.random() * 4)) : []
+  const goals = Math.random() > 0.8 ? [] : sampleArray(FARM_GOALS, Math.round(Math.random() * 3) + 1)
+
+  const flexible = {
+    hylo: {
+      at_a_glance: [sample(types), sample(management_plans_current_detail), sample(certifications_current_detail), sample(product_detail), sample(products_animals)],
+      location_privacy: sampleArray(LOCATION_PRIVACY, 1),
+      mission: faker.lorem.sentence(),
+      opening_hours: open_to_public ? 'M-F: 9-3 \n S-S: 12-4' : null,
+      open_to_public,
+      public_offerings
+    }
+  }
 
   return {
     area_total_hectares: Math.random() > 0.85 ? null : Math.random() * 1000 * Math.random() + 0.1,
@@ -251,14 +272,14 @@ function generateFakeFarmData (index) {
     average_annual_rainfall: Math.random() > 0.85 ? null : Math.random() * 1500 * Math.random() + 1,
     average_annual_temperature: Math.random() > 0.9 ? null : Math.random() * 24 * Math.random() + 4,
     bio: Math.random() > 0.8 ? null : faker.lorem.paragraph(),
-    certifications_current_detail: Math.random() > 0.9 ? null : certificationsPartitions[0],
+    certifications_current_detail,
     certifications_current: 'yes',
     certifications_desired_detail: Math.random() > 0.9 ? null : certificationsPartitions[1],
     certifications_desired: 'yes',
     climate_zone: Math.random() > 0.85 ? null : sample(CLIMATE_ZONES).value,
     conditions_details: null, // left null for now
     county: Math.random() > 0.6 ? null : faker.address.county(),
-    interest: Math.random() > 0.9 ? [] : sampleArray(COLLABORATION_INTERESTS, Math.round(Math.random() * 4)),
+    interest,
     company: Math.random() > 0.5 ? faker.random.word() + faker.random.word() + ' LLC' : null,
     equity_practices: [...new Array(Math.round(Math.random() * 6) + 1)].map((el) => 'to be implemented'),
     phone: Math.random() > 0.85 ? null : faker.phone.phoneNumber('(###) ###-####'),
@@ -268,9 +289,11 @@ function generateFakeFarmData (index) {
     area: Math.random() > 0.6 ? null : generateFakeGeometry(),
     location: `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
     community_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
-    types: sampleArray(FARM_TYPES, Math.round(Math.random() * 2) + 1),
-    flexible: null, // left null
-    goals: Math.random() > 0.6 ? [] : sampleArray(FARM_GOALS, Math.round(Math.random() * 3) + 1),
+    types,
+    flexible,
+    goal_1: goals.length > 0 ? goals[0] : null,
+    goal_2: goals.length > 1 ? goals[1] : null,
+    goal_3: goals.length > 2 ? goals[2] : null,
     hardiness_zone: Math.random() > 0.9 ? null : sample(HARDINESS_ZONES),
     immediate_data_source: faker.random.word(),
     indigenous_territory: Math.random() > 0.6 ? null : [...new Array(Math.round(Math.random() * 2) + 1)].map((el) => 'to be implemented'),
@@ -290,13 +313,13 @@ function generateFakeFarmData (index) {
     mailing_address: Math.random() > 0.6 ? null : `${faker.address.streetAddress()}, ${faker.address.city()}, ${faker.address.county()}, ${faker.address.country()}`,
     management_plans_current: 'yes',
     management_plans_future: 'yes',
-    management_plans_current_detail: Math.random() > 0.92 ? null : managementPartitions[0],
+    management_plans_current_detail,
     management_plans_future_detail: Math.random() > 0.92 ? null : managementPartitions[1],
     organizational_id: faker.datatype.uuid(),
     motivations: Math.random() > 0.8 ? null : sampleArray(FARM_MOTIVATIONS, Math.round(Math.random() * 5)),
     preferred_contact_method: Math.random() > 0.8 ? null : sample(PREFERRED_CONTACT_METHODS).value,
     product_categories: sampledProductCategories,
-    product_detail: Math.random() > 0.85 ? [] : generateProducts(index),
+    product_detail,
     products_value_added: Math.random() > 0.5 ? [] : [...new Array(Math.round(Math.random() * 15) + 1)].map((el) => faker.random.word()),
     records_software: null, // left null
     records_system: null, // left null
