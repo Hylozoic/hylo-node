@@ -10,12 +10,11 @@ Before making any API calls you must get an auth token
 `POST to https://hylo.com/noo/oauth/token`
 
 __Parameters (all required):__
-grant_type = client_credentials
-audience = https://hylo.com
-resource = https://hylo.com
-scope = api:write
-client_id =  YOUR_ID
-client_secret = YOUR_SECRET
+- audience = https://hylo.com
+- resource = https://hylo.com
+- scope = api:write
+- client_id =  YOUR_ID
+- client_secret = YOUR_SECRET
 
 This call will return an Auth Token for use in later API calls. This token will expire in 2 hours at which point you will need to make another API call to get a new Auth Token (AUTH_TOKEN).
 
@@ -30,9 +29,9 @@ __Headers:__
 Content-Type: application/x-www-form-urlencoded
 
 __Parameters:__
-name (required) = Judy Mangrove
-email (required) = email@email.com
-groupId (optional) = the id of a group to add the user to
+- name (required) = Judy Mangrove
+- email (required) = email@email.com
+- groupId (optional) = the id of a group to add the user to
 
 TODO: talk about possible errors
 { "message": "User already exists" }
