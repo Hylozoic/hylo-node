@@ -9,7 +9,11 @@ Before making any API calls you must get an auth token
 
 `POST to https://hylo.com/noo/oauth/token`
 
+__Headers:__
+Content-Type: application/x-www-form-urlencoded
+
 __Parameters (all required):__
+- grant_type = client_credentials
 - audience = https://hylo.com
 - resource = https://hylo.com
 - scope = api:write
@@ -33,8 +37,19 @@ __Parameters:__
 - email (required) = email@email.com
 - groupId (optional) = the id of a group to add the user to
 
-TODO: talk about possible errors
-{ "message": "User already exists" }
+__Return value__:
+
+On success this will return a JSON object that looks like:
+```
+{
+    "id": "44692",
+    "name": "Judy Mangrove",
+    "email": "email@email.com"
+}
+```
+
+If there is already a user with this email registered you will receive:
+`{ "message": "User already exists" }`
 
 
 ### Create a Group
