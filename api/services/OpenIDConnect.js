@@ -72,8 +72,7 @@ const configuration = {
         return {
           // Super clients get write access
           scope: 'api:read' + (client.role.includes("super") ? ' api:write' : ''),
-          // TODO: check audience based on the client, stored as client metadata?
-          // audience: 'resource-server-audience-value',
+          audience: process.env.PROTOCOL + '://' + process.env.DOMAIN,
           accessTokenTTL: 2 * 60 * 60, // 2 hours
           accessTokenFormat: 'jwt',
           jwt: {

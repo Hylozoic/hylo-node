@@ -14,8 +14,7 @@ Content-Type: application/x-www-form-urlencoded
 
 __Parameters (all required):__
 - grant_type = client_credentials
-- audience = https://hylo.com
-- resource = https://hylo.com
+- resource = the server URL you are making the call to (e.g. https://hylo.com, https://staging.hylo.com, or https://localhost:3000)
 - scope = api:write
 - client_id =  YOUR_ID
 - client_secret = YOUR_SECRET
