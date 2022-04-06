@@ -133,6 +133,6 @@ const configuration = {
 
 }
 
-const oidc = new Provider('https://localhost:3000', configuration)
+const oidc = new Provider(process.env.PROTOCOL + '://' + process.env.DOMAIN, configuration)
 
 export default oidc
