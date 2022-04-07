@@ -296,6 +296,7 @@ type GroupSettings {
   allowGroupInvites: Boolean
   askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
+  hideExtensionData: Boolean
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
 }
@@ -866,6 +867,7 @@ input GroupSettingsInput {
   allowGroupInvites: Boolean
   askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
+  hideExtensionData: Boolean
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
 }
