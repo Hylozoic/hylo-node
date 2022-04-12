@@ -29,6 +29,7 @@ module.exports.routes = {
   'GET    /noo/login/token':                              'SessionController.createWithToken',
   'POST   /noo/login/token':                              'SessionController.createWithToken',
   'GET    /noo/login/jwt':                                'SessionController.createWithJWT',
+  'POST   /noo/login/jwt':                                'SessionController.createWithJWT',
   'POST   /noo/login/apple/oauth':                        'SessionController.finishAppleOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',

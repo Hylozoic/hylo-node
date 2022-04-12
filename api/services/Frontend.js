@@ -170,11 +170,11 @@ module.exports = {
     },
 
     useInvitation: function (token, email) {
-      return url('/h/use-invitation?token=%s&email=%s', token, email)
+      return url('/h/use-invitation?token=%s&email=%s', token, encodeURIComponent(email))
     },
 
     verifyEmail: function(email, token) {
-      return url('/signup/verify-email?email=%s&token=%s', email, token)
+      return url('/signup/verify-email?email=%s&token=%s', encodeURIComponent(email), token)
     },
 
     emailPostForm: function () {
