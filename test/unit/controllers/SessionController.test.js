@@ -188,7 +188,7 @@ describe('SessionController', function () {
       })
     })
 
-    it("for valid JWT and POST returns success", () => {
+    it('for valid JWT and POST returns success', () => {
       _.extend(req.params, {u: user.id, token})
       req.method = 'POST'
       req.session.authenticated = true
@@ -212,13 +212,14 @@ describe('SessionController', function () {
 
     it('for invalid token and POST it returns error', () => {
       let error
-      res.send = spy(function (msg) { error = msg })
+      const send = spy(function (msg) { error = msg })
+      res.status = spy(() => ({ send }))
       req.method = 'POST'
-      req.session.authenticated = false
+      req.session.userId = null
 
       return SessionController.createWithJWT(req, res)
       .then(() => {
-        expect(res.send).to.have.been.called()
+        expect(res.status).to.have.been.called()
         expect(error).to.equal('Invalid link, please try again')
       })
     })
