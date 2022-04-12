@@ -50,6 +50,7 @@ module.exports = {
         })
 
         return res.ok({
+          id: user.id,
           name: user.get('name'),
           email: user.get('email')
         })

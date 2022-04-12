@@ -127,8 +127,7 @@ opts.jwtFromRequest = ExtractJwt.fromExtractors([ ExtractJwt.fromAuthHeaderAsBea
 opts.secretOrKey = getPublicKeyFromPem(process.env.OIDC_KEYS.split(',')[0])
 // TODO: in the future this could be something like accounts.hylo.com
 opts.issuer = process.env.PROTOCOL + '://' + process.env.DOMAIN
-// What other audiences might we have?
-opts.audience = 'https://hylo.com'
+opts.audience = process.env.PROTOCOL + '://' + process.env.DOMAIN
 opts.algorithms = ['RS256']
 opts.jsonWebTokenOptions = {
   // 4 hours because right now we only use these tokens for password reset and email verification and want to quickly invalidate, could even be quicker
