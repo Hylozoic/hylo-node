@@ -130,7 +130,7 @@ export const sendPasswordReset = async (_, { email }) => {
 
     return { success: true }
   } catch (error) {
-    return { succcess: false }
+    return { success: false }
   }
 }
 
