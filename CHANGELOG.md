@@ -4,6 +4,20 @@ All notable changes to Hylo Node (the Hylo server) will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+## [3.2.0] - 2022-03-28
+### Added
+- Setup for group types
+- Back-end for farm type groups
+- Widgets to group profile/about pages
+
+### Fixed
+- Make sure notifications are turned on for creator of a new group
+
+### Changed
+- Update group num_members in 10 minute cron job so it stays up to date and can be used by the front-end as Group.memberCount again
+
 ## [3.1.4] - 2022-03-08
 
 ### Changed

@@ -189,6 +189,7 @@ type Group {
   ): GroupQuerySet
   createdAt: Date
   description: String
+  geoShape: JSON
   groupExtensions: GroupExtensionQuerySet
   groupRelationshipInvitesFrom: GroupRelationshipInviteQuerySet
   groupRelationshipInvitesTo: GroupRelationshipInviteQuerySet
@@ -856,6 +857,7 @@ input GroupInput {
   avatarUrl: String
   bannerUrl: String
   description: String
+  geoShape: String
   groupToGroupJoinQuestions: [QuestionInput]
   groupExtensions: [GroupExtensionInput]
   joinQuestions: [QuestionInput]
