@@ -88,7 +88,7 @@ module.exports = {
 
   device: attrs => {
     return new Device(merge({
-      token: faker.random.uuid()
+      token: faker.datatype.uuid()
     }, attrs))
   },
 
@@ -102,8 +102,8 @@ module.exports = {
 
   stripeAccount: attrs => {
     return new StripeAccount(merge({
-      stripe_account_external_id: faker.random.uuid(),
-      refresh_token: faker.random.uuid()
+      stripe_account_external_id: faker.datatype.uuid(),
+      refresh_token: faker.datatype.uuid()
     }, attrs))
   },
 

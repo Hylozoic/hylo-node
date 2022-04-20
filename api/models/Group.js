@@ -1,5 +1,7 @@
+import knexPostgis from 'knex-postgis'
 import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
+import wkx from 'wkx'
 import HasSettings from './mixins/HasSettings'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
@@ -20,6 +22,31 @@ module.exports = bookshelf.Model.extend(merge({
   tableName: 'groups',
   requireFetch: false,
   hasTimestamps: true,
+
+  format(attributes) {
+    const st = knexPostgis(bookshelf.knex);
+
+    // Make sure geometry column goes into the database correctly, converting from GeoJSON
+    const { geo_shape } = attributes
+    if (geo_shape) {
+      attributes.geo_shape = st.geomFromGeoJSON(geo_shape)
+    }
+
+    return attributes
+  },
+
+  parse(response) {
+    const st = knexPostgis(bookshelf.knex)
+
+    // Convert geometry hex values into GeoJSON before returning to the client
+    if (typeof response.geo_shape === 'string') {
+      const b = Buffer.from(response.geo_shape, 'hex')
+      const parsedGeo = wkx.Geometry.parse(b)
+      response.geo_shape = parsedGeo.toGeoJSON()
+    }
+
+    return response
+  },
 
   // ******** Getters ******* //
 
@@ -128,10 +155,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberCount: function () {
-    // TODO: investigate why num_members is not always accurate
-    // then remove memberCount and use num_members
-    // return this.get('num_members')
-    return this.members().fetch().then(x => x.length)
+    return this.get('num_members')
   },
 
   moderators () {
@@ -255,8 +279,13 @@ module.exports = bookshelf.Model.extend(merge({
     const updatedAttribs = Object.assign(
       {},
       {
+        active: true,
         role: GroupMembership.Role.DEFAULT,
-        active: true
+        settings: {
+          sendEmail: true,
+          sendPushNotifications: true,
+          showJoinForm: false
+        }
       },
       pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
     )
@@ -277,6 +306,13 @@ module.exports = bookshelf.Model.extend(merge({
         }), { transacting })
       newMemberships.push(membership)
     }
+
+    // Increment num_members
+    // XXX: num_members is updated every 10 minutes via cron, we are doing this here too for the case that someone joins a group and moderator looks immedaitely at member count after that
+    if (newUserIds.length > 0) {
+      await this.save({ num_members: this.get('num_members') + newUserIds.length }, { transacting })
+    }
+
     return updatedMemberships.concat(newMemberships)
   },
 
@@ -314,7 +350,8 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   async removeMembers (usersOrIds, { transacting } = {}) {
-    return this.updateMembers(usersOrIds, {active: false}, {transacting})
+    return this.updateMembers(usersOrIds, {active: false}, {transacting}).then(() =>
+      this.save({ num_members: this.get('num_members') - usersOrIds.length }, { transacting }))
   },
 
   async updateMembers (usersOrIds, attrs, { transacting } = {}) {
@@ -335,7 +372,7 @@ module.exports = bookshelf.Model.extend(merge({
   update: async function (changes) {
     var whitelist = [
       'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url', 'description',
-      'location', 'location_id', 'name', 'settings', 'visibility'
+      'geo_shape', 'location', 'location_id', 'name', 'settings', 'visibility'
     ]
 
     const attributes = pick(changes, whitelist)
@@ -572,5 +609,9 @@ module.exports = bookshelf.Model.extend(merge({
   isSlugValid: function (slug) {
     const regex = /^[0-9a-z-]{2,40}$/
     return regex.test(slug)
+  },
+
+  updateAllMemberCounts () {
+    return bookshelf.knex.raw('update groups set num_members = (select count(group_memberships.*) from group_memberships inner join users on users.id = group_memberships.user_id where group_memberships.active = true and users.active = true and group_memberships.group_id = groups.id)')
   }
 })
