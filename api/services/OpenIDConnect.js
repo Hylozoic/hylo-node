@@ -61,10 +61,6 @@ const configuration = {
     devInteractions: { enabled: false },
     // Enable token introspection
     introspection: { enabled: true },
-    issAuthResp: {
-      ack: 'draft-04',
-      enabled: true
-    },
     // Turning on resource indicators also needed for machine to machine API access
     resourceIndicators: {
       enabled: true,
