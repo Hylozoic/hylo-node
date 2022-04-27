@@ -219,11 +219,15 @@ export default async function makeModels (userId, isAdmin) {
         'geo_shape',
         'location',
         'memberCount',
+        'moderator_descriptor',
+        'moderator_descriptor_plural',
         'name',
         'postCount',
         'slug',
         'visibility',
-        'type'
+        'type',
+        'type_descriptor',
+        'type_descriptor_plural'
       ],
       relations: [
         {activeMembers: { querySet: true }},
