@@ -50,6 +50,6 @@ module.exports = bookshelf.Model.extend({
   },
 
   isMessage: function () {
-    return this.get('type') === Post.Type.MESSAGE
+    return this.get('type') === UserConnection.Type.MESSAGE
   }
 })
