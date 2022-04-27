@@ -150,6 +150,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   memberships (includeInactive = false) {
+    // TODO: need to check if person is active too?
     return this.hasMany(GroupMembership)
       .query(q => includeInactive ? q : q.where('group_memberships.active', true))
   },
@@ -446,6 +447,14 @@ module.exports = bookshelf.Model.extend(merge({
 
   // ******* Class methods ******** //
   async create (userId, data) {
+    if (!data.slug) {
+      throw Error("Missing required field: slug")
+    }
+    const existingGroup = await Group.find(data.slug)
+    if (existingGroup) {
+      throw Error("A group with that URL slug already exists")
+    }
+
     var attrs = defaults(
       pick(data,
         'accessibility', 'description', 'slug', 'category', 'access_code', 'banner_url', 'avatar_url',
@@ -487,6 +496,18 @@ module.exports = bookshelf.Model.extend(merge({
         }
       }
 
+      if (data.group_extensions) {
+        for (const extData of data.group_extensions) {
+          const ext = await Extension.find(extData.type, { transacting: trx })
+          if (ext) {
+            const ge = new GroupExtension({ group_id: group.id, extension_id: ext.id, data: extData.data })
+            await ge.save(null, { transacting: trx })
+          } else {
+            throw Error('Invalid extension type ' + extData.type)
+          }
+        }
+      }
+
       await group.createStarterPosts(trx)
 
       await group.createInitialWidgets(trx)
@@ -497,7 +518,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     await Queue.classMethod('Group', 'notifyAboutCreate', { groupId: group.id })
 
-    return memberships[0]
+    return group
   },
 
   async deactivate (id, opts = {}) {

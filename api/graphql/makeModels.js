@@ -31,22 +31,24 @@ export default async function makeModels (userId, isAdmin) {
       model: User,
       attributes: [
         'id',
-        'name',
-        'email',
         'avatar_url',
         'banner_url',
+        'bio',
+        'email',
         'contact_email',
         'contact_phone',
-        'twitter_name',
+        'email_validated',
+        'hasRegistered',
+        'intercomHash',
         'linkedin_url',
-        'facebook_url',
-        'url',
         'location',
-        'bio',
-        'updated_at',
-        'tagline',
+        'facebook_url',
+        'name',
         'new_notification_count',
-        'intercomHash'
+        'tagline',
+        'twitter_name',
+        'updated_at',
+        'url'
       ],
       relations: [
         'groups',
@@ -70,9 +72,9 @@ export default async function makeModels (userId, isAdmin) {
       ],
       getters: {
         blockedUsers: u => u.blockedUsers().fetch(),
+        hasStripeAccount: u => u.hasStripeAccount(),
         isAdmin: () => isAdmin || false,
-        settings: u => mapKeys(camelCase, u.get('settings')),
-        hasStripeAccount: u => u.hasStripeAccount()
+        settings: u => mapKeys(camelCase, u.get('settings'))
       }
     },
 
@@ -248,6 +250,7 @@ export default async function makeModels (userId, isAdmin) {
         {joinQuestions: {querySet: true}},
         'locationObject',
         {moderators: {querySet: true}},
+        {memberships: {querySet: true}},
         {members: {
           querySet: true,
           filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
@@ -277,7 +280,7 @@ export default async function makeModels (userId, isAdmin) {
           querySet: true,
           filter: (relation, { onlyNotMember }) =>
             relation.query(q => {
-              if (onlyNotMember) {
+              if (onlyNotMember && userId) {
                 // Only return prerequisite groups that the current user is not yet a member of
                 q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
                   'group_memberships.user_id': userId,
