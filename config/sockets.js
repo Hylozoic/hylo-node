@@ -18,10 +18,10 @@ module.exports.sockets = {
   * disconnects                                                              *
   *                                                                          *
   ***************************************************************************/
-  afterDisconnect: function(session, socket) {
+  // afterDisconnect: function(session, socket) {
 
     // By default: do nothing.
-  },
+  // },
 
 
   /***************************************************************************
