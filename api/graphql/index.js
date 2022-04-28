@@ -103,14 +103,14 @@ async function createSchema (expressContext) {
   const session = req.session
   const userId = session.userId
   const isAdmin = Admin.isSignedIn(req)
-  const models = await makeModels(userId, isAdmin)
+  const models = await makeModels(userId, isAdmin, req.api_client)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   let allResolvers
   if (req.api_client) {
     // TODO: check scope here, just api:write, just api_read, or both?
     allResolvers = {
-      Query: {},
+      Query: makeApiQueries(fetchOne),
       Mutation: makeApiMutations()
     }
   } else if (!userId) {
@@ -201,7 +201,8 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       .tap(() => resetCount && User.resetNewNotificationCount(userId))
     },
     people: (root, args) => fetchMany('Person', args),
-    person: (root, { id }) => fetchOne('Person', id),
+    // you can query by id or email, with id taking preference
+    person: (root, { id, email }) => fetchOne('Person', id || email),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
     savedSearches: (root, args) => fetchMany('SavedSearch', args),
@@ -420,9 +421,19 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
   }
 }
 
+export function makeApiQueries (fetchOne) {
+  return {
+    // you can specify id or slug, but not both
+    group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id'),
+    // you can query by id or email, with id taking preference
+    person: (root, { id, email }) => fetchOne('Person', email || id, email ? 'email' : 'id')
+  }
+}
+
 export function makeApiMutations () {
   return {
-    createGroup: (root, { asUserId, data }) => createGroup(asUserId, data)
+    createGroup: (root, { asUserId, data }) => createGroup(asUserId, data),
+    updateGroup: (root, { asUserId, id, changes }) => updateGroup(asUserId, id, changes)
   }
 }
 
