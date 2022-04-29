@@ -255,18 +255,10 @@ function generateFakeFarmData (index) {
   const location = {
     address_line1: faker.address.streetAddress(),
     postal_code: faker.address.zipCode('#####'),
-    country: faker.address.countryCode(),
+    country_code: faker.address.countryCode(),
     locality: faker.address.city(),
     administrative_area: faker.address.state()
   }
-  const mailing_address = {
-    address_line1: faker.address.streetAddress(),
-    postal_code: faker.address.zipCode('#####'),
-    country: faker.address.countryCode(),
-    locality: faker.address.city(),
-    administrative_area: faker.address.state()
-  }
-
 
   const flexible = {
     hylo: {
@@ -302,7 +294,12 @@ function generateFakeFarmData (index) {
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
     farm_leadership_experience: Math.random() > 0.85 ? null : Math.random() * 19 + 1,
     area: Math.random() > 0.6 ? null : generateFakeGeometry(),
-    location,
+    location_address_line1: location.address_line1,
+    location_address_line2: null,
+    location_locality: location.locality,
+    location_country_code: location.country_code,
+    location_postal_code: location.postal_code,
+    location_administrative_area: location.administrative_area,
     community_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
     types,
     flexible,
@@ -325,7 +322,7 @@ function generateFakeFarmData (index) {
       native_land_title: Math.random() > 0.8 ? null : native_land_title ? Math.random() * 99 + 1 : 0
     },
     land_type_details: Math.random() > 0.6 ? {} : allocateLandUseByProduct(sampledProductCategories),
-    mailing_address: Math.random() > 0.6 ? null : mailing_address,
+    // mailing_address: Math.random() > 0.6 ? null : mailing_address, // removed from schema 1.0, will likely be added back
     management_plans_current: 'yes',
     management_plans_future: 'yes',
     management_plans_current_detail,
