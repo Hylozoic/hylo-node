@@ -27,19 +27,32 @@ describe('Group', function() {
       'slug': 'comm1'
     }
 
-    const user = await new User({name: 'username', email: 'john@foo.com', active: true}).save()
+    const user = await new User({name: 'username', email: 'john1@foo.com', active: true}).save()
     const group = await Group.create(user.id, data)
     const savedGroup = await Group.find('comm1')
     expect(savedGroup.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg')
     expect(savedGroup.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png')
   })
 
-  
-  it('sets default type to "group"', function(){
-    var group = new Group({slug: 'meep', name: 'schboobie', access_code: 'meeeeep!', group_data_type: 1})
-    return group.save().then(function() {
-      expect(group.get('type')).to.equal('group')
-    })
+  it('can be created with group extension data', async function() {
+    const data = {
+      'name': 'my group',
+      'slug': 'group2',
+      'group_extensions': [{
+        'type': 'ext',
+        'data' : {
+          'test': 'somedata'
+        }
+      }]
+    }
+
+    const extension = await new Extension({type: 'ext', updated_at: new Date()}).save()
+    const user = await new User({name: 'username', email: 'john@foo.com', active: true}).save()
+    const group = await Group.create(user.id, data)
+    const savedGroup = await Group.find('group2')
+    const extensions = await savedGroup.groupExtensions().fetch()
+    expect(extensions.length).to.equal(1)
+    expect(extensions.models[0].pivot.get('data')).to.deep.equal({ test: 'somedata' })
   })
 
   describe('.find', function() {

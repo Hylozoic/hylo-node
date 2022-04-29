@@ -25,6 +25,7 @@ import {
   createProject,
   createProjectRole,
   createSavedSearch,
+  login,
   createTopic,
   deactivateUser,
   deleteUser,
@@ -49,6 +50,7 @@ import {
   joinProject,
   leaveGroup,
   leaveProject,
+  logout,
   markActivityRead,
   markAllActivitiesRead,
   pinPost,
@@ -59,6 +61,7 @@ import {
   reinviteAll,
   rejectGroupRelationshipInvite,
   reactivateUser,
+  register,
   removeMember,
   removeModerator,
   removePost,
@@ -67,6 +70,8 @@ import {
   removeSuggestedSkillFromGroup,
   resendInvitation,
   respondToEvent,
+  sendEmailVerification,
+  sendPasswordReset,
   subscribe,
   unblockUser,
   unfulfillPost,
@@ -81,6 +86,7 @@ import {
   updateStripeAccount,
   updateWidget,
   useInvitation,
+  verifyEmail,
   vote
 } from './mutations'
 import InvitationService from '../services/InvitationService'
@@ -92,34 +98,52 @@ import { merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
-async function createSchema (session, isAdmin) {
+async function createSchema (expressContext) {
+  const { req } = expressContext
+  const session = req.session
   const userId = session.userId
+  const isAdmin = Admin.isSignedIn(req)
   const models = await makeModels(userId, isAdmin)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
-  const allResolvers = Object.assign({
-    Query: userId ? makeAuthenticatedQueries(userId, fetchOne, fetchMany) : makePublicQueries(userId, fetchOne, fetchMany),
-    Mutation: userId ? makeMutations(session.id, userId, isAdmin) : {},
+  let allResolvers
+  if (req.api_client) {
+    // TODO: check scope here, just api:write, just api_read, or both?
+    allResolvers = {
+      Query: {},
+      Mutation: makeApiMutations()
+    }
+  } else if (!userId) {
+    allResolvers = {
+      Query: makePublicQueries(userId, fetchOne, fetchMany),
+      Mutation: makePublicMutations(expressContext, fetchOne)
+    }
+  } else {
+    // authenticated users
+    allResolvers = {
+      Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
+      Mutation: makeMutations(expressContext, userId, isAdmin, fetchOne),
 
-    FeedItemContent: {
-      __resolveType (data, context, info) {
-        if (data instanceof bookshelf.Model) {
-          return info.schema.getType('Post')
+      FeedItemContent: {
+        __resolveType (data, context, info) {
+          if (data instanceof bookshelf.Model) {
+            return info.schema.getType('Post')
+          }
+          throw new Error('Post is the only implemented FeedItemContent type')
         }
-        throw new Error('Post is the only implemented FeedItemContent type')
-      }
-    },
+      },
 
-    SearchResultContent: {
-      __resolveType (data, context, info) {
-        return getTypeForInstance(data, models)
+      SearchResultContent: {
+        __resolveType (data, context, info) {
+          return getTypeForInstance(data, models)
+        }
       }
     }
-  }, resolvers)
+  }
 
   return makeExecutableSchema({
     typeDefs: [schemaText],
-    resolvers: allResolvers
+    resolvers: Object.assign(allResolvers, resolvers)
   })
 }
 
@@ -127,7 +151,7 @@ async function createSchema (session, isAdmin) {
 export function makePublicQueries (userId, fetchOne, fetchMany) {
   return {
     checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode),
+      InvitationService.check(invitationToken, accessCode),
     // Can only access public communities and posts
     group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id', { visibility: Group.Visibility.PUBLIC }),
     groups: (root, args) => fetchMany('Group', Object.assign(args, { visibility: Group.Visibility.PUBLIC })),
@@ -140,7 +164,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   return {
     activity: (root, { id }) => fetchOne('Activity', id),
     checkInvitation: (root, { invitationToken, accessCode }) =>
-      InvitationService.check(userId, invitationToken, accessCode),
+      InvitationService.check(invitationToken, accessCode),
     comment: (root, { id }) => fetchOne('Comment', id),
     connections: (root, args) => fetchMany('PersonConnection', args),
     group: async (root, { id, slug, updateLastViewed }) => {
@@ -198,8 +222,26 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
   }
 }
 
-export function makeMutations (sessionId, userId, isAdmin) {
+export function makePublicMutations (expressContext, fetchOne) {
   return {
+    login: login(fetchOne, expressContext),
+    logout: logout(expressContext),
+    sendEmailVerification,
+    sendPasswordReset,
+    register: register(fetchOne, expressContext),
+    verifyEmail: verifyEmail(fetchOne, expressContext)
+  }
+}
+
+export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
+  const { req, res } = expressContext
+  const sessionId = req.session.id
+
+  return {
+    // Currently injecting all Public Mutations here so those resolvers remain
+    // available between auth'd and non-auth'd sessions
+    ...makePublicMutations(expressContext, fetchOne),
+
     acceptGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => acceptGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
@@ -378,6 +420,12 @@ export function makeMutations (sessionId, userId, isAdmin) {
   }
 }
 
+export function makeApiMutations () {
+  return {
+    createGroup: (root, { asUserId, data }) => createGroup(asUserId, data)
+  }
+}
+
 export const createRequestHandler = () =>
   graphqlHTTP(async (req, res) => {
     if (process.env.DEBUG_GRAPHQL) {
@@ -401,7 +449,7 @@ export const createRequestHandler = () =>
       await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
     }
 
-    const schema = await createSchema(req.session, Admin.isSignedIn(req))
+    const schema = await createSchema({ req, res })
     return {
       schema,
       graphiql: true,

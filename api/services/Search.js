@@ -61,6 +61,7 @@ module.exports = {
         qb.join('group_extensions', 'groups.id', '=', 'group_extensions.group_id')
         qb.join('extensions', 'group_extensions.extension_id', '=', 'extensions.id')
         qb.whereRaw('extensions.type = \'farm-onboarding\'')
+        qb.whereRaw('groups.settings -> \'hide_extension_data\' != \'true\'')
 
         if (farmType !== '') {
           qb.whereRaw(`group_extensions.data @> '{"farm_types": ["${farmType}"]}'`)

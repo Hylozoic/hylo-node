@@ -17,8 +17,10 @@ type Me {
   groupsTotal: Int
   groupInvitesPending: InvitationQuerySet
   email: String
+  emailValidated: Boolean
   facebookUrl: String
   hasDevice: Boolean
+  hasRegistered: Boolean
   hasStripeAccount: Boolean
   intercomHash: String
   isAdmin: Boolean
@@ -216,7 +218,10 @@ type Group {
     autocomplete: String
   ): PersonQuerySet
   memberCount: Int
+  memberships: MembershipQuerySet
   moderators(first: Int, cursor: ID, order: String): PersonQuerySet
+  moderatorDescriptor: String
+  moderatorDescriptorPlural: String
   name: String
   numPrerequisitesLeft: Int
   parentGroups(
@@ -256,6 +261,8 @@ type Group {
   slug: String
   suggestedSkills: SkillQuerySet
   type: String
+  typeDescriptor: String
+  typeDescriptorPlural: String
   viewPosts(
     afterTime: Date,
     beforeTime: Date,
@@ -297,6 +304,7 @@ type GroupSettings {
   allowGroupInvites: Boolean
   askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
+  hideExtensionData: Boolean
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
 }
@@ -351,6 +359,12 @@ type GroupRelationshipInvite {
   toGroup: Group
   type: Int
   updatedAt: Date
+}
+
+type MembershipQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Membership]
 }
 
 type PersonQuerySet {
@@ -850,9 +864,12 @@ input GroupInput {
   description: String
   geoShape: String
   groupToGroupJoinQuestions: [QuestionInput]
+  groupExtensions: [GroupExtensionInput]
   joinQuestions: [QuestionInput]
   location: String
   locationId: ID
+  moderatorDescriptor: String
+  moderatorDescriptorPlural: String
   name: String
   parentIds: [ID]
   prerequisiteGroupIds: [ID]
@@ -861,6 +878,8 @@ input GroupInput {
   slackTeam: String
   slackConfigureUrl: String
   slug: String
+  typeDescriptor: String
+  typeDescriptorPlural: String
   visibility: Int
 }
 
@@ -868,8 +887,14 @@ input GroupSettingsInput {
   allowGroupInvites: Boolean
   askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
+  hideExtensionData: Boolean
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
+}
+
+input GroupExtensionInput {
+  data: JSON
+  type: String
 }
 
 input QuestionInput {
@@ -936,7 +961,7 @@ type Mutation {
   cancelJoinRequest(joinRequestId: ID): GenericResult
   createAffiliation(data: AffiliationInput): Affiliation
   createComment(data: CommentInput): Comment
-  createGroup(data: GroupInput): Membership
+  createGroup(data: GroupInput, asUserId: ID): Group
   createInvitation(groupId: ID, data: InviteInput): CreatedInvitations
   createJoinRequest(groupId: ID, questionAnswers: [QuestionAnswerInput]): CreatedRequest
   createMessage(data: MessageInput): Message
@@ -968,6 +993,8 @@ type Mutation {
   joinProject(id: ID): GenericResult
   leaveGroup(id: ID): ID
   leaveProject(id: ID): GenericResult
+  login(email: String, password: String): SignupResult
+  logout: GenericResult,
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
   pinPost(postId: ID, groupId: ID): GenericResult
@@ -976,6 +1003,7 @@ type Mutation {
   regenerateAccessCode(groupId: ID): Group
   registerDevice(playerId: String, platform: String, version: String): GenericResult
   reinviteAll(groupId: ID): GenericResult
+  register(name: String, password: String): SignupResult
   registerStripeAccount(authorizationCode: String): GenericResult
   rejectGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
   removeMember(personId: ID, groupId: ID): Group
@@ -987,6 +1015,8 @@ type Mutation {
   requestToAddGroupToParent(parentId: ID, childId: ID, questionAnswers: [QuestionAnswerInput]): CreatedGroupRelationshipInvite
   resendInvitation(invitationId: ID): GenericResult
   respondToEvent(id: ID, response: String): GenericResult
+  sendEmailVerification(email: String!): GenericResult,
+  sendPasswordReset(email: String!): GenericResult,
   subscribe(groupId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
   unlinkAccount(provider: String): GenericResult
   unblockUser(blockedUserId: ID): GenericResult
@@ -1001,7 +1031,13 @@ type Mutation {
   updateStripeAccount(accountId: String): GenericResult
   updateWidget(id: ID, changes: GroupWidgetInput): GroupWidget
   useInvitation(invitationToken: String, accessCode: String): InvitationUseResult
+  verifyEmail(code: String, email: String!, token: String): SignupResult
   vote(postId: ID, isUpvote: Boolean): Post
+}
+
+type SignupResult {
+  me: Me
+  error: String
 }
 
 type InvitationUseResult {
@@ -1011,6 +1047,7 @@ type InvitationUseResult {
 
 type GenericResult {
   success: Boolean
+  error: String
 }
 
 type LinkPreview {
