@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Methods for adding users and groups via OAuth based API.
 - Graphql endpoints for login and other auth-related features
 - Login by JWT route POST route without redirect for XHR requests
+- moderator_descriptor and type_descriptor columns (and plural version) to Group to customize the name of "moderators" and of how the group is described.
 
 ## [3.2.0] - 2022-03-28
 ### Added
