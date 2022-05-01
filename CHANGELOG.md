@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.3.0] - 2022-04-28
 ### Added
-- Methods for adding users and groups via OAuth
+- Hylo is now an OAuth 2.0 / OpenID Connect provider! This means you can add Sign in With Hylo to your website.
+- Methods for adding users and groups via OAuth based API.
 - Graphql endpoints for login and other auth-related features
 - Login by JWT route POST route without redirect for XHR requests
 
