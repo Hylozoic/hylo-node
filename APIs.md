@@ -118,7 +118,7 @@ Example GraphQL query:
 NOTE: you will want to pass _either_ a slug _or_ an id to query by. If you pass both only the slug will be used to lookup the group.
 ```
 {
-  "query": "query ($id: ID, $slug: String) { group(id: $id, slug: $slug) { id name slug members { id name hasRegistered } } }",
+  "query": "query ($id: ID, $slug: String) { group(id: $id, slug: $slug) { id name slug members { items { id name hasRegistered } } } }",
   "variables": {
     "slug": "GROUP_SLUG"
     "id": GROUP_ID
