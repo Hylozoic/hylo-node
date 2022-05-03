@@ -4,7 +4,13 @@ All notable changes to Hylo Node (the Hylo server) will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [3.3.0] - 2022-04-28
+### Added
+- Hylo is now an OAuth 2.0 / OpenID Connect provider! This means you can add Sign in With Hylo to your website.
+- Methods for adding users and groups via OAuth based API.
+- Graphql endpoints for login and other auth-related features
+- Login by JWT route POST route without redirect for XHR requests
+- moderator_descriptor and type_descriptor columns (and plural version) to Group to customize the name of "moderators" and of how the group is described.
 
 ## [3.2.0] - 2022-03-28
 ### Added

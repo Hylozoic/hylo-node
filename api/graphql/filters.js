@@ -93,12 +93,16 @@ export function makeFilterToggle (enabled) {
     enabled ? filterFn(relation) : relation
 }
 
-export const membershipFilter = userId => relation =>
-  relation.query(q => {
-    // XXX: why are we passing in AXOLOTL_ID? wouldnt that return all memberships the AXOLOTL has too?
-    const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID]).query().select('group_id')
-    q.whereIn('group_memberships.group_id', subq)
-  })
+export const membershipFilter = userId => relation => {
+  if (userId) {
+    return relation.query(q => {
+      // XXX: why are we passing in AXOLOTL_ID? wouldnt that return all memberships the AXOLOTL has too?
+      const subq = GroupMembership.forMember([userId, User.AXOLOTL_ID]).query().select('group_id')
+      q.whereIn('group_memberships.group_id', subq)
+    })
+  }
+  return relation
+}
 
 export const messageFilter = userId => relation => relation.query(q => {
   q.whereNotIn('comments.user_id', BlockedUser.blockedFor(userId))
@@ -138,7 +142,7 @@ export const postFilter = (userId, isAdmin) => relation => {
 
     if (!userId) {
       // non authenticated queries can only see public posts
-      q.where(tableName + '.is_public', true)
+      q.where('posts.is_public', true)
     } else if (!isAdmin) {
       // Only show posts that are public or posted to a group the user is a member of
       q.where(q3 => {

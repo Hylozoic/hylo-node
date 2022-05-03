@@ -69,7 +69,7 @@ module.exports = {
    */
   create: ({sessionUserId, groupId, tagName, userIds, emails = [], message, isModerator = false, subject}) => {
     return Promise.join(
-      userIds && User.whereIn('id', userIds).fetchAll(),
+      userIds && User.query(q => q.whereIn('id', userIds)).fetchAll(),
       Group.find(groupId),
       tagName && Tag.find({ name: tagName }),
       (users, group, tag) => {
@@ -147,21 +147,21 @@ module.exports = {
     })
   },
 
-  check: (userId, token, accessCode) => {
+  check: (token, accessCode) => {
     if (accessCode) {
       return Group.queryByAccessCode(accessCode)
-      .count()
-      .then(count => {
-        return {valid: count !== '0'}
-      })
-    }
+        .count()
+        .then(count => {
+          return {valid: count !== '0'}
+        })
+      }
     if (token) {
       return Invitation.query()
-      .where({token, used_by_id: null})
-      .count()
-      .then(result => {
-        return {valid: result[0].count !== '0'}
-      })
+        .where({ token, used_by_id: null, expired_by_id: null })
+        .count()
+        .then(result => {
+          return { valid: result[0].count !== '0' }
+        })
     }
   },
 

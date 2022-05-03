@@ -267,6 +267,7 @@ describe('User', function () {
 
     it('works with google', function () {
       return User.create({
+        name: 'foo2 moo2 wow',
         email: 'foo2.moo2_wow@bar.com',
         account: {type: 'google', profile: {id: 'foo'}}
       })
@@ -511,6 +512,69 @@ describe('User', function () {
       .update(user.id)
       .digest('hex')
       expect(user.intercomHash()).to.equal(hash)
+    })
+  })
+
+  describe('#claims', () => {
+    let user, location
+
+    before(async () => {
+      location = await Location.create({
+        address_number: '1',
+        address_street: 'Best St',
+        city: 'City',
+        region: 'Region',
+        neighborhood: 'neighborhood',
+        postcode: '94610',
+        country: 'USA'
+      })
+      user = await User.create({
+        active: true,
+        avatar_url: 'https://picture.com/me',
+        email: 'sweet@mojo.org',
+        email_validated: true,
+        location_id: location.id,
+        location: 'full location',
+        name: 'Mojo'
+      })
+    })
+
+    it('returns the right data based on scope', async () => {
+      expect(await user.claims('userinfo', '')).to.deep.equal({ sub: user.id })
+      expect(await user.claims('userinfo', 'email')).to.deep.equal({
+        sub: user.id,
+        email: user.get('email'),
+        email_verified: true
+      })
+      expect(await user.claims('userinfo', 'email phone address profile')).to.deep.equal({
+        sub: user.id,
+        email: user.get('email'),
+        email_verified: true,
+        address: {
+          country: location.get('country'),
+          formatted: user.get('location'),
+          locality: location.get('city'),
+          postal_code: location.get('postcode'),
+          region: location.get('region'),
+          street_address: location.get('address_number') + ' ' + location.get('address_street')
+        },
+        birthdate: null,
+        family_name: null,
+        gender: null,
+        given_name: null,
+        locale: null,
+        middle_name: null,
+        name: user.get('name'),
+        nickname: null,
+        picture: user.get('avatar_url'),
+        preferred_username: null,
+        profile: Frontend.Route.profile(user),
+        updated_at: user.get('updated_at'),
+        website: null,
+        zoneinfo: null,
+        phone_number: user.get('contact_phone'),
+        phone_number_verified: false
+      })
     })
   })
 })

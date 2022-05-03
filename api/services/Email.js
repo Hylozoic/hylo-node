@@ -44,6 +44,9 @@ module.exports = {
   sendEmailVerification: opts =>
     sendSimpleEmail(opts.email, 'tem_tt6gJkFMgjThCHHR6MwpPPrT', opts.templateData),
 
+  sendFinishRegistration: opts =>
+    sendSimpleEmail(opts.email, 'tem_BcfBCCHdDmkvcvkBSGPWYcjJ', opts.templateData),
+
   sendInvitation: (email, data) =>
     sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
       email,

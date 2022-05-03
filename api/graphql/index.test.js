@@ -1,4 +1,5 @@
 /* eslint-disable no-unused-expressions */
+import jwt from 'jsonwebtoken'
 import { createRequestHandler, makeMutations, makeAuthenticatedQueries } from './index'
 import '../../test/setup'
 import factories from '../../test/setup/factories'
@@ -60,7 +61,10 @@ describe('graphql request handler', () => {
     req = factories.mock.request()
     req.url = '/noo/graphql'
     req.method = 'POST'
-    req.session = {userId: user.id}
+    req.session = {
+      userId: user.id,
+      destroy: () => {}
+    }
     res = factories.mock.response()
   })
 
@@ -372,7 +376,6 @@ describe('graphql request handler', () => {
             }
             groupExtensions{
               items{
-                id
                 type
                 data
               }
@@ -403,8 +406,8 @@ describe('graphql request handler', () => {
                     type:'test', 
                     data: {
                       "key-test": "value-test"
-                      }, 
-                    id: groupExtension.id.toString()}
+                    }
+                  }
                 ]
               }
             }
@@ -547,33 +550,235 @@ describe('graphql request handler', () => {
       })
     })
   })
-})
 
-describe('makeMutations', () => {
-  it('imports mutation functions correctly', () => {
-    // this test does not check the correctness of the functions used in
-    // mutations; it only checks that they are actually functions (i.e. it fails
-    // if there are any broken imports)
-
-    const mutations = makeMutations(11)
-    const root = {}
-    const args = {}
-
-    return Promise.each(Object.keys(mutations), key => {
-      const fn = mutations[key]
-      return Promise.resolve()
-      .then(() => fn(root, args))
-      .catch(err => {
-        if (some(pattern => err.message.match(pattern), [
-          /is not a function/,
-          /is not defined/
-        ])) {
-          expect.fail(null, null, `Mutation "${key}" is not imported correctly: ${err.message}`)
+  describe('sendEmailVerification', function () {
+    it('returns `success: true` if new user', async () => {
+      req.body = {
+        query: `
+          mutation {
+            sendEmailVerification(email: "person@blah.com") {
+              success
+            }
+          }
+        `
+      }
+      await handler(req, res)
+      
+      expectJSON(res, {
+        data: {
+          sendEmailVerification: {
+            success: true
+          }
         }
+      })
+    })
 
-        // FIXME: the console.log below shows a number of places where we need
-        // more validation and/or are exposing SQL errors to the end-user
-        // console.log(`${key}: ${err.message}`)
+    it('returns `success: true` if existing user with an unverified email', async () => {
+      const testUser = await factories.user().save()
+      req.body = {
+        query: `
+          mutation {
+            sendEmailVerification(email: "${testUser.get('email')}") {
+              success
+            }
+          }
+        `
+      }
+      await handler(req, res)
+      
+      expectJSON(res, {
+        data: {
+          sendEmailVerification: {
+            success: true
+          }
+        }
+      })
+    })
+
+    it('returns `success: true` if existing user with an already verified email', async () => {
+      const testUser = await factories.user({
+        'email_validated': true
+      }).save()
+      req.body = {
+        query: `
+          mutation {
+            sendEmailVerification(email: "${testUser.get('email')}") {
+              success
+            }
+          }
+        `
+      }
+      await handler(req, res)
+      
+      expectJSON(res, {
+        data: {
+          sendEmailVerification: {
+            success: true
+          }
+        }
+      })
+    })
+  })
+
+  describe('verifyEmail', function () {
+    let code, token
+
+    beforeEach(async () => {
+      const userVerificationCode = await UserVerificationCode.create(user.get('email'))
+      code = userVerificationCode.code
+      token = userVerificationCode.token
+    })
+
+    it('works', () => {
+      req.body = {
+        query: `
+          mutation {
+            verifyEmail(code: "${code}", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+              error
+            }
+          }
+        `
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: {
+                me: {
+                  id: user.id,
+                  emailValidated: true
+                },
+                error: null
+              }
+            }
+          })
+          // expect(user.get('email_validated')).to.be.true
+          expect(req.session.userId).to.equal(user.id)
+       })
+     })
+
+     it('returns invalid-code error when code is not valid', () => {
+       req.body = {
+        query: `
+          mutation {
+            verifyEmail(code: "booop", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+              error
+            }
+          }
+        `
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: {
+                me: null,
+                error: 'invalid-code'
+              }
+            }
+          })
+        })
+    })
+
+    it('returns invalid-link error when token is bad ', () => {
+      const testToken = jwt.sign({
+        iss: 'https://hylo.com/moo', // Bad iss here makes bad token
+        aud: 'https://hylo.com',
+        sub: code,
+        exp: Math.floor(Date.now() / 1000) + (60 * 60 * 4), // 4 hour expiration
+        code
+      }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
+
+      req.body = {
+        query: `
+          mutation {
+            verifyEmail(token: "${testToken}", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+              error
+            }
+          }
+        `
+      }
+      return handler(req, res)
+        .then(() => {
+          expectJSON(res, {
+            data: {
+              verifyEmail: {
+                me: null,
+                error: 'invalid-link'
+              }
+            }
+          })
+        })
+    })
+
+    it('validates email and creates user session on valid token', async () => {
+      req.body = {
+        query: `
+          mutation {
+            verifyEmail(token: "${token}", email: "${user.get('email')}") {
+              me {
+                id
+                emailValidated
+              }
+            }
+          }
+        `
+      }
+
+      await handler(req, res)
+
+      expectJSON(res, {
+        data: {
+          verifyEmail: {
+            me: {
+              id: user.id,
+              emailValidated: true
+            }
+          }
+        }
+      })
+      expect(req.session.userId).to.equal(user.id)
+    })
+  })
+
+  describe('makeMutations', () => {
+    it('imports mutation functions correctly', () => {
+      // this test does not check the correctness of the functions used in
+      // mutations; it only checks that they are actually functions (i.e. it fails
+      // if there are any broken imports)
+
+      const mutations = makeMutations({ req, res }, 11, false, () => {})
+      const root = {}
+      const args = {}
+
+      return Promise.each(Object.keys(mutations), key => {
+        const fn = mutations[key]
+        return Promise.resolve()
+        .then(() => fn(root, args))
+        .catch(err => {
+          if (some(pattern => err.message.match(pattern), [
+            /is not a function/,
+            /is not defined/
+          ])) {
+            expect.fail(null, null, `Mutation "${key}" is not imported correctly: ${err.message}`)
+          }
+
+          // FIXME: the console.log below shows a number of places where we need
+          // more validation and/or are exposing SQL errors to the end-user
+          // console.log(`${key}: ${err.message}`)
+        })
       })
     })
   })

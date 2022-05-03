@@ -4,8 +4,6 @@ import crypto from 'crypto'
 
 const rollbar = require('../../lib/rollbar')
 
-import checkJWT from '../policies/checkJWT'
-
 const findUser = function (service, email, id) {
   return User.query(function (qb) {
     qb.leftJoin('linked_account', (q2) => {
@@ -76,9 +74,10 @@ const upsertLinkedAccount = (req, service, profile) => {
       return account.save({user_id: userId}, {patch: true})
       .then(() => LinkedAccount.updateUser(userId, {type: service, profile}))
     }
-
     // we create a new account regardless of whether one exists for the service;
     // this allows the user to continue to log in with the old one
+    // NOTE: This is currently having the effect of creating a new LinkedAccount for a service
+    // EVERY TIME a user authenticates with that service, even using an already linked account.
     return LinkedAccount.create(userId, {type: service, profile}, {updateUser: true})
   })
 }
@@ -177,7 +176,7 @@ module.exports = {
   },
 
   startGoogleOAuth: setSessionFromParams(function (req, res) {
-    passport.authenticate('google', {scope: 'email'})(req, res)
+    passport.authenticate('google', {scope: ['email', 'profile']})(req, res)
   }),
 
   finishGoogleOAuth: function (req, res, next) {
@@ -232,10 +231,12 @@ module.exports = {
     const shouldRedirect = req.method === 'GET'
     const nextUrl = req.param('n') || Frontend.Route.evo.passwordSetting()
 
-    if (req.session.authenticated) {
+    // NOTE: this was `req.session.authenticated` but that doesn't seem to
+    // populate in the case (or in time) for a POST request? This works.
+    if (req.session.userId) {
       return shouldRedirect
         ? res.redirect(nextUrl)
-        : res.ok({success: true})
+        : res.ok({ success: true })
     } else {
       // still redirect, to give the user a chance to log in manually
       // if a specific URL other than the default was the entry point
@@ -271,7 +272,7 @@ module.exports = {
       return res.serverError
     }
   },
-
+  
   // these are here for testing
   findUser,
   upsertLinkedAccount

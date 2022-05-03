@@ -24,27 +24,34 @@ describe('InvitationService', () => {
     })
 
     it('should find a group by a valid accessCode', () => {
-      return InvitationService.check(invitee.get('id'), null, group.get('access_code'))
+      return InvitationService.check(null, group.get('access_code'))
       .then(result =>
         expect(result.valid).to.equal(true)
       )
     })
 
     it('should find a group by a valid token', () => {
-      const userId = invitee.get('id')
       const token = invitation.get('token')
-      return InvitationService.check(userId, token, null)
+      return InvitationService.check(token, null)
       .then(result =>
         expect(result.valid).to.equal(true)
       )
     })
 
     it('should find a group by accessCode if both an accessCode and token are provided', () => {
-      const userId = invitee.get('id')
       const accessCode = group.get('access_code')
       const token = 'INVALIDTOKEN'
-      InvitationService.check(userId, token, accessCode).then(result =>
+      InvitationService.check(token, accessCode).then(result =>
         expect(result.valid).to.equal(true)
+      )
+    })
+
+    it('should not be valid if accessCode is invalid, even if token is valid', () => {
+      const token = invitation.get('token')
+      const accessCode = 'badaccesscode'
+      return InvitationService.check(token, accessCode)
+      .then(result =>
+        expect(result.valid).to.equal(false)
       )
     })
   })
