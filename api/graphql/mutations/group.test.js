@@ -127,17 +127,18 @@ describe('mutations/group', () => {
     })
 
     it('returns the new moderator membership', async () => {
-      const membership = await createGroup(user.id, {
+      const group = await createGroup(user.id, {
         name: 'Foo',
         slug: 'foob',
         description: 'Here be foo'
       })
 
-      expect(membership).to.exist
-      expect(membership.get('role')).to.equal(GroupMembership.Role.MODERATOR)
-      const group = await membership.group().fetch()
+      const membership = await group.memberships().fetchOne()
+
       expect(group).to.exist
       expect(group.get('slug')).to.equal('foob')
+      expect(membership).to.exist
+      expect(membership.get('role')).to.equal(GroupMembership.Role.MODERATOR)
       const post = await group.posts().fetchOne()
       expect(post).to.exist
       expect(post.get('name')).to.equal(starterPost.get('name'))
@@ -146,9 +147,6 @@ describe('mutations/group', () => {
     it('creates inside a parent group if user can moderate the parent or parent is open', () => {
       const childGroup = {name: 'goose', slug: 'goose', parent_ids: [starterGroup.id]}
       return createGroup(user.id, childGroup)
-      .then(membership => {
-        return membership.group().fetch()
-      })
       .then(async (group) => {
         expect(group).to.exist
         expect(Number((await group.parentGroups().fetch()).length)).to.equal(1)

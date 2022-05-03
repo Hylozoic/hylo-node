@@ -5,11 +5,10 @@
  */
 
 module.exports.routes = {
-  'GET    /noo/user/status':                              'UserController.status',
-  'POST   /noo/user/send-email-verification':             'UserController.sendEmailVerification',
-  'GET    /noo/user/verify-email':                        'UserController.verifyEmailByToken',
-  'POST   /noo/user/verify-email':                        'UserController.verifyEmailByCode',
-  'POST   /noo/user/password':                            'UserController.sendPasswordReset',
+  // for OIDC
+  // XXX: unclear if its ok to redirect like this, can we somehow directly call the oidc-provider discovery function here?
+  'GET    /.well-known/openid-configuration':             '/noo/oauth/.well-known/openid-configuration',
+
   'POST   /noo/user':                                     'UserController.create',
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
@@ -30,6 +29,7 @@ module.exports.routes = {
   'GET    /noo/login/token':                              'SessionController.createWithToken',
   'POST   /noo/login/token':                              'SessionController.createWithToken',
   'GET    /noo/login/jwt':                                'SessionController.createWithJWT',
+  'POST   /noo/login/jwt':                                'SessionController.createWithJWT',
   'POST   /noo/login/apple/oauth':                        'SessionController.finishAppleOAuth',
   'GET    /noo/login/google':                             'SessionController.startGoogleOAuth',
   'GET    /noo/login/google/oauth':                       'SessionController.finishGoogleOAuth',
@@ -73,4 +73,5 @@ module.exports.routes = {
   'POST   /noo/upload':                                   'UploadController.create',
 
   'GET    /noo/export/group':                             'ExportController.groupData'
+
 }

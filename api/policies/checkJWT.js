@@ -1,6 +1,6 @@
 import passport from 'passport'
 
-module.exports = async (req, res, proceed) => {
+module.exports = async (req, res, next) => {
   return passport.authenticate('jwt', { }, async (err, user, info) => {
     if (err) {
       return res.serverError(err, err.message)
@@ -9,7 +9,7 @@ module.exports = async (req, res, proceed) => {
     if (user) {
       // Kind of weird we are creating a session from a JWT, but way better than the non expiring, never changing 1 token per user we used to use
       await UserSession.login(req, user, 'jwt')
-      return proceed()
+      return next()
     }
 
     // TODO: what if they are already logged in as someone else? just take them to the app? to the login screen? login should redirect if logged in already
@@ -23,5 +23,5 @@ module.exports = async (req, res, proceed) => {
 
     // Otherwise, this request did not come from a logged-in user.
     return res.forbidden()
-  })(req, res, proceed)
+  })(req, res, next)
 }
