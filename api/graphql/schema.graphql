@@ -52,6 +52,7 @@ type UserSettings {
   digestFrequency: String
   dmNotifications: String
   lastViewedMessagesAt: String
+  mapBaseLayer: String
   signupInProgress: Boolean
   streamViewMode: String
   streamSortBy: String
@@ -931,6 +932,7 @@ input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
   lastViewedMessagesAt: String
+  mapBaseLayer: String
   signupInProgress: Boolean
   streamViewMode: String
   streamSortBy: String
