@@ -4,7 +4,6 @@ import randomstring from 'randomstring'
 import wkx from 'wkx'
 import HasSettings from './mixins/HasSettings'
 import findOrCreateThread from './post/findOrCreateThread'
-import createComment from './comment/createComment'
 import { groupFilter } from '../graphql/filters'
 
 import DataType, {
