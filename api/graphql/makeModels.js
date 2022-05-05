@@ -353,7 +353,7 @@ export default async function makeModels (userId, isAdmin) {
             // For near only include region, city, country columns, and move the exact location around every load
             const columns = [
               'id',
-              bookshelf.knex.raw('ST_Translate(center, random()*.2 - .2, random()*.2 -.2) as center'),
+              bookshelf.knex.raw('ST_Translate(center, random()*.03 - .03, random()*.03 -.03) as center'),
               'city',
               'locality',
               'region',
