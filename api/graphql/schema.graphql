@@ -167,7 +167,7 @@ type MembershipSettings {
 
 type Group {
   id: ID
-  aboutVideoURI: String,
+  aboutVideoUri: String,
   accessibility: Int
   activeMembers(
     boundingBox: [PointInput],
