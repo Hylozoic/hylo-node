@@ -2,7 +2,7 @@ import { extend, merge, pick, reduce } from 'lodash'
 import { spy } from 'chai'
 import i18n from 'i18n'
 import { ReadableStreamBuffer } from 'stream-buffers'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 
 module.exports = {
   blockedUser: attrs => {

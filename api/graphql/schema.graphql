@@ -52,6 +52,7 @@ type UserSettings {
   digestFrequency: String
   dmNotifications: String
   lastViewedMessagesAt: String
+  mapBaseLayer: String
   signupInProgress: Boolean
   streamViewMode: String
   streamSortBy: String
@@ -932,6 +933,7 @@ input UserSettingsInput {
   digestFrequency: String
   dmNotifications: String
   lastViewedMessagesAt: String
+  mapBaseLayer: String
   signupInProgress: Boolean
   streamViewMode: String
   streamSortBy: String
@@ -998,6 +1000,7 @@ type Mutation {
   logout: GenericResult,
   markActivityRead(id: ID): Activity
   markAllActivitiesRead: GenericResult
+  messageGroupModerators(groupId: ID): ID
   pinPost(postId: ID, groupId: ID): GenericResult
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
   reactivateMe(id: ID): GenericResult

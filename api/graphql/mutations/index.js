@@ -287,6 +287,10 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
   .then(() => ({success: true}))
 }
 
+export function messageGroupModerators (userId, groupId) {
+  return Group.messageModerators(userId, groupId)
+}
+
 export async function removePost (userId, postId, groupIdOrSlug) {
   const group = await Group.find(groupIdOrSlug)
   return Promise.join(
