@@ -10,7 +10,7 @@ import {
   postFilter,
   voteFilter
 } from './filters'
-import { mapKeys, camelCase } from 'lodash/fp'
+import { camelCase, mapKeys, startCase } from 'lodash/fp'
 import InvitationService from '../services/InvitationService'
 import {
   filterAndSortPosts,
@@ -221,15 +221,11 @@ export default async function makeModels (userId, isAdmin) {
         'geo_shape',
         'location',
         'memberCount',
-        'moderator_descriptor',
-        'moderator_descriptor_plural',
         'name',
         'postCount',
         'slug',
         'visibility',
-        'type',
-        'type_descriptor',
-        'type_descriptor_plural'
+        'type'
       ],
       relations: [
         {activeMembers: { querySet: true }},
@@ -325,10 +321,16 @@ export default async function makeModels (userId, isAdmin) {
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+        // XXX: Flag for translation
+        moderatorDescriptor: (g) => g.get('moderator_descriptor') || 'Moderator',
+        moderatorDescriptorPlural: (g) => g.get('moderator_descriptor_plural') || 'Moderators',
         // Get number of prerequisite groups that current user is not a member of yet
         numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
-        settings: g => mapKeys(camelCase, g.get('settings'))
+        settings: g => mapKeys(camelCase, g.get('settings')),
+        // XXX: Flag for translation
+        typeDescriptor: g => g.get('type_descriptor') || (g.get('type') ? startCase(g.get('type')) : 'Group'),
+        typeDescriptorPlural: g => g.get('type_descriptor_plural') || (g.get('type') ? startCase(g.get('type')) + 's' : 'Groups')
       },
       filter: nonAdminFilter(groupFilter(userId)),
       fetchMany: ({ autocomplete, boundingBox, context, farmQuery, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
