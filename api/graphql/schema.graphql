@@ -859,6 +859,7 @@ input InviteInput {
 }
 
 input GroupInput {
+  aboutVideoUri: String
   accessibility: Int
   active: Boolean
   avatarUrl: String
