@@ -23,8 +23,11 @@ import {
 //
 // keys in the returned object are GraphQL schema type names
 //
-export default async function makeModels (userId, isAdmin) {
+export default async function makeModels (userId, isAdmin, apiClient) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
+
+  // XXX: for now give API users more access, in the future track which groups each client can access
+  const apiFilter = makeFilterToggle(!apiClient)
 
   return {
     Me: {
@@ -131,7 +134,7 @@ export default async function makeModels (userId, isAdmin) {
         {skillsToLearn: {querySet: true}},
         {votes: {querySet: true}}
       ],
-      filter: nonAdminFilter(personFilter(userId)),
+      filter: nonAdminFilter(apiFilter(personFilter(userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, groupIds, filter }) =>
         searchQuerySet('users', {
@@ -330,7 +333,7 @@ export default async function makeModels (userId, isAdmin) {
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
         settings: g => mapKeys(camelCase, g.get('settings'))
       },
-      filter: nonAdminFilter(groupFilter(userId)),
+      filter: nonAdminFilter(apiFilter(groupFilter(userId))),
       fetchMany: ({ autocomplete, boundingBox, context, farmQuery, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
         searchQuerySet('groups', {
           autocomplete,
