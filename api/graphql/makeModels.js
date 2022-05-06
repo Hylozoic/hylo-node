@@ -326,10 +326,10 @@ export default async function makeModels (userId, isAdmin) {
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
         location: async (g) => {
-          // If location obfuscation is on then return a display string that only includes city, region & country for non group members
+          // If location obfuscation is on then non group moderators see a display string that only includes city, region & country
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
           if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
-                (userId && await GroupMembership.forPair(userId, g).fetch())) {
+                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
             return g.get('location')
           } else {
             const locObj = await g.locationObject().fetch()
@@ -344,10 +344,10 @@ export default async function makeModels (userId, isAdmin) {
           }
         },
         locationObject: async (g) => {
-          // If precision is precise or user is a member of the group show the exact location
+          // If precision is precise or user is a moderator of the group show the exact location
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
           if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
-                (userId && await GroupMembership.forPair(userId, g).fetch())) {
+                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
             return g.locationObject().fetch()
           } else if (precision === LOCATION_DISPLAY_PRECISION.Near) {
             // For near only include region, city, country columns, and move the exact location around every load
