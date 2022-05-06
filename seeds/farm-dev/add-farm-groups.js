@@ -333,7 +333,7 @@ function generateFakeFarmData (index) {
     organizational_id: faker.datatype.uuid(),
     motivations: Math.random() > 0.8 ? null : sampleArray(FARM_MOTIVATIONS, Math.round(Math.random() * 5)),
     preferred_contact_method: Math.random() > 0.8 ? null : sample(PREFERRED_CONTACT_METHODS).value,
-    product_categories: sampledProductCategories,
+    products_categories: sampledProductCategories,
     product_detail,
     products_value_added: Math.random() > 0.5 ? [] : [...new Array(Math.round(Math.random() * 15) + 1)].map((el) => faker.random.word()),
     records_software: null, // left null
@@ -440,7 +440,7 @@ function fakeGroupData (name, slug, created_by_id, type) {
   return {
     name,
     group_data_type: 1,
-    avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png',
+    avatar_url: `https://avatars.dicebear.com/api/bottts/${faker.random.word()}.svg`,
     access_code: faker.datatype.uuid(),
     description: faker.lorem.paragraph(),
     slug: slug,
@@ -462,7 +462,7 @@ function fakeUser () {
   return Promise.resolve({
     email: `${uuid.v4()}@farm-demo.com`,
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-    avatar_url: faker.internet.avatar(),
+    avatar_url: `https://avatars.dicebear.com/api/open-peeps/${faker.random.word()}.svg`,
     first_name: faker.name.firstName(),
     last_name: faker.name.lastName(),
     last_login_at: faker.date.past(),
