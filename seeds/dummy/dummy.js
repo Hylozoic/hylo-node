@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const faker = require('faker')
+const { faker } = require('@faker-js/faker')
 const promisify = require('bluebird').promisify
 const hash = promisify(bcrypt.hash, bcrypt)
 const readline = require('readline')
