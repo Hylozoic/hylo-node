@@ -11,6 +11,7 @@ import {
   voteFilter
 } from './filters'
 import { camelCase, mapKeys, startCase } from 'lodash/fp'
+import pluralize from 'pluralize'
 import InvitationService from '../services/InvitationService'
 import {
   filterAndSortPosts,
@@ -330,7 +331,7 @@ export default async function makeModels (userId, isAdmin) {
         settings: g => mapKeys(camelCase, g.get('settings')),
         // XXX: Flag for translation
         typeDescriptor: g => g.get('type_descriptor') || (g.get('type') ? startCase(g.get('type')) : 'Group'),
-        typeDescriptorPlural: g => g.get('type_descriptor_plural') || (g.get('type') ? startCase(g.get('type')) + 's' : 'Groups')
+        typeDescriptorPlural: g => g.get('type_descriptor_plural') || (g.get('type') ? pluralize(startCase(g.get('type'))) : 'Groups')
       },
       filter: nonAdminFilter(groupFilter(userId)),
       fetchMany: ({ autocomplete, boundingBox, context, farmQuery, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
