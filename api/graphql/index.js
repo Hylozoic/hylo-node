@@ -53,6 +53,7 @@ import {
   logout,
   markActivityRead,
   markAllActivitiesRead,
+  messageGroupModerators,
   pinPost,
   processStripeToken,
   regenerateAccessCode,
@@ -341,6 +342,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     markActivityRead: (root, { id }) => markActivityRead(userId, id),
 
     markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
+
+    messageGroupModerators: (root, { groupId }) => messageGroupModerators(userId, groupId),
 
     pinPost: (root, { postId, groupId }) =>
       pinPost(userId, postId, groupId),
