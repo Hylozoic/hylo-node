@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 const { sample, partition } = require('lodash')
 const knexPostgis = require('knex-postgis')
-const faker = require('faker')
+const { faker } = require('@faker-js/faker')
 const {
   ANIMAL_LIST,
   CLIMATE_ZONES,
