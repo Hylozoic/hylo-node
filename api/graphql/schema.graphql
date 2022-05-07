@@ -168,6 +168,7 @@ type MembershipSettings {
 
 type Group {
   id: ID
+  aboutVideoUri: String,
   accessibility: Int
   activeMembers(
     boundingBox: [PointInput],
@@ -859,6 +860,7 @@ input InviteInput {
 }
 
 input GroupInput {
+  aboutVideoUri: String
   accessibility: Int
   active: Boolean
   avatarUrl: String
