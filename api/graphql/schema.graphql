@@ -107,6 +107,7 @@ type Person {
   bio: String
   contactEmail: String
   contactPhone: String
+  hasRegistered: Boolean
   twitterName: String
   linkedinUrl: String
   facebookUrl: String
@@ -631,9 +632,9 @@ type GroupExistsOutput {
 
 type Query {
   activity(id: ID): Activity
+  comment(id: ID): Comment
   groupExists(slug: String): GroupExistsOutput
   me: Me
-  person(id: ID): Person
   notifications(
     first: Int,
     order: String,
@@ -685,7 +686,6 @@ type Query {
     topics: [ID],
     types: [String]
   ): PostQuerySet
-  comment(id: ID): Comment
   people(
     boundingBox: [PointInput],
     first: Int,
@@ -697,6 +697,7 @@ type Query {
     groupIds: [String],
     filter: String
   ): PersonQuerySet
+  person(id: ID, email: String): Person
   topic(id: ID, name: String): Topic
   groupTopic(
     groupSlug: String,
@@ -1028,6 +1029,7 @@ type Mutation {
   unfulfillPost(postId: ID): GenericResult
   updateComment(id: ID, data: CommentInput): Comment
   updateGroupSettings(id: ID, changes: GroupInput): Group
+  updateGroup(id: ID, changes: GroupInput, asUserId: ID): Group
   updateGroupTopic(id: ID, data: GroupTopicInput): GenericResult
   updateGroupTopicFollow(id: ID, data: GroupTopicFollowInput): GenericResult
   updateMe(changes: MeInput): Me

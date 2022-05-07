@@ -61,18 +61,18 @@ module.exports = {
         qb.join('group_extensions', 'groups.id', '=', 'group_extensions.group_id')
         qb.join('extensions', 'group_extensions.extension_id', '=', 'extensions.id')
         qb.whereRaw('extensions.type = \'farm-onboarding\'')
-        qb.whereRaw('groups.settings -> \'hide_extension_data\' != \'true\'')
+        qb.whereRaw('(groups.settings -> \'hideExtensionData\')::boolean IS NOT TRUE')
 
         if (farmType !== '') {
-          qb.whereRaw(`group_extensions.data @> '{"farm_types": ["${farmType}"]}'`)
+          qb.whereRaw(`group_extensions.data @> '{"types": ["${farmType}"]}'`)
         }
 
         if (productCategories !== '') {
-          qb.whereRaw(`group_extensions.data @> '{"product_categories": ["${productCategories}"]}'`)
+          qb.whereRaw(`group_extensions.data @> '{"products_categories": ["${productCategories}"]}'`)
         }
 
         if (certOrManagementPlan !== '') {
-          qb.whereRaw(`group_extensions.data @> '{"management_plans_current": ["${certOrManagementPlan}"]}' OR group_extensions.data @> '{"certifications_current": ["${certOrManagementPlan}"]}'`)
+          qb.whereRaw(`group_extensions.data @> '{"management_plans_current_detail": ["${certOrManagementPlan}"]}' OR group_extensions.data @> '{"certifications_current_detail": ["${certOrManagementPlan}"]}'`)
         }
       }
 
