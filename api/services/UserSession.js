@@ -31,6 +31,6 @@ module.exports = {
   },
 
   isLoggedIn: function (req) {
-    return !!req.session.userId
+    return !!req?.session?.userId
   }
 }

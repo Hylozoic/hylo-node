@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt')
-const faker = require('faker')
+const { faker } = require('@faker-js/faker')
 const promisify = require('bluebird').promisify
 const hash = promisify(bcrypt.hash, bcrypt)
 const readline = require('readline')
@@ -235,7 +235,7 @@ function fakeGroupData(name, slug, created_by_id, type) {
   return {
     name,
     group_data_type: 1,
-    avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png',
+    avatar_url: `https://avatars.dicebear.com/api/bottts/${faker.random.word()}.svg`,
     access_code: faker.datatype.uuid(),
     description: faker.lorem.paragraph(),
     slug: slug,
@@ -299,7 +299,7 @@ function fakeUser (email) {
   return Promise.resolve({
     email: email || faker.internet.email(),
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-    avatar_url: faker.internet.avatar(),
+    avatar_url: `https://avatars.dicebear.com/api/open-peeps/${faker.random.word()}.svg`,
     first_name: faker.name.firstName(),
     last_name: faker.name.lastName(),
     last_login_at: faker.date.past(),

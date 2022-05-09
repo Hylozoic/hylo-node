@@ -3,6 +3,9 @@ import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge
 import randomstring from 'randomstring'
 import wkx from 'wkx'
 import HasSettings from './mixins/HasSettings'
+import findOrCreateThread from './post/findOrCreateThread'
+import { groupFilter } from '../graphql/filters'
+
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
@@ -372,8 +375,8 @@ module.exports = bookshelf.Model.extend(merge({
 
   update: async function (changes) {
     var whitelist = [
-      'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url', 'description',
-      'geo_shape', 'location', 'location_id', 'name', 'settings', 'visibility'
+      'about_video_uri', 'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url',
+      'description', 'geo_shape', 'location', 'location_id', 'name', 'settings', 'visibility'
     ]
 
     const attributes = pick(changes, whitelist)
@@ -457,8 +460,9 @@ module.exports = bookshelf.Model.extend(merge({
 
     var attrs = defaults(
       pick(data,
-        'accessibility', 'description', 'slug', 'category', 'access_code', 'banner_url', 'avatar_url',
-        'location_id', 'location', 'group_data_type', 'name', 'visibility'
+        'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
+        'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'name',
+        'visibility'
       ),
       {
         'accessibility': Group.Accessibility.RESTRICTED,
@@ -550,6 +554,24 @@ module.exports = bookshelf.Model.extend(merge({
       return test(code).then(count => count ? loop() : code)
     }
     return loop()
+  },
+
+  messageModerators: async function(fromUserId, groupId) {
+    // Make sure they can only message a group they can see
+    const group = await groupFilter(fromUserId)(Group.where({ id: groupId })).fetch()
+
+    if (group) {
+      const moderators = await group.moderators().fetch()
+      if (moderators.length > 0) {
+        // HACK: add user_connection row so that the people can see each other even though they are not in the same group
+        moderators.forEach(async (m) => {
+          await UserConnection.create(fromUserId, m.id, UserConnection.Type.MESSAGE)
+        })
+        const thread = await findOrCreateThread(fromUserId, moderators.map(m => m.id))
+        return thread.id
+      }
+    }
+    return null
   },
 
   notifyAboutCreate: function (opts) {

@@ -83,3 +83,65 @@ Example GraphQL mutation:
   }
 }
 ```
+
+### Update a Group
+
+`POST to https://hylo.com/noo/graphql`
+
+__Headers:__
+Content-Type: application/json
+
+This is a GraphQL based endpoint so you will want the pass in a raw POST data
+Example GraphQL mutation:
+```
+{
+  "query": "mutation ($id: ID, $changes: GroupInput, $asUserId: ID) { updateGroup(id: $id, changes: $changes, asUserId: $asUserId) { id name slug } }",
+  "variables": {
+    "id": GROUP_ID,
+    "changes": {
+      "name": "New Name"
+    },
+    "asUserId": USER_ID
+  }
+}
+```
+
+### Query a Group
+
+`POST to https://hylo.com/noo/graphql`
+
+__Headers:__
+Content-Type: application/json
+
+This is a GraphQL based endpoint so you will want the pass in a raw POST data
+Example GraphQL query:
+NOTE: you will want to pass _either_ a slug _or_ an id to query by. If you pass both only the slug will be used to lookup the group.
+```
+{
+  "query": "query ($id: ID, $slug: String) { group(id: $id, slug: $slug) { id name slug members { items { id name hasRegistered } } } }",
+  "variables": {
+    "slug": "GROUP_SLUG"
+    "id": GROUP_ID
+  }
+}
+```
+
+### Query a Person
+
+`POST to https://hylo.com/noo/graphql`
+
+__Headers:__
+Content-Type: application/json
+
+This is a GraphQL based endpoint so you will want the pass in a raw POST data
+Example GraphQL query:
+NOTE: you will want to pass _either_ an email _or_ an id to query by. If you pass both only the email will be used to lookup the person.
+```
+{
+  "query": "query ($id: ID, $email: String) { person(id: $id, email: $email) { id name hasRegistered } }",
+  "variables": {
+    "email": "test@hello.com"
+    "id": PERSON_ID
+  }
+}
+```
