@@ -218,6 +218,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
     Group: {
       model: Group,
       attributes: [
+        'about_video_uri',
         'accessibility',
         'avatar_url',
         'banner_url',
