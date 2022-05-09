@@ -80,13 +80,13 @@ function fakeLocation (knex) {
   const city = faker.address.city()
   const address_street = faker.address.streetName()
   const country = faker.address.country()
-  const locality = 'California'
+  const locality = null
   const address_number = faker.datatype.number({ min: 1, max: 1000 })
   const fakeLat = faker.address.latitude(42, 38) // TODO: is this the right syntax???
   const fakeLng = faker.address.longitude(-119, -122)
   const center = st.geomFromText('POINT(' + fakeLng + ' ' + fakeLat + ')', 4326)
   const full_text = `${address_number} ${address_street}, ${city}, ${locality}, ${country}`
-  const region = faker.address.county()
+  const region = faker.address.state()
 
   return Promise.resolve({
     center,

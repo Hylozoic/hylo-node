@@ -1,3 +1,5 @@
+import { camelCase, mapKeys, startCase } from 'lodash/fp'
+import pluralize from 'pluralize'
 import searchQuerySet from './searchQuerySet'
 import {
   commentFilter,
@@ -10,8 +12,7 @@ import {
   postFilter,
   voteFilter
 } from './filters'
-import { camelCase, mapKeys, startCase } from 'lodash/fp'
-import pluralize from 'pluralize'
+import { LOCATION_DISPLAY_PRECISION } from '../../lib/constants'
 import InvitationService from '../services/InvitationService'
 import {
   filterAndSortPosts,
@@ -223,8 +224,8 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         'banner_url',
         'created_at',
         'description',
-        'geo_shape',
         'location',
+        'geo_shape',
         'memberCount',
         'name',
         'postCount',
@@ -249,7 +250,6 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         }},
         {groupToGroupJoinQuestions: {querySet: true}},
         {joinQuestions: {querySet: true}},
-        'locationObject',
         {moderators: {querySet: true}},
         {memberships: {querySet: true}},
         {members: {
@@ -326,6 +326,50 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+        location: async (g) => {
+          // If location obfuscation is on then non group moderators see a display string that only includes city, region & country
+          const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
+          if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
+                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+            return g.get('location')
+          } else {
+            const locObj = await g.locationObject().fetch()
+            let display = locObj.get('country')
+            if (locObj.get('region')) {
+              display = locObj.get('region') + ", " + display
+            }
+            if (locObj.get('city')) {
+              display = locObj.get('city') + ", " + display
+            }
+            return display
+          }
+        },
+        locationObject: async (g) => {
+          // If precision is precise or user is a moderator of the group show the exact location
+          const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
+          if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
+                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+            return g.locationObject().fetch()
+          } else if (precision === LOCATION_DISPLAY_PRECISION.Near) {
+            // For near only include region, city, country columns, and move the exact location around every load
+            const columns = [
+              'id',
+              bookshelf.knex.raw('ST_Translate(center, random()*.03 - .03, random()*.03 -.03) as center'),
+              'city',
+              'locality',
+              'region',
+              'neighborhood',
+              'postcode',
+              'country',
+              'accuracy',
+              'wikidata'
+            ]
+            return g.locationObject().query(q => q.select(columns)).fetch()
+          } else {
+            // if location display precision is "region" then don't return the location object at all
+            return null
+          }
+        },
         // XXX: Flag for translation
         moderatorDescriptor: (g) => g.get('moderator_descriptor') || 'Moderator',
         moderatorDescriptorPlural: (g) => g.get('moderator_descriptor_plural') || 'Moderators',
