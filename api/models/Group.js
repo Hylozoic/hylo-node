@@ -1,7 +1,9 @@
 import knexPostgis from 'knex-postgis'
-import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omitBy, isUndefined, trim } from 'lodash'
+import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
+import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import randomstring from 'randomstring'
 import wkx from 'wkx'
+import { LocationHelpers } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
@@ -9,6 +11,8 @@ import { groupFilter } from '../graphql/filters'
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
+import convertGraphqlData from '../graphql/mutations/convertGraphqlData'
+import { findOrCreateLocation } from '../graphql/mutations/location'
 
 export const GROUP_ATTR_UPDATE_WHITELIST = [
   'role',
@@ -27,7 +31,7 @@ module.exports = bookshelf.Model.extend(merge({
   hasTimestamps: true,
 
   format(attributes) {
-    const st = knexPostgis(bookshelf.knex);
+    const st = knexPostgis(bookshelf.knex)
 
     // Make sure geometry column goes into the database correctly, converting from GeoJSON
     const { geo_shape } = attributes
@@ -388,6 +392,11 @@ module.exports = bookshelf.Model.extend(merge({
 
     saneAttrs.location_id = isEmpty(saneAttrs.location_id) ? null : saneAttrs.location_id
 
+    // If a new location is being passed in but not a new location_id then we geocode on the server
+    if (changes.location && changes.location !== this.get('location') && !changes.location_id) {
+      await Queue.classMethod('Group', 'geocodeLocation', { groupId: this.id })
+    }
+
     if (changes.group_to_group_join_questions) {
       const questions = await Promise.map(changes.group_to_group_join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
         return (await Question.where({ text: trim(jq.text) }).fetch()) || (await Question.forge({ text: trim(jq.text) }).save())
@@ -520,6 +529,10 @@ module.exports = bookshelf.Model.extend(merge({
         {role: GroupMembership.Role.MODERATOR}, { transacting: trx })
     })
 
+    if (data.location && !data.location_id) {
+      await Queue.classMethod('Group', 'geocodeLocation', { groupId: group.id })
+    }
+
     await Queue.classMethod('Group', 'notifyAboutCreate', { groupId: group.id })
 
     return group
@@ -554,6 +567,25 @@ module.exports = bookshelf.Model.extend(merge({
       return test(code).then(count => count ? loop() : code)
     }
     return loop()
+  },
+
+  geocodeLocation: async function({ groupId }) {
+    const group = await Group.find(groupId)
+    if (group) {
+      const geocoder = mbxGeocoder({ accessToken: process.env.MAPBOX_TOKEN })
+
+      geocoder.forwardGeocode({
+        mode: 'mapbox.places-permanent',
+        query: group.get('location')
+      }).send().then(response => {
+        const match = response.body
+        if (match?.features && match?.features.length > 0) {
+          const locationData = omit(LocationHelpers.convertMapboxToLocation(match.features[0]), 'mapboxId')
+          const loc = findOrCreateLocation(locationData)
+          group.save({ location_id: loc.id })
+        }
+      })
+    }
   },
 
   messageModerators: async function(fromUserId, groupId) {

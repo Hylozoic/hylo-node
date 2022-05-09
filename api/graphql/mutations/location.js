@@ -13,7 +13,7 @@ export function findLocation (data) {
         locality: data.locality || null,
         neighborhood: data.neighborhood || null,
         postcode: data.postcode || null,
-        country: data.country || null
+        country_code: data.country_code || null
       }
     }
   } else if (data.full_text) {

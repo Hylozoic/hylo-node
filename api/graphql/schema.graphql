@@ -1,6 +1,12 @@
 scalar Date
 scalar JSON
 
+enum LocationDisplayPrecision {
+  precise
+  near
+  region
+}
+
 # The currently logged-in person.
 type Me {
   id: ID
@@ -308,6 +314,7 @@ type GroupSettings {
   askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
   hideExtensionData: Boolean
+  locationDisplayPrecision: LocationDisplayPrecision
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
 }
@@ -539,6 +546,7 @@ type Location {
   bbox: [Point]
   center: Point
   city: String
+  countryCode: String
   country: String
   createdAt: Date
   fullText: String
@@ -822,6 +830,7 @@ input LocationInput {
   center: PointInput
   city: String
   country: String
+  countryCode: String
   createdAt: Date
   fullText: String
   geometry: [PointInput]
@@ -892,6 +901,7 @@ input GroupSettingsInput {
   askGroupToGroupJoinQuestions: Boolean
   askJoinQuestions: Boolean
   hideExtensionData: Boolean
+  locationDisplayPrecision: LocationDisplayPrecision
   publicMemberDirectory: Boolean
   showSuggestedSkills: Boolean
 }
