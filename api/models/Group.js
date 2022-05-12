@@ -380,7 +380,8 @@ module.exports = bookshelf.Model.extend(merge({
   update: async function (changes) {
     var whitelist = [
       'about_video_uri', 'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url',
-      'description', 'geo_shape', 'location', 'location_id', 'name', 'settings', 'visibility'
+      'description', 'geo_shape', 'location', 'location_id', 'name', 'moderator_descriptor',
+      'moderator_descriptor_plural', 'settings', 'type_descriptor', 'type_descriptor_plural', 'visibility'
     ]
 
     const attributes = pick(changes, whitelist)
@@ -470,8 +471,8 @@ module.exports = bookshelf.Model.extend(merge({
     var attrs = defaults(
       pick(data,
         'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
-        'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'name',
-        'visibility'
+        'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
+        'moderator_descriptor_plural', 'name', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
         'accessibility': Group.Accessibility.RESTRICTED,
