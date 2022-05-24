@@ -65,21 +65,42 @@ Example GraphQL mutation:
   "query": "mutation ($data: GroupInput, $asUserId: ID) { createGroup(data: $data, asUserId: $asUserId) { id name slug } }",
   "variables": {
     "data": {
-      "accessibility": 1,
+      "accessibility": 1, // 0 => closed (invite only), 1 => restricted (join request requires approval), 2 => open (anyone can instantly join)
+      "description": "This is a long-form description of the group",
       "name": "Test Group",
       "slug": "unique-url-slug",
-      "parentIds": [],
-      "visibility": 1,
+      "parentIds": [], // group-ids for any parent group of this group
+      "visibility": 1, // 0 => hidden (Only members can see), 1 => protected (only members and members of networked groups can see), 2 => public (anyone can see, including external public)
+      "location": "12345 Farm Street, Farmville, Iowa, 50129, USA",
+      "geoShape": <valid geoJSON>,
       "groupExtensions": [
           {
               "type": "farm-onboarding",
               "data": {
-                  "farm_email": "test@farm.org"
+                "farm_email": "test@farm.org",
+                farmSchema..., // All the values from the farm schema, keys in snake_case
+                "flexible: {
+                  hylo: {
+                    purpose: "Excellence in animal husbandry and educating folks about the role of grazing livestock in the soil cycle", // One or two sentence statement about the vision or purpose of a farm
+                    at_a_glance: ["Event center", "You-pick", "Food Education", "Livestock breeder"],
+                    opening_hours: "1-5 M-F, 10-6 Weekends", // String descriptor
+                    open_to_public: true, // Boolean,
+                    public_offerings: ["Farmstand", "Gift shop", "Farm tours", "Workshops"]
+                  }
+                }
               }
           }
-      ]
+      ],
+      "moderatorDescriptor": "Steward", // Default is Moderator
+      "moderatorDescriptorPlural": "Stewards", // Default is Moderators
+      "settings": {
+        locationDisplayPrecision: precise, //   precise => precise location displayed, near => location text shows nearby town/city and coordinate shifted, region => location not shown on map at all and location text shows nearby city/region
+        publicMemberDirectory: false, // Boolean
+      },
+      "typeDescriptor": "Ranch", // Group is the default
+      "typeDescriptorPlural": "Ranches" // Groups is the default
     },
-    "asUserId": USER_ID
+    "asUserId": <valid hylo userId>
   }
 }
 ```
