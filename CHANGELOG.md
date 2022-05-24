@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [4.1.0] - 2022-04-28
 ### Added
 - Location obfuscation setting for groups that can be set to precise (return exact location), near (return location offset by a slight amount and location string only shows city, region, country) or region (don't return a location object at all, and location string shows only city, region, country). Group moderators always see the precise location and location display string.
 - New field on group to store an About Video URI
@@ -12,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User setting to track which map base a layer a user has most recently used
 - When a group has a location string set without a location_id we geocode the location string on the back-end and create a location object. This is primarily for groups created via API.
 
-## [3.3.0] - 2022-04-28
+## [4.0.0] - 2022-04-28
 ### Added
 - Hylo is now an OAuth 2.0 / OpenID Connect provider! This means you can add Sign in With Hylo to your website.
 - Methods for adding users and groups via OAuth based API.
