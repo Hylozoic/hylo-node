@@ -65,12 +65,12 @@ Example GraphQL mutation:
   "query": "mutation ($data: GroupInput, $asUserId: ID) { createGroup(data: $data, asUserId: $asUserId) { id name slug } }",
   "variables": {
     "data": {
-      "accessibility": 0, // 0 => closed (invite only), 1 => restrictied (join request requires approval), 2 => open (anyone can instantly join)
+      "accessibility": 1, // 0 => closed (invite only), 1 => restricted (join request requires approval), 2 => open (anyone can instantly join)
       "description": "This is a long-form description of the group",
       "name": "Test Group",
       "slug": "unique-url-slug",
       "parentIds": [], // group-ids for any parent group of this group
-      "visibility": 2, // 0 => hidden (Only members can see), 1 => protected (only members and members of networked groups can see), 2 => public (anyone can see, including external public)
+      "visibility": 1, // 0 => hidden (Only members can see), 1 => protected (only members and members of networked groups can see), 2 => public (anyone can see, including external public)
       "location": "12345 Farm Street, Farmville, Iowa, 50129, USA",
       "geoShape": <valid geoJSON>,
       "groupExtensions": [
@@ -91,14 +91,14 @@ Example GraphQL mutation:
               }
           }
       ],
-      "moderatorDescriptor": "Steward", //
-      "moderatorDescriptorPlural": "Stewards",
+      "moderatorDescriptor": "Steward", // Default is Moderator
+      "moderatorDescriptorPlural": "Stewards", // Default is Moderators
       "settings": {
         locationDisplayPrecision: precise, //   precise => precise location displayed, near => location text shows nearby town/city and coordinate shifted, region => location not shown on map at all and location text shows nearby city/region
         publicMemberDirectory: false, // Boolean
       },
-      "typeDescriptor": "Ranch",
-      "typeDescriptorPlural": "Ranches"
+      "typeDescriptor": "Ranch", // Group is the default
+      "typeDescriptorPlural": "Ranches" // Groups is the default
     },
     "asUserId": <valid hylo userId>
   }
