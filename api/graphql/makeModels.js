@@ -1,3 +1,5 @@
+import { camelCase, mapKeys, startCase } from 'lodash/fp'
+import pluralize from 'pluralize'
 import searchQuerySet from './searchQuerySet'
 import {
   commentFilter,
@@ -10,7 +12,7 @@ import {
   postFilter,
   voteFilter
 } from './filters'
-import { mapKeys, camelCase } from 'lodash/fp'
+import { LOCATION_DISPLAY_PRECISION } from '../../lib/constants'
 import InvitationService from '../services/InvitationService'
 import {
   filterAndSortPosts,
@@ -23,8 +25,11 @@ import {
 //
 // keys in the returned object are GraphQL schema type names
 //
-export default async function makeModels (userId, isAdmin) {
+export default async function makeModels (userId, isAdmin, apiClient) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
+
+  // XXX: for now give API users more access, in the future track which groups each client can access
+  const apiFilter = makeFilterToggle(!apiClient)
 
   return {
     Me: {
@@ -131,7 +136,7 @@ export default async function makeModels (userId, isAdmin) {
         {skillsToLearn: {querySet: true}},
         {votes: {querySet: true}}
       ],
-      filter: nonAdminFilter(personFilter(userId)),
+      filter: nonAdminFilter(apiFilter(personFilter(userId))),
       isDefaultTypeForTable: true,
       fetchMany: ({ boundingBox, first, order, sortBy, offset, search, autocomplete, groupIds, filter }) =>
         searchQuerySet('users', {
@@ -213,23 +218,20 @@ export default async function makeModels (userId, isAdmin) {
     Group: {
       model: Group,
       attributes: [
+        'about_video_uri',
         'accessibility',
         'avatar_url',
         'banner_url',
         'created_at',
         'description',
-        'geo_shape',
         'location',
+        'geo_shape',
         'memberCount',
-        'moderator_descriptor',
-        'moderator_descriptor_plural',
         'name',
         'postCount',
         'slug',
         'visibility',
-        'type',
-        'type_descriptor',
-        'type_descriptor_plural'
+        'type'
       ],
       relations: [
         {activeMembers: { querySet: true }},
@@ -248,7 +250,6 @@ export default async function makeModels (userId, isAdmin) {
         }},
         {groupToGroupJoinQuestions: {querySet: true}},
         {joinQuestions: {querySet: true}},
-        'locationObject',
         {moderators: {querySet: true}},
         {memberships: {querySet: true}},
         {members: {
@@ -325,12 +326,62 @@ export default async function makeModels (userId, isAdmin) {
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+        location: async (g) => {
+          // If location obfuscation is on then non group moderators see a display string that only includes city, region & country
+          const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
+          if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
+                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+            return g.get('location')
+          } else {
+            const locObj = await g.locationObject().fetch()
+            let display = locObj.get('country')
+            if (locObj.get('region')) {
+              display = locObj.get('region') + ", " + display
+            }
+            if (locObj.get('city')) {
+              display = locObj.get('city') + ", " + display
+            }
+            return display
+          }
+        },
+        locationObject: async (g) => {
+          // If precision is precise or user is a moderator of the group show the exact location
+          const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
+          if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
+                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+            return g.locationObject().fetch()
+          } else if (precision === LOCATION_DISPLAY_PRECISION.Near) {
+            // For near only include region, city, country columns, and move the exact location around every load
+            const columns = [
+              'id',
+              bookshelf.knex.raw('ST_Translate(center, random()*.03 - .03, random()*.03 -.03) as center'),
+              'city',
+              'locality',
+              'region',
+              'neighborhood',
+              'postcode',
+              'country',
+              'accuracy',
+              'wikidata'
+            ]
+            return g.locationObject().query(q => q.select(columns)).fetch()
+          } else {
+            // if location display precision is "region" then don't return the location object at all
+            return null
+          }
+        },
+        // XXX: Flag for translation
+        moderatorDescriptor: (g) => g.get('moderator_descriptor') || 'Moderator',
+        moderatorDescriptorPlural: (g) => g.get('moderator_descriptor_plural') || 'Moderators',
         // Get number of prerequisite groups that current user is not a member of yet
         numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
         pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
-        settings: g => mapKeys(camelCase, g.get('settings'))
+        settings: g => mapKeys(camelCase, g.get('settings')),
+        // XXX: Flag for translation
+        typeDescriptor: g => g.get('type_descriptor') || (g.get('type') ? startCase(g.get('type')) : 'Group'),
+        typeDescriptorPlural: g => g.get('type_descriptor_plural') || (g.get('type') ? pluralize(startCase(g.get('type'))) : 'Groups')
       },
-      filter: nonAdminFilter(groupFilter(userId)),
+      filter: nonAdminFilter(apiFilter(groupFilter(userId))),
       fetchMany: ({ autocomplete, boundingBox, context, farmQuery, filter, first, groupIds, groupType, nearCoord, offset, onlyMine, order, parentSlugs, search, sortBy, visibility }) =>
         searchQuerySet('groups', {
           autocomplete,

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 const { sample, partition } = require('lodash')
 const knexPostgis = require('knex-postgis')
-const faker = require('faker')
+const { faker } = require('@faker-js/faker')
 const {
   ANIMAL_LIST,
   CLIMATE_ZONES,
@@ -80,13 +80,13 @@ function fakeLocation (knex) {
   const city = faker.address.city()
   const address_street = faker.address.streetName()
   const country = faker.address.country()
-  const locality = 'California'
+  const locality = null
   const address_number = faker.datatype.number({ min: 1, max: 1000 })
   const fakeLat = faker.address.latitude(42, 38) // TODO: is this the right syntax???
   const fakeLng = faker.address.longitude(-119, -122)
   const center = st.geomFromText('POINT(' + fakeLng + ' ' + fakeLat + ')', 4326)
   const full_text = `${address_number} ${address_street}, ${city}, ${locality}, ${country}`
-  const region = faker.address.county()
+  const region = faker.address.state()
 
   return Promise.resolve({
     center,
@@ -255,18 +255,10 @@ function generateFakeFarmData (index) {
   const location = {
     address_line1: faker.address.streetAddress(),
     postal_code: faker.address.zipCode('#####'),
-    country: faker.address.countryCode(),
+    country_code: faker.address.countryCode(),
     locality: faker.address.city(),
     administrative_area: faker.address.state()
   }
-  const mailing_address = {
-    address_line1: faker.address.streetAddress(),
-    postal_code: faker.address.zipCode('#####'),
-    country: faker.address.countryCode(),
-    locality: faker.address.city(),
-    administrative_area: faker.address.state()
-  }
-
 
   const flexible = {
     hylo: {
@@ -302,7 +294,12 @@ function generateFakeFarmData (index) {
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
     farm_leadership_experience: Math.random() > 0.85 ? null : Math.random() * 19 + 1,
     area: Math.random() > 0.6 ? null : generateFakeGeometry(),
-    location,
+    location_address_line1: location.address_line1,
+    location_address_line2: null,
+    location_locality: location.locality,
+    location_country_code: location.country_code,
+    location_postal_code: location.postal_code,
+    location_administrative_area: location.administrative_area,
     community_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
     types,
     flexible,
@@ -325,7 +322,7 @@ function generateFakeFarmData (index) {
       native_land_title: Math.random() > 0.8 ? null : native_land_title ? Math.random() * 99 + 1 : 0
     },
     land_type_details: Math.random() > 0.6 ? {} : allocateLandUseByProduct(sampledProductCategories),
-    mailing_address: Math.random() > 0.6 ? null : mailing_address,
+    // mailing_address: Math.random() > 0.6 ? null : mailing_address, // removed from schema 1.0, will likely be added back
     management_plans_current: 'yes',
     management_plans_future: 'yes',
     management_plans_current_detail,
@@ -333,7 +330,7 @@ function generateFakeFarmData (index) {
     organizational_id: faker.datatype.uuid(),
     motivations: Math.random() > 0.8 ? null : sampleArray(FARM_MOTIVATIONS, Math.round(Math.random() * 5)),
     preferred_contact_method: Math.random() > 0.8 ? null : sample(PREFERRED_CONTACT_METHODS).value,
-    product_categories: sampledProductCategories,
+    products_categories: sampledProductCategories,
     product_detail,
     products_value_added: Math.random() > 0.5 ? [] : [...new Array(Math.round(Math.random() * 15) + 1)].map((el) => faker.random.word()),
     records_software: null, // left null
@@ -440,7 +437,7 @@ function fakeGroupData (name, slug, created_by_id, type) {
   return {
     name,
     group_data_type: 1,
-    avatar_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png',
+    avatar_url: `https://avatars.dicebear.com/api/bottts/${faker.random.word()}.svg`,
     access_code: faker.datatype.uuid(),
     description: faker.lorem.paragraph(),
     slug: slug,
@@ -462,7 +459,7 @@ function fakeUser () {
   return Promise.resolve({
     email: `${uuid.v4()}@farm-demo.com`,
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-    avatar_url: faker.internet.avatar(),
+    avatar_url: `https://avatars.dicebear.com/api/open-peeps/${faker.random.word()}.svg`,
     first_name: faker.name.firstName(),
     last_name: faker.name.lastName(),
     last_login_at: faker.date.past(),
