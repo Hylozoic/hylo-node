@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 const { sample, partition } = require('lodash')
-const knexPostgis = require('knex-postgis')
 const { faker } = require('@faker-js/faker')
 const {
   ANIMAL_LIST,
@@ -16,21 +15,24 @@ const {
   MANAGEMENT_PLANS,
   PREFERRED_CONTACT_METHODS,
   PRODUCT_CATAGORIES,
-  PUBLIC_OFFERINGS,
+  PUBLIC_OFFERINGS
 } = require('../../lib/constants')
 const uuid = require('node-uuid')
 
-exports.seed = (knex) => seed('locations', knex)
-  .then(() => seed('users', knex))
-  .then(() => seed('groups', knex))
-  .then(() => seed('posts', knex))
-  .then(() => addUsersToGroups(knex))
-  .then(() => addPostsToGroups(knex))
+const farmNames = [
+  'Luna Farm',
+  'Shoestring Ranch',
+  'Buckeye Valley',
+  'Black Crow Farms',
+  'Harvest Moon'
+]
+
+exports.seed = (knex) => seed('groups', knex)
+  // .then(() => addUsersToGroups(knex))
   .then(() => addFarmExtensionToGroups(knex))
-  .then(() => addlocationsToUsers(knex))
-  .then(() => addlocationsToGroups(knex))
-  .then(() => addlocationsToPosts(knex))
   .then(() => addWidgetsToGroups(knex))
+  .then(() => addClareToGroups(knex))
+  .then(() => addKrishaToGroups(knex))
   .catch(err => {
     let report = err.message
     if (err.message.includes('unique constraint')) {
@@ -49,103 +51,57 @@ ${err.message}
   })
 
 const n = {
-  groups: 24,
-  posts: 80,
-  users: 50,
-  locations: 200
+  groups: 5
 }
 
 const fake = {
-  groups: fakeGroup,
-  posts: fakePost,
-  users: fakeUser,
-  locations: fakeLocation
+  groups: fakeGroup
 }
 
 function seed (entity, knex) {
   console.info(`  --> ${entity}`, n[entity], fake[entity])
   return Promise.all(
     [...new Array(n[entity])].map(
-      () => fake[entity](knex).then(row => knex(entity).insert(row))
+      (value, index) => fake[entity](knex, index).then(row => knex(entity).insert(row))
     )
   )
 }
 
-function moderatorOrMember () {
-  // Role 1 is moderator
-  return Math.random() > 0.5 ? 1 : 0 // for farms, half the members will be moderators, on average
-}
-
-function fakeLocation (knex) {
-  const st = knexPostgis(knex)
-  const city = faker.address.city()
-  const address_street = faker.address.streetName()
-  const country = faker.address.country()
-  const locality = null
-  const address_number = faker.datatype.number({ min: 1, max: 1000 })
-  const fakeLat = faker.address.latitude(42, 38) // TODO: is this the right syntax???
-  const fakeLng = faker.address.longitude(-119, -122)
-  const center = st.geomFromText('POINT(' + fakeLng + ' ' + fakeLat + ')', 4326)
-  const full_text = `${address_number} ${address_street}, ${city}, ${locality}, ${country}`
-  const region = faker.address.state()
-
-  return Promise.resolve({
-    center,
-    full_text,
-    address_street,
-    address_number,
-    city,
-    locality,
-    region,
-    country,
-    neighborhood: 'fakesville',
-    created_at: knex.fn.now()
-  })
-}
-
-function addUsersToGroups (knex) {
-  console.info('  --> farm group_memberships')
-  return knex('users').select('id')
-    .whereRaw('users.email ILIKE \'%@farm-demo.com\'')
-    .then(users => Promise.all(users.map(({ id }) => fakeMembership(id, knex))))
-}
-
-function addlocationsToUsers (knex) {
-  console.info('  --> user locations')
-  return knex('users').select('id')
-    .whereRaw('users.email ILIKE \'%@farm-demo.com\'')
-    .then(users => Promise.all(users.map(({ id }) => updateLocationId(id, knex, 'users'))))
-}
-
-function addlocationsToGroups (knex) {
-  console.info('  --> farm group locations')
+function addKrishaToGroups (knex) {
+  console.info('  --> farm krisha group_memberships')
   return knex('groups').select('id')
-    .whereRaw('groups.type = \'farm\' and groups.name ILIKE \'% farm\'')
-    .then(groups => Promise.all(groups.map(({ id }) => updateLocationId(id, knex, 'groups'))))
+    .whereIn('groups.name', farmNames)
+    .then(groupIds => Promise.all(groupIds.map(({ id }) => knex('group_memberships')
+      .insert({
+        active: true,
+        group_id: id,
+        created_at: knex.fn.now(),
+        role: 1,
+        settings: '{ "send_email": true, "send_push_notifications": true }',
+        user_id: 45331
+      }))))
 }
 
-function addlocationsToPosts (knex) {
-  console.info('  --> farm post locations')
-  return knex('posts').select('id')
-    .whereRaw('posts.description ILIKE \'fake-farm%\'')
-    .then(posts => Promise.all(posts.map(({ id }) => updateLocationId(id, knex, 'posts'))))
+function addClareToGroups (knex) {
+  console.info('  --> farm clare group_memberships')
+  return knex('groups').select('id')
+    .whereIn('groups.name', farmNames)
+    .then(groupIds => Promise.all(groupIds.map(({ id }) => knex('group_memberships')
+      .insert({
+        active: true,
+        group_id: id,
+        created_at: knex.fn.now(),
+        role: 1,
+        settings: '{ "send_email": true, "send_push_notifications": true }',
+        user_id: 30206
+      }))))
 }
 
-function updateLocationId (id, knex, table) {
-  return sampleDB('locations', knex.raw('locations.neighborhood = \'fakesville\''), knex)
-    .then(([location]) => knex(table)
-      .where(`${table}.id`, '=', id)
-      .update({
-        location_id: location.id
-      })
-    )
-}
-
-function fakeGroup (knex) {
-  const name = faker.random.words() + ' farm'
+function fakeGroup (knex, index) {
+  const name = farmNames[index]
 
   return Promise.all([
-    sampleDB('users', knex.raw('users.email ILIKE \'%@farm-demo.com\''), knex) // select only farm-demo users to create these specific posts for
+    sampleDB('users', knex.raw('users.email = \'clare@terran.io\''), knex) // select only farm-demo users to create these specific posts for
   ]).then(([users]) => fakeGroupData(name, faker.helpers.slugify(name).toLowerCase(), users[0].id, 'farm'))
 }
 
@@ -156,47 +112,10 @@ function fakeMembership (user_id, knex) {
         active: true,
         group_id: group.id,
         created_at: knex.fn.now(),
-        role: moderatorOrMember(),
+        role: 1,
         settings: '{ "send_email": true, "send_push_notifications": true }',
         user_id
       }))
-}
-
-function fakePost (knex) {
-  const type = ['discussion', 'resource', 'project', 'event', 'offer', 'request'][faker.datatype.number({ min: 0, max: 5 })]
-  let starts_at, ends_at
-  if (type !== 'discussion') {
-    starts_at = faker.date.soon(faker.datatype.number({ min: 1, max: 20 }))
-    ends_at = faker.date.future(faker.datatype.number({ min: 1, max: 2 }))
-  }
-
-  return sampleDB('users', knex.raw('users.email ILIKE \'%@farm-demo.com\''), knex) // select only farm-demo users to create these specific posts for
-    .then(([user]) => ({
-      name: faker.lorem.sentence(),
-      type,
-      description: `fake-farm: ${faker.lorem.paragraph()}`,
-      created_at: faker.date.past(),
-      user_id: user.id,
-      active: true,
-      visibility: 2,
-      is_public: true,
-      starts_at,
-      ends_at
-    }))
-}
-
-function addPostsToGroups (knex) {
-  console.info('  --> farm groups_posts')
-  return knex('posts')
-    .select(['id as post_id', 'user_id'])
-    .whereRaw('user_id in (select users.id as user_id from users where users.email ILIKE \'%@farm-demo.com\')')
-    .then(posts => Promise.all(
-      posts.map(({ post_id, user_id }) => knex('group_memberships')
-        .where('group_memberships.user_id', user_id)
-        .first('group_id')
-        .then(({ group_id }) => knex('groups_posts')
-          .insert({ post_id, group_id }))
-      )))
 }
 
 async function addFarmExtensionToGroups (knex) {
@@ -261,11 +180,19 @@ function generateFakeFarmData (index) {
     administrative_area: faker.address.state()
   }
 
+  const glances = [
+    ['U-pick', 'Organic', 'Berries', 'Cooperative'],
+    ['Nursery', 'Farm Tours', 'Drought tolerant plants'],
+    ['Wholesale livestock', 'Food forest', 'Biodynamic', 'Soil regeneration'],
+    ['Flower wholesale seller', 'Wedding Venue', 'Dried and fresh flowers'],
+    ['CSA', 'Community farm', 'Vegetables', 'Farmers markets']
+  ]
+
   const flexible = {
     hylo: {
-      at_a_glance: [sample(types), sample(management_plans_current_detail), sample(certifications_current_detail), sample(product_detail), sample(products_animals)],
+      at_a_glance: glances[index],
       location_privacy: sampleArray(LOCATION_PRIVACY, 1),
-      mission: faker.lorem.sentence(),
+      purpose: faker.lorem.sentence(),
       opening_hours: open_to_public ? 'M-F: 9-3 \n S-S: 12-4' : null,
       open_to_public,
       public_offerings
@@ -294,14 +221,12 @@ function generateFakeFarmData (index) {
     email: Math.random() > 0.85 ? null : `${faker.random.word()}@${faker.random.word()}.com`,
     name: `${faker.name.firstName()} ${faker.name.lastName()}`,
     farm_leadership_experience: Math.random() > 0.85 ? null : Math.random() * 19 + 1,
-    area: Math.random() > 0.6 ? null : generateFakeGeometry(),
     location_address_line1: location.address_line1,
     location_address_line2: null,
     location_locality: location.locality,
     location_country_code: location.country_code,
     location_postal_code: location.postal_code,
     location_administrative_area: location.administrative_area,
-    community_outline: Math.random() > 0.7 ? null : generateFakeGeometry(0.09),
     types,
     flexible,
     goal_1: goals.length > 0 ? goals[0] : null,
@@ -375,55 +300,11 @@ function allocateLandUseByProduct (products) {
 }
 
 function generateProducts (index) {
-  if (index === 0) return []
   const sampledProducts = sampleArray(FARM_PRODUCT_LIST, Math.round(Math.random() * 30) + 1)
-  if (index % 6 === 0 && !sampledProducts.includes('apple')) sampledProducts.push('apple')
-  if (index % 8 === 0 && !sampledProducts.includes('pear')) sampledProducts.push('pear')
-  if (index % 13 === 0 && !sampledProducts.includes('carrots')) sampledProducts.push('carrots')
-  if (index % 15 === 0 && !sampledProducts.includes('millet')) sampledProducts.push('millet')
+  if (index % 2 === 0 && !sampledProducts.includes('apple')) sampledProducts.push('apple')
+  if (index % 3 === 0 && !sampledProducts.includes('pear')) sampledProducts.push('pear')
+  if (index % 4 === 0 && !sampledProducts.includes('carrots')) sampledProducts.push('carrots')
   return sampledProducts
-}
-
-function generateFakeGeometry (sideLength = 0.002) {
-  const fakeLat = faker.address.latitude(42, 38)
-  const fakeLng = faker.address.longitude(-119, -122)
-  return {
-    type: 'FeatureCollection',
-    features: [
-      {
-        type: 'Feature',
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [
-                fakeLat,
-                fakeLng
-              ],
-              [
-                fakeLat + sideLength,
-                fakeLng
-              ],
-              [
-                fakeLat + sideLength,
-                fakeLng + sideLength
-              ],
-              [
-                fakeLat,
-                fakeLng + sideLength
-              ],
-              [
-                fakeLat,
-                fakeLng
-              ]
-            ]
-          ]
-        },
-        properties: null,
-        id: 'measureFeature0'
-      }
-    ]
-  }
 }
 
 function sampleDB (entity, where, knex, limit = 1) {
@@ -440,14 +321,12 @@ function fakeGroupData (name, slug, created_by_id, type) {
     group_data_type: 1,
     avatar_url: `https://avatars.dicebear.com/api/bottts/${faker.random.word()}.svg`,
     access_code: faker.datatype.uuid(),
-    description: faker.lorem.paragraph(),
     slug: slug,
     banner_url: 'https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg',
     created_at: faker.date.past(),
     created_by_id,
-    location: faker.address.country(),
     visibility: 2,
-    accessibility: 2,
+    accessibility: 1,
     settings: { allow_group_invites: false, public_member_directory: false },
     slack_hook_url: faker.internet.url(),
     slack_team: faker.internet.url(),
@@ -456,36 +335,11 @@ function fakeGroupData (name, slug, created_by_id, type) {
   }
 }
 
-function fakeUser () {
-  return Promise.resolve({
-    email: `${uuid.v4()}@farm-demo.com`,
-    name: `${faker.name.firstName()} ${faker.name.lastName()}`,
-    avatar_url: `https://avatars.dicebear.com/api/open-peeps/${faker.random.word()}.svg`,
-    first_name: faker.name.firstName(),
-    last_name: faker.name.lastName(),
-    last_login_at: faker.date.past(),
-    active: true,
-    email_validated: true,
-    created_at: faker.date.past(),
-    bio: faker.lorem.paragraph(),
-    banner_url: faker.image.imageUrl(),
-    twitter_name: faker.internet.userName(),
-    linkedin_url: faker.internet.url(),
-    facebook_url: faker.internet.url(),
-    work: faker.lorem.paragraph(),
-    intention: faker.lorem.paragraph(),
-    extra_info: faker.lorem.paragraph(),
-    updated_at: faker.date.past(),
-    location: faker.address.country(),
-    url: faker.internet.url()
-  })
-}
-
 function addWidgetsToGroups (knex) {
   console.info('  --> farm group_widgets')
   return knex('groups')
     .select(['id as group_id'])
-    .whereRaw('groups.type = \'farm\'')
+    .whereIn('groups.name', farmNames)
     .then(groupIds => Promise.all(
       groupIds.map(({ group_id }, index) => Promise.all(
         [1, 2, 3, 4, 5, 6, 7, 8, 9].map((widget_id) => knex('group_widgets')
