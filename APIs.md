@@ -97,6 +97,7 @@ Example GraphQL mutation:
         locationDisplayPrecision: precise, //   precise => precise location displayed, near => location text shows nearby town/city and coordinate shifted, region => location not shown on map at all and location text shows nearby city/region
         publicMemberDirectory: false, // Boolean
       },
+      "type": "farm", // Optionally set the group type to farm, don't pass in for regular groups
       "typeDescriptor": "Ranch", // Group is the default
       "typeDescriptorPlural": "Ranches" // Groups is the default
     },

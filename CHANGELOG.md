@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [4.1.0] - 2022-04-28
+## [4.1.1] - 2022-05-26
+
+### Added
+- Script to seed demo farm data
+
+## [4.1.0] - 2022-05-24
 ### Added
 - Location obfuscation setting for groups that can be set to precise (return exact location), near (return location offset by a slight amount and location string only shows city, region, country) or region (don't return a location object at all, and location string shows only city, region, country). Group moderators always see the precise location and location display string.
 - New field on group to store an About Video URI
