@@ -73,6 +73,7 @@ Example GraphQL mutation:
       "visibility": 1, // 0 => hidden (Only members can see), 1 => protected (only members and members of networked groups can see), 2 => public (anyone can see, including external public)
       "location": "12345 Farm Street, Farmville, Iowa, 50129, USA",
       "geoShape": <valid geoJSON>,
+      "type:": <valid type or empty for default group type>,
       "groupExtensions": [
           {
               "type": "farm-onboarding",

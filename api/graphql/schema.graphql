@@ -884,6 +884,7 @@ input GroupInput {
   moderatorDescriptor: String
   moderatorDescriptorPlural: String
   name: String
+  type: String
   parentIds: [ID]
   prerequisiteGroupIds: [ID]
   settings: GroupSettingsInput
