@@ -472,7 +472,7 @@ module.exports = bookshelf.Model.extend(merge({
       pick(data,
         'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
         'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
-        'moderator_descriptor_plural', 'name', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+        'moderator_descriptor_plural', 'name', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
         'accessibility': Group.Accessibility.RESTRICTED,

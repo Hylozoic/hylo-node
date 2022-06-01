@@ -884,7 +884,6 @@ input GroupInput {
   moderatorDescriptor: String
   moderatorDescriptorPlural: String
   name: String
-  type: String
   parentIds: [ID]
   prerequisiteGroupIds: [ID]
   settings: GroupSettingsInput
@@ -892,6 +891,7 @@ input GroupInput {
   slackTeam: String
   slackConfigureUrl: String
   slug: String
+  type: String
   typeDescriptor: String
   typeDescriptorPlural: String
   visibility: Int
