@@ -578,11 +578,11 @@ module.exports = bookshelf.Model.extend(merge({
       geocoder.forwardGeocode({
         mode: 'mapbox.places-permanent',
         query: group.get('location')
-      }).send().then(response => {
+      }).send().then(async (response) => {
         const match = response.body
         if (match?.features && match?.features.length > 0) {
           const locationData = omit(LocationHelpers.convertMapboxToLocation(match.features[0]), 'mapboxId')
-          const loc = findOrCreateLocation(locationData)
+          const loc = await findOrCreateLocation(locationData)
           group.save({ location_id: loc.id })
         }
       })
