@@ -57,7 +57,7 @@ async function exportMembers(groupId, req, email) {
   await Promise.all(users.map((u, idx) => {
     // pluck core user data into results
     results.push(u.pick([
-      'name', 'contact_email', 'contact_phone', 'avatar_url', 'tagline', 'bio',
+      'id', 'name', 'contact_email', 'contact_phone', 'avatar_url', 'tagline', 'bio',
       'url', 'twitter_name', 'facebook_url', 'linkedin_url'
     ]))
 
@@ -122,7 +122,7 @@ async function exportMembers(groupId, req, email) {
 
   // send data as CSV response
   output(results, [
-    'name', 'contact_email', 'contact_phone', 'location', 'avatar_url', 'tagline', 'bio',
+    'id', 'name', 'contact_email', 'contact_phone', 'location', 'avatar_url', 'tagline', 'bio',
     { key: 'url', header: 'personal_url' },
     'twitter_name', 'facebook_url', 'linkedin_url',
     'skills', 'skills_to_learn',
