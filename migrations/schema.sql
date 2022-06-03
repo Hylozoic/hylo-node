@@ -893,7 +893,12 @@ CREATE TABLE public.groups (
     slack_team text,
     slack_configure_url text,
     type text,
-    geo_shape public.geometry(Polygon,4326)
+    geo_shape public.geometry(Polygon,4326),
+    type_descriptor character varying(255) DEFAULT NULL::character varying,
+    type_descriptor_plural character varying(255) DEFAULT NULL::character varying,
+    moderator_descriptor character varying(255) DEFAULT NULL::character varying,
+    moderator_descriptor_plural character varying(255) DEFAULT NULL::character varying,
+    about_video_uri character varying(255)
 );
 
 
@@ -1158,11 +1163,12 @@ CREATE TABLE public.locations (
     region character varying(255),
     neighborhood character varying(255),
     postcode character varying(255),
-    country character varying(255),
+    country_code character varying(255),
     accuracy character varying(255),
     wikidata character varying(255),
     created_at timestamp with time zone,
-    updated_at timestamp with time zone
+    updated_at timestamp with time zone,
+    country character varying(255)
 );
 
 
