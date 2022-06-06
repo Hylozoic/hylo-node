@@ -6,6 +6,7 @@ module.exports = {
   create: async function (req, res) {
     const { name, email, groupId, isModerator } = req.allParams()
     const group = groupId && await Group.find(groupId)
+    const isModeratorVal = isModerator && isModerator === 'true'
 
     let user = await User.find(email, {}, false)
     if (user) {
@@ -27,7 +28,7 @@ module.exports = {
 
           await InvitationService.create({
             groupId: group.id,
-            isModerator,
+            isModerator: isModeratorVal,
             message,
             sessionUserId: inviteBy?.id,
             subject,
@@ -41,7 +42,7 @@ module.exports = {
     }
 
     const attrs = { name, email: email ? email.toLowerCase() : null, email_validated: false, active: false, group }
-    if (isModerator) {
+    if (isModeratorVal) {
       attrs['role'] = GroupMembership.Role.MODERATOR
     }
 

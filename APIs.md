@@ -35,6 +35,7 @@ __Parameters:__
 - name (required) = Judy Mangrove
 - email (required) = email@email.com
 - groupId (optional) = the id of a group to add the user to
+- isModerator (optional) = true to add the user to the group specified by groupId as a moderator
 
 __Return value__:
 
