@@ -48,9 +48,14 @@ On success this will return a JSON object that looks like:
 }
 ```
 
-If there is already a user with this email registered you will receive:
-`{ "message": "User already exists" }`
+If there is already a user with this email but they are a not member of the group, this call will send them an invitation to join the group. You will receive:
+{ message: `User already exists, invite sent to group GROUP_NAME` }
 
+If there is already a user with this email and they are already a member of the group:
+{ message: `User already exists, and is already a member of this group` }
+
+If there is already a user with this email and you didn't pass in a group you will receive:
+`{ "message": "User already exists" }`
 
 ### Create a Group
 
