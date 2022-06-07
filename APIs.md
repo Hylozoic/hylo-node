@@ -35,6 +35,7 @@ __Parameters:__
 - name (required) = Judy Mangrove
 - email (required) = email@email.com
 - groupId (optional) = the id of a group to add the user to
+- isModerator (optional) = true to add the user to the group specified by groupId as a moderator
 
 __Return value__:
 
@@ -47,9 +48,14 @@ On success this will return a JSON object that looks like:
 }
 ```
 
-If there is already a user with this email registered you will receive:
-`{ "message": "User already exists" }`
+If there is already a user with this email but they are a not member of the group, this call will send them an invitation to join the group. You will receive:
+{ message: `User already exists, invite sent to group GROUP_NAME` }
 
+If there is already a user with this email and they are already a member of the group:
+{ message: `User already exists, and is already a member of this group` }
+
+If there is already a user with this email and you didn't pass in a group you will receive:
+`{ "message": "User already exists" }`
 
 ### Create a Group
 
@@ -124,6 +130,26 @@ Example GraphQL mutation:
       "name": "New Name"
     },
     "asUserId": USER_ID
+  }
+}
+```
+
+### Add a Person to a Group
+
+`POST to https://hylo.com/noo/graphql`
+
+__Headers:__
+Content-Type: application/json
+
+This is a GraphQL based endpoint so you will want the pass in a raw POST data
+Example GraphQL mutation:
+```
+{
+  "query": "mutation ($userId: ID, $groupId: ID, $role: Int) { addMember(userId: $userId, groupId: $groupId, role: $role) { success error } }",
+  "variables": {
+    "groupId": USER_ID,
+    "groupId": GROUP_ID,
+    "role": 0 // 0 = regular member, 1 = Moderator
   }
 }
 ```

@@ -966,6 +966,7 @@ input GroupWidgetSettingsInput {
 type Mutation {
   acceptGroupRelationshipInvite(groupRelationshipInviteId: ID): AcceptGroupRelationshipInviteResult
   acceptJoinRequest(joinRequestId: ID): JoinRequest
+  addMember(userId: ID, groupId: ID, role: Int): GenericResult
   addModerator(personId: ID, groupId: ID): Group
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   addSkill(name: String, type: Int): Skill

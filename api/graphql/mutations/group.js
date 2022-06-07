@@ -200,3 +200,16 @@ export async function rejectGroupRelationshipInvite (userId, groupRelationshipIn
     throw new Error(`Invalid parameters to reject invite`)
   }
 }
+
+// API only Group Mutations
+export async function addMember (userId, groupId, role) {
+  const group = await Group.find(groupId)
+  if (!group) {
+    return { success: false, error: 'Group not found' }
+  }
+
+  if (group) {
+    await group.addMembers([userId], { role: role || GroupMembership.Role.DEFAULT }, {})
+  }
+  return { success: true }
+}

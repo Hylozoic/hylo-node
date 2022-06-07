@@ -6,6 +6,7 @@ import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   acceptGroupRelationshipInvite,
   acceptJoinRequest,
+  addMember,
   addModerator,
   addPeopleToProjectRole,
   addSkill,
@@ -435,6 +436,7 @@ export function makeApiQueries (fetchOne) {
 
 export function makeApiMutations () {
   return {
+    addMember: (root, { userId, groupId, role }) => addMember(userId, groupId, role),
     createGroup: (root, { asUserId, data }) => createGroup(asUserId, data),
     updateGroup: (root, { asUserId, id, changes }) => updateGroup(asUserId, id, changes)
   }

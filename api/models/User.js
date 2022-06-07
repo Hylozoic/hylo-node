@@ -600,7 +600,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   create: function (attributes) {
-    const { account, group } = attributes
+    const { account, group, role } = attributes
 
     attributes = merge({
       avatar_url: User.gravatar(attributes.email),
@@ -613,7 +613,7 @@ module.exports = bookshelf.Model.extend(merge({
         comment_notifications: 'both'
       },
       active: true
-    }, omit(attributes, 'account', 'group'))
+    }, omit(attributes, 'account', 'group', 'role'))
 
     if (account) {
       merge(
@@ -628,7 +628,7 @@ module.exports = bookshelf.Model.extend(merge({
       .then(async (user) => {
         await Promise.join(
           account && LinkedAccount.create(user.id, account, {transacting}),
-          group && group.addMembers([user.id], {}, {transacting}),
+          group && group.addMembers([user.id], { role: role || GroupMembership.Role.DEFAULT }, {transacting}),
           group && user.markInvitationsUsed(group.id, transacting)
         )
         return user
