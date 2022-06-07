@@ -129,6 +129,26 @@ Example GraphQL mutation:
 }
 ```
 
+### Add a Person to a Group
+
+`POST to https://hylo.com/noo/graphql`
+
+__Headers:__
+Content-Type: application/json
+
+This is a GraphQL based endpoint so you will want the pass in a raw POST data
+Example GraphQL mutation:
+```
+{
+  "query": "mutation ($userId: ID, $groupId: ID, $role: Int) { addMember(userId: $userId, groupId: $groupId, role: $role) { success error } }",
+  "variables": {
+    "groupId": USER_ID,
+    "groupId": GROUP_ID,
+    "role": 0 // 0 = regular member, 1 = Moderator
+  }
+}
+```
+
 ### Query a Group
 
 `POST to https://hylo.com/noo/graphql`
