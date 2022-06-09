@@ -472,7 +472,7 @@ module.exports = bookshelf.Model.extend(merge({
       pick(data,
         'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
         'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
-        'moderator_descriptor_plural', 'name', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+        'moderator_descriptor_plural', 'name', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
         'accessibility': Group.Accessibility.RESTRICTED,
@@ -578,11 +578,11 @@ module.exports = bookshelf.Model.extend(merge({
       geocoder.forwardGeocode({
         mode: 'mapbox.places-permanent',
         query: group.get('location')
-      }).send().then(response => {
+      }).send().then(async (response) => {
         const match = response.body
         if (match?.features && match?.features.length > 0) {
           const locationData = omit(LocationHelpers.convertMapboxToLocation(match.features[0]), 'mapboxId')
-          const loc = findOrCreateLocation(locationData)
+          const loc = await findOrCreateLocation(locationData)
           group.save({ location_id: loc.id })
         }
       })

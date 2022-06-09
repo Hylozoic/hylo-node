@@ -142,7 +142,8 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
 
   if (boundingBox) {
     q.join('locations', 'locations.id', '=', 'users.location_id')
-    q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
+    const bb = [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat]
+    q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', bb)
   }
 })
 
@@ -157,8 +158,12 @@ export const filterAndSortGroups = curry((opts, q) => {
   }
 
   if (boundingBox) {
-    q.join('locations', 'locations.id', '=', 'groups.location_id')
-    q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
+    q.leftJoin('locations', 'locations.id', '=', 'groups.location_id')
+    const bb = [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat]
+    q.where(q2 =>
+      q2.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', bb)
+        .orWhereRaw('ST_Intersects(groups.geo_shape, ST_MakeEnvelope(?, ?, ?, ?, 4326))', bb)
+    )
   }
 
   if (sortBy === 'size') {

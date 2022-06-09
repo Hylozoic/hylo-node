@@ -23,6 +23,7 @@ export {
 } from './event'
 export {
   acceptGroupRelationshipInvite,
+  addMember,
   addModerator,
   cancelGroupRelationshipInvite,
   createGroup,

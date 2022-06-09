@@ -4,8 +4,9 @@ import OIDCAdapter from '../services/oidc/KnexAdapter'
 module.exports = {
 
   create: async function (req, res) {
-    const { name, email, groupId } = req.allParams()
+    const { name, email, groupId, isModerator } = req.allParams()
     const group = groupId && await Group.find(groupId)
+    const isModeratorVal = isModerator && isModerator === 'true'
 
     let user = await User.find(email, {}, false)
     if (user) {
@@ -26,18 +27,26 @@ module.exports = {
           const inviteBy = await group.moderators().fetchOne()
 
           await InvitationService.create({
-            sessionUserId: inviteBy?.id,
             groupId: group.id,
-            userIds: [user.id],
+            isModerator: isModeratorVal,
             message,
-            subject
+            sessionUserId: inviteBy?.id,
+            subject,
+            userIds: [user.id]
           })
+          return res.ok({ message: `User already exists, invite sent to group ${group.get('name')}` })
         }
+        return res.ok({ message: `User already exists, and is already a member of this group` })
       }
       return res.ok({ message: "User already exists" })
     }
 
-    return User.create({name, email: email ? email.toLowerCase() : null, email_validated: false, active: false, group })
+    const attrs = { name, email: email ? email.toLowerCase() : null, email_validated: false, active: false, group }
+    if (isModeratorVal) {
+      attrs['role'] = GroupMembership.Role.MODERATOR
+    }
+
+    return User.create(attrs)
       .then(async (user) => {
         Queue.classMethod('Email', 'sendFinishRegistration', {
           email,

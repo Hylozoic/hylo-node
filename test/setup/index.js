@@ -16,7 +16,7 @@ var TestSetup = function () {
 var setup = new TestSetup()
 
 before(function (done) {
-  this.timeout(30000)
+  this.timeout(50000)
 
   var i18n = require('i18n')
   i18n.configure(require(root('config/i18n')).i18n)
