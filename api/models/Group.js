@@ -378,7 +378,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   update: async function (changes) {
-    var whitelist = [
+    const whitelist = [
       'about_video_uri', 'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url',
       'description', 'geo_shape', 'location', 'location_id', 'name', 'moderator_descriptor',
       'moderator_descriptor_plural', 'settings', 'type_descriptor', 'type_descriptor_plural', 'visibility'
@@ -424,9 +424,22 @@ module.exports = bookshelf.Model.extend(merge({
       await Promise.map(parentRelationships.models, async (relationship) => {
         const isNowPrereq = changes.prerequisite_group_ids.includes(relationship.get('parent_group_id'))
         if (relationship.getSetting('isPrerequisite') !== isNowPrereq) {
-          await relationship.addSetting({ isPrerequisite: isNowPrereq}, true)
+          await relationship.addSetting({ isPrerequisite: isNowPrereq }, true)
         }
       })
+    }
+
+    if (changes.group_extensions) {
+      for (const extData of changes.group_extensions) {
+        const ext = await Extension.find(extData.type)
+        if (ext) {
+          const ge = GroupExtension.find(this.id, ext.id)
+          ge.set({ data: extData.data })
+          await ge.save()
+        } else {
+          throw Error('Invalid extension type ' + extData.type)
+        }
+      }
     }
 
     this.set(saneAttrs)
