@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [4.1.2] - 2022-06-08
+
+### Added
+- Add user id to member export CSV
+- Add role parameter to createUser api call
+- New API call addMember to add person to a group
+- Group type can be set when creating a group
+
+### Fixed
+- Return groups that match a bounding box if they have a geoShape but no location
+- Geocoding of locations when only a location string is passed in to create a group
+
 ## [4.1.1] - 2022-05-26
 
 ### Added
