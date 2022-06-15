@@ -433,7 +433,7 @@ module.exports = bookshelf.Model.extend(merge({
       for (const extData of changes.group_extensions) {
         const ext = await Extension.find(extData.type)
         if (ext) {
-          const ge = GroupExtension.find(this.id, ext.id)
+          const ge = (await GroupExtension.find(this.id, ext.id)) || new GroupExtension({ group_id: this.id, extension_id: ext.id })
           ge.set({ data: extData.data })
           await ge.save()
         } else {
