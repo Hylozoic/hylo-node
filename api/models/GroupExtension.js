@@ -11,4 +11,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
   async type () {
     return (await this.extension().fetch()).get('type')
   }
-}), {})
+}), {
+  find (groupId, extensionId, opts = {}) {
+    if (!groupId || !extensionId) return Promise.resolve(null)
+
+    const where = { group_id: groupId, extension_id: extensionId }
+
+    return this.where(where).fetch(opts)
+  }
+})

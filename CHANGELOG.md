@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [4.1.4] - 2022-06-20
+
+### Fixed
+- Groups not displaying when they don't have a location but location obfuscation is set to something other than Precise
+
+## [4.1.3] - 2022-06-15
+
+### Added
+-  Can update groupExtenions when updating a group
+
+### Changed
+- New collaboration for farms
+
 ## [4.1.2] - 2022-06-08
 
 ### Added

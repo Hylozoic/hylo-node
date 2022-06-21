@@ -334,15 +334,18 @@ export default async function makeModels (userId, isAdmin, apiClient) {
             return g.get('location')
           } else {
             const locObj = await g.locationObject().fetch()
-            let display = locObj.get('country')
-            if (locObj.get('region')) {
-              display = locObj.get('region') + ", " + display
+            if (locObj) {
+              let display = locObj.get('country')
+              if (locObj.get('region')) {
+                display = locObj.get('region') + ", " + display
+              }
+              if (locObj.get('city')) {
+                display = locObj.get('city') + ", " + display
+              }
+              return display
             }
-            if (locObj.get('city')) {
-              display = locObj.get('city') + ", " + display
-            }
-            return display
           }
+          return null
         },
         locationObject: async (g) => {
           // If precision is precise or user is a moderator of the group show the exact location
