@@ -43,7 +43,8 @@ const configuration = {
       'invite_subject', // The email subject of invite messages sent to users created by this client
       'invite_message', // The email body of invite messages sent to users created by this client
       'name', // The name of the API client
-      'role' // Can give a client super powers by giving them a role of 'super'
+      'role', // Can give a client super powers by giving them a role of 'super'
+      'noPKCE' // Turn off requirement for PKCE from this client
     ]
   },
   findAccount: async (ctx, id, token) => {
