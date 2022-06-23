@@ -91,7 +91,9 @@ const configuration = {
     keys: process.env.OIDC_KEYS ? process.env.OIDC_KEYS.split(',').map(k => rsaPemToJwk(Buffer.from(k, 'base64').toString('ascii'), {}, 'private')) : []
   },
   pkce: {
-    required: false
+    required: (ctx, client) => {
+      return client.noPKCE ? false : true
+    }
   },
   proxy: true, // maybe??
   routes: {
