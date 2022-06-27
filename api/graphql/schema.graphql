@@ -197,6 +197,7 @@ type Group {
     autocomplete: String
   ): GroupQuerySet
   createdAt: Date
+  customView: CustomView
   description: String
   geoShape: JSON
   groupExtensions: GroupExtensionQuerySet
@@ -343,6 +344,19 @@ type GroupWidgetQuerySet {
 type Widget {
   id: Int
   name: String
+}
+
+type CustomView {
+  id: Int
+  name: String
+  groupId: Int
+  isActive: Boolean
+  searchText: String
+  icon: String
+  externalLink: String
+  viewMode: String
+  activePostsOnly: Boolean
+  postTypes: [String]
 }
 
 type GroupRelationship {
@@ -874,6 +888,7 @@ input GroupInput {
   active: Boolean
   avatarUrl: String
   bannerUrl: String
+  customView: customView
   description: String
   geoShape: String
   groupToGroupJoinQuestions: [QuestionInput]

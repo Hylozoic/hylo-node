@@ -236,6 +236,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
       relations: [
         {activeMembers: { querySet: true }},
         {childGroups: {querySet: true}},
+        {customViews: {querySet: true}}, // Currently there is no queryset on the the actual graphQL type
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
         {groupTags: {
@@ -435,12 +436,28 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         'created_at',
         'status',
         'type',
-        'updated_at',
+        'updated_at'
       ],
       getters: {
         questionAnswers: i => i.questionAnswers().fetch()
       },
       relations: ['createdBy', 'fromGroup', 'toGroup']
+    },
+
+    CustomView: {
+      model: CustomView,
+      attributes: [
+        'group_id',
+        'is_active',
+        'search_text',
+        'icon',
+        'name',
+        'external_link',
+        'view_mode',
+        'active_posts_only',
+        'post_types',
+      ],
+      relations: ['group', 'topics']
     },
 
     Invitation: {
@@ -455,7 +472,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
       relations: [
         'creator',
         'group'
-      ],
+      ]
     },
 
     JoinRequest: {

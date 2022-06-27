@@ -1,6 +1,7 @@
 import GroupService from '../../services/GroupService'
 import convertGraphqlData from './convertGraphqlData'
 import underlyingDeleteGroupTopic from '../../models/group/deleteGroupTopic'
+import CustomView from '../../models/CustomView'
 
 // Util function
 async function getModeratedGroup (userId, groupId) {
@@ -115,7 +116,20 @@ export async function removeModerator (userId, personId, groupId, isRemoveFromGr
 
 export async function updateGroup (userId, groupId, changes) {
   const group = await getModeratedGroup(userId, groupId)
-  return group.update(convertGraphqlData(changes))
+  const convertedChanges = convertGraphqlData(changes)
+  /* 
+    - check if customView is in changes
+    - check if customView exists
+    - either update/create customView
+  */
+ 
+  if (group && convertedChanges.customView) {
+    const existingView = (await CustomView.find(groupId)) || new CustomView({ group_id: groupId })
+    existingView.set(convertedChanges.customView)
+    await existingView.save()
+  }
+
+  return group.update(convertedChanges)
 }
 
 export async function inviteGroupToGroup(userId, fromId, toId, type, questionAnswers = []) {
