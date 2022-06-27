@@ -2,7 +2,7 @@
 exports.up = async function (knex) {
   await knex.schema.createTable('custom_views', table => {
     table.increments().primary()
-    table.bigInteger('group_id').references('id').inTable('group_id')
+    table.bigInteger('group_id').references('id').inTable('groups')
     table.boolean('is_active').defaultTo(true)
     table.string('search_text')
     table.string('icon')
