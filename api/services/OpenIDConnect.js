@@ -29,11 +29,14 @@ const configuration = {
     long: {
       // XXX: setting path to / needed since we redirect our interactions to evo routes. Is this dangerous?
       path: '/',
+      // XXX: a hack since for some reason on heroku the redirects go to the underlying proxied domain like api-staging.hylo.com but then cookie doesnt work when staging.hylo.com
+      domain: process.env.NODE_ENV === 'development' ? 'localhost' : '.hylo.com',
       signed: true
     },
     short: {
       // XXX: needed since we redirect our interactions to evo routes. Is this dangerous?
       path: '/',
+      domain: process.env.NODE_ENV === 'development' ? 'localhost' : '.hylo.com',
       signed: true
     }
   },
