@@ -79,7 +79,7 @@ const configuration = {
       }
     }
   },
-  // let's tell oidc-provider where our own interactions will be
+  // let's tell oidc-provider where our own interactions will be.
   // setting a nested route is just good practice so that users
   // don't run into weird issues with multiple interactions open
   // at a time.

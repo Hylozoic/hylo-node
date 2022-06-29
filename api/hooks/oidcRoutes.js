@@ -2,8 +2,8 @@ import { get } from 'lodash/fp'
 import oidc from '../services/OpenIDConnect'
 
 // This is only needed for local dev, for some reason it is using :3001 for the port when we want :3000
-const adjustRedirectUrl = (url) => {
-  return url.replace(':3001', ':3000')
+const adjustRedirectUrl = (url, req) => {
+  return url.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
 }
 
 module.exports = function (app) {
@@ -51,7 +51,7 @@ module.exports = function (app) {
             let redirectTo = await oidc.interactionResult(req, res, result, { mergeWithLastSubmission: false })
 
             // Add name of the client so we can display locally
-            redirectTo = adjustRedirectUrl(redirectTo) + '?name=' + client['name']
+            redirectTo = adjustRedirectUrl(redirectTo, req) + '?name=' + client['name']
 
             return res.send({ redirectTo })
           } catch (err) {
@@ -106,7 +106,7 @@ module.exports = function (app) {
 
             const result = { consent }
             const redirectTo = await oidc.interactionResult(req, res, result, { mergeWithLastSubmission: true })
-            return res.send({ redirectTo: adjustRedirectUrl(redirectTo) })
+            return res.send({ redirectTo: adjustRedirectUrl(redirectTo, req) })
           } catch (err) {
             return res.status(500).send({ error: err.message })
           }
@@ -119,7 +119,7 @@ module.exports = function (app) {
               error_description: 'End-User aborted interaction',
             }
             const redirectTo = await oidc.interactionResult(req, res, result, { mergeWithLastSubmission: false })
-            return res.send({ redirectTo: adjustRedirectUrl(redirectTo) })
+            return res.send({ redirectTo: adjustRedirectUrl(redirectTo, req) })
           } catch (err) {
             return res.status(500).json({ error: err.message })
           }
