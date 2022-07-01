@@ -4,7 +4,8 @@ import oidc from '../services/OpenIDConnect'
 // This is only needed for local dev, for some reason it is using :3001 for the port when we want :3000
 const adjustRedirectUrl = (url, req) => {
   console.log("adjust url", url, "base url =", req.baseUrl, "original url", req.originalUrl, "final url = ", url.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN))
-  return url.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
+  const redirectUrl = (process.env.PROTOCOL === 'https') ? url.replace('http://', 'https://') : url
+  return redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
 }
 
 module.exports = function (app) {
