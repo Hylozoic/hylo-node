@@ -7,7 +7,7 @@ import rsaPemToJwk from 'rsa-pem-to-jwk'
 
 const configuration = {
   adapter: KnexAdapter,
-  scopes: ['address', 'email', 'phone', 'profile', 'api:read', 'api:write'],
+  scopes: ['address', 'email', 'phone', 'profile', 'api:read', 'api:write', 'offline_access'],
   claims: {
     openid: ['sub'],
     address: ['address'],
