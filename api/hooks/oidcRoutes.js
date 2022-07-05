@@ -3,8 +3,8 @@ import oidc from '../services/OpenIDConnect'
 
 // This is only needed for local dev, for some reason it is using :3001 for the port when we want :3000
 const adjustRedirectUrl = (url, req) => {
-  console.log("adjust url", url, "base url =", req.baseUrl, "original url", req.originalUrl, "final url = ", url.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN))
   const redirectUrl = (process.env.PROTOCOL === 'https') ? url.replace('http://', 'https://') : url
+  console.log("redirect url", redirectUrl, "base url =", req.baseUrl, "original url", req.originalUrl, "final url = ", redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN))
   return redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
 }
 
@@ -23,6 +23,8 @@ module.exports = function (app) {
             if (prompt.name === 'login') {
               return res.redirect('/oauth/login/' + uid + '?name=' + client['name'])
             }
+
+            console.log("interaction", details, " prompt = ", prompt, uid, params)
 
             // TODO: could be called authorize?
             let redirectUrl = '/oauth/consent/' + uid
@@ -66,6 +68,7 @@ module.exports = function (app) {
             const interactionDetails = await oidc.interactionDetails(req, res)
             const { prompt: { name, details }, params, session: { accountId } } = interactionDetails
 
+            console.log("confirmmm", interactionDetails, " name = ", name, details, params, accountId)
             if (name !== 'consent') return res.status(500).send({ error: "Invalid Request" })
 
             let { grantId } = interactionDetails
