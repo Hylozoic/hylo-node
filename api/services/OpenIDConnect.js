@@ -7,7 +7,7 @@ import rsaPemToJwk from 'rsa-pem-to-jwk'
 
 const configuration = {
   adapter: KnexAdapter,
-  scopes: ['address', 'email', 'phone', 'profile', 'api:read', 'api:write', 'offline_access'],
+  scopes: ['openid', 'offline_access', 'address', 'email', 'phone', 'profile', 'api:read', 'api:write'],
   claims: {
     openid: ['sub'],
     address: ['address'],
@@ -122,17 +122,39 @@ const configuration = {
       }
       return 60 * 60 // 1 hour in seconds
     },
+    AuthorizationCode: 600 /* 10 minutes in seconds */,
+    BackchannelAuthenticationRequest: function BackchannelAuthenticationRequestTTL(ctx, request, client) {
+      if (ctx && ctx.oidc && ctx.oidc.params.requested_expiry) {
+        return Math.min(10 * 60, +ctx.oidc.params.requested_expiry); // 10 minutes in seconds or requested_expiry, whichever is shorter
+      }
+
+      return 10 * 60; // 10 minutes in seconds
+    },
     ClientCredentials: function ClientCredentialsTTL(ctx, token, client) {
       if (token.resourceServer) {
         return token.resourceServer.accessTokenTTL || 10 * 60; // 10 minutes in seconds
       }
       return 10 * 60; // 10 minutes in seconds
     },
+    DeviceCode: 600 /* 10 minutes in seconds */,
+    Grant: 1209600 /* 14 days in seconds */,
     IdToken: 3600, // 1 hour
-    Interaction: 1800, // 30 minutes expiration for interaction artifacts
-    Session: 1209600 // 14 days in seconds
+    Interaction: 3600 /* 1 hour in seconds */,
+    RefreshToken: function RefreshTokenTTL(ctx, token, client) {
+      if (
+        ctx && ctx.oidc.entities.RotatedRefreshToken
+        && client.applicationType === 'web'
+        && client.tokenEndpointAuthMethod === 'none'
+        && !token.isSenderConstrained()
+      ) {
+        // Non-Sender Constrained SPA RefreshTokens do not have infinite expiration through rotation
+        return ctx.oidc.entities.RotatedRefreshToken.remainingTTL;
   }
 
+      return 14 * 24 * 60 * 60; // 14 days in seconds
+    },
+    Session: 1209600 // 14 days in seconds
+  }
 }
 
 const oidc = new Provider(process.env.PROTOCOL + '://' + process.env.DOMAIN, configuration)
