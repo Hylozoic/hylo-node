@@ -27,10 +27,10 @@ module.exports = function (app) {
             console.log("interaction", details, " prompt = ", prompt, uid, params)
 
             // TODO: could be called authorize?
-            let redirectUrl = '/oauth/consent/' + uid
+            let redirectUrl = '/oauth/consent/' + uid + '?name=' + client['name']
             const missingOIDCScope = get("details.missingOIDCScope", prompt) || false
             if (missingOIDCScope) {
-              redirectUrl += "?name=" + client['name'] + '&' + missingOIDCScope.map(s => 'missingScopes=' + s).join('&')
+              redirectUrl += '&' + missingOIDCScope.map(s => 'missingScopes=' + s).join('&')
             }
 
             return res.redirect(redirectUrl)
