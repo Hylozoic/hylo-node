@@ -30,18 +30,6 @@ module.exports = bookshelf.Model.extend(merge({
   requireFetch: false,
   hasTimestamps: true,
 
-  format(attributes) {
-    const st = knexPostgis(bookshelf.knex)
-
-    // Make sure geometry column goes into the database correctly, converting from GeoJSON
-    const { geo_shape } = attributes
-    if (geo_shape) {
-      attributes.geo_shape = st.geomFromGeoJSON(geo_shape)
-    }
-
-    return attributes
-  },
-
   parse(response) {
     const st = knexPostgis(bookshelf.knex)
 
@@ -392,6 +380,14 @@ module.exports = bookshelf.Model.extend(merge({
     }
 
     saneAttrs.location_id = isEmpty(saneAttrs.location_id) ? null : saneAttrs.location_id
+
+    // Make sure geometry column goes into the database correctly, converting from GeoJSON
+    if (!isEmpty(attributes.geo_shape)) {
+      const st = knexPostgis(bookshelf.knex)
+      saneAttrs.geo_shape = st.geomFromGeoJSON(attributes.geo_shape)
+    } else {
+      saneAttrs.geo_shape = null
+    }
 
     // If a new location is being passed in but not a new location_id then we geocode on the server
     if (changes.location && changes.location !== this.get('location') && !changes.location_id) {
