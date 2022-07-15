@@ -213,6 +213,7 @@ type Group {
     subscribed: Boolean,
     visibility: Int
   ): GroupTopicQuerySet
+  hasStripeAccount: Boolean,
   invitePath: String
   joinQuestions: GroupJoinQuestionQuerySet
   location: String
@@ -987,6 +988,7 @@ type Mutation {
   createProjectRole(projectId: ID, roleName: String): GenericResult
   createSavedSearch(data: SavedSearchInput): SavedSearch
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
+  connectGroupToStripe(groupId: ID): StripeResponse
   deactivateMe(id: ID): GenericResult
   deleteMe: GenericResult
   declineJoinRequest(joinRequestId: ID): JoinRequest
@@ -1232,4 +1234,9 @@ input LinkDataInput {
   id: ID
   slug: String
   type: String
+}
+
+type StripeResponse {
+  error: String
+  redirectURL: String
 }

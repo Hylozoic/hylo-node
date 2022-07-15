@@ -26,6 +26,7 @@ export {
   addMember,
   addModerator,
   cancelGroupRelationshipInvite,
+  connectGroupToStripe,
   createGroup,
   deleteGroup,
   deleteGroupRelationship,

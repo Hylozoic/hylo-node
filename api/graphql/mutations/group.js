@@ -1,3 +1,5 @@
+import request from 'request'
+import Stripe from 'stripe'
 import GroupService from '../../services/GroupService'
 import convertGraphqlData from './convertGraphqlData'
 import underlyingDeleteGroupTopic from '../../models/group/deleteGroupTopic'
@@ -199,6 +201,54 @@ export async function rejectGroupRelationshipInvite (userId, groupRelationshipIn
   } else {
     throw new Error(`Invalid parameters to reject invite`)
   }
+}
+
+export async function connectGroupToStripe (userId, groupId) {
+  console.log("connect!", userId, groupId)
+  const user = await User.find(userId)
+  const group = await Group.find(groupId, {withRelated: 'stripeAccount'})
+  if (!group) {
+    throw new Error('Group not found')
+  }
+
+  const stripe = Stripe(process.env.STRIPE_API_KEY)
+
+  const account = await stripe.accounts.create({
+    type: 'standard',
+    country: group.location?.country_code
+  })
+
+  console.log("connect2!", account)
+
+  const accountLink = await stripe.accountLinks.create({
+    account: account.id,
+    refresh_url: `${process.env.PROTOCOL}://${process.env.DOMAIN}/group/${group.slug}/settings/payments/`,
+    return_url: `${process.env.PROTOCOL}://${process.env.DOMAIN}/group/${group.slug}/settings/payments/`,
+    type: 'account_onboarding',
+  })
+
+  console.log("connect2!", accountLink)
+
+  // const options = {
+  //   uri: 'https://connect.stripe.com/oauth/token',
+  //   form: {
+  //     client_secret: process.env.STRIPE_API_KEY,
+  //     code: authorizationCode,
+  //     grant_type: 'authorization_code'
+  //   },
+  //   json: true
+  // }
+
+  // // TODO: this should be in a promise chain
+  // request.post(options, async (err, response, body) => {
+  //   const accountId = body.stripe_user_id
+  //   const refreshToken = body.refresh_token
+  //   if (accountId && refreshToken) {
+  //     await user.updateStripeAccount(accountId, refreshToken)
+  //   }
+  // })
+
+  return { redirectURL: accountLink.url }
 }
 
 // API only Group Mutations

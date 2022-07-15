@@ -1750,6 +1750,11 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.29.tgz#7f2e1159231d4a077bb660edab0fde373e375a3d"
   integrity sha512-tx5jMmMFwx7wBwq/V7OohKDVb/JwJU5qCVkeLMh1//xycAJ/ESuw9aJ9SEtlCZDYi2pBfe4JkisSoAtbOsBNAA==
 
+"@types/node@>=8.1.0":
+  version "17.0.41"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-17.0.41.tgz#1607b2fd3da014ae5d4d1b31bc792a39348dfb9b"
+  integrity sha512-xA6drNNeqb5YyV5fO3OAEsnXLfO7uF0whiOfPTz5AeDo8KeZFmODKnvwPymMNO8qE/an8pVY/O50tig2SQCrGw==
+
 "@types/normalize-package-data@^2.4.0":
   version "2.4.1"
   resolved "https://registry.yarnpkg.com/@types/normalize-package-data/-/normalize-package-data-2.4.1.tgz#d3357479a0fdfdd5907fe67e17e0a85c906e1301"
@@ -10383,7 +10388,7 @@ qs@4.0.0:
   resolved "https://registry.yarnpkg.com/qs/-/qs-4.0.0.tgz#c31d9b74ec27df75e543a86c78728ed8d4623607"
   integrity sha1-wx2bdOwn33XlQ6hseHKO2NRiNgc=
 
-qs@6.10.3, qs@^6.0.2, qs@^6.6.0:
+qs@6.10.3, qs@^6.0.2:
   version "6.10.3"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.10.3.tgz#d6cde1b2ffca87b5aa57889816c5f81535e22e8e"
   integrity sha512-wr7M2E0OFRfIfJZjKGieI8lBKb7fRCH4Fv5KNPEs7gJ8jadvotdsS08PzOKR7opXhZ/Xkjtt3WF9g38drmyRqQ==
@@ -10399,6 +10404,13 @@ qs@6.7.0:
   version "6.7.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.7.0.tgz#41dc1a015e3d581f1621776be31afb2876a9b1bc"
   integrity sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==
+
+qs@^6.10.3:
+  version "6.10.5"
+  resolved "https://registry.yarnpkg.com/qs/-/qs-6.10.5.tgz#974715920a80ff6a262264acd2c7e6c2a53282b4"
+  integrity sha512-O5RlPh0VFtR78y79rgcgKK4wbAI0C5zGVLztOIdpWX6ep368q5Hv6XRxDvXuZ9q3C6v+e3n8UfZZJw7IIG27eQ==
+  dependencies:
+    side-channel "^1.0.4"
 
 qs@~6.5.2:
   version "6.5.3"
@@ -12339,15 +12351,13 @@ strip-json-comments@~2.0.1:
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
   integrity sha1-PFMZQukIwml8DsNEhYwobHygpgo=
 
-stripe@^6.15.0:
-  version "6.36.0"
-  resolved "https://registry.yarnpkg.com/stripe/-/stripe-6.36.0.tgz#546cb863a766674a86c02322e0d6d5d84c656fc4"
-  integrity sha512-7vjyVO4NCWvX38CH1AuSQH16uRxcQN+UhUTBPs4UHsIl5+SJXLBvCsHrMgd+bY9k1YDliT0fQB1fH9OI3GrEhw==
+stripe@^9.7.0:
+  version "9.7.0"
+  resolved "https://registry.yarnpkg.com/stripe/-/stripe-9.7.0.tgz#e5a5dc7d67a17524f49490a6b5d577458394f8dc"
+  integrity sha512-e64zqFzodh/AygIuDb3AQQFqroEkueX0ZKq2uoiqOHwtxPx4qEWf7qv2l9hloXaV7mmzmtHPAk5VKOCMPCP7+w==
   dependencies:
-    lodash.isplainobject "^4.0.6"
-    qs "^6.6.0"
-    safe-buffer "^5.1.1"
-    uuid "^3.3.2"
+    "@types/node" ">=8.1.0"
+    qs "^6.10.3"
 
 stylus@0.54.5:
   version "0.54.5"

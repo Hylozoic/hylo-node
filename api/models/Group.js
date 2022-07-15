@@ -227,6 +227,10 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
+  stripeAccount: function () {
+    return this.belongsTo(StripeAccount)
+  },
+
   suggestedSkills: function () {
     return this.belongsToMany(Skill, 'groups_suggested_skills')
   },

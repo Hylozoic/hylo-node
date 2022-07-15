@@ -16,6 +16,7 @@ import {
   blockUser,
   cancelGroupRelationshipInvite,
   cancelJoinRequest,
+  connectGroupToStripe,
   createAffiliation,
   createComment,
   createGroup,
@@ -266,6 +267,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     cancelGroupRelationshipInvite: (root, { groupRelationshipInviteId }) => cancelGroupRelationshipInvite(userId, groupRelationshipInviteId),
 
     cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
+
+    connectGroupToStripe: (root, { groupId }) => connectGroupToStripe(userId, groupId),
 
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 

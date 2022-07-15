@@ -323,6 +323,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         {groupExtensions: {querySet: true }}
       ],
       getters: {
+        hasStripeAccount: g => !!g.get('stripe_account_id'),
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
           .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
