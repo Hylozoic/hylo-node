@@ -193,8 +193,9 @@ export default async function makeModels (userId, isAdmin, apiClient) {
       ],
       filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
-      fetchMany: ({ afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, isFulfilled, offset, order, sortBy, search, topic, topics, types }) =>
+      fetchMany: ({ activePostsOnly = false, afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, isFulfilled, offset, order, sortBy, search, topic, topics, types }) =>
         searchQuerySet('posts', {
+          activePostsOnly,
           afterTime,
           beforeTime,
           boundingBox,
@@ -236,7 +237,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
       relations: [
         {activeMembers: { querySet: true }},
         {childGroups: {querySet: true}},
-        {customViews: {querySet: true}}, // Currently there is no queryset on the the actual graphQL type
+        {customViews: {querySet: true}},
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
         {groupTags: {
@@ -261,8 +262,9 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
+              activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
@@ -304,8 +306,9 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, filter, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
+              activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
@@ -456,10 +459,9 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         'view_mode',
         'active_posts_only',
         'post_types',
-      ],
-      relations: ['group', 'topics']
+        'order'
+      ]
     },
-
     Invitation: {
       model: Invitation,
       attributes: [

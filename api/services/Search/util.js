@@ -4,6 +4,7 @@ import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {
   const {
+    activePostsOnly = false,
     afterTime,
     beforeTime,
     boundingBox,
@@ -44,6 +45,14 @@ export const filterAndSortPosts = curry((opts, q) => {
       .orWhere('posts.end_time', '<', moment().toDate())
     })
   } else if (isFulfilled === false) {
+    q.whereNull('posts.fulfilled_at')
+    .andWhere(q2 => {
+      q2.whereNull('posts.end_time')
+      .orWhere('posts.end_time', '>=', moment().toDate())
+    })
+  }
+
+  if (activePostsOnly) {
     q.whereNull('posts.fulfilled_at')
     .andWhere(q2 => {
       q2.whereNull('posts.end_time')

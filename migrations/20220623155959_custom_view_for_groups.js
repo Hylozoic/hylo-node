@@ -13,6 +13,7 @@ exports.up = async function (knex) {
     table.specificType('post_types', 'character varying(255)[]')
     table.timestamp('created_at')
     table.timestamp('updated_at')
+    table.integer('order').notNullable()
   })
 
   await knex.schema.createTable('custom_view_topics', table => {
