@@ -447,42 +447,42 @@ type Interstitial {
 
 type Post {
   id: ID
-  title: String
-  details: String
-  type: String
-  createdAt: Date
-  updatedAt: Date
-  fulfilledAt: Date
-  startTime: Date
-  endTime: Date
-  location: String
-  locationObject: Location
-  isPublic: Boolean
-  creator: Person
-  followers(first: Int, cursor: ID, order: String): [Person]
-  followersTotal: Int
+  acceptContributions: Boolean
   activeMembers(first: Int, cursor: ID, order: String): PersonQuerySet
-  members(first: Int, cursor: ID, order: String): PersonQuerySet
-  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
-  groups(first: Int, cursor: ID, order: String): [Group]
-  groupsTotal: Int
+  announcement: Boolean
+  attachments(type: String): [Attachment]
+  attachmentsTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
   commenters(first: Int): [Person]
   commentersTotal: Int
   commentsTotal: Int
+  createdAt: Date
+  creator: Person
+  details: String
+  endTime: Date
+  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
+  groups(first: Int, cursor: ID, order: String): [Group]
+  groupsTotal: Int
+  followers(first: Int, cursor: ID, order: String): [Person]
+  followersTotal: Int
+  fulfilledAt: Date
   linkPreview: LinkPreview
-  votesTotal: Int
+  location: String
+  locationObject: Location
   myVote: Boolean
-  attachments(type: String): [Attachment]
-  attachmentsTotal: Int
   postMemberships: [PostMembership]
   postMembershipsTotal: Int,
+  isPublic: Boolean
+  members(first: Int, cursor: ID, order: String): PersonQuerySet
+  myEventResponse: String
+  startTime: Date
+  title: String
   topics: [Topic],
   topicsTotal: Int
-  announcement: Boolean
-  acceptContributions: Boolean
   totalContributions: Int
-  myEventResponse: String
+  type: String
+  updatedAt: Date
+  votesTotal: Int
 }
 
 type PostMembership {
