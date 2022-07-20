@@ -459,6 +459,7 @@ type Post {
   createdAt: Date
   creator: Person
   details: String
+  donationsLink: String
   endTime: Date
   eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
   groups(first: Int, cursor: ID, order: String): [Group]
@@ -471,13 +472,14 @@ type Post {
   locationObject: Location
   myVote: Boolean
   postMemberships: [PostMembership]
-  postMembershipsTotal: Int,
+  postMembershipsTotal: Int
+  projectManagementLink: String
   isPublic: Boolean
   members(first: Int, cursor: ID, order: String): PersonQuerySet
   myEventResponse: String
   startTime: Date
   title: String
-  topics: [Topic],
+  topics: [Topic]
   topicsTotal: Int
   totalContributions: Int
   type: String
@@ -782,23 +784,25 @@ input MeInput {
 }
 
 input PostInput {
-  title: String
+  acceptContributions: Boolean
+  announcement: Boolean
   details: String
-  type: String
+  donationsLink: String
+  endTime: Date
+  eventInviteeIds: [ID]
+  fileUrls: [String]
   groupIds: [String]
-  linkPreviewId: String
+  imageUrls: [String]
   isPublic: Boolean
+  linkPreviewId: String
   location: String
   locationId: ID
-  imageUrls: [String]
-  fileUrls: [String]
-  announcement: Boolean
-  topicNames: [String]
   memberIds: [ID]
-  acceptContributions: Boolean
-  eventInviteeIds: [ID]
+  projectManagementLink: String
   startTime: Date
-  endTime: Date
+  title: String
+  topicNames: [String]
+  type: String
 }
 
 input CommentInput {
