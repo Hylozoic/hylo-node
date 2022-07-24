@@ -3848,6 +3848,11 @@ cookies@~0.8.0:
     depd "~2.0.0"
     keygrip "~1.1.0"
 
+coordinate-parser@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/coordinate-parser/-/coordinate-parser-1.0.7.tgz#9350485f03146af0f377dd51a0907a0ac684363e"
+  integrity sha512-pkcjigkAEjU5JsTYnuXLkRgR6T5fF/7GXR4p9vWJesy8fKwsheN8zC5d3sSvdMmWihHB4u48xWZ5mUCcgBIEpw==
+
 copy-descriptor@^0.1.0:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/copy-descriptor/-/copy-descriptor-0.1.1.tgz#676f6eb3c39997c2ee1ac3a924fd6124748f578d"
@@ -6699,12 +6704,13 @@ https-proxy-agent@^5.0.0:
     agent-base "6"
     debug "4"
 
-hylo-shared@^1.6.8:
-  version "1.6.8"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.6.8.tgz#6ed660ce24891dae13cbeadbb153c9f4a75b6408"
-  integrity sha512-fcTH4mCFw7i1h/a6NGe540aKRuJCafYam015v9bnX1s84bz9p4fbL+JqjmzkNIOC7Ld41P52pmNAlKnRFEfJfA==
+hylo-shared@^1.8.0:
+  version "1.8.0"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.8.0.tgz#3fd15e3443dbc7aed0ddfd5640b68f2a5f01a49b"
+  integrity sha512-LJBAsj3LwSAVVTrxZU1h7CD4KXXw6lJJ0M3kgBdA3nRGLhBcw0YzvIEoWnZHwACOm+IZ8zk0mrSHBnfuHUTsyg==
   dependencies:
     cheerio "^1.0.0-rc.10"
+    coordinate-parser "^1.0.7"
     html-to-text "^8.1.0"
     insane "^2.6.2"
     linkify-plugin-hashtag "^3.0.4"
