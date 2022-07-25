@@ -130,6 +130,7 @@ type Person {
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
   moderatedGroupMembershipsTotal: Int
   posts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -197,6 +198,7 @@ type Group {
     autocomplete: String
   ): GroupQuerySet
   createdAt: Date
+  customViews: CustomViewQuerySet
   description: String
   geoShape: JSON
   groupExtensions: GroupExtensionQuerySet
@@ -245,6 +247,7 @@ type Group {
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   prerequisiteGroups(onlyNotMember: Boolean): GroupQuerySet
   posts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -273,6 +276,7 @@ type Group {
   typeDescriptor: String
   typeDescriptorPlural: String
   viewPosts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -343,6 +347,26 @@ type GroupWidgetQuerySet {
 type Widget {
   id: Int
   name: String
+}
+
+type CustomView {
+  id: Int
+  name: String
+  groupId: Int
+  isActive: Boolean
+  searchText: String
+  icon: String
+  externalLink: String
+  viewMode: String
+  order: Int
+  activePostsOnly: Boolean
+  postTypes: [String]
+}
+
+type CustomViewQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CustomView]
 }
 
 type GroupRelationship {
@@ -680,6 +704,7 @@ type Query {
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -878,6 +903,7 @@ input GroupInput {
   active: Boolean
   avatarUrl: String
   bannerUrl: String
+  customViews: [CustomViewInput]
   description: String
   geoShape: String
   groupToGroupJoinQuestions: [QuestionInput]
@@ -914,6 +940,25 @@ input GroupSettingsInput {
 input GroupExtensionInput {
   data: JSON
   type: String
+}
+
+input CustomViewInput {
+  id: Int
+  name: String
+  groupId: Int
+  isActive: Boolean
+  searchText: String
+  icon: String
+  externalLink: String
+  viewMode: String
+  activePostsOnly: Boolean
+  postTypes: [String]
+  order: Int
+}
+
+input CustomViewTopicInput {
+  id: Int
+  name: String
 }
 
 input QuestionInput {
