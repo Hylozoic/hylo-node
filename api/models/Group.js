@@ -89,6 +89,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(User, 'created_by_id')
   },
 
+  customViews () {
+    return this.hasMany(CustomView)
+  },
+
   groupRelationshipInvitesFrom () {
     return this.hasMany(GroupRelationshipInvite, 'from_group_id')
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
@@ -436,6 +440,14 @@ module.exports = bookshelf.Model.extend(merge({
           throw Error('Invalid extension type ' + extData.type)
         }
       }
+    }
+
+    if (changes.custom_views) {
+      const existingView = (await CustomView.find(this.id)) || new CustomView({ group_id: this.id })
+      existingView.set(changes.custom_views[0])
+      // Left for when/if we add topics to custom views
+      // await existingView.updateTopics(changes.custom_view.topics)
+      await existingView.save()
     }
 
     this.set(saneAttrs)
