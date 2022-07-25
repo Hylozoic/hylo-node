@@ -155,16 +155,18 @@ export default async function makeModels (userId, isAdmin, apiClient) {
     Post: {
       model: Post,
       attributes: [
-        'created_at',
-        'updated_at',
-        'fulfilled_at',
-        'end_time',
-        'start_time',
-        'location',
-        'announcement',
         'accept_contributions',
+        'announcement',
+        'created_at',
+        'donations_link',
+        'end_time',
+        'fulfilled_at',
         'is_public',
-        'type'
+        'location',
+        'project_management_link',
+        'start_time',
+        'type',
+        'updated_at'
       ],
       getters: {
         commenters: (p, { first }) => p.getCommenters(first, userId),
@@ -176,20 +178,22 @@ export default async function makeModels (userId, isAdmin, apiClient) {
           : ''
       },
       relations: [
-        {comments: {querySet: true}},
+        { comments: { querySet: true } },
         'groups',
-        {user: {alias: 'creator'}},
+        { user: { alias: 'creator' } },
         'followers',
         'locationObject',
-        {members: {querySet: true}},
-        {eventInvitations: {querySet: true}},
+        { members: { querySet: true } },
+        { eventInvitations: { querySet: true } },
         'linkPreview',
         'postMemberships',
-        {media: {
-          alias: 'attachments',
-          arguments: ({ type }) => [type]
-        }},
-        {tags: {alias: 'topics'}}
+        {
+          media: {
+            alias: 'attachments',
+            arguments: ({ type }) => [type]
+          }
+        },
+        { tags: { alias: 'topics' } }
       ],
       filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,

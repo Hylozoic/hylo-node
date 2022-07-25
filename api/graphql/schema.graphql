@@ -471,42 +471,44 @@ type Interstitial {
 
 type Post {
   id: ID
-  title: String
-  details: String
-  type: String
-  createdAt: Date
-  updatedAt: Date
-  fulfilledAt: Date
-  startTime: Date
-  endTime: Date
-  location: String
-  locationObject: Location
-  isPublic: Boolean
-  creator: Person
-  followers(first: Int, cursor: ID, order: String): [Person]
-  followersTotal: Int
+  acceptContributions: Boolean
   activeMembers(first: Int, cursor: ID, order: String): PersonQuerySet
-  members(first: Int, cursor: ID, order: String): PersonQuerySet
-  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
-  groups(first: Int, cursor: ID, order: String): [Group]
-  groupsTotal: Int
+  announcement: Boolean
+  attachments(type: String): [Attachment]
+  attachmentsTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
   commenters(first: Int): [Person]
   commentersTotal: Int
   commentsTotal: Int
+  createdAt: Date
+  creator: Person
+  details: String
+  donationsLink: String
+  endTime: Date
+  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
+  groups(first: Int, cursor: ID, order: String): [Group]
+  groupsTotal: Int
+  followers(first: Int, cursor: ID, order: String): [Person]
+  followersTotal: Int
+  fulfilledAt: Date
   linkPreview: LinkPreview
-  votesTotal: Int
+  location: String
+  locationObject: Location
   myVote: Boolean
-  attachments(type: String): [Attachment]
-  attachmentsTotal: Int
   postMemberships: [PostMembership]
-  postMembershipsTotal: Int,
-  topics: [Topic],
-  topicsTotal: Int
-  announcement: Boolean
-  acceptContributions: Boolean
-  totalContributions: Int
+  postMembershipsTotal: Int
+  projectManagementLink: String
+  isPublic: Boolean
+  members(first: Int, cursor: ID, order: String): PersonQuerySet
   myEventResponse: String
+  startTime: Date
+  title: String
+  topics: [Topic]
+  topicsTotal: Int
+  totalContributions: Int
+  type: String
+  updatedAt: Date
+  votesTotal: Int
 }
 
 type PostMembership {
@@ -807,23 +809,25 @@ input MeInput {
 }
 
 input PostInput {
-  title: String
+  acceptContributions: Boolean
+  announcement: Boolean
   details: String
-  type: String
+  donationsLink: String
+  endTime: Date
+  eventInviteeIds: [ID]
+  fileUrls: [String]
   groupIds: [String]
-  linkPreviewId: String
+  imageUrls: [String]
   isPublic: Boolean
+  linkPreviewId: String
   location: String
   locationId: ID
-  imageUrls: [String]
-  fileUrls: [String]
-  announcement: Boolean
-  topicNames: [String]
   memberIds: [ID]
-  acceptContributions: Boolean
-  eventInviteeIds: [ID]
+  projectManagementLink: String
   startTime: Date
-  endTime: Date
+  title: String
+  topicNames: [String]
+  type: String
 }
 
 input CommentInput {
