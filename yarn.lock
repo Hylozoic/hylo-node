@@ -6704,16 +6704,15 @@ https-proxy-agent@^5.0.0:
     agent-base "6"
     debug "4"
 
-hylo-shared@^1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.8.0.tgz#3fd15e3443dbc7aed0ddfd5640b68f2a5f01a49b"
-  integrity sha512-LJBAsj3LwSAVVTrxZU1h7CD4KXXw6lJJ0M3kgBdA3nRGLhBcw0YzvIEoWnZHwACOm+IZ8zk0mrSHBnfuHUTsyg==
+hylo-shared@^1.9.0-beta.0:
+  version "1.9.0-beta.0"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.9.0-beta.0.tgz#fdfa6793dde453122b72dee90e25394a4761d7f6"
+  integrity sha512-Y14VLI+tsp0wjV6XkJ24zhDLeeEs2zsDAfGxr4c4VbhKdJGrtFuYLYJ61zbmHBhxkWv/65phJzy2ybTIld8dpw==
   dependencies:
     cheerio "^1.0.0-rc.10"
     coordinate-parser "^1.0.7"
     html-to-text "^8.1.0"
     insane "^2.6.2"
-    linkify-plugin-hashtag "^3.0.4"
     linkify-string "^3.0.4"
     linkifyjs "^3.0.5"
     lodash "~4.17.21"
@@ -7925,11 +7924,6 @@ lines-and-columns@^1.1.6:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
-
-linkify-plugin-hashtag@^3.0.4:
-  version "3.0.4"
-  resolved "https://registry.yarnpkg.com/linkify-plugin-hashtag/-/linkify-plugin-hashtag-3.0.4.tgz#8c037dce48b645db540a785db4c253fe0e7e22d0"
-  integrity sha512-GXVzS0VUNykfud6aiuuT0XgR1Cq5JJ40GcJzhwSbaRLYY2OwntvWjtD1D8rNPdFC3yOHAx8CIqQZxXNJl8nGjA==
 
 linkify-string@^3.0.4:
   version "3.0.4"
