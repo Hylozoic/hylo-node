@@ -489,10 +489,10 @@ module.exports = bookshelf.Model.extend(merge({
       throw Error("A group with that URL slug already exists")
     }
 
-    var attrs = defaults(
+    let attrs = defaults(
       pick(data,
         'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
-        'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
+        'access_code', 'banner_url', 'location_id', 'location', 'geo_shape', 'group_data_type', 'moderator_descriptor',
         'moderator_descriptor_plural', 'name', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
@@ -506,6 +506,11 @@ module.exports = bookshelf.Model.extend(merge({
 
     // eslint-disable-next-line camelcase
     const access_code = attrs.access_code || await Group.getNewAccessCode()
+
+    if (!isEmpty(attrs.geo_shape)) {
+      const st = knexPostgis(bookshelf.knex)
+      attrs.geo_shape = st.geomFromGeoJSON(attrs.geo_shape)
+    }
 
     const group = new Group(merge(attrs, {
       access_code,
