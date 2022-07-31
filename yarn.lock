@@ -6704,10 +6704,10 @@ https-proxy-agent@^5.0.0:
     agent-base "6"
     debug "4"
 
-hylo-shared@^1.9.0-beta.0:
-  version "1.9.0-beta.0"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.9.0-beta.0.tgz#fdfa6793dde453122b72dee90e25394a4761d7f6"
-  integrity sha512-Y14VLI+tsp0wjV6XkJ24zhDLeeEs2zsDAfGxr4c4VbhKdJGrtFuYLYJ61zbmHBhxkWv/65phJzy2ybTIld8dpw==
+hylo-shared@1.9.0-beta.3:
+  version "1.9.0-beta.3"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.9.0-beta.3.tgz#c8d712f5c104e1fdeef14c3981cce3d6921fbbbb"
+  integrity sha512-0RtrQpbIhTH5g34x7bJjceUjfTCa7tF9ojm0jrwU6pQvLU8ONEthHL4N3isoA6b73n98Qol1DYu+8+rAkhTbJw==
   dependencies:
     cheerio "^1.0.0-rc.10"
     coordinate-parser "^1.0.7"
