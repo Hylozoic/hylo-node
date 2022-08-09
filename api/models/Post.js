@@ -45,7 +45,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   details: function () {
     // This should be always used when accessing this attribute
-    return TextHelpers.sanitizeHTML(this.get('description'))
+    // return TextHelpers.sanitizeHTML(this.get('description'))
+    return this.get('description')
   },
 
   description: function () {

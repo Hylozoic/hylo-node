@@ -118,7 +118,7 @@ export function findOrCreateThread (userId, data) {
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
 }
 
-export function findOrCreateLinkPreviewByUrl (data) {
+export async function findOrCreateLinkPreviewByUrl (data) {
   return underlyingFindLinkPreview(data.url)
 }
 
