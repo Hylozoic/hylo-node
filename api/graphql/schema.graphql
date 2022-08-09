@@ -353,6 +353,7 @@ type CustomView {
   id: Int
   name: String
   groupId: Int
+  group: Group
   isActive: Boolean
   searchText: String
   icon: String
@@ -361,6 +362,8 @@ type CustomView {
   order: Int
   activePostsOnly: Boolean
   postTypes: [String]
+  topics: [Topic]
+  topicsTotal: Int
 }
 
 type CustomViewQuerySet {
@@ -943,7 +946,7 @@ input GroupExtensionInput {
 }
 
 input CustomViewInput {
-  id: Int
+  id: ID
   name: String
   groupId: Int
   isActive: Boolean
@@ -954,10 +957,11 @@ input CustomViewInput {
   activePostsOnly: Boolean
   postTypes: [String]
   order: Int
+  topics: [CustomViewTopicInput]
 }
 
 input CustomViewTopicInput {
-  id: Int
+  id: ID
   name: String
 }
 

@@ -467,8 +467,13 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         'active_posts_only',
         'post_types',
         'order'
+      ],
+      relations: [
+        'group',
+        { tags: { alias: 'topics' } }
       ]
     },
+
     Invitation: {
       model: Invitation,
       attributes: [

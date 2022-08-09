@@ -1,10 +1,12 @@
 import { get, has, isUndefined, merge, unset } from 'lodash'
 
 export default {
-  addSetting: function (value, save = false) {
+  addSetting: function (value, save = false, transacting = false) {
     this.set('settings', merge({}, this.get('settings'), value))
     if (save) {
-      return this.save({settings: this.get('settings')}, {patch: true})
+      const options = { patch: true }
+      if (transacting) settings['transacting'] = transacting
+      return this.save({settings: this.get('settings')}, options)
     }
     return this
   },

@@ -1,38 +1,47 @@
-import { isEqual, difference } from 'lodash'
+import { isEmpty, isEqual, difference } from 'lodash'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'custom_views',
   requireFetch: false,
+
   group () {
     return this.belongsTo(Group)
   },
-  // Left in if we want to add topics to custom-views in the future
-  // topics () {
-  //   return this.hasMany(CustomViewTopic)
-  // }
-}), {
-  find (groupId, opts = {}) {
-    if (!groupId) return Promise.resolve(null)
 
-    const where = { group_id: groupId }
-
-    return this.where(where).fetch(opts)
+  tags () {
+    return this.belongsToMany(Tag).through(CustomViewTopic)
   },
-  // Left in if we want to add topics to custom-views in the future
-  // async updateTopics (topics, transacting) {
-  //   const topicIds = topics.map(topic => topic.id)
-  //   const existingTopicIds = await CustomViewTopic.query(q => q.where('custom_view_id', this.id)).fetch({ transacting })
-  //   if (!isEqual(topicIds, existingTopicIds)) {
-  //     const topicsToAdd = difference(topicIds, existingTopicIds)
-  //     const topicsToRemove = difference(existingTopicIds, topicIds)
 
-  //     Promise.Map(topicsToAdd, async (tag_id) => {
-  //       await CustomViewTopic.create({ tag_id, custom_view_id: this.id, transacting })
-  //     })
+  destroy(options = {}) {
+    if (options.transacting) {
+      CustomViewTopic.where({ custom_view_id: this.id }).destroy(options)
+    } else {
+      bookshelf.knex.transaction(transacting => CustomViewTopic.where({ custom_view_id: this.id }).destroy({ ...options, transacting }))
+    }
+  },
 
-  //     Promise.Map(topicsToRemove, async (tag_id) => {
-  //       await CustomViewTopic.delete({ tag_id, custom_view_id: this.id })
-  //     })
-  //   }
-  // }
+  async updateTopics(topics, transacting) {
+    const newTopicIds = topics ? await Promise.map(topics, async (t) => parseInt(t.id) || parseInt((await Tag.findOrCreate(t.name, { transacting })).id)) : []
+    const existingTopics = (await CustomViewTopic.query(q => q.select('tag_id').where('custom_view_id', this.id)).fetchAll({ transacting }))
+    const existingTopicIds = existingTopics.map(t => parseInt(t.get('tag_id')))
+
+    if (!isEqual(newTopicIds, existingTopicIds)) {
+      const topicsToAdd = difference(newTopicIds, existingTopicIds)
+      const topicsToRemove = difference(existingTopicIds, newTopicIds)
+
+      await Promise.map(topicsToAdd, async (id) => {
+        await CustomViewTopic.create({ tag_id: id, custom_view_id: this.id }, transacting)
+      })
+
+      await Promise.map(topicsToRemove, async (id) => {
+        await CustomViewTopic.where({ tag_id: id, custom_view_id: this.id }).destroy({ require: false, transacting })
+      })
+    }
+  }
+}), {
+  find (id, opts = {}) {
+    if (!id) return Promise.resolve(null)
+    const where = { id }
+    return this.where(where).fetch(opts)
+  }
 })
