@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- Bugs that could unset a location or area polygon when saving settings
+
 ## [4.1.5] - 2022-07-05
 
 ### Fixed
