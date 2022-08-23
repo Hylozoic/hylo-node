@@ -180,6 +180,8 @@
       "BlockedUser",
       "Comment",
       "CommentTag",
+      "CustomView",
+      "CustomViewTopic",
       "Contribution",
       "Device",
       "Email",

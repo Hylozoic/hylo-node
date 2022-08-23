@@ -89,6 +89,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(User, 'created_by_id')
   },
 
+  customViews () {
+    return this.hasMany(CustomView)
+  },
+
   groupRelationshipInvitesFrom () {
     return this.hasMany(GroupRelationshipInvite, 'from_group_id')
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
@@ -379,67 +383,105 @@ module.exports = bookshelf.Model.extend(merge({
       saneAttrs.settings = merge({}, this.get('settings'), attributes.settings)
     }
 
-    saneAttrs.location_id = isEmpty(saneAttrs.location_id) ? null : saneAttrs.location_id
+    // If location_id is explicitly set to something empty then set it to null
+    // Otherwise leave it alone
+    saneAttrs.location_id = saneAttrs.hasOwnProperty('location_id') && isEmpty(saneAttrs.location_id) ? null : saneAttrs.location_id
 
     // Make sure geometry column goes into the database correctly, converting from GeoJSON
     if (!isEmpty(attributes.geo_shape)) {
       const st = knexPostgis(bookshelf.knex)
       saneAttrs.geo_shape = st.geomFromGeoJSON(attributes.geo_shape)
-    } else {
+    } else if (saneAttrs.hasOwnProperty('geo_shape')) {
+      // if geo_shape is explicitly set to an empty value then unset it
       saneAttrs.geo_shape = null
     }
+
+    this.set(saneAttrs)
+    await this.validate()
+
+    await bookshelf.transaction(async transacting => {
+      if (changes.group_to_group_join_questions) {
+        const questions = await Promise.map(changes.group_to_group_join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
+            return (await Question.where({ text: trim(jq.text) }).fetch({ transacting })) || (await Question.forge({ text: trim(jq.text) }).save({}, { transacting }))
+        })
+          await GroupToGroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false, transacting })
+        for (let q of questions) {
+            await GroupToGroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save({}, { transacting })
+        }
+      }
+
+      if (changes.join_questions) {
+        const questions = await Promise.map(changes.join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
+            return (await Question.where({ text: trim(jq.text) }).fetch({ transacting })) || (await Question.forge({ text: trim(jq.text) }).save({}, { transacting }))
+        })
+          await GroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false, transacting })
+        for (let q of questions) {
+            await GroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save({}, { transacting })
+        }
+      }
+
+      if (changes.prerequisite_group_ids) {
+        // Go through all parent groups and reset which ones are prerequisites
+          const parentRelationships = await this.parentGroupRelationships().fetch({ transacting })
+        await Promise.map(parentRelationships.models, async (relationship) => {
+          const isNowPrereq = changes.prerequisite_group_ids.includes(relationship.get('parent_group_id'))
+          if (relationship.getSetting('isPrerequisite') !== isNowPrereq) {
+              await relationship.addSetting({ isPrerequisite: isNowPrereq }, true, transacting)
+          }
+        })
+      }
+
+      if (changes.group_extensions) {
+        for (const extData of changes.group_extensions) {
+          const ext = await Extension.find(extData.type)
+          if (ext) {
+            const ge = (await GroupExtension.find(this.id, ext.id)) || new GroupExtension({ group_id: this.id, extension_id: ext.id })
+            ge.set({ data: extData.data })
+              await ge.save({}, { transacting })
+          } else {
+            throw Error('Invalid extension type ' + extData.type)
+          }
+        }
+      }
+
+      if (changes.custom_views) {
+        const newViewIndex = 0
+        const oldViewIndex = 0
+        const currentViews = await this.customViews().fetch({ transacting })
+        let currentView = currentViews.shift()
+        // TODO: more validation?
+        const newViews = changes.custom_views.filter(cv => trim(cv.name) !== '')
+        let newView = newViews.shift()
+        // Update current views, add new ones, delete old ones and try to be efficient about it
+        while (currentView || newView) {
+          if (newView) {
+            const topics = newView && newView.topics
+            delete newView.topics
+            delete newView.id
+            if (currentView) {
+              await currentView.save(newView, { transacting })
+            } else {
+              currentView = await CustomView.forge({ ...newView, group_id: this.id }).save({}, { transacting })
+            }
+
+            await currentView.updateTopics(topics, transacting)
+          } else if (currentView) {
+            await currentView.destroy({ transacting })
+          } else {
+            break
+          }
+          currentView = currentViews.shift()
+          newView = newViews.shift()
+        }
+      }
+
+      await this.save({}, { transacting })
+    })
 
     // If a new location is being passed in but not a new location_id then we geocode on the server
     if (changes.location && changes.location !== this.get('location') && !changes.location_id) {
       await Queue.classMethod('Group', 'geocodeLocation', { groupId: this.id })
     }
-
-    if (changes.group_to_group_join_questions) {
-      const questions = await Promise.map(changes.group_to_group_join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
-        return (await Question.where({ text: trim(jq.text) }).fetch()) || (await Question.forge({ text: trim(jq.text) }).save())
-      })
-      await GroupToGroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false })
-      for (let q of questions) {
-        await GroupToGroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save()
-      }
-    }
-
-    if (changes.join_questions) {
-      const questions = await Promise.map(changes.join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
-        return (await Question.where({ text: trim(jq.text) }).fetch()) || (await Question.forge({ text: trim(jq.text) }).save())
-      })
-      await GroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false })
-      for (let q of questions) {
-        await GroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save()
-      }
-    }
-
-    if (changes.prerequisite_group_ids) {
-      // Go through all parent groups and reset which ones are prerequisites
-      const parentRelationships = await this.parentGroupRelationships().fetch()
-      await Promise.map(parentRelationships.models, async (relationship) => {
-        const isNowPrereq = changes.prerequisite_group_ids.includes(relationship.get('parent_group_id'))
-        if (relationship.getSetting('isPrerequisite') !== isNowPrereq) {
-          await relationship.addSetting({ isPrerequisite: isNowPrereq }, true)
-        }
-      })
-    }
-
-    if (changes.group_extensions) {
-      for (const extData of changes.group_extensions) {
-        const ext = await Extension.find(extData.type)
-        if (ext) {
-          const ge = (await GroupExtension.find(this.id, ext.id)) || new GroupExtension({ group_id: this.id, extension_id: ext.id })
-          ge.set({ data: extData.data })
-          await ge.save()
-        } else {
-          throw Error('Invalid extension type ' + extData.type)
-        }
-      }
-    }
-
-    this.set(saneAttrs)
-    await this.validate().then(() => this.save())
     return this
   },
 
