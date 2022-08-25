@@ -105,6 +105,9 @@ module.exports = bookshelf.Model.extend({
     if (this.get('group_id')) {
       relations.push('group')
     }
+    if (this.get('other_group_id')) {
+      relations.push('otherGroup')
+    }
     await this.load(relations, {transacting: trx})
     const notificationData = await Activity.generateNotificationMedia(this)
 
@@ -249,7 +252,8 @@ module.exports = bookshelf.Model.extend({
     } else if (activity.get('comment_id')) {
       return get(activity, 'relations.comment.relations.post.relations.groups', []).map(c => c.id)
     } else if (activity.get('group_id')) {
-      return [activity.relations.group.id]
+      // For group to group join requests/invites other group is the one related to the reader of the notification
+      return activity.get('other_group_id') ? [activity.relations.group.id, activity.relations.otherGroup.id] : [activity.relations.group.id]
     }
     return []
   },

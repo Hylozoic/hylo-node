@@ -7,6 +7,7 @@ import { LocationHelpers } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
+import { inviteGroupToGroup } from '../graphql/mutations/group.js'
 
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
@@ -546,20 +547,6 @@ module.exports = bookshelf.Model.extend(merge({
 
     const memberships = await bookshelf.transaction(async trx => {
       await group.save(null, {transacting: trx})
-      if (data.parent_ids) {
-        for (const parentId of data.parent_ids) {
-          // Only allow for adding parent groups that the creator is a moderator of or that are Open
-          const parentGroupMembership = await GroupMembership.forIds(userId, parentId, {
-            query: q => { q.select('group_memberships.*', 'groups.accessibility as accessibility', 'groups.visibility as visibility')}
-          }).fetch({ transacting: trx })
-
-          if (parentGroupMembership &&
-              (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR
-                || parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN)) {
-            await group.parentGroups().attach(parentId, { transacting: trx })
-          }
-        }
-      }
 
       if (data.group_extensions) {
         for (const extData of data.group_extensions) {
@@ -577,8 +564,33 @@ module.exports = bookshelf.Model.extend(merge({
 
       await group.createInitialWidgets(trx)
 
-      return group.addMembers([userId],
+      const members = await group.addMembers([userId],
         {role: GroupMembership.Role.MODERATOR}, { transacting: trx })
+
+      // Have to add/request add to parent group after moderator has been added to the group
+      if (data.parent_ids) {
+        for (const parentId of data.parent_ids) {
+          const parent = await Group.findActive(parentId, { transacting: trx })
+
+          if (parent) {
+            // Only allow for adding parent groups that the creator is a moderator of or that are Open
+            const parentGroupMembership = await GroupMembership.forIds(userId, parentId, {
+              query: q => { q.select('group_memberships.*', 'groups.accessibility as accessibility', 'groups.visibility as visibility')}
+            }).fetch({ transacting: trx })
+
+            if (parentGroupMembership &&
+                (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR
+                  || parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN)) {
+              await group.parentGroups().attach(parentId, { transacting: trx })
+            } else {
+              // If can't add directly to parent group then send a request to join
+              await inviteGroupToGroup(userId, group.id, parentId, GroupRelationshipInvite.TYPE.ChildToParent, [], { transacting: trx })
+            }
+          }
+        }
+      }
+
+      return members
     })
 
     if (data.location && !data.location_id) {
