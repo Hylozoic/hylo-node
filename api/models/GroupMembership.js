@@ -81,8 +81,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  async hasModeratorRole (userOrId, groupOrId) {
-    const gm = await this.forPair(userOrId, groupOrId).fetch()
+  async hasModeratorRole (userOrId, groupOrId, opts) {
+    const gm = await this.forPair(userOrId, groupOrId).fetch(opts)
     return gm && gm.hasRole(this.Role.MODERATOR)
   },
 
