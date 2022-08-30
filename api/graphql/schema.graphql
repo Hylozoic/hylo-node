@@ -130,6 +130,7 @@ type Person {
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
   moderatedGroupMembershipsTotal: Int
   posts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -197,6 +198,7 @@ type Group {
     autocomplete: String
   ): GroupQuerySet
   createdAt: Date
+  customViews: CustomViewQuerySet
   description: String
   geoShape: JSON
   groupExtensions: GroupExtensionQuerySet
@@ -245,6 +247,7 @@ type Group {
   pendingInvitations(first: Int, cursor: ID, order: String): InvitationQuerySet
   prerequisiteGroups(onlyNotMember: Boolean): GroupQuerySet
   posts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -273,6 +276,7 @@ type Group {
   typeDescriptor: String
   typeDescriptorPlural: String
   viewPosts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -343,6 +347,29 @@ type GroupWidgetQuerySet {
 type Widget {
   id: Int
   name: String
+}
+
+type CustomView {
+  id: Int
+  name: String
+  groupId: Int
+  group: Group
+  isActive: Boolean
+  searchText: String
+  icon: String
+  externalLink: String
+  viewMode: String
+  order: Int
+  activePostsOnly: Boolean
+  postTypes: [String]
+  topics: [Topic]
+  topicsTotal: Int
+}
+
+type CustomViewQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CustomView]
 }
 
 type GroupRelationship {
@@ -447,42 +474,44 @@ type Interstitial {
 
 type Post {
   id: ID
-  title: String
-  details: String
-  type: String
-  createdAt: Date
-  updatedAt: Date
-  fulfilledAt: Date
-  startTime: Date
-  endTime: Date
-  location: String
-  locationObject: Location
-  isPublic: Boolean
-  creator: Person
-  followers(first: Int, cursor: ID, order: String): [Person]
-  followersTotal: Int
+  acceptContributions: Boolean
   activeMembers(first: Int, cursor: ID, order: String): PersonQuerySet
-  members(first: Int, cursor: ID, order: String): PersonQuerySet
-  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
-  groups(first: Int, cursor: ID, order: String): [Group]
-  groupsTotal: Int
+  announcement: Boolean
+  attachments(type: String): [Attachment]
+  attachmentsTotal: Int
   comments(first: Int, cursor: ID, order: String): CommentQuerySet
   commenters(first: Int): [Person]
   commentersTotal: Int
   commentsTotal: Int
+  createdAt: Date
+  creator: Person
+  details: String
+  donationsLink: String
+  endTime: Date
+  eventInvitations(first: Int, cursor: ID, order: String): EventInvitationQuerySet
+  groups(first: Int, cursor: ID, order: String): [Group]
+  groupsTotal: Int
+  followers(first: Int, cursor: ID, order: String): [Person]
+  followersTotal: Int
+  fulfilledAt: Date
   linkPreview: LinkPreview
-  votesTotal: Int
+  location: String
+  locationObject: Location
   myVote: Boolean
-  attachments(type: String): [Attachment]
-  attachmentsTotal: Int
   postMemberships: [PostMembership]
-  postMembershipsTotal: Int,
-  topics: [Topic],
-  topicsTotal: Int
-  announcement: Boolean
-  acceptContributions: Boolean
-  totalContributions: Int
+  postMembershipsTotal: Int
+  projectManagementLink: String
+  isPublic: Boolean
+  members(first: Int, cursor: ID, order: String): PersonQuerySet
   myEventResponse: String
+  startTime: Date
+  title: String
+  topics: [Topic]
+  topicsTotal: Int
+  totalContributions: Int
+  type: String
+  updatedAt: Date
+  votesTotal: Int
 }
 
 type PostMembership {
@@ -678,6 +707,7 @@ type Query {
   messageThread(id: ID): MessageThread
   post(id: ID): Post
   posts(
+    activePostsOnly: Boolean,
     afterTime: Date,
     beforeTime: Date,
     boundingBox: [PointInput],
@@ -782,23 +812,25 @@ input MeInput {
 }
 
 input PostInput {
-  title: String
+  acceptContributions: Boolean
+  announcement: Boolean
   details: String
-  type: String
+  donationsLink: String
+  endTime: Date
+  eventInviteeIds: [ID]
+  fileUrls: [String]
   groupIds: [String]
-  linkPreviewId: String
+  imageUrls: [String]
   isPublic: Boolean
+  linkPreviewId: String
   location: String
   locationId: ID
-  imageUrls: [String]
-  fileUrls: [String]
-  announcement: Boolean
-  topicNames: [String]
   memberIds: [ID]
-  acceptContributions: Boolean
-  eventInviteeIds: [ID]
+  projectManagementLink: String
   startTime: Date
-  endTime: Date
+  title: String
+  topicNames: [String]
+  type: String
 }
 
 input CommentInput {
@@ -874,6 +906,7 @@ input GroupInput {
   active: Boolean
   avatarUrl: String
   bannerUrl: String
+  customViews: [CustomViewInput]
   description: String
   geoShape: String
   groupToGroupJoinQuestions: [QuestionInput]
@@ -910,6 +943,26 @@ input GroupSettingsInput {
 input GroupExtensionInput {
   data: JSON
   type: String
+}
+
+input CustomViewInput {
+  id: ID
+  name: String
+  groupId: Int
+  isActive: Boolean
+  searchText: String
+  icon: String
+  externalLink: String
+  viewMode: String
+  activePostsOnly: Boolean
+  postTypes: [String]
+  order: Int
+  topics: [CustomViewTopicInput]
+}
+
+input CustomViewTopicInput {
+  id: ID
+  name: String
 }
 
 input QuestionInput {

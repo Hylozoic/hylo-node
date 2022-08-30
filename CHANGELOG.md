@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [4.2.1] - 2022-08-25
+
+# Added
+- If a group is created with a parent group that it can't join then send a request to join
+
+# Fixed
+- Bug that was preventing email notifications going out for requests to join a child to a parent group.
+
+## [4.2.0] - 2022-08-19
+
+### Added
+- Add, delete and update Custom Views for groups that can either be a link to an external URL or a filtered view of posts in a group
+- Project management link and Donations link added to posts (only used for projects right now)
+- Query for non-logged in users to be able to look up public posts
+
+### Fixed
+- Bugs that could unset a location or area polygon when saving settings
+
 ## [4.1.5] - 2022-07-05
 
 ### Fixed

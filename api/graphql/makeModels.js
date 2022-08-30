@@ -155,16 +155,18 @@ export default async function makeModels (userId, isAdmin, apiClient) {
     Post: {
       model: Post,
       attributes: [
-        'created_at',
-        'updated_at',
-        'fulfilled_at',
-        'end_time',
-        'start_time',
-        'location',
-        'announcement',
         'accept_contributions',
+        'announcement',
+        'created_at',
+        'donations_link',
+        'end_time',
+        'fulfilled_at',
         'is_public',
-        'type'
+        'location',
+        'project_management_link',
+        'start_time',
+        'type',
+        'updated_at'
       ],
       getters: {
         commenters: (p, { first }) => p.getCommenters(first, userId),
@@ -176,25 +178,28 @@ export default async function makeModels (userId, isAdmin, apiClient) {
           : ''
       },
       relations: [
-        {comments: {querySet: true}},
+        { comments: { querySet: true } },
         'groups',
-        {user: {alias: 'creator'}},
+        { user: { alias: 'creator' } },
         'followers',
         'locationObject',
-        {members: {querySet: true}},
-        {eventInvitations: {querySet: true}},
+        { members: { querySet: true } },
+        { eventInvitations: { querySet: true } },
         'linkPreview',
         'postMemberships',
-        {media: {
-          alias: 'attachments',
-          arguments: ({ type }) => [type]
-        }},
-        {tags: {alias: 'topics'}}
+        {
+          media: {
+            alias: 'attachments',
+            arguments: ({ type }) => [type]
+          }
+        },
+        { tags: { alias: 'topics' } }
       ],
       filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
-      fetchMany: ({ afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, isFulfilled, offset, order, sortBy, search, topic, topics, types }) =>
+      fetchMany: ({ activePostsOnly = false, afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, isFulfilled, offset, order, sortBy, search, topic, topics, types }) =>
         searchQuerySet('posts', {
+          activePostsOnly,
           afterTime,
           beforeTime,
           boundingBox,
@@ -236,6 +241,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
       relations: [
         {activeMembers: { querySet: true }},
         {childGroups: {querySet: true}},
+        {customViews: {querySet: true}},
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
         {groupTags: {
@@ -260,8 +266,9 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
+              activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
@@ -303,8 +310,9 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { afterTime, beforeTime, boundingBox, filter, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, filter, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
+              activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
@@ -438,12 +446,32 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         'created_at',
         'status',
         'type',
-        'updated_at',
+        'updated_at'
       ],
       getters: {
         questionAnswers: i => i.questionAnswers().fetch()
       },
       relations: ['createdBy', 'fromGroup', 'toGroup']
+    },
+
+    CustomView: {
+      model: CustomView,
+      attributes: [
+        'group_id',
+        'is_active',
+        'search_text',
+        'icon',
+        'name',
+        'external_link',
+        'view_mode',
+        'active_posts_only',
+        'post_types',
+        'order'
+      ],
+      relations: [
+        'group',
+        { tags: { alias: 'topics' } }
+      ]
     },
 
     Invitation: {
@@ -458,7 +486,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
       relations: [
         'creator',
         'group'
-      ],
+      ]
     },
 
     JoinRequest: {

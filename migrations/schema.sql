@@ -1515,7 +1515,9 @@ CREATE TABLE public.posts (
     end_time timestamp with time zone,
     accept_contributions boolean DEFAULT false,
     location_id bigint,
-    is_public boolean DEFAULT false
+    is_public boolean DEFAULT false,
+    donations_link text,
+    project_management_link text
 );
 
 

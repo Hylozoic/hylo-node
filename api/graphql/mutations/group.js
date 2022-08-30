@@ -3,13 +3,13 @@ import convertGraphqlData from './convertGraphqlData'
 import underlyingDeleteGroupTopic from '../../models/group/deleteGroupTopic'
 
 // Util function
-async function getModeratedGroup (userId, groupId) {
-  const group = await Group.find(groupId)
+async function getModeratedGroup (userId, groupId, opts = {}) {
+  const group = await Group.find(groupId, opts)
   if (!group) {
     throw new Error('Group not found')
   }
 
-  const isModerator = await GroupMembership.hasModeratorRole(userId, group)
+  const isModerator = await GroupMembership.hasModeratorRole(userId, group, opts)
   if (!isModerator) {
     throw new Error("You don't have permission to moderate this group")
   }
@@ -115,11 +115,12 @@ export async function removeModerator (userId, personId, groupId, isRemoveFromGr
 
 export async function updateGroup (userId, groupId, changes) {
   const group = await getModeratedGroup(userId, groupId)
+
   return group.update(convertGraphqlData(changes))
 }
 
-export async function inviteGroupToGroup(userId, fromId, toId, type, questionAnswers = []) {
-  const toGroup = await Group.find(toId)
+export async function inviteGroupToGroup(userId, fromId, toId, type, questionAnswers = [], opts = {}) {
+  const toGroup = await Group.find(toId, opts)
   if (!toGroup) {
     throw new Error('Group not found')
   }
@@ -128,24 +129,26 @@ export async function inviteGroupToGroup(userId, fromId, toId, type, questionAns
     throw new Error('Invalid group relationship type')
   }
 
-  const fromGroup = await getModeratedGroup(userId, fromId)
+  const fromGroup = await getModeratedGroup(userId, fromId, opts)
 
-  if (await GroupRelationship.forPair(fromGroup, toGroup).fetch()) {
+  if (await GroupRelationship.forPair(fromGroup, toGroup).fetch(opts)) {
     throw new Error('Groups are already related')
   }
 
   // If current user is a moderator of both the from group and the to group they can automatically join the groups together
   if (await GroupMembership.hasModeratorRole(userId, toGroup)) {
     if (type === GroupRelationshipInvite.TYPE.ParentToChild) {
-      return { success: true, groupRelationship: await fromGroup.addChild(toGroup) }
+      return { success: true, groupRelationship: await fromGroup.addChild(toGroup, opts) }
     } if (type === GroupRelationshipInvite.TYPE.ChildToParent) {
-      return { success: true, groupRelationship: await fromGroup.addParent(toGroup) }
+      return { success: true, groupRelationship: await fromGroup.addParent(toGroup, opts) }
     }
   } else {
-    const existingInvite = GroupRelationshipInvite.forPair(fromGroup, toGroup).fetch()
+    const existingInvite = GroupRelationshipInvite.forPair(fromGroup, toGroup).fetch(opts)
+
     if (existingInvite && existingInvite.status === GroupRelationshipInvite.STATUS.Pending) {
       return { success: false, groupRelationshipInvite: existingInvite }
     }
+
     // If there's an existing processed invite then let's leave it and create a new one
     // TODO: what if the last one was rejected, do we let them create a new one?
     const invite = await GroupRelationshipInvite.create({
@@ -153,9 +156,10 @@ export async function inviteGroupToGroup(userId, fromId, toId, type, questionAns
       fromGroupId: fromId,
       toGroupId: toId,
       type
-    })
+    }, opts)
+
     for (let qa of questionAnswers) {
-      await GroupToGroupJoinRequestQuestionAnswer.forge({ join_request_id: invite.id, question_id: qa.questionId, answer: qa.answer }).save()
+      await GroupToGroupJoinRequestQuestionAnswer.forge({ join_request_id: invite.id, question_id: qa.questionId, answer: qa.answer }).save({}, opts)
     }
     return { success: true, groupRelationshipInvite: invite }
   }

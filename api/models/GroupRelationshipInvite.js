@@ -93,24 +93,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     }
 
     return true
-  },
-
-  afterCreate: async function () {
-    await this.load(['toGroup', 'createdBy', 'fromGroup'])
-    const { toGroup, createdBy, fromGroup } = this.relations
-
-    const moderators = await toGroup.moderators().fetch()
-
-    const notifications = moderators.map(moderator => ({
-      actor_id: createdBy.id,
-      reader_id: moderator.id,
-      group_id: fromGroup.id,
-      other_group_id: toGroup.id,
-      reason: this.get('type') === GroupRelationshipInvite.TYPE.ParentToChild ? Activity.Reason.GroupChildGroupInvite : Activity.Reason.GroupParentGroupJoinRequest
-    }))
-
-    return Activity.saveForReasons(notifications)
-  },
+  }
 
 }, EnsureLoad), {
 
@@ -126,21 +109,34 @@ module.exports = bookshelf.Model.extend(Object.assign({
     ChildToParent: 1
   },
 
-  create: function (opts) {
-    return new GroupRelationshipInvite({
+  create: async function (attrs, opts) {
+    const invite = await new GroupRelationshipInvite({
       created_at: new Date(),
-      created_by_id: opts.userId || opts.createdById,
-      from_group_id: opts.fromGroupId,
-      message: opts.message,
+      created_by_id: attrs.userId || attrs.createdById,
+      from_group_id: attrs.fromGroupId,
+      message: attrs.message,
       status: this.STATUS.Pending,
-      subject: opts.subject,
-      to_group_id: opts.toGroupId,
-      type: opts.type
-    }).save()
-    .then(async invite => {
-      invite.afterCreate()
-      return invite
-    })
+      subject: attrs.subject,
+      to_group_id: attrs.toGroupId,
+      type: attrs.type
+    }).save({}, opts)
+
+    await invite.load(['toGroup', 'createdBy', 'fromGroup'], opts)
+    const { toGroup, createdBy, fromGroup } = invite.relations
+
+    const moderators = await toGroup.moderators().fetch(opts)
+
+    const notifications = moderators.map(moderator => ({
+      actor_id: createdBy.id,
+      reader_id: moderator.id,
+      group_id: fromGroup.id,
+      other_group_id: toGroup.id,
+      reason: invite.get('type') === GroupRelationshipInvite.TYPE.ParentToChild ? Activity.Reason.GroupChildGroupInvite : Activity.Reason.GroupParentGroupJoinRequest
+    }))
+
+    await Activity.saveForReasons(notifications, opts.transacting)
+
+    return invite
   },
 
   createAcceptNotifications: function({ inviteId, actorId }) {
