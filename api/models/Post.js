@@ -225,7 +225,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         commentsTotal: 0,
         groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
         creator,
-        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
+        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'description', 'url' ]),
         topics,
 
         // TODO: Once legacy site is decommissioned, these are no longer required.

@@ -162,6 +162,7 @@ export default async function makeModels (userId, isAdmin, apiClient) {
         'end_time',
         'fulfilled_at',
         'is_public',
+        'link_preview_featured',
         'location',
         'project_management_link',
         'start_time',
