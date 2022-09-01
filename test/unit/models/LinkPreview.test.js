@@ -10,28 +10,6 @@ const mockDoc = `<html><head>
 </head></html>`
 
 describe('LinkPreview', () => {
-  describe('parse', () => {
-    it('reads Open Graph tags', () => {
-      expect(LinkPreview.parse(mockDoc)).to.deep.equal({
-        title: 'wow!',
-        image_url: 'http://fake.host/wow.png',
-        description: "it's amazing"
-      })
-    })
-
-    it('handles missing tags', () => {
-      const doc = `<html><head>
-        <title>wow!</title>
-      </head></html>`
-
-      expect(LinkPreview.parse(doc)).to.deep.equal({
-        title: 'wow!',
-        image_url: undefined,
-        description: undefined
-      })
-    })
-  })
-
   describe('populate', () => {
     const url = 'http://foo.com/bar'
     var preview

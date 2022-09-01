@@ -569,12 +569,11 @@ export default async function makeModels (userId, isAdmin, apiClient) {
     LinkPreview: {
       model: LinkPreview,
       attributes: [
-        'title',
-        'url',
+        'description',
         'image_url',
-        'image_width',
-        'image_height',
-        'status'
+        'status',
+        'title',
+        'url'
       ]
     },
 
