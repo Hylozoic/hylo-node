@@ -11,9 +11,10 @@ exports.up = async function (knex) {
     table.renameColumn('date_voted', 'date_reacted')
     table.index('emoji_base', 'idx_reactions_emoji_full')
     table.index('entity_type', 'idx_reactions_entity_type')
-    table.dropIndex('ix_vote_post_14')
     table.index('entity_id', 'idx_reactions_entity_id')
   })
+
+  await knex.raw('DROP INDEX ix_vote_post_14')
 
   // migrate prior data
   // 'U+1F44D' but encoded in UTF-16 (because javascript) => '\uD83D\uDC4D', thumbs up emoji, :thumbs up:
@@ -26,8 +27,16 @@ exports.up = async function (knex) {
 
   await knex.schema.table('posts', table => {
     table.jsonb('reactions')
-    table.renameColumn('num_votes', 'num_reactions')
+    table.renameColumn('num_votes', 'num_people_reacts')
   })
+
+  const existingCounts = await knex.raw('select id, num_people_reacts from posts')
+
+  return Promise.all(
+    existingCounts.rows.map(({id, num_people_reacts}) => knex.raw(
+      `update posts set reactions = '{"\uD83D\uDC4D": ${num_people_reacts}}' where id = ${id}`
+    ))
+  )
 }
 
 exports.down = async function (knex) {
@@ -47,9 +56,9 @@ exports.down = async function (knex) {
 
   await knex.schema.table('posts', table => {
     table.dropColumn('reactions')
-    table.renameColumn('num_reactions', 'num_votes')
+    table.renameColumn('num_people_reacts', 'num_votes')
     table.renameColumn('date_reacted', 'date_voted')
   })
 
-  await knex.schema.renameTable('reactions', 'votes')
+  return await knex.schema.renameTable('reactions', 'votes')
 }

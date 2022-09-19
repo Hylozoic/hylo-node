@@ -33,6 +33,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.relations.post.relations.groups.first()
   },
 
+  userReactions: function (userId, trx) {
+    return this.reactions().query({ where: { user_id: userId, entity_type: 'comment' } }, { transacting: trx })
+  },
+
+  commentReactions: function () {
+    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'comment')
+  },
+
   tags: function () {
     return this.belongsToMany(Tag).through(CommentTag)
   },
@@ -44,6 +52,32 @@ module.exports = bookshelf.Model.extend(Object.assign({
   parentComment: function () {
     return this.belongsTo(Comment).where('comments.active', true)
   },
+
+  reaction: function (userId, data) {
+    return this.userReactions(userId)
+      .then(userReactions => bookshelf.transaction(async trx => {
+        const delta = userReactions.length > 0 ? 0 : 1
+        const commentReactions = await this.get('reactions')
+        const { emojiFull } = data
+        const reactionCount = commentReactions[emojiFull] || 0
+        const inc = () =>
+          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...commentReactions, [emojiFull]: reactionCount + delta } }, { transacting: trx })
+
+        return new Reaction({
+          entity_id: this.id,
+          user_id: userId,
+          emoji_base: data.emojiBase,
+          emoji_full: data.emojiFull,
+          entity_type: 'comment',
+          emoji_label: data.emojiLabel
+        }).save().then(inc())
+      }))
+      .then(() => this)
+  },
+
+  deleteReaction: function (userId, data){
+
+  }, 
 
   childComments: function () {
     return this.hasMany(Comment, 'comment_id').query({where: {'comments.active': true}})

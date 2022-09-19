@@ -150,8 +150,10 @@ type Person {
   projects: PostQuerySet
   skills(first: Int, cursor: ID): SkillQuerySet
   skillsToLearn(first: Int, cursor: ID): SkillQuerySet
+  reactions(first: Int, offset: Int, order: String): ReactionQuerySet
   votes(first: Int, offset: Int, order: String): VoteQuerySet
   votesTotal: Int
+  poepleReactionsTotal: Int
   messageThreadId: ID
 }
 
@@ -497,7 +499,9 @@ type Post {
   linkPreview: LinkPreview
   location: String
   locationObject: Location
+  # TODO: Need to address this, now that reactions can be N big
   myVote: Boolean
+  myReactions: [Reaction]
   postMemberships: [PostMembership]
   postMembershipsTotal: Int
   projectManagementLink: String
@@ -511,6 +515,7 @@ type Post {
   totalContributions: Int
   type: String
   updatedAt: Date
+  peopleReactionsTotal: Int
   votesTotal: Int
 }
 
@@ -648,6 +653,12 @@ type Message {
   creator: Person
   messageThread: MessageThread
   createdAt: Date
+}
+
+type ReactionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Reaction]
 }
 
 type Vote {
@@ -844,6 +855,27 @@ input MessageInput {
   text: String
   messageThreadId: String
   createdAt: Date
+}
+
+input ReactionInput {
+  emojiBase: String
+  emojiFull: String
+  emojiLabel: String
+  entityId: ID
+  entityType: String
+  createdAt: Date
+}
+
+type Reaction {
+  emojiBase: String
+  emojiFull: String
+  emojiLabel: String
+  entityId: ID
+  entityType: String
+  userId: ID
+  createdAt: Date
+  post: Post
+  user: Person
 }
 
 input MessageThreadInput {
@@ -1050,6 +1082,7 @@ type Mutation {
   deleteGroupTopic(id: ID): GenericResult
   deletePost(id: ID): GenericResult
   deleteProjectRole(id: ID): GenericResult
+  deleteReaction(id: ID, emojiFull: String): GenericResult
   deleteSavedSearch(id: ID): ID
   expireInvitation(invitationId: ID): GenericResult
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
@@ -1070,6 +1103,7 @@ type Mutation {
   messageGroupModerators(groupId: ID): ID
   pinPost(postId: ID, groupId: ID): GenericResult
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
+  reaction(entityId: ID, data: ReactionInput): GenericResult
   reactivateMe(id: ID): GenericResult
   regenerateAccessCode(groupId: ID): Group
   registerDevice(playerId: String, platform: String, version: String): GenericResult
@@ -1104,6 +1138,7 @@ type Mutation {
   updateWidget(id: ID, changes: GroupWidgetInput): GroupWidget
   useInvitation(invitationToken: String, accessCode: String): InvitationUseResult
   verifyEmail(code: String, email: String!, token: String): SignupResult
+  # need to leave this one in for now
   vote(postId: ID, isUpvote: Boolean): Post
 }
 

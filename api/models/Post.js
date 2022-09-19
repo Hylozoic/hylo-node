@@ -73,8 +73,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('num_comments')
   },
 
+  peopleReactionsTotal: function () {
+    return this.get('num_people_reacts')
+  },
+
   votesTotal: function () {
-    return this.get('num_votes')
+    return this.get('num_people_reacts')
   },
 
   // Relations
@@ -162,18 +166,26 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
+  userReactions: function (userId, trx) {
+    return this.reactions().query({ where: { user_id: userId, entity_type: 'post' } }, { transacting: trx })
+  },
+
+  postReactions: function () {
+    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
+  },
+
   userVote: function (userId) {
-    return this.votes().query({where: {user_id: userId}}).fetchOne()
+    return this.votes().query({ where: { user_id: userId, entity_type: 'post' } }).fetchOne()
   },
 
   votes: function () {
-    return this.hasMany(Vote)
+    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
   },
 
   // TODO: this is confusing and we are not using, remove for now?
   children: function () {
     return this.hasMany(Post, 'parent_post_id')
-    .query({where: {active: true}})
+    .query({ where: { active: true } })
   },
 
   parent: function () {
@@ -216,8 +228,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Object.assign({},
       refineOne(
         this,
-        [ 'created_at', 'description', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
-        { 'description': 'details', 'name': 'title', 'num_votes': 'votesTotal' }
+        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'type', 'updated_at', 'num_votes'],
+        { description: 'details', name: 'title', num_people_reacts: 'peopleReactionsTotal', num_votes: 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation
@@ -349,7 +361,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       reader_id: eventInvitation.get('user_id'),
       post_id: this.id,
       actor_id: eventInvitation.get('inviter_id'),
-      reason: `eventInvitation`
+      reason: 'eventInvitation'
     }))
 
     let members = await Promise.all(groups.map(async group => {
@@ -388,21 +400,74 @@ module.exports = bookshelf.Model.extend(Object.assign({
   fulfill,
 
   unfulfill,
-
+  // TODO: Need to remove this once mobile has been updated
   vote: function (userId, isUpvote) {
-    return this.votes().query({where: {user_id: userId}}).fetchOne()
-    .then(vote => bookshelf.transaction(trx => {
-      var inc = delta => () =>
-        this.save({num_votes: this.get('num_votes') + delta}, {transacting: trx})
+    return this.postReactions().query({ where: { user_id: userId, emoji_full: '\uD83D\uDC4D' } }).fetchOne()
+      .then(reaction => bookshelf.transaction(trx => {
+        const inc = delta => async () => {
+          const reactions = await this.get('reactions')
+          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...reactions, '\uD83D\uDC4D': reactions['\uD83D\uDC4D'] + delta } })
+        }
 
-      return (vote && !isUpvote
-        ? vote.destroy({transacting: trx}).then(inc(-1))
-        : isUpvote && new Vote({
-          post_id: this.id,
-          user_id: userId
-        }).save().then(inc(1)))
-    }))
-    .then(() => this)
+        return (reaction && !isUpvote
+          ? reaction.destroy({ transacting: trx }).then(inc(-1))
+          : isUpvote && new Reaction({
+            entity_id: this.id,
+            user_id: userId,
+            emoji_base: '\uD83D\uDC4D',
+            emoji_full: '\uD83D\uDC4D',
+            entity_type: 'post',
+            emoji_label: ':thumbs up:'
+          }).save().then(inc(1)))
+      }))
+      .then(() => this)
+  },
+
+  deleteReaction: function (userId, data) {
+    return this.userReactions(userId)
+      .then(userReactions => bookshelf.transaction(async trx => {
+        const isLastReaction = userReactions.length === 1
+        const userReaction = userReactions.filter(reaction => reaction.emojiFull === data.emojiFull)
+        const { emojiFull } = data
+        const cleanUp = async () => {
+          const reactions = await this.get('reactions')
+          const reactionCount = reactions[emojiFull] || 0
+          if (isLastReaction) {
+            this.save({ num_people_reacts: this.get('num_people_reacts') - 1, reactions: { ...reactions, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+          } else {
+            const reactions = await this.get('reactions')
+            this.save({ reactions: { ...reactions, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+          }
+        }
+
+        return userReaction.destroy({ transacting: trx })
+          .then(cleanUp())
+      }))
+  },
+
+  reaction: function (userId, data) {
+    return this.userReactions(userId)
+      .then(userReactions => bookshelf.transaction(async trx => { // TODO: this needs to be finished off
+      // need to update the count on the post and the reactions field...
+      // so need to retrive the post.. but we are in the post, so that's easy :)
+      // then we need to create a new Reaction
+        const delta = userReactions.length > 0 ? 0 : 1
+        const postReactions = await this.get('reactions')
+        const { emojiFull } = data
+        const reactionCount = postReactions[emojiFull] || 0
+        const inc = () =>
+          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...postReactions, [emojiFull]: reactionCount + delta } }, { transacting: trx })
+
+        return new Reaction({
+          entity_id: this.id,
+          user_id: userId,
+          emoji_base: data.emojiBase,
+          emoji_full: data.emojiFull,
+          entity_type: 'post',
+          emoji_label: data.emojiLabel
+        }).save().then(inc())
+      }))
+      .then(() => this)
   },
 
   removeFromGroup: function (idOrSlug) {
@@ -498,7 +563,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     updated_at: new Date(),
     active: true,
     num_comments: 0,
-    num_votes: 0
+    num_people_reacts: 0
   }),
 
   create: function (attrs, opts) {

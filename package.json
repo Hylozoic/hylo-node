@@ -215,6 +215,7 @@
       "ProjectContributions",
       "PushNotification",
       "Queue",
+      "Reaction",
       "RedisClient",
       "RequestValidation",
       "RichText",
@@ -229,8 +230,7 @@
       "UserExternalData",
       "UserSession",
       "UserVerificationCode",
-      "Validation",
-      "Vote"
+      "Validation"
     ]
   },
   "nodemonConfig": {

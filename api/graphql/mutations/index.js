@@ -292,6 +292,34 @@ export function messageGroupModerators (userId, groupId) {
   return Group.messageModerators(userId, groupId)
 }
 
+export function reaction (userId, data) {
+  // check if the inbound data has an entityType
+  const lookUp = {
+    post: Post,
+    comment: Comment
+  }
+  const { entityType, entityId } = data
+  if (!['post', 'comment'].includes(entityType)) {
+    throw new Error('entityType invalid: you need to say its a post or a comment')
+  }
+  return lookUp[entityType].find(entityId)
+    .then(entity => entity.reaction(userId, data))
+}
+
+export function deleteReaction (userId, data) {
+  // check if the inbound data has an entityType
+  const lookUp = {
+    post: Post,
+    comment: Comment
+  }
+  const { entityType, entityId } = data
+  if (!['post', 'comment'].includes(entityType)) {
+    throw new Error('entityType invalid: you need to say its a post or a comment')
+  }
+  return lookUp[entityType].find(entityId)
+    .then(entity => entity.deleteReaction(userId, data))
+}
+
 export async function removePost (userId, postId, groupIdOrSlug) {
   const group = await Group.find(groupIdOrSlug)
   return Promise.join(
