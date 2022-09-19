@@ -11,7 +11,7 @@ Hylo URLs. Adds token links for all other relative/apparently Hylo `href`s
 export const qualifyLinks = (html, recipient, token, slug) => {
   if (!html) return html
 
-  const presentedHTML = TextHelpers.presentHTML(html, { slug }) 
+  const presentedHTML = TextHelpers.processHTML(html, { slug }) 
   const $ = Cheerio.load(presentedHTML, null, false)
 
   $('a').each(function () {
