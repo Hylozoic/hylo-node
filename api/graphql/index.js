@@ -1,5 +1,6 @@
+import { envelop, useLazyLoadedSchema } from '@envelop/core'
+const { createServer } = require('@graphql-yoga/node')
 import { readFileSync } from 'fs'
-import { graphqlHTTP } from 'express-graphql'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
@@ -100,16 +101,36 @@ import { merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
-async function createSchema (expressContext) {
+export const createRequestHandler = () =>
+  createServer({
+    plugins: [useLazyLoadedSchema(createSchema)],
+    context: async ({ query, req, variables }) => {
+      if (process.env.DEBUG_GRAPHQL) {
+        sails.log.info('\n' +
+          red('graphql query start') + '\n' +
+          query + '\n' +
+          red('graphql query end')
+        )
+        sails.log.info(inspect(variables))
+      }
+
+      if (req.session.userId) {
+        await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
+      }
+    },
+    graphiql: true
+  })
+
+function createSchema (expressContext) {
   const { req } = expressContext
-  const session = req.session
+  const { api_client, session } = req
   const userId = session.userId
   const isAdmin = Admin.isSignedIn(req)
-  const models = await makeModels(userId, isAdmin, req.api_client)
+  const models = makeModels(userId, isAdmin, api_client)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   let allResolvers
-  if (req.api_client) {
+  if (api_client) {
     // TODO: check scope here, just api:write, just api_read, or both?
     allResolvers = {
       Query: makeApiQueries(fetchOne),
@@ -122,6 +143,7 @@ async function createSchema (expressContext) {
     }
   } else {
     // authenticated users
+
     allResolvers = {
       Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
       Mutation: makeMutations(expressContext, userId, isAdmin, fetchOne),
@@ -442,37 +464,6 @@ export function makeApiMutations () {
     updateGroup: (root, { asUserId, id, changes }) => updateGroup(asUserId, id, changes)
   }
 }
-
-export const createRequestHandler = () =>
-  graphqlHTTP(async (req, res) => {
-    if (process.env.DEBUG_GRAPHQL) {
-      sails.log.info('\n' +
-        red('graphql query start') + '\n' +
-        req.body.query + '\n' +
-        red('graphql query end')
-      )
-      sails.log.info(inspect(req.body.variables))
-    }
-
-    // TODO: since this function can return a promise, we could run through some
-    // policies based on the current user here and assign them to context, so
-    // that the resolvers can use them to deny or restrict access...
-    //
-    // ideally we would be able to associate paths with policies, analyze the
-    // query to find the policies which should be tested, and run them to allow
-    // or deny access to those paths
-
-    if (req.session.userId) {
-      await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
-    }
-
-    const schema = await createSchema({ req, res })
-    return {
-      schema,
-      graphiql: true,
-      customFormatErrorFn: process.env.NODE_ENV === 'development' ? logError : null
-    }
-  })
 
 let modelToTypeMap
 
