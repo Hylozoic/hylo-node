@@ -30,8 +30,6 @@ export async function invitePeopleToEvent (userId, eventId, inviteeIds) {
     var eventInvitation = await EventInvitation.find({userId: inviteeId, eventId})
     if (!eventInvitation) {
 
-      console.log('creating for invitation for ', inviteeId)
-
       await EventInvitation.create({
         userId: inviteeId,
         inviterId: userId,
