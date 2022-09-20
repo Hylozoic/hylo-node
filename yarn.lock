@@ -4728,11 +4728,6 @@ electron-to-chromium@^1.4.118:
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.124.tgz#e9015e234d8632920dcdf5480351da9e845ed220"
   integrity sha512-VhaE9VUYU6d2eIb+4xf83CATD+T+3bTzvxvlADkQE+c2hisiw3sZmvEDtsW704+Zky9WZGhBuQXijDVqSriQLA==
 
-emitter-component@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/emitter-component/-/emitter-component-1.1.1.tgz#065e2dbed6959bf470679edabeaf7981d1003ab6"
-  integrity sha1-Bl4tvtaVm/RwZ57avq95gdEAOrY=
-
 emoji-regex@^8.0.0:
   version "8.0.0"
   resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-8.0.0.tgz#e818fd69ce5ccfcb404594f842963bf53164cc37"
@@ -6892,23 +6887,18 @@ https-proxy-agent@^5.0.0, https-proxy-agent@^5.0.1:
     agent-base "6"
     debug "4"
 
-hylo-shared@1.9.0-beta.10:
-  version "1.9.0-beta.10"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.9.0-beta.10.tgz#62bc6d72615d347c16014b7c7658b3b7ff794001"
-  integrity sha512-4UMKlQhwwMn3GSHIHJWl6jiTYNcrysz2FT8wz+rpzRnyFH8uiaxsCVNv4OJwIMOReUTG5wJd5jyNs/VOTZN1bw==
+hylo-shared@1.9.0-beta.11:
+  version "1.9.0-beta.11"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.9.0-beta.11.tgz#dcf2d94bf4cb764bec8dc92dee65457aad16945a"
+  integrity sha512-Miw+FAQ3b6jhHZouKdFS/sawadsP4wZk/CVfUKdpOI2YSnXbCk8KtCNZkOgJG/mUEkqjcCSumDMh9ItBhlr/3A==
   dependencies:
     coordinate-parser "^1.0.7"
     html-to-text "^8.1.0"
-    insane "^2.6.2"
-    jsdom "^20.0.0"
-    linkify-html "^3.0.5"
-    linkifyjs "^3.0.5"
     lodash "~4.17.21"
     marked "^4.0.12"
     moment-timezone "^0.5.34"
     pretty-date "^0.2.0"
     querystring "^0.2.1"
-    stream "^0.0.2"
     trunc-html "^1.1.2"
     trunc-text "^1.0.2"
     validator "^13.7.0"
@@ -8169,15 +8159,15 @@ link-preview-js@^3.0.3:
     cross-fetch "3.1.5"
     url "0.11.0"
 
-linkify-html@^3.0.5:
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/linkify-html/-/linkify-html-3.0.5.tgz#317181f7603e17b7d38492b0f6fdf9cce14f1e6b"
-  integrity sha512-3O7HEYjkugX+C/G2C2wyBmIt8Mt0pmeaHNIxRHodCFeQQeSxSoZHR+5hC1pi0WrmoEvfnSemyZyYTM8w3lo9cA==
+linkify-html@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/linkify-html/-/linkify-html-4.0.0.tgz#884d14fd6e6e8cc4f112fa3681145cafce13bc97"
+  integrity sha512-I8W8rhaExwKDEWoqIa6UGyLQK5nrLyXIX1poMZq0CNpsBPDSYNqkVyDNiSpXs7pRmQYIOg2zDGcVHBWj+GuYLA==
 
-linkifyjs@^3.0.5:
-  version "3.0.5"
-  resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-3.0.5.tgz#99e51a3a0c0e232fcb63ebb89eea3ff923378f34"
-  integrity sha512-1Y9XQH65eQKA9p2xtk+zxvnTeQBG7rdAXSkUG97DmuI/Xhji9uaUzaWxRj6rf9YC0v8KKHkxav7tnLX82Sz5Fg==
+linkifyjs@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-4.0.0.tgz#765d5283ddf94373357af34655557b3761b42233"
+  integrity sha512-RJuSqTcPSE7lHqZzVaZbg5w231QhIHkytiCjM6lxVHhodkt2rCBNDONCYVBYRXXIBvUl/Z+xOhRwOJnVrZB4Wg==
 
 load-json-file@^1.0.0:
   version "1.1.0"
@@ -12464,13 +12454,6 @@ stream-transform@^2.1.3:
   integrity sha512-9GHUiM5hMiCi6Y03jD2ARC1ettBXkQBoQAe7nJsPknnI0ow10aXjTnew8QtYQmLjzn974BnmWEAJgCY6ZP1DeQ==
   dependencies:
     mixme "^0.5.1"
-
-stream@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/stream/-/stream-0.0.2.tgz#7f5363f057f6592c5595f00bc80a27f5cec1f0ef"
-  integrity sha1-f1Nj8Ff2WSxVlfALyAon9c7B8O8=
-  dependencies:
-    emitter-component "^1.1.1"
 
 streamifier@0.1.1:
   version "0.1.1"

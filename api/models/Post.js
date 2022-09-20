@@ -1,7 +1,6 @@
 /* globals _ */
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
-import { TextHelpers } from 'hylo-shared'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -9,6 +8,7 @@ import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
 import ProjectMixin from './project/mixin'
 import EventMixin from './event/mixin'
+import * as RichText from '../services/RichText'
 
 export const POSTS_USERS_ATTR_UPDATE_WHITELIST = [
   'project_role_id',
@@ -50,7 +50,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     // which seems unecessary as for now in both Web and Mobile we will sense clicks and replace
     // the root to the contextual group slug. Also would be potentially impactful to performance
     // when loading a large number of posts.
-    return TextHelpers.sanitizeHTML(TextHelpers.processHTML(this.get('description')))
+    return RichText.sanitizeHTML(RichText.processHTML(this.get('description')))
   },
 
   description: function () {
