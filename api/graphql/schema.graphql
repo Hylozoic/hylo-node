@@ -1103,7 +1103,7 @@ type Mutation {
   messageGroupModerators(groupId: ID): ID
   pinPost(postId: ID, groupId: ID): GenericResult
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
-  reaction(entityId: ID, data: ReactionInput): GenericResult
+  reaction(entityId: ID, data: ReactionInput): Post
   reactivateMe(id: ID): GenericResult
   regenerateAccessCode(groupId: ID): Group
   registerDevice(playerId: String, platform: String, version: String): GenericResult

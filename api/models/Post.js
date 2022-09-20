@@ -405,8 +405,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.postReactions().query({ where: { user_id: userId, emoji_full: '\uD83D\uDC4D' } }).fetchOne()
       .then(reaction => bookshelf.transaction(trx => {
         const inc = delta => async () => {
-          const reactions = await this.get('reactions')
-          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...reactions, '\uD83D\uDC4D': reactions['\uD83D\uDC4D'] + delta } })
+          const reactionsSummary = await this.get('reactions_summary')
+          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...reactionsSummary, '\uD83D\uDC4D': reactionsSummary['\uD83D\uDC4D'] + delta } })
         }
 
         return (reaction && !isUpvote
@@ -430,13 +430,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
         const userReaction = userReactions.filter(reaction => reaction.emojiFull === data.emojiFull)
         const { emojiFull } = data
         const cleanUp = async () => {
-          const reactions = await this.get('reactions')
-          const reactionCount = reactions[emojiFull] || 0
+          const reactionsSummary = await this.get('reactions_summary')
+          const reactionCount = reactionsSummary[emojiFull] || 0
           if (isLastReaction) {
-            this.save({ num_people_reacts: this.get('num_people_reacts') - 1, reactions: { ...reactions, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+            this.save({ num_people_reacts: this.get('num_people_reacts') - 1, reactions: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
           } else {
-            const reactions = await this.get('reactions')
-            this.save({ reactions: { ...reactions, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+            const reactionsSummary = await this.get('reactions_summary')
+            this.save({ reactions: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
           }
         }
 

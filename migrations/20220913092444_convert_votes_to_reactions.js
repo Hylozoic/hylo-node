@@ -26,7 +26,7 @@ exports.up = async function (knex) {
   })
 
   await knex.schema.table('posts', table => {
-    table.jsonb('reactions')
+    table.jsonb('reactions_summary')
     table.renameColumn('num_votes', 'num_people_reacts')
   })
 
@@ -34,7 +34,7 @@ exports.up = async function (knex) {
 
   return Promise.all(
     existingCounts.rows.map(({id, num_people_reacts}) => knex.raw(
-      `update posts set reactions = '{"\uD83D\uDC4D": ${num_people_reacts}}' where id = ${id}`
+      `update posts set reactions_summary = '{"\uD83D\uDC4D": ${num_people_reacts}}' where id = ${id}`
     ))
   )
 }
@@ -55,7 +55,7 @@ exports.down = async function (knex) {
   })
 
   await knex.schema.table('posts', table => {
-    table.dropColumn('reactions')
+    table.dropColumn('reactions_summary')
     table.renameColumn('num_people_reacts', 'num_votes')
     table.renameColumn('date_reacted', 'date_voted')
   })
