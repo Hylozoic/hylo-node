@@ -101,16 +101,36 @@ import { merge, reduce } from 'lodash'
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
+export const createRequestHandler = () =>
+  createServer({
+    plugins: [useLazyLoadedSchema(createSchema)],
+    context: async ({ query, req, variables }) => {
+      if (process.env.DEBUG_GRAPHQL) {
+        sails.log.info('\n' +
+          red('graphql query start') + '\n' +
+          query + '\n' +
+          red('graphql query end')
+        )
+        sails.log.info(inspect(variables))
+      }
+
+      if (req.session.userId) {
+        await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
+      }
+    },
+    graphiql: true
+  })
+
 function createSchema (expressContext) {
   const { req } = expressContext
-  const session = req.session
+  const { api_client, session } = req
   const userId = session.userId
   const isAdmin = Admin.isSignedIn(req)
-  const models = makeModels(userId, isAdmin, req.api_client)
+  const models = makeModels(userId, isAdmin, api_client)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   let allResolvers
-  if (req.api_client) {
+  if (api_client) {
     // TODO: check scope here, just api:write, just api_read, or both?
     allResolvers = {
       Query: makeApiQueries(fetchOne),
@@ -123,6 +143,7 @@ function createSchema (expressContext) {
     }
   } else {
     // authenticated users
+
     allResolvers = {
       Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
       Mutation: makeMutations(expressContext, userId, isAdmin, fetchOne),
@@ -443,26 +464,6 @@ export function makeApiMutations () {
     updateGroup: (root, { asUserId, id, changes }) => updateGroup(asUserId, id, changes)
   }
 }
-
-export const createRequestHandler = () =>
-  createServer({
-    plugins: [useLazyLoadedSchema(createSchema)],
-    context: async ({ query, req, variables }) => {
-      if (process.env.DEBUG_GRAPHQL) {
-        sails.log.info('\n' +
-          red('graphql query start') + '\n' +
-          query + '\n' +
-          red('graphql query end')
-        )
-        sails.log.info(inspect(variables))
-      }
-
-      if (req.session.userId) {
-        await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
-      }
-    },
-    graphiql: true
-  })
 
 let modelToTypeMap
 
