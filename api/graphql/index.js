@@ -1,5 +1,5 @@
 import { envelop, useLazyLoadedSchema } from '@envelop/core'
-const { createServer } = require('@graphql-yoga/node')
+const { createServer, GraphQLYogaError } = require('@graphql-yoga/node')
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
@@ -153,7 +153,7 @@ function createSchema (expressContext) {
           if (data instanceof bookshelf.Model) {
             return info.schema.getType('Post')
           }
-          throw new Error('Post is the only implemented FeedItemContent type')
+          throw new GraphQLYogaError('Post is the only implemented FeedItemContent type')
         }
       },
 
@@ -210,7 +210,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
           return {exists: false}
         })
       }
-      throw new Error('Slug is invalid')
+      throw new GraphQLYogaError('Slug is invalid')
     },
     groupExtension: (root, args) => fetchOne('GroupExtension', args),
     groupExtensions: (root, args) => fetchMany('GroupExtension', args),

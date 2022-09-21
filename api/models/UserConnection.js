@@ -1,3 +1,5 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 /* eslint-disable camelcase */
 module.exports = bookshelf.Model.extend({
   tableName: 'user_connections',
@@ -18,10 +20,10 @@ module.exports = bookshelf.Model.extend({
 
   create: function (userId, otherUserId, type) {
     if (!this.Type.hasOwnProperty(type.toUpperCase())) {
-      throw new Error('Invalid UserConnection type specified')
+      throw new GraphQLYogaError('Invalid UserConnection type specified')
     }
     if (userId === otherUserId) {
-      throw new Error('other_user_id cannot equal user_id')
+      throw new GraphQLYogaError('other_user_id cannot equal user_id')
     }
     return new UserConnection({
       user_id: userId,
@@ -45,7 +47,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function (user_id, other_user_id, type) {
-    if (!user_id) throw new Error('Parameter user_id must be supplied.')
+    if (!user_id) throw new GraphQLYogaError('Parameter user_id must be supplied.')
     return UserConnection.where({ user_id, other_user_id, type }).fetch()
   },
 

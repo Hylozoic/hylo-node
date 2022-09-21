@@ -1,12 +1,13 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { difference, uniq } from 'lodash'
 import { updateMedia } from './util'
 
 export default async function updateComment (commenterId, id, params) {
-  if (!id) throw new Error('updateComment called with no ID')
+  if (!id) throw new GraphQLYogaError('updateComment called with no ID')
 
   const comment = await Comment.find(id, { withRelated: ['post', 'media'] })
 
-  if (!comment) throw new Error('cannot find comment with ID', id)
+  if (!comment) throw new GraphQLYogaError('cannot find comment with ID', id)
 
   let { text, attachments } = params
 

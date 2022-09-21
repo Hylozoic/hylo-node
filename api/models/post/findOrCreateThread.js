@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { pick } from 'lodash'
 import { map, uniq } from 'lodash/fp'
 import { isFollowing } from '../group/queryUtils'
@@ -26,12 +27,12 @@ export async function createThread (userId, participantIds) {
 export function validateThreadData (userId, data) {
   const { participantIds } = data
   if (!(participantIds && participantIds.length)) {
-    throw new Error("participantIds can't be empty")
+    throw new GraphQLYogaError("participantIds can't be empty")
   }
   const checkForSharedGroup = id =>
     Group.inSameGroup([userId, id])
     .then(doesShare => {
-      if (!doesShare) throw new Error(`no shared communities with user ${id}`)
+      if (!doesShare) throw new GraphQLYogaError(`no shared groups with user ${id}`)
     })
   return Promise.all(map(checkForSharedGroup, participantIds))
 }

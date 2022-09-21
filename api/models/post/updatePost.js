@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
 import {
@@ -7,11 +8,11 @@ import {
 } from './util'
 
 export default function updatePost (userId, id, params) {
-  if (!id) throw new Error('updatePost called with no ID')
+  if (!id) throw new GraphQLYogaError('updatePost called with no ID')
   return setupPostAttrs(userId, params)
   .then(attrs => bookshelf.transaction(transacting =>
     Post.find(id).then(post => {
-      if (!post) throw new Error('Post not found')
+      if (!post) throw new GraphQLYogaError('Post not found')
       const updatableTypes = [
         Post.Type.OFFER,
         Post.Type.PROJECT,
@@ -22,7 +23,7 @@ export default function updatePost (userId, id, params) {
         null
       ]
       if (!updatableTypes.includes(post.get('type'))) {
-        throw new Error("This post can't be modified")
+        throw new GraphQLYogaError("This post can't be modified")
       }
 
       return post.save(attrs, {patch: true, transacting})
