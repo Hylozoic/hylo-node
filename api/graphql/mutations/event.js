@@ -1,14 +1,16 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 import { values, includes } from 'lodash/fp'
 
 export async function respondToEvent(userId, eventId, response) {
 
   if (!includes(response, values(EventInvitation.RESPONSE))) {
-    throw new Error(`response must be one of ${values(EventInvitation.RESPONSE)}. received ${response}`)
+    throw new GraphQLYogaError(`response must be one of ${values(EventInvitation.RESPONSE)}. received ${response}`)
   }
 
   const event = await Post.find(eventId)
   if(!event) {
-    throw new Error('Event not found')
+    throw new GraphQLYogaError('Event not found')
   }
 
   var eventInvitation = await EventInvitation.find({userId, eventId})
