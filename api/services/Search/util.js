@@ -9,6 +9,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     afterTime,
     beforeTime,
     boundingBox,
+    collectionToFilterOut,
     isAnnouncement,
     isFulfilled,
     order = 'desc',
@@ -73,6 +74,10 @@ export const filterAndSortPosts = curry((opts, q) => {
       q2.where('posts.start_time', '<', beforeTime)
       .andWhere('posts.end_time', '<', beforeTime)
     )
+  }
+
+  if (collectionToFilterOut) {
+    q.whereNotIn('posts.id', bookshelf.knex.raw('select post_id from collections_posts where collection_id = ?', [collectionToFilterOut]))
   }
 
   if (types) {

@@ -17,6 +17,8 @@ type Query {
   # Find an Comment by ID
   comment(id: ID): Comment
 
+  collection(id: ID): Collection
+
   # Query for PersonConnections
   connections(
     # Number of PersonConnections to load
@@ -185,8 +187,10 @@ type Query {
     beforeTime: Date,
     # Only return posts within this geographic bounding box
     boundingBox: [PointInput],
+    # Only return posts that are not in this collection
+    collectionToFilterOut: ID,
     # If 'all' only return posts from groups the current logged in user is a member of. If 'public' only return pubic posts
-    context: String
+    context: String,
     # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'request' or 'resource'
     filter: String,
     # Number of posts to return
@@ -363,6 +367,23 @@ type CheckInvitationResult {
   valid: Boolean
 }
 
+type Collection {
+  id: ID
+  # When the Collection was created
+  createdAt: Date
+  # The Group this Collection is associated with (optional)
+  group: Group
+  # The name of the collection
+  name: String
+  # The Posts in this Collection
+  posts: PostQuerySet
+  postsTotal: Int
+  # When the Collection was last updated
+  updatedAt: Date
+  # The person who created this Collection
+  user: Person
+}
+
 # A comment on a post
 type Comment {
   id: ID
@@ -371,7 +392,14 @@ type Comment {
   # Number of attachments
   attachmentsTotal: Int
   # Child comments
-  childComments(first: Int, cursor: ID, order: String): CommentQuerySet
+  childComments(
+    # For pagination, return comments after this ID
+    cursor: ID,
+    # Number of comments to return
+    first: Int,
+    # Determines sort order, either 'ASC' or 'DESC'
+    order: String
+  ): CommentQuerySet
   createdAt: Date
   # 'email' if this comment was created via an email, otherwise null
   createdFrom: String
@@ -397,11 +425,21 @@ type CustomView {
   id: ID
   # Whether this view only displays active posts or not
   activePostsOnly: Boolean
+  # The id of the Collection associated with this CustomView, for 'collection' type views
+  collectionId: ID
+  # For 'collection' type CustomViews, this is the Collection of posts
+  collection: Collection
+  # How to sort a Post stream or Collection by defaut ('created', updated', or 'votes')
+  defaultSort: String
+  # The default style of viewing posts in the view ('cards', 'list', 'bigGrid', 'grid')
+  defaultViewMode: String
   # URL for external link views
   externalLink: String
   # Is this view active or not
   isActive: Boolean
+  # The Group this CustomView is in
   group: Group
+  # ID of the group this CustomView is attached to
   groupId: Int
   # The icon to display for this CustomView
   icon: String
@@ -417,8 +455,8 @@ type CustomView {
   topics: [Topic]
   # Number of topic filters for this CustomView
   topicsTotal: Int
-  # For post stream type views, how to display the posts: 'cards', 'list', 'grid', 'bigGrid'
-  viewMode: String
+  # The type of custom view: 'externalLink', 'stream', or 'collection'
+  type: String
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -654,6 +692,8 @@ type Group {
     beforeTime: Date,
     # Only return posts within this geographic bounding box
     boundingBox: [PointInput],
+    # Only return posts that are not in this collection
+    collectionToFilterOut: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts
@@ -1694,6 +1734,8 @@ type Mutation {
   addModerator(personId: ID, groupId: ID): Group
   # NOT USED RIGHGT NOW. Add one or more people to a Project as a Project member.
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
+  # Add a Post to a Collection
+  addPostToCollection(collectionId: ID, postId: ID): GenericResult
   # Add a skill to your profile
   addSkill(
     name: String,
@@ -1714,6 +1756,8 @@ type Mutation {
   cancelJoinRequest(joinRequestId: ID): GenericResult
   # For logged in user to add an Affiliation to their profile
   createAffiliation(data: AffiliationInput): Affiliation
+  # Create a new post Collection
+  createCollection(data: CollectionInput): Collection
   # Add a comment to a Post
   createComment(data: CommentInput): Comment
   # Create a new Group
@@ -1823,6 +1867,8 @@ type Mutation {
   ): Group
   # Remove a Post from a group, by groupId or group slug
   removePost(postId: ID, slug: String, groupId: ID): GenericResult
+  # Remove a Post from a Collection, if you have permission to
+  removePostFromCollection(collectionId: ID, postId: ID): GenericResult
   # Remove a skill from your user profile
   removeSkill(id: ID, name: String): GenericResult
   # Remove a skill you want to learn from your user profile
@@ -1836,6 +1882,13 @@ type Mutation {
     questionAnswers: [QuestionAnswerInput],
     parentId: ID
   ): CreatedGroupRelationshipInvite
+  # Change a post's order/position in a Collection to newOrderIndex (0 indexed)
+  reorderPostInCollection(
+    collectionId: ID,
+    postId: ID,
+    # Move the post to this index in the collection, 0 indexed
+    newOrderIndex: Int
+  ): GenericResult
   # Resend an invitation to the invited email address
   resendInvitation(invitationId: ID): GenericResult
   # Change your response to an event Post
@@ -1975,6 +2028,27 @@ input AttachmentInput {
   url: String
 }
 
+# A Collection
+input CollectionInput {
+  id: ID
+  # The Group this Collection is associated with (optional)
+  groupId: ID
+  # The name of the collection
+  name: String
+  # The Posts in this Collection
+  posts: [CollectionsPostInput]
+  # The person who created this Collection
+  userId: ID
+}
+
+input CollectionsPostInput {
+  id: ID
+  collectionId: ID
+  postId: ID
+  userId: ID
+  order: Int
+}
+
 # A Comment
 input CommentInput {
   # Image or file attachments on the comment
@@ -1993,8 +2067,15 @@ input CustomViewInput {
   id: ID
   # Whether this view only displays active posts or not
   activePostsOnly: Boolean
+  # ID of a Collection for 'collection type' views
+  collectionId: ID
+  # How to sort a Post stream or Collection by defaut ('created', updated', or 'votes')
+  defaultSort: String
+  # The default style of viewing posts in the view ('cards', 'list', 'bigGrid', 'grid')
+  defaultViewMode: String
   # URL for external link views
   externalLink: String
+  # ID of the group this view is connected to
   groupId: Int
   # The icon to display for this CustomView
   icon: String
@@ -2010,8 +2091,8 @@ input CustomViewInput {
   searchText: String
   # For post stream type views, only show posts that have any of these topics
   topics: [CustomViewTopicInput]
-  # For post stream type views, how to display the posts: 'cards', 'list', 'grid', 'bigGrid'
-  viewMode: String
+  # The type of custom view: 'externalLink', 'stream', or 'collection'
+  type: String
 }
 
 # A Topic added to a CustomView

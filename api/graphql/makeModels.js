@@ -197,12 +197,31 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       filter: postFilter(userId, isAdmin),
       isDefaultTypeForTable: true,
-      fetchMany: ({ activePostsOnly = false, afterTime, beforeTime, boundingBox, context, filter, first, groupSlugs, isFulfilled, offset, order, sortBy, search, topic, topics, types }) =>
+      fetchMany: ({
+        activePostsOnly = false,
+        afterTime,
+        beforeTime,
+        boundingBox,
+        collectionToFilterOut,
+        context,
+        filter,
+        first,
+        groupSlugs,
+        isFulfilled,
+        offset,
+        order,
+        sortBy,
+        search,
+        topic,
+        topics,
+        types
+      }) =>
         searchQuerySet('posts', {
           activePostsOnly,
           afterTime,
           beforeTime,
           boundingBox,
+          collectionToFilterOut,
           currentUserId: userId,
           groupSlugs,
           isFulfilled,
@@ -266,12 +285,13 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
               activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
+              collectionToFilterOut,
               isAnnouncement,
               isFulfilled,
               order,
@@ -457,20 +477,38 @@ export default function makeModels (userId, isAdmin, apiClient) {
     CustomView: {
       model: CustomView,
       attributes: [
-        'group_id',
-        'is_active',
-        'search_text',
-        'icon',
-        'name',
-        'external_link',
-        'view_mode',
         'active_posts_only',
+        'collection_id',
+        'default_sort',
+        'default_view_mode',
+        'external_link',
+        'group_id',
+        'icon',
+        'is_active',
+        'name',
+        'order',
         'post_types',
-        'order'
+        'type',
+        'search_text',
+      ],
+      relations: [
+        'collection',
+        'group',
+        { tags: { alias: 'topics' } }
+      ]
+    },
+
+    Collection: {
+      model: Collection,
+      attributes: [
+        'created_at',
+        'name',
+        'updated_at'
       ],
       relations: [
         'group',
-        { tags: { alias: 'topics' } }
+        { posts: {querySet: true} },
+        'user'
       ]
     },
 

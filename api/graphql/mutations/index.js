@@ -11,6 +11,12 @@ export {
   deleteAffiliation
 } from './affiliation'
 export {
+  createCollection,
+  addPostToCollection,
+  reorderPostInCollection,
+  removePostFromCollection
+} from './collection'
+export {
   createComment,
   createMessage,
   deleteComment,
