@@ -10,6 +10,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     beforeTime,
     boundingBox,
     collectionToFilterOut,
+    forCollection,
     isAnnouncement,
     isFulfilled,
     order = 'desc',
@@ -76,6 +77,11 @@ export const filterAndSortPosts = curry((opts, q) => {
     )
   }
 
+  if (forCollection) {
+    q.join('collections_posts', 'collections_posts.post_id', 'posts.id')
+    q.whereIn('posts.id', bookshelf.knex.raw('select post_id from collections_posts where collection_id = ?', [forCollection]))
+  }
+
   if (collectionToFilterOut) {
     q.whereNotIn('posts.id', bookshelf.knex.raw('select post_id from collections_posts where collection_id = ?', [collectionToFilterOut]))
   }
@@ -116,7 +122,9 @@ export const filterAndSortPosts = curry((opts, q) => {
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
-  if (sort === 'posts.updated_at' && showPinnedFirst) {
+  if (forCollection) {
+    q.orderBy('collections_posts.order', 'ASC')
+  } else if (sort === 'posts.updated_at' && showPinnedFirst) {
     q.orderByRaw('groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, posts.updated_at desc')
   } else if (sort) {
     q.orderBy(sort, order || 'desc')

@@ -206,6 +206,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         context,
         filter,
         first,
+        forCollection,
         groupSlugs,
         isFulfilled,
         offset,
@@ -223,6 +224,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
           boundingBox,
           collectionToFilterOut,
           currentUserId: userId,
+          forCollection,
           groupSlugs,
           isFulfilled,
           limit: first,
@@ -285,13 +287,14 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, forCollection, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
               activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
               collectionToFilterOut,
+              forCollection,
               isAnnouncement,
               isFulfilled,
               order,
@@ -330,12 +333,14 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {viewPosts: {
           querySet: true,
           arguments: () => [userId],
-          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, filter, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, filter, forCollection, isFulfilled, order, search, sortBy, topic, topics, types }) =>
             relation.query(filterAndSortPosts({
               activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
+              collectionToFilterOut,
+              forCollection,
               isFulfilled,
               order,
               search,

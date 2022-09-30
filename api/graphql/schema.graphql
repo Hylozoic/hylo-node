@@ -195,6 +195,8 @@ type Query {
     filter: String,
     # Number of posts to return
     first: Int,
+    # Only return posts that are in this collection
+    forCollection: ID,
     # Only return posts from this set of groups by group URL slug
     groupSlugs: [String],
     # true = Only return posts that have been marked fulfilled/complete, false = only return posts not marked fulfilled/complete
@@ -698,6 +700,8 @@ type Group {
     filter: String,
     # Load this number of posts
     first: Int,
+    # Only return posts that are in this collection
+    forCollection: ID,
     # Load only posts from this set of groups by group slug
     groupSlugs: [String],
     # Only return posts that are marked as an announcement
@@ -743,10 +747,14 @@ type Group {
     beforeTime: Date,
     # Only return posts within this geographic bounding box
     boundingBox: [PointInput],
+    # Only return posts that are not in this collection
+    collectionToFilterOut: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts
     first: Int,
+    # Only return posts that are in this collection
+    forCollection: ID,
     # Load only posts from this set of groups by group slug
     groupSlugs: [String],
     # Only return posts that are either completed/fulfilled (true) or not (false)
