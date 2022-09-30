@@ -1390,12 +1390,16 @@ type Person {
     beforeTime: Date,
     # Only return posts within this geographic bounding box
     boundingBox: [PointInput],
+    # Only return posts that are not in this collection
+    collectionToFilterOut: ID,
     # Only return posts within this context: 'public' = only return posts set to Public. 'all' = only return posts within a group that the current logged in user is a member of
     context: String,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts
     first: Int,
+    # Only return posts that are in this collection
+    forCollection: ID,
     # Load only posts from this set of groups by group slug
     groupSlugs: [String],
     # Only return posts that are either completed/fulfilled (true) or not (false)
