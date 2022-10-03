@@ -404,7 +404,7 @@ module.exports = bookshelf.Model.extend({
 
     const post = comment.relations.post
     const commenter = comment.relations.user
-    const text = RichText.qualifyLinks(comment.text())
+    var text = RichText.qualifyLinks(comment.text())
     const replyTo = Email.postReplyAddress(post.id, reader.id)
     const title = decode(post.get('name'))
 

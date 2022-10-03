@@ -16,9 +16,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(Post)
   },
 
-  text: function () {
+  text: function (baseGroupSlug) {
     // This should be always used when accessing this attribute
-    return RichText.sanitizeHTML(RichText.processHTML(this.get('text')))
+    return RichText.sanitizeHTML(RichText.processHTML(this.get('text'), baseGroupSlug))
   },
 
   mentions: function () {

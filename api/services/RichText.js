@@ -1,5 +1,6 @@
 let Cheerio = require('cheerio')
 import forEach from 'lodash/fp/forEach'
+import uniq from 'lodash/fp/uniq'
 import insane from 'insane'
 import { JSDOM } from 'jsdom'
 import linkifyHTML from 'linkify-html'
@@ -10,6 +11,12 @@ export const HYLO_URL_REGEX = /http[s]?:\/\/(?:www\.)?hylo\.com(.*)/gi // https:
 // NOTE: May still wish to use this if some legacy content proves to not have linked topics
 export const HASHTAG_FULL_REGEX = /^#([A-Za-z][\w_-]+)$/
 
+
+export function getDOM (contentHTML) {
+  const jsdom = new JSDOM(contentHTML)
+
+  return jsdom.window.document
+}
 
 // Sanitization should only occur on the backend
 export function sanitizeHTML (text, providedInsaneOptions) {
@@ -26,11 +33,10 @@ export function sanitizeHTML (text, providedInsaneOptions) {
 export function processHTML (contentHTML, groupSlug) {
   if (!contentHTML) return contentHTML
 
-  const linkfiiedHTML = linkifyHTML(contentHTML)
-  const jsdom = new JSDOM(linkfiiedHTML)
-  const dom = jsdom.window.document
+  const linkfiedHTML = linkifyHTML(contentHTML)
+  const dom = getDOM(linkfiedHTML)
 
-  // Make Hylo `anchors` relative links with `target='_self'`, otherwise `target=_blank`
+  // Make Hylo `anchors` relative links with `target='_self'`, otherwise `target=_blank` unless forEmail
   forEach(el => {
     if (el.getAttribute('href')) {
       if (el.textContent.length > MAX_LINK_LENGTH) {
@@ -53,7 +59,7 @@ export function processHTML (contentHTML, groupSlug) {
   // Convert Mention and Topic `spans` to `anchors`
   const convertSpansToAnchors = forEach(el => {
     const anchorElement = dom.createElement('a')
-    const href = el.className === 'mention'
+    let href = el.className === 'mention'
       ? PathHelpers.mentionPath(el.getAttribute('data-id'), groupSlug)
       : PathHelpers.topicPath(el.getAttribute('data-label'), groupSlug)
 
@@ -93,41 +99,54 @@ export function processHTML (contentHTML, groupSlug) {
   return dom.querySelector('body').innerHTML
 }
 
-/*
-For email use exclusively:
+export function qualifyLinks (processedHTML) {
+  const dom = getDOM(processedHTML)
 
-Canonically relying on the output of `processHTML`
-this function further transforms anchor element `href`s to fully qualified
-Hylo URLs. Adds token links for all other relative/apparently Hylo `href`s
-*/
-export const qualifyLinks = (html, recipient, token, slug) => {
-  if (!html) return html
-
-  const presentedHTML = processHTML(html, { slug }) 
-  const $ = Cheerio.load(presentedHTML, null, false)
-
-  $('a').each(function () {
-    const $el = $(this)
-    let url = $el.attr('href') || ''
-
-    if ($el.attr('data-user-id')) {
-      const userId = $el.attr('data-user-id')
-      url = `${Frontend.Route.prefix}${PathHelpers.mentionPath(userId, slug)}`
-    } else if ($el.attr('data-search')) {
-      const topic = $el.attr('data-search').replace(/^#/, '')
-      url = `${Frontend.Route.prefix}${PathHelpers.topicPath(topic, slug)}`
-    } else if (!url.match(/^https?:\/\//)) {
-      url = Frontend.Route.prefix + url
-      if (recipient && token) {
-        url = Frontend.Route.tokenLogin(recipient, token, url)
-      }
+  forEach(el => {
+    const href = el.getAttribute('href')
+    if (href && !href.match(/^https?:\/\//)) {
+      el.setAttribute('href', Frontend.Route.prefix + href)
     }
+  }, dom.querySelectorAll('a'))
 
-    $el.attr('href', url)
-  })
-
-  return $.html()
+  return dom.querySelector('body').innerHTML
 }
+
+// /*
+// For email use exclusively:
+
+// Canonically relying on the output of `processHTML`
+// this function further transforms anchor element `href`s to fully qualified
+// Hylo URLs. Adds token links for all other relative/apparently Hylo `href`s
+// */
+// export const qualifyLinks = (html, recipient, token, slug) => {
+//   if (!html) return html
+
+//   const presentedHTML = processHTML(html, { groupSlug: slug }) 
+//   const $ = Cheerio.load(presentedHTML, null, false)
+
+//   $('a').each(function () {
+//     const $el = $(this)
+//     let url = $el.attr('href') || ''
+
+//     if ($el.attr('data-user-id')) {
+//       const userId = $el.attr('data-user-id')
+//       url = `${Frontend.Route.prefix}${PathHelpers.mentionPath(userId, slug)}`
+//     } else if ($el.attr('data-search')) {
+//       const topic = $el.attr('data-search').replace(/^#/, '')
+//       url = `${Frontend.Route.prefix}${PathHelpers.topicPath(topic, slug)}`
+//     } else if (!url.match(/^https?:\/\//)) {
+//       url = Frontend.Route.prefix + url
+//       if (recipient && token) {
+//         url = Frontend.Route.tokenLogin(recipient, token, url)
+//       }
+//     }
+
+//     $el.attr('href', url)
+//   })
+
+//   return $.html()
+// }
 
 /*
 Returns a set of unique IDs for any mention members
@@ -135,14 +154,12 @@ found in the provided HTML
 
 Used for generating notifications
 */
-export const getUserMentions = html => {
-  if (!html) return []
+export function getUserMentions (processedHTML) {
+  if (!processedHTML) return []
+  
+  const dom = getDOM(processedHTML)
 
-  let $ = Cheerio.load(html)
-
-  return _.uniq($('a[data-user-id]').map(function () {
-    return $(this).attr('data-user-id').toString()
-  }).get())
+  return uniq(forEach(el => el.getAttribute('data-id'), dom.querySelectorAll('a.mention')))
 }
 
 // export function getDom (contentHTML) {
