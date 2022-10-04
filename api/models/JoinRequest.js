@@ -1,3 +1,5 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 module.exports = bookshelf.Model.extend({
   tableName: 'join_requests',
   requireFetch: false,
@@ -34,7 +36,7 @@ module.exports = bookshelf.Model.extend({
       })
       return this
     }
-    throw new Error("Invalid join request")
+    throw new GraphQLYogaError("Invalid join request")
   }
 }, {
 

@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import validator from 'validator'
 import { TextHelpers } from 'hylo-shared'
 import { get, isEmpty, map, merge } from 'lodash/fp'
@@ -6,7 +7,7 @@ module.exports = {
   checkPermission: (userId, invitationId) => {
     return Invitation.find(invitationId, {withRelated: 'group'})
     .then(async (invitation) => {
-      if (!invitation) throw new Error('Invitation not found')
+      if (!invitation) throw new GraphQLYogaError('Invitation not found')
       const { group } = invitation.relations
       const user = await User.find(userId)
       return user.get('email') === invitation.get('email') || GroupMembership.hasModeratorRole(userId, group)
@@ -132,7 +133,7 @@ module.exports = {
   expire: (userId, invitationId) => {
     return Invitation.find(invitationId)
     .then(invitation => {
-      if (!invitation) throw new Error('not found')
+      if (!invitation) throw new GraphQLYogaError('not found')
 
       return invitation.expire(userId)
     })
@@ -141,7 +142,7 @@ module.exports = {
   resend: (invitationId) => {
     return Invitation.find(invitationId)
     .then(invitation => {
-      if (!invitation) throw new Error('not found')
+      if (!invitation) throw new GraphQLYogaError('not found')
 
       return invitation.send()
     })
@@ -187,8 +188,8 @@ module.exports = {
     if (token) {
       return Invitation.where({token}).fetch()
       .then(invitation => {
-        if (!invitation) throw new Error('not found')
-        if (invitation.isExpired()) throw new Error('expired')
+        if (!invitation) throw new GraphQLYogaError('not found')
+        if (invitation.isExpired()) throw new GraphQLYogaError('expired')
         return invitation.use(userId)
       })
     }

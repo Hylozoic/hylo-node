@@ -1,3 +1,5 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 import validatePostData from '../../models/post/validatePostData'
 import underlyingCreatePost from '../../models/post/createPost'
 import underlyingUpdatePost from '../../models/post/updatePost'
@@ -18,7 +20,7 @@ export function fulfillPost (userId, postId) {
   return Post.find(postId)
     .then(post => {
       if (post.get('user_id') !== userId) {
-        throw new Error("You don't have permission to modify this post")
+        throw new GraphQLYogaError("You don't have permission to modify this post")
       }
       return post.fulfill()
     })
@@ -29,7 +31,7 @@ export function unfulfillPost (userId, postId) {
   return Post.find(postId)
     .then(post => {
       if (post.get('user_id') !== userId) {
-        throw new Error("You don't have permission to modify this post")
+        throw new GraphQLYogaError("You don't have permission to modify this post")
       }
       return post.unfulfill()
     })
@@ -45,10 +47,10 @@ export function deletePost (userId, postId) {
   return Post.find(postId)
   .then(post => {
     if (!post) {
-      throw new Error("Post does not exist")
+      throw new GraphQLYogaError("Post does not exist")
     }
     if (post.get('user_id') !== userId) {
-      throw new Error("You don't have permission to modify this post")
+      throw new GraphQLYogaError("You don't have permission to modify this post")
     }
     return Post.deactivate(postId)
   })
@@ -59,10 +61,10 @@ export async function pinPost (userId, postId, groupId) {
   const group = await Group.find(groupId)
   return GroupMembership.hasModeratorRole(userId, group)
   .then(isModerator => {
-    if (!isModerator) throw new Error("You don't have permission to modify this group")
+    if (!isModerator) throw new GraphQLYogaError("You don't have permission to modify this group")
     return PostMembership.find(postId, groupId)
     .then(postMembership => {
-      if (!postMembership) throw new Error("Couldn't find postMembership")
+      if (!postMembership) throw new GraphQLYogaError("Couldn't find postMembership")
       return postMembership.togglePinned()
     })
     .then(() => ({success: true}))

@@ -1,5 +1,6 @@
-import { createPost } from './post'
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { uniq } from 'lodash/fp'
+import { createPost } from './post'
 var stripe = require("stripe")(process.env.STRIPE_API_KEY);
 
 export function createProject (userId, data) {
@@ -14,15 +15,15 @@ export function createProject (userId, data) {
 async function getModeratedProject (userId, projectId) {
   const project = await Post.find(projectId, {withRelated: 'user'})
   if (!project) {
-    throw new Error('Project not found')
+    throw new GraphQLYogaError('Project not found')
   }
 
   if (!project.isProject()) {
-    throw new Error('Post with supplied id is not a project')
+    throw new GraphQLYogaError('Post with supplied id is not a project')
   }
 
   if (project.relations.user.id !== userId) {
-    throw new Error("You don't have permission to moderate this project")
+    throw new GraphQLYogaError("You don't have permission to moderate this project")
   }
   return project
 }
@@ -36,7 +37,7 @@ export async function createProjectRole (userId, projectId, roleName) {
   }).fetch()
 
   if (existing) {
-    throw new Error('A role with that name already exists in this project')
+    throw new GraphQLYogaError('A role with that name already exists in this project')
   }
 
   return ProjectRole.forge({
@@ -51,7 +52,7 @@ export async function deleteProjectRole (userId, id) {
   const projectRole = await ProjectRole.find(id, {withRelated: 'project'})
 
   if (!projectRole) {
-    throw new Error('Project Role not found')
+    throw new GraphQLYogaError('Project Role not found')
   }
 
   await getModeratedProject(userId, projectRole.relations.project.id)
@@ -64,19 +65,19 @@ export async function addPeopleToProjectRole (userId, peopleIds, projectRoleId) 
   const projectRole = await ProjectRole.find(projectRoleId, {withRelated: 'project'})
 
   if (!projectRole) {
-    throw new Error('Project Role not found')
+    throw new GraphQLYogaError('Project Role not found')
   }
 
   const project = await getModeratedProject(userId, projectRole.relations.project.id)
 
   if (!project) {
-    throw new Error('No associated project')
+    throw new GraphQLYogaError('No associated project')
   }
 
   const checkForSharedGroup = id =>
     Group.inSameGroup([userId, id])
     .then(doesShare => {
-      if (!doesShare) throw new Error(`no shared communities with user ${id}`)
+      if (!doesShare) throw new GraphQLYogaError(`no shared groups with user ${id}`)
     })
 
   return Promise.map(peopleIds, async id => {
@@ -132,12 +133,12 @@ export async function processStripeToken (userId, projectId, token, amount) {
   const applicationFeeFraction = 0.01
   const project = await Post.find(projectId)
   if (!project) {
-    throw new Error (`Can't find project with that id`)
+    throw new GraphQLYogaError (`Can't find project with that id`)
   }
   const contributor = await User.find(userId)
   const projectCreator = await User.find(project.get('user_id'), {withRelated: 'stripeAccount'})
   if (!projectCreator.relations.stripeAccount) {
-    throw new Error (`This user does not have a connected Stripe account`)
+    throw new GraphQLYogaError (`This user does not have a connected Stripe account`)
   }
 
   // amount is in dollars, chargeAmount is in cents

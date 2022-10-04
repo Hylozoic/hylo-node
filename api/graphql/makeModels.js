@@ -25,7 +25,7 @@ import {
 //
 // keys in the returned object are GraphQL schema type names
 //
-export default async function makeModels (userId, isAdmin, apiClient) {
+export default function makeModels (userId, isAdmin, apiClient) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
 
   // XXX: for now give API users more access, in the future track which groups each client can access

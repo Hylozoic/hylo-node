@@ -1,3 +1,5 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 import request from 'request'
 import { decodeHyloJWT } from '../../../lib/HyloJWT'
 
@@ -57,11 +59,11 @@ export const register = (fetchOne, { req }) => async (_, { name, password }) => 
     const user = await User.find(req.session.userId, {}, false)
 
     if (!user) {
-      throw new Error('Not authorized')
+      throw new GraphQLYogaError('Not authorized')
     }
 
     if (!user.get('email_validated')) {
-      throw new Error('Email not validated')
+      throw new GraphQLYogaError('Email not validated')
     }
 
     await bookshelf.transaction(async transacting => {
@@ -167,7 +169,7 @@ export async function blockUser (userId, blockedUserId) {
 export async function unblockUser (userId, blockedUserId) {
   const blockedUser = await BlockedUser.find(userId, blockedUserId)
 
-  if (!blockedUser) throw new Error('user is not blocked')
+  if (!blockedUser) throw new GraphQLYogaError('user is not blocked')
 
   await blockedUser.destroy()
 

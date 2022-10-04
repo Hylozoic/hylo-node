@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import bcrypt from 'bcrypt'
 import Promise from 'bluebird'
 import { get, isEmpty } from 'lodash'
@@ -30,7 +31,7 @@ module.exports = bookshelf.Model.extend({
   create: function (userId, { type, profile, password, token }, { transacting, updateUser } = {}) {
     if (type === 'password') {
       const invalidReason = Validators.validateUser.password(password)
-      if (invalidReason) return Promise.reject(new Error(invalidReason))
+      if (invalidReason) return Promise.reject(new GraphQLYogaError(invalidReason))
     }
 
     return (() =>

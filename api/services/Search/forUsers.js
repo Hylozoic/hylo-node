@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { countTotal } from '../../../lib/util/knex'
 import { filterAndSortUsers } from './util'
 
@@ -17,7 +18,7 @@ export default function (opts) {
 
     if (opts.sort === 'join') {
       if (!groups || groups.length !== 1) {
-        throw new Error('When sorting by join date, you must specify exactly one community.')
+        throw new GraphQLYogaError('When sorting by join date, you must specify exactly one group.')
       }
     }
 

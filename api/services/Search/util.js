@@ -1,3 +1,4 @@
+import { GraphQLYogaError } from '@graphql-yoga/node'
 import { curry, includes, isEmpty, values } from 'lodash'
 import moment from 'moment'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
@@ -30,7 +31,7 @@ export const filterAndSortPosts = curry((opts, q) => {
 
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy || v === sortBy)
   if (!sort) {
-    throw new Error(`Cannot sort by "${sortBy}"`)
+    throw new GraphQLYogaError(`Cannot sort by "${sortBy}"`)
   }
 
   const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
@@ -80,7 +81,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     q.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
   } else {
     if (!includes(values(Post.Type), type)) {
-      throw new Error(`unknown post type: "${type}"`)
+      throw new GraphQLYogaError(`unknown post type: "${type}"`)
     }
     q.where({'posts.type': type})
   }
@@ -134,11 +135,11 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
   }
 
   if (sortBy && !['name', 'location', 'join', 'last_active_at'].includes(sortBy)) {
-    throw new Error(`Cannot sort by "${sortBy}"`)
+    throw new GraphQLYogaError(`Cannot sort by "${sortBy}"`)
   }
 
   if (order && !['asc', 'desc'].includes(order.toLowerCase())) {
-    throw new Error(`Cannot use sort order "${order}"`)
+    throw new GraphQLYogaError(`Cannot use sort order "${order}"`)
   }
 
   if (sortBy === 'join') {

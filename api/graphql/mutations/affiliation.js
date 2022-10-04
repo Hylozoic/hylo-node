@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import validator from 'validator'
 
 export async function canDeleteAffiliation (userId, affiliationId) {
@@ -13,7 +14,7 @@ export function formatUrl (url = '') {
 }
 
 export async function createAffiliation (userId, { role, preposition, orgName, url = '' }) {
-  if (url.length > 0 && !validator.isURL(formatUrl(url))) throw new Error(`Please enter a valid URL.`)
+  if (url.length > 0 && !validator.isURL(formatUrl(url))) throw new GraphQLYogaError(`Please enter a valid URL.`)
   if (userId && role && preposition && orgName) {
     return Affiliation.create({
       userId,
@@ -23,7 +24,7 @@ export async function createAffiliation (userId, { role, preposition, orgName, u
       url: url.length > 0 ? formatUrl(url) : url
     })
   } else {
-    throw new Error(`Invalid parameters to create affiliation`)
+    throw new GraphQLYogaError(`Invalid parameters to create affiliation`)
   }
 }
 
@@ -31,6 +32,6 @@ export function deleteAffiliation (userId, id) {
   if (userId && id && canDeleteAffiliation(userId, id)) {
     return Affiliation.delete(id)
   } else {
-    throw new Error(`Invalid parameters to delete affiliation`)
+    throw new GraphQLYogaError(`Invalid parameters to delete affiliation`)
   }
 }
