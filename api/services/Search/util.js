@@ -13,7 +13,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     forCollection,
     isAnnouncement,
     isFulfilled,
-    order = 'desc',
+    order,
     search,
     showPinnedFirst,
     sortBy = 'updated',
@@ -28,7 +28,8 @@ export const filterAndSortPosts = curry((opts, q) => {
     votes: 'posts.num_votes',
     updated: 'posts.updated_at',
     created: 'posts.created_at',
-    start_time: 'posts.start_time'
+    start_time: 'posts.start_time',
+    order: 'collections_posts.order' // Only works if forCollection is set
   }
 
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy || v === sortBy)
@@ -78,7 +79,10 @@ export const filterAndSortPosts = curry((opts, q) => {
   }
 
   if (forCollection) {
-    q.join('collections_posts', 'collections_posts.post_id', 'posts.id')
+    q.join('collections_posts', (j) => {
+      j.on('collections_posts.post_id', '=', 'posts.id')
+      j.andOn('collections_posts.collection_id', '=', bookshelf.knex.raw('?', [forCollection]))
+    })
     q.whereIn('posts.id', bookshelf.knex.raw('select post_id from collections_posts where collection_id = ?', [forCollection]))
   }
 
@@ -122,12 +126,10 @@ export const filterAndSortPosts = curry((opts, q) => {
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
-  if (forCollection) {
-    q.orderBy('collections_posts.order', 'ASC')
-  } else if (sort === 'posts.updated_at' && showPinnedFirst) {
+  if (sort === 'posts.updated_at' && showPinnedFirst) {
     q.orderByRaw('groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, posts.updated_at desc')
   } else if (sort) {
-    q.orderBy(sort, order || 'desc')
+    q.orderBy(sort, order || (sortBy === 'order' ? 'asc' : 'desc'))
   }
 
 })

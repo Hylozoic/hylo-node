@@ -14,7 +14,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   posts: function () {
-    return this.belongsToMany(Post).through(CollectionsPost).orderBy('collections_posts.order', 'ASC')
+    return this.belongsToMany(Post).through(CollectionsPost).orderBy('collections_posts.order', 'ASC').withPivot(['order'])
   },
 
   user: function () {

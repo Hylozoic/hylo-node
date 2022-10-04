@@ -512,7 +512,21 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       relations: [
         'group',
+        { linkedPosts: {querySet: true} },
         { posts: {querySet: true} },
+        'user'
+      ]
+    },
+
+    CollectionsPost: {
+      model: CollectionsPost,
+      attributes: [
+        'created_at',
+        'order',
+        'updated_at'
+      ],
+      relations: [
+        'post',
         'user'
       ]
     },

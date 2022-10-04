@@ -375,15 +375,39 @@ type Collection {
   createdAt: Date
   # The Group this Collection is associated with (optional)
   group: Group
+  # The Posts in this Collection
+  linkedPosts: CollectionsPostQuerySet
   # The name of the collection
   name: String
   # The Posts in this Collection
   posts: PostQuerySet
+  # Total # of posts in this collection
   postsTotal: Int
   # When the Collection was last updated
   updatedAt: Date
   # The person who created this Collection
   user: Person
+}
+
+type CollectionsPost {
+  id: ID
+  # When the CollectionsPost was created
+  createdAt: Date
+  # The order of the post in the collection when manually sorted
+  order: Int
+  # The post
+  post: Post
+  # When the CollectionsPost was last updated
+  updatedAt: Date
+  # The user that added this post to this collection
+  user: Person
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type CollectionsPostQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CollectionsPost]
 }
 
 # A comment on a post
@@ -2056,9 +2080,11 @@ input CollectionInput {
 input CollectionsPostInput {
   id: ID
   collectionId: ID
-  postId: ID
-  userId: ID
+  # The order of the post in the collection when manually sorted
   order: Int
+  postId: ID
+  # The user that added this post to this collection
+  userId: ID
 }
 
 # A Comment
