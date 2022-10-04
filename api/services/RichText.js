@@ -1,6 +1,5 @@
-let Cheerio = require('cheerio')
-import forEach from 'lodash/fp/forEach'
-import uniq from 'lodash/fp/uniq'
+// let Cheerio = require('cheerio')
+import { filter, forEach, map, uniq, isNull } from 'lodash/fp'
 import insane from 'insane'
 import { JSDOM } from 'jsdom'
 import linkifyHTML from 'linkify-html'
@@ -83,9 +82,11 @@ export function processHTML (contentHTML, groupSlug) {
 
     if (el.getAttribute('data-entity-type') === 'mention') {
       el.className = 'mention'
+      el.setAttribute('data-id', el.getAttribute('data-user-id'))
       href = PathHelpers.mentionPath(el.getAttribute('data-user-id'), groupSlug)
     } else {
       el.className = 'topic'
+      el.setAttribute('data-label', el.getAttribute('data-search'))
       href = PathHelpers.topicPath(el.getAttribute('data-search') || el.textContent?.slice(1), groupSlug)
     }
 
@@ -99,6 +100,7 @@ export function processHTML (contentHTML, groupSlug) {
   return dom.querySelector('body').innerHTML
 }
 
+// For email use exclusively:
 export function qualifyLinks (processedHTML) {
   const dom = getDOM(processedHTML)
 
@@ -112,42 +114,6 @@ export function qualifyLinks (processedHTML) {
   return dom.querySelector('body').innerHTML
 }
 
-// /*
-// For email use exclusively:
-
-// Canonically relying on the output of `processHTML`
-// this function further transforms anchor element `href`s to fully qualified
-// Hylo URLs. Adds token links for all other relative/apparently Hylo `href`s
-// */
-// export const qualifyLinks = (html, recipient, token, slug) => {
-//   if (!html) return html
-
-//   const presentedHTML = processHTML(html, { groupSlug: slug }) 
-//   const $ = Cheerio.load(presentedHTML, null, false)
-
-//   $('a').each(function () {
-//     const $el = $(this)
-//     let url = $el.attr('href') || ''
-
-//     if ($el.attr('data-user-id')) {
-//       const userId = $el.attr('data-user-id')
-//       url = `${Frontend.Route.prefix}${PathHelpers.mentionPath(userId, slug)}`
-//     } else if ($el.attr('data-search')) {
-//       const topic = $el.attr('data-search').replace(/^#/, '')
-//       url = `${Frontend.Route.prefix}${PathHelpers.topicPath(topic, slug)}`
-//     } else if (!url.match(/^https?:\/\//)) {
-//       url = Frontend.Route.prefix + url
-//       if (recipient && token) {
-//         url = Frontend.Route.tokenLogin(recipient, token, url)
-//       }
-//     }
-
-//     $el.attr('href', url)
-//   })
-
-//   return $.html()
-// }
-
 /*
 Returns a set of unique IDs for any mention members
 found in the provided HTML
@@ -158,23 +124,8 @@ export function getUserMentions (processedHTML) {
   if (!processedHTML) return []
   
   const dom = getDOM(processedHTML)
-
-  return uniq(forEach(el => el.getAttribute('data-id'), dom.querySelectorAll('a.mention')))
+  const mentionElements = dom.querySelectorAll('.mention')
+  const mentionedUserIDs = map(el => el.getAttribute('data-id'), mentionElements)
+  
+  return filter(el => !isNull(el), uniq(mentionedUserIDs))
 }
-
-// export function getDom (contentHTML) {
-//   // Node
-//   if (typeof window === 'undefined') {
-//     const { JSDOM } = require('jsdom')
-//     const jsdom = new JSDOM(contentHTML)
-//     return jsdom.window.document
-//   // // React Native
-//   // } else if (typeof navigator !== 'undefined' && navigator.product === 'ReactNative') {
-//   //   const DomParser = require('react-native-html-parser').DOMParser
-//   //   return new DomParser().parseFromString(contentHTML,'text/html')
-//   // Browser
-//   } else {
-//     const parser = new window.DOMParser()
-//     return parser.parseFromString(contentHTML, 'text/html')
-//   }
-// }

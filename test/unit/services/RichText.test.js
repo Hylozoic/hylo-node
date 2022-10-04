@@ -46,25 +46,32 @@ describe('RichText', function () {
 
   describe('.qualifyLinks', function () {
     it('turns relative links into fully-qualified links', function () {
-      let text = '<p>a paragraph, and of course <a href="/all/members/5942" data-user-id="5942">@Minda Myers</a>&nbsp;' +
-        '<a href="/all/members/8781" data-user-id="8781">@Ray Hylo</a>' +
-        '<a href="/all/topics/boom" class="hashtag" data-search="#boom">#boom</a>.</p><p>danke</p>'
-      let expected = `<p>a paragraph, and of course <a href="${prefix}/all/members/5942" data-user-id="5942">@Minda Myers</a>&nbsp;` +
-        `<a href="${prefix}/all/members/8781" data-user-id="8781">@Ray Hylo</a>&nbsp;` +
-        `<a href="${prefix}/all/topics/boom" class="hashtag" data-search="#boom">#boom</a>.</p><p>danke</p>`
+      // Note: This text is legacy, e.g. `data-search` vs `data-label`, `data-user-id` vs `data-id`, etc
+      let text = '<p>a paragraph, and of course <a href="/all/members/5942" class="mention" data-id="5942">Minda Myers</a>&nbsp;' +
+        '<a href="/all/members/8781" class="mention" data-id="8781">Ray Hylo</a>' +
+        '<a href="/all/topics/boom" class="topic" data-label="#boom">#boom</a>.</p><p>danke</p>'
+      let expected = `<p>a paragraph, and of course <a href="${prefix}/all/members/5942" class="mention" data-id="5942">Minda Myers</a>&nbsp;` +
+        `<a href="${prefix}/all/members/8781" class="mention" data-id="8781">Ray Hylo</a>` +
+        `<a href="${prefix}/all/topics/boom" class="topic" data-label="#boom">#boom</a>.</p><p>danke</p>`
 
       expect(RichText.qualifyLinks(text)).to.equal(expected)
     })
   })
 
   describe('getUserMentions', () => {
+    it("doesn't fail if no mentions are found", () => {
+      const text = `<p>test text</p>`
+
+      expect(RichText.getUserMentions(text)).to.be.empty
+    }),
+
     it('gets all the mentions', () => {
-      const text = `<p><a href="${prefix}/all/topics/hashtag" class="hashtag" data-search="#hashtag">#hashtag</a>, ` +
-        `<a href="${prefix}/all/topics/anotherhashtag" class="hashtag" data-search="#anotherhashtag">#anotherhashtag</a>, ` +
+      const text = `<p><a href="${prefix}/all/topics/hashtag" class="topic" data-label="#hashtag">#hashtag</a>, ` +
+        `<a href="${prefix}/all/topics/anotherhashtag" class="topic" data-label="#anotherhashtag">#anotherhashtag</a>, ` +
         `<a href="https://www.metafilter.com/wooooo" class="linkified" target="_blank">https://www.metafilter.com/wooooo</a></p>` +
-        `<p>a paragraph, and of course <a href="${prefix}/all/members/5942" data-user-id="5942">@Minda Myers</a>&nbsp;` +
-        `<a href="${prefix}/all/members/8781" data-user-id="8781">@Ray Hylo</a>&nbsp;` +
-        `<a href="${prefix}/all/topics/boom" class="hashtag" data-search="#boom">#boom</a>.</p><p>danke</p>`
+        `<p>a paragraph, and of course <a href="${prefix}/all/members/5942" class="mention" data-id="5942">@Minda Myers</a>&nbsp;` +
+        `<a href="${prefix}/all/members/8781" class="mention" data-id="8781">@Ray Hylo</a>&nbsp;` +
+        `<a href="${prefix}/all/topics/boom" class="topic" data-label="#boom">#boom</a>.</p><p>danke</p>`
 
       expect(RichText.getUserMentions(text)).to.have.members(['5942', '8781'])
     })

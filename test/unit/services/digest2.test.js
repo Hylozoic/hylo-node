@@ -245,8 +245,8 @@ describe('group digest v2', () => {
           model({
             id: 1,
             name: 'Foo!',
-            details: `<p><a href="/groups/foo/members/21" data-user-id="21" class="mention" target="_blank">Edward West</a> &amp; ` +
-            `<a href="/groups/foo/members/16325" data-user-id="16325" class="mention" target="_blank">Julia Pope</a> ` +
+            details: () => `<p><a href="/groups/foo/members/21" data-id="21" class="mention" target="_blank">Edward West</a> &amp; ` +
+            `<a href="/groups/foo/members/16325" data-id="16325" class="mention" target="_blank">Julia Pope</a> ` +
             `<a href="/groups/foo/topics/oakland" data-label="#oakland" class="topic" target="_blank">#oakland</a></p>`,
             type: 'request',
             relations: {
@@ -265,8 +265,8 @@ describe('group digest v2', () => {
           {
             id: 1,
             title: 'Foo!',
-            details: `<p><a href="${prefix}/groups/foo/members/21" data-user-id="21" class="mention" target="_blank">Edward West</a> &amp; ` +
-              `<a href="${prefix}/groups/foo/members/16325" data-user-id="16325" class="mention" target="_blank">Julia Pope</a> ` +
+            details: `<p><a href="${prefix}/groups/foo/members/21" data-id="21" class="mention" target="_blank">Edward West</a> &amp; ` +
+              `<a href="${prefix}/groups/foo/members/16325" data-id="16325" class="mention" target="_blank">Julia Pope</a> ` +
               `<a href="${prefix}/groups/foo/topics/oakland" data-label="#oakland" class="topic" target="_blank">#oakland</a></p>`,
             user: u1.attributes,
             url: Frontend.Route.post({id: 1}, group),

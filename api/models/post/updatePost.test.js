@@ -40,7 +40,7 @@ describe('afterUpdatingPost', () => {
   })
 
   it('adds new followers if there are new mentions', async () => {
-    const description = `hello <a data-user-id="${u2.id}">person</a>`
+    const description = `hello <a class="mention" data-id="${u2.id}">person</a>`
     await post.save({description}, {patch: true})
     await afterUpdatingPost(post, {params: {}})
 
