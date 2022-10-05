@@ -17,7 +17,7 @@ export function getDOM (contentHTML) {
   return jsdom.window.document
 }
 
-// Sanitization should only occur on the backend
+// Sanitization should only occur from the backend and on output
 export function sanitizeHTML (text, providedInsaneOptions) {
   if (!text) return ''
 
@@ -29,6 +29,17 @@ export function sanitizeHTML (text, providedInsaneOptions) {
   return insane(strippedText, options)
 }
 
+/*
+
+Handles raw HTML from database:
+
+1) Aligns legacy HTML content to deliver a result consistent to current HTML format
+2) Makes all links in content which reference Hylo relative links with `target='_self'`
+3) Ensures that all external links have `target='_blank'`
+
+Note: `Post#details()` and `Comment#text()` both run this by default, and it should always be ran against those fields.
+
+*/
 export function processHTML (contentHTML, groupSlug) {
   if (!contentHTML) return contentHTML
 
@@ -55,7 +66,40 @@ export function processHTML (contentHTML, groupSlug) {
     }
   }, dom.querySelectorAll('a'))
 
-  // Convert Mention and Topic `spans` to `anchors`
+  // Normalize legacy Mention and Topic `anchors`
+  const convertLegacyAnchors = forEach(el => {
+    const newSpanElement = dom.createElement('span')
+
+    if (el.getAttribute('data-entity-type') === 'mention') {
+      newSpanElement.className = 'mention'
+      newSpanElement.setAttribute('data-id', el.getAttribute('data-user-id'))
+    } else {
+      newSpanElement.className = 'topic'
+      newSpanElement.setAttribute('data-label', el.getAttribute('data-search') || el.textContent?.slice(1))
+    }
+
+    newSpanElement.innerHTML = el.innerHTML
+    el.parentNode.replaceChild(newSpanElement, el)
+  })
+  convertLegacyAnchors(dom.querySelectorAll(
+    'a[data-entity-type="#mention"], a[data-entity-type="mention"], a[data-user-id], a.hashtag'
+  ))
+
+  return dom.querySelector('body').innerHTML
+}
+
+/*
+
+Prepares content for HTML Email delivery
+
+Note: Always make sure `processHTML` was ran first, this is done
+in `Post#details()` and `Comment#text()`
+
+*/
+export function qualifyLinks (processedHTML) {
+  const dom = getDOM(processedHTML)
+
+  // Convert Mention and Topic `span` elements to `a` elements
   const convertSpansToAnchors = forEach(el => {
     const anchorElement = dom.createElement('a')
     let href = el.className === 'mention'
@@ -76,34 +120,6 @@ export function processHTML (contentHTML, groupSlug) {
     'span.topic, span.mention'
   ))
 
-  // Normalize legacy Mention and Topic `anchors`
-  const convertLegacyAnchors = forEach(el => {
-    let href
-
-    if (el.getAttribute('data-entity-type') === 'mention') {
-      el.className = 'mention'
-      el.setAttribute('data-id', el.getAttribute('data-user-id'))
-      href = PathHelpers.mentionPath(el.getAttribute('data-user-id'), groupSlug)
-    } else {
-      el.className = 'topic'
-      el.setAttribute('data-label', el.getAttribute('data-search'))
-      href = PathHelpers.topicPath(el.getAttribute('data-search') || el.textContent?.slice(1), groupSlug)
-    }
-
-    el.setAttribute('href', href)
-    el.setAttribute('target', '_self')
-  })
-  convertLegacyAnchors(dom.querySelectorAll(
-    'a[data-entity-type="#mention"], a[data-entity-type="mention"], a[data-user-id], a.hashtag'
-  ))
-
-  return dom.querySelector('body').innerHTML
-}
-
-// For email use exclusively:
-export function qualifyLinks (processedHTML) {
-  const dom = getDOM(processedHTML)
-
   forEach(el => {
     const href = el.getAttribute('href')
     if (href && !href.match(/^https?:\/\//)) {
@@ -115,10 +131,10 @@ export function qualifyLinks (processedHTML) {
 }
 
 /*
-Returns a set of unique IDs for any mention members
-found in the provided HTML
 
-Used for generating notifications
+Returns a unique set of IDs for any members "mentioned"
+in the provided HTML. Used for generating notifications.
+
 */
 export function getUserMentions (processedHTML) {
   if (!processedHTML) return []
