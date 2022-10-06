@@ -6,12 +6,24 @@ const prefix = Frontend.Route.prefix
 
 describe('RichText', function () {
   describe('processHTML', () => {
-    it('converts Hylo.com URLs to relative hrefs', () => {
+    it('Ensures that long link text is concatenated', () => {
       const processResult = RichText.processHTML(
-        '<a href="https://www.hylo.com/groups/exit-to-community" target="_blank">https://www.hylo.com/groups/exit-to-community</a>',
+        '<a href="https://hylo.com/0123456789001234567890012345678900123456789001234567890">https://hylo.com/0123456789001234567890012345678900123456789001234567890</a>',
       )
       expect(processResult).to.equal(
-        '<a href="/groups/exit-to-community" target="_self">https://www.hylo.com/groups/exit-to-community</a>'
+        '<a href="https://hylo.com/0123456789001234567890012345678900123456789001234567890">https://hylo.com/0123456789001234567890012345678…</a>'
+      )
+    })
+
+    it('Aligns legacy HTML content to deliver a result consistent to current HTML format', () => {
+      const processResult = RichText.processHTML(
+        '<a data-entity-type="mention" data-user-id="99999">Person 9999</a>' +
+        '<a data-entity-type="#mention" data-search="my-topic">#my-topic</a>'
+      )
+
+      expect(processResult).to.equal(
+        '<span class="mention" data-id="99999">Person 9999</span>' +
+        '<span class="topic" data-label="my-topic">#my-topic</span>'
       )
     })
   })

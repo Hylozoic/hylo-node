@@ -1,15 +1,21 @@
-// let Cheerio = require('cheerio')
 import { filter, forEach, map, uniq, isNull } from 'lodash/fp'
 import insane from 'insane'
 import { JSDOM } from 'jsdom'
+import decode from 'ent/decode'
 import linkifyHTML from 'linkify-html'
 import { PathHelpers, TextHelpers } from 'hylo-shared'
 
 export const MAX_LINK_LENGTH = 48
-export const HYLO_URL_REGEX = /http[s]?:\/\/(?:www\.)?hylo\.com(.*)/gi // https://regex101.com/r/0GZMny/1
-// NOTE: May still wish to use this if some legacy content proves to not have linked topics
-export const HASHTAG_FULL_REGEX = /^#([A-Za-z][\w_-]+)$/
 
+/*
+  Note: Very old legacy content (older than 3-5 years) relied upon topic "#" references being 
+  "Linkified" automatically. Currently our editors don't assume the text "#whatever-topic"
+  should be automatically linked, relying upon the explicit topic picking within the editor.
+  
+  Keeping this note and regex as as a reminder if this proves an issue for any reason in the
+  future.
+*/
+export const HASHTAG_FULL_REGEX = /^#([A-Za-z][\w_-]+)$/
 
 export function getDOM (contentHTML) {
   const jsdom = new JSDOM(contentHTML)
@@ -33,35 +39,25 @@ export function sanitizeHTML (text, providedInsaneOptions) {
 
 Handles raw HTML from database:
 
-1) Aligns legacy HTML content to deliver a result consistent to current HTML format
-2) Makes all links in content which reference Hylo relative links with `target='_self'`
-3) Ensures that all external links have `target='_blank'`
+1) Ensures that long link text is concatenated
+2) Aligns legacy HTML content to deliver a result consistent to current HTML format
 
-Note: `Post#details()` and `Comment#text()` both run this by default, and it should always be ran against those fields.
+Note: `Post#details()` and `Comment#text()` both run this by default, and it should always
+      be ran against those fields.
 
 */
-export function processHTML (contentHTML, groupSlug) {
+export function processHTML (contentHTML) {
   if (!contentHTML) return contentHTML
 
-  const linkfiedHTML = linkifyHTML(contentHTML)
-  const dom = getDOM(linkfiedHTML)
+  const linkifiedHTML = linkifyHTML(decode(contentHTML), { target: { url: null } })
+  const dom = getDOM(linkifiedHTML)
 
-  // Make Hylo `anchors` relative links with `target='_self'`, otherwise `target=_blank` unless forEmail
+  // Concatenate long link text appending "…"
+  // This currently has to be reversed by the TipTap by referencing the href on edit
   forEach(el => {
     if (el.getAttribute('href')) {
       if (el.textContent.length > MAX_LINK_LENGTH) {
         el.innerHTML = `${el.textContent.slice(0, MAX_LINK_LENGTH)}…`
-      }
-
-      const hyloLinksMatch = el.getAttribute('href').matchAll(HYLO_URL_REGEX).next()
-
-      if (hyloLinksMatch?.value && hyloLinksMatch?.value?.length === 2) {
-        const relativeURLPath = hyloLinksMatch.value[1] === '' ? '/' : hyloLinksMatch.value[1]
-
-        el.setAttribute('target', '_self')
-        el.setAttribute('href', relativeURLPath)
-      } else {
-        el.setAttribute('target', '_blank')
       }
     }
   }, dom.querySelectorAll('a'))
@@ -75,6 +71,9 @@ export function processHTML (contentHTML, groupSlug) {
       newSpanElement.setAttribute('data-id', el.getAttribute('data-user-id'))
     } else {
       newSpanElement.className = 'topic'
+      if (el.getAttribute('data-id')) {
+        newSpanElement.setAttribute('data-id', el.getAttribute('data-id'))
+      }
       newSpanElement.setAttribute('data-label', el.getAttribute('data-search') || el.textContent?.slice(1))
     }
 
@@ -92,8 +91,11 @@ export function processHTML (contentHTML, groupSlug) {
 
 Prepares content for HTML Email delivery
 
-Note: Always make sure `processHTML` was ran first, this is done
-in `Post#details()` and `Comment#text()`
+- Always make sure `processHTML` was ran first, this is done
+  in `Post#details()` and `Comment#text()`
+
+- This same logic is handled dynamcially on Web in `ClickCatcher`,
+  and on Mobile in the `HyloHTML` component.
 
 */
 export function qualifyLinks (processedHTML) {
@@ -112,7 +114,6 @@ export function qualifyLinks (processedHTML) {
 
     anchorElement.innerHTML = el.innerHTML
     anchorElement.setAttribute('href', href)
-    anchorElement.setAttribute('target', '_self')
 
     el.parentNode.replaceChild(anchorElement, el)
   })
@@ -122,7 +123,7 @@ export function qualifyLinks (processedHTML) {
 
   forEach(el => {
     const href = el.getAttribute('href')
-    if (href && !href.match(/^https?:\/\//)) {
+    if (href && !href.match(/^(https?|email):/)) {
       el.setAttribute('href', Frontend.Route.prefix + href)
     }
   }, dom.querySelectorAll('a'))
