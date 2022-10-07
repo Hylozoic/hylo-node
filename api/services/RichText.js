@@ -39,8 +39,9 @@ export function sanitizeHTML (text, providedInsaneOptions) {
 
 Handles raw HTML from database:
 
-1) Ensures that long link text is concatenated
-2) Aligns legacy HTML content to deliver a result consistent to current HTML format
+1) Removes `target` attribute on all links
+2) Ensures that long link text is concatenated to MAX_LINK_LENGTH
+3) Normalize legacy HTML content to be consistent with current HTML format
 
 Note: `Post#details()` and `Comment#text()` both run this by default, and it should always
       be ran against those fields.
@@ -52,9 +53,11 @@ export function processHTML (contentHTML) {
   const linkifiedHTML = linkifyHTML(decode(contentHTML), { target: { url: null } })
   const dom = getDOM(linkifiedHTML)
 
-  // Concatenate long link text appending "…"
+  // Remove all `target` attributes for anchors  Concatenate long link text appending "…"
   // This currently has to be reversed by the TipTap by referencing the href on edit
   forEach(el => {
+    el.removeAttribute('target')
+
     if (el.getAttribute('href')) {
       if (el.textContent.length > MAX_LINK_LENGTH) {
         el.innerHTML = `${el.textContent.slice(0, MAX_LINK_LENGTH)}…`
