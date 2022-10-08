@@ -1433,6 +1433,8 @@ type Post {
   groupsTotal: Int
   # Whether this post is publicly visible (outside of the groups it is posted to)
   isPublic: Boolean
+  # Whether LinkPreview appears full size above post or smaller below
+  linkPreviewFeatured: Boolean
   # Full location string
   location: String
   # Object with geocoded location deatils
@@ -1482,8 +1484,6 @@ type Post {
 
   # The link preview of the first link in the post that is shown as a card on the post
   linkPreview: LinkPreview
-  # Whether LinkPreview appears full size above post or smaller below
-  linkPreviewFeatured: Boolean
 
   # The members of a project type Post
   members(first: Int, cursor: ID, order: String): PersonQuerySet
