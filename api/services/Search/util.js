@@ -1,6 +1,6 @@
 import { GraphQLYogaError } from '@graphql-yoga/node'
 import { curry, includes, isEmpty, values } from 'lodash'
-import moment from 'moment'
+import moment from 'moment-timezone'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {

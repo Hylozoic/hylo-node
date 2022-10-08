@@ -7036,16 +7036,15 @@ https-proxy-agent@^5.0.0, https-proxy-agent@^5.0.1:
     agent-base "6"
     debug "4"
 
-hylo-shared@1.9.0-beta.11:
-  version "1.9.0-beta.11"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-1.9.0-beta.11.tgz#dcf2d94bf4cb764bec8dc92dee65457aad16945a"
-  integrity sha512-Miw+FAQ3b6jhHZouKdFS/sawadsP4wZk/CVfUKdpOI2YSnXbCk8KtCNZkOgJG/mUEkqjcCSumDMh9ItBhlr/3A==
+hylo-shared@4.1.0-beta.12:
+  version "4.1.0-beta.12"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-4.1.0-beta.12.tgz#ab92b7c0bb5759e3314eda6b5310901e7d248e7f"
+  integrity sha512-UpUFOooGGdaL/jfiQqOX0Jkg8Kx5fPuUqmQP7I/fBKECk7jCn6rhHuOnmWnqfPOxSwuTt4Wj20Gc3QP7bjjEwg==
   dependencies:
     coordinate-parser "^1.0.7"
     html-to-text "^8.1.0"
     lodash "~4.17.21"
     marked "^4.0.12"
-    moment-timezone "^0.5.34"
     pretty-date "^0.2.0"
     querystring "^0.2.1"
     trunc-html "^1.1.2"
@@ -9025,14 +9024,14 @@ mock-require@^2.0.2:
   dependencies:
     caller-id "^0.1.0"
 
-moment-timezone@^0.5.34:
+moment-timezone@^0.5.37:
   version "0.5.37"
   resolved "https://registry.yarnpkg.com/moment-timezone/-/moment-timezone-0.5.37.tgz#adf97f719c4e458fdb12e2b4e87b8bec9f4eef1e"
   integrity sha512-uEDzDNFhfaywRl+vwXxffjjq1q0Vzr+fcQpQ1bU0kbzorfS7zVtZnCnGc8mhWmF39d4g4YriF6kwA75mJKE/Zg==
   dependencies:
     moment ">= 2.9.0"
 
-"moment@>= 2.9.0", moment@^2.9.0:
+"moment@>= 2.9.0":
   version "2.29.4"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.4.tgz#3dbe052889fe7c1b2ed966fcb3a77328964ef108"
   integrity sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==
