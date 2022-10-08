@@ -2590,6 +2590,13 @@ atob@^2.1.2:
   resolved "https://registry.yarnpkg.com/atob/-/atob-2.1.2.tgz#6d9517eb9e030d2436666651e86bd9f6f13533c9"
   integrity sha512-Wm6ukoaOGJi/73p/cl2GvLjTI5JM1k/O14isD73YML8StrH/7/lRFgmg8nICZgD3bZZvjwCGxtMOD3wWNAu8cg==
 
+autolinker@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/autolinker/-/autolinker-4.0.0.tgz#aa1f9a52786b727b0ecee8cd7d4a97e0e3ef59f1"
+  integrity sha512-fl5Kh6BmEEZx+IWBfEirnRUU5+cOiV0OK7PEt0RBKvJMJ8GaRseIOeDU3FKf4j3CE5HVefcjHmhYPOcaVt0bZw==
+  dependencies:
+    tslib "^2.3.0"
+
 available-typed-arrays@^1.0.5:
   version "1.0.5"
   resolved "https://registry.yarnpkg.com/available-typed-arrays/-/available-typed-arrays-1.0.5.tgz#92f95616501069d07d10edb2fc37d3e1c65123b7"
@@ -8309,16 +8316,6 @@ link-preview-js@^3.0.3:
     cheerio "1.0.0-rc.11"
     cross-fetch "3.1.5"
     url "0.11.0"
-
-linkify-html@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/linkify-html/-/linkify-html-4.0.2.tgz#f55e58ee27b4e34793f03a0bf81910c8a92151e5"
-  integrity sha512-YcN3tsyutK2Y/uSuoG0zne8FQdoqzrAgNU5ko0DWE7M2oQ3ms4z/202f2W4TvRm9uxKdrsWAullfynANLaVMqw==
-
-linkifyjs@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/linkifyjs/-/linkifyjs-4.0.2.tgz#5844ea70f4427004e50036d983b66da50fe13389"
-  integrity sha512-/VSoCZiglX0VMsXmL5PN3lRg45M86lrD9PskdkA2abWaTKap1bIcJ11LS4EE55bcUl9ZOR4eZ792UtQ9E/5xLA==
 
 load-json-file@^1.0.0:
   version "1.1.0"

@@ -37,10 +37,6 @@ describe('RichText', function () {
       expect(RichText.sanitizeHTML('foo')).to.equal('foo')
     })
   
-    it('strips leading whitespace in paragraphs', () => {
-      expect(RichText.sanitizeHTML('<p>&nbsp;</p>')).to.equal('<p></p>')
-    })
-  
     it('removes tags not on a whitelist', () => {
       const expected = 'Wombats are great.<div>They poop square.</div>'
       const unsafe = 'Wombats are great.<em>So great.</em><div>They poop square.</div>'

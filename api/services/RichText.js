@@ -1,37 +1,30 @@
 import { filter, forEach, map, uniq, isNull } from 'lodash/fp'
 import insane from 'insane'
+import Autolinker from 'autolinker'
 import { JSDOM } from 'jsdom'
-import decode from 'ent/decode'
-import linkifyHTML from 'linkify-html'
 import { PathHelpers, TextHelpers } from 'hylo-shared'
 
 export const MAX_LINK_LENGTH = 48
 
 export function getDOM (contentHTML) {
-  const jsdom = new JSDOM(contentHTML)
-
-  return jsdom.window.document
+  return new JSDOM(contentHTML).window.document
 }
 
 // Sanitization should only occur from the backend and on output
 export function sanitizeHTML (text, providedInsaneOptions) {
   if (!text) return ''
 
-  const options = TextHelpers.insaneOptions(providedInsaneOptions)
-
-  // remove leading &nbsp; (a side-effect of contenteditable)
-  const strippedText = text.replace(/<p>&nbsp;/gi, '<p>')
-
-  return insane(strippedText, options)
+  return insane(text, TextHelpers.insaneOptions(providedInsaneOptions))
 }
 
 /*
 
 Handles raw HTML from database:
 
-1) Removes `target` attribute on all links
-2) Ensures that long link text is concatenated to MAX_LINK_LENGTH
-3) Normalize legacy HTML content to be consistent with current HTML format
+1) Linkifies the HTML (this is necessary for legacy content)
+2) Removes `target` attribute from all all links
+3) Ensures that long link text is concatenated to `MAX_LINK_LENGTH`
+4) Normalizes legacy HTML content to be consistent with current HTML format
 
 Note: `Post#details()` and `Comment#text()` both run this by default, and it should always
       be ran against those fields.
@@ -40,8 +33,8 @@ Note: `Post#details()` and `Comment#text()` both run this by default, and it sho
 export function processHTML (contentHTML) {
   if (!contentHTML) return contentHTML
 
-  const linkifiedHTML = linkifyHTML(decode(contentHTML), { target: { url: null } })
-  const dom = getDOM(linkifiedHTML)
+  const autolinkedHTML = Autolinker.link(contentHTML)
+  const dom = getDOM(autolinkedHTML)
 
   // Remove all `target` attributes for anchors  Concatenate long link text appending "…"
   // This currently has to be reversed by the TipTap by referencing the href on edit
