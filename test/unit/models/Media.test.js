@@ -35,7 +35,7 @@ describe('Media', () => {
     let user, post
     beforeEach(async () => {
       user = await new User({name: 'username', email: 'john@foo.com', active: true}).save()
-      post = await factories.post({ description: '<p>hello <a class="mention" data-id="334">John Doe</a> #MOO</p>', user_id: user.id }).save()
+      post = await factories.post({ description: '<p>hello <a class="mention" data-type="mention" data-id="334" data-label="John Doe">John Doe</a> #MOO</p>', user_id: user.id }).save()
       await Media.createForSubject({
         subjectType: 'post',
         subjectId: post.id,

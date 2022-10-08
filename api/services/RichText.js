@@ -7,16 +7,6 @@ import { PathHelpers, TextHelpers } from 'hylo-shared'
 
 export const MAX_LINK_LENGTH = 48
 
-/*
-  Note: Very old legacy content (older than 3-5 years) relied upon topic "#" references being 
-  "Linkified" automatically. Currently our editors don't assume the text "#whatever-topic"
-  should be automatically linked, relying upon the explicit topic picking within the editor.
-  
-  Keeping this note and regex as as a reminder if this proves an issue for any reason in the
-  future.
-*/
-export const HASHTAG_FULL_REGEX = /^#([A-Za-z][\w_-]+)$/
-
 export function getDOM (contentHTML) {
   const jsdom = new JSDOM(contentHTML)
 
@@ -71,13 +61,14 @@ export function processHTML (contentHTML) {
 
     if (el.getAttribute('data-entity-type') === 'mention') {
       newSpanElement.className = 'mention'
+      newSpanElement.setAttribute('data-type', 'mention')
       newSpanElement.setAttribute('data-id', el.getAttribute('data-user-id'))
+      newSpanElement.setAttribute('data-label', el.textContent)
     } else {
       newSpanElement.className = 'topic'
-      if (el.getAttribute('data-id')) {
-        newSpanElement.setAttribute('data-id', el.getAttribute('data-id'))
-      }
-      newSpanElement.setAttribute('data-label', el.getAttribute('data-search') || el.textContent?.slice(1))
+      newSpanElement.setAttribute('data-type', 'topic')
+      newSpanElement.setAttribute('data-id', el.textContent?.slice(1))
+      newSpanElement.setAttribute('data-label', el.textContent)
     }
 
     newSpanElement.innerHTML = el.innerHTML
@@ -109,7 +100,7 @@ export function qualifyLinks (processedHTML) {
     const anchorElement = dom.createElement('a')
     let href = el.className === 'mention'
       ? PathHelpers.mentionPath(el.getAttribute('data-id'), groupSlug)
-      : PathHelpers.topicPath(el.getAttribute('data-label'), groupSlug)
+      : PathHelpers.topicPath(el.getAttribute('data-id'), groupSlug)
 
     for (const attr of el.attributes) {
       anchorElement.setAttribute(attr.name, attr.value)

@@ -310,7 +310,7 @@ describe('Activity', function () {
     })
 
     it('sets action = "mention" for mentions', function () {
-      comment.set('text', 'yo <a class="mention" data-id="7">Bob</a>!')
+      comment.set('text', 'yo <a class="mention" data-type="mention" data-id="7" data-label="Bob">Bob</a>!')
       var activity = Activity.forComment(comment, '7')
 
       expect(activity.get('comment_id')).to.equal('4')

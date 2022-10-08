@@ -25,6 +25,7 @@ export async function notifyAboutMessage ({ commentId }) {
     if (!user.enabledNotification(Notification.TYPE.Message, Notification.MEDIUM.Push)) return
 
     const lastReadAt = user.pivot.get('last_read_at')
+
     if (!lastReadAt || comment.get('created_at') > new Date(lastReadAt)) {
       return user.sendPushNotification(alert, path)
     }
