@@ -2,7 +2,7 @@ import { filter, forEach, map, uniq, isNull } from 'lodash/fp'
 import insane from 'insane'
 import Autolinker from 'autolinker'
 import { JSDOM } from 'jsdom'
-import { PathHelpers, TextHelpers } from 'hylo-shared'
+import { PathHelpers, TextHelpers, HYLO_URL_REGEX } from 'hylo-shared'
 
 export const MAX_LINK_LENGTH = 48
 
@@ -21,9 +21,10 @@ export function sanitizeHTML (text, providedInsaneOptions) {
 
 Handles raw HTML from database:
 
-1) Linkifies the HTML (this is necessary for legacy content)
-2) Removes `target` attribute from all all links
-3) Ensures that long link text is concatenated to `MAX_LINK_LENGTH`
+1) Linkifies the HTML (this is necessary for legacy content),
+   adding class 'hylo-link' to any internal links
+2) Ensures that long link text is concatenated to `MAX_LINK_LENGTH`
+3) Removes `target` attribute from all all links
 4) Normalizes legacy HTML content to be consistent with current HTML format
 
 Note: `Post#details()` and `Comment#text()` both run this by default, and it should always
@@ -33,43 +34,59 @@ Note: `Post#details()` and `Comment#text()` both run this by default, and it sho
 export function processHTML (contentHTML) {
   if (!contentHTML) return contentHTML
 
-  const autolinkedHTML = Autolinker.link(contentHTML)
+  const autolinkedHTML = Autolinker.link(contentHTML, { className: 'linkified' })
   const dom = getDOM(autolinkedHTML)
 
-  // Remove all `target` attributes for anchors  Concatenate long link text appending "…"
-  // This currently has to be reversed by the TipTap by referencing the href on edit
   forEach(el => {
+    // Remove all `target` attributes for anchors  Concatenate long link text appending "…"
     el.removeAttribute('target')
 
-    if (el.getAttribute('href')) {
-      if (el.textContent.length > MAX_LINK_LENGTH) {
-        el.innerHTML = `${el.textContent.slice(0, MAX_LINK_LENGTH)}…`
-      }
+    // Add `hylo-link` to internal links
+    if ((el.getAttribute('href') && el.getAttribute('href').match(HYLO_URL_REGEX))) {
+      el.className = 'hylo-link'
     }
-  }, dom.querySelectorAll('a'))
 
-  // Normalize legacy Mention and Topic `anchors`
-  const convertLegacyAnchors = forEach(el => {
-    const newSpanElement = dom.createElement('span')
+    // This currently has to be reversed by the TipTap by referencing the href on edit
+    if (el.textContent.length > MAX_LINK_LENGTH) {
+      el.innerHTML = `${el.textContent.slice(0, MAX_LINK_LENGTH)}…`
+    }
 
-    if (el.getAttribute('data-entity-type') === 'mention') {
+    // Normalize legacy Mentions
+    if (
+      el.getAttribute('data-entity-type') === 'mention'||
+      el.getAttribute('data-user-id')
+    ) {
+      const newSpanElement = dom.createElement('span')
+
       newSpanElement.className = 'mention'
       newSpanElement.setAttribute('data-type', 'mention')
       newSpanElement.setAttribute('data-id', el.getAttribute('data-user-id'))
       newSpanElement.setAttribute('data-label', el.textContent)
-    } else {
+      newSpanElement.innerHTML = el.innerHTML
+
+      el.parentNode.replaceChild(newSpanElement, el)
+
+      return
+    }
+
+    // Normalize legacy Topics
+    if (
+      el.getAttribute('data-entity-type') === '#mention' ||
+      (!el.getAttribute('href') && el.textContent[0] === '#')
+    ) {
+      const newSpanElement = dom.createElement('span')
+
       newSpanElement.className = 'topic'
       newSpanElement.setAttribute('data-type', 'topic')
       newSpanElement.setAttribute('data-id', el.textContent?.slice(1))
       newSpanElement.setAttribute('data-label', el.textContent)
-    }
+      newSpanElement.innerHTML = el.innerHTML
 
-    newSpanElement.innerHTML = el.innerHTML
-    el.parentNode.replaceChild(newSpanElement, el)
-  })
-  convertLegacyAnchors(dom.querySelectorAll(
-    'a[data-entity-type="#mention"], a[data-entity-type="mention"], a[data-user-id], a.hashtag'
-  ))
+      el.parentNode.replaceChild(newSpanElement, el)
+
+      return
+    }
+  }, dom.querySelectorAll('a'))
 
   return dom.querySelector('body').innerHTML
 }
