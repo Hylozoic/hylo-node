@@ -22,7 +22,6 @@ exports.up = async function (knex) {
     table.timestamp('created_at')
     table.timestamp('updated_at')
   })
-  // TODO: how to handle ordering? instead of this table do we just have an array in the collections table? or delete and recreate the list every time order changes? or use order column?
 
   await knex.raw('alter table collections_posts alter constraint collections_posts_collection_id_foreign deferrable initially deferred')
   await knex.raw('alter table collections_posts alter constraint collections_posts_post_id_foreign deferrable initially deferred')
