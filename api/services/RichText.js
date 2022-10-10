@@ -10,13 +10,6 @@ export function getDOM (contentHTML) {
   return new JSDOM(contentHTML).window.document
 }
 
-// Sanitization should only occur from the backend and on output
-export function sanitizeHTML (text, providedInsaneOptions) {
-  if (!text) return ''
-
-  return insane(text, TextHelpers.insaneOptions(providedInsaneOptions))
-}
-
 /*
 
 Handles raw HTML from database:
@@ -26,13 +19,15 @@ Handles raw HTML from database:
 2) Ensures that long link text is concatenated to `MAX_LINK_LENGTH`
 3) Removes `target` attribute from all all links
 4) Normalizes legacy HTML content to be consistent with current HTML format
+5) Sanitizes final output (* sanitization should only occur from the backend and on output)
 
 Note: `Post#details()` and `Comment#text()` both run this by default, and it should always
       be ran against those fields.
 
 */
-export function processHTML (contentHTML) {
-  if (!contentHTML) return contentHTML
+export function processHTML (contentHTML, providedInsaneOptions) {
+  // NOTE: Will probably fail silently if bad content sent
+  if (!contentHTML) return ''
 
   const autolinkedHTML = Autolinker.link(contentHTML, { className: 'linkified' })
   const dom = getDOM(autolinkedHTML)
@@ -87,8 +82,14 @@ export function processHTML (contentHTML) {
       return
     }
   }, dom.querySelectorAll('a'))
+  
+  // Always sanitize on output, but only once and only here
+  const  santizedHTML = insane(
+    dom.querySelector('body').innerHTML,
+    TextHelpers.insaneOptions(providedInsaneOptions)
+  )
 
-  return dom.querySelector('body').innerHTML
+  return santizedHTML
 }
 
 /*
@@ -98,11 +99,13 @@ Prepares content for HTML Email delivery
 - Always make sure `processHTML` was ran first, this is done
   in `Post#details()` and `Comment#text()`
 
-- This same logic is handled dynamcially on Web in `ClickCatcher`,
+- Links will be generated with `/all` if a `groupSlug` is not passed
+
+- This same logic is handled dynamically on Web in `ClickCatcher`,
   and on Mobile in the `HyloHTML` component.
 
 */
-export function qualifyLinks (processedHTML) {
+export function qualifyLinks (processedHTML, groupSlug) {
   const dom = getDOM(processedHTML)
 
   // Convert Mention and Topic `span` elements to `a` elements

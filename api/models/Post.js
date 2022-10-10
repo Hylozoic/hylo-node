@@ -44,13 +44,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // Simple attribute getters
 
   // This should be always used when accessing this attribute
-  details: function (baseGroupSlug) {
-    // Ideally we would process HTML these with the first Group Slug associated with the post,
-    // but there isn't a simple way to accompish that here without a `groups().fetch()`
-    // which seems unecessary as for now in both Web and Mobile we will sense clicks and replace
-    // the root to the contextual group slug. Also would be potentially impactful to performance
-    // when loading a large number of posts.
-    return RichText.sanitizeHTML(RichText.processHTML(this.get('description'), baseGroupSlug))
+  details: function () {
+    return RichText.processHTML(this.get('description'))
   },
 
   description: function () {

@@ -324,7 +324,6 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var user = post.relations.user
-    var description = RichText.qualifyLinks(post.details())
     var replyTo = Email.postReplyAddress(post.id, reader.id)
   
     var groupIds = Activity.groupIds(this.relations.activity)
@@ -346,7 +345,7 @@ module.exports = bookshelf.Model.extend({
             user.get('avatar_url') + '?ctt=announcement_email&cti=' + reader.id),
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(user) + '?ctt=announcement_email&cti=' + reader.id),
-          post_description: description,
+          post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
           post_title: decode(post.get('name')),
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post, group) + '?ctt=announcement_email&cti=' + reader.id),
@@ -362,7 +361,6 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var user = post.relations.user
-    var description = RichText.qualifyLinks(post.details())
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
     var groupIds = Activity.groupIds(this.relations.activity)
@@ -384,7 +382,7 @@ module.exports = bookshelf.Model.extend({
             user.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
-          post_description: description,
+          post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
           post_title: decode(post.get('name')),
           post_type: 'conversation',
           post_url: Frontend.Route.tokenLogin(reader, token,
@@ -404,7 +402,6 @@ module.exports = bookshelf.Model.extend({
 
     const post = comment.relations.post
     const commenter = comment.relations.user
-    var text = RichText.qualifyLinks(comment.text())
     const replyTo = Email.postReplyAddress(post.id, reader.id)
     const title = decode(post.get('name'))
 
@@ -436,7 +433,7 @@ module.exports = bookshelf.Model.extend({
           commenter_avatar_url: commenter.get('avatar_url'),
           commenter_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(commenter) + '?ctt=comment_email&cti=' + reader.id),
-          comment_text: text,
+          comment_text: RichText.qualifyLinks(comment.text(), group.get('slug')),
           post_label: postLabel,
           post_title: title,
           comment_url: Frontend.Route.tokenLogin(reader, token,
@@ -653,7 +650,6 @@ module.exports = bookshelf.Model.extend({
     var post = this.post()
     var reader = this.reader()
     var inviter = this.actor()
-    var description = RichText.qualifyLinks(post.details())
     var replyTo = Email.postReplyAddress(post.id, reader.id)
 
     var groupIds = Activity.groupIds(this.relations.activity)
@@ -675,7 +671,7 @@ module.exports = bookshelf.Model.extend({
             inviter.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(inviter) + '?ctt=post_mention_email&cti=' + reader.id),
-          post_description: description,
+          post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
           post_title: decode(post.get('name')),
           post_type: 'event',
           post_date: post.prettyEventDates(post.get('start_time'), post.get('end_time')),
