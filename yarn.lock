@@ -7036,10 +7036,10 @@ https-proxy-agent@^5.0.0, https-proxy-agent@^5.0.1:
     agent-base "6"
     debug "4"
 
-hylo-shared@4.1.0-beta.13:
-  version "4.1.0-beta.13"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-4.1.0-beta.13.tgz#589bad46e0d3290cf2e551bd8ae31e53bc2a716c"
-  integrity sha512-fcjEmh3ts6caOM87Mv2Uo8dIFWUnOAXNA/VPfCAfJMa8m9O9Frb4FJgqZAJolNxyQKcQjTjvtRW8VHMJ2AcTIQ==
+hylo-shared@4.1.0-beta.14:
+  version "4.1.0-beta.14"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-4.1.0-beta.14.tgz#4b07c13327e10ea44c230a780401c8fb01f7625a"
+  integrity sha512-3XtDvSKdTQIa07N55XbppzyWs5PFOOIHpWhPeIupyLVvZj89o9oF4X/n77+ZH/2a3F5y42KZ0OO7I9p+jrzFBg==
   dependencies:
     coordinate-parser "^1.0.7"
     html-to-text "^8.1.0"
