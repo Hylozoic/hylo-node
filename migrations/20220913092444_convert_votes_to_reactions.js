@@ -1,5 +1,6 @@
 
 exports.up = async function (knex) {
+  await knex.raw('alter table votes drop constraint if exists uq_vote_1')
   await knex.schema.renameTable('votes', 'reactions')
 
   await knex.schema.table('reactions', table => {

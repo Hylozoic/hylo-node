@@ -1367,14 +1367,12 @@ type Person {
     topics: [ID],
     # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
     types: [String]
-
-    # reactions associated with each post
   ): PostQuerySet
 
   # Project posts that this person is a member of
   projects: PostQuerySet
 
-  # This persons reactions (substitute bookmarks?)
+  # This person's reactions (substitute bookmarks?)
   reactions(first: Int, offset: Int, order: String): ReactionQuerySet
 
   # The set of Skills this person has added to their profile
@@ -1449,6 +1447,9 @@ type Post {
   myReactions: [Reaction]
   # Whether the logged-in user has upvoted the post or not
   myVote: Boolean
+  # Number of people that have one or more reactions to a post
+  peopleReactionsTotal: Int
+  postReactionsTotal: Int
   # Number of total "members" of the post. Used for Projects only right now
   postMembershipsTotal: Int
   # Link to a project management tool or service. Only used for Projects right now
@@ -1498,7 +1499,7 @@ type Post {
   postMemberships: [PostMembership]
 
   # reactions to this post
-  reactions: [Reactions]
+  postReactions: [Reaction]
 
   # The topics that have been added to this post
   topics: [Topic]
@@ -1554,6 +1555,8 @@ type Reaction {
   entityId: ID
   # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
   entityType: String
+  # id for the reaction
+  id: ID
   # id for the user who reacted
   userId: ID
 
@@ -1567,12 +1570,8 @@ type Reaction {
 input ReactionInput {
   # when the reaction happened
   createdAt: Date
-  # Just the basic emoji, no modifiers. UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
-  emojiBase: String
   # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
   emojiFull: String
-  # The EN locale string for an emoji, like :thumbs_up:
-  emojiLabel: String
   # id for the entity associated with the reactions
   entityId: ID
   # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
@@ -1816,7 +1815,7 @@ type Mutation {
   # Remove a person as a member from a project Post
   deleteProjectRole(id: ID): GenericResult
   # Delete a reaction you created
-  deleteReaction(id: ID, emojiFull: String): GenericResult
+  deleteReaction(entityId: ID, data: ReactionInput): Post
   # Delete a SavedSearch you created
   deleteSavedSearch(id: ID): ID
   # Set an invitation to join a group as expired. Only a group moderator can call this.

@@ -171,7 +171,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       getters: {
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
-        myReactions: p => userId ? p.userReactions(userId) : [], // need to adjust for having multiple reactions
+        myReactions: p => userId ? p.postReactions(userId).fetch() : [], // is this actually fetching anything?
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
           userId && p.isEvent() ? p.userEventInvitation(userId)
@@ -188,6 +188,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { eventInvitations: { querySet: true } },
         'linkPreview',
         'postMemberships',
+        'postReactions',
         {
           media: {
             alias: 'attachments',
@@ -625,8 +626,14 @@ export default function makeModels (userId, isAdmin, apiClient) {
     Reaction: {
       model: Reaction,
       getters: {
-        createdAt: r => r.get('date_reacted')
+        createdAt: r => r.get('date_reacted'),
+        emojiBase: r => r.get('emoji_base'),
+        emojiFull: r => r.get('emoji_full'),
+        emojiLabel: r => r.get('emoji_label'),
+        entityId: r => r.get('entity_id'),
+        entityType: r => r.get('entity_type')
       },
+      isDefaultTypeForTable: true,
       relations: [
         'post',
         'user'

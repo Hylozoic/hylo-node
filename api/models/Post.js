@@ -1,4 +1,6 @@
 /* globals _ */
+import data from '@emoji-mart/data'
+import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
 import { TextHelpers } from 'hylo-shared'
@@ -9,6 +11,8 @@ import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
 import ProjectMixin from './project/mixin'
 import EventMixin from './event/mixin'
+
+init({ data })
 
 export const POSTS_USERS_ATTR_UPDATE_WHITELIST = [
   'project_role_id',
@@ -155,7 +159,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // should only be one of these per post
   selectedTags: function () {
     return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
-    .query({where: {selected: true}})
+      .query({ where: { selected: true } })
   },
 
   tags: function () {
@@ -166,12 +170,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
-  userReactions: function (userId, trx) {
-    return this.reactions().query({ where: { user_id: userId, entity_type: 'post' } }, { transacting: trx })
-  },
-
-  postReactions: function () {
-    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
+  postReactions: function (userId) {
+    return userId
+      ? this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'post', 'reactions.user_id': userId })
+      : this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
   },
 
   userVote: function (userId) {
@@ -406,7 +408,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       .then(reaction => bookshelf.transaction(trx => {
         const inc = delta => async () => {
           const reactionsSummary = await this.get('reactions_summary')
-          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...reactionsSummary, '\uD83D\uDC4D': reactionsSummary['\uD83D\uDC4D'] + delta } })
+          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions_summary: { ...reactionsSummary, '\uD83D\uDC4D': reactionsSummary['\uD83D\uDC4D'] + delta } })
         }
 
         return (reaction && !isUpvote
@@ -424,47 +426,49 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   deleteReaction: function (userId, data) {
-    return this.userReactions(userId)
-      .then(userReactions => bookshelf.transaction(async trx => {
+    return this.postReactions(userId).fetch()
+      .then(userReactionsModels => bookshelf.transaction(async trx => {
+        const userReactions = userReactionsModels.models
         const isLastReaction = userReactions.length === 1
-        const userReaction = userReactions.filter(reaction => reaction.emojiFull === data.emojiFull)
+        const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === data.emojiFull)[0]
         const { emojiFull } = data
-        const cleanUp = async () => {
-          const reactionsSummary = await this.get('reactions_summary')
+
+        const cleanUp = () => {
+          const reactionsSummary = this.get('reactions_summary')
           const reactionCount = reactionsSummary[emojiFull] || 0
           if (isLastReaction) {
-            this.save({ num_people_reacts: this.get('num_people_reacts') - 1, reactions: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+            return this.save({ num_people_reacts: this.get('num_people_reacts') - 1, reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
           } else {
-            const reactionsSummary = await this.get('reactions_summary')
-            this.save({ reactions: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+            const reactionsSummary = this.get('reactions_summary')
+            return this.save({ reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
           }
         }
 
         return userReaction.destroy({ transacting: trx })
-          .then(cleanUp())
+          .then(cleanUp)
       }))
   },
 
   reaction: function (userId, data) {
-    return this.userReactions(userId)
-      .then(userReactions => bookshelf.transaction(async trx => { // TODO: this needs to be finished off
-      // need to update the count on the post and the reactions field...
-      // so need to retrive the post.. but we are in the post, so that's easy :)
-      // then we need to create a new Reaction
-        const delta = userReactions.length > 0 ? 0 : 1
-        const postReactions = await this.get('reactions')
+    return this.postReactions(userId).fetch()
+      .then(userReactions => bookshelf.transaction(async trx => {
+
+        const delta = userReactions?.models?.length > 0 ? 0 : 1
+        const reactionsSummary = this.get('reactions_summary') || {}
         const { emojiFull } = data
-        const reactionCount = postReactions[emojiFull] || 0
-        const inc = () =>
-          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...postReactions, [emojiFull]: reactionCount + delta } }, { transacting: trx })
+        const emojiObject = await getEmojiDataFromNative(emojiFull)
+        const reactionCount = reactionsSummary[emojiFull] || 0
+        const inc = () => {
+          return this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount + delta } }, { transacting: trx })
+        }
 
         return new Reaction({
           entity_id: this.id,
           user_id: userId,
-          emoji_base: data.emojiBase,
-          emoji_full: data.emojiFull,
+          emoji_base: emojiFull,
+          emoji_full: emojiFull,
           entity_type: 'post',
-          emoji_label: data.emojiLabel
+          emoji_label: emojiObject.shortcodes
         }).save().then(inc())
       }))
       .then(() => this)

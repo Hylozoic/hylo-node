@@ -339,7 +339,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
 
-    deleteReaction: (root, { data }) => deleteReaction(userId, data),
+    deleteReaction: (root, { entityId, data }) => deleteReaction(entityId, userId, data),
 
     deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
 
@@ -380,7 +380,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
 
-    reaction: (root, { data }) => reaction(userId, data),
+    reaction: (root, { entityId, data }) => reaction(userId, entityId, data),
 
     reactivateMe: (root) => reactivateUser({ userId }),
 

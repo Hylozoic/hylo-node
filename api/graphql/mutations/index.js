@@ -292,13 +292,13 @@ export function messageGroupModerators (userId, groupId) {
   return Group.messageModerators(userId, groupId)
 }
 
-export function reaction (userId, data) {
+export function reaction (userId, entityId, data) {
   // check if the inbound data has an entityType
   const lookUp = {
     post: Post,
     comment: Comment
   }
-  const { entityType, entityId } = data
+  const { entityType } = data
   if (!['post', 'comment'].includes(entityType)) {
     throw new Error('entityType invalid: you need to say its a post or a comment')
   }
@@ -306,13 +306,13 @@ export function reaction (userId, data) {
     .then(entity => entity.reaction(userId, data))
 }
 
-export function deleteReaction (userId, data) {
+export function deleteReaction (entityId, userId, data) {
   // check if the inbound data has an entityType
   const lookUp = {
     post: Post,
     comment: Comment
   }
-  const { entityType, entityId } = data
+  const { entityType } = data
   if (!['post', 'comment'].includes(entityType)) {
     throw new Error('entityType invalid: you need to say its a post or a comment')
   }

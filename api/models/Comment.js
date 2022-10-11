@@ -1,6 +1,10 @@
+import data from '@emoji-mart/data'
+import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { TextHelpers } from 'hylo-shared'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'
 import EnsureLoad from './mixins/EnsureLoad'
+
+init({ data })
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'comments',
@@ -34,7 +38,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   userReactions: function (userId, trx) {
-    return this.reactions().query({ where: { user_id: userId, entity_type: 'comment' } }, { transacting: trx })
+    return this.commentReactions().query({ where: { user_id: userId, entity_type: 'comment' } }, { transacting: trx })
   },
 
   commentReactions: function () {
@@ -59,6 +63,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         const delta = userReactions.length > 0 ? 0 : 1
         const commentReactions = await this.get('reactions')
         const { emojiFull } = data
+        const emojiObject = getEmojiDataFromNative(emojiFull)
         const reactionCount = commentReactions[emojiFull] || 0
         const inc = () =>
           this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...commentReactions, [emojiFull]: reactionCount + delta } }, { transacting: trx })
@@ -66,10 +71,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
         return new Reaction({
           entity_id: this.id,
           user_id: userId,
-          emoji_base: data.emojiBase,
-          emoji_full: data.emojiFull,
+          emoji_base: emojiFull,
+          emoji_full: emojiFull,
           entity_type: 'comment',
-          emoji_label: data.emojiLabel
+          emoji_label: emojiObject.shortcodes
         }).save().then(inc())
       }))
       .then(() => this)
