@@ -10,6 +10,7 @@ import {
   addMember,
   addModerator,
   addPeopleToProjectRole,
+  addPostToCollection,
   addSkill,
   addSkillToLearn,
   addSuggestedSkillToGroup,
@@ -18,6 +19,7 @@ import {
   cancelGroupRelationshipInvite,
   cancelJoinRequest,
   createAffiliation,
+  createCollection,
   createComment,
   createGroup,
   createInvitation,
@@ -65,9 +67,11 @@ import {
   rejectGroupRelationshipInvite,
   reactivateUser,
   register,
+  reorderPostInCollection,
   removeMember,
   removeModerator,
   removePost,
+  removePostFromCollection,
   removeSkill,
   removeSkillToLearn,
   removeSuggestedSkillFromGroup,
@@ -190,6 +194,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     activity: (root, { id }) => fetchOne('Activity', id),
     checkInvitation: (root, { invitationToken, accessCode }) =>
       InvitationService.check(invitationToken, accessCode),
+    collection: (root, { id }) => fetchOne('Collection', id),
     comment: (root, { id }) => fetchOne('Comment', id),
     connections: (root, args) => fetchMany('PersonConnection', args),
     group: async (root, { id, slug, updateLastViewed }) => {
@@ -278,6 +283,9 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     addPeopleToProjectRole: (root, { peopleIds, projectRoleId }) =>
       addPeopleToProjectRole(userId, peopleIds, projectRoleId),
 
+    addPostToCollection: (root, { collectionId, postId }) =>
+      addPostToCollection(userId, collectionId, postId),
+
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
     addSuggestedSkillToGroup: (root, { groupId, name }) => addSuggestedSkillToGroup(userId, groupId, name),
@@ -291,6 +299,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
 
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
+
+    createCollection: (root, { data }) => createCollection(userId, data),
 
     createComment: (root, { data }) => createComment(userId, data),
 
@@ -399,9 +409,15 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     removePost: (root, { postId, groupId, slug }) =>
       removePost(userId, postId, groupId || slug),
 
+    removePostFromCollection: (root, { collectionId, postId }) =>
+      removePostFromCollection(userId, collectionId, postId),
+
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
     removeSuggestedSkillFromGroup: (root, { groupId, id, name }) => removeSuggestedSkillFromGroup(userId, groupId, id || name),
+
+    reorderPostInCollection: (root, { collectionId, postId, newOrderIndex }) =>
+      reorderPostInCollection(userId, collectionId, postId, newOrderIndex),
 
     requestToAddGroupToParent: (root, { parentId, childId, questionAnswers }) =>
       inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent, questionAnswers),

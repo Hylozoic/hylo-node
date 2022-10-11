@@ -3,6 +3,7 @@ import { isEmpty, isEqual, difference } from 'lodash'
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'custom_views',
   requireFetch: false,
+  hasTimestamps: true,
 
   initialize() {
     this.on('destroying', function(model, options) {
@@ -13,6 +14,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
         bookshelf.knex.transaction(transacting => CustomViewTopic.where({ custom_view_id: this.id }).destroy({ ...options, transacting }))
       }
     })
+  },
+
+  collection () {
+    return this.belongsTo(Collection)
   },
 
   group () {
