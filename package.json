@@ -115,7 +115,7 @@
     "mime-types": "^2.1.34",
     "minimist": "^1.1.0",
     "moment": "^2.9.0",
-    "moment-timezone": "^0.5.34",
+    "moment-timezone": "^0.5.35",
     "newrelic": "^7.0.0",
     "node-uuid": "^1.4.8",
     "oidc-provider": "^7.11.0",
