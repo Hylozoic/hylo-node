@@ -147,7 +147,7 @@
     "sanitize-filename": "^1.6.1",
     "semver": "^5.4.1",
     "sendwithus": "^2.8.0",
-    "sharp": "^0.30.4",
+    "sharp": "^0.30.5",
     "socket.io-emitter": "^3.1.1",
     "stream-buffers": "^3.0.2",
     "stripe": "^6.15.0",
