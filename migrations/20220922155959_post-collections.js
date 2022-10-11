@@ -40,6 +40,7 @@ exports.up = async function (knex) {
   })
   await knex.raw('UPDATE custom_views SET type = (CASE WHEN default_view_mode=\'externalLink\' THEN \'externalLink\' ELSE \'stream\' END)')
   await knex.raw('alter table custom_views alter constraint custom_views_collection_id_foreign deferrable initially deferred')
+  await knex.raw('UPDATE custom_views SET default_view_mode = \'cards\' WHERE default_view_mode=\'externalLink\'')
 }
 
 exports.down = async function (knex) {
