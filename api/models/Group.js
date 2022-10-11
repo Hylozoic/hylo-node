@@ -462,6 +462,12 @@ module.exports = bookshelf.Model.extend(merge({
             delete newView.id
             if (currentView) {
               await currentView.save(newView, { transacting })
+
+              // If this custom view has a collection then update the name of the collection to match the custom view's name
+              const collection = await currentView.collection().fetch()
+              if (collection && collection.get('name') !== currentView.get('name')) {
+                await collection.save({ name: currentView.get('name') })
+              }
             } else {
               currentView = await CustomView.forge({ ...newView, group_id: this.id }).save({}, { transacting })
             }

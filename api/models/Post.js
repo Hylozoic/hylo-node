@@ -83,6 +83,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(Activity)
   },
 
+  collections: function () {
+    return this.belongsToMany(Collection).through(CollectionsPost)
+  },
+
+  collectionsPosts: function () {
+    return this.hasMany(CollectionsPost, 'post_id')
+  },
+
   contributions: function () {
     return this.hasMany(Contribution, 'post_id')
   },
