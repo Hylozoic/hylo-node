@@ -40,11 +40,13 @@ describe('afterUpdatingPost', () => {
   })
 
   it('adds new followers if there are new mentions', async () => {
-    const description = `hello <a class="mention" data-type="mention" data-id="${u2.id}" data-label="person">person</a>`
+    const description = `hello <span class="mention" data-type="mention" data-id="${u2.id}" data-label="person">person</span>`
     await post.save({description}, {patch: true})
     await afterUpdatingPost(post, {params: {}})
 
     const followers = await post.followers().fetch()
+
+    console.log('!!! followers', followers)
     expect(followers.pluck('id').sort()).to.deep.equal([u1.id, u2.id].sort())
   })
 
