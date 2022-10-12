@@ -1,6 +1,7 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import knexPostgis from 'knex-postgis'
 import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
-import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import randomstring from 'randomstring'
 import wkx from 'wkx'
 import { LocationHelpers } from 'hylo-shared'
@@ -440,7 +441,7 @@ module.exports = bookshelf.Model.extend(merge({
             ge.set({ data: extData.data })
               await ge.save({}, { transacting })
           } else {
-            throw Error('Invalid extension type ' + extData.type)
+            throw new GraphQLYogaError('Invalid extension type ' + extData.type)
           }
         }
       }
@@ -461,6 +462,12 @@ module.exports = bookshelf.Model.extend(merge({
             delete newView.id
             if (currentView) {
               await currentView.save(newView, { transacting })
+
+              // If this custom view has a collection then update the name of the collection to match the custom view's name
+              const collection = await currentView.collection().fetch()
+              if (collection && collection.get('name') !== currentView.get('name')) {
+                await collection.save({ name: currentView.get('name') })
+              }
             } else {
               currentView = await CustomView.forge({ ...newView, group_id: this.id }).save({}, { transacting })
             }
@@ -488,7 +495,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   validate: function () {
     if (!trim(this.get('name'))) {
-      return Promise.reject(new Error('Name cannot be blank'))
+      return Promise.reject(new GraphQLYogaError('Name cannot be blank'))
     }
 
     return Promise.resolve()
@@ -513,11 +520,11 @@ module.exports = bookshelf.Model.extend(merge({
   // ******* Class methods ******** //
   async create (userId, data) {
     if (!data.slug) {
-      throw Error("Missing required field: slug")
+      throw new GraphQLYogaError("Missing required field: slug")
     }
     const existingGroup = await Group.find(data.slug)
     if (existingGroup) {
-      throw Error("A group with that URL slug already exists")
+      throw new GraphQLYogaError("A group with that URL slug already exists")
     }
 
     var attrs = defaults(
@@ -555,7 +562,7 @@ module.exports = bookshelf.Model.extend(merge({
             const ge = new GroupExtension({ group_id: group.id, extension_id: ext.id, data: extData.data })
             await ge.save(null, { transacting: trx })
           } else {
-            throw Error('Invalid extension type ' + extData.type)
+            throw new GraphQLYogaError('Invalid extension type ' + extData.type)
           }
         }
       }

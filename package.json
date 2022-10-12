@@ -181,6 +181,8 @@
       "Analytics",
       "AssetManagement",
       "BlockedUser",
+      "Collection",
+      "CollectionsPost",
       "Comment",
       "CommentTag",
       "CustomView",

@@ -21,7 +21,7 @@ describe('BlockedUser', () => {
 
     it('throws if user_id is null', () => {
       expect(() => BlockedUser.create(null, '1'))
-        .to.throw(/must provice a user_id and blocked_user_id/)
+        .to.throw(/must provide a user_id and blocked_user_id/)
     })
 
     it('creates a BlockedUser', () => {

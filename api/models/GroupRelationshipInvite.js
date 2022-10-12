@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import EnsureLoad from './mixins/EnsureLoad'
 
 module.exports = bookshelf.Model.extend(Object.assign({
@@ -50,7 +51,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const fromGroup = await this.fromGroup().fetch({ transacting })
     if (!GroupMembership.hasModeratorRole(user, fromGroup)) {
       // The person trying to cancel the invite does not have permission
-      throw new Error('Not permitted to do this')
+      throw new GraphQLYogaError('Not permitted to do this')
     }
 
     await this.save({ canceled_by_id: userId, canceled_at: new Date(), status: GroupRelationshipInvite.STATUS.Canceled },
@@ -70,7 +71,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const toGroup = await this.toGroup().fetch({ transacting })
     if (!GroupMembership.hasModeratorRole(user, toGroup)) {
       // The person trying to process the invite does not have permission
-      throw new Error('Not permitted to do this')
+      throw new GraphQLYogaError('Not permitted to do this')
     }
     const fromGroup = await this.fromGroup().fetch({ transacting })
     const parentGroup = (this.get('type') === GroupRelationshipInvite.TYPE.ParentToChild) ? fromGroup : toGroup

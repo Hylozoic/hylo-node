@@ -1,3 +1,5 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 /* eslint-disable camelcase */
 module.exports = bookshelf.Model.extend({
   tableName: 'event_invitations',
@@ -26,11 +28,11 @@ module.exports = bookshelf.Model.extend({
 
   create: function ({userId, inviterId, eventId, response}, trxOpts) {
     if (!userId) {
-      throw new Error('must provide a user_id')
+      throw new GraphQLYogaError('must provide a user_id')
     }
 
     if (!eventId) {
-      throw new Error('must provide an event_id')
+      throw new GraphQLYogaError('must provide an event_id')
     }
 
     return this.find({userId, inviterId, eventId}, trxOpts)
@@ -50,8 +52,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   find: function ({ userId, inviterId, eventId }, opts) {
-    if (!userId) throw new Error('Parameter user_id must be supplied.')
-    if (!eventId) throw new Error('Parameter event_id must be supplied.')
+    if (!userId) throw new GraphQLYogaError('Parameter user_id must be supplied.')
+    if (!eventId) throw new GraphQLYogaError('Parameter event_id must be supplied.')
 
     const conditions = {
       user_id: userId,

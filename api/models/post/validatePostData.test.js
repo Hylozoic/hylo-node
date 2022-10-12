@@ -28,14 +28,14 @@ describe('validatePostData', () => {
 
   it('fails if no group_ids are provided', () => {
     const fn = () => validatePostData(null, {name: 't'})
-    expect(fn).to.throw(/no communities specified/)
+    expect(fn).to.throw(/no groups specified/)
   })
 
   it('fails if there is a group_id for a group user is not a member of', () => {
     const data = {name: 't', group_ids: [inGroup.id, notInGroup.id]}
     return validatePostData(user.id, data)
     .catch(function (e) {
-      expect(e.message).to.match(/unable to post to all those communities/)
+      expect(e.message).to.match(/unable to post to all those groups/)
     })
   })
 
@@ -52,7 +52,7 @@ describe('validatePostData', () => {
     expect(fn).to.throw(/too many topics in post, maximum 3/)
   })
 
-  it('continues the promise chain if name is provided and user is member of communities', () => {
+  it('continues the promise chain if name is provided and user is member of groups', () => {
     const data = {name: 't', group_ids: [inGroup.id]}
     return validatePostData(user.id, data)
     .catch(() => expect.fail('should resolve'))
