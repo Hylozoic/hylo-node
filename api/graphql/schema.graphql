@@ -1387,7 +1387,7 @@ type Person {
     # Load this number of posts
     first: Int,
     # Start loading posts at this index
-    offset: ID,
+    offset: Int,
     # Determines sort order, either 'ASC' or 'DESC'. Posts are sorted by order they were created.
     order: String
   ): CommentQuerySet
