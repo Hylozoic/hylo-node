@@ -437,6 +437,12 @@ type Comment {
   post: Post
   # The content of the comment
   text: String
+  # Not used
+  commentReactionsTotal: Int
+  # All reactions on a comment
+  commentReactions: [Reaction]
+  # The reactions of the logged-in user to this
+  myReactions: [Reaction]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1432,6 +1438,7 @@ type Person {
     offset: Int,
     # Determines sort order, either 'ASC' or 'DESC'
     order: String,
+
     # Only load posts whose content matches this search string
     search: String,
     # Sort posts by 'created', 'start_time', 'updated', 'votes'
@@ -1446,6 +1453,9 @@ type Person {
 
   # Project posts that this person is a member of
   projects: PostQuerySet
+
+  # This person's reactions (substitute bookmarks?)
+  reactions(first: Int, offset: Int, order: String): ReactionQuerySet
 
   # The set of Skills this person has added to their profile
   skills(first: Int, cursor: ID): SkillQuerySet
@@ -1517,8 +1527,13 @@ type Post {
   locationObject: Location
   # Logged in user's attendance response to an event post: 'yes', 'maybe' or 'no'
   myEventResponse: String
-  # Whether the logged in user has upvoted the post or not
+  # The reactions of the logged-in user to this
+  myReactions: [Reaction]
+  # Whether the logged-in user has upvoted the post or not
   myVote: Boolean
+  # Number of people that have one or more reactions to a post
+  peopleReactionsTotal: Int
+  postReactionsTotal: Int
   # Number of total "members" of the post. Used for Projects only right now
   postMembershipsTotal: Int
   # Link to a project management tool or service. Only used for Projects right now
@@ -1567,6 +1582,9 @@ type Post {
   # The post's "memberships" in the groups it has been posted in
   postMemberships: [PostMembership]
 
+  # reactions to this post
+  postReactions: [Reaction]
+
   # The topics that have been added to this post
   topics: [Topic]
 }
@@ -1605,6 +1623,50 @@ type Question {
   id: Int
   # The question content
   text: String
+}
+
+# Emoji reactions to posts and comments
+type Reaction {
+  # when the reaction happened
+  createdAt: Date
+  # Just the basic emoji, no modifiers. UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
+  emojiBase: String
+  # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
+  emojiFull: String
+  # The EN locale string for an emoji, like :thumbs_up:
+  emojiLabel: String
+  # id for the entity associated with the reactions
+  entityId: ID
+  # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
+  entityType: String
+  # id for the reaction
+  id: ID
+  # id for the user who reacted
+  userId: ID
+
+  # The post associated with a reaction
+  post: Post
+  # The user associated with a reaction
+  user: Person
+}
+
+# Inputs for emoji reactions to posts and comments
+input ReactionInput {
+  # when the reaction happened
+  createdAt: Date
+  # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
+  emojiFull: String
+  # id for the entity associated with the reactions
+  entityId: ID
+  # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
+  entityType: String
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ReactionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Reaction]
 }
 
 # A saved set of search/filter parameters for the map that can be reloaded later by a user
@@ -1840,6 +1902,8 @@ type Mutation {
   deletePost(id: ID): GenericResult
   # Remove a person as a member from a project Post
   deleteProjectRole(id: ID): GenericResult
+  # Delete a reaction you created
+  deleteReaction(entityId: ID, data: ReactionInput): Post
   # Delete a SavedSearch you created
   deleteSavedSearch(id: ID): ID
   # Set an invitation to join a group as expired. Only a group moderator can call this.
@@ -1880,6 +1944,8 @@ type Mutation {
   pinPost(postId: ID, groupId: ID): GenericResult
   # NOT USED RIGHT NOW
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
+  # react to a post or comment
+  reaction(entityId: ID, data: ReactionInput): Post
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
   # Regenerate the invite URL used to invite people to a Group. Only a group moderator can call this.

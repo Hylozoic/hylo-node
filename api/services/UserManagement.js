@@ -39,6 +39,7 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['group_invites', 'invited_by_id'],
     ['group_invites', 'used_by_id'],
     ['user_external_data', 'user_id'],
+    ['reactions', 'user_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]
@@ -52,7 +53,6 @@ const generateMergeQueries = function (userId, duplicateUserId, knex) {
     ['contributions', 'user_id', 'post_id'],
     ['follows', 'user_id', 'post_id'],
     ['linked_account', 'user_id', 'provider_user_id'],
-    ['votes', 'user_id', 'post_id'],
     ['tag_follows', 'user_id', 'tag_id'],
     ['groups_tags', 'user_id', 'tag_id'],
     ['thanks', 'thanked_by_id', 'comment_id'],
@@ -112,7 +112,7 @@ const generateRemoveQueries = function (userId, knex) {
     ['user_external_data', 'user_id'],
     ['user_post_relevance', 'user_id'],
     ['users', 'id'],
-    ['votes', 'user_id']
+    ['reactions', 'user_id']
   ].forEach(args => {
     var table = args[0]
     var userCol = args[1]

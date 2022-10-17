@@ -41,6 +41,7 @@ import {
   deleteGroupTopic,
   deletePost,
   deleteProjectRole,
+  deleteReaction,
   deleteSavedSearch,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
@@ -60,12 +61,13 @@ import {
   messageGroupModerators,
   pinPost,
   processStripeToken,
+  reaction,
+  reactivateUser,
   regenerateAccessCode,
   registerDevice,
   registerStripeAccount,
   reinviteAll,
   rejectGroupRelationshipInvite,
-  reactivateUser,
   register,
   reorderPostInCollection,
   removeMember,
@@ -347,6 +349,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
 
+    deleteReaction: (root, { entityId, data }) => deleteReaction(entityId, userId, data),
+
     deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
 
     expireInvitation: (root, {invitationId}) =>
@@ -384,6 +388,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
+
+    reaction: (root, { entityId, data }) => reaction(userId, entityId, data),
 
     reactivateMe: (root) => reactivateUser({ userId }),
 

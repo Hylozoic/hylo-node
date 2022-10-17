@@ -1640,7 +1640,7 @@ CREATE TABLE public.posts (
     type character varying(255),
     created_at timestamp with time zone,
     user_id bigint,
-    num_votes integer,
+    num_people_reacts integer,
     num_comments integer,
     active boolean,
     deactivated_by_id bigint,
@@ -1665,6 +1665,7 @@ CREATE TABLE public.posts (
     donations_link character varying(255),
     project_management_link character varying(255),
     link_preview_featured boolean DEFAULT false
+    reactions_summary jsonb
 );
 
 
@@ -2410,16 +2411,19 @@ CREATE SEQUENCE public.vote_seq
 
 
 --
--- Name: votes; Type: TABLE; Schema: public; Owner: -
+-- Name: reactions; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.votes (
+CREATE TABLE public.reactions (
     id bigint DEFAULT nextval('public.vote_seq'::regclass) NOT NULL,
     user_id bigint,
-    post_id bigint,
-    date_voted timestamp with time zone
+    entity_id bigint,
+    date_reacted timestamp with time zone,
+    emoji_base text,
+    emoji_full text,
+    emoji_label text,
+    entity_type text
 );
-
 
 --
 -- Name: widgets; Type: TABLE; Schema: public; Owner: -
@@ -3323,10 +3327,8 @@ ALTER TABLE ONLY public.user_post_relevance
 -- Name: votes pk_vote; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.votes
+ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT pk_vote PRIMARY KEY (id);
-
-
 --
 -- Name: groups_posts post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -3574,15 +3576,6 @@ ALTER TABLE ONLY public.thanks
 ALTER TABLE ONLY public.group_invites
     ADD CONSTRAINT uq_no_multiple_tokens UNIQUE (token);
 
-
---
--- Name: votes uq_vote_1; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.votes
-    ADD CONSTRAINT uq_vote_1 UNIQUE (user_id, post_id);
-
-
 --
 -- Name: user_affiliations user_affiliations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -3652,6 +3645,26 @@ ALTER TABLE ONLY public.widgets
 --
 
 CREATE INDEX communities_tags_community_id_visibility_index ON public.groups_tags USING btree (community_id, visibility);
+
+--
+-- Name: idx_reactions_emoji_full; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reactions_emoji_full ON public.reactions USING btree (emoji_base);
+
+
+--
+-- Name: idx_reactions_entity_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reactions_entity_id ON public.reactions USING btree (entity_id);
+
+
+--
+-- Name: idx_reactions_entity_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reactions_entity_type ON public.reactions USING btree (entity_type);
 
 
 --
@@ -3861,14 +3874,14 @@ CREATE INDEX ix_thank_you_user_2 ON public.thanks USING btree (user_id);
 -- Name: ix_vote_post_14; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_vote_post_14 ON public.votes USING btree (post_id);
+CREATE INDEX ix_vote_post_14 ON public.reactions USING btree (entity_id);
 
 
 --
 -- Name: ix_vote_user_13; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX ix_vote_user_13 ON public.votes USING btree (user_id);
+CREATE INDEX ix_vote_user_13 ON public.reactions USING btree (user_id);
 
 
 --
@@ -4442,15 +4455,15 @@ ALTER TABLE ONLY public.communities_users
 -- Name: votes fk_vote_post_14; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.votes
-    ADD CONSTRAINT fk_vote_post_14 FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
+ALTER TABLE ONLY public.reactions
+    ADD CONSTRAINT fk_vote_post_14 FOREIGN KEY (entity_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
 -- Name: votes fk_vote_user_13; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.votes
+ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT fk_vote_user_13 FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 

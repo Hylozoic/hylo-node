@@ -25,7 +25,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   let { topics = [] } = opts
 
   const sortColumns = {
-    votes: 'posts.num_votes',
+    votes: 'posts.num_people_reacts',
     updated: 'posts.updated_at',
     created: 'posts.created_at',
     start_time: 'posts.start_time',
