@@ -166,7 +166,7 @@ describe('group digest v2', () => {
           }
         ],
         resources: [],
-        conversations: [
+        discussions: [
           {
             id: 7,
             title: 'Kapow!',
@@ -260,7 +260,7 @@ describe('group digest v2', () => {
       const prefix = Frontend.Route.prefix
       expect(formatData(group, data)).to.deep.equal({
         offers: [],
-        conversations: [],
+        discussions: [],
         requests: [
           {
             id: 1,
@@ -286,7 +286,7 @@ describe('group digest v2', () => {
       expect(formatData(group, data)).to.deep.equal({
         offers: [],
         requests: [],
-        conversations: [],
+        discussions: [],
         postsWithNewComments: [],
         projects: [],
         events: [],
@@ -323,7 +323,7 @@ describe('group digest v2', () => {
             url: 'https://www.hylo.com/all/post/1'
           }
         ],
-        conversations: [
+        discussions: [
           {
             id: 2,
             title: 'Ya',
@@ -351,7 +351,7 @@ describe('group digest v2', () => {
               url: 'https://www.hylo.com/all/post/1?' + ctParams
             }
           ],
-          conversations: [
+          discussions: [
             {
               id: 2,
               title: 'Ya',
@@ -384,12 +384,12 @@ describe('group digest v2', () => {
 
   describe('shouldSendData', () => {
     it('is false if the data is empty', () => {
-      const data = {requests: [], offers: [], conversations: []}
+      const data = {requests: [], offers: [], discussions: []}
       return shouldSendData(data).then(val => expect(val).to.be.false)
     })
 
     it('is true if there is some data', () => {
-      const data = {conversations: [{id: 'foo'}]}
+      const data = {discussions: [{id: 'foo'}]}
       return shouldSendData(data).then(val => expect(val).to.be.true)
     })
   })
@@ -439,7 +439,7 @@ describe('group digest v2', () => {
           events: [],
           projects: [],
           resources: [],
-          conversations: [
+          discussions: [
             {
               id: post.id,
               title: post.get('name'),

@@ -14,13 +14,13 @@ export default function updatePost (userId, id, params) {
     Post.find(id).then(post => {
       if (!post) throw new GraphQLYogaError('Post not found')
       const updatableTypes = [
+        Post.Type.CHAT,
+        Post.Type.DISCUSSION,
+        Post.Type.EVENT,
         Post.Type.OFFER,
         Post.Type.PROJECT,
         Post.Type.REQUEST,
-        Post.Type.RESOURCE,
-        Post.Type.DISCUSSION,
-        Post.Type.EVENT,
-        null
+        Post.Type.RESOURCE
       ]
       if (!updatableTypes.includes(post.get('type'))) {
         throw new GraphQLYogaError("This post can't be modified")

@@ -157,6 +157,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       attributes: [
         'accept_contributions',
         'announcement',
+        'commentsTotal',
         'created_at',
         'donations_link',
         'end_time',

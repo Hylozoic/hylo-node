@@ -37,7 +37,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     throw new GraphQLYogaError(`Cannot sort by "${sortBy}"`)
   }
 
-  const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
+  const { CHAT, DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
 
   if (isAnnouncement) {
     q.where('announcement', true).andWhere('posts.created_at', '>=', moment().subtract(1, 'month').toDate())
@@ -93,7 +93,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   if (types) {
     q.whereIn('posts.type', types)
   } else if (!type || type === 'all' || type === 'all+welcome') {
-    q.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
+    q.whereIn('posts.type', [CHAT, DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
   } else {
     if (!includes(values(Post.Type), type)) {
       throw new GraphQLYogaError(`unknown post type: "${type}"`)
