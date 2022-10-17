@@ -171,7 +171,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       getters: {
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
-        myReactions: p => userId ? p.postReactions(userId).fetch() : [], // is this actually fetching anything?
+        myReactions: p => userId ? p.postReactions(userId).fetch() : [],
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
         myEventResponse: p =>
           userId && p.isEvent() ? p.userEventInvitation(userId)
@@ -611,15 +611,19 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       relations: [
         'post',
-        {user: {alias: 'creator'}},
-        {childComments: { querySet: true }},
-        {media: {
-          alias: 'attachments',
-          arguments: ({ type }) => [type]
-        }}
+        { user: { alias: 'creator' } },
+        { childComments: { querySet: true } },
+        {
+          media: {
+            alias: 'attachments',
+            arguments: ({ type }) => [type]
+          }
+        }
       ],
       getters: {
-        parentComment: (c) => c.parentComment().fetch()
+        parentComment: (c) => c.parentComment().fetch(),
+        myReactions: c => userId ? c.commentReactions(userId).fetch() : [],
+        commentReactions: c => c.commentReactions().fetch()
       },
       filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true

@@ -300,7 +300,6 @@ export function messageGroupModerators (userId, groupId) {
 }
 
 export function reaction (userId, entityId, data) {
-  // check if the inbound data has an entityType
   const lookUp = {
     post: Post,
     comment: Comment
@@ -314,7 +313,6 @@ export function reaction (userId, entityId, data) {
 }
 
 export function deleteReaction (entityId, userId, data) {
-  // check if the inbound data has an entityType
   const lookUp = {
     post: Post,
     comment: Comment

@@ -37,12 +37,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.relations.post.relations.groups.first()
   },
 
-  userReactions: function (userId, trx) {
-    return this.commentReactions().query({ where: { user_id: userId, entity_type: 'comment' } }, { transacting: trx })
-  },
-
-  commentReactions: function () {
-    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'comment')
+  commentReactions: function (userId) {
+    return userId
+      ? this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'comment', 'reactions.user_id': userId })
+      : this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'comment')
   },
 
   tags: function () {
@@ -57,32 +55,30 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(Comment).where('comments.active', true)
   },
 
-  reaction: function (userId, data) {
-    return this.userReactions(userId)
-      .then(userReactions => bookshelf.transaction(async trx => {
-        const delta = userReactions.length > 0 ? 0 : 1
-        const commentReactions = await this.get('reactions')
-        const { emojiFull } = data
-        const emojiObject = getEmojiDataFromNative(emojiFull)
-        const reactionCount = commentReactions[emojiFull] || 0
-        const inc = () =>
-          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions: { ...commentReactions, [emojiFull]: reactionCount + delta } }, { transacting: trx })
+  deleteReaction: function (userId, data) {
+    return this.commentReactions(userId).fetch()
+      .then(userReactionsModels => bookshelf.transaction(async trx => {
+        const userReactions = userReactionsModels.models
+        const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === data.emojiFull)[0]
 
-        return new Reaction({
-          entity_id: this.id,
-          user_id: userId,
-          emoji_base: emojiFull,
-          emoji_full: emojiFull,
-          entity_type: 'comment',
-          emoji_label: emojiObject.shortcodes
-        }).save().then(inc())
+        return userReaction.destroy({ transacting: trx })
       }))
-      .then(() => this)
   },
 
-  deleteReaction: function (userId, data){
+  reaction: async function (userId, data) {
+    const { emojiFull } = data
+    const emojiObject = await getEmojiDataFromNative(emojiFull)
 
-  }, 
+    return new Reaction({
+      entity_id: this.id,
+      user_id: userId,
+      emoji_base: emojiFull,
+      emoji_full: emojiFull,
+      entity_type: 'comment',
+      emoji_label: emojiObject.shortcodes
+    }).save()
+      .then(() => this)
+  },
 
   childComments: function () {
     return this.hasMany(Comment, 'comment_id').query({where: {'comments.active': true}})

@@ -437,6 +437,12 @@ type Comment {
   post: Post
   # The content of the comment
   text: String
+  # Not used
+  commentReactionsTotal: Int
+  # All reactions on a comment
+  commentReactions: [Reaction]
+  # The reactions of the logged-in user to this
+  myReactions: [Reaction]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
