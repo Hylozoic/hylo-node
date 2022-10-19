@@ -25,7 +25,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   let { topics = [] } = opts
 
   const sortColumns = {
-    votes: 'posts.num_people_reacts',
+    votes: 'posts.num_people_reacts', // Need to remove once Mobile has been ported to reactions
     updated: 'posts.updated_at',
     created: 'posts.created_at',
     start_time: 'posts.start_time',
