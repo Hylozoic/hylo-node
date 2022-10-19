@@ -172,7 +172,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
         myReactions: p => userId ? p.postReactions(userId).fetch() : [],
-        myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
+        myVote: p => userId ? p.userVote(userId).then(v => !!v) : false, // Remove once Mobile has been updated
         myEventResponse: p =>
           userId && p.isEvent() ? p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')

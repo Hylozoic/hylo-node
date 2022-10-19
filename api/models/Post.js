@@ -239,7 +239,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       refineOne(
         this,
         ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'type', 'updated_at', 'num_votes'],
-        { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotaltionsTotal', num_votes: 'votesTotal' }
+        { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotal', num_votes: 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation
