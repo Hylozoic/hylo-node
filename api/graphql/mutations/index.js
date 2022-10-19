@@ -299,7 +299,7 @@ export function messageGroupModerators (userId, groupId) {
   return Group.messageModerators(userId, groupId)
 }
 
-export function reaction (userId, entityId, data) {
+export function reactOn (userId, entityId, data) {
   const lookUp = {
     post: Post,
     comment: Comment

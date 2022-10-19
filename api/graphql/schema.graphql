@@ -1454,7 +1454,7 @@ type Person {
   # Project posts that this person is a member of
   projects: PostQuerySet
 
-  # This person's reactions (substitute bookmarks?)
+  # This person's reactions
   reactions(first: Int, offset: Int, order: String): ReactionQuerySet
 
   # The set of Skills this person has added to their profile
@@ -1530,7 +1530,7 @@ type Post {
   # Whether the logged-in user has upvoted the post or not
   myVote: Boolean
   # Number of people that have one or more reactions to a post
-  peopleReactionsTotal: Int
+  peopleReactedTotal: Int
   postReactionsTotal: Int
   # Number of total "members" of the post. Used for Projects only right now
   postMembershipsTotal: Int
@@ -1646,18 +1646,6 @@ type Reaction {
   post: Post
   # The user associated with a reaction
   user: Person
-}
-
-# Inputs for emoji reactions to posts and comments
-input ReactionInput {
-  # when the reaction happened
-  createdAt: Date
-  # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
-  emojiFull: String
-  # id for the entity associated with the reactions
-  entityId: ID
-  # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
-  entityType: String
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1943,7 +1931,7 @@ type Mutation {
   # NOT USED RIGHT NOW
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
   # react to a post or comment
-  reaction(entityId: ID, data: ReactionInput): Post
+  reactOn(entityId: ID, data: ReactionInput): Post
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
   # Regenerate the invite URL used to invite people to a Group. Only a group moderator can call this.
@@ -2521,6 +2509,18 @@ input QuestionAnswerInput {
   answer: String
   # Question ID
   questionId: Int
+}
+
+# Inputs for emoji reactions to posts and comments
+input ReactionInput {
+  # when the reaction happened
+  createdAt: Date
+  # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
+  emojiFull: String
+  # id for the entity associated with the reactions
+  entityId: ID
+  # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
+  entityType: String
 }
 
 # A SavedSearch on the Map
