@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.0.0] - 2022-10-24
+
 ### Added
 - `Post#LinkPreviewFeatured` to indicate if a `LinkPreview` should be given precedence in the UI when displaying post
 - All parsing of `Post#details` and `Comment#text` HTML is now handled here and nowhere else, moving and refactoring `presentHTML` from `hylo-shared` to support new TipTap editor formatting, and consolidating similar functions from `hylo-evo` all and here all into `RichText`
