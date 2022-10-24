@@ -1,3 +1,5 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 export async function createJoinRequest (userId, groupId, questionAnswers = []) {
   if (groupId && userId) {
     const pendingRequest = await JoinRequest.where({ user_id: userId, group_id: groupId, status: JoinRequest.STATUS.Pending}).fetch()
@@ -17,7 +19,7 @@ export async function createJoinRequest (userId, groupId, questionAnswers = []) 
       return { request }
     })
   } else {
-    throw new Error(`Invalid parameters to create join request`)
+    throw new GraphQLYogaError(`Invalid parameters to create join request`)
   }
 }
 
@@ -27,10 +29,10 @@ export async function acceptJoinRequest (userId, joinRequestId) {
     if (await GroupMembership.hasModeratorRole(userId, joinRequest.get('group_id'))) {
       return joinRequest.accept(userId)
     } else {
-      throw new Error(`You do not have permission to do this`)
+      throw new GraphQLYogaError(`You do not have permission to do this`)
     }
   } else {
-    throw new Error(`Invalid parameters to accept join request`)
+    throw new GraphQLYogaError(`Invalid parameters to accept join request`)
   }
 }
 
@@ -41,10 +43,10 @@ export async function cancelJoinRequest (userId, joinRequestId) {
       await joinRequest.save({ status: JoinRequest.STATUS.Canceled })
       return { success: true }
     } else {
-      throw new Error(`You do not have permission to do this`)
+      throw new GraphQLYogaError(`You do not have permission to do this`)
     }
   } else {
-    throw new Error(`Invalid parameters to cancel join request`)
+    throw new GraphQLYogaError(`Invalid parameters to cancel join request`)
   }
 }
 
@@ -55,9 +57,9 @@ export async function declineJoinRequest (userId, joinRequestId) {
       await joinRequest.save({ status: JoinRequest.STATUS.Rejected })
       return joinRequest
     } else {
-      throw new Error(`You do not have permission to do this`)
+      throw new GraphQLYogaError(`You do not have permission to do this`)
     }
   } else {
-    throw new Error(`Invalid parameters to decline join request`)
+    throw new GraphQLYogaError(`Invalid parameters to decline join request`)
   }
 }

@@ -1,3 +1,4 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { includes } from 'lodash'
 import createPost from '../models/post/createPost'
 import { joinRoom, leaveRoom } from '../services/Websockets'
@@ -14,7 +15,7 @@ const PostController = {
 
     const type = req.param('type')
     if (!includes(Object.keys(namePrefixes), type)) {
-      return res.serverError(new Error(`invalid type: ${type}`))
+      return res.serverError(new GraphQLYogaError(`invalid type: ${type}`))
     }
 
     const attributes = {

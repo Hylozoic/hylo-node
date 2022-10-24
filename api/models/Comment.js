@@ -1,6 +1,7 @@
 import { TextHelpers } from 'hylo-shared'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'
 import EnsureLoad from './mixins/EnsureLoad'
+import * as RichText from '../services/RichText'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'comments',
@@ -16,8 +17,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   text: function () {
-    // This should be always used when accessing this attribute
-    return TextHelpers.sanitizeHTML(this.get('text'))
+    return RichText.processHTML(this.get('text'))
   },
 
   mentions: function () {

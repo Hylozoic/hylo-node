@@ -1,10 +1,12 @@
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 export async function topicMutationPermissionCheck (userId, groupId) {
   const group = await Group.find(groupId)
   if (!group) {
-    throw new Error('That group does not exist.')
+    throw new GraphQLYogaError('That group does not exist.')
   }
   if (!await GroupMembership.hasActiveMembership(userId, group)) {
-    throw new Error("You're not a member of that group.")
+    throw new GraphQLYogaError("You're not a member of that group.")
   }
 }
 
@@ -12,7 +14,7 @@ export async function createTopic (userId, topicName, groupId, isDefault, isSubs
   await topicMutationPermissionCheck(userId, groupId)
   const invalidReason = Tag.validate(topicName)
   if (invalidReason) {
-    throw new Error(invalidReason)
+    throw new GraphQLYogaError(invalidReason)
   }
 
   const topic = await Tag.findOrCreate(topicName)

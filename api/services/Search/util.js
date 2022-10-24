@@ -1,5 +1,6 @@
+import { GraphQLYogaError } from '@graphql-yoga/node'
 import { curry, includes, isEmpty, values } from 'lodash'
-import moment from 'moment'
+import moment from 'moment-timezone'
 import addTermToQueryBuilder from './addTermToQueryBuilder'
 
 export const filterAndSortPosts = curry((opts, q) => {
@@ -8,9 +9,11 @@ export const filterAndSortPosts = curry((opts, q) => {
     afterTime,
     beforeTime,
     boundingBox,
+    collectionToFilterOut,
+    forCollection,
     isAnnouncement,
     isFulfilled,
-    order = 'desc',
+    order,
     search,
     showPinnedFirst,
     sortBy = 'updated',
@@ -25,12 +28,13 @@ export const filterAndSortPosts = curry((opts, q) => {
     votes: 'posts.num_votes',
     updated: 'posts.updated_at',
     created: 'posts.created_at',
-    start_time: 'posts.start_time'
+    start_time: 'posts.start_time',
+    order: 'collections_posts.order' // Only works if forCollection is set
   }
 
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy || v === sortBy)
   if (!sort) {
-    throw new Error(`Cannot sort by "${sortBy}"`)
+    throw new GraphQLYogaError(`Cannot sort by "${sortBy}"`)
   }
 
   const { DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type
@@ -74,13 +78,25 @@ export const filterAndSortPosts = curry((opts, q) => {
     )
   }
 
+  if (forCollection) {
+    q.join('collections_posts', (j) => {
+      j.on('collections_posts.post_id', '=', 'posts.id')
+      j.andOn('collections_posts.collection_id', '=', bookshelf.knex.raw('?', [forCollection]))
+    })
+    q.whereIn('posts.id', bookshelf.knex.raw('select post_id from collections_posts where collection_id = ?', [forCollection]))
+  }
+
+  if (collectionToFilterOut) {
+    q.whereNotIn('posts.id', bookshelf.knex.raw('select post_id from collections_posts where collection_id = ?', [collectionToFilterOut]))
+  }
+
   if (types) {
     q.whereIn('posts.type', types)
   } else if (!type || type === 'all' || type === 'all+welcome') {
     q.whereIn('posts.type', [DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE])
   } else {
     if (!includes(values(Post.Type), type)) {
-      throw new Error(`unknown post type: "${type}"`)
+      throw new GraphQLYogaError(`unknown post type: "${type}"`)
     }
     q.where({'posts.type': type})
   }
@@ -113,7 +129,7 @@ export const filterAndSortPosts = curry((opts, q) => {
   if (sort === 'posts.updated_at' && showPinnedFirst) {
     q.orderByRaw('groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, posts.updated_at desc')
   } else if (sort) {
-    q.orderBy(sort, order || 'desc')
+    q.orderBy(sort, order || (sortBy === 'order' ? 'asc' : 'desc'))
   }
 
 })
@@ -134,11 +150,11 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, sea
   }
 
   if (sortBy && !['name', 'location', 'join', 'last_active_at'].includes(sortBy)) {
-    throw new Error(`Cannot sort by "${sortBy}"`)
+    throw new GraphQLYogaError(`Cannot sort by "${sortBy}"`)
   }
 
   if (order && !['asc', 'desc'].includes(order.toLowerCase())) {
-    throw new Error(`Cannot use sort order "${order}"`)
+    throw new GraphQLYogaError(`Cannot use sort order "${order}"`)
   }
 
   if (sortBy === 'join') {

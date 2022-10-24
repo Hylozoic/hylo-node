@@ -246,7 +246,7 @@ describe('Post', function () {
     it('creates an activity for a mention', () => {
       var post = factories.post({
         user_id: u.id,
-        description: `<p>Yo <a data-user-id="${u3.id}">u3</a>, how goes it</p>`
+        description: `<p>Yo <a class="mention" data-type="mention" data-id="${u3.id}" data-label="u3">u3</a>, how goes it</p>`
       })
       return post.save()
       .then(() => post.groups().attach(c.id))

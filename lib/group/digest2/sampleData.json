@@ -73,7 +73,7 @@
         "avatar_url": "https://d3ngex8q79bk55.cloudfront.net/user/11204/avatar/fGvpYNkTXeE9rg0aZg3L_Screen_Shot_2015-02-04_at_2.53.53_PM.png"
       },
       "title": "Could you please post the recipe for your magic supplements?",
-      "details": "<p><a href=\"/members/21\" data-user-id=\"21\">Edward West</a> <a href=\"/members/16325\" data-user-id=\"16325\">Julia Pope</a> <a>#woo</a></p>",
+      "details": "<p><a href=\"/members/21\" class=\"mention\" data-type=\"mention\" data-id=\"21\" data-label=\"Edward West\">Edward West</a> <a href=\"/members/16325\" class=\"mention\" data-type=\"mention\" data-id=\"16325\" data-label=\"Julia Pope\">Julia Pope</a> <a data-type=\"topic\" data-id=\"woo\" data-label=\"#woo\">#woo</a></p>",
       "comments": [
         {
           "id": 13,

@@ -1,4 +1,4 @@
-import moment from 'moment'
+import moment from 'moment-timezone'
 import { merge, transform, sortBy } from 'lodash'
 
 // TODO: this is old and broken

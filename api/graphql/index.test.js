@@ -61,17 +61,21 @@ describe('graphql request handler', () => {
     req = factories.mock.request()
     req.url = '/noo/graphql'
     req.method = 'POST'
+    req.headers = {
+      'Content-Type': 'application/json',
+    },
     req.session = {
       userId: user.id,
       destroy: () => {}
-    }
+    },
+    req.user = user
     res = factories.mock.response()
   })
 
   describe('with a simple query', () => {
-    beforeEach(() => {
-      req.body = {
-        query: `{
+    it('responds as expected', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `{
           me {
             name
             memberships {
@@ -86,36 +90,33 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
-    })
+        }`,
+        serverContext: { req, res }
+      })
 
-    it('responds as expected', () => {
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            me: {
-              name: user.get('name'),
-              memberships: [
-                {
-                  group: {
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          me: {
+            name: user.get('name'),
+            memberships: [
+              {
+                group: {
+                  name: group.get('name')
+                }
+              }
+            ],
+            posts: [
+              {
+                title: post.get('name'),
+                groups: [
+                  {
                     name: group.get('name')
                   }
-                }
-              ],
-              posts: [
-                {
-                  title: post.get('name'),
-                  groups: [
-                    {
-                      name: group.get('name')
-                    }
-                  ]
-                }
-              ]
-            }
+                ]
+              }
+            ]
           }
-        })
+        }
       })
     })
   })
@@ -137,9 +138,10 @@ describe('graphql request handler', () => {
       await thread.addFollowers([user.id, user2.id])
     })
 
-    beforeEach(() => {
-      req.body = {
-        query: `{
+
+    it('responds as expected', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `{
           me {
             name
             memberships {
@@ -185,88 +187,85 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
-    })
+        }`,
+        serverContext: { req, res }
+      })
 
-    it('responds as expected', () => {
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            me: {
-              name: user.get('name'),
-              memberships: [
-                {
-                  group: {
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          me: {
+            name: user.get('name'),
+            memberships: [
+              {
+                group: {
+                  name: group.get('name')
+                }
+              }
+            ],
+            posts: [
+              {
+                title: post.get('name'),
+                groups: [
+                  {
                     name: group.get('name')
                   }
-                }
-              ],
-              posts: [
-                {
-                  title: post.get('name'),
-                  groups: [
+                ],
+                comments: {
+                  items: [
                     {
-                      name: group.get('name')
+                      text: comment.text(),
+                      creator: {
+                        name: user2.get('name')
+                      }
                     }
-                  ],
-                  comments: {
+                  ]
+                },
+                followers: [
+                  {
+                    name: user2.get('name')
+                  }
+                ],
+                followersTotal: 1
+              }
+            ],
+            messageThreads: {
+              hasMore: false,
+              total: 1,
+              items: [
+                {
+                  id: thread.id,
+                  messages: {
                     items: [
                       {
-                        text: comment.text(),
+                        text: message.get('text'),
                         creator: {
                           name: user2.get('name')
                         }
                       }
                     ]
                   },
-                  followers: [
+                  participants: [
+                    {
+                      name: user.get('name')
+                    },
                     {
                       name: user2.get('name')
                     }
                   ],
-                  followersTotal: 1
+                  participantsTotal: 2
                 }
-              ],
-              messageThreads: {
-                hasMore: false,
-                total: 1,
-                items: [
-                  {
-                    id: thread.id,
-                    messages: {
-                      items: [
-                        {
-                          text: message.get('text'),
-                          creator: {
-                            name: user2.get('name')
-                          }
-                        }
-                      ]
-                    },
-                    participants: [
-                      {
-                        name: user.get('name')
-                      },
-                      {
-                        name: user2.get('name')
-                      }
-                    ],
-                    participantsTotal: 2
-                  }
-                ]
-              }
+              ]
             }
           }
-        })
+        }
       })
     })
   })
 
   describe('querying Comment attachments', () => {
-    beforeEach(() => {
-      req.body = {
-        query: `{
+    it('responds as expected', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `{
           post (id: ${post.id}) {
             comments {
               items {
@@ -280,33 +279,30 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
-    })
+        }`,
+        serverContext: { req, res }
+      })
 
-    it('responds as expected', () => {
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            post: {
-              comments: {
-                items: [
-                  {
-                    text: comment.text(),
-                    attachments: [
-                      {
-                        id: media.id,
-                        type: media.get('type'),
-                        position: media.get('position'),
-                        url: media.get('url')
-                      }
-                    ]
-                  }
-                ]
-              }
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          post: {
+            comments: {
+              items: [
+                {
+                  text: comment.text(),
+                  attachments: [
+                    {
+                      id: media.id,
+                      type: media.get('type'),
+                      position: media.get('position'),
+                      url: media.get('url')
+                    }
+                  ]
+                }
+              ]
             }
           }
-        })
+        }
       })
     })
   })
@@ -316,52 +312,51 @@ describe('graphql request handler', () => {
       req.session = {}
     })
 
-    it('shows "not logged in" errors for most queries', () => {
-      req.body = {
-        query: `{
+    it('shows "not logged in" errors for most queries', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `{
           me {
             name
           }
           group(id: 9) {
             name
           }
-        }`
-      }
+        }`,
+        serverContext: { req, res }
+      })
 
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            me: null,
-            group: null
-          }
-        })
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          me: null,
+          group: null
+        }
       })
     })
 
-    it('allows checkInvitation', () => {
-      req.body = {
-        query: `{
+    it('allows checkInvitation', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `{
           checkInvitation(invitationToken: "foo") {
             valid
           }
-        }`
-      }
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            checkInvitation: {
-              valid: false
-            }
+        }`,
+        serverContext: { req, res }
+      })
+
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          checkInvitation: {
+            valid: false
           }
-        })
+        }
       })
     })
   })
 
   describe('querying group data', () => {
-    it('works as expected', () => {
-      req.body = {
-        query: `{
+    it('works as expected', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `{
           group(id: "${group.id}") {
             slug
             members(first: 2, sortBy: "join") {
@@ -381,45 +376,44 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
+        }`,
+        serverContext: { req, res }
+      })
 
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            group: {
-              slug: group.get('slug'),
-              members: {
-                items: [
-                  {name: user2.get('name')},
-                  {name: user.get('name')}
-                ]
-              },
-              posts: {
-                items: [
-                  {title: post2.get('name')}
-                ]
-              },
-              groupExtensions: {
-                items: [
-                  {
-                    type:'test', 
-                    data: {
-                      "key-test": "value-test"
-                    }
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          group: {
+            slug: group.get('slug'),
+            members: {
+              items: [
+                {name: user2.get('name')},
+                {name: user.get('name')}
+              ]
+            },
+            posts: {
+              items: [
+                {title: post2.get('name')}
+              ]
+            },
+            groupExtensions: {
+              items: [
+                {
+                  type:'test',
+                  data: {
+                    "key-test": "value-test"
                   }
-                ]
-              }
+                }
+              ]
             }
           }
-        })
+        }
       })
     })
 
     describe('with an invalid sort option', () => {
-      it('shows an error', () => {
-        req.body = {
-          query: `{
+      it('shows an error', async () => {
+        const { response, executionResult } = await handler.inject({
+          document: `{
             group(id: "${group.id}") {
               members(first: 2, sortBy: "height") {
                 items {
@@ -427,18 +421,19 @@ describe('graphql request handler', () => {
                 }
               }
             }
-          }`
-        }
+          }`,
+          serverContext: { req, res }
+        })
 
-        return handler(req, res).then(() => {
-          expectJSON(res, {
-            'errors[0].message': 'Cannot sort by "height"',
-            data: {
-              group: {
-                members: null
-              }
+        console.log("executionResultmoo", executionResult, executionResult.errors[0].locations)
+
+        return expect(executionResult).to.deep.nested.include({
+          'errors[0].message': 'Cannot sort by "height"',
+          data: {
+            group: {
+              members: null
             }
-          })
+          }
         })
       })
     })
@@ -450,9 +445,9 @@ describe('graphql request handler', () => {
       await FullTextSearch.createView()
     })
 
-    it('works', () => {
-      req.body = {
-        query: `{
+    it('works', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `{
           search(term: "${post.get('name').substring(0, 4)}") {
             items {
               content {
@@ -463,24 +458,23 @@ describe('graphql request handler', () => {
               }
             }
           }
-        }`
-      }
+        }`,
+        serverContext: { req, res }
+      })
 
-      return handler(req, res).then(() => {
-        expectJSON(res, {
-          data: {
-            search: {
-              items: [
-                {
-                  content: {
-                    __typename: 'Post',
-                    title: post.get('name')
-                  }
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          search: {
+            items: [
+              {
+                content: {
+                  __typename: 'Post',
+                  title: post.get('name')
                 }
-              ]
-            }
+              }
+            ]
           }
-        })
+        }
       })
     })
   })
@@ -504,67 +498,67 @@ describe('graphql request handler', () => {
       ))
     })
 
-    it('removes a skill with an id', () => {
-      req.body = {
-        query: `mutation {
+    it('removes a skill with an id', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `mutation {
           removeSkill(id: ${skill1.id}) {
             success
           }
-        }`
-      }
-      return handler(req, res)
-      .then(() => user.load('skills'))
-      .then(() => {
-        expectJSON(res, {
-          data: {
-            removeSkill: {
-              success: true
-            }
-          }
-        })
-        expect(user.relations.skills.length).to.equal(1)
-        expect(user.relations.skills.first().id).to.equal(skill2.id)
+        }`,
+        serverContext: { req, res }
       })
+
+      await user.load('skills')
+
+      expect(executionResult).to.deep.nested.include({
+        data: {
+          removeSkill: {
+            success: true
+          }
+        }
+       })
+       expect(user.relations.skills.length).to.equal(1)
+       expect(user.relations.skills.first().id).to.equal(skill2.id)
     })
 
-    it('removes a skill with a name', () => {
-      req.body = {
-        query: `mutation {
+    it('removes a skill with a name', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `mutation {
           removeSkill(name: "${skill2.get('name')}") {
             success
           }
-        }`
-      }
-      return handler(req, res)
-      .then(() => user.load('skills'))
-      .then(() => {
-        expectJSON(res, {
-          data: {
-            removeSkill: {
-              success: true
-            }
-          }
-        })
-        expect(user.relations.skills.length).to.equal(1)
-        expect(user.relations.skills.first().id).to.equal(skill1.id)
+        }`,
+        serverContext: { req, res }
       })
+
+      await user.load('skills')
+
+      expect(executionResult).to.deep.nested.include({
+        data: {
+          removeSkill: {
+            success: true
+          }
+        }
+      })
+      expect(user.relations.skills.length).to.equal(1)
+      expect(user.relations.skills.first().id).to.equal(skill1.id)
     })
   })
 
   describe('sendEmailVerification', function () {
     it('returns `success: true` if new user', async () => {
-      req.body = {
-        query: `
+      const { response, executionResult } = await handler.inject({
+        document: `
           mutation {
             sendEmailVerification(email: "person@blah.com") {
               success
             }
           }
-        `
-      }
-      await handler(req, res)
+        `,
+        serverContext: { req, res }
+      })
       
-      expectJSON(res, {
+      return expect(executionResult).to.deep.nested.include({
         data: {
           sendEmailVerification: {
             success: true
@@ -575,18 +569,18 @@ describe('graphql request handler', () => {
 
     it('returns `success: true` if existing user with an unverified email', async () => {
       const testUser = await factories.user().save()
-      req.body = {
-        query: `
+      const { response, executionResult } = await handler.inject({
+        document: `
           mutation {
             sendEmailVerification(email: "${testUser.get('email')}") {
               success
             }
           }
-        `
-      }
-      await handler(req, res)
+        `,
+        serverContext: { req, res }
+      })
       
-      expectJSON(res, {
+      return expect(executionResult).to.deep.nested.include({
         data: {
           sendEmailVerification: {
             success: true
@@ -599,18 +593,19 @@ describe('graphql request handler', () => {
       const testUser = await factories.user({
         'email_validated': true
       }).save()
-      req.body = {
-        query: `
+
+      const { response, executionResult } = await handler.inject({
+        document: `
           mutation {
             sendEmailVerification(email: "${testUser.get('email')}") {
               success
             }
           }
-        `
-      }
-      await handler(req, res)
+        `,
+        serverContext: { req, res }
+      })
       
-      expectJSON(res, {
+      return expect(executionResult).to.deep.nested.include({
         data: {
           sendEmailVerification: {
             success: true
@@ -629,9 +624,9 @@ describe('graphql request handler', () => {
       token = userVerificationCode.token
     })
 
-    it('works', () => {
-      req.body = {
-        query: `
+    it('works', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `
           mutation {
             verifyEmail(code: "${code}", email: "${user.get('email')}") {
               me {
@@ -641,29 +636,28 @@ describe('graphql request handler', () => {
               error
             }
           }
-        `
-      }
-      return handler(req, res)
-        .then(() => {
-          expectJSON(res, {
-            data: {
-              verifyEmail: {
-                me: {
-                  id: user.id,
-                  emailValidated: true
-                },
-                error: null
-              }
-            }
-          })
-          // expect(user.get('email_validated')).to.be.true
-          expect(req.session.userId).to.equal(user.id)
-       })
-     })
+        `,
+        serverContext: { req, res }
+      })
 
-     it('returns invalid-code error when code is not valid', () => {
-       req.body = {
-        query: `
+      expect(executionResult).to.deep.nested.include({
+        data: {
+          verifyEmail: {
+            me: {
+              id: user.id,
+              emailValidated: true
+            },
+            error: null
+          }
+        }
+      })
+      // expect(user.get('email_validated')).to.be.true
+      expect(req.session.userId).to.equal(user.id)
+    })
+
+    it('returns invalid-code error when code is not valid', async () => {
+      const { response, executionResult } = await handler.inject({
+        document: `
           mutation {
             verifyEmail(code: "booop", email: "${user.get('email')}") {
               me {
@@ -673,22 +667,21 @@ describe('graphql request handler', () => {
               error
             }
           }
-        `
-      }
-      return handler(req, res)
-        .then(() => {
-          expectJSON(res, {
-            data: {
-              verifyEmail: {
-                me: null,
-                error: 'invalid-code'
-              }
-            }
-          })
-        })
+        `,
+        serverContext: { req, res }
+      })
+
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          verifyEmail: {
+            me: null,
+            error: 'invalid-code'
+          }
+        }
+      })
     })
 
-    it('returns invalid-link error when token is bad ', () => {
+    it('returns invalid-link error when token is bad ', async () => {
       const testToken = jwt.sign({
         iss: 'https://hylo.com/moo', // Bad iss here makes bad token
         aud: 'https://hylo.com',
@@ -697,8 +690,8 @@ describe('graphql request handler', () => {
         code
       }, Buffer.from(process.env.OIDC_KEYS.split(',')[0], 'base64'), { algorithm: 'RS256' })
 
-      req.body = {
-        query: `
+      const { response, executionResult } = await handler.inject({
+        document: `
           mutation {
             verifyEmail(token: "${testToken}", email: "${user.get('email')}") {
               me {
@@ -708,24 +701,23 @@ describe('graphql request handler', () => {
               error
             }
           }
-        `
-      }
-      return handler(req, res)
-        .then(() => {
-          expectJSON(res, {
-            data: {
-              verifyEmail: {
-                me: null,
-                error: 'invalid-link'
-              }
-            }
-          })
-        })
+        `,
+        serverContext: { req, res }
+      })
+
+      return expect(executionResult).to.deep.nested.include({
+        data: {
+          verifyEmail: {
+            me: null,
+            error: 'invalid-link'
+          }
+        }
+      })
     })
 
     it('validates email and creates user session on valid token', async () => {
-      req.body = {
-        query: `
+      const { response, executionResult } = await handler.inject({
+        document: `
           mutation {
             verifyEmail(token: "${token}", email: "${user.get('email')}") {
               me {
@@ -734,12 +726,11 @@ describe('graphql request handler', () => {
               }
             }
           }
-        `
-      }
+        `,
+        serverContext: { req, res }
+      })
 
-      await handler(req, res)
-
-      expectJSON(res, {
+      return expect(executionResult).to.deep.nested.include({
         data: {
           verifyEmail: {
             me: {
@@ -854,8 +845,3 @@ describe('makeAuthenticatedQueries', () => {
     })
   })
 })
-
-function expectJSON (res, expected) {
-  expect(res.body).to.exist
-  return expect(res.body).to.deep.nested.include(expected)
-}
