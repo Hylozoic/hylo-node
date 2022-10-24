@@ -4,9 +4,10 @@ module.exports = {
   // logic for setting up the session when a user logs in
   login: async function (req, user, providerKey, { transacting } = {}) {
     // So when an anonmyous person logs in we generate a new session for them (handles session fixation)
-    req.userId = user.id
-    const regenerateSession = Promise.promisify(req.session.regenerate, req.session)
-    const session = await regenerateSession()
+    // XXX: not working on production for some reason
+    // req.userId = user.id
+    // const regenerateSession = Promise.promisify(req.session.regenerate, req.session)
+    // const session = await regenerateSession()
 
     req.session.userId = user.id
 
