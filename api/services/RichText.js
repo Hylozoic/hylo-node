@@ -1,54 +1,155 @@
-var Cheerio = require('cheerio')
-import { PathHelpers, TextHelpers } from 'hylo-shared'
+import { filter, forEach, map, uniq, isNull } from 'lodash/fp'
+import insane from 'insane'
+import Autolinker from 'autolinker'
+import { JSDOM } from 'jsdom'
+import { PathHelpers, TextHelpers, HYLO_URL_REGEX } from 'hylo-shared'
 
-/*
-For email use exclusively:
+export const MAX_LINK_LENGTH = 48
 
-Canonically relying on the output of HyloShared TextHelpers.presentHTML
-this function further transforms anchor element `href`s to fully qualified
-Hylo URLs. Adds token links for all other relative/apparently Hylo `href`s
-*/
-export const qualifyLinks = (html, recipient, token, slug) => {
-  if (!html) return html
-
-  const presentedHTML = TextHelpers.presentHTML(html, { slug }) 
-  const $ = Cheerio.load(presentedHTML, null, false)
-
-  $('a').each(function () {
-    const $el = $(this)
-    let url = $el.attr('href') || ''
-
-    if ($el.attr('data-user-id')) {
-      const userId = $el.attr('data-user-id')
-      url = `${Frontend.Route.prefix}${PathHelpers.mentionPath(userId, slug)}`
-    } else if ($el.attr('data-search')) {
-      const topic = $el.attr('data-search').replace(/^#/, '')
-      url = `${Frontend.Route.prefix}${PathHelpers.topicPath(topic, slug)}`
-    } else if (!url.match(/^https?:\/\//)) {
-      url = Frontend.Route.prefix + url
-      if (recipient && token) {
-        url = Frontend.Route.tokenLogin(recipient, token, url)
-      }
-    }
-
-    $el.attr('href', url)
-  })
-
-  return $.html()
+export function getDOM (contentHTML) {
+  return new JSDOM(contentHTML).window.document
 }
 
 /*
-Returns a set of unique IDs for any mention members
-found in the provided HTML
 
-Used for generating notifications
+Handles raw HTML from database:
+
+1) Linkifies the HTML (this is necessary for legacy content),
+   adding class 'hylo-link' to any internal links
+2) Ensures that long link text is concatenated to `MAX_LINK_LENGTH`
+3) Removes `target` attribute from all all links
+4) Normalizes legacy HTML content to be consistent with current HTML format
+5) Sanitizes final output (* sanitization should only occur from the backend and on output)
+
+Note: `Post#details()` and `Comment#text()` both run this by default, and it should always
+      be ran against those fields.
+
 */
-export const getUserMentions = html => {
-  if (!html) return []
+export function processHTML (contentHTML, providedInsaneOptions) {
+  // NOTE: Will probably fail silently if bad content sent
+  if (!contentHTML) return ''
 
-  let $ = Cheerio.load(html)
+  const autolinkedHTML = Autolinker.link(contentHTML, { className: 'linkified' })
+  const dom = getDOM(autolinkedHTML)
 
-  return _.uniq($('a[data-user-id]').map(function () {
-    return $(this).attr('data-user-id').toString()
-  }).get())
+  forEach(el => {
+    // Remove all `target` attributes for anchors  Concatenate long link text appending "…"
+    el.removeAttribute('target')
+
+    // Add `hylo-link` to internal links
+    if ((el.getAttribute('href') && el.getAttribute('href').match(HYLO_URL_REGEX))) {
+      el.className = 'hylo-link'
+    }
+
+    // This currently has to be reversed by the TipTap by referencing the href on edit
+    if (el.textContent.length > MAX_LINK_LENGTH) {
+      el.innerHTML = `${el.textContent.slice(0, MAX_LINK_LENGTH)}…`
+    }
+
+    // Normalize legacy Mentions
+    if (
+      el.getAttribute('data-entity-type') === 'mention'||
+      el.getAttribute('data-user-id')
+    ) {
+      const newSpanElement = dom.createElement('span')
+
+      newSpanElement.className = 'mention'
+      newSpanElement.setAttribute('data-type', 'mention')
+      newSpanElement.setAttribute('data-id', el.getAttribute('data-user-id'))
+      newSpanElement.setAttribute('data-label', el.textContent)
+      newSpanElement.innerHTML = el.innerHTML
+
+      el.parentNode.replaceChild(newSpanElement, el)
+
+      return
+    }
+
+    // Normalize legacy Topics
+    if (
+      el.getAttribute('data-entity-type') === '#mention' ||
+      (!el.getAttribute('href') && el.textContent[0] === '#')
+    ) {
+      const newSpanElement = dom.createElement('span')
+
+      newSpanElement.className = 'topic'
+      newSpanElement.setAttribute('data-type', 'topic')
+      newSpanElement.setAttribute('data-id', el.textContent?.slice(1))
+      newSpanElement.setAttribute('data-label', el.textContent)
+      newSpanElement.innerHTML = el.innerHTML
+
+      el.parentNode.replaceChild(newSpanElement, el)
+
+      return
+    }
+  }, dom.querySelectorAll('a'))
+  
+  // Always sanitize on output, but only once and only here
+  const  santizedHTML = insane(
+    dom.querySelector('body').innerHTML,
+    TextHelpers.insaneOptions(providedInsaneOptions)
+  )
+
+  return santizedHTML
+}
+
+/*
+
+Prepares content for HTML Email delivery
+
+- Always make sure `processHTML` was ran first, this is done
+  in `Post#details()` and `Comment#text()`
+
+- Links will be generated with `/all` if a `groupSlug` is not passed
+
+- This same logic is handled dynamically on Web in `ClickCatcher`,
+  and on Mobile in the `HyloHTML` component.
+
+*/
+export function qualifyLinks (processedHTML, groupSlug) {
+  const dom = getDOM(processedHTML)
+
+  // Convert Mention and Topic `span` elements to `a` elements
+  const convertSpansToAnchors = forEach(el => {
+    const anchorElement = dom.createElement('a')
+    let href = el.className === 'mention'
+      ? PathHelpers.mentionPath(el.getAttribute('data-id'), groupSlug)
+      : PathHelpers.topicPath(el.getAttribute('data-id'), groupSlug)
+
+    for (const attr of el.attributes) {
+      anchorElement.setAttribute(attr.name, attr.value)
+    }
+
+    anchorElement.innerHTML = el.innerHTML
+    anchorElement.setAttribute('href', href)
+
+    el.parentNode.replaceChild(anchorElement, el)
+  })
+  convertSpansToAnchors(dom.querySelectorAll(
+    'span.topic, span.mention'
+  ))
+
+  forEach(el => {
+    const href = el.getAttribute('href')
+    if (href && !href.match(/^(https?|email):/)) {
+      el.setAttribute('href', Frontend.Route.prefix + href)
+    }
+  }, dom.querySelectorAll('a'))
+
+  return dom.querySelector('body').innerHTML
+}
+
+/*
+
+Returns a unique set of IDs for any members "mentioned"
+in the provided HTML. Used for generating notifications.
+
+*/
+export function getUserMentions (processedHTML) {
+  if (!processedHTML) return []
+  
+  const dom = getDOM(processedHTML)
+  const mentionElements = dom.querySelectorAll('.mention')
+  const mentionedUserIDs = map(el => el.getAttribute('data-id'), mentionElements)
+  
+  return filter(el => !isNull(el), uniq(mentionedUserIDs))
 }

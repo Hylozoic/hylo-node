@@ -6,12 +6,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.0.1] - 2022-10-24
+
+### Fixed
+- Update `hylo-shared` to fix bug in Mention HTMl generation
+
+## [5.0.0] - 2022-10-24
+
+### Added
+- `Post#LinkPreviewFeatured` to indicate if a `LinkPreview` should be given precedence in the UI when displaying post
+- All parsing of `Post#details` and `Comment#text` HTML is now handled here and nowhere else, moving and refactoring `presentHTML` from `hylo-shared` to support new TipTap editor formatting, and consolidating similar functions from `hylo-evo` all and here all into `RichText`
+- Support for Post "Collections" which are a curated set of posts. New `collections` and `collections_posts` tables.
+- CustomViews can now be of type 'collection' and point to a collection_id. When this is the case the Collection name will always be the same as the CustomView.
+- CustomViews can now have a default sort specified.
+- Much better inline documentation of our GraphQL APIs using Graphiql or other graphql doc viewers.
+
+### Changed
+- Updates `LinkPreview` scrapping to be more rich and somewhat more reliable
+- Updates all notification email and push notifications to work with new `RichText` handling, fixing/improving some results
+- Deprecates use of `linkifyjs` for `autolinker` for link recognition in HTML, and `cheerio` for `jsdom` for parsing
+- Replace 'express-graphql' library with 'graphql-yoga'. Back-end errors are now returned to the front-end with generic text of 'Unknown Error', except when explicitly specified in the back-end by throwing a GraphQLYogaError object.
+
 ## [4.2.1] - 2022-08-25
 
-# Added
+### Added
 - If a group is created with a parent group that it can't join then send a request to join
 
-# Fixed
+### Fixed
 - Bug that was preventing email notifications going out for requests to join a child to a parent group.
 
 ## [4.2.0] - 2022-08-19

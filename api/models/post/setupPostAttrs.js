@@ -15,7 +15,17 @@ export default function setupPostAttrs (userId, params) {
     start_time: params.startTime ? new Date(Number(params.startTime)) : null,
     end_time: params.endTime ? new Date(Number(params.endTime)) : null,
     is_public: params.isPublic
-  }, pick(params, 'name', 'description', 'type', 'starts_at', 'ends_at', 'location_id', 'location', 'created_from'))
+  }, pick(params,
+    'name',
+    'description',
+    'type',
+    'starts_at',
+    'ends_at',
+    'link_preview_featured',
+    'location_id',
+    'location',
+    'created_from'
+  ))
 
   return Promise.resolve(attrs)
 }

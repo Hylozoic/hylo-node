@@ -358,8 +358,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
 
-    findOrCreateLinkPreviewByUrl: (root, { data }) =>
-      findOrCreateLinkPreviewByUrl(data),
+    findOrCreateLinkPreviewByUrl: (root, { data }) => findOrCreateLinkPreviewByUrl(data),
 
     findOrCreateLocation: (root, { data }) => findOrCreateLocation(data),
 

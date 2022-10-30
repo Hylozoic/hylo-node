@@ -3,7 +3,6 @@ import { isEmpty, mapKeys, pick, snakeCase, size, trim } from 'lodash'
 import underlyingFindOrCreateThread, {
   validateThreadData
 } from '../../models/post/findOrCreateThread'
-import underlyingFindLinkPreview from '../../models/linkPreview/findOrCreateByUrl'
 import convertGraphqlData from './convertGraphqlData'
 
 export {
@@ -125,8 +124,13 @@ export function findOrCreateThread (userId, data) {
   .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
 }
 
-export function findOrCreateLinkPreviewByUrl (data) {
-  return underlyingFindLinkPreview(data.url)
+export async function findOrCreateLinkPreviewByUrl ({ url }) {
+  const preview = await LinkPreview.find(url)
+
+  if (!preview) return LinkPreview.queue(url)
+  if (!preview.get('done')) return
+
+  return preview
 }
 
 export function updateGroupTopic (id, data) {

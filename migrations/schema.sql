@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 13.5
--- Dumped by pg_dump version 14.1
+-- Dumped from database version 14.2
+-- Dumped by pg_dump version 14.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -23,7 +23,6 @@ CREATE EXTENSION postgis;
 --
 
 COMMENT ON SCHEMA public IS 'standard public schema';
-
 
 SET default_tablespace = '';
 
@@ -101,6 +100,76 @@ CREATE SEQUENCE public.blocked_users_id_seq
 --
 
 ALTER SEQUENCE public.blocked_users_id_seq OWNED BY public.blocked_users.id;
+
+
+--
+-- Name: collections; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.collections (
+    id integer NOT NULL,
+    user_id bigint,
+    group_id bigint,
+    is_active boolean DEFAULT true,
+    name character varying(255) NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: collections_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.collections_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collections_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.collections_id_seq OWNED BY public.collections.id;
+
+
+--
+-- Name: collections_posts; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.collections_posts (
+    id integer NOT NULL,
+    collection_id bigint NOT NULL,
+    post_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    "order" integer DEFAULT 0,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: collections_posts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.collections_posts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: collections_posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.collections_posts_id_seq OWNED BY public.collections_posts.id;
 
 
 --
@@ -310,6 +379,81 @@ CREATE TABLE public.contributions (
     user_id bigint NOT NULL,
     contributed_at timestamp with time zone NOT NULL
 );
+
+
+--
+-- Name: custom_view_topics; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.custom_view_topics (
+    id integer NOT NULL,
+    custom_view_id bigint NOT NULL,
+    tag_id bigint NOT NULL
+);
+
+
+--
+-- Name: custom_view_topics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.custom_view_topics_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: custom_view_topics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.custom_view_topics_id_seq OWNED BY public.custom_view_topics.id;
+
+
+--
+-- Name: custom_views; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.custom_views (
+    id integer NOT NULL,
+    group_id bigint,
+    is_active boolean DEFAULT true,
+    search_text character varying(255),
+    icon character varying(255),
+    name character varying(255),
+    external_link character varying(255),
+    default_view_mode character varying(255),
+    active_posts_only boolean,
+    post_types character varying(255)[],
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    "order" integer NOT NULL,
+    collection_id bigint,
+    default_sort character varying(255),
+    type character varying(255)
+);
+
+
+--
+-- Name: custom_views_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.custom_views_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: custom_views_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.custom_views_id_seq OWNED BY public.custom_views.id;
 
 
 --
@@ -1424,7 +1568,9 @@ CREATE TABLE public.oidc_payloads (
     user_code character varying(255),
     uid character varying(255),
     expires_at timestamp with time zone,
-    consumed_at timestamp with time zone
+    consumed_at timestamp with time zone,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -1519,6 +1665,7 @@ CREATE TABLE public.posts (
     donations_link character varying(255),
     project_management_link character varying(255),
     reactions_summary jsonb
+    link_preview_featured boolean DEFAULT false
 );
 
 
@@ -2323,6 +2470,20 @@ ALTER TABLE ONLY public.blocked_users ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: collections id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections ALTER COLUMN id SET DEFAULT nextval('public.collections_id_seq'::regclass);
+
+
+--
+-- Name: collections_posts id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections_posts ALTER COLUMN id SET DEFAULT nextval('public.collections_posts_id_seq'::regclass);
+
+
+--
 -- Name: comments_tags id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2334,6 +2495,20 @@ ALTER TABLE ONLY public.comments_tags ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.communities_users ALTER COLUMN id SET DEFAULT nextval('public.users_community_id_seq'::regclass);
+
+
+--
+-- Name: custom_view_topics id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_view_topics ALTER COLUMN id SET DEFAULT nextval('public.custom_view_topics_id_seq'::regclass);
+
+
+--
+-- Name: custom_views id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_views ALTER COLUMN id SET DEFAULT nextval('public.custom_views_id_seq'::regclass);
 
 
 --
@@ -2709,6 +2884,22 @@ ALTER TABLE ONLY public.blocked_users
 
 
 --
+-- Name: collections collections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections
+    ADD CONSTRAINT collections_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: collections_posts collections_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections_posts
+    ADD CONSTRAINT collections_posts_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: comments_tags comments_tags_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2722,6 +2913,22 @@ ALTER TABLE ONLY public.comments_tags
 
 ALTER TABLE ONLY public.groups_tags
     ADD CONSTRAINT communities_tags_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: custom_view_topics custom_view_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_view_topics
+    ADD CONSTRAINT custom_view_topics_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: custom_views custom_views_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_views
+    ADD CONSTRAINT custom_views_pkey PRIMARY KEY (id);
 
 
 --
@@ -3837,6 +4044,46 @@ ALTER TABLE ONLY public.blocked_users
 
 
 --
+-- Name: collections collections_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections
+    ADD CONSTRAINT collections_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collections_posts collections_posts_collection_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections_posts
+    ADD CONSTRAINT collections_posts_collection_id_foreign FOREIGN KEY (collection_id) REFERENCES public.collections(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collections_posts collections_posts_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections_posts
+    ADD CONSTRAINT collections_posts_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collections_posts collections_posts_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections_posts
+    ADD CONSTRAINT collections_posts_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: collections collections_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.collections
+    ADD CONSTRAINT collections_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: comments comments_comment_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3922,6 +4169,38 @@ ALTER TABLE ONLY public.communities
 
 ALTER TABLE ONLY public.communities
     ADD CONSTRAINT community_network_id_foreign FOREIGN KEY (network_id) REFERENCES public.networks(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: custom_view_topics custom_view_topics_custom_view_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_view_topics
+    ADD CONSTRAINT custom_view_topics_custom_view_id_foreign FOREIGN KEY (custom_view_id) REFERENCES public.custom_views(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: custom_view_topics custom_view_topics_tag_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_view_topics
+    ADD CONSTRAINT custom_view_topics_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES public.tags(id);
+
+
+--
+-- Name: custom_views custom_views_collection_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_views
+    ADD CONSTRAINT custom_views_collection_id_foreign FOREIGN KEY (collection_id) REFERENCES public.collections(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: custom_views custom_views_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.custom_views
+    ADD CONSTRAINT custom_views_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --

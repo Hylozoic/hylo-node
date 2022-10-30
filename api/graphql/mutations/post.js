@@ -78,6 +78,7 @@ function convertGraphqlPostData (data) {
     name: data.title,
     description: data.details,
     link_preview_id: data.linkPreviewId,
+    link_preview_featured: data.linkPreviewFeatured,
     group_ids: data.groupIds,
     parent_post_id: data.parentPostId,
     location_id: data.locationId,

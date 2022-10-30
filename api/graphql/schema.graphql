@@ -1393,7 +1393,7 @@ type Person {
     # Load this number of posts
     first: Int,
     # Start loading posts at this index
-    offset: ID,
+    offset: Int,
     # Determines sort order, either 'ASC' or 'DESC'. Posts are sorted by order they were created.
     order: String
   ): CommentQuerySet
@@ -1519,6 +1519,8 @@ type Post {
   groupsTotal: Int
   # Whether this post is publicly visible (outside of the groups it is posted to)
   isPublic: Boolean
+  # Whether LinkPreview appears full size above post or smaller below
+  linkPreviewFeatured: Boolean
   # Full location string
   location: String
   # Object with geocoded location deatils
@@ -2476,6 +2478,8 @@ input PostInput {
   isPublic: Boolean
   # ID of a LinkPreview to show in the post
   linkPreviewId: String
+  # Whether LinkPreview appears full size above post or smaller below
+  linkPreviewFeatured: Boolean
   # Full location string
   location: String
   # Id to location object with geocoded location deatils

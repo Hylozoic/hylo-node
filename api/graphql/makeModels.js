@@ -162,6 +162,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'end_time',
         'fulfilled_at',
         'is_public',
+        'link_preview_featured',
         'location',
         'project_management_link',
         'start_time',
@@ -632,12 +633,11 @@ export default function makeModels (userId, isAdmin, apiClient) {
     LinkPreview: {
       model: LinkPreview,
       attributes: [
-        'title',
-        'url',
+        'description',
         'image_url',
-        'image_width',
-        'image_height',
-        'status'
+        'status',
+        'title',
+        'url'
       ]
     },
 

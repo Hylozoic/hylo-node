@@ -3,7 +3,6 @@ import data from '@emoji-mart/data'
 import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
-import { TextHelpers } from 'hylo-shared'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -11,6 +10,7 @@ import { countTotal } from '../../lib/util/knex'
 import { refineMany, refineOne } from './util/relations'
 import ProjectMixin from './project/mixin'
 import EventMixin from './event/mixin'
+import * as RichText from '../services/RichText'
 
 init({ data })
 
@@ -47,9 +47,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   // Simple attribute getters
 
+  // This should be always used when accessing this attribute
   details: function () {
-    // This should be always used when accessing this attribute
-    return TextHelpers.sanitizeHTML(this.get('description'))
+    return RichText.processHTML(this.get('description'))
   },
 
   description: function () {
@@ -247,7 +247,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         commentsTotal: 0,
         groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
         creator,
-        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'url' ]),
+        linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'description', 'url' ]),
         topics,
 
         // TODO: Once legacy site is decommissioned, these are no longer required.

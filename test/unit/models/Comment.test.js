@@ -164,7 +164,7 @@ describe('Comment', () => {
       afterEach(() => unspyify(Email, 'sendCommentDigest'))
 
       it('changes the subject if the digest contains a mention', () => {
-        const text = `hello <a data-user-id="${u2.get('id')}">buddy</a>!`
+        const text = `hello <a class="mention" data-id="${u2.get('id')}" data-label="buddy">buddy</a>!`
         return comments[1].save({text}, {patch: true})
         .then(() => Comment.sendDigests())
         .then(count => {
