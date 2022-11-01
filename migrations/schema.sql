@@ -1664,6 +1664,7 @@ CREATE TABLE public.posts (
     is_public boolean DEFAULT false,
     donations_link character varying(255),
     project_management_link character varying(255),
+    reactions_summary jsonb,
     link_preview_featured boolean DEFAULT false
 );
 
@@ -5045,6 +5046,12 @@ ALTER TABLE ONLY public.users
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_stripe_account_id_foreign FOREIGN KEY (stripe_account_id) REFERENCES public.stripe_accounts(id);
 
+
+--
+-- Data seeding
+--
+
+insert into tags (name) values ('general') ON CONFLICT DO NOTHING
 
 --
 -- PostgreSQL database dump complete
