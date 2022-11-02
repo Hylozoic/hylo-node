@@ -538,7 +538,7 @@ module.exports = bookshelf.Model.extend(merge({
       pick(data,
         'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
         'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
-        'moderator_descriptor_plural', 'name', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+        'moderator_descriptor_plural', 'name', 'settings', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
         'accessibility': Group.Accessibility.RESTRICTED,
@@ -551,7 +551,6 @@ module.exports = bookshelf.Model.extend(merge({
 
     // eslint-disable-next-line camelcase
     const access_code = attrs.access_code || await Group.getNewAccessCode()
-
     const group = new Group(merge(attrs, {
       access_code,
       created_at: new Date(),
