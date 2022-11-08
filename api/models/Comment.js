@@ -173,7 +173,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
 
     const finalText = cutoff ? lines.slice(0, cutoff).join('\n') : text
-    return opts.useMarkdown ? TextHelpers.markdown(finalText || '') : finalText
+    return opts.useMarkdown ? TextHelpers.markdown(finalText || '', { disableAutolinking: true }) : finalText
   },
 
   notifyAboutMessage,
