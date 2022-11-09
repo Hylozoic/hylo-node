@@ -716,12 +716,13 @@ export default function makeModels (userId, isAdmin, apiClient) {
 
     GroupTopic: {
       model: GroupTag,
-      attributes: ['is_default', 'visibility', 'updated_at', 'created_at'],
+      attributes: ['created_at', 'is_default', 'updated_at', 'visibility', ],
       getters: {
-        postsTotal: ct => ct.postCount(),
-        followersTotal: ct => ct.followerCount(),
-        isSubscribed: ct => ct.isFollowed(userId),
-        newPostCount: ct => ct.newPostCount(userId)
+        postsTotal: gt => gt.postCount(),
+        followersTotal: gt => gt.followerCount(),
+        isSubscribed: gt => gt.isFollowed(userId),
+        lastReadPostId: gt => gt.lastReadPostId(userId),
+        newPostCount: gt => gt.newPostCount(userId)
       },
       relations: [
         'group',

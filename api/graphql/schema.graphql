@@ -940,6 +940,8 @@ type GroupTopic {
   isDefault: Boolean
   # Whether the current logged in user is subscribed to this topic in this group
   isSubscribed: Boolean
+  # The most recent post that the user has read in this GroupTopic
+  lastReadPostId: ID
   # The number of new posts in this topic in this group since the current logged in user looked at the stream for this topic/group
   newPostCount: Int
   # Total number of posts using this topic in this group
@@ -2326,6 +2328,8 @@ input GroupTopicInput {
 
 # Data related to a Person following a Topic in a Group
 input GroupTopicFollowInput {
+  # The most recent post that the user has read in this GroupTopic
+  lastReadPostId: ID
   # Set the count of new posts with this Topic in the Group since the Person last looked a the Topic stream
   newPostCount: Int
 }

@@ -142,7 +142,7 @@ export function updateGroupTopic (id, data) {
 }
 
 export function updateGroupTopicFollow (userId, { id, data }) {
-  const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
+  const whitelist = mapKeys(pick(data, ['newPostCount', 'lastReadPostId']), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
   return GroupTag.where({id}).fetch()
