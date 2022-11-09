@@ -191,6 +191,7 @@ type Query {
     collectionToFilterOut: ID,
     # If 'all' only return posts from groups the current logged in user is a member of. If 'public' only return pubic posts
     context: String,
+    # Load posts before or after this ID, depending on sort order
     cursor: ID,
     # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'request' or 'resource'
     filter: String,
@@ -727,6 +728,7 @@ type Group {
     boundingBox: [PointInput],
     # Only return posts that are not in this collection
     collectionToFilterOut: ID,
+    # Start loading posts before or after this ID, depending on sort order
     cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
@@ -781,6 +783,8 @@ type Group {
     boundingBox: [PointInput],
     # Only return posts that are not in this collection
     collectionToFilterOut: ID,
+    # Return posts before or after this post id, depending on sort order
+    cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts
@@ -1188,7 +1192,7 @@ type Me {
 
   # Hylo Group memberships
   groups(
-    # Start loading groups at this index
+    # Start loading groups at this group id
     cursor: ID,
     # Load this number of groups
     first: Int,
@@ -1207,7 +1211,7 @@ type Me {
 
   # Hylo Group memberships
   memberships(
-    # Start loading memberships at this index
+    # Start loading memberships at this id
     cursor: ID,
     # Load this number of memberships
     first: Int,
@@ -1229,7 +1233,7 @@ type Me {
 
   # The set of Posts the logged in user has created
   posts(
-    # Start loading posts at this index
+    # Start loading posts at this post id
     cursor: ID,
     # Load this number of posts
     first: Int,
@@ -1247,7 +1251,7 @@ type Me {
 
   # The set of Skills the logged in user want to learn
   skillsToLearn(
-    # Start loading skills after this id
+    # Start loading skills after this ID
     cursor: ID,
     # Number of skills to load
     first: Int
@@ -1405,7 +1409,7 @@ type Person {
   eventsAttending: PostQuerySet
   # The set of Group Memberships this person has (that are visible to logged in user)
   memberships(
-    # Start loading memberships at this index
+    # Start loading memberships at this ID
     cursor: ID,
     # Load this number of memberships
     first: Int,
