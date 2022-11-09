@@ -10,6 +10,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     beforeTime,
     boundingBox,
     collectionToFilterOut,
+    cursor,
     forCollection,
     isAnnouncement,
     isFulfilled,
@@ -25,16 +26,25 @@ export const filterAndSortPosts = curry((opts, q) => {
   let { topics = [] } = opts
 
   const sortColumns = {
-    votes: 'posts.num_people_reacts',
-    updated: 'posts.updated_at',
     created: 'posts.created_at',
+    id: 'posts.id',
+    order: 'collections_posts.order', // Only works if forCollection is set
     start_time: 'posts.start_time',
-    order: 'collections_posts.order' // Only works if forCollection is set
+    updated: 'posts.updated_at',
+    votes: 'posts.num_people_reacts'
   }
 
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy || v === sortBy)
   if (!sort) {
     throw new GraphQLYogaError(`Cannot sort by "${sortBy}"`)
+  }
+
+  if (cursor) {
+    if (order === 'asc') {
+      q.where('posts.id', '>', cursor)
+    } else {
+      q.where('posts.id', '<', cursor)
+    }
   }
 
   const { CHAT, DISCUSSION, REQUEST, OFFER, PROJECT, EVENT, RESOURCE } = Post.Type

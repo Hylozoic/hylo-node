@@ -191,6 +191,7 @@ type Query {
     collectionToFilterOut: ID,
     # If 'all' only return posts from groups the current logged in user is a member of. If 'public' only return pubic posts
     context: String,
+    cursor: ID,
     # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'request' or 'resource'
     filter: String,
     # Number of posts to return
@@ -726,6 +727,7 @@ type Group {
     boundingBox: [PointInput],
     # Only return posts that are not in this collection
     collectionToFilterOut: ID,
+    cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts

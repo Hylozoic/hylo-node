@@ -208,6 +208,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         boundingBox,
         collectionToFilterOut,
         context,
+        cursor,
         filter,
         first,
         forCollection,
@@ -228,6 +229,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
           boundingBox,
           collectionToFilterOut,
           currentUserId: userId,
+          cursor,
           forCollection,
           groupSlugs,
           isFulfilled,
@@ -291,13 +293,31 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, forCollection, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, {
+            activePostsOnly = false,
+            afterTime,
+            beforeTime,
+            boundingBox,
+            collectionToFilterOut,
+            cursor,
+            forCollection,
+            filter,
+            isAnnouncement,
+            isFulfilled,
+            order,
+            search,
+            sortBy,
+            topic,
+            topics,
+            types
+          }) =>
             relation.query(filterAndSortPosts({
               activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
               collectionToFilterOut,
+              cursor,
               forCollection,
               isAnnouncement,
               isFulfilled,
