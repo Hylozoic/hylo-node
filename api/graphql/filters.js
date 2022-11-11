@@ -25,6 +25,8 @@ export const groupFilter = userId => relation => {
     // non authenticated queries can only see public groups
     if (!userId) {
       q.where('groups.visibility', Group.Visibility.PUBLIC)
+      // Only show groups that are allowed to be show in public
+      q.andWhere('allow_in_public', true)
     } else {
       // the effect of using `where` like this is to wrap everything within its
       // callback in parentheses -- this is necessary to keep `or` from "leaking"
@@ -38,7 +40,7 @@ export const groupFilter = userId => relation => {
 
         // Can see groups you are a member of...
         q2.whereIn('groups.id', selectIdsForMember)
-        // + their parent group
+        // + their parent groups
         q2.orWhereIn('groups.id', parentGroupIds)
         // + child groups that are not hidden, except moderators of a group can see its hidden children
         q2.orWhere(q3 => {
@@ -49,7 +51,11 @@ export const groupFilter = userId => relation => {
           q3.orWhereIn('groups.id', childrenOfModeratedGroupIds)
         })
         // + all public groups
-        q2.orWhere('groups.visibility', Group.Visibility.PUBLIC)
+        q2.orWhere(q5 => {
+          q5.where('groups.visibility', Group.Visibility.PUBLIC)
+          // Only show groups that are allowed to be show in public
+          q5.andWhere('allow_in_public', true)
+        })
       })
     }
   })
