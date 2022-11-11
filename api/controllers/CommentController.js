@@ -42,7 +42,7 @@ module.exports = {
     // TODO: fix
     const { groupId, userId } = res.locals.tokenData
 
-    const replyText = postId => TextHelpers.markdown(req.param(`post-${postId}`))
+    const replyText = postId => TextHelpers.markdown(req.param(`post-${postId}`, { disableAutolinking: true }))
 
     const postIds = flow(
       Object.keys,

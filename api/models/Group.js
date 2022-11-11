@@ -318,6 +318,13 @@ module.exports = bookshelf.Model.extend(merge({
     return updatedMemberships.concat(newMemberships)
   },
 
+  createDefaultTopics: async function (group_id, user_id, transacting) {
+    return Tag.where({ name: 'general' }).fetch({ transacting })
+      .then(generalTag => {
+        return GroupTag.create({ updated_at: new Date(), group_id, tag_id: generalTag.get('id'), user_id, is_default: true }, { transacting })
+      })
+  },
+
   createInitialWidgets: async function (transacting) {
     // In the future this will have to look up the template of whatever group is being created and add widgets based on that
     const initialWidgets = await Widget.query(q => q.whereIn('id', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 20, 21])).fetchAll({ transacting })
@@ -531,7 +538,7 @@ module.exports = bookshelf.Model.extend(merge({
       pick(data,
         'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
         'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
-        'moderator_descriptor_plural', 'name', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+        'moderator_descriptor_plural', 'name', 'settings', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
         'accessibility': Group.Accessibility.RESTRICTED,
@@ -544,7 +551,6 @@ module.exports = bookshelf.Model.extend(merge({
 
     // eslint-disable-next-line camelcase
     const access_code = attrs.access_code || await Group.getNewAccessCode()
-
     const group = new Group(merge(attrs, {
       access_code,
       created_at: new Date(),
@@ -553,7 +559,7 @@ module.exports = bookshelf.Model.extend(merge({
     }))
 
     const memberships = await bookshelf.transaction(async trx => {
-      await group.save(null, {transacting: trx})
+      await group.save(null, { transacting: trx })
 
       if (data.group_extensions) {
         for (const extData of data.group_extensions) {
@@ -570,9 +576,11 @@ module.exports = bookshelf.Model.extend(merge({
       await group.createStarterPosts(trx)
 
       await group.createInitialWidgets(trx)
+      
+      await group.createDefaultTopics(group.id, userId, trx)
 
       const members = await group.addMembers([userId],
-        {role: GroupMembership.Role.MODERATOR}, { transacting: trx })
+        { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
 
       // Have to add/request add to parent group after moderator has been added to the group
       if (data.parent_ids) {

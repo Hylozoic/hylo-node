@@ -7046,15 +7046,15 @@ https-proxy-agent@^5.0.0, https-proxy-agent@^5.0.1:
     agent-base "6"
     debug "4"
 
-hylo-shared@5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-5.0.0.tgz#7cc76a87d092947b9c78aafb270e059d29866e41"
-  integrity sha512-72wTvmE1VfZEZ6Hk6jdrmXz4ocF66Y6FkHFDjqRwO9KYe5FSRwOY9tImperx12sB8GZY+Ss1R8sn0JF8IhOyyA==
+hylo-shared@5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-5.1.0.tgz#e4cdb43a2d65926d195bb70e6a24b874efc03f52"
+  integrity sha512-YWXEs8F/Sw6yazUi6Nii8JMoLa9P5HfnUJ8B+JcyZNs3EaDbf04FVZdi1bFYMgzcl+uNNx9ebRWY+2mJPGRqoQ==
   dependencies:
     coordinate-parser "^1.0.7"
     html-to-text "^8.1.0"
     lodash "~4.17.21"
-    marked "^4.0.12"
+    marked "^4.2.1"
     pretty-date "^0.2.0"
     querystring "^0.2.1"
     trunc-html "^1.1.2"
@@ -8655,10 +8655,10 @@ map-visit@^1.0.0:
   dependencies:
     object-visit "^1.0.0"
 
-marked@^4.0.12:
-  version "4.1.1"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-4.1.1.tgz#2f709a4462abf65a283f2453dc1c42ab177d302e"
-  integrity sha512-0cNMnTcUJPxbA6uWmCmjWz4NJRe/0Xfk2NhXCUHjew9qJzFN20krFnsUe7QynwqOwa5m1fZ4UDg0ycKFVC0ccw==
+marked@^4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-4.2.1.tgz#eaa32594e45b4e58c02e4d118531fd04345de3b4"
+  integrity sha512-VK1/jNtwqDLvPktNpL0Fdg3qoeUZhmRsuiIjPEy/lHwXW4ouLoZfO4XoWd4ClDt+hupV1VLpkZhEovjU0W/kqA==
 
 math-interval-parser@^2.0.1:
   version "2.0.1"

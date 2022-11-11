@@ -90,7 +90,7 @@ module.exports = {
           if (tag) {
             opts.tagId = tag.id
           } else {
-            opts.message = TextHelpers.markdown(message)
+            opts.message = TextHelpers.markdown(message, { disableAutolinking: true })
             opts.moderator = isModerator
             opts.subject = subject
           }
