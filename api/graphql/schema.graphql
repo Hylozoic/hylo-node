@@ -731,6 +731,8 @@ type Group {
     # Start loading posts before or after this ID, depending on sort order
     cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    #  a value of 'all' will include all above post types
+    #  a value of 'chat' will include all above post types + 'chat'
     filter: String,
     # Load this number of posts
     first: Int,
