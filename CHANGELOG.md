@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.0.2] - 2022-11-13
+
+### Added
+- New allow_in_public flag on groups that determines whether the group appears in the Group Explorer and whether posts from that group are allowed in the public stream. This flag is turned off for new groups by default while we figure out our strategy for deciding whether it should be on or off for any given group.
+- Every new group has a #general topic added to it as a default topic. This will be more important/useful when topic based chat rooms are released soon!
+
+### Fixed
+- Update `hylo-shared` to fix bug in Mention HTMl generation
+- Autolinking (links being turned into clickable links) in Group descriptions is turned back on
+- Can set group settings when creating a group via API. This fixes an issue where the group's locationDisplayPrecision was not being set correctly.
+
 ## [5.0.1] - 2022-10-24
 
 ### Fixed

@@ -15,6 +15,7 @@ describe('GroupExtension', function () {
       slug: 'comm1',
       group_data_type: 1
     }
+    await Tag.findOrCreate('general')
     user = await new User({ name: 'username', email: 'john@foo.com', active: true }).save()
     await Group.create(user.id, data)
     savedGroup = await Group.find('comm1')

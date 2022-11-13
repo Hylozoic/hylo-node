@@ -44,11 +44,14 @@ const PostController = {
         }
       }))
     .then(stop => stop || createPost(userId, attributes)
-      .tap(() => Analytics.track({
-        userId,
-        event: 'Add Post by Email Form',
-        properties: {group: group.get('name')}
-      }))
+      .then(post => {
+        Analytics.track({
+          userId,
+          event: 'Add Post by Email Form',
+          properties: {group: group.get('name')}
+        })
+        return post
+      })
       .then(post => res.redirect(Frontend.Route.post(post, group))))
     .catch(res.serverError)
   },
