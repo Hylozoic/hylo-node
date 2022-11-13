@@ -1042,7 +1042,8 @@ CREATE TABLE public.groups (
     type_descriptor_plural character varying(255) DEFAULT NULL::character varying,
     moderator_descriptor character varying(255) DEFAULT NULL::character varying,
     moderator_descriptor_plural character varying(255) DEFAULT NULL::character varying,
-    about_video_uri character varying(255)
+    about_video_uri character varying(255),
+    allow_in_public boolean DEFAULT false
 );
 
 
