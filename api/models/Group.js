@@ -534,7 +534,7 @@ module.exports = bookshelf.Model.extend(merge({
       throw new GraphQLYogaError("A group with that URL slug already exists")
     }
 
-    var attrs = defaults(
+    let attrs = defaults(
       pick(data,
         'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
         'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
@@ -548,6 +548,11 @@ module.exports = bookshelf.Model.extend(merge({
         'visibility': Group.Visibility.PROTECTED
       }
     )
+
+    // XXX: temporary, by default show all farms in public. These can only be created via API right now
+    if (attrs.type === 'farm') {
+      attrs.allow_in_public = true
+    }
 
     // eslint-disable-next-line camelcase
     const access_code = attrs.access_code || await Group.getNewAccessCode()
