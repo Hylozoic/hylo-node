@@ -26,6 +26,11 @@ export const filterAndSortPosts = curry((opts, q) => {
   let { topics = [] } = opts
 
   const sortColumns = {
+<<<<<<< HEAD
+=======
+    votes: 'posts.num_people_reacts', // Need to remove once Mobile has been ported to reactions
+    updated: 'posts.updated_at',
+>>>>>>> NODE-858-reacts-on-comments
     created: 'posts.created_at',
     id: 'posts.id',
     order: 'collections_posts.order', // Only works if forCollection is set

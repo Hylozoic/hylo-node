@@ -80,7 +80,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('num_comments')
   },
 
-  peopleReactionsTotal: function () {
+  peopleReactedTotal: function () {
     return this.get('num_people_reacts')
   },
 
@@ -241,8 +241,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Object.assign({},
       refineOne(
         this,
-        [ 'created_at', 'id', 'name', 'num_people_reacts', 'num_votes', 'type', 'updated_at' ],
-        { name: 'title', num_votes: 'votesTotal', num_people_reacts: 'peopleReactionsTotal' }
+        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'type', 'updated_at', 'num_votes'],
+        { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotal', num_votes: 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation

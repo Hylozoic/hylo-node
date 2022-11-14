@@ -61,7 +61,7 @@ import {
   messageGroupModerators,
   pinPost,
   processStripeToken,
-  reaction,
+  reactOn,
   reactivateUser,
   regenerateAccessCode,
   registerDevice,
@@ -389,7 +389,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     processStripeToken: (root, { postId, token, amount }) =>
       processStripeToken(userId, postId, token, amount),
 
-    reaction: (root, { entityId, data }) => reaction(userId, entityId, data),
+    reactOn: (root, { entityId, data }) => reactOn(userId, entityId, data),
 
     reactivateMe: (root) => reactivateUser({ userId }),
 

@@ -1667,7 +1667,6 @@ CREATE TABLE public.posts (
     project_management_link character varying(255),
     reactions_summary jsonb,
     link_preview_featured boolean DEFAULT false
-    reactions_summary jsonb
 );
 
 
