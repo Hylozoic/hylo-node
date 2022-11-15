@@ -29,6 +29,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     created: 'posts.created_at',
     id: 'posts.id',
     order: 'collections_posts.order', // Only works if forCollection is set
+    reactions: 'posts.num_people_reacts',
     start_time: 'posts.start_time',
     updated: 'posts.updated_at',
     votes: 'posts.num_people_reacts', // Need to remove once Mobile has been ported to reactions
