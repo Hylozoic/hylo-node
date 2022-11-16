@@ -3,18 +3,25 @@ import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
 import { groupRoom, pushToSockets } from '../../services/Websockets'
 
-export default function createPost (userId, params) {
+export default async function createPost (userId, params) {
+  if (params.isPublic) {
+    // Don't allow creating a public post unless at least one of the post's groups has allow_in_public set to true
+    const groups = await Group.query(q => q.whereIn('id', params.group_ids)).fetchAll()
+    const allowedToMakePublic = groups.find(g => g.get('allow_in_public'))
+    if (!allowedToMakePublic) params.isPublic = false
+  }
+
   return setupPostAttrs(userId, merge(Post.newPostAttrs(), params))
-  .then(attrs => bookshelf.transaction(transacting =>
-    Post.create(attrs, { transacting })
-    .tap(post => afterCreatingPost(post, merge(
-      pick(params, 'group_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
-      {children: params.requests, transacting}
-    )))).then(function(inserts) {
-      return inserts
-    }).catch(function(error) {
-      throw error
-    })
+    .then(attrs => bookshelf.transaction(transacting =>
+      Post.create(attrs, { transacting })
+        .tap(post => afterCreatingPost(post, merge(
+          pick(params, 'group_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
+          {children: params.requests, transacting}
+      )))).then(function(inserts) {
+        return inserts
+      }).catch(function(error) {
+        throw error
+      })
   )
 }
 
