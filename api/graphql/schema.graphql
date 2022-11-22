@@ -1432,6 +1432,8 @@ type Person {
     collectionToFilterOut: ID,
     # Only return posts within this context: 'public' = only return posts set to Public. 'all' = only return posts within a group that the current logged in user is a member of
     context: String,
+    # Start loading posts before or after this ID, depending on sort order
+    cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts
