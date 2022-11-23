@@ -280,7 +280,7 @@ module.exports = bookshelf.Model.extend({
     const emailable = membershipsPermitting('sendEmail')
     const pushable = membershipsPermitting('sendPushNotifications')
 
-    // Send emails if email notifications on and is announcement or
+    // Send emails if email notifications on and is announcement or "not just a new post" notification
     if (!isEmpty(emailable) && (!isJustNewPost(activity) || isAnnouncement(activity))) {
       notifications.push(Notification.MEDIUM.Email)
     }
