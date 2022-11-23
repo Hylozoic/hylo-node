@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- Don't send emails or push notifications for Announcements when notifications are turned off in a group
+
 ## [5.0.2] - 2022-11-13
 
 ### Added
