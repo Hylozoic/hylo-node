@@ -280,11 +280,13 @@ module.exports = bookshelf.Model.extend({
     const emailable = membershipsPermitting('sendEmail')
     const pushable = membershipsPermitting('sendPushNotifications')
 
-    if ((!isEmpty(emailable) && !isJustNewPost(activity)) || isAnnouncement(activity)) {
+    // Send emails if email notifications on and is announcement or
+    if (!isEmpty(emailable) && (!isJustNewPost(activity) || isAnnouncement(activity))) {
       notifications.push(Notification.MEDIUM.Email)
     }
 
-    if (isTopic(activity) || !isEmpty(pushable) || isAnnouncement(activity)) {
+    // XXX: right now all notification types get sent as a push notification. Is this what we want?
+    if (!isEmpty(pushable)) {
       notifications.push(Notification.MEDIUM.Push)
     }
 
