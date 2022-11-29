@@ -1,20 +1,7 @@
 {
   "name": "hylo-node",
   "description": "The back-end/API server for Hylo - the Social Coordination Platform for a Thriving Planet",
-  "scripts": {
-  },
-  "env": {
-    "COOKIE_DOMAIN": ".hylo.com",
-    "COOKIE_NAME": "hylo.review.sid2",
-    "COOKIE_SECRET": {
-      "description": "A secret key for verifying the integrity of signed cookies.",
-      "generator": "secret"
-    },
-    "EMAIL_SENDER": "dev@hylo.com",
-    "NODE_ENV": "staging",
-    "NODE_MODULES_CACHE": false,
-    "PROTOCOL": "https"
-  },
+  "stack": "heroku-20",
   "addons": [
     "redisgreen",
     "scheduler",
@@ -26,24 +13,27 @@
     },
     {
       "url": "heroku/nodejs"
+    },
+    {
+      "url": "https://github.com/Hylozoic/heroku-buildpack-migrate"
     }
   ],
-  "stack": "heroku-20",
+  "env": {
+    "COOKIE_DOMAIN": ".hylo.com",
+    "COOKIE_NAME": "hylo.sid2",
+    "COOKIE_SECRET": {
+      "description": "A secret key for verifying the integrity of signed cookies.",
+      "generator": "secret"
+    },
+    "EMAIL_SENDER": "dev@hylo.com",
+    "NODE_ENV": "staging",
+    "NODE_MODULES_CACHE": false,
+    "PROTOCOL": "https"
+  },
+  "scripts": {
+  },
   "environments": {
     "review": {
-      "addons": [
-        "redisgreen",
-        "scheduler",
-        "heroku-postgresql:basic"
-      ],
-      "env": {
-        "COOKIE_DOMAIN": ".hylo.com",
-        "COOKIE_NAME": "hylo.review.sid2",
-        "EMAIL_SENDER": "dev+review@hylo.com",
-        "NODE_ENV": "staging",
-        "NODE_MODULES_CACHE": false,
-        "PROTOCOL": "http"
-      },
       "formation": {
         "web": {
           "quantity": 1,
@@ -53,6 +43,27 @@
           "quantity": 1,
           "size": "basic"
         }
+      },
+      "addons": [
+        "redisgreen",
+        "scheduler",
+        "heroku-postgresql:basic"
+      ],
+      "buildpacks": [
+        {
+          "url": "https://github.com/mcollina/heroku-buildpack-graphicsmagick"
+        },
+        {
+          "url": "heroku/nodejs"
+        }
+      ],
+      "env": {
+        "COOKIE_DOMAIN": ".hylo.com",
+        "COOKIE_NAME": "hylo.review.sid2",
+        "EMAIL_SENDER": "dev+review@hylo.com",
+        "NODE_ENV": "staging",
+        "NODE_MODULES_CACHE": false,
+        "PROTOCOL": "http"
       }
     }
   }
