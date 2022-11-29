@@ -7874,10 +7874,10 @@ join-component@~1.0.0:
   resolved "https://registry.yarnpkg.com/join-component/-/join-component-1.0.0.tgz#cd2b2321c054be54e493815436b0ddc28a44235c"
   integrity sha512-OC3jbEKjRjdGhwImZ3T/sbUw3/62lDvLgTAVwAJPjMQC07KSpRJ6r3KTEXAsTXTkjwcVq1NZQLPmaYhboE7zog==
 
-jose@^4.8.3:
-  version "4.10.0"
-  resolved "https://registry.yarnpkg.com/jose/-/jose-4.10.0.tgz#2e0b7bcc80dd0775f8a4588e55beb9460c37d60a"
-  integrity sha512-KEhB/eLGLomWGPTb+/RNbYsTjIyx03JmbqAyIyiXBuNSa7CmNrJd5ysFhblayzs/e/vbOPMUaLnjHUMhGp4yLw==
+jose@^4.10.3:
+  version "4.11.1"
+  resolved "https://registry.yarnpkg.com/jose/-/jose-4.11.1.tgz#8f7443549befe5bddcf4bae664a9cbc1a62da4fa"
+  integrity sha512-YRv4Tk/Wlug8qicwqFNFVEZSdbROCHRAC6qu/i0dyNKr5JQdoa2pIGoS04lLO/jXQX7Z9omoNewYIVIxqZBd9Q==
 
 js-stringify@^1.0.1:
   version "1.0.2"
@@ -9517,10 +9517,10 @@ object-copy@^0.1.0:
     define-property "^0.2.5"
     kind-of "^3.0.3"
 
-object-hash@^2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-2.2.0.tgz#5ad518581eefc443bd763472b8ff2e9c2c0d54a5"
-  integrity sha512-gScRMn0bS5fH+IuwyIFgnh9zBdo4DV+6GhygmWM9HyNJSgS0hScp1f5vjtm7oIIOiT9trXrShAkLFSc2IqKNgw==
+object-hash@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/object-hash/-/object-hash-3.0.0.tgz#73f97f753e7baffc0e2cc9d6e079079744ac82e9"
+  integrity sha512-RSn9F68PjH9HqtltsSnqYC1XXoWe9Bju5+213R98cNGttag9q9yAOTzdbsqvIa7aNm5WffBZFpWYr2aWrklWAw==
 
 object-inspect@^1.12.2, object-inspect@^1.9.0:
   version "1.12.2"
@@ -9625,22 +9625,22 @@ object.values@^1.1.4:
     define-properties "^1.1.3"
     es-abstract "^1.19.1"
 
-oidc-provider@^7.11.0:
-  version "7.12.0"
-  resolved "https://registry.yarnpkg.com/oidc-provider/-/oidc-provider-7.12.0.tgz#63c6234e827ace9d2a5421fb1e4ff04230d8290d"
-  integrity sha512-VyyKV9Axkni3riZzrwppxQ4kcP59m1PXEgQ2aGPs2jagON4ejyu5vmH2A3BhYFgT50IdvHxxN3VI9vW3DF68ig==
+oidc-provider@^7.11.3:
+  version "7.14.1"
+  resolved "https://registry.yarnpkg.com/oidc-provider/-/oidc-provider-7.14.1.tgz#f999c72a5dd098b7564fdabe582389a2bf031024"
+  integrity sha512-zSQ3kPaCyE2XIp1xlrObGM6lUb8FTJ+iXavAN09uICemudasiuTjGLhR9YeaQ89JG1b+gNXWpvQe5yOe2Gdp+g==
   dependencies:
     "@koa/cors" "^3.3.0"
     cacheable-lookup "^6.0.4"
     debug "^4.3.4"
     ejs "^3.1.8"
     got "^11.8.5"
-    jose "^4.8.3"
+    jose "^4.10.3"
     jsesc "^3.0.2"
     koa "^2.13.4"
     koa-compose "^4.1.0"
     nanoid "^3.3.4"
-    object-hash "^2.2.0"
+    object-hash "^3.0.0"
     oidc-token-hash "^5.0.1"
     paseto "^2.1.3"
     quick-lru "^5.1.1"
