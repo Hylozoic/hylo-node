@@ -10,10 +10,10 @@
       "description": "A secret key for verifying the integrity of signed cookies.",
       "generator": "secret"
     },
-    "EMAIL_SENDER": "dev+review@hylo.com",
+    "EMAIL_SENDER": "dev@hylo.com",
     "NODE_ENV": "staging",
     "NODE_MODULES_CACHE": false,
-    "PROTOCOL": "http"
+    "PROTOCOL": "https"
   },
   "addons": [
     "redisgreen",
@@ -36,8 +36,6 @@
         "scheduler",
         "heroku-postgresql:basic"
       ],
-      "scripts": {
-      },
       "env": {
         "COOKIE_DOMAIN": ".hylo.com",
         "COOKIE_NAME": "hylo.review.sid2",
@@ -55,7 +53,7 @@
           "quantity": 1,
           "size": "basic"
         }
-      },
+      }
     }
   }
 }
