@@ -28,7 +28,7 @@
       "url": "heroku/nodejs"
     }
   ],
-  "stack": "heroku-22",
+  "stack": "heroku-20",
   "environments": {
     "review": {
       "addons": [
