@@ -5,7 +5,7 @@ export default {
     this.set('settings', merge({}, this.get('settings'), value))
     if (save) {
       const options = { patch: true }
-      if (transacting) settings['transacting'] = transacting
+      if (transacting) options['transacting'] = transacting
       return this.save({settings: this.get('settings')}, options)
     }
     return this
