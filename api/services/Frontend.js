@@ -67,15 +67,12 @@ module.exports = {
 
     root: () => url('/app'),
 
-    comment: function (comment, group) {
-      // TODO: update to use comment specific url when implemented in frontend
-      let groupSlug = getSlug(group)
+    comment: function ({ comment, groupSlug, post }) {
 
       let groupUrl = isEmpty(groupSlug) ? '/all' : `/groups/${groupSlug}`
 
-      const postId = comment.relations.post.id
-
-      return url(`${groupUrl}/post/${postId}`)
+      const postId = comment?.relations?.post?.id || post.id
+      return url(`${groupUrl}/post/${postId}/comments/${comment.id}`)
     },
 
     group: function (group) {
