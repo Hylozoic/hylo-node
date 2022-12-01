@@ -38,11 +38,10 @@ export function unfulfillPost (userId, postId) {
     .then(() => ({success: true}))
 }
 
-export function vote (userId, postId, isUpvote) {
+export function vote (userId, postId, isUpvote) { // TODO: remove after mobile brought back into sync
   return Post.find(postId)
   .then(post => post.vote(userId, isUpvote))
 }
-
 export function deletePost (userId, postId) {
   return Post.find(postId)
   .then(post => {

@@ -10,7 +10,7 @@ import {
   messageFilter,
   personFilter,
   postFilter,
-  voteFilter
+  reactionFilter
 } from './filters'
 import { LOCATION_DISPLAY_PRECISION } from '../../lib/constants'
 import InvitationService from '../services/InvitationService'
@@ -134,7 +134,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {comments: {querySet: true}},
         {skills: {querySet: true}},
         {skillsToLearn: {querySet: true}},
-        {votes: {querySet: true}}
+        {reactions: {querySet: true}}
       ],
       filter: nonAdminFilter(apiFilter(personFilter(userId))),
       isDefaultTypeForTable: true,
@@ -172,7 +172,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
       getters: {
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
-        myVote: p => userId ? p.userVote(userId).then(v => !!v) : false,
+        myReactions: p => userId ? p.postReactions(userId).fetch() : [],
+        myVote: p => userId ? p.userVote(userId).then(v => !!v) : false, // Remove once Mobile has been updated
         myEventResponse: p =>
           userId && p.isEvent() ? p.userEventInvitation(userId)
           .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
@@ -188,6 +189,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { eventInvitations: { querySet: true } },
         'linkPreview',
         'postMemberships',
+        'postReactions',
         {
           media: {
             alias: 'attachments',
@@ -610,15 +612,19 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       relations: [
         'post',
-        {user: {alias: 'creator'}},
-        {childComments: { querySet: true }},
-        {media: {
-          alias: 'attachments',
-          arguments: ({ type }) => [type]
-        }}
+        { user: { alias: 'creator' } },
+        { childComments: { querySet: true } },
+        {
+          media: {
+            alias: 'attachments',
+            arguments: ({ type }) => [type]
+          }
+        }
       ],
       getters: {
-        parentComment: (c) => c.parentComment().fetch()
+        parentComment: (c) => c.parentComment().fetch(),
+        myReactions: c => userId ? c.commentReactions(userId).fetch() : [],
+        commentReactions: c => c.commentReactions().fetch()
       },
       filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true
@@ -678,16 +684,33 @@ export default function makeModels (userId, isAdmin, apiClient) {
       filter: messageFilter(userId)
     },
 
-    Vote: {
-      model: Vote,
+    Reaction: {
+      model: Reaction,
       getters: {
-        createdAt: v => v.get('date_voted')
+        createdAt: r => r.get('date_reacted'),
+        emojiBase: r => r.get('emoji_base'),
+        emojiFull: r => r.get('emoji_full'),
+        emojiLabel: r => r.get('emoji_label'),
+        entityId: r => r.get('entity_id'),
+        entityType: r => r.get('entity_type')
+      },
+      isDefaultTypeForTable: true,
+      relations: [
+        'post',
+        'user'
+      ],
+      filter: nonAdminFilter(reactionFilter('reactions', userId))
+    },
+    Vote: { // TO BE REMOVED ONCE MOBILE IS UPDATED
+      model: Reaction,
+      getters: {
+        createdAt: v => v.get('date_reacted')
       },
       relations: [
         'post',
-        {user: {alias: 'voter'}}
+        { user: { alias: 'voter' } }
       ],
-      filter: nonAdminFilter(voteFilter('votes', userId))
+      filter: nonAdminFilter(reactionFilter('reactions', userId))
     },
 
     GroupTopic: {
