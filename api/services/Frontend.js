@@ -72,7 +72,6 @@ module.exports = {
       let groupUrl = isEmpty(groupSlug) ? '/all' : `/groups/${groupSlug}`
 
       const postId = comment?.relations?.post?.id || post.id
-
       return url(`${groupUrl}/post/${postId}/comments/${comment.id}`)
     },
 
