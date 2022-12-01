@@ -41,7 +41,7 @@ module.exports = bookshelf.Model.extend({
         return Frontend.Route.post(this.get('object_id'), group, isPublic)
       case FlaggedItem.Type.COMMENT:
         const comment = await this.getObject()
-        return Frontend.Route.comment(comment, group, isPublic)
+        return Frontend.Route.comment({ comment, group })
       case FlaggedItem.Type.MEMBER:
         return Frontend.Route.profile(this.get('object_id'))
       default:
