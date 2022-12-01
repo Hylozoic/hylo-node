@@ -137,6 +137,7 @@ describe('group digest v2', () => {
       }
 
       const expected = {
+        chats: [],
         requests: [
           {
             id: 5,
@@ -259,6 +260,7 @@ describe('group digest v2', () => {
 
       const prefix = Frontend.Route.prefix
       expect(formatData(group, data)).to.deep.equal({
+        chats: [],
         offers: [],
         discussions: [],
         requests: [
@@ -284,6 +286,7 @@ describe('group digest v2', () => {
       const data = {posts: [], comments: []}
 
       expect(formatData(group, data)).to.deep.equal({
+        chats: [],
         offers: [],
         requests: [],
         discussions: [],
@@ -433,6 +436,7 @@ describe('group digest v2', () => {
           group_url: Frontend.Route.group(group) + clickthroughParams,
           time_period: 'yesterday',
           subject: `New activity from ${u2.get('name')}`,
+          chats: [],
           requests: [],
           offers: [],
           postsWithNewComments: [],
