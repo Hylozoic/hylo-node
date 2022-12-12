@@ -1773,6 +1773,8 @@ type UserSettings {
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
+  # Include child group posts in user's stream
+  streamChildPosts: String
   # The most recent stream view mode used by this person: cards, list, grid, bigGrid
   streamViewMode: String
   # The most recent stream sort used by this person: updated, created, votes
@@ -2562,6 +2564,8 @@ input UserSettingsInput {
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
+  # Include child group posts in user's stream
+  streamChildPosts: String
   # The most recent stream view mode used by this person: cards, list, grid, bigGrid
   streamViewMode: String
   # The most recent stream sort used by this person: updated, created, votes
