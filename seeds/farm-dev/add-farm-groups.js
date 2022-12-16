@@ -164,10 +164,10 @@ function fakeMembership (user_id, knex) {
 
 function fakePost (knex) {
   const type = ['discussion', 'resource', 'project', 'event', 'offer', 'request'][faker.datatype.number({ min: 0, max: 5 })]
-  let starts_at, ends_at
+  let start_time, end_time
   if (type !== 'discussion') {
-    starts_at = faker.date.soon(faker.datatype.number({ min: 1, max: 20 }))
-    ends_at = faker.date.future(faker.datatype.number({ min: 1, max: 2 }))
+    start_time = faker.date.soon(faker.datatype.number({ min: 1, max: 20 }))
+    end_time = faker.date.future(faker.datatype.number({ min: 1, max: 2 }))
   }
 
   return sampleDB('users', knex.raw('users.email ILIKE \'%@farm-demo.com\''), knex) // select only farm-demo users to create these specific posts for
@@ -180,8 +180,8 @@ function fakePost (knex) {
       active: true,
       visibility: 2,
       is_public: true,
-      starts_at,
-      ends_at
+      start_time,
+      end_time
     }))
 }
 
