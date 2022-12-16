@@ -2,7 +2,6 @@
 
 import data from '@emoji-mart/data'
 import { init, getEmojiDataFromNative } from 'emoji-mart'
-import insane from 'insane'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
 import { TextHelpers } from 'hylo-shared'
@@ -62,6 +61,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   title: function () {
     return this.get('name')
+  },
+
+  // To handle posts without a name/title
+  summary: function () {
+    return this.get('name') || TextHelpers.presentHTMLToText(this.details(), { truncate: 80 })
   },
 
   isPublic: function () {
@@ -627,6 +631,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     Post.find(opts.postId).then(post => post &&
       bookshelf.transaction(trx => post.createActivities(trx))),
 
+  // TODO: remove, unused (??)
   fixTypedPosts: () =>
     bookshelf.transaction(transacting =>
       Tag.whereIn('name', ['request', 'offer', 'resource', 'intention'])
