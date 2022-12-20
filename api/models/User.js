@@ -345,7 +345,6 @@ module.exports = bookshelf.Model.extend(merge({
     if (transacting) {
       q.transacting(transacting)
     }
-    await this.followDefaultTags(group.id, transacting)
     await this.markInvitationsUsed(group.id, transacting)
     return memberships[0]
   },

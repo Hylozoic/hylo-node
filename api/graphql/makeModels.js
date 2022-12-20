@@ -157,6 +157,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       attributes: [
         'accept_contributions',
         'announcement',
+        'commentsTotal',
         'created_at',
         'donations_link',
         'end_time',
@@ -207,6 +208,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         boundingBox,
         collectionToFilterOut,
         context,
+        cursor,
         filter,
         first,
         forCollection,
@@ -227,6 +229,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
           boundingBox,
           collectionToFilterOut,
           currentUserId: userId,
+          cursor,
           forCollection,
           groupSlugs,
           isFulfilled,
@@ -290,13 +293,31 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {parentGroups: {querySet: true}},
         {posts: {
           querySet: true,
-          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, forCollection, filter, isAnnouncement, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+          filter: (relation, {
+            activePostsOnly = false,
+            afterTime,
+            beforeTime,
+            boundingBox,
+            collectionToFilterOut,
+            cursor,
+            forCollection,
+            filter,
+            isAnnouncement,
+            isFulfilled,
+            order,
+            search,
+            sortBy,
+            topic,
+            topics,
+            types
+          }) =>
             relation.query(filterAndSortPosts({
               activePostsOnly,
               afterTime,
               beforeTime,
               boundingBox,
               collectionToFilterOut,
+              cursor,
               forCollection,
               isAnnouncement,
               isFulfilled,
@@ -715,12 +736,13 @@ export default function makeModels (userId, isAdmin, apiClient) {
 
     GroupTopic: {
       model: GroupTag,
-      attributes: ['is_default', 'visibility', 'updated_at', 'created_at'],
+      attributes: ['created_at', 'is_default', 'updated_at', 'visibility', ],
       getters: {
-        postsTotal: ct => ct.postCount(),
-        followersTotal: ct => ct.followerCount(),
-        isSubscribed: ct => ct.isFollowed(userId),
-        newPostCount: ct => ct.newPostCount(userId)
+        postsTotal: gt => gt.postCount(),
+        followersTotal: gt => gt.followerCount(),
+        isSubscribed: gt => gt.isFollowed(userId),
+        lastReadPostId: gt => gt.lastReadPostId(userId),
+        newPostCount: gt => gt.newPostCount(userId)
       },
       relations: [
         'group',

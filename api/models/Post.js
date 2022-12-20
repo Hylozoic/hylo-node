@@ -1,8 +1,10 @@
 /* globals _ */
+
 import data from '@emoji-mart/data'
 import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
+import { TextHelpers } from 'hylo-shared'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -59,6 +61,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   title: function () {
     return this.get('name')
+  },
+
+  // To handle posts without a name/title
+  summary: function () {
+    return this.get('name') || TextHelpers.presentHTMLToText(this.details(), { truncate: 80 })
   },
 
   isPublic: function () {
@@ -225,7 +232,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   // Emulate the graphql request for a post in the feed so the feed can be
-  // updated via socket. Some fields omitted, linkPreview for example.
+  // updated via socket. Some fields omitted.
   // TODO: if we were in a position to avoid duplicating the graphql layer
   // here, that'd be grand.
   getNewPostSocketPayload: function () {
@@ -245,6 +252,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         // Shouldn't have commenters immediately after creation
         commenters: [],
         commentsTotal: 0,
+        details: this.details(),
         groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
         creator,
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'description', 'url' ]),
@@ -490,14 +498,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // Class Methods
 
   Type: {
-    WELCOME: 'welcome',
-    REQUEST: 'request',
-    OFFER: 'offer',
-    RESOURCE: 'resource',
+    CHAT: 'chat',
     DISCUSSION: 'discussion',
     EVENT: 'event',
+    OFFER: 'offer',
     PROJECT: 'project',
-    THREAD: 'thread'
+    REQUEST: 'request',
+    RESOURCE: 'resource',
+    THREAD: 'thread',
+    WELCOME: 'welcome',
   },
 
   // TODO Consider using Visibility property for more granular privacy
@@ -622,6 +631,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     Post.find(opts.postId).then(post => post &&
       bookshelf.transaction(trx => post.createActivities(trx))),
 
+  // TODO: remove, unused (??)
   fixTypedPosts: () =>
     bookshelf.transaction(transacting =>
       Tag.whereIn('name', ['request', 'offer', 'resource', 'intention'])

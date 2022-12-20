@@ -63,14 +63,14 @@ module.exports = bookshelf.Model.extend({
     .then(follow => follow ||
       new TagFollow(attrs).save(null, {transacting})
       .then(async (tf) => {
-        const q = GroupTag.query(q => {
+        const query = GroupTag.query(q => {
           q.where('group_id', groupId)
           q.where('tag_id', tagId)
-        })
+        }).query()
         if (transacting) {
-          q.transacting(transacting)
+          query.transacting(transacting)
         }
-        await q.query().increment('num_followers')
+        await query.increment('num_followers')
         return tf
       })
      )
@@ -87,14 +87,14 @@ module.exports = bookshelf.Model.extend({
     .then(tagFollow => tagFollow &&
       tagFollow.destroy({transacting})
       .then(() => {
-        const q = GroupTag.query(q => {
+        const query = GroupTag.query(q => {
           q.where('group_id', attrs.group_id)
           q.where('tag_id', attrs.tag_id)
-        })
+        }).query()
         if (transacting) {
-          q.transacting(transacting)
+          query.transacting(transacting)
         }
-        return q.query().decrement('num_followers')
+        return query.decrement('num_followers')
       })
     )
   },

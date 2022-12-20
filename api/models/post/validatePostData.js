@@ -2,11 +2,7 @@ const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { includes, isEmpty, trim } from 'lodash'
 
 export default function validatePostData (userId, data) {
-  if (!trim(data.name)) {
-    throw new GraphQLYogaError('title can\'t be blank')
-  }
-
-  const allowedTypes = [Post.Type.REQUEST, Post.Type.OFFER, Post.Type.DISCUSSION, Post.Type.PROJECT, Post.Type.EVENT, Post.Type.RESOURCE]
+  const allowedTypes = [Post.Type.CHAT, Post.Type.REQUEST, Post.Type.OFFER, Post.Type.DISCUSSION, Post.Type.PROJECT, Post.Type.EVENT, Post.Type.RESOURCE]
   if (data.type && !includes(allowedTypes, data.type)) {
     throw new GraphQLYogaError('not a valid type')
   }
