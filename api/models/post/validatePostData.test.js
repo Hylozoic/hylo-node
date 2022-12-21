@@ -16,11 +16,6 @@ describe('validatePostData', () => {
     })
   })
 
-  it('fails if no name is provided', () => {
-    const fn = () => validatePostData(null, {})
-    expect(fn).to.throw(/title can't be blank/)
-  })
-
   it('fails if an invalid type is provided', () => {
     const fn = () => validatePostData(null, {name: 't', type: 'thread'})
     expect(fn).to.throw(/not a valid type/)
@@ -37,11 +32,6 @@ describe('validatePostData', () => {
     .catch(function (e) {
       expect(e.message).to.match(/unable to post to all those groups/)
     })
-  })
-
-  it('fails if a blank name is provided', () => {
-    const fn = () => validatePostData(null, {name: '   ', group_ids: [inGroup.id]})
-    expect(fn).to.throw(/title can't be blank/)
   })
 
   it('fails if there are more than 3 topicNames', () => {

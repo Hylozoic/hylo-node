@@ -142,7 +142,7 @@ export function updateGroupTopic (id, data) {
 }
 
 export function updateGroupTopicFollow (userId, { id, data }) {
-  const whitelist = mapKeys(pick(data, 'newPostCount'), (v, k) => snakeCase(k))
+  const whitelist = mapKeys(pick(data, ['newPostCount', 'lastReadPostId']), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
   return GroupTag.where({id}).fetch()
@@ -301,6 +301,32 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
 
 export function messageGroupModerators (userId, groupId) {
   return Group.messageModerators(userId, groupId)
+}
+
+export function reactOn (userId, entityId, data) {
+  const lookUp = {
+    post: Post,
+    comment: Comment
+  }
+  const { entityType } = data
+  if (!['post', 'comment'].includes(entityType)) {
+    throw new Error('entityType invalid: you need to say its a post or a comment')
+  }
+  return lookUp[entityType].find(entityId)
+    .then(entity => entity.reaction(userId, data))
+}
+
+export function deleteReaction (entityId, userId, data) {
+  const lookUp = {
+    post: Post,
+    comment: Comment
+  }
+  const { entityType } = data
+  if (!['post', 'comment'].includes(entityType)) {
+    throw new Error('entityType invalid: you need to say its a post or a comment')
+  }
+  return lookUp[entityType].find(entityId)
+    .then(entity => entity.deleteReaction(userId, data))
 }
 
 export async function removePost (userId, postId, groupIdOrSlug) {

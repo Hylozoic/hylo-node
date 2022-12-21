@@ -11,17 +11,17 @@ throughout the code.
 let prefix = `${process.env.PROTOCOL}://${process.env.DOMAIN}`
 const isTesting = process.env.NODE_ENV === 'test'
 
-var url = function () {
+const url = function () {
   // allow these values to be changed in individual tests
   if (isTesting) {
     prefix = `${process.env.PROTOCOL}://${process.env.DOMAIN}`
   }
-  var args = Array.prototype.slice.call(arguments)
+  const args = Array.prototype.slice.call(arguments)
   args[0] = prefix + args[0]
   return format.apply(null, args)
 }
 
-var getModelId = function (model) {
+const getModelId = function (model) {
   let id
   // If it's a number, than we just passed the ID in straight
   if (isString(model) || isNumber(model)) {
@@ -33,7 +33,7 @@ var getModelId = function (model) {
   return id
 }
 
-var getSlug = function (group) {
+const getSlug = function (group) {
   let slug
   if (isString(group)) { // In case we passed just the slug in instead of group object
     slug = group
@@ -42,6 +42,17 @@ var getSlug = function (group) {
   }
 
   return slug
+}
+
+const getTopicName = function (topic) {
+  let name
+  if (isString(topic)) { // In case we passed just the name in instead of group object
+    name = topic
+  } else if (topic) {
+    name = topic.name || topic.get('name')
+  }
+
+  return name
 }
 
 module.exports = {
@@ -67,15 +78,12 @@ module.exports = {
 
     root: () => url('/app'),
 
-    comment: function (comment, group) {
-      // TODO: update to use comment specific url when implemented in frontend
-      let groupSlug = getSlug(group)
+    comment: function ({ comment, groupSlug, post }) {
 
       let groupUrl = isEmpty(groupSlug) ? '/all' : `/groups/${groupSlug}`
 
-      const postId = comment.relations.post.id
-
-      return url(`${groupUrl}/post/${postId}`)
+      const postId = comment?.relations?.post?.id || post.id
+      return url(`${groupUrl}/post/${postId}/comments/${comment.id}`)
     },
 
     group: function (group) {
@@ -145,6 +153,10 @@ module.exports = {
 
     thread: function (post) {
       return url(`/messages/${getModelId(post)}`)
+    },
+
+    topic: function (group, topic) {
+      return url(`/groups/${getSlug(group)}/topics/${getTopicName(topic)}`)
     },
 
     unfollow: function (post, group) {

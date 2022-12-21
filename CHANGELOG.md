@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.1.0] - 2022-12-21
+
+### Added
+- New 'chat' type posts for topic based chat rooms.
+- Track the last read post in a topic for each user so we can show new posts in the new topic based chat rooms.
+- Switch from votes to emoji based reactions on posts (votes APIs still in place to support mobile app).
+- Add reactions to comments.
+- Add a #general topic to all groups which is set to be a suggested/default topic and pinned as well. Subscribe all users to the #general topic in every group they are a part of.
+- APIs to decide whether to show child posts in the stream when looking at a group or not.
+- New comment URL that allows for going directly to a comment in a post from a notification.
+
+### Changed
+- Updated digest emails to show chats and improve Sender and Subject. Also switch reply-to email to donotreply@hylo.com.
+- Allow for posts without a title, for chat posts only for now.
+
 ## [5.0.3] - 2022-11-23
 
 ### Fixed

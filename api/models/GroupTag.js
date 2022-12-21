@@ -31,6 +31,11 @@ module.exports = bookshelf.Model.extend({
     return this.tagFollow(userId).count().then(count => Number(count) > 0)
   },
 
+  lastReadPostId: function (userId) {
+    return this.tagFollow(userId).query().select('last_read_post_id')
+      .then(rows => rows.length > 0 ? rows[0].last_read_post_id : null)
+  },
+
   newPostCount: function (userId) {
     return this.tagFollow(userId).query().select('new_post_count')
     .then(rows => rows.length > 0 ? rows[0].new_post_count : 0)

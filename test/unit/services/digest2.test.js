@@ -56,7 +56,7 @@ describe('group digest v2', () => {
             post_id: 5,
             relations: {
               user: u3,
-              post: model({id: 5, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
+              post: model({id: 5, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           }),
           model({
@@ -65,7 +65,7 @@ describe('group digest v2', () => {
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
+              post: model({id: 8, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           }),
           model({
@@ -74,7 +74,7 @@ describe('group digest v2', () => {
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
+              post: model({id: 8, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
             }
           })
 
@@ -83,6 +83,7 @@ describe('group digest v2', () => {
           model({
             id: 5,
             name: 'Do you have a dollar?',
+            summary: () => 'Do you have a dollar?',
             details: () => {},
             type: 'request',
             relations: {
@@ -93,8 +94,10 @@ describe('group digest v2', () => {
             id: 7,
             name: 'Kapow!',
             details: () => {},
+            summary: () => 'Kapow!',
+            type: 'discussion',
             relations: {
-              selectedTags: collection([]),
+              tags: collection([]),
               linkPreview,
               user: u2
             }
@@ -102,6 +105,7 @@ describe('group digest v2', () => {
           model({
             id: 6,
             name: 'I have cookies!',
+            summary: () => 'I have cookies!',
             details: () => {},
             type: 'offer',
             relations: {
@@ -111,10 +115,11 @@ describe('group digest v2', () => {
           model({
             id: 76,
             name: 'An event',
+            summary: () => 'An event',
             details: () => {},
             type: 'event',
             location: 'Home',
-            starts_at: new Date('December 17, 1995 18:30:00'),
+            start_time: new Date('December 17, 1995 18:30:00'),
             relations: {
               user: u2
             }
@@ -122,6 +127,7 @@ describe('group digest v2', () => {
           model({
             id: 77,
             name: 'A project with requests',
+            summary: () => 'A project with requests',
             details: () => {},
             type: 'project',
             relations: {
@@ -132,11 +138,31 @@ describe('group digest v2', () => {
                 model({name: 'and more things'})
               ])
             }
+          }),
+          model({
+            id: 78,
+            name: '',
+            details: () => "A chat!",
+            summary: () => 'A chat!',
+            type: 'chat',
+            relations: {
+              user: u2,
+              tags: collection([
+                model({ name: 'bayarea' })
+              ])
+            }
           })
         ]
       }
 
       const expected = {
+        topicsWithChats: [
+          {
+            name: 'bayarea',
+            num_new_chats: 1,
+            url: Frontend.Route.topic('foo', { name: 'bayarea' })
+          }
+        ],
         requests: [
           {
             id: 5,
@@ -166,7 +192,7 @@ describe('group digest v2', () => {
           }
         ],
         resources: [],
-        conversations: [
+        discussions: [
           {
             id: 7,
             title: 'Kapow!',
@@ -181,7 +207,7 @@ describe('group digest v2', () => {
             id: 76,
             title: 'An event',
             location: 'Home',
-            when: '6pm - December 17, 1995',
+            when: 'December 17, 1995 @ 6:30pm',
             user: u2.attributes,
             url: Frontend.Route.post({id: 76}, group),
             comments: []
@@ -193,12 +219,7 @@ describe('group digest v2', () => {
             title: 'A project with requests',
             user: u2.attributes,
             url: Frontend.Route.post({id: 77}, group),
-            comments: [],
-            requests: [
-              'I need things',
-              'and love',
-              'and more things'
-            ]
+            comments: []
           }
         ],
         postsWithNewComments: [
@@ -245,6 +266,7 @@ describe('group digest v2', () => {
           model({
             id: 1,
             name: 'Foo!',
+            summary: () => `Foo!`,
             details: () => `<p><a href="/groups/foo/members/21" data-id="21" class="mention" target="_blank">Edward West</a> &amp; ` +
             `<a href="/groups/foo/members/16325" data-id="16325" class="mention" target="_blank">Julia Pope</a> ` +
             `<a href="/groups/foo/topics/oakland" data-label="#oakland" class="topic" target="_blank">#oakland</a></p>`,
@@ -260,7 +282,7 @@ describe('group digest v2', () => {
       const prefix = Frontend.Route.prefix
       expect(formatData(group, data)).to.deep.equal({
         offers: [],
-        conversations: [],
+        discussions: [],
         requests: [
           {
             id: 1,
@@ -274,6 +296,7 @@ describe('group digest v2', () => {
           }
         ],
         postsWithNewComments: [],
+        topicsWithChats: [],
         projects: [],
         events: [],
         resources: []
@@ -284,9 +307,10 @@ describe('group digest v2', () => {
       const data = {posts: [], comments: []}
 
       expect(formatData(group, data)).to.deep.equal({
+        topicsWithChats: [],
         offers: [],
         requests: [],
-        conversations: [],
+        discussions: [],
         postsWithNewComments: [],
         projects: [],
         events: [],
@@ -323,7 +347,7 @@ describe('group digest v2', () => {
             url: 'https://www.hylo.com/all/post/1'
           }
         ],
-        conversations: [
+        discussions: [
           {
             id: 2,
             title: 'Ya',
@@ -339,7 +363,7 @@ describe('group digest v2', () => {
         ]
       }
 
-      return personalizeData(user, data).then(newData => {
+      return personalizeData(user, 'daily', data).then(newData => {
         const ctParams = `ctt=digest_email&cti=${user.id}&ctcn=foo`
         expect(newData).to.deep.equal(merge({}, data, {
           offers: [
@@ -351,7 +375,7 @@ describe('group digest v2', () => {
               url: 'https://www.hylo.com/all/post/1?' + ctParams
             }
           ],
-          conversations: [
+          discussions: [
             {
               id: 2,
               title: 'Ya',
@@ -375,7 +399,7 @@ describe('group digest v2', () => {
           reply_action_url: Frontend.Route.emailBatchCommentForm(),
           form_token: Email.formToken(77, user.id),
           tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, group: 'foo'}),
-          subject: `New activity from ${u4.name} and ${u3.name}`,
+          subject: `Hi | ${u4.name}`,
           group_url: 'https://www.hylo.com/groups/foo?' + ctParams
         }))
       })
@@ -384,12 +408,12 @@ describe('group digest v2', () => {
 
   describe('shouldSendData', () => {
     it('is false if the data is empty', () => {
-      const data = {requests: [], offers: [], conversations: []}
+      const data = {requests: [], offers: [], discussions: []}
       return shouldSendData(data).then(val => expect(val).to.be.false)
     })
 
     it('is true if there is some data', () => {
-      const data = {conversations: [{id: 'foo'}]}
+      const data = {discussions: [{id: 'foo'}]}
       return shouldSendData(data).then(val => expect(val).to.be.true)
     })
   })
@@ -409,7 +433,7 @@ describe('group digest v2', () => {
       u2 = await factories.user({avatar_url: 'av2'}).save()
       group = await factories.group({ avatar_url: 'foo' }).save()
 
-      post = await factories.post({created_at: six, user_id: u2.id}).save()
+      post = await factories.post({created_at: six, user_id: u2.id, type: 'discussion'}).save()
       await post.groups().attach(group.id)
       await group.addMembers([u1.id], {
         settings: {sendEmail: true}
@@ -432,22 +456,22 @@ describe('group digest v2', () => {
           group_avatar_url: group.get('avatar_url'),
           group_url: Frontend.Route.group(group) + clickthroughParams,
           time_period: 'yesterday',
-          subject: `New activity from ${u2.get('name')}`,
+          subject: `${post.get('name')} | ${u2.get('name')}`,
           requests: [],
           offers: [],
           postsWithNewComments: [],
+          topicsWithChats: [],
           events: [],
           projects: [],
           resources: [],
-          conversations: [
+          discussions: [
             {
               id: post.id,
               title: post.get('name'),
               reply_url: Email.postReplyAddress(post.id, u1.id),
               url: Frontend.Route.post(post, group) + clickthroughParams,
               user: u2.pick('id', 'avatar_url', 'name'),
-              comments: [],
-              requests: []
+              comments: []
             }
           ],
           recipient: u1.pick('avatar_url', 'name'),
@@ -457,7 +481,7 @@ describe('group digest v2', () => {
           tracking_pixel_url: Analytics.pixelUrl('Digest', {
             userId: u1.id,
             group: group.get('name'),
-            'Email Version': 'Holonic architecture'
+            'Email Version': 'Dec 2022 - With topic chats'
           }),
           email_settings_url: Frontend.Route.userSettings() + clickthroughParams + '&expand=account'
         })

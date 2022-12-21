@@ -191,6 +191,8 @@ type Query {
     collectionToFilterOut: ID,
     # If 'all' only return posts from groups the current logged in user is a member of. If 'public' only return pubic posts
     context: String,
+    # Load posts before or after this ID, depending on sort order
+    cursor: ID,
     # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'request' or 'resource'
     filter: String,
     # Number of posts to return
@@ -207,7 +209,7 @@ type Query {
     order: String,
     # Return posts whose name or description match the search term
     search: String,
-    # One of 'created' (created datetime), 'updated' (last updated datetime), 'votes' (number of votes), 'start_time'
+    # One of 'created' (created datetime), 'updated' (last updated datetime), 'reactions' (number of reactions), 'start_time'
     sortBy: String,
     # Return only posts that have this topic by ID
     topic: ID,
@@ -437,6 +439,12 @@ type Comment {
   post: Post
   # The content of the comment
   text: String
+  # Not used
+  commentReactionsTotal: Int
+  # All reactions on a comment
+  commentReactions: [Reaction]
+  # The reactions of the logged-in user to this
+  myReactions: [Reaction]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -455,7 +463,7 @@ type CustomView {
   collectionId: ID
   # For 'collection' type CustomViews, this is the Collection of posts
   collection: Collection
-  # How to sort a Post stream or Collection by defaut ('created', updated', or 'votes')
+  # How to sort a Post stream or Collection by defaut ('created', updated', or 'reactions')
   defaultSort: String
   # The default style of viewing posts in the view ('cards', 'list', 'bigGrid', 'grid')
   defaultViewMode: String
@@ -720,7 +728,11 @@ type Group {
     boundingBox: [PointInput],
     # Only return posts that are not in this collection
     collectionToFilterOut: ID,
+    # Start loading posts before or after this ID, depending on sort order
+    cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    #  a value of 'all' will include all above post types
+    #  a value of 'chat' will include all above post types + 'chat'
     filter: String,
     # Load this number of posts
     first: Int,
@@ -738,7 +750,7 @@ type Group {
     order: String,
     # Only load posts whose content matches this search string
     search: String,
-    # Sort posts by 'created', 'start_time', 'updated', 'votes'
+    # Sort posts by 'created', 'start_time', 'updated', 'reactions'
     sortBy: String,
     # Only load posts with this topic by topic id
     topic: ID,
@@ -773,6 +785,8 @@ type Group {
     boundingBox: [PointInput],
     # Only return posts that are not in this collection
     collectionToFilterOut: ID,
+    # Return posts before or after this post id, depending on sort order
+    cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts
@@ -789,7 +803,7 @@ type Group {
     order: String,
     # Only load posts whose content matches this search string
     search: String,
-    # Sort posts by 'created', 'start_time', 'updated', 'votes'
+    # Sort posts by 'created', 'start_time', 'reactions', 'updated'
     sortBy: String,
     # Only load posts with this topic by topic id
     topic: ID,
@@ -934,6 +948,8 @@ type GroupTopic {
   isDefault: Boolean
   # Whether the current logged in user is subscribed to this topic in this group
   isSubscribed: Boolean
+  # The most recent post that the user has read in this GroupTopic
+  lastReadPostId: ID
   # The number of new posts in this topic in this group since the current logged in user looked at the stream for this topic/group
   newPostCount: Int
   # Total number of posts using this topic in this group
@@ -1178,7 +1194,7 @@ type Me {
 
   # Hylo Group memberships
   groups(
-    # Start loading groups at this index
+    # Start loading groups at this group id
     cursor: ID,
     # Load this number of groups
     first: Int,
@@ -1197,7 +1213,7 @@ type Me {
 
   # Hylo Group memberships
   memberships(
-    # Start loading memberships at this index
+    # Start loading memberships at this id
     cursor: ID,
     # Load this number of memberships
     first: Int,
@@ -1219,7 +1235,7 @@ type Me {
 
   # The set of Posts the logged in user has created
   posts(
-    # Start loading posts at this index
+    # Start loading posts at this post id
     cursor: ID,
     # Load this number of posts
     first: Int,
@@ -1237,7 +1253,7 @@ type Me {
 
   # The set of Skills the logged in user want to learn
   skillsToLearn(
-    # Start loading skills after this id
+    # Start loading skills after this ID
     cursor: ID,
     # Number of skills to load
     first: Int
@@ -1377,8 +1393,6 @@ type Person {
   twitterName: String
   # A website URL this person has added to their profile
   url: String
-  # Total number of upvotes this person has made on posts
-  votesTotal: Int
 
   # Organizational affiliations that are not Hylo Groups
   affiliations: AffiliationQuerySet
@@ -1395,7 +1409,7 @@ type Person {
   eventsAttending: PostQuerySet
   # The set of Group Memberships this person has (that are visible to logged in user)
   memberships(
-    # Start loading memberships at this index
+    # Start loading memberships at this ID
     cursor: ID,
     # Load this number of memberships
     first: Int,
@@ -1418,6 +1432,8 @@ type Person {
     collectionToFilterOut: ID,
     # Only return posts within this context: 'public' = only return posts set to Public. 'all' = only return posts within a group that the current logged in user is a member of
     context: String,
+    # Start loading posts before or after this ID, depending on sort order
+    cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
     filter: String,
     # Load this number of posts
@@ -1432,9 +1448,10 @@ type Person {
     offset: Int,
     # Determines sort order, either 'ASC' or 'DESC'
     order: String,
+
     # Only load posts whose content matches this search string
     search: String,
-    # Sort posts by 'created', 'start_time', 'updated', 'votes'
+    # Sort posts by 'created', 'start_time', 'reactions', 'updated'
     sortBy: String,
     # Only load posts with this topic by topic id
     topic: ID,
@@ -1447,13 +1464,16 @@ type Person {
   # Project posts that this person is a member of
   projects: PostQuerySet
 
+  # This person's reactions
+  reactions(first: Int, offset: Int, order: String): ReactionQuerySet
+
   # The set of Skills this person has added to their profile
   skills(first: Int, cursor: ID): SkillQuerySet
 
   # The set of Skills this person want to learn
   skillsToLearn(first: Int, cursor: ID): SkillQuerySet
 
-  # Upvotes on posts that this person has made
+  # Upvotes on posts that this person has made. DEPRECATED, use reactions instead
   votes(first: Int, offset: Int, order: String): VoteQuerySet
 }
 
@@ -1517,8 +1537,14 @@ type Post {
   locationObject: Location
   # Logged in user's attendance response to an event post: 'yes', 'maybe' or 'no'
   myEventResponse: String
-  # Whether the logged in user has upvoted the post or not
+  # The reactions of the logged-in user to this
+  myReactions: [Reaction]
+  # Whether the logged-in user has upvoted the post or not
   myVote: Boolean
+  # Number of people that have one or more reactions to a post
+  peopleReactedTotal: Int
+  # Number of total reactions on the post
+  postReactionsTotal: Int
   # Number of total "members" of the post. Used for Projects only right now
   postMembershipsTotal: Int
   # Link to a project management tool or service. Only used for Projects right now
@@ -1534,7 +1560,7 @@ type Post {
   # Post type: 'discussion', 'event', 'offer', 'project', 'request', or 'resource'
   type: String
   updatedAt: Date
-  # Number of upvotes on the post
+  # Number of upvotes on the post. DEPRECATED
   votesTotal: Int
 
   # The attachments (images, videos or files) added to the post
@@ -1567,6 +1593,9 @@ type Post {
   # The post's "memberships" in the groups it has been posted in
   postMemberships: [PostMembership]
 
+  # reactions to this post
+  postReactions: [Reaction]
+
   # The topics that have been added to this post
   topics: [Topic]
 }
@@ -1587,7 +1616,7 @@ type PostMembership {
   pinned: Boolean
 }
 
-# Relationship of a user to a post, indicating "following the post". Created when a user comments on or upvotes a post
+# Relationship of a user to a post, indicating "following the post". Created when a user comments on or reacts to a post
 type PostUser {
   id: ID
   post: Post
@@ -1605,6 +1634,38 @@ type Question {
   id: Int
   # The question content
   text: String
+}
+
+# Emoji reactions to posts and comments
+type Reaction {
+  # when the reaction happened
+  createdAt: Date
+  # Just the basic emoji, no modifiers. UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
+  emojiBase: String
+  # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
+  emojiFull: String
+  # The EN locale string for an emoji, like :thumbs_up:
+  emojiLabel: String
+  # id for the entity associated with the reactions
+  entityId: ID
+  # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
+  entityType: String
+  # id for the reaction
+  id: ID
+  # id for the user who reacted
+  userId: ID
+
+  # The post associated with a reaction
+  post: Post
+  # The user associated with a reaction
+  user: Person
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ReactionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Reaction]
 }
 
 # A saved set of search/filter parameters for the map that can be reloaded later by a user
@@ -1723,15 +1784,17 @@ type UserSettings {
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
+  # Include child group posts in user's stream
+  streamChildPosts: String
   # The most recent stream view mode used by this person: cards, list, grid, bigGrid
   streamViewMode: String
-  # The most recent stream sort used by this person: updated, created, votes
+  # The most recent stream sort used by this person: updated, created, reactions
   streamSortBy: String
   # The most recent stream post type filter used by this person
   streamPostType: String
 }
 
-# An upvote on a post
+# An upvote on a post. DEPRECATED
 type Vote {
   id: ID
   createdAt: Date
@@ -1840,6 +1903,8 @@ type Mutation {
   deletePost(id: ID): GenericResult
   # Remove a person as a member from a project Post
   deleteProjectRole(id: ID): GenericResult
+  # Delete a reaction you created
+  deleteReaction(entityId: ID, data: ReactionInput): Post
   # Delete a SavedSearch you created
   deleteSavedSearch(id: ID): ID
   # Set an invitation to join a group as expired. Only a group moderator can call this.
@@ -1880,6 +1945,8 @@ type Mutation {
   pinPost(postId: ID, groupId: ID): GenericResult
   # NOT USED RIGHT NOW
   processStripeToken(postId: ID, token: String, amount: Int): GenericResult
+  # react to a post or comment
+  reactOn(entityId: ID, data: ReactionInput): Post
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
   # Regenerate the invite URL used to invite people to a Group. Only a group moderator can call this.
@@ -1989,7 +2056,7 @@ type Mutation {
     # For verifying by clicking on a URL, the unique verification token
     token: String
   ): SignupResult
-  # Upvote a post, or remove upvote
+  # Upvote a post, or remove upvote. DEPRECATED, use reactOn instead
   vote(postId: ID, isUpvote: Boolean): Post
 }
 
@@ -2109,7 +2176,7 @@ input CustomViewInput {
   activePostsOnly: Boolean
   # ID of a Collection for 'collection type' views
   collectionId: ID
-  # How to sort a Post stream or Collection by defaut ('created', updated', or 'votes')
+  # How to sort a Post stream or Collection by defaut ('created', 'reactions', or 'updated')
   defaultSort: String
   # The default style of viewing posts in the view ('cards', 'list', 'bigGrid', 'grid')
   defaultViewMode: String
@@ -2260,6 +2327,8 @@ input GroupTopicInput {
 
 # Data related to a Person following a Topic in a Group
 input GroupTopicFollowInput {
+  # The most recent post that the user has read in this GroupTopic
+  lastReadPostId: ID
   # Set the count of new posts with this Topic in the Group since the Person last looked a the Topic stream
   newPostCount: Int
 }
@@ -2461,6 +2530,18 @@ input QuestionAnswerInput {
   questionId: Int
 }
 
+# Inputs for emoji reactions to posts and comments
+input ReactionInput {
+  # when the reaction happened
+  createdAt: Date
+  # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
+  emojiFull: String
+  # id for the entity associated with the reactions
+  entityId: ID
+  # What type of entity a reaction is associated with. Currently only 'post' or 'comment'
+  entityType: String
+}
+
 # A SavedSearch on the Map
 input SavedSearchInput {
   # The geographic bounding box
@@ -2496,9 +2577,11 @@ input UserSettingsInput {
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
+  # Include child group posts in user's stream
+  streamChildPosts: String
   # The most recent stream view mode used by this person: cards, list, grid, bigGrid
   streamViewMode: String
-  # The most recent stream sort used by this person: updated, created, votes
+  # The most recent stream sort used by this person: 'created', 'reactions', or 'updated'
   streamSortBy: String
   # The most recent stream post type filter used by this person
   streamPostType: String

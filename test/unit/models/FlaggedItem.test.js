@@ -183,7 +183,8 @@ describe('FlaggedItem', () => {
         link: 'www.hylo.com/post/1'
       })
       const link = await flaggedItem.getContentLink(group)
-      expect(link).to.equal(Frontend.Route.post(commentParent.id, group))
+
+      expect(link).to.equal(Frontend.Route.comment({ post: commentParent, group, comment }))
     })
 
     it('throws an error when object_type is bad', () => {

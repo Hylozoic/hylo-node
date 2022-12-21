@@ -1,6 +1,10 @@
 /* globals _ */
+
+import data from '@emoji-mart/data'
+import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
+import { TextHelpers } from 'hylo-shared'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -9,6 +13,8 @@ import { refineMany, refineOne } from './util/relations'
 import ProjectMixin from './project/mixin'
 import EventMixin from './event/mixin'
 import * as RichText from '../services/RichText'
+
+init({ data })
 
 export const POSTS_USERS_ATTR_UPDATE_WHITELIST = [
   'project_role_id',
@@ -57,6 +63,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('name')
   },
 
+  // To handle posts without a name/title
+  summary: function () {
+    return this.get('name') || TextHelpers.presentHTMLToText(this.details(), { truncate: 80 })
+  },
+
   isPublic: function () {
     return this.get('is_public')
   },
@@ -73,8 +84,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('num_comments')
   },
 
+  peopleReactedTotal: function () {
+    return this.get('num_people_reacts')
+  },
+
   votesTotal: function () {
-    return this.get('num_votes')
+    return this.get('num_people_reacts')
   },
 
   // Relations
@@ -159,7 +174,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // should only be one of these per post
   selectedTags: function () {
     return this.belongsToMany(Tag).through(PostTag).withPivot('selected')
-    .query({where: {selected: true}})
+      .query({ where: { selected: true } })
   },
 
   tags: function () {
@@ -170,18 +185,24 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
+  postReactions: function (userId) {
+    return userId
+      ? this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'post', 'reactions.user_id': userId })
+      : this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
+  },
+
   userVote: function (userId) {
-    return this.votes().query({where: {user_id: userId}}).fetchOne()
+    return this.votes().query({ where: { user_id: userId, entity_type: 'post' } }).fetchOne()
   },
 
   votes: function () {
-    return this.hasMany(Vote)
+    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
   },
 
   // TODO: this is confusing and we are not using, remove for now?
   children: function () {
     return this.hasMany(Post, 'parent_post_id')
-    .query({where: {active: true}})
+    .query({ where: { active: true } })
   },
 
   parent: function () {
@@ -211,7 +232,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   // Emulate the graphql request for a post in the feed so the feed can be
-  // updated via socket. Some fields omitted, linkPreview for example.
+  // updated via socket. Some fields omitted.
   // TODO: if we were in a position to avoid duplicating the graphql layer
   // here, that'd be grand.
   getNewPostSocketPayload: function () {
@@ -224,13 +245,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Object.assign({},
       refineOne(
         this,
-        [ 'created_at', 'description', 'id', 'name', 'num_votes', 'type', 'updated_at' ],
-        { 'description': 'details', 'name': 'title', 'num_votes': 'votesTotal' }
+        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'type', 'updated_at', 'num_votes'],
+        { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotal', num_votes: 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation
         commenters: [],
         commentsTotal: 0,
+        details: this.details(),
         groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
         creator,
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'description', 'url' ]),
@@ -357,7 +379,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       reader_id: eventInvitation.get('user_id'),
       post_id: this.id,
       actor_id: eventInvitation.get('inviter_id'),
-      reason: `eventInvitation`
+      reason: 'eventInvitation'
     }))
 
     let members = await Promise.all(groups.map(async group => {
@@ -396,21 +418,76 @@ module.exports = bookshelf.Model.extend(Object.assign({
   fulfill,
 
   unfulfill,
-
+  // TODO: Need to remove this once mobile has been updated
   vote: function (userId, isUpvote) {
-    return this.votes().query({where: {user_id: userId}}).fetchOne()
-    .then(vote => bookshelf.transaction(trx => {
-      var inc = delta => () =>
-        this.save({num_votes: this.get('num_votes') + delta}, {transacting: trx})
+    return this.postReactions().query({ where: { user_id: userId, emoji_full: '\uD83D\uDC4D' } }).fetchOne()
+      .then(reaction => bookshelf.transaction(trx => {
+        const inc = delta => async () => {
+          const reactionsSummary = await this.get('reactions_summary')
+          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions_summary: { ...reactionsSummary, '\uD83D\uDC4D': reactionsSummary['\uD83D\uDC4D'] + delta } })
+        }
 
-      return (vote && !isUpvote
-        ? vote.destroy({transacting: trx}).then(inc(-1))
-        : isUpvote && new Vote({
-          post_id: this.id,
-          user_id: userId
-        }).save().then(inc(1)))
-    }))
-    .then(() => this)
+        return (reaction && !isUpvote
+          ? reaction.destroy({ transacting: trx }).then(inc(-1))
+          : isUpvote && new Reaction({
+            entity_id: this.id,
+            user_id: userId,
+            emoji_base: '\uD83D\uDC4D',
+            emoji_full: '\uD83D\uDC4D',
+            entity_type: 'post',
+            emoji_label: ':thumbs up:'
+          }).save().then(inc(1)))
+      }))
+      .then(() => this)
+  },
+
+  deleteReaction: function (userId, data) {
+    return this.postReactions(userId).fetch()
+      .then(userReactionsModels => bookshelf.transaction(async trx => {
+        const userReactions = userReactionsModels.models
+        const isLastReaction = userReactions.length === 1
+        const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === data.emojiFull)[0]
+        const { emojiFull } = data
+
+        const cleanUp = () => {
+          const reactionsSummary = this.get('reactions_summary')
+          const reactionCount = reactionsSummary[emojiFull] || 0
+          if (isLastReaction) {
+            return this.save({ num_people_reacts: this.get('num_people_reacts') - 1, reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+          } else {
+            const reactionsSummary = this.get('reactions_summary')
+            return this.save({ reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+          }
+        }
+
+        return userReaction.destroy({ transacting: trx })
+          .then(cleanUp)
+      }))
+  },
+
+  reaction: function (userId, data) {
+    return this.postReactions(userId).fetch()
+      .then(userReactions => bookshelf.transaction(async trx => {
+
+        const delta = userReactions?.models?.length > 0 ? 0 : 1
+        const reactionsSummary = this.get('reactions_summary') || {}
+        const { emojiFull } = data
+        const emojiObject = await getEmojiDataFromNative(emojiFull)
+        const reactionCount = reactionsSummary[emojiFull] || 0
+        const inc = () => {
+          return this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount + delta } }, { transacting: trx })
+        }
+
+        return new Reaction({
+          entity_id: this.id,
+          user_id: userId,
+          emoji_base: emojiFull,
+          emoji_full: emojiFull,
+          entity_type: 'post',
+          emoji_label: emojiObject.shortcodes
+        }).save().then(inc())
+      }))
+      .then(() => this)
   },
 
   removeFromGroup: function (idOrSlug) {
@@ -421,14 +498,15 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // Class Methods
 
   Type: {
-    WELCOME: 'welcome',
-    REQUEST: 'request',
-    OFFER: 'offer',
-    RESOURCE: 'resource',
+    CHAT: 'chat',
     DISCUSSION: 'discussion',
     EVENT: 'event',
+    OFFER: 'offer',
     PROJECT: 'project',
-    THREAD: 'thread'
+    REQUEST: 'request',
+    RESOURCE: 'resource',
+    THREAD: 'thread',
+    WELCOME: 'welcome',
   },
 
   // TODO Consider using Visibility property for more granular privacy
@@ -506,7 +584,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     updated_at: new Date(),
     active: true,
     num_comments: 0,
-    num_votes: 0
+    num_people_reacts: 0
   }),
 
   create: function (attrs, opts) {
@@ -553,6 +631,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     Post.find(opts.postId).then(post => post &&
       bookshelf.transaction(trx => post.createActivities(trx))),
 
+  // TODO: remove, unused (??)
   fixTypedPosts: () =>
     bookshelf.transaction(transacting =>
       Tag.whereIn('name', ['request', 'offer', 'resource', 'intention'])
