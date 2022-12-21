@@ -5,7 +5,7 @@
   "author": "Tibet Sprague <tibet@hylo.com>",
   "license": "GNU AFFERO GENERAL PUBLIC LICENSE v3",
   "private": true,
-  "version": "5.0.3",
+  "version": "5.1.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/Hylozoic/hylo-node.git"
