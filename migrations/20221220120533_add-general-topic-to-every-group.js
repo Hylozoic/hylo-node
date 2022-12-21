@@ -11,9 +11,9 @@ exports.up = async function (knex) {
     const groupId = parseInt(row.id)
     const numMembers = parseInt(row.num_members)
     let query = `INSERT INTO groups_tags (group_id, tag_id, is_default, visibility, num_followers, created_at, updated_at)
-                 VALUES (${groupId}, ${tagId}, true, 1, ${numMembers}, current_timestamp, current_timestamp)
+                 VALUES (${groupId}, ${tagId}, true, 2, ${numMembers}, current_timestamp, current_timestamp)
                  ON CONFLICT (group_id, tag_id)
-                 DO UPDATE set num_followers = ${numMembers}, is_default = true, updated_at = current_timestamp;`
+                 DO UPDATE set num_followers = ${numMembers}, is_default = true, visibility = 2, updated_at = current_timestamp;`
     await knex.raw(query)
   })
 
