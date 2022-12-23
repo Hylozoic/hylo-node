@@ -26,7 +26,7 @@ export const groupFilter = userId => relation => {
     if (!userId) {
       q.where('groups.visibility', Group.Visibility.PUBLIC)
       // Only show groups that are allowed to be show in public
-      q.andWhere('allow_in_public', true)
+      q.andWhere('groups.allow_in_public', true)
     } else {
       // the effect of using `where` like this is to wrap everything within its
       // callback in parentheses -- this is necessary to keep `or` from "leaking"
@@ -54,7 +54,7 @@ export const groupFilter = userId => relation => {
         q2.orWhere(q5 => {
           q5.where('groups.visibility', Group.Visibility.PUBLIC)
           // Only show groups that are allowed to be show in public
-          q5.andWhere('allow_in_public', true)
+          q5.andWhere('groups.allow_in_public', true)
         })
       })
     }
@@ -162,12 +162,13 @@ export const postFilter = (userId, isAdmin) => relation => {
   })
 }
 
-// Only can see votes from active posts that are public or are in a group that the person is a member of
-export const voteFilter = userId => relation => {
+// Only can see reactions from active posts that are public or are in a group that the person is a member of
+export const reactionFilter = userId => relation => {
   return relation.query(q => {
-    q.join('groups_posts', 'votes.post_id', 'groups_posts.post_id')
+    q.join('groups_posts', 'reactions.entity_id', 'groups_posts.post_id')
     q.join('posts', 'posts.id', 'groups_posts.post_id')
     q.where('posts.active', true)
+    q.andWhere('reactions.entity_type', 'post')
     q.andWhere(q2 => {
       const selectIdsForMember = Group.selectIdsForMember(userId)
       q.whereIn('groups_posts.group_id', selectIdsForMember)
@@ -175,4 +176,3 @@ export const voteFilter = userId => relation => {
     })
   })
 }
-

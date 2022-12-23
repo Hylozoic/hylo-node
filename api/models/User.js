@@ -188,8 +188,8 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(StripeAccount)
   },
 
-  votes: function () {
-    return this.hasMany(Vote)
+  reactions: function () {
+    return this.hasMany(Reaction)
   },
 
   postUsers: function () {
@@ -298,7 +298,7 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM user_external_data WHERE user_id = ${this.id};
     DELETE FROM user_post_relevance WHERE user_id = ${this.id};
     DELETE FROM posts_tags WHERE post_id in (select id from posts WHERE user_id = ${this.id});
-    DELETE FROM votes WHERE user_id = ${this.id};
+    DELETE FROM reactions WHERE user_id = ${this.id};
 
     UPDATE users SET 
     active = false, 
@@ -345,7 +345,6 @@ module.exports = bookshelf.Model.extend(merge({
     if (transacting) {
       q.transacting(transacting)
     }
-    await this.followDefaultTags(group.id, transacting)
     await this.markInvitationsUsed(group.id, transacting)
     return memberships[0]
   },

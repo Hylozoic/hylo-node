@@ -1,7 +1,11 @@
+import data from '@emoji-mart/data'
+import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { TextHelpers } from 'hylo-shared'
 import { notifyAboutMessage, sendDigests } from './comment/notifications'
 import EnsureLoad from './mixins/EnsureLoad'
 import * as RichText from '../services/RichText'
+
+init({ data })
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'comments',
@@ -33,6 +37,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.relations.post.relations.groups.first()
   },
 
+  commentReactions: function (userId) {
+    return userId
+      ? this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'comment', 'reactions.user_id': userId })
+      : this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'comment')
+  },
+
   tags: function () {
     return this.belongsToMany(Tag).through(CommentTag)
   },
@@ -43,6 +53,31 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   parentComment: function () {
     return this.belongsTo(Comment).where('comments.active', true)
+  },
+
+  deleteReaction: function (userId, data) {
+    return this.commentReactions(userId).fetch()
+      .then(userReactionsModels => bookshelf.transaction(async trx => {
+        const userReactions = userReactionsModels.models
+        const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === data.emojiFull)[0]
+
+        return userReaction.destroy({ transacting: trx })
+      }))
+  },
+
+  reaction: async function (userId, data) {
+    const { emojiFull } = data
+    const emojiObject = await getEmojiDataFromNative(emojiFull)
+
+    return new Reaction({
+      entity_id: this.id,
+      user_id: userId,
+      emoji_base: emojiFull,
+      emoji_full: emojiFull,
+      entity_type: 'comment',
+      emoji_label: emojiObject.shortcodes
+    }).save()
+      .then(() => this)
   },
 
   childComments: function () {

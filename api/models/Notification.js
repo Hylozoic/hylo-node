@@ -384,7 +384,7 @@ module.exports = bookshelf.Model.extend({
             Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
           post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
           post_title: decode(post.get('name')),
-          post_type: 'conversation',
+          post_type: post.get('type'),
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
@@ -437,7 +437,7 @@ module.exports = bookshelf.Model.extend({
           post_label: postLabel,
           post_title: title,
           comment_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post, group) + '?ctt=comment_email&cti=' + reader.id + `#comment-${comment.id}`),
+            Frontend.Route.comment({ comment, groupSlug: group.get('slug'), post })),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.unfollow(post, group)),
           tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})

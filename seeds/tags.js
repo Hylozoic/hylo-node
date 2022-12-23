@@ -5,6 +5,7 @@ exports.seed = function (knex, Promise) {
     .then(() => knex('tags').insert([
       {name: 'offer'},
       {name: 'request'},
-      {name: 'intention'}
+      {name: 'intention'},
+      {name: 'general'}
     ]))
 }

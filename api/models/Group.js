@@ -225,6 +225,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Skill, 'groups_suggested_skills')
   },
 
+  tags () {
+    return this.belongsToMany(Tag).through(GroupTag).withPivot(['is_default'])
+  },
+
   // The posts to show for a particular user viewing a group's stream or map
   // includes the direct posts to this group + posts to child groups the user is a member of
   viewPosts (userId) {
@@ -300,6 +304,8 @@ module.exports = bookshelf.Model.extend(merge({
     const updatedMemberships = await this.updateMembers(existingUserIds, updatedAttribs, { transacting })
     const newMemberships = []
 
+    const defaultTagIds = (await GroupTag.defaults(this.id, transacting)).models.map(t => t.get('tag_id'))
+
     for (let id of newUserIds) {
       const membership = await this.memberships().create(
         Object.assign({}, updatedAttribs, {
@@ -307,6 +313,8 @@ module.exports = bookshelf.Model.extend(merge({
           created_at: new Date()
         }), { transacting })
       newMemberships.push(membership)
+      // Subscribe each user to the default tags in the group
+      await User.followTags(id, this.id, defaultTagIds, transacting)
     }
 
     // Increment num_members

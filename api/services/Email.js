@@ -28,7 +28,7 @@ const sendEmailWithOptions = curry((templateId, opts) =>
     recipient: {address: opts.email},
     email_data: opts.data,
     version_name: opts.version,
-    sender: opts.sender, // expects {name, address}
+    sender: opts.sender, // expects {name, reply_to}
     files: opts.files
   })))
 
