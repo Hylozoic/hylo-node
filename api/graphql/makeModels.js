@@ -740,8 +740,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
       getters: {
         postsTotal: gt => gt.postCount(),
         followersTotal: gt => gt.followerCount(),
-        isSubscribed: gt => gt.isFollowed(userId),
-        lastReadPostId: gt => gt.lastReadPostId(userId),
+        isSubscribed: gt => userId ? gt.isFollowed(userId) : null,
+        lastReadPostId: gt => userId ? gt.lastReadPostId(userId) : null,
         newPostCount: gt => gt.newPostCount(userId)
       },
       relations: [

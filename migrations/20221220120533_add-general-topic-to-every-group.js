@@ -9,7 +9,7 @@ exports.up = async function (knex) {
 
   groups.rows.forEach(async (row) => {
     const groupId = parseInt(row.id)
-    const numMembers = parseInt(row.num_members)
+    const numMembers = parseInt(row.num_members || 0)
     let query = `INSERT INTO groups_tags (group_id, tag_id, is_default, visibility, num_followers, created_at, updated_at)
                  VALUES (${groupId}, ${tagId}, true, 2, ${numMembers}, current_timestamp, current_timestamp)
                  ON CONFLICT (group_id, tag_id)
