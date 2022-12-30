@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.1.2] - 2022-12-29
+
+### Fixed
+- Comment notification emails for comments on chat posts (posts without a title). This hopefully also fixes issue where people were seeing duplicate comment notification emails about the same comments.
+
 ## [5.1.1] - 2022-12-23
 
 ### Fixed
