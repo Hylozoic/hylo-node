@@ -41,12 +41,23 @@ module.exports = function (app) {
 
         'POST /noo/oidc/:uid/login': async (req, res, next) => {
           try {
-            const { uid, prompt, params } = await oidc.interactionDetails(req, res)
+            const details = await oidc.interactionDetails(req, res)
+            const { uid, prompt, params } = details
+
             if (prompt.name !== 'login') return res.status(403).send({ error: "Invalid request, please start over" })
 
             const client = await oidc.Client.find(params.client_id)
 
-            const user = await User.authenticate(req.body.email, req.body.password)
+            let user
+
+            // Check if user is already logged in by session
+            const userId = req.session?.userId
+            if (userId) {
+              user = await User.find(userId)
+            } else {
+              // Otherwise try to log user in
+              user = await User.authenticate(req.body.email, req.body.password)
+            }
 
             const result = {
               login: { accountId: user.id },

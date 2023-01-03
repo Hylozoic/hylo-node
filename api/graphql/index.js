@@ -139,7 +139,7 @@ function createSchema (expressContext) {
   if (api_client) {
     // TODO: check scope here, just api:write, just api_read, or both?
     allResolvers = {
-      Query: makeApiQueries(fetchOne),
+      Query: makeApiQueries(fetchOne, fetchMany),
       Mutation: makeApiMutations()
     }
   } else if (!userId) {
@@ -469,10 +469,13 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
   }
 }
 
-export function makeApiQueries (fetchOne) {
+export function makeApiQueries (fetchOne, fetchMany) {
   return {
     // you can specify id or slug, but not both
     group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id'),
+
+    groups: (root, args) => fetchMany('Group', args),
+
     // you can query by id or email, with id taking preference
     person: (root, { id, email }) => fetchOne('Person', email || id, email ? 'email' : 'id')
   }
