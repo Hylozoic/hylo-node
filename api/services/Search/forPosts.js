@@ -75,7 +75,6 @@ export default function forPosts (opts) {
       qb.whereIn('comments.user_id', opts.interactedWithBy)
       qb.orWhereIn('reactions.user_id', opts.interactedWithBy)
       qb.orWhereIn('comments.id', subquery)
-      //
     }
 
     if (opts.mentionsOf){
