@@ -28,11 +28,11 @@ module.exports = async (req, res, next) => {
       const accessToken = await (new OIDCAdapter("AccessToken")).find(token)
       console.log("got access token", accessToken, accessToken?.exp)
       const expiresAt = accessToken && new Date(accessToken.exp * 1000)
-      console.log("expires", expiresAt)
+      console.log("expires", expiresAt, Date.now(), expiresAt > Date.now())
       if (expiresAt && expiresAt > Date.now()) {
         clientId = accessToken.clientId
         const client = await (new OIDCAdapter("Client")).find(clientId)
-        if (!client || client.role !== 'super') {
+        if (!client) {
           return res.status(403).json({ error: 'Unauthorized' })
         }
         console.log("client, ", client)

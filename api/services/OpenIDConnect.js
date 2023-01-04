@@ -74,7 +74,7 @@ const configuration = {
       getResourceServerInfo: async (ctx, resourceIndicator, client) => {
         return {
           // Super clients get write access
-          scope: 'api:read' + (client.role.includes("super") ? ' api:write' : ''),
+          scope: 'api:read' + (client.role?.includes("super") ? ' api:write' : ''),
           audience: resourceIndicator,
           accessTokenTTL: 2 * 60 * 60, // 2 hours
           accessTokenFormat: 'jwt',
