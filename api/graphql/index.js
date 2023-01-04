@@ -136,19 +136,9 @@ function createSchema (expressContext) {
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   let allResolvers
-  if (api_client) {
-    // TODO: check scope here, just api:write, just api_read, or both?
-    allResolvers = {
-      Query: makeApiQueries(fetchOne, fetchMany),
-      Mutation: makeApiMutations()
-    }
-  } else if (!userId) {
-    allResolvers = {
-      Query: makePublicQueries(userId, fetchOne, fetchMany),
-      Mutation: makePublicMutations(expressContext, fetchOne)
-    }
-  } else {
+  if (userId) {
     // authenticated users
+    // TODO: look for api_client.scope to see what they are allowed to access
 
     allResolvers = {
       Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
@@ -168,6 +158,18 @@ function createSchema (expressContext) {
           return getTypeForInstance(data, models)
         }
       }
+    }
+  } else if (api_client) {
+    // TODO: check scope here, just api:write, just api:read, or both?
+    allResolvers = {
+      Query: makeApiQueries(fetchOne, fetchMany),
+      Mutation: makeApiMutations()
+    }
+  } else {
+    // Not authenticated, only allow for public queries
+    allResolvers = {
+      Query: makePublicQueries(userId, fetchOne, fetchMany),
+      Mutation: makePublicMutations(expressContext, fetchOne)
     }
   }
 
