@@ -7,6 +7,7 @@ module.exports = async (req, res, next) => {
   let clientId
   if (match) {
     const token = match[1]
+    console.log("got token, ", token)
     try {
       // Look for a JWT for client_credentials flow for API clients
       const decoded = decodeHyloJWT(token)
