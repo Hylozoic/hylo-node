@@ -118,7 +118,7 @@ const configuration = {
         </div>
       </body>
       </html>`;
-  }
+  },
   routes: {
     authorization: '/auth',
     backchannel_authentication: '/backchannel',
