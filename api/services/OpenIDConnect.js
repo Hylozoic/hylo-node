@@ -68,11 +68,14 @@ const configuration = {
     // Turning on resource indicators also needed for machine to machine API access
     resourceIndicators: {
       enabled: true,
+      defaultResource: (ctx, client, oneOf) => {
+        return process.env.PROTOCOL + '://' + process.env.DOMAIN
+      },
       getResourceServerInfo: async (ctx, resourceIndicator, client) => {
         return {
           // Super clients get write access
           scope: 'api:read' + (client.role.includes("super") ? ' api:write' : ''),
-          audience: process.env.PROTOCOL + '://' + process.env.DOMAIN,
+          audience: resourceIndicator,
           accessTokenTTL: 2 * 60 * 60, // 2 hours
           accessTokenFormat: 'jwt',
           jwt: {
