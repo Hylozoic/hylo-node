@@ -21,10 +21,11 @@ module.exports = function (app) {
             const client = await oidc.Client.find(params.client_id)
 
             if (prompt.name === 'login') {
+              console.log("login interaction, redirecting to /oauth/login/", details)
               return res.redirect('/oauth/login/' + uid + '?name=' + client['name'])
             }
 
-            console.log("interaction", details, " prompt = ", prompt, uid, params)
+            console.log("non-login interactionxx", details)
 
             // TODO: could be called authorize?
             let redirectUrl = '/oauth/consent/' + uid + '?name=' + client['name']
@@ -79,7 +80,7 @@ module.exports = function (app) {
             const interactionDetails = await oidc.interactionDetails(req, res)
             const { prompt: { name, details }, params, session: { accountId } } = interactionDetails
 
-            console.log("confirmmm", interactionDetails, " name = ", name, details, params, accountId)
+            console.log("confirmmm/consent interaction2", interactionDetails, " name = ", name, details, params, accountId)
             if (name !== 'consent') return res.status(500).send({ error: "Invalid Request" })
 
             let { grantId } = interactionDetails
