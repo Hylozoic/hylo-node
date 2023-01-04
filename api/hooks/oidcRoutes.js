@@ -82,7 +82,7 @@ module.exports = function (app) {
             const interactionDetails = await oidc.interactionDetails(req, res)
             const { prompt: { name, details }, params, session: { accountId } } = interactionDetails
 
-            console.log("confirmmm/consent interaction2", interactionDetails, " name = ", name, details, params, accountId)
+            console.error("confirmmm/consent interaction2", interactionDetails, " name = ", name, details, params, accountId)
             if (name !== 'consent') return res.status(500).send({ error: "Invalid Request" })
 
             let { grantId } = interactionDetails
