@@ -4,7 +4,7 @@ import oidc from '../services/OpenIDConnect'
 // This is only needed for local dev, for some reason it is using :3001 for the port when we want :3000
 const adjustRedirectUrl = (url, req) => {
   const redirectUrl = (process.env.PROTOCOL === 'https') ? url.replace('http://', 'https://') : url
-  console.log("redirect url", redirectUrl, "base url =", req.baseUrl, "original url", req.originalUrl, "final url = ", redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN))
+  console.error("redirect url", redirectUrl, "base url =", req.baseUrl, "original url", req.originalUrl, "final url = ", redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN))
   return redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
 }
 
@@ -21,11 +21,11 @@ module.exports = function (app) {
             const client = await oidc.Client.find(params.client_id)
 
             if (prompt.name === 'login') {
-              console.log("login interaction, redirecting to /oauth/login/", details)
+              console.error("login interaction, redirecting to /oauth/login/", details)
               return res.redirect('/oauth/login/' + uid + '?name=' + client['name'])
             }
 
-            console.log("non-login interactionxx", details)
+            console.error("non-login interactionxx", details)
 
             // TODO: could be called authorize?
             let redirectUrl = '/oauth/consent/' + uid + '?name=' + client['name']
@@ -36,6 +36,7 @@ module.exports = function (app) {
 
             return res.redirect(redirectUrl)
           } catch (err) {
+            console.error("Goterrror", err)
             return next(err)
           }
         },
@@ -71,6 +72,7 @@ module.exports = function (app) {
 
             return res.send({ redirectTo })
           } catch (err) {
+            console.error("Goterrror2", err)
             return res.status(403).send({ error: err.message })
           }
         },
