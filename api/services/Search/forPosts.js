@@ -66,7 +66,7 @@ export default function forPosts (opts) {
       qb.where('is_public', opts.onlyPublic)
     }
 
-    if (opts.interactedWithBy){
+    if (opts.interactedWithBy) {
       const subquery = bookshelf.knex.select('entity_id').from('reactions').whereIn('reactions.user_id', opts.interactedWithBy).where('reactions.entity_type', 'comment')
       // All reactions by specificed users that are on comments
 
@@ -77,7 +77,7 @@ export default function forPosts (opts) {
       qb.orWhereIn('comments.id', subquery)
     }
 
-    if (opts.mentionsOf){
+    if (opts.mentionsOf) {
       qb.join('activities', 'activities.post_id', '=', 'posts.id')
       qb.whereRaw(`activities.meta->>'reasons' like '%mention%'`)
       qb.whereIn(`activities.reader_id`, opts.mentionsOf)
