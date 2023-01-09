@@ -2023,7 +2023,7 @@ type Mutation {
   updateGroup(
     id: ID,
     changes: GroupInput,
-    # Update group as a particular User
+    # Update group as a particular User (with permission)
     asUserId: ID
   ): Group
   # Update settings related a Topic in a Group. Only a group moderator can call this.
