@@ -26,7 +26,11 @@
       "generator": "secret"
     },
     "EMAIL_SENDER": "dev@hylo.com",
-    "NODE_ENV": "staging",
+    "JWT_SECRET": {
+      "description": "A secret key for creating JWTs.",
+      "generator": "secret"
+    },
+    "NODE_ENV": "production",
     "NODE_MODULES_CACHE": false,
     "PROTOCOL": "https"
   },
@@ -61,7 +65,7 @@
         "COOKIE_DOMAIN": ".hylo.com",
         "COOKIE_NAME": "hylo.review.sid2",
         "EMAIL_SENDER": "dev+review@hylo.com",
-        "NODE_ENV": "staging",
+        "NODE_ENV": "production",
         "NODE_MODULES_CACHE": false,
         "PROTOCOL": "http"
       }
