@@ -120,7 +120,8 @@ export const createRequestHandler = () =>
         sails.log.info(inspect(variables))
       }
 
-      if (req.session.userId) {
+      // Update user last active time unless this is an oAuth login
+      if (req.session.userId && !req.api_client) {
         await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
       }
     },
@@ -163,7 +164,7 @@ function createSchema (expressContext) {
       }
     }
   } else if (api_client) {
-    console.log("got api client", api_client)
+    console.log("using api client", api_client)
     // TODO: check scope here, just api:write, just api:read, or both?
     allResolvers = {
       Query: makeApiQueries(fetchOne, fetchMany),
