@@ -122,7 +122,6 @@
     "minimist": "^1.1.0",
     "moment-timezone": "^0.5.37",
     "newrelic": "^7.0.0",
-    "node-uuid": "^1.4.8",
     "oidc-provider": "^7.11.0",
     "parse-redis-url": "0.0.2",
     "passport": "^0.2.1",
@@ -161,6 +160,7 @@
     "tar-stream": "^1.2.1",
     "unist-util-inspect": "^4.1.3",
     "unist-util-visit": "^1.3.1",
+    "uuid": "^9.0.0",
     "validator": "^3.22.1",
     "wkx": "^0.5.0"
   },

@@ -1,5 +1,5 @@
 const sails = require('sails')
-const uuid = require('node-uuid')
+import { v4 as uuidv4 } from 'uuid'
 var instance
 
 if (process.env.NODE_ENV === 'test') {
@@ -24,7 +24,7 @@ instance.pixelUrl = function (emailName, props) {
   if (props.userId) {
     data.userId = props.userId
   } else {
-    data.anonymousId = uuid.v4()
+    data.anonymousId = uuidv4()
   }
 
   var encodedData = Buffer.from(JSON.stringify(data), 'utf8').toString('base64')

@@ -1,4 +1,4 @@
-import uuid from 'node-uuid'
+import { v4 as uuidv4 } from 'uuid'
 import EnsureLoad from './mixins/EnsureLoad'
 
 module.exports = bookshelf.Model.extend(Object.assign({
@@ -129,7 +129,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
       email: opts.email.toLowerCase(),
       tag_id: opts.tagId,
       role: GroupMembership.Role[opts.moderator ? 'MODERATOR' : 'DEFAULT'],
-      token: uuid.v4(),
+      token: uuidv4(),
       created_at: new Date(),
       subject: opts.subject,
       message: opts.message
