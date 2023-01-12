@@ -117,7 +117,7 @@ export const sendDigests = async () => {
           email: user.get('email'),
           data: {
             count: commentData.length,
-            post_title: TextHelpers.truncateText(post.get('name'), 140),
+            post_title: post.summary(),
             post_creator_avatar_url: post.relations.user.get('avatar_url'),
             thread_url: Frontend.Route.comment({ comment: commentData[0], post }),
             comments: commentData,

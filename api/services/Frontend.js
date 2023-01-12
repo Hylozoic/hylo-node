@@ -56,6 +56,7 @@ const getTopicName = function (topic) {
 }
 
 module.exports = {
+  getSlug,
   Route: {
     evo: {
       passwordSetting: function () {
@@ -139,7 +140,6 @@ module.exports = {
       } else if (!isEmpty(groupSlug)) {
         groupUrl = `/groups/${groupSlug}`
       }
-
       return url(`${groupUrl}/post/${getModelId(post)}`)
     },
 

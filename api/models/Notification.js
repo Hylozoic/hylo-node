@@ -5,6 +5,7 @@ import decode from 'ent/decode'
 import { refineOne } from './util/relations'
 import rollbar from '../../lib/rollbar'
 import { broadcast, userRoom } from '../services/Websockets'
+import { getSlug } from '../services/Frontend'
 
 const TYPE = {
   Mention: 'mention', // you are mentioned in a post or comment
@@ -178,9 +179,12 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendCommentPush: function (version) {
-    var comment = this.comment()
-    var path = url.parse(Frontend.Route.post(comment.relations.post)).path
-    var alertText = PushNotification.textForComment(comment, version)
+    const comment = this.comment()
+    const post = comment.relations.post
+    const group = post.relations.groups.first()
+    const groupSlug = getSlug(group)
+    const path = url.parse(Frontend.Route.comment({ comment, groupSlug, post  })).path
+    const alertText = PushNotification.textForComment(comment, version)
     if (!this.reader().enabledNotification(TYPE.Comment, MEDIUM.Push)) {
       return Promise.resolve()
     }

@@ -1,4 +1,4 @@
-const uuid = require('node-uuid')
+const { v4: uuidv4 } = require('uuid')
 
 /**
  * Session Configuration
@@ -27,7 +27,7 @@ module.exports.session = {
 
   genid: function(req) {
     // use UUIDs for session IDs prefixed by userId so we can find and clear all sessions for this user on password change
-    return (req.userId || 'anon') + ":" + uuid.v4()
+    return (req.userId || 'anon') + ":" + uuidv4()
   },
 
   /***************************************************************************

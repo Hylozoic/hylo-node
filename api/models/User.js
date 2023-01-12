@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
-import uuid from 'node-uuid'
+import { v4 as uuidv4 } from 'uuid'
 import validator from 'validator'
 import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
@@ -314,7 +314,7 @@ module.exports = bookshelf.Model.extend(merge({
     location_id = NULL,
     contact_email = NULL,
     contact_phone = NULL,
-    email = '${uuid.v4()}@hylo.com',
+    email = '${uuidv4()}@hylo.com',
     first_name = NULL,
     last_name = NULL,
     twitter_name = NULL,

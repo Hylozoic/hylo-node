@@ -204,16 +204,20 @@ export default function makeModels (userId, isAdmin, apiClient) {
       fetchMany: ({
         activePostsOnly = false,
         afterTime,
+        announcementsOnly,
         beforeTime,
         boundingBox,
         collectionToFilterOut,
         context,
+        createdBy,
         cursor,
         filter,
         first,
         forCollection,
         groupSlugs,
+        interactedWithBy,
         isFulfilled,
+        mentionsOf,
         offset,
         order,
         sortBy,
@@ -225,6 +229,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         searchQuerySet('posts', {
           activePostsOnly,
           afterTime,
+          announcementsOnly,
           beforeTime,
           boundingBox,
           collectionToFilterOut,
@@ -232,8 +237,10 @@ export default function makeModels (userId, isAdmin, apiClient) {
           cursor,
           forCollection,
           groupSlugs,
+          interactedWithBy,
           isFulfilled,
           limit: first,
+          mentionsOf,
           offset,
           onlyMyGroups: context === 'all',
           onlyPublic: context === 'public',
@@ -243,7 +250,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
           topic,
           topics,
           type: filter,
-          types
+          types,
+          users: createdBy
         })
     },
 
