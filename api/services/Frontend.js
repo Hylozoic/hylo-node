@@ -33,7 +33,7 @@ const getModelId = function (model) {
   return id
 }
 
-export const getSlug = function (group) {
+const getSlug = function (group) {
   let slug
   if (isString(group)) { // In case we passed just the slug in instead of group object
     slug = group
@@ -56,6 +56,7 @@ const getTopicName = function (topic) {
 }
 
 module.exports = {
+  getSlug,
   Route: {
     evo: {
       passwordSetting: function () {
