@@ -17,7 +17,7 @@ const {
   PRODUCT_CATAGORIES,
   PUBLIC_OFFERINGS
 } = require('../../lib/constants')
-const uuid = require('node-uuid')
+const { v4: uuidv4 } = require('uuid')
 
 const farmNames = [
   'Luna Farm',
@@ -264,7 +264,7 @@ function generateFakeFarmData (index) {
     role: null, // left null
     schema_version: '0.2',
     social: `${faker.random.word()}.com`,
-    unique_id: uuid.v4(),
+    unique_id: uuidv4(),
     units: Math.random() > 0.85 ? null : Math.random() > 0.5 ? 'imperial' : 'metric',
     website: Math.random() > 0.8 ? null : `${faker.random.word()}-farm.com`
   }

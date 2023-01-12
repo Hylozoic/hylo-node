@@ -33,7 +33,7 @@ const getModelId = function (model) {
   return id
 }
 
-const getSlug = function (group) {
+export const getSlug = function (group) {
   let slug
   if (isString(group)) { // In case we passed just the slug in instead of group object
     slug = group
@@ -139,7 +139,6 @@ module.exports = {
       } else if (!isEmpty(groupSlug)) {
         groupUrl = `/groups/${groupSlug}`
       }
-
       return url(`${groupUrl}/post/${getModelId(post)}`)
     },
 

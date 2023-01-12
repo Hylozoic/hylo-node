@@ -557,10 +557,8 @@ module.exports = bookshelf.Model.extend(merge({
       }
     )
 
-    // XXX: temporary, by default show all farms in public. These can only be created via API right now
-    if (attrs.type === 'farm') {
-      attrs.allow_in_public = true
-    }
+    // XXX: for now allow all groups to appear in public by default
+    attrs.allow_in_public = true
 
     // eslint-disable-next-line camelcase
     const access_code = attrs.access_code || await Group.getNewAccessCode()

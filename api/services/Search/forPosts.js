@@ -18,7 +18,7 @@ export default function forPosts (opts) {
     // which is useful for pagination
     countTotal(qb, 'posts', opts.totalColumnName)
 
-    if (opts.users) {
+    if (opts.users) { // alias createdBy
       qb.whereIn('posts.user_id', opts.users)
     }
 
@@ -54,12 +54,33 @@ export default function forPosts (opts) {
         [opts.start_time, opts.end_time, opts.start_time, opts.end_time])
     }
 
+    if (opts.announcementsOnly) {
+      qb.where('announcement', true)
+    }
+
     if (opts.visibility) {
       qb.whereIn('visibility', opts.visibility)
     }
 
     if (opts.onlyPublic) {
       qb.where('is_public', opts.onlyPublic)
+    }
+
+    if (opts.interactedWithBy) {
+      const subquery = bookshelf.knex.select('entity_id').from('reactions').whereIn('reactions.user_id', opts.interactedWithBy).where('reactions.entity_type', 'comment')
+      // All reactions by specificed users that are on comments
+
+      qb.join('comments', 'comments.post_id', '=', 'posts.id')
+      qb.joinRaw(`join reactions on reactions.entity_id = posts.id AND reactions.entity_type = 'post'`)
+      qb.whereIn('comments.user_id', opts.interactedWithBy)
+      qb.orWhereIn('reactions.user_id', opts.interactedWithBy)
+      qb.orWhereIn('comments.id', subquery)
+    }
+
+    if (opts.mentionsOf) {
+      qb.join('activities', 'activities.post_id', '=', 'posts.id')
+      qb.whereRaw(`activities.meta->>'reasons' like '%mention%'`)
+      qb.whereIn(`activities.reader_id`, opts.mentionsOf)
     }
 
     filterAndSortPosts(Object.assign({}, opts, {

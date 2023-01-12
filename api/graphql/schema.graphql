@@ -183,6 +183,8 @@ type Query {
     activePostsOnly: Boolean,
     # Only return posts that end after this time
     afterTime: Date,
+    # Only return announcements
+    announcementsOnly: Boolean,
     # Only return posts that end before this time
     beforeTime: Date,
     # Only return posts within this geographic bounding box
@@ -191,6 +193,8 @@ type Query {
     collectionToFilterOut: ID,
     # If 'all' only return posts from groups the current logged in user is a member of. If 'public' only return pubic posts
     context: String,
+    # Return posts from these users
+    createdBy: [ID],
     # Load posts before or after this ID, depending on sort order
     cursor: ID,
     # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'request' or 'resource'
@@ -203,6 +207,10 @@ type Query {
     groupSlugs: [String],
     # true = Only return posts that have been marked fulfilled/complete, false = only return posts not marked fulfilled/complete
     isFulfilled: Boolean,
+    # Return posts that these users have reacted to or commented on
+    interactedWithBy: [ID],
+    # Return posts that mention these users
+    mentionsOf: [ID],
     # For pagination return posts after this offset
     offset: Int,
     # Determines sort order, either 'ASC' or 'DESC'
@@ -1424,6 +1432,8 @@ type Person {
     activePostsOnly: Boolean,
     # Only return posts that were created after this time
     afterTime: Date,
+    # Only return announcements
+    announcementsOnly: Boolean,
     # Only return posts that were created before this time
     beforeTime: Date,
     # Only return posts within this geographic bounding box
@@ -1432,6 +1442,8 @@ type Person {
     collectionToFilterOut: ID,
     # Only return posts within this context: 'public' = only return posts set to Public. 'all' = only return posts within a group that the current logged in user is a member of
     context: String,
+    # Return posts from these users
+    createdBy: [ID],
     # Start loading posts before or after this ID, depending on sort order
     cursor: ID,
     # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
@@ -1444,6 +1456,10 @@ type Person {
     groupSlugs: [String],
     # Only return posts that are either completed/fulfilled (true) or not (false)
     isFulfilled: Boolean,
+    # Return posts that these users have reacted to or commented on
+    interactedWithBy: [ID],
+    # Return posts that mention these users
+    mentionsOf: [ID],
     # Start loading posts at this index
     offset: Int,
     # Determines sort order, either 'ASC' or 'DESC'
