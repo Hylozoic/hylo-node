@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.2.0] - 2023-01-11
+
+### Added
+- Queries for My Home views - my posts, mentions, announcements, posts I've interacted with
+
+### Changed
+- Update product categories for farms to have Other option
+- Improved Saved Search email digests
+- Push notifications now should jump directly to the comment they refer to
+
+### Fixed
+- Bug preventing email digests from going out
+
 ## [5.1.2] - 2022-12-29
 
 ### Fixed
