@@ -26,28 +26,37 @@ describe('RichText', function () {
         '<span class="topic" data-type="topic" data-id="my-topic" data-label="#my-topic">#my-topic</span>'
       )
     })
-  })
-  
-  describe('processHTML', () => {
+
+    it('adds "mention-current-user" CSS class to mentions for a provider user id', () => {
+      const processResult = RichText.processHTML(
+        '<span class="mention" data-id="12">Test User</span>',
+        { forUserId: '12' }
+      )
+
+      expect(processResult).to.equal(
+        '<span class="mention mention-current-user" data-id="12">Test User</span>'
+      )
+    })
+
     it('returns empty string if called without text', () => {
       expect(RichText.processHTML()).to.equal('')
     })
-  
+
     it('allows whitelist to be undefined', () => {
       expect(RichText.processHTML('foo')).to.equal('foo')
     })
-  
+
     it('removes tags not on a whitelist', () => {
       const expected = 'Wombats are great.<div>They poop square.</div>'
       const unsafe = 'Wombats are great.<em>So great.</em><div>They poop square.</div>'
-      const actual = RichText.processHTML(unsafe, { allowedTags: ['div'] })
+      const actual = RichText.processHTML(unsafe, { insaneOptions: { allowedTags: ['div'] } })
       expect(actual).to.equal(expected)
     })
-  
+
     it('removes attributes not on a whitelist', () => {
       const expected = '<p id="wombat-data">Wombats are great.</p>'
       const unsafe = '<p id="wombat-data" class="main-wombat">Wombats are great.</p>'
-      const actual = RichText.processHTML(unsafe, { allowTags: ['p'], allowedAttributes: { p: ['id'] } })
+      const actual = RichText.processHTML(unsafe, { insaneOptions: { allowTags: ['p'], allowedAttributes: { p: ['id'] } } })
       expect(actual).to.equal(expected)
     })
   })
@@ -55,13 +64,13 @@ describe('RichText', function () {
   describe('.qualifyLinks', function () {
     it('turns relative links into fully-qualified links', function () {
       // Note: This text is legacy, e.g. `data-search` vs `data-label`, `data-user-id` vs `data-id`, etc
-      let text = '<p>a paragraph, and of course <span href="/all/members/5942" class="mention" data-type="mention" data-id="5942" data-label="Minda Myers">Minda Myers</span>&nbsp;' +
+      const text = '<p>a paragraph, and of course <span href="/all/members/5942" class="mention" data-type="mention" data-id="5942" data-label="Minda Myers">Minda Myers</span>&nbsp;' +
         '<span href="/all/members/8781" class="mention" data-type="mention" data-id="8781" data-label="Ray Hylo">Ray Hylo</span>' +
         '<span href="/all/topics/boom" class="topic" data-type="topic" data-id="boom" data-label="#boom">#boom</span>.</p><p>danke</p>'
-      let expectedWithGroupSlug = `<p>a paragraph, and of course <a href="${prefix}/groups/my-group-slug/members/5942" class="mention" data-type="mention" data-id="5942" data-label="Minda Myers">Minda Myers</a>&nbsp;` +
+      const expectedWithGroupSlug = `<p>a paragraph, and of course <a href="${prefix}/groups/my-group-slug/members/5942" class="mention" data-type="mention" data-id="5942" data-label="Minda Myers">Minda Myers</a>&nbsp;` +
         `<a href="${prefix}/groups/my-group-slug/members/8781" class="mention" data-type="mention" data-id="8781" data-label="Ray Hylo">Ray Hylo</a>` +
         `<a href="${prefix}/groups/my-group-slug/topics/boom" class="topic" data-type="topic" data-id="boom" data-label="#boom">#boom</a>.</p><p>danke</p>`
-      let expectedWithoutGroupSlug = `<p>a paragraph, and of course <a href="${prefix}/all/members/5942" class="mention" data-type="mention" data-id="5942" data-label="Minda Myers">Minda Myers</a>&nbsp;` +
+      const expectedWithoutGroupSlug = `<p>a paragraph, and of course <a href="${prefix}/all/members/5942" class="mention" data-type="mention" data-id="5942" data-label="Minda Myers">Minda Myers</a>&nbsp;` +
         `<a href="${prefix}/all/members/8781" class="mention" data-type="mention" data-id="8781" data-label="Ray Hylo">Ray Hylo</a>` +
         `<a href="${prefix}/all/topics/boom" class="topic" data-type="topic" data-id="boom" data-label="#boom">#boom</a>.</p><p>danke</p>`
 

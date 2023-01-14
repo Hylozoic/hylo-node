@@ -25,7 +25,13 @@ Note: `Post#details()` and `Comment#text()` both run this by default, and it sho
       be ran against those fields.
 
 */
-export function processHTML (contentHTML, providedInsaneOptions) {
+export function processHTML (
+  contentHTML,
+  {
+    forUserId = null,
+    insaneOptions = {}
+  } = {}
+) {
   // NOTE: Will probably fail silently if bad content sent
   if (!contentHTML) return ''
 
@@ -48,7 +54,7 @@ export function processHTML (contentHTML, providedInsaneOptions) {
 
     // Normalize legacy Mentions
     if (
-      el.getAttribute('data-entity-type') === 'mention'||
+      el.getAttribute('data-entity-type') === 'mention' ||
       el.getAttribute('data-user-id')
     ) {
       const newSpanElement = dom.createElement('span')
@@ -60,8 +66,6 @@ export function processHTML (contentHTML, providedInsaneOptions) {
       newSpanElement.innerHTML = el.innerHTML
 
       el.parentNode.replaceChild(newSpanElement, el)
-
-      return
     }
 
     // Normalize legacy Topics
@@ -78,15 +82,21 @@ export function processHTML (contentHTML, providedInsaneOptions) {
       newSpanElement.innerHTML = el.innerHTML
 
       el.parentNode.replaceChild(newSpanElement, el)
-
-      return
     }
   }, dom.querySelectorAll('a'))
-  
+
+  // Add extra CSS class to mentions of `forUserId` (usually currentUser)
+  if (forUserId) {
+    forEach(
+      el => el.classList.add('mention-current-user'),
+      dom.querySelectorAll(`span.mention[data-id="${forUserId.toString()}"]`)
+    )
+  }
+
   // Always sanitize on output, but only once and only here
-  const  santizedHTML = insane(
+  const santizedHTML = insane(
     dom.querySelector('body').innerHTML,
-    TextHelpers.insaneOptions(providedInsaneOptions)
+    TextHelpers.insaneOptions(insaneOptions)
   )
 
   return santizedHTML
@@ -111,7 +121,7 @@ export function qualifyLinks (processedHTML, groupSlug) {
   // Convert Mention and Topic `span` elements to `a` elements
   const convertSpansToAnchors = forEach(el => {
     const anchorElement = dom.createElement('a')
-    let href = el.className === 'mention'
+    const href = el.className === 'mention'
       ? PathHelpers.mentionPath(el.getAttribute('data-id'), groupSlug)
       : PathHelpers.topicPath(el.getAttribute('data-id'), groupSlug)
 
@@ -146,10 +156,10 @@ in the provided HTML. Used for generating notifications.
 */
 export function getUserMentions (processedHTML) {
   if (!processedHTML) return []
-  
+
   const dom = getDOM(processedHTML)
   const mentionElements = dom.querySelectorAll('.mention')
   const mentionedUserIDs = map(el => el.getAttribute('data-id'), mentionElements)
-  
+
   return filter(el => !isNull(el), uniq(mentionedUserIDs))
 }

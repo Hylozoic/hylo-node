@@ -20,12 +20,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(Post)
   },
 
-  text: function () {
-    return RichText.processHTML(this.get('text'))
-  },
-
   mentions: function () {
     return RichText.getUserMentions(this.text())
+  },
+
+  text: function (forUserId) {
+    return RichText.processHTML(this.get('text'), { forUserId })
   },
 
   thanks: function () {
