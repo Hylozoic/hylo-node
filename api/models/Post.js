@@ -50,13 +50,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // Simple attribute getters
 
   // This should be always used when accessing this attribute
-  details: function () {
-    return RichText.processHTML(this.get('description'))
+  details: function (forUserId) {
+    return RichText.processHTML(this.get('description'), { forUserId })
   },
 
-  description: function () {
+  description: function (forUserId) {
     console.warn('Deprecation warning: Post#description called but has been replaced by Post#details')
-    return this.details()
+    return this.details(forUserId)
   },
 
   title: function () {

@@ -173,6 +173,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       getters: {
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
+        details: p => p.details(userId),
         myReactions: p => userId ? p.postReactions(userId).fetch() : [],
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false, // Remove once Mobile has been updated
         myEventResponse: p =>
@@ -651,6 +652,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         }
       ],
       getters: {
+        text: comment => comment.text(userId),
         parentComment: (c) => c.parentComment().fetch(),
         myReactions: c => userId ? c.commentReactions(userId).fetch() : [],
         commentReactions: c => c.commentReactions().fetch()
