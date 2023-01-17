@@ -136,13 +136,10 @@ function createSchema (expressContext) {
   const models = makeModels(userId, isAdmin, api_client)
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
-  console.log("creating schema userId", userId)
-
   let allResolvers
   if (userId) {
     // authenticated users
-    console.log("authenticated user", userId)
-    // TODO: look for api_client.scope to see what they are allowed to access
+    // TODO: look for api_client.scope to see what an oAuthed user is allowed to access
 
     allResolvers = {
       Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
@@ -164,7 +161,6 @@ function createSchema (expressContext) {
       }
     }
   } else if (api_client) {
-    console.log("using api client", api_client)
     // TODO: check scope here, just api:write, just api:read, or both?
     allResolvers = {
       Query: makeApiQueries(fetchOne, fetchMany),
