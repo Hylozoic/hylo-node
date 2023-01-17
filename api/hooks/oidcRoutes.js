@@ -1,7 +1,8 @@
 import { get } from 'lodash/fp'
 import oidc from '../services/OpenIDConnect'
 
-// This is only needed for local dev, for some reason it is using :3001 for the port when we want :3000
+// This is needed for local dev, for some reason it is using :3001 for the port when we want :3000
+// And on staging to make sure we use the right base URL
 const adjustRedirectUrl = (url, req) => {
   const redirectUrl = (process.env.PROTOCOL === 'https') ? url.replace('http://', 'https://') : url
   return redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
