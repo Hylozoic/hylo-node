@@ -160,7 +160,7 @@ type Query {
     # Number of People to return
     first: Int,
     # Only return members of these groups by group ID
-    groupIds: [String],
+    groupIds: [ID],
     # For pagination return people after this offset
     offset: Int,
     # Number of People to return
