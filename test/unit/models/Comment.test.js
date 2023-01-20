@@ -83,10 +83,12 @@ describe('Comment', () => {
           expect(send1.data.messages)
           .to.deep.equal([
             {
+              id: comments[2].id,
               text: comments[2].get('text'),
               name: u2.get('name'),
               avatar_url: u2.get('avatar_url')
             }, {
+              id: comments[3].id,
               text: comments[3].get('text'),
               name: u2.get('name'),
               avatar_url: u2.get('avatar_url')
@@ -96,10 +98,12 @@ describe('Comment', () => {
           expect(send2.data.messages)
           .to.deep.equal([
             {
+              id: comments[0].id,
               text: comments[0].get('text'),
               name: u1.get('name'),
               avatar_url: u1.get('avatar_url')
             }, {
+              id: comments[1].id,
               text: comments[1].get('text'),
               name: u1.get('name'),
               avatar_url: u1.get('avatar_url')
@@ -122,6 +126,7 @@ describe('Comment', () => {
           expect(log[0].email).to.equal(u1.get('email'))
           expect(log[0].data.messages)
           .to.deep.equal([{
+            id: comments[3].id,
             text: comments[3].get('text'),
             name: u2.get('name'),
             avatar_url: u2.get('avatar_url')
@@ -139,10 +144,12 @@ describe('Comment', () => {
           expect(log[0].email).to.equal(u2.get('email'))
           expect(log[0].data.messages)
           .to.deep.equal([{
+            id: comments[0].id,
             name: u1.get('name'),
             avatar_url: u1.get('avatar_url'),
             text: comments[0].get('text')
           }, {
+            id: comments[1].id,
             name: u1.get('name'),
             avatar_url: u1.get('avatar_url'),
             text: comments[1].get('text')
