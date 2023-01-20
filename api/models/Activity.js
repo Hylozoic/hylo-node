@@ -248,9 +248,9 @@ module.exports = bookshelf.Model.extend({
 
   groupIds: function (activity) {
     if (activity.get('post_id')) {
-      return get(activity, 'relations.post.relations.groups', []).map(c => c.id)
+      return get(activity, 'relations.post.relations.groups', []).map(g => g.id)
     } else if (activity.get('comment_id')) {
-      return get(activity, 'relations.comment.relations.post.relations.groups', []).map(c => c.id)
+      return get(activity, 'relations.comment.relations.post.relations.groups', []).map(g => g.id)
     } else if (activity.get('group_id')) {
       // For group to group join requests/invites other group is the one related to the reader of the notification
       return activity.get('other_group_id') ? [activity.relations.group.id, activity.relations.otherGroup.id] : [activity.relations.group.id]

@@ -41,7 +41,7 @@ describe('Comment', () => {
   })
 
   describe('sendDigests', () => {
-    var u1, u2, post, comments, log, now
+    let u1, u2, post, comments, log, now, group
 
     beforeEach(async () => {
       now = new Date()
@@ -50,11 +50,13 @@ describe('Comment', () => {
 
       u1 = factories.user({avatar_url: 'foo.png', settings: {dm_notifications: 'both'}})
       u2 = factories.user({avatar_url: 'bar.png', settings: {dm_notifications: 'both'}})
-      post = factories.post({type: Post.Type.THREAD, updated_at: now})
+      group = factories.group({ name: 'group', slug: 'slug' })
+      post = factories.post({ type: Post.Type.THREAD, updated_at: now })
 
-      await Promise.join(u1.save(), u2.save())
+      await Promise.join(group.save(), u1.save(), u2.save())
       await post.save({ user_id: u1.id })
       await post.addFollowers([u1.id, u2.id])
+      await group.posts().attach(post)
       ;[u1.id, u2.id].forEach(userId =>
         times(2, i => comments.push(factories.comment({
           post_id: post.id,
@@ -83,10 +85,12 @@ describe('Comment', () => {
           expect(send1.data.messages)
           .to.deep.equal([
             {
+              id: comments[2].id,
               text: comments[2].get('text'),
               name: u2.get('name'),
               avatar_url: u2.get('avatar_url')
             }, {
+              id: comments[3].id,
               text: comments[3].get('text'),
               name: u2.get('name'),
               avatar_url: u2.get('avatar_url')
@@ -96,10 +100,12 @@ describe('Comment', () => {
           expect(send2.data.messages)
           .to.deep.equal([
             {
+              id: comments[0].id,
               text: comments[0].get('text'),
               name: u1.get('name'),
               avatar_url: u1.get('avatar_url')
             }, {
+              id: comments[1].id,
               text: comments[1].get('text'),
               name: u1.get('name'),
               avatar_url: u1.get('avatar_url')
@@ -122,6 +128,7 @@ describe('Comment', () => {
           expect(log[0].email).to.equal(u1.get('email'))
           expect(log[0].data.messages)
           .to.deep.equal([{
+            id: comments[3].id,
             text: comments[3].get('text'),
             name: u2.get('name'),
             avatar_url: u2.get('avatar_url')
@@ -139,10 +146,12 @@ describe('Comment', () => {
           expect(log[0].email).to.equal(u2.get('email'))
           expect(log[0].data.messages)
           .to.deep.equal([{
+            id: comments[0].id,
             name: u1.get('name'),
             avatar_url: u1.get('avatar_url'),
             text: comments[0].get('text')
           }, {
+            id: comments[1].id,
             name: u1.get('name'),
             avatar_url: u1.get('avatar_url'),
             text: comments[1].get('text')
