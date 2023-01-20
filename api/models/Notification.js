@@ -350,7 +350,7 @@ module.exports = bookshelf.Model.extend({
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(user) + '?ctt=announcement_email&cti=' + reader.id),
           post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-          post_title: decode(post.get('name')),
+          post_title: decode(post.summary()),
           post_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.post(post, group) + '?ctt=announcement_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
@@ -362,13 +362,16 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendPostMentionEmail: function () {
-    var post = this.post()
-    var reader = this.reader()
-    var user = post.relations.user
-    var replyTo = Email.postReplyAddress(post.id, reader.id)
+    const post = this.post()
+    const reader = this.reader()
+    const user = post.relations.user
+    const tags =  post.relations.tags
+    const firstTag =  tags && tags.first()?.get('name')
+    const replyTo = Email.postReplyAddress(post.id, reader.id)
 
-    var groupIds = Activity.groupIds(this.relations.activity)
+    const groupIds = Activity.groupIds(this.relations.activity)
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+
     return Group.find(groupIds[0])
     .then(group => reader.generateToken()
       .then(token => Email.sendPostMentionNotification({
@@ -387,10 +390,10 @@ module.exports = bookshelf.Model.extend({
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
           post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-          post_title: decode(post.get('name')),
+          post_title: post.get('type') === Post.Type.CHAT ? '#' + firstTag : decode(post.summary()),
           post_type: post.get('type'),
           post_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
+            Frontend.Route.post(post, group, false, firstTag) + '?ctt=post_mention_email&cti=' + reader.id),
           unfollow_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
           tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
@@ -399,6 +402,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   // version corresponds to names of versions in SendWithUs
+  // XXX: This is not used right now, we send Comment Digests instead
   sendCommentNotificationEmail: function (version) {
     const comment = this.comment()
     const reader = this.reader()
@@ -407,7 +411,7 @@ module.exports = bookshelf.Model.extend({
     const post = comment.relations.post
     const commenter = comment.relations.user
     const replyTo = Email.postReplyAddress(post.id, reader.id)
-    const title = decode(post.get('name'))
+    const title = decode(post.summary())
 
     var postLabel = `"${title}"`
     if (post.get('type') === 'welcome') {
@@ -613,9 +617,9 @@ module.exports = bookshelf.Model.extend({
     const token = await reader.generateToken()
     return Email.sendDonationToEmail({
       email: reader.get('email'),
-      sender: {name: project.get('name')},
+      sender: {name: project.summary()},
       data: {
-        project_title: project.get('name'),
+        project_title: project.summary(),
         project_url: Frontend.Route.tokenLogin(reader, token,
           Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),
         contribution_amount: projectContribution.get('amount') / 100,
@@ -636,9 +640,9 @@ module.exports = bookshelf.Model.extend({
     const token = await reader.generateToken()
     return Email.sendDonationFromEmail({
       email: reader.get('email'),
-      sender: {name: project.get('name')},
+      sender: {name: project.summary()},
       data: {
-        project_title: project.get('name'),
+        project_title: project.summary(),
         project_url: Frontend.Route.tokenLogin(reader, token,
           Frontend.Route.post(project) + '?ctt=post_mention_email&cti=' + reader.id),
         contribution_amount: projectContribution.get('amount') / 100,
@@ -676,7 +680,7 @@ module.exports = bookshelf.Model.extend({
           post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
             Frontend.Route.profile(inviter) + '?ctt=post_mention_email&cti=' + reader.id),
           post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-          post_title: decode(post.get('name')),
+          post_title: decode(post.summary()),
           post_type: 'event',
           post_date: post.prettyEventDates(post.get('start_time'), post.get('end_time')),
           post_url: Frontend.Route.tokenLogin(reader, token,
@@ -764,6 +768,7 @@ module.exports = bookshelf.Model.extend({
     return Notification.findUnsent({withRelated: [
       'activity',
       'activity.post',
+      'activity.post.tags',
       'activity.post.groups',
       'activity.post.user',
       'activity.comment',

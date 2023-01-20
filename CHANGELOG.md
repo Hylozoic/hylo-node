@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.2.1] - 2023-01-20
+
+### Changed
+- Links from comment notification emails go to the first group of the post
+- Adds extra CSS class for mentioned current user
+
+### Fixed
+- All notifications work with chat posts - showing chat content instead of trying to show empty post title
+- Comment digest emails now link to the right comment
+
 ## [5.2.0] - 2023-01-11
 
 ### Added
