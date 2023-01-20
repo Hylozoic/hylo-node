@@ -404,7 +404,6 @@ module.exports = bookshelf.Model.extend({
   // version corresponds to names of versions in SendWithUs
   // XXX: This is not used right now, we send Comment Digests instead
   sendCommentNotificationEmail: function (version) {
-
     const comment = this.comment()
     const reader = this.reader()
     if (!comment) return
