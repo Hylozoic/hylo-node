@@ -72,6 +72,7 @@ export const sendDigests = async () => {
 
       const presentComment = comment => {
         const presented = {
+          id: comment.id,
           name: comment.relations.user.get('name'),
           avatar_url: comment.relations.user.get('avatar_url')
         }
