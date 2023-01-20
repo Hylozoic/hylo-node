@@ -41,7 +41,7 @@ describe('Comment', () => {
   })
 
   describe('sendDigests', () => {
-    var u1, u2, post, comments, log, now
+    let u1, u2, post, comments, log, now, group
 
     beforeEach(async () => {
       now = new Date()
@@ -50,11 +50,13 @@ describe('Comment', () => {
 
       u1 = factories.user({avatar_url: 'foo.png', settings: {dm_notifications: 'both'}})
       u2 = factories.user({avatar_url: 'bar.png', settings: {dm_notifications: 'both'}})
-      post = factories.post({type: Post.Type.THREAD, updated_at: now})
+      group = factories.group({ name: 'group', slug: 'slug' })
+      post = factories.post({ type: Post.Type.THREAD, updated_at: now })
 
-      await Promise.join(u1.save(), u2.save())
+      await Promise.join(group.save(), u1.save(), u2.save())
       await post.save({ user_id: u1.id })
       await post.addFollowers([u1.id, u2.id])
+      await group.posts().attach(post)
       ;[u1.id, u2.id].forEach(userId =>
         times(2, i => comments.push(factories.comment({
           post_id: post.id,
