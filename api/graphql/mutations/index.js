@@ -80,6 +80,12 @@ export {
   leaveProject,
   processStripeToken
 } from './project'
+export {
+  addGroupRole,
+  addRoleToMember,
+  removeRoleFromMember,
+  updateGroupRole
+} from './role'
 export { deleteSavedSearch, createSavedSearch } from './savedSearch'
 export {
   createTopic,

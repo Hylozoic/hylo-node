@@ -1078,6 +1078,39 @@ CREATE TABLE public.groups_posts (
     group_id bigint NOT NULL
 );
 
+--
+-- Name: groups_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.groups_roles (
+    id integer NOT NULL,
+    group_id bigint,
+    name character varying(255),
+    emoji character varying(255),
+    color character varying(255),
+    active boolean
+);
+
+
+--
+-- Name: groups_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.groups_roles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: groups_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.groups_roles_id_seq OWNED BY public.groups_roles.id;
+
 
 --
 -- Name: groups_suggested_skills; Type: TABLE; Schema: public; Owner: -
@@ -1365,6 +1398,34 @@ CREATE TABLE public.media (
     comment_id bigint,
     "position" integer DEFAULT 0
 );
+
+CREATE TABLE public.members_roles (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    group_role_id bigint NOT NULL,
+    active boolean
+);
+
+
+--
+-- Name: members_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.members_roles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: members_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.members_roles_id_seq OWNED BY public.members_roles.id;
 
 
 --

@@ -18,6 +18,7 @@ import {
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
+import GroupRole from '../models/GroupRole'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied
@@ -512,6 +513,19 @@ export default function makeModels (userId, isAdmin, apiClient) {
       relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 
+    GroupRole: {
+      model: GroupRole,
+      attributes: [
+        'color',
+        'emoji',
+        'name',
+        'active'
+      ],
+      relations: [
+        'group'
+      ]
+    },
+
     CustomView: {
       model: CustomView,
       attributes: [
@@ -687,6 +701,21 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'neighborhood',
         'region',
         'postcode'
+      ]
+    },
+
+    MemberRole: {
+      model: MemberRole,
+      attributes: [
+        'color',
+        'emoji',
+        'name',
+        'active'
+      ],
+      relations: [
+        'groupRole',
+        'group',
+        'user'
       ]
     },
 
