@@ -346,6 +346,7 @@ describe('Notification', function () {
               text: () => 'I have an opinion',
               relations: {
                 post: model({
+                  summary: () => "hello world",
                   name: 'hello world',
                   relations: {
                     groups: [group]

@@ -15,7 +15,7 @@ module.exports = {
     } else {
       return format('<%s|%s> posted <%s|%s> in <%s|%s>',
         Frontend.Route.profile(creator), creator.get('name'),
-        Frontend.Route.post(post, group), post.get('name'),
+        Frontend.Route.post(post, group), post.summary(),
         Frontend.Route.group(group), group.get('name'))
     }
   },

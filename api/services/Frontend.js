@@ -131,14 +131,14 @@ module.exports = {
       return url(`/members/${getModelId(user)}`)
     },
 
-    post: function (post, group, isPublic) {
+    post: function (post, group, isPublic, topic) {
       let groupSlug = getSlug(group)
       let groupUrl = '/all'
 
       if (isPublic) {
         groupUrl = '/public'
       } else if (!isEmpty(groupSlug)) {
-        groupUrl = `/groups/${groupSlug}`
+        groupUrl = `/groups/${groupSlug}` + (topic ? `/topics/${topic}` : '')
       }
       return url(`${groupUrl}/post/${getModelId(post)}`)
     },
