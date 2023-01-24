@@ -48,6 +48,7 @@ export const sendDigests = async () => {
         q.orderBy('created_at', 'asc')
       }},
       'user',
+      'groups',
       'comments.user',
       'comments.media'
     ]})
@@ -57,6 +58,7 @@ export const sendDigests = async () => {
     if (comments.length === 0) return []
 
     const followers = await post.followers().fetch()
+    const firstGroup = post.relations.groups.first()
 
     return Promise.map(followers.models, user => {
       // select comments not written by this user and newer than user's last
@@ -72,6 +74,7 @@ export const sendDigests = async () => {
 
       const presentComment = comment => {
         const presented = {
+          id: comment.id,
           name: comment.relations.user.get('name'),
           avatar_url: comment.relations.user.get('avatar_url')
         }
@@ -119,7 +122,7 @@ export const sendDigests = async () => {
             count: commentData.length,
             post_title: post.summary(),
             post_creator_avatar_url: post.relations.user.get('avatar_url'),
-            thread_url: Frontend.Route.comment({ comment: commentData[0], post }),
+            thread_url: Frontend.Route.comment({ comment: commentData[0], groupSlug: firstGroup.get('slug'), post }),
             comments: commentData,
             subject_prefix: some(hasMention, commentData)
               ? 'You were mentioned in'

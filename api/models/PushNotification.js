@@ -44,7 +44,7 @@ module.exports = bookshelf.Model.extend({
 }, {
   textForContribution: function (contribution) {
     const post = contribution.relations.post
-    return `You have been added as a contributor to the request "${post.get('name')}"`
+    return `You have been added as a contributor to the request "${post.summary()}"`
   },
 
   textForComment: function (comment, version) {
@@ -54,7 +54,7 @@ module.exports = bookshelf.Model.extend({
       return `${person} sent an image`
     }
     const blurb = TextHelpers.presentHTMLToText(comment.text(), { truncate: 140 })
-    const postName = comment.relations.post.get('name')
+    const postName = comment.relations.post.summary()
 
     return version === 'mention'
       ? `${person} mentioned you: "${blurb}" (in "${postName}")`
@@ -63,7 +63,7 @@ module.exports = bookshelf.Model.extend({
 
   textForPost: function (post, group, userId, version) {
     const person = post.relations.user.get('name')
-    const postName = decode(post.get('name'))
+    const postName = decode(post.summary())
 
     return version === 'mention'
       ? `${person} mentioned you in "${postName}"`
@@ -72,13 +72,13 @@ module.exports = bookshelf.Model.extend({
 
   textForAnnouncement: function (post) {
     const person = post.relations.user.get('name')
-    const postName = decode(post.get('name'))
+    const postName = decode(post.summary())
 
     return `${person} sent an announcement titled "${postName}"`
   },
 
   textForEventInvitation: function (post, actor) {
-    const postName = decode(post.get('name'))
+    const postName = decode(post.summary())
 
     return `${actor.get('name')} invited you to "${postName}"`
   },
@@ -133,7 +133,7 @@ module.exports = bookshelf.Model.extend({
 
   textForDonationTo: function (contribution) {
     const project = contribution.relations.project
-    const postName = decode(project.get('name'))
+    const postName = decode(project.summary())
     const amount = contribution.get('amount') / 100
 
     return `You contributed $${amount} to "${postName}"`
@@ -142,7 +142,7 @@ module.exports = bookshelf.Model.extend({
   textForDonationFrom: function (contribution) {
     const actor = contribution.relations.user
     const project = contribution.relations.project
-    const postName = decode(project.get('name'))
+    const postName = decode(project.summary())
 
     const amount = contribution.get('amount') / 100
     return `${actor.get('name')} contributed $${amount} to "${postName}"`
