@@ -18,7 +18,6 @@ import {
   filterAndSortPosts,
   filterAndSortUsers
 } from '../services/Search/util'
-import GroupRole from '../models/GroupRole'
 
 // this defines what subset of attributes and relations in each Bookshelf model
 // should be exposed through GraphQL, and what query filters should be applied

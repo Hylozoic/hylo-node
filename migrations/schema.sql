@@ -1097,7 +1097,6 @@ CREATE TABLE public.groups_roles (
 --
 
 CREATE SEQUENCE public.groups_roles_id_seq
-    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -2663,6 +2662,18 @@ ALTER TABLE ONLY public.group_to_group_join_request_question_answers ALTER COLUM
 
 ALTER TABLE ONLY public.group_widgets ALTER COLUMN id SET DEFAULT nextval('public.group_widgets_id_seq'::regclass);
 
+
+--
+-- Name: groups_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_roles ALTER COLUMN id SET DEFAULT nextval('public.groups_roles_id_seq'::regclass);
+
+--
+-- Name: members_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_roles ALTER COLUMN id SET DEFAULT nextval('public.members_roles_id_seq'::regclass);
 
 --
 -- Name: groups id; Type: DEFAULT; Schema: public; Owner: -

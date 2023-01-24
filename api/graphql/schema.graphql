@@ -930,6 +930,17 @@ type GroupRelationshipInviteQuerySet {
   items: [GroupRelationshipInvite]
 }
 
+# Group role
+type GroupRole {
+  name: String
+  color: String
+  emoji: String
+  group: Group
+  id: ID
+  groupId: ID
+  active: Boolean
+}
+
 # A question required to be answered when a group requests to join this group
 type GroupToGroupJoinQuestion {
   id: Int
@@ -1266,6 +1277,20 @@ type Me {
     # Number of skills to load
     first: Int
   ): SkillQuerySet
+}
+
+# Member role
+type MemberRole {
+  id: ID
+  active: Boolean
+  color: String
+  emoji: String
+  group: Group
+  groupMemberId: ID
+  groupRole: GroupRole
+  name: String
+  userId: ID
+  user: Person
 }
 
 # A user's group membership
