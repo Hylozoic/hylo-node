@@ -7,10 +7,12 @@ import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   acceptGroupRelationshipInvite,
   acceptJoinRequest,
+  addGroupRole,
   addMember,
   addModerator,
   addPeopleToProjectRole,
   addPostToCollection,
+  addRoleToMember,
   addSkill,
   addSkillToLearn,
   addSuggestedSkillToGroup,
@@ -74,6 +76,7 @@ import {
   removeModerator,
   removePost,
   removePostFromCollection,
+  removeRoleFromMember,
   removeSkill,
   removeSkillToLearn,
   removeSuggestedSkillFromGroup,
@@ -87,6 +90,7 @@ import {
   unlinkAccount,
   updateComment,
   updateGroup,
+  updateGroupRole,
   updateGroupTopic,
   updateGroupTopicFollow,
   updateMe,
@@ -279,6 +283,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
+    addGroupRole: (root, { groupId, color, name, emoji }) => addGroupRole({userId, groupId, color, name, emoji}),
+
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
 
@@ -287,6 +293,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
+
+    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ personId, groupRoleId, groupId }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
@@ -418,6 +426,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     removePostFromCollection: (root, { collectionId, postId }) =>
       removePostFromCollection(userId, collectionId, postId),
 
+    removeRoleFromMember: (root, { groupRoleId, personId, groupId }) => removeRoleFromMember({ groupRoleId, personId, userId, groupId }),
+
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
     removeSuggestedSkillFromGroup: (root, { groupId, id, name }) => removeSuggestedSkillFromGroup(userId, groupId, id || name),
@@ -443,6 +453,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
+
+    updateGroupRole: (root, { groupRoleId, color, name, emoji, active, groupId }) => updateGroupRole({userId, groupRoleId, color, name, emoji, active, groupId}),
 
     updateGroupSettings: (root, { id, changes }) =>
       updateGroup(userId, id, changes),

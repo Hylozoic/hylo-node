@@ -930,6 +930,19 @@ type GroupRelationshipInviteQuerySet {
   items: [GroupRelationshipInvite]
 }
 
+# Group role
+type GroupRole {
+  active: Boolean
+  color: String
+  createdAt: Date
+  emoji: String
+  id: ID
+  group: Group
+  groupId: ID
+  name: String
+  updatedAt: Date
+}
+
 # A question required to be answered when a group requests to join this group
 type GroupToGroupJoinQuestion {
   id: Int
@@ -1266,6 +1279,22 @@ type Me {
     # Number of skills to load
     first: Int
   ): SkillQuerySet
+}
+
+# Member role
+type MemberRole {
+  id: ID
+  active: Boolean
+  color: String
+  createdAt: Date
+  emoji: String
+  group: Group
+  groupMemberId: ID
+  groupRole: GroupRole
+  name: String
+  updatedAt: Date
+  userId: ID
+  user: Person
 }
 
 # A user's group membership
@@ -1840,6 +1869,13 @@ type Mutation {
   acceptGroupRelationshipInvite(groupRelationshipInviteId: ID): AcceptGroupRelationshipInviteResult
   # For a moderator to accept a request from a Person to join a Group
   acceptJoinRequest(joinRequestId: ID): JoinRequest
+  # For a moderator to add a badge/role to a group
+  addGroupRole(
+    color: String,
+    emoji: String,
+    groupId: ID,
+    name: String,
+  ): GroupRole
   # Add a person to a group. Only a moderator of the group can do this.
   addMember(
     groupId: ID,
@@ -1853,6 +1889,11 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   # Add a Post to a Collection
   addPostToCollection(collectionId: ID, postId: ID): GenericResult
+  # For a moderator to add a badge/role to a group to a member of a group
+  addRoleToMember(
+    groupRoleId: ID,
+    userId: ID,
+  ): MemberRole
   # Add a skill to your profile
   addSkill(
     name: String,
@@ -1990,6 +2031,8 @@ type Mutation {
   removePost(postId: ID, slug: String, groupId: ID): GenericResult
   # Remove a Post from a Collection, if you have permission to
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
+  # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
+  removeRoleFromMember(id: ID): GenericResult
   # Remove a skill from your user profile
   removeSkill(id: ID, name: String): GenericResult
   # Remove a skill you want to learn from your user profile
@@ -2042,6 +2085,8 @@ type Mutation {
     # Update group as a particular User
     asUserId: ID
   ): Group
+  # Update a badge/role from a group and all associated MemberRoles
+  updateGroupRole(id: ID): GroupRole
   # Update settings related a Topic in a Group. Only a group moderator can call this.
   updateGroupTopic(id: ID, data: GroupTopicInput): GenericResult
   # Update settings related to a Person following a Topic in a Group
