@@ -7,9 +7,7 @@ export async function addGroupRole ({ groupId, color, name, emoji, userId }){
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
 
     if (groupMembership && (groupMembership.get('role') === GroupMembership.Role.MODERATOR)) {
-      const newGroupRole = { group_id: groupId, name, emoji, active: true }
-      if (color) newGroupRole.color = color
-      return GroupRole.forge(newGroupRole).save().then((savedGroupRole) => savedGroupRole)
+      return GroupRole.forge({ group_id: groupId, name, emoji, active: true, color }).save().then((savedGroupRole) => savedGroupRole)
     } else {
       throw new GraphQLYogaError(`User doesn't have required privileges to create group role`)
     }
@@ -75,7 +73,7 @@ export async function removeRoleFromMember ({userId, memberRoleId, personId, gro
   if (personId && memberRoleId && groupId) {
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
 
-    if (groupMembership && (groupMembership.get('role') === GroupMembership.Role.MODERATOR)) {
+    if (groupMembership && (groupMembership.get('role') === GroupMembership.Role.MODERATOR) || userId === personId) {
       const memberRole = await MemberRole.query('where', 'id', '=', memberRoleId).fetch()
       return memberRole.destroy()
     } else {

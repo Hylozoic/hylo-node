@@ -932,13 +932,15 @@ type GroupRelationshipInviteQuerySet {
 
 # Group role
 type GroupRole {
-  name: String
-  color: String
-  emoji: String
-  group: Group
-  id: ID
-  groupId: ID
   active: Boolean
+  color: String
+  createdAt: Date
+  emoji: String
+  id: ID
+  group: Group
+  groupId: ID
+  name: String
+  updatedAt: Date
 }
 
 # A question required to be answered when a group requests to join this group
@@ -1284,11 +1286,13 @@ type MemberRole {
   id: ID
   active: Boolean
   color: String
+  createdAt: Date
   emoji: String
   group: Group
   groupMemberId: ID
   groupRole: GroupRole
   name: String
+  updatedAt: Date
   userId: ID
   user: Person
 }
@@ -1885,7 +1889,7 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   # Add a Post to a Collection
   addPostToCollection(collectionId: ID, postId: ID): GenericResult
-  # For a moderator to add a badge/role to a group
+  # For a moderator to add a badge/role to a group to a member of a group
   addRoleToMember(
     groupRoleId: ID,
     userId: ID,

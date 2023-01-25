@@ -7,6 +7,8 @@ exports.up = async function(knex) {
     table.string('emoji')
     table.string('color')
     table.boolean('active')
+    table.timestamp('created_at')
+    table.timestamp('updated_at')
     table.index(['group_id'])
   })
 
@@ -16,6 +18,8 @@ exports.up = async function(knex) {
     table.bigInteger('user_id').references('id').inTable('users').notNullable()
     table.bigInteger('group_role_id').references('id').inTable('groups_roles').notNullable()
     table.boolean('active')
+    table.timestamp('created_at')
+    table.timestamp('updated_at')
     table.index(['group_id', 'user_id'])
   })
 };

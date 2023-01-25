@@ -1088,6 +1088,8 @@ CREATE TABLE public.groups_roles (
     name character varying(255),
     emoji character varying(255),
     color character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     active boolean
 );
 
@@ -1403,6 +1405,8 @@ CREATE TABLE public.members_roles (
     group_id bigint NOT NULL,
     user_id bigint NOT NULL,
     group_role_id bigint NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
     active boolean
 );
 

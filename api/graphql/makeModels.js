@@ -518,7 +518,9 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'color',
         'emoji',
         'name',
-        'active'
+        'active',
+        'createdAt',
+        'updatedAt'
       ],
       relations: [
         'group'
@@ -709,7 +711,9 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'color',
         'emoji',
         'name',
-        'active'
+        'active',
+        'createdAt',
+        'updatedAt'
       ],
       relations: [
         'groupRole',

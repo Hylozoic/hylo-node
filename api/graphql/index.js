@@ -294,7 +294,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
 
-    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ isAdmin, personId, groupRoleId, groupId }),
+    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ personId, groupRoleId, groupId }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
@@ -426,7 +426,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     removePostFromCollection: (root, { collectionId, postId }) =>
       removePostFromCollection(userId, collectionId, postId),
 
-    removeRoleFromMember: (root, { groupRoleId, personId, groupId }) => removeRoleFromMember({ isAdmin, groupRoleId, personId, userId, groupId }),
+    removeRoleFromMember: (root, { groupRoleId, personId, groupId }) => removeRoleFromMember({ groupRoleId, personId, userId, groupId }),
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
