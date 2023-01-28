@@ -551,6 +551,7 @@ module.exports = bookshelf.Model.extend(merge({
           body: JSON.stringify(members.map(m => ({ id: m.id, name: m.get('name') }))),
           headers: { 'Content-Type': 'application/json' }
         })
+        console.log("got response from zapier", response)
         // TODO: what to do with the response? check if succeeded or not?
       }
     }
