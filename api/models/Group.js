@@ -1,4 +1,5 @@
 const { GraphQLYogaError } = require('@graphql-yoga/node')
+import fetch from 'node-fetch'
 import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import knexPostgis from 'knex-postgis'
 import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
@@ -318,10 +319,15 @@ module.exports = bookshelf.Model.extend(merge({
     }
 
     // Increment num_members
-    // XXX: num_members is updated every 10 minutes via cron, we are doing this here too for the case that someone joins a group and moderator looks immedaitely at member count after that
+    // XXX: num_members is updated every 10 minutes via cron, we are doing this here too for the case that someone joins a group and moderator looks immediately at member count after that
     if (newUserIds.length > 0) {
       await this.save({ num_members: this.get('num_members') + newUserIds.length }, { transacting })
     }
+
+    Queue.classMethod('Group', 'afterAddMembers', {
+      groupId: this.id,
+      newUserIds
+    })
 
     return updatedMemberships.concat(newMemberships)
   },
@@ -533,6 +539,23 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   // ******* Class methods ******** //
+
+  // Background task to do additional work/tasks when new members are added to a group
+  async afterAddMembers({ groupId, newUserIds }) {
+    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'new_member' })).fetchAll()
+    if (zapierTriggers && zapierTriggers.length > 0) {
+      const members = await User.query(q => q.whereIn('id', newUserIds)).fetchAll()
+      for (const trigger of zapierTriggers) {
+        const response = await fetch(trigger.get('target_url'), {
+          method: 'post',
+          body: JSON.stringify(members.map(m => ({ id: m.id, name: m.get('name') }))),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        // TODO: what to do with the response? check if succeeded or not?
+      }
+    }
+  },
+
   async create (userId, data) {
     if (!data.slug) {
       throw new GraphQLYogaError("Missing required field: slug")

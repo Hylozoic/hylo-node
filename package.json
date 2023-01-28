@@ -122,6 +122,7 @@
     "minimist": "^1.1.0",
     "moment-timezone": "^0.5.37",
     "newrelic": "^7.0.0",
+    "node-fetch": "^2",
     "oidc-provider": "^7.11.3",
     "parse-redis-url": "0.0.2",
     "passport": "^0.2.1",

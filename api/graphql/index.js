@@ -1,4 +1,4 @@
-import { envelop, useLazyLoadedSchema } from '@envelop/core'
+import { useLazyLoadedSchema } from '@envelop/core'
 const { createServer, GraphQLYogaError } = require('@graphql-yoga/node')
 import { readFileSync } from 'fs'
 import { join } from 'path'
@@ -29,6 +29,7 @@ import {
   createProject,
   createProjectRole,
   createSavedSearch,
+  createZapierTrigger,
   login,
   createTopic,
   deactivateUser,
@@ -43,6 +44,7 @@ import {
   deleteProjectRole,
   deleteReaction,
   deleteSavedSearch,
+  deleteZapierTrigger,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
   findOrCreateLocation,
@@ -326,6 +328,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
+    createZapierTrigger: (root, { groupId, targetUrl, type }) => createZapierTrigger(userId, groupId, targetUrl, type),
+
     joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
@@ -355,6 +359,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     deleteReaction: (root, { entityId, data }) => deleteReaction(entityId, userId, data),
 
     deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
+
+    deleteZapierTrigger: (root, { id }) => deleteZapierTrigger(userId, id),
 
     expireInvitation: (root, {invitationId}) =>
       expireInvitation(userId, invitationId),

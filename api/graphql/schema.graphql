@@ -1834,6 +1834,15 @@ type Widget {
   name: String
 }
 
+type ZapierTrigger {
+  id: ID
+  groupId: ID
+  # The Zapier URL to call when this type is triggered
+  targetUrl: String
+  # When this gets triggered. Options: 'new_member' = when 1 or more members are added to a group
+  type: String
+}
+
 # The mutations accepted by Hylo
 type Mutation {
   # For a moderator to accept an invitation to one of their groups to be related to another group (either as a parent or a child)
@@ -1899,6 +1908,8 @@ type Mutation {
   createSavedSearch(data: SavedSearchInput): SavedSearch
   # Create a new topic within a Group
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
+  # Add a new Zapier trigger (called by Zapier)
+  createZapierTrigger(groupId: ID, targetUrl: String, type: String): ZapierTrigger
   # Used by current logged in user to deactivate their account
   deactivateMe(id: ID): GenericResult
   # Used by current logged in user to delete their account permanently
@@ -1923,6 +1934,8 @@ type Mutation {
   deleteReaction(entityId: ID, data: ReactionInput): Post
   # Delete a SavedSearch you created
   deleteSavedSearch(id: ID): ID
+  # Delete a Zapier trigger (called by Zapier)
+  deleteZapierTrigger(id: ID): Boolean
   # Set an invitation to join a group as expired. Only a group moderator can call this.
   expireInvitation(invitationId: ID): GenericResult
   # Look for a link preview of a URL, or if not found create one
