@@ -300,11 +300,12 @@ module.exports = bookshelf.Model.extend(merge({
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingMemberships = await this.memberships(true)
       .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
+    const reactivatedUserIds = existingMemberships.filter(m => !m.get('active')).map(m => m.get('user_id'))
     const existingUserIds = existingMemberships.pluck('user_id')
     const newUserIds = difference(userIds, existingUserIds)
     const updatedMemberships = await this.updateMembers(existingUserIds, updatedAttribs, { transacting })
-    const newMemberships = []
 
+    const newMemberships = []
     const defaultTagIds = (await GroupTag.defaults(this.id, transacting)).models.map(t => t.get('tag_id'))
 
     for (let id of newUserIds) {
@@ -326,7 +327,8 @@ module.exports = bookshelf.Model.extend(merge({
 
     Queue.classMethod('Group', 'afterAddMembers', {
       groupId: this.id,
-      newUserIds
+      newUserIds,
+      reactivatedUserIds
     })
 
     return updatedMemberships.concat(newMemberships)
@@ -541,17 +543,16 @@ module.exports = bookshelf.Model.extend(merge({
   // ******* Class methods ******** //
 
   // Background task to do additional work/tasks when new members are added to a group
-  async afterAddMembers({ groupId, newUserIds }) {
+  async afterAddMembers({ groupId, newUserIds, reactivatedUserIds }) {
     const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'new_member' })).fetchAll()
     if (zapierTriggers && zapierTriggers.length > 0) {
-      const members = await User.query(q => q.whereIn('id', newUserIds)).fetchAll()
+      const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
       for (const trigger of zapierTriggers) {
         const response = await fetch(trigger.get('target_url'), {
           method: 'post',
-          body: JSON.stringify(members.map(m => ({ id: m.id, name: m.get('name') }))),
+          body: JSON.stringify(members.map(m => ({ id: m.id, name: m.get('name'), reactivated: reactivatedUserIds.includes(m.id) }))),
           headers: { 'Content-Type': 'application/json' }
         })
-        console.log("got response from zapier", response)
         // TODO: what to do with the response? check if succeeded or not?
       }
     }

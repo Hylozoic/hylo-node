@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
+import fetch from 'node-fetch'
 import { v4 as uuidv4 } from 'uuid'
 import validator from 'validator'
 import { Validators } from 'hylo-shared'
@@ -351,6 +352,11 @@ module.exports = bookshelf.Model.extend(merge({
 
   leaveGroup: async function (group) {
     await group.removeMembers([this.id])
+
+    Queue.classMethod('User', 'afterLeaveGroup', {
+      groupId: group.id,
+      userId: this.id
+    })
   },
 
   // sanitize certain values before storing them
@@ -749,6 +755,24 @@ module.exports = bookshelf.Model.extend(merge({
       q.where('num_comments', '>', 0)
     })
     .count().then(c => Number(c))
+  },
+
+  // Background jobs
+
+  async afterLeaveGroup({ groupId, userId }) {
+    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'leaves_group' })).fetchAll()
+    if (zapierTriggers && zapierTriggers.length > 0) {
+      console.log("leave group user", userId)
+      const user = await User.find(userId)
+      for (const trigger of zapierTriggers) {
+        const response = await fetch(trigger.get('target_url'), {
+          method: 'post',
+          body: JSON.stringify({ id: user.id, name: user.get('name') }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        // TODO: what to do with the response? check if succeeded or not?
+      }
+    }
   }
 })
 
