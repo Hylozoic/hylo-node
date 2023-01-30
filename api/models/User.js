@@ -350,12 +350,13 @@ module.exports = bookshelf.Model.extend(merge({
     return memberships[0]
   },
 
-  leaveGroup: async function (group) {
+  leaveGroup: async function (group, removedByModerator = false) {
     await group.removeMembers([this.id])
 
     Queue.classMethod('User', 'afterLeaveGroup', {
       groupId: group.id,
-      userId: this.id
+      userId: this.id,
+      removedByModerator
     })
   },
 
@@ -460,28 +461,43 @@ module.exports = bookshelf.Model.extend(merge({
   validateAndSave: function (sessionId, changes) {
     // TODO maybe throw an error if a non-whitelisted field is supplied (besides
     // tags and password, which are used later)
-    var whitelist = pick(changes, [
+    const whitelist = pick(changes, [
       'avatar_url', 'banner_url', 'bio', 'email', 'contact_email', 'contact_phone',
       'extra_info', 'facebook_url', 'intention', 'linkedin_url', 'location', 'location_id',
       'name', 'password', 'settings', 'tagline', 'twitter_name', 'url', 'work',
       'new_notification_count'
     ])
 
-    return bookshelf.transaction(transacting =>
-      validateUserAttributes(whitelist, {existingUser: this, transacting})
+    return bookshelf.transaction(async (transacting) => {
+      await validateUserAttributes(whitelist, { existingUser: this, transacting })
+
       // we refresh the user's data inside the transaction to avoid a race
       // condition between two updates on the same user that depend upon
       // existing data, e.g. when updating settings
-      .then(() => this.refresh({transacting}))
-      .then(() => this.setSanely(omit(whitelist, 'password')))
-      .then(() => Promise.all([
-        changes.password && this.setPassword(changes.password, sessionId, {transacting}),
-        !isEmpty(this.changed) && this.save(
-          Object.assign({updated_at: new Date()}, this.changed),
-          {patch: true, transacting}
-        )
-      ])))
-    .then(() => this)
+      await this.refresh({ transacting })
+
+      this.setSanely(omit(whitelist, 'password'))
+
+      if (changes.password) {
+        await this.setPassword(changes.password, sessionId, { transacting })
+      }
+
+      if (!isEmpty(this.changed)) {
+        // Save the updated fields to send a Zapier trigger for, before we save and lose the changes
+        const changedForTrigger = pick(this.changed, [
+          'avatar_url', 'banner_url', 'bio', 'contact_email', 'contact_phone',
+          'facebook_url', 'linkedin_url', 'location', 'location_id',
+          'name', 'settings', 'tagline', 'twitter_name', 'url'
+        ])
+
+        await this.save(Object.assign({ updated_at: new Date() }, this.changed), { patch: true, transacting })
+
+        if (!isEmpty(changedForTrigger)) {
+          Queue.classMethod('User', 'afterUpdate', { userId: this.id, changes: changedForTrigger })
+        }
+      }
+    })
+    return this
   },
 
   enabledNotification (type, medium) {
@@ -759,19 +775,36 @@ module.exports = bookshelf.Model.extend(merge({
 
   // Background jobs
 
-  async afterLeaveGroup({ groupId, userId }) {
+  async afterLeaveGroup({ removedByModerator, groupId, userId }) {
     const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'leaves_group' })).fetchAll()
     if (zapierTriggers && zapierTriggers.length > 0) {
-      console.log("leave group user", userId)
       const user = await User.find(userId)
       for (const trigger of zapierTriggers) {
         const response = await fetch(trigger.get('target_url'), {
           method: 'post',
-          body: JSON.stringify({ id: user.id, name: user.get('name') }),
+          body: JSON.stringify({ id: user.id, name: user.get('name'), removedByModerator }),
           headers: { 'Content-Type': 'application/json' }
         })
         // TODO: what to do with the response? check if succeeded or not?
       }
+    }
+  },
+
+  async afterUpdate({ userId, changes }) {
+    const user = await User.find(userId)
+    if (user) {
+      const memberships = await user.memberships().fetch()
+      memberships.models.forEach(async (membership) => {
+        const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: membership.get('group_id'), type: 'member_updated' })).fetchAll()
+        for (const trigger of zapierTriggers) {
+          const response = await fetch(trigger.get('target_url'), {
+            method: 'post',
+            body: JSON.stringify(Object.assign({ id: user.id }, changes)),
+            headers: { 'Content-Type': 'application/json' }
+          })
+          // TODO: what to do with the response? check if succeeded or not?
+        }
+      })
     }
   }
 })
