@@ -1,4 +1,4 @@
-import { envelop, useLazyLoadedSchema } from '@envelop/core'
+import { useLazyLoadedSchema } from '@envelop/core'
 const { createServer, GraphQLYogaError } = require('@graphql-yoga/node')
 import { readFileSync } from 'fs'
 import { join } from 'path'
@@ -7,10 +7,12 @@ import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
 import {
   acceptGroupRelationshipInvite,
   acceptJoinRequest,
+  addGroupRole,
   addMember,
   addModerator,
   addPeopleToProjectRole,
   addPostToCollection,
+  addRoleToMember,
   addSkill,
   addSkillToLearn,
   addSuggestedSkillToGroup,
@@ -29,6 +31,7 @@ import {
   createProject,
   createProjectRole,
   createSavedSearch,
+  createZapierTrigger,
   login,
   createTopic,
   deactivateUser,
@@ -43,6 +46,7 @@ import {
   deleteProjectRole,
   deleteReaction,
   deleteSavedSearch,
+  deleteZapierTrigger,
   expireInvitation,
   findOrCreateLinkPreviewByUrl,
   findOrCreateLocation,
@@ -74,6 +78,7 @@ import {
   removeModerator,
   removePost,
   removePostFromCollection,
+  removeRoleFromMember,
   removeSkill,
   removeSkillToLearn,
   removeSuggestedSkillFromGroup,
@@ -87,6 +92,7 @@ import {
   unlinkAccount,
   updateComment,
   updateGroup,
+  updateGroupRole,
   updateGroupTopic,
   updateGroupTopicFollow,
   updateMe,
@@ -120,7 +126,8 @@ export const createRequestHandler = () =>
         sails.log.info(inspect(variables))
       }
 
-      if (req.session.userId) {
+      // Update user last active time unless this is an oAuth login
+      if (req.session.userId && !req.api_client) {
         await User.query().where({ id: req.session.userId }).update({ last_active_at: new Date() })
       }
     },
@@ -136,19 +143,9 @@ function createSchema (expressContext) {
   const { resolvers, fetchOne, fetchMany } = setupBridge(models)
 
   let allResolvers
-  if (api_client) {
-    // TODO: check scope here, just api:write, just api_read, or both?
-    allResolvers = {
-      Query: makeApiQueries(fetchOne),
-      Mutation: makeApiMutations()
-    }
-  } else if (!userId) {
-    allResolvers = {
-      Query: makePublicQueries(userId, fetchOne, fetchMany),
-      Mutation: makePublicMutations(expressContext, fetchOne)
-    }
-  } else {
+  if (userId) {
     // authenticated users
+    // TODO: look for api_client.scope to see what an oAuthed user is allowed to access
 
     allResolvers = {
       Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
@@ -168,6 +165,18 @@ function createSchema (expressContext) {
           return getTypeForInstance(data, models)
         }
       }
+    }
+  } else if (api_client) {
+    // TODO: check scope here, just api:write, just api:read, or both?
+    allResolvers = {
+      Query: makeApiQueries(fetchOne, fetchMany),
+      Mutation: makeApiMutations()
+    }
+  } else {
+    // Not authenticated, only allow for public queries
+    allResolvers = {
+      Query: makePublicQueries(userId, fetchOne, fetchMany),
+      Mutation: makePublicMutations(expressContext, fetchOne)
     }
   }
 
@@ -279,6 +288,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
+    addGroupRole: (root, { groupId, color, name, emoji }) => addGroupRole({userId, groupId, color, name, emoji}),
+
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
 
@@ -287,6 +298,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
+
+    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ personId, groupRoleId, groupId }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
@@ -323,6 +336,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
+    createZapierTrigger: (root, { groupId, targetUrl, type }) => createZapierTrigger(userId, groupId, targetUrl, type),
+
     joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 
     joinProject: (root, { id }) => joinProject(id, userId),
@@ -352,6 +367,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     deleteReaction: (root, { entityId, data }) => deleteReaction(entityId, userId, data),
 
     deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
+
+    deleteZapierTrigger: (root, { id }) => deleteZapierTrigger(userId, id),
 
     expireInvitation: (root, {invitationId}) =>
       expireInvitation(userId, invitationId),
@@ -418,6 +435,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     removePostFromCollection: (root, { collectionId, postId }) =>
       removePostFromCollection(userId, collectionId, postId),
 
+    removeRoleFromMember: (root, { groupRoleId, personId, groupId }) => removeRoleFromMember({ groupRoleId, personId, userId, groupId }),
+
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
     removeSuggestedSkillFromGroup: (root, { groupId, id, name }) => removeSuggestedSkillFromGroup(userId, groupId, id || name),
@@ -444,6 +463,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
 
+    updateGroupRole: (root, { groupRoleId, color, name, emoji, active, groupId }) => updateGroupRole({userId, groupRoleId, color, name, emoji, active, groupId}),
+
     updateGroupSettings: (root, { id, changes }) =>
       updateGroup(userId, id, changes),
 
@@ -469,10 +490,13 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
   }
 }
 
-export function makeApiQueries (fetchOne) {
+export function makeApiQueries (fetchOne, fetchMany) {
   return {
     // you can specify id or slug, but not both
     group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id'),
+
+    groups: (root, args) => fetchMany('Group', args),
+
     // you can query by id or email, with id taking preference
     person: (root, { id, email }) => fetchOne('Person', email || id, email ? 'email' : 'id')
   }

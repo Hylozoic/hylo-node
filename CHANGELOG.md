@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.3.0] - 2023-01-30
+
+### Added
+- Support for oAuth Authorization Code flow, to enable full API integrations with other apps!
+- Initial Zapier triggers: When a member is added to a group, when a member leaves or is removed from a group, when a member of a group updates their profile information.
+- Database tables for GroupRole and MemberRole to support adding roles or badges to group members.
+
 ## [5.2.1] - 2023-01-20
 
 ### Changed

@@ -49,13 +49,13 @@ On success this will return a JSON object that looks like:
 ```
 
 If there is already a user with this email but they are a not member of the group, this call will send them an invitation to join the group. You will receive:
-{ message: `User already exists, invite sent to group GROUP_NAME` }
+`{ message: "User already exists, invite sent to group GROUP_NAME" }`
 
 If there is already a user with this email and they are already a member of the group:
-{ message: `User already exists, and is already a member of this group` }
+`{ message: "User already exists, and is already a member of this group" }`
 
 If there is already a user with this email and you didn't pass in a group you will receive:
-`{ "message": "User already exists" }`
+`{ message: "User already exists" }`
 
 ### Create a Group
 
@@ -183,7 +183,7 @@ Content-Type: application/json
 
 This is a GraphQL based endpoint so you will want the pass in a raw POST data
 Example GraphQL query:
-NOTE: you will want to pass _either_ an email _or_ an id to query by. If you pass both only the email will be used to lookup the person.
+NOTE: you will want to pass _either_ an email _or_ an id to query by. If you pass both only the id will be used to lookup the person.
 ```
 {
   "query": "query ($id: ID, $email: String) { person(id: $id, email: $email) { id name hasRegistered } }",

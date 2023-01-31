@@ -28,8 +28,8 @@ import {
 export default function makeModels (userId, isAdmin, apiClient) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
 
-  // XXX: for now give API users more access, in the future track which groups each client can access
-  const apiFilter = makeFilterToggle(!apiClient)
+  // XXX: for now give super API users more access, in the future track which groups each client can access
+  const apiFilter = makeFilterToggle(!apiClient || !apiClient.super)
 
   return {
     Me: {
@@ -512,6 +512,21 @@ export default function makeModels (userId, isAdmin, apiClient) {
       relations: ['createdBy', 'fromGroup', 'toGroup']
     },
 
+    GroupRole: {
+      model: GroupRole,
+      attributes: [
+        'color',
+        'emoji',
+        'name',
+        'active',
+        'createdAt',
+        'updatedAt'
+      ],
+      relations: [
+        'group'
+      ]
+    },
+
     CustomView: {
       model: CustomView,
       attributes: [
@@ -687,6 +702,23 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'neighborhood',
         'region',
         'postcode'
+      ]
+    },
+
+    MemberRole: {
+      model: MemberRole,
+      attributes: [
+        'color',
+        'emoji',
+        'name',
+        'active',
+        'createdAt',
+        'updatedAt'
+      ],
+      relations: [
+        'groupRole',
+        'group',
+        'user'
       ]
     },
 

@@ -1078,6 +1078,40 @@ CREATE TABLE public.groups_posts (
     group_id bigint NOT NULL
 );
 
+--
+-- Name: groups_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.groups_roles (
+    id integer NOT NULL,
+    group_id bigint,
+    name character varying(255),
+    emoji character varying(255),
+    color character varying(255),
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    active boolean
+);
+
+
+--
+-- Name: groups_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.groups_roles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: groups_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.groups_roles_id_seq OWNED BY public.groups_roles.id;
+
 
 --
 -- Name: groups_suggested_skills; Type: TABLE; Schema: public; Owner: -
@@ -1365,6 +1399,36 @@ CREATE TABLE public.media (
     comment_id bigint,
     "position" integer DEFAULT 0
 );
+
+CREATE TABLE public.members_roles (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    group_role_id bigint NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    active boolean
+);
+
+
+--
+-- Name: members_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.members_roles_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: members_roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.members_roles_id_seq OWNED BY public.members_roles.id;
 
 
 --
@@ -2602,6 +2666,18 @@ ALTER TABLE ONLY public.group_to_group_join_request_question_answers ALTER COLUM
 
 ALTER TABLE ONLY public.group_widgets ALTER COLUMN id SET DEFAULT nextval('public.group_widgets_id_seq'::regclass);
 
+
+--
+-- Name: groups_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_roles ALTER COLUMN id SET DEFAULT nextval('public.groups_roles_id_seq'::regclass);
+
+--
+-- Name: members_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_roles ALTER COLUMN id SET DEFAULT nextval('public.members_roles_id_seq'::regclass);
 
 --
 -- Name: groups id; Type: DEFAULT; Schema: public; Owner: -

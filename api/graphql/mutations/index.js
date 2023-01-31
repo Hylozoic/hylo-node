@@ -80,6 +80,12 @@ export {
   leaveProject,
   processStripeToken
 } from './project'
+export {
+  addGroupRole,
+  addRoleToMember,
+  removeRoleFromMember,
+  updateGroupRole
+} from './role'
 export { deleteSavedSearch, createSavedSearch } from './savedSearch'
 export {
   createTopic,
@@ -100,6 +106,10 @@ export {
   updateStripeAccount,
   verifyEmail
 } from './user'
+export {
+  createZapierTrigger,
+  deleteZapierTrigger
+} from './zapier'
 
 export async function updateMe (sessionId, userId, changes) {
   const user = await User.find(userId)
