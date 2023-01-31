@@ -1,6 +1,5 @@
 export async function createZapierTrigger (userId, groupId, targetUrl, type) {
   if (groupId) {
-    //const group = await Group.find(groupId)
     const membership = await GroupMembership.forPair(userId, groupId)
     if (!membership) {
       throw new GraphQLYogaError('You don\'t have access to a group with this ID')
