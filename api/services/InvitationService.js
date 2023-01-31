@@ -174,9 +174,18 @@ module.exports = {
       .then(group => {
         return GroupMembership.forPair(user, group, {includeInactive: true}).fetch()
         .then(existingMembership => {
-          if (existingMembership) return existingMembership.get('active')
+          if (existingMembership) {
+            return existingMembership.get('active')
               ? existingMembership
-              : existingMembership.save({active: true}, {patch: true}).then(membership => membership)
+              : existingMembership.save({active: true}, {patch: true}).then(membership => {
+                Queue.classMethod('Group', 'afterAddMembers', {
+                  groupId: group.id,
+                  newUserIds: [userId],
+                  reactivatedUserIds: [userId]
+                })
+                return membership
+              })
+          }
           if (!!group) return user.joinGroup(group, GroupMembership.Role.DEFAULT, true).then(membership => membership)
         })
         .catch(err => {
