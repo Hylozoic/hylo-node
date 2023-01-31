@@ -2559,9 +2559,9 @@ async-each@^1.0.1:
   resolved "https://registry.npmjs.org/async-each/-/async-each-1.0.3.tgz"
   integrity sha512-z/WhQ5FPySLdvREByI2vZiTWwCnF0moMJ1hK9YQwDTHKh6I7/uSckMetoRGb5UBZPC1z0jlw+n/XCgjeH7y1AQ==
 
-async-repl@ef4/async-repl:
+async-repl@ownadi/async-repl:
   version "0.4.0"
-  resolved "git+ssh://git@github.com/ef4/async-repl.git#3cc96fd25d043271b62a8d9d8f1ee3d7280d365e"
+  resolved "https://codeload.github.com/ownadi/async-repl/tar.gz/3cc96fd25d043271b62a8d9d8f1ee3d7280d365e"
   dependencies:
     babylon "^6.17.3"
     debug "^2.6.8"
