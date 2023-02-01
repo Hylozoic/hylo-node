@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.3.1] - 2023-02-01
+
 ### Fixed
 - Link previews for unlisted youtube videos without descriptions
+- Creating posts on mobile app
 
 ## [5.3.0] - 2023-01-30
 
