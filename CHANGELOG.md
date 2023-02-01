@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+- Link previews for unlisted youtube videos without descriptions
+
 ## [5.3.0] - 2023-01-30
 
 ### Added
