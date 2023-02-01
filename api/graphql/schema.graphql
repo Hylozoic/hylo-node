@@ -2560,7 +2560,7 @@ input PostInput {
   # URLs for file attachments
   fileUrls: [String]
   # IDs of the groups to post to
-  groupIds: [ID]
+  groupIds: [String]
   # URLs of images in the post
   imageUrls: [String]
   # Whether this post is publicly visible (outside of the groups it is posted to)
