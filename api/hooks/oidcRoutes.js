@@ -24,7 +24,6 @@ module.exports = function (app) {
               return res.redirect('/oauth/login/' + uid + '?name=' + client['name'])
             }
 
-            // TODO: could be called authorize?
             let redirectUrl = '/oauth/consent/' + uid + '?name=' + client['name']
             const missingOIDCScope = get("details.missingOIDCScope", prompt) || false
             if (missingOIDCScope) {

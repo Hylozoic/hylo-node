@@ -1941,7 +1941,7 @@ type Mutation {
   createMessage(data: MessageInput): Message
   # Create a new Post
   createPost(data: PostInput): Post
-  # Create a new 'project' type Post
+  # Create a new 'project' type Post NOT USED RIGHT NOW, use createPost instead
   createProject(data: PostInput): Post
   # NOT USED RIGHT NOW
   createProjectRole(projectId: ID, roleName: String): GenericResult
@@ -2560,7 +2560,7 @@ input PostInput {
   # URLs for file attachments
   fileUrls: [String]
   # IDs of the groups to post to
-  groupIds: [String]
+  groupIds: [ID]
   # URLs of images in the post
   imageUrls: [String]
   # Whether this post is publicly visible (outside of the groups it is posted to)
