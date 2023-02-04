@@ -2,10 +2,12 @@ import { get } from 'lodash/fp'
 import oidc from '../services/OpenIDConnect'
 
 // This is needed for local dev, for some reason it is using :3001 for the port when we want :3000
-// And on staging to make sure we use the right base URL
+// And on staging and prod make sure we use the right base URL
+// Don't know exactly why the request is getting a baseUrl that looks like http://node1.hylo.com 🤷‍♂️
 const adjustRedirectUrl = (url, req) => {
   const redirectUrl = (process.env.PROTOCOL === 'https') ? url.replace('http://', 'https://') : url
-  return redirectUrl.replace(req.baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
+  const baseUrl = (process.env.PROTOCOL === 'https') ? req.baseUrl.replace('http://', 'https://') : req.baseUrl
+  return redirectUrl.replace(baseUrl, process.env.PROTOCOL + '://' + process.env.DOMAIN)
 }
 
 module.exports = function (app) {
@@ -39,6 +41,7 @@ module.exports = function (app) {
 
         'POST /noo/oidc/:uid/login': async (req, res, next) => {
           try {
+
             const details = await oidc.interactionDetails(req, res)
             const { uid, prompt, params } = details
 
