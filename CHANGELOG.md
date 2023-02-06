@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.3.2] - 2023-02-05
+
+### Changed
+- Tweak fields sent to zapier triggers for users/members
+
+### Fixed
+- Fix oAuth authorization code flow
+
 ## [5.3.1] - 2023-02-01
 
 ### Fixed

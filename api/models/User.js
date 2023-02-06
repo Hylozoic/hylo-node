@@ -485,9 +485,9 @@ module.exports = bookshelf.Model.extend(merge({
       if (!isEmpty(this.changed)) {
         // Save the updated fields to send a Zapier trigger for, before we save and lose the changes
         const changedForTrigger = pick(this.changed, [
-          'avatar_url', 'banner_url', 'bio', 'contact_email', 'contact_phone',
+          'avatar_url', 'bio', 'contact_email', 'contact_phone',
           'facebook_url', 'linkedin_url', 'location', 'location_id',
-          'name', 'settings', 'tagline', 'twitter_name', 'url'
+          'name', 'tagline', 'twitter_name', 'url'
         ])
 
         await this.save(Object.assign({ updated_at: new Date() }, this.changed), { patch: true, transacting })
