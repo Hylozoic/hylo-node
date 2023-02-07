@@ -1,5 +1,5 @@
 import { uniq, difference } from 'lodash/fp'
-import moment from 'moment-timezone'
+import { DateTime } from 'luxon'
 
 export default {
   isEvent () {
@@ -8,7 +8,7 @@ export default {
 
   eventInvitees: function () {
     return this.belongsToMany(User).through(EventInvitation, 'event_id', 'user_id')
-    .withPivot('response')
+      .withPivot('response')
   },
 
   eventInvitations: function () {
@@ -49,24 +49,26 @@ export default {
 
   prettyEventDates: function (startTime, endTime) {
     if (!startTime && !endTime) return null
-    const start = moment(startTime)
-    const end = moment(endTime)
+    const dateNoYearWithTime = { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }
+    const dateNoYearNoMonthWithTime = { weekday: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' }
+    const start = startTime instanceof Date ? DateTime.fromJSDate(startTime) : typeof startTime === 'number' ? DateTime.fromMillis(startTime) : DateTime.fromISO(startTime)
+    const end = endTime instanceof Date ? DateTime.fromJSDate(endTime) : typeof endTime === 'number' ? DateTime.fromMillis(endTime) : DateTime.fromISO(endTime)
 
-    const from = start.format('ddd, MMM D [at] h:mmA')
+    const from = start.toLocaleString(dateNoYearWithTime)
 
     let to = ''
 
     if (endTime) {
       if (end.month() !== start.month()) {
-        to = end.format(' - ddd, MMM D [at] h:mmA')
+        to = ` - ${end.toLocaleString(dateNoYearWithTime)}`
       } else if (end.day() !== start.day()) {
-        to = end.format(' - ddd D [at] h:mmA')
+        to = ` - ${end.toLocaleString(dateNoYearNoMonthWithTime)}`
       } else {
-        to = end.format(' - h:mmA')
+        to = ` - ${end.toLocaleString(DateTime.TIME_WITH_SECONDS)}`
       }
     }
 
-    return from + to + " UTC"
+    return from + to + ' UTC'
   },
 
   createInviteNotifications: async function (userId, inviteeIds) {

@@ -1,4 +1,4 @@
-import moment from 'moment-timezone'
+import { DateTime } from 'luxon'
 import formatData from '../../../lib/group/digest2/formatData'
 import personalizeData from '../../../lib/group/digest2/personalizeData'
 import { defaultTimezone, shouldSendData, getRecipients } from '../../../lib/group/digest2/util'
@@ -35,7 +35,7 @@ const u4 = model({
   avatar_url: 'http://cnn.com/man.png'
 })
 
-const group = model({slug: 'foo'})
+const group = model({ slug: 'foo' })
 
 const linkPreview = model({
   id: '1',
@@ -56,7 +56,7 @@ describe('group digest v2', () => {
             post_id: 5,
             relations: {
               user: u3,
-              post: model({id: 5, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
+              post: model({ id: 5, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: { user: u4 } })
             }
           }),
           model({
@@ -65,7 +65,7 @@ describe('group digest v2', () => {
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
+              post: model({ id: 8, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: { user: u4 } })
             }
           }),
           model({
@@ -74,7 +74,7 @@ describe('group digest v2', () => {
             post_id: 8,
             relations: {
               user: u3,
-              post: model({id: 8, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: {user: u4}})
+              post: model({ id: 8, name: 'Old Post, New Comments', summary: () => 'Old Post, New Comments', details: () => {}, relations: { user: u4 } })
             }
           })
 
@@ -133,16 +133,16 @@ describe('group digest v2', () => {
             relations: {
               user: u2,
               children: collection([
-                model({name: 'I need things'}),
-                model({name: 'and love'}),
-                model({name: 'and more things'})
+                model({ name: 'I need things' }),
+                model({ name: 'and love' }),
+                model({ name: 'and more things' })
               ])
             }
           }),
           model({
             id: 78,
             name: '',
-            details: () => "A chat!",
+            details: () => 'A chat!',
             summary: () => 'A chat!',
             type: 'chat',
             relations: {
@@ -168,7 +168,7 @@ describe('group digest v2', () => {
             id: 5,
             title: 'Do you have a dollar?',
             user: u1.attributes,
-            url: Frontend.Route.post({id: 5}, group),
+            url: Frontend.Route.post({ id: 5 }, group),
             comments: [
               {
                 id: 12,
@@ -187,7 +187,7 @@ describe('group digest v2', () => {
             id: 6,
             title: 'I have cookies!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 6}, group),
+            url: Frontend.Route.post({ id: 6 }, group),
             comments: []
           }
         ],
@@ -197,7 +197,7 @@ describe('group digest v2', () => {
             id: 7,
             title: 'Kapow!',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 7}, group),
+            url: Frontend.Route.post({ id: 7 }, group),
             comments: [],
             link_preview: omit(linkPreview.attributes, 'id')
           }
@@ -209,7 +209,7 @@ describe('group digest v2', () => {
             location: 'Home',
             when: 'December 17, 1995 @ 6:30pm',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 76}, group),
+            url: Frontend.Route.post({ id: 76 }, group),
             comments: []
           }
         ],
@@ -218,7 +218,7 @@ describe('group digest v2', () => {
             id: 77,
             title: 'A project with requests',
             user: u2.attributes,
-            url: Frontend.Route.post({id: 77}, group),
+            url: Frontend.Route.post({ id: 77 }, group),
             comments: []
           }
         ],
@@ -226,7 +226,7 @@ describe('group digest v2', () => {
           {
             id: 8,
             title: 'Old Post, New Comments',
-            url: Frontend.Route.post({id: 8}, group),
+            url: Frontend.Route.post({ id: 8 }, group),
             comments: [
               {
                 id: 13,
@@ -266,10 +266,10 @@ describe('group digest v2', () => {
           model({
             id: 1,
             name: 'Foo!',
-            summary: () => `Foo!`,
-            details: () => `<p><a href="/groups/foo/members/21" data-id="21" class="mention" target="_blank">Edward West</a> &amp; ` +
-            `<a href="/groups/foo/members/16325" data-id="16325" class="mention" target="_blank">Julia Pope</a> ` +
-            `<a href="/groups/foo/topics/oakland" data-label="#oakland" class="topic" target="_blank">#oakland</a></p>`,
+            summary: () => 'Foo!',
+            details: () => '<p><a href="/groups/foo/members/21" data-id="21" class="mention" target="_blank">Edward West</a> &amp; ' +
+            '<a href="/groups/foo/members/16325" data-id="16325" class="mention" target="_blank">Julia Pope</a> ' +
+            '<a href="/groups/foo/topics/oakland" data-label="#oakland" class="topic" target="_blank">#oakland</a></p>',
             type: 'request',
             relations: {
               user: u1
@@ -291,7 +291,7 @@ describe('group digest v2', () => {
               `<a href="${prefix}/groups/foo/members/16325" data-id="16325" class="mention" target="_blank">Julia Pope</a> ` +
               `<a href="${prefix}/groups/foo/topics/oakland" data-label="#oakland" class="topic" target="_blank">#oakland</a></p>`,
             user: u1.attributes,
-            url: Frontend.Route.post({id: 1}, group),
+            url: Frontend.Route.post({ id: 1 }, group),
             comments: []
           }
         ],
@@ -304,7 +304,7 @@ describe('group digest v2', () => {
     })
 
     it('sets the no_new_activity key if there is no data', () => {
-      const data = {posts: [], comments: []}
+      const data = { posts: [], comments: [] }
 
       expect(formatData(group, data)).to.deep.equal({
         topicsWithChats: [],
@@ -321,10 +321,10 @@ describe('group digest v2', () => {
   })
 
   describe('personalizeData', () => {
-    var user
+    let user
 
     before(() => {
-      user = factories.user({avatar_url: 'http://google.com/logo.png'})
+      user = factories.user({ avatar_url: 'http://google.com/logo.png' })
       return user.save()
     })
 
@@ -355,8 +355,8 @@ describe('group digest v2', () => {
             details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
               `<a href="${prefix}/members/2?ya=1">Person</a></p>`,
             comments: [
-              {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
-              {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4">Bob</a>`}
+              { id: 3, user: user.pick('id', 'avatar_url'), text: 'Na' },
+              { id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4">Bob</a>` }
             ],
             url: 'https://www.hylo.com/all/post/2'
           }
@@ -381,12 +381,12 @@ describe('group digest v2', () => {
               title: 'Ya',
               user: u3.attributes,
               details: '<p><a href="mailto:foo@bar.com">foo@bar.com</a> and ' +
-                `<a href="${prefix}/members/2?ya=1&amp;${ctParams.replace(/\&/g, '&amp;')}">Person</a></p>`,
+                `<a href="${prefix}/members/2?ya=1&amp;${ctParams.replace(/&/g, '&amp;')}">Person</a></p>`,
               reply_url: Email.postReplyAddress(2, user.id),
               url: 'https://www.hylo.com/all/post/2?' + ctParams,
               comments: [
-                {id: 3, user: user.pick('id', 'avatar_url'), text: 'Na'},
-                {id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4?${ctParams.replace(/\&/g, '&amp;')}">Bob</a>`}
+                { id: 3, user: user.pick('id', 'avatar_url'), text: 'Na' },
+                { id: 4, user: u2.attributes, text: `Woa <a href="${prefix}/members/4?${ctParams.replace(/&/g, '&amp;')}">Bob</a>` }
               ]
             }
           ],
@@ -398,7 +398,7 @@ describe('group digest v2', () => {
           post_creation_action_url: Frontend.Route.emailPostForm(),
           reply_action_url: Frontend.Route.emailBatchCommentForm(),
           form_token: Email.formToken(77, user.id),
-          tracking_pixel_url: Analytics.pixelUrl('Digest', {userId: user.id, group: 'foo'}),
+          tracking_pixel_url: Analytics.pixelUrl('Digest', { userId: user.id, group: 'foo' }),
           subject: `Hi | ${u4.name}`,
           group_url: 'https://www.hylo.com/groups/foo?' + ctParams
         }))
@@ -408,35 +408,35 @@ describe('group digest v2', () => {
 
   describe('shouldSendData', () => {
     it('is false if the data is empty', () => {
-      const data = {requests: [], offers: [], discussions: []}
+      const data = { requests: [], offers: [], discussions: [] }
       return shouldSendData(data).then(val => expect(val).to.be.false)
     })
 
     it('is true if there is some data', () => {
-      const data = {discussions: [{id: 'foo'}]}
+      const data = { discussions: [{ id: 'foo' }] }
       return shouldSendData(data).then(val => expect(val).to.be.true)
     })
   })
 
   describe('sendAllDigests', () => {
-    var args, u1, u2, group, post
+    let args, u1, u2, group, post
 
     before(async () => {
       spyify(Email, 'sendSimpleEmail', function () { args = arguments })
-      const six = moment.tz(defaultTimezone).startOf('day').add(6, 'hours')
+      const six = DateTime.now().setZone(defaultTimezone).startOf('day').plus({ hours: 6 })
 
       u1 = await factories.user({
         active: true,
-        settings: {digest_frequency: 'daily'},
+        settings: { digest_frequency: 'daily' },
         avatar_url: 'av1'
       }).save()
-      u2 = await factories.user({avatar_url: 'av2'}).save()
+      u2 = await factories.user({ avatar_url: 'av2' }).save()
       group = await factories.group({ avatar_url: 'foo' }).save()
 
-      post = await factories.post({created_at: six, user_id: u2.id, type: 'discussion'}).save()
+      post = await factories.post({ created_at: six, user_id: u2.id, type: 'discussion' }).save()
       await post.groups().attach(group.id)
       await group.addMembers([u1.id], {
-        settings: {sendEmail: true}
+        settings: { sendEmail: true }
       })
     })
 
@@ -490,7 +490,7 @@ describe('group digest v2', () => {
   })
 
   describe('sendDigest', () => {
-    var group
+    let group
 
     beforeEach(() => {
       group = factories.group()
@@ -500,24 +500,24 @@ describe('group digest v2', () => {
     describe('when there is no data', () => {
       it('does not send -- feature disabled', () => {
         return sendDigest(group.id, 'daily')
-        .then(result => expect(result).to.equal(false))
+          .then(result => expect(result).to.equal(false))
       })
     })
   })
 })
 
 describe('getRecipients', () => {
-  var g, uIn1, uOut1, uOut2, uOut3, uOut4, uOut5, uIn2
+  let g, uIn1, uOut1, uOut2, uOut3, uOut4, uOut5, uIn2
 
   before(async () => {
-    const settings = {digest_frequency: 'daily'}
-    uIn1 = factories.user({settings})
-    uOut1 = factories.user({active: false, settings})                // inactive user
-    uOut2 = factories.user({settings})                               // inactive membership
-    uOut3 = factories.user({settings})                               // send_email = false
-    uOut4 = factories.user({settings: {digest_frequency: 'weekly'}}) // digest_frequency = 'weekly'
-    uOut5 = factories.user({settings})                               // not in the group
-    uIn2 = factories.user({settings})
+    const settings = { digest_frequency: 'daily' }
+    uIn1 = factories.user({ settings })
+    uOut1 = factories.user({ active: false, settings }) // inactive user
+    uOut2 = factories.user({ settings }) // inactive membership
+    uOut3 = factories.user({ settings }) // send_email = false
+    uOut4 = factories.user({ settings: { digest_frequency: 'weekly' } }) // digest_frequency = 'weekly'
+    uOut5 = factories.user({ settings }) // not in the group
+    uIn2 = factories.user({ settings })
     g = factories.group()
     await Promise.join(
       uIn1.save(),
@@ -531,19 +531,19 @@ describe('getRecipients', () => {
     )
 
     await g.addMembers([uIn1, uOut1, uOut2, uOut4, uIn2], {
-      settings: {sendEmail: true}
+      settings: { sendEmail: true }
     })
 
-    await g.addMembers([uOut3], {settings: {sendEmail: false}})
+    await g.addMembers([uOut3], { settings: { sendEmail: false } })
     await g.removeMembers([uOut2])
   })
 
   it('only returns active members with email turned on and the right digest type', () => {
     return getRecipients(g.id, 'daily')
-    .then(models => {
-      expect(models.length).to.equal(2)
-      expect(models.map(m => m.id).sort())
-      .to.deep.equal([uIn1.id, uIn2.id].sort())
-    })
+      .then(models => {
+        expect(models.length).to.equal(2)
+        expect(models.map(m => m.id).sort())
+          .to.deep.equal([uIn1.id, uIn2.id].sort())
+      })
   })
 })

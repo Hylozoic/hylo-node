@@ -1,8 +1,8 @@
-import moment from 'moment-timezone'
+import { DateTime } from 'luxon'
 import { merge, transform, sortBy } from 'lodash'
 
 // TODO: this is old and broken
-var rawMetricsQuery = startTime => Promise.props({
+const rawMetricsQuery = startTime => Promise.props({
   community: Community.query(q => {
     q.select(['id', 'name', 'created_at', 'avatar_url'])
   }).query(),
@@ -31,39 +31,39 @@ var rawMetricsQuery = startTime => Promise.props({
 module.exports = {
   loginAsUser: function (req, res) {
     return User.find(req.param('userId'))
-    .then(user => UserSession.login(req, user, 'admin'))
-    .then(() => res.redirect('/app'))
+      .then(user => UserSession.login(req, user, 'admin'))
+      .then(() => res.redirect('/app'))
   },
 
   rawMetrics: function (req, res) {
-    const startTime = moment().subtract(3, 'months').toDate()
+    const startTime = DateTime.now().minus({ months: 3 }).toJSDate()
     return rawMetricsQuery(startTime)
-    .then(props => {
-      let result = props.community.reduce((acc, c) => {
-        acc[c.id] = merge(c, {events: []})
-        return acc
-      }, {})
+      .then(props => {
+        let result = props.community.reduce((acc, c) => {
+          acc[c.id] = merge(c, { events: [] })
+          return acc
+        }, {})
 
-      result.none = {id: 'none', name: 'No community', events: []}
+        result.none = { id: 'none', name: 'No community', events: [] }
 
-      ;['user', 'post', 'comment'].forEach(name => {
-        props[name].forEach(item => {
-          const key = item.community_id || 'none'
-          result[key].events.push({
-            time: Date.parse(item.created_at),
-            user_id: item.user_id || item.id,
-            name
+        ;['user', 'post', 'comment'].forEach(name => {
+          props[name].forEach(item => {
+            const key = item.community_id || 'none'
+            result[key].events.push({
+              time: Date.parse(item.created_at),
+              user_id: item.user_id || item.id,
+              name
+            })
           })
         })
+
+        result = transform(result, (acc, c, k) => {
+          if (c.events.length === 0) return
+          c.events = sortBy(c.events, 'time')
+          acc[k] = c
+        }, {})
+
+        res.ok(result)
       })
-
-      result = transform(result, (acc, c, k) => {
-        if (c.events.length === 0) return
-        c.events = sortBy(c.events, 'time')
-        acc[k] = c
-      }, {})
-
-      res.ok(result)
-    })
   }
 }
