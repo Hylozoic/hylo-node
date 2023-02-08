@@ -1213,15 +1213,17 @@ type Me {
   # Set of Users the logged in user has blocked
   blockedUsers: [Person]
 
-  # Hylo Group memberships
+  # Groups I am a member of
   groups(
     # Start loading groups at this group id
     cursor: ID,
     # Load this number of groups
     first: Int,
+    # Starting loading groups at this offset
+    offset: Int,
     # Determines sort order, either 'ASC' or 'DESC'. Groups always sorted by order they were created.
     order: String
-  ): [Membership]
+  ): [Group]
 
   # Set of pending invites to Groups
   groupInvitesPending: InvitationQuerySet
@@ -1232,7 +1234,7 @@ type Me {
     status: Int
   ): JoinRequestQuerySet
 
-  # Hylo Group memberships
+  # Group memberships
   memberships(
     # Start loading memberships at this id
     cursor: ID,
