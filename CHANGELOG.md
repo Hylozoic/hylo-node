@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.3.3] - 2023-02-09
+
+### Added
+- sortby and offset parameters to me.groups queries
+
+### Changed
+- me.groups returns Group objects now, not Memberships
+- Change name of zapier trigger leaves_group to member_leaves
+
 ## [5.3.2] - 2023-02-05
 
 ### Changed
