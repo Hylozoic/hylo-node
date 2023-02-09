@@ -776,7 +776,7 @@ module.exports = bookshelf.Model.extend(merge({
   // Background jobs
 
   async afterLeaveGroup({ removedByModerator, groupId, userId }) {
-    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'leaves_group' })).fetchAll()
+    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'member_leaves' })).fetchAll()
     if (zapierTriggers && zapierTriggers.length > 0) {
       const user = await User.find(userId)
       for (const trigger of zapierTriggers) {
