@@ -139,8 +139,8 @@ export const filterAndSortPosts = curry((opts, q) => {
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
-  if (sort === 'posts.updated_at' && showPinnedFirst) {
-    q.orderByRaw('groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, posts.updated_at desc')
+  if (showPinnedFirst) {
+    q.orderByRaw(`groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, ${sort || 'posts.updated_at'} ${order || (sortBy === 'order' ? 'asc' : 'desc')}`)
   } else if (sort) {
     q.orderBy(sort, order || (sortBy === 'order' ? 'asc' : 'desc'))
   }
