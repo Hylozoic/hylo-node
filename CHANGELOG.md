@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.3.4] - 2023-02-14
+
+### Changed
+- Pinned posts now appear first in every context they are visible and regardless of the sort
+
 ## [5.3.3] - 2023-02-09
 
 ### Added
