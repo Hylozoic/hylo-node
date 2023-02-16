@@ -283,7 +283,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
-    addGroupRole: (root, { groupId, color, name, emoji }) => addGroupRole({userId, groupId, color, name, emoji}),
+    addGroupRole: (root, { groupId, color, name, description, emoji }) => addGroupRole({userId, groupId, color, name, description, emoji}),
 
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
@@ -294,7 +294,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
 
-    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ personId, groupRoleId, groupId }),
+    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ userId, personId, groupRoleId, groupId }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
@@ -454,7 +454,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
 
-    updateGroupRole: (root, { groupRoleId, color, name, emoji, active, groupId }) => updateGroupRole({userId, groupRoleId, color, name, emoji, active, groupId}),
+    updateGroupRole: (root, { groupRoleId, color, name, description, emoji, active, groupId }) => updateGroupRole({userId, groupRoleId, color, name, description, emoji, active, groupId}),
 
     updateGroupSettings: (root, { id, changes }) =>
       updateGroup(userId, id, changes),

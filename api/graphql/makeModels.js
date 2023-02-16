@@ -127,6 +127,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'memberships',
         'moderatedGroupMemberships',
         'locationObject',
+        'groupRoles',
         {affiliations: {querySet: true}},
         {eventsAttending: {querySet: true}},
         {posts: {querySet: true}},
@@ -280,6 +281,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {customViews: {querySet: true}},
         {groupRelationshipInvitesFrom: {querySet: true}},
         {groupRelationshipInvitesTo: {querySet: true}},
+        {groupRoles: {querySet: true}},
         {groupTags: {
           querySet: true,
           alias: 'groupTopics',
@@ -296,8 +298,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {memberships: {querySet: true}},
         {members: {
           querySet: true,
-          filter: (relation, { autocomplete, boundingBox, order, search, sortBy }) =>
-            relation.query(filterAndSortUsers({ autocomplete, boundingBox, order, search, sortBy }))
+          filter: (relation, { autocomplete, boundingBox, groupRoleId, order, search, sortBy }) =>
+            relation.query(filterAndSortUsers({ autocomplete, boundingBox, groupRoleId, order, search, sortBy }))
         }},
         {parentGroups: {querySet: true}},
         {posts: {
@@ -517,6 +519,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       attributes: [
         'color',
         'emoji',
+        'description',
         'name',
         'active',
         'createdAt',
@@ -704,24 +707,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'postcode'
       ]
     },
-
-    MemberRole: {
-      model: MemberRole,
-      attributes: [
-        'color',
-        'emoji',
-        'name',
-        'active',
-        'createdAt',
-        'updatedAt'
-      ],
-      relations: [
-        'groupRole',
-        'group',
-        'user'
-      ]
-    },
-
+    
     MessageThread: {
       model: Post,
       attributes: ['created_at', 'updated_at'],

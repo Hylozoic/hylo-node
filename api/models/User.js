@@ -114,6 +114,12 @@ module.exports = bookshelf.Model.extend(merge({
       )
   },
 
+  groupRoles() {
+    return this.belongsToMany(GroupRole)
+      .through(MemberRole, 'user_id', 'group_role_id')
+      .where('groups_roles.active', true)
+  },
+
   contributions: function () {
     return this.hasMany(Contribution)
   },
@@ -277,6 +283,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     DELETE FROM thanks WHERE comment_id in (select id from comments WHERE user_id = ${this.id});
     DELETE FROM thanks WHERE thanked_by_id = ${this.id};
+    DELETE FROM members_roles WHERE user_id = ${this.id};
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
     DELETE FROM push_notifications WHERE device_id in (select id from devices WHERE user_id = ${this.id});

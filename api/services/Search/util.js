@@ -147,11 +147,16 @@ export const filterAndSortPosts = curry((opts, q) => {
 
 })
 
-export const filterAndSortUsers = curry(({ autocomplete, boundingBox, order, search, sortBy }, q) => {
+export const filterAndSortUsers = curry(({ autocomplete, boundingBox, groupRoleId, order, search, sortBy }, q) => {
   if (autocomplete) {
     addTermToQueryBuilder(autocomplete, q, {
       columns: ['users.name']
     })
+  }
+
+  if (groupRoleId) {
+    q.leftJoin('members_roles', 'members_roles.user_id', '=', 'users.id')
+    q.where('members_roles.group_role_id', '=', groupRoleId)
   }
 
   if (search) {
