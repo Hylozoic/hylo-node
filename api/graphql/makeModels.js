@@ -86,7 +86,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
     Membership: {
       model: GroupMembership,
       attributes: [
-        'created_at'
+        'created_at',
+        'group_id'
       ],
       relations: [
         { group: { alias: 'group' } },
@@ -520,6 +521,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'color',
         'emoji',
         'description',
+        'group_id',
         'name',
         'active',
         'createdAt',

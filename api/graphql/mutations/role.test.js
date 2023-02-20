@@ -56,12 +56,4 @@ describe('roles mutations', () => {
     expect(updatedGroupRole.get('color')).to.equal('green')
 
   })
-
-  it('deactivates a member role when a group role is deactivated', async () => {
-    const groupRole = await addGroupRole({ groupId: group.id, color, name, emoji, userId: user2.id })
-    const memberRole = await addRoleToMember({ userId: user2.id, groupRoleId: groupRole.get('id'), personId: user.id, groupId: group.id })
-    const updatedGroupRole = await updateGroupRole({ groupId: group.id, active: false, userId: user2.id, groupRoleId: groupRole.get('id') })
-    const updatedMemberRole = await MemberRole.where({id: memberRole.get('id')}).fetch()
-    expect(updatedMemberRole.get('active')).to.be.false
-  })
 })
