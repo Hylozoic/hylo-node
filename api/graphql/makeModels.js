@@ -28,8 +28,8 @@ import {
 export default function makeModels (userId, isAdmin, apiClient) {
   const nonAdminFilter = makeFilterToggle(!isAdmin)
 
-  // XXX: for now give API users more access, in the future track which groups each client can access
-  const apiFilter = makeFilterToggle(!apiClient)
+  // XXX: for now give super API users more access, in the future track which groups each client can access
+  const apiFilter = makeFilterToggle(!apiClient || !apiClient.super)
 
   return {
     Me: {

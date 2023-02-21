@@ -160,7 +160,7 @@ type Query {
     # Number of People to return
     first: Int,
     # Only return members of these groups by group ID
-    groupIds: [String],
+    groupIds: [ID],
     # For pagination return people after this offset
     offset: Int,
     # Number of People to return
@@ -1226,15 +1226,19 @@ type Me {
   # Set of Users the logged in user has blocked
   blockedUsers: [Person]
 
-  # Hylo Group memberships
+  # Groups I am a member of
   groups(
     # Start loading groups at this group id
     cursor: ID,
     # Load this number of groups
     first: Int,
-    # Determines sort order, either 'ASC' or 'DESC'. Groups always sorted by order they were created.
+    # Starting loading groups at this offset
+    offset: Int,
+    # Determines sort order, either 'ASC' or 'DESC'.
     order: String
-  ): [Membership]
+    # 'name', 'size', or 'nearest'. If empty then by default sorted by order they were created.
+    sortBy: String
+  ): [Group]
 
   # Set of pending invites to Groups
   groupInvitesPending: InvitationQuerySet
@@ -1245,7 +1249,7 @@ type Me {
     status: Int
   ): JoinRequestQuerySet
 
-  # Hylo Group memberships
+  # Group memberships
   memberships(
     # Start loading memberships at this id
     cursor: ID,
@@ -1864,6 +1868,15 @@ type Widget {
   name: String
 }
 
+type ZapierTrigger {
+  id: ID
+  groupId: ID
+  # The Zapier URL to call when this type is triggered
+  targetUrl: String
+  # When this gets triggered. Options: 'new_member' = when 1 or more members are added to a group
+  type: String
+}
+
 # The mutations accepted by Hylo
 type Mutation {
   # For a moderator to accept an invitation to one of their groups to be related to another group (either as a parent or a child)
@@ -1935,7 +1948,7 @@ type Mutation {
   createMessage(data: MessageInput): Message
   # Create a new Post
   createPost(data: PostInput): Post
-  # Create a new 'project' type Post
+  # Create a new 'project' type Post NOT USED RIGHT NOW, use createPost instead
   createProject(data: PostInput): Post
   # NOT USED RIGHT NOW
   createProjectRole(projectId: ID, roleName: String): GenericResult
@@ -1943,6 +1956,8 @@ type Mutation {
   createSavedSearch(data: SavedSearchInput): SavedSearch
   # Create a new topic within a Group
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
+  # Add a new Zapier trigger (called by Zapier)
+  createZapierTrigger(groupId: ID, targetUrl: String, type: String): ZapierTrigger
   # Used by current logged in user to deactivate their account
   deactivateMe(id: ID): GenericResult
   # Used by current logged in user to delete their account permanently
@@ -1967,6 +1982,8 @@ type Mutation {
   deleteReaction(entityId: ID, data: ReactionInput): Post
   # Delete a SavedSearch you created
   deleteSavedSearch(id: ID): ID
+  # Delete a Zapier trigger (called by Zapier)
+  deleteZapierTrigger(id: ID): Boolean
   # Set an invitation to join a group as expired. Only a group moderator can call this.
   expireInvitation(invitationId: ID): GenericResult
   # Look for a link preview of a URL, or if not found create one
@@ -2085,7 +2102,7 @@ type Mutation {
   updateGroup(
     id: ID,
     changes: GroupInput,
-    # Update group as a particular User
+    # Update group as a particular User (with permission)
     asUserId: ID
   ): Group
   # Update a badge/role from a group and all associated roles
@@ -2558,7 +2575,7 @@ input PostInput {
   # URLs for file attachments
   fileUrls: [String]
   # IDs of the groups to post to
-  groupIds: [String]
+  groupIds: [ID]
   # URLs of images in the post
   imageUrls: [String]
   # Whether this post is publicly visible (outside of the groups it is posted to)

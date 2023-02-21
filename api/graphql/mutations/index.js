@@ -106,6 +106,10 @@ export {
   updateStripeAccount,
   verifyEmail
 } from './user'
+export {
+  createZapierTrigger,
+  deleteZapierTrigger
+} from './zapier'
 
 export async function updateMe (sessionId, userId, changes) {
   const user = await User.find(userId)

@@ -6,6 +6,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.3.4] - 2023-02-14
+
+### Changed
+- Pinned posts now appear first in every context they are visible and regardless of the sort
+
+## [5.3.3] - 2023-02-09
+
+### Added
+- sortby and offset parameters to me.groups queries
+
+### Changed
+- me.groups returns Group objects now, not Memberships
+- Change name of zapier trigger leaves_group to member_leaves
+
+## [5.3.2] - 2023-02-05
+
+### Changed
+- Tweak fields sent to zapier triggers for users/members
+
+### Fixed
+- Fix oAuth authorization code flow
+
+## [5.3.1] - 2023-02-01
+
+### Fixed
+- Link previews for unlisted youtube videos without descriptions
+- Creating posts on mobile app
+
+## [5.3.0] - 2023-01-30
+
+### Added
+- Support for oAuth Authorization Code flow, to enable full API integrations with other apps!
+- Initial Zapier triggers: When a member is added to a group, when a member leaves or is removed from a group, when a member of a group updates their profile information.
+- Database tables for GroupRole and MemberRole to support adding roles or badges to group members.
+
 ## [5.2.1] - 2023-01-20
 
 ### Changed

@@ -26,10 +26,8 @@ const LinkPreview = bookshelf.Model.extend({
       const linkPreviewData = await getLinkPreview(preview.get('url'), { followRedirects: 'follow' })
       const attrs = doneAttrs()
 
-      if (linkPreviewData?.title && linkPreviewData?.description) {
-        attrs.title = linkPreviewData?.title
-        attrs.description = linkPreviewData?.description
-      }
+      attrs.title = linkPreviewData?.title
+      attrs.description = linkPreviewData?.description
 
       const imageURL = get('images[0]', linkPreviewData) || get('favicons[0]', linkPreviewData)
 

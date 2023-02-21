@@ -1,16 +1,11 @@
 {
   "name": "hylo-node",
-  "scripts": {
-  },
-  "env": {
-    "COOKIE_DOMAIN": ""
-  },
-  "formation": {
-  },
+  "description": "The back-end/API server for Hylo - the Social Coordination Platform for a Thriving Planet",
+  "stack": "heroku-20",
   "addons": [
     "redisgreen",
     "scheduler",
-    "heroku-postgresql"
+    "heroku-postgresql:standard-0"
   ],
   "buildpacks": [
     {
@@ -23,5 +18,57 @@
       "url": "https://github.com/Hylozoic/heroku-buildpack-migrate"
     }
   ],
-  "stack": "heroku-20"
+  "env": {
+    "COOKIE_DOMAIN": ".hylo.com",
+    "COOKIE_NAME": "hylo.sid2",
+    "COOKIE_SECRET": {
+      "description": "A secret key for verifying the integrity of signed cookies.",
+      "generator": "secret"
+    },
+    "EMAIL_SENDER": "dev@hylo.com",
+    "JWT_SECRET": {
+      "description": "A secret key for creating JWTs.",
+      "generator": "secret"
+    },
+    "NODE_ENV": "production",
+    "NODE_MODULES_CACHE": false,
+    "PROTOCOL": "https"
+  },
+  "scripts": {
+  },
+  "environments": {
+    "review": {
+      "formation": {
+        "web": {
+          "quantity": 1,
+          "size": "basic"
+        },
+        "worker": {
+          "quantity": 1,
+          "size": "basic"
+        }
+      },
+      "addons": [
+        "redisgreen",
+        "scheduler",
+        "heroku-postgresql:basic"
+      ],
+      "buildpacks": [
+        {
+          "url": "https://github.com/mcollina/heroku-buildpack-graphicsmagick"
+        },
+        {
+          "url": "heroku/nodejs"
+        }
+      ],
+      "env": {
+        "COOKIE_DOMAIN": ".hylo.com",
+        "COOKIE_NAME": "hylo.review.sid2",
+        "EMAIL_SENDER": "dev+review@hylo.com",
+        "NODE_ENV": "production",
+        "NODE_MODULES_CACHE": false,
+        "PROTOCOL": "http"
+      }
+    }
+  }
 }

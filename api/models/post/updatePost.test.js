@@ -46,7 +46,6 @@ describe('afterUpdatingPost', () => {
 
     const followers = await post.followers().fetch()
 
-    console.log('!!! followers', followers)
     expect(followers.pluck('id').sort()).to.deep.equal([u1.id, u2.id].sort())
   })
 
