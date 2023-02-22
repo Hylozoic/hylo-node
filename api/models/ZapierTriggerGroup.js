@@ -1,7 +1,7 @@
 module.exports = bookshelf.Model.extend({
   tableName: 'zapier_triggers_groups',
   requireFetch: false,
-  hasTimestamps: true,
+  hasTimestamps: false,
 
   trigger: function () {
     return this.belongsTo(ZapierTrigger)

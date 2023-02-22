@@ -24,7 +24,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   forTypeAndGroups (type, groupIdOrArray) {
     const groupIds = castArray(groupIdOrArray)
     return ZapierTrigger.query(q => {
-      q.join('zapier_triggers_groups', 'trigger_id', 'zapier_triggers.id')
+      q.join('zapier_triggers_groups', 'zapier_trigger_id', 'zapier_triggers.id')
       q.where({ type }).whereIn('group_id', groupIds)
     })
   }
