@@ -5,6 +5,7 @@ import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
 import { TextHelpers } from 'hylo-shared'
+import fetch from 'node-fetch'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -668,24 +669,33 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   // Background task to fire zapier triggers on new_post
   zapierTriggers: async ({ postId }) => {
-    const post = await Post.find(postId, { withRelated: ['groups'] })
+    const post = await Post.find(postId, { withRelated: ['groups', 'tags'] })
     if (!post) return
     const groupIds = post.relations.groups.map(g => g.id)
     const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_post', groupIds).fetchAll()
     if (zapierTriggers && zapierTriggers.length > 0) {
-      const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
       for (const trigger of zapierTriggers) {
         // Check if this trigger is only for certain post types and if so whether it matches this post type
         if (trigger.get('params')?.types?.length > 0 && !trigger.get('params').types.includes(post.get('type'))) {
           continue
         }
+
         const response = await fetch(trigger.get('target_url'), {
           method: 'post',
-          body: JSON.stringify(members.map(m => ({
-            id: m.id,
-            name: m.get('name'),
-            reactivated: reactivatedUserIds.includes(m.id)
-          }))),
+          body: JSON.stringify({
+            id: post.id,
+            announcement: post.get('announcement'),
+            title: post.summary(),
+            details: post.details(),
+            createdAt: post.get('created_at'),
+            endTime: post.get('end_time'),
+            isPublic: post.get('is_public'),
+            location: post.get('location'),
+            startTime: post.get('start_time'),
+            type: post.get('type'),
+            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name')})),
+            topics: post.relations.tags.map(t => ({ name: t.get('name')})),
+          }),
           headers: { 'Content-Type': 'application/json' }
         })
         // TODO: what to do with the response? check if succeeded or not?
