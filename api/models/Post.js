@@ -669,7 +669,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   // Background task to fire zapier triggers on new_post
   zapierTriggers: async ({ postId }) => {
-    const post = await Post.find(postId, { withRelated: ['groups', 'tags'] })
+    const post = await Post.find(postId, { withRelated: ['groups', 'tags', 'user'] })
     if (!post) return
     const groupIds = post.relations.groups.map(g => g.id)
     const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_post', groupIds).fetchAll()
@@ -680,20 +680,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
           continue
         }
 
+        const creator = post.relations.user
         const response = await fetch(trigger.get('target_url'), {
           method: 'post',
           body: JSON.stringify({
             id: post.id,
             announcement: post.get('announcement'),
-            title: post.summary(),
-            details: post.details(),
             createdAt: post.get('created_at'),
+            creator: { name: creator.get('name'), url: Frontend.Route.profile(creator) },
+            details: post.details(),
             endTime: post.get('end_time'),
             isPublic: post.get('is_public'),
             location: post.get('location'),
             startTime: post.get('start_time'),
+            title: post.summary(),
             type: post.get('type'),
-            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name')})),
+            url: Frontend.Route.post(post),
+            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), postUrl: Frontend.Route.post(post, g) })),
             topics: post.relations.tags.map(t => ({ name: t.get('name')})),
           }),
           headers: { 'Content-Type': 'application/json' }
