@@ -1,13 +1,15 @@
-export async function createZapierTrigger (userId, groupId, targetUrl, type) {
-  if (groupId) {
-    const membership = await GroupMembership.forPair(userId, groupId)
-    if (!membership) {
-      throw new GraphQLYogaError('You don\'t have access to a group with this ID')
+export async function createZapierTrigger (userId, groupIds, targetUrl, type, params) {
+  const trigger = ZapierTrigger.forge({ user_id: userId, target_url: targetUrl, type, params })
+
+  if (groupIds && groupIds.length > 0) {
+    const memberships = await GroupMembership.query(q => q.where({ user_id: userId }).whereIn('group_id', groupIds)).fetchAll()
+    if (!memberships || memberships.length === 0) {
+      throw new GraphQLYogaError('You don\'t have access to any of these groups')
     }
+    trigger.groups().attach(memberships.map(m => m.group_id))
   }
 
-  const trigger = await ZapierTrigger.forge({ user_id: userId, group_id: groupId, target_url: targetUrl, type }).save()
-  return trigger
+  return trigger.save()
 }
 
 export async function deleteZapierTrigger (userId, id) {

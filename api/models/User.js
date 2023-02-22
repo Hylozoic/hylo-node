@@ -776,7 +776,7 @@ module.exports = bookshelf.Model.extend(merge({
   // Background jobs
 
   async afterLeaveGroup({ removedByModerator, groupId, userId }) {
-    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'member_leaves' })).fetchAll()
+    const zapierTriggers = await ZapierTrigger.forTypeAndGroups('member_leaves', groupId).fetchAll()
     if (zapierTriggers && zapierTriggers.length > 0) {
       const user = await User.find(userId)
       for (const trigger of zapierTriggers) {
@@ -795,7 +795,7 @@ module.exports = bookshelf.Model.extend(merge({
     if (user) {
       const memberships = await user.memberships().fetch()
       memberships.models.forEach(async (membership) => {
-        const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: membership.get('group_id'), type: 'member_updated' })).fetchAll()
+        const zapierTriggers = await ZapierTrigger.forTypeAndGroups('member_udpated', membership.get('group_id')).fetchAll()
         for (const trigger of zapierTriggers) {
           const response = await fetch(trigger.get('target_url'), {
             method: 'post',

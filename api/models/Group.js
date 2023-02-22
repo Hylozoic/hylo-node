@@ -544,7 +544,8 @@ module.exports = bookshelf.Model.extend(merge({
 
   // Background task to do additional work/tasks when new members are added to a group
   async afterAddMembers({ groupId, newUserIds, reactivatedUserIds }) {
-    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'new_member' })).fetchAll()
+    const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_member', groupId).fetchAll()
+
     if (zapierTriggers && zapierTriggers.length > 0) {
       const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
       for (const trigger of zapierTriggers) {

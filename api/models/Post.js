@@ -662,7 +662,35 @@ module.exports = bookshelf.Model.extend(Object.assign({
     Post.find(postId, {withRelated: ['groups', 'user', 'relatedUsers']})
     .then(post => {
       if (!post) return
-      const slackCommunities = post.relations.groups.filter(c => c.get('slack_hook_url'))
-      return Promise.map(slackCommunities, c => Group.notifySlack(c.id, post))
-    })
+      const slackCommunities = post.relations.groups.filter(g => g.get('slack_hook_url'))
+      return Promise.map(slackCommunities, g => Group.notifySlack(g.id, post))
+    }),
+
+  // Background task to fire zapier triggers on new_post
+  zapierTriggers: async ({ postId }) => {
+    const post = await Post.find(postId, { withRelated: ['groups'] })
+    if (!post) return
+    const groupIds = post.relations.groups.map(g => g.id)
+    const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_post', groupIds).fetchAll()
+    if (zapierTriggers && zapierTriggers.length > 0) {
+      const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
+      for (const trigger of zapierTriggers) {
+        // Check if this trigger is only for certain post types and if so whether it matches this post type
+        if (trigger.get('params')?.types?.length > 0 && !trigger.get('params').types.includes(post.get('type'))) {
+          continue
+        }
+        const response = await fetch(trigger.get('target_url'), {
+          method: 'post',
+          body: JSON.stringify(members.map(m => ({
+            id: m.id,
+            name: m.get('name'),
+            reactivated: reactivatedUserIds.includes(m.id)
+          }))),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        // TODO: what to do with the response? check if succeeded or not?
+      }
+    }
+  }
+
 })
