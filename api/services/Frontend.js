@@ -129,7 +129,7 @@ module.exports = {
 
     profile: function (user, group) {
       if (group) {
-        url(`/groups/${getSlug(group)}/members/${getModelId(user)}`)
+        return url(`/groups/${getSlug(group)}/members/${getModelId(user)}`)
       }
       return url(`/members/${getModelId(user)}`)
     },
