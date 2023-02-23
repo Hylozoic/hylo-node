@@ -127,7 +127,10 @@ module.exports = {
       return url(`${contextUrl}/map/post/${getModelId(post)}`)
     },
 
-    profile: function (user) {
+    profile: function (user, group) {
+      if (group) {
+        url(`/groups/${getSlug(group)}/members/${getModelId(user)}`)
+      }
       return url(`/members/${getModelId(user)}`)
     },
 

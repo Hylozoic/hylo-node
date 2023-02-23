@@ -15,10 +15,13 @@ export async function createZapierTrigger (userId, groupIds, targetUrl, type, pa
 }
 
 export async function deleteZapierTrigger (userId, id) {
-  const trigger = await ZapierTrigger.query(q => q.where({ id, userId })).fetch()
+  return bookshelf.transaction(async (transacting) => {
+    const trigger = await ZapierTrigger.query(q => q.where({ id, userId })).fetch()
 
-  if (trigger) {
-    await trigger.destroy()
-  }
-  return true
+    if (trigger) {
+      await ZapierTriggerGroup.where({ zapier_trigger_id: id }).destroy({ transacting })
+      await trigger.destroy({ transacting })
+    }
+    return true
+  })
 }

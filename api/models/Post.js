@@ -671,6 +671,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   zapierTriggers: async ({ postId }) => {
     const post = await Post.find(postId, { withRelated: ['groups', 'tags', 'user'] })
     if (!post) return
+
     const groupIds = post.relations.groups.map(g => g.id)
     const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_post', groupIds).fetchAll()
     if (zapierTriggers && zapierTriggers.length > 0) {
@@ -696,7 +697,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
             title: post.summary(),
             type: post.get('type'),
             url: Frontend.Route.post(post),
-            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), postUrl: Frontend.Route.post(post, g) })),
+            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), url: Frontend.Route.group(g), postUrl: Frontend.Route.post(post, g) })),
             topics: post.relations.tags.map(t => ({ name: t.get('name')})),
           }),
           headers: { 'Content-Type': 'application/json' }
