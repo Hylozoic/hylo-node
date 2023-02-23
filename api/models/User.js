@@ -808,7 +808,7 @@ module.exports = bookshelf.Model.extend(merge({
         for (const trigger of zapierTriggers) {
           const response = await fetch(trigger.get('target_url'), {
             method: 'post',
-            body: JSON.stringify(Object.assign({ id: user.id }, changes)),
+            body: JSON.stringify(Object.assign({ id: user.id, profileUrl: Frontend.Route.profile(user) }, changes)),
             headers: { 'Content-Type': 'application/json' }
           })
           // TODO: what to do with the response? check if succeeded or not?
