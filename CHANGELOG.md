@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.3.5] - 2023-02-26
+
+### Added
+- Zapier trigger when new posts are created
+
+### Changed
+- Zapier triggers can now be setup to track (work with) more than one group at a time
+- Send more data with all zapier triggers, like group URLs and profile URLs
+
 ## [5.3.4] - 2023-02-14
 
 ### Changed
