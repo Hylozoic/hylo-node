@@ -242,7 +242,9 @@
       "UserExternalData",
       "UserSession",
       "UserVerificationCode",
-      "Validation"
+      "Validation",
+      "ZapierTrigger",
+      "ZapierTriggerGroup"
     ]
   },
   "nodemonConfig": {
