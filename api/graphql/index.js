@@ -336,7 +336,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
-    createZapierTrigger: (root, { groupId, targetUrl, type }) => createZapierTrigger(userId, groupId, targetUrl, type),
+    createZapierTrigger: (root, { groupIds, targetUrl, type, params }) => createZapierTrigger(userId, groupIds, targetUrl, type, params),
 
     joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 

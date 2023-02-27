@@ -1873,7 +1873,13 @@ type ZapierTrigger {
   groupId: ID
   # The Zapier URL to call when this type is triggered
   targetUrl: String
-  # When this gets triggered. Options: 'new_member' = when 1 or more members are added to a group
+  """
+  When this gets triggered. Options:
+    'new_member' = when 1 or more members are added to a group
+    'member_leaves' = when a person leaves or is kicked out of a group
+    'member_updated' = when a member of a group updates their profile
+    'new_post' = when a new post is created
+  """
   type: String
 }
 
@@ -1957,7 +1963,7 @@ type Mutation {
   # Create a new topic within a Group
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   # Add a new Zapier trigger (called by Zapier)
-  createZapierTrigger(groupId: ID, targetUrl: String, type: String): ZapierTrigger
+  createZapierTrigger(groupIds: [ID], targetUrl: String, type: String, params: JSON): ZapierTrigger
   # Used by current logged in user to deactivate their account
   deactivateMe(id: ID): GenericResult
   # Used by current logged in user to delete their account permanently

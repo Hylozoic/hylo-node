@@ -1,4 +1,4 @@
-import { isEmpty, isEqual, difference } from 'lodash'
+import { castArray, isEmpty, isEqual, difference } from 'lodash'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'zapier_triggers',
@@ -9,8 +9,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
-  group () {
-    return this.belongsTo(Group)
+  groups () {
+    return this.belongsToMany(Group).through(ZapierTriggerGroup)
   }
 
 }), {
@@ -19,6 +19,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     if (!id) return Promise.resolve(null)
     const where = { id }
     return this.where(where).fetch(opts)
+  },
+
+  forTypeAndGroups (type, groupIdOrArray) {
+    const groupIds = castArray(groupIdOrArray)
+    return ZapierTrigger.query(q => {
+      q.join('zapier_triggers_groups', 'zapier_trigger_id', 'zapier_triggers.id')
+      q.where({ type }).whereIn('group_id', groupIds)
+    })
   }
 
 })

@@ -43,7 +43,7 @@ module.exports = bookshelf.Model.extend({
         const comment = await this.getObject()
         return Frontend.Route.comment({ comment, groupSlug: group ? group.get('slug') : null })
       case FlaggedItem.Type.MEMBER:
-        return Frontend.Route.profile(this.get('object_id'))
+        return Frontend.Route.profile(this.get('object_id'), group)
       default:
         throw new GraphQLYogaError('Unsupported type for Flagged Item', this.get('object_type'))
     }

@@ -87,8 +87,9 @@ export function afterCreatingPost (post, opts) {
   .then(() => post.isEvent() && post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndGroups(post, trx))
-  .then(() => Queue.classMethod('Post', 'createActivities', {postId: post.id}))
-  .then(() => Queue.classMethod('Post', 'notifySlack', {postId: post.id}))
+  .then(() => Queue.classMethod('Post', 'createActivities', { postId: post.id }))
+  .then(() => Queue.classMethod('Post', 'notifySlack', { postId: post.id }))
+  .then(() => Queue.classMethod('Post', 'zapierTriggers', { postId: post.id }))
 }
 
 async function updateTagsAndGroups (post, trx) {
