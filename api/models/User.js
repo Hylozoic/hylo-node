@@ -777,19 +777,11 @@ module.exports = bookshelf.Model.extend(merge({
 
   async afterLeaveGroup({ removedByModerator, groupId, userId }) {
     const zapierTriggers = await ZapierTrigger.forTypeAndGroups('member_leaves', groupId).fetchAll()
-    console.log("member leaves", zapierTriggers, groupId, userId)
     if (zapierTriggers && zapierTriggers.length > 0) {
       const user = await User.find(userId)
       const group = await Group.find(groupId)
       if (user && group) {
         for (const trigger of zapierTriggers) {
-          console.log("doing trigger", trigger.get('target_url'), JSON.stringify({
-              id: user.id,
-              name: user.get('name'),
-              // Which group were they removed from, since the trigger can be for multiple groups
-              group: { id: group.id, name: group.get('name'), url: Frontend.Route.group(group) },
-              removedByModerator
-            }))
           const response = await fetch(trigger.get('target_url'), {
             method: 'post',
             body: JSON.stringify({
