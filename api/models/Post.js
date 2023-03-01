@@ -5,6 +5,7 @@ import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
 import { flatten, sortBy } from 'lodash'
 import { TextHelpers } from 'hylo-shared'
+import fetch from 'node-fetch'
 import { postRoom, pushToSockets } from '../services/Websockets'
 import { fulfill, unfulfill } from './post/fulfillPost'
 import EnsureLoad from './mixins/EnsureLoad'
@@ -662,7 +663,48 @@ module.exports = bookshelf.Model.extend(Object.assign({
     Post.find(postId, {withRelated: ['groups', 'user', 'relatedUsers']})
     .then(post => {
       if (!post) return
-      const slackCommunities = post.relations.groups.filter(c => c.get('slack_hook_url'))
-      return Promise.map(slackCommunities, c => Group.notifySlack(c.id, post))
-    })
+      const slackCommunities = post.relations.groups.filter(g => g.get('slack_hook_url'))
+      return Promise.map(slackCommunities, g => Group.notifySlack(g.id, post))
+    }),
+
+  // Background task to fire zapier triggers on new_post
+  zapierTriggers: async ({ postId }) => {
+    const post = await Post.find(postId, { withRelated: ['groups', 'tags', 'user'] })
+    if (!post) return
+
+    const groupIds = post.relations.groups.map(g => g.id)
+    const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_post', groupIds).fetchAll()
+    if (zapierTriggers && zapierTriggers.length > 0) {
+      for (const trigger of zapierTriggers) {
+        // Check if this trigger is only for certain post types and if so whether it matches this post type
+        if (trigger.get('params')?.types?.length > 0 && !trigger.get('params').types.includes(post.get('type'))) {
+          continue
+        }
+
+        const creator = post.relations.user
+        const response = await fetch(trigger.get('target_url'), {
+          method: 'post',
+          body: JSON.stringify({
+            id: post.id,
+            announcement: post.get('announcement'),
+            createdAt: post.get('created_at'),
+            creator: { name: creator.get('name'), url: Frontend.Route.profile(creator) },
+            details: post.details(),
+            endTime: post.get('end_time'),
+            isPublic: post.get('is_public'),
+            location: post.get('location'),
+            startTime: post.get('start_time'),
+            title: post.summary(),
+            type: post.get('type'),
+            url: Frontend.Route.post(post),
+            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), url: Frontend.Route.group(g), postUrl: Frontend.Route.post(post, g) })),
+            topics: post.relations.tags.map(t => ({ name: t.get('name')})),
+          }),
+          headers: { 'Content-Type': 'application/json' }
+        })
+        // TODO: what to do with the response? check if succeeded or not?
+      }
+    }
+  }
+
 })

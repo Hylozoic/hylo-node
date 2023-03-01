@@ -544,16 +544,32 @@ module.exports = bookshelf.Model.extend(merge({
 
   // Background task to do additional work/tasks when new members are added to a group
   async afterAddMembers({ groupId, newUserIds, reactivatedUserIds }) {
-    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'new_member' })).fetchAll()
+    const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_member', groupId).fetchAll()
+
     if (zapierTriggers && zapierTriggers.length > 0) {
+      const group = await Group.find(groupId)
       const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
       for (const trigger of zapierTriggers) {
         const response = await fetch(trigger.get('target_url'), {
           method: 'post',
           body: JSON.stringify(members.map(m => ({
             id: m.id,
+            avatarUrl: m.get('avatar_url'),
+            bio: m.get('bio'),
+            contactEmail: m.get('contact_email'),
+            contactPhone: m.get('contact_phone'),
+            facebookUrl: m.get('facebook_url'),
+            linkedinUrl: m.get('linkedin_url'),
+            location: m.get('location'),
             name: m.get('name'),
-            reactivated: reactivatedUserIds.includes(m.id)
+            profileUrl: Frontend.Route.profile(m, group),
+            tagline: m.get('tagline'),
+            twitterName: m.get('twitter_name'),
+            url: m.get('url'),
+            // Whether this user was previously in the group and is being reactivated
+            reactivated: reactivatedUserIds.includes(m.id),
+            // Which group were they added to, since the trigger can be for multiple groups
+            group: { id: group.id, name: group.get('name'), url: Frontend.Route.group(group) }
           }))),
           headers: { 'Content-Type': 'application/json' }
         })
