@@ -1086,6 +1086,7 @@ CREATE TABLE public.groups_roles (
     id integer NOT NULL,
     group_id bigint,
     name character varying(255),
+    description character varying(255),
     emoji character varying(255),
     color character varying(255),
     created_at timestamp with time zone,

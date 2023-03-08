@@ -14,8 +14,11 @@ module.exports = bookshelf.Model.extend({
   },
 
   groupRole: function () {
-    return this.belongsTo(GroupRole)
+    return this.belongsTo(GroupRole, 'group_role_id')
+  },
+
+  groupMembership () {
+    return this.belongsTo(GroupMembership)
   },
 }, {
-
 })

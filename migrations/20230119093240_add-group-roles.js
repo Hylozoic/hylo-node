@@ -6,6 +6,7 @@ exports.up = async function(knex) {
     table.string('name')
     table.string('emoji')
     table.string('color')
+    table.string('description')
     table.boolean('active')
     table.timestamp('created_at')
     table.timestamp('updated_at')
