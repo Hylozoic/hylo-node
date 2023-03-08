@@ -55,7 +55,7 @@ type Query {
     Example object
     {
       farmType: 'wholesale_farm, directsale_farm',
-      productCategories: 'grains_other', 'vegetables',
+      productCategories: 'grains', 'vegetables',
       certOrManagementPlan: 'american_grassfed'
     }
     """
