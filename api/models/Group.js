@@ -106,6 +106,10 @@ module.exports = bookshelf.Model.extend(merge({
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
   },
 
+  groupRoles () {
+    return this.hasMany(GroupRole)
+  },
+
   groupTags () {
     return this.hasMany(GroupTag)
   },

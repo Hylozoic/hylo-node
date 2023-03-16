@@ -1,13 +1,13 @@
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
-export async function addGroupRole ({ groupId, color, name, emoji, userId }){
+export async function addGroupRole ({ groupId, color, name, description,  emoji, userId }){
   if (!userId) throw new GraphQLYogaError(`No userId passed into function`)
 
   if (groupId && name && emoji) {
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
 
     if (groupMembership && (groupMembership.get('role') === GroupMembership.Role.MODERATOR)) {
-      return GroupRole.forge({ group_id: groupId, name, emoji, active: true, color }).save().then((savedGroupRole) => savedGroupRole)
+      return GroupRole.forge({ group_id: groupId, name, description, emoji, active: true, color }).save().then((savedGroupRole) => savedGroupRole)
     } else {
       throw new GraphQLYogaError(`User doesn't have required privileges to create group role`)
     }
@@ -16,7 +16,7 @@ export async function addGroupRole ({ groupId, color, name, emoji, userId }){
   }
 }
 
-export async function updateGroupRole ({ groupRoleId, color, name, emoji, userId, active, groupId }){
+export async function updateGroupRole ({ groupRoleId, color, name, description, emoji, userId, active, groupId }){
   if (!userId) throw new GraphQLYogaError(`No userId passed into function`)
 
   if (groupRoleId) {
@@ -29,17 +29,11 @@ export async function updateGroupRole ({ groupRoleId, color, name, emoji, userId
         const updatedAttributes = {
           color: color || groupRole.get('color'),
           name: name || groupRole.get('name'),
+          description: description || groupRole.get('description'),
           emoji: emoji || groupRole.get('emoji'),
           active: verifiedActiveParam,
         }
-
-        if (verifiedActiveParam !== groupRole.get('active')) {
-          await bookshelf.knex.raw(`
-          UPDATE members_roles
-          SET active = ?
-          WHERE group_role_id = ?
-        `, [verifiedActiveParam, groupRoleId], { transacting })
-        }
+        
         return groupRole.save(updatedAttributes, { transacting }).then((savedGroupRole) => savedGroupRole)
       })
     } else {
@@ -67,20 +61,25 @@ export async function addRoleToMember ({userId, groupRoleId, personId, groupId})
   }
 }
 
-export async function removeRoleFromMember ({userId, memberRoleId, personId, groupId}){
+export async function removeRoleFromMember ({userId, groupRoleId, personId, groupId}){
   if (!userId) throw new GraphQLYogaError(`No userId passed into function`)
 
-  if (personId && memberRoleId && groupId) {
+  if (personId && groupRoleId && groupId) {
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
 
     if (groupMembership && (groupMembership.get('role') === GroupMembership.Role.MODERATOR) || userId === personId) {
-      const memberRole = await MemberRole.query('where', 'id', '=', memberRoleId).fetch()
+      const memberRole = await MemberRole
+        .query(q => {
+          return q.where('user_id', personId)
+                  .andWhere('group_role_id', groupRoleId)
+        })
+        .fetch()
       return memberRole.destroy()
     } else {
       throw new GraphQLYogaError(`User doesn't have required privileges to remove role from member`)
     }
   } else {
-    throw new GraphQLYogaError(`Invalid/undefined parameters to remove role from member: received ${JSON.stringify({ personId, memberRoleId })}`)
+    throw new GraphQLYogaError(`Invalid/undefined parameters to remove role from member: received ${JSON.stringify({ personId, groupRoleId, groupId })}`)
   }
 
 }

@@ -637,6 +637,9 @@ type Group {
   # Questions that a group requesting to join this group must answer
   groupToGroupJoinQuestions: GroupToGroupJoinQuestionQuerySet
 
+  # Special roles or badges attached to this group
+  groupRoles: GroupRoleQuerySet
+
   # Topics that have been used in this group
   groupTopics(
     # Return only topics whose name starts with the autocomplete string
@@ -666,6 +669,8 @@ type Group {
     autocomplete: String
     # Return only people within the geographic bounding box
     boundingBox: [PointInput],
+    # Return members with a specific groupRole
+    groupRoleId: ID,
     # Number of people to return
     first: Int,
     # For pagination, return people after this offset in the query results
@@ -935,6 +940,7 @@ type GroupRole {
   active: Boolean
   color: String
   createdAt: Date
+  description: String
   emoji: String
   id: ID
   group: Group
@@ -984,6 +990,13 @@ type GroupTopic {
     (pinned topics appear at the top of every member's subscribed topics list if they are subscribed to this topic)
   """
   visibility: Int
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type GroupRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupRole]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1285,26 +1298,11 @@ type Me {
   ): SkillQuerySet
 }
 
-# Member role
-type MemberRole {
-  id: ID
-  active: Boolean
-  color: String
-  createdAt: Date
-  emoji: String
-  group: Group
-  groupMemberId: ID
-  groupRole: GroupRole
-  name: String
-  updatedAt: Date
-  userId: ID
-  user: Person
-}
-
 # A user's group membership
 type Membership {
   id: ID
   createdAt: Date
+  groupId: ID
   group: Group
   # Is this group membership a moderator role
   hasModeratorRole: Boolean
@@ -1457,6 +1455,9 @@ type Person {
     # Determines sort order, either 'ASC' or 'DESC'. Memberships always sorted by order they were created.
     order: String
   ): [Membership]
+  # All the member roles for a user
+  groupRoles: [GroupRole]
+  groupRolesTotal: Int
   # The set of Memberships to groups this person moderates (that are visible to logged in user
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
   # The set of Posts this person has created (that are visible to logged in user)
@@ -1891,6 +1892,7 @@ type Mutation {
   # For a moderator to add a badge/role to a group
   addGroupRole(
     color: String,
+    description: String,
     emoji: String,
     groupId: ID,
     name: String,
@@ -1911,8 +1913,9 @@ type Mutation {
   # For a moderator to add a badge/role to a group to a member of a group
   addRoleToMember(
     groupRoleId: ID,
-    userId: ID,
-  ): MemberRole
+    groupId: ID,
+    personId: ID,
+  ): GroupRole
   # Add a skill to your profile
   addSkill(
     name: String,
@@ -2055,7 +2058,7 @@ type Mutation {
   # Remove a Post from a Collection, if you have permission to
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
   # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
-  removeRoleFromMember(id: ID): GenericResult
+  removeRoleFromMember(groupRoleId: ID, groupId: ID, personId: ID): GenericResult
   # Remove a skill from your user profile
   removeSkill(id: ID, name: String): GenericResult
   # Remove a skill you want to learn from your user profile
@@ -2108,8 +2111,16 @@ type Mutation {
     # Update group as a particular User (with permission)
     asUserId: ID
   ): Group
-  # Update a badge/role from a group and all associated MemberRoles
-  updateGroupRole(id: ID): GroupRole
+  # Update a badge/role from a group and all associated roles
+  updateGroupRole(
+    groupRoleId: ID
+    color: String,
+    description: String,
+    emoji: String,
+    groupId: ID,
+    name: String,
+    active: Boolean
+  ): GroupRole
   # Update settings related a Topic in a Group. Only a group moderator can call this.
   updateGroupTopic(id: ID, data: GroupTopicInput): GenericResult
   # Update settings related to a Person following a Topic in a Group
