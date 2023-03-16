@@ -6,10 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [5.3.7] - 2023-03-05
+## [5.4.0] - 2023-03-15
 
 ### Changed
-- Tweaked APIs for group roles and badges
+- Finished backend and APIs for group roles and badges
 
 ## [5.3.6] - 2023-03-04
 
