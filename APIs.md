@@ -58,16 +58,19 @@ Content-Type: application/x-www-form-urlencoded
      - `token_type`: Identifies the type of token returned.
      - `refresh_token` (optional): This field is only present if the scope parameters included offline_access in the authentication request. This can be used to request a new access token when this one expires
 5. Making an API call with the access token:
-`POST to https://hylo.com/noo/graphql`
-
-__Headers:__
 ```
+POST to https://hylo.com/noo/graphql
+
+Headers:
+
 'Authorization: `Bearer ${access_token}`
 'Content-Type': 'application/json'
 ```
+
 This is a GraphQL based endpoint so you will want to pass in raw POST data in the body.
 
 Example GraphQL query: __Querying a Group__
+
 NOTE: you will want to pass _either_ a slug _or_ an id to query by. If you pass both only the slug will be used to lookup the group.
 ```
 {
@@ -111,11 +114,11 @@ __Headers:__
 ```
 
 __Parameters (all required):__
-- grant_type = client_credentials
-- client_id =  YOUR_ID
-- client_secret = YOUR_SECRET
-- resource = the server URL you are making the call to (e.g. https://hylo.com, https://staging.hylo.com, or https://localhost:3000)
-- scope = 'api:write' if you want to write data, or 'api:read' if you just want to read it.
+- `grant_type` = `client_credentials`
+- `client_id` =  YOUR_ID
+- `client_secret` = YOUR_SECRET
+- `resource` = the server URL you are making the call to (e.g. https://hylo.com, https://staging.hylo.com, or https://localhost:3000)
+- `scope` = `api:write` if you want to write data, or `api:read` if you just want to read it.
 
 This call will return an ACCESS_TOKEN for use in later API calls. This token will expire in 2 hours at which point you will need to make another API call to get a new ACCESS_TOKEN.
 
