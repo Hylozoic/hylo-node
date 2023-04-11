@@ -1830,6 +1830,8 @@ type UserSettings {
   dmNotifications: String
   # When person wants last viewed their Direct Messages
   lastViewedMessagesAt: String
+  # Locale preferences for the user
+  locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up
@@ -2668,6 +2670,8 @@ input UserSettingsInput {
   dmNotifications: String
   # When person wants last viewed their Direct Messages
   lastViewedMessagesAt: String
+  # Locale preferences for the user
+  locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up
