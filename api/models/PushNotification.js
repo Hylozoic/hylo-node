@@ -1,5 +1,8 @@
 import decode from 'ent/decode'
 import { TextHelpers } from 'hylo-shared'
+import { en } from '../../lib/i18n/en'
+import { es } from '../../lib/i18n/es'
+const locales = { en, es }
 
 module.exports = bookshelf.Model.extend({
   tableName: 'push_notifications',
@@ -42,93 +45,96 @@ module.exports = bookshelf.Model.extend({
   }
 
 }, {
-  textForContribution: function (contribution) {
+  textForContribution: function (contribution, locale) {
     const post = contribution.relations.post
-    return `You have been added as a contributor to the request "${post.summary()}"`
+
+    return locales[locale].textForContribution(post)
   },
 
-  textForComment: function (comment, version) {
+  textForComment: function (comment, version, locale) {
     const person = comment.relations.user.get('name')
     const { media } = comment.relations
     if (media && media.length !== 0) {
-      return `${person} sent an image`
+      // return `${person} sent an image` // Question: do we want to start adding more text detail here?
+      return locales[locale].textForCommentImage(person)
     }
+    textForComment
     const blurb = TextHelpers.presentHTMLToText(comment.text(), { truncate: 140 })
     const postName = comment.relations.post.summary()
 
     return version === 'mention'
-      ? `${person} mentioned you: "${blurb}" (in "${postName}")`
-      : `${person}: "${blurb}" (in "${postName}")`
+      ? locales[locale].textForCommentMention({person, blurb, postName})
+      : locales[locale].textForComment({person, blurb, postName})
   },
 
-  textForPost: function (post, group, userId, version) {
+  textForPost: function (post, group, userId, version, locale) {
     const person = post.relations.user.get('name')
     const postName = decode(post.summary())
 
     return version === 'mention'
-      ? `${person} mentioned you in "${postName}"`
-      : `${person} posted "${postName}" in ${group.get('name')}`
+    ? locales[locale].textForPostMention({person, postName})
+    : locales[locale].textForPost({person, postName, groupName: group.get('name')})
   },
 
-  textForAnnouncement: function (post) {
+  textForAnnouncement: function (post, locale) {
     const person = post.relations.user.get('name')
     const postName = decode(post.summary())
 
-    return `${person} sent an announcement titled "${postName}"`
+    return locales[locale].textForAnnouncement({person, postName})
   },
 
-  textForEventInvitation: function (post, actor) {
+  textForEventInvitation: function (post, actor, locale) {
     const postName = decode(post.summary())
 
-    return `${actor.get('name')} invited you to "${postName}"`
+    return locales[locale].textForEventInvitation({actor, postName})
   },
 
-  textForJoinRequest: function (group, actor) {
-    return `${actor.get('name')} asked to join ${group.get('name')}`
+  textForJoinRequest: function (group, actor, locale) {
+    return locales[locale].textForJoinRequest({actor, groupName: group.get('name')})
   },
 
-  textForApprovedJoinRequest: function (group, actor) {
-    return `${actor.get('name')} approved your request to join ${group.get('name')}`
+  textForApprovedJoinRequest: function (group, actor, locale) {
+    return locales[locale].textForApprovedJoinRequest({actor, groupName: group.get('name')})
   },
 
-  textForGroupChildGroupInvite: function (parentGroup, childGroup, actor) {
-    return `${actor.get('name')} invited your group ${childGroup.name} to join their group ${parentGroup.name}`
+  textForGroupChildGroupInvite: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupChildGroupInvite({actor, parentGroup, childGroup})
   },
 
-  textForGroupChildGroupInviteAcceptedParentModerator: function (parentGroup, childGroup, actor) {
-    return `${actor.get('name')} accepted your invite of their group ${childGroup.name} to join your group ${parentGroup.name}`
+  textForGroupChildGroupInviteAcceptedParentModerator: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupChildGroupInviteAcceptedParentModerator({actor, parentGroup, childGroup})
   },
 
-  textForGroupChildGroupInviteAcceptedParentMember: function (parentGroup, childGroup, actor) {
-    return `The group ${childGroup.name} just joined your group ${parentGroup.name}!`
+  textForGroupChildGroupInviteAcceptedParentMember: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupChildGroupInviteAcceptedParentMember({parentGroup, childGroup})
   },
 
-  textForGroupChildGroupInviteAcceptedChildModerator: function (parentGroup, childGroup, actor) {
-    return `${actor.get('name')} accepted an invite for your group ${childGroup.name} to join group ${parentGroup.name}`
+  textForGroupChildGroupInviteAcceptedChildModerator: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupChildGroupInviteAcceptedChildModerator({parentGroup, childGroup})
   },
 
-  textForGroupChildGroupInviteAcceptedChildMember: function (parentGroup, childGroup, actor) {
-    return `Your group ${childGroup.name} has joined ${parentGroup.name}. You can now join ${parentGroup.name}!`
+  textForGroupChildGroupInviteAcceptedChildMember: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupChildGroupInviteAcceptedChildMember({parentGroup, childGroup})
   },
 
-  textForGroupParentGroupJoinRequest: function (parentGroup, childGroup, actor) {
-    return `${actor.get('name')} is requesting to add their group ${childGroup.name} as a member of your group ${parentGroup.name}`
+  textForGroupParentGroupJoinRequest: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupParentGroupJoinRequest({actor, parentGroup, childGroup})
   },
 
-  textForGroupParentGroupJoinRequestAcceptedParentModerator: function (parentGroup, childGroup, actor) {
-    return `${actor.get('name')} accepted a request to add ${childGroup.name} to your group ${parentGroup.name}`
+  textForGroupParentGroupJoinRequestAcceptedParentModerator: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupParentGroupJoinRequestAcceptedParentModerator({parentGroup, childGroup, actor})
   },
 
-  textForGroupParentGroupJoinRequestAcceptedParentMember: function (parentGroup, childGroup, actor) {
-    return `Group ${childGroup.name} has joined your group ${parentGroup.name}`
+  textForGroupParentGroupJoinRequestAcceptedParentMember: function (parentGroup, childGroup, locale) {
+    return locales[locale].textForGroupParentGroupJoinRequestAcceptedParentMember({parentGroup, childGroup})
   },
 
-  textForGroupParentGroupJoinRequestAcceptedChildModerator: function (parentGroup, childGroup, actor) {
-    return `Your group ${childGroup.name} has been accepted as a member of ${parentGroup.name} by ${actor.get('name')}`
+  textForGroupParentGroupJoinRequestAcceptedChildModerator: function (parentGroup, childGroup, actor, locale) {
+    return locales[locale].textForGroupParentGroupJoinRequestAcceptedChildModerator({parentGroup, childGroup, actor})
   },
 
-  textForGroupParentGroupJoinRequestAcceptedChildMember: function (parentGroup, childGroup, actor) {
-    return `Your group ${childGroup.name} has joined group ${parentGroup.name}`
+  textForGroupParentGroupJoinRequestAcceptedChildMember: function (parentGroup, childGroup, locale) {
+    return locales[locale].textForGroupParentGroupJoinRequestAcceptedChildMember({parentGroup, childGroup})
   },
 
   textForDonationTo: function (contribution) {
@@ -136,7 +142,7 @@ module.exports = bookshelf.Model.extend({
     const postName = decode(project.summary())
     const amount = contribution.get('amount') / 100
 
-    return `You contributed $${amount} to "${postName}"`
+    return locales[locale].textForDonationTo({postName, amount})
   },
 
   textForDonationFrom: function (contribution) {
@@ -145,6 +151,6 @@ module.exports = bookshelf.Model.extend({
     const postName = decode(project.summary())
 
     const amount = contribution.get('amount') / 100
-    return `${actor.get('name')} contributed $${amount} to "${postName}"`
+    return locales[locale].textForDonationFrom({actor, postName, amount})
   }
 })
