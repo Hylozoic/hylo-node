@@ -51,14 +51,13 @@ module.exports = bookshelf.Model.extend({
     return locales[locale].textForContribution(post)
   },
 
-  textForComment: function (comment, version, locale) {
+  textForComment: function (comment, version, locale = 'en') {
     const person = comment.relations.user.get('name')
     const { media } = comment.relations
     if (media && media.length !== 0) {
       // return `${person} sent an image` // Question: do we want to start adding more text detail here?
       return locales[locale].textForCommentImage(person)
     }
-    textForComment
     const blurb = TextHelpers.presentHTMLToText(comment.text(), { truncate: 140 })
     const postName = comment.relations.post.summary()
 
