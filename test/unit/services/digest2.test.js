@@ -452,7 +452,6 @@ describe('group digest v2', () => {
         expect(args[0]).to.equal(u1.get('email'))
         expect(args[2]).to.deep.equal({
           group_id: group.id,
-          locale: 'en-US',
           group_name: group.get('name'),
           group_avatar_url: group.get('avatar_url'),
           group_url: Frontend.Route.group(group) + clickthroughParams,
