@@ -322,7 +322,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     createGroup: (root, { data }) => createGroup(userId, data),
 
     createInvitation: (root, {groupId, data}) =>
-      createInvitation(userId, groupId, data),
+      createInvitation(userId, groupId, data), // consider sending locale from the frontend here
 
     createJoinRequest: (root, {groupId, questionAnswers}) => createJoinRequest(userId, groupId, questionAnswers),
 

@@ -1,8 +1,13 @@
 const { GraphQLYogaError } = require('@graphql-yoga/node')
+import { es } from '../../../lib/i18n/es'
+import { en } from '../../../lib/i18n/en'
 import InvitationService from '../../services/InvitationService'
+const locales = {es, en}
 
 export async function createInvitation (userId, groupId, data) {
   const group = await Group.find(groupId)
+  const user = await User.find(userId)
+  const locale = user.get('settings')?.locale || 'en'
   return GroupMembership.hasModeratorRole(userId, group)
   .then(ok => {
     if (!ok) throw new GraphQLYogaError("You don't have permission to create an invitation for this group")
@@ -16,7 +21,7 @@ export async function createInvitation (userId, groupId, data) {
       emails: data.emails,
       message: data.message,
       moderator: data.isModerator || false,
-      subject: `Join me in ${group.get('name')} on Hylo!`
+      subject: locales[locale].createInvitationSubject(group.get('name'))
     })
   })
   .then(invitations => ({invitations}))
