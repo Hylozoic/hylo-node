@@ -64,6 +64,10 @@ module.exports = bookshelf.Model.extend({
     return this.relations.activity.relations.projectContribution
   },
 
+  locale: function () {
+    return this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+  }
+
   send: function () {
     var action
     return this.shouldBeBlocked()
@@ -134,7 +138,7 @@ module.exports = bookshelf.Model.extend({
   sendEventInvitationPush: function () {
     const post = this.post()
     const actor = this.actor()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     const groupIds = Activity.groupIds(this.relations.activity)
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
@@ -148,7 +152,7 @@ module.exports = bookshelf.Model.extend({
   sendPushAnnouncement: function (version) {
     var post = this.post()
     var groupIds = Activity.groupIds(this.relations.activity)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
       .then(group => {
@@ -161,7 +165,7 @@ module.exports = bookshelf.Model.extend({
   sendPostPush: function (version) {
     var post = this.post()
     var groupIds = Activity.groupIds(this.relations.activity)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
     .then(group => {
@@ -173,7 +177,7 @@ module.exports = bookshelf.Model.extend({
 
   sendContributionPush: function (version) {
     return this.load(['contribution', 'contribution.post'])
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     .then(() => {
       const { contribution } = this.relations.activity.relations
       var path = url.parse(Frontend.Route.post(contribution.relations.post)).path
@@ -186,7 +190,7 @@ module.exports = bookshelf.Model.extend({
     const comment = this.comment()
     const post = comment.relations.post
     const group = post.relations.groups.first()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     const groupSlug = getSlug(group)
     const path = url.parse(Frontend.Route.comment({ comment, groupSlug, post  })).path
     const alertText = PushNotification.textForComment(comment, version, locale)
@@ -198,7 +202,7 @@ module.exports = bookshelf.Model.extend({
 
   sendJoinRequestPush: function () {
     var groupIds = Activity.groupIds(this.relations.activity)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
     .then(group => {
@@ -211,7 +215,7 @@ module.exports = bookshelf.Model.extend({
   sendApprovedJoinRequestPush: function () {
     var groupIds = Activity.groupIds(this.relations.activity)
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     return Group.find(groupIds[0])
     .then(group => {
       var path = url.parse(Frontend.Route.group(group)).path
@@ -223,7 +227,7 @@ module.exports = bookshelf.Model.extend({
   sendGroupChildGroupInvitePush: async function () {
     const childGroup = await this.relations.activity.otherGroup().fetch()
     const parentGroup = await this.relations.activity.group().fetch()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
     const path = url.parse(Frontend.Route.groupRelationshipInvites(childGroup)).path
     const alertText = PushNotification.textForGroupChildGroupInvite(parentGroup, childGroup, this.actor(), locale)
@@ -233,7 +237,7 @@ module.exports = bookshelf.Model.extend({
   sendGroupChildGroupInviteAcceptedPush: async function () {
     const childGroup = await this.relations.activity.group().fetch()
     const parentGroup = await this.relations.activity.otherGroup().fetch()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
     const reason = this.relations.activity.get('meta').reasons[0]
     const whichGroupMember = reason.split(':')[1]
@@ -258,7 +262,7 @@ module.exports = bookshelf.Model.extend({
   sendGroupParentGroupJoinRequestPush: async function () {
     const parentGroup = await this.relations.activity.otherGroup().fetch()
     const childGroup = await this.relations.activity.group().fetch()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
     const path = url.parse(Frontend.Route.groupRelationshipJoinRequests(parentGroup)).path
     const alertText = PushNotification.textForGroupParentGroupJoinRequest(parentGroup, childGroup, this.actor(), locale)
@@ -268,7 +272,7 @@ module.exports = bookshelf.Model.extend({
   sendGroupParentGroupJoinRequestAcceptedPush: async function () {
     const parentGroup = await this.relations.activity.otherGroup().fetch()
     const childGroup = await this.relations.activity.group().fetch()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
     const reason = this.relations.activity.get('meta').reasons[0]
     const whichGroupMember = reason.split(':')[1]
@@ -293,7 +297,7 @@ module.exports = bookshelf.Model.extend({
   sendPushDonationTo: async function () {
     await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
     var projectContribution = this.projectContribution()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
     var alertText = PushNotification.textForDonationTo(projectContribution, locale)
     return this.reader().sendPushNotification(alertText, path)
@@ -302,7 +306,7 @@ module.exports = bookshelf.Model.extend({
   sendPushDonationFrom: async function () {
     await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
     var projectContribution = this.projectContribution()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
     var alertText = PushNotification.textForDonationFrom(projectContribution, locale)
     return this.reader().sendPushNotification(alertText, path)
@@ -344,7 +348,7 @@ module.exports = bookshelf.Model.extend({
     const replyTo = Email.postReplyAddress(post.id, reader.id)
   
     const groupIds = Activity.groupIds(this.relations.activity)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
@@ -384,7 +388,7 @@ module.exports = bookshelf.Model.extend({
     const tags =  post.relations.tags
     const firstTag =  tags && tags.first()?.get('name')
     const replyTo = Email.postReplyAddress(post.id, reader.id)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     const groupIds = Activity.groupIds(this.relations.activity)
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
@@ -430,7 +434,7 @@ module.exports = bookshelf.Model.extend({
     const commenter = comment.relations.user
     const replyTo = Email.postReplyAddress(post.id, reader.id)
     const title = decode(post.summary())
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     var postLabel = `"${title}"`
     if (post.get('type') === 'welcome') {
@@ -477,7 +481,7 @@ module.exports = bookshelf.Model.extend({
     const actor = this.actor()
     const reader = this.reader()
     const groupIds = Activity.groupIds(this.relations.activity)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
     .then(group => reader.generateToken()
@@ -503,7 +507,7 @@ module.exports = bookshelf.Model.extend({
     const actor = this.actor()
     const reader = this.reader()
     const groupIds = Activity.groupIds(this.relations.activity)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
@@ -531,7 +535,7 @@ module.exports = bookshelf.Model.extend({
     const reader = this.reader()
     const childGroup = await this.relations.activity.otherGroup().fetch()
     const parentGroup = await this.relations.activity.group().fetch()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     if (!childGroup || !parentGroup) throw new Error('Missing group in activity')
     const token = reader.generateToken()
@@ -565,7 +569,7 @@ module.exports = bookshelf.Model.extend({
     const reason = this.relations.activity.get('meta').reasons[0]
     const whichGroupMember = reason.split(':')[1]
     const groupMemberType = reason.split(':')[2]
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     Email.sendGroupChildGroupInviteAcceptedNotification({
       version: whichGroupMember + '-' + groupMemberType,
@@ -590,7 +594,7 @@ module.exports = bookshelf.Model.extend({
     const reader = this.reader()
     const parentGroup = await this.relations.activity.otherGroup().fetch()
     const childGroup = await this.relations.activity.group().fetch()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     if (!childGroup || !parentGroup) throw new Error('Missing group in activity')
     const token = reader.generateToken()
@@ -625,7 +629,7 @@ module.exports = bookshelf.Model.extend({
     const reason = this.relations.activity.get('meta').reasons[0]
     const whichGroupMember = reason.split(':')[1]
     const groupMemberType = reason.split(':')[2]
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     Email.sendGroupParentGroupJoinRequestAcceptedNotification({
       version: whichGroupMember + '-' + groupMemberType,
@@ -652,7 +656,7 @@ module.exports = bookshelf.Model.extend({
     const actor = this.actor()
     const reader = this.reader()
     const token = await reader.generateToken()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     return Email.sendDonationToEmail({
       email: reader.get('email'),
@@ -678,7 +682,7 @@ module.exports = bookshelf.Model.extend({
     const actor = this.actor()
     const reader = this.reader()
     const token = await reader.generateToken()
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     return Email.sendDonationFromEmail({
       email: reader.get('email'),
@@ -703,7 +707,7 @@ module.exports = bookshelf.Model.extend({
     var inviter = this.actor()
     var replyTo = Email.postReplyAddress(post.id, reader.id)
     var groupIds = Activity.groupIds(this.relations.activity)
-    const locale = this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
+    const locale = this.locale()
 
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
