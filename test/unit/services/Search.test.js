@@ -1,4 +1,4 @@
-import moment from 'moment-timezone'
+import { DateTime } from 'luxon'
 import { expectEqualQuery } from '../../setup/helpers'
 import setup from '../../setup'
 
@@ -6,11 +6,11 @@ describe('Search', function () {
   describe('.forPosts', function () {
     // TODO: fix this by reorganizing the search and filter code for posts to join groups_posts in the right place
     it.skip('produces the expected SQL for a complex query', function () {
-      var startTime = moment('2015-03-24 19:54:12-04:00')
-      var endTime = moment('2015-03-31 19:54:12-04:00')
-      var tz = moment.tz.guess()
-      var startTimeAsString = startTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
-      var endTimeAsString = endTime.tz(tz).format('YYYY-MM-DD HH:mm:ss.SSS')
+      const startTime = DateTime.fromISO('2015-03-24 19:54:12-04:00')
+      const endTime = DateTime.fromISO('2015-03-31 19:54:12-04:00')
+      const timeZone = DateTime.local().zoneName
+      const startTimeAsString = startTime.setZone(timeZone).toLocaleString({ ...DateTime.DATETIME_SHORT, timeZoneName: 'short' })
+      const endTimeAsString = endTime.setZone(timeZone).toLocaleString({ ...DateTime.DATETIME_SHORT, timeZoneName: 'short' })
 
       const search = Search.forPosts({
         limit: 5,
@@ -20,8 +20,8 @@ describe('Search', function () {
         follower: 37,
         term: 'milk toast',
         type: 'request',
-        start_time: startTime.toDate(),
-        end_time: endTime.toDate(),
+        start_time: startTime.toJSDate(),
+        end_time: endTime.toJSDate(),
         sort: 'posts.updated_at'
       })
 
