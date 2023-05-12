@@ -1,5 +1,8 @@
+import { en } from '../../lib/i18n/en'
+import { es } from '../../lib/i18n/es'
 import InvitationService from '../services/InvitationService'
 import OIDCAdapter from '../services/oidc/KnexAdapter'
+const locales = {es, en}
 
 module.exports = {
 
@@ -12,17 +15,18 @@ module.exports = {
     if (user) {
       // User already exists
       if (group) {
+        const locale = user?.get('settings')?.locale || 'en'
         if (!(await GroupMembership.hasActiveMembership(user, group))) {
           // If user exists but is not part of the group then invite them
-          let message = `${req.api_client} is excited to invite you to join our community on Hylo.`
-          let subject = `Join me in ${group.get('name')} on Hylo!`
+          let message = locales[locale].apiInviteMessageContent(req.api_client)
+          let subject = locales[locale].apiInviteMessageSubject(group.get('name'))
           if (req.api_client) {
             const client = await (new OIDCAdapter("Client")).find(req.api_client.id)
             if (!client) {
               return res.status(403).json({ error: 'Unauthorized' })
             }
-            subject = client.invite_subject || `You've been invited to join ${group.get('name')} on Hylo`
-            message = client.invite_message || `Hi ${user.get('name')}, <br><br> We're excited to welcome you into our community. Click below to join ${group.get('name')} on Hylo.`
+            subject = client.invite_subject || locales[locale].clientInviteSubjectDefault(group.get('name'))
+            message = client.invite_message || locales[locale].clientInviteMessageDefault({userName: user.get('name'), groupName: group.get('name')})
           }
           const inviteBy = await group.moderators().fetchOne()
 

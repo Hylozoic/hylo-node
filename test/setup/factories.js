@@ -48,7 +48,8 @@ module.exports = {
     return new User(merge({
       name: faker.name.findName(),
       active: true,
-      email: faker.internet.email()
+      email: faker.internet.email(),
+      settings: {locale: 'en'},
     }, attrs))
   },
 

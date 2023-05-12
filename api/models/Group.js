@@ -10,12 +10,14 @@ import HasSettings from './mixins/HasSettings'
 import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
 import { inviteGroupToGroup } from '../graphql/mutations/group.js'
-
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
 import convertGraphqlData from '../graphql/mutations/convertGraphqlData'
 import { findOrCreateLocation } from '../graphql/mutations/location'
+import { es } from '../../lib/i18n/es'
+import { en } from '../../lib/i18n/en'
+const locales = { es, en }
 
 export const GROUP_ATTR_UPDATE_WHITELIST = [
   'role',
@@ -750,15 +752,16 @@ module.exports = bookshelf.Model.extend(merge({
     .then(g => {
       var creator = g.relations.creator
       var recipient = process.env.NEW_GROUP_EMAIL
+      const locale = creator.get('settings')?.locale || 'en'
       return Email.sendRawEmail(recipient, {
-        subject: "New Hylo Group Created: " + g.get('name'),
-        body: `Group
-          Name: ${g.get('name')}
+        subject: locales[locale].groupCreatedNotifySubject(g.get('name')),
+        body: `${locales[locale].Group()}
+          ${locales[locale].Name()}: ${g.get('name')}
           URL: ${Frontend.Route.group(g)}
-          Creator Email: ${creator.get('email')}
-          Creator Name: ${creator.get('name')}
-          Creator URL: ${Frontend.Route.profile(creator)}
-        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
+          ${locales[locale].CreatorEmail()}: ${creator.get('email')}
+          ${locales[locale].CreatorName()}: ${creator.get('name')}
+          ${locales[locale].CreatorURL()}: ${Frontend.Route.profile(creator)}
+        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n') 
       }, {
         sender: {
           name: 'Hylobot',

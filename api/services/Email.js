@@ -2,6 +2,7 @@ const api = require('sendwithus')(process.env.SENDWITHUS_KEY)
 const Promise = require('bluebird')
 import { curry, merge } from 'lodash'
 import { format } from 'util'
+import { mapLocaleToSendWithUS } from '../../lib/util'
 
 const sendEmail = opts =>
   new Promise((resolve, reject) =>
@@ -11,10 +12,11 @@ const defaultOptions = {
   sender: {
     address: process.env.EMAIL_SENDER,
     name: 'Hylo'
-  }
+  },
+  locale: 'en-US'
 }
 
-const sendSimpleEmail = function (address, templateId, data, extraOptions) {
+const sendSimpleEmail = function (address, templateId, data, extraOptions, locale = 'en-US') {
   return sendEmail(merge({}, defaultOptions, {
     email_id: templateId,
     recipient: {address},
@@ -28,6 +30,7 @@ const sendEmailWithOptions = curry((templateId, opts) =>
     recipient: {address: opts.email},
     email_data: opts.data,
     version_name: opts.version,
+    locale: mapLocaleToSendWithUS(opts.locale),
     sender: opts.sender, // expects {name, reply_to}
     files: opts.files
   })))
@@ -39,18 +42,19 @@ module.exports = {
     sendSimpleEmail(email, 'tem_nt4RmzAfN4KyPZYxFJWpFE', data, extraOptions),
 
   sendPasswordReset: opts =>
-    sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData),
+    sendSimpleEmail(opts.email, 'tem_mccpcJNEzS4822mAnDNmGT', opts.templateData, mapLocaleToSendWithUS(opts.locale)),
 
   sendEmailVerification: opts =>
-    sendSimpleEmail(opts.email, 'tem_tt6gJkFMgjThCHHR6MwpPPrT', opts.templateData),
+    sendSimpleEmail(opts.email, 'tem_tt6gJkFMgjThCHHR6MwpPPrT', opts.templateData, mapLocaleToSendWithUS(opts.locale)),
 
   sendFinishRegistration: opts =>
-    sendSimpleEmail(opts.email, 'tem_BcfBCCHdDmkvcvkBSGPWYcjJ', opts.templateData),
+    sendSimpleEmail(opts.email, 'tem_BcfBCCHdDmkvcvkBSGPWYcjJ', opts.templateData, mapLocaleToSendWithUS(opts.locale)),
 
   sendInvitation: (email, data) =>
     sendEmailWithOptions('tem_ZXZuvouDYKKhCrdEWYbEp9', {
       email,
       data,
+      locale: mapLocaleToSendWithUS(data.locale) || 'en-US',
       version: 'Holonic architecture',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,
@@ -62,6 +66,7 @@ module.exports = {
     sendEmailWithOptions('tem_tmEEpPvtQ69wGkmf9njCx8', {
       email,
       data,
+      locale: mapLocaleToSendWithUS(data.locale) || 'en-US',
       version: 'default',
       sender: {
         name: `${data.inviter_name} (via Hylo)`,

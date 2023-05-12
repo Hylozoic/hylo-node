@@ -3,6 +3,7 @@
 import { parse } from 'url'
 import { compact, some, sum, uniq } from 'lodash/fp'
 import { TextHelpers } from 'hylo-shared'
+import { mapLocaleToSendWithUS } from '../../../lib/util'
 
 const MAX_PUSH_NOTIFICATION_LENGTH = 140
 
@@ -65,6 +66,7 @@ export const sendDigests = async () => {
       // read time.
       let lastReadAt = user.pivot.get('last_read_at')
       if (lastReadAt) lastReadAt = new Date(lastReadAt)
+      const locale = mapLocaleToSendWithUS(user.get('settings').locale || 'en-US')
 
       const filtered = comments.filter(c =>
         c.get('created_at') > (lastReadAt || 0) &&
@@ -94,9 +96,10 @@ export const sendDigests = async () => {
 
         var participantNames = otherNames.slice(0, otherNames.length - 1).join(', ') +
         ' & ' + otherNames[otherNames.length - 1]
-
+        
         return Email.sendMessageDigest({
           email: user.get('email'),
+          locale,
           data: {
             count: filtered.length,
             participant_avatars: otherAvatarUrls[0],
@@ -118,6 +121,7 @@ export const sendDigests = async () => {
 
         return Email.sendCommentDigest({
           email: user.get('email'),
+          locale,
           data: {
             count: commentData.length,
             post_title: post.summary(),

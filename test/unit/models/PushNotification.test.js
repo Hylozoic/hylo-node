@@ -42,7 +42,7 @@ describe('PushNotification', () => {
     beforeEach(async () => {
       var username = 'username'
       var postname = 'My Post'
-      user = await factories.user({name: username}).save()
+      user = await factories.user({name: username, settings: {locale: 'en'}}).save()
       post = await factories.post({user_id: user.id, name: postname}).save()
     })
 
@@ -51,7 +51,7 @@ describe('PushNotification', () => {
       const person = post.relations.user.get('name')
       const postName = post.get('name')
       var expected = `${person} sent an announcement titled "${postName}"`
-      expect(PushNotification.textForAnnouncement(post)).to.equal(expected)
+      expect(PushNotification.textForAnnouncement(post, 'en')).to.equal(expected)
     })
 
     it('sets sent_at and disabled', function () {

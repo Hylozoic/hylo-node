@@ -354,7 +354,8 @@ describe('Notification', function () {
                 }),
                 user: model({
                   id: 2,
-                  name: 'Ka Mentor'
+                  name: 'Ka Mentor',
+                  settings: {locale: 'en'}
                 })
               }
             }),
@@ -362,7 +363,8 @@ describe('Notification', function () {
               id: 1,
               name: 'Reader Person',
               email: 'ilovenotifications@foo.com',
-              created_at: new Date()
+              created_at: new Date(),
+              settings: {locale: 'en'}
             })
           }
         })
@@ -590,7 +592,7 @@ describe('Notification', function () {
     it('calls sendPushNotification with the correct params', async () => {
       await notification.sendPushAnnouncement()
       expect(notification.relations.activity.relations.reader.sendPushNotification).to.have.been.called()
-      expect(alertText).to.equal(PushNotification.textForAnnouncement(post))
+      expect(alertText).to.equal(PushNotification.textForAnnouncement(post, 'en'))
       expect(path).to.equal(url.parse(Frontend.Route.post(post, group)).path)
     })
   })
