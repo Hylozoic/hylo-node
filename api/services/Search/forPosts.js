@@ -96,9 +96,16 @@ export default function forPosts (opts) {
     if (opts.onlyMyGroups) {
       const selectIdsForMember = Group.selectIdsForMember(opts.currentUserId)
       qb.whereIn('groups_posts.group_id', selectIdsForMember)
-    } else if (opts.groupIds) {
+    }
+
+    if (opts.groupIds) {
       qb.whereIn('groups_posts.group_id', opts.groupIds)
-    } else if (opts.groupSlugs && opts.groupSlugs.length > 0) {
+    }
+
+    if (opts.groupSlugs && opts.groupSlugs.length > 0) {
+      // Make sure groups_posts is joined before we try to join groups on it
+      qb.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
+      qb.queryContext({ alreadyJoinedGroupPosts: true }) // Track this so we don't double join in filters.js
       qb.join('groups', 'groups_posts.group_id', '=', 'groups.id')
       qb.whereIn('groups.slug', opts.groupSlugs)
     }

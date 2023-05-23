@@ -23,6 +23,7 @@ nbproject
 *.iml
 latest.dump
 latest.dump.*
+*.sql
 .env.swp
 *.swp
 .nyc_output/
