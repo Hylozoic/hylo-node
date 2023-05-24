@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.5.1] - 2023-05-23
+
+### Added
+- Mixpanel tracking when a new member joins a group any which way
+
 ## Fixed
 - Filtering of public map by a specific group
 
