@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Fixed
+- Filtering of public map by a specific group
+
 ## [5.5.0] - 2023-05-12
 
 ### Added
@@ -14,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.4.1] - 2023-04-11
 
 ### Added
-- Track locale in user settings 
+- Track locale in user settings
 
 ### Changed
 - Improved API docs
