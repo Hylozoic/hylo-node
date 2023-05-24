@@ -7060,6 +7060,14 @@ https-proxy-agent@0:
     debug "2"
     extend "3"
 
+https-proxy-agent@5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/https-proxy-agent/-/https-proxy-agent-5.0.0.tgz#e2a90542abb68a762e0a0850f6c9edadfd8506b2"
+  integrity sha512-EkYm5BcKUGiduxzSt3Eppko+PiNWNEpa4ySk9vTC6wDsQJW9rHSa+UhGNJoRYp7bz6Ht1eaRIa6QaJqO5rCFbA==
+  dependencies:
+    agent-base "6"
+    debug "4"
+
 https-proxy-agent@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/https-proxy-agent/-/https-proxy-agent-4.0.0.tgz#702b71fb5520a132a66de1f67541d9e62154d82b"
@@ -7076,10 +7084,10 @@ https-proxy-agent@^5.0.0, https-proxy-agent@^5.0.1:
     agent-base "6"
     debug "4"
 
-hylo-shared@5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-5.1.0.tgz#e4cdb43a2d65926d195bb70e6a24b874efc03f52"
-  integrity sha512-YWXEs8F/Sw6yazUi6Nii8JMoLa9P5HfnUJ8B+JcyZNs3EaDbf04FVZdi1bFYMgzcl+uNNx9ebRWY+2mJPGRqoQ==
+hylo-shared@5.2.3:
+  version "5.2.3"
+  resolved "https://registry.yarnpkg.com/hylo-shared/-/hylo-shared-5.2.3.tgz#3c814dfece6bedca90800f6f0b30b03cc818f0b1"
+  integrity sha512-OzcCMMSZ/+6msIHaJc1fWQ4l3RFkKgjwTtaoARV07WOdEhqBaErTKPhRe71Sg2LGWeLPgECxQ2S5RmRITEtHFg==
   dependencies:
     coordinate-parser "^1.0.7"
     html-to-text "^8.1.0"
@@ -9038,6 +9046,13 @@ mixme@^0.5.1:
   version "0.5.5"
   resolved "https://registry.yarnpkg.com/mixme/-/mixme-0.5.5.tgz#bf8f67d8caf10fdb49fd23198fd1fa6d8e406627"
   integrity sha512-/6IupbRx32s7jjEwHcycXikJwFD5UujbVNuJFkeKLYje+92OvtuPniF6JhnFm5JCTDUhS+kYK3W/4BWYQYXz7w==
+
+mixpanel@^0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/mixpanel/-/mixpanel-0.17.0.tgz#ec57b068598c620cf039a5e504fb37c97ebfe8ce"
+  integrity sha512-DY5WeOy/hmkPrNiiZugJpWR0iMuOwuj1a3u0bgwB2eUFRV6oIew/pIahhpawdbNjb+Bye4a8ID3gefeNPvL81g==
+  dependencies:
+    https-proxy-agent "5.0.0"
 
 mkdirp-classic@^0.5.2, mkdirp-classic@^0.5.3:
   version "0.5.3"

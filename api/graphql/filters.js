@@ -142,7 +142,8 @@ export const postFilter = (userId, isAdmin) => relation => {
     q.where('posts.active', true)
 
     // If we are loading posts through a group then groups_posts already joined, otherwise we need it
-    if (!relation.relatedData || relation.relatedData.parentTableName !== 'groups') {
+    // Also check if we already loaded groups_posts in the forPosts search code
+    if ((!relation.relatedData || relation.relatedData.parentTableName !== 'groups') && !q.queryContext()?.alreadyJoinedGroupPosts) {
       q.join('groups_posts', 'groups_posts.post_id', '=', 'posts.id')
     }
 

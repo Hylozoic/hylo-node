@@ -5,11 +5,13 @@ import knexPostgis from 'knex-postgis'
 import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
 import wkx from 'wkx'
-import { LocationHelpers } from 'hylo-shared'
+import mixpanel from '../../lib/mixpanel'
+import { AnalyticsEvents, LocationHelpers } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
 import { inviteGroupToGroup } from '../graphql/mutations/group.js'
+
 import DataType, {
   getDataTypeForInstance, getDataTypeForModel, getModelForDataType
 } from './group/DataType'
@@ -314,7 +316,7 @@ module.exports = bookshelf.Model.extend(merge({
     const newMemberships = []
     const defaultTagIds = (await GroupTag.defaults(this.id, transacting)).models.map(t => t.get('tag_id'))
 
-    for (let id of newUserIds) {
+    for (const id of newUserIds) {
       const membership = await this.memberships().create(
         Object.assign({}, updatedAttribs, {
           user_id: id,
@@ -549,12 +551,13 @@ module.exports = bookshelf.Model.extend(merge({
   // ******* Class methods ******** //
 
   // Background task to do additional work/tasks when new members are added to a group
-  async afterAddMembers({ groupId, newUserIds, reactivatedUserIds }) {
+  async afterAddMembers ({ groupId, newUserIds, reactivatedUserIds }) {
     const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_member', groupId).fetchAll()
+
+    const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
 
     if (zapierTriggers && zapierTriggers.length > 0) {
       const group = await Group.find(groupId)
-      const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
       for (const trigger of zapierTriggers) {
         const response = await fetch(trigger.get('target_url'), {
           method: 'post',
@@ -581,6 +584,13 @@ module.exports = bookshelf.Model.extend(merge({
         })
         // TODO: what to do with the response? check if succeeded or not?
       }
+    }
+
+    for (const member of members) {
+      mixpanel.track(AnalyticsEvents.GROUP_NEW_MEMBER, {
+        distinct_id: member.id,
+        groupId: [groupId]
+      })
     }
   },
 
@@ -638,7 +648,7 @@ module.exports = bookshelf.Model.extend(merge({
       await group.createStarterPosts(trx)
 
       await group.createInitialWidgets(trx)
-      
+
       await group.createDefaultTopics(group.id, userId, trx)
 
       const members = await group.addMembers([userId],
@@ -761,7 +771,7 @@ module.exports = bookshelf.Model.extend(merge({
           ${locales[locale].CreatorEmail()}: ${creator.get('email')}
           ${locales[locale].CreatorName()}: ${creator.get('name')}
           ${locales[locale].CreatorURL()}: ${Frontend.Route.profile(creator)}
-        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n') 
+        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
       }, {
         sender: {
           name: 'Hylobot',
