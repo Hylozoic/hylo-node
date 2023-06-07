@@ -323,10 +323,10 @@ export function reactOn (userId, entityId, data) {
     throw new Error('entityType invalid: you need to say its a post or a comment')
   }
   return lookUp[entityType].find(entityId)
-    .then(entity => entity.reaction(userId, data))
+    .then(entity => entity.addReaction(userId, data.emojiFull))
 }
 
-export function deleteReaction (entityId, userId, data) {
+export function deleteReaction (userId, entityId, data) {
   const lookUp = {
     post: Post,
     comment: Comment
@@ -336,7 +336,7 @@ export function deleteReaction (entityId, userId, data) {
     throw new Error('entityType invalid: you need to say its a post or a comment')
   }
   return lookUp[entityType].find(entityId)
-    .then(entity => entity.deleteReaction(userId, data))
+    .then(entity => entity.deleteReaction(userId, data.emojiFull))
 }
 
 export async function removePost (userId, postId, groupIdOrSlug) {

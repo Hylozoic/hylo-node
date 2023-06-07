@@ -168,6 +168,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'link_preview_featured',
         'location',
         'project_management_link',
+        'reactions_summary',
         'start_time',
         'type',
         'updated_at'
@@ -176,12 +177,12 @@ export default function makeModels (userId, isAdmin, apiClient) {
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
         details: p => p.details(userId),
-        myReactions: p => userId ? p.postReactions(userId).fetch() : [],
+        myReactions: p => userId ? p.reactionsForUser(userId).fetch() : [],
         myVote: p => userId ? p.userVote(userId).then(v => !!v) : false, // Remove once Mobile has been updated
         myEventResponse: p =>
-          userId && p.isEvent() ? p.userEventInvitation(userId)
-          .then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
-          : ''
+          userId && p.isEvent()
+            ? p.userEventInvitation(userId).then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
+            : ''
       },
       relations: [
         { comments: { querySet: true } },
@@ -193,7 +194,11 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { eventInvitations: { querySet: true } },
         'linkPreview',
         'postMemberships',
-        'postReactions',
+        {
+          reactions: {
+            alias: 'postReactions'
+          }
+        },
         {
           media: {
             alias: 'attachments',
@@ -613,7 +618,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       getters: {
         questionAnswers: jr => jr.questionAnswers().fetch()
       },
-      fetchMany: ({ groupId }) => JoinRequest.where({ 'group_id': groupId, status: JoinRequest.STATUS.Pending })
+      fetchMany: ({ groupId }) => JoinRequest.where({ group_id: groupId, status: JoinRequest.STATUS.Pending })
     },
 
     JoinRequestQuestionAnswer: {
@@ -621,7 +626,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       attributes: [
         'answer'
       ],
-      relations: ['question'],
+      relations: ['question']
     },
 
     Question: {
@@ -640,7 +645,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'preposition',
         'org_name',
         'url',
-        'is_active',
+        'is_active'
       ],
       relations: ['user']
     },
@@ -651,7 +656,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'response'
       ],
       relations: [
-        {user: {alias: 'person'}}
+        { user: { alias: 'person' } }
       ]
     },
 
@@ -674,8 +679,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
       getters: {
         text: comment => comment.text(userId),
         parentComment: (c) => c.parentComment().fetch(),
-        myReactions: c => userId ? c.commentReactions(userId).fetch() : [],
-        commentReactions: c => c.commentReactions().fetch()
+        myReactions: c => userId ? c.reactionsForUser(userId).fetch() : [],
+        commentReactions: c => c.reactions().fetch() // XXX: for some reason this doesn't work as relationship alias, I dont know why
       },
       filter: nonAdminFilter(commentFilter(userId)),
       isDefaultTypeForTable: true
@@ -709,7 +714,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'postcode'
       ]
     },
-    
+
     MessageThread: {
       model: Post,
       attributes: ['created_at', 'updated_at'],

@@ -1,11 +1,12 @@
 /* eslint-disable no-unused-expressions */
+import { expect } from 'chai'
 import root from 'root-path'
 const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
 describe('Post', function () {
   describe('#addFollowers', function () {
-    var u1, u2, post
+    let u1, u2, post
 
     beforeEach(async () => {
       await setup.clearDb()
@@ -216,7 +217,8 @@ describe('Post', function () {
   })
 
   describe('.createActivities', () => {
-    var u, u2, u3, c
+    let u, u2, u3, c
+
     before(async () => {
       u = await factories.user().save()
       u2 = await factories.user().save()
@@ -227,66 +229,68 @@ describe('Post', function () {
     })
 
     it('creates activity for group members', () => {
-      var post = factories.post({user_id: u.id})
+      const post = factories.post({user_id: u.id})
+
       return post.save()
-      .then(() => post.groups().attach(c.id))
-      .then(() => post.createActivities())
-      .then(() => Activity.where({post_id: post.id}).fetchAll())
-      .then(activities => {
-        expect(activities.length).to.equal(2)
-        expect(activities.pluck('reader_id').sort()).to.deep.equal([u2.id, u3.id].sort())
-        activities.forEach(activity => {
-          expect(activity.get('actor_id')).to.equal(u.id)
-          expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${c.id}`]})
-          expect(activity.get('unread')).to.equal(true)
+        .then(() => post.groups().attach(c.id))
+        .then(() => post.createActivities())
+        .then(() => Activity.where({post_id: post.id}).fetchAll())
+        .then(activities => {
+          expect(activities.length).to.equal(2)
+          expect(activities.pluck('reader_id').sort()).to.deep.equal([u2.id, u3.id].sort())
+          activities.forEach(activity => {
+            expect(activity.get('actor_id')).to.equal(u.id)
+            expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${c.id}`]})
+            expect(activity.get('unread')).to.equal(true)
+          })
         })
-      })
     })
 
     it('creates an activity for a mention', () => {
-      var post = factories.post({
+      const post = factories.post({
         user_id: u.id,
         description: `<p>Yo <a class="mention" data-type="mention" data-id="${u3.id}" data-label="u3">u3</a>, how goes it</p>`
       })
+
       return post.save()
-      .then(() => post.groups().attach(c.id))
-      .then(() => post.createActivities())
-      .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
-      .then(activities => {
-        expect(activities.length).to.equal(1)
-        const activity = activities.first()
-        expect(activity).to.exist
-        expect(activity.get('actor_id')).to.equal(u.id)
-        expect(activity.get('meta')).to.deep.equal({reasons: ['mention', `newPost: ${c.id}`]})
-        expect(activity.get('unread')).to.equal(true)
-      })
+        .then(() => post.groups().attach(c.id))
+        .then(() => post.createActivities())
+        .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
+        .then(activities => {
+          expect(activities.length).to.equal(1)
+          const activity = activities.first()
+          expect(activity).to.exist
+          expect(activity.get('actor_id')).to.equal(u.id)
+          expect(activity.get('meta')).to.deep.equal({reasons: ['mention', `newPost: ${c.id}`]})
+          expect(activity.get('unread')).to.equal(true)
+        })
     })
 
     it('creates an activity for a tag follower', () => {
-      var post = factories.post({
+      const post = factories.post({
         user_id: u.id
       })
 
       return new Tag({name: 'FollowThisTag'}).save()
-      .tap(tag => u3.followedTags().attach({tag_id: tag.id, group_id: c.id}))
-      .then(() => post.save())
-      .then(() => Tag.updateForPost(post, ['FollowThisTag']))
-      .then(() => post.groups().attach(c.id))
-      .then(() => post.createActivities())
-      .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
-      .then(activities => {
-        expect(activities.length).to.equal(1)
-        const activity = activities.first()
-        expect(activity).to.exist
-        expect(activity.get('actor_id')).to.equal(u.id)
-        expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${c.id}`, 'tag: FollowThisTag']})
-        expect(activity.get('unread')).to.equal(true)
-      })
+        .tap(tag => u3.followedTags().attach({tag_id: tag.id, group_id: c.id}))
+        .then(() => post.save())
+        .then(() => Tag.updateForPost(post, ['FollowThisTag']))
+        .then(() => post.groups().attach(c.id))
+        .then(() => post.createActivities())
+        .then(() => Activity.where({post_id: post.id, reader_id: u3.id}).fetchAll())
+        .then(activities => {
+          expect(activities.length).to.equal(1)
+          const activity = activities.first()
+          expect(activity).to.exist
+          expect(activity.get('actor_id')).to.equal(u.id)
+          expect(activity.get('meta')).to.deep.equal({reasons: [`newPost: ${c.id}`, 'tag: FollowThisTag']})
+          expect(activity.get('unread')).to.equal(true)
+        })
     })
   })
 
   describe('#updateFromNewComment', () => {
-    var post, user
+    let post, user
 
     before(async () => {
       user = await factories.user().save()
@@ -311,14 +315,59 @@ describe('Post', function () {
         await post.lastReadAtForUser(user.id)
       ]
       const now = new Date().getTime()
-      for (let date of timestamps) {
+      for (const date of timestamps) {
         expect(date.getTime()).to.be.closeTo(now, 2000)
       }
     })
   })
 
+  describe('reactions', () => {
+    let user, post
+
+    before(async () => {
+      user = await factories.user().save()
+      post = await factories.post().save()
+      await post.addFollowers([user.id])
+    })
+
+    it('adds new reactions and updates counts correctly', async () => {
+      await post.addReaction(user.id, '\uD83D\uDC4D')
+      await post.addReaction(user.id, '😁')
+      await post.refresh()
+      const reactions = await post.reactions().fetch()
+      expect(reactions.length).to.equal(2)
+      expect(reactions.pluck('user_id')).to.deep.equal([user.id, user.id])
+      expect(reactions.pluck('emoji_full')).to.deep.equal(['\uD83D\uDC4D', '😁'])
+      expect(post.get('num_people_reacts')).to.equal(1)
+      expect(post.get('reactions_summary')).to.deep.equal({ '👍': 1, '😁': 1 })
+    })
+
+    it('deletes reactions correctly', async () => {
+      await post.deleteReaction(user.id, '\uD83D\uDC4D')
+      expect(post.get('num_people_reacts')).to.equal(1)
+      expect(post.get('reactions_summary')).to.deep.equal({ '👍': 0, '😁': 1 })
+      await post.deleteReaction(user.id, '\uD83D\uDC4D')
+      expect(post.get('num_people_reacts')).to.equal(1)
+      expect(post.get('reactions_summary')).to.deep.equal({ '👍': 0, '😁': 1 })
+      await post.deleteReaction(user.id, '😁')
+      expect(post.get('num_people_reacts')).to.equal(0)
+      expect(post.get('reactions_summary')).to.deep.equal({ '👍': 0, '😁': 0 })
+    })
+
+    it('votes correctly and not too many times', async () => {
+      await post.vote(user.id, true)
+      await post.vote(user.id, true)
+      expect(post.get('num_people_reacts')).to.equal(1)
+      expect(post.get('reactions_summary')).to.deep.equal({ '👍': 1, '😁': 0 })
+      await post.vote(user.id, false)
+      await post.vote(user.id, false)
+      expect(post.get('num_people_reacts')).to.equal(0)
+      expect(post.get('reactions_summary')).to.deep.equal({ '👍': 0, '😁': 0 })
+    })
+  })
+
   describe('#unreadCountForUser', () => {
-    var post, user, user2
+    let post, user, user2
 
     before(async () => {
       post = factories.post()
@@ -340,12 +389,12 @@ describe('Post', function () {
 
     it('returns the number of unread messages (comments)', () => {
       return post.unreadCountForUser(user.id)
-      .then(count => expect(count).to.equal(2))
+        .then(count => expect(count).to.equal(2))
     })
 
     it('returns the total number of messages (comments) with no read timestamps', () => {
       return post.unreadCountForUser(user2.id)
-      .then(count => expect(count).to.equal(3))
+        .then(count => expect(count).to.equal(3))
     })
   })
 })
