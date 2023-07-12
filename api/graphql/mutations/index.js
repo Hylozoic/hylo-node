@@ -326,7 +326,7 @@ export function reactOn (userId, entityId, data) {
     .then(entity => entity.reaction(userId, data))
 }
 
-export function deleteReaction (entityId, userId, data) {
+export function deleteReaction (userId, entityId, data) {
   const lookUp = {
     post: Post,
     comment: Comment
