@@ -197,7 +197,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   parentGroupRelationships () {
     return this.hasMany(GroupRelationship, 'child_group_id')
-      .query({ where: { 'active': true } })
+      .query({ where: { active: true } })
   },
 
   prerequisiteGroups () {
@@ -213,10 +213,10 @@ module.exports = bookshelf.Model.extend(merge({
     return Post.query(q => {
       q.select(bookshelf.knex.raw('count(*)'))
       q.join('groups_posts', 'posts.id', 'groups_posts.post_id')
-      q.where({'groups_posts.group_id': this.id, 'active': true})
+      q.where({ 'groups_posts.group_id': this.id, active: true })
     })
-    .fetch()
-    .then(result => result.get('count'))
+      .fetch()
+      .then(result => result.get('count'))
   },
 
   skills: function () {
@@ -248,6 +248,7 @@ module.exports = bookshelf.Model.extend(merge({
     })
 
     return Post.collection().query(q => {
+      q.queryContext({ primaryGroupId: this.id }) // To help with sorting pinned posts
       q.join('users', 'posts.user_id', 'users.id')
       q.where('users.active', true)
       q.andWhere(q2 => {
@@ -269,7 +270,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   // ******** Setters ********** //
 
-  async addChild(childGroup, { transacting } = {}) {
+  async addChild (childGroup, { transacting } = {}) {
     const childGroupId = childGroup instanceof Group ? childGroup.id : childGroup
     const existingChild = await GroupRelationship.where({ child_group_id: childGroupId, parent_group_id: this.id }).fetch({ transacting })
     if (existingChild) {
@@ -278,7 +279,7 @@ module.exports = bookshelf.Model.extend(merge({
     return GroupRelationship.forge({ child_group_id: childGroupId, parent_group_id: this.id }).save({}, { transacting })
   },
 
-  async addParent(parentGroup, { transacting } = {}) {
+  async addParent (parentGroup, { transacting } = {}) {
     const parentGroupId = parentGroup instanceof Group ? parentGroup.id : parentGroup
     const existingParent = await GroupRelationship.where({ parent_group_id: parentGroupId, child_group_id: this.id }).fetch({ transacting })
     if (existingParent) {
