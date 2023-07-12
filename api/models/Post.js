@@ -114,7 +114,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   followers: function () {
     return this.belongsToMany(User).through(PostUser)
       .withPivot(['last_read_at'])
-      .where({ following: true, 'posts_users.active': true })
+      .where({ following: true, 'posts_users.active': true, 'users.active': true })
   },
 
   groups: function () {
