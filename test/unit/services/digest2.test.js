@@ -207,7 +207,7 @@ describe('group digest v2', () => {
             id: 76,
             title: 'An event',
             location: 'Home',
-            when: 'December 17, 1995 @ 6:30pm',
+            when: 'Sun, Dec 17, 1995 at 6:30PM PST',
             user: u2.attributes,
             url: Frontend.Route.post({id: 76}, group),
             comments: []
