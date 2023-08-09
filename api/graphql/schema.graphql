@@ -1601,6 +1601,8 @@ type Post {
   projectManagementLink: String
   # When this post "starts". Used for events, resources, projects, requests and offers right now
   startTime: Date
+  # The timezone of the post
+  timezone: String
   # The title text for the post
   title: String
   # Number of topics added to the post
@@ -2602,6 +2604,8 @@ input PostInput {
   projectManagementLink: String
   # When this post "starts". Used for events, resources, projects, requests and offers right now
   startTime: Date
+  # The timezone of the post
+  timezone: String
   # The title text for the post
   title: String
   # Topics to add to the post

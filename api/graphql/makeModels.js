@@ -169,6 +169,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'location',
         'project_management_link',
         'start_time',
+        'timezone',
         'type',
         'updated_at'
       ],
@@ -709,7 +710,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'postcode'
       ]
     },
-    
+
     MessageThread: {
       model: Post,
       attributes: ['created_at', 'updated_at'],
