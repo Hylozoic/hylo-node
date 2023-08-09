@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.5.3] - 2023-08-09
+
+## Fixed
+- Show timezone for events in digest emails, for now always display in the time zone of the event creator
+
 ## [5.5.2] - 2023-06-12
 
 ## Fixed
