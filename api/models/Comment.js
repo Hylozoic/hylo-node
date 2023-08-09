@@ -37,10 +37,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.relations.post.relations.groups.first()
   },
 
-  commentReactions: function (userId) {
+  commentReactions: function () {
+    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'comment')
+  },
+
+  reactions: function () {
+    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'comment')
+  },
+
+  reactionsForUser: function (userId) {
     return userId
-      ? this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'comment', 'reactions.user_id': userId })
-      : this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'comment')
+      ? this.reactions().query({ where: { 'reactions.user_id': userId } })
+      : this.reactions()
   },
 
   tags: function () {
@@ -55,29 +63,43 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(Comment).where('comments.active', true)
   },
 
-  deleteReaction: function (userId, data) {
-    return this.commentReactions(userId).fetch()
-      .then(userReactionsModels => bookshelf.transaction(async trx => {
-        const userReactions = userReactionsModels.models
-        const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === data.emojiFull)[0]
+  addReaction: async function (userId, emojiFull) {
+    return bookshelf.transaction(async trx => {
+      const userReactionsModels = await this.reactionsForUser(userId).fetch({ transacting: trx })
+      const userReactions = userReactionsModels.models
+      const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === emojiFull)[0]
 
-        return userReaction.destroy({ transacting: trx })
-      }))
+      if (!userReaction) {
+        const emojiObject = await getEmojiDataFromNative(emojiFull)
+
+        await new Reaction({
+          date_reacted: new Date(),
+          entity_id: this.id,
+          user_id: userId,
+          emoji_base: emojiFull,
+          emoji_full: emojiFull,
+          entity_type: 'comment',
+          emoji_label: emojiObject.shortcodes
+        }).save({}, { transacting: trx })
+
+        return this
+      }
+      return false
+    })
   },
 
-  reaction: async function (userId, data) {
-    const { emojiFull } = data
-    const emojiObject = await getEmojiDataFromNative(emojiFull)
+  deleteReaction: function (userId, emojiFull) {
+    return bookshelf.transaction(async trx => {
+      const userReactionsModels = await this.reactionsForUser(userId).fetch({ transacting: trx })
+      const userReactions = userReactionsModels.models
+      const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === emojiFull)[0]
 
-    return new Reaction({
-      entity_id: this.id,
-      user_id: userId,
-      emoji_base: emojiFull,
-      emoji_full: emojiFull,
-      entity_type: 'comment',
-      emoji_label: emojiObject.shortcodes
-    }).save()
-      .then(() => this)
+      if (userReaction) {
+        await userReaction.destroy({ transacting: trx })
+        return this
+      }
+      return false
+    })
   },
 
   childComments: function () {
@@ -95,7 +117,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   createActivities: async function (trx) {
-    var toLoad = ['post']
+    const toLoad = ['post']
 
     await this.ensureLoad(toLoad)
     const actorId = this.get('user_id')

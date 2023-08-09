@@ -148,7 +148,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   media: function (type) {
     const relation = this.hasMany(Media)
-    return type ? relation.query({where: {type}}) : relation
+    return type ? relation.query({ where: { type } }) : relation
   },
 
   // TODO: rename postGroups?
@@ -162,6 +162,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   projectContributions: function () {
     return this.hasMany(ProjectContribution)
+  },
+
+  reactions: function () {
+    return this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'post' })
   },
 
   responders: function () {
@@ -186,10 +190,17 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
-  postReactions: function (userId) {
-    return userId
-      ? this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'post', 'reactions.user_id': userId })
-      : this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
+  reactionsForUser: function (userId, emojiFull) {
+    const q = this.reactions()
+    if (userId) {
+      q.query({ where: { 'reactions.user_id': userId } })
+    }
+
+    if (emojiFull) {
+      q.query({ where: { 'reactions.emoji_full': emojiFull } })
+    }
+
+    return q
   },
 
   userVote: function (userId) {
@@ -203,7 +214,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // TODO: this is confusing and we are not using, remove for now?
   children: function () {
     return this.hasMany(Post, 'parent_post_id')
-    .query({ where: { active: true } })
+      .query({ where: { active: true } })
   },
 
   parent: function () {
@@ -213,8 +224,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   getTagsInComments: function (opts) {
     // this is part of the 'taggable' interface, shared with Comment
     return this.load('comments.tags', opts)
-    .then(() =>
-      uniqBy('id', flatten(this.relations.comments.map(c => c.relations.tags.models))))
+      .then(() => uniqBy('id', flatten(this.relations.comments.map(c => c.relations.tags.models))))
   },
 
   getCommenters: function (first, currentUserId) {
@@ -419,76 +429,75 @@ module.exports = bookshelf.Model.extend(Object.assign({
   fulfill,
 
   unfulfill,
-  // TODO: Need to remove this once mobile has been updated
+
+  // TODO: Remove this once mobile has been updated
   vote: function (userId, isUpvote) {
-    return this.postReactions().query({ where: { user_id: userId, emoji_full: '\uD83D\uDC4D' } }).fetchOne()
-      .then(reaction => bookshelf.transaction(trx => {
-        const inc = delta => async () => {
-          const reactionsSummary = await this.get('reactions_summary')
-          this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions_summary: { ...reactionsSummary, '\uD83D\uDC4D': reactionsSummary['\uD83D\uDC4D'] + delta } })
-        }
-
-        return (reaction && !isUpvote
-          ? reaction.destroy({ transacting: trx }).then(inc(-1))
-          : isUpvote && new Reaction({
-            entity_id: this.id,
-            user_id: userId,
-            emoji_base: '\uD83D\uDC4D',
-            emoji_full: '\uD83D\uDC4D',
-            entity_type: 'post',
-            emoji_label: ':thumbs up:'
-          }).save().then(inc(1)))
-      }))
-      .then(() => this)
+    return isUpvote ? this.addReaction(userId, '\uD83D\uDC4D') : this.deleteReaction(userId, '\uD83D\uDC4D')
   },
 
-  deleteReaction: function (userId, data) {
-    return this.postReactions(userId).fetch()
-      .then(userReactionsModels => bookshelf.transaction(async trx => {
-        const userReactions = userReactionsModels.models
-        const isLastReaction = userReactions.length === 1
-        const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === data.emojiFull)[0]
-        const { emojiFull } = data
+  addReaction: function (userId, emojiFull) {
+    return bookshelf.transaction(async trx => {
+      const userReactions = await this.reactionsForUser(userId).fetch()
+      const deltaPeople = userReactions?.models?.length > 0 ? 0 : 1
+      const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === emojiFull)[0]
 
-        const cleanUp = () => {
-          const reactionsSummary = this.get('reactions_summary')
-          const reactionCount = reactionsSummary[emojiFull] || 0
-          if (isLastReaction) {
-            return this.save({ num_people_reacts: this.get('num_people_reacts') - 1, reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
-          } else {
-            const reactionsSummary = this.get('reactions_summary')
-            return this.save({ reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
-          }
-        }
+      // If user has alread reacted with this emoji on this post then ignore this
+      if (userReaction) {
+        return false
+      }
 
-        return userReaction.destroy({ transacting: trx })
-          .then(cleanUp)
-      }))
+      const reactionsSummary = this.get('reactions_summary') || {}
+      const reactionCount = reactionsSummary[emojiFull] || 0
+
+      const emojiObject = await getEmojiDataFromNative(emojiFull)
+
+      await new Reaction({
+        date_reacted: new Date(),
+        entity_id: this.id,
+        user_id: userId,
+        emoji_base: emojiFull,
+        emoji_full: emojiFull,
+        entity_type: 'post',
+        emoji_label: emojiObject.shortcodes
+      }).save({}, { transacting: trx })
+
+      await this.save({
+        num_people_reacts: this.get('num_people_reacts') + deltaPeople,
+        reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount + 1 }
+      }, { transacting: trx })
+
+      return this
+    })
   },
 
-  reaction: function (userId, data) {
-    return this.postReactions(userId).fetch()
-      .then(userReactions => bookshelf.transaction(async trx => {
+  deleteReaction: function (userId, emojiFull) {
+    return bookshelf.transaction(async trx => {
+      const userReactionsModels = await this.reactionsForUser(userId).fetch({ transacting: trx })
+      const userReactions = userReactionsModels.models
+      const userReaction = userReactions.filter(reaction => reaction.attributes?.emoji_full === emojiFull)[0]
+      if (!userReaction) {
+        return false
+      }
 
-        const delta = userReactions?.models?.length > 0 ? 0 : 1
-        const reactionsSummary = this.get('reactions_summary') || {}
-        const { emojiFull } = data
-        const emojiObject = await getEmojiDataFromNative(emojiFull)
-        const reactionCount = reactionsSummary[emojiFull] || 0
-        const inc = () => {
-          return this.save({ num_people_reacts: this.get('num_people_reacts') + delta, reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount + delta } }, { transacting: trx })
-        }
+      // is this the last reaction on this post from this user?
+      const isLastReaction = userReactions.length === 1
 
-        return new Reaction({
-          entity_id: this.id,
-          user_id: userId,
-          emoji_base: emojiFull,
-          emoji_full: emojiFull,
-          entity_type: 'post',
-          emoji_label: emojiObject.shortcodes
-        }).save().then(inc())
-      }))
-      .then(() => this)
+      await userReaction.destroy({ transacting: trx })
+
+      const reactionsSummary = this.get('reactions_summary')
+      const reactionCount = reactionsSummary[emojiFull] || 0
+
+      if (isLastReaction) {
+        await this.save({
+          num_people_reacts: this.get('num_people_reacts') - 1,
+          reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 }
+        }, { transacting: trx })
+      } else {
+        const reactionsSummary = this.get('reactions_summary')
+        await this.save({ reactions_summary: { ...reactionsSummary, [emojiFull]: reactionCount - 1 } }, { transacting: trx })
+      }
+      return this
+    })
   },
 
   removeFromGroup: function (idOrSlug) {

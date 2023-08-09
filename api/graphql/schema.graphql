@@ -1599,6 +1599,10 @@ type Post {
   postMembershipsTotal: Int
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
+  # Number of total reactions on the post
+  reactionsTotal: Int
+  # Summary of reactions on the post
+  reactionsSummary: JSON
   # When this post "starts". Used for events, resources, projects, requests and offers right now
   startTime: Date
   # The timezone of the post
@@ -2633,8 +2637,6 @@ input QuestionAnswerInput {
 
 # Inputs for emoji reactions to posts and comments
 input ReactionInput {
-  # when the reaction happened
-  createdAt: Date
   # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
   emojiFull: String
   # id for the entity associated with the reactions
