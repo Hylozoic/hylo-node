@@ -3,27 +3,26 @@ import { getOr } from 'lodash/fp'
 
 export default function setupPostAttrs (userId, params) {
   const attrs = merge({
-    user_id: userId,
+    accept_contributions: params.acceptContributions,
+    announcement: params.announcement,
+    donations_link: params.donationsLink,
+    end_time: params.endTime ? new Date(Number(params.endTime)) : null,
+    is_public: params.isPublic,
     link_preview_id: params.link_preview_id || getOr(null, 'id', params.linkPreview),
     parent_post_id: params.parent_post_id,
-    updated_at: new Date(),
-    announcement: params.announcement,
-    accept_contributions: params.acceptContributions,
-    donations_link: params.donationsLink,
     project_management_link: params.projectManagementLink,
     start_time: params.startTime ? new Date(Number(params.startTime)) : null,
-    end_time: params.endTime ? new Date(Number(params.endTime)) : null,
-    is_public: params.isPublic
+    updated_at: new Date(),
+    user_id: userId
   }, pick(params,
-    'name',
+    'created_from',
     'description',
-    'type',
-    'starts_at',
-    'ends_at',
     'link_preview_featured',
     'location_id',
     'location',
-    'created_from'
+    'name',
+    'timezone',
+    'type'
   ))
 
   return Promise.resolve(attrs)

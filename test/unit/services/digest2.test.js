@@ -35,7 +35,7 @@ const u4 = model({
   avatar_url: 'http://cnn.com/man.png'
 })
 
-const group = model({slug: 'foo'})
+const group = model({ slug: 'foo' })
 
 const linkPreview = model({
   id: '1',
@@ -48,6 +48,8 @@ const linkPreview = model({
 describe('group digest v2', () => {
   describe('formatData', () => {
     it('organizes new posts and comments', () => {
+      const eventStart = moment.tz(new Date(), moment.tz.guess())
+
       const data = {
         comments: [
           model({
@@ -119,7 +121,7 @@ describe('group digest v2', () => {
             details: () => {},
             type: 'event',
             location: 'Home',
-            start_time: new Date('December 17, 1995 18:30:00'),
+            start_time: eventStart,
             relations: {
               user: u2
             }
@@ -207,7 +209,7 @@ describe('group digest v2', () => {
             id: 76,
             title: 'An event',
             location: 'Home',
-            when: 'December 17, 1995 @ 6:30pm',
+            when: eventStart.format('ddd, MMM D [at] h:mmA z'),
             user: u2.attributes,
             url: Frontend.Route.post({id: 76}, group),
             comments: []
