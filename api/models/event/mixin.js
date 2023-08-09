@@ -47,28 +47,6 @@ export default {
     return this.addEventInvitees(toAdd, inviterId, opts)
   },
 
-  prettyEventDates: function (startTime, endTime) {
-    if (!startTime && !endTime) return null
-    const start = moment(startTime)
-    const end = moment(endTime)
-
-    const from = start.format('ddd, MMM D [at] h:mmA')
-
-    let to = ''
-
-    if (endTime) {
-      if (end.month() !== start.month()) {
-        to = end.format(' - ddd, MMM D [at] h:mmA')
-      } else if (end.day() !== start.day()) {
-        to = end.format(' - ddd D [at] h:mmA')
-      } else {
-        to = end.format(' - h:mmA')
-      }
-    }
-
-    return from + to + " UTC"
-  },
-
   createInviteNotifications: async function (userId, inviteeIds) {
     const invitees = inviteeIds.map(inviteeId => ({
       reader_id: inviteeId,

@@ -2,6 +2,7 @@ import url from 'url'
 import { isEmpty } from 'lodash'
 import { get, includes } from 'lodash/fp'
 import decode from 'ent/decode'
+import { TextHelpers } from 'hylo-shared'
 import { refineOne } from './util/relations'
 import rollbar from '../../lib/rollbar'
 import { broadcast, userRoom } from '../services/Websockets'
@@ -69,33 +70,34 @@ module.exports = bookshelf.Model.extend({
   },
 
   send: function () {
-    var action
+    let action
     return this.shouldBeBlocked()
-    .then(shouldBeBlocked => {
-      if (shouldBeBlocked) {
-        this.destroy()
-        return Promise.resolve()
-      }
-      switch (this.get('medium')) {
-        case MEDIUM.Push:
-          action = this.sendPush()
-          break
-        case MEDIUM.Email:
-          action = this.sendEmail()
-          break
-        case MEDIUM.InApp:
-          const userId = this.reader().id
-          action = User.incNewNotificationCount(userId)
-            .then(() => this.updateUserSocketRoom(userId))
-          break
-      }
-      if (action) {
-        return action
-          .then(() => this.save({'sent_at': (new Date()).toISOString()}))
-      } else {
-        return Promise.resolve()
-      }
-    })
+      .then(shouldBeBlocked => {
+        if (shouldBeBlocked) {
+          this.destroy()
+          return Promise.resolve()
+        }
+        switch (this.get('medium')) {
+          case MEDIUM.Push:
+            action = this.sendPush()
+            break
+          case MEDIUM.Email:
+            action = this.sendEmail()
+            break
+          case MEDIUM.InApp: {
+            const userId = this.reader().id
+            action = User.incNewNotificationCount(userId)
+              .then(() => this.updateUserSocketRoom(userId))
+            break
+          }
+        }
+        if (action) {
+          return action
+            .then(() => this.save({ sent_at: (new Date()).toISOString() }))
+        } else {
+          return Promise.resolve()
+        }
+      })
   },
 
   sendPush: function () {
@@ -143,36 +145,36 @@ module.exports = bookshelf.Model.extend({
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
       .then(group => {
-        var path = url.parse(Frontend.Route.post(post, group)).path
-        var alertText = PushNotification.textForEventInvitation(post, actor, locale)
+        const path = url.parse(Frontend.Route.post(post, group)).path
+        const alertText = PushNotification.textForEventInvitation(post, actor, locale)
         return this.reader().sendPushNotification(alertText, path)
       })
   },
 
   sendPushAnnouncement: function (version) {
-    var post = this.post()
-    var groupIds = Activity.groupIds(this.relations.activity)
+    const post = this.post()
+    const groupIds = Activity.groupIds(this.relations.activity)
     const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
       .then(group => {
-        var path = url.parse(Frontend.Route.post(post, group)).path
-        var alertText = PushNotification.textForAnnouncement(post, locale)
+        const path = url.parse(Frontend.Route.post(post, group)).path
+        const alertText = PushNotification.textForAnnouncement(post, locale)
         return this.reader().sendPushNotification(alertText, path)
       })
   },
 
   sendPostPush: function (version) {
-    var post = this.post()
-    var groupIds = Activity.groupIds(this.relations.activity)
+    const post = this.post()
+    const groupIds = Activity.groupIds(this.relations.activity)
     const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
-    .then(group => {
-      var path = url.parse(Frontend.Route.post(post, group)).path
-      var alertText = PushNotification.textForPost(post, group, this.relations.activity.get('reader_id'), version, locale)
-      return this.reader().sendPushNotification(alertText, path)
-    })
+      .then(group => {
+        const path = url.parse(Frontend.Route.post(post, group)).path
+        const alertText = PushNotification.textForPost(post, group, this.relations.activity.get('reader_id'), version, locale)
+        return this.reader().sendPushNotification(alertText, path)
+      })
   },
 
   sendContributionPush: function (version) {
@@ -201,27 +203,27 @@ module.exports = bookshelf.Model.extend({
   },
 
   sendJoinRequestPush: function () {
-    var groupIds = Activity.groupIds(this.relations.activity)
+    const groupIds = Activity.groupIds(this.relations.activity)
     const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
-    .then(group => {
-      var path = url.parse(Frontend.Route.groupJoinRequests(group)).path
-      var alertText = PushNotification.textForJoinRequest(group, this.actor(), locale)
-      return this.reader().sendPushNotification(alertText, path)
-    })
+      .then(group => {
+        const path = url.parse(Frontend.Route.groupJoinRequests(group)).path
+        const alertText = PushNotification.textForJoinRequest(group, this.actor(), locale)
+        return this.reader().sendPushNotification(alertText, path)
+      })
   },
 
   sendApprovedJoinRequestPush: function () {
-    var groupIds = Activity.groupIds(this.relations.activity)
+    const groupIds = Activity.groupIds(this.relations.activity)
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     const locale = this.locale()
     return Group.find(groupIds[0])
-    .then(group => {
-      var path = url.parse(Frontend.Route.group(group)).path
-      var alertText = PushNotification.textForApprovedJoinRequest(group, this.actor(), locale)
-      return this.reader().sendPushNotification(alertText, path)
-    })
+      .then(group => {
+        var path = url.parse(Frontend.Route.group(group)).path
+        var alertText = PushNotification.textForApprovedJoinRequest(group, this.actor(), locale)
+        return this.reader().sendPushNotification(alertText, path)
+      })
   },
 
   sendGroupChildGroupInvitePush: async function () {
@@ -240,7 +242,7 @@ module.exports = bookshelf.Model.extend({
     const locale = this.locale()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
     const reason = this.relations.activity.get('meta').reasons[0]
-    const whichGroupMember = reason.split(':')[1]
+    const whichGroup = reason.split(':')[1]
     const groupMemberType = reason.split(':')[2]
     let alertPath, alertText
     if (whichGroup === 'parent' && groupMemberType === 'moderator') {
@@ -275,14 +277,14 @@ module.exports = bookshelf.Model.extend({
     const locale = this.locale()
     if (!childGroup || !parentGroup) throw new Error('Missing a group in activity')
     const reason = this.relations.activity.get('meta').reasons[0]
-    const whichGroupMember = reason.split(':')[1]
+    const whichGroup = reason.split(':')[1]
     const groupMemberType = reason.split(':')[2]
     let alertPath, alertText
     if (whichGroup === 'parent' && groupMemberType === 'moderator') {
       alertPath = url.parse(Frontend.Route.group(childGroup)).path
       alertText = PushNotification.textForGroupParentGroupJoinRequestAcceptedParentModerator(parentGroup, childGroup, this.actor(), locale)
     } else if (whichGroup === 'parent' && groupMemberType === 'member') {
-      alertPath = url.parse(Frontend.Route.group(childGroup)).path 
+      alertPath = url.parse(Frontend.Route.group(childGroup)).path
       alertText = PushNotification.textForGroupParentGroupJoinRequestAcceptedParentMember(parentGroup, childGroup, locale)
     } else if (whichGroup === 'child' && groupMemberType === 'moderator') {
       alertPath = url.parse(Frontend.Route.group(parentGroup)).path
@@ -296,19 +298,19 @@ module.exports = bookshelf.Model.extend({
 
   sendPushDonationTo: async function () {
     await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
-    var projectContribution = this.projectContribution()
+    const projectContribution = this.projectContribution()
     const locale = this.locale()
-    var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
-    var alertText = PushNotification.textForDonationTo(projectContribution, locale)
+    const path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
+    const alertText = PushNotification.textForDonationTo(projectContribution, locale)
     return this.reader().sendPushNotification(alertText, path)
   },
 
   sendPushDonationFrom: async function () {
     await this.load(['activity.reader', 'activity.projectContribution', 'activity.projectContribution.project', 'activity.projectContribution.user'])
-    var projectContribution = this.projectContribution()
+    const projectContribution = this.projectContribution()
     const locale = this.locale()
-    var path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
-    var alertText = PushNotification.textForDonationFrom(projectContribution, locale)
+    const path = url.parse(Frontend.Route.post(projectContribution.relations.project)).path
+    const alertText = PushNotification.textForDonationFrom(projectContribution, locale)
     return this.reader().sendPushNotification(alertText, path)
   },
 
@@ -346,39 +348,39 @@ module.exports = bookshelf.Model.extend({
     const reader = this.reader()
     const user = post.relations.user
     const replyTo = Email.postReplyAddress(post.id, reader.id)
-  
+
     const groupIds = Activity.groupIds(this.relations.activity)
     const locale = this.locale()
 
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
-    .then(group => reader.generateToken()
-      .then(token => Email.sendAnnouncementNotification({
-        version: 'Holonic architecture',
-        email: reader.get('email'),
-        locale,
-        sender: {
-          address: replyTo,
-          reply_to: replyTo,
-          name: `${user.get('name')} (via Hylo)`
-        },
-        data: {
-          group_name: group.get('name'),
-          post_user_name: user.get('name'),
-          post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
-            user.get('avatar_url') + '?ctt=announcement_email&cti=' + reader.id),
-          post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(user) + '?ctt=announcement_email&cti=' + reader.id),
-          post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-          post_title: decode(post.summary()),
-          post_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post, group) + '?ctt=announcement_email&cti=' + reader.id),
-          unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, group) + '?ctt=announcement_email&cti=' + reader.id),
-          tracking_pixel_url: Analytics.pixelUrl('Announcement', { userId: reader.id }),
-          post_date: post.prettyEventDates(post.get('start_time'), post.get('end_time'))
-        }
-      })))
+      .then(group => reader.generateToken()
+        .then(token => Email.sendAnnouncementNotification({
+          version: 'Holonic architecture',
+          email: reader.get('email'),
+          locale,
+          sender: {
+            address: replyTo,
+            reply_to: replyTo,
+            name: `${user.get('name')} (via Hylo)`
+          },
+          data: {
+            group_name: group.get('name'),
+            post_user_name: user.get('name'),
+            post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
+              user.get('avatar_url') + '?ctt=announcement_email&cti=' + reader.id),
+            post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.profile(user) + '?ctt=announcement_email&cti=' + reader.id),
+            post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
+            post_title: decode(post.summary()),
+            post_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.post(post, group) + '?ctt=announcement_email&cti=' + reader.id),
+            unfollow_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.unfollow(post, group) + '?ctt=announcement_email&cti=' + reader.id),
+            tracking_pixel_url: Analytics.pixelUrl('Announcement', { userId: reader.id }),
+            post_date: TextHelpers.formatDatePair(post.get('start_time'), post.get('end_time'), false, post.get('timezone'))
+          }
+        })))
   },
 
   sendPostMentionEmail: function () {
@@ -394,33 +396,33 @@ module.exports = bookshelf.Model.extend({
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
 
     return Group.find(groupIds[0])
-    .then(group => reader.generateToken()
-      .then(token => Email.sendPostMentionNotification({
-        version: 'Holonic architecture',
-        email: reader.get('email'),
-        locale,
-        sender: {
-          address: replyTo,
-          reply_to: replyTo,
-          name: `${user.get('name')} (via Hylo)`
-        },
-        data: {
-          group_name: group.get('name'),
-          post_user_name: user.get('name'),
-          post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
-            user.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
-          post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
-          post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-          post_title: post.get('type') === Post.Type.CHAT ? '#' + firstTag : decode(post.summary()),
-          post_type: post.get('type'),
-          post_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post, group, false, firstTag) + '?ctt=post_mention_email&cti=' + reader.id),
-          unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
-          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
-        }
-      })))
+      .then(group => reader.generateToken()
+        .then(token => Email.sendPostMentionNotification({
+          version: 'Holonic architecture',
+          email: reader.get('email'),
+          locale,
+          sender: {
+            address: replyTo,
+            reply_to: replyTo,
+            name: `${user.get('name')} (via Hylo)`
+          },
+          data: {
+            group_name: group.get('name'),
+            post_user_name: user.get('name'),
+            post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
+              user.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
+            post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
+            post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
+            post_title: post.get('type') === Post.Type.CHAT ? '#' + firstTag : decode(post.summary()),
+            post_type: post.get('type'),
+            post_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.post(post, group, false, firstTag) + '?ctt=post_mention_email&cti=' + reader.id),
+            unfollow_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
+            tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
+          }
+        })))
   },
 
   // version corresponds to names of versions in SendWithUs
@@ -436,9 +438,9 @@ module.exports = bookshelf.Model.extend({
     const title = decode(post.summary())
     const locale = this.locale()
 
-    var postLabel = `"${title}"`
+    let postLabel = `"${title}"`
     if (post.get('type') === 'welcome') {
-      var relatedUser = post.relations.relatedUsers.first()
+      const relatedUser = post.relations.relatedUsers.first()
       if (relatedUser.id === reader.id) {
         postLabel = 'your welcoming post'
       } else {
@@ -449,32 +451,32 @@ module.exports = bookshelf.Model.extend({
     const groupIds = Activity.groupIds(this.relations.activity)
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
-    .then(group => reader.generateToken()
-      .then(token => Email.sendNewCommentNotification({
-        version: version,
-        email: reader.get('email'),
-        locale,
-        sender: {
-          address: replyTo,
-          reply_to: replyTo,
-          name: `${commenter.get('name')} (via Hylo)`
-        },
-        data: {
-          group_name: group.get('name'),
-          commenter_name: commenter.get('name'),
-          commenter_avatar_url: commenter.get('avatar_url'),
-          commenter_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(commenter) + '?ctt=comment_email&cti=' + reader.id),
-          comment_text: RichText.qualifyLinks(comment.text(), group.get('slug')),
-          post_label: postLabel,
-          post_title: title,
-          comment_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.comment({ comment, groupSlug: group.get('slug'), post })),
-          unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, group)),
-          tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})
-        }
-      })))
+      .then(group => reader.generateToken()
+        .then(token => Email.sendNewCommentNotification({
+          version: version,
+          email: reader.get('email'),
+          locale,
+          sender: {
+            address: replyTo,
+            reply_to: replyTo,
+            name: `${commenter.get('name')} (via Hylo)`
+          },
+          data: {
+            group_name: group.get('name'),
+            commenter_name: commenter.get('name'),
+            commenter_avatar_url: commenter.get('avatar_url'),
+            commenter_profile_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.profile(commenter) + '?ctt=comment_email&cti=' + reader.id),
+            comment_text: RichText.qualifyLinks(comment.text(), group.get('slug')),
+            post_label: postLabel,
+            post_title: title,
+            comment_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.comment({ comment, groupSlug: group.get('slug'), post })),
+            unfollow_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.unfollow(post, group)),
+            tracking_pixel_url: Analytics.pixelUrl('Comment', {userId: reader.id})
+          }
+        })))
   },
 
   sendJoinRequestEmail: function () {
@@ -484,23 +486,23 @@ module.exports = bookshelf.Model.extend({
     const locale = this.locale()
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
-    .then(group => reader.generateToken()
-      .then(token => Email.sendJoinRequestNotification({
-        version: 'Holonic architecture',
-        email: reader.get('email'),
-        locale,
-        sender: {name: group.get('name')},
-        data: {
-          group_name: group.get('name'),
-          requester_name: actor.get('name'),
-          requester_avatar_url: actor.get('avatar_url'),
-          requester_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(actor) +
-            `?ctt=join_request_email&cti=${reader.id}&check-join-requests=1`),
-          settings_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.groupJoinRequests(group))
-        }
-      })))
+      .then(group => reader.generateToken()
+        .then(token => Email.sendJoinRequestNotification({
+          version: 'Holonic architecture',
+          email: reader.get('email'),
+          locale,
+          sender: {name: group.get('name')},
+          data: {
+            group_name: group.get('name'),
+            requester_name: actor.get('name'),
+            requester_avatar_url: actor.get('avatar_url'),
+            requester_profile_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.profile(actor) +
+              `?ctt=join_request_email&cti=${reader.id}&check-join-requests=1`),
+            settings_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.groupJoinRequests(group))
+          }
+        })))
   },
 
   sendApprovedJoinRequestEmail: function () {
@@ -511,23 +513,23 @@ module.exports = bookshelf.Model.extend({
 
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
-    .then(group => reader.generateToken()
-      .then(token => Email.sendApprovedJoinRequestNotification({
-        version: 'Holonic architecture',
-        email: reader.get('email'),
-        locale,
-        sender: {name: group.get('name')},
-        data: {
-          group_name: group.get('name'),
-          group_avatar_url: group.get('avatar_url'),
-          approver_name: actor.get('name'),
-          approver_avatar_url: actor.get('avatar_url'),
-          approver_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(actor) + '?ctt=approved_join_request_email&cti=' + reader.id),
-          group_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.group(group))
-        }
-      })))
+      .then(group => reader.generateToken()
+        .then(token => Email.sendApprovedJoinRequestNotification({
+          version: 'Holonic architecture',
+          email: reader.get('email'),
+          locale,
+          sender: {name: group.get('name')},
+          data: {
+            group_name: group.get('name'),
+            group_avatar_url: group.get('avatar_url'),
+            approver_name: actor.get('name'),
+            approver_avatar_url: actor.get('avatar_url'),
+            approver_profile_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.profile(actor) + '?ctt=approved_join_request_email&cti=' + reader.id),
+            group_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.group(group))
+          }
+        })))
   },
 
   sendGroupChildGroupInviteEmail: async function () {
@@ -661,7 +663,7 @@ module.exports = bookshelf.Model.extend({
     return Email.sendDonationToEmail({
       email: reader.get('email'),
       locale,
-      sender: {name: project.summary()},
+      sender: { name: project.summary() },
       data: {
         project_title: project.summary(),
         project_url: Frontend.Route.tokenLogin(reader, token,
@@ -671,7 +673,7 @@ module.exports = bookshelf.Model.extend({
         contributor_avatar_url: actor.get('avatar_url'),
         contributor_profile_url: Frontend.Route.tokenLogin(reader, token,
           Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
-       }
+      }
     })
   },
 
@@ -687,7 +689,7 @@ module.exports = bookshelf.Model.extend({
     return Email.sendDonationFromEmail({
       email: reader.get('email'),
       locale,
-      sender: {name: project.summary()},
+      sender: { name: project.summary() },
       data: {
         project_title: project.summary(),
         project_url: Frontend.Route.tokenLogin(reader, token,
@@ -697,48 +699,48 @@ module.exports = bookshelf.Model.extend({
         contributor_avatar_url: actor.get('avatar_url'),
         contributor_profile_url: Frontend.Route.tokenLogin(reader, token,
           Frontend.Route.profile(actor) + '?ctt=comment_email&cti=' + reader.id),
-       }
+      }
     })
   },
 
   sendEventInvitationEmail: function () {
-    var post = this.post()
-    var reader = this.reader()
-    var inviter = this.actor()
-    var replyTo = Email.postReplyAddress(post.id, reader.id)
-    var groupIds = Activity.groupIds(this.relations.activity)
+    const post = this.post()
+    const reader = this.reader()
+    const inviter = this.actor()
+    const replyTo = Email.postReplyAddress(post.id, reader.id)
+    const groupIds = Activity.groupIds(this.relations.activity)
     const locale = this.locale()
 
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
-    .then(group => reader.generateToken()
-      .then(token => Email.sendEventInvitationEmail({
-        version: 'Holonic architecture',
-        email: reader.get('email'),
-        locale,
-        sender: {
-          address: replyTo,
-          reply_to: replyTo,
-          name: `${inviter.get('name')} (via Hylo)`
-        },
-        data: {
-          group_name: group.get('name'),
-          post_user_name: inviter.get('name'),
-          post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
-            inviter.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
-          post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.profile(inviter) + '?ctt=post_mention_email&cti=' + reader.id),
-          post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-          post_title: decode(post.summary()),
-          post_type: 'event',
-          post_date: post.prettyEventDates(post.get('start_time'), post.get('end_time')),
-          post_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
-          unfollow_url: Frontend.Route.tokenLogin(reader, token,
-            Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
-          tracking_pixel_url: Analytics.pixelUrl('Mention in Post', { userId: reader.id })
-        }
-      })))
+      .then(group => reader.generateToken()
+        .then(token => Email.sendEventInvitationEmail({
+          version: 'Holonic architecture',
+          email: reader.get('email'),
+          locale,
+          sender: {
+            address: replyTo,
+            reply_to: replyTo,
+            name: `${inviter.get('name')} (via Hylo)`
+          },
+          data: {
+            group_name: group.get('name'),
+            post_user_name: inviter.get('name'),
+            post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
+              inviter.get('avatar_url') + '?ctt=post_mention_email&cti=' + reader.id),
+            post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.profile(inviter) + '?ctt=post_mention_email&cti=' + reader.id),
+            post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
+            post_title: decode(post.summary()),
+            post_type: 'event',
+            post_date: TextHelpers.formatDatePair(post.get('start_time'), post.get('end_time'), false, post.get('timezone')),
+            post_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.post(post) + '?ctt=post_mention_email&cti=' + reader.id),
+            unfollow_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
+            tracking_pixel_url: Analytics.pixelUrl('Mention in Post', { userId: reader.id })
+          }
+        })))
   },
 
   shouldBeBlocked: async function () {
@@ -747,7 +749,7 @@ module.exports = bookshelf.Model.extend({
     const blockedUserIds = (await BlockedUser.blockedFor(this.get('user_id'))).rows.map(r => r.user_id)
     if (blockedUserIds.length === 0) return Promise.resolve(false)
 
-      // TODO: add , 'activity.actor', 'activity.reader'
+    // TODO: add , 'activity.actor', 'activity.reader'
     await this.load(['activity', 'activity.post', 'activity.post.user', 'activity.comment', 'activity.comment.user'])
     const postCreatorId = get('relations.activity.relations.post.relations.user.id', this)
     const commentCreatorId = get('relations.activity.relations.comment.relations.user.id', this)
@@ -769,16 +771,16 @@ module.exports = bookshelf.Model.extend({
     const payload = {
       id: '' + this.id,
       activity: Object.assign({},
-        refineOne(activity, [ 'created_at', 'id', 'meta', 'unread' ]),
+        refineOne(activity, ['created_at', 'id', 'meta', 'unread']),
         {
           action,
-          actor: refineOne(actor, [ 'avatar_url', 'id', 'name' ]),
-          comment: refineOne(comment, [ 'id', 'text' ]),
-          group: refineOne(group, [ 'id', 'name', 'slug' ]),
-          otherGroup: refineOne(otherGroup, [ 'id', 'name', 'slug' ]),
+          actor: refineOne(actor, ['avatar_url', 'id', 'name']),
+          comment: refineOne(comment, ['id', 'text']),
+          group: refineOne(group, ['id', 'name', 'slug']),
+          otherGroup: refineOne(otherGroup, ['id', 'name', 'slug']),
           post: refineOne(
             post,
-            [ 'id', 'name', 'description' ],
+            ['id', 'name', 'description'],
             { description: 'details', name: 'title' }
           )
         }
@@ -793,7 +795,7 @@ module.exports = bookshelf.Model.extend({
 
   find: function (id, options) {
     if (!id) return Promise.resolve(null)
-    return Notification.where({id: id}).fetch(options)
+    return Notification.where({ id: id }).fetch(options)
   },
 
   findUnsent: function (options = {}) {
@@ -804,11 +806,11 @@ module.exports = bookshelf.Model.extend({
       }
       q.where(function () {
         this.where('failed_at', null)
-        .orWhere('failed_at', '<', bookshelf.knex.raw("now() - interval '1 hour'"))
+          .orWhere('failed_at', '<', bookshelf.knex.raw("now() - interval '1 hour'"))
       })
       q.limit(200)
     })
-    .fetchAll(options)
+      .fetchAll(options)
   },
 
   sendUnsent: function () {
@@ -832,15 +834,15 @@ module.exports = bookshelf.Model.extend({
       'activity.reader',
       'activity.actor'
     ]})
-    .then(ns => ns.length > 0 &&
-      Promise.each(ns.models,
-        n => n.send().catch(err => {
-          rollbar.error(err, null, {notification: n.attributes})
-          return n.save({failed_at: new Date()}, {patch: true})
-        }))
-      .then(() => new Promise(resolve => {
-        setTimeout(() => resolve(Notification.sendUnsent()), 1000)
-      })))
+      .then(ns => ns.length > 0 &&
+        Promise.each(ns.models,
+          n => n.send().catch(err => {
+            rollbar.error(err, null, { notification: n.attributes })
+            return n.save({ failed_at: new Date() }, { patch: true })
+          }))
+          .then(() => new Promise(resolve => {
+            setTimeout(() => resolve(Notification.sendUnsent()), 1000)
+          })))
   },
 
   priorityReason: function (reasons) {
@@ -856,7 +858,7 @@ module.exports = bookshelf.Model.extend({
 
   removeOldNotifications: function () {
     return Notification.query()
-    .whereRaw("created_at < now() - interval '1 month'")
-    .del()
+      .whereRaw("created_at < now() - interval '1 month'")
+      .del()
   }
 })
