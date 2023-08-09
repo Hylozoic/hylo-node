@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Fixed
 - Show timezone for events in digest emails, for now always display in the time zone of the event creator
+- Ensure you can't double upvote on posts with the same reaction
 
 ## [5.5.2] - 2023-06-12
 
