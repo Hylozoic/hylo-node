@@ -47,7 +47,7 @@ describe('Media', () => {
 
     it('returns the correct urls', async () => {
       const mediaUrls = await Media.findMediaUrlsForUser(user.id)
-      const expectedUrls = ['https://vimeo.com/70509133', 'https://i.vimeocdn.com/video/555280788-3f8ee9b5a9a54434acff9809c8ab998c22d26487171a868747a1ac4220a15110-d_640']
+      const expectedUrls = ['https://vimeo.com/70509133', 'http://i.vimeocdn.com/video/555280788-3f8ee9b5a9a54434acff9809c8ab998c22d26487171a868747a1ac4220a15110-d_640']
       expect(mediaUrls).to.deep.equal(expectedUrls)
     })
   })
