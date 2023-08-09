@@ -32,7 +32,7 @@ export const filterAndSortPosts = curry((opts, q) => {
     reactions: 'posts.num_people_reacts',
     start_time: 'posts.start_time',
     updated: 'posts.updated_at',
-    votes: 'posts.num_people_reacts', // Need to remove once Mobile has been ported to reactions
+    votes: 'posts.num_people_reacts' // Need to remove once Mobile has been ported to reactions
   }
 
   const sort = sortColumns[sortBy] || values(sortColumns).find(v => v === 'posts.' + sortBy || v === sortBy)
@@ -139,8 +139,11 @@ export const filterAndSortPosts = curry((opts, q) => {
     q.whereRaw('locations.center && ST_MakeEnvelope(?, ?, ?, ?, 4326)', [boundingBox[0].lng, boundingBox[0].lat, boundingBox[1].lng, boundingBox[1].lat])
   }
 
+  // This is used to make sure that when viewing posts from child groups too, only pin ones from the parent group
+  const primaryGroupId = q.queryContext()?.primaryGroupId
+
   if (showPinnedFirst) {
-    q.orderByRaw(`groups_posts.pinned_at is null asc, groups_posts.pinned_at desc, ${sort || 'posts.updated_at'} ${order || (sortBy === 'order' ? 'asc' : 'desc')}`)
+    q.orderByRaw(`${primaryGroupId ? `case when groups_posts.group_id = ${primaryGroupId} then groups_posts.pinned_at end desc nulls last` : 'groups_posts.pinned_at desc nulls last'}, ${sort || 'posts.updated_at'} ${order || (sortBy === 'order' ? 'asc' : 'desc')}`)
   } else if (sort) {
     q.orderBy(sort, order || (sortBy === 'order' ? 'asc' : 'desc'))
   }
@@ -191,7 +194,7 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, groupRoleI
 })
 
 export const filterAndSortGroups = curry((opts, q) => {
-  
+
   const { search, sortBy = 'name', boundingBox, order } = opts
 
   if (search) {

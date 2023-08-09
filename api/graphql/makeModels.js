@@ -170,6 +170,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'project_management_link',
         'reactions_summary',
         'start_time',
+        'timezone',
         'type',
         'updated_at'
       ],

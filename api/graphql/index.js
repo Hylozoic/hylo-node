@@ -367,7 +367,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
 
-    deleteReaction: (root, { entityId, data }) => deleteReaction(entityId, userId, data),
+    deleteReaction: (root, { entityId, data }) => deleteReaction(userId, entityId, data),
 
     deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
 

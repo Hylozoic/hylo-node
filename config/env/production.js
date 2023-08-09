@@ -44,6 +44,7 @@ module.exports = {
       "https://hylo.com",
       "https://api.hylo.com",
       "https://staging.hylo.com",
+      "https://node1.hylo.com",
       "https://review.hylo.com",
       "https://api-staging.hylo.com",
       "https://api-review.hylo.com",

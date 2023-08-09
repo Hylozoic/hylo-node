@@ -1,6 +1,6 @@
 export const commentFilter = userId => relation => relation.query(q => {
   q.distinct()
-  q.where({'comments.active': true})
+  q.where({ 'comments.active': true })
 
   if (userId) {
     q.leftJoin('groups_posts', 'comments.post_id', 'groups_posts.post_id')
@@ -10,10 +10,10 @@ export const commentFilter = userId => relation => relation.query(q => {
     q.where(q2 => {
       const followedPostIds = PostUser.followedPostIds(userId)
       q2.whereIn('comments.post_id', followedPostIds)
-      .orWhereIn('groups_posts.group_id', Group.selectIdsForMember(userId))
-      .orWhere('posts.is_public', true)
+        .orWhereIn('groups_posts.group_id', Group.selectIdsForMember(userId))
+        .orWhere('posts.is_public', true)
     })
-    q.groupBy("comments.id")
+    q.groupBy('comments.id')
   }
 })
 
@@ -82,7 +82,7 @@ export function groupTopicFilter (userId, {
       q.where('groups_tags.is_default', true)
     }
 
-    if (subscribed) {
+    if (subscribed && userId) {
       q.join('tag_follows', 'tag_follows.tag_id', 'groups_tags.tag_id')
       q.where('tag_follows.user_id', userId)
       q.whereRaw('tag_follows.group_id = groups_tags.group_id')
@@ -131,8 +131,8 @@ export const personFilter = userId => relation => relation.query(q => {
     })
     q.where(inner =>
       inner.where('users.id', User.AXOLOTL_ID)
-      .orWhereIn('users.id', sharedMemberships.query())
-      .orWhereIn('users.id', sharedConnections.query()))
+        .orWhereIn('users.id', sharedMemberships.query())
+        .orWhereIn('users.id', sharedConnections.query()))
   }
 })
 
