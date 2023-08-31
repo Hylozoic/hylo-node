@@ -80,8 +80,7 @@ module.exports = {
     root: () => url('/app'),
 
     comment: function ({ comment, groupSlug, post }) {
-
-      let groupUrl = isEmpty(groupSlug) ? '/all' : `/groups/${groupSlug}`
+      const groupUrl = isEmpty(groupSlug) ? '/all' : `/groups/${groupSlug}`
 
       const postId = comment?.relations?.post?.id || post.id
       return url(`${groupUrl}/post/${postId}/comments/${comment.id}`)
@@ -127,6 +126,10 @@ module.exports = {
       return url(`${contextUrl}/map/post/${getModelId(post)}`)
     },
 
+    notificationsSettings: function () {
+      return url('/notifications')
+    },
+
     profile: function (user, group) {
       if (group) {
         return url(`/groups/${getSlug(group)}/members/${getModelId(user)}`)
@@ -135,7 +138,7 @@ module.exports = {
     },
 
     post: function (post, group, isPublic, topic) {
-      let groupSlug = getSlug(group)
+      const groupSlug = getSlug(group)
       let groupUrl = '/all'
 
       if (isPublic) {

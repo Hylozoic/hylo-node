@@ -79,7 +79,9 @@ module.exports.policies = {
   },
 
   UserController: {
-    create: ['checkClientCredentials']
+    create: ['checkClientCredentials'],
+    getNotificationSettings: true,
+    updateNotificationSettings: true
   },
 
   PaymentController: {
