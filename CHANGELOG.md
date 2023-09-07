@@ -6,16 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+- Ability to change notification settings and unsubscribe from all notifications from links in emails that still work even when not logged in. Uses special JWT tokens for this that only allow for fetching and updating the user's notification settings.
+
 ## [5.5.3] - 2023-08-09
 
-## Fixed
+### Fixed
 - Show timezone for events in digest emails and announcement emails, for now always display in the time zone of the event creator
 - Ensure you can't double upvote on posts with the same reaction
 - Notifications related to groups joining other groups
 
 ## [5.5.2] - 2023-06-12
 
-## Fixed
+### Fixed
 - Pinned posts from child groups appearing at the top of streams when viewing parent groups
 
 ## [5.5.1] - 2023-05-23
@@ -23,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Mixpanel tracking when a new member joins a group any which way
 
-## Fixed
+### Fixed
 - Filtering of public map by a specific group
 
 ## [5.5.0] - 2023-05-12
