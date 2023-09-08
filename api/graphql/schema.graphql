@@ -575,6 +575,8 @@ type Group {
   numPrerequisitesLeft: Int
   # Total number of posts in this group
   postCount: Int
+  # The purpose statement for the group
+  purpose: String
   # Group settings
   settings: GroupSettings
   # Unique URL slug
@@ -2393,6 +2395,8 @@ input GroupInput {
   parentIds: [ID]
   # IDs of Groups that someone must join before they can join this one
   prerequisiteGroupIds: [ID]
+  # Purpose statement
+  purpose: String
   # Group settings
   settings: GroupSettingsInput
   # NOT USED RIGHT NOW. For Slack integratiom
