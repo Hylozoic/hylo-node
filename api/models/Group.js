@@ -2,7 +2,7 @@ const { GraphQLYogaError } = require('@graphql-yoga/node')
 import fetch from 'node-fetch'
 import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import knexPostgis from 'knex-postgis'
-import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
+import { clone, defaults, difference, flatten, intersection, isEmpty, mapValues, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
 import wkx from 'wkx'
 import mixpanel from '../../lib/mixpanel'
