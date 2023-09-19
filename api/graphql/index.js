@@ -246,7 +246,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     },
     people: (root, args) => fetchMany('Person', args),
     // you can query by id or email, with id taking preference
-    person: (root, { id, email }) => fetchOne('Person', id || email),
+    person: (root, { id, email }) => fetchOne('Person', id || email, id ? 'id' : 'email'),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
     savedSearches: (root, args) => fetchMany('SavedSearch', args),
@@ -501,7 +501,7 @@ export function makeApiQueries (fetchOne, fetchMany) {
     groups: (root, args) => fetchMany('Group', args),
 
     // you can query by id or email, with id taking preference
-    person: (root, { id, email }) => fetchOne('Person', email || id, email ? 'email' : 'id')
+    person: (root, { id, email }) => fetchOne('Person', id || email, id ? 'id' : 'email')
   }
 }
 
