@@ -4,6 +4,7 @@ import { readFileSync } from 'fs'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
 import { presentQuerySet } from '../../lib/graphql-bookshelf-bridge/util'
+import mixpanel from '../../lib/mixpanel'
 import {
   acceptGroupRelationshipInvite,
   acceptJoinRequest,
@@ -147,6 +148,8 @@ function createSchema (expressContext) {
     // authenticated users
     // TODO: look for api_client.scope to see what an oAuthed user is allowed to access
 
+    mixpanel.people.set(userId)
+
     allResolvers = {
       Query: makeAuthenticatedQueries(userId, fetchOne, fetchMany),
       Mutation: makeMutations(expressContext, userId, isAdmin, fetchOne),
@@ -243,7 +246,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     },
     people: (root, args) => fetchMany('Person', args),
     // you can query by id or email, with id taking preference
-    person: (root, { id, email }) => fetchOne('Person', id || email),
+    person: (root, { id, email }) => fetchOne('Person', id || email, id ? 'id' : 'email'),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
     savedSearches: (root, args) => fetchMany('SavedSearch', args),
@@ -288,7 +291,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
-    addGroupRole: (root, { groupId, color, name, emoji }) => addGroupRole({userId, groupId, color, name, emoji}),
+    addGroupRole: (root, { groupId, color, name, description, emoji }) => addGroupRole({userId, groupId, color, name, description, emoji}),
 
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
@@ -299,7 +302,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
 
-    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ personId, groupRoleId, groupId }),
+    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ userId, personId, groupRoleId, groupId }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
@@ -322,7 +325,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     createGroup: (root, { data }) => createGroup(userId, data),
 
     createInvitation: (root, {groupId, data}) =>
-      createInvitation(userId, groupId, data),
+      createInvitation(userId, groupId, data), // consider sending locale from the frontend here
 
     createJoinRequest: (root, {groupId, questionAnswers}) => createJoinRequest(userId, groupId, questionAnswers),
 
@@ -336,7 +339,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     createSavedSearch: (root, { data }) => createSavedSearch(data),
 
-    createZapierTrigger: (root, { groupId, targetUrl, type }) => createZapierTrigger(userId, groupId, targetUrl, type),
+    createZapierTrigger: (root, { groupIds, targetUrl, type, params }) => createZapierTrigger(userId, groupIds, targetUrl, type, params),
 
     joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
 
@@ -364,7 +367,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     deleteProjectRole: (root, { id }) => deleteProjectRole(userId, id),
 
-    deleteReaction: (root, { entityId, data }) => deleteReaction(entityId, userId, data),
+    deleteReaction: (root, { entityId, data }) => deleteReaction(userId, entityId, data),
 
     deleteSavedSearch: (root, { id }) => deleteSavedSearch(id),
 
@@ -463,7 +466,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
 
-    updateGroupRole: (root, { groupRoleId, color, name, emoji, active, groupId }) => updateGroupRole({userId, groupRoleId, color, name, emoji, active, groupId}),
+    updateGroupRole: (root, { groupRoleId, color, name, description, emoji, active, groupId }) => updateGroupRole({userId, groupRoleId, color, name, description, emoji, active, groupId}),
 
     updateGroupSettings: (root, { id, changes }) =>
       updateGroup(userId, id, changes),
@@ -498,7 +501,7 @@ export function makeApiQueries (fetchOne, fetchMany) {
     groups: (root, args) => fetchMany('Group', args),
 
     // you can query by id or email, with id taking preference
-    person: (root, { id, email }) => fetchOne('Person', email || id, email ? 'email' : 'id')
+    person: (root, { id, email }) => fetchOne('Person', id || email, id ? 'id' : 'email')
   }
 }
 

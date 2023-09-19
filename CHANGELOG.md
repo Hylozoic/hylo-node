@@ -6,6 +6,94 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.5.4] - 2023-09-19
+
+### Added
+- Ability to change notification settings and unsubscribe from all notifications from links in emails that still work even when not logged in. Uses special JWT tokens for this that only allow for fetching and updating the user's notification settings.
+
+### Fixed
+- Person query to return the right user when searching by email
+
+## [5.5.3] - 2023-08-09
+
+### Fixed
+- Show timezone for events in digest emails and announcement emails, for now always display in the time zone of the event creator
+- Ensure you can't double upvote on posts with the same reaction
+- Notifications related to groups joining other groups
+
+## [5.5.2] - 2023-06-12
+
+### Fixed
+- Pinned posts from child groups appearing at the top of streams when viewing parent groups
+
+## [5.5.1] - 2023-05-23
+
+### Added
+- Mixpanel tracking when a new member joins a group any which way
+
+### Fixed
+- Filtering of public map by a specific group
+
+## [5.5.0] - 2023-05-12
+
+### Added
+- Initial internationalization support, and translations of emails and notifications into Spanish
+
+## [5.4.1] - 2023-04-11
+
+### Added
+- Track locale in user settings
+
+### Changed
+- Improved API docs
+
+## [5.4.0] - 2023-03-15
+
+### Changed
+- Finished backend and APIs for group roles and badges
+
+## [5.3.6] - 2023-03-04
+
+### Added
+- New product categories for farms: grains, other_row_crops
+
+## [5.3.5] - 2023-02-26
+
+### Added
+- Zapier trigger when new posts are created
+
+### Changed
+- Zapier triggers can now be setup to track (work with) more than one group at a time
+- Send more data with all zapier triggers, like group URLs and profile URLs
+
+## [5.3.4] - 2023-02-14
+
+### Changed
+- Pinned posts now appear first in every context they are visible and regardless of the sort
+
+## [5.3.3] - 2023-02-09
+
+### Added
+- sortby and offset parameters to me.groups queries
+
+### Changed
+- me.groups returns Group objects now, not Memberships
+- Change name of zapier trigger leaves_group to member_leaves
+
+## [5.3.2] - 2023-02-05
+
+### Changed
+- Tweak fields sent to zapier triggers for users/members
+
+### Fixed
+- Fix oAuth authorization code flow
+
+## [5.3.1] - 2023-02-01
+
+### Fixed
+- Link previews for unlisted youtube videos without descriptions
+- Creating posts on mobile app
+
 ## [5.3.0] - 2023-01-30
 
 ### Added

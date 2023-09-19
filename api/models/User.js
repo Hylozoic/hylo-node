@@ -96,15 +96,15 @@ module.exports = bookshelf.Model.extend(merge({
 
   comments: function () {
     return this.hasMany(Comment)
-    .query(q => {
-      // TODO: this breaks recent activity, but it is sketchy to take out here.
-      // q.join('posts', 'posts.id', 'comments.post_id')
-      q.whereNotIn('posts.user_id', BlockedUser.blockedFor(this.id))
-      q.where(function () {
-        this.where('posts.type', '!=', Post.Type.THREAD)
-        .orWhere('posts.type', null)
+      .query(q => {
+        // TODO: this breaks recent activity, but it is sketchy to take out here.
+        // q.join('posts', 'posts.id', 'comments.post_id')
+        q.whereNotIn('posts.user_id', BlockedUser.blockedFor(this.id))
+        q.where(function () {
+          this.where('posts.type', '!=', Post.Type.THREAD)
+            .orWhere('posts.type', null)
+        })
       })
-    })
   },
 
   memberships() {
@@ -113,6 +113,12 @@ module.exports = bookshelf.Model.extend(merge({
         .where('group_memberships.active', true)
         .where('groups.active', true)
       )
+  },
+
+  groupRoles() {
+    return this.belongsToMany(GroupRole)
+      .through(MemberRole, 'user_id', 'group_role_id')
+      .where('groups_roles.active', true)
   },
 
   contributions: function () {
@@ -137,13 +143,13 @@ module.exports = bookshelf.Model.extend(merge({
 
   groupInvitesPending: function () {
     return this.hasMany(Invitation, 'email', 'email')
-      .query({ where: { 'used_by_id': null, 'expired_by_id': null } })
+      .query({ where: { used_by_id: null, expired_by_id: null } })
       .orderBy('created_at', 'desc')
   },
 
   inAppNotifications: function () {
     return this.hasMany(Notification)
-    .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
+      .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
   },
 
   followedTags: function () {
@@ -231,8 +237,8 @@ module.exports = bookshelf.Model.extend(merge({
 
   intercomHash: function () {
     return crypto.createHmac('sha256', process.env.INTERCOM_KEY)
-    .update(this.id)
-    .digest('hex')
+      .update(this.id)
+      .digest('hex')
   },
 
   reactivate: function () {
@@ -254,7 +260,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   sanelyDeleteUser: async function ({ sessionId, transacting = {} }) {
-    /* 
+    /*
       ### List of things to be done on account deletion ###
 
       - Look up urls for all their possible uploads
@@ -278,6 +284,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     DELETE FROM thanks WHERE comment_id in (select id from comments WHERE user_id = ${this.id});
     DELETE FROM thanks WHERE thanked_by_id = ${this.id};
+    DELETE FROM members_roles WHERE user_id = ${this.id};
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
     DELETE FROM push_notifications WHERE device_id in (select id from devices WHERE user_id = ${this.id});
@@ -301,12 +308,12 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM posts_tags WHERE post_id in (select id from posts WHERE user_id = ${this.id});
     DELETE FROM reactions WHERE user_id = ${this.id};
 
-    UPDATE users SET 
-    active = false, 
-    settings = NULL, 
-    name = 'Deleted User', 
-    avatar_url = NULL, 
-    bio = NULL, 
+    UPDATE users SET
+    active = false,
+    settings = NULL,
+    name = 'Deleted User',
+    avatar_url = NULL,
+    bio = NULL,
     banner_url = NULL,
     location = NULL,
     url = NULL,
@@ -393,12 +400,12 @@ module.exports = bookshelf.Model.extend(merge({
     return `crumbly:${this.id}:${this.get('email')}:${this.get('created_at')}`
   },
 
-  generateJWT: function () {
-    return generateHyloJWT(this.id)
+  generateJWT: function (data = {}) {
+    return generateHyloJWT(this.id, data)
   },
 
   generateToken: function () {
-    var hash = Promise.promisify(bcrypt.hash, bcrypt)
+    const hash = Promise.promisify(bcrypt.hash, bcrypt)
     return hash(this.generateTokenContents(), 10)
   },
 
@@ -413,14 +420,14 @@ module.exports = bookshelf.Model.extend(merge({
 
   sendPushNotification: function (alert, url) {
     return this.devices().fetch()
-    .then(devices => Promise.map(devices.models, device =>
-      device.sendPushNotification(alert, url)))
+      .then(devices => Promise.map(devices.models, device =>
+        device.sendPushNotification(alert, url)))
   },
 
   resetNotificationCount: function () {
     return this.devices().fetch()
-    .then(devices => Promise.map(devices.models, device =>
-      device.resetNotificationCount()))
+      .then(devices => Promise.map(devices.models, device =>
+        device.resetNotificationCount()))
   },
 
   followDefaultTags: function (groupId, trx) {
@@ -437,15 +444,15 @@ module.exports = bookshelf.Model.extend(merge({
       q.transacting(trx)
     }
     return q.where('group_id', groupId)
-    .whereRaw('lower(email) = lower(?)', this.get('email'))
-    .update({ used_by_id: this.id, used_at: new Date() })
+      .whereRaw('lower(email) = lower(?)', this.get('email'))
+      .update({ used_by_id: this.id, used_at: new Date() })
   },
 
   setPassword: function (password, sessionId, { transacting } = {}) {
     return LinkedAccount.where({user_id: this.id, provider_key: 'password'})
-    .fetch({transacting}).then(account => account
-      ? account.updatePassword(password, sessionId, {transacting})
-      : LinkedAccount.create(this.id, {type: 'password', password, transacting}))
+      .fetch({ transacting }).then(account => account
+        ? account.updatePassword(password, sessionId, { transacting })
+        : LinkedAccount.create(this.id, { type: 'password', password, transacting }))
   },
 
   hasRegistered: async function () {
@@ -455,7 +462,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   hasDevice: function () {
     return this.load('devices')
-    .then(() => this.relations.devices.length > 0)
+      .then(() => this.relations.devices.length > 0)
   },
 
   validateAndSave: function (sessionId, changes) {
@@ -485,9 +492,9 @@ module.exports = bookshelf.Model.extend(merge({
       if (!isEmpty(this.changed)) {
         // Save the updated fields to send a Zapier trigger for, before we save and lose the changes
         const changedForTrigger = pick(this.changed, [
-          'avatar_url', 'banner_url', 'bio', 'contact_email', 'contact_phone',
+          'avatar_url', 'bio', 'contact_email', 'contact_phone',
           'facebook_url', 'linkedin_url', 'location', 'location_id',
-          'name', 'settings', 'tagline', 'twitter_name', 'url'
+          'name', 'tagline', 'twitter_name', 'url'
         ])
 
         await this.save(Object.assign({ updated_at: new Date() }, this.changed), { patch: true, transacting })
@@ -496,8 +503,8 @@ module.exports = bookshelf.Model.extend(merge({
           Queue.classMethod('User', 'afterUpdate', { userId: this.id, changes: changedForTrigger })
         }
       }
+      return this
     })
-    return this
   },
 
   enabledNotification (type, medium) {
@@ -776,16 +783,25 @@ module.exports = bookshelf.Model.extend(merge({
   // Background jobs
 
   async afterLeaveGroup({ removedByModerator, groupId, userId }) {
-    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'leaves_group' })).fetchAll()
+    const zapierTriggers = await ZapierTrigger.forTypeAndGroups('member_leaves', groupId).fetchAll()
     if (zapierTriggers && zapierTriggers.length > 0) {
       const user = await User.find(userId)
-      for (const trigger of zapierTriggers) {
-        const response = await fetch(trigger.get('target_url'), {
-          method: 'post',
-          body: JSON.stringify({ id: user.id, name: user.get('name'), removedByModerator }),
-          headers: { 'Content-Type': 'application/json' }
-        })
-        // TODO: what to do with the response? check if succeeded or not?
+      const group = await Group.find(groupId)
+      if (user && group) {
+        for (const trigger of zapierTriggers) {
+          const response = await fetch(trigger.get('target_url'), {
+            method: 'post',
+            body: JSON.stringify({
+              id: user.id,
+              name: user.get('name'),
+              // Which group were they removed from, since the trigger can be for multiple groups
+              group: { id: group.id, name: group.get('name'), url: Frontend.Route.group(group) },
+              removedByModerator
+            }),
+            headers: { 'Content-Type': 'application/json' }
+          })
+          // TODO: what to do with the response? check if succeeded or not?
+        }
       }
     }
   },
@@ -793,13 +809,13 @@ module.exports = bookshelf.Model.extend(merge({
   async afterUpdate({ userId, changes }) {
     const user = await User.find(userId)
     if (user) {
-      const memberships = await user.memberships().fetch()
+      const memberships = await user.memberships().fetch({ withRelated: 'group' })
       memberships.models.forEach(async (membership) => {
-        const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: membership.get('group_id'), type: 'member_updated' })).fetchAll()
+        const zapierTriggers = await ZapierTrigger.forTypeAndGroups('member_updated', membership.get('group_id')).fetchAll()
         for (const trigger of zapierTriggers) {
           const response = await fetch(trigger.get('target_url'), {
             method: 'post',
-            body: JSON.stringify(Object.assign({ id: user.id }, changes)),
+            body: JSON.stringify(Object.assign({ id: user.id, profileUrl: Frontend.Route.profile(user, membership.relations.group) }, changes)),
             headers: { 'Content-Type': 'application/json' }
           })
           // TODO: what to do with the response? check if succeeded or not?

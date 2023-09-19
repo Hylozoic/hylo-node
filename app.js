@@ -26,7 +26,7 @@ if (process.env.NEW_RELIC_LICENSE_KEY) {
 }
 
 if (process.env.ROLLBAR_SERVER_TOKEN && process.env.NODE_ENV !== 'test') {
-  var rollbar = require('rollbar')
+  const rollbar = require('rollbar')
   rollbar.init({
     accessToken: process.env.ROLLBAR_SERVER_TOKEN,
     captureUncaught: true,

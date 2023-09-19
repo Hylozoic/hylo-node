@@ -10,6 +10,8 @@ module.exports.routes = {
   'GET    /.well-known/openid-configuration':             '/noo/oauth/.well-known/openid-configuration',
 
   'POST   /noo/user':                                     'UserController.create',
+  'POST   /noo/user/update-notification-settings':        'UserController.updateNotificationSettings',
+  'GET    /noo/user/notification-settings':               'UserController.getNotificationSettings',
 
   'POST   /noo/post/:postId/update-last-read':            'PostController.updateLastRead',
 

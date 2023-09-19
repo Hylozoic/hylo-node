@@ -55,7 +55,7 @@ type Query {
     Example object
     {
       farmType: 'wholesale_farm, directsale_farm',
-      productCategories: 'grains_other', 'vegetables',
+      productCategories: 'grains', 'vegetables',
       certOrManagementPlan: 'american_grassfed'
     }
     """
@@ -637,6 +637,9 @@ type Group {
   # Questions that a group requesting to join this group must answer
   groupToGroupJoinQuestions: GroupToGroupJoinQuestionQuerySet
 
+  # Special roles or badges attached to this group
+  groupRoles: GroupRoleQuerySet
+
   # Topics that have been used in this group
   groupTopics(
     # Return only topics whose name starts with the autocomplete string
@@ -666,6 +669,8 @@ type Group {
     autocomplete: String
     # Return only people within the geographic bounding box
     boundingBox: [PointInput],
+    # Return members with a specific groupRole
+    groupRoleId: ID,
     # Number of people to return
     first: Int,
     # For pagination, return people after this offset in the query results
@@ -935,6 +940,7 @@ type GroupRole {
   active: Boolean
   color: String
   createdAt: Date
+  description: String
   emoji: String
   id: ID
   group: Group
@@ -984,6 +990,13 @@ type GroupTopic {
     (pinned topics appear at the top of every member's subscribed topics list if they are subscribed to this topic)
   """
   visibility: Int
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type GroupRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupRole]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1213,15 +1226,19 @@ type Me {
   # Set of Users the logged in user has blocked
   blockedUsers: [Person]
 
-  # Hylo Group memberships
+  # Groups I am a member of
   groups(
     # Start loading groups at this group id
     cursor: ID,
     # Load this number of groups
     first: Int,
-    # Determines sort order, either 'ASC' or 'DESC'. Groups always sorted by order they were created.
+    # Starting loading groups at this offset
+    offset: Int,
+    # Determines sort order, either 'ASC' or 'DESC'.
     order: String
-  ): [Membership]
+    # 'name', 'size', or 'nearest'. If empty then by default sorted by order they were created.
+    sortBy: String
+  ): [Group]
 
   # Set of pending invites to Groups
   groupInvitesPending: InvitationQuerySet
@@ -1232,7 +1249,7 @@ type Me {
     status: Int
   ): JoinRequestQuerySet
 
-  # Hylo Group memberships
+  # Group memberships
   memberships(
     # Start loading memberships at this id
     cursor: ID,
@@ -1281,26 +1298,11 @@ type Me {
   ): SkillQuerySet
 }
 
-# Member role
-type MemberRole {
-  id: ID
-  active: Boolean
-  color: String
-  createdAt: Date
-  emoji: String
-  group: Group
-  groupMemberId: ID
-  groupRole: GroupRole
-  name: String
-  updatedAt: Date
-  userId: ID
-  user: Person
-}
-
 # A user's group membership
 type Membership {
   id: ID
   createdAt: Date
+  groupId: ID
   group: Group
   # Is this group membership a moderator role
   hasModeratorRole: Boolean
@@ -1453,6 +1455,9 @@ type Person {
     # Determines sort order, either 'ASC' or 'DESC'. Memberships always sorted by order they were created.
     order: String
   ): [Membership]
+  # All the member roles for a user
+  groupRoles: [GroupRole]
+  groupRolesTotal: Int
   # The set of Memberships to groups this person moderates (that are visible to logged in user
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
   # The set of Posts this person has created (that are visible to logged in user)
@@ -1594,8 +1599,14 @@ type Post {
   postMembershipsTotal: Int
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
+  # Number of total reactions on the post
+  reactionsTotal: Int
+  # Summary of reactions on the post
+  reactionsSummary: JSON
   # When this post "starts". Used for events, resources, projects, requests and offers right now
   startTime: Date
+  # The timezone of the post
+  timezone: String
   # The title text for the post
   title: String
   # Number of topics added to the post
@@ -1825,6 +1836,8 @@ type UserSettings {
   dmNotifications: String
   # When person wants last viewed their Direct Messages
   lastViewedMessagesAt: String
+  # Locale preferences for the user
+  locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up
@@ -1868,7 +1881,13 @@ type ZapierTrigger {
   groupId: ID
   # The Zapier URL to call when this type is triggered
   targetUrl: String
-  # When this gets triggered. Options: 'new_member' = when 1 or more members are added to a group
+  """
+  When this gets triggered. Options:
+    'new_member' = when 1 or more members are added to a group
+    'member_leaves' = when a person leaves or is kicked out of a group
+    'member_updated' = when a member of a group updates their profile
+    'new_post' = when a new post is created
+  """
   type: String
 }
 
@@ -1881,6 +1900,7 @@ type Mutation {
   # For a moderator to add a badge/role to a group
   addGroupRole(
     color: String,
+    description: String,
     emoji: String,
     groupId: ID,
     name: String,
@@ -1901,8 +1921,9 @@ type Mutation {
   # For a moderator to add a badge/role to a group to a member of a group
   addRoleToMember(
     groupRoleId: ID,
-    userId: ID,
-  ): MemberRole
+    groupId: ID,
+    personId: ID,
+  ): GroupRole
   # Add a skill to your profile
   addSkill(
     name: String,
@@ -1941,7 +1962,7 @@ type Mutation {
   createMessage(data: MessageInput): Message
   # Create a new Post
   createPost(data: PostInput): Post
-  # Create a new 'project' type Post
+  # Create a new 'project' type Post NOT USED RIGHT NOW, use createPost instead
   createProject(data: PostInput): Post
   # NOT USED RIGHT NOW
   createProjectRole(projectId: ID, roleName: String): GenericResult
@@ -1950,7 +1971,7 @@ type Mutation {
   # Create a new topic within a Group
   createTopic(topicName: String, groupId: ID, isDefault: Boolean, isSubscribing: Boolean): Topic
   # Add a new Zapier trigger (called by Zapier)
-  createZapierTrigger(groupId: ID, targetUrl: String, type: String): ZapierTrigger
+  createZapierTrigger(groupIds: [ID], targetUrl: String, type: String, params: JSON): ZapierTrigger
   # Used by current logged in user to deactivate their account
   deactivateMe(id: ID): GenericResult
   # Used by current logged in user to delete their account permanently
@@ -2045,7 +2066,7 @@ type Mutation {
   # Remove a Post from a Collection, if you have permission to
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
   # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
-  removeRoleFromMember(id: ID): GenericResult
+  removeRoleFromMember(groupRoleId: ID, groupId: ID, personId: ID): GenericResult
   # Remove a skill from your user profile
   removeSkill(id: ID, name: String): GenericResult
   # Remove a skill you want to learn from your user profile
@@ -2098,8 +2119,16 @@ type Mutation {
     # Update group as a particular User (with permission)
     asUserId: ID
   ): Group
-  # Update a badge/role from a group and all associated MemberRoles
-  updateGroupRole(id: ID): GroupRole
+  # Update a badge/role from a group and all associated roles
+  updateGroupRole(
+    groupRoleId: ID
+    color: String,
+    description: String,
+    emoji: String,
+    groupId: ID,
+    name: String,
+    active: Boolean
+  ): GroupRole
   # Update settings related a Topic in a Group. Only a group moderator can call this.
   updateGroupTopic(id: ID, data: GroupTopicInput): GenericResult
   # Update settings related to a Person following a Topic in a Group
@@ -2579,6 +2608,8 @@ input PostInput {
   projectManagementLink: String
   # When this post "starts". Used for events, resources, projects, requests and offers right now
   startTime: Date
+  # The timezone of the post
+  timezone: String
   # The title text for the post
   title: String
   # Topics to add to the post
@@ -2606,8 +2637,6 @@ input QuestionAnswerInput {
 
 # Inputs for emoji reactions to posts and comments
 input ReactionInput {
-  # when the reaction happened
-  createdAt: Date
   # The full emoji, with any modifiers (eg: for skin). UTF-16 (JS default) encoding for an emojis code-points (like '\uD83D\uDE00')
   emojiFull: String
   # id for the entity associated with the reactions
@@ -2647,6 +2676,8 @@ input UserSettingsInput {
   dmNotifications: String
   # When person wants last viewed their Direct Messages
   lastViewedMessagesAt: String
+  # Locale preferences for the user
+  locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
   # Whether this person has finished viewing the welcome wizard after first signing up

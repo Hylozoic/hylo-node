@@ -92,6 +92,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         message: this.get('message'),
         inviter_name: creator.get('name'),
         inviter_email: creator.get('email'),
+        locale: creator.get('settings').locale || 'en',
         // TODO: change this data name in the email
         group_name: group.get('name'),
         invite_link: Frontend.Route.useInvitation(this.get('token'), email),

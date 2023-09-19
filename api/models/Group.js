@@ -5,7 +5,8 @@ import knexPostgis from 'knex-postgis'
 import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
 import wkx from 'wkx'
-import { LocationHelpers } from 'hylo-shared'
+import mixpanel from '../../lib/mixpanel'
+import { AnalyticsEvents, LocationHelpers } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
@@ -16,6 +17,9 @@ import DataType, {
 } from './group/DataType'
 import convertGraphqlData from '../graphql/mutations/convertGraphqlData'
 import { findOrCreateLocation } from '../graphql/mutations/location'
+import { es } from '../../lib/i18n/es'
+import { en } from '../../lib/i18n/en'
+const locales = { es, en }
 
 export const GROUP_ATTR_UPDATE_WHITELIST = [
   'role',
@@ -106,6 +110,10 @@ module.exports = bookshelf.Model.extend(merge({
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
   },
 
+  groupRoles () {
+    return this.hasMany(GroupRole)
+  },
+
   groupTags () {
     return this.hasMany(GroupTag)
   },
@@ -189,7 +197,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   parentGroupRelationships () {
     return this.hasMany(GroupRelationship, 'child_group_id')
-      .query({ where: { 'active': true } })
+      .query({ where: { active: true } })
   },
 
   prerequisiteGroups () {
@@ -205,10 +213,10 @@ module.exports = bookshelf.Model.extend(merge({
     return Post.query(q => {
       q.select(bookshelf.knex.raw('count(*)'))
       q.join('groups_posts', 'posts.id', 'groups_posts.post_id')
-      q.where({'groups_posts.group_id': this.id, 'active': true})
+      q.where({ 'groups_posts.group_id': this.id, active: true })
     })
-    .fetch()
-    .then(result => result.get('count'))
+      .fetch()
+      .then(result => result.get('count'))
   },
 
   skills: function () {
@@ -240,6 +248,7 @@ module.exports = bookshelf.Model.extend(merge({
     })
 
     return Post.collection().query(q => {
+      q.queryContext({ primaryGroupId: this.id }) // To help with sorting pinned posts
       q.join('users', 'posts.user_id', 'users.id')
       q.where('users.active', true)
       q.andWhere(q2 => {
@@ -261,7 +270,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   // ******** Setters ********** //
 
-  async addChild(childGroup, { transacting } = {}) {
+  async addChild (childGroup, { transacting } = {}) {
     const childGroupId = childGroup instanceof Group ? childGroup.id : childGroup
     const existingChild = await GroupRelationship.where({ child_group_id: childGroupId, parent_group_id: this.id }).fetch({ transacting })
     if (existingChild) {
@@ -270,7 +279,7 @@ module.exports = bookshelf.Model.extend(merge({
     return GroupRelationship.forge({ child_group_id: childGroupId, parent_group_id: this.id }).save({}, { transacting })
   },
 
-  async addParent(parentGroup, { transacting } = {}) {
+  async addParent (parentGroup, { transacting } = {}) {
     const parentGroupId = parentGroup instanceof Group ? parentGroup.id : parentGroup
     const existingParent = await GroupRelationship.where({ parent_group_id: parentGroupId, child_group_id: this.id }).fetch({ transacting })
     if (existingParent) {
@@ -308,7 +317,7 @@ module.exports = bookshelf.Model.extend(merge({
     const newMemberships = []
     const defaultTagIds = (await GroupTag.defaults(this.id, transacting)).models.map(t => t.get('tag_id'))
 
-    for (let id of newUserIds) {
+    for (const id of newUserIds) {
       const membership = await this.memberships().create(
         Object.assign({}, updatedAttribs, {
           user_id: id,
@@ -543,18 +552,46 @@ module.exports = bookshelf.Model.extend(merge({
   // ******* Class methods ******** //
 
   // Background task to do additional work/tasks when new members are added to a group
-  async afterAddMembers({ groupId, newUserIds, reactivatedUserIds }) {
-    const zapierTriggers = await ZapierTrigger.query(q => q.where({ group_id: groupId, type: 'new_member' })).fetchAll()
+  async afterAddMembers ({ groupId, newUserIds, reactivatedUserIds }) {
+    const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_member', groupId).fetchAll()
+
+    const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
+
     if (zapierTriggers && zapierTriggers.length > 0) {
-      const members = await User.query(q => q.whereIn('id', newUserIds.concat(reactivatedUserIds))).fetchAll()
+      const group = await Group.find(groupId)
       for (const trigger of zapierTriggers) {
         const response = await fetch(trigger.get('target_url'), {
           method: 'post',
-          body: JSON.stringify(members.map(m => ({ id: m.id, name: m.get('name'), reactivated: reactivatedUserIds.includes(m.id) }))),
+          body: JSON.stringify(members.map(m => ({
+            id: m.id,
+            avatarUrl: m.get('avatar_url'),
+            bio: m.get('bio'),
+            contactEmail: m.get('contact_email'),
+            contactPhone: m.get('contact_phone'),
+            facebookUrl: m.get('facebook_url'),
+            linkedinUrl: m.get('linkedin_url'),
+            location: m.get('location'),
+            name: m.get('name'),
+            profileUrl: Frontend.Route.profile(m, group),
+            tagline: m.get('tagline'),
+            twitterName: m.get('twitter_name'),
+            url: m.get('url'),
+            // Whether this user was previously in the group and is being reactivated
+            reactivated: reactivatedUserIds.includes(m.id),
+            // Which group were they added to, since the trigger can be for multiple groups
+            group: { id: group.id, name: group.get('name'), url: Frontend.Route.group(group) }
+          }))),
           headers: { 'Content-Type': 'application/json' }
         })
         // TODO: what to do with the response? check if succeeded or not?
       }
+    }
+
+    for (const member of members) {
+      mixpanel.track(AnalyticsEvents.GROUP_NEW_MEMBER, {
+        distinct_id: member.id,
+        groupId: [groupId]
+      })
     }
   },
 
@@ -612,7 +649,7 @@ module.exports = bookshelf.Model.extend(merge({
       await group.createStarterPosts(trx)
 
       await group.createInitialWidgets(trx)
-      
+
       await group.createDefaultTopics(group.id, userId, trx)
 
       const members = await group.addMembers([userId],
@@ -726,14 +763,15 @@ module.exports = bookshelf.Model.extend(merge({
     .then(g => {
       var creator = g.relations.creator
       var recipient = process.env.NEW_GROUP_EMAIL
+      const locale = creator.get('settings')?.locale || 'en'
       return Email.sendRawEmail(recipient, {
-        subject: "New Hylo Group Created: " + g.get('name'),
-        body: `Group
-          Name: ${g.get('name')}
+        subject: locales[locale].groupCreatedNotifySubject(g.get('name')),
+        body: `${locales[locale].Group()}
+          ${locales[locale].Name()}: ${g.get('name')}
           URL: ${Frontend.Route.group(g)}
-          Creator Email: ${creator.get('email')}
-          Creator Name: ${creator.get('name')}
-          Creator URL: ${Frontend.Route.profile(creator)}
+          ${locales[locale].CreatorEmail()}: ${creator.get('email')}
+          ${locales[locale].CreatorName()}: ${creator.get('name')}
+          ${locales[locale].CreatorURL()}: ${Frontend.Route.profile(creator)}
         `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
       }, {
         sender: {
