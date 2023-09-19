@@ -6,8 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.5.4] - 2023-09-19
+
 ### Added
 - Ability to change notification settings and unsubscribe from all notifications from links in emails that still work even when not logged in. Uses special JWT tokens for this that only allow for fetching and updating the user's notification settings.
+
+### Fixed
+- Person query to return the right user when searching by email
 
 ## [5.5.3] - 2023-08-09
 
