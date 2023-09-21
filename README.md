@@ -200,63 +200,31 @@ createdb $LOCAL_DB_NAME -h localhost
 cat $DUMP_FILENAME | psql -h localhost $LOCAL_DB_NAME
 ```
 
-
-### design guidelines
+### Design guidelines
 
 * GET methods on `FooController` should return instances of `Foo`. (See policies.js for some related FIXME's)
 
-### style guidelines
+### Style guidelines
 
 We're gradually migrating to [Javascript Standard Style](https://github.com/feross/standard).
-
-The [standard-formatter Atom package](https://atom.io/packages/standard-formatter) helps out a lot. We deviate from its default behavior only in not indenting a multi-line method chain:
-
-```javascript
-// yes
-return Do(() => {
-  amaze()
-  very()
-})
-.then(such)
-.tap(wow)
-
-// no
-return Do(() => {
-  amaze()
-  very()
-})
-  .then(such)
-  .tap(wow)
-```
-
+The [standard-formatter Atom package](https://atom.io/packages/standard-formatter) helps out a lot.
 The [linter-js-standard](https://atom.io/packages/linter-js-standard) package is also very helpful.
 
 ## GraphQL API
 
-Many queries can also be issued using the newer GraphQL API. Types available:
+Our main API uses GraphQL. You can browse the queries and mutations by going to http://localhost:3001/noo/graphql and using the Documentation Explorer in the right sidebar.
 
-```
-Comment
-Community
-FeedItem
-Follower
-Me
-Membership
-Person
-Post
-```
-
-Queries:
+Example Queries:
 
 ```
 type Query {
   me: Me
   person(id: ID): Person
-  community(id: ID, slug: String): Community
+  ...
 }
 ```
 
-where `Me` is the currently logged-in user. For example, to load all posts:
+where `Me` is the currently logged-in user. For example, to load all current user's posts:
 
 ```
 {
@@ -277,11 +245,11 @@ where `Me` is the currently logged-in user. For example, to load all posts:
         avatarUrl
       }
       followersTotal,
-      communities {
+      groups {
         id,
         name
       },
-      communitiesTotal,
+      groupsTotal,
       comments {
         id,
         createdAt,

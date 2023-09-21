@@ -2,7 +2,7 @@ const { GraphQLYogaError } = require('@graphql-yoga/node')
 import fetch from 'node-fetch'
 import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import knexPostgis from 'knex-postgis'
-import { clone, defaults, difference, flatten, intersection, isEmpty, map, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
+import { clone, defaults, difference, flatten, intersection, isEmpty, mapValues, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
 import randomstring from 'randomstring'
 import wkx from 'wkx'
 import mixpanel from '../../lib/mixpanel'
@@ -359,28 +359,28 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   createStarterPosts: function (transacting) {
-    var now = new Date()
-    var timeShift = {offer: 1, request: 2, resource: 3}
+    const now = new Date()
+    const timeShift = { offer: 1, request: 2, resource: 3 }
 
-    return Group.find('starter-posts', {withRelated: ['posts']})
-    .then(g => {
-      if (!g) throw new Error('Starter posts group not found')
-      return g
-    })
-    .then(g => g.relations.posts.models)
-    .then(posts => Promise.map(posts, post => {
-      if (post.get('type') === 'welcome') return
-      var newPost = post.copy()
-      var time = new Date(now - (timeShift[post.get('type')] || 0) * 1000)
-      // TODO: why are we attaching Ed West as a follower to every welcome post??
-      return newPost.save({created_at: time, updated_at: time}, {transacting})
-      .then(() => Promise.all(flatten([
-        this.posts().attach(newPost, {transacting}),
-        post.followers().fetch().then(followers =>
-          newPost.addFollowers(followers.map(f => f.id), {}, {transacting})
-        )
-      ])))
-    }))
+    return Group.find('starter-posts', { withRelated: ['posts'] })
+      .then(g => {
+        if (!g) throw new Error('Starter posts group not found')
+        return g
+      })
+      .then(g => g.relations.posts.models)
+      .then(posts => Promise.map(posts, post => {
+        if (post.get('type') === 'welcome') return
+        const newPost = post.copy()
+        const time = new Date(now - (timeShift[post.get('type')] || 0) * 1000)
+        // TODO: why are we attaching Ed West as a follower to every welcome post??
+        return newPost.save({created_at: time, updated_at: time}, {transacting})
+          .then(() => Promise.all(flatten([
+            this.posts().attach(newPost, {transacting}),
+            post.followers().fetch().then(followers =>
+              newPost.addFollowers(followers.map(f => f.id), {}, {transacting})
+            )
+          ])))
+      }))
   },
 
   async removeMembers (usersOrIds, { transacting } = {}) {
@@ -406,11 +406,12 @@ module.exports = bookshelf.Model.extend(merge({
   update: async function (changes) {
     const whitelist = [
       'about_video_uri', 'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url',
-      'description', 'geo_shape', 'location', 'location_id', 'name', 'moderator_descriptor',
-      'moderator_descriptor_plural', 'settings', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+      'description', 'geo_shape', 'location', 'location_id', 'moderator_descriptor', 'moderator_descriptor_plural',
+      'name', 'purpose', 'settings', 'type_descriptor', 'type_descriptor_plural', 'visibility'
     ]
+    const trimAttrs = ['name', 'description', 'purpose']
 
-    const attributes = pick(changes, whitelist)
+    const attributes = mapValues(pick(changes, whitelist), (v, k) => trimAttrs.includes(k) ? trim(v) : v)
     const saneAttrs = clone(attributes)
 
     if (attributes.settings) {
@@ -436,31 +437,31 @@ module.exports = bookshelf.Model.extend(merge({
     await bookshelf.transaction(async transacting => {
       if (changes.group_to_group_join_questions) {
         const questions = await Promise.map(changes.group_to_group_join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
-            return (await Question.where({ text: trim(jq.text) }).fetch({ transacting })) || (await Question.forge({ text: trim(jq.text) }).save({}, { transacting }))
+          return (await Question.where({ text: trim(jq.text) }).fetch({ transacting })) || (await Question.forge({ text: trim(jq.text) }).save({}, { transacting }))
         })
-          await GroupToGroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false, transacting })
-        for (let q of questions) {
-            await GroupToGroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save({}, { transacting })
+        await GroupToGroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false, transacting })
+        for (const q of questions) {
+          await GroupToGroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save({}, { transacting })
         }
       }
 
       if (changes.join_questions) {
         const questions = await Promise.map(changes.join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
-            return (await Question.where({ text: trim(jq.text) }).fetch({ transacting })) || (await Question.forge({ text: trim(jq.text) }).save({}, { transacting }))
+          return (await Question.where({ text: trim(jq.text) }).fetch({ transacting })) || (await Question.forge({ text: trim(jq.text) }).save({}, { transacting }))
         })
-          await GroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false, transacting })
-        for (let q of questions) {
-            await GroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save({}, { transacting })
+        await GroupJoinQuestion.where({ group_id: this.id }).destroy({ require: false, transacting })
+        for (const q of questions) {
+          await GroupJoinQuestion.forge({ group_id: this.id, question_id: q.id }).save({}, { transacting })
         }
       }
 
       if (changes.prerequisite_group_ids) {
         // Go through all parent groups and reset which ones are prerequisites
-          const parentRelationships = await this.parentGroupRelationships().fetch({ transacting })
+        const parentRelationships = await this.parentGroupRelationships().fetch({ transacting })
         await Promise.map(parentRelationships.models, async (relationship) => {
           const isNowPrereq = changes.prerequisite_group_ids.includes(relationship.get('parent_group_id'))
           if (relationship.getSetting('isPrerequisite') !== isNowPrereq) {
-              await relationship.addSetting({ isPrerequisite: isNowPrereq }, true, transacting)
+            await relationship.addSetting({ isPrerequisite: isNowPrereq }, true, transacting)
           }
         })
       }
@@ -471,7 +472,7 @@ module.exports = bookshelf.Model.extend(merge({
           if (ext) {
             const ge = (await GroupExtension.find(this.id, ext.id)) || new GroupExtension({ group_id: this.id, extension_id: ext.id })
             ge.set({ data: extData.data })
-              await ge.save({}, { transacting })
+            await ge.save({}, { transacting })
           } else {
             throw new GraphQLYogaError('Invalid extension type ' + extData.type)
           }
@@ -479,8 +480,6 @@ module.exports = bookshelf.Model.extend(merge({
       }
 
       if (changes.custom_views) {
-        const newViewIndex = 0
-        const oldViewIndex = 0
         const currentViews = await this.customViews().fetch({ transacting })
         let currentView = currentViews.shift()
         // TODO: more validation?
@@ -597,25 +596,26 @@ module.exports = bookshelf.Model.extend(merge({
 
   async create (userId, data) {
     if (!data.slug) {
-      throw new GraphQLYogaError("Missing required field: slug")
+      throw new GraphQLYogaError('Missing required field: slug')
     }
     const existingGroup = await Group.find(data.slug)
     if (existingGroup) {
-      throw new GraphQLYogaError("A group with that URL slug already exists")
+      throw new GraphQLYogaError('A group with that URL slug already exists')
     }
 
-    let attrs = defaults(
-      pick(data,
-        'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug', 'category',
+    const trimAttrs = ['name', 'purpose']
+    const attrs = defaults(
+      pick(mapValues(data, (v, k) => trimAttrs.includes(k) ? trim(v) : v),
+        'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug',
         'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
-        'moderator_descriptor_plural', 'name', 'settings', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+        'moderator_descriptor_plural', 'name', 'purpose', 'settings', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
-        'accessibility': Group.Accessibility.RESTRICTED,
-        'avatar_url': DEFAULT_AVATAR,
-        'banner_url': DEFAULT_BANNER,
-        'group_data_type': 1,
-        'visibility': Group.Visibility.PROTECTED
+        accessibility: Group.Accessibility.RESTRICTED,
+        avatar_url: DEFAULT_AVATAR,
+        banner_url: DEFAULT_BANNER,
+        group_data_type: 1,
+        visibility: Group.Visibility.PROTECTED
       }
     )
 
