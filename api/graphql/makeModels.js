@@ -60,20 +60,22 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'memberships',
         'posts',
         'locationObject',
-        {affiliations: {querySet: true}},
-        {groupInvitesPending: {querySet: true}},
-        {joinRequests: {
-          querySet: true,
-          filter: (relation, { status }) =>
-            relation.query(q => {
-              if (typeof status !== 'undefined') {
-                q.where('status', status)
-              }
-            })
-        }},
-        {skills: {querySet: true}},
-        {skillsToLearn: {querySet: true}},
-        {messageThreads: {typename: 'MessageThread', querySet: true}}
+        { affiliations: { querySet: true } },
+        { groupInvitesPending: { querySet: true } },
+        {
+          joinRequests: {
+            querySet: true,
+            filter: (relation, { status }) =>
+              relation.query(q => {
+                if (typeof status !== 'undefined') {
+                  q.where('status', status)
+                }
+              })
+          }
+        },
+        { skills: { querySet: true } },
+        { skillsToLearn: { querySet: true } },
+        { messageThreads: { typename: 'MessageThread', querySet: true } }
       ],
       getters: {
         blockedUsers: u => u.blockedUsers().fetch(),
@@ -129,14 +131,14 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'moderatedGroupMemberships',
         'locationObject',
         'groupRoles',
-        {affiliations: {querySet: true}},
-        {eventsAttending: {querySet: true}},
-        {posts: {querySet: true}},
-        {projects: {querySet: true}},
-        {comments: {querySet: true}},
-        {skills: {querySet: true}},
-        {skillsToLearn: {querySet: true}},
-        {reactions: {querySet: true}}
+        { affiliations: { querySet: true } },
+        { eventsAttending: { querySet: true } },
+        { posts: { querySet: true } },
+        { projects: { querySet: true } },
+        { comments: { querySet: true } },
+        { skills: { querySet: true } },
+        { skillsToLearn: { querySet: true } },
+        { reactions: { querySet: true } }
       ],
       filter: nonAdminFilter(apiFilter(personFilter(userId))),
       isDefaultTypeForTable: true,
@@ -278,129 +280,142 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'memberCount',
         'name',
         'postCount',
+        'purpose',
         'slug',
         'visibility',
         'type'
       ],
       relations: [
-        {activeMembers: { querySet: true }},
-        {childGroups: {querySet: true}},
-        {customViews: {querySet: true}},
-        {groupRelationshipInvitesFrom: {querySet: true}},
-        {groupRelationshipInvitesTo: {querySet: true}},
-        {groupRoles: {querySet: true}},
-        {groupTags: {
-          querySet: true,
-          alias: 'groupTopics',
-          filter: (relation, { autocomplete, subscribed }) =>
-            relation.query(groupTopicFilter(userId, {
-              autocomplete,
-              subscribed,
-              groupId: relation.relatedData.parentId
-            }))
-        }},
-        {groupToGroupJoinQuestions: {querySet: true}},
-        {joinQuestions: {querySet: true}},
-        {moderators: {querySet: true}},
-        {memberships: {querySet: true}},
-        {members: {
-          querySet: true,
-          filter: (relation, { autocomplete, boundingBox, groupRoleId, order, search, sortBy }) =>
-            relation.query(filterAndSortUsers({ autocomplete, boundingBox, groupRoleId, order, search, sortBy }))
-        }},
-        {parentGroups: {querySet: true}},
-        {posts: {
-          querySet: true,
-          filter: (relation, {
-            activePostsOnly = false,
-            afterTime,
-            beforeTime,
-            boundingBox,
-            collectionToFilterOut,
-            cursor,
-            forCollection,
-            filter,
-            isAnnouncement,
-            isFulfilled,
-            order,
-            search,
-            sortBy,
-            topic,
-            topics,
-            types
-          }) =>
-            relation.query(filterAndSortPosts({
-              activePostsOnly,
+        { activeMembers: { querySet: true } },
+        { childGroups: { querySet: true } },
+        { customViews: { querySet: true } },
+        { groupRelationshipInvitesFrom: { querySet: true } },
+        { groupRelationshipInvitesTo: { querySet: true } },
+        { groupRoles: { querySet: true } },
+        {
+          groupTags: {
+            querySet: true,
+            alias: 'groupTopics',
+            filter: (relation, { autocomplete, subscribed }) =>
+              relation.query(groupTopicFilter(userId, {
+                autocomplete,
+                subscribed,
+                groupId: relation.relatedData.parentId
+              }))
+          }
+        },
+        { groupToGroupJoinQuestions: { querySet: true } },
+        { joinQuestions: { querySet: true } },
+        { moderators: { querySet: true } },
+        { memberships: { querySet: true } },
+        {
+          members: {
+            querySet: true,
+            filter: (relation, { autocomplete, boundingBox, groupRoleId, order, search, sortBy }) =>
+              relation.query(filterAndSortUsers({ autocomplete, boundingBox, groupRoleId, order, search, sortBy }))
+          }
+        },
+        { parentGroups: { querySet: true } },
+        {
+          posts: {
+            querySet: true,
+            filter: (relation, {
+              activePostsOnly = false,
               afterTime,
               beforeTime,
               boundingBox,
               collectionToFilterOut,
               cursor,
               forCollection,
+              filter,
               isAnnouncement,
               isFulfilled,
               order,
               search,
-              showPinnedFirst: true,
               sortBy,
               topic,
               topics,
-              type: filter,
               types
-            }))
-        }},
-        {prerequisiteGroups: {
-          querySet: true,
-          filter: (relation, { onlyNotMember }) =>
-            relation.query(q => {
-              if (onlyNotMember && userId) {
-                // Only return prerequisite groups that the current user is not yet a member of
-                q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
-                  'group_memberships.user_id': userId,
-                  'group_memberships.active': true
-                }))
-              }
-            })
-        }},
-        {skills: {
-          querySet: true,
-          filter: (relation, { autocomplete }) =>
-            relation.query(q => {
-              if (autocomplete) {
-                q.whereRaw('skills.name ilike ?', autocomplete + '%')
-              }
-            })
-        }},
-        {suggestedSkills: {querySet: true}},
-        {viewPosts: {
-          querySet: true,
-          arguments: () => [userId],
-          filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, filter, forCollection, isFulfilled, order, search, sortBy, topic, topics, types }) =>
-            relation.query(filterAndSortPosts({
-              activePostsOnly,
-              afterTime,
-              beforeTime,
-              boundingBox,
-              collectionToFilterOut,
-              forCollection,
-              isFulfilled,
-              order,
-              search,
-              showPinnedFirst: true,
-              sortBy,
-              topic,
-              topics,
-              type: filter,
-              types
-            }))
-        }},
-        {widgets: {querySet: true }},
-        {groupExtensions: {querySet: true }}
+            }) =>
+              relation.query(filterAndSortPosts({
+                activePostsOnly,
+                afterTime,
+                beforeTime,
+                boundingBox,
+                collectionToFilterOut,
+                cursor,
+                forCollection,
+                isAnnouncement,
+                isFulfilled,
+                order,
+                search,
+                showPinnedFirst: true,
+                sortBy,
+                topic,
+                topics,
+                type: filter,
+                types
+              }))
+          }
+        },
+        {
+          prerequisiteGroups: {
+            querySet: true,
+            filter: (relation, { onlyNotMember }) =>
+              relation.query(q => {
+                if (onlyNotMember && userId) {
+                  // Only return prerequisite groups that the current user is not yet a member of
+                  q.whereNotIn('groups.id', GroupMembership.query().select('group_id').where({
+                    'group_memberships.user_id': userId,
+                    'group_memberships.active': true
+                  }))
+                }
+              })
+          }
+        },
+        {
+          skills: {
+            querySet: true,
+            filter: (relation, { autocomplete }) =>
+              relation.query(q => {
+                if (autocomplete) {
+                  q.whereRaw('skills.name ilike ?', autocomplete + '%')
+                }
+              })
+          }
+        },
+        { suggestedSkills: { querySet: true } },
+        {
+          viewPosts: {
+            querySet: true,
+            arguments: () => [userId],
+            filter: (relation, { activePostsOnly = false, afterTime, beforeTime, boundingBox, collectionToFilterOut, filter, forCollection, isFulfilled, order, search, sortBy, topic, topics, types }) =>
+              relation.query(filterAndSortPosts({
+                activePostsOnly,
+                afterTime,
+                beforeTime,
+                boundingBox,
+                collectionToFilterOut,
+                forCollection,
+                isFulfilled,
+                order,
+                search,
+                showPinnedFirst: true,
+                sortBy,
+                topic,
+                topics,
+                type: filter,
+                types
+              }))
+          }
+        },
+        { widgets: { querySet: true } },
+        { groupExtensions: { querySet: true } }
       ],
       getters: {
         invitePath: g =>
           GroupMembership.hasModeratorRole(userId, g)
-          .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+            .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
         location: async (g) => {
           // If location obfuscation is on then non group moderators see a display string that only includes city, region & country
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
@@ -412,10 +427,10 @@ export default function makeModels (userId, isAdmin, apiClient) {
             if (locObj) {
               let display = locObj.get('country')
               if (locObj.get('region')) {
-                display = locObj.get('region') + ", " + display
+                display = locObj.get('region') + ', ' + display
               }
               if (locObj.get('city')) {
-                display = locObj.get('city') + ", " + display
+                display = locObj.get('city') + ', ' + display
               }
               return display
             }
@@ -453,7 +468,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         moderatorDescriptorPlural: (g) => g.get('moderator_descriptor_plural') || 'Moderators',
         // Get number of prerequisite groups that current user is not a member of yet
         numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
-        pendingInvitations: (g, { first }) => InvitationService.find({groupId: g.id, pendingOnly: true}),
+        pendingInvitations: (g, { first }) => InvitationService.find({ groupId: g.id, pendingOnly: true }),
         settings: g => mapKeys(camelCase, g.get('settings')),
         // XXX: Flag for translation
         typeDescriptor: g => g.get('type_descriptor') || (g.get('type') ? startCase(g.get('type')) : 'Group'),
@@ -502,7 +517,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       attributes: [
         'created_at',
         'role',
-        'updated_at',
+        'updated_at'
       ],
       relations: ['childGroup', 'parentGroup']
     },
@@ -553,7 +568,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'order',
         'post_types',
         'type',
-        'search_text',
+        'search_text'
       ],
       relations: [
         'collection',
@@ -571,8 +586,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       relations: [
         'group',
-        { linkedPosts: {querySet: true} },
-        { posts: {querySet: true} },
+        { linkedPosts: { querySet: true } },
+        { posts: { querySet: true } },
         'user'
       ]
     },
@@ -724,8 +739,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         lastReadAt: t => t.lastReadAtForUser(userId)
       },
       relations: [
-        {followers: {alias: 'participants'}},
-        {comments: {alias: 'messages', typename: 'Message', querySet: true}}
+        { followers: { alias: 'participants' } },
+        { comments: { alias: 'messages', typename: 'Message', querySet: true } }
       ],
       filter: relation => relation.query(q =>
         q.whereIn('posts.id', PostUser.followedPostIds(userId)))
@@ -735,8 +750,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
       model: Comment,
       attributes: ['created_at'],
       relations: [
-        {post: {alias: 'messageThread', typename: 'MessageThread'}},
-        {user: {alias: 'creator'}}
+        { post: { alias: 'messageThread', typename: 'MessageThread' } },
+        { user: { alias: 'creator' } }
       ],
       filter: messageFilter(userId)
     },
@@ -772,7 +787,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
 
     GroupTopic: {
       model: GroupTag,
-      attributes: ['created_at', 'is_default', 'updated_at', 'visibility', ],
+      attributes: ['created_at', 'is_default', 'updated_at', 'visibility'],
       getters: {
         postsTotal: gt => gt.postCount(),
         followersTotal: gt => gt.followerCount(),
@@ -782,7 +797,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       },
       relations: [
         'group',
-        { tag: { alias: 'topic'}}
+        { tag: { alias: 'topic' } }
       ],
       filter: nonAdminFilter(relation => relation.query(q => {
         q.whereIn('groups_tags.group_id', Group.selectIdsForMember(userId))
@@ -802,7 +817,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'search_text',
         'post_types'
       ],
-      fetchMany: ({ userId }) => SavedSearch.where({ 'user_id': userId, 'is_active': true })
+      fetchMany: ({ userId }) => SavedSearch.where({ user_id: userId, is_active: true })
     },
 
     Skill: {
@@ -834,7 +849,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
               subscribed,
               visibility
             })
-          )
+            )
         }
       }],
       fetchMany: ({ groupSlug, name, isDefault, visibility, autocomplete, first, offset = 0, sortBy }) =>
@@ -849,10 +864,10 @@ export default function makeModels (userId, isAdmin, apiClient) {
       },
       fetchMany: ({ first, order, offset = 0 }) =>
         Notification.where({
-          'medium': Notification.MEDIUM.InApp,
+          medium: Notification.MEDIUM.InApp,
           'notifications.user_id': userId
         })
-        .orderBy('id', order),
+          .orderBy('id', order)
       // TODO: fix this filter. Currently it filters out any notification without a comment
       // filter: (relation) => relation.query(q => {
       //   q.join('activities', 'activities.id', 'notifications.activity_id')
@@ -886,7 +901,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'created_at',
         'updated_at'
       ],
-      relations: [ {otherUser: {alias: 'person'}} ],
+      relations: [{ otherUser: { alias: 'person' } }],
       fetchMany: () => UserConnection,
       filter: relation => {
         return relation.query(q => {
@@ -927,13 +942,13 @@ export default function makeModels (userId, isAdmin, apiClient) {
 
     GroupExtension: {
       model: GroupExtension,
-      attributes:[
+      attributes: [
         'id',
         'active',
-        'type',
+        'type'
       ],
-      getters:{
-        data: groupExtension => groupExtension.pivot && groupExtension.pivot.get('data'),
+      getters: {
+        data: groupExtension => groupExtension.pivot && groupExtension.pivot.get('data')
       }
     },
 

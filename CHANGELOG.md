@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.5.5] - 2023-09-23
+
+### Added
+- Purpose field for groups. This is a free form text field that can be used to describe the group's purpose, mission, vision, etc.
+
 ## [5.5.4] - 2023-09-19
 
 ### Added

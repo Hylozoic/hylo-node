@@ -127,12 +127,11 @@ module.exports = bookshelf.Model.extend({
     }
 
     if (videoUrl.match(/vimeo/)) {
-      const videoId = videoUrl.match(/vimeo\.com\/(\d+)/)[1]
-      const url = `http://vimeo.com/api/v2/video/${videoId}.json`
+      const url = `https://vimeo.com/api/oembed.json?url=${videoUrl}`
       return new Promise((resolve, reject) => {
         request(url, (err, resp, body) => {
           if (err) reject(err)
-          resolve(JSON.parse(body)[0].thumbnail_large)
+          resolve(JSON.parse(body).thumbnail_url)
         })
       })
     }
