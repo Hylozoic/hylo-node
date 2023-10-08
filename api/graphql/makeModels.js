@@ -32,6 +32,21 @@ export default function makeModels (userId, isAdmin, apiClient) {
   const apiFilter = makeFilterToggle(!apiClient || !apiClient.super)
 
   return {
+    Agreement: {
+      model: Agreement,
+      attributes: [
+        'id',
+        'accepted',
+        'description',
+        'order',
+        'title'
+      ],
+      getters: {
+        accepted: a => a.pivot && a.pivot.get('accepted'),
+        order: a => a.pivot && a.pivot.get('order')
+      }
+    },
+
     Me: {
       model: User,
       attributes: [
@@ -92,6 +107,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'group_id'
       ],
       relations: [
+        { agreements: { querySet: true } },
         { group: { alias: 'group' } },
         { user: { alias: 'person' } }
       ],
@@ -287,6 +303,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       relations: [
         { activeMembers: { querySet: true } },
+        { agreements: { querySet: true } },
         { childGroups: { querySet: true } },
         { customViews: { querySet: true } },
         { groupRelationshipInvitesFrom: { querySet: true } },

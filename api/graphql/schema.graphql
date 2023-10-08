@@ -359,6 +359,28 @@ type AffiliationQuerySet {
   items: [Affiliation]
 }
 
+# An agreement used by a Group
+type Agreement {
+  id: Int
+  # Whether a user has accepted this agreement or not (only included when accessed through a Membership)
+  accepted: Boolean
+  createdAt: Date
+  # The content of the agreement
+  description: String
+  # The order of the agreement within a group
+  order: Int
+  # The title/header of the agreement
+  title: String
+  updatedAt: Date
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type AgreementQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Agreement]
+}
+
 # A post attachment, either an image, video or file
 type Attachment {
   id: ID
@@ -605,6 +627,9 @@ type Group {
     search: String,
     sortBy: String
   ): PersonQuerySet
+
+  # The agreements required to participate in this Group
+  agreements: AgreementQuerySet
 
   # Child groups of this group
   childGroups(
@@ -1303,6 +1328,8 @@ type Me {
 # A user's group membership
 type Membership {
   id: ID
+  # The agreements this user has agreed to (or not) for this group
+  agreements: AgreementQuerySet
   createdAt: Date
   groupId: ID
   group: Group
@@ -2230,6 +2257,17 @@ input AffiliationInput {
   url: String
 }
 
+# A Group Agreement
+input AgreementInput {
+  id: ID
+  # The text of the agreement
+  description: String
+  # To order the display of the agreements in the group
+  order: Int
+  # The title/header of the agreement
+  title: String
+}
+
 # An Attachment on a Post
 input AttachmentInput {
   # 'image', 'file' or 'video'
@@ -2363,6 +2401,8 @@ input GroupInput {
   accessibility: Int
   # Whether this Group is active or not
   active: Boolean
+  # The group agreements
+  agreements: [AgreementInput]
   # URL to the image of the avatar of the group
   avatarUrl: String
   # URL to the image of the banner for the group
@@ -2538,6 +2578,8 @@ input MeInput {
 
 # Data related to membership in a Group
 input MembershipInput {
+  # Accept or reject all current agreements of the group
+  acceptAgreements: Boolean
   # Number of new Posts in the Group since you last looked at it
   newPostCount: Int
   # Settings related to membership in a Group

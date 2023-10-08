@@ -1,5 +1,4 @@
 import { useLazyLoadedSchema } from '@envelop/core'
-const { createServer, GraphQLYogaError } = require('@graphql-yoga/node')
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import setupBridge from '../../lib/graphql-bookshelf-bridge'
@@ -111,6 +110,7 @@ import { makeExecutableSchema } from 'graphql-tools'
 import { inspect } from 'util'
 import { red } from 'chalk'
 import { merge, reduce } from 'lodash'
+const { createServer, GraphQLYogaError } = require('@graphql-yoga/node')
 
 const schemaText = readFileSync(join(__dirname, 'schema.graphql')).toString()
 
@@ -223,11 +223,11 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     groupExists: (root, { slug }) => {
       if (Group.isSlugValid(slug)) {
         return Group.where(bookshelf.knex.raw('slug = ?', slug))
-        .count()
-        .then(count => {
-          if (count > 0) return {exists: true}
-          return {exists: false}
-        })
+          .count()
+          .then(count => {
+            if (count > 0) return {exists: true}
+            return {exists: false}
+          })
       }
       throw new GraphQLYogaError('Slug is invalid')
     },
@@ -242,7 +242,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     messageThread: (root, { id }) => fetchOne('MessageThread', id),
     notifications: (root, { first, offset, resetCount, order = 'desc' }) => {
       return fetchMany('Notification', { first, offset, order })
-      .tap(() => resetCount && User.resetNewNotificationCount(userId))
+        .tap(() => resetCount && User.resetNewNotificationCount(userId))
     },
     people: (root, args) => fetchMany('Person', args),
     // you can query by id or email, with id taking preference
@@ -253,12 +253,12 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     search: (root, args) => {
       if (!args.first) args.first = 20
       return Search.fullTextSearch(userId, args)
-      .then(({ models, total }) => {
-        // FIXME this shouldn't be used directly here -- there should be some
-        // way of integrating this into makeModels and using the presentation
-        // logic that's already in the fetcher
-        return presentQuerySet(models, merge(args, {total}))
-      })
+        .then(({ models, total }) => {
+          // FIXME this shouldn't be used directly here -- there should be some
+          // way of integrating this into makeModels and using the presentation
+          // logic that's already in the fetcher
+          return presentQuerySet(models, merge(args, {total}))
+        })
     },
     skills: (root, args) => fetchMany('Skill', args),
     topic: (root, { id, name }) => // you can specify id or name, but not both
@@ -279,7 +279,7 @@ export function makePublicMutations (expressContext, fetchOne) {
 }
 
 export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
-  const { req, res } = expressContext
+  const { req } = expressContext
   const sessionId = req.session.id
 
   return {
@@ -450,10 +450,10 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     requestToAddGroupToParent: (root, { parentId, childId, questionAnswers }) =>
       inviteGroupToGroup(userId, childId, parentId, GroupRelationshipInvite.TYPE.ChildToParent, questionAnswers),
 
-    resendInvitation: (root, {invitationId}) =>
+    resendInvitation: (root, { invitationId }) =>
       resendInvitation(userId, invitationId),
 
-    respondToEvent: (root, {id, response}) =>
+    respondToEvent: (root, { id, response }) =>
       respondToEvent(userId, id, response),
 
     subscribe: (root, { groupId, topicId, isSubscribing }) =>
@@ -466,7 +466,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
 
-    updateGroupRole: (root, { groupRoleId, color, name, description, emoji, active, groupId }) => updateGroupRole({userId, groupRoleId, color, name, description, emoji, active, groupId}),
+    updateGroupRole: (root, { groupRoleId, color, name, description, emoji, active, groupId }) =>
+      updateGroupRole({ userId, groupRoleId, color, name, description, emoji, active, groupId }),
 
     updateGroupSettings: (root, { id, changes }) =>
       updateGroup(userId, id, changes),

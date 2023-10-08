@@ -1,24 +1,22 @@
-const { GraphQLYogaError } = require('@graphql-yoga/node')
-import fetch from 'node-fetch'
-import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import knexPostgis from 'knex-postgis'
 import { clone, defaults, difference, flatten, intersection, isEmpty, mapValues, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
+import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
+import fetch from 'node-fetch'
 import randomstring from 'randomstring'
 import wkx from 'wkx'
+
 import mixpanel from '../../lib/mixpanel'
 import { AnalyticsEvents, LocationHelpers } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
-import { inviteGroupToGroup } from '../graphql/mutations/group.js'
-
-import DataType, {
-  getDataTypeForInstance, getDataTypeForModel, getModelForDataType
-} from './group/DataType'
-import convertGraphqlData from '../graphql/mutations/convertGraphqlData'
+import { inviteGroupToGroup } from '../graphql/mutations/group'
 import { findOrCreateLocation } from '../graphql/mutations/location'
 import { es } from '../../lib/i18n/es'
 import { en } from '../../lib/i18n/en'
+
+const { GraphQLYogaError } = require('@graphql-yoga/node')
+
 const locales = { es, en }
 
 export const GROUP_ATTR_UPDATE_WHITELIST = [
@@ -37,9 +35,7 @@ module.exports = bookshelf.Model.extend(merge({
   requireFetch: false,
   hasTimestamps: true,
 
-  parse(response) {
-    const st = knexPostgis(bookshelf.knex)
-
+  parse (response) {
     // Convert geometry hex values into GeoJSON before returning to the client
     if (typeof response.geo_shape === 'string') {
       const b = Buffer.from(response.geo_shape, 'hex')
@@ -51,6 +47,14 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   // ******** Getters ******* //
+
+  agreements: function () {
+    return this.belongsToMany(Agreement).through(GroupAgreement)
+      .where('groups_agreements.active', true)
+      .withPivot(['order']).query(q => {
+        q.orderByRaw('_pivot_order asc')
+      })
+  },
 
   // The full tree of child groups + grandchild groups, etc. includes the root group too
   allChildGroups () {
@@ -100,6 +104,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(CustomView)
   },
 
+  groupAgreements () {
+    return this.hasMany(GroupAgreement)
+  },
+
   groupRelationshipInvitesFrom () {
     return this.hasMany(GroupRelationshipInvite, 'from_group_id')
       .query({ where: { status: GroupRelationshipInvite.STATUS.Pending }})
@@ -120,7 +128,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   groupExtensions: function () {
     return this.belongsToMany(Extension).through(GroupExtension).where('group_extensions.active', true)
-    .withPivot(['data'])
+      .withPivot(['data'])
   },
 
   groupToGroupJoinQuestions () {
@@ -147,16 +155,16 @@ module.exports = bookshelf.Model.extend(merge({
 
   members (where) {
     return this.belongsToMany(User).through(GroupMembership)
-    .query(q => {
-      q.where({
-        'group_memberships.active': true,
-        'users.active': true
+      .query(q => {
+        q.where({
+          'group_memberships.active': true,
+          'users.active': true
+        })
+        if (where) {
+          q.where(where)
+        }
       })
-      if (where) {
-        q.where(where)
-      }
-    })
-    .withPivot(['created_at', 'role', 'settings'])
+      .withPivot(['created_at', 'role', 'settings'])
   },
 
   memberships (includeInactive = false) {
@@ -300,7 +308,7 @@ module.exports = bookshelf.Model.extend(merge({
         settings: {
           sendEmail: true,
           sendPushNotifications: true,
-          showJoinForm: false
+          showJoinForm: true
         }
       },
       pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
@@ -435,6 +443,20 @@ module.exports = bookshelf.Model.extend(merge({
     await this.validate()
 
     await bookshelf.transaction(async transacting => {
+      if (changes.agreements) {
+        const agreements = await Promise.map(changes.agreements.filter(a => trim(a.title) !== ''), async (a) => {
+          return (await Agreement.where({ title: trim(a.title), description: trim(a.description) }).fetch({ transacting })) ||
+            (await Agreement.forge({ title: trim(a.title), description: trim(a.description) }).save({}, { transacting }))
+        })
+
+        await GroupAgreement.where({ group_id: this.id }).destroy({ require: false, transacting })
+        let order = 1
+        for (const a of agreements) {
+          await GroupAgreement.forge({ group_id: this.id, agreement_id: a.id, order }).save({}, { transacting })
+          order = order + 1
+        }
+      }
+
       if (changes.group_to_group_join_questions) {
         const questions = await Promise.map(changes.group_to_group_join_questions.filter(jq => trim(jq.text) !== ''), async (jq) => {
           return (await Question.where({ text: trim(jq.text) }).fetch({ transacting })) || (await Question.forge({ text: trim(jq.text) }).save({}, { transacting }))
@@ -533,8 +555,6 @@ module.exports = bookshelf.Model.extend(merge({
   },
 }, HasSettings), {
   // ****** Class constants ****** //
-  //TODO: remove
-  DataType,
 
   Visibility: {
     HIDDEN: 0,
@@ -701,21 +721,21 @@ module.exports = bookshelf.Model.extend(merge({
   find (idOrSlug, opts = {}) {
     if (!idOrSlug) return Promise.resolve(null)
 
-    let where = isNaN(Number(idOrSlug))
-      ? (opts.active ? {slug: idOrSlug, active: true} : {slug: idOrSlug})
-      : (opts.active ? {id: idOrSlug, active: true} : {id: idOrSlug})
+    const where = isNaN(Number(idOrSlug))
+      ? (opts.active ? { slug: idOrSlug, active: true } : { slug: idOrSlug })
+      : (opts.active ? { id: idOrSlug, active: true } : { id: idOrSlug })
 
     return this.where(where).fetch(opts)
   },
 
   findActive (key, opts = {}) {
-    return this.find(key, merge({active: true}, opts))
+    return this.find(key, merge({ active: true }, opts))
   },
 
   getNewAccessCode: function () {
-    const test = code => Group.where({access_code: code}).count().then(Number)
+    const test = code => Group.where({ access_code: code }).count().then(Number)
     const loop = () => {
-      const code = randomstring.generate({length: 10, charset: 'alphanumeric'})
+      const code = randomstring.generate({ length: 10, charset: 'alphanumeric' })
       return test(code).then(count => count ? loop() : code)
     }
     return loop()
@@ -760,35 +780,35 @@ module.exports = bookshelf.Model.extend(merge({
 
   notifyAboutCreate: function (opts) {
     return Group.find(opts.groupId, {withRelated: ['creator']})
-    .then(g => {
-      var creator = g.relations.creator
-      var recipient = process.env.NEW_GROUP_EMAIL
-      const locale = creator.get('settings')?.locale || 'en'
-      return Email.sendRawEmail(recipient, {
-        subject: locales[locale].groupCreatedNotifySubject(g.get('name')),
-        body: `${locales[locale].Group()}
-          ${locales[locale].Name()}: ${g.get('name')}
-          URL: ${Frontend.Route.group(g)}
-          ${locales[locale].CreatorEmail()}: ${creator.get('email')}
-          ${locales[locale].CreatorName()}: ${creator.get('name')}
-          ${locales[locale].CreatorURL()}: ${Frontend.Route.profile(creator)}
-        `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
-      }, {
-        sender: {
-          name: 'Hylobot',
-          address: 'dev+bot@hylo.com'
-        }
+      .then(g => {
+        const creator = g.relations.creator
+        const recipient = process.env.NEW_GROUP_EMAIL
+        const locale = creator.get('settings')?.locale || 'en'
+        return Email.sendRawEmail(recipient, {
+          subject: locales[locale].groupCreatedNotifySubject(g.get('name')),
+          body: `${locales[locale].Group()}
+            ${locales[locale].Name()}: ${g.get('name')}
+            URL: ${Frontend.Route.group(g)}
+            ${locales[locale].CreatorEmail()}: ${creator.get('email')}
+            ${locales[locale].CreatorName()}: ${creator.get('name')}
+            ${locales[locale].CreatorURL()}: ${Frontend.Route.profile(creator)}
+          `.replace(/^\s+/gm, '').replace(/\n/g, '<br/>\n')
+        }, {
+          sender: {
+            name: 'Hylobot',
+            address: 'dev+bot@hylo.com'
+          }
+        })
       })
-    })
   },
 
   notifySlack: function (groupId, post) {
     return Group.find(groupId)
-    .then(group => {
-      if (!group || !group.get('slack_hook_url')) return
-      var slackMessage = Slack.textForNewPost(post, group)
-      return Slack.send(slackMessage, group.get('slack_hook_url'))
-    })
+      .then(group => {
+        if (!group || !group.get('slack_hook_url')) return
+        const slackMessage = Slack.textForNewPost(post, group)
+        return Slack.send(slackMessage, group.get('slack_hook_url'))
+      })
   },
 
   async pluckIdsForMember (userOrId, where) {
@@ -825,7 +845,7 @@ module.exports = bookshelf.Model.extend(merge({
       q.join('group_memberships', 'groups.id', 'group_memberships.group_id')
       q.where('group_memberships.active', true)
       q.groupBy('groups.id')
-      q.having(bookshelf.knex.raw(`array_agg(user_id order by user_id) = ?`, [userIds]))
+      q.having(bookshelf.knex.raw('array_agg(user_id order by user_id) = ?', [userIds]))
     })
   },
 

@@ -3,15 +3,18 @@ import { isEmpty } from 'lodash'
 import {
   whereId
 } from './group/queryUtils'
-import {
-  getDataTypeForModel,
-  getModelForDataType
-} from './group/DataType'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
   requireFetch: false,
   hasTimestamps: true,
+
+  agreements () {
+    return this.belongsToMany(Agreement, 'users_groups_agreements', 'group_id', 'agreement_id', 'group_id')
+      .through(UserGroupAgreement, 'group_id', 'agreement_id')
+      .where({ user_id: this.get('user_id') })
+      .withPivot(['accepted'])
+  },
 
   group () {
     return this.belongsTo(Group)
@@ -22,7 +25,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async updateAndSave (attrs, { transacting } = {}) {
-    for (let key in attrs) {
+    for (const key in attrs) {
       if (key === 'settings') {
         this.addSetting(attrs[key])
       } else {
@@ -87,18 +90,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async setModeratorRole (userId, group) {
-    return group.addMembers([userId], {role: this.Role.MODERATOR})
+    return group.addMembers([userId], { role: this.Role.MODERATOR })
   },
 
   async removeModeratorRole (userId, group) {
-    return group.addMembers([userId], {role: this.Role.DEFAULT})
+    return group.addMembers([userId], { role: this.Role.DEFAULT })
   },
 
   forMember (userOrId) {
-    return this.forIds(userOrId, null, {multiple: true})
+    return this.forIds(userOrId, null, { multiple: true })
   },
 
-  async updateLastViewedAt(userOrId, groupOrId) {
+  async updateLastViewedAt (userOrId, groupOrId) {
     const membership = await GroupMembership.forPair(userOrId, groupOrId).fetch()
     if (membership) {
       membership.addSetting({ lastReadAt: new Date() })
@@ -106,5 +109,5 @@ module.exports = bookshelf.Model.extend(Object.assign({
       return membership
     }
     return false
-  },
+  }
 })

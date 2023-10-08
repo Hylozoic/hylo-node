@@ -345,7 +345,7 @@ module.exports = bookshelf.Model.extend(merge({
         settings: {
           sendEmail: true,
           sendPushNotifications: true,
-          showJoinForm: fromInvitation
+          showJoinForm: true
         }
       },
       { transacting })
@@ -806,7 +806,7 @@ module.exports = bookshelf.Model.extend(merge({
     }
   },
 
-  async afterUpdate({ userId, changes }) {
+  async afterUpdate ({ userId, changes }) {
     const user = await User.find(userId)
     if (user) {
       const memberships = await user.memberships().fetch({ withRelated: 'group' })
