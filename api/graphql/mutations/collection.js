@@ -44,7 +44,7 @@ export async function removePostFromCollection (userId, collectionId, postId) {
 }
 
 export async function reorderPostInCollection (userId, collectionId, postId, newOrderIndex) {
-  const collection = await Collection.findValidCollectionForUser(userId, collectionId)
+  await Collection.findValidCollectionForUser(userId, collectionId)
   const linkedPost = await CollectionsPost.query(q => q.where({ collection_id: collectionId, post_id: postId })).fetch()
 
   if (!linkedPost) {
@@ -53,10 +53,8 @@ export async function reorderPostInCollection (userId, collectionId, postId, new
 
   const oldOrder = linkedPost.get('order')
 
-  console.log("reorder", postId, linkedPost.get('name'), oldOrder, " new order = ", newOrderIndex)
   await bookshelf.transaction(async transacting => {
     if (oldOrder > newOrderIndex) {
-      console.log("old greater than new")
       await CollectionsPost.query()
         .select("max('order') as max_order")
         .where({ collection_id: collectionId })
@@ -65,7 +63,6 @@ export async function reorderPostInCollection (userId, collectionId, postId, new
         .update({ order: bookshelf.knex.raw('?? + 1', ['order']) })
         .transacting(transacting)
     } else if (oldOrder < newOrderIndex) {
-      console.log("old less than new")
       await CollectionsPost.query()
         .select("max('order') as max_order")
         .where({ collection_id: collectionId })
