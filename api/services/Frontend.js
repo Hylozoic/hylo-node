@@ -79,6 +79,14 @@ module.exports = {
 
     root: () => url('/app'),
 
+    // Just using the regular url for chats in mobile will keep directing to a mobile UI with poor UX, so we need a specific url to flag it as a chat early
+    chatPostForMobile: function (post, group, topic) {
+      const groupSlug = getSlug(group)
+      if (isEmpty(groupSlug) || !topic) return this.post(post) // fallback but all chats ought to have a group
+      const groupUrl = `/groups/${groupSlug}/topics/${topic}`
+      return url(`${groupUrl}/?postid=${getModelId(post)}`)
+    },
+
     comment: function ({ comment, groupSlug, post }) {
       const groupUrl = isEmpty(groupSlug) ? '/all' : `/groups/${groupSlug}`
 

@@ -707,7 +707,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
             title: post.summary(),
             type: post.get('type'),
             url: Frontend.Route.post(post),
-            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), url: Frontend.Route.group(g), postUrl: Frontend.Route.post(post, g) })),
+            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), url: Frontend.Route.group(g), postUrl: Frontend.Route.post(post, g) })), // This is the thing that is probably borking the zapier links
             topics: post.relations.tags.map(t => ({ name: t.get('name')})),
           }),
           headers: { 'Content-Type': 'application/json' }
