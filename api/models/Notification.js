@@ -71,7 +71,7 @@ module.exports = bookshelf.Model.extend({
 
   postUrlHelper: function ({ post, group, isPublic = false, topic, reader }) {
     if (post.get('type') === Post.Type.CHAT) {
-      return Frontend.Route.chatPostForMobile(post, group, isPublic, topic)
+      return Frontend.Route.chatPostForMobile(post, group, topic)
     }
     return Frontend.Route.post(post, group, isPublic, topic)
   },
