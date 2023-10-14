@@ -680,6 +680,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
   zapierTriggers: async ({ postId }) => {
     const post = await Post.find(postId, { withRelated: ['groups', 'tags', 'user'] })
     if (!post) return
+    const tags = post.relations.tags
+    const firstTag = tags && tags.first()?.get('name')
 
     const groupIds = post.relations.groups.map(g => g.id)
     const zapierTriggers = await ZapierTrigger.forTypeAndGroups('new_post', groupIds).fetchAll()
@@ -689,6 +691,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
         if (trigger.get('params')?.types?.length > 0 && !trigger.get('params').types.includes(post.get('type'))) {
           continue
         }
+
+        const entityUrl = (post.get('type') === Post.Type.CHAT && post.relations.groups.length > 0 && firstTag)
+          ? Frontend.Route.chatPostForMobile(post, post.relations.groups[0], firstTag)
+          : Frontend.Route.post(post)
 
         const creator = post.relations.user
         const response = await fetch(trigger.get('target_url'), {
@@ -706,8 +712,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
             timezone: post.get('timezone'),
             title: post.summary(),
             type: post.get('type'),
-            url: Frontend.Route.post(post),
-            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), url: Frontend.Route.group(g), postUrl: Frontend.Route.post(post, g) })), // This is the thing that is probably borking the zapier links
+            url: entityUrl,
+            groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), url: Frontend.Route.group(g), postUrl: Frontend.Route.post(post, g) })),
             topics: post.relations.tags.map(t => ({ name: t.get('name')})),
           }),
           headers: { 'Content-Type': 'application/json' }

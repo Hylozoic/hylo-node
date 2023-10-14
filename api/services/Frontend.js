@@ -84,7 +84,7 @@ module.exports = {
       const groupSlug = getSlug(group)
       if (isEmpty(groupSlug) || !topic) return this.post(post) // fallback but all chats ought to have a group
       const groupUrl = `/groups/${groupSlug}/topics/${topic}`
-      return url(`${groupUrl}/?postid=${getModelId(post)}`)
+      return url(`${groupUrl}/?postId=${getModelId(post)}`)
     },
 
     comment: function ({ comment, groupSlug, post }) {
