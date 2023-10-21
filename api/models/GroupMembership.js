@@ -24,6 +24,28 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
+  hasRole (role) {
+    return Number(role) === this.get('role')
+  },
+
+  async acceptAgreements (transacting) {
+    const groupId = this.get('group_id')
+    const groupAgreements = await GroupAgreement.where({ group_id: groupId }).fetchAll({ transacting })
+    for (const ga of groupAgreements) {
+      const attrs = { group_id: groupId, user_id: this.get('user_id'), agreement_id: ga.get('agreement_id') }
+      await UserGroupAgreement
+        .where(attrs)
+        .fetch({ transacting })
+        .then(async (uga) => {
+          if (uga && !uga.get('accepted')) {
+            await uga.save({ accepted: true }, { transacting })
+          } else {
+            await UserGroupAgreement.forge(attrs).save({}, { transacting })
+          }
+        })
+    }
+  },
+
   async updateAndSave (attrs, { transacting } = {}) {
     for (const key in attrs) {
       if (key === 'settings') {
@@ -35,10 +57,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     if (!isEmpty(this.changed)) return this.save(null, {transacting})
     return this
-  },
-
-  hasRole (role) {
-    return Number(role) === this.get('role')
   }
 
 }, HasSettings), {

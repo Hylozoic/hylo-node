@@ -329,7 +329,12 @@ module.exports = bookshelf.Model.extend(merge({
       const membership = await this.memberships().create(
         Object.assign({}, updatedAttribs, {
           user_id: id,
-          created_at: new Date()
+          created_at: new Date(),
+          settings: {
+            ...updatedAttribs.settings,
+            // Show join form, unless member is the creator of the group
+            showJoinForm: id !== this.get('created_by_id')
+          }
         }), { transacting })
       newMemberships.push(membership)
       // Subscribe each user to the default tags in the group

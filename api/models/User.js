@@ -349,11 +349,14 @@ module.exports = bookshelf.Model.extend(merge({
         }
       },
       { transacting })
-    const q = Group.query()
-    if (transacting) {
-      q.transacting(transacting)
-    }
+
     await this.markInvitationsUsed(group.id, transacting)
+
+    if (!fromInvitation) {
+      // XXX: A user choosing to join a group has aleady seen/accepted all the agreements (enforced on the front-end)
+      await memberships[0].acceptAgreements(transacting)
+    }
+
     return memberships[0]
   },
 
