@@ -42,24 +42,30 @@ export const sendDigests = async () => {
 
   lastDigestAt = lastDigestAt ? new Date(Number(lastDigestAt)) : fallbackTime()
 
-  const posts = await Post.where('updated_at', '>', lastDigestAt)
-    .fetchAll({withRelated: [
-      {comments: q => {
-        q.where('created_at', '>', lastDigestAt)
-        q.orderBy('created_at', 'asc')
-      }},
-      'user',
-      'groups',
-      'comments.user',
-      'comments.media'
-    ]})
+  const posts = await Post.where('updated_at', '>', lastDigestAt).andWhere('active', true)
+    .fetchAll({
+      withRelated: [
+        {
+          comments: q => {
+            q.where('created_at', '>', lastDigestAt)
+            q.orderBy('created_at', 'asc')
+          }
+        },
+        'user',
+        'groups',
+        'comments.user',
+        'comments.media'
+      ]
+    })
 
   const numSends = await Promise.all(posts.map(async post => {
     const { comments } = post.relations
     if (comments.length === 0) return []
 
-    const followers = await post.followers().fetch()
     const firstGroup = post.relations.groups.first()
+    if (!firstGroup) return []
+
+    const followers = await post.followers().fetch()
 
     return Promise.map(followers.models, user => {
       // select comments not written by this user and newer than user's last
@@ -94,9 +100,9 @@ export const sendDigests = async () => {
 
         const otherAvatarUrls = others.map(other => other.get('avatar_url'))
 
-        var participantNames = otherNames.slice(0, otherNames.length - 1).join(', ') +
+        const participantNames = otherNames.slice(0, otherNames.length - 1).join(', ') +
         ' & ' + otherNames[otherNames.length - 1]
-        
+
         return Email.sendMessageDigest({
           email: user.get('email'),
           locale,
@@ -138,7 +144,7 @@ export const sendDigests = async () => {
         })
       }
     })
-    .then(sends => compact(sends).length)
+      .then(sends => compact(sends).length)
   }))
 
   await redisClient.set(sendDigests.REDIS_TIMESTAMP_KEY, now.getTime().toString())
