@@ -42,7 +42,7 @@ export const sendDigests = async () => {
 
   lastDigestAt = lastDigestAt ? new Date(Number(lastDigestAt)) : fallbackTime()
 
-  const posts = await Post.where('updated_at', '>', lastDigestAt).andWhere('active', true)
+  const posts = await Post.where('updated_at', '>', lastDigestAt)
     .fetchAll({
       withRelated: [
         {
