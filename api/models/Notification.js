@@ -69,6 +69,13 @@ module.exports = bookshelf.Model.extend({
     return this.reader().get('settings')?.locale || this.actor().get('settings')?.locale || 'en'
   },
 
+  postUrlHelper: function ({ post, group, isPublic = false, topic, reader }) {
+    if (post.get('type') === Post.Type.CHAT) {
+      return Frontend.Route.chatPostForMobile(post, group, topic)
+    }
+    return Frontend.Route.post(post, group, isPublic, topic)
+  },
+
   send: function () {
     let action
     return this.shouldBeBlocked()
@@ -168,10 +175,13 @@ module.exports = bookshelf.Model.extend({
     const post = this.post()
     const groupIds = Activity.groupIds(this.relations.activity)
     const locale = this.locale()
+    const tags = post.relations.tags
+    const firstTag = tags && tags.first()?.get('name')
+
     if (isEmpty(groupIds)) throw new Error('no group ids in activity')
     return Group.find(groupIds[0])
       .then(group => {
-        const path = url.parse(Frontend.Route.post(post, group)).path
+        const path = url.parse(this.postUrlHelper({ post, isPublic: false, topic: firstTag, group })).path
         const alertText = PushNotification.textForPost(post, group, this.relations.activity.get('reader_id'), version, locale)
         return this.reader().sendPushNotification(alertText, path)
       })
@@ -194,7 +204,7 @@ module.exports = bookshelf.Model.extend({
     const group = post.relations.groups.first()
     const locale = this.locale()
     const groupSlug = getSlug(group)
-    const path = url.parse(Frontend.Route.comment({ comment, groupSlug, post  })).path
+    const path = url.parse(Frontend.Route.comment({ comment, groupSlug, post })).path
     const alertText = PushNotification.textForComment(comment, version, locale)
     if (!this.reader().enabledNotification(TYPE.Comment, MEDIUM.Push)) {
       return Promise.resolve()
@@ -387,8 +397,8 @@ module.exports = bookshelf.Model.extend({
     const post = this.post()
     const reader = this.reader()
     const user = post.relations.user
-    const tags =  post.relations.tags
-    const firstTag =  tags && tags.first()?.get('name')
+    const tags = post.relations.tags
+    const firstTag = tags && tags.first()?.get('name')
     const replyTo = Email.postReplyAddress(post.id, reader.id)
     const locale = this.locale()
 
@@ -416,8 +426,7 @@ module.exports = bookshelf.Model.extend({
             post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
             post_title: post.get('type') === Post.Type.CHAT ? '#' + firstTag : decode(post.summary()),
             post_type: post.get('type'),
-            post_url: Frontend.Route.tokenLogin(reader, token,
-              Frontend.Route.post(post, group, false, firstTag) + '?ctt=post_mention_email&cti=' + reader.id),
+            post_url: Frontend.Route.tokenLogin(reader, token, this.postUrlHelper({ post, isPublic: false, topic: firstTag, group }) + '?ctt=post_mention_email&cti=' + reader.id ),
             unfollow_url: Frontend.Route.tokenLogin(reader, token,
               Frontend.Route.unfollow(post, group) + '?ctt=post_mention_email&cti=' + reader.id),
             tracking_pixel_url: Analytics.pixelUrl('Mention in Post', {userId: reader.id})
