@@ -7,7 +7,7 @@ export default {
   },
 
   members: function () {
-    return this.followers().query(q => q.whereRaw('project_role_id is not null'))
+    return this.isProject() ? this.followers().query(q => q.whereRaw('project_role_id is not null')) : false
   },
 
   addProjectMembers: async function (usersOrIds, opts) {
@@ -44,7 +44,7 @@ export default {
         post_id: this.id,
         name: ProjectRole.MEMBER_ROLE_NAME
       })
-      .save({}, opts)
+        .save({}, opts)
     }
   }
 }

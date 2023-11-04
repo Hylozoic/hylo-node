@@ -7,8 +7,9 @@ export default {
   },
 
   eventInvitees: function () {
-    return this.belongsToMany(User).through(EventInvitation, 'event_id', 'user_id')
-    .withPivot('response')
+    return this.isEvent()
+      ? this.belongsToMany(User).through(EventInvitation, 'event_id', 'user_id').withPivot('response')
+      : false
   },
 
   eventInvitations: function () {
