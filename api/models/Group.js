@@ -619,8 +619,8 @@ module.exports = bookshelf.Model.extend(merge({
       }
     )
 
-    // XXX: for now allow all groups to appear in public by default
-    attrs.allow_in_public = true
+    // XXX: for now groups by default cannot post to public on production
+    attrs.allow_in_public = process.env.NODE_ENV === 'development'
 
     // eslint-disable-next-line camelcase
     const access_code = attrs.access_code || await Group.getNewAccessCode()
