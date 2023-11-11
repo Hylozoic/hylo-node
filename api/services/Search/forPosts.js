@@ -86,7 +86,8 @@ export default function forPosts (opts) {
     filterAndSortPosts(Object.assign({}, opts, {
       search: opts.term,
       sortBy: opts.sort,
-      showPinnedFirst: get(opts.groupIds, 'length') === 1
+      // Sort pinned posts first only when looking at a single group and not looking at chat room
+      showPinnedFirst: opts.type !== 'chat' && get(opts.groupIds, 'length') === 1
     }), qb)
 
     if (opts.omit) {

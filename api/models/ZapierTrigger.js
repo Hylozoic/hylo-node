@@ -1,4 +1,4 @@
-import { castArray, isEmpty, isEqual, difference } from 'lodash'
+import { castArray } from 'lodash'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'zapier_triggers',

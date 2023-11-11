@@ -42,21 +42,23 @@ export const sendDigests = async () => {
 
   lastDigestAt = lastDigestAt ? new Date(Number(lastDigestAt)) : fallbackTime()
 
-  const posts = await Post.where('updated_at', '>', lastDigestAt)
-    .fetchAll({
-      withRelated: [
-        {
-          comments: q => {
-            q.where('created_at', '>', lastDigestAt)
-            q.orderBy('created_at', 'asc')
-          }
-        },
-        'user',
-        'groups',
-        'comments.user',
-        'comments.media'
-      ]
-    })
+  const posts = await Post.query(q => {
+    q.where('updated_at', '>', lastDigestAt)
+    q.where('active', true)
+  }).fetchAll({
+    withRelated: [
+      {
+        comments: q => {
+          q.where('created_at', '>', lastDigestAt)
+          q.orderBy('created_at', 'asc')
+        }
+      },
+      'user',
+      'groups',
+      'comments.user',
+      'comments.media'
+    ]
+  })
 
   const numSends = await Promise.all(posts.map(async post => {
     const { comments } = post.relations
