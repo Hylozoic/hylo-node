@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.6.1] - 2023-11-11
+
+### Changed
+- Notifications for new chats take you to the chat room on mobile, scrolled to that post, instead of opening the post itself
+- Turn off ability for new groups to to be able to post in public and appear in the Group Explorer. In the future groups will have to apply to be able to post in public. This is a temporary measure to prevent spam.
+- Improve performance by loading event invites only for events and post members only for projects
+- For post related Zapier triggers set the post URL to be the post in the first group it is in, instead of in the "all" groups context. Normally this is what people will want, to see the post in its group context.
+
+### Fixed
+- Fix bug that broke notifications when dealing with a post that somehow doesn't have a group (still have to figure out why that can happen)
+- "Null" post time in notification emails for posts that dont have a start time.
+- Don't sort pinned posts first when getting posts for chat rooms
+
 ## [5.6.0] - 2023-09-23
 
 ### Added

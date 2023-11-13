@@ -73,6 +73,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('is_public')
   },
 
+  isChat: function () {
+    return this.get('type') === Post.Type.CHAT
+  },
+
   isWelcome: function () {
     return this.get('type') === Post.Type.WELCOME
   },
@@ -119,11 +123,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   groups: function () {
     return this.belongsToMany(Group).through(PostMembership)
-      .query({where: {'groups.active': true }})
-  },
-
-  invitees: function () {
-    return this.belongsToMany(User).through(EventInvitation)
+      .query({ where: { 'groups.active': true } })
   },
 
   async isFollowed (userId) {
@@ -143,7 +143,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   locationObject: function () {
-    return this.belongsTo(Location, 'location_id')
+    return this.isChat() ? false : this.belongsTo(Location, 'location_id')
   },
 
   media: function (type) {
@@ -151,7 +151,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return type ? relation.query({ where: { type } }) : relation
   },
 
-  // TODO: rename postGroups?
   postMemberships: function () {
     return this.hasMany(PostMembership, 'post_id')
   },
@@ -694,7 +693,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
         const entityUrl = (post.get('type') === Post.Type.CHAT && post.relations.groups.length > 0 && firstTag)
           ? Frontend.Route.chatPostForMobile(post, post.relations.groups[0], firstTag)
-          : Frontend.Route.post(post)
+          : Frontend.Route.post(post, post.relations.groups[0])
 
         const creator = post.relations.user
         const response = await fetch(trigger.get('target_url'), {
@@ -714,7 +713,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
             type: post.get('type'),
             url: entityUrl,
             groups: post.relations.groups.map(g => ({ id: g.id, name: g.get('name'), url: Frontend.Route.group(g), postUrl: Frontend.Route.post(post, g) })),
-            topics: post.relations.tags.map(t => ({ name: t.get('name')})),
+            topics: post.relations.tags.map(t => ({ name: t.get('name') }))
           }),
           headers: { 'Content-Type': 'application/json' }
         })

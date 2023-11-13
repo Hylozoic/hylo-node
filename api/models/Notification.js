@@ -388,7 +388,7 @@ module.exports = bookshelf.Model.extend({
             unfollow_url: Frontend.Route.tokenLogin(reader, token,
               Frontend.Route.unfollow(post, group) + '?ctt=announcement_email&cti=' + reader.id),
             tracking_pixel_url: Analytics.pixelUrl('Announcement', { userId: reader.id }),
-            post_date: TextHelpers.formatDatePair(post.get('start_time'), post.get('end_time'), false, post.get('timezone'))
+            post_date: post.get('start_time') ? TextHelpers.formatDatePair(post.get('start_time'), post.get('end_time'), false, post.get('timezone')) : null
           }
         })))
   },
