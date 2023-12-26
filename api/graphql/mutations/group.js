@@ -118,7 +118,7 @@ export async function removeModerator (userId, personId, groupId, isRemoveFromGr
 export async function updateGroup (userId, groupId, changes) {
   const group = await getModeratedGroup(userId, groupId)
 
-  return group.update(convertGraphqlData(changes))
+  return group.update(convertGraphqlData(changes), userId)
 }
 
 // Group to group relationship mutations

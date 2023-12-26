@@ -29,6 +29,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async acceptAgreements (transacting) {
+    this.addSetting({ agreementsAcceptedAt: (new Date()).toISOString() })
     const groupId = this.get('group_id')
     const groupAgreements = await GroupAgreement.where({ group_id: groupId }).fetchAll({ transacting })
     for (const ga of groupAgreements) {

@@ -1,5 +1,5 @@
 import knexPostgis from 'knex-postgis'
-import { clone, defaults, difference, flatten, intersection, isEmpty, mapValues, merge, sortBy, pick, omit, omitBy, isUndefined, trim } from 'lodash'
+import { clone, defaults, difference, flatten, intersection, isEmpty, mapValues, merge, sortBy, pick, omit, omitBy, isUndefined, trim, xor } from 'lodash'
 import mbxGeocoder from '@mapbox/mapbox-sdk/services/geocoding'
 import fetch from 'node-fetch'
 import randomstring from 'randomstring'
@@ -332,6 +332,7 @@ module.exports = bookshelf.Model.extend(merge({
           created_at: new Date(),
           settings: {
             ...updatedAttribs.settings,
+            agreementsAcceptedAt: id === this.get('created_by_id') ? new Date() : null,
             // Show join form, unless member is the creator of the group
             showJoinForm: id !== this.get('created_by_id')
           }
@@ -416,7 +417,7 @@ module.exports = bookshelf.Model.extend(merge({
     return Promise.map(existingMemberships.models, ms => ms.updateAndSave(updatedAttribs, {transacting}))
   },
 
-  update: async function (changes) {
+  update: async function (changes, updatedByUserId) {
     const whitelist = [
       'about_video_uri', 'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url',
       'description', 'geo_shape', 'location', 'location_id', 'moderator_descriptor', 'moderator_descriptor_plural',
@@ -449,10 +450,30 @@ module.exports = bookshelf.Model.extend(merge({
 
     await bookshelf.transaction(async transacting => {
       if (changes.agreements) {
+        const currentAgreementIds = (await this.agreements().fetch({ transacting })).pluck('id')
+        const newAgreementIds = []
+
+        // TODO: what if there are multiple agreements with the same title/description?
         const agreements = await Promise.map(changes.agreements.filter(a => trim(a.title) !== ''), async (a) => {
-          return (await Agreement.where({ title: trim(a.title), description: trim(a.description) }).fetch({ transacting })) ||
-            (await Agreement.forge({ title: trim(a.title), description: trim(a.description) }).save({}, { transacting }))
+          let agreement = await Agreement.where({ title: trim(a.title), description: trim(a.description) }).fetch({ transacting })
+          if (!agreement) {
+            agreement = await Agreement.forge({ title: trim(a.title), description: trim(a.description) }).save({}, { transacting })
+          }
+          newAgreementIds.push(agreement.id)
+          return agreement
         })
+
+        // If there are any new/different agreements track the date of the change so we can tell group members
+        // TODO: more sophisticated way to track what exactly changed in the text
+        const differentIds = xor(currentAgreementIds, newAgreementIds)
+        if (differentIds.length > 0) {
+          this.addSetting({ agreements_last_updated_at: (new Date()).toISOString() })
+          // Make sure that the user making the changes doesn't need to then accept the new agreements
+          const updatedByUserMembership = await GroupMembership.forPair(updatedByUserId, this.id).fetch()
+          if (updatedByUserMembership) {
+            await updatedByUserMembership.save({ settings: { agreementsAcceptedAt: (new Date()).toISOString() } }, { transacting })
+          }
+        }
 
         await GroupAgreement.where({ group_id: this.id }).destroy({ require: false, transacting })
         let order = 1
@@ -653,7 +674,7 @@ module.exports = bookshelf.Model.extend(merge({
       access_code,
       created_at: new Date(),
       created_by_id: userId,
-      settings: { allow_group_invites: false, public_member_directory: false }
+      settings: { allow_group_invites: false, agreements_last_updated_at: null, public_member_directory: false }
     }))
 
     const memberships = await bookshelf.transaction(async trx => {
