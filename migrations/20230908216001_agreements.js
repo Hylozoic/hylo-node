@@ -1,4 +1,3 @@
-
 exports.up = async function(knex, Promise) {
   await knex.schema.createTable('agreements', table => {
     table.increments().primary()
@@ -18,6 +17,9 @@ exports.up = async function(knex, Promise) {
     table.timestamp('updated_at')
   })
 
+  await knex.raw('alter table groups_agreements alter constraint groups_agreements_group_id_foreign deferrable initially deferred')
+  await knex.raw('alter table groups_agreements alter constraint groups_agreements_agreement_id_foreign deferrable initially deferred')
+
   await knex.schema.createTable('users_groups_agreements', table => {
     table.increments().primary()
     table.bigInteger('group_id').references('id').inTable('groups').notNullable()
@@ -27,6 +29,10 @@ exports.up = async function(knex, Promise) {
     table.timestamp('created_at')
     table.timestamp('updated_at')
   })
+
+  await knex.raw('alter table users_groups_agreements alter constraint users_groups_agreements_group_id_foreign deferrable initially deferred')
+  await knex.raw('alter table users_groups_agreements alter constraint users_groups_agreements_agreement_id_foreign deferrable initially deferred')
+  await knex.raw('alter table users_groups_agreements alter constraint users_groups_agreements_user_id_foreign deferrable initially deferred')
 }
 
 exports.down = async function(knex, Promise) {
