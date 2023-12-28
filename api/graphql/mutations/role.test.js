@@ -39,7 +39,7 @@ describe('roles mutations', () => {
 
   it('adds a role to a group member', async () => {
     const groupRole = await addGroupRole({ groupId: group.id, color, name, emoji, userId: user2.id })
-    const memberRole = await addRoleToMember({ userId: user2.id, groupRoleId: groupRole.get('id'), personId: user.id, groupId: group.id })
+    const memberRole = await addRoleToMember({ userId: user2.id, roleId: groupRole.get('id'), personId: user.id, groupId: group.id })
     expect(parseInt(memberRole.get('group_role_id'))).to.equal(groupRole.get('id'))
   })
 

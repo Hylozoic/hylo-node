@@ -123,14 +123,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     }
 
     const gm = await this.forPair(userOrId, groupId).fetch(opts)
-    if (!gm.hasRole(this.Role.MODERATOR)) {
+    if (gm && !gm.hasRole(this.Role.MODERATOR)) {
       responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
     }
 
-    if (!gm.hasRole(this.Role.MODERATOR) && !responsibilities.includes(additionalResponsibility)) {
+    if ((gm && !gm.hasRole(this.Role.MODERATOR)) && !responsibilities.includes(additionalResponsibility)) {
       return false
     }
-    return gm
+    return !!gm
   },
 
   async setModeratorRole (userId, group) {
