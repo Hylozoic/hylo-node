@@ -14,10 +14,10 @@ export async function updateMembership (userId, { groupId, data, data: { setting
     if (!membership) throw new GraphQLYogaError("Couldn't find membership for group with id", groupId)
     if (!isEmpty(settings)) membership.addSetting(settings)
     if (!isEmpty(whitelist)) membership.set(whitelist)
-    if (membership.changed) await membership.save({}, { transacting })
     if (data.acceptAgreements) {
       await membership.acceptAgreements(transacting)
     }
+    if (membership.changed) await membership.save({}, { transacting })
     return membership
   })
 }

@@ -34,15 +34,14 @@ export default function makeModels (userId, isAdmin, apiClient) {
   return {
     Agreement: {
       model: Agreement,
+      isDefaultTypeForTable: true,
       attributes: [
         'id',
-        'accepted',
         'description',
         'order',
         'title'
       ],
       getters: {
-        accepted: a => a.pivot && a.pivot.get('accepted'),
         order: a => a.pivot && a.pivot.get('order')
       }
     },
@@ -135,6 +134,17 @@ export default function makeModels (userId, isAdmin, apiClient) {
         hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR)
       },
       filter: nonAdminFilter(membershipFilter(userId))
+    },
+
+    MembershipAgreement: {
+      model: Agreement,
+      attributes: [
+        'id',
+        'accepted'
+      ],
+      getters: {
+        accepted: a => a.pivot && a.pivot.get('accepted')
+      }
     },
 
     Person: {
@@ -341,7 +351,17 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { groupToGroupJoinQuestions: { querySet: true } },
         { joinQuestions: { querySet: true } },
         { moderators: { querySet: true } },
-        { memberships: { querySet: true } },
+        {
+          memberships: {
+            querySet: true,
+            filter: (relation, { userId }) =>
+              relation.query(q => {
+                if (userId) {
+                  q.where('group_memberships.user_id', userId)
+                }
+              })
+          }
+        },
         {
           members: {
             querySet: true,
