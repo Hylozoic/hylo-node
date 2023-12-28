@@ -12,23 +12,24 @@ export function myGroupIdsSqlFragment (userId) {
     and "groups"."active" = true)`
 }
 
-describe('Group', function() {
+describe('Group', function () {
   it('can be created', function () {
-    var group = new Group({slug: 'foo', name: 'foo', access_code: 'foo!', group_data_type: 1})
-    return group.save().then(function() {
+    const group = new Group({ slug: 'foo', name: 'foo', access_code: 'foo!', group_data_type: 1 })
+    return group.save().then(function () {
       expect(group.id).to.exist
     })
   })
 
-  it('creates with default banner and avatar', async function() {
+  it('creates with default banner and avatar', async function () {
     const data = {
-      'name': 'my group',
-      'description': 'a group description',
-      'slug': 'comm1'
+      name: 'my group',
+      description: 'a group description',
+      slug: 'comm1'
     }
 
-    const user = await new User({name: 'username', email: 'john1@foo.com', active: true}).save()
-    const group = await Group.create(user.id, data)
+    const user = await new User({ name: 'username', email: 'john1@foo.com', active: true }).save()
+    await new Tag({ name: 'general' }).save()
+    await Group.create(user.id, data)
     const savedGroup = await Group.find('comm1')
     expect(savedGroup.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg')
     expect(savedGroup.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png')
@@ -125,17 +126,17 @@ describe('Group', function() {
       })
     })
 
-    it('merges new settings to existing memberships and creates new ones', async function() {
-      const results = await group.addMembers([u1.id, u2.id], {role: 1, settings: {there: true}})
+    it('merges new settings to existing memberships and creates new ones', async function () {
+      const results = await group.addMembers([u1.id, u2.id], { role: 1, settings: { there: true } })
       expect(results.length).to.equal(2)
 
       await gm1.refresh()
-      expect(gm1.get('settings')).to.deep.equal({here: true, there: true})
+      expect(gm1.get('settings')).to.deep.equal({ here: true, there: true })
       expect(gm1.get('role')).to.equal(1)
 
       const gm2 = await group.memberships()
-      .query(q => q.where('user_id', u2.id)).fetchOne()
-      expect(gm2.get('settings')).to.deep.equal({there: true})
+        .query(q => q.where('user_id', u2.id)).fetchOne()
+      expect(gm2.get('settings')).to.deep.equal({ agreementsAcceptedAt: null, showJoinForm: true, there: true })
       expect(gm2.get('role')).to.equal(1)
     })
   })

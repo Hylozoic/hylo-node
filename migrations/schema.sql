@@ -71,6 +71,39 @@ ALTER SEQUENCE public.activity_id_seq OWNED BY public.activities.id;
 
 
 --
+-- Name: agreements; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.agreements (
+    id integer NOT NULL,
+    title text,
+    description text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: agreements_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.agreements_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: agreements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.agreements_id_seq OWNED BY public.agreements.id;
+
+
+--
 -- Name: blocked_users; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -651,7 +684,8 @@ CREATE TABLE public.tag_follows (
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
     new_post_count integer DEFAULT 0,
-    group_id bigint NOT NULL
+    group_id bigint NOT NULL,
+    last_read_post_id bigint
 );
 
 
@@ -1043,8 +1077,44 @@ CREATE TABLE public.groups (
     moderator_descriptor character varying(255) DEFAULT NULL::character varying,
     moderator_descriptor_plural character varying(255) DEFAULT NULL::character varying,
     about_video_uri character varying(255),
-    allow_in_public boolean DEFAULT false
+    allow_in_public boolean DEFAULT false,
+    purpose text
 );
+
+
+--
+-- Name: groups_agreements; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.groups_agreements (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    agreement_id bigint NOT NULL,
+    active boolean DEFAULT true,
+    "order" integer,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: groups_agreements_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.groups_agreements_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: groups_agreements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.groups_agreements_id_seq OWNED BY public.groups_agreements.id;
 
 
 --
@@ -1078,6 +1148,7 @@ CREATE TABLE public.groups_posts (
     group_id bigint NOT NULL
 );
 
+
 --
 -- Name: groups_roles; Type: TABLE; Schema: public; Owner: -
 --
@@ -1086,12 +1157,12 @@ CREATE TABLE public.groups_roles (
     id integer NOT NULL,
     group_id bigint,
     name character varying(255),
-    description character varying(255),
     emoji character varying(255),
     color character varying(255),
+    active boolean,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    active boolean
+    description character varying(255)
 );
 
 
@@ -1100,6 +1171,7 @@ CREATE TABLE public.groups_roles (
 --
 
 CREATE SEQUENCE public.groups_roles_id_seq
+    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -1401,14 +1473,19 @@ CREATE TABLE public.media (
     "position" integer DEFAULT 0
 );
 
+
+--
+-- Name: members_roles; Type: TABLE; Schema: public; Owner: -
+--
+
 CREATE TABLE public.members_roles (
     id integer NOT NULL,
     group_id bigint NOT NULL,
     user_id bigint NOT NULL,
     group_role_id bigint NOT NULL,
+    active boolean,
     created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    active boolean
+    updated_at timestamp with time zone
 );
 
 
@@ -1730,8 +1807,9 @@ CREATE TABLE public.posts (
     is_public boolean DEFAULT false,
     donations_link character varying(255),
     project_management_link character varying(255),
+    link_preview_featured boolean DEFAULT false,
     reactions_summary jsonb,
-    link_preview_featured boolean DEFAULT false
+    timezone character varying(255)
 );
 
 
@@ -2011,6 +2089,34 @@ CREATE SEQUENCE public.queued_pushes_id_seq
 --
 
 ALTER SEQUENCE public.queued_pushes_id_seq OWNED BY public.push_notifications.id;
+
+
+--
+-- Name: vote_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.vote_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: reactions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reactions (
+    id bigint DEFAULT nextval('public.vote_seq'::regclass) NOT NULL,
+    user_id bigint,
+    entity_id bigint,
+    date_reacted timestamp with time zone,
+    emoji_base text,
+    emoji_full text,
+    emoji_label text,
+    entity_type text
+);
 
 
 --
@@ -2465,10 +2571,26 @@ ALTER SEQUENCE public.users_community_id_seq OWNED BY public.communities_users.i
 
 
 --
--- Name: vote_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: users_groups_agreements; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.vote_seq
+CREATE TABLE public.users_groups_agreements (
+    id integer NOT NULL,
+    group_id bigint NOT NULL,
+    agreement_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    accepted boolean DEFAULT true,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: users_groups_agreements_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.users_groups_agreements_id_seq
+    AS integer
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -2477,19 +2599,11 @@ CREATE SEQUENCE public.vote_seq
 
 
 --
--- Name: reactions; Type: TABLE; Schema: public; Owner: -
+-- Name: users_groups_agreements_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-CREATE TABLE public.reactions (
-    id bigint DEFAULT nextval('public.vote_seq'::regclass) NOT NULL,
-    user_id bigint,
-    entity_id bigint,
-    date_reacted timestamp with time zone,
-    emoji_base text,
-    emoji_full text,
-    emoji_label text,
-    entity_type text
-);
+ALTER SEQUENCE public.users_groups_agreements_id_seq OWNED BY public.users_groups_agreements.id;
+
 
 --
 -- Name: widgets; Type: TABLE; Schema: public; Owner: -
@@ -2522,10 +2636,84 @@ ALTER SEQUENCE public.widgets_id_seq OWNED BY public.widgets.id;
 
 
 --
+-- Name: zapier_triggers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.zapier_triggers (
+    id integer NOT NULL,
+    user_id bigint,
+    is_active boolean DEFAULT true,
+    type character varying(255) NOT NULL,
+    target_url character varying(255) NOT NULL,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    params jsonb
+);
+
+
+--
+-- Name: zapier_triggers_groups; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.zapier_triggers_groups (
+    id integer NOT NULL,
+    zapier_trigger_id bigint,
+    group_id bigint
+);
+
+
+--
+-- Name: zapier_triggers_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.zapier_triggers_groups_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: zapier_triggers_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.zapier_triggers_groups_id_seq OWNED BY public.zapier_triggers_groups.id;
+
+
+--
+-- Name: zapier_triggers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.zapier_triggers_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: zapier_triggers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.zapier_triggers_id_seq OWNED BY public.zapier_triggers.id;
+
+
+--
 -- Name: activities id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.activities ALTER COLUMN id SET DEFAULT nextval('public.activity_id_seq'::regclass);
+
+
+--
+-- Name: agreements id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agreements ALTER COLUMN id SET DEFAULT nextval('public.agreements_id_seq'::regclass);
 
 
 --
@@ -2669,18 +2857,6 @@ ALTER TABLE ONLY public.group_widgets ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
--- Name: groups_roles id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_roles ALTER COLUMN id SET DEFAULT nextval('public.groups_roles_id_seq'::regclass);
-
---
--- Name: members_roles id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.members_roles ALTER COLUMN id SET DEFAULT nextval('public.members_roles_id_seq'::regclass);
-
---
 -- Name: groups id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2688,10 +2864,24 @@ ALTER TABLE ONLY public.groups ALTER COLUMN id SET DEFAULT nextval('public.group
 
 
 --
+-- Name: groups_agreements id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_agreements ALTER COLUMN id SET DEFAULT nextval('public.groups_agreements_id_seq'::regclass);
+
+
+--
 -- Name: groups_posts id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.groups_posts ALTER COLUMN id SET DEFAULT nextval('public.post_community_id_seq'::regclass);
+
+
+--
+-- Name: groups_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_roles ALTER COLUMN id SET DEFAULT nextval('public.groups_roles_id_seq'::regclass);
 
 
 --
@@ -2741,6 +2931,13 @@ ALTER TABLE ONLY public.link_previews ALTER COLUMN id SET DEFAULT nextval('publi
 --
 
 ALTER TABLE ONLY public.locations ALTER COLUMN id SET DEFAULT nextval('public.locations_id_seq'::regclass);
+
+
+--
+-- Name: members_roles id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_roles ALTER COLUMN id SET DEFAULT nextval('public.members_roles_id_seq'::regclass);
 
 
 --
@@ -2898,10 +3095,31 @@ ALTER TABLE ONLY public.user_verification_codes ALTER COLUMN id SET DEFAULT next
 
 
 --
+-- Name: users_groups_agreements id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users_groups_agreements ALTER COLUMN id SET DEFAULT nextval('public.users_groups_agreements_id_seq'::regclass);
+
+
+--
 -- Name: widgets id; Type: DEFAULT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.widgets ALTER COLUMN id SET DEFAULT nextval('public.widgets_id_seq'::regclass);
+
+
+--
+-- Name: zapier_triggers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.zapier_triggers ALTER COLUMN id SET DEFAULT nextval('public.zapier_triggers_id_seq'::regclass);
+
+
+--
+-- Name: zapier_triggers_groups id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.zapier_triggers_groups ALTER COLUMN id SET DEFAULT nextval('public.zapier_triggers_groups_id_seq'::regclass);
 
 
 --
@@ -2951,6 +3169,14 @@ UNION
 
 ALTER TABLE ONLY public.activities
     ADD CONSTRAINT activity_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: agreements agreements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.agreements
+    ADD CONSTRAINT agreements_pkey PRIMARY KEY (id);
 
 
 --
@@ -3162,6 +3388,14 @@ ALTER TABLE ONLY public.groups
 
 
 --
+-- Name: groups_agreements groups_agreements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_agreements
+    ADD CONSTRAINT groups_agreements_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: groups groups_group_data_id_group_data_type_unique; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3183,6 +3417,14 @@ ALTER TABLE ONLY public.groups
 
 ALTER TABLE ONLY public.groups_posts
     ADD CONSTRAINT groups_posts_group_id_post_id_unique UNIQUE (group_id, post_id);
+
+
+--
+-- Name: groups_roles groups_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_roles
+    ADD CONSTRAINT groups_roles_pkey PRIMARY KEY (id);
 
 
 --
@@ -3255,6 +3497,14 @@ ALTER TABLE ONLY public.link_previews
 
 ALTER TABLE ONLY public.locations
     ADD CONSTRAINT locations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: members_roles members_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_roles
+    ADD CONSTRAINT members_roles_pkey PRIMARY KEY (id);
 
 
 --
@@ -3402,11 +3652,13 @@ ALTER TABLE ONLY public.user_post_relevance
 
 
 --
--- Name: votes pk_vote; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: reactions pk_vote; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reactions
     ADD CONSTRAINT pk_vote PRIMARY KEY (id);
+
+
 --
 -- Name: groups_posts post_community_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -3654,6 +3906,7 @@ ALTER TABLE ONLY public.thanks
 ALTER TABLE ONLY public.group_invites
     ADD CONSTRAINT uq_no_multiple_tokens UNIQUE (token);
 
+
 --
 -- Name: user_affiliations user_affiliations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -3711,6 +3964,14 @@ ALTER TABLE ONLY public.communities_users
 
 
 --
+-- Name: users_groups_agreements users_groups_agreements_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users_groups_agreements
+    ADD CONSTRAINT users_groups_agreements_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: widgets widgets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3719,30 +3980,26 @@ ALTER TABLE ONLY public.widgets
 
 
 --
+-- Name: zapier_triggers_groups zapier_triggers_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.zapier_triggers_groups
+    ADD CONSTRAINT zapier_triggers_groups_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: zapier_triggers zapier_triggers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.zapier_triggers
+    ADD CONSTRAINT zapier_triggers_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: communities_tags_community_id_visibility_index; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX communities_tags_community_id_visibility_index ON public.groups_tags USING btree (community_id, visibility);
-
---
--- Name: idx_reactions_emoji_full; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_reactions_emoji_full ON public.reactions USING btree (emoji_base);
-
-
---
--- Name: idx_reactions_entity_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_reactions_entity_id ON public.reactions USING btree (entity_id);
-
-
---
--- Name: idx_reactions_entity_type; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_reactions_entity_type ON public.reactions USING btree (entity_type);
 
 
 --
@@ -3809,6 +4066,13 @@ CREATE INDEX group_widgets_group_id_index ON public.group_widgets USING btree (g
 
 
 --
+-- Name: groups_roles_group_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX groups_roles_group_id_index ON public.groups_roles USING btree (group_id);
+
+
+--
 -- Name: groups_suggested_skills_group_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3834,6 +4098,27 @@ CREATE INDEX groups_visibility_index ON public.groups USING btree (visibility);
 --
 
 CREATE INDEX idx_fts_search ON public.search_index USING gin (document);
+
+
+--
+-- Name: idx_reactions_emoji_full; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reactions_emoji_full ON public.reactions USING btree (emoji_base);
+
+
+--
+-- Name: idx_reactions_entity_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reactions_entity_id ON public.reactions USING btree (entity_id);
+
+
+--
+-- Name: idx_reactions_entity_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reactions_entity_type ON public.reactions USING btree (entity_type);
 
 
 --
@@ -3949,13 +4234,6 @@ CREATE INDEX ix_thank_you_user_2 ON public.thanks USING btree (user_id);
 
 
 --
--- Name: ix_vote_post_14; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX ix_vote_post_14 ON public.reactions USING btree (entity_id);
-
-
---
 -- Name: ix_vote_user_13; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -3981,6 +4259,13 @@ CREATE INDEX join_requests_community_id_status_index ON public.join_requests USI
 --
 
 CREATE INDEX location_center_idx ON public.locations USING gist (center);
+
+
+--
+-- Name: members_roles_group_id_user_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX members_roles_group_id_user_id_index ON public.members_roles USING btree (group_id, user_id);
 
 
 --
@@ -4023,6 +4308,13 @@ CREATE INDEX saved_searches_user_id_index ON public.saved_searches USING btree (
 --
 
 CREATE INDEX user_verification_codes_email_index ON public.user_verification_codes USING btree (email);
+
+
+--
+-- Name: zapier_triggers_groups_zapier_trigger_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX zapier_triggers_groups_zapier_trigger_id_index ON public.zapier_triggers_groups USING btree (zapier_trigger_id);
 
 
 --
@@ -4530,15 +4822,7 @@ ALTER TABLE ONLY public.communities_users
 
 
 --
--- Name: votes fk_vote_post_14; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT fk_vote_post_14 FOREIGN KEY (entity_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: votes fk_vote_user_13; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: reactions fk_vote_user_13; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.reactions
@@ -4614,7 +4898,7 @@ ALTER TABLE ONLY public.group_extensions
 --
 
 ALTER TABLE ONLY public.group_extensions
-    ADD CONSTRAINT group_extensions_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+    ADD CONSTRAINT group_extensions_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id);
 
 
 --
@@ -4754,6 +5038,22 @@ ALTER TABLE ONLY public.group_widgets
 
 
 --
+-- Name: groups_agreements groups_agreements_agreement_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_agreements
+    ADD CONSTRAINT groups_agreements_agreement_id_foreign FOREIGN KEY (agreement_id) REFERENCES public.agreements(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: groups_agreements groups_agreements_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_agreements
+    ADD CONSTRAINT groups_agreements_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: groups groups_created_by_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4775,6 +5075,14 @@ ALTER TABLE ONLY public.groups
 
 ALTER TABLE ONLY public.groups_posts
     ADD CONSTRAINT groups_posts_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: groups_roles groups_roles_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.groups_roles
+    ADD CONSTRAINT groups_roles_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -4855,6 +5163,30 @@ ALTER TABLE ONLY public.join_requests
 
 ALTER TABLE ONLY public.media
     ADD CONSTRAINT media_comment_id_foreign FOREIGN KEY (comment_id) REFERENCES public.comments(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_roles members_roles_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_roles
+    ADD CONSTRAINT members_roles_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_roles members_roles_group_role_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_roles
+    ADD CONSTRAINT members_roles_group_role_id_foreign FOREIGN KEY (group_role_id) REFERENCES public.groups_roles(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: members_roles members_roles_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.members_roles
+    ADD CONSTRAINT members_roles_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
@@ -5082,6 +5414,14 @@ ALTER TABLE ONLY public.tag_follows
 
 
 --
+-- Name: tag_follows tag_follows_last_read_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_follows
+    ADD CONSTRAINT tag_follows_last_read_post_id_foreign FOREIGN KEY (last_read_post_id) REFERENCES public.posts(id);
+
+
+--
 -- Name: user_affiliations user_affiliations_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5122,6 +5462,30 @@ ALTER TABLE ONLY public.communities_users
 
 
 --
+-- Name: users_groups_agreements users_groups_agreements_agreement_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users_groups_agreements
+    ADD CONSTRAINT users_groups_agreements_agreement_id_foreign FOREIGN KEY (agreement_id) REFERENCES public.agreements(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_groups_agreements users_groups_agreements_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users_groups_agreements
+    ADD CONSTRAINT users_groups_agreements_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: users_groups_agreements users_groups_agreements_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users_groups_agreements
+    ADD CONSTRAINT users_groups_agreements_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: users users_location_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5138,10 +5502,28 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Data seeding
+-- Name: zapier_triggers_groups zapier_triggers_groups_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-insert into tags (name) values ('general') ON CONFLICT DO NOTHING
+ALTER TABLE ONLY public.zapier_triggers_groups
+    ADD CONSTRAINT zapier_triggers_groups_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: zapier_triggers_groups zapier_triggers_groups_trigger_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.zapier_triggers_groups
+    ADD CONSTRAINT zapier_triggers_groups_trigger_id_foreign FOREIGN KEY (zapier_trigger_id) REFERENCES public.zapier_triggers(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: zapier_triggers zapier_triggers_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.zapier_triggers
+    ADD CONSTRAINT zapier_triggers_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
 
 --
 -- PostgreSQL database dump complete

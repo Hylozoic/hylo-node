@@ -362,8 +362,6 @@ type AffiliationQuerySet {
 # An agreement used by a Group
 type Agreement {
   id: Int
-  # Whether a user has accepted this agreement or not (only included when accessed through a Membership)
-  accepted: Boolean
   createdAt: Date
   # The content of the agreement
   description: String
@@ -711,7 +709,10 @@ type Group {
   ): PersonQuerySet
 
   # Group memberships (returns the membership objects instead of the Person objects of the members)
-  memberships: MembershipQuerySet
+  memberships(
+    # If set then return only the memberships for a specific user
+    userId: ID
+  ): MembershipQuerySet
 
   # The group moderators
   moderators(
@@ -903,6 +904,8 @@ type GroupJoinQuestionQuerySet {
 
 # Group settings
 type GroupSettings {
+  # The last date/time that the group agreements were updated
+  agreementsLastUpdatedAt: Date
   # Whether this group allows non-moderators to invite people (not currently used)
   allowGroupInvites: Boolean
   # Whether to require questions being answered when a group requests to join this group
@@ -1329,7 +1332,7 @@ type Me {
 type Membership {
   id: ID
   # The agreements this user has agreed to (or not) for this group
-  agreements: AgreementQuerySet
+  agreements: MembershipAgreementQuerySet
   createdAt: Date
   groupId: ID
   group: Group
@@ -1352,8 +1355,25 @@ type MembershipQuerySet {
   items: [Membership]
 }
 
+# A relationship between a user and a group agreement
+type MembershipAgreement {
+  # The agreement id
+  id: Int
+  # Whether a user has accepted this agreement or not
+  accepted: Boolean
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type MembershipAgreementQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [MembershipAgreement]
+}
+
 # Settinga for a user's group membership
 type MembershipSettings {
+  # When the member last accepted the agreements of the group
+  agreementsAcceptedAt: Date
   # Whether the user wants to get email notifications from this group
   sendEmail: Boolean
   # Whether this user has yet seen the form that appears when first joining a new group
