@@ -216,6 +216,70 @@ CREATE TABLE public.comments_tags (
     updated_at timestamp with time zone
 );
 
+--
+-- Name: responsibilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.responsibilities (
+    id serial NOT NULL,
+    title text NOT NULL,
+    description text,
+    type text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    group_id bigint REFERENCES public.groups(id)
+);
+
+
+--
+-- Name: common_roles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.common_roles (
+    id serial NOT NULL,
+    name text NOT NULL,
+    description text,
+    emoji text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
+);
+
+
+--
+-- Name: group_roles_responsibilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_roles_responsibilities (
+    id serial NOT NULL,
+    group_role_id bigint REFERENCES public.groups_roles(id),
+    responsibility_id bigint REFERENCES public.responsibilities(id)
+);
+
+
+--
+-- Name: common_roles_responsibilities; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.common_roles_responsibilities (
+    id serial NOT NULL,
+    common_role_id bigint REFERENCES public.common_roles(id),
+    responsibility_id bigint REFERENCES public.responsibilities(id)
+);
+
+
+--
+-- Name: common_roles_group_memberships; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.common_roles_group_memberships (
+    id serial NOT NULL,
+    common_role_id bigint REFERENCES public.common_roles(id),
+    user_id bigint REFERENCES public.users(id),
+    group_id bigint REFERENCES public.groups(id),
+    group_membership_id bigint REFERENCES public.group_memberships(id)
+);
+
+
 
 --
 -- Name: comments_tags_id_seq; Type: SEQUENCE; Schema: public; Owner: -
