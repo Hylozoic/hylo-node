@@ -2706,7 +2706,7 @@ CREATE TABLE public.responsibilities (
     type text,
     created_at timestamp with time zone,
     updated_at timestamp with time zone,
-    group_id bigint REFERENCES public.groups(id)
+    group_id bigint
 );
 
 
