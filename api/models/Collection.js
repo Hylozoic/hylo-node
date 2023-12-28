@@ -46,6 +46,7 @@ module.exports = bookshelf.Model.extend({
         .andWhere(q => {
           q.where({ user_id: userId })
             .orWhereIn('group_id', Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR }))
+            // TODO: need to add responsibilities here
         })
     })
 

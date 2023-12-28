@@ -10,6 +10,7 @@ import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
 import { generateHyloJWT } from '../../lib/HyloJWT'
+import MemberCommonRole from './MemberCommonRole'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
@@ -107,7 +108,7 @@ module.exports = bookshelf.Model.extend(merge({
       })
   },
 
-  memberships() {
+  memberships () {
     return this.hasMany(GroupMembership)
       .query(q => q.leftJoin('groups', 'groups.id', 'group_memberships.group_id')
         .where('group_memberships.active', true)
@@ -115,10 +116,15 @@ module.exports = bookshelf.Model.extend(merge({
       )
   },
 
-  groupRoles() {
+  groupRoles () {
     return this.belongsToMany(GroupRole)
       .through(MemberRole, 'user_id', 'group_role_id')
       .where('groups_roles.active', true)
+  },
+
+  commonRoles () {
+    return this.belongsToMany(CommonRole)
+      .through(MemberCommonRole, 'user_id', 'common_role_id')
   },
 
   contributions: function () {

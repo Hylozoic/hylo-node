@@ -49,8 +49,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     const user = await User.find(userId, { transacting })
     const fromGroup = await this.fromGroup().fetch({ transacting })
-    if (!GroupMembership.hasModeratorRole(user, fromGroup)) {
-      // The person trying to cancel the invite does not have permission
+    if (!GroupMembership.hasModeratorRole(user, fromGroup, {}, Responsibility.constants.RESP_ADMINISTRATION)) {
       throw new GraphQLYogaError('Not permitted to do this')
     }
 
@@ -69,7 +68,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     const user = await User.find(userId, { transacting })
     const toGroup = await this.toGroup().fetch({ transacting })
-    if (!GroupMembership.hasModeratorRole(user, toGroup)) {
+    if (!GroupMembership.hasModeratorRole(user, toGroup, {}, Responsibility.constants.RESP_ADMINISTRATION)) {
       // The person trying to process the invite does not have permission
       throw new GraphQLYogaError('Not permitted to do this')
     }

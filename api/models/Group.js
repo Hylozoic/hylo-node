@@ -153,6 +153,18 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
+  availableResponsibitlies () {
+    return Responsibility.collection().query(q => {
+      q.whereRaw('group_id = ? or group_id is null', this.id)
+    })
+  },
+
+  commonRoles () {
+    return bookshelf.knex.raw(
+      'select * from common_roles'
+    ).then(resp => resp.rows)
+  },
+
   members (where) {
     return this.belongsToMany(User).through(GroupMembership)
       .query(q => {
@@ -768,7 +780,7 @@ module.exports = bookshelf.Model.extend(merge({
   messageModerators: async function(fromUserId, groupId) {
     // Make sure they can only message a group they can see
     const group = await groupFilter(fromUserId)(Group.where({ id: groupId })).fetch()
-
+    // TODO: ADD RESP TO THIS ONE
     if (group) {
       const moderators = await group.moderators().fetch()
       if (moderators.length > 0) {

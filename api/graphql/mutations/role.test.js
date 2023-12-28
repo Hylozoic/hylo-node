@@ -45,8 +45,8 @@ describe('roles mutations', () => {
 
   it('removes a group role from a group member', async () => {
     const groupRole = await addGroupRole({ groupId: group.id, color, name, emoji, userId: user2.id })
-    const memberRole = await addRoleToMember({ userId: user2.id, groupRoleId: groupRole.get('id'), personId: user.id, groupId: group.id })
-    const deleted = await removeRoleFromMember({ userId: user2.id, groupRoleId: groupRole.get('id'), personId: user.id, groupId: group.id })
+    const memberRole = await addRoleToMember({ userId: user2.id, roleId: groupRole.get('id'), personId: user.id, groupId: group.id })
+    const deleted = await removeRoleFromMember({ userId: user2.id, roleId: groupRole.get('id'), personId: user.id, groupId: group.id })
     expect(deleted.get('id')).to.equal(undefined)
   })
 

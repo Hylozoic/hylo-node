@@ -8,6 +8,9 @@ module.exports = bookshelf.Model.extend({
   group: function () {
     return this.belongsTo(Group)
   },
+  responsibilities: function () {
+    return this.belongsToMany(Responsibility, 'group_roles_responsibilities', 'group_role_id', 'responsibility_id')
+  }
 }, {
-
+  
 })

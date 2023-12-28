@@ -402,8 +402,8 @@ module.exports = bookshelf.Model.extend(Object.assign({
         reason: `newPost: ${group.id}`
       }))
 
-      const isModerator = await GroupMembership.hasModeratorRole(this.get('user_id'), group)
-      if (this.get('announcement') && isModerator) {
+      const isModerator = await GroupMembership.hasModeratorRole(this.get('user_id'), group, {}, Responsibility.constants.RESP_ADMINISTRATION)
+      if (this.get('announcement') && (isModerator)) {
         const announcees = userIds.map(userId => ({
           reader_id: userId,
           post_id: this.id,

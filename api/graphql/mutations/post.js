@@ -58,7 +58,8 @@ export function deletePost (userId, postId) {
 
 export async function pinPost (userId, postId, groupId) {
   const group = await Group.find(groupId)
-  return GroupMembership.hasModeratorRole(userId, group)
+  const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
+  return GroupMembership.hasModeratorRole(userId, group, {}, Responsibility.constants.RESP_MANAGE_CONTENT)
   .then(isModerator => {
     if (!isModerator) throw new GraphQLYogaError("You don't have permission to modify this group")
     return PostMembership.find(postId, groupId)

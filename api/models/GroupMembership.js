@@ -16,6 +16,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
       .withPivot(['accepted'])
   },
 
+  commonRoles () {
+    return this.belongsToMany(CommonRole, 'common_roles_group_memberships', 'group_membership_id', 'common_role_id')
+  },
+
+  commonRolesTotal () {
+    return 1 // "Membership.commonRolesTotal defined in resolvers, but not in schema"
+  },
+
   group () {
     return this.belongsTo(Group)
   },
@@ -102,9 +110,26 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  async hasModeratorRole (userOrId, groupOrId, opts) {
-    const gm = await this.forPair(userOrId, groupOrId).fetch(opts)
-    return gm && gm.hasRole(this.Role.MODERATOR)
+  async hasModeratorRole (userOrId, groupOrId, opts = {}, additionalResponsibility = '') {
+    const userId = userOrId instanceof User ? userOrId.id : userOrId
+    const groupId = groupOrId instanceof Group ? groupOrId.id : groupOrId
+    let responsibilities = []
+    if (!userId) {
+      throw new Error("Can't call forPair without a user or user id")
+    }
+    if (!groupId) {
+      throw new Error("Can't call forPair without a group or group id")
+    }
+
+    const gm = await this.forPair(userOrId, groupId).fetch(opts)
+    if (!gm.hasRole(this.Role.MODERATOR)) {
+      responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
+    }
+
+    if (!gm.hasRole(this.Role.MODERATOR) && !responsibilities.includes(additionalResponsibility)) {
+      return false
+    }
+    return gm
   },
 
   async setModeratorRole (userId, group) {

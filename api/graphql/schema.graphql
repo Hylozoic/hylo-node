@@ -227,6 +227,16 @@ type Query {
     types: [String]
   ): PostQuerySet
 
+  # Query for responsibilities
+  responsibilities(
+    # responsibilties for a group id
+    groupId: ID
+    # responsibilties for a groupRole id
+    groupRoleId: ID
+    # responsibilties for a commonRole id
+    commonRoleId: ID
+  ): [Responsibility]
+
   # Query for SavedSearches by user ID
   savedSearches(userId: ID): SavedSearchQuerySet
 
@@ -484,6 +494,20 @@ type CommentQuerySet {
   items: [Comment]
 }
 
+# Common Roles are role templates available to all groups for roles that are common across many groups
+type CommonRole {
+  id: ID
+  # The name of the role
+  name: String
+  # The description of the role
+  description: String
+  # The emoji/icon used for the role
+  emoji: String
+  # The responsiblities attached to the role
+  responsibilities: ResponsibilityQuerySet
+  responsibilitiesTotal: Int
+}
+
 # A CustomView for a Group
 type CustomView {
   id: ID
@@ -649,6 +673,9 @@ type Group {
     search: String
   ): GroupQuerySet
 
+  # Provide the list of common roles
+  commonRoles: [CommonRole]
+
   # CustomViews for this group
   customViews: CustomViewQuerySet
 
@@ -698,6 +725,8 @@ type Group {
     boundingBox: [PointInput],
     # Return members with a specific groupRole
     groupRoleId: ID,
+    # Return members with a specific groupCommonRole
+    groupCommonRoleId: ID,
     # Number of people to return
     first: Int,
     # For pagination, return people after this offset in the query results
@@ -799,6 +828,9 @@ type Group {
     # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
     types: [String]
   ): PostQuerySet
+
+  # All responsibilities available to the group
+  responsibilities: [Responsibility]
 
   # All skills of members in this group
   skills(
@@ -974,6 +1006,8 @@ type GroupRole {
   groupId: ID
   name: String
   updatedAt: Date
+  responsibilities: [Responsibility]
+  responsibilitiesTotal: Int
 }
 
 # A question required to be answered when a group requests to join this group
@@ -1024,6 +1058,20 @@ type GroupRoleQuerySet {
   total: Int
   hasMore: Boolean
   items: [GroupRole]
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ResponsibilityQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Responsibility]
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type GroupCommonRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [CommonRole]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1267,6 +1315,8 @@ type Me {
     sortBy: String
   ): [Group]
 
+  groupRoles: GroupRoleQuerySet
+
   # Set of pending invites to Groups
   groupInvitesPending: InvitationQuerySet
 
@@ -1343,6 +1393,8 @@ type Membership {
   # 0: default, 1: moderator
   role: Int
   settings: MembershipSettings
+  commonRoles: GroupCommonRoleQuerySet
+  commonRolesTotal: Int
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1473,6 +1525,10 @@ type Person {
     # Determines sort order, either 'ASC' or 'DESC'. Posts are sorted by order they were created.
     order: String
   ): CommentQuerySet
+  # Common roles that the user has in groups
+  commonRoles(
+    groupCommonRoleId: ID
+  ): GroupCommonRoleQuerySet
   # The events this person is attending (that are visible to logged in user)
   eventsAttending: PostQuerySet
   # The set of Group Memberships this person has (that are visible to logged in user)
@@ -1485,7 +1541,7 @@ type Person {
     order: String
   ): [Membership]
   # All the member roles for a user
-  groupRoles: [GroupRole]
+  groupRoles: GroupRoleQuerySet
   groupRolesTotal: Int
   # The set of Memberships to groups this person moderates (that are visible to logged in user
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
@@ -1753,6 +1809,19 @@ type ReactionQuerySet {
   items: [Reaction]
 }
 
+# Responsibilities are either group-level platform powers (such as removing content or inviting new members) or non-platform group-specific responsibilities (such as handles budget, consent team, etc)
+type Responsibility {
+  id: ID
+  # If the responsibility is mapped to a group_role
+  responsibilityId: ID
+  # Description of this responsibility
+  description: String
+  # The name of the responsibility
+  title: String
+  # The type of responsibility: 'system' or 'group'
+  type: String
+}
+
 # A saved set of search/filter parameters for the map that can be reloaded later by a user
 type SavedSearch {
   id: ID
@@ -1926,6 +1995,14 @@ type Mutation {
   acceptGroupRelationshipInvite(groupRelationshipInviteId: ID): AcceptGroupRelationshipInviteResult
   # For a moderator to accept a request from a Person to join a Group
   acceptJoinRequest(joinRequestId: ID): JoinRequest
+  # For a moderator to add a group responsibility to a group
+  addGroupResponsibility(
+    # The description of the responsibility
+    description: String,
+    # The name of the responsibility
+    title: String,
+    groupId: ID
+  ): Responsibility
   # For a moderator to add a badge/role to a group
   addGroupRole(
     color: String,
@@ -1947,11 +2024,18 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   # Add a Post to a Collection
   addPostToCollection(collectionId: ID, postId: ID): GenericResult
+  # Add responsibility to a role
+  addResponsibilityToRole(
+    responsibilityId: ID, 
+    groupRoleId: ID, 
+    groupId: ID
+  ): Responsibility
   # For a moderator to add a badge/role to a group to a member of a group
   addRoleToMember(
-    groupRoleId: ID,
+    roleId: ID,
     groupId: ID,
     personId: ID,
+    isCommonRole: Boolean
   ): GroupRole
   # Add a skill to your profile
   addSkill(
@@ -2015,6 +2099,12 @@ type Mutation {
   deleteGroup(id: ID): GenericResult
   # Remove the relationship between two groups if you are a moderator of one of them
   deleteGroupRelationship(parentId: ID, childId: ID): GenericResult
+  # Delete a group responsibility from a group
+  deleteGroupResponsibility(
+    responsibilityId: ID,
+     groupId: ID,
+     groupRoleId: ID
+  ): GenericResult
   # Hide a topic within a group (it will still appear on posts in the group)
   deleteGroupTopic(id: ID): GenericResult
   # Delete a post you created
@@ -2094,8 +2184,12 @@ type Mutation {
   removePost(postId: ID, slug: String, groupId: ID): GenericResult
   # Remove a Post from a Collection, if you have permission to
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
+  # Remove a group responsibility from a group
+  removeResponsibilityFromRole(
+    roleResponsibilityId: ID, groupRoleId: ID, groupId: ID
+  ): GenericResult
   # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
-  removeRoleFromMember(groupRoleId: ID, groupId: ID, personId: ID): GenericResult
+  removeRoleFromMember(roleId: ID, groupId: ID, personId: ID, isCommonRole: Boolean): GenericResult
   # Remove a skill from your user profile
   removeSkill(id: ID, name: String): GenericResult
   # Remove a skill you want to learn from your user profile
@@ -2148,6 +2242,16 @@ type Mutation {
     # Update group as a particular User (with permission)
     asUserId: ID
   ): Group
+  # Update a group responsibility
+  updateGroupResponsibility(
+    responsibilityId: ID,
+    # The description of the responsibility
+    description: String,
+    # The name of the responsibility
+    title: String
+    # groupId
+    groupId: ID
+  ): Responsibility
   # Update a badge/role from a group and all associated roles
   updateGroupRole(
     groupRoleId: ID
@@ -2691,6 +2795,14 @@ input ReactionInput {
   entityType: String
 }
 
+# Input for creating group responsibilities that don't have spceific power on the platform but convey information about a group member
+input ResponsibilityInput {
+  # The name of the responsibility
+  name: String
+  # The description of the responsibility
+  description: String
+}
+
 # A SavedSearch on the Map
 input SavedSearchInput {
   # The geographic bounding box
@@ -2737,4 +2849,3 @@ input UserSettingsInput {
   # The most recent stream post type filter used by this person
   streamPostType: String
 }
-
