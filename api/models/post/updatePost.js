@@ -40,13 +40,13 @@ export function afterUpdatingPost (post, opts) {
   } = opts
 
   return post.ensureLoad(['groups'])
-  .then(() => Promise.all([
-    updateChildren(post, requests, transacting),
-    updateGroups(post, group_ids, transacting),
-    updateAllMedia(post, params, transacting),
-    Tag.updateForPost(post, topicNames, userId, transacting),
-    updateFollowers(post, transacting)
-  ]))
-  .then(() => memberIds && post.setProjectMembers(memberIds, {transacting}))
-  .then(() => eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, {transacting}))
+    .then(() => Promise.all([
+      updateChildren(post, requests, transacting),
+      updateGroups(post, group_ids, transacting),
+      updateAllMedia(post, params, transacting),
+      Tag.updateForPost(post, topicNames, userId, transacting),
+      updateFollowers(post, transacting)
+    ]))
+    .then(() => post.get('type') === 'project' && memberIds && post.setProjectMembers(memberIds, { transacting }))
+    .then(() => post.get('type') === 'event' && eventInviteeIds && post.updateEventInvitees(eventInviteeIds, userId, { transacting }))
 }
