@@ -65,7 +65,6 @@ export const sendDigests = async () => {
     if (comments.length === 0) return []
 
     const firstGroup = post.relations.groups.first()
-    if (!firstGroup) return []
 
     const followers = await post.followers().fetch()
 
@@ -134,7 +133,7 @@ export const sendDigests = async () => {
             count: commentData.length,
             post_title: post.summary(),
             post_creator_avatar_url: post.relations.user.get('avatar_url'),
-            thread_url: Frontend.Route.comment({ comment: commentData[0], groupSlug: firstGroup.get('slug'), post }),
+            thread_url: Frontend.Route.comment({ comment: commentData[0], groupSlug: firstGroup?.get('slug'), post }),
             comments: commentData,
             subject_prefix: some(hasMention, commentData)
               ? 'You were mentioned in'
