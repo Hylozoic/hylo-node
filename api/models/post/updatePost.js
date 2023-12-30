@@ -39,7 +39,6 @@ export function afterUpdatingPost (post, opts) {
     transacting
   } = opts
 
-  console.log("post type", post.get('type'), post)
   return post.ensureLoad(['groups'])
     .then(() => Promise.all([
       updateChildren(post, requests, transacting),
