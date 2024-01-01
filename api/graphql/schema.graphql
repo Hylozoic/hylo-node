@@ -2047,7 +2047,7 @@ type Mutation {
   # Add responsibility to a role
   addResponsibilityToRole(
     responsibilityId: ID, 
-    groupRoleId: ID, 
+    roleId: ID, 
     groupId: ID
   ): Responsibility
   # For a moderator to add a badge/role to a group to a member of a group
@@ -2206,7 +2206,7 @@ type Mutation {
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
   # Remove a group responsibility from a group
   removeResponsibilityFromRole(
-    roleResponsibilityId: ID, groupRoleId: ID, groupId: ID
+    roleResponsibilityId: ID, groupId: ID
   ): GenericResult
   # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
   removeRoleFromMember(roleId: ID, groupId: ID, personId: ID, isCommonRole: Boolean): GenericResult

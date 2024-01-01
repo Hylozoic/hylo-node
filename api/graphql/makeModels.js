@@ -166,7 +166,6 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       getters: {
         messageThreadId: p => p.getMessageThreadWith(userId).then(post => post ? post.id : null),
-        // commonRoles: async p => p.commonRoles()
       },
       relations: [
         'memberships',

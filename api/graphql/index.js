@@ -309,8 +309,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
-    addResponsibilityToRole: (root, { responsibilityId, groupRoleId, groupId }) =>
-      addResponsibilityToRole({ userId, responsibilityId, groupRoleId, groupId }),
+    addResponsibilityToRole: (root, { responsibilityId, roleId, groupId }) =>
+      addResponsibilityToRole({ userId, responsibilityId, roleId, groupId }),
 
     addRoleToMember: (root, { personId, roleId, groupId, isCommonRole = false }) => addRoleToMember({ userId, personId, roleId, groupId, isCommonRole }),
 
@@ -451,8 +451,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     removePostFromCollection: (root, { collectionId, postId }) =>
       removePostFromCollection(userId, collectionId, postId),
 
-    removeResponsibilityFromRole: (root, { roleResponsibilityId, groupRoleId, groupId }) =>
-      removeResponsibilityFromRole({ userId, roleResponsibilityId, groupRoleId, groupId }),
+    removeResponsibilityFromRole: (root, { roleResponsibilityId, groupId }) =>
+      removeResponsibilityFromRole({ userId, roleResponsibilityId, groupId }),
 
     removeRoleFromMember: (root, { roleId, personId, groupId, isCommonRole }) => removeRoleFromMember({ roleId, personId, userId, groupId, isCommonRole }),
 
