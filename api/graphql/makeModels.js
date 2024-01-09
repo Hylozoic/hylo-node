@@ -524,7 +524,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         // Get number of prerequisite groups that current user is not a member of yet
         numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
         pendingInvitations: (g, { first }) => InvitationService.find({ groupId: g.id, pendingOnly: true }),
-        responsibilities: async g => g.availableResponsibitlies().fetch(),
+        responsibilities: async g => g.availableResponsibilities().fetch(),
         settings: g => mapKeys(camelCase, g.get('settings')),
         // XXX: Flag for translation
         typeDescriptor: g => g.get('type_descriptor') || (g.get('type') ? startCase(g.get('type')) : 'Group'),
@@ -606,7 +606,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       relations: [
         'group',
-        'responsibilities'
+        { responsibilities: { querySet: true } }
       ]
     },
 
@@ -830,18 +830,6 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       filter: nonAdminFilter(reactionFilter('reactions', userId))
     },
-    // Vote: { // TO BE REMOVED ONCE MOBILE IS UPDATED
-    //   model: Reaction,
-    //   getters: {
-    //     createdAt: v => v.get('date_reacted')
-    //   },
-    //   relations: [
-    //     'post',
-    //     { user: { alias: 'voter' } }
-    //   ],
-    //   filter: nonAdminFilter(reactionFilter('reactions', userId))
-    // },
-
     GroupTopic: {
       model: GroupTag,
       attributes: ['created_at', 'is_default', 'updated_at', 'visibility'],

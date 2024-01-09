@@ -3,6 +3,7 @@ import { isEmpty } from 'lodash'
 import {
   whereId
 } from './group/queryUtils'
+import MemberCommonRole from './MemberCommonRole'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
@@ -17,7 +18,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   commonRoles () {
-    return this.belongsToMany(CommonRole, 'common_roles_group_memberships', 'group_membership_id', 'common_role_id')
+    return this.belongsToMany(CommonRole, 'common_roles')
+      .through(MemberCommonRole, 'group_membership_id', 'common_role_id')
+      .where({ user_id: this.get('user_id') })
+      .withPivot(['group_id'])
   },
 
   commonRolesTotal () {

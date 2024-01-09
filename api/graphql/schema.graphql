@@ -495,12 +495,12 @@ type CommentQuerySet {
 # Common Roles are role templates available to all groups for roles that are common across many groups
 type CommonRole {
   id: ID
-  # The name of the role
-  name: String
   # The description of the role
   description: String
   # The emoji/icon used for the role
   emoji: String
+  # The name of the role
+  name: String
   # The responsiblities attached to the role
   responsibilities: ResponsibilityQuerySet
   responsibilitiesTotal: Int
@@ -1009,7 +1009,7 @@ type GroupRole {
   groupId: ID
   name: String
   updatedAt: Date
-  responsibilities: [Responsibility]
+  responsibilities: ResponsibilityQuerySet
   responsibilitiesTotal: Int
 }
 
@@ -1562,7 +1562,6 @@ type Person {
   ): [Membership]
   # All the member roles for a user
   groupRoles: GroupRoleQuerySet
-  groupRolesTotal: Int
   # The set of Memberships to groups this person moderates (that are visible to logged in user
   moderatedGroupMemberships(first: Int, cursor: ID, order: String): [Membership]
   # The set of Posts this person has created (that are visible to logged in user)

@@ -153,7 +153,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
-  availableResponsibitlies () {
+  availableResponsibilities () {
     return Responsibility.collection().query(q => {
       q.whereRaw('group_id = ? or group_id is null', this.id)
     })

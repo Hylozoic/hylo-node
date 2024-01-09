@@ -31,14 +31,14 @@ export async function createGroup (userId, data) {
 }
 
 export async function deleteGroup (userId, groupId) {
-  await getModeratedGroup(userId, groupId)
+  await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
 
   await Group.deactivate(groupId)
   return { success: true }
 }
 
 export async function deleteGroupTopic (userId, groupTopicId) {
-  const groupTopic = await GroupTag.where({id: groupTopicId}).fetch()
+  const groupTopic = await GroupTag.where({ id: groupTopicId }).fetch()
 
   await getModeratedGroup(userId, groupTopic.get('group_id'), {}, Responsibility.constants.RESP_MANAGE_CONTENT)
 
