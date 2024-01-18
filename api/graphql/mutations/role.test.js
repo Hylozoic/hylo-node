@@ -21,8 +21,8 @@ describe('roles mutations', () => {
     user2 = factories.user()
     group = factories.group()
     return Promise.join(group.save(), user.save(), user2.save())
-    .then(() => user.joinGroup(group))
-    .then(() => user2.joinGroup(group, GroupMembership.Role.MODERATOR))
+      .then(() => user.joinGroup(group))
+      .then(() => user2.joinGroup(group, { role: GroupMembership.Role.MODERATOR }))
 
   })
 

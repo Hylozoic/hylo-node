@@ -10,19 +10,67 @@ SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', 'public', false);
+SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-CREATE EXTENSION postgis;
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA public;
+
 
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
 --
 
 COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- Name: delete_user(integer); Type: PROCEDURE; Schema: public; Owner: -
+--
+
+CREATE PROCEDURE public.delete_user(IN uid integer)
+    LANGUAGE sql
+    AS $$
+update groups set created_by_id = null where created_by_id = uid;
+update comments set deactivated_by_id = null where deactivated_by_id = uid;
+update follows set added_by_id = null where added_by_id = uid;
+update groups_tags set user_id = null where user_id = uid;
+delete from thanks where comment_id in (select id from comments where user_id = uid);
+delete from notifications where activity_id in (select id from activities where reader_id = uid);
+delete from notifications where activity_id in (select id from activities where actor_id = uid);
+delete from activities where actor_id = uid;
+delete from activities where reader_id = uid;
+delete from activities where parent_comment_id in (select id from comments where user_id = uid);
+delete from comments where user_id = uid;
+delete from contributions where user_id = uid;
+delete from devices where user_id = uid;
+delete from group_invites where used_by_id = uid;
+delete from group_invites where invited_by_id = uid;
+delete from group_memberships where user_id = uid;
+delete from communities_users where user_id = uid;
+delete from linked_account where user_id = uid;
+delete from join_requests where user_id = uid;
+delete from skills_users where user_id = uid;
+delete from posts_about_users where user_id = uid;
+delete from posts_users where user_id = uid;
+delete from tag_follows where user_id = uid;
+delete from thanks where thanked_by_id = uid;
+delete from user_connections where user_id = uid;
+delete from user_external_data where user_id = uid;
+delete from user_post_relevance where user_id = uid;
+delete from posts_tags where post_id in (select id from posts where user_id = uid);
+delete from groups_posts where post_id in (select id from posts where user_id = uid);
+delete from posts where user_id = uid;
+delete from reactions where user_id = uid;
+delete from users where id = uid;
+$$;
+
 
 SET default_tablespace = '';
 
@@ -844,6 +892,22 @@ CREATE TABLE public.group_join_questions (
 
 
 --
+-- Name: group_join_questions_answers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_join_questions_answers (
+    id integer NOT NULL,
+    question_id bigint NOT NULL,
+    join_request_id bigint,
+    answer text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    group_id bigint,
+    user_id bigint
+);
+
+
+--
 -- Name: group_join_questions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1230,20 +1294,6 @@ CREATE SEQUENCE public.invite_request_seq
 
 
 --
--- Name: join_request_question_answers; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.join_request_question_answers (
-    id integer NOT NULL,
-    question_id bigint NOT NULL,
-    join_request_id bigint NOT NULL,
-    answer text,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-
-
---
 -- Name: join_request_question_answers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1259,7 +1309,7 @@ CREATE SEQUENCE public.join_request_question_answers_id_seq
 -- Name: join_request_question_answers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.join_request_question_answers_id_seq OWNED BY public.join_request_question_answers.id;
+ALTER SEQUENCE public.join_request_question_answers_id_seq OWNED BY public.group_join_questions_answers.id;
 
 
 --
@@ -2815,6 +2865,13 @@ ALTER TABLE ONLY public.group_join_questions ALTER COLUMN id SET DEFAULT nextval
 
 
 --
+-- Name: group_join_questions_answers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_join_questions_answers ALTER COLUMN id SET DEFAULT nextval('public.join_request_question_answers_id_seq'::regclass);
+
+
+--
 -- Name: group_memberships id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2896,13 +2953,6 @@ ALTER TABLE ONLY public.groups_suggested_skills ALTER COLUMN id SET DEFAULT next
 --
 
 ALTER TABLE ONLY public.groups_tags ALTER COLUMN id SET DEFAULT nextval('public.communities_tags_id_seq'::regclass);
-
-
---
--- Name: join_request_question_answers id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.join_request_question_answers ALTER COLUMN id SET DEFAULT nextval('public.join_request_question_answers_id_seq'::regclass);
 
 
 --
@@ -3452,10 +3502,10 @@ ALTER TABLE ONLY public.groups_tags
 
 
 --
--- Name: join_request_question_answers join_request_question_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: group_join_questions_answers join_request_question_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.join_request_question_answers
+ALTER TABLE ONLY public.group_join_questions_answers
     ADD CONSTRAINT join_request_question_answers_pkey PRIMARY KEY (id);
 
 
@@ -4244,7 +4294,7 @@ CREATE INDEX ix_vote_user_13 ON public.reactions USING btree (user_id);
 -- Name: join_request_question_answers_join_request_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX join_request_question_answers_join_request_id_index ON public.join_request_question_answers USING btree (join_request_id);
+CREATE INDEX join_request_question_answers_join_request_id_index ON public.group_join_questions_answers USING btree (join_request_id);
 
 
 --
@@ -4910,6 +4960,22 @@ ALTER TABLE ONLY public.group_invites
 
 
 --
+-- Name: group_join_questions_answers group_join_questions_answers_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_join_questions_answers
+    ADD CONSTRAINT group_join_questions_answers_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_join_questions_answers group_join_questions_answers_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_join_questions_answers
+    ADD CONSTRAINT group_join_questions_answers_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: group_join_questions group_join_questions_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5110,18 +5176,18 @@ ALTER TABLE ONLY public.groups_tags
 
 
 --
--- Name: join_request_question_answers join_request_question_answers_join_request_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_join_questions_answers join_request_question_answers_join_request_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.join_request_question_answers
+ALTER TABLE ONLY public.group_join_questions_answers
     ADD CONSTRAINT join_request_question_answers_join_request_id_foreign FOREIGN KEY (join_request_id) REFERENCES public.join_requests(id);
 
 
 --
--- Name: join_request_question_answers join_request_question_answers_question_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_join_questions_answers join_request_question_answers_question_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.join_request_question_answers
+ALTER TABLE ONLY public.group_join_questions_answers
     ADD CONSTRAINT join_request_question_answers_question_id_foreign FOREIGN KEY (question_id) REFERENCES public.questions(id);
 
 

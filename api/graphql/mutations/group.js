@@ -68,7 +68,8 @@ export async function deleteGroupRelationship (userId, parentId, childId) {
   throw new GraphQLYogaError("You don't have permission to do this")
 }
 
-export async function joinGroup (groupId, userId) {
+// Called when a user joins an open group
+export async function joinGroup (groupId, userId, questionAnswers) {
   const user = await User.find(userId)
   if (!user) throw new GraphQLYogaError(`User id ${userId} not found`)
   const group = await Group.find(groupId)
@@ -85,7 +86,7 @@ export async function joinGroup (groupId, userId) {
       throw new GraphQLYogaError(`You must be a member of group ${prereq.get('name')} first`)
     }
   })
-  return user.joinGroup(group)
+  return user.joinGroup(group, questionAnswers)
 }
 
 export async function regenerateAccessCode (userId, groupId) {

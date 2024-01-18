@@ -6,7 +6,7 @@ export async function updateMembership (userId, { groupId, data, data: { setting
     'newPostCount'
   ]), (v, k) => snakeCase(k))
   if (data.lastViewedAt) settings.lastReadAt = data.lastViewedAt // legacy
-  if (data.lastReadAt) settings.lastReadAt = data.lastReadAt
+  if (data.lastReadAt) settings.lastReadAt = data.lastReadAt // XXX: this doesn't seem to be getting used either, remove?
   if (isEmpty(settings) && isEmpty(whitelist)) return Promise.resolve(null)
 
   return bookshelf.transaction(async transacting => {
@@ -16,6 +16,11 @@ export async function updateMembership (userId, { groupId, data, data: { setting
     if (!isEmpty(whitelist)) membership.set(whitelist)
     if (data.acceptAgreements) {
       await membership.acceptAgreements(transacting)
+    }
+    if (data.questionAnswers) {
+      for (const qa of data.questionAnswers) {
+        await GroupJoinQuestionAnswer.forge({ group_id: groupId, question_id: qa.questionId, answer: qa.answer, user_id: userId }).save()
+      }
     }
     if (membership.changed) await membership.save({}, { transacting })
     return membership
