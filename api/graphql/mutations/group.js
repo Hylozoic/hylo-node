@@ -86,7 +86,7 @@ export async function joinGroup (groupId, userId, questionAnswers) {
       throw new GraphQLYogaError(`You must be a member of group ${prereq.get('name')} first`)
     }
   })
-  return user.joinGroup(group, questionAnswers)
+  return user.joinGroup(group, { questionAnswers })
 }
 
 export async function regenerateAccessCode (userId, groupId) {

@@ -10,17 +10,11 @@ SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
+SELECT pg_catalog.set_config('search_path', 'public', false);
 SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: public; Type: SCHEMA; Schema: -; Owner: -
---
-
-CREATE SCHEMA public;
 
 
 --
@@ -29,52 +23,11 @@ CREATE SCHEMA public;
 
 COMMENT ON SCHEMA public IS 'standard public schema';
 
-
---
--- Name: delete_user(integer); Type: PROCEDURE; Schema: public; Owner: -
---
-
-CREATE PROCEDURE public.delete_user(IN uid integer)
-    LANGUAGE sql
-    AS $$
-update groups set created_by_id = null where created_by_id = uid;
-update comments set deactivated_by_id = null where deactivated_by_id = uid;
-update follows set added_by_id = null where added_by_id = uid;
-update groups_tags set user_id = null where user_id = uid;
-delete from thanks where comment_id in (select id from comments where user_id = uid);
-delete from notifications where activity_id in (select id from activities where reader_id = uid);
-delete from notifications where activity_id in (select id from activities where actor_id = uid);
-delete from activities where actor_id = uid;
-delete from activities where reader_id = uid;
-delete from activities where parent_comment_id in (select id from comments where user_id = uid);
-delete from comments where user_id = uid;
-delete from contributions where user_id = uid;
-delete from devices where user_id = uid;
-delete from group_invites where used_by_id = uid;
-delete from group_invites where invited_by_id = uid;
-delete from group_memberships where user_id = uid;
-delete from communities_users where user_id = uid;
-delete from linked_account where user_id = uid;
-delete from join_requests where user_id = uid;
-delete from skills_users where user_id = uid;
-delete from posts_about_users where user_id = uid;
-delete from posts_users where user_id = uid;
-delete from tag_follows where user_id = uid;
-delete from thanks where thanked_by_id = uid;
-delete from user_connections where user_id = uid;
-delete from user_external_data where user_id = uid;
-delete from user_post_relevance where user_id = uid;
-delete from posts_tags where post_id in (select id from posts where user_id = uid);
-delete from groups_posts where post_id in (select id from posts where user_id = uid);
-delete from posts where user_id = uid;
-delete from reactions where user_id = uid;
-delete from users where id = uid;
-$$;
-
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+CREATE EXTENSION postgis;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -

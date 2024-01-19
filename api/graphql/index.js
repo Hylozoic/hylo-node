@@ -324,10 +324,10 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     createGroup: (root, { data }) => createGroup(userId, data),
 
-    createInvitation: (root, {groupId, data}) =>
+    createInvitation: (root, { groupId, data }) =>
       createInvitation(userId, groupId, data), // consider sending locale from the frontend here
 
-    createJoinRequest: (root, {groupId, questionAnswers}) => createJoinRequest(userId, groupId, questionAnswers),
+    createJoinRequest: (root, { groupId, questionAnswers }) => createJoinRequest(userId, groupId, questionAnswers),
 
     createMessage: (root, { data }) => createMessage(userId, data),
 
@@ -341,7 +341,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     createZapierTrigger: (root, { groupIds, targetUrl, type, params }) => createZapierTrigger(userId, groupIds, targetUrl, type, params),
 
-    joinGroup: (root, { groupId }) => joinGroup(groupId, userId),
+    joinGroup: (root, { groupId, questionAnswers }) => joinGroup(groupId, userId, questionAnswers),
 
     joinProject: (root, { id }) => joinProject(id, userId),
 
@@ -373,7 +373,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     deleteZapierTrigger: (root, { id }) => deleteZapierTrigger(userId, id),
 
-    expireInvitation: (root, {invitationId}) =>
+    expireInvitation: (root, { invitationId }) =>
       expireInvitation(userId, invitationId),
 
     findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
@@ -390,7 +390,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     inviteGroupToJoinParent: (root, { parentId, childId }) =>
       inviteGroupToGroup(userId, parentId, childId, GroupRelationshipInvite.TYPE.ParentToChild),
 
-    invitePeopleToEvent: (root, {eventId, inviteeIds}) =>
+    invitePeopleToEvent: (root, { eventId, inviteeIds }) =>
       invitePeopleToEvent(userId, eventId, inviteeIds),
 
     leaveGroup: (root, { id }) => leaveGroup(userId, id),

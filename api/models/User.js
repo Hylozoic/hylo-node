@@ -359,6 +359,11 @@ module.exports = bookshelf.Model.extend(merge({
 
     await this.markInvitationsUsed(group.id, transacting)
 
+    // Add join question answers
+    for (const qa of questionAnswers) {
+      await GroupJoinQuestionAnswer.forge({ group_id: group.id, question_id: qa.questionId, answer: qa.answer, user_id: this.id }).save()
+    }
+
     return memberships[0]
   },
 
