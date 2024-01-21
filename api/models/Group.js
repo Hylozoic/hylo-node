@@ -472,7 +472,7 @@ module.exports = bookshelf.Model.extend(merge({
           // Make sure that the user making the changes doesn't need to then accept the new agreements
           const updatedByUserMembership = await GroupMembership.forPair(updatedByUserId, this.id).fetch()
           if (updatedByUserMembership) {
-            await updatedByUserMembership.save({ settings: Object.assign(updatedByUserMembership.settings, { agreementsAcceptedAt: (new Date()).toISOString() }) }, { transacting })
+            await updatedByUserMembership.save({ settings: { ...updatedByUserMembership.get('settings'), agreementsAcceptedAt: (new Date()).toISOString() } }, { transacting })
           }
         }
 
