@@ -80,13 +80,13 @@ const configuration = {
       getResourceServerInfo: async (ctx, resourceIndicator, client) => {
         return {
           // Super clients get write access
-          scope: 'api:read' + (client.role?.includes("super") ? ' api:write' : ''),
+          scope: 'api:read' + (client.role?.includes('super') ? ' api:write' : ''),
           audience: resourceIndicator,
           accessTokenTTL: 2 * 60 * 60, // 2 hours
           accessTokenFormat: 'jwt',
           jwt: {
-            sign: { alg: 'RS256' },
-          },
+            sign: { alg: 'RS256' }
+          }
         }
       }
     }
@@ -96,16 +96,16 @@ const configuration = {
   // don't run into weird issues with multiple interactions open
   // at a time.
   interactions: {
-    url(ctx, interaction) {
+    url (ctx, interaction) {
       return `/noo/oidc/interaction/${interaction.uid}`
-    },
+    }
   },
   jwks: {
     keys: process.env.OIDC_KEYS ? process.env.OIDC_KEYS.split(',').map(k => rsaPemToJwk(Buffer.from(k, 'base64').toString('ascii'), {}, 'private')) : []
   },
   pkce: {
     required: (ctx, client) => {
-      return client.noPKCE ? false : true
+      return client.noPKCE ? false : true;
     }
   },
   proxy: true,
@@ -123,7 +123,7 @@ const configuration = {
     token: '/token',
     userinfo: '/me'
   },
-  //TODO: renderError: redirect to nice error page?
+  // TODO: renderError: redirect to nice error page?
   ttl: {
     AccessToken: (ctx, token, client) => {
       if (token.resourceServer) {
@@ -132,35 +132,36 @@ const configuration = {
       return 60 * 60 // 1 hour in seconds
     },
     AuthorizationCode: 600 /* 10 minutes in seconds */,
-    BackchannelAuthenticationRequest: function BackchannelAuthenticationRequestTTL(ctx, request, client) {
+    BackchannelAuthenticationRequest: function BackchannelAuthenticationRequestTTL (ctx, request, client) {
       if (ctx && ctx.oidc && ctx.oidc.params.requested_expiry) {
-        return Math.min(10 * 60, +ctx.oidc.params.requested_expiry); // 10 minutes in seconds or requested_expiry, whichever is shorter
+        return Math.min(10 * 60, +ctx.oidc.params.requested_expiry) // 10 minutes in seconds or requested_expiry, whichever is shorter
       }
 
-      return 10 * 60; // 10 minutes in seconds
+      return 10 * 60 // 10 minutes in seconds
     },
-    ClientCredentials: function ClientCredentialsTTL(ctx, token, client) {
+    ClientCredentials: function ClientCredentialsTTL (ctx, token, client) {
       if (token.resourceServer) {
-        return token.resourceServer.accessTokenTTL || 10 * 60; // 10 minutes in seconds
+        return token.resourceServer.accessTokenTTL || 10 * 60 // 10 minutes in seconds
       }
-      return 10 * 60; // 10 minutes in seconds
+      return 10 * 60 // 10 minutes in seconds
     },
     DeviceCode: 600 /* 10 minutes in seconds */,
-    Grant: 1209600 /* 14 days in seconds */,
+    Grant: 14 * 24 * 60 * 60 /* 14 days in seconds */,
     IdToken: 3600, // 1 hour
     Interaction: 3600 /* 1 hour in seconds */,
-    RefreshToken: function RefreshTokenTTL(ctx, token, client) {
+    RefreshToken: function RefreshTokenTTL (ctx, token, client) {
       if (
-        ctx && ctx.oidc.entities.RotatedRefreshToken
-        && client.applicationType === 'web'
-        && client.tokenEndpointAuthMethod === 'none'
-        && !token.isSenderConstrained()
+        ctx &&
+        ctx.oidc.entities.RotatedRefreshToken &&
+        client.applicationType === 'web' &&
+        client.tokenEndpointAuthMethod === 'none' &&
+        !token.isSenderConstrained()
       ) {
         // Non-Sender Constrained SPA RefreshTokens do not have infinite expiration through rotation
-        return ctx.oidc.entities.RotatedRefreshToken.remainingTTL;
-  }
+        return ctx.oidc.entities.RotatedRefreshToken.remainingTTL
+      }
 
-      return 14 * 24 * 60 * 60; // 14 days in seconds
+      return 180 * 24 * 60 * 60 // Refresh token lasts 180 days (TODO: switch to refresh token rotation)
     },
     Session: 1209600 // 14 days in seconds
   }
