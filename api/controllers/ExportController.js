@@ -6,14 +6,13 @@ module.exports = {
   groupData: async function (req, res) {
     const p = req.allParams()
 
-    const user = await new User({id: req.session.userId} )
-                  .fetch({ columns: ['email']})
+    const user = await new User({ id: req.session.userId }).fetch({ columns: ['email'] })
 
     if (!p.groupId) {
-      return res.status(400).send({ error: "Please specify group ID" })
+      return res.status(400).send({ error: 'Please specify group ID' })
     }
     if (!p.datasets || !p.datasets.length) {
-      return res.status(400).send({ error: "Please specify datasets to export" })
+      return res.status(400).send({ error: 'Please specify datasets to export' })
     }
 
     // auth check
@@ -25,7 +24,7 @@ module.exports = {
     }
 
     if (!ok) {
-      return res.status(403).send({ error: "No access" })
+      return res.status(403).send({ error: 'No access' })
     }
 
     // process specified datasets
@@ -35,20 +34,20 @@ module.exports = {
     }
 
     // got to the end and nothing output/exited, throw error
-    throw new Error("Unknown datasets specified: " + JSON.stringify(p.datasets))
+    throw new Error('Unknown datasets specified: ' + JSON.stringify(p.datasets))
   }
 }
 
 /**
  * Group members export by Group ID
  */
-async function exportMembers(groupId, req, email) {
+async function exportMembers (groupId, req, email) {
   const users = await new Group({ id: groupId })
-                  .members()
-                  .fetch()
+    .members()
+    .fetch()
 
   const group = await new Group({ id: groupId })
-                  .fetch()
+    .fetch()
 
   const results = []
   const questions = {}
@@ -68,54 +67,52 @@ async function exportMembers(groupId, req, email) {
       // location (full details)
       u.locationObject().fetch()
         .then(location => {
-          results[idx]['location'] = renderLocation(location)
+          results[idx].location = renderLocation(location)
         }),
 
       // affiliations
       u.affiliations().fetch()
         .then(affils => {
-          results[idx]['affiliations'] = accumulatePivotCell(affils, renderAffiliation)
+          results[idx].affiliations = accumulatePivotCell(affils, renderAffiliation)
         }),
 
       // skills
       u.skills().fetch()
         .then(skills => {
-          results[idx]['skills'] = accumulatePivotCell(skills, renderSkill)
+          results[idx].skills = accumulatePivotCell(skills, renderSkill)
         }),
 
       // skills to learn
       u.skillsToLearn().fetch()
         .then(skills => {
-          results[idx]['skills_to_learn'] = accumulatePivotCell(skills, renderSkill)
+          results[idx].skills_to_learn = accumulatePivotCell(skills, renderSkill)
         }),
 
-      // Join request questions & answers
-      u.joinRequests()
-        .where({ group_id: groupId, status: JoinRequest.STATUS.Accepted })
+      // Join questions & answers
+      // TODO: pull direectly from groupJoinQuestionAnswers. how to sort by latest of each question within that group?
+      // https://stackoverflow.com/questions/12245289/select-unique-values-sorted-by-date
+      u.groupJoinQuestionAnswers()
+        .where({ group_id: groupId })
         .orderBy('created_at', 'DESC')
-        .fetchOne()
-        .then(jr => {
-          if (!jr) {
-            return null
-          }
-          return jr.questionAnswers().fetch()
-            .then(qas => Promise.all(qas.map(qa =>
-              Promise.all([
-                qa.question().fetch(),
-                Promise.resolve(qa)
-              ])
-            )))
+        .fetch({ withRelated: ['question'] })
+        .then(answers => {
+          return Promise.all(answers.map(qa =>
+            Promise.all([
+              qa.load(['question']),
+              Promise.resolve(qa)
+            ])
+          ))
         })
         .then(data => {
           if (!data) return
-          results[idx]['join_request_answers'] = accumulateJoinRequestQA(data, questions)
+          results[idx].join_question_answers = accumulateJoinQA(data, questions)
         }),
 
       // other groups the requesting member has acccess to
       groupFilter(req.session.userId)(u.groups()).fetch()
         .then(groups => {
-          results[idx]['groups'] = accumulatePivotCell(groups, renderGroup)
-        }),
+          results[idx].groups = accumulatePivotCell(groups, renderGroup)
+        })
 
     ])
   }))
@@ -132,7 +129,7 @@ async function exportMembers(groupId, req, email) {
 }
 
 // toplevel output function for specific endpoints to complete with
-function output(data, columns, email, groupName, questions) {
+function output (data, columns, email, groupName, questions) {
   // Add each question as a column in the results
   const questionsArray = Object.values(questions)
   questionsArray.forEach((question) => {
@@ -141,7 +138,7 @@ function output(data, columns, email, groupName, questions) {
 
   // Add rows for each user to match their answers with the added question colums
   const transformedData = data.map((user) => {
-    const answers = user.join_request_answers
+    const answers = user.join_question_answers
     questionsArray.forEach((question) => {
       if (!answers) {
         user[`${question.text}`] = '-'
@@ -149,75 +146,78 @@ function output(data, columns, email, groupName, questions) {
         const foundAnswer = answers.find((answer) => `${question.id}` === `${answer.question_id}`)
         user[`${question.text}`] = foundAnswer
           ? user[`${question.text}`] = foundAnswer.answer
-          :user[`${question.text}`] = '-'
+          : user[`${question.text}`] = '-'
       }
     })
     return user
   })
-  
+
   stringify(transformedData, {
     header: true,
     columns
   }, (err, output) => {
-    const formattedDate = new Date().toISOString().slice(0,10)
+    if (err) {
+      console.error(err)
+      return
+    }
+    const formattedDate = new Date().toISOString().slice(0, 10)
     const buff = Buffer.from(output)
     const base64output = buff.toString('base64')
- 
+
     Queue.classMethod('Email', 'sendExportMembersList', {
-      email:  email,
+      email: email,
       files: [
         {
           id: `members-export-${groupName}-${formattedDate}.csv`,
           data: base64output
-      }
+        }
       ]
     })
   })
-
 }
 
 // reduce helper to format lists of records into single CSV cells
-function accumulatePivotCell(records, renderValue) {
+function accumulatePivotCell (records, renderValue) {
   return records.reduce((joined, a) => joined ? (joined + `,${renderValue(a)}`) : renderValue(a), null)
 }
 
-const accumulateJoinRequestQA = (records, questions) => {
+const accumulateJoinQA = (records, questions) => {
   // an array of question/answer pairs
-  if (records[0] && records[0][0]){
+  if (records[0] && records[0][0]) {
     records.forEach((record) => {
-      const question = record[0].toJSON()
-      questions[question.id] = question  
+      const question = record[0].toJSON().question
+      questions[question.id] = question
     })
   }
-  return records.reduce((accum, record) => accum.concat(renderJoinRequestAnswersToJSON(record)), [])
+  return records.reduce((accum, record) => accum.concat(renderJoinQuestionAnswersToJSON(record)), [])
 }
 
 // formatting for individual sub-cell record types
 
-function renderLocation(l) {
+function renderLocation (l) {
   if (l === null || l.get('center') === null) {
     return ''
   }
 
-  const geometry = l.get('center')  // :TODO: make this work for polygonal locations, if needed
+  const geometry = l.get('center') // :TODO: make this work for polygonal locations, if needed
   const lat = geometry.lat
   const lng = geometry.lng
   return `${l.get('full_text')}${lat && lng ? ` (${lat.toFixed(3)},${lng.toFixed(3)})` : ''}`
 }
 
-function renderAffiliation(a) {
+function renderAffiliation (a) {
   return `${a.get('role')} ${a.get('preposition')} ${a.get('org_name')} ${a.get('url') ? `(${a.get('url')})` : ''}`
 }
 
-function renderSkill(s) {
+function renderSkill (s) {
   return s.get('name')
 }
 
-function renderJoinRequestAnswersToJSON(QApair) {
-  if (QApair.length === 0) {return []}
+function renderJoinQuestionAnswersToJSON (QApair) {
+  if (QApair.length === 0) { return [] }
   return [QApair[1].toJSON()]
 }
 
-function renderGroup(g) {
+function renderGroup (g) {
   return `${g.get('name')} (${Frontend.Route.group(g)})`
 }

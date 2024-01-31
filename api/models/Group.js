@@ -344,8 +344,9 @@ module.exports = bookshelf.Model.extend(merge({
           created_at: new Date(),
           settings: {
             ...updatedAttribs.settings,
+            // Show join form, and ask for agreements and join questions to be answered, unless member is the creator of the group
             agreementsAcceptedAt: id === this.get('created_by_id') ? new Date() : null,
-            // Show join form, unless member is the creator of the group
+            joinQuestionsAnsweredAt: id === this.get('created_by_id') ? new Date() : null,
             showJoinForm: id !== this.get('created_by_id')
           }
         }), { transacting })
@@ -483,7 +484,7 @@ module.exports = bookshelf.Model.extend(merge({
           // Make sure that the user making the changes doesn't need to then accept the new agreements
           const updatedByUserMembership = await GroupMembership.forPair(updatedByUserId, this.id).fetch()
           if (updatedByUserMembership) {
-            await updatedByUserMembership.save({ settings: { agreementsAcceptedAt: (new Date()).toISOString() } }, { transacting })
+            await updatedByUserMembership.save({ settings: { ...updatedByUserMembership.get('settings'), agreementsAcceptedAt: (new Date()).toISOString() } }, { transacting })
           }
         }
 

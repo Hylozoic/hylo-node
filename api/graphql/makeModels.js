@@ -123,7 +123,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { agreements: { querySet: true } },
         { group: { alias: 'group' } },
         { user: { alias: 'person' } },
-        { commonRoles: { querySet: true } }
+        { commonRoles: { querySet: true } },
+        { joinQuestionAnswers: { querySet: true } }
       ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
@@ -560,6 +561,15 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ]
     },
 
+    GroupJoinQuestionAnswer: {
+      model: GroupJoinQuestionAnswer,
+      isDefaultTypeForTable: true,
+      attributes: [
+        'answer'
+      ],
+      relations: ['group', 'question', 'user']
+    },
+
     GroupToGroupJoinQuestion: {
       model: GroupToGroupJoinQuestion,
       attributes: [
@@ -692,14 +702,6 @@ export default function makeModels (userId, isAdmin, apiClient) {
         questionAnswers: jr => jr.questionAnswers().fetch()
       },
       fetchMany: ({ groupId }) => JoinRequest.where({ group_id: groupId, status: JoinRequest.STATUS.Pending })
-    },
-
-    JoinRequestQuestionAnswer: {
-      model: JoinRequestQuestionAnswer,
-      attributes: [
-        'answer'
-      ],
-      relations: ['question']
     },
 
     Question: {

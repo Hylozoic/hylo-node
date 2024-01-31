@@ -136,7 +136,7 @@ describe('Group', function () {
 
       const gm2 = await group.memberships()
         .query(q => q.where('user_id', u2.id)).fetchOne()
-      expect(gm2.get('settings')).to.deep.equal({ agreementsAcceptedAt: null, showJoinForm: true, there: true })
+      expect(gm2.get('settings')).to.deep.equal({ agreementsAcceptedAt: null, joinQuestionsAnsweredAt: null, showJoinForm: true, there: true })
       expect(gm2.get('role')).to.equal(1)
     })
   })

@@ -10,8 +10,8 @@ describe('pinPost', () => {
     group = factories.group()
     post = factories.post()
     return Promise.join(group.save(), user.save(), post.save())
-    .then(() => group.posts().attach(post))
-    .then(() => user.joinGroup(group, GroupMembership.Role.MODERATOR))
+      .then(() => group.posts().attach(post))
+      .then(() => user.joinGroup(group, { role: GroupMembership.Role.MODERATOR }))
   })
 
   it('sets pinned_at to current time if not set', () => {

@@ -3,7 +3,6 @@ import { isEmpty } from 'lodash'
 import {
   whereId
 } from './group/queryUtils'
-import MemberCommonRole from './MemberCommonRole'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
@@ -30,6 +29,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   group () {
     return this.belongsTo(Group)
+  },
+
+  joinQuestionAnswers () {
+    return this.hasMany(GroupJoinQuestionAnswer, 'group_id').where({ user_id: this.get('user_id') })
   },
 
   user () {

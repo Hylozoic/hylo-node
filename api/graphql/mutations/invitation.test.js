@@ -8,7 +8,7 @@ describe('invitation mutation', () => {
     user = factories.user()
     group = factories.group()
     return Promise.join(group.save(), user.save())
-    .then(() => user.joinGroup(group, GroupMembership.Role.MODERATOR)) // TODO RESP: edit joinGroup
+    .then(() => user.joinGroup(group, { role: GroupMembership.Role.MODERATOR })) // TODO RESP: edit joinGroup
   })
 
   it('createInvitation successfully', () => {

@@ -934,6 +934,28 @@ type GroupJoinQuestionQuerySet {
   items: [GroupJoinQuestion]
 }
 
+# An answer to a required question when joining a group
+type GroupJoinQuestionAnswer {
+  id: Int
+  # The answer text
+  answer: String
+  # The group
+  group: Group
+  ## The question's id
+  ## questionId: ID
+  # The question
+  question: Question
+  # The person answering
+  user: Person
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type GroupJoinQuestionAnswerQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupJoinQuestionAnswer]
+}
+
 # Group settings
 type GroupSettings {
   # The last date/time that the group agreements were updated
@@ -980,7 +1002,7 @@ type GroupRelationshipInvite {
   # The group doing the inviting or requesting to join
   fromGroup: Group
   # When a group is trying to join one that has questions, here are the answers to those questions
-  questionAnswers: [JoinRequestQuestionAnswer]
+  questionAnswers: [GroupJoinQuestionAnswer]
   # 0 = Pending, 1 = Accepted, 2 = Rejected, 3 = Canceled
   status: Int
   # The group being invited or asked to join
@@ -1152,7 +1174,7 @@ type JoinRequest {
   # Which group is being requested to join
   group: Group
   # Answers to questions required by Restricted groups
-  questionAnswers: [JoinRequestQuestionAnswer]
+  questionAnswers: [GroupJoinQuestionAnswer]
   # 0 = Pending, 1 = Accepted, 2 = Rejected, 3 = Canceled
   status: Int
   updatedAt: Date
@@ -1167,16 +1189,6 @@ type JoinRequestQuerySet {
   items: [JoinRequest]
 }
 
-# An answer to a required question when requesting to join a group
-type JoinRequestQuestionAnswer {
-  id: Int
-  # THe answer text
-  answer: String
-  # The question
-  question: Question
-  # The person answering
-  user: Person
-}
 
 # A generated preview of a link in a Post
 type LinkPreview {
@@ -1388,6 +1400,8 @@ type Membership {
   group: Group
   # Is this group membership a moderator role
   hasModeratorRole: Boolean
+  # Answers to the join questions for this group
+  joinQuestionAnswers: GroupJoinQuestionAnswerQuerySet
   # The last time the current logged in user viewed this group (if they are a member of it)
   lastViewedAt: String
   # Number of new posts in this group since the current logged in user viewed it (if they are a member of it)
@@ -1426,6 +1440,8 @@ type MembershipAgreementQuerySet {
 type MembershipSettings {
   # When the member last accepted the agreements of the group
   agreementsAcceptedAt: Date
+  # When the member filled out the join questions
+  joinQuestionsAnsweredAt: Date
   # Whether the user wants to get email notifications from this group
   sendEmail: Boolean
   # Whether this user has yet seen the form that appears when first joining a new group
@@ -2153,7 +2169,7 @@ type Mutation {
   # Invite one or more people to an event Post
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
   # Join a group. Will fail if the person does not have permission to join this group.
-  joinGroup(groupId: ID): Membership
+  joinGroup(groupId: ID, questionAnswers: [QuestionAnswerInput]): Membership
   # Join a project Post as a member
   joinProject(id: ID): GenericResult
   # Leave a group
@@ -2705,13 +2721,17 @@ input MembershipInput {
   acceptAgreements: Boolean
   # Number of new Posts in the Group since you last looked at it
   newPostCount: Int
+  # Answers to the join questions for this Group
+  questionAnswers: [QuestionAnswerInput]
   # Settings related to membership in a Group
   settings: MembershipSettingsInput
 }
 
 # Personal settings for a User's relationship to a Group
 input MembershipSettingsInput {
-  # Whether to receive emai notifications for this Group
+  # When the member filled out the join questions
+  joinQuestionsAnsweredAt: Date
+  # Whether to receive email notifications for this Group
   sendEmail: Boolean
   # Whether to show the form displayed upon first viewing a Group this Person just joined
   showJoinForm: Boolean

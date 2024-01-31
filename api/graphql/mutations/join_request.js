@@ -10,14 +10,14 @@ export async function createJoinRequest (userId, groupId, questionAnswers = []) 
     // Maybe they left the group and want back in? Or maybe initial request was rejected
     return JoinRequest.create({
       userId,
-      groupId,
+      groupId
     })
-    .then(async (request) => {
-      for (let qa of questionAnswers) {
-        await JoinRequestQuestionAnswer.forge({ join_request_id: request.id, question_id: qa.questionId, answer: qa.answer }).save()
-      }
-      return { request }
-    })
+      .then(async (request) => {
+        for (const qa of questionAnswers) {
+          await GroupJoinQuestionAnswer.forge({ group_id: groupId, join_request_id: request.id, question_id: qa.questionId, answer: qa.answer, user_id: userId }).save()
+        }
+        return { request }
+      })
   } else {
     throw new GraphQLYogaError('Invalid parameters to create join request')
   }

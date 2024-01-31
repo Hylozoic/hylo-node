@@ -16,7 +16,6 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-CREATE EXTENSION postgis;
 
 --
 -- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
@@ -27,6 +26,8 @@ COMMENT ON SCHEMA public IS 'standard public schema';
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+CREATE EXTENSION postgis;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -
@@ -1006,6 +1007,22 @@ CREATE TABLE public.group_join_questions (
 
 
 --
+-- Name: group_join_questions_answers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.group_join_questions_answers (
+    id integer NOT NULL,
+    question_id bigint NOT NULL,
+    join_request_id bigint,
+    answer text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone,
+    group_id bigint,
+    user_id bigint
+);
+
+
+--
 -- Name: group_join_questions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1423,20 +1440,6 @@ CREATE SEQUENCE public.invite_request_seq
 
 
 --
--- Name: join_request_question_answers; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.join_request_question_answers (
-    id integer NOT NULL,
-    question_id bigint NOT NULL,
-    join_request_id bigint NOT NULL,
-    answer text,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone
-);
-
-
---
 -- Name: join_request_question_answers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1452,7 +1455,7 @@ CREATE SEQUENCE public.join_request_question_answers_id_seq
 -- Name: join_request_question_answers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.join_request_question_answers_id_seq OWNED BY public.join_request_question_answers.id;
+ALTER SEQUENCE public.join_request_question_answers_id_seq OWNED BY public.group_join_questions_answers.id;
 
 
 --
@@ -3070,6 +3073,13 @@ ALTER TABLE ONLY public.group_join_questions ALTER COLUMN id SET DEFAULT nextval
 
 
 --
+-- Name: group_join_questions_answers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_join_questions_answers ALTER COLUMN id SET DEFAULT nextval('public.join_request_question_answers_id_seq'::regclass);
+
+
+--
 -- Name: group_memberships id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -3158,13 +3168,6 @@ ALTER TABLE ONLY public.groups_suggested_skills ALTER COLUMN id SET DEFAULT next
 --
 
 ALTER TABLE ONLY public.groups_tags ALTER COLUMN id SET DEFAULT nextval('public.communities_tags_id_seq'::regclass);
-
-
---
--- Name: join_request_question_answers id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.join_request_question_answers ALTER COLUMN id SET DEFAULT nextval('public.join_request_question_answers_id_seq'::regclass);
 
 
 --
@@ -3753,10 +3756,10 @@ ALTER TABLE ONLY public.groups_tags
 
 
 --
--- Name: join_request_question_answers join_request_question_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: group_join_questions_answers join_request_question_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.join_request_question_answers
+ALTER TABLE ONLY public.group_join_questions_answers
     ADD CONSTRAINT join_request_question_answers_pkey PRIMARY KEY (id);
 
 
@@ -4553,7 +4556,7 @@ CREATE INDEX ix_vote_user_13 ON public.reactions USING btree (user_id);
 -- Name: join_request_question_answers_join_request_id_index; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX join_request_question_answers_join_request_id_index ON public.join_request_question_answers USING btree (join_request_id);
+CREATE INDEX join_request_question_answers_join_request_id_index ON public.group_join_questions_answers USING btree (join_request_id);
 
 
 --
@@ -5251,6 +5254,22 @@ ALTER TABLE ONLY public.group_invites
 
 
 --
+-- Name: group_join_questions_answers group_join_questions_answers_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_join_questions_answers
+    ADD CONSTRAINT group_join_questions_answers_group_id_foreign FOREIGN KEY (group_id) REFERENCES public.groups(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: group_join_questions_answers group_join_questions_answers_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.group_join_questions_answers
+    ADD CONSTRAINT group_join_questions_answers_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
 -- Name: group_join_questions group_join_questions_group_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -5467,18 +5486,18 @@ ALTER TABLE ONLY public.groups_tags
 
 
 --
--- Name: join_request_question_answers join_request_question_answers_join_request_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_join_questions_answers join_request_question_answers_join_request_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.join_request_question_answers
+ALTER TABLE ONLY public.group_join_questions_answers
     ADD CONSTRAINT join_request_question_answers_join_request_id_foreign FOREIGN KEY (join_request_id) REFERENCES public.join_requests(id);
 
 
 --
--- Name: join_request_question_answers join_request_question_answers_question_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: group_join_questions_answers join_request_question_answers_question_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.join_request_question_answers
+ALTER TABLE ONLY public.group_join_questions_answers
     ADD CONSTRAINT join_request_question_answers_question_id_foreign FOREIGN KEY (question_id) REFERENCES public.questions(id);
 
 

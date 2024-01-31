@@ -10,7 +10,6 @@ import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
 import { generateHyloJWT } from '../../lib/HyloJWT'
-import MemberCommonRole from './MemberCommonRole'
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',
@@ -23,6 +22,10 @@ module.exports = bookshelf.Model.extend(merge({
 
   affiliations: function () {
     return this.hasMany(Affiliation).where('is_active', true)
+  },
+
+  blockedUsers: function () {
+    return this.belongsToMany(User, 'blocked_users', 'user_id', 'blocked_user_id')
   },
 
   /**
@@ -141,10 +144,26 @@ module.exports = bookshelf.Model.extend(merge({
       .where('event_invitations.response', 'yes')
   },
 
+  eventsInvitedTo: function () {
+    return this.belongsToMany(Post).through(EventInvitation)
+  },
+
+  followedPosts () {
+    return this.belongsToMany(Post).through(PostUser).query(q => q.where({'posts_users.following': true, 'posts_users.active': true}))
+  },
+
+  followedTags: function () {
+    return this.belongsToMany(Tag).through(TagFollow)
+  },
+
   groups: function () {
     return this.belongsToMany(Group).through(GroupMembership)
       .where('groups.active', true)
       .where('group_memberships.active', true)
+  },
+
+  groupJoinQuestionAnswers: function () {
+    return this.hasMany(GroupJoinQuestionAnswer)
   },
 
   groupInvitesPending: function () {
@@ -153,17 +172,19 @@ module.exports = bookshelf.Model.extend(merge({
       .orderBy('created_at', 'desc')
   },
 
+  groupRoles () {
+    return this.belongsToMany(GroupRole)
+      .through(MemberRole, 'user_id', 'group_role_id')
+      .where('groups_roles.active', true)
+  },
+
   inAppNotifications: function () {
     return this.hasMany(Notification)
       .query({where: {'notifications.medium': Notification.MEDIUM.InApp}})
   },
 
-  followedTags: function () {
-    return this.belongsToMany(Tag).through(TagFollow)
-  },
-
-  tagFollows: function () {
-    return this.hasMany(TagFollow)
+  joinRequests: function () {
+    return this.hasMany(JoinRequest)
   },
 
   linkedAccounts: function () {
@@ -174,8 +195,16 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
-  joinRequests: function () {
-    return this.hasMany(JoinRequest)
+  memberships () {
+    return this.hasMany(GroupMembership)
+      .query(q => q.leftJoin('groups', 'groups.id', 'group_memberships.group_id')
+        .where('group_memberships.active', true)
+        .where('groups.active', true)
+      )
+  },
+
+  messageThreads: function () {
+    return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
   },
 
   moderatedGroupMemberships: function () { // TODO RESP: need to edit this. A helper function has already been created on the Responsibility model, it gets you groupIds and responsibilities tho, need to use that to look up memberships to return
@@ -185,6 +214,10 @@ module.exports = bookshelf.Model.extend(merge({
 
   posts: function () {
     return this.hasMany(Post).query(q => q.where('type', '!=', Post.Type.THREAD))
+  },
+
+  postUsers: function () {
+    return this.hasMany(PostUser, 'user_id')
   },
 
   projects: function () {
@@ -197,28 +230,8 @@ module.exports = bookshelf.Model.extend(merge({
     )
   },
 
-  stripeAccount: function () {
-    return this.belongsTo(StripeAccount)
-  },
-
   reactions: function () {
     return this.hasMany(Reaction)
-  },
-
-  postUsers: function () {
-    return this.hasMany(PostUser, 'user_id')
-  },
-
-  followedPosts () {
-    return this.belongsToMany(Post).through(PostUser).query(q => q.where({'posts_users.following': true, 'posts_users.active': true}))
-  },
-
-  messageThreads: function () {
-    return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
-  },
-
-  eventsInvitedTo: function () {
-    return this.belongsToMany(Post).through(EventInvitation)
   },
 
   sentInvitations: function () {
@@ -233,8 +246,12 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsToMany(Skill, 'skills_users').query({ where: { type: Skill.Type.LEARNING } }).withPivot(['type'])
   },
 
-  blockedUsers: function () {
-    return this.belongsToMany(User, 'blocked_users', 'user_id', 'blocked_user_id')
+  stripeAccount: function () {
+    return this.belongsTo(StripeAccount)
+  },
+
+  tagFollows: function () {
+    return this.hasMany(TagFollow)
   },
 
   thanks: function () {
@@ -344,12 +361,14 @@ module.exports = bookshelf.Model.extend(merge({
     return bookshelf.knex.raw(query)
   },
 
-  joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
+  joinGroup: async function (group, { role = GroupMembership.Role.DEFAULT, fromInvitation = false, questionAnswers = [], transacting = null } = {}) {
     // TODO RESP:  need to handle role differently here. Probably easiest to just pass in the role, and then handle it in the class method addMembers
     const memberships = await group.addMembers([this.id],
       {
         role,
         settings: {
+          // XXX: A user choosing to join a group has aleady seen/filled out the join questions (enforced on the front-end)
+          joinQuestionsAnsweredAt: fromInvitation ? null : new Date(),
           sendEmail: true,
           sendPushNotifications: true,
           showJoinForm: true
@@ -359,9 +378,9 @@ module.exports = bookshelf.Model.extend(merge({
 
     await this.markInvitationsUsed(group.id, transacting)
 
-    if (!fromInvitation) {
-      // XXX: A user choosing to join a group has aleady seen/accepted all the agreements (enforced on the front-end)
-      await memberships[0].acceptAgreements(transacting)
+    // Add join question answers
+    for (const qa of questionAnswers) {
+      await GroupJoinQuestionAnswer.forge({ group_id: group.id, question_id: qa.questionId, answer: qa.answer, user_id: this.id }).save()
     }
 
     return memberships[0]

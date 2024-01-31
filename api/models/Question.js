@@ -3,12 +3,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
   requireFetch: false,
   hasTimestamps: ['created_at', null],
 
-  groups () {
-    return this.hasMany(Groups).through(GroupJoinQuestion)
+  answers () {
+    return this.hasMany(GroupJoinQuestionAnswer)
   },
 
-  joinRequestAnswers () {
-    return this.hasMany(JoinRequestQuestionAnswer)
+  groups () {
+    return this.hasMany(Group).through(GroupJoinQuestion)
   }
 
 }), {
