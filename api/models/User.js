@@ -1,7 +1,6 @@
 /* globals RedisClient */
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
-const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { has, isEmpty, merge, omit, pick, intersectionBy } from 'lodash'
 import fetch from 'node-fetch'
 import { v4 as uuidv4 } from 'uuid'
@@ -11,6 +10,7 @@ import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
 import { generateHyloJWT } from '../../lib/HyloJWT'
 import GroupJoinQuestionAnswer from './GroupJoinQuestionAnswer'
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 module.exports = bookshelf.Model.extend(merge({
   tableName: 'users',

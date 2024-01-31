@@ -1,4 +1,3 @@
-import { getDataTypeForModel } from './DataType'
 import { castArray, has } from 'lodash'
 
 // handle a single entity or a list of entity or ids; do nothing if no ids or
