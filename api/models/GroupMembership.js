@@ -3,7 +3,6 @@ import { isEmpty } from 'lodash'
 import {
   whereId
 } from './group/queryUtils'
-import GroupJoinQuestionAnswer from './GroupJoinQuestionAnswer'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',

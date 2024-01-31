@@ -9,7 +9,6 @@ import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
 import { generateHyloJWT } from '../../lib/HyloJWT'
-import GroupJoinQuestionAnswer from './GroupJoinQuestionAnswer'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 module.exports = bookshelf.Model.extend(merge({
