@@ -359,6 +359,26 @@ type AffiliationQuerySet {
   items: [Affiliation]
 }
 
+# An agreement used by a Group
+type Agreement {
+  id: Int
+  createdAt: Date
+  # The content of the agreement
+  description: String
+  # The order of the agreement within a group
+  order: Int
+  # The title/header of the agreement
+  title: String
+  updatedAt: Date
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type AgreementQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [Agreement]
+}
+
 # A post attachment, either an image, video or file
 type Attachment {
   id: ID
@@ -606,6 +626,9 @@ type Group {
     sortBy: String
   ): PersonQuerySet
 
+  # The agreements required to participate in this Group
+  agreements: AgreementQuerySet
+
   # Child groups of this group
   childGroups(
     # Return groups whose names start with the autocomplete string
@@ -686,7 +709,10 @@ type Group {
   ): PersonQuerySet
 
   # Group memberships (returns the membership objects instead of the Person objects of the members)
-  memberships: MembershipQuerySet
+  memberships(
+    # If set then return only the memberships for a specific user
+    userId: ID
+  ): MembershipQuerySet
 
   # The group moderators
   moderators(
@@ -876,8 +902,32 @@ type GroupJoinQuestionQuerySet {
   items: [GroupJoinQuestion]
 }
 
+# An answer to a required question when joining a group
+type GroupJoinQuestionAnswer {
+  id: Int
+  # The answer text
+  answer: String
+  # The group
+  group: Group
+  ## The question's id
+  ## questionId: ID
+  # The question
+  question: Question
+  # The person answering
+  user: Person
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type GroupJoinQuestionAnswerQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [GroupJoinQuestionAnswer]
+}
+
 # Group settings
 type GroupSettings {
+  # The last date/time that the group agreements were updated
+  agreementsLastUpdatedAt: Date
   # Whether this group allows non-moderators to invite people (not currently used)
   allowGroupInvites: Boolean
   # Whether to require questions being answered when a group requests to join this group
@@ -920,7 +970,7 @@ type GroupRelationshipInvite {
   # The group doing the inviting or requesting to join
   fromGroup: Group
   # When a group is trying to join one that has questions, here are the answers to those questions
-  questionAnswers: [JoinRequestQuestionAnswer]
+  questionAnswers: [GroupJoinQuestionAnswer]
   # 0 = Pending, 1 = Accepted, 2 = Rejected, 3 = Canceled
   status: Int
   # The group being invited or asked to join
@@ -1076,7 +1126,7 @@ type JoinRequest {
   # Which group is being requested to join
   group: Group
   # Answers to questions required by Restricted groups
-  questionAnswers: [JoinRequestQuestionAnswer]
+  questionAnswers: [GroupJoinQuestionAnswer]
   # 0 = Pending, 1 = Accepted, 2 = Rejected, 3 = Canceled
   status: Int
   updatedAt: Date
@@ -1091,16 +1141,6 @@ type JoinRequestQuerySet {
   items: [JoinRequest]
 }
 
-# An answer to a required question when requesting to join a group
-type JoinRequestQuestionAnswer {
-  id: Int
-  # THe answer text
-  answer: String
-  # The question
-  question: Question
-  # The person answering
-  user: Person
-}
 
 # A generated preview of a link in a Post
 type LinkPreview {
@@ -1303,11 +1343,15 @@ type Me {
 # A user's group membership
 type Membership {
   id: ID
+  # The agreements this user has agreed to (or not) for this group
+  agreements: MembershipAgreementQuerySet
   createdAt: Date
   groupId: ID
   group: Group
   # Is this group membership a moderator role
   hasModeratorRole: Boolean
+  # Answers to the join questions for this group
+  joinQuestionAnswers: GroupJoinQuestionAnswerQuerySet
   # The last time the current logged in user viewed this group (if they are a member of it)
   lastViewedAt: String
   # Number of new posts in this group since the current logged in user viewed it (if they are a member of it)
@@ -1325,8 +1369,27 @@ type MembershipQuerySet {
   items: [Membership]
 }
 
+# A relationship between a user and a group agreement
+type MembershipAgreement {
+  # The agreement id
+  id: Int
+  # Whether a user has accepted this agreement or not
+  accepted: Boolean
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type MembershipAgreementQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [MembershipAgreement]
+}
+
 # Settinga for a user's group membership
 type MembershipSettings {
+  # When the member last accepted the agreements of the group
+  agreementsAcceptedAt: Date
+  # When the member filled out the join questions
+  joinQuestionsAnsweredAt: Date
   # Whether the user wants to get email notifications from this group
   sendEmail: Boolean
   # Whether this user has yet seen the form that appears when first joining a new group
@@ -2017,7 +2080,7 @@ type Mutation {
   # Invite one or more people to an event Post
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
   # Join a group. Will fail if the person does not have permission to join this group.
-  joinGroup(groupId: ID): Membership
+  joinGroup(groupId: ID, questionAnswers: [QuestionAnswerInput]): Membership
   # Join a project Post as a member
   joinProject(id: ID): GenericResult
   # Leave a group
@@ -2230,6 +2293,17 @@ input AffiliationInput {
   url: String
 }
 
+# A Group Agreement
+input AgreementInput {
+  id: ID
+  # The text of the agreement
+  description: String
+  # To order the display of the agreements in the group
+  order: Int
+  # The title/header of the agreement
+  title: String
+}
+
 # An Attachment on a Post
 input AttachmentInput {
   # 'image', 'file' or 'video'
@@ -2363,6 +2437,8 @@ input GroupInput {
   accessibility: Int
   # Whether this Group is active or not
   active: Boolean
+  # The group agreements
+  agreements: [AgreementInput]
   # URL to the image of the avatar of the group
   avatarUrl: String
   # URL to the image of the banner for the group
@@ -2538,15 +2614,21 @@ input MeInput {
 
 # Data related to membership in a Group
 input MembershipInput {
+  # Accept or reject all current agreements of the group
+  acceptAgreements: Boolean
   # Number of new Posts in the Group since you last looked at it
   newPostCount: Int
+  # Answers to the join questions for this Group
+  questionAnswers: [QuestionAnswerInput]
   # Settings related to membership in a Group
   settings: MembershipSettingsInput
 }
 
 # Personal settings for a User's relationship to a Group
 input MembershipSettingsInput {
-  # Whether to receive emai notifications for this Group
+  # When the member filled out the join questions
+  joinQuestionsAnsweredAt: Date
+  # Whether to receive email notifications for this Group
   sendEmail: Boolean
   # Whether to show the form displayed upon first viewing a Group this Person just joined
   showJoinForm: Boolean

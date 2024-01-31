@@ -17,13 +17,13 @@ module.exports = bookshelf.Model.extend({
 }, {
 
   create: async function (attrs) {
-    const { groupId, order, postId, userId } = opts
+    const { groupId, order, postId, userId } = attrs
 
     const cp = await this.forge({
       group_id: groupId,
       order,
       post_id: postId,
-      user_id: userId,
+      user_id: userId
     }).save()
 
     return cp
@@ -32,6 +32,6 @@ module.exports = bookshelf.Model.extend({
   find: function (id) {
     if (!id) return Promise.resolve(null)
     return CollectionsPost.where({ id }).fetch()
-  },
+  }
 
 })

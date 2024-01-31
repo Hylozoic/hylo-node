@@ -28,7 +28,7 @@ module.exports = bookshelf.Model.extend({
     const collection = await this.forge({
       group_id: groupId,
       name,
-      user_id: userId,
+      user_id: userId
     }).save()
 
     return collection
@@ -45,8 +45,8 @@ module.exports = bookshelf.Model.extend({
       return q.where({ id: this.id, is_active: true })
         .andWhere(q => {
           q.where({ user_id: userId })
-         .orWhereIn('group_id', Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR }))
-       })
+            .orWhereIn('group_id', Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR }))
+        })
     })
 
     if (!collection) {
