@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.6.2] - 2023-12-29
+
+### Changed
+- oAuth refresh tokens last 180 days instead of 14 days
+
+### Fixed
+- Bug that was preventing direct message email notifications from going out
+
 ## [5.6.1] - 2023-11-11
 
 ### Changed
