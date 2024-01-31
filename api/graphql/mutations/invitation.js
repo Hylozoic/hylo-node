@@ -47,7 +47,6 @@ export function resendInvitation (userId, invitationId) {
 
 export async function reinviteAll (userId, groupId) {
   const group = await Group.find(groupId)
-  const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
   return GroupMembership.hasModeratorRole(userId, group, {}, Responsibility.constants.RESP_ADD_MEMBERS)
   .then(ok => {
     if (!ok) throw new GraphQLYogaError("You don't have permission to modify this invitation")

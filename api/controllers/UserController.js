@@ -50,7 +50,7 @@ module.exports = {
 
     const attrs = { name, email: email ? email.toLowerCase() : null, email_validated: false, active: false, group }
     if (isModeratorVal) {
-      attrs.role = GroupMembership.Role.MODERATOR
+      attrs.role = GroupMembership.Role.MODERATOR // TODO RESP: this needs to change
     }
 
     return User.create(attrs)

@@ -160,7 +160,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
             actor_id: actorId,
             group_id: fromGroup.id,
             other_group_id: toGroup.id,
-            reason: `${reason}:${parentToChild ? 'parent' : 'child'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}`
+            reason: `${reason}:${parentToChild ? 'parent' : 'child'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}` // TODO RESP: need to switch this to GroupMembership.hasRole
           }
         })
         const toGroupActivities = toMembers.map(member => {
@@ -169,7 +169,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
             actor_id: actorId,
             group_id: fromGroup.id,
             other_group_id: toGroup.id,
-            reason: `${reason}:${parentToChild ? 'child' : 'parent'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}`
+            reason: `${reason}:${parentToChild ? 'child' : 'parent'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}` // TODO RESP: need to switch this to GroupMembership.hasRole
           }
         })
         return Activity.saveForReasons(fromGroupActivities.concat(toGroupActivities), transacting)

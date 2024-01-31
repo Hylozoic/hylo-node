@@ -5,7 +5,7 @@ import underlyingDeleteGroupTopic from '../../models/group/deleteGroupTopic'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 // Util function
-async function getModeratedGroup (userId, groupId, opts = {}, additionalResponsibility = '') {
+async function getModeratedGroup (userId, groupId, opts = {}, additionalResponsibility = '') { // TODO RESP: check all the places that this is called
   const group = await Group.find(groupId, opts)
   if (!group) {
     throw new GraphQLYogaError('Group not found')

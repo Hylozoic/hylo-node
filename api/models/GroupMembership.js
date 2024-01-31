@@ -37,6 +37,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   hasRole (role) {
+    // TODO RESP: change this to a lookup of responsibilities
     return Number(role) === this.get('role')
   },
 
@@ -115,33 +116,37 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  async hasModeratorRole (userOrId, groupOrId, opts = {}, additionalResponsibility = '') {
+  async hasModeratorRole (userOrId, groupOrId, opts = {}, responsibility = '') { // TODO RESP: this could be simplified now we are ripping out
+    // Currently this checks if the user is a moderator of the group, or if they have the responsibility passed in
+    // Maybe it should be renamed to hasResponsibility, and just checks for the responsibility passed in...
+    // but there are still uses where it only being used to check just the moderator role, so those will need to be accommodated in some fashion
     const userId = userOrId instanceof User ? userOrId.id : userOrId
     const groupId = groupOrId instanceof Group ? groupOrId.id : groupOrId
-    let responsibilities = []
     if (!userId) {
       throw new Error("Can't call forPair without a user or user id")
     }
     if (!groupId) {
       throw new Error("Can't call forPair without a group or group id")
     }
-
-    const gm = await this.forPair(userOrId, groupId).fetch(opts)
-    if (gm && !gm.hasRole(this.Role.MODERATOR)) {
-      responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
+    if (responsibility.length === 0) {
+      throw new Error("Can't determine what responsibility is being checked")
     }
 
-    if ((gm && !gm.hasRole(this.Role.MODERATOR)) && !responsibilities.includes(additionalResponsibility)) {
+    const gm = await this.forPair(userOrId, groupId).fetch(opts)
+
+    const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
+
+    if (gm && !responsibilities.includes(responsibility)) {
       return false
     }
     return !!gm
   },
 
-  async setModeratorRole (userId, group) {
+  async setModeratorRole (userId, group) { // TODO RESP: this needs to change to instead give the user the manager common role
     return group.addMembers([userId], { role: this.Role.MODERATOR })
   },
 
-  async removeModeratorRole (userId, group) {
+  async removeModeratorRole (userId, group) { // TODO RESP: this needs to change to instead remove the manager common role from the user
     return group.addMembers([userId], { role: this.Role.DEFAULT })
   },
 

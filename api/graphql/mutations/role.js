@@ -4,10 +4,9 @@ export async function addGroupRole ({ groupId, color, name, description, emoji, 
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (groupId && name && emoji) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
 
-    if (groupMembership && ((groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)))) {
+    if ( responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       return GroupRole.forge({ group_id: groupId, name, description, emoji, active: true, color }).save().then((savedGroupRole) => savedGroupRole)
     } else {
       throw new GraphQLYogaError('User doesn\'t have required privileges to create group role')
@@ -21,9 +20,8 @@ export async function updateGroupRole ({ groupRoleId, color, name, description, 
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (groupRoleId) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (groupMembership && ((groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)))) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       return bookshelf.transaction(async transacting => {
         const groupRole = await GroupRole.where({ id: groupRoleId}).fetch()
         const verifiedActiveParam = (active == null) ? groupRole.get('active') : active
@@ -50,9 +48,8 @@ export async function addRoleToMember ({ userId, roleId, personId, groupId, isCo
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (personId && roleId) {
-    const actorGroupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (actorGroupMembership && ((actorGroupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)))) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       const groupMembership = await GroupMembership.forIds(personId, groupId).fetch()
       const useThisModel = isCommonRole ? MemberCommonRole : MemberRole
       const useThisData = isCommonRole ? { common_role_id: roleId, user_id: personId, group_id: groupId, group_membership_id: groupMembership.id } : { group_role_id: roleId, user_id: personId, active: true, group_id: groupId }
@@ -69,9 +66,8 @@ export async function removeRoleFromMember ({ userId, roleId, personId, groupId,
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (personId && roleId && groupId) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (groupMembership && ((groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) || userId === personId)) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION) || userId === personId) {
       const useThisModel = isCommonRole
         ? MemberCommonRole.query(q => {
             return q.where('user_id', personId)

@@ -4,9 +4,8 @@ export async function addGroupResponsibility ({ groupId, title, description, use
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (groupId && title) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (groupMembership && (groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION))) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       return Responsibility.forge({ group_id: groupId, title, description, type: 'group' }).save().then((savedGroupResponsibility) => savedGroupResponsibility)
     } else {
       throw new GraphQLYogaError('User doesn\'t have required privileges to create group responsibility')
@@ -18,13 +17,11 @@ export async function addGroupResponsibility ({ groupId, title, description, use
 
 export async function updateGroupResponsibility ({ responsibilityId, title, description, userId, groupId }) {
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
-
   if (responsibilityId) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (groupMembership && (groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION))) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       return bookshelf.transaction(async transacting => {
-        const groupResponsibility = await Responsibility.where({ id: responsibilityId}).fetch()
+        const groupResponsibility = await Responsibility.where({ id: responsibilityId }).fetch()
         const updatedAttributes = {
           title: title || groupResponsibility.get('title'),
           description: description || groupResponsibility.get('description')
@@ -44,9 +41,8 @@ export async function deleteGroupResponsibility ({ responsibilityId, userId, gro
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (responsibilityId) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (groupMembership && ((groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)))) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       const groupRoleResponsibility = await Responsibility.query(q => {
         return q.where('id', responsibilityId)
           .andWhere('group_id', groupId)
@@ -64,9 +60,8 @@ export async function deleteGroupResponsibility ({ responsibilityId, userId, gro
 export async function addResponsibilityToRole ({ userId, responsibilityId, roleId, groupId }) {
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
   if (responsibilityId && roleId && groupId) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (groupMembership && ((groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)))) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       return GroupRoleResponsibility.forge({ group_role_id: roleId, responsibility_id: responsibilityId }).save().then((savedRoleResponsibility) => savedRoleResponsibility)
     } else {
       throw new GraphQLYogaError('User doesn\'t have required privileges to add responsibility to role')
@@ -80,9 +75,8 @@ export async function removeResponsibilityFromRole ({ userId, roleResponsibility
   if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (roleResponsibilityId && groupId) {
-    const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
-    if (groupMembership && ((groupMembership.get('role') === GroupMembership.Role.MODERATOR || responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)))) {
+    if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
       const roleResponsibility = await GroupRoleResponsibility.query(q => {
         return q.where('id', roleResponsibilityId)
       })

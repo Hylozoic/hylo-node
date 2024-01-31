@@ -178,7 +178,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.hasMany(JoinRequest)
   },
 
-  moderatedGroupMemberships: function () {
+  moderatedGroupMemberships: function () { // TODO RESP: need to edit this. A helper function has already been created on the Responsibility model, it gets you groupIds and responsibilities tho, need to use that to look up memberships to return
     return this.memberships()
       .where('group_memberships.role', GroupMembership.Role.MODERATOR)
   },
@@ -280,7 +280,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     await this.deleteUserMedia()
     Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
-
+    // TODO RESP: will need to add responsibilies, roles, etc to here, where they are missing (some roles are already handled)
     const query = `
     BEGIN;
     UPDATE posts SET name = 'Post by deleted user', description = '', location = NULL, location_id = NULL WHERE user_id = ${this.id};
@@ -345,6 +345,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   joinGroup: async function (group, role = GroupMembership.Role.DEFAULT, fromInvitation = false, { transacting } = {}) {
+    // TODO RESP:  need to handle role differently here. Probably easiest to just pass in the role, and then handle it in the class method addMembers
     const memberships = await group.addMembers([this.id],
       {
         role,

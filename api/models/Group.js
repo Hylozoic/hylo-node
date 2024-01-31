@@ -165,7 +165,7 @@ module.exports = bookshelf.Model.extend(merge({
     ).then(resp => resp.rows)
   },
 
-  members (where) {
+  members (where) { // TODO RESP: does this need to change or should I just build a new one for... the problem is the access to the role attribute. Maybe uses of that can be removed
     return this.belongsToMany(User).through(GroupMembership)
       .query(q => {
         q.where({
@@ -190,7 +190,7 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   moderators () {
-    return this.members({ role: GroupMembership.Role.MODERATOR })
+    return this.members({ role: GroupMembership.Role.MODERATOR }) // TODO RESP: this needs to change
   },
 
   // Return # of prereq groups userId is not a member of yet
@@ -323,7 +323,7 @@ module.exports = bookshelf.Model.extend(merge({
           showJoinForm: true
         }
       },
-      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
+      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST) // TODO RESP: adjust for MODERATOR stuff; if there are uses of this that expect a moderator to be returned, we need to run some additional queries to add the appropriate roles
     )
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
@@ -712,6 +712,8 @@ module.exports = bookshelf.Model.extend(merge({
 
       const members = await group.addMembers([userId],
         { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
+        // TODO RESP: Need to find another way to filter stuff for moderators
+        // This is labeled members but functionally it appears to be the group creator, thus the admin power. Worth a rename for clarity
 
       // Have to add/request add to parent group after moderator has been added to the group
       if (data.parent_ids) {
@@ -725,7 +727,7 @@ module.exports = bookshelf.Model.extend(merge({
             }).fetch({ transacting: trx })
 
             if (parentGroupMembership &&
-                (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR
+                (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR // TODO RESP: switch this to the GroupMembership method hasRole
                   || parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN)) {
               await group.parentGroups().attach(parentId, { transacting: trx })
             } else {
@@ -870,6 +872,26 @@ module.exports = bookshelf.Model.extend(merge({
       },
       multiple: true
     }).query()
+  },
+
+  async selectIdsForModeratedGroups (userId) { // TODO RESP: recall what this is for
+    const responsibilities = await Responsibility.fetchSystemResponsiblititesForUser(userId)
+    const byGroupId = {}
+    const result = []
+    responsibilities.forEach(r => {
+      if (byGroupId[r.group_id]) {
+        byGroupId[r.group_id] += 1
+      } else {
+        byGroupId[r.group_id] = 1
+      }
+    })
+
+    for (const key in byGroupId) {
+      if (byGroupId[key] === 4) {
+        result.push(key)
+      }
+    }
+    return result
   },
 
   async allHaveMember (groupDataIds, userOrId) {

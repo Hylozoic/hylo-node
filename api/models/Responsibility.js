@@ -68,5 +68,54 @@ module.exports = bookshelf.Model.extend({
       FROM responsibilities
       WHERE id IN (SELECT responsibility_id FROM ResponsibilitiesCTE);`
     ).then(resp => resp.rows.map(r => r.title))
+  },
+  fetchSystemResponsiblititesForUser (userId, groupIds = []) {
+    return bookshelf.knex.raw(
+      `WITH UserGroupRoles AS (
+        -- CTE to get group_role_id and group_id for the specified user
+        SELECT
+          m.group_role_id,
+          m.group_id
+        FROM members_roles m
+        WHERE m.user_id = ${userId}
+      ),
+      CommonRolesGroupMemberships AS (
+        -- CTE to get common_role_id and group_id for the specified user
+        SELECT
+          c.common_role_id,
+          c.group_id
+        FROM common_roles_group_memberships c
+        WHERE c.user_id = ${userId}
+      ),
+      ResponsibilitiesCTE AS (
+        -- CTE to get responsibility_id, group_id, and source table for the user's roles with type 'system'
+        SELECT
+          gr.responsibility_id,
+          ugr.group_id,
+          r.title
+        FROM group_roles_responsibilities gr
+        JOIN UserGroupRoles ugr ON gr.group_role_id = ugr.group_role_id
+        JOIN responsibilities r ON gr.responsibility_id = r.id AND r.type = 'system'
+        UNION
+        -- UNION with responsibility_id, group_id, and source table for the user's common roles with type 'system'
+        SELECT
+          cr.responsibility_id,
+          cm.group_id,
+          r.title
+        FROM common_roles_responsibilities cr
+        JOIN CommonRolesGroupMemberships cm ON cr.common_role_id = cm.common_role_id
+        JOIN responsibilities r ON cr.responsibility_id = r.id AND r.type = 'system'
+      )
+      -- Final query to get responsibility_id, group_id pairs sorted by group_id
+      SELECT
+        r.responsibility_id,
+        r.group_id,
+        r.title
+      FROM ResponsibilitiesCTE r
+      ORDER BY r.group_id;`
+    ).then(resp => {
+      if (groupIds.length === 0) return resp.rows
+      return resp.rows.filter(r => groupIds.includes(r.group_id))
+    })
   }
 })
