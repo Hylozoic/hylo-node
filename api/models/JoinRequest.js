@@ -14,7 +14,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   questionAnswers: function () {
-    return this.hasMany(JoinRequestQuestionAnswer)
+    return this.hasMany(GroupJoinQuestionAnswer)
   },
 
   accept: async function (moderatorId) {

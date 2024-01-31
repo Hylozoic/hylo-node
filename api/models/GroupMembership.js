@@ -3,26 +3,57 @@ import { isEmpty } from 'lodash'
 import {
   whereId
 } from './group/queryUtils'
-import {
-  getDataTypeForModel,
-  getModelForDataType
-} from './group/DataType'
+import GroupJoinQuestionAnswer from './GroupJoinQuestionAnswer'
 
 module.exports = bookshelf.Model.extend(Object.assign({
   tableName: 'group_memberships',
   requireFetch: false,
   hasTimestamps: true,
 
+  agreements () {
+    return this.belongsToMany(Agreement, 'users_groups_agreements', 'group_id', 'agreement_id', 'group_id')
+      .through(UserGroupAgreement, 'group_id', 'agreement_id')
+      .where({ user_id: this.get('user_id') })
+      .withPivot(['accepted'])
+  },
+
   group () {
     return this.belongsTo(Group)
+  },
+
+  joinQuestionAnswers () {
+    return this.hasMany(GroupJoinQuestionAnswer, 'group_id').where({ user_id: this.get('user_id') })
   },
 
   user () {
     return this.belongsTo(User)
   },
 
+  hasRole (role) {
+    return Number(role) === this.get('role')
+  },
+
+  async acceptAgreements (transacting) {
+    this.addSetting({ agreementsAcceptedAt: (new Date()).toISOString() })
+    const groupId = this.get('group_id')
+    const groupAgreements = await GroupAgreement.where({ group_id: groupId }).fetchAll({ transacting })
+    for (const ga of groupAgreements) {
+      const attrs = { group_id: groupId, user_id: this.get('user_id'), agreement_id: ga.get('agreement_id') }
+      await UserGroupAgreement
+        .where(attrs)
+        .fetch({ transacting })
+        .then(async (uga) => {
+          if (uga && !uga.get('accepted')) {
+            await uga.save({ accepted: true }, { transacting })
+          } else {
+            await UserGroupAgreement.forge(attrs).save({}, { transacting })
+          }
+        })
+    }
+  },
+
   async updateAndSave (attrs, { transacting } = {}) {
-    for (let key in attrs) {
+    for (const key in attrs) {
       if (key === 'settings') {
         this.addSetting(attrs[key])
       } else {
@@ -32,10 +63,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     if (!isEmpty(this.changed)) return this.save(null, {transacting})
     return this
-  },
-
-  hasRole (role) {
-    return Number(role) === this.get('role')
   }
 
 }, HasSettings), {
@@ -87,18 +114,18 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async setModeratorRole (userId, group) {
-    return group.addMembers([userId], {role: this.Role.MODERATOR})
+    return group.addMembers([userId], { role: this.Role.MODERATOR })
   },
 
   async removeModeratorRole (userId, group) {
-    return group.addMembers([userId], {role: this.Role.DEFAULT})
+    return group.addMembers([userId], { role: this.Role.DEFAULT })
   },
 
   forMember (userOrId) {
-    return this.forIds(userOrId, null, {multiple: true})
+    return this.forIds(userOrId, null, { multiple: true })
   },
 
-  async updateLastViewedAt(userOrId, groupOrId) {
+  async updateLastViewedAt (userOrId, groupOrId) {
     const membership = await GroupMembership.forPair(userOrId, groupOrId).fetch()
     if (membership) {
       membership.addSetting({ lastReadAt: new Date() })
@@ -106,5 +133,5 @@ module.exports = bookshelf.Model.extend(Object.assign({
       return membership
     }
     return false
-  },
+  }
 })

@@ -186,7 +186,7 @@ module.exports = {
                 return membership
               })
           }
-          if (!!group) return user.joinGroup(group, GroupMembership.Role.DEFAULT, true).then(membership => membership)
+          if (!!group) return user.joinGroup(group, { role: GroupMembership.Role.DEFAULT, fromInvitation: true }).then(membership => membership)
         })
         .catch(err => {
           throw new Error(err.message)

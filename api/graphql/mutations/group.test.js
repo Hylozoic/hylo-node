@@ -28,7 +28,7 @@ describe('mutations/group', () => {
       user = factories.user()
       group = factories.group()
       return Promise.join(group.save(), user.save())
-      .then(() => user.joinGroup(group, GroupMembership.Role.MODERATOR))
+        .then(() => user.joinGroup(group, { role: GroupMembership.Role.MODERATOR }))
     })
 
     describe('updateGroup', () => {
@@ -65,7 +65,7 @@ describe('mutations/group', () => {
     describe('removeModerator', () => {
       it('just removes moderator role', async () => {
         const user2 = await factories.user().save()
-        await user2.joinGroup(group, GroupMembership.Role.MODERATOR)
+        await user2.joinGroup(group, { role: GroupMembership.Role.MODERATOR })
         await removeModerator(user.id, user2.id, group.id)
         expect(!await GroupMembership.hasModeratorRole(user2, group))
 
@@ -76,7 +76,7 @@ describe('mutations/group', () => {
 
       it('also removes from group when selected', async () => {
         const user2 = await factories.user().save()
-        await user2.joinGroup(group, GroupMembership.Role.MODERATOR)
+        await user2.joinGroup(group, { role: GroupMembership.Role.MODERATOR })
         await removeModerator(user.id, user2.id, group.id, true)
         expect(!await GroupMembership.hasModeratorRole(user2, group))
 
@@ -87,10 +87,10 @@ describe('mutations/group', () => {
 
       it('throws an error if youre not a moderator', async () => {
         const nonModeratorUser = await factories.user().save()
-        await nonModeratorUser.joinGroup(group, GroupMembership.Role.DEFAULT)
+        await nonModeratorUser.joinGroup(group, { role: GroupMembership.Role.DEFAULT })
 
         const user2 = await factories.user().save()
-        await user2.joinGroup(group, GroupMembership.Role.MODERATOR)
+        await user2.joinGroup(group, { role: GroupMembership.Role.MODERATOR })
 
         return expect(removeModerator(nonModeratorUser.id, user2.id, group.id, true)).to.eventually.be.rejected
       })
@@ -99,7 +99,7 @@ describe('mutations/group', () => {
     describe('removeMember', () => {
       it('works', async () => {
         const user2 = await factories.user().save()
-        await user2.joinGroup(group, GroupMembership.Role.MODERATOR)
+        await user2.joinGroup(group, { role: GroupMembership.Role.MODERATOR })
         await removeMember(user.id, user2.id, group.id)
 
         const membership = await GroupMembership.forPair(user2, group,
@@ -178,7 +178,7 @@ describe('mutations/group', () => {
       user = factories.user()
       group = factories.group()
       return Promise.join(group.save(), user.save())
-      .then(() => user.joinGroup(group, GroupMembership.Role.MODERATOR))
+      .then(() => user.joinGroup(group, { role: GroupMembership.Role.MODERATOR }))
     })
 
     it('deletes the topic', async () => {
@@ -200,7 +200,7 @@ describe('mutations/group', () => {
     before(async () => {
       user = await factories.user().save()
       group = await factories.group().save()
-      await user.joinGroup(group, GroupMembership.Role.MODERATOR)
+      await user.joinGroup(group, { role: GroupMembership.Role.MODERATOR })
     })
 
     it('makes the group inactive', async () => {

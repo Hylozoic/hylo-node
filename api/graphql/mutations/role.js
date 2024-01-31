@@ -1,7 +1,7 @@
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
-export async function addGroupRole ({ groupId, color, name, description,  emoji, userId }){
-  if (!userId) throw new GraphQLYogaError(`No userId passed into function`)
+export async function addGroupRole ({ groupId, color, name, description, emoji, userId }) {
+  if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (groupId && name && emoji) {
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
@@ -16,8 +16,8 @@ export async function addGroupRole ({ groupId, color, name, description,  emoji,
   }
 }
 
-export async function updateGroupRole ({ groupRoleId, color, name, description, emoji, userId, active, groupId }){
-  if (!userId) throw new GraphQLYogaError(`No userId passed into function`)
+export async function updateGroupRole ({ groupRoleId, color, name, description, emoji, userId, active, groupId }) {
+  if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (groupRoleId) {
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
@@ -33,7 +33,7 @@ export async function updateGroupRole ({ groupRoleId, color, name, description, 
           emoji: emoji || groupRole.get('emoji'),
           active: verifiedActiveParam,
         }
-        
+
         return groupRole.save(updatedAttributes, { transacting }).then((savedGroupRole) => savedGroupRole)
       })
     } else {
@@ -45,8 +45,8 @@ export async function updateGroupRole ({ groupRoleId, color, name, description, 
 
 }
 
-export async function addRoleToMember ({userId, groupRoleId, personId, groupId}){
-  if (!userId) throw new GraphQLYogaError(`No userId passed into function`)
+export async function addRoleToMember ({ userId, groupRoleId, personId, groupId }) {
+  if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (personId && groupRoleId) {
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
@@ -61,8 +61,8 @@ export async function addRoleToMember ({userId, groupRoleId, personId, groupId})
   }
 }
 
-export async function removeRoleFromMember ({userId, groupRoleId, personId, groupId}){
-  if (!userId) throw new GraphQLYogaError(`No userId passed into function`)
+export async function removeRoleFromMember ({ userId, groupRoleId, personId, groupId }) {
+  if (!userId) throw new GraphQLYogaError('No userId passed into function')
 
   if (personId && groupRoleId && groupId) {
     const groupMembership = await GroupMembership.forIds(userId, groupId).fetch()
