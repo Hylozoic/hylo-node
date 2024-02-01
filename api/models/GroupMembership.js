@@ -71,6 +71,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
         this.set(key, attrs[key])
       }
     }
+    if (attrs.role === 0 || attrs.role === 1) {
+      await MemberCommonRole.updateManagerRole({ groupMembershipId: this.get('id'), userId: this.get('user_id'), groupId: this.get('group_id'), role: attrs.role, transacting })
+    }
 
     if (!isEmpty(this.changed)) return this.save(null, {transacting})
     return this

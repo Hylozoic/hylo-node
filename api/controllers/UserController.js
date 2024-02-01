@@ -50,7 +50,7 @@ module.exports = {
 
     const attrs = { name, email: email ? email.toLowerCase() : null, email_validated: false, active: false, group }
     if (isModeratorVal) {
-      attrs.role = GroupMembership.Role.MODERATOR // TODO RESP: this needs to change
+      attrs.role = GroupMembership.Role.MODERATOR // This is ultimately fed to Group.addMembers, which handles mod -> manager
     }
 
     return User.create(attrs)

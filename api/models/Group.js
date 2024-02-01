@@ -165,7 +165,7 @@ module.exports = bookshelf.Model.extend(merge({
     ).then(resp => resp.rows)
   },
 
-  members (where) { // TODO RESP: does this need to change or should I just build a new one for... the problem is the access to the role attribute. Maybe uses of that can be removed
+  members (where) { // TODO RESP: does this need to change or should we just build a new one for... the problem is the access to the role attribute. Maybe uses of that can be removed
     return this.belongsToMany(User).through(GroupMembership)
       .query(q => {
         q.where({
@@ -323,7 +323,7 @@ module.exports = bookshelf.Model.extend(merge({
           showJoinForm: true
         }
       },
-      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST) // TODO RESP: adjust for MODERATOR stuff; if there are uses of this that expect a moderator to be returned, we need to run some additional queries to add the appropriate roles
+      pick(omitBy(attrs, isUndefined), GROUP_ATTR_UPDATE_WHITELIST)
     )
 
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
@@ -351,6 +351,8 @@ module.exports = bookshelf.Model.extend(merge({
           }
         }), { transacting })
       newMemberships.push(membership)
+      // Based on the role attribute, add or remove the user to the manager common role
+      await MemberCommonRole.updateManagerRole({ groupMembershipId: membership.id, userId: id, groupId: this.id, role: updatedAttribs.role, transacting })
       // Subscribe each user to the default tags in the group
       await User.followTags(id, this.id, defaultTagIds, transacting)
     }
