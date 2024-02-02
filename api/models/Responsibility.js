@@ -117,5 +117,37 @@ module.exports = bookshelf.Model.extend({
       if (groupIds.length === 0) return resp.rows
       return resp.rows.filter(r => groupIds.includes(r.group_id))
     })
+  },
+  fetchForGroup (groupId) {
+    return bookshelf.knex.raw(
+      `SELECT DISTINCT
+        r.title AS responsibility_title,
+        m.user_id
+      FROM responsibilities r
+      JOIN group_roles_responsibilities gr ON r.id = gr.responsibility_id
+      JOIN members_roles m ON gr.group_role_id = m.group_id
+      WHERE r.type = 'system' AND m.group_id = ${groupId}
+      
+      UNION
+      
+      SELECT DISTINCT
+        r.title AS responsibility_title,
+        c.user_id
+      FROM responsibilities r
+      JOIN common_roles_responsibilities cr ON r.id = cr.responsibility_id
+      JOIN common_roles_group_memberships c ON cr.common_role_id = c.common_role_id
+      WHERE r.type = 'system' AND c.group_id = ${groupId};`
+    ).then(resp => resp.rows)
+  },
+  hasAllResponsibilities (rows) {
+    const userCounts = rows.reduce((acc, row) => {
+      const { user_id } = row
+      acc[user_id] = (acc[user_id] || 0) + 1
+      return acc
+    }, {})
+
+    return Object.entries(userCounts)
+      .filter(([_, count]) => count >= 4)
+      .map(([user_id]) => parseInt(user_id, 10))
   }
 })

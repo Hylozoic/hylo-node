@@ -189,8 +189,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.get('num_members')
   },
 
-  moderators () {
-    return this.members({ role: GroupMembership.Role.MODERATOR }) // TODO RESP: this needs to change
+  async moderators () {
+    const responsibilities = await Responsibility.fetchForGroup(this.id)
+    const userIds = Responsibility.hasAllResponsibilities(responsibilities)
+    return this.members({ user_id: userIds }) // TODO RESP: this needs to be verified
   },
 
   // Return # of prereq groups userId is not a member of yet

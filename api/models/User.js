@@ -362,7 +362,6 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   joinGroup: async function (group, { role = GroupMembership.Role.DEFAULT, fromInvitation = false, questionAnswers = [], transacting = null } = {}) {
-    // TODO RESP:  need to handle role differently here. Probably easiest to just pass in the role, and then handle it in the class method addMembers
     const memberships = await group.addMembers([this.id],
       {
         role,

@@ -46,7 +46,7 @@ module.exports = bookshelf.Model.extend({
         .andWhere(q => {
           q.where({ user_id: userId })
             .orWhereIn('group_id', Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR }))
-            // TODO RESP: need to check the right RESP here
+            // TODO RESP: need to check the right RESP here, I think there is a helper function/method for this
         })
     })
 
