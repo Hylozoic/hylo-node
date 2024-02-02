@@ -39,9 +39,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
-  hasRole (role) {
-    // TODO RESP: change this to a lookup of responsibilities
-    return Number(role) === this.get('role')
+  async hasRole (role) {
+    if (role === GroupMembership.Role.MODERATOR) {
+      const result = await bookshelf.knex.raw(`SELECT 1 FROM common_roles_group_memberships WHERE user_id = ${this.get('user_id')} AND group_id = ${this.get('group_id')} AND group_membership_id = ${this.get('id')} AND common_role_id = (SELECT id FROM common_roles WHERE name = 'Manager') LIMIT 1`)
+      return result.rows.length > 0
+    }
+    return false
   },
 
   async acceptAgreements (transacting) {

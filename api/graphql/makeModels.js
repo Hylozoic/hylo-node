@@ -132,7 +132,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
           m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
           m.get('user_id') === userId ? m.get('new_post_count') : null,
-        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR) // TODO RESP: this needs to change
+        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR) // TODO RESP: verify
       },
       filter: nonAdminFilter(membershipFilter(userId))
     },

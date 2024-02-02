@@ -715,8 +715,7 @@ module.exports = bookshelf.Model.extend(merge({
 
       const members = await group.addMembers([userId],
         { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
-        // TODO RESP: Need to find another way to filter stuff for moderators
-        // This is labeled members but functionally it appears to be the group creator, thus the admin power. Worth a rename for clarity
+      // This is labeled members but functionally it appears to be the group creator, thus the admin power. Worth a rename for clarity
 
       // Have to add/request add to parent group after moderator has been added to the group
       if (data.parent_ids) {
@@ -730,8 +729,7 @@ module.exports = bookshelf.Model.extend(merge({
             }).fetch({ transacting: trx })
 
             if (parentGroupMembership &&
-                (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR // TODO RESP: switch this to the GroupMembership method hasRole
-                  || parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN)) {
+                (parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN || parentGroupMembership.hasRole(GroupMembership.Role.MODERATOR))) {
               await group.parentGroups().attach(parentId, { transacting: trx })
             } else {
               // If can't add directly to parent group then send a request to join
