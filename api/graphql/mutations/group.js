@@ -5,7 +5,7 @@ import underlyingDeleteGroupTopic from '../../models/group/deleteGroupTopic'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 // Util function
-async function getModeratedGroup (userId, groupId, opts = {}, additionalResponsibility = '') { // TODO RESP: check all the places that this is called
+async function getModeratedGroup (userId, groupId, opts = {}, additionalResponsibility = '') {
   const group = await Group.find(groupId, opts)
   if (!group) {
     throw new GraphQLYogaError('Group not found')
@@ -21,7 +21,7 @@ async function getModeratedGroup (userId, groupId, opts = {}, additionalResponsi
 // Group Mutations
 
 export async function addModerator (userId, personId, groupId) {
-  const group = await getModeratedGroup(userId, groupId)
+  const group = await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
   await GroupMembership.setModeratorRole(personId, group)
   return group
 }
@@ -104,7 +104,7 @@ export async function removeMember (loggedInUserId, userIdToRemove, groupId) {
 }
 
 export async function removeModerator (userId, personId, groupId, isRemoveFromGroup) {
-  const group = await getModeratedGroup(userId, groupId)
+  const group = await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
   if (isRemoveFromGroup) {
     await GroupMembership.removeModeratorRole(personId, group)
     await GroupService.removeMember(personId, groupId)
@@ -132,7 +132,7 @@ export async function inviteGroupToGroup(userId, fromId, toId, type, questionAns
     throw new GraphQLYogaError('Invalid group relationship type')
   }
 
-  const fromGroup = await getModeratedGroup(userId, fromId, opts)
+  const fromGroup = await getModeratedGroup(userId, fromId, opts, Responsibility.constants.RESP_ADMINISTRATION)
 
   if (await GroupRelationship.forPair(fromGroup, toGroup).fetch(opts)) {
     throw new GraphQLYogaError('Groups are already related')
