@@ -880,7 +880,7 @@ module.exports = bookshelf.Model.extend(merge({
     }).query()
   },
 
-  async selectIdsForModeratedGroups (userId) { // TODO RESP: recall what this is for
+  async selectIdsForModeratedGroups (userId) { // TODO RESP: .... this was the last thing I was working on before getting sick and then going to kiwiburn... so I don't recal whether its worth keeping around or not...
     // get all responsiblities for a user
     const responsibilities = await Responsibility.fetchSystemResponsiblititesForUser(userId)
     const byGroupId = {}
