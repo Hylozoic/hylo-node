@@ -165,7 +165,10 @@ module.exports = bookshelf.Model.extend(merge({
     ).then(resp => resp.rows)
   },
 
-  members (where) { // TODO RESP: does this need to change or should we just build a new one for... the problem is the access to the role attribute. Maybe uses of that can be removed
+  members (where) { 
+    // TODO RESP: does this need to change or should we just build a new one for it... the problem is the access to the role attribute. 
+    // It doesn't seem like there are any more Node calls of this that rely on the role being present
+    // But I suspect that there might be graphQL queries that rely on it
     return this.belongsToMany(User).through(GroupMembership)
       .query(q => {
         q.where({
@@ -878,9 +881,11 @@ module.exports = bookshelf.Model.extend(merge({
   },
 
   async selectIdsForModeratedGroups (userId) { // TODO RESP: recall what this is for
+    // get all responsiblities for a user
     const responsibilities = await Responsibility.fetchSystemResponsiblititesForUser(userId)
     const byGroupId = {}
     const result = []
+    // count how many responsibilities a user has for each group
     responsibilities.forEach(r => {
       if (byGroupId[r.group_id]) {
         byGroupId[r.group_id] += 1
@@ -889,6 +894,7 @@ module.exports = bookshelf.Model.extend(merge({
       }
     })
 
+    // return an array of group ids that the user has 4 responsibilities for. This defacto means they have full power of a group, whether its from a manager role or not
     for (const key in byGroupId) {
       if (byGroupId[key] === 4) {
         result.push(key)

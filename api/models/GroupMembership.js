@@ -151,11 +151,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm
   },
 
-  async setModeratorRole (userId, group) { // TODO RESP: this needs to change to instead give the user the manager common role
+  async setModeratorRole (userId, group) {
     return group.addMembers([userId], { role: this.Role.MODERATOR })
   },
 
-  async removeModeratorRole (userId, group) { // TODO RESP: this needs to change to instead remove the manager common role from the user
+  async removeModeratorRole (userId, group) {
     return group.addMembers([userId], { role: this.Role.DEFAULT })
   },
 

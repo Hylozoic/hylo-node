@@ -145,6 +145,18 @@ exports.up = async function (knex) {
       RETURNING *
     )
   `)
+
+  // Give all moderators a 'manager' common role
+  await knex.raw(`
+    INSERT INTO common_roles_group_memberships (common_role_id, user_id, group_id, group_membership_id)
+    SELECT
+      (SELECT id FROM common_roles WHERE name = 'Manager') AS common_role_id,
+      m.user_id,
+      m.group_id,
+      m.id AS group_membership_id
+    FROM group_memberships m
+    WHERE m.role = 1;
+  `)
 }
 
 exports.down = async function (knex) {
