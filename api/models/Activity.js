@@ -298,9 +298,9 @@ module.exports = bookshelf.Model.extend({
   },
 
   createWithNotifications: function (attributes, trx) {
-    return new Activity(Object.assign({created_at: new Date()}, attributes))
-    .save({}, {transacting: trx})
-    .tap(activity => activity.createNotifications(trx))
+    return new Activity(Object.assign({ created_at: new Date() }, attributes))
+      .save({}, { transacting: trx })
+      .tap(activity => activity.createNotifications(trx))
   },
 
   removeForComment: removeForRelation('comment'),

@@ -155,9 +155,9 @@ export function updateGroupTopicFollow (userId, { id, data }) {
   const whitelist = mapKeys(pick(data, ['newPostCount', 'lastReadPostId']), (v, k) => snakeCase(k))
   if (isEmpty(whitelist)) return Promise.resolve(null)
 
-  return GroupTag.where({id}).fetch()
-  .then(ct => ct.tagFollow(userId).query().update(whitelist))
-  .then(() => ({success: true}))
+  return GroupTag.where({ id }).fetch()
+    .then(ct => ct.tagFollow(userId).query().update(whitelist))
+    .then(() => ({ success: true }))
 }
 
 export function markActivityRead (userId, activityid) {

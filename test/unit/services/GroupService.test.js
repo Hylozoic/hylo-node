@@ -11,7 +11,7 @@ describe('GroupService', function () {
     u1 = await factories.user({name: 'moderator'}).save()
     u2 = await factories.user().save({name: 'user'})
     g1 = await factories.group({num_members: 0}).save()
-    await u1.joinGroup(g1, GroupMembership.Role.MODERATOR)
+    await u1.joinGroup(g1, { role: GroupMembership.Role.MODERATOR })
     await u2.joinGroup(g1)
   })
 

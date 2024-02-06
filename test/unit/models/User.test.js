@@ -83,7 +83,7 @@ describe('User', function () {
     const street = new Group({ name: 'Street', slug: 'street', group_data_type: 1 })
 
     return street.save()
-    .then(() => cat.joinGroup(street, GroupMembership.Role.MODERATOR))
+    .then(() => cat.joinGroup(street, { role: GroupMembership.Role.MODERATOR }))
     .then(() => GroupMembership.forPair(cat, street).fetch())
     .then(membership => {
       expect(membership).to.exist

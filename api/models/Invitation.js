@@ -44,12 +44,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // invitation is unused, whether the membership already exists, and whether
   // the tag follow already exists
   async use (userId, { transacting } = {}) {
-    const user = await User.find(userId, {transacting})
-    const group = await this.group().fetch({transacting})
+    const user = await User.find(userId, { transacting })
+    const group = await this.group().fetch({ transacting })
     const role = Number(this.get('role'))
     const membership =
-      await GroupMembership.forPair(user, group).fetch({transacting}) ||
-      await user.joinGroup(group, role, true, {transacting})
+      await GroupMembership.forPair(user, group).fetch({ transacting }) ||
+      await user.joinGroup(group, { role, fromInvitation: true, transacting })
 
     if (!this.isUsed() && this.get('tag_id')) {
       try {
@@ -68,8 +68,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     }
 
     if (!this.isUsed()) {
-      await this.save({used_by_id: userId, used_at: new Date()},
-        {patch: true, transacting})
+      await this.save({ used_by_id: userId, used_at: new Date() }, { patch: true, transacting })
     }
 
     return membership

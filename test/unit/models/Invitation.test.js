@@ -15,7 +15,7 @@ describe('Invitation', function () {
   })
 
   describe('#use', function () {
-    var user, group, tag, invitation1, invitation2, inviter
+    let user, group, tag, invitation1, invitation2, inviter
 
     before(async () => {
       inviter = await factories.user().save()
@@ -38,7 +38,7 @@ describe('Invitation', function () {
     })
 
     it('creates a membership and marks itself used', async () => {
-      await bookshelf.transaction(trx => invitation1.use(user.id, {transacting: trx}))
+      await bookshelf.transaction(trx => invitation1.use(user.id, { transacting: trx }))
       expect(invitation1.get('used_by_id')).to.equal(user.id)
       expect(invitation1.get('used_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
       const isModerator = await GroupMembership.hasModeratorRole(user, group)

@@ -32,6 +32,20 @@ export default function makeModels (userId, isAdmin, apiClient) {
   const apiFilter = makeFilterToggle(!apiClient || !apiClient.super)
 
   return {
+    Agreement: {
+      model: Agreement,
+      isDefaultTypeForTable: true,
+      attributes: [
+        'id',
+        'description',
+        'order',
+        'title'
+      ],
+      getters: {
+        order: a => a.pivot && a.pivot.get('order')
+      }
+    },
+
     Me: {
       model: User,
       attributes: [
@@ -92,7 +106,9 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'group_id'
       ],
       relations: [
+        { agreements: { querySet: true } },
         { group: { alias: 'group' } },
+        { joinQuestionAnswers: { querySet: true } },
         { user: { alias: 'person' } }
       ],
       getters: {
@@ -104,6 +120,17 @@ export default function makeModels (userId, isAdmin, apiClient) {
         hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR)
       },
       filter: nonAdminFilter(membershipFilter(userId))
+    },
+
+    MembershipAgreement: {
+      model: Agreement,
+      attributes: [
+        'id',
+        'accepted'
+      ],
+      getters: {
+        accepted: a => a.pivot && a.pivot.get('accepted')
+      }
     },
 
     Person: {
@@ -287,6 +314,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       relations: [
         { activeMembers: { querySet: true } },
+        { agreements: { querySet: true } },
         { childGroups: { querySet: true } },
         { customViews: { querySet: true } },
         { groupRelationshipInvitesFrom: { querySet: true } },
@@ -307,7 +335,17 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { groupToGroupJoinQuestions: { querySet: true } },
         { joinQuestions: { querySet: true } },
         { moderators: { querySet: true } },
-        { memberships: { querySet: true } },
+        {
+          memberships: {
+            querySet: true,
+            filter: (relation, { userId }) =>
+              relation.query(q => {
+                if (userId) {
+                  q.where('group_memberships.user_id', userId)
+                }
+              })
+          }
+        },
         {
           members: {
             querySet: true,
@@ -504,6 +542,15 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ]
     },
 
+    GroupJoinQuestionAnswer: {
+      model: GroupJoinQuestionAnswer,
+      isDefaultTypeForTable: true,
+      attributes: [
+        'answer'
+      ],
+      relations: ['group', 'question', 'user']
+    },
+
     GroupToGroupJoinQuestion: {
       model: GroupToGroupJoinQuestion,
       attributes: [
@@ -635,14 +682,6 @@ export default function makeModels (userId, isAdmin, apiClient) {
         questionAnswers: jr => jr.questionAnswers().fetch()
       },
       fetchMany: ({ groupId }) => JoinRequest.where({ group_id: groupId, status: JoinRequest.STATUS.Pending })
-    },
-
-    JoinRequestQuestionAnswer: {
-      model: JoinRequestQuestionAnswer,
-      attributes: [
-        'answer'
-      ],
-      relations: ['question']
     },
 
     Question: {
