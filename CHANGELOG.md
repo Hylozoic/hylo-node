@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - When inviting someone to a group that has Join Questions new members are now asked to answer the join questions before being let in to the group even when invited by join link or email address.
 
+### Fixed
+- Bug that allowed people to message someone they don't share a group with.
+
 ## [5.6.2] - 2023-12-29
 
 ### Changed
