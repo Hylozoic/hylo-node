@@ -2,7 +2,7 @@ import findOrCreateThread, { validateThreadData } from './findOrCreateThread'
 import factories from '../../../test/setup/factories'
 
 describe('findOrCreateThread', () => {
-  var u1, u2, u3
+  let u1, u2, u3
   before(async () => {
     u1 = await factories.user().save()
     u2 = await factories.user().save()
@@ -10,21 +10,21 @@ describe('findOrCreateThread', () => {
   })
 
   it('finds or creates a thread', async () => {
-    let thread = await findOrCreateThread(u1.id, [u1.id, u2.id, u3.id])
+    let thread = await findOrCreateThread(u1.id, [u1.id, u2.id, u3.id], true)
     thread = await Post.find(thread.id)
     expect(await thread.followers().fetch().then(x => x.length)).to.equal(3)
 
-    let thread2 = await findOrCreateThread(u2.id, [u1.id, u2.id, u3.id])
+    const thread2 = await findOrCreateThread(u2.id, [u1.id, u2.id, u3.id], true)
     expect(thread2.id).to.equal(thread.id)
 
-    let thread3 = await findOrCreateThread(u2.id, [u2.id, u3.id])
+    const thread3 = await findOrCreateThread(u2.id, [u2.id, u3.id], true)
     expect(thread3.id).not.to.equal(thread.id)
     expect(await thread3.followers().fetch().then(x => x.length)).to.equal(2)
   })
 })
 
 describe('validateThreadData', () => {
-  var user, userSharingGroup, userNotInGroup, group
+  let user, userSharingGroup, userNotInGroup, group
 
   before(async () => {
     group = await factories.group().save()
@@ -35,19 +35,29 @@ describe('validateThreadData', () => {
     await userSharingGroup.joinGroup(group)
   })
 
-  it('fails if no participantIds are provided', () => {
-    const fn = () => validateThreadData(user.id, [])
-    expect(fn).to.throw(/participantIds can't be empty/)
+  it('fails if no participantIds are provided', async () => {
+    let err
+    try {
+      await validateThreadData(user.id, [])
+    } catch (error) {
+      err = error
+    }
+    expect(err.message).to.equal("participantIds can't be empty")
   })
-  it('fails if there is a participantId for a user the creator shares no communities with', () => {
-    const data = {participantIds: [userSharingGroup.id, userNotInGroup.id]}
-    return validateThreadData(user.id, data)
-    .catch(function (e) {
-      expect(e.message).to.equal(`no shared communities with user ${userNotInGroup.id}`)
-    })
+
+  it('fails if there is a participantId for a user the creator shares no groups with', async () => {
+    const participantIds = [userSharingGroup.id, userNotInGroup.id]
+    let err
+    try {
+      await validateThreadData(user.id, participantIds)
+    } catch (error) {
+      err = error
+    }
+    expect(err.message).to.equal("Cannot message a participant who doesn't share a group")
   })
-  it('continue the promise chain if user shares group with all participants', () => {
-    const data = {participantIds: [userSharingGroup.id]}
-    expect(validateThreadData(user.id, data)).to.respondTo('then')
+
+  it('returns true if user shares group with all participants', async () => {
+    const participantIds = [userSharingGroup.id]
+    expect(await validateThreadData(user.id, participantIds)).to.equal(true)
   })
 })
