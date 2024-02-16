@@ -539,7 +539,8 @@ module.exports = bookshelf.Model.extend(merge({
     return this.addSetting({
       digest_frequency: 'never',
       comment_notifications: 'none',
-      dm_notifications: 'none'
+      dm_notifications: 'none',
+      post_notifications: 'none'
     }, true)
   },
 

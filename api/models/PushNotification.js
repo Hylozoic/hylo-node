@@ -36,7 +36,7 @@ module.exports = bookshelf.Model.extend({
   },
 
   getPlatform: function () {
-    var platform = this.get('platform')
+    const platform = this.get('platform')
     if (platform) {
       return platform
     } else {
@@ -66,20 +66,22 @@ module.exports = bookshelf.Model.extend({
       : locales[locale].textForComment({person, blurb, postName})
   },
 
-  textForPost: function (post, group, userId, version, locale) {
+  textForPost: function (post, group, firstTag, version, locale) {
     const person = post.relations.user.get('name')
     const postName = decode(post.summary())
+    const groupName = group.get('name')
 
     return version === 'mention'
-    ? locales[locale].textForPostMention({person, postName})
-    : locales[locale].textForPost({person, postName, groupName: group.get('name')})
+      ? locales[locale].textForPostMention({ groupName, person, postName })
+      : locales[locale].textForPost({ person, postName, groupName, firstTag })
   },
 
-  textForAnnouncement: function (post, locale) {
+  textForAnnouncement: function (post, group, locale) {
     const person = post.relations.user.get('name')
     const postName = decode(post.summary())
+    const groupName = group.get('name')
 
-    return locales[locale].textForAnnouncement({person, postName})
+    return locales[locale].textForAnnouncement({ groupName, person, postName })
   },
 
   textForEventInvitation: function (post, actor, locale) {

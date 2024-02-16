@@ -1905,6 +1905,8 @@ type UserSettings {
   locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
+  # How this person wants to receive notifications for each post in their groups. None, Important, or All
+  postNotifications: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
   # Include child group posts in user's stream
@@ -2766,6 +2768,8 @@ input UserSettingsInput {
   locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
+  # How this person wants to receive notifications for each post in their groups. None, Important, or All
+  postNotifications: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
   # Include child group posts in user's stream

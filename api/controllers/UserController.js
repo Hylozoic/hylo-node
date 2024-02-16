@@ -94,6 +94,7 @@ module.exports = {
       digestFrequency: user.get('settings')?.digest_frequency || 'daily',
       dmNotifications: user.get('settings')?.dm_notifications || 'both',
       commentNotifications: user.get('settings')?.comment_notifications || 'both',
+      postNotifications: user.get('settings')?.post_notifications || 'important',
       sendEmail: !isEmpty(emailable),
       sendPushNotifications: !isEmpty(pushable),
       hasDevice: await user.hasDevice()
@@ -119,9 +120,10 @@ module.exports = {
       ? {
           digest_frequency: 'never',
           dm_notifications: 'none',
-          comment_notifications: 'none'
+          comment_notifications: 'none',
+          post_notifications: 'none'
         }
-      : mapKeys(pick(req.body, ['digestFrequency', 'dmNotifications', 'commentNotifications']), (v, k) => snakeCase(k))
+      : mapKeys(pick(req.body, ['digestFrequency', 'dmNotifications', 'commentNotifications', 'postNotifications']), (v, k) => snakeCase(k))
 
     await user.save({ settings: merge({}, user.get('settings'), userSettings) }, { patch: true })
 

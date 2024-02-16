@@ -2,7 +2,7 @@ import factories from '../../setup/factories'
 import { mockify, unspyify } from '../../setup/helpers'
 
 describe('PushNotification', () => {
-  var device, pushNotification, tmpEnvVar, notifyCall
+  let device, pushNotification, tmpEnvVar, notifyCall
 
   before(() => {
     tmpEnvVar = process.env.PUSH_NOTIFICATIONS_ENABLED
@@ -33,25 +33,26 @@ describe('PushNotification', () => {
   })
 
   describe('without PUSH_NOTIFICATIONS_ENABLED', () => {
-    var user, post
+    let user, post, group
 
     before(() => {
       delete process.env.PUSH_NOTIFICATIONS_ENABLED
     })
 
     beforeEach(async () => {
-      var username = 'username'
-      var postname = 'My Post'
+      const username = 'username'
+      const postname = 'My Post'
       user = await factories.user({name: username, settings: {locale: 'en'}}).save()
       post = await factories.post({user_id: user.id, name: postname}).save()
+      group = await factories.group({ name: 'Friends of Cheese' }).save()
     })
 
     it('returns correct text with textForAnnouncement', async () => {
       await post.load('user')
       const person = post.relations.user.get('name')
       const postName = post.get('name')
-      var expected = `${person} sent an announcement titled "${postName}"`
-      expect(PushNotification.textForAnnouncement(post, 'en')).to.equal(expected)
+      const expected = `${person} sent an announcement "${postName}" to ${group.get('name')}`
+      expect(PushNotification.textForAnnouncement(post, group, 'en')).to.equal(expected)
     })
 
     it('sets sent_at and disabled', function () {

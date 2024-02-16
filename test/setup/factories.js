@@ -200,6 +200,7 @@ module.exports = {
         get: function (name) { return this[name] },
         pick: function () { return pick(this, arguments) },
         load: () => Promise.resolve(),
+        related: (type) => attrs.relations ? attrs.relations[type] : null,
         toJSON: () => {
           return Object.assign(reduce(attrs.relations, (m, v, k) => {
             m[k] = v.toJSON()
