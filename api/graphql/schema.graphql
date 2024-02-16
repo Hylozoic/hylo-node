@@ -1893,11 +1893,11 @@ type TopicQuerySet {
 type UserSettings {
   # Has this person seen the tour that displays the first time someone logs in
   alreadySeenTour: Boolean
-  # How this person wants to receive notifications about new comments on posts they're following? By Email, Mobile App, or Both
+  # How this person wants to receive notifications about new comments on posts they're following? email, push, both, or none
   commentNotifications: String
-  # How often this person wants to receive the email digest about new posts and comments: Daily, Weekly or Never
+  # How often this person wants to receive the email digest about new posts and comments: daily, weekly, or never
   digestFrequency: String
-  # How this person wants to receive notifications about Direct Messages: Email, Mobile App, or Both
+  # How this person wants to receive notifications about Direct Messages: email, push, both, or none
   dmNotifications: String
   # When person wants last viewed their Direct Messages
   lastViewedMessagesAt: String
@@ -1905,7 +1905,7 @@ type UserSettings {
   locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
-  # How this person wants to receive notifications for each post in their groups. None, Important, or All
+  # How this person wants to receive notifications for each post in their groups. none, important, or all
   postNotifications: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
@@ -2756,11 +2756,11 @@ input SavedSearchInput {
 input UserSettingsInput {
   # Has this person seen the tour that displays the first time someone logs in
   alreadySeenTour: Boolean
-  # How this person wants to receive notifications about new comments on posts they're following? By Email, Mobile App, or Both
+  # How this person wants to receive notifications about new comments on posts they're following? email, push, both, or none
   commentNotifications: String
-  # How often this person wants to receive the email digest about new posts and comments: Daily, Weekly or Never
+  # How often this person wants to receive the email digest about new posts and comments: daily, weekly, or never
   digestFrequency: String
-  # How this person wants to receive notifications about Direct Messages: Email, Mobile App, or Both
+  # How this person wants to receive notifications about Direct Messages: email, push, both, or none
   dmNotifications: String
   # When person wants last viewed their Direct Messages
   lastViewedMessagesAt: String
@@ -2768,7 +2768,7 @@ input UserSettingsInput {
   locale: String
   # The most recent map base later viewed by this person
   mapBaseLayer: String
-  # How this person wants to receive notifications for each post in their groups. None, Important, or All
+  # How this person wants to receive notifications for each post in their groups. none, important, or all
   postNotifications: String
   # Whether this person has finished viewing the welcome wizard after first signing up
   signupInProgress: Boolean
