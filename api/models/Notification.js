@@ -450,7 +450,7 @@ module.exports = bookshelf.Model.extend({
     return Group.find(groupIds[0])
       .then(group => reader.generateToken()
         .then(token => Email.sendPostMentionNotification({
-          version: 'All Posts',
+          version: 'Holonic architecture',
           email: reader.get('email'),
           locale,
           sender: {
@@ -466,8 +466,7 @@ module.exports = bookshelf.Model.extend({
             post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
               Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
             post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-            post_subject: decode(post.summary()),
-            post_title: decode(post.title() || ''),
+            post_title: decode(post.summary()),
             post_topic: firstTag,
             post_type: post.get('type'),
             post_url: Frontend.Route.tokenLogin(reader, token, this.postUrlHelper({ post, isPublic: false, topic: firstTag, group }) + '?ctt=post_mention_email&cti=' + reader.id ),
