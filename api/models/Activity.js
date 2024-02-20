@@ -1,5 +1,15 @@
 import { values, omit, filter, includes, isEmpty, get } from 'lodash'
 
+const isNewPost = activity => {
+  const reasons = activity.get('meta').reasons
+  return filter(reasons, reason => reason.match(/^newPost/)).length > 0
+}
+
+const isMention = activity => {
+  const reasons = activity.get('meta').reasons
+  return filter(reasons, reason => reason.match(/^mention/)).length > 0
+}
+
 const isJustNewPost = activity => {
   const reasons = activity.get('meta').reasons
   return reasons.every(reason => reason.match(/^newPost/))
@@ -108,7 +118,7 @@ module.exports = bookshelf.Model.extend({
     if (this.get('other_group_id')) {
       relations.push('otherGroup')
     }
-    await this.load(relations, {transacting: trx})
+    await this.load(relations, { transacting: trx })
     const notificationData = await Activity.generateNotificationMedia(this)
 
     return Promise.map(notificationData, medium =>
@@ -264,15 +274,15 @@ module.exports = bookshelf.Model.extend({
     if (!isJoinRequestRelated) await activity.load('post.groups')
 
     // TODO: rename 'notifications' to 'media'
-    var notifications = []
-    var groups = Activity.groupIds(activity)
+    const notifications = []
+    const groups = Activity.groupIds(activity)
 
-    var user = activity.relations.reader
+    const user = activity.relations.reader
 
-    const memberships = await user.memberships().fetch({withRelated: 'group'})
+    const memberships = await user.memberships().fetch({ withRelated: 'group' })
 
     const relevantMemberships = filter(memberships.models, mem =>
-      includes(groups, mem.relations.group.id))
+      includes(groups, mem.related('group').id))
 
     const membershipsPermitting = key =>
       filter(relevantMemberships, mem => mem.getSetting(key))
@@ -280,19 +290,24 @@ module.exports = bookshelf.Model.extend({
     const emailable = membershipsPermitting('sendEmail')
     const pushable = membershipsPermitting('sendPushNotifications')
 
-    // Send emails if email notifications on and is announcement or "not just a new post" notification
-    if (!isEmpty(emailable) && (!isJustNewPost(activity) || isAnnouncement(activity))) {
+    const newPostsSetting = user.getSetting('post_notifications')
+
+    // Send notifications if not just about a new post, or notifications for all new posts are on, or notifications for important posts are on and its an announcement or mention
+    const sendNotification = !isNewPost(activity) ||
+      newPostsSetting === 'all' ||
+      (newPostsSetting === 'important' && (isAnnouncement(activity) || isMention(activity)))
+
+    if (!isEmpty(emailable) && sendNotification) {
+      // TODO: make sure email shows its from the first group that has sendEmail set to true, or maybe show all groups on it?
       notifications.push(Notification.MEDIUM.Email)
     }
 
-    // XXX: right now all notification types get sent as a push notification. Is this what we want?
-    if (!isEmpty(pushable)) {
+    if (!isEmpty(pushable) && sendNotification) {
       notifications.push(Notification.MEDIUM.Push)
     }
 
-    if (!isJustNewPost(activity) || isAnnouncement(activity)) {
-      notifications.push(Notification.MEDIUM.InApp)
-    }
+    // Send an in-app notification for every activity right now
+    notifications.push(Notification.MEDIUM.InApp)
 
     return notifications
   },
