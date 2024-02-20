@@ -125,6 +125,7 @@ module.exports = bookshelf.Model.extend({
         return this.sendGroupParentGroupJoinRequestAcceptedPush()
       case 'announcement':
         return this.sendPushAnnouncement()
+      case 'tag':
       case 'newPost':
         return this.sendPostPush()
       case 'donation to':
