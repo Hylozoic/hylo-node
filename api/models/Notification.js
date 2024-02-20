@@ -325,8 +325,9 @@ module.exports = bookshelf.Model.extend({
       case 'approvedJoinRequest':
         return this.sendApprovedJoinRequestEmail()
       case 'announcement':
-        return this.sendPostEmail(true)
+        return this.sendAnnouncementEmail()
       case 'newPost':
+      case 'tag':
         return this.sendPostEmail()
       case 'donation to':
         return this.sendDonationToEmail()
@@ -347,7 +348,7 @@ module.exports = bookshelf.Model.extend({
     }
   },
 
-  sendPostEmail: function (announcement = false) {
+  sendAnnouncementEmail: function () {
     const post = this.post()
     const reader = this.reader()
     const user = post.relations.user
@@ -360,7 +361,7 @@ module.exports = bookshelf.Model.extend({
     return Group.find(groupIds[0])
       .then(group => reader.generateToken()
         .then(token => Email.sendPostNotification({
-          version: 'Holonic architecture',
+          version: 'All Posts',
           email: reader.get('email'),
           locale,
           sender: {
@@ -369,7 +370,7 @@ module.exports = bookshelf.Model.extend({
             name: `${user.get('name')} (via Hylo)`
           },
           data: {
-            announcement,
+            announcement: true,
             group_name: group.get('name'),
             post_user_name: user.get('name'),
             post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
@@ -377,12 +378,58 @@ module.exports = bookshelf.Model.extend({
             post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
               Frontend.Route.profile(user) + '?ctt=announcement_email&cti=' + reader.id),
             post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-            post_title: decode(post.summary()),
+            post_subject: decode(post.summary()),
+            post_title: decode(post.title() || ''),
+            post_type: post.get('type'),
             post_url: Frontend.Route.tokenLogin(reader, token,
               Frontend.Route.post(post, group) + '?ctt=announcement_email&cti=' + reader.id),
             unfollow_url: Frontend.Route.tokenLogin(reader, token,
               Frontend.Route.unfollow(post, group) + '?ctt=announcement_email&cti=' + reader.id),
             tracking_pixel_url: Analytics.pixelUrl('Announcement', { userId: reader.id }),
+            post_date: post.get('start_time') ? TextHelpers.formatDatePair(post.get('start_time'), post.get('end_time'), false, post.get('timezone')) : null
+          }
+        })))
+  },
+
+  sendPostEmail: function () {
+    const post = this.post()
+    const reader = this.reader()
+    const user = post.relations.user
+    const tags = post.relations.tags
+    const firstTag = tags && tags.first()?.get('name')
+    const replyTo = Email.postReplyAddress(post.id, reader.id)
+
+    const groupIds = Activity.groupIds(this.relations.activity)
+    const locale = this.locale()
+
+    if (isEmpty(groupIds)) throw new Error('no group ids in activity')
+    return Group.find(groupIds[0])
+      .then(group => reader.generateToken()
+        .then(token => Email.sendPostNotification({
+          version: 'All Posts',
+          email: reader.get('email'),
+          locale,
+          sender: {
+            address: replyTo,
+            reply_to: replyTo,
+            name: `${user.get('name')} (via Hylo)`
+          },
+          data: {
+            group_name: group.get('name'),
+            post_user_name: user.get('name'),
+            post_user_avatar_url: Frontend.Route.tokenLogin(reader, token,
+              user.get('avatar_url') + '?ctt=post_email&cti=' + reader.id),
+            post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.profile(user) + '?ctt=post_email&cti=' + reader.id),
+            post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
+            post_subject: decode(post.summary()),
+            post_title: decode(post.title() || ''),
+            post_topic: firstTag,
+            post_type: post.get('type'),
+            post_url: Frontend.Route.tokenLogin(reader, token, this.postUrlHelper({ post, isPublic: false, topic: firstTag, group }) + '?ctt=post_email&cti=' + reader.id),
+            unfollow_url: Frontend.Route.tokenLogin(reader, token,
+              Frontend.Route.unfollow(post, group) + '?ctt=post_email&cti=' + reader.id),
+            tracking_pixel_url: Analytics.pixelUrl('Post', { userId: reader.id }),
             post_date: post.get('start_time') ? TextHelpers.formatDatePair(post.get('start_time'), post.get('end_time'), false, post.get('timezone')) : null
           }
         })))
@@ -403,7 +450,7 @@ module.exports = bookshelf.Model.extend({
     return Group.find(groupIds[0])
       .then(group => reader.generateToken()
         .then(token => Email.sendPostMentionNotification({
-          version: 'Holonic architecture',
+          version: 'All Posts',
           email: reader.get('email'),
           locale,
           sender: {
@@ -419,7 +466,9 @@ module.exports = bookshelf.Model.extend({
             post_user_profile_url: Frontend.Route.tokenLogin(reader, token,
               Frontend.Route.profile(user) + '?ctt=post_mention_email&cti=' + reader.id),
             post_description: RichText.qualifyLinks(post.details(), group.get('slug')),
-            post_title: post.get('type') === Post.Type.CHAT ? '#' + firstTag : decode(post.summary()),
+            post_subject: decode(post.summary()),
+            post_title: decode(post.title() || ''),
+            post_topic: firstTag,
             post_type: post.get('type'),
             post_url: Frontend.Route.tokenLogin(reader, token, this.postUrlHelper({ post, isPublic: false, topic: firstTag, group }) + '?ctt=post_mention_email&cti=' + reader.id ),
             unfollow_url: Frontend.Route.tokenLogin(reader, token,
@@ -839,6 +888,7 @@ module.exports = bookshelf.Model.extend({
       .then(ns => ns.length > 0 &&
         Promise.each(ns.models,
           n => n.send().catch(err => {
+            console.error('Error sending notification', err, n.attributes)
             rollbar.error(err, null, { notification: n.attributes })
             return n.save({ failed_at: new Date() }, { patch: true })
           }))
