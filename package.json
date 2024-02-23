@@ -74,7 +74,7 @@
     "apple-signin-auth": "^1.2.1",
     "async-repl": "ownadi/async-repl",
     "autolinker": "^4.0.0",
-    "aws-sdk": "^2.9.0",
+    "aws-sdk": "^2.1565.0",
     "bcrypt": "^5.0.1",
     "bluebird": "^2.3.11",
     "body-parser": "^1.17.2",
