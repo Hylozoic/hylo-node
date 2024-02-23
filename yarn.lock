@@ -2610,7 +2610,7 @@ available-typed-arrays@^1.0.5, available-typed-arrays@^1.0.6:
   dependencies:
     possible-typed-array-names "^1.0.0"
 
-aws-sdk@^2.9.0:
+aws-sdk@^2.1565.0:
   version "2.1565.0"
   resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.1565.0.tgz#a8eb27473015e5a1cc94b92aa37e19f24c6e80b9"
   integrity sha512-5+qkIUd6GfzybqWP43RCMqCNL5Ry3ztCWcC5d9Mq0O9cqQQM9eoUfktdgiu1eFc3zAM01dFNUR6fZfXnmZgkuQ==
