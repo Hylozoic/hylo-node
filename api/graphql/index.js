@@ -228,8 +228,8 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
         return Group.where(bookshelf.knex.raw('slug = ?', slug))
           .count()
           .then(count => {
-            if (count > 0) return {exists: true}
-            return {exists: false}
+            if (count > 0) return { exists: true }
+            return { exists: false }
           })
       }
       throw new GraphQLYogaError('Slug is invalid')
@@ -260,7 +260,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
           // FIXME this shouldn't be used directly here -- there should be some
           // way of integrating this into makeModels and using the presentation
           // logic that's already in the fetcher
-          return presentQuerySet(models, merge(args, {total}))
+          return presentQuerySet(models, merge(args, { total }))
         })
     },
     skills: (root, args) => fetchMany('Skill', args),
@@ -294,7 +294,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
-    addGroupRole: (root, { groupId, color, name, description, emoji }) => addGroupRole({userId, groupId, color, name, description, emoji}),
+    addGroupRole: (root, { groupId, color, name, description, emoji }) => addGroupRole({ userId, groupId, color, name, description, emoji }),
 
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
@@ -499,7 +499,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     updateWidget: (root, { id, changes }) => updateWidget(id, changes),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
-      useInvitation(userId, invitationToken, accessCode),
+      useInvitation(userId, invitationToken, accessCode)
   }
 }
 

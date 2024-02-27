@@ -2010,6 +2010,8 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   # Add a Post to a Collection
   addPostToCollection(collectionId: ID, postId: ID): GenericResult
+  # Add a rvote to a proposal
+  addProposalVote(postId: ID, optionId: ID): GenericResult
   # For a moderator to add a badge/role to a group to a member of a group
   addRoleToMember(
     groupRoleId: ID,
@@ -2157,6 +2159,8 @@ type Mutation {
   removePost(postId: ID, slug: String, groupId: ID): GenericResult
   # Remove a Post from a Collection, if you have permission to
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
+  # Remove a vote from a proposal
+  removeProposalVote(postId: ID, optionId: ID): GenericResult
   # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
   removeRoleFromMember(groupRoleId: ID, groupId: ID, personId: ID): GenericResult
   # Remove a skill from your user profile
@@ -2192,8 +2196,12 @@ type Mutation {
   sendEmailVerification(email: String!): GenericResult,
   # Send a password reset email
   sendPasswordReset(email: String!): GenericResult,
+  # set options for a proposal
+  setProposalOptions(postId: ID, options: [ProposalOptionInput]): [ProposalOption]
   # Subscribe or unsubscribe to a Topic in a Group
   subscribe(groupId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
+  # Swap votes on a proposal
+  swapProposalVote(postId: ID, addOptionId: ID, removeOptionId: ID): GenericResult
   # Unlink profile from previously linked social platform. Provider can be 'facebook', 'twitter', or 'linkedin'
   unlinkAccount(provider: String): GenericResult
   # Unblock a user
@@ -2729,6 +2737,14 @@ input PostInput {
   topicNames: [String]
   # Post type: 'discussion', 'event', 'offer', 'project', 'request', or 'resource'
   type: String
+}
+
+input ProposalOptionInput {
+  id: ID
+  # Required: Title of the option
+  text: String
+  # Optional: more detailed text for the option
+  description: String
 }
 
 # A Question to be asked before joining a Group
