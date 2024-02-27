@@ -12,6 +12,7 @@ import {
   addModerator,
   addPeopleToProjectRole,
   addPostToCollection,
+  addProposalVote,
   addRoleToMember,
   addSkill,
   addSkillToLearn,
@@ -79,6 +80,7 @@ import {
   removePost,
   removePostFromCollection,
   removeRoleFromMember,
+  removeProposalVote,
   removeSkill,
   removeSkillToLearn,
   removeSuggestedSkillFromGroup,
@@ -86,7 +88,9 @@ import {
   respondToEvent,
   sendEmailVerification,
   sendPasswordReset,
+  setProposalOptions,
   subscribe,
+  swapProposalVote,
   unblockUser,
   unfulfillPost,
   unlinkAccount,
@@ -101,8 +105,7 @@ import {
   updateStripeAccount,
   updateWidget,
   useInvitation,
-  verifyEmail,
-  vote
+  verifyEmail
 } from './mutations'
 import InvitationService from '../services/InvitationService'
 import makeModels from './makeModels'
@@ -302,6 +305,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
 
+    addProposalVote: (root, { postId, optionId }) => addProposalVote({ userId, postId, optionId }),
+
     addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ userId, personId, groupRoleId, groupId }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
@@ -438,6 +443,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     removePostFromCollection: (root, { collectionId, postId }) =>
       removePostFromCollection(userId, collectionId, postId),
 
+    removeProposalVote: (root, { postId, optionId }) => removeProposalVote({ userId, postId, optionId }),
+
     removeRoleFromMember: (root, { groupRoleId, personId, groupId }) => removeRoleFromMember({ groupRoleId, personId, userId, groupId }),
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
@@ -456,8 +463,12 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     respondToEvent: (root, { id, response }) =>
       respondToEvent(userId, id, response),
 
+    setProposalOptions: (root, { postId, options }) => setProposalOptions({ userId, postId, options }),
+
     subscribe: (root, { groupId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, groupId, isSubscribing),
+
+    swapProposalVote: (root, { postId, removeOptionId, addOptionId }) => swapProposalVote({ userId, postId, removeOptionId, addOptionId }),
 
     unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
 
@@ -489,8 +500,6 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     useInvitation: (root, { invitationToken, accessCode }) =>
       useInvitation(userId, invitationToken, accessCode),
-
-    vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
   }
 }
 

@@ -1587,9 +1587,6 @@ type Person {
 
   # The set of Skills this person want to learn
   skillsToLearn(first: Int, cursor: ID): SkillQuerySet
-
-  # Upvotes on posts that this person has made. DEPRECATED, use reactions instead
-  votes(first: Int, offset: Int, order: String): VoteQuerySet
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1621,6 +1618,8 @@ type Post {
   id: ID
   # NOT USED RIGHT NOW. Whether this post can accept financial contributions
   acceptContributions: Boolean
+  # whether voting is anonymous for this proposal (Only used by proposal type posts)
+  anonymity: Boolean
   # Was this post marked an announcement by a group moderator?
   announcement: Boolean
   # Number of attachments on this post
@@ -1654,16 +1653,20 @@ type Post {
   myEventResponse: String
   # The reactions of the logged-in user to this
   myReactions: [Reaction]
-  # Whether the logged-in user has upvoted the post or not
-  myVote: Boolean
   # Number of people that have one or more reactions to a post
   peopleReactedTotal: Int
   # Number of total reactions on the post
   postReactionsTotal: Int
   # Number of total "members" of the post. Used for Projects only right now
   postMembershipsTotal: Int
+  # A proposal's outcome: 'cancelled', 'quorum-not-met', 'in-progress', 'successful', 'tie'
+  proposalOutcome: String
+  # The status of a proposal post: 'discussion', 'voting', 'completed'
+  proposalStatus: String
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
+  # The percentage of membership that need to vote for a proposal to complete successfully
+  quorum: Int
   # Number of total reactions on the post
   reactionsTotal: Int
   # Summary of reactions on the post
@@ -1681,8 +1684,6 @@ type Post {
   # Post type: 'discussion', 'event', 'offer', 'project', 'request', or 'resource'
   type: String
   updatedAt: Date
-  # Number of upvotes on the post. DEPRECATED
-  votesTotal: Int
 
   # The attachments (images, videos or files) added to the post
   attachments(type: String): [Attachment]
@@ -1717,6 +1718,12 @@ type Post {
   # reactions to this post
   postReactions: [Reaction]
 
+  # For proposal posts, load all the different options that people can vote on.
+  proposalOptions: ProposalOptionQuerySet
+  
+  # Load all votes for a proposal post. Note: not a queryset; to avoid paginating votes
+  proposalVotes: ProposalVoteQuerySet
+
   # The topics that have been added to this post
   topics: [Topic]
 }
@@ -1748,6 +1755,27 @@ type PostUser {
 type Point {
   lat: String
   lng: String
+}
+
+type ProposalOption {
+  id: ID
+  postId: ID
+  # Required: The text of the proposal option
+  text: String
+  # Optional longer description of the option
+  description: String
+}
+
+type ProposalVote {
+  id: ID
+  # The person who voted
+  userId: ID
+  # The post that the vote is for
+  postId: ID
+  # The option that the person voted for
+  optionId: ID
+  # timestamp of when the vote was created
+  createdAt: Date
 }
 
 # A question asked when someone is trying to join a group
@@ -1919,21 +1947,18 @@ type UserSettings {
   streamPostType: String
 }
 
-# An upvote on a post. DEPRECATED
-type Vote {
-  id: ID
-  createdAt: Date
-  # The Post being voted on
-  post: Post
-  # The Person doing the voting
-  voter: Person
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ProposalOptionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [ProposalOption]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
-type VoteQuerySet {
+type ProposalVoteQuerySet {
   total: Int
   hasMore: Boolean
-  items: [Vote]
+  items: [ProposalVote]
 }
 
 # A widget is a block of styled content that appears in an Explore page for a group
