@@ -97,10 +97,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('num_people_reacts')
   },
 
-  votesTotal: function () { // TODO PROPOSAL: check if this can be removed
-    return this.get('num_people_reacts')
-  },
-
   // Relations
 
   activities: function () {
@@ -213,14 +209,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     return q
   },
-  // TOOD PROPOSAL: check if this can be removed
-  userVote: function (userId) {
-    return this.votes().query({ where: { user_id: userId, entity_type: 'post' } }).fetchOne()
-  },
-  // TOOD PROPOSAL: check if this can be removed
-  votes: function () {
-    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
-  },
 
   // TODO: this is confusing and we are not using, remove for now?
   children: function () {
@@ -258,27 +246,29 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // TODO: if we were in a position to avoid duplicating the graphql layer
   // here, that'd be grand.
   getNewPostSocketPayload: function () {
-    const { groups, linkPreview, tags, user } = this.relations
+    const { groups, linkPreview, tags, user, proposalOptions } = this.relations
 
     const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
     const topics = refineMany(tags, [ 'id', 'name' ])
-    // TODO PROPOSAL: check if proposal addtions need to be added here?
+
     // TODO: Sanitization -- sanitize details here if not passing through `text` getter
     return Object.assign({},
       refineOne(
         this,
-        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes'],
+        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes', 'proposalType', 'proposalStatus', 'proposalOutcome'],
         { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotal', num_votes: 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation
         commenters: [],
+        proposalVotes: [],
         commentsTotal: 0,
         details: this.details(),
         groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
         creator,
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'description', 'url' ]),
         topics,
+        proposalOptions,
 
         // TODO: Once legacy site is decommissioned, these are no longer required.
         creatorId: creator.id,
