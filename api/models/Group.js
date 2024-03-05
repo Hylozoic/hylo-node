@@ -153,7 +153,22 @@ module.exports = bookshelf.Model.extend(merge({
     return this.belongsTo(Location, 'location_id')
   },
 
-  members (where) {
+  availableResponsibilities () {
+    return Responsibility.collection().query(q => {
+      q.whereRaw('group_id = ? or group_id is null', this.id)
+    })
+  },
+
+  commonRoles () {
+    return bookshelf.knex.raw(
+      'select * from common_roles'
+    ).then(resp => resp.rows)
+  },
+
+  members (where) { 
+    // TODO RESP: does this need to change or should we just build a new one for it... the problem is the access to the role attribute. 
+    // It doesn't seem like there are any more Node calls of this that rely on the role being present
+    // But I suspect that there might be graphQL queries that rely on it
     return this.belongsToMany(User).through(GroupMembership)
       .query(q => {
         q.where({
@@ -177,8 +192,10 @@ module.exports = bookshelf.Model.extend(merge({
     return this.get('num_members')
   },
 
-  moderators () {
-    return this.members({ role: GroupMembership.Role.MODERATOR })
+  async moderators () {
+    const responsibilities = await Responsibility.fetchForGroup(this.id)
+    const userIds = Responsibility.hasAllResponsibilities(responsibilities)
+    return this.members({ user_id: userIds }) // TODO RESP: this needs to be verified
   },
 
   // Return # of prereq groups userId is not a member of yet
@@ -339,6 +356,8 @@ module.exports = bookshelf.Model.extend(merge({
           }
         }), { transacting })
       newMemberships.push(membership)
+      // Based on the role attribute, add or remove the user to the manager common role
+      await MemberCommonRole.updateManagerRole({ groupMembershipId: membership.id, userId: id, groupId: this.id, role: updatedAttribs.role, transacting })
       // Subscribe each user to the default tags in the group
       await User.followTags(id, this.id, defaultTagIds, transacting)
     }
@@ -701,6 +720,7 @@ module.exports = bookshelf.Model.extend(merge({
 
       const members = await group.addMembers([userId],
         { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
+      // This is labeled members but functionally it appears to be the group creator, thus the admin power. Worth a rename for clarity
 
       // Have to add/request add to parent group after moderator has been added to the group
       if (data.parent_ids) {
@@ -714,8 +734,7 @@ module.exports = bookshelf.Model.extend(merge({
             }).fetch({ transacting: trx })
 
             if (parentGroupMembership &&
-                (parentGroupMembership.get('role') === GroupMembership.Role.MODERATOR
-                  || parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN)) {
+                (parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN || parentGroupMembership.hasRole(GroupMembership.Role.MODERATOR))) {
               await group.parentGroups().attach(parentId, { transacting: trx })
             } else {
               // If can't add directly to parent group then send a request to join
@@ -790,7 +809,7 @@ module.exports = bookshelf.Model.extend(merge({
   messageModerators: async function(fromUserId, groupId) {
     // Make sure they can only message a group they can see
     const group = await groupFilter(fromUserId)(Group.where({ id: groupId })).fetch()
-
+    // TODO: ADD RESP TO THIS ONE
     if (group) {
       const moderators = await group.moderators().fetch()
       if (moderators.length > 0) {
@@ -859,6 +878,29 @@ module.exports = bookshelf.Model.extend(merge({
       },
       multiple: true
     }).query()
+  },
+
+  async selectIdsForModeratedGroups (userId) { // TODO RESP: .... this was the last thing I was working on before getting sick and then going to kiwiburn... so I don't recal whether its worth keeping around or not...
+    // get all responsiblities for a user
+    const responsibilities = await Responsibility.fetchSystemResponsiblititesForUser(userId)
+    const byGroupId = {}
+    const result = []
+    // count how many responsibilities a user has for each group
+    responsibilities.forEach(r => {
+      if (byGroupId[r.group_id]) {
+        byGroupId[r.group_id] += 1
+      } else {
+        byGroupId[r.group_id] = 1
+      }
+    })
+
+    // return an array of group ids that the user has 4 responsibilities for. This defacto means they have full power of a group, whether its from a manager role or not
+    for (const key in byGroupId) {
+      if (byGroupId[key] === 4) {
+        result.push(key)
+      }
+    }
+    return result
   },
 
   async allHaveMember (groupDataIds, userOrId) {

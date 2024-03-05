@@ -46,6 +46,19 @@ export default function makeModels (userId, isAdmin, apiClient) {
       }
     },
 
+    CommonRole: {
+      model: CommonRole,
+      attributes: [
+        'id',
+        'name',
+        'description',
+        'emoji'
+      ],
+      relations: [
+        { responsibilities: { querySet: true } }
+      ]
+    },
+
     Me: {
       model: User,
       attributes: [
@@ -74,6 +87,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'memberships',
         'posts',
         'locationObject',
+        { groupRoles: { querySet: true } },
         { affiliations: { querySet: true } },
         { groupInvitesPending: { querySet: true } },
         {
@@ -108,8 +122,9 @@ export default function makeModels (userId, isAdmin, apiClient) {
       relations: [
         { agreements: { querySet: true } },
         { group: { alias: 'group' } },
-        { joinQuestionAnswers: { querySet: true } },
-        { user: { alias: 'person' } }
+        { user: { alias: 'person' } },
+        { commonRoles: { querySet: true } },
+        { joinQuestionAnswers: { querySet: true } }
       ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
@@ -117,7 +132,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
           m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
           m.get('user_id') === userId ? m.get('new_post_count') : null,
-        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR)
+        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR) // TODO RESP: verify
       },
       filter: nonAdminFilter(membershipFilter(userId))
     },
@@ -151,13 +166,14 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'tagline'
       ],
       getters: {
-        messageThreadId: p => p.getMessageThreadWith(userId).then(post => post ? post.id : null)
+        messageThreadId: p => p.getMessageThreadWith(userId).then(post => post ? post.id : null),
       },
       relations: [
         'memberships',
         'moderatedGroupMemberships',
         'locationObject',
-        'groupRoles',
+        { groupRoles: { querySet: true } },
+        { commonRoles: { querySet: true } },
         { affiliations: { querySet: true } },
         { eventsAttending: { querySet: true } },
         { posts: { querySet: true } },
@@ -349,8 +365,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {
           members: {
             querySet: true,
-            filter: (relation, { autocomplete, boundingBox, groupRoleId, order, search, sortBy }) =>
-              relation.query(filterAndSortUsers({ autocomplete, boundingBox, groupRoleId, order, search, sortBy }))
+            filter: (relation, { autocomplete, boundingBox, groupRoleId, order, search, sortBy, groupCommonRoleId }) =>
+              relation.query(filterAndSortUsers({ autocomplete, boundingBox, groupRoleId, order, search, sortBy, groupCommonRoleId }))
           }
         },
         { parentGroups: { querySet: true } },
@@ -451,14 +467,15 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { groupExtensions: { querySet: true } }
       ],
       getters: {
+        commonRoles: async g => g.commonRoles(),
         invitePath: g =>
-          GroupMembership.hasModeratorRole(userId, g)
+          GroupMembership.hasModeratorRole(userId, g, {}, Responsibility.constants.RESP_ADD_MEMBERS)
             .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
         location: async (g) => {
           // If location obfuscation is on then non group moderators see a display string that only includes city, region & country
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
           if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
-                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+                (userId && await GroupMembership.hasModeratorRole(userId, g, {}, Responsibility.constants.RESP_ADMINISTRATION))) {
             return g.get('location')
           } else {
             const locObj = await g.locationObject().fetch()
@@ -479,7 +496,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
           // If precision is precise or user is a moderator of the group show the exact location
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
           if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
-                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+                (userId && await GroupMembership.hasModeratorRole(userId, g, {}, Responsibility.constants.RESP_ADMINISTRATION))) {
+                  // TODO: add RESP for this
             return g.locationObject().fetch()
           } else if (precision === LOCATION_DISPLAY_PRECISION.Near) {
             // For near only include region, city, country columns, and move the exact location around every load
@@ -507,6 +525,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         // Get number of prerequisite groups that current user is not a member of yet
         numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
         pendingInvitations: (g, { first }) => InvitationService.find({ groupId: g.id, pendingOnly: true }),
+        responsibilities: async g => g.availableResponsibilities().fetch(),
         settings: g => mapKeys(camelCase, g.get('settings')),
         // XXX: Flag for translation
         typeDescriptor: g => g.get('type_descriptor') || (g.get('type') ? startCase(g.get('type')) : 'Group'),
@@ -596,7 +615,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'updatedAt'
       ],
       relations: [
-        'group'
+        'group',
+        { responsibilities: { querySet: true } }
       ]
     },
 
@@ -812,18 +832,6 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       filter: nonAdminFilter(reactionFilter('reactions', userId))
     },
-    Vote: { // TO BE REMOVED ONCE MOBILE IS UPDATED
-      model: Reaction,
-      getters: {
-        createdAt: v => v.get('date_reacted')
-      },
-      relations: [
-        'post',
-        { user: { alias: 'voter' } }
-      ],
-      filter: nonAdminFilter(reactionFilter('reactions', userId))
-    },
-
     GroupTopic: {
       model: GroupTag,
       attributes: ['created_at', 'is_default', 'updated_at', 'visibility'],
@@ -842,6 +850,16 @@ export default function makeModels (userId, isAdmin, apiClient) {
         q.whereIn('groups_tags.group_id', Group.selectIdsForMember(userId))
       })),
       fetchMany: args => GroupTag.query(groupTopicFilter(userId, args))
+    },
+
+    Responsibility: {
+      model: Responsibility,
+      attributes: [
+        'id',
+        'title',
+        'description',
+        'type'
+      ]
     },
 
     SavedSearch: {

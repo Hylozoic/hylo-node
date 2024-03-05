@@ -16,6 +16,17 @@ module.exports = bookshelf.Model.extend(Object.assign({
       .withPivot(['accepted'])
   },
 
+  commonRoles () {
+    return this.belongsToMany(CommonRole, 'common_roles')
+      .through(MemberCommonRole, 'group_membership_id', 'common_role_id')
+      .where({ user_id: this.get('user_id') })
+      .withPivot(['group_id'])
+  },
+
+  commonRolesTotal () {
+    return 1 // "Membership.commonRolesTotal defined in resolvers, but not in schema"
+  },
+
   group () {
     return this.belongsTo(Group)
   },
@@ -28,8 +39,12 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
-  hasRole (role) {
-    return Number(role) === this.get('role')
+  async hasRole (role) {
+    if (role === GroupMembership.Role.MODERATOR) {
+      const result = await bookshelf.knex.raw(`SELECT 1 FROM common_roles_group_memberships WHERE user_id = ${this.get('user_id')} AND group_id = ${this.get('group_id')} AND group_membership_id = ${this.get('id')} AND common_role_id = (SELECT id FROM common_roles WHERE name = 'Manager') LIMIT 1`)
+      return result.rows.length > 0
+    }
+    return false
   },
 
   async acceptAgreements (transacting) {
@@ -58,6 +73,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
       } else {
         this.set(key, attrs[key])
       }
+    }
+    if (attrs.role === 0 || attrs.role === 1) {
+      await MemberCommonRole.updateManagerRole({ groupMembershipId: this.get('id'), userId: this.get('user_id'), groupId: this.get('group_id'), role: attrs.role, transacting })
     }
 
     if (!isEmpty(this.changed)) return this.save(null, {transacting})
@@ -107,9 +125,30 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  async hasModeratorRole (userOrId, groupOrId, opts) {
-    const gm = await this.forPair(userOrId, groupOrId).fetch(opts)
-    return gm && gm.hasRole(this.Role.MODERATOR)
+  async hasModeratorRole (userOrId, groupOrId, opts = {}, responsibility = '') { // TODO RESP: this could be simplified now we are ripping out
+    // Currently this checks if the user is a moderator of the group, or if they have the responsibility passed in
+    // Maybe it should be renamed to hasResponsibility, and just checks for the responsibility passed in...
+    // but there are still uses where it only being used to check just the moderator role, so those will need to be accommodated in some fashion
+    const userId = userOrId instanceof User ? userOrId.id : userOrId
+    const groupId = groupOrId instanceof Group ? groupOrId.id : groupOrId
+    if (!userId) {
+      throw new Error("Can't call forPair without a user or user id")
+    }
+    if (!groupId) {
+      throw new Error("Can't call forPair without a group or group id")
+    }
+    if (responsibility.length === 0) {
+      throw new Error("Can't determine what responsibility is being checked")
+    }
+
+    const gm = await this.forPair(userOrId, groupId).fetch(opts)
+
+    const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
+
+    if (gm && !responsibilities.includes(responsibility)) {
+      return false
+    }
+    return !!gm
   },
 
   async setModeratorRole (userId, group) {

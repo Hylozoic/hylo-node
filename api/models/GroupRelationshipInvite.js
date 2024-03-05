@@ -49,8 +49,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     const user = await User.find(userId, { transacting })
     const fromGroup = await this.fromGroup().fetch({ transacting })
-    if (!GroupMembership.hasModeratorRole(user, fromGroup)) {
-      // The person trying to cancel the invite does not have permission
+    if (!GroupMembership.hasModeratorRole(user, fromGroup, {}, Responsibility.constants.RESP_ADMINISTRATION)) {
       throw new GraphQLYogaError('Not permitted to do this')
     }
 
@@ -69,7 +68,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     const user = await User.find(userId, { transacting })
     const toGroup = await this.toGroup().fetch({ transacting })
-    if (!GroupMembership.hasModeratorRole(user, toGroup)) {
+    if (!GroupMembership.hasModeratorRole(user, toGroup, {}, Responsibility.constants.RESP_ADMINISTRATION)) {
       // The person trying to process the invite does not have permission
       throw new GraphQLYogaError('Not permitted to do this')
     }
@@ -161,7 +160,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
             actor_id: actorId,
             group_id: fromGroup.id,
             other_group_id: toGroup.id,
-            reason: `${reason}:${parentToChild ? 'parent' : 'child'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}`
+            reason: `${reason}:${parentToChild ? 'parent' : 'child'}:${member.hasRole(GroupMembership.Role.MODERATOR) ? 'moderator' : 'member'}`
           }
         })
         const toGroupActivities = toMembers.map(member => {
@@ -170,7 +169,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
             actor_id: actorId,
             group_id: fromGroup.id,
             other_group_id: toGroup.id,
-            reason: `${reason}:${parentToChild ? 'child' : 'parent'}:${member.get('role') === GroupMembership.Role.MODERATOR ? 'moderator' : 'member'}`
+            reason: `${reason}:${parentToChild ? 'child' : 'parent'}:${member.hasRole(GroupMembership.Role.MODERATOR) ? 'moderator' : 'member'}`
           }
         })
         return Activity.saveForReasons(fromGroupActivities.concat(toGroupActivities), transacting)

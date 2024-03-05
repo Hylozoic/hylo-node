@@ -35,7 +35,7 @@ export const groupFilter = userId => relation => {
         const selectIdsForMember = Group.selectIdsForMember(userId)
         const parentGroupIds = GroupRelationship.parentIdsFor(selectIdsForMember)
         const childGroupIds = GroupRelationship.childIdsFor(selectIdsForMember)
-        const selectModeratedGroupIds = Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR })
+        const selectModeratedGroupIds = Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR }) // TODO RESP: this is going to be a nightmare now :\ Should change to or add a specific 'moderator' ids method
         const childrenOfModeratedGroupIds = GroupRelationship.childIdsFor(selectModeratedGroupIds)
 
         // Can see groups you are a member of...

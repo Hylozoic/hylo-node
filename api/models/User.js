@@ -111,6 +111,11 @@ module.exports = bookshelf.Model.extend(merge({
       })
   },
 
+  commonRoles () {
+    return this.belongsToMany(CommonRole)
+      .through(MemberCommonRole, 'user_id', 'common_role_id')
+  },
+
   contributions: function () {
     return this.hasMany(Contribution)
   },
@@ -188,7 +193,7 @@ module.exports = bookshelf.Model.extend(merge({
     return this.followedPosts().query(q => q.where('type', Post.Type.THREAD))
   },
 
-  moderatedGroupMemberships: function () {
+  moderatedGroupMemberships: function () { // TODO RESP: need to edit this. A helper function has already been created on the Responsibility model, it gets you groupIds and responsibilities tho, need to use that to look up memberships to return
     return this.memberships()
       .where('group_memberships.role', GroupMembership.Role.MODERATOR)
   },
@@ -278,7 +283,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     await this.deleteUserMedia()
     Queue.classMethod('User', 'clearSessionsFor', { userId: this.get('user_id'), sessionId })
-
+    // TODO RESP: will need to add responsibilies, roles, etc to here, where they are missing (some roles are already handled)
     const query = `
     BEGIN;
     UPDATE posts SET name = 'Post by deleted user', description = '', location = NULL, location_id = NULL WHERE user_id = ${this.id};

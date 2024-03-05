@@ -1,6 +1,7 @@
-const { GraphQLYogaError } = require('@graphql-yoga/node')
 import { isEmpty, mapKeys, pick, snakeCase, size, trim } from 'lodash'
 import convertGraphqlData from './convertGraphqlData'
+
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 export {
   createAffiliation,
@@ -77,6 +78,13 @@ export {
   leaveProject,
   processStripeToken
 } from './project'
+export {
+  addGroupResponsibility,
+  updateGroupResponsibility,
+  deleteGroupResponsibility,
+  addResponsibilityToRole,
+  removeResponsibilityFromRole
+} from './responsibilities'
 export {
   addGroupRole,
   addRoleToMember,
@@ -225,8 +233,8 @@ export async function addSkillToLearn (userId, name) {
 export async function addSuggestedSkillToGroup (userId, groupId, name) {
   const group = await Group.find(groupId)
   if (!group) throw new GraphQLYogaError(`Invalid group`)
-  const isModerator = GroupMembership.hasModeratorRole(userId, group)
-  if (!isModerator) throw new GraphQLYogaError(`You don't have permission`)
+  const isModerator = GroupMembership.hasModeratorRole(userId, group, {}, Responsibility.constants.RESP_ADMINISTRATION)
+  if (!isModerator) throw new GraphQLYogaError(`You don't have permission to add skill to group`)
 
   const skill = await createSkill(name)
 
@@ -262,8 +270,8 @@ export function removeSkillToLearn (userId, skillIdOrName) {
 export async function removeSuggestedSkillFromGroup (userId, groupId, skillIdOrName) {
   const group = await Group.find(groupId)
   if (!group) throw new GraphQLYogaError(`Invalid group`)
-  const isModerator = GroupMembership.hasModeratorRole(userId, group)
-  if (!isModerator) throw new GraphQLYogaError(`You don't have permission`)
+  const isModerator = GroupMembership.hasModeratorRole(userId, group, {}, Responsibility.constants.RESP_ADMINISTRATION)
+  if (!isModerator) throw new GraphQLYogaError(`You don't have permission to remove skill from group`)
 
   return Skill.find(skillIdOrName)
     .then(skill => {
@@ -336,10 +344,10 @@ export async function removePost (userId, postId, groupIdOrSlug) {
   const group = await Group.find(groupIdOrSlug)
   return Promise.join(
     Post.find(postId),
-    GroupMembership.hasModeratorRole(userId, group),
+    GroupMembership.hasModeratorRole(userId, group, {}, Responsibility.constants.RESP_MANAGE_CONTENT),
     (post, isModerator) => {
       if (!post) throw new GraphQLYogaError(`Couldn't find post with id ${postId}`)
-      if (!isModerator) throw new GraphQLYogaError(`You don't have permission to remove this post`)
+      if (!isModerator) throw new GraphQLYogaError('You don\'t have permission to remove this post')
       return post.removeFromGroup(groupIdOrSlug)
     })
   .then(() => ({success: true}))
