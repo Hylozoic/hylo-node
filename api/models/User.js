@@ -306,7 +306,7 @@ module.exports = bookshelf.Model.extend(merge({
     DELETE FROM group_memberships WHERE user_id = ${this.id};
     DELETE FROM communities_users WHERE user_id = ${this.id};
     DELETE FROM linked_account WHERE user_id = ${this.id};
-    DELETE FROM join_request_question_answers WHERE join_request_id in (select id from join_requests WHERE user_id = ${this.id});
+    DELETE FROM group_join_questions_answers WHERE user_id = ${this.id};
     DELETE FROM join_requests WHERE user_id = ${this.id};
     DELETE FROM skills_users WHERE user_id = ${this.id};
     DELETE FROM posts_about_users WHERE user_id = ${this.id};
@@ -544,7 +544,8 @@ module.exports = bookshelf.Model.extend(merge({
     return this.addSetting({
       digest_frequency: 'never',
       comment_notifications: 'none',
-      dm_notifications: 'none'
+      dm_notifications: 'none',
+      post_notifications: 'none'
     }, true)
   },
 

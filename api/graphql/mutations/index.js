@@ -1,7 +1,4 @@
 import { isEmpty, mapKeys, pick, snakeCase, size, trim } from 'lodash'
-import underlyingFindOrCreateThread, {
-  validateThreadData
-} from '../../models/post/findOrCreateThread'
 import convertGraphqlData from './convertGraphqlData'
 
 const { GraphQLYogaError } = require('@graphql-yoga/node')
@@ -118,6 +115,7 @@ export {
   createZapierTrigger,
   deleteZapierTrigger
 } from './zapier'
+export { default as findOrCreateThread } from '../../models/post/findOrCreateThread'
 
 export async function updateMe (sessionId, userId, changes) {
   const user = await User.find(userId)
@@ -135,11 +133,6 @@ export async function leaveGroup (userId, groupId) {
   const user = await User.find(userId)
   await user.leaveGroup(group)
   return groupId
-}
-
-export function findOrCreateThread (userId, data) {
-  return validateThreadData(userId, data)
-  .then(() => underlyingFindOrCreateThread(userId, data.participantIds))
 }
 
 export async function findOrCreateLinkPreviewByUrl ({ url }) {

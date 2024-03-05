@@ -389,7 +389,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     expireInvitation: (root, { invitationId }) =>
       expireInvitation(userId, invitationId),
 
-    findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data),
+    findOrCreateThread: (root, { data }) => findOrCreateThread(userId, data.participantIds),
 
     findOrCreateLinkPreviewByUrl: (root, { data }) => findOrCreateLinkPreviewByUrl(data),
 

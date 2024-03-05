@@ -6,6 +6,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.7.1] - 2024-02-20
+
+## Added
+- New setting to receive a notification for every post in your groups. This is set to only receive "important" post notifications by default, which includes Announcement posts, and posts you are mentioned in. You can change the setting to All posts or None in the Notifications settings page.
+
+## [5.7.0] - 2024-02-05
+
+### Added
+- Group Agreements: Groups can now have agreements that members must agree to when joining the group. Each agreement has a title and description, and newly joining members must agree to them before they are let in. If agreements change then the member will be asked to agree to the newly changed agreeements.
+- You can now require Join Questions for Groups that are set to Accessibility = Closed or Open, no longer just for Restricted groups
+
+### Changed
+- When inviting someone to a group that has Join Questions new members are now asked to answer the join questions before being let in to the group even when invited by join link or email address.
+
+### Fixed
+- Bug that allowed people to message someone they don't share a group with.
+
 ## [5.6.2] - 2023-12-29
 
 ### Changed

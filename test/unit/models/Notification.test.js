@@ -44,16 +44,16 @@ describe('Notification', function () {
   let activities, activity, actor, comment, group, device, post, reader
 
   before(() => {
-    return factories.user({avatar_url: 'http://joe.com/headshot.jpg', name: 'Joe'}).save()
+    return factories.user({ avatar_url: 'http://joe.com/headshot.jpg', name: 'Joe' }).save()
       .then(u => { actor = u })
-      .then(() => factories.post({name: 'My Post', user_id: actor.id, description: 'The body of the post'}).save())
+      .then(() => factories.post({ name: 'My Post', user_id: actor.id, description: 'The body of the post' }).save())
       .then(p => { post = p })
-      .then(() => new Comment({text: 'hi', user_id: actor.id, post_id: post.id}).save())
+      .then(() => new Comment({ text: 'hi', user_id: actor.id, post_id: post.id }).save())
       .then(c => { comment = c })
-      .then(() => factories.group({name: 'My Group', slug: 'my-group'}).save())
+      .then(() => factories.group({ name: 'My Group', slug: 'my-group' }).save())
       .then(c => { group = c })
       .then(() => group.posts().attach(post))
-      .then(() => factories.user({email: 'readersemail@hylo.com'}).save())
+      .then(() => factories.user({ email: 'readersemail@hylo.com' }).save())
       .then(u => { reader = u })
       .then(() => new Device({
         user_id: reader.id,
@@ -69,38 +69,38 @@ describe('Notification', function () {
         activity = a
         activities = {
           approvedJoinRequest: {
-            meta: {reasons: ['approvedJoinRequest']},
+            meta: { reasons: ['approvedJoinRequest'] },
             reader_id: reader.id,
             actor_id: actor.id,
             group_id: group.id
           },
           newComment: {
             comment_id: comment.id,
-            meta: {reasons: ['newComment']},
+            meta: { reasons: ['newComment'] },
             reader_id: reader.id,
             actor_id: actor.id
           },
           commentMention: {
             comment_id: comment.id,
-            meta: {reasons: ['commentMention']},
+            meta: { reasons: ['commentMention'] },
             reader_id: reader.id,
             actor_id: actor.id
           },
           joinRequest: {
-            meta: {reasons: ['joinRequest']},
+            meta: { reasons: ['joinRequest'] },
             reader_id: reader.id,
             actor_id: actor.id,
             group_id: group.id
           },
           mention: {
             post_id: post.id,
-            meta: {reasons: ['mention']},
+            meta: { reasons: ['mention'] },
             reader_id: reader.id,
             actor_id: actor.id
           },
           newPost: {
             post_id: post.id,
-            meta: {reasons: [`newPost: ${group.id}`]},
+            meta: { reasons: [`newPost: ${group.id}`] },
             reader_id: reader.id,
             actor_id: actor.id,
             group_id: group.id
@@ -118,10 +118,10 @@ describe('Notification', function () {
     it('sends a push for a new post', () => {
       return preloadNotification(activities.newPost, Notification.MEDIUM.Push)
         .then(notification => notification.send())
-        .then(() => PushNotification.where({device_id: device.id}).fetchAll())
+        .then(() => PushNotification.where({ device_id: device.id }).fetchAll())
         .then(pns => {
           expect(pns.length).to.equal(1)
-          var pn = pns.first()
+          const pn = pns.first()
           expect(pn.get('alert')).to.equal('Joe posted "My Post" in My Group')
         })
     })
@@ -129,11 +129,11 @@ describe('Notification', function () {
     it('sends a push for a mention in a post', () => {
       return preloadNotification(activities.mention, Notification.MEDIUM.Push)
         .then(notification => notification.send())
-        .then(() => PushNotification.where({device_id: device.id}).fetchAll())
+        .then(() => PushNotification.where({ device_id: device.id }).fetchAll())
         .then(pns => {
           expect(pns.length).to.equal(1)
-          var pn = pns.first()
-          expect(pn.get('alert')).to.equal('Joe mentioned you in "My Post"')
+          const pn = pns.first()
+          expect(pn.get('alert')).to.equal('Joe mentioned you in post "My Post" in My Group')
         })
     })
 
@@ -141,22 +141,22 @@ describe('Notification', function () {
       it('sends no push for a comment', () => {
         return preloadNotification(activities.newComment, Notification.MEDIUM.Push)
           .then(notification => notification.send())
-          .then(() => PushNotification.where({device_id: device.id}).fetchAll())
+          .then(() => PushNotification.where({ device_id: device.id }).fetchAll())
           .then(pns => expect(pns.length).to.equal(0))
       })
     })
 
     describe('to a user with push notifications for comments enabled', () => {
-      beforeEach(() => reader.addSetting({comment_notifications: 'push'}, true))
+      beforeEach(() => reader.addSetting({ comment_notifications: 'push' }, true))
       afterEach(() => reader.removeSetting('comment_notifications', true))
 
       it('sends a push for a comment', () => {
         return preloadNotification(activities.newComment, Notification.MEDIUM.Push)
           .then(notification => notification.send())
-          .then(() => PushNotification.where({device_id: device.id}).fetchAll())
+          .then(() => PushNotification.where({ device_id: device.id }).fetchAll())
           .then(pns => {
             expect(pns.length).to.equal(1)
-            var pn = pns.first()
+            let pn = pns.first()
             expect(pn.get('alert')).to.equal(`Joe: "${comment.text()}" (in "My Post")`)
           })
       })
@@ -164,10 +164,10 @@ describe('Notification', function () {
       it('sends a push for a mention in a comment', () => {
         return preloadNotification(activities.commentMention, Notification.MEDIUM.Push)
           .then(notification => notification.send())
-          .then(() => PushNotification.where({device_id: device.id}).fetchAll())
+          .then(() => PushNotification.where({ device_id: device.id }).fetchAll())
           .then(pns => {
             expect(pns.length).to.equal(1)
-            var pn = pns.first()
+            let pn = pns.first()
             expect(pn.get('alert')).to.equal('Joe mentioned you: "hi" (in "My Post")')
           })
       })
@@ -176,10 +176,10 @@ describe('Notification', function () {
     it('sends a push for a join request', () => {
       return preloadNotification(activities.joinRequest, Notification.MEDIUM.Push)
         .then(notification => notification.send())
-        .then(() => PushNotification.where({device_id: device.id}).fetchAll())
+        .then(() => PushNotification.where({ device_id: device.id }).fetchAll())
         .then(pns => {
           expect(pns.length).to.equal(1)
-          var pn = pns.first()
+          const pn = pns.first()
           expect(pn.get('alert')).to.equal('Joe asked to join My Group')
         })
     })
@@ -187,10 +187,10 @@ describe('Notification', function () {
     it('sends a push for an approved join request', () => {
       return preloadNotification(activities.approvedJoinRequest, Notification.MEDIUM.Push)
         .then(notification => notification.send())
-        .then(() => PushNotification.where({device_id: device.id}).fetchAll())
+        .then(() => PushNotification.where({ device_id: device.id }).fetchAll())
         .then(pns => {
           expect(pns.length).to.equal(1)
-          var pn = pns.first()
+          const pn = pns.first()
           expect(pn.get('alert')).to.equal('Joe approved your request to join My Group')
         })
     })
@@ -284,11 +284,11 @@ describe('Notification', function () {
       })
 
       return preloadNotification(activities.approvedJoinRequest, Notification.MEDIUM.Email)
-      .then(notification => notification.send())
-      .then(() => {
-        expect(Email.sendApprovedJoinRequestNotification).to.have.been.called()
-      })
-      .then(() => unspyify(Email, 'sendApprovedJoinRequestNotification'))
+        .then(notification => notification.send())
+        .then(() => {
+          expect(Email.sendApprovedJoinRequestNotification).to.have.been.called()
+        })
+        .then(() => unspyify(Email, 'sendApprovedJoinRequestNotification'))
     })
   })
 
@@ -311,19 +311,19 @@ describe('Notification', function () {
           medium: Notification.MEDIUM.InApp,
           created_at: new Date()
         }).save())
-      .then(() => Notification.findUnsent())
-      .then(notifications => {
-        expect(notifications.length).to.equal(2)
-        expect(notifications.pluck('medium').sort()).to.deep.equal([
-          Notification.MEDIUM.Push,
-          Notification.MEDIUM.InApp
-        ].sort())
-      })
+        .then(() => Notification.findUnsent())
+        .then(notifications => {
+          expect(notifications.length).to.equal(2)
+          expect(notifications.pluck('medium').sort()).to.deep.equal([
+            Notification.MEDIUM.Push,
+            Notification.MEDIUM.InApp
+          ].sort())
+        })
     })
   })
 
   describe('sendCommentNotificationEmail', () => {
-    var args, group
+    let args, group
     beforeEach(() => {
       spyify(Email, 'sendNewCommentNotification', x => { args = x })
       group = factories.group()
@@ -346,7 +346,7 @@ describe('Notification', function () {
               text: () => 'I have an opinion',
               relations: {
                 post: model({
-                  summary: () => "hello world",
+                  summary: () => 'hello world',
                   name: 'hello world',
                   relations: {
                     groups: [group]
@@ -355,7 +355,7 @@ describe('Notification', function () {
                 user: model({
                   id: 2,
                   name: 'Ka Mentor',
-                  settings: {locale: 'en'}
+                  settings: { locale: 'en' }
                 })
               }
             }),
@@ -364,17 +364,17 @@ describe('Notification', function () {
               name: 'Reader Person',
               email: 'ilovenotifications@foo.com',
               created_at: new Date(),
-              settings: {locale: 'en'}
+              settings: { locale: 'en' }
             })
           }
         })
       }
 
       return note.sendCommentNotificationEmail()
-      .then(() => {
-        expect(Email.sendNewCommentNotification).to.have.been.called()
-        expect(args.data.post_label).to.equal('"hello world"')
-      })
+        .then(() => {
+          expect(Email.sendNewCommentNotification).to.have.been.called()
+          expect(args.data.post_label).to.equal('"hello world"')
+        })
     })
   })
 
@@ -416,7 +416,7 @@ describe('Notification', function () {
 
     beforeEach(done => {
       socketClient = ioClient.connect('http://localhost:3333', {
-        transports: [ 'websocket' ],
+        transports: ['websocket'],
         'force new connection': true
       })
       socketClient.on('connect', () => {
@@ -570,19 +570,20 @@ describe('Notification', function () {
       })
     })
   })
+
   describe('sendPushAnnouncement', () => {
-    var post, notification, reader, group, activity, user, alertText, path
+    let post, notification, reader, group, activity, user, alertText, path
 
     before(async () => {
       reader = await factories.user().save()
       user = await factories.user().save()
-      group = await factories.group().save()
-      post = await factories.post({user_id: user.id}).save()
+      group = await factories.group({ name: 'This is the best group' }).save()
+      post = await factories.post({ user_id: user.id }).save()
       await group.posts().attach(post)
-      activity = await factories.activity({post_id: post.id, reader_id: reader.id}).save()
-      notification = await factories.notification({activity_id: activity.id}).save()
+      activity = await factories.activity({ post_id: post.id, reader_id: reader.id, group_id: group.id }).save()
+      notification = await factories.notification({ activity_id: activity.id }).save()
       await post.load('user')
-      await notification.load(['activity', 'activity.post.groups', 'activity.reader', 'activity.post.user'])
+      await notification.load(['activity', 'activity.group', 'activity.post.groups', 'activity.reader', 'activity.post.user'])
       notification.relations.activity.relations.reader.sendPushNotification = spy((inAlertText, inPath) => {
         alertText = inAlertText
         path = inPath
@@ -592,8 +593,8 @@ describe('Notification', function () {
     it('calls sendPushNotification with the correct params', async () => {
       await notification.sendPushAnnouncement()
       expect(notification.relations.activity.relations.reader.sendPushNotification).to.have.been.called()
-      expect(alertText).to.equal(PushNotification.textForAnnouncement(post, 'en'))
-      expect(path).to.equal(url.parse(Frontend.Route.post(post, group)).path)
+      expect(alertText).to.equal(PushNotification.textForAnnouncement(post, group, 'en'))
+      expect(path).to.equal(new URL(Frontend.Route.post(post, group)).pathname)
     })
   })
 })
