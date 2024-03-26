@@ -44,6 +44,7 @@ exports.down = async function (knex, Promise) {
     table.dropIndex(['proposal_outcome'])
     table.dropColumn('quorum')
     table.dropColumn('proposal_status')
+    table.dropColumn('proposal_type')
     table.dropColumn('proposal_outcome')
     table.dropColumn('anonymous_voting')
     table.dropColumn('proposal_vote_limit')
