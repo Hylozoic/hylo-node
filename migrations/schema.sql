@@ -1817,7 +1817,8 @@ CREATE TABLE public.posts (
     proposal_status text,
     proposal_outcome text,
     proposal_type text,
-    anonymity text
+    anonymous_voting text,
+    proposal_vote_limit integer
 );
 
 
@@ -1970,7 +1971,8 @@ CREATE TABLE public.proposal_options (
     id integer NOT NULL,
     post_id bigint NOT NULL,
     text text NOT NULL,
-    description text
+    emoji text,
+    color text
 );
 
 

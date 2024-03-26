@@ -60,7 +60,7 @@ export async function addProposalVote ({ userId, postId, optionId }) {
 
   return Post.find(postId)
     .then(post => {
-      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed')
+      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed') // TODO PROPOSALS: edit this for casual proposals
       return post.addProposalVote({ userId, optionId })
     })
     .catch((err) => { throw new GraphQLYogaError(`adding of vote failed: ${err}`) })
@@ -75,7 +75,7 @@ export async function removeProposalVote ({ userId, postId, optionId }) {
 
   return Post.find(postId)
     .then(post => {
-      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed')
+      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed') // TODO PROPOSALS: edit this for casual proposals
       return post.removeProposalVote({ userId, optionId })
     })
     .catch((err) => { throw new GraphQLYogaError(`removal of vote failed: ${err}`) })
@@ -88,7 +88,7 @@ export async function setProposalOptions ({ userId, postId, options }) {
   if (!authorized) throw new GraphQLYogaError("You don't have permission to modify this post")
   return Post.find(postId)
     .then(post => {
-      if (post.get('proposal_status') !== Post.Proposal_Status.DISCUSSION) throw new GraphQLYogaError("Proposal options cannot be changed unless the proposal is in 'discussion'")
+      if (post.get('proposal_status') !== Post.Proposal_Status.DISCUSSION) throw new GraphQLYogaError("Proposal options cannot be changed unless the proposal is in 'discussion'") // TODO PROPOSALS: edit this for casual proposals
       return post.setProposalOptions(options)
     })
     .catch((err) => { throw new GraphQLYogaError(`setting of options failed: ${err}`) })
@@ -103,7 +103,7 @@ export async function swapProposalVote ({ userId, postId, removeOptionId, addOpt
 
   const post = await Post.find(postId)
   if (!post) throw new GraphQLYogaError(`Couldn't find post for ${postId}`)
-  if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed')
+  if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed') // TODO PROPOSALS: edit this for casual proposals
 
   try {
     await post.removeProposalVote({ userId, optionId: removeOptionId })

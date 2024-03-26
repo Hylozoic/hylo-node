@@ -4,18 +4,21 @@ exports.up = async function (knex, Promise) {
     table.text('proposal_status').index()
     table.text('proposal_outcome').index()
     table.text('proposal_type')
+    table.integer('proposal_vote_limit')
+    table.boolean('proposal_strict').defaultTo(false)
     /*
       added proposal_ prefix to status and outcome because they are very generic column names
       and I don't want to confuse future developers as to why they are largely null
     */
-    table.text('anonymity')
+    table.text('anonymous_voting')
   })
 
   await knex.schema.createTable('proposal_options', table => {
     table.increments().primary()
     table.bigInteger('post_id').references('id').inTable('posts').notNullable()
+    table.text('emoji')
+    table.text('color')
     table.text('text').notNullable()
-    table.text('description')
   })
 
   await knex.schema.createTable('proposal_votes', table => {
@@ -42,6 +45,7 @@ exports.down = async function (knex, Promise) {
     table.dropColumn('quorum')
     table.dropColumn('proposal_status')
     table.dropColumn('proposal_outcome')
-    table.dropColumn('anonymity')
+    table.dropColumn('anonymous_voting')
+    table.dropColumn('proposal_vote_limit')
   })
 }

@@ -342,9 +342,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     DELETE FROM proposal_options
     WHERE post_id = ${this.id};
     
-    INSERT INTO proposal_options (post_id, text, description)
+    INSERT INTO proposal_options (post_id, text, color, emoji)
     VALUES
-      ${options.map(option => `(${this.id}, '${option.text}', '${option.description}')`).join(', ')}
+      ${options.map(option => `(${this.id}, '${option.text}', '${option.color}', '${option.emoji}')`).join(', ')}
     RETURNING id;
 
     COMMIT;`)
@@ -561,6 +561,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
     IN_PROGRESS: 'in-progress',
     SUCCESSFUL: 'successful',
     TIE: 'tie'
+  },
+
+  Proposal_Type: {
+    SINGLE: 'single',
+    MULTI_UNRESTRICTED: 'multi-unrestricted',
+    CONSENSUS: 'consensus', // Stricter form of single vote, all votes must be for the same option to 'pass'
+    MAJORITY: 'majority' // one option must have more than 50% of votes for the proposal to 'pass'
   },
 
   // TODO Consider using Visibility property for more granular privacy

@@ -55,10 +55,10 @@ describe('ProposalVote', () => {
       .then(() => user.joinGroup(g1))
       .then(() => post.groups().attach(g1.id))
       .then(async () => {
-        option1 = { post_id: post.id, text: 'option1', description: 'description1' }
-        option2 = { post_id: post.id, text: 'option2', description: 'description2' }
-        option3 = { post_id: post.id, text: 'third', description: 'description third' }
-        option4 = { post_id: post.id, text: 'fourth', description: 'description fourth' }
+        option1 = { post_id: post.id, text: 'option1' }
+        option2 = { post_id: post.id, text: 'option2' }
+        option3 = { post_id: post.id, text: 'third' }
+        option4 = { post_id: post.id, text: 'fourth' }
         await post.save({ proposal_status: Post.Proposal_Status.DISCUSSION }, { patch: true })
 
         return post.setProposalOptions([option1, option2])

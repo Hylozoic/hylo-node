@@ -1619,7 +1619,7 @@ type Post {
   # NOT USED RIGHT NOW. Whether this post can accept financial contributions
   acceptContributions: Boolean
   # whether voting is anonymous for this proposal (Only used by proposal type posts)
-  anonymity: Boolean
+  anonymousVoting: Boolean
   # Was this post marked an announcement by a group moderator?
   announcement: Boolean
   # Number of attachments on this post
@@ -1762,8 +1762,10 @@ type ProposalOption {
   postId: ID
   # Required: The text of the proposal option
   text: String
-  # Optional longer description of the option
-  description: String
+  # Optional: The emoji for the proposal option
+  emoji: String
+  # Optional: The color for the proposal option
+  color: String
 }
 
 type ProposalVote {
@@ -2743,8 +2745,10 @@ input ProposalOptionInput {
   id: ID
   # Required: Title of the option
   text: String
-  # Optional: more detailed text for the option
-  description: String
+  # Optional: emoji to represent the option
+  emoji: String
+  # Optional: hexcode color to represent the option
+  color: String
 }
 
 # A Question to be asked before joining a Group
