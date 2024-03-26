@@ -63,8 +63,11 @@ export {
   createPost,
   fulfillPost,
   unfulfillPost,
+  setProposalOptions,
+  addProposalVote,
+  removeProposalVote,
+  swapProposalVote,
   updatePost,
-  vote,
   deletePost,
   pinPost
 } from './post'

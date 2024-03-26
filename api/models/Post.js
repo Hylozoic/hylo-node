@@ -77,12 +77,16 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('type') === Post.Type.CHAT
   },
 
-  isWelcome: function () {
-    return this.get('type') === Post.Type.WELCOME
+  isProposal: function () {
+    return this.get('type') === Post.Type.Proposal
   },
 
   isThread: function () {
     return this.get('type') === Post.Type.THREAD
+  },
+
+  isWelcome: function () {
+    return this.get('type') === Post.Type.WELCOME
   },
 
   commentsTotal: function () {
@@ -90,10 +94,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   peopleReactedTotal: function () {
-    return this.get('num_people_reacts')
-  },
-
-  votesTotal: function () {
     return this.get('num_people_reacts')
   },
 
@@ -163,6 +163,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(ProjectContribution)
   },
 
+  proposalOptions: function () {
+    return this.hasMany(ProposalOption)
+  },
+
+  proposalVotes: function () {
+    return this.hasMany(ProposalVote)
+  },
+
   reactions: function () {
     return this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'post' })
   },
@@ -202,14 +210,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return q
   },
 
-  userVote: function (userId) {
-    return this.votes().query({ where: { user_id: userId, entity_type: 'post' } }).fetchOne()
-  },
-
-  votes: function () {
-    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
-  },
-
   // TODO: this is confusing and we are not using, remove for now?
   children: function () {
     return this.hasMany(Post, 'parent_post_id')
@@ -246,7 +246,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // TODO: if we were in a position to avoid duplicating the graphql layer
   // here, that'd be grand.
   getNewPostSocketPayload: function () {
-    const { groups, linkPreview, tags, user } = this.relations
+    const { groups, linkPreview, tags, user, proposalOptions } = this.relations
 
     const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
     const topics = refineMany(tags, [ 'id', 'name' ])
@@ -255,18 +255,20 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Object.assign({},
       refineOne(
         this,
-        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes'],
+        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes', 'proposalType', 'proposalStatus', 'proposalOutcome'],
         { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotal', num_votes: 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation
         commenters: [],
+        proposalVotes: [],
         commentsTotal: 0,
         details: this.details(),
         groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
         creator,
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'description', 'url' ]),
         topics,
+        proposalOptions,
 
         // TODO: Once legacy site is decommissioned, these are no longer required.
         creatorId: creator.id,
@@ -321,12 +323,40 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return updatedFollowers.concat(newFollowers)
   },
 
+  async addProposalVote ({ userId, optionId }) {
+    return ProposalVote.forge({ post_id: this.id, user_id: userId, option_id: optionId, created_at: new Date() }).save()
+  },
+
   async removeFollowers (usersOrIds, { transacting } = {}) {
     return this.updateFollowers(usersOrIds, { active: false }, { transacting })
   },
 
+  async removeProposalVote ({ userId, optionId }) {
+    const vote = await ProposalVote.query({ where: { user_id: userId, option_id: optionId } }).fetch()
+    return vote.destroy()
+  },
+
+  async setProposalOptions (options = []) {
+    return bookshelf.knex.raw(`BEGIN;
+
+    DELETE FROM proposal_options
+    WHERE post_id = ${this.id};
+    
+    INSERT INTO proposal_options (post_id, text, color, emoji)
+    VALUES
+      ${options.map(option => `(${this.id}, '${option.text}', '${option.color}', '${option.emoji}')`).join(', ')}
+    RETURNING id;
+
+    COMMIT;`)
+  },
+
+  async swapProposalVote ({ userId, removeOptionId, addOptionId }) {
+    await this.removeProposalVote({ userId, optionId: removeOptionId })
+    return this.addProposalVote({ userId, optionId: addOptionId })
+  },
+
   async updateFollowers (usersOrIds, attrs, { transacting } = {}) {
-    if (usersOrIds.length == 0) return []
+    if (usersOrIds.length === 0) return []
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingFollowers = await this.postUsers()
       .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
@@ -512,10 +542,32 @@ module.exports = bookshelf.Model.extend(Object.assign({
     EVENT: 'event',
     OFFER: 'offer',
     PROJECT: 'project',
+    PROPOSAL: 'proposal',
     REQUEST: 'request',
     RESOURCE: 'resource',
     THREAD: 'thread',
-    WELCOME: 'welcome',
+    WELCOME: 'welcome'
+  },
+
+  Proposal_Status: {
+    DISCUSSION: 'discussion',
+    COMPLETED: 'completed',
+    VOTING: 'voting'
+  },
+
+  Proposal_Outcome: {
+    CANCELLED: 'cancelled',
+    QUORUM_NOT_MET: 'quorum-not-met',
+    IN_PROGRESS: 'in-progress',
+    SUCCESSFUL: 'successful',
+    TIE: 'tie'
+  },
+
+  Proposal_Type: {
+    SINGLE: 'single',
+    MULTI_UNRESTRICTED: 'multi-unrestricted',
+    CONSENSUS: 'consensus', // Stricter form of single vote, all votes must be for the same option to 'pass'
+    MAJORITY: 'majority' // one option must have more than 50% of votes for the proposal to 'pass'
   },
 
   // TODO Consider using Visibility property for more granular privacy
@@ -558,14 +610,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   isVisibleToUser: async function (postId, userId) {
     if (!postId || !userId) return Promise.resolve(false)
-
     const post = await Post.find(postId)
-
     if (post.isPublic()) return true
 
     const postGroupIds = await PostMembership.query()
       .where({ post_id: postId }).pluck('group_id')
     const userGroupIds = await Group.pluckIdsForMember(userId)
+
     if (intersection(postGroupIds, userGroupIds).length > 0) return true
     if (await post.isFollowed(userId)) return true
 
