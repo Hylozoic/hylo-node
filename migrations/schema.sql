@@ -1815,6 +1815,7 @@ CREATE TABLE public.posts (
     timezone character varying(255),
     quorum bigint,
     proposal_status text,
+    proposal_strict boolean DEFAULT false,
     proposal_outcome text,
     proposal_type text,
     anonymous_voting text,

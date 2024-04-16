@@ -199,6 +199,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'location',
         'project_management_link',
         'proposal_status',
+        'proposal_type',
         'proposal_outcome',
         'quorum',
         'reactions_summary',
@@ -973,6 +974,27 @@ export default function makeModels (userId, isAdmin, apiClient) {
       model: PostUser,
       relations: [
         'post',
+        'user'
+      ]
+    },
+
+    ProposalOption: {
+      model: ProposalOption,
+      attributes: [
+        'emoji',
+        'color',
+        'text'
+      ]
+    },
+
+    ProposalVote: {
+      model: ProposalVote,
+      attributes: [
+        'created_at',
+        'id',
+        'option_id'
+      ],
+      relations: [
         'user'
       ]
     },

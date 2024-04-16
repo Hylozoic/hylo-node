@@ -10,12 +10,11 @@ export default async function createPost (userId, params) {
     const allowedToMakePublic = groups.find(g => g.get('allow_in_public'))
     if (!allowedToMakePublic) params.isPublic = false
   }
-
-  return setupPostAttrs(userId, merge(Post.newPostAttrs(), params))
+  return setupPostAttrs(userId, merge(Post.newPostAttrs(), params), true)
     .then(attrs => bookshelf.transaction(transacting =>
       Post.create(attrs, { transacting })
         .tap(post => afterCreatingPost(post, merge(
-          pick(params, 'group_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
+          pick(params, 'group_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id', 'proposalOptions'),
           {children: params.requests, transacting}
       )))).then(function(inserts) {
         return inserts
@@ -31,7 +30,6 @@ export function afterCreatingPost (post, opts) {
   const followerIds = uniq(mentioned.concat(userId))
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
-
   return Promise.all(flatten([
     opts.group_ids && post.groups().attach(uniq(opts.group_ids), trxOpts),
 
@@ -80,11 +78,11 @@ export function afterCreatingPost (post, opts) {
       type: 'video',
       url: opts.videoUrl
     }, trx),
-
     opts.docs && Promise.map(opts.docs, (doc) => Media.createDoc(post.id, doc, trx)),
   ]))
   .then(() => post.isProject() && post.setProjectMembers(opts.memberIds || [], trxOpts))
   .then(() => post.isEvent() && post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
+  .then(() => post.isProposal() && post.setProposalOptions({ options: opts.proposalOptions || [], userId, opts: trxOpts }))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndGroups(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', { postId: post.id }))

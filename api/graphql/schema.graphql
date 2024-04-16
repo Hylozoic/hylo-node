@@ -21,7 +21,7 @@ type Query {
 
   # Query for PersonConnections
   connections(
-    # Number of PersonConnections to load
+    # Int of PersonConnections to load
     first: Int,
     # Start loading at this offset
     offset: Int
@@ -62,7 +62,7 @@ type Query {
     farmQuery: JSON,
     # XXX: NOT USED
     filter: String,
-    # Number of groups to return
+    # Int of groups to return
     first: Int,
     # Only find these groups, by ID
     groupIds: [ID],
@@ -107,7 +107,7 @@ type Query {
   groupTopics(
     # Return only topics whose name starts with the autocomplete string
     autocomplete: String,
-    # Number of GroupTopics to return
+    # Int of GroupTopics to return
     first: Int,
     # If true only return topics that are set to be a default topic in a group that the current logged in user is a member of
     isDefault: Boolean,
@@ -197,7 +197,7 @@ type Query {
     createdBy: [ID],
     # Load posts before or after this ID, depending on sort order
     cursor: ID,
-    # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'request' or 'resource'
+    # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'proposal', 'request' or 'resource'
     filter: String,
     # Number of posts to return
     first: Int,
@@ -223,7 +223,7 @@ type Query {
     topic: ID,
     # Return only posts that have any of these topics by topic ID
     topics: [ID],
-    # Return only posts that are one of these types: 'discussion', 'event', 'offer', 'project', 'request' and/or 'resource'
+    # Return only posts that are one of these types: 'discussion', 'event', 'offer', 'project', 'proposal', 'request' and/or 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -771,7 +771,7 @@ type Group {
     collectionToFilterOut: ID,
     # Start loading posts before or after this ID, depending on sort order
     cursor: ID,
-    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     #  a value of 'all' will include all above post types
     #  a value of 'chat' will include all above post types + 'chat'
     filter: String,
@@ -797,7 +797,7 @@ type Group {
     topic: ID,
     # Only load posts that have one of these topics by topic id
     topics: [ID],
-    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -828,7 +828,7 @@ type Group {
     collectionToFilterOut: ID,
     # Return posts before or after this post id, depending on sort order
     cursor: ID,
-    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     filter: String,
     # Load this number of posts
     first: Int,
@@ -850,7 +850,7 @@ type Group {
     topic: ID,
     # Only load posts that have one of these topics by topic id
     topics: [ID],
-    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -1545,7 +1545,7 @@ type Person {
     createdBy: [ID],
     # Start loading posts before or after this ID, depending on sort order
     cursor: ID,
-    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     filter: String,
     # Load this number of posts
     first: Int,
@@ -1572,7 +1572,7 @@ type Person {
     topic: ID,
     # Only load posts that have one of these topics by topic id
     topics: [ID],
-    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -1641,8 +1641,12 @@ type Post {
   fulfilledAt: Date
   # Number of groups this has been posted to
   groupsTotal: Int
+  # Whether who votes on this proposal is visible or not
+  isAnonymousVote: Boolean
   # Whether this post is publicly visible (outside of the groups it is posted to)
   isPublic: Boolean
+  # A strict proposal cannot be edited in all the ways a casual proposal can be
+  isStrictProposal: Boolean
   # Whether LinkPreview appears full size above post or smaller below
   linkPreviewFeatured: Boolean
   # Full location string
@@ -1665,7 +1669,9 @@ type Post {
   proposalStatus: String
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
-  # The percentage of membership that need to vote for a proposal to complete successfully
+  # The type of proposal: 'single', 'multiple-unrestricted', 'majority', 'consensus'
+  proposalType: String
+  # Percentage of all group members that must vote for a proposal to complete
   quorum: Int
   # Number of total reactions on the post
   reactionsTotal: Int
@@ -1681,7 +1687,7 @@ type Post {
   topicsTotal: Int
   # NOT USED RIGHT NOW
   totalContributions: Int
-  # Post type: 'discussion', 'event', 'offer', 'project', 'request', or 'resource'
+  # Post type: 'discussion', 'event', 'offer', 'project', 'proposal', 'request', or 'resource'
   type: String
   updatedAt: Date
 
@@ -1778,6 +1784,8 @@ type ProposalVote {
   optionId: ID
   # timestamp of when the vote was created
   createdAt: Date
+  # The person who voted
+  user: Person
 }
 
 # A question asked when someone is trying to join a group
@@ -2241,6 +2249,8 @@ type Mutation {
   updateMembership(groupId: ID, slug: String, data: MembershipInput): Membership
   # Update a post you created
   updatePost(id: ID, data: PostInput): Post
+  # update options for a proposal
+  updateProposalOptions(postId: ID, options: [ProposalOptionInput]): [ProposalOption]
   # NOT USED RIGHT NOW
   updateStripeAccount(accountId: String): GenericResult
   # Update settings for a GroupWidget
@@ -2715,8 +2725,12 @@ input PostInput {
   groupIds: [ID]
   # URLs of images in the post
   imageUrls: [String]
+  # Whether who votes on this proposal is visible or not
+  isAnonymousVote: Boolean
   # Whether this post is publicly visible (outside of the groups it is posted to)
   isPublic: Boolean
+  # A strict proposal cannot be edited in all the ways a casual proposal can be
+  isStrictProposal: Boolean
   # ID of a LinkPreview to show in the post
   linkPreviewId: String
   # Whether LinkPreview appears full size above post or smaller below
@@ -2729,6 +2743,12 @@ input PostInput {
   memberIds: [ID]
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
+  # The options for this proposal
+  proposalOptions: [ProposalOptionInput]
+  # The type of proposal: 'poll', 'survey', 'vote', or 'proposal'
+  proposalType: String
+  # Percentage of all group members that must vote for a proposal to complete
+  quorum: Int
   # When this post "starts". Used for events, resources, projects, requests and offers right now
   startTime: Date
   # The timezone of the post
@@ -2737,7 +2757,7 @@ input PostInput {
   title: String
   # Topics to add to the post
   topicNames: [String]
-  # Post type: 'discussion', 'event', 'offer', 'project', 'request', or 'resource'
+  # Post type: 'discussion', 'event', 'offer', 'project', 'proposal', 'request', or 'resource'
   type: String
 }
 

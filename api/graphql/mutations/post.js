@@ -60,7 +60,7 @@ export async function addProposalVote ({ userId, postId, optionId }) {
 
   return Post.find(postId)
     .then(post => {
-      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed') // TODO PROPOSALS: edit this for casual proposals
+      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed')
       return post.addProposalVote({ userId, optionId })
     })
     .catch((err) => { throw new GraphQLYogaError(`adding of vote failed: ${err}`) })
@@ -72,10 +72,9 @@ export async function removeProposalVote ({ userId, postId, optionId }) {
 
   const authorized = await Post.isVisibleToUser(postId, userId)
   if (!authorized) throw new GraphQLYogaError("You don't have permission to vote on this post")
-
   return Post.find(postId)
     .then(post => {
-      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed') // TODO PROPOSALS: edit this for casual proposals
+      if (post.get('proposal_status') !== Post.Proposal_Status.VOTING && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed')
       return post.removeProposalVote({ userId, optionId })
     })
     .catch((err) => { throw new GraphQLYogaError(`removal of vote failed: ${err}`) })
@@ -88,8 +87,22 @@ export async function setProposalOptions ({ userId, postId, options }) {
   if (!authorized) throw new GraphQLYogaError("You don't have permission to modify this post")
   return Post.find(postId)
     .then(post => {
-      if (post.get('proposal_status') !== Post.Proposal_Status.DISCUSSION) throw new GraphQLYogaError("Proposal options cannot be changed unless the proposal is in 'discussion'") // TODO PROPOSALS: edit this for casual proposals
-      return post.setProposalOptions(options)
+      if (post.get('proposal_status') !== Post.Proposal_Status.DISCUSSION) throw new GraphQLYogaError("Proposal options cannot be changed unless the proposal is in 'discussion'")
+      return post.setProposalOptions({ options })
+    })
+    .catch((err) => { throw new GraphQLYogaError(`setting of options failed: ${err}`) })
+    .then(() => ({ success: true }))
+}
+
+export async function updateProposalOptions ({ userId, postId, options }) {
+  if (!userId || !postId || !options) throw new GraphQLYogaError(`Missing required parameters: ${JSON.stringify({ userId, postId, options })}`)
+  const authorized = await Post.isVisibleToUser(postId, userId)
+  if (!authorized) throw new GraphQLYogaError("You don't have permission to modify this post")
+  return Post.find(postId)
+    .then(post => {
+      if (post.get('proposal_status') === Post.Proposal_Status.COMPLETED && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError("Proposal options cannot be changed unless the proposal is in 'discussion'")
+       // TODO PROPOSALS: discard votes if options are changed
+      return post.updateProposalOptions({ options, userId, opts: { transacting: null, require: false } })
     })
     .catch((err) => { throw new GraphQLYogaError(`setting of options failed: ${err}`) })
     .then(() => ({ success: true }))
@@ -103,7 +116,7 @@ export async function swapProposalVote ({ userId, postId, removeOptionId, addOpt
 
   const post = await Post.find(postId)
   if (!post) throw new GraphQLYogaError(`Couldn't find post for ${postId}`)
-  if (post.get('proposal_status') !== Post.Proposal_Status.VOTING) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed') // TODO PROPOSALS: edit this for casual proposals
+  if (post.get('proposal_status') !== Post.Proposal_Status.VOTING && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed')
 
   try {
     await post.removeProposalVote({ userId, optionId: removeOptionId })

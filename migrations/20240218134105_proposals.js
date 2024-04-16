@@ -29,7 +29,7 @@ exports.up = async function (knex, Promise) {
     table.timestamp('created_at')
   })
 
-  await knex.raw('alter table proposal_options alter constraint proposal_options_post_id_foreign deferrable initially deferred')
+  // await knex.raw('alter table proposal_options alter constraint proposal_options_post_id_foreign deferrable initially deferred')
   await knex.raw('alter table proposal_votes alter constraint proposal_votes_post_id_foreign deferrable initially deferred')
   await knex.raw('alter table proposal_votes alter constraint proposal_votes_option_id_foreign deferrable initially deferred')
   await knex.raw('alter table proposal_votes alter constraint proposal_votes_user_id_foreign deferrable initially deferred')
@@ -44,6 +44,7 @@ exports.down = async function (knex, Promise) {
     table.dropIndex(['proposal_outcome'])
     table.dropColumn('quorum')
     table.dropColumn('proposal_status')
+    table.dropColumn('proposal_strict')
     table.dropColumn('proposal_type')
     table.dropColumn('proposal_outcome')
     table.dropColumn('anonymous_voting')

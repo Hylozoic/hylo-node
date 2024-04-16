@@ -1,6 +1,6 @@
 import '../../../test/setup'
 import factories from '../../../test/setup/factories'
-import { pinPost, removeProposalVote, addProposalVote, swapProposalVote, setProposalOptions } from './post'
+import { pinPost, removeProposalVote, addProposalVote, swapProposalVote, setProposalOptions, updateProposalOptions } from './post'
 
 describe('pinPost', () => {
   var user, group, post
@@ -45,7 +45,7 @@ describe('pinPost', () => {
 })
 
 describe('ProposalVote', () => {
-  var user, post, option1, option2, option3, option4, optionId, optionId2, g1
+  var user, post, option1, option2, option3, option4, option5, optionId, optionId2, g1
 
   before(function () {
     user = factories.user()
@@ -59,9 +59,10 @@ describe('ProposalVote', () => {
         option2 = { post_id: post.id, text: 'option2' }
         option3 = { post_id: post.id, text: 'third' }
         option4 = { post_id: post.id, text: 'fourth' }
+        option5 = { post_id: post.id, text: 'five' }
         await post.save({ proposal_status: Post.Proposal_Status.DISCUSSION }, { patch: true })
 
-        return post.setProposalOptions([option1, option2])
+        return post.setProposalOptions({ options: [option1, option2] })
       })
       .then(async (result) => {
         const rows = result.filter((res) => (res.command === 'INSERT'))[0].rows
@@ -103,13 +104,25 @@ describe('ProposalVote', () => {
       .catch(e => expect(e).to.match(/You don't have permission to vote on this post/))
   })
 
-  it('allows the proposal options to be updated', async () => {
+  it('allows the proposal options to be set', async () => {
     await removeProposalVote({ userId: user.id, postId: post.id, optionId: optionId2 })
     await post.save({ proposal_status: Post.Proposal_Status.DISCUSSION }, { patch: true })
     return setProposalOptions({ userId: user.id, postId: post.id, options: [option3, option4] })
       .then(() => post.proposalOptions().fetch())
       .then(options => {
         expect(options.models[0].attributes.text).to.equal(option3.text)
+      })
+  })
+
+  it('allows the proposal options to be updated', async () => {
+    await post.save({ proposal_status: Post.Proposal_Status.DISCUSSION }, { patch: true })
+    const currentOptions = await post.proposalOptions().fetch()
+    const option3Model = currentOptions.models[0]
+    return updateProposalOptions({ userId: user.id, postId: post.id, options: [{ id: option3Model.get('id'), text: option3Model.get('text') }, option5] })
+      .then(() => post.proposalOptions().fetch())
+      .then(options => {
+        expect(options.models[0].attributes.text).to.equal(option3.text)
+        expect(options.models[1].attributes.text).to.equal(option5.text)
       })
   })
 

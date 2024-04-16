@@ -102,6 +102,7 @@ import {
   updateMe,
   updateMembership,
   updatePost,
+  updateProposalOptions,
   updateStripeAccount,
   updateWidget,
   useInvitation,
@@ -492,6 +493,9 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     updateMembership: (root, args) => updateMembership(userId, args),
 
     updatePost: (root, args) => updatePost(userId, args),
+
+    updateProposalOptions: (root, { postId, options }) => updateProposalOptions({ userId, postId, options }),
+
     updateComment: (root, args) => updateComment(userId, args),
 
     updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
