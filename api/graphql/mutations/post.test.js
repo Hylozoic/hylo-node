@@ -49,7 +49,7 @@ describe('ProposalVote', () => {
 
   before(function () {
     user = factories.user()
-    post = factories.post()
+    post = factories.post({ type: 'proposal' })
     g1 = factories.group({ active: true })
     return Promise.join(user.save(), post.save(), g1.save())
       .then(() => user.joinGroup(g1))

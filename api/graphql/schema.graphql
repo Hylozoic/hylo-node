@@ -21,7 +21,7 @@ type Query {
 
   # Query for PersonConnections
   connections(
-    # Int of PersonConnections to load
+    # Number of PersonConnections to load
     first: Int,
     # Start loading at this offset
     offset: Int

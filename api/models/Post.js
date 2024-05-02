@@ -164,11 +164,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   proposalOptions: function () {
-    return this.hasMany(ProposalOption)
+    // return this.hasMany(ProposalOption)
+    return this.get('type') === Post.Type.PROPOSAL ? this.hasMany(ProposalOption) : null
   },
 
   proposalVotes: function () {
-    return this.hasMany(ProposalVote)
+    // return this.hasMany(ProposalVote)
+    return this.get('type') === Post.Type.PROPOSAL ? this.hasMany(ProposalVote) : null
   },
 
   reactions: function () {
@@ -602,9 +604,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   Proposal_Type: {
     SINGLE: 'single',
-    MULTI_UNRESTRICTED: 'multi-unrestricted',
-    MAJORITY: 'majority', // one option must have more than 50% of votes for the proposal to 'pass',
-    CONSENSUS: 'consensus' // Will not pass if there are any block votes
+    MULTI_UNRESTRICTED: 'multi-unrestricted'
+    // unused for now
+    // MAJORITY: 'majority', // one option must have more than 50% of votes for the proposal to 'pass',
+    // CONSENSUS: 'consensus' // Will not pass if there are any block votes
   },
 
   // TODO Consider using Visibility property for more granular privacy
@@ -685,7 +688,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   }),
 
   create: function (attrs, opts) {
-    console.log(attrs,'attrs in create')
     return Post.forge(_.merge(Post.newPostAttrs(), attrs))
     .save(null, _.pick(opts, 'transacting'))
   },

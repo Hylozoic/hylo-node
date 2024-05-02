@@ -34,7 +34,7 @@ export default function setupPostAttrs (userId, params, create = false) {
   if (create) {
     // if the startTime of the post is set and its before the current time in that timezone, then set the proposal status to VOTING
     proposalAttrs = {
-      proposal_outcome: Post.Proposal_Outcome.INPROGRESS,
+      proposal_outcome: Post.Proposal_Outcome.IN_PROGRESS,
       proposal_strict: params.isStrictProposal,
       proposal_status: params.startTime ? proposalStatus : Post.Proposal_Status.CASUAL
     }
