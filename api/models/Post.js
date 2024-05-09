@@ -371,6 +371,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
     const existingOptions = await this.proposalOptions().fetch({ transaction: opts.transacting, require: false })
     const existingOptionIds = existingOptions.pluck('id')
 
+    // Add activities for vote reset
+    if (options.length > 0 && existingOptionIds.length > 0) {
+      await this.createVoteResetActivities(opts.transacting)
+    }
+
     // Delete ALL votes any time options are updated
     if (options.length > 0 && existingOptionIds.length > 0) {
       const deleteVotesQuery = `
@@ -490,6 +495,20 @@ module.exports = bookshelf.Model.extend(Object.assign({
       mentioned.concat(members).concat(tagFollowers).concat(invitees))
 
     return Activity.saveForReasons(readers, trx)
+  },
+
+  createVoteResetActivities: async function (trx) {
+    const voterIds = await ProposalVote.getVoterIdsForPost(this.id).fetchAll({ transacting: trx })
+    if (!voterIds || voterIds.length === 0) return Promise.resolve()
+
+    const voters = voterIds.map(voterId => ({
+      reader_id: voterId.get('user_id'),
+      post_id: this.id,
+      actor_id: this.get('user_id'),
+      reason: 'voteReset'
+    }))
+
+    return Activity.saveForReasons(voters, trx)
   },
 
   fulfill,

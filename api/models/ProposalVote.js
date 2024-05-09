@@ -11,7 +11,11 @@ module.exports = bookshelf.Model.extend({
   user: function () {
     return this.belongsTo(User, 'user_id')
   }
+
 }, {
-
-
+  getVoterIdsForPost: function (postId) {
+    return this.query(qb => {
+      qb.distinct().select('user_id').where('post_id', postId)
+    })
+  }
 })

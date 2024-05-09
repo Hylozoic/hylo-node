@@ -1,6 +1,6 @@
 import '../../../test/setup'
 import factories from '../../../test/setup/factories'
-import { pinPost, removeProposalVote, addProposalVote, swapProposalVote, setProposalOptions, updateProposalOptions } from './post'
+import { pinPost, removeProposalVote, addProposalVote, swapProposalVote,setProposalOptions, updateProposalOptions } from './post'
 
 describe('pinPost', () => {
   var user, group, post

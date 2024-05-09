@@ -59,8 +59,9 @@ export async function addProposalVote ({ userId, postId, optionId }) {
   if (!authorized) throw new GraphQLYogaError("You don't have permission to vote on this post")
 
   return Post.find(postId)
-    .then(post => {
+    .then(async post => {
       if (post.get('proposal_status') !== Post.Proposal_Status.VOTING && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError('Cannot vote on a proposal that is in discussion or completed')
+      await post.addFollowers([userId])
       return post.addProposalVote({ userId, optionId })
     })
     .catch((err) => { throw new GraphQLYogaError(`adding of vote failed: ${err}`) })
@@ -100,8 +101,7 @@ export async function updateProposalOptions ({ userId, postId, options }) {
   if (!authorized) throw new GraphQLYogaError("You don't have permission to modify this post")
   return Post.find(postId)
     .then(post => {
-      if (post.get('proposal_status') === Post.Proposal_Status.COMPLETED && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError("Proposal options cannot be changed unless the proposal is in 'discussion'")
-       // TODO PROPOSALS: discard votes if options are changed
+      if (post.get('proposal_status') === Post.Proposal_Status.COMPLETED && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError("Proposal options cannot be changed once a proposal is complete'")
       return post.updateProposalOptions({ options, userId, opts: { transacting: null, require: false } })
     })
     .catch((err) => { throw new GraphQLYogaError(`setting of options failed: ${err}`) })

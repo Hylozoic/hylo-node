@@ -40,8 +40,7 @@ export default function setupPostAttrs (userId, params, create = false) {
     }
   } else {
     proposalAttrs = {
-      proposal_status: proposalStatus
-
+      proposal_status: params.startTime ? proposalStatus : Post.Proposal_Status.CASUAL
     }
   }
 

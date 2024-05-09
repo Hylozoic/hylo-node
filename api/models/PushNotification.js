@@ -71,9 +71,14 @@ module.exports = bookshelf.Model.extend({
     const postName = decode(post.summary())
     const groupName = group.get('name')
 
-    return version === 'mention'
-      ? locales[locale].textForPostMention({ groupName, person, postName })
-      : locales[locale].textForPost({ person, postName, groupName, firstTag })
+    switch (version) {
+      case 'mention':
+        return locales[locale].textForPostMention({ groupName, person, postName })
+      case 'voteReset':
+        return locales[locale].textForVoteReset({ person, postName, groupName })
+      default:
+        return locales[locale].textForPost({ person, postName, groupName, firstTag })
+    }
   },
 
   textForAnnouncement: function (post, group, locale) {
