@@ -127,6 +127,17 @@ export async function swapProposalVote ({ userId, postId, removeOptionId, addOpt
   }
 }
 
+export function updateProposalOutcome ({ userId, postId, proposalOutcome }) {
+  return Post.find(postId)
+    .then(post => {
+      if (post.get('user_id') !== userId) {
+        throw new GraphQLYogaError("You don't have permission to modify this post")
+      }
+      return post.updateProposalOutcome(proposalOutcome)
+    })
+    .then(() => ({ success: true }))
+}
+
 export async function pinPost (userId, postId, groupId) {
   const group = await Group.find(groupId)
   return GroupMembership.hasModeratorRole(userId, group)

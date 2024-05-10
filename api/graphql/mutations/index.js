@@ -69,6 +69,7 @@ export {
   swapProposalVote,
   updatePost,
   updateProposalOptions,
+  updateProposalOutcome,
   deletePost,
   pinPost
 } from './post'

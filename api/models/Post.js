@@ -585,6 +585,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
+  updateProposalOutcome: function (proposalOutcome) {
+    return Post.where({ id: this.id }).query().update({ proposal_outcome: proposalOutcome})
+  },
+
   removeFromGroup: function (idOrSlug) {
     return PostMembership.find(this.id, idOrSlug)
       .then(membership => membership.destroy())
@@ -683,7 +687,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   find: function (id, options) {
-    return Post.where({id, 'posts.active': true}).fetch(options)
+    return Post.where({ id, 'posts.active': true }).fetch(options)
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {

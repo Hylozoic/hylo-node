@@ -2251,6 +2251,8 @@ type Mutation {
   updatePost(id: ID, data: PostInput): Post
   # update options for a proposal
   updateProposalOptions(postId: ID, options: [ProposalOptionInput]): [ProposalOption]
+  # update the outcome of a proposal
+  updateProposalOutcome(postId: ID, proposalOutcome: String): GenericResult
   # NOT USED RIGHT NOW
   updateStripeAccount(accountId: String): GenericResult
   # Update settings for a GroupWidget
