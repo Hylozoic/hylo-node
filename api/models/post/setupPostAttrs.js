@@ -28,20 +28,10 @@ export default function setupPostAttrs (userId, params, create = false) {
     'type'
   ))
 
-  let proposalAttrs = {}
   let proposalStatus = params.startTime && new Date(Number(params.startTime)) < new Date() ? Post.Proposal_Status.VOTING : Post.Proposal_Status.DISCUSSION
   if (params.endTime && new Date(Number(params.endTime)) < new Date()) proposalStatus = Post.Proposal_Status.COMPLETED
-  if (create) {
-    // if the startTime of the post is set and its before the current time in that timezone, then set the proposal status to VOTING
-    proposalAttrs = {
-      proposal_outcome: Post.Proposal_Outcome.IN_PROGRESS,
-      proposal_strict: params.isStrictProposal,
-      proposal_status: params.startTime ? proposalStatus : Post.Proposal_Status.CASUAL
-    }
-  } else {
-    proposalAttrs = {
-      proposal_status: params.startTime ? proposalStatus : Post.Proposal_Status.CASUAL
-    }
+  const proposalAttrs = {
+    proposal_status: params.startTime ? proposalStatus : Post.Proposal_Status.CASUAL
   }
 
   return Promise.resolve({ ...attrs, ...proposalAttrs })
