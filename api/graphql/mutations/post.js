@@ -83,13 +83,15 @@ export async function removeProposalVote ({ userId, postId, optionId }) {
 }
 
 export async function setProposalOptions ({ userId, postId, options }) {
+  console.log('entering setProposalOptions')
   if (!userId || !postId || !options) throw new GraphQLYogaError(`Missing required parameters: ${JSON.stringify({ userId, postId, options })}`)
   const authorized = await Post.isVisibleToUser(postId, userId)
   if (!authorized) throw new GraphQLYogaError("You don't have permission to modify this post")
   return Post.find(postId)
     .then(post => {
       if (post.get('proposal_status') !== Post.Proposal_Status.DISCUSSION) throw new GraphQLYogaError("Proposal options cannot be changed unless the proposal is in 'discussion'")
-      return post.setProposalOptions({ options })
+      console.log('setting options')
+        return post.setProposalOptions({ options })
     })
     .catch((err) => { throw new GraphQLYogaError(`setting of options failed: ${err}`) })
     .then(() => ({ success: true }))
@@ -156,6 +158,7 @@ export async function pinPost (userId, postId, groupId) {
 // the legacy code expects -- this sort of thing can be removed/refactored once
 // hylo-redux is no longer in use
 function convertGraphqlPostData (data) {
+  console.log(data, 'convertGraphqlPostData')
   return Promise.resolve(Object.assign({
     name: data.title,
     description: data.details,

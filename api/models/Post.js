@@ -711,6 +711,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   }),
 
   create: function (attrs, opts) {
+    console.log('entering Post.create')
     return Post.forge(_.merge(Post.newPostAttrs(), attrs))
     .save(null, _.pick(opts, 'transacting'))
   },

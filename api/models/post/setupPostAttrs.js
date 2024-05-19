@@ -2,6 +2,7 @@ import { merge, pick } from 'lodash'
 import { getOr } from 'lodash/fp'
 
 export default function setupPostAttrs (userId, params, create = false) {
+  console.log('entering setupPostAttrs')
   const attrs = merge({
     accept_contributions: params.acceptContributions,
     anonymous_voting: params.isAnonymousVote,
@@ -33,6 +34,6 @@ export default function setupPostAttrs (userId, params, create = false) {
   const proposalAttrs = {
     proposal_status: params.startTime ? proposalStatus : Post.Proposal_Status.CASUAL
   }
-
+  console.log('exiting setupPostAttrs')
   return Promise.resolve({ ...attrs, ...proposalAttrs })
 }
