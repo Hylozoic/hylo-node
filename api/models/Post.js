@@ -164,12 +164,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   proposalOptions: function () {
-    // return this.hasMany(ProposalOption)
     return this.get('type') === Post.Type.PROPOSAL ? this.hasMany(ProposalOption) : null
   },
 
   proposalVotes: function () {
-    // return this.hasMany(ProposalVote)
     return this.get('type') === Post.Type.PROPOSAL ? this.hasMany(ProposalVote) : null
   },
 
