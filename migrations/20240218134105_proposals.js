@@ -29,7 +29,7 @@ exports.up = async function (knex, Promise) {
     table.timestamp('created_at')
   })
 
-  await knex.raw('alter table proposal_options DROP CONSTRAINT proposal_options_post_id_foreign deferrable initially deferred')
+  await knex.raw('alter table proposal_options DROP CONSTRAINT proposal_options_post_id_foreign')
   await knex.raw('alter table proposal_votes alter constraint proposal_votes_post_id_foreign deferrable initially deferred')
   await knex.raw('alter table proposal_votes alter constraint proposal_votes_option_id_foreign deferrable initially deferred')
   await knex.raw('alter table proposal_votes alter constraint proposal_votes_user_id_foreign deferrable initially deferred')
