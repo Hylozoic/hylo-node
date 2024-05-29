@@ -31,7 +31,7 @@ module.exports = {
             subject = client.invite_subject || locales[locale].clientInviteSubjectDefault(group.get('name'))
             message = client.invite_message || locales[locale].clientInviteMessageDefault({userName: user.get('name'), groupName: group.get('name')})
           }
-          const inviteBy = await group.moderators().fetchOne()
+          const inviteBy = await group.stewards().fetchOne()
 
           await InvitationService.create({
             groupId: group.id,
@@ -50,7 +50,7 @@ module.exports = {
 
     const attrs = { name, email: email ? email.toLowerCase() : null, email_validated: false, active: false, group }
     if (isModeratorVal) {
-      attrs.role = GroupMembership.Role.MODERATOR // This is ultimately fed to Group.addMembers, which handles mod -> manager
+      attrs.role = GroupMembership.Role.MODERATOR // This is ultimately fed to Group.addMembers, which handles mod -> Coordinator. TODO: fix this
     }
 
     return User.create(attrs)

@@ -5,14 +5,14 @@ import underlyingDeleteGroupTopic from '../../models/group/deleteGroupTopic'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 // Util function
-async function getModeratedGroup (userId, groupId, opts = {}, additionalResponsibility = '') {
+async function getStewardedGroup (userId, groupId, additionalResponsibility = '', opts = {}) {
   const group = await Group.find(groupId, opts)
   if (!group) {
     throw new GraphQLYogaError('Group not found')
   }
-  const isModerator = await GroupMembership.hasModeratorRole(userId, group, opts, additionalResponsibility)
-  if (!isModerator) {
-    throw new GraphQLYogaError("You don't have permission to moderate this group")
+  const isSteward = await GroupMembership.hasResponsibility(userId, group, additionalResponsibility, opts)
+  if (!isSteward) {
+    throw new GraphQLYogaError("You don't have the right responsibilities for this group")
   }
 
   return group
@@ -21,7 +21,7 @@ async function getModeratedGroup (userId, groupId, opts = {}, additionalResponsi
 // Group Mutations
 
 export async function addModerator (userId, personId, groupId) {
-  const group = await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
+  const group = await getStewardedGroup(userId, groupId, Responsibility.constants.RESP_ADMINISTRATION)
   await GroupMembership.setModeratorRole(personId, group)
   return group
 }
@@ -31,7 +31,7 @@ export async function createGroup (userId, data) {
 }
 
 export async function deleteGroup (userId, groupId) {
-  await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
+  await getStewardedGroup(userId, groupId, Responsibility.constants.RESP_ADMINISTRATION)
 
   await Group.deactivate(groupId)
   return { success: true }
@@ -40,7 +40,7 @@ export async function deleteGroup (userId, groupId) {
 export async function deleteGroupTopic (userId, groupTopicId) {
   const groupTopic = await GroupTag.where({ id: groupTopicId }).fetch()
 
-  await getModeratedGroup(userId, groupTopic.get('group_id'), {}, Responsibility.constants.RESP_MANAGE_CONTENT)
+  await getStewardedGroup(userId, groupTopic.get('group_id'), Responsibility.constants.RESP_MANAGE_CONTENT)
 
   await underlyingDeleteGroupTopic(groupTopic)
   return { success: true }
@@ -53,14 +53,14 @@ export async function deleteGroupRelationship (userId, parentId, childId) {
   }
   let childGroup, parentGroup
   try {
-    childGroup = await getModeratedGroup(userId, groupRelationship.get('child_group_id'), {}, Responsibility.constants.RESP_ADMINISTRATION)
+    childGroup = await getStewardedGroup(userId, groupRelationship.get('child_group_id'), Responsibility.constants.RESP_ADMINISTRATION)
   } catch (e) {}
   try {
-    parentGroup = await getModeratedGroup(userId, groupRelationship.get('parent_group_id'), {}, Responsibility.constants.RESP_ADMINISTRATION)
+    parentGroup = await getStewardedGroup(userId, groupRelationship.get('parent_group_id'), Responsibility.constants.RESP_ADMINISTRATION)
   } catch (e) {}
 
   if (childGroup || parentGroup) {
-    // the logged in user is a moderator of one of the groups and so can delete the relationship
+    // the logged in user is a steward of one of the groups and so can delete the relationship
     await groupRelationship.save({ active: false })
     return { success: true }
   }
@@ -89,22 +89,22 @@ export async function joinGroup (groupId, userId, questionAnswers) {
 }
 
 export async function regenerateAccessCode (userId, groupId) {
-  const group = await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADD_MEMBERS)
+  const group = await getStewardedGroup(userId, groupId, Responsibility.constants.RESP_ADD_MEMBERS)
   const code = await Group.getNewAccessCode()
   return group.save({ access_code: code }, { patch: true }) // eslint-disable-line camelcase
 }
 
 /**
- * As a moderator, removes member from a group.
+ * As a host, removes member from a group.
  */
 export async function removeMember (loggedInUserId, userIdToRemove, groupId) {
-  const group = await getModeratedGroup(loggedInUserId, groupId, {}, Responsibility.constants.RESP_REMOVE_MEMBERS)
+  const group = await getStewardedGroup(loggedInUserId, groupId, Responsibility.constants.RESP_REMOVE_MEMBERS)
   await GroupService.removeMember(userIdToRemove, groupId)
   return group
 }
 
 export async function removeModerator (userId, personId, groupId, isRemoveFromGroup) {
-  const group = await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
+  const group = await getStewardedGroup(userId, groupId, Responsibility.constants.RESP_ADMINISTRATION)
   if (isRemoveFromGroup) {
     await GroupMembership.removeModeratorRole(personId, group)
     await GroupService.removeMember(personId, groupId)
@@ -116,7 +116,7 @@ export async function removeModerator (userId, personId, groupId, isRemoveFromGr
 }
 
 export async function updateGroup (userId, groupId, changes) {
-  const group = await getModeratedGroup(userId, groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
+  const group = await getStewardedGroup(userId, groupId, Responsibility.constants.RESP_ADMINISTRATION)
 
   return group.update(convertGraphqlData(changes), userId)
 }
@@ -132,14 +132,14 @@ export async function inviteGroupToGroup(userId, fromId, toId, type, questionAns
     throw new GraphQLYogaError('Invalid group relationship type')
   }
 
-  const fromGroup = await getModeratedGroup(userId, fromId, opts, Responsibility.constants.RESP_ADMINISTRATION)
+  const fromGroup = await getStewardedGroup(userId, fromId, Responsibility.constants.RESP_ADMINISTRATION, opts)
 
   if (await GroupRelationship.forPair(fromGroup, toGroup).fetch(opts)) {
     throw new GraphQLYogaError('Groups are already related')
   }
 
-  // If current user is a moderator of both the from group and the to group they can automatically join the groups together
-  if (await GroupMembership.hasModeratorRole(userId, toGroup, {}, Responsibility.constants.RESP_ADMINISTRATION)) {
+  // If current user is an administrator of both the from group and the to group they can automatically join the groups together
+  if (await GroupMembership.getStewardedGroup(userId, toGroup, Responsibility.constants.RESP_ADMINISTRATION)) {
     if (type === GroupRelationshipInvite.TYPE.ParentToChild) {
       return { success: true, groupRelationship: await fromGroup.addChild(toGroup, opts) }
     } if (type === GroupRelationshipInvite.TYPE.ChildToParent) {
@@ -171,7 +171,7 @@ export async function inviteGroupToGroup(userId, fromId, toId, type, questionAns
 export async function acceptGroupRelationshipInvite (userId, groupRelationshipInviteId) {
   const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
   if (invite) {
-    if (GroupMembership.hasModeratorRole(userId, invite.get('to_group_id'), {}, Responsibility.constants.RESP_ADMINISTRATION)) {
+    if (GroupMembership.hasResponsibility(userId, invite.get('to_group_id'), Responsibility.constants.RESP_ADMINISTRATION)) {
       const groupRelationship = await invite.accept(userId)
       return { success: !!groupRelationship, groupRelationship }
     } else {
@@ -185,7 +185,7 @@ export async function acceptGroupRelationshipInvite (userId, groupRelationshipIn
 export async function cancelGroupRelationshipInvite (userId, groupRelationshipInviteId) {
   const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
   if (invite) {
-    if (GroupMembership.hasModeratorRole(userId, invite.get('from_group_id'), {}, Responsibility.constants.RESP_ADMINISTRATION)) {
+    if (GroupMembership.hasResponsibility(userId, invite.get('from_group_id'), Responsibility.constants.RESP_ADMINISTRATION)) {
       return { success: await invite.cancel(userId) }
     } else {
       throw new GraphQLYogaError('You do not have permission to do this')
@@ -198,7 +198,7 @@ export async function cancelGroupRelationshipInvite (userId, groupRelationshipIn
 export async function rejectGroupRelationshipInvite (userId, groupRelationshipInviteId) {
   const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
   if (invite) {
-    if (GroupMembership.hasModeratorRole(userId, invite.get('to_group_id'), {}, Responsibility.constants.RESP_ADMINISTRATION)) {
+    if (GroupMembership.hasResponsibility(userId, invite.get('to_group_id'), Responsibility.constants.RESP_ADMINISTRATION)) {
       return { success: await invite.reject(userId) }
     } else {
       throw new GraphQLYogaError('You do not have permission to do this')

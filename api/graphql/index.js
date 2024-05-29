@@ -65,7 +65,7 @@ import {
   logout,
   markActivityRead,
   markAllActivitiesRead,
-  messageGroupModerators,
+  messageGroupStewards,
   pinPost,
   processStripeToken,
   reactOn,
@@ -215,6 +215,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       InvitationService.check(invitationToken, accessCode),
     collection: (root, { id }) => fetchOne('Collection', id),
     comment: (root, { id }) => fetchOne('Comment', id),
+    commonRoles: (root, args) => CommonRole.fetchAll(args),
     connections: (root, args) => fetchMany('PersonConnection', args),
     group: async (root, { id, slug, updateLastViewed }) => {
       // you can specify id or slug, but not both
@@ -414,7 +415,10 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
 
-    messageGroupModerators: (root, { groupId }) => messageGroupModerators(userId, groupId),
+    // TODO: remove once mobile app has been updated to stewards
+    messageGroupModerators: (root, { groupId }) => messageGroupStewards(userId, groupId),
+
+    messageGroupStewards: (root, { groupId }) => messageGroupStewards(userId, groupId),
 
     pinPost: (root, { postId, groupId }) =>
       pinPost(userId, postId, groupId),
@@ -500,7 +504,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     updateMembership: (root, args) => updateMembership(userId, args),
 
     updatePost: (root, args) => updatePost(userId, args),
-    
+
     updateComment: (root, args) => updateComment(userId, args),
 
     updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),

@@ -150,7 +150,7 @@ export const filterAndSortPosts = curry((opts, q) => {
 
 })
 
-export const filterAndSortUsers = curry(({ autocomplete, boundingBox, groupRoleId, groupCommonRoleId, order, search, sortBy }, q) => {
+export const filterAndSortUsers = curry(({ autocomplete, boundingBox, groupId, groupRoleId, commonRoleId, order, search, sortBy }, q) => {
   if (autocomplete) {
     addTermToQueryBuilder(autocomplete, q, {
       columns: ['users.name']
@@ -158,13 +158,16 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, groupRoleI
   }
 
   if (groupRoleId) {
-    q.leftJoin('members_roles', 'members_roles.user_id', '=', 'users.id')
-    q.where('members_roles.group_role_id', '=', groupRoleId)
+    q.leftJoin('group_memberships_group_roles', 'group_memberships_group_roles.user_id', '=', 'users.id')
+    q.where('group_memberships_group_roles.group_role_id', '=', groupRoleId)
   }
 
-  if (groupCommonRoleId) {
-    q.leftJoin('common_roles_group_memberships as crgm', 'crgm.user_id', '=', 'users.id')
-    q.where('crgm.common_role_id', '=', groupCommonRoleId)
+  if (commonRoleId && groupId) {
+    // TODO: RESP. need to add groups.id = group_id to this query
+    //q.leftJoin('group_memberships_common_roles as crgm ON crgm.user_id = users.id AND crgm.group_id = ?', groupId)
+    q.leftJoin('group_memberships_common_roles as crgm', 'crgm.user_id', 'users.id')
+    q.where('crgm.common_role_id', '=', commonRoleId)
+    q.andWhere('crgm.group_id', '=', groupId)
   }
 
   if (search) {

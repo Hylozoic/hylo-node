@@ -23,12 +23,24 @@ module.exports = bookshelf.Model.extend({
     RESP_MANAGE_CONTENT,
     RESP_REMOVE_MEMBERS
   },
+
+  // Users with these responsibilities we show to users in the sidebar of the group
+  IMPORTANT_RESPONSIBILITIES: [RESP_ADMINISTRATION, RESP_REMOVE_MEMBERS, RESP_MANAGE_CONTENT],
+
+  Common: {
+    RESP_ADMINISTRATION: 1,
+    RESP_ADD_MEMBERS: 2,
+    RESP_REMOVE_MEMBERS: 3,
+    RESP_MANAGE_CONTENT: 4
+  },
+
   fetchAll: function ({ groupId = 0, groupRoleId, commonRoleId }) {
     if (groupRoleId) {
       return bookshelf.knex('responsibilities')
         .join('group_roles_responsibilities', 'responsibilities.id', 'group_roles_responsibilities.responsibility_id')
         .where('group_roles_responsibilities.group_role_id', groupRoleId)
     }
+
     if (commonRoleId) {
       return bookshelf.knex('responsibilities')
         .join('common_roles_responsibilities', 'responsibilities.id', 'common_roles_responsibilities.responsibility_id')
@@ -36,19 +48,20 @@ module.exports = bookshelf.Model.extend({
     }
     return bookshelf.knex('responsibilities').whereRaw('group_id is NULL or group_id = ?', groupId)
   },
+
   fetchForUserAndGroupAsStrings (userId, groupId) {
     return bookshelf.knex.raw(
       `WITH UserGroupRoles AS (
         -- CTE to get group_role_id for the specified user and group
         SELECT group_role_id
-        FROM members_roles
+        FROM group_memberships_group_roles
         WHERE user_id = ${userId}
           AND group_id = ${groupId}
       ),
       CommonRolesGroupMemberships AS (
-        -- CTE to get common_role_id for the specified user and group from common_roles_group_memberships
+        -- CTE to get common_role_id for the specified user and group from group_memberships_common_roles
         SELECT common_role_id
-        FROM common_roles_group_memberships
+        FROM group_memberships_common_roles
         WHERE user_id = ${userId}
           AND group_id = ${groupId}
       ),
@@ -69,6 +82,7 @@ module.exports = bookshelf.Model.extend({
       WHERE id IN (SELECT responsibility_id FROM ResponsibilitiesCTE);`
     ).then(resp => resp.rows.map(r => r.title))
   },
+
   fetchSystemResponsiblititesForUser (userId, groupIds = []) {
     return bookshelf.knex.raw(
       `WITH UserGroupRoles AS (
@@ -76,7 +90,7 @@ module.exports = bookshelf.Model.extend({
         SELECT
           m.group_role_id,
           m.group_id
-        FROM members_roles m
+        FROM group_memberships_group_roles m
         WHERE m.user_id = ${userId}
       ),
       CommonRolesGroupMemberships AS (
@@ -84,7 +98,7 @@ module.exports = bookshelf.Model.extend({
         SELECT
           c.common_role_id,
           c.group_id
-        FROM common_roles_group_memberships c
+        FROM group_memberships_common_roles c
         WHERE c.user_id = ${userId}
       ),
       ResponsibilitiesCTE AS (
@@ -118,6 +132,7 @@ module.exports = bookshelf.Model.extend({
       return resp.rows.filter(r => groupIds.includes(r.group_id))
     })
   },
+
   fetchForGroup (groupId) {
     return bookshelf.knex.raw(
       `SELECT DISTINCT
@@ -125,20 +140,21 @@ module.exports = bookshelf.Model.extend({
         m.user_id
       FROM responsibilities r
       JOIN group_roles_responsibilities gr ON r.id = gr.responsibility_id
-      JOIN members_roles m ON gr.group_role_id = m.group_id
+      JOIN group_memberships_group_roles m ON gr.group_role_id = m.group_id
       WHERE r.type = 'system' AND m.group_id = ${groupId}
-      
+
       UNION
-      
+
       SELECT DISTINCT
         r.title AS responsibility_title,
         c.user_id
       FROM responsibilities r
       JOIN common_roles_responsibilities cr ON r.id = cr.responsibility_id
-      JOIN common_roles_group_memberships c ON cr.common_role_id = c.common_role_id
+      JOIN group_memberships_common_roles c ON cr.common_role_id = c.common_role_id
       WHERE r.type = 'system' AND c.group_id = ${groupId};`
     ).then(resp => resp.rows)
   },
+
   hasAllResponsibilities (rows) {
     const userCounts = rows.reduce((acc, row) => {
       const { user_id } = row

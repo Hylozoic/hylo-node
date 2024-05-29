@@ -12,6 +12,7 @@ import findOrCreateThread from './post/findOrCreateThread'
 import { groupFilter } from '../graphql/filters'
 import { inviteGroupToGroup } from '../graphql/mutations/group'
 import { findOrCreateLocation } from '../graphql/mutations/location'
+import { whereId } from './group/queryUtils'
 import { es } from '../../lib/i18n/es'
 import { en } from '../../lib/i18n/en'
 
@@ -159,14 +160,8 @@ module.exports = bookshelf.Model.extend(merge({
     })
   },
 
-  commonRoles () {
-    return bookshelf.knex.raw(
-      'select * from common_roles'
-    ).then(resp => resp.rows)
-  },
-
-  members (where) { 
-    // TODO RESP: does this need to change or should we just build a new one for it... the problem is the access to the role attribute. 
+  members (where) {
+    // TODO RESP: does this need to change or should we just build a new one for it... the problem is the access to the role attribute.
     // It doesn't seem like there are any more Node calls of this that rely on the role being present
     // But I suspect that there might be graphQL queries that rely on it
     return this.belongsToMany(User).through(GroupMembership)
@@ -192,10 +187,15 @@ module.exports = bookshelf.Model.extend(merge({
     return this.get('num_members')
   },
 
-  async moderators () {
-    const responsibilities = await Responsibility.fetchForGroup(this.id)
-    const userIds = Responsibility.hasAllResponsibilities(responsibilities)
-    return this.members({ user_id: userIds }) // TODO RESP: this needs to be verified
+  // TODO: remove when mobile app has been updated
+  moderators () {
+    return this.stewards()
+  },
+
+  stewards () {
+    return this.members().query(q => {
+      q.whereRaw('exists (select * from group_memberships_common_roles inner join common_roles_responsibilities on common_roles_responsibilities.common_role_id = group_memberships_common_roles.common_role_id where common_roles_responsibilities.responsibility_id IN (1, 3, 4) and group_memberships_common_roles.user_id = users.id and group_memberships_common_roles.group_id = group_memberships.group_id)')
+    })
   },
 
   // Return # of prereq groups userId is not a member of yet
@@ -356,8 +356,8 @@ module.exports = bookshelf.Model.extend(merge({
           }
         }), { transacting })
       newMemberships.push(membership)
-      // Based on the role attribute, add or remove the user to the manager common role
-      await MemberCommonRole.updateManagerRole({ groupMembershipId: membership.id, userId: id, groupId: this.id, role: updatedAttribs.role, transacting })
+      // Based on the role attribute, add or remove the user to the Coordinator common role
+      await MemberCommonRole.updateCoordinatorRole({ userId: id, groupId: this.id, role: updatedAttribs.role, transacting })
       // Subscribe each user to the default tags in the group
       await User.followTags(id, this.id, defaultTagIds, transacting)
     }
@@ -440,8 +440,8 @@ module.exports = bookshelf.Model.extend(merge({
   update: async function (changes, updatedByUserId) {
     const whitelist = [
       'about_video_uri', 'active', 'access_code', 'accessibility', 'avatar_url', 'banner_url',
-      'description', 'geo_shape', 'location', 'location_id', 'moderator_descriptor', 'moderator_descriptor_plural',
-      'name', 'purpose', 'settings', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+      'description', 'geo_shape', 'location', 'location_id', 'name', 'purpose', 'settings',
+      'steward_descriptor', 'steward_descriptor_plural', 'type_descriptor', 'type_descriptor_plural', 'visibility'
     ]
     const trimAttrs = ['name', 'description', 'purpose']
 
@@ -672,9 +672,9 @@ module.exports = bookshelf.Model.extend(merge({
     const trimAttrs = ['name', 'purpose']
     const attrs = defaults(
       pick(mapValues(data, (v, k) => trimAttrs.includes(k) ? trim(v) : v),
-        'about_video_uri', 'accessibility', 'avatar_url', 'description', 'slug',
-        'access_code', 'banner_url', 'location_id', 'location', 'group_data_type', 'moderator_descriptor',
-        'moderator_descriptor_plural', 'name', 'purpose', 'settings', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
+        'about_video_uri', 'accessibility', 'access_code', 'avatar_url', 'banner_url', 'description',
+        'location_id', 'location', 'group_data_type', 'name', 'purpose', 'settings', 'slug',
+        'steward_descriptor', 'steward_descriptor_plural', 'type', 'type_descriptor', 'type_descriptor_plural', 'visibility'
       ),
       {
         accessibility: Group.Accessibility.RESTRICTED,
@@ -733,6 +733,7 @@ module.exports = bookshelf.Model.extend(merge({
               query: q => { q.select('group_memberships.*', 'groups.accessibility as accessibility', 'groups.visibility as visibility')}
             }).fetch({ transacting: trx })
 
+            // TODO: fix hasRole
             if (parentGroupMembership &&
                 (parentGroupMembership.get('accessibility') === Group.Accessibility.OPEN || parentGroupMembership.hasRole(GroupMembership.Role.MODERATOR))) {
               await group.parentGroups().attach(parentId, { transacting: trx })
@@ -880,28 +881,57 @@ module.exports = bookshelf.Model.extend(merge({
     }).query()
   },
 
-  async selectIdsForModeratedGroups (userId) { // TODO RESP: .... this was the last thing I was working on before getting sick and then going to kiwiburn... so I don't recal whether its worth keeping around or not...
-    // get all responsiblities for a user
-    const responsibilities = await Responsibility.fetchSystemResponsiblititesForUser(userId)
-    const byGroupId = {}
-    const result = []
-    // count how many responsibilities a user has for each group
-    responsibilities.forEach(r => {
-      if (byGroupId[r.group_id]) {
-        byGroupId[r.group_id] += 1
-      } else {
-        byGroupId[r.group_id] = 1
-      }
+  selectIdsByResponsibilities (userOrId, responsibilities) {
+    const throughCommonRole = MemberCommonRole.query(q => {
+      q.select('group_id')
+      whereId(q, userOrId, 'group_memberships_common_roles.user_id')
+      q.join('common_roles_responsibilities', 'common_roles_responsibilities.common_role_id', 'group_memberships_common_roles.common_role_id')
+      q.where('common_roles_responsibilities.responsibility_id', 'in', responsibilities)
     })
 
-    // return an array of group ids that the user has 4 responsibilities for. This defacto means they have full power of a group, whether its from a manager role or not
-    for (const key in byGroupId) {
-      if (byGroupId[key] === 4) {
-        result.push(key)
-      }
-    }
-    return result
+    const throughGroupRole = MemberGroupRole.collection().query(q => {
+      q.select('group_id')
+      whereId(q, userOrId, 'group_memberships_group_roles.user_id')
+      q.join('group_roles_responsibilities', 'group_roles_responsibilities.group_role_id', 'group_memberships_group_roles.group_role_id')
+      q.where('group_roles_responsibilities.responsibility_id', 'in', responsibilities)
+    })
+
+    return GroupMembership.forIds(userOrId, null, {
+      query: q => {
+        q.select('groups.id')
+        q.join('groups', 'groups.id', 'group_memberships.group_id')
+        q.where('groups.active', true)
+        q.where((q2) => {
+          q2.whereIn('groups.id', throughCommonRole.query())
+          q2.orWhereIn('groups.id', throughGroupRole.query())
+        })
+      },
+      multiple: true
+    }).query()
   },
+
+  // async selectIdsForModeratedGroups (userId) { // TODO RESP: .... this was the last thing I was working on before getting sick and then going to kiwiburn... so I don't recal whether its worth keeping around or not...
+  //   // get all responsiblities for a user
+  //   const responsibilities = await Responsibility.fetchSystemResponsiblititesForUser(userId)
+  //   const byGroupId = {}
+  //   const result = []
+  //   // count how many responsibilities a user has for each group
+  //   responsibilities.forEach(r => {
+  //     if (byGroupId[r.group_id]) {
+  //       byGroupId[r.group_id] += 1
+  //     } else {
+  //       byGroupId[r.group_id] = 1
+  //     }
+  //   })
+
+  //   // return an array of group ids that the user has 4 responsibilities for. This defacto means they have full power of a group, whether its from a manager role or not
+  //   for (const key in byGroupId) {
+  //     if (byGroupId[key] === 4) {
+  //       result.push(key)
+  //     }
+  //   }
+  //   return result
+  // },
 
   async allHaveMember (groupDataIds, userOrId) {
     const memberIds = await this.pluckIdsForMember(userOrId)

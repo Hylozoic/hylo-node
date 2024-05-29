@@ -17,6 +17,8 @@ type Query {
   # Find an Comment by ID
   comment(id: ID): Comment
 
+  commonRoles: [CommonRole]
+
   collection(id: ID): Collection
 
   # Query for PersonConnections
@@ -492,7 +494,7 @@ type CommentQuerySet {
   items: [Comment]
 }
 
-# Common Roles are role templates available to all groups for roles that are common across many groups
+# Common Roles are standard roles that are always available in all groups
 type CommonRole {
   id: ID
   # The description of the role
@@ -609,9 +611,9 @@ type Group {
   locationObject: Location
   # Number of members in this group
   memberCount: Int
-  # Word used to describe an admin/moderator of this group. Defaults to "Moderator"
+  # Word used to describe an admin/moderator of this group. Defaults to "Moderator". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptor: String
-  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators"
+  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptorPlural: String
   # Group name
   name: String
@@ -625,6 +627,10 @@ type Group {
   settings: GroupSettings
   # Unique URL slug
   slug: String
+  # Word used to describe any steward of this group. Defaults to "Steward"
+  stewardDescriptor: String
+  # Plural word used to describe stewards of this group. Defaults to "Stewards"
+  stewardDescriptorPlural: String
   # Right now can either by 'farm' or null
   type: String
   # Word used to describe this type of group. Defaults to Group, or if type is set then defaults to the type (e.g. Farm)
@@ -670,9 +676,6 @@ type Group {
     # Return groups where the search text matches in the name, description or location
     search: String
   ): GroupQuerySet
-
-  # Provide the list of common roles
-  commonRoles: [CommonRole]
 
   # CustomViews for this group
   customViews: CustomViewQuerySet
@@ -723,8 +726,8 @@ type Group {
     boundingBox: [PointInput],
     # Return members with a specific groupRole
     groupRoleId: ID,
-    # Return members with a specific groupCommonRole
-    groupCommonRoleId: ID,
+    # Return members with a specific commonRole
+    commonRoleId: ID,
     # Number of people to return
     first: Int,
     # For pagination, return people after this offset in the query results
@@ -743,11 +746,21 @@ type Group {
     userId: ID
   ): MembershipQuerySet
 
-  # The group moderators
+  # TODO: remove when mobile app has been updated to use stewards
   moderators(
-    # For pagination, return moderators after this ID
+    # For pagination, return stewards after this ID
     cursor: ID,
-    # Number of moderators to return
+    # Number of stewards to return
+    first: Int,
+    # Determines sort order, either 'ASC' or 'DESC'
+    order: String
+  ): PersonQuerySet
+
+  # The group stewards - members who have common roles
+  stewards(
+    # For pagination, return stewards after this ID
+    cursor: ID,
+    # Number of stewards to return
     first: Int,
     # Determines sort order, either 'ASC' or 'DESC'
     order: String
@@ -1093,7 +1106,7 @@ type ResponsibilityQuerySet {
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
-type GroupCommonRoleQuerySet {
+type CommonRoleQuerySet {
   total: Int
   hasMore: Boolean
   items: [CommonRole]
@@ -1351,6 +1364,11 @@ type Me {
     order: String
   ): [Membership]
 
+  # Set of common roles I have in groups. Can be filtered by groupId
+  membershipCommonRoles(
+    groupId: ID
+  ): MembershipCommonRoleQuerySet
+
   # The set of MessageThreads
   messageThreads(
     # Load this number of threads
@@ -1396,22 +1414,26 @@ type Membership {
   # The agreements this user has agreed to (or not) for this group
   agreements: MembershipAgreementQuerySet
   createdAt: Date
+  # The common roles this member has in this group
+  commonRoles: CommonRoleQuerySet
   groupId: ID
   group: Group
-  # Is this group membership a moderator role
+  # Is this group membership a moderator role. TODO: remove once mobile app has been updated to use new roles
   hasModeratorRole: Boolean
   # Answers to the join questions for this group
   joinQuestionAnswers: GroupJoinQuestionAnswerQuerySet
   # The last time the current logged in user viewed this group (if they are a member of it)
   lastViewedAt: String
+  # The common roles this members has in this group - just the join table data
+  membershipCommonRoles: MembershipCommonRoleQuerySet
+  # The group defined roles this members has in this group - just the join table data
+  membershipGroupRoles: MembershipGroupRoleQuerySet
   # Number of new posts in this group since the current logged in user viewed it (if they are a member of it)
   newPostCount: Int
   person: Person
-  # 0: default, 1: moderator
+  # 0: default, 1: moderator. TODO: deprecated, remove once mobile app has been updated to use new roles
   role: Int
   settings: MembershipSettings
-  commonRoles: GroupCommonRoleQuerySet
-  commonRolesTotal: Int
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1434,6 +1456,50 @@ type MembershipAgreementQuerySet {
   total: Int
   hasMore: Boolean
   items: [MembershipAgreement]
+}
+
+# The common roles a user has in a group
+type MembershipCommonRole {
+  id: ID
+  commonRoleId: ID
+  commonRole: CommonRole
+  createdAt: Date
+  group: Group
+  groupId: ID
+  # same as commonRoleId
+  roleId: ID
+  updatedAt: Date
+  user: Person
+  userId: ID
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type MembershipCommonRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [MembershipCommonRole]
+}
+
+# The common roles a user has in a group
+type MembershipGroupRole {
+  id: ID
+  createdAt: Date
+  group: Group
+  groupId: ID
+  groupRoleId: ID
+  groupRole: GroupRole
+  # same as groupRoleId
+  roleId: ID
+  updatedAt: Date
+  user: Person
+  userId: ID
+}
+
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type MembershipGroupRoleQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [MembershipGroupRole]
 }
 
 # Settinga for a user's group membership
@@ -1563,8 +1629,8 @@ type Person {
   ): CommentQuerySet
   # Common roles that the user has in groups
   commonRoles(
-    groupCommonRoleId: ID
-  ): GroupCommonRoleQuerySet
+    id: ID
+  ): CommonRoleQuerySet
   # The events this person is attending (that are visible to logged in user)
   eventsAttending: PostQuerySet
   # The set of Group Memberships this person has (that are visible to logged in user)
@@ -1576,6 +1642,10 @@ type Person {
     # Determines sort order, either 'ASC' or 'DESC'. Memberships always sorted by order they were created.
     order: String
   ): [Membership]
+  # The set of common roles this person has in groups. Can be filtered by groupId
+  membershipCommonRoles(
+    groupId: ID
+  ): MembershipCommonRoleQuerySet
   # All the member roles for a user
   groupRoles: GroupRoleQuerySet
   # The set of Memberships to groups this person moderates (that are visible to logged in user
@@ -2063,8 +2133,8 @@ type Mutation {
   addPostToCollection(collectionId: ID, postId: ID): GenericResult
   # Add responsibility to a role
   addResponsibilityToRole(
-    responsibilityId: ID, 
-    roleId: ID, 
+    responsibilityId: ID,
+    roleId: ID,
     groupId: ID
   ): Responsibility
   # For a moderator to add a badge/role to a group to a member of a group
@@ -2186,8 +2256,10 @@ type Mutation {
   markActivityRead(id: ID): Activity
   # Mark all notifications as read
   markAllActivitiesRead: GenericResult
-  # Send a message to all the moderators of a Group
+  # TODO: remove when mobile app has been updated
   messageGroupModerators(groupId: ID): ID
+  # Send a message to all the stewards of a Group
+  messageGroupStewards(groupId: ID): ID
   # Pin a post within a Group. Only a group moderator can call this.
   pinPost(postId: ID, groupId: ID): GenericResult
   # NOT USED RIGHT NOW
@@ -2566,9 +2638,9 @@ input GroupInput {
   location: String
   # ID of the geocoded location object
   locationId: ID
-  # Word used to describe an admin/moderator of this group. Defaults to "Moderator"
+  # Word used to describe an admin/moderator of this group. Defaults to "Moderator". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptor: String
-  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators"
+  # Plural word used to describe admins/moderators of this group. Defaults to "Moderators". TODO: remove once mobile app switches to stewardDescriptor
   moderatorDescriptorPlural: String
   # Group name
   name: String
@@ -2588,6 +2660,10 @@ input GroupInput {
   slackConfigureUrl: String
   # Unique URL slug
   slug: String
+  # Word used to describe any steward of this group (someone with a Common Role). Defaults to "Steward"
+  stewardDescriptor: String
+  # Word used to describe stewards of this group (people with a Common Role). Defaults to "Stewards"
+  stewardDescriptorPlural: String
   # Right now can either by 'farm' or empty
   type: String
   # Word used to describe this type of group. Defaults to Group, or if type is set then defaults to the type (e.g. Farm)

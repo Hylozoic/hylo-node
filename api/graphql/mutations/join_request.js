@@ -26,7 +26,7 @@ export async function createJoinRequest (userId, groupId, questionAnswers = []) 
 export async function acceptJoinRequest (userId, joinRequestId) {
   const joinRequest = await JoinRequest.find(joinRequestId)
   if (joinRequest) {
-    if (await GroupMembership.hasModeratorRole(userId, joinRequest.get('group_id'), {}, Responsibility.constants.RESP_ADD_MEMBERS)) {
+    if (await GroupMembership.hasResponsibility(userId, joinRequest.get('group_id'), Responsibility.constants.RESP_ADD_MEMBERS)) {
       return joinRequest.accept(userId)
     } else {
       throw new GraphQLYogaError('You do not have permission to accept a join request')
@@ -53,7 +53,7 @@ export async function cancelJoinRequest (userId, joinRequestId) {
 export async function declineJoinRequest (userId, joinRequestId) {
   const joinRequest = await JoinRequest.find(joinRequestId)
   if (joinRequest) {
-    if (await GroupMembership.hasModeratorRole(userId, joinRequest.get('group_id'), {}, Responsibility.constants.RESP_ADD_MEMBERS)) {
+    if (await GroupMembership.hasResponsibility(userId, joinRequest.get('group_id'), Responsibility.constants.RESP_ADD_MEMBERS)) {
       await joinRequest.save({ status: JoinRequest.STATUS.Rejected })
       return joinRequest
     } else {

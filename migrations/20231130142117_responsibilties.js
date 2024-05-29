@@ -47,19 +47,19 @@ exports.up = async function (knex) {
 
   const commonRolesData = [
     {
-      name: 'Manager',
-      description: 'The manager is empowered to do everything related to group administration.',
-      emoji: '💼'
+      name: 'Coordinator',
+      description: 'Coordinators are empowered to do everything related to group administration.',
+      emoji: '🪄'
     },
     {
       name: 'Moderator',
       description: 'Moderators are expected to actively engage in discussion, encourage participation, and take corrective action if a member violates group agreements.',
-      emoji: '🎤'
+      emoji: '⚖️'
     },
     {
       name: 'Host',
       description: 'Hosts are responsible for cultivating a good atmosphere by welcoming and orienting new members, embodying the group culture and agreements, and helping members connect with relevant content and people.',
-      emoji: '🎉'
+      emoji: '👋'
     }
   ]
 
@@ -78,91 +78,102 @@ exports.up = async function (knex) {
     table.bigInteger('responsibility_id').references('id').inTable('responsibilities')
   })
 
-  await knex.schema.createTable('common_roles_group_memberships', table => {
+  await knex.schema.createTable('group_memberships_common_roles', table => {
     table.increments().primary()
     table.bigInteger('common_role_id').references('id').inTable('common_roles')
     table.bigInteger('user_id').references('id').inTable('users')
     table.bigInteger('group_id').references('id').inTable('groups')
-    table.bigInteger('group_membership_id').references('id').inTable('group_memberships')
+    table.index(['group_id', 'user_id'])
   })
 
+  await knex.schema.renameTable('members_roles', 'group_memberships_group_roles')
+
+  /* Step 1: Look up the id of the Coordinator in the common_roles table
+     Step 2: Look up the ids of the four different inserted responsibilities
+     Step 3: Insert the combination of the two sets of ids (four rows) into common_roles_responsibilities
+     Step 4: Look up the id of the Moderator in the common_roles table
+     Step 5: Look up the ids of the Manage Content and Remove Members rows in the responsibilities table
+     Step 6: Insert the combination of the two sets of ids (two rows) into common_roles_responsibilities
+     Step 7: Look up the id of the Host in the common_roles table
+     Step 8: Look up the ids of the Invite Members row in the responsibilities table
+     Step 9: Insert the combination of the two sets of ids (one row) into common_roles_responsibilities
+  */
   await knex.raw(`
-    WITH ManagerCTE AS (
-      -- Step 1: Look up the id of the Manager in the common_roles table
+    WITH CoordinatorCTE AS (
       SELECT id
       FROM common_roles
-      WHERE name = 'Manager'
+      WHERE name = 'Coordinator'
     ),
     ResponsibilitiesCTE AS (
-      -- Step 2: Look up the ids of the four different inserted responsibilities
       SELECT id
       FROM responsibilities
       WHERE title IN ('Administration', 'Add Members', 'Remove Members', 'Manage Content')
     ),
-    InsertManagerResponsibilities AS (
-      -- Step 3: Insert the combination of the two sets of ids (four rows) into common_roles_responsibilities
+    InsertCoordinatorResponsibilities AS (
       INSERT INTO common_roles_responsibilities (common_role_id, responsibility_id)
-      SELECT ManagerCTE.id, ResponsibilitiesCTE.id
-      FROM ManagerCTE, ResponsibilitiesCTE
+      SELECT CoordinatorCTE.id, ResponsibilitiesCTE.id
+      FROM CoordinatorCTE, ResponsibilitiesCTE
       RETURNING *
     ),
     ModeratorCTE AS (
-      -- Step 4: Look up the id of the Moderator in the common_roles table
       SELECT id
       FROM common_roles
       WHERE name = 'Moderator'
     ),
     ManageContentRemoveMembersCTE AS (
-      -- Step 5: Look up the ids of the Manage Content and Remove Members rows in the responsibilities table
       SELECT id
       FROM responsibilities
       WHERE title IN ('Manage Content', 'Remove Members')
     ),
     InsertModeratorResponsibilities AS (
-      -- Step 6: Insert the combination of the two sets of ids (two rows) into common_roles_responsibilities
       INSERT INTO common_roles_responsibilities (common_role_id, responsibility_id)
       SELECT ModeratorCTE.id, ManageContentRemoveMembersCTE.id
       FROM ModeratorCTE, ManageContentRemoveMembersCTE
       RETURNING *
     ),
     HostCTE AS (
-      -- Step 7: Look up the id of the Host in the common_roles table
       SELECT id
       FROM common_roles
       WHERE name = 'Host'
     ),
     InviteMembersCTE AS (
-      -- Step 8: Look up the ids of the Invite Members row in the responsibilities table
       SELECT id
       FROM responsibilities
       WHERE title = 'Add Members'
-    ),
-    InsertHostResponsibilities AS (
-      -- Step 9: Insert the combination of the two sets of ids (one row) into common_roles_responsibilities
-      INSERT INTO common_roles_responsibilities (common_role_id, responsibility_id)
-      SELECT HostCTE.id, InviteMembersCTE.id
-      FROM HostCTE, InviteMembersCTE
-      RETURNING *
     )
+    INSERT INTO common_roles_responsibilities (common_role_id, responsibility_id)
+    SELECT HostCTE.id, InviteMembersCTE.id
+    FROM HostCTE, InviteMembersCTE
+    RETURNING *
   `)
 
-  // Give all moderators a 'manager' common role
+  // Give all moderators a 'Coordinator' common role
   await knex.raw(`
-    INSERT INTO common_roles_group_memberships (common_role_id, user_id, group_id, group_membership_id)
+    INSERT INTO group_memberships_common_roles (common_role_id, user_id, group_id)
     SELECT
-      (SELECT id FROM common_roles WHERE name = 'Manager') AS common_role_id,
+      (SELECT id FROM common_roles WHERE name = 'Coordinator') AS common_role_id,
       m.user_id,
-      m.group_id,
-      m.id AS group_membership_id
+      m.group_id
     FROM group_memberships m
     WHERE m.role = 1;
   `)
+
+  await knex.schema.table('groups', table => {
+    table.renameColumn('moderator_descriptor', 'steward_descriptor')
+    table.renameColumn('moderator_descriptor_plural', 'steward_descriptor_plural')
+  })
 }
 
 exports.down = async function (knex) {
   await knex.schema.dropTableIfExists('group_roles_responsibilities')
   await knex.schema.dropTableIfExists('common_roles_responsibilities')
-  await knex.schema.dropTableIfExists('common_roles_group_memberships')
+  await knex.schema.dropTableIfExists('group_memberships_common_roles')
   await knex.schema.dropTableIfExists('responsibilities')
   await knex.schema.dropTableIfExists('common_roles')
+  await knex.schema.renameTable('group_memberships_group_roles', 'members_roles')
+
+  await knex.schema.table('groups', table => {
+    table.renameColumn('steward_descriptor', 'moderator_descriptor')
+    table.renameColumn('steward_descriptor_plural', 'moderator_descriptor_plural')
+  })
 }

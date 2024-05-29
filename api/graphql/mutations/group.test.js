@@ -39,7 +39,7 @@ describe('mutations/group', () => {
         .catch(e => expect(e.message).to.match(/Name cannot be blank/))
       })
 
-      it('rejects if user is not a moderator', () => {
+      it('rejects if user is not a steward', () => {
         const data = {name: '   '}
         return updateGroup('777', group.id, data)
         .then(() => expect.fail('should reject'))
@@ -51,23 +51,24 @@ describe('mutations/group', () => {
       it('works for a non-member', async () => {
         const user2 = await factories.user().save()
         await addModerator(user.id, user2.id, group.id)
-        expect(await GroupMembership.hasModeratorRole(user2, group))
+        expect(await GroupMembership.hasResponsibility(user2, group, Responsibility.constants.RESP_ADMINISTRATION))
       })
 
       it('works for an existing member', async () => {
         const user2 = await factories.user().save()
         await user2.joinGroup(group)
         await addModerator(user.id, user2.id, group.id)
-        expect(await GroupMembership.hasModeratorRole(user2, group))
+        expect(await GroupMembership.hasResponsibility(user2, group, Responsibility.constants.RESP_ADMINISTRATION))
       })
     })
 
+    // TODO: remove?
     describe('removeModerator', () => {
       it('just removes moderator role', async () => {
         const user2 = await factories.user().save()
         await user2.joinGroup(group, { role: GroupMembership.Role.MODERATOR })
         await removeModerator(user.id, user2.id, group.id)
-        expect(!await GroupMembership.hasModeratorRole(user2, group))
+        expect(!await GroupMembership.hasResponsibility(user2, group, Responsibility.constants.RESP_ADMINISTRATION))
 
         const membership = await GroupMembership.forPair(user2, group,
         {includeInactive: true}).fetch()
@@ -78,14 +79,14 @@ describe('mutations/group', () => {
         const user2 = await factories.user().save()
         await user2.joinGroup(group, { role: GroupMembership.Role.MODERATOR })
         await removeModerator(user.id, user2.id, group.id, true)
-        expect(!await GroupMembership.hasModeratorRole(user2, group))
+        expect(!await GroupMembership.hasResponsibility(user2, group, Responsibility.constants.RESP_ADMINISTRATION))
 
         const membership = await GroupMembership.forPair(user2, group,
         {includeInactive: true}).fetch()
         expect(membership.get('active')).to.be.false
       })
 
-      it('throws an error if youre not a moderator', async () => {
+      it('throws an error if youre not an administrator', async () => {
         const nonModeratorUser = await factories.user().save()
         await nonModeratorUser.joinGroup(group, { role: GroupMembership.Role.DEFAULT })
 
@@ -126,7 +127,7 @@ describe('mutations/group', () => {
       starterGroup.addMembers([user])
     })
 
-    it('setups up the new moderator membership correctly', async () => {
+    it('setups up the new administrator membership correctly', async () => {
       const group = await createGroup(user.id, {
         name: 'Foo',
         slug: 'foob',
@@ -138,6 +139,7 @@ describe('mutations/group', () => {
       expect(group).to.exist
       expect(group.get('slug')).to.equal('foob')
       expect(membership).to.exist
+      // TODO: improve this test
       expect(membership.get('role')).to.equal(GroupMembership.Role.MODERATOR)
 
       const post = await group.posts().fetchOne()

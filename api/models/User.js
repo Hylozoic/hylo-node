@@ -9,6 +9,7 @@ import { Validators } from 'hylo-shared'
 import HasSettings from './mixins/HasSettings'
 import { findThread } from './post/findOrCreateThread'
 import { generateHyloJWT } from '../../lib/HyloJWT'
+import MemberCommonRole from './MemberCommonRole'
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 module.exports = bookshelf.Model.extend(merge({
@@ -160,7 +161,7 @@ module.exports = bookshelf.Model.extend(merge({
 
   groupRoles () {
     return this.belongsToMany(GroupRole)
-      .through(MemberRole, 'user_id', 'group_role_id')
+      .through(MemberGroupRole, 'user_id', 'group_role_id')
       .where('groups_roles.active', true)
   },
 
@@ -187,6 +188,10 @@ module.exports = bookshelf.Model.extend(merge({
         .where('group_memberships.active', true)
         .where('groups.active', true)
       )
+  },
+
+  membershipCommonRoles () {
+    return this.hasMany(MemberCommonRole, 'user_id')
   },
 
   messageThreads: function () {
@@ -293,7 +298,7 @@ module.exports = bookshelf.Model.extend(merge({
 
     DELETE FROM thanks WHERE comment_id in (select id from comments WHERE user_id = ${this.id});
     DELETE FROM thanks WHERE thanked_by_id = ${this.id};
-    DELETE FROM members_roles WHERE user_id = ${this.id};
+    DELETE FROM group_memberships_group_roles WHERE user_id = ${this.id};
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE reader_id = ${this.id});
     DELETE FROM notifications WHERE activity_id in (select id from activities WHERE actor_id = ${this.id});
     DELETE FROM push_notifications WHERE device_id in (select id from devices WHERE user_id = ${this.id});

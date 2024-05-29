@@ -49,7 +49,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     const user = await User.find(userId, { transacting })
     const fromGroup = await this.fromGroup().fetch({ transacting })
-    if (!GroupMembership.hasModeratorRole(user, fromGroup, {}, Responsibility.constants.RESP_ADMINISTRATION)) {
+    if (!GroupMembership.hasResponsibility(user, fromGroup, Responsibility.constants.RESP_ADMINISTRATION)) {
       throw new GraphQLYogaError('Not permitted to do this')
     }
 
@@ -68,7 +68,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
     const user = await User.find(userId, { transacting })
     const toGroup = await this.toGroup().fetch({ transacting })
-    if (!GroupMembership.hasModeratorRole(user, toGroup, {}, Responsibility.constants.RESP_ADMINISTRATION)) {
+    if (!GroupMembership.hasResponsibility(user, toGroup, Responsibility.constants.RESP_ADMINISTRATION)) {
       // The person trying to process the invite does not have permission
       throw new GraphQLYogaError('Not permitted to do this')
     }
@@ -147,12 +147,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
         const parentToChild = invite.get('type') === GroupRelationshipInvite.TYPE.ParentToChild
         const childToParent = invite.get('type') === GroupRelationshipInvite.TYPE.ChildToParent
 
-        // If child group is hidden then only tell moderators of the parent about it joining the parent, otherwise tell all the parent's members about it
-        const fromMembers = (childToParent && fromGroup.isHidden()) ? await fromGroup.moderators().fetch({ transacting }) : await fromGroup.members().fetch({ transacting })
-        const toMembers = (parentToChild && toGroup.isHidden()) ? await toGroup.moderators().fetch({ transacting }) : await toGroup.members().fetch({ transacting })
+        // If child group is hidden then only tell administrators of the parent about it joining the parent, otherwise tell all the parent's members about it
+        // TODO: RESP. check if this is what we want
+        const fromMembers = (childToParent && fromGroup.isHidden()) ? await fromGroup.stewards().fetch({ transacting }) : await fromGroup.members().fetch({ transacting })
+        const toMembers = (parentToChild && toGroup.isHidden()) ? await toGroup.stewards().fetch({ transacting }) : await toGroup.members().fetch({ transacting })
 
         // TODO: don't send a notification to the actorId...
 
+        // TODO: fix hasRole
         const reason = parentToChild ? Activity.Reason.GroupChildGroupInviteAccepted : Activity.Reason.GroupParentGroupJoinRequestAccepted
         const fromGroupActivities = fromMembers.map(member => {
           return {

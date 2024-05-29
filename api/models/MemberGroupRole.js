@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 
 module.exports = bookshelf.Model.extend({
-  tableName: 'members_roles',
+  tableName: 'group_memberships_group_roles',
   requireFetch: false,
   hasTimestamps: true,
 
@@ -19,6 +19,6 @@ module.exports = bookshelf.Model.extend({
 
   groupMembership () {
     return this.belongsTo(GroupMembership)
-  },
+  }
 }, {
 })

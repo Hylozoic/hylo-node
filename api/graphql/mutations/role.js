@@ -50,9 +50,8 @@ export async function addRoleToMember ({ userId, roleId, personId, groupId, isCo
   if (personId && roleId) {
     const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
     if (responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
-      const groupMembership = await GroupMembership.forIds(personId, groupId).fetch()
-      const useThisModel = isCommonRole ? MemberCommonRole : MemberRole
-      const useThisData = isCommonRole ? { common_role_id: roleId, user_id: personId, group_id: groupId, group_membership_id: groupMembership.id } : { group_role_id: roleId, user_id: personId, active: true, group_id: groupId }
+      const useThisModel = isCommonRole ? MemberCommonRole : MemberGroupRole
+      const useThisData = isCommonRole ? { common_role_id: roleId, user_id: personId, group_id: groupId } : { group_role_id: roleId, user_id: personId, active: true, group_id: groupId }
       return useThisModel.forge(useThisData).save().then((savedRole) => savedRole)
     } else {
       throw new GraphQLYogaError('User doesn\'t have required privileges to add role to member')
@@ -74,7 +73,7 @@ export async function removeRoleFromMember ({ userId, roleId, personId, groupId,
               .andWhere('common_role_id', roleId)
               .andWhere('group_id', groupId)
           })
-        : MemberRole.query(q => {
+        : MemberGroupRole.query(q => {
           return q.where('user_id', personId)
             .andWhere('group_role_id', roleId)
         })

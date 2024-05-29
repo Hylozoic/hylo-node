@@ -41,8 +41,8 @@ describe('Invitation', function () {
       await bookshelf.transaction(trx => invitation1.use(user.id, { transacting: trx }))
       expect(invitation1.get('used_by_id')).to.equal(user.id)
       expect(invitation1.get('used_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
-      const isModerator = await GroupMembership.hasModeratorRole(user, group)
-      expect(isModerator).to.be.true
+      const hasAdministration = await GroupMembership.hasResponsibility(user, group, Responsibility.constants.RESP_ADMINISTRATION)
+      expect(hasAdministration).to.be.true
     })
 
     it('creates a tag_follow when it has a tag_id', function () {
