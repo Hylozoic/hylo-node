@@ -126,7 +126,7 @@
     "node-fetch": "^2",
     "oidc-provider": "^7.11.3",
     "parse-redis-url": "0.0.2",
-    "passport": "^0.2.1",
+    "passport": "^0.6.0",
     "passport-facebook": "2.1.1",
     "passport-facebook-token": "3.3.0",
     "passport-google-oauth": "^2.0.0",
