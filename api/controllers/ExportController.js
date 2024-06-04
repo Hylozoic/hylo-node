@@ -18,7 +18,7 @@ module.exports = {
     // auth check
     let ok = false
     try {
-      ok = await GroupMembership.hasModeratorRole(req.session.userId, p.groupId, {}, Responsibility.constants.RESP_ADMINISTRATION)
+      ok = await GroupMembership.hasResponsibility(req.session.userId, p.groupId, Responsibility.constants.RESP_ADMINISTRATION)
     } catch (err) {
       return res.status(422).send({ error: err.message ? err.message : err })
     }
