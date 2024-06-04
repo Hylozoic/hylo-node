@@ -235,8 +235,8 @@ module.exports = bookshelf.Model.extend({
   },
 
   unreadCountForUser: function (user) {
-    return Activity.query().where({reader_id: user.id, unread: true}).count()
-    .then(rows => rows[0].count)
+    return Activity.query().where({ reader_id: user.id, unread: true }).count()
+      .then(rows => rows[0].count)
   },
 
   saveForReasonsOpts: function ({ activities }) {
@@ -248,12 +248,12 @@ module.exports = bookshelf.Model.extend({
       const attrs = Object.assign(
         {},
         omit(activity, 'reasons'),
-        {meta: {reasons: activity.reasons}}
+        { meta: { reasons: activity.reasons } }
       )
 
       return Activity.createWithNotifications(attrs, trx)
     })
-    .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
+      .tap(() => Queue.classMethod('Notification', 'sendUnsent'))
   },
 
   groupIds: function (activity) {

@@ -2,22 +2,24 @@ import { flatten, merge, pick, uniq } from 'lodash'
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
 import { groupRoom, pushToSockets } from '../../services/Websockets'
+const { GraphQLYogaError } = require('@graphql-yoga/node')
 
 export default async function createPost (userId, params) {
+  console.log('entering createPost')
   if (params.isPublic) {
     // Don't allow creating a public post unless at least one of the post's groups has allow_in_public set to true
     const groups = await Group.query(q => q.whereIn('id', params.group_ids)).fetchAll()
     const allowedToMakePublic = groups.find(g => g.get('allow_in_public'))
     if (!allowedToMakePublic) params.isPublic = false
   }
-
-  return setupPostAttrs(userId, merge(Post.newPostAttrs(), params))
+  return setupPostAttrs(userId, merge(Post.newPostAttrs(), params), true)
     .then(attrs => bookshelf.transaction(transacting =>
       Post.create(attrs, { transacting })
         .tap(post => afterCreatingPost(post, merge(
-          pick(params, 'group_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id'),
+          pick(params, 'group_ids', 'imageUrl', 'videoUrl', 'docs', 'topicNames', 'memberIds', 'eventInviteeIds', 'imageUrls', 'fileUrls', 'announcement', 'location', 'location_id', 'proposalOptions'),
           {children: params.requests, transacting}
       )))).then(function(inserts) {
+        console.log('exiting createPost')
         return inserts
       }).catch(function(error) {
         throw error
@@ -26,12 +28,12 @@ export default async function createPost (userId, params) {
 }
 
 export function afterCreatingPost (post, opts) {
+  console.log('entering afterCreatingPost')
   const userId = post.get('user_id')
   const mentioned = RichText.getUserMentions(post.details())
   const followerIds = uniq(mentioned.concat(userId))
   const trx = opts.transacting
   const trxOpts = pick(opts, 'transacting')
-
   return Promise.all(flatten([
     opts.group_ids && post.groups().attach(uniq(opts.group_ids), trxOpts),
 
@@ -40,7 +42,7 @@ export function afterCreatingPost (post, opts) {
 
     // Add creator to RSVPs
     post.get('type') === 'event' &&
-      EventInvitation.create({userId, inviterId: userId, eventId: post.id, response: EventInvitation.RESPONSE.YES}, trxOpts),
+      EventInvitation.create({ userId, inviterId: userId, eventId: post.id, response: EventInvitation.RESPONSE.YES }, trxOpts),
 
     // Add media, if any
     // redux version
@@ -80,16 +82,17 @@ export function afterCreatingPost (post, opts) {
       type: 'video',
       url: opts.videoUrl
     }, trx),
-
     opts.docs && Promise.map(opts.docs, (doc) => Media.createDoc(post.id, doc, trx)),
   ]))
   .then(() => post.isProject() && post.setProjectMembers(opts.memberIds || [], trxOpts))
   .then(() => post.isEvent() && post.updateEventInvitees(opts.eventInviteeIds || [], userId, trxOpts))
+  .then(() => post.isProposal() && post.setProposalOptions({ options: opts.proposalOptions || [], userId, opts: trxOpts }))
   .then(() => Tag.updateForPost(post, opts.topicNames, userId, trx))
   .then(() => updateTagsAndGroups(post, trx))
   .then(() => Queue.classMethod('Post', 'createActivities', { postId: post.id }))
   .then(() => Queue.classMethod('Post', 'notifySlack', { postId: post.id }))
   .then(() => Queue.classMethod('Post', 'zapierTriggers', { postId: post.id }))
+  .catch((err) => { throw new GraphQLYogaError(`afterCreatingPost failed: ${err}`) })
 }
 
 async function updateTagsAndGroups (post, trx) {

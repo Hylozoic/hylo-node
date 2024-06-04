@@ -132,6 +132,8 @@ module.exports = bookshelf.Model.extend({
         return this.sendPushDonationTo()
       case 'donation from':
         return this.sendPushDonationFrom()
+      case 'voteReset':
+        return this.sendPostPush('voteReset')
       default:
         return Promise.resolve()
     }

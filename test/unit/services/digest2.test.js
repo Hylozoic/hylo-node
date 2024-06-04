@@ -194,6 +194,7 @@ describe('group digest v2', () => {
           }
         ],
         resources: [],
+        proposals: [],
         discussions: [
           {
             id: 7,
@@ -285,6 +286,7 @@ describe('group digest v2', () => {
       expect(formatData(group, data)).to.deep.equal({
         offers: [],
         discussions: [],
+        proposals: [],
         requests: [
           {
             id: 1,
@@ -313,6 +315,7 @@ describe('group digest v2', () => {
         offers: [],
         requests: [],
         discussions: [],
+        proposals: [],
         postsWithNewComments: [],
         projects: [],
         events: [],
@@ -466,6 +469,7 @@ describe('group digest v2', () => {
           topicsWithChats: [],
           events: [],
           projects: [],
+          proposals: [],
           resources: [],
           discussions: [
             {

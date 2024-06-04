@@ -112,6 +112,17 @@ module.exports = {
     return new GroupExtension(attrs)
   },
 
+  proposalOption: attrs => {
+    return new ProposalOption(merge({
+      text: faker.random.words(3),
+      description: faker.lorem.sentences(2)
+    }, attrs))
+  },
+
+  proposalVote: attrs => {
+    return new ProposalVote(attrs)
+  },
+
   extension: attrs => {
     return new Extension(attrs)
   },

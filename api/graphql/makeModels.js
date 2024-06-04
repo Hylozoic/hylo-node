@@ -188,6 +188,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
       attributes: [
         'accept_contributions',
         'announcement',
+        'anonymous_voting',
         'commentsTotal',
         'created_at',
         'donations_link',
@@ -197,6 +198,10 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'link_preview_featured',
         'location',
         'project_management_link',
+        'proposal_status',
+        'proposal_type',
+        'proposal_outcome',
+        'quorum',
         'reactions_summary',
         'start_time',
         'timezone',
@@ -208,7 +213,6 @@ export default function makeModels (userId, isAdmin, apiClient) {
         commentersTotal: p => p.getCommentersTotal(userId),
         details: p => p.details(userId),
         myReactions: p => userId ? p.reactionsForUser(userId).fetch() : [],
-        myVote: p => userId ? p.userVote(userId).then(v => !!v) : false, // Remove once Mobile has been updated
         myEventResponse: p =>
           userId && p.isEvent()
             ? p.userEventInvitation(userId).then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
@@ -222,6 +226,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'locationObject',
         { members: { querySet: true } },
         { eventInvitations: { querySet: true } },
+        { proposalOptions: { querySet: true } },
+        { proposalVotes: { querySet: true } },
         'linkPreview',
         'postMemberships',
         {
@@ -258,6 +264,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         mentionsOf,
         offset,
         order,
+        proposalOutcome,
+        proposalStatus,
         sortBy,
         search,
         topic,
@@ -283,6 +291,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
           onlyMyGroups: context === 'all',
           onlyPublic: context === 'public',
           order,
+          proposalOutcome,
+          proposalStatus,
           sort: sortBy,
           term: search,
           topic,
@@ -812,17 +822,6 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       filter: nonAdminFilter(reactionFilter('reactions', userId))
     },
-    Vote: { // TO BE REMOVED ONCE MOBILE IS UPDATED
-      model: Reaction,
-      getters: {
-        createdAt: v => v.get('date_reacted')
-      },
-      relations: [
-        'post',
-        { user: { alias: 'voter' } }
-      ],
-      filter: nonAdminFilter(reactionFilter('reactions', userId))
-    },
 
     GroupTopic: {
       model: GroupTag,
@@ -975,6 +974,27 @@ export default function makeModels (userId, isAdmin, apiClient) {
       model: PostUser,
       relations: [
         'post',
+        'user'
+      ]
+    },
+
+    ProposalOption: {
+      model: ProposalOption,
+      attributes: [
+        'emoji',
+        'color',
+        'text'
+      ]
+    },
+
+    ProposalVote: {
+      model: ProposalVote,
+      attributes: [
+        'created_at',
+        'id',
+        'option_id'
+      ],
+      relations: [
         'user'
       ]
     },

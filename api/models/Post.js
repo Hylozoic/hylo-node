@@ -77,12 +77,16 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.get('type') === Post.Type.CHAT
   },
 
-  isWelcome: function () {
-    return this.get('type') === Post.Type.WELCOME
+  isProposal: function () {
+    return this.get('type') === Post.Type.PROPOSAL
   },
 
   isThread: function () {
     return this.get('type') === Post.Type.THREAD
+  },
+
+  isWelcome: function () {
+    return this.get('type') === Post.Type.WELCOME
   },
 
   commentsTotal: function () {
@@ -90,10 +94,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   peopleReactedTotal: function () {
-    return this.get('num_people_reacts')
-  },
-
-  votesTotal: function () {
     return this.get('num_people_reacts')
   },
 
@@ -163,6 +163,14 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.hasMany(ProjectContribution)
   },
 
+  proposalOptions: function () {
+    return this.get('type') === Post.Type.PROPOSAL ? this.hasMany(ProposalOption) : null
+  },
+
+  proposalVotes: function () {
+    return this.get('type') === Post.Type.PROPOSAL ? this.hasMany(ProposalVote) : null
+  },
+
   reactions: function () {
     return this.hasMany(Reaction, 'entity_id').where({ 'reactions.entity_type': 'post' })
   },
@@ -202,14 +210,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return q
   },
 
-  userVote: function (userId) {
-    return this.votes().query({ where: { user_id: userId, entity_type: 'post' } }).fetchOne()
-  },
-
-  votes: function () {
-    return this.hasMany(Reaction, 'entity_id').where('reactions.entity_type', 'post')
-  },
-
   // TODO: this is confusing and we are not using, remove for now?
   children: function () {
     return this.hasMany(Post, 'parent_post_id')
@@ -246,7 +246,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   // TODO: if we were in a position to avoid duplicating the graphql layer
   // here, that'd be grand.
   getNewPostSocketPayload: function () {
-    const { groups, linkPreview, tags, user } = this.relations
+    const { groups, linkPreview, tags, user, proposalOptions } = this.relations
 
     const creator = refineOne(user, [ 'id', 'name', 'avatar_url' ])
     const topics = refineMany(tags, [ 'id', 'name' ])
@@ -255,18 +255,20 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Object.assign({},
       refineOne(
         this,
-        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes'],
+        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes', 'proposalType', 'proposalStatus', 'proposalOutcome'],
         { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotal', num_votes: 'votesTotal' }
       ),
       {
         // Shouldn't have commenters immediately after creation
         commenters: [],
+        proposalVotes: [],
         commentsTotal: 0,
         details: this.details(),
         groups: refineMany(groups, [ 'id', 'name', 'slug' ]),
         creator,
         linkPreview: refineOne(linkPreview, [ 'id', 'image_url', 'title', 'description', 'url' ]),
         topics,
+        proposalOptions,
 
         // TODO: Once legacy site is decommissioned, these are no longer required.
         creatorId: creator.id,
@@ -321,17 +323,85 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return updatedFollowers.concat(newFollowers)
   },
 
+  async addProposalVote ({ userId, optionId }) {
+    return ProposalVote.forge({ post_id: this.id, user_id: userId, option_id: optionId, created_at: new Date() }).save()
+  },
+
   async removeFollowers (usersOrIds, { transacting } = {}) {
     return this.updateFollowers(usersOrIds, { active: false }, { transacting })
   },
 
+  async removeProposalVote ({ userId, optionId }) {
+    const vote = await ProposalVote.query({ where: { user_id: userId, option_id: optionId } }).fetch()
+    return vote.destroy()
+  },
+
+  async setProposalOptions ({ options = [], userId, opts = {} }) {
+    const trxOpts = { require: false, ...opts }
+    return bookshelf.knex.raw(`BEGIN;
+
+      DELETE FROM proposal_options
+      WHERE post_id = ${this.id};
+
+      INSERT INTO proposal_options (post_id, text, color, emoji)
+      VALUES
+        ${options.map(option => `(${this.id}, '${option.text}', '${option.color || ''}', '${option.emoji || ''}')`).join(', ')}
+      RETURNING id;
+
+      COMMIT;`).transacting(trxOpts)
+  },
+
+  async swapProposalVote ({ userId, removeOptionId, addOptionId }) {
+    await this.removeProposalVote({ userId, optionId: removeOptionId })
+    return this.addProposalVote({ userId, optionId: addOptionId })
+  },
+
   async updateFollowers (usersOrIds, attrs, { transacting } = {}) {
-    if (usersOrIds.length == 0) return []
+    if (usersOrIds.length === 0) return []
     const userIds = usersOrIds.map(x => x instanceof User ? x.id : x)
     const existingFollowers = await this.postUsers()
       .query(q => q.whereIn('user_id', userIds)).fetch({ transacting })
     const updatedAttribs = pick(POSTS_USERS_ATTR_UPDATE_WHITELIST, omitBy(isUndefined, attrs))
-    return Promise.map(existingFollowers.models, postUser => postUser.updateAndSave(updatedAttribs, {transacting}))
+    return Promise.map(existingFollowers.models, postUser => postUser.updateAndSave(updatedAttribs, { transacting }))
+  },
+
+  async updateProposalOptions ({ options = [], userId, opts = { } }) {
+    const existingOptions = await this.proposalOptions().fetch({ transaction: opts.transacting, require: false })
+    const existingOptionIds = existingOptions.pluck('id')
+
+    // Add activities for vote reset
+    if (options.length > 0 && existingOptionIds.length > 0) {
+      await this.createVoteResetActivities(opts.transacting)
+    }
+
+    // Delete ALL votes any time options are updated
+    if (options.length > 0 && existingOptionIds.length > 0) {
+      const deleteVotesQuery = `
+        DELETE FROM proposal_votes
+        WHERE option_id IN (${existingOptionIds.join(', ')});
+      `
+      await bookshelf.knex.raw(deleteVotesQuery).transacting({ transaction: opts.transacting, require: false })
+    }
+    // Delete all options and start fresh
+    if (options.length > 0 && existingOptionIds.length > 0) {
+      const deleteQuery = `
+        DELETE FROM proposal_options
+        WHERE id IN (${existingOptionIds.join(', ')});
+      `
+      await bookshelf.knex.raw(deleteQuery).transacting({ transaction: opts.transacting, require: false })
+    }
+
+    // Execute the insert query for options passed in
+    if (options.length > 0) {
+      const insertQuery = `
+        INSERT INTO proposal_options (post_id, text, color, emoji)
+        VALUES ${options.map(option => `(${this.id}, '${option.text}', '${option.color}', '${option.emoji}')`).join(', ')};
+      `
+      await bookshelf.knex.raw(insertQuery).transacting({ transaction: opts.transacting, require: false })
+    }
+
+    // Return a resolved promise
+    return Promise.resolve()
   },
 
   async markAsRead (userId) {
@@ -425,6 +495,20 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Activity.saveForReasons(readers, trx)
   },
 
+  createVoteResetActivities: async function (trx) {
+    const voterIds = await ProposalVote.getVoterIdsForPost(this.id).fetchAll({ transacting: trx })
+    if (!voterIds || voterIds.length === 0) return Promise.resolve()
+
+    const voters = voterIds.map(voterId => ({
+      reader_id: voterId.get('user_id'),
+      post_id: this.id,
+      actor_id: this.get('user_id'),
+      reason: 'voteReset'
+    }))
+
+    return Activity.saveForReasons(voters, trx)
+  },
+
   fulfill,
 
   unfulfill,
@@ -499,6 +583,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     })
   },
 
+  updateProposalOutcome: function (proposalOutcome) {
+    return Post.where({ id: this.id }).query().update({ proposal_outcome: proposalOutcome})
+  },
+
   removeFromGroup: function (idOrSlug) {
     return PostMembership.find(this.id, idOrSlug)
       .then(membership => membership.destroy())
@@ -512,10 +600,35 @@ module.exports = bookshelf.Model.extend(Object.assign({
     EVENT: 'event',
     OFFER: 'offer',
     PROJECT: 'project',
+    PROPOSAL: 'proposal',
     REQUEST: 'request',
     RESOURCE: 'resource',
     THREAD: 'thread',
-    WELCOME: 'welcome',
+    WELCOME: 'welcome'
+  },
+
+  Proposal_Status: {
+    DISCUSSION: 'discussion',
+    COMPLETED: 'completed',
+    VOTING: 'voting',
+    CASUAL: 'casual'
+  },
+
+  Proposal_Outcome: {
+    CANCELLED: 'cancelled',
+    QUORUM_NOT_MET: 'quorum-not-met',
+    INCOMPLETE: 'incomplete',
+    IN_PROGRESS: 'in-progress',
+    SUCCESSFUL: 'successful',
+    TIE: 'tie'
+  },
+
+  Proposal_Type: {
+    SINGLE: 'single',
+    MULTI_UNRESTRICTED: 'multi-unrestricted'
+    // unused for now
+    // MAJORITY: 'majority', // one option must have more than 50% of votes for the proposal to 'pass',
+    // CONSENSUS: 'consensus' // Will not pass if there are any block votes
   },
 
   // TODO Consider using Visibility property for more granular privacy
@@ -558,14 +671,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   isVisibleToUser: async function (postId, userId) {
     if (!postId || !userId) return Promise.resolve(false)
-
     const post = await Post.find(postId)
-
     if (post.isPublic()) return true
 
     const postGroupIds = await PostMembership.query()
       .where({ post_id: postId }).pluck('group_id')
     const userGroupIds = await Group.pluckIdsForMember(userId)
+
     if (intersection(postGroupIds, userGroupIds).length > 0) return true
     if (await post.isFollowed(userId)) return true
 
@@ -573,7 +685,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   find: function (id, options) {
-    return Post.where({id, 'posts.active': true}).fetch(options)
+    return Post.where({ id, 'posts.active': true }).fetch(options)
   },
 
   createdInTimeRange: function (collection, startTime, endTime) {
@@ -597,6 +709,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   }),
 
   create: function (attrs, opts) {
+    console.log('entering Post.create')
     return Post.forge(_.merge(Post.newPostAttrs(), attrs))
     .save(null, _.pick(opts, 'transacting'))
   },
@@ -644,36 +757,58 @@ module.exports = bookshelf.Model.extend(Object.assign({
   fixTypedPosts: () =>
     bookshelf.transaction(transacting =>
       Tag.whereIn('name', ['request', 'offer', 'resource', 'intention'])
-      .fetchAll({transacting})
-      .then(tags => Post.query(q => {
-        q.whereIn('type', ['request', 'offer', 'resource', 'intention'])
-      }).fetchAll({withRelated: ['selectedTags', 'tags'], transacting})
-      .then(posts => Promise.each(posts.models, post => {
-        const untype = () => post.save({type: null}, {patch: true, transacting})
-        if (post.relations.selectedTags.first()) return untype()
+        .fetchAll({ transacting })
+        .then(tags => Post.query(q => {
+          q.whereIn('type', ['request', 'offer', 'resource', 'intention'])
+        }).fetchAll({ withRelated: ['selectedTags', 'tags'], transacting })
+          .then(posts => Promise.each(posts.models, post => {
+            const untype = () => post.save({ type: null }, { patch: true, transacting })
+            if (post.relations.selectedTags.first()) return untype()
 
-        const matches = t => t.get('name') === post.get('type')
-        const existingTag = post.relations.tags.find(matches)
-        if (existingTag) {
-          return PostTag.query()
-          .where({post_id: post.id, tag_id: existingTag.id})
-          .update({selected: true}).transacting(transacting)
-          .then(untype)
-        }
+            const matches = t => t.get('name') === post.get('type')
+            const existingTag = post.relations.tags.find(matches)
+            if (existingTag) {
+              return PostTag.query()
+                .where({ post_id: post.id, tag_id: existingTag.id })
+                .update({ selected: true }).transacting(transacting)
+                .then(untype)
+            }
 
-        return post.selectedTags().attach(tags.find(matches).id, {transacting})
-        .then(untype)
-      }))
-      .then(promises => promises.length))),
+            return post.selectedTags().attach(tags.find(matches).id, { transacting })
+              .then(untype)
+          }))
+          .then(promises => promises.length))),
 
   // TODO: does this work?
   notifySlack: ({ postId }) =>
-    Post.find(postId, {withRelated: ['groups', 'user', 'relatedUsers']})
-    .then(post => {
-      if (!post) return
-      const slackCommunities = post.relations.groups.filter(g => g.get('slack_hook_url'))
-      return Promise.map(slackCommunities, g => Group.notifySlack(g.id, post))
-    }),
+    Post.find(postId, { withRelated: ['groups', 'user', 'relatedUsers'] })
+      .then(post => {
+        if (!post) return
+        const slackCommunities = post.relations.groups.filter(g => g.get('slack_hook_url'))
+        return Promise.map(slackCommunities, g => Group.notifySlack(g.id, post))
+      }),
+
+  updateProposalStatuses: async () => {
+    return bookshelf.knex.raw(
+      `UPDATE posts
+      SET proposal_status = 
+          CASE 
+              WHEN proposal_status NOT IN ('casual', 'completed') 
+                   AND type = 'proposal' 
+                   AND CURRENT_TIMESTAMP BETWEEN start_time AND end_time 
+                   THEN 'voting'
+              WHEN proposal_status NOT IN ('casual', 'completed') 
+                   AND type = 'proposal' 
+                   AND CURRENT_TIMESTAMP > end_time 
+                   THEN 'completed'
+              ELSE proposal_status
+          END
+      WHERE type = 'proposal' 
+        AND proposal_status NOT IN ('casual', 'completed') 
+        AND start_time IS NOT NULL 
+        AND end_time IS NOT NULL;`
+    )
+  },
 
   // Background task to fire zapier triggers on new_post
   zapierTriggers: async ({ postId }) => {
