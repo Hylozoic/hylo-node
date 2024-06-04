@@ -14,6 +14,7 @@ import {
   addPeopleToProjectRole,
   addPostToCollection,
   addResponsibilityToRole,
+  addProposalVote,
   addRoleToMember,
   addSkill,
   addSkillToLearn,
@@ -83,6 +84,7 @@ import {
   removePostFromCollection,
   removeResponsibilityFromRole,
   removeRoleFromMember,
+  removeProposalVote,
   removeSkill,
   removeSkillToLearn,
   removeSuggestedSkillFromGroup,
@@ -90,7 +92,9 @@ import {
   respondToEvent,
   sendEmailVerification,
   sendPasswordReset,
+  setProposalOptions,
   subscribe,
+  swapProposalVote,
   unblockUser,
   unfulfillPost,
   unlinkAccount,
@@ -103,11 +107,12 @@ import {
   updateMe,
   updateMembership,
   updatePost,
+  updateProposalOptions,
+  updateProposalOutcome,
   updateStripeAccount,
   updateWidget,
   useInvitation,
-  verifyEmail,
-  vote
+  verifyEmail
 } from './mutations'
 import InvitationService from '../services/InvitationService'
 import makeModels from './makeModels'
@@ -231,8 +236,8 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
         return Group.where(bookshelf.knex.raw('slug = ?', slug))
           .count()
           .then(count => {
-            if (count > 0) return {exists: true}
-            return {exists: false}
+            if (count > 0) return { exists: true }
+            return { exists: false }
           })
       }
       throw new GraphQLYogaError('Slug is invalid')
@@ -264,7 +269,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
           // FIXME this shouldn't be used directly here -- there should be some
           // way of integrating this into makeModels and using the presentation
           // logic that's already in the fetcher
-          return presentQuerySet(models, merge(args, {total}))
+          return presentQuerySet(models, merge(args, { total }))
         })
     },
     skills: (root, args) => fetchMany('Skill', args),
@@ -300,7 +305,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     addGroupResponsibility: (root, { groupId, title, description }) => addGroupResponsibility({ userId, groupId, title, description }),
 
-    addGroupRole: (root, { groupId, color, name, description, emoji }) => addGroupRole({userId, groupId, color, name, description, emoji}),
+    addGroupRole: (root, { groupId, color, name, description, emoji }) => addGroupRole({ userId, groupId, color, name, description, emoji }),
 
     addModerator: (root, { personId, groupId }) =>
       addModerator(userId, personId, groupId),
@@ -310,6 +315,9 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     addPostToCollection: (root, { collectionId, postId }) =>
       addPostToCollection(userId, collectionId, postId),
+
+    addProposalVote: (root, { postId, optionId }) => addProposalVote({ userId, postId, optionId }),
+
     addResponsibilityToRole: (root, { responsibilityId, roleId, groupId }) =>
       addResponsibilityToRole({ userId, responsibilityId, roleId, groupId }),
 
@@ -459,6 +467,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
       removeResponsibilityFromRole({ userId, roleResponsibilityId, groupId }),
 
     removeRoleFromMember: (root, { roleId, personId, groupId, isCommonRole }) => removeRoleFromMember({ roleId, personId, userId, groupId, isCommonRole }),
+    removeProposalVote: (root, { postId, optionId }) => removeProposalVote({ userId, postId, optionId }),
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
@@ -476,8 +485,12 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     respondToEvent: (root, { id, response }) =>
       respondToEvent(userId, id, response),
 
+    setProposalOptions: (root, { postId, options }) => setProposalOptions({ userId, postId, options }),
+
     subscribe: (root, { groupId, topicId, isSubscribing }) =>
       subscribe(userId, topicId, groupId, isSubscribing),
+
+    swapProposalVote: (root, { postId, removeOptionId, addOptionId }) => swapProposalVote({ userId, postId, removeOptionId, addOptionId }),
 
     unblockUser: (root, { blockedUserId }) => unblockUser(userId, blockedUserId),
 
@@ -505,6 +518,10 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     updatePost: (root, args) => updatePost(userId, args),
 
+    updateProposalOptions: (root, { postId, options }) => updateProposalOptions({ userId, postId, options }),
+
+    updateProposalOutcome: (root, { postId, proposalOutcome }) => updateProposalOutcome({ userId, postId, proposalOutcome }),
+
     updateComment: (root, args) => updateComment(userId, args),
 
     updateStripeAccount: (root, { accountId }) => updateStripeAccount(userId, accountId),
@@ -512,9 +529,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     updateWidget: (root, { id, changes }) => updateWidget(id, changes),
 
     useInvitation: (root, { invitationToken, accessCode }) =>
-      useInvitation(userId, invitationToken, accessCode),
-
-    vote: (root, { postId, isUpvote }) => vote(userId, postId, isUpvote)
+      useInvitation(userId, invitationToken, accessCode)
   }
 }
 

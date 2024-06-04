@@ -232,6 +232,8 @@
       "PostUser",
       "ProjectRole",
       "ProjectContributions",
+      "ProposalOption",
+      "ProposalVote",
       "PushNotification",
       "Question",
       "Queue",

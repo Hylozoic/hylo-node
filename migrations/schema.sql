@@ -2002,8 +2002,19 @@ CREATE TABLE public.posts (
     donations_link character varying(255),
     project_management_link character varying(255),
     reactions_summary jsonb,
+<<<<<<< HEAD
     link_preview_featured boolean DEFAULT false,
     timezone character varying(255)
+=======
+    timezone character varying(255),
+    quorum bigint,
+    proposal_status text,
+    proposal_strict boolean DEFAULT false,
+    proposal_outcome text,
+    proposal_type text,
+    anonymous_voting text,
+    proposal_vote_limit integer
+>>>>>>> dev
 );
 
 
@@ -2148,6 +2159,70 @@ CREATE SEQUENCE public.project_roles_id_seq
 
 ALTER SEQUENCE public.project_roles_id_seq OWNED BY public.project_roles.id;
 
+--
+-- Name: proposal_options; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.proposal_options (
+    id integer NOT NULL,
+    post_id bigint NOT NULL,
+    text text NOT NULL,
+    emoji text,
+    color text
+);
+
+
+--
+-- Name: proposal_options_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.proposal_options_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: proposal_options_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.proposal_options_id_seq OWNED BY public.proposal_options.id;
+
+
+--
+-- Name: proposal_votes; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.proposal_votes (
+    id integer NOT NULL,
+    post_id bigint NOT NULL,
+    option_id bigint NOT NULL,
+    user_id bigint NOT NULL,
+    created_at timestamp with time zone
+);
+
+
+--
+-- Name: proposal_votes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.proposal_votes_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: proposal_votes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.proposal_votes_id_seq OWNED BY public.proposal_votes.id;
 
 --
 -- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -3267,6 +3342,18 @@ ALTER TABLE ONLY public.project_contributions ALTER COLUMN id SET DEFAULT nextva
 
 ALTER TABLE ONLY public.project_roles ALTER COLUMN id SET DEFAULT nextval('public.project_roles_id_seq'::regclass);
 
+--
+-- Name: proposal_options id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_options ALTER COLUMN id SET DEFAULT nextval('public.proposal_options_id_seq'::regclass);
+
+
+--
+-- Name: proposal_votes id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_votes ALTER COLUMN id SET DEFAULT nextval('public.proposal_votes_id_seq'::regclass);
 
 --
 -- Name: push_notifications id; Type: DEFAULT; Schema: public; Owner: -
@@ -4018,6 +4105,19 @@ ALTER TABLE ONLY public.project_contributions
 ALTER TABLE ONLY public.project_roles
     ADD CONSTRAINT project_roles_pkey PRIMARY KEY (id);
 
+--
+-- Name: proposal_options proposal_options_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_options
+    ADD CONSTRAINT proposal_options_pkey PRIMARY KEY (id);
+
+--
+-- Name: proposal_votes proposal_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_votes
+    ADD CONSTRAINT proposal_votes_pkey PRIMARY KEY (id);
 
 --
 -- Name: questions questions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -5723,6 +5823,38 @@ ALTER TABLE ONLY public.project_contributions
 
 ALTER TABLE ONLY public.project_roles
     ADD CONSTRAINT project_roles_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
+
+--
+-- Name: proposal_options proposal_options_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_options
+    ADD CONSTRAINT proposal_options_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: proposal_votes proposal_votes_option_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_votes
+    ADD CONSTRAINT proposal_votes_option_id_foreign FOREIGN KEY (option_id) REFERENCES public.proposal_options(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: proposal_votes proposal_votes_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_votes
+    ADD CONSTRAINT proposal_votes_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: proposal_votes proposal_votes_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.proposal_votes
+    ADD CONSTRAINT proposal_votes_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
+
 
 
 --
