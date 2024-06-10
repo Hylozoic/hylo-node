@@ -199,7 +199,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'location',
         'project_management_link',
         'proposal_status',
-        'proposal_type',
+        'voting_method',
         'proposal_outcome',
         'quorum',
         'reactions_summary',

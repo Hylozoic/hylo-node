@@ -255,7 +255,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Object.assign({},
       refineOne(
         this,
-        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes', 'proposalType', 'proposalStatus', 'proposalOutcome'],
+        ['created_at', 'description', 'id', 'name', 'num_people_reacts', 'timezone', 'type', 'updated_at', 'num_votes', 'votingMethod', 'proposalStatus', 'proposalOutcome'],
         { description: 'details', name: 'title', num_people_reacts: 'peopleReactedTotal', num_votes: 'votesTotal' }
       ),
       {
@@ -623,7 +623,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     TIE: 'tie'
   },
 
-  Proposal_Type: {
+  voting_method: {
     SINGLE: 'single',
     MULTI_UNRESTRICTED: 'multi-unrestricted'
     // unused for now

@@ -13,7 +13,7 @@ export default function setupPostAttrs (userId, params, create = false) {
     link_preview_id: params.link_preview_id || getOr(null, 'id', params.linkPreview),
     parent_post_id: params.parent_post_id,
     project_management_link: params.projectManagementLink,
-    proposal_type: params.proposalType,
+    voting_method: params.votingMethod,
     start_time: params.startTime ? new Date(Number(params.startTime)) : null,
     updated_at: new Date(),
     user_id: userId
