@@ -1817,7 +1817,7 @@ CREATE TABLE public.posts (
     proposal_status text,
     proposal_strict boolean DEFAULT false,
     proposal_outcome text,
-    proposal_type text,
+    voting_method text,
     anonymous_voting text,
     proposal_vote_limit integer
 );

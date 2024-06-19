@@ -1670,7 +1670,7 @@ type Post {
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
   # The type of proposal: 'single', 'multiple-unrestricted', 'majority', 'consensus'
-  proposalType: String
+  votingMethod: String
   # Percentage of all group members that must vote for a proposal to complete
   quorum: Int
   # Number of total reactions on the post
@@ -2748,7 +2748,7 @@ input PostInput {
   # The options for this proposal
   proposalOptions: [ProposalOptionInput]
   # The type of proposal: 'poll', 'survey', 'vote', or 'proposal'
-  proposalType: String
+  votingMethod: String
   # Percentage of all group members that must vote for a proposal to complete
   quorum: Int
   # When this post "starts". Used for events, resources, projects, requests and offers right now

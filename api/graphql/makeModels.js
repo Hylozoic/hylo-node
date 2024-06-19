@@ -199,7 +199,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'location',
         'project_management_link',
         'proposal_status',
-        'proposal_type',
+        'voting_method',
         'proposal_outcome',
         'quorum',
         'reactions_summary',
@@ -212,6 +212,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         commenters: (p, { first }) => p.getCommenters(first, userId),
         commentersTotal: p => p.getCommentersTotal(userId),
         details: p => p.details(userId),
+        isAnonymousVote: p => p.get('anonymous_voting') === 'true',
         myReactions: p => userId ? p.reactionsForUser(userId).fetch() : [],
         myEventResponse: p =>
           userId && p.isEvent()
