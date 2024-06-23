@@ -907,29 +907,6 @@ module.exports = bookshelf.Model.extend(merge({
     }).query()
   },
 
-  // async selectIdsForModeratedGroups (userId) { // TODO RESP: .... this was the last thing I was working on before getting sick and then going to kiwiburn... so I don't recal whether its worth keeping around or not...
-  //   // get all responsiblities for a user
-  //   const responsibilities = await Responsibility.fetchSystemResponsiblititesForUser(userId)
-  //   const byGroupId = {}
-  //   const result = []
-  //   // count how many responsibilities a user has for each group
-  //   responsibilities.forEach(r => {
-  //     if (byGroupId[r.group_id]) {
-  //       byGroupId[r.group_id] += 1
-  //     } else {
-  //       byGroupId[r.group_id] = 1
-  //     }
-  //   })
-
-  //   // return an array of group ids that the user has 4 responsibilities for. This defacto means they have full power of a group, whether its from a manager role or not
-  //   for (const key in byGroupId) {
-  //     if (byGroupId[key] === 4) {
-  //       result.push(key)
-  //     }
-  //   }
-  //   return result
-  // },
-
   async allHaveMember (groupDataIds, userOrId) {
     const memberIds = await this.pluckIdsForMember(userOrId)
     return difference(groupDataIds, memberIds).length === 0
