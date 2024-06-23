@@ -6,12 +6,12 @@ import underlyingDeleteComment from '../../models/comment/deleteComment'
 import underlyingCreateComment from '../../models/comment/createComment'
 import underlyingUpdateComment from '../../models/comment/updateComment'
 
-export function canDeleteComment (userId, comment) {
+export async function canDeleteComment (userId, comment) {
   if (comment.get('user_id') === userId) return Promise.resolve(true)
   return comment.load('post.groups')
     .then(comment => Promise.any(
-      comment.relations.post.relations.groups.map(c =>
-        GroupMembership.hasResponsibility(userId, c, Responsibility.constants.RESP_MANAGE_CONTENT))
+      comment.relations.post.relations.groups.map(g =>
+        GroupMembership.hasResponsibility(userId, g, Responsibility.constants.RESP_MANAGE_CONTENT))
     ))
 }
 

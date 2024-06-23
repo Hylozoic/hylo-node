@@ -283,7 +283,7 @@ export async function removeSuggestedSkillFromGroup (userId, groupId, skillIdOrN
       if (!skill) throw new GraphQLYogaError(`Couldn't find skill with ID or name ${skillIdOrName}`)
       return group.suggestedSkills().detach({ skill_id: skill.id })
     })
-    .then(() => ({success: true}))
+    .then(() => ({ success: true }))
 }
 
 export function flagInappropriateContent (userId, { category, reason, linkData }) {
@@ -311,12 +311,12 @@ export function flagInappropriateContent (userId, { category, reason, linkData }
     object_id: linkData.id,
     object_type: linkData.type
   })
-  .tap(flaggedItem => Queue.classMethod('FlaggedItem', 'notifyModerators', {id: flaggedItem.id}))
-  .then(() => ({success: true}))
+    .tap(flaggedItem => Queue.classMethod('FlaggedItem', 'notifyModerators', {id: flaggedItem.id}))
+    .then(() => ({ success: true }))
 }
 
 export function messageGroupStewards (userId, groupId) {
-  return Group.messageModerators(userId, groupId)
+  return Group.messageStewards(userId, groupId)
 }
 
 export function reactOn (userId, entityId, data) {

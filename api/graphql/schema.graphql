@@ -603,7 +603,7 @@ type Group {
   description: String
   # A geoJSON object outlining a geographic shape describing the border/boundaries of the group in the world
   geoShape: JSON
-  # The current invite link for this group (only a moderator of this group can access this attribute)
+  # The current invite link for this group
   invitePath: String
   # A string describing the physical location of this group in the world
   location: String
@@ -973,7 +973,7 @@ type GroupJoinQuestionAnswerQuerySet {
 type GroupSettings {
   # The last date/time that the group agreements were updated
   agreementsLastUpdatedAt: Date
-  # Whether this group allows non-moderators to invite people (not currently used)
+  # Whether this group allows any member to invite people (not currently used)
   allowGroupInvites: Boolean
   # Whether to require questions being answered when a group requests to join this group
   askGroupToGroupJoinQuestions: Boolean
@@ -1851,7 +1851,7 @@ type Post {
 
   # For proposal posts, load all the different options that people can vote on.
   proposalOptions: ProposalOptionQuerySet
-  
+
   # Load all votes for a proposal post. Note: not a queryset; to avoid paginating votes
   proposalVotes: ProposalVoteQuerySet
 
@@ -2133,11 +2133,11 @@ type ZapierTrigger {
 
 # The mutations accepted by Hylo
 type Mutation {
-  # For a moderator to accept an invitation to one of their groups to be related to another group (either as a parent or a child)
+  # For a steward to accept an invitation to one of their groups to be related to another group (either as a parent or a child)
   acceptGroupRelationshipInvite(groupRelationshipInviteId: ID): AcceptGroupRelationshipInviteResult
-  # For a moderator to accept a request from a Person to join a Group
+  # For a steward to accept a request from a Person to join a Group
   acceptJoinRequest(joinRequestId: ID): JoinRequest
-  # For a moderator to add a group responsibility to a group
+  # For a steward to add a group responsibility to a group
   addGroupResponsibility(
     # The description of the responsibility
     description: String,
@@ -2145,7 +2145,7 @@ type Mutation {
     title: String,
     groupId: ID
   ): Responsibility
-  # For a moderator to add a badge/role to a group
+  # For a steward to add a badge/role to a group
   addGroupRole(
     color: String,
     description: String,
@@ -2153,11 +2153,11 @@ type Mutation {
     groupId: ID,
     name: String,
   ): GroupRole
-  # Add a person to a group. Only a moderator of the group can do this.
+  # Add a person to a group. Only a steward of the group can do this.
   addMember(
     groupId: ID,
     userId: ID,
-    # 0 = Regular member, 1 = moderator
+    # 0 = default, 1 = moderator
     role: Int
   ): GenericResult
   # Add a new moderator to a Group. Only a moderator of the Group can do this.
@@ -2174,7 +2174,7 @@ type Mutation {
   ): Responsibility
   # Add a rvote to a proposal
   addProposalVote(postId: ID, optionId: ID): GenericResult
-  # For a moderator to add a badge/role to a group to a member of a group
+  # For a steward to add a badge/role to a group to a member of a group
   addRoleToMember(
     roleId: ID,
     groupId: ID,
@@ -2189,13 +2189,13 @@ type Mutation {
   ): Skill
   # Add a skill you want to learn to your profile
   addSkillToLearn(name: String): Skill
-  # Add a suggested skill to a Group. Only a group moderator can do this.
+  # Add a suggested skill to a Group. Only a group steward can do this.
   addSuggestedSkillToGroup(groupId: ID, name: String): Skill
-  # NOT USED RIGHT NOW. Toggle whether a Group allows non-moderators to invite new people to the Group. Only a group moderator can call this.
+  # NOT USED RIGHT NOW. Toggle whether a Group allows non-hosts to invite new people to the Group. Only a group steward can call this.
   allowGroupInvites(groupId: ID, data: Boolean): Group
   # For logged in user to block a user, meaning they will no longer see the user's posts and that user can no longer see theirs or message them.
   blockUser(blockedUserId: ID): GenericResult
-  # For a moderator of a group that has invited a group to be in relationship with it, to cancel that invitation.
+  # For a steward of a group that has invited a group to be in relationship with it, to cancel that invitation.
   cancelGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
   # For a Person who has requested to join another group to cancel that request.
   cancelJoinRequest(joinRequestId: ID): GenericResult
@@ -2233,15 +2233,15 @@ type Mutation {
   deactivateMe(id: ID): GenericResult
   # Used by current logged in user to delete their account permanently
   deleteMe: GenericResult
-  # For moderator to decline someone's request to join their Group
+  # For group host to decline someone's request to join their Group
   declineJoinRequest(joinRequestId: ID): JoinRequest
   # Delete an Affiliation from your profile
   deleteAffiliation(id: ID): ID
   # Delete a comment
   deleteComment(id: ID): GenericResult
-  # Delete a group that you are a moderator of
+  # Delete a group that you are a steward of
   deleteGroup(id: ID): GenericResult
-  # Remove the relationship between two groups if you are a moderator of one of them
+  # Remove the relationship between two groups if you are a steward of one of them
   deleteGroupRelationship(parentId: ID, childId: ID): GenericResult
   # Delete a group responsibility from a group
   deleteGroupResponsibility(
@@ -2261,7 +2261,7 @@ type Mutation {
   deleteSavedSearch(id: ID): ID
   # Delete a Zapier trigger (called by Zapier)
   deleteZapierTrigger(id: ID): Boolean
-  # Set an invitation to join a group as expired. Only a group moderator can call this.
+  # Set an invitation to join a group as expired. Only a group host can call this.
   expireInvitation(invitationId: ID): GenericResult
   # Look for a link preview of a URL, or if not found create one
   findOrCreateLinkPreviewByUrl(data: LinkPreviewInput): LinkPreview
@@ -2273,7 +2273,7 @@ type Mutation {
   flagInappropriateContent(data: InappropriateContentInput): GenericResult
   # Mark one of your posts as fulfilled or completed
   fulfillPost(postId: ID): GenericResult
-  # Invite a group to join one of your groups as a child of it. Only a group moderator can call this.
+  # Invite a group to join one of your groups as a child of it. Only a group steward can call this.
   inviteGroupToJoinParent(parentId: ID, childId: ID): CreatedGroupRelationshipInvite
   # Invite one or more people to an event Post
   invitePeopleToEvent(eventId: ID, inviteeIds: [ID]): Post
@@ -2293,8 +2293,6 @@ type Mutation {
   markActivityRead(id: ID): Activity
   # Mark all notifications as read
   markAllActivitiesRead: GenericResult
-  # TODO: remove when mobile app has been updated
-  messageGroupModerators(groupId: ID): ID
   # Send a message to all the stewards of a Group
   messageGroupStewards(groupId: ID): ID
   # Pin a post within a Group. Only a group moderator can call this.
@@ -2305,19 +2303,19 @@ type Mutation {
   reactOn(entityId: ID, data: ReactionInput): Post
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
-  # Regenerate the invite URL used to invite people to a Group. Only a group moderator can call this.
+  # Regenerate the invite URL used to invite people to a Group. Only a group Host can call this.
   regenerateAccessCode(groupId: ID): Group
   # Register a new mobile device to the current logged in user account
   registerDevice(playerId: String, platform: String, version: String): GenericResult
-  # Reinvite all pending invitations to the current group. Only a group moderator can call this.
+  # Reinvite all pending invitations to the current group. Only a group Host can call this.
   reinviteAll(groupId: ID): GenericResult
   # Create a new user account
   register(name: String, password: String): SignupResult
   # NOT USED RIGHT NOW
   registerStripeAccount(authorizationCode: String): GenericResult
-  # Reject a Group's invite or request to connect to one of your groups. Only a group moderator can call this.
+  # Reject a Group's invite or request to connect to one of your groups. Only a group steward can call this.
   rejectGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
-  # Remove a Person from a Group. Only a group moderator can call this.
+  # Remove a Person from a Group. Only a group Moderator can call this.
   removeMember(personId: ID, groupId: ID): Group
   # Remove a moderator from a Group.
   removeModerator(
@@ -2336,7 +2334,7 @@ type Mutation {
   ): GenericResult
   # Remove a vote from a proposal
   removeProposalVote(postId: ID, optionId: ID): GenericResult
-  # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
+  # Remove a badge/role from a member of a group, inititated by that member or by a group Steward
   removeRoleFromMember(roleId: ID, groupId: ID, personId: ID, isCommonRole: Boolean): GenericResult
   # Remove a skill from your user profile
   removeSkill(id: ID, name: String): GenericResult
@@ -2344,7 +2342,7 @@ type Mutation {
   removeSkillToLearn(id: ID, name: String): GenericResult
   # Remove a suggested skill from a Group by skill ID or name/text
   removeSuggestedSkillFromGroup(groupId: ID, id: ID, name: String): GenericResult
-  # Request to add one one of the groups you moderate to another group as a child group. Only a group moderator can call this.
+  # Request to add one one of the groups you moderate to another group as a child group. Only a group steward can call this.
   requestToAddGroupToParent(
     childId: ID,
     # Answers to any required questions to connect to the group
@@ -2385,7 +2383,7 @@ type Mutation {
   unfulfillPost(postId: ID): GenericResult
   # Edit a comment
   updateComment(id: ID, data: CommentInput): Comment
-  # Update a Group's settings. Only a group moderator can call this.
+  # Update a Group's settings. Only a group steward can call this.
   updateGroupSettings(id: ID, changes: GroupInput): Group
   # Update a Group's settings. Only can be called via API key.
   updateGroup(
@@ -2414,7 +2412,7 @@ type Mutation {
     name: String,
     active: Boolean
   ): GroupRole
-  # Update settings related a Topic in a Group. Only a group moderator can call this.
+  # Update settings related a Topic in a Group. Only a group steward can call this.
   updateGroupTopic(id: ID, data: GroupTopicInput): GenericResult
   # Update settings related to a Person following a Topic in a Group
   updateGroupTopicFollow(id: ID, data: GroupTopicFollowInput): GenericResult
@@ -2475,9 +2473,9 @@ type CreatedRequest {
 type CreatedGroupRelationshipInvite {
   # Whether the mutation succeeded or not
   success: Boolean
-  # In the case that the invite was from and to a group that the user is a moderator of then the invite automatically succeeds and a GroupRelationship is formed and returned
+  # In the case that the invite was from and to a group that the user is a steward of then the invite automatically succeeds and a GroupRelationship is formed and returned
   groupRelationship: GroupRelationship
-  # If the invite was to a group the user is not a moderator of then return the new GroupRelationshipInvite
+  # If the invite was to a group the user is not a steward of then return the new GroupRelationshipInvite
   groupRelationshipInvite: GroupRelationshipInvite
 }
 
@@ -2677,7 +2675,7 @@ input GroupInput {
   groupExtensions: [GroupExtensionInput]
   # Questions that a group requesting to connect must answer
   groupToGroupJoinQuestions: [QuestionInput]
-  # The current invite link for this group (only a moderator of this group can access this attribute)
+  # The current invite link for this group
   invitePath: String
   # Questions a Person must answer when requesting to join this group
   joinQuestions: [QuestionInput]
@@ -2746,7 +2744,7 @@ input GroupTopicFollowInput {
 
 # Group settings
 input GroupSettingsInput {
-  # Whether this group allows non-moderators to invite people (not currently used)
+  # Whether this group allows non-hosts to invite people (not currently used)
   allowGroupInvites: Boolean
   # Whether to require questions being answered when a group requests to join this group
   askGroupToGroupJoinQuestions: Boolean

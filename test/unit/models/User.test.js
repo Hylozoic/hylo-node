@@ -8,7 +8,7 @@ import { wait } from '../../setup/helpers'
 import { times } from 'lodash'
 
 describe('User', function () {
-  var cat
+  let cat
 
   before(function () {
     cat = new User({ name: 'Cat', email: 'Iam@cat.org', active: true })

@@ -10,7 +10,7 @@ import {
   regenerateAccessCode,
   deleteGroupTopic,
   deleteGroup
- } from './group'
+} from './group'
 
 let starterGroup, starterPost
 
@@ -22,7 +22,7 @@ before(async () => {
 
 describe('mutations/group', () => {
   describe('moderation', () => {
-    var user, group
+    let user, group
 
     before(function () {
       user = factories.user()
@@ -33,17 +33,17 @@ describe('mutations/group', () => {
 
     describe('updateGroup', () => {
       it('rejects if name is blank', () => {
-        const data = {name: '   '}
+        const data = { name: '   ' }
         return updateGroup(user.id, group.id, data)
-        .then(() => expect.fail('should reject'))
-        .catch(e => expect(e.message).to.match(/Name cannot be blank/))
+          .then(() => expect.fail('should reject'))
+          .catch(e => expect(e.message).to.match(/Name cannot be blank/))
       })
 
       it('rejects if user is not a steward', () => {
-        const data = {name: '   '}
+        const data = { name: 'whee' }
         return updateGroup('777', group.id, data)
-        .then(() => expect.fail('should reject'))
-        .catch(e => expect(e.message).to.match(/don't have permission/))
+          .then(() => expect.fail('should reject'))
+          .catch(e => expect(e.message).to.match(/You don't have the right responsibilities for this group/))
       })
     })
 
@@ -123,6 +123,9 @@ describe('mutations/group', () => {
     let user
 
     before(async () => {
+      starterGroup = await factories.group().save({ slug: 'starter-posts', access_code: 'aasdfkjh3##Sasdfsdfedss', accessibility: Group.Accessibility.OPEN })
+      starterPost = await factories.post().save()
+      await starterGroup.posts().attach(starterPost.id)
       user = await factories.user().save()
       starterGroup.addMembers([user])
     })
@@ -158,23 +161,23 @@ describe('mutations/group', () => {
     })
 
     it('creates inside a parent group if user can moderate the parent or parent is open', () => {
-      const childGroup = {name: 'goose', slug: 'goose', parent_ids: [starterGroup.id]}
+      const childGroup = { name: 'goose', slug: 'goose', parent_ids: [starterGroup.id] }
       return createGroup(user.id, childGroup)
-      .then(async (group) => {
-        expect(group).to.exist
-        expect(Number((await group.parentGroups().fetch()).length)).to.equal(1)
+        .then(async (group) => {
+          expect(group).to.exist
+          expect(Number((await group.parentGroups().fetch()).length)).to.equal(1)
 
-        const newChildGroup = {name: 'gander', slug: 'gander', parent_ids: [group.id]}
-        createGroup(user.id, newChildGroup).then(async (g2) => {
-          expect(g2).to.exist
-          expect(Number((await g2.parentGroups().fetch()).length)).to.equal(1)
+          const newChildGroup = {name: 'gander', slug: 'gander', parent_ids: [group.id]}
+          createGroup(user.id, newChildGroup).then(async (g2) => {
+            expect(g2).to.exist
+            expect(Number((await g2.parentGroups().fetch()).length)).to.equal(1)
+          })
         })
-      })
     })
   })
 
   describe('deleteGroupTopic', () => {
-    var user, group
+    let user, group
 
     before(function () {
       user = factories.user()

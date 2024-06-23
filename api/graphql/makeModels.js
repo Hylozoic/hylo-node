@@ -216,7 +216,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'tagline'
       ],
       getters: {
-        messageThreadId: p => p.getMessageThreadWith(userId).then(post => post ? post.id : null),
+        messageThreadId: p => p.getMessageThreadWith(userId).then(post => post ? post.id : null)
       },
       relations: [
         'memberships',
@@ -567,7 +567,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
           return null
         },
         locationObject: async (g) => {
-          // If precision is precise or user is a moderator of the group show the exact location
+          // If precision is precise or user is an administrator of the group show the exact location
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
           if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
                 (userId && await GroupMembership.hasResponsibility(userId, g, Responsibility.constants.RESP_ADMINISTRATION))) {

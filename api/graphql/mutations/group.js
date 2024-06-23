@@ -122,7 +122,7 @@ export async function updateGroup (userId, groupId, changes) {
 }
 
 // Group to group relationship mutations
-export async function inviteGroupToGroup(userId, fromId, toId, type, questionAnswers = [], opts = {}) {
+export async function inviteGroupToGroup (userId, fromId, toId, type, questionAnswers = [], opts = {}) {
   const toGroup = await Group.find(toId, opts)
   if (!toGroup) {
     throw new GraphQLYogaError('Group not found')
@@ -169,7 +169,7 @@ export async function inviteGroupToGroup(userId, fromId, toId, type, questionAns
 }
 
 export async function acceptGroupRelationshipInvite (userId, groupRelationshipInviteId) {
-  const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
+  const invite = await GroupRelationshipInvite.where({ id: groupRelationshipInviteId }).fetch()
   if (invite) {
     if (GroupMembership.hasResponsibility(userId, invite.get('to_group_id'), Responsibility.constants.RESP_ADMINISTRATION)) {
       const groupRelationship = await invite.accept(userId)
@@ -183,7 +183,7 @@ export async function acceptGroupRelationshipInvite (userId, groupRelationshipIn
 }
 
 export async function cancelGroupRelationshipInvite (userId, groupRelationshipInviteId) {
-  const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
+  const invite = await GroupRelationshipInvite.where({ id: groupRelationshipInviteId }).fetch()
   if (invite) {
     if (GroupMembership.hasResponsibility(userId, invite.get('from_group_id'), Responsibility.constants.RESP_ADMINISTRATION)) {
       return { success: await invite.cancel(userId) }
@@ -196,7 +196,7 @@ export async function cancelGroupRelationshipInvite (userId, groupRelationshipIn
 }
 
 export async function rejectGroupRelationshipInvite (userId, groupRelationshipInviteId) {
-  const invite = await GroupRelationshipInvite.where({id: groupRelationshipInviteId}).fetch()
+  const invite = await GroupRelationshipInvite.where({ id: groupRelationshipInviteId }).fetch()
   if (invite) {
     if (GroupMembership.hasResponsibility(userId, invite.get('to_group_id'), Responsibility.constants.RESP_ADMINISTRATION)) {
       return { success: await invite.reject(userId) }

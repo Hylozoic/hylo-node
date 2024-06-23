@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-expressions */
 import { spyify, unspyify } from '../../setup/helpers'
 import { sortBy } from 'lodash/fp'
-var root = require('root-path')
-var setup = require(root('test/setup'))
-var factories = require(root('test/setup/factories'))
+const root = require('root-path')
+const setup = require(root('test/setup'))
+const factories = require(root('test/setup/factories'))
 
 describe('Invitation', function () {
   before(() => setup.clearDb())
@@ -15,13 +15,13 @@ describe('Invitation', function () {
   })
 
   describe('#use', function () {
-    let user, group, tag, invitation1, invitation2, inviter
+    let user, group, tag, invitation1, invitation2, inviter, cr
 
     before(async () => {
       inviter = await factories.user().save()
       user = await factories.user().save()
       group = await factories.group().save()
-      tag = await new Tag({name: 'taginvitationtest'}).save()
+      tag = await new Tag({ name: 'taginvitationtest' }).save()
       invitation1 = await Invitation.create({
         userId: inviter.id,
         groupId: group.id,
@@ -46,13 +46,13 @@ describe('Invitation', function () {
     })
 
     it('creates a tag_follow when it has a tag_id', function () {
-      return bookshelf.transaction(trx => invitation2.use(user.id, {transacting: trx}))
-      .then(TagFollow.where({
-        user_id: user.id,
-        group_id: group.id,
-        tag_id: tag.id
-      }).fetch())
-      .then(tagFollow => expect(tagFollow).to.exist)
+      return bookshelf.transaction(trx => invitation2.use(user.id, { transacting: trx }))
+        .then(TagFollow.where({
+          user_id: user.id,
+          group_id: group.id,
+          tag_id: tag.id
+        }).fetch())
+        .then(tagFollow => expect(tagFollow).to.exist)
     })
   })
 

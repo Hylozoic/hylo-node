@@ -216,6 +216,7 @@
       "GroupRole",
       "GroupRoleResponsibility",
       "GroupTag",
+      "GroupWidget",
       "Invitation",
       "JoinRequest",
       "LinkedAccount",

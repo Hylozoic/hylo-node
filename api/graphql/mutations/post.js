@@ -158,7 +158,6 @@ export async function pinPost (userId, postId, groupId) {
 // the legacy code expects -- this sort of thing can be removed/refactored once
 // hylo-redux is no longer in use
 function convertGraphqlPostData (data) {
-  console.log(data, 'convertGraphqlPostData')
   return Promise.resolve(Object.assign({
     name: data.title,
     description: data.details,

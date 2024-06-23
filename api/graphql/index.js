@@ -423,9 +423,6 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
 
-    // TODO: remove once mobile app has been updated to stewards
-    messageGroupModerators: (root, { groupId }) => messageGroupStewards(userId, groupId),
-
     messageGroupStewards: (root, { groupId }) => messageGroupStewards(userId, groupId),
 
     pinPost: (root, { postId, groupId }) =>

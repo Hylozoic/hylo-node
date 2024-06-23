@@ -28,36 +28,35 @@ describe('Group', function () {
     }
 
     const user = await new User({ name: 'username', email: 'john1@foo.com', active: true }).save()
-    await new Tag({ name: 'general' }).save()
     await Group.create(user.id, data)
     const savedGroup = await Group.find('comm1')
     expect(savedGroup.get('banner_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_banner.jpg')
     expect(savedGroup.get('avatar_url')).to.equal('https://d3ngex8q79bk55.cloudfront.net/misc/default_community_avatar.png')
   })
 
-  it('can be created with group extension data', async function() {
+  it('can be created with group extension data', async function () {
     const data = {
-      'name': 'my group',
-      'slug': 'group2',
-      'group_extensions': [{
-        'type': 'ext',
-        'data' : {
-          'test': 'somedata'
+      name: 'my group',
+      slug: 'group2',
+      group_extensions: [{
+        type: 'ext',
+        data: {
+          test: 'somedata'
         }
       }]
     }
 
-    const extension = await new Extension({type: 'ext', updated_at: new Date()}).save()
-    const user = await new User({name: 'username', email: 'john@foo.com', active: true}).save()
-    const group = await Group.create(user.id, data)
+    await new Extension({ type: 'ext', updated_at: new Date() }).save()
+    const user = await new User({ name: 'username', email: 'john@foo.com', active: true }).save()
+    await Group.create(user.id, data)
     const savedGroup = await Group.find('group2')
     const extensions = await savedGroup.groupExtensions().fetch()
     expect(extensions.length).to.equal(1)
     expect(extensions.models[0].pivot.get('data')).to.deep.equal({ test: 'somedata' })
   })
 
-  describe('.find', function() {
-    it('ignores a blank id', function() {
+  describe('.find', function () {
+    it('ignores a blank id', function () {
       return Group.find(null).then(i => expect(i).to.be.null)
     })
   })
@@ -112,16 +111,16 @@ describe('Group', function () {
     })
   })
 
-  describe('addMembers', function() {
+  describe('addMembers', function () {
     let group, u1, u2, gm1
 
-    beforeEach(async function() {
-      group = await Group.forge({group_data_type: 0}).save()
+    beforeEach(async function () {
+      group = await Group.forge({ group_data_type: 0 }).save()
       u1 = await factories.user().save()
       u2 = await factories.user().save()
       gm1 = await group.memberships().create({
         user_id: u1.id,
-        settings: {here: true},
+        settings: { here: true },
         group_data_type: 0
       })
     })

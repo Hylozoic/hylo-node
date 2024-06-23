@@ -22,10 +22,9 @@ module.exports = bookshelf.Model.extend({
 }, {
   // TODO: this should not use the actual role names, not the old role system
   updateCoordinatorRole: async function ({ userId, groupId, role, transacting }) {
-    // dependening on the value of the role, we need to add or remove the user from the Coordinator common role
-
+    // depending on the value of the role, we need to add or remove the user from the Coordinator common role
     if (role === GroupMembership.Role.MODERATOR) {
-      return bookshelf.knex.raw(`
+      const query = bookshelf.knex.raw(`
         WITH ExistingMembership AS (
           -- CTE to check if a row already exists in group_memberships_common_roles for the specified ids
           SELECT 1
@@ -39,7 +38,8 @@ module.exports = bookshelf.Model.extend({
         INSERT INTO group_memberships_common_roles (user_id, group_id, common_role_id)
         SELECT ${userId}, ${groupId}, 1
         WHERE NOT EXISTS (SELECT 1 FROM ExistingMembership);`
-      ).transacting(transacting)
+      )
+      return transacting ? query.transacting(transacting) : query
     }
 
     if (role === GroupMembership.Role.DEFAULT) {

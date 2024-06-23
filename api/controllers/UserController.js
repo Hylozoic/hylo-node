@@ -24,12 +24,12 @@ module.exports = {
           let message = locales[locale].apiInviteMessageContent(req.api_client)
           let subject = locales[locale].apiInviteMessageSubject(group.get('name'))
           if (req.api_client) {
-            const client = await (new OIDCAdapter("Client")).find(req.api_client.id)
+            const client = await (new OIDCAdapter('Client')).find(req.api_client.id)
             if (!client) {
               return res.status(403).json({ error: 'Unauthorized' })
             }
             subject = client.invite_subject || locales[locale].clientInviteSubjectDefault(group.get('name'))
-            message = client.invite_message || locales[locale].clientInviteMessageDefault({userName: user.get('name'), groupName: group.get('name')})
+            message = client.invite_message || locales[locale].clientInviteMessageDefault({ userName: user.get('name'), groupName: group.get('name') })
           }
           const inviteBy = await group.stewards().fetchOne()
 
@@ -50,7 +50,7 @@ module.exports = {
 
     const attrs = { name, email: email ? email.toLowerCase() : null, email_validated: false, active: false, group }
     if (isModeratorVal) {
-      attrs.role = GroupMembership.Role.MODERATOR // This is ultimately fed to Group.addMembers, which handles mod -> Coordinator. TODO: fix this
+      attrs.role = GroupMembership.Role.MODERATOR // This is ultimately fed to Group.addMembers, which handles mod -> Coordinator. TODO: RESP, fix this
     }
 
     return User.create(attrs)

@@ -163,8 +163,6 @@ export const filterAndSortUsers = curry(({ autocomplete, boundingBox, groupId, g
   }
 
   if (commonRoleId && groupId) {
-    // TODO: RESP. need to add groups.id = group_id to this query
-    //q.leftJoin('group_memberships_common_roles as crgm ON crgm.user_id = users.id AND crgm.group_id = ?', groupId)
     q.leftJoin('group_memberships_common_roles as crgm', 'crgm.user_id', 'users.id')
     q.where('crgm.common_role_id', '=', commonRoleId)
     q.andWhere('crgm.group_id', '=', groupId)

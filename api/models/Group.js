@@ -357,6 +357,7 @@ module.exports = bookshelf.Model.extend(merge({
         }), { transacting })
       newMemberships.push(membership)
       // Based on the role attribute, add or remove the user to the Coordinator common role
+      // TODO: RESP, change this to directly pass in and set commonRoles, instead of the role attribute
       await MemberCommonRole.updateCoordinatorRole({ userId: id, groupId: this.id, role: updatedAttribs.role, transacting })
       // Subscribe each user to the default tags in the group
       await User.followTags(id, this.id, defaultTagIds, transacting)
@@ -697,7 +698,7 @@ module.exports = bookshelf.Model.extend(merge({
       settings: { allow_group_invites: false, agreements_last_updated_at: null, public_member_directory: false }
     }))
 
-    const memberships = await bookshelf.transaction(async trx => {
+    await bookshelf.transaction(async trx => {
       await group.save(null, { transacting: trx })
 
       if (data.group_extensions) {
@@ -718,11 +719,9 @@ module.exports = bookshelf.Model.extend(merge({
 
       await group.createDefaultTopics(group.id, userId, trx)
 
-      const members = await group.addMembers([userId],
-        { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
-      // This is labeled members but functionally it appears to be the group creator, thus the admin power. Worth a rename for clarity
+      await group.addMembers([userId], { role: GroupMembership.Role.MODERATOR }, { transacting: trx })
 
-      // Have to add/request add to parent group after moderator has been added to the group
+      // Have to add/request add to parent group after admin has been added to the group
       if (data.parent_ids) {
         for (const parentId of data.parent_ids) {
           const parent = await Group.findActive(parentId, { transacting: trx })
@@ -744,8 +743,6 @@ module.exports = bookshelf.Model.extend(merge({
           }
         }
       }
-
-      return members
     })
 
     if (data.location && !data.location_id) {
@@ -807,12 +804,12 @@ module.exports = bookshelf.Model.extend(merge({
     }
   },
 
-  messageModerators: async function(fromUserId, groupId) {
+  messageStewards: async function(fromUserId, groupId) {
     // Make sure they can only message a group they can see
     const group = await groupFilter(fromUserId)(Group.where({ id: groupId })).fetch()
     // TODO: ADD RESP TO THIS ONE
     if (group) {
-      const moderators = await group.moderators().fetch()
+      const moderators = await group.stewards().fetch()
       if (moderators.length > 0) {
         // HACK: add user_connection row so that the people can see each other even though they are not in the same group
         moderators.forEach(async (m) => {
