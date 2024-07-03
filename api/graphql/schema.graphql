@@ -62,7 +62,7 @@ type Query {
     farmQuery: JSON,
     # XXX: NOT USED
     filter: String,
-    # Number of groups to return
+    # Int of groups to return
     first: Int,
     # Only find these groups, by ID
     groupIds: [ID],
@@ -107,7 +107,7 @@ type Query {
   groupTopics(
     # Return only topics whose name starts with the autocomplete string
     autocomplete: String,
-    # Number of GroupTopics to return
+    # Int of GroupTopics to return
     first: Int,
     # If true only return topics that are set to be a default topic in a group that the current logged in user is a member of
     isDefault: Boolean,
@@ -197,7 +197,7 @@ type Query {
     createdBy: [ID],
     # Load posts before or after this ID, depending on sort order
     cursor: ID,
-    # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'request' or 'resource'
+    # Only return posts of this type: 'discussion', 'event', 'offer', 'project', 'proposal', 'request' or 'resource'
     filter: String,
     # Number of posts to return
     first: Int,
@@ -223,7 +223,7 @@ type Query {
     topic: ID,
     # Return only posts that have any of these topics by topic ID
     topics: [ID],
-    # Return only posts that are one of these types: 'discussion', 'event', 'offer', 'project', 'request' and/or 'resource'
+    # Return only posts that are one of these types: 'discussion', 'event', 'offer', 'project', 'proposal', 'request' and/or 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -771,7 +771,7 @@ type Group {
     collectionToFilterOut: ID,
     # Start loading posts before or after this ID, depending on sort order
     cursor: ID,
-    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     #  a value of 'all' will include all above post types
     #  a value of 'chat' will include all above post types + 'chat'
     filter: String,
@@ -797,7 +797,7 @@ type Group {
     topic: ID,
     # Only load posts that have one of these topics by topic id
     topics: [ID],
-    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -828,7 +828,7 @@ type Group {
     collectionToFilterOut: ID,
     # Return posts before or after this post id, depending on sort order
     cursor: ID,
-    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     filter: String,
     # Load this number of posts
     first: Int,
@@ -850,7 +850,7 @@ type Group {
     topic: ID,
     # Only load posts that have one of these topics by topic id
     topics: [ID],
-    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -1545,7 +1545,7 @@ type Person {
     createdBy: [ID],
     # Start loading posts before or after this ID, depending on sort order
     cursor: ID,
-    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a post type: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     filter: String,
     # Load this number of posts
     first: Int,
@@ -1572,7 +1572,7 @@ type Person {
     topic: ID,
     # Only load posts that have one of these topics by topic id
     topics: [ID],
-    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', request', 'resource'
+    # Filter posts by a set of post types: 'discussion', 'event', 'offer', 'project', 'proposal', request', 'resource'
     types: [String]
   ): PostQuerySet
 
@@ -1587,9 +1587,6 @@ type Person {
 
   # The set of Skills this person want to learn
   skillsToLearn(first: Int, cursor: ID): SkillQuerySet
-
-  # Upvotes on posts that this person has made. DEPRECATED, use reactions instead
-  votes(first: Int, offset: Int, order: String): VoteQuerySet
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
@@ -1621,6 +1618,8 @@ type Post {
   id: ID
   # NOT USED RIGHT NOW. Whether this post can accept financial contributions
   acceptContributions: Boolean
+  # whether voting is anonymous for this proposal (Only used by proposal type posts)
+  anonymousVoting: Boolean
   # Was this post marked an announcement by a group moderator?
   announcement: Boolean
   # Number of attachments on this post
@@ -1642,8 +1641,12 @@ type Post {
   fulfilledAt: Date
   # Number of groups this has been posted to
   groupsTotal: Int
+  # Whether who votes on this proposal is visible or not
+  isAnonymousVote: Boolean
   # Whether this post is publicly visible (outside of the groups it is posted to)
   isPublic: Boolean
+  # A strict proposal cannot be edited in all the ways a casual proposal can be
+  isStrictProposal: Boolean
   # Whether LinkPreview appears full size above post or smaller below
   linkPreviewFeatured: Boolean
   # Full location string
@@ -1654,16 +1657,22 @@ type Post {
   myEventResponse: String
   # The reactions of the logged-in user to this
   myReactions: [Reaction]
-  # Whether the logged-in user has upvoted the post or not
-  myVote: Boolean
   # Number of people that have one or more reactions to a post
   peopleReactedTotal: Int
   # Number of total reactions on the post
   postReactionsTotal: Int
   # Number of total "members" of the post. Used for Projects only right now
   postMembershipsTotal: Int
+  # A proposal's outcome: 'cancelled', 'quorum-not-met', 'in-progress', 'successful', 'tie'
+  proposalOutcome: String
+  # The status of a proposal post: 'discussion', 'voting', 'completed'
+  proposalStatus: String
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
+  # The type of proposal: 'single', 'multiple-unrestricted', 'majority', 'consensus'
+  votingMethod: String
+  # Percentage of all group members that must vote for a proposal to complete
+  quorum: Int
   # Number of total reactions on the post
   reactionsTotal: Int
   # Summary of reactions on the post
@@ -1678,11 +1687,9 @@ type Post {
   topicsTotal: Int
   # NOT USED RIGHT NOW
   totalContributions: Int
-  # Post type: 'discussion', 'event', 'offer', 'project', 'request', or 'resource'
+  # Post type: 'discussion', 'event', 'offer', 'project', 'proposal', 'request', or 'resource'
   type: String
   updatedAt: Date
-  # Number of upvotes on the post. DEPRECATED
-  votesTotal: Int
 
   # The attachments (images, videos or files) added to the post
   attachments(type: String): [Attachment]
@@ -1717,6 +1724,12 @@ type Post {
   # reactions to this post
   postReactions: [Reaction]
 
+  # For proposal posts, load all the different options that people can vote on.
+  proposalOptions: ProposalOptionQuerySet
+  
+  # Load all votes for a proposal post. Note: not a queryset; to avoid paginating votes
+  proposalVotes: ProposalVoteQuerySet
+
   # The topics that have been added to this post
   topics: [Topic]
 }
@@ -1748,6 +1761,31 @@ type PostUser {
 type Point {
   lat: String
   lng: String
+}
+
+type ProposalOption {
+  id: ID
+  postId: ID
+  # Required: The text of the proposal option
+  text: String
+  # Optional: The emoji for the proposal option
+  emoji: String
+  # Optional: The color for the proposal option
+  color: String
+}
+
+type ProposalVote {
+  id: ID
+  # The person who voted
+  userId: ID
+  # The post that the vote is for
+  postId: ID
+  # The option that the person voted for
+  optionId: ID
+  # timestamp of when the vote was created
+  createdAt: Date
+  # The person who voted
+  user: Person
 }
 
 # A question asked when someone is trying to join a group
@@ -1919,21 +1957,18 @@ type UserSettings {
   streamPostType: String
 }
 
-# An upvote on a post. DEPRECATED
-type Vote {
-  id: ID
-  createdAt: Date
-  # The Post being voted on
-  post: Post
-  # The Person doing the voting
-  voter: Person
+# Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
+type ProposalOptionQuerySet {
+  total: Int
+  hasMore: Boolean
+  items: [ProposalOption]
 }
 
 # Query Sets are used for pagination, returning the total # of results for a query along with the current set of items and whether there is more to load in the final set
-type VoteQuerySet {
+type ProposalVoteQuerySet {
   total: Int
   hasMore: Boolean
-  items: [Vote]
+  items: [ProposalVote]
 }
 
 # A widget is a block of styled content that appears in an Explore page for a group
@@ -1985,6 +2020,8 @@ type Mutation {
   addPeopleToProjectRole(peopleIds: [ID], projectRoleId: ID): GenericResult
   # Add a Post to a Collection
   addPostToCollection(collectionId: ID, postId: ID): GenericResult
+  # Add a rvote to a proposal
+  addProposalVote(postId: ID, optionId: ID): GenericResult
   # For a moderator to add a badge/role to a group to a member of a group
   addRoleToMember(
     groupRoleId: ID,
@@ -2132,6 +2169,8 @@ type Mutation {
   removePost(postId: ID, slug: String, groupId: ID): GenericResult
   # Remove a Post from a Collection, if you have permission to
   removePostFromCollection(collectionId: ID, postId: ID): GenericResult
+  # Remove a vote from a proposal
+  removeProposalVote(postId: ID, optionId: ID): GenericResult
   # Remove a badge/role from a member of a group, inititated by that member or by a group moderator
   removeRoleFromMember(groupRoleId: ID, groupId: ID, personId: ID): GenericResult
   # Remove a skill from your user profile
@@ -2167,8 +2206,12 @@ type Mutation {
   sendEmailVerification(email: String!): GenericResult,
   # Send a password reset email
   sendPasswordReset(email: String!): GenericResult,
+  # set options for a proposal
+  setProposalOptions(postId: ID, options: [ProposalOptionInput]): [ProposalOption]
   # Subscribe or unsubscribe to a Topic in a Group
   subscribe(groupId: ID, topicId: ID, isSubscribing: Boolean): GenericResult
+  # Swap votes on a proposal
+  swapProposalVote(postId: ID, addOptionId: ID, removeOptionId: ID): GenericResult
   # Unlink profile from previously linked social platform. Provider can be 'facebook', 'twitter', or 'linkedin'
   unlinkAccount(provider: String): GenericResult
   # Unblock a user
@@ -2206,6 +2249,10 @@ type Mutation {
   updateMembership(groupId: ID, slug: String, data: MembershipInput): Membership
   # Update a post you created
   updatePost(id: ID, data: PostInput): Post
+  # update options for a proposal
+  updateProposalOptions(postId: ID, options: [ProposalOptionInput]): [ProposalOption]
+  # update the outcome of a proposal
+  updateProposalOutcome(postId: ID, proposalOutcome: String): GenericResult
   # NOT USED RIGHT NOW
   updateStripeAccount(accountId: String): GenericResult
   # Update settings for a GroupWidget
@@ -2680,8 +2727,12 @@ input PostInput {
   groupIds: [ID]
   # URLs of images in the post
   imageUrls: [String]
+  # Whether who votes on this proposal is visible or not
+  isAnonymousVote: Boolean
   # Whether this post is publicly visible (outside of the groups it is posted to)
   isPublic: Boolean
+  # A strict proposal cannot be edited in all the ways a casual proposal can be
+  isStrictProposal: Boolean
   # ID of a LinkPreview to show in the post
   linkPreviewId: String
   # Whether LinkPreview appears full size above post or smaller below
@@ -2694,6 +2745,12 @@ input PostInput {
   memberIds: [ID]
   # Link to a project management tool or service. Only used for Projects right now
   projectManagementLink: String
+  # The options for this proposal
+  proposalOptions: [ProposalOptionInput]
+  # The type of proposal: 'poll', 'survey', 'vote', or 'proposal'
+  votingMethod: String
+  # Percentage of all group members that must vote for a proposal to complete
+  quorum: Int
   # When this post "starts". Used for events, resources, projects, requests and offers right now
   startTime: Date
   # The timezone of the post
@@ -2702,8 +2759,18 @@ input PostInput {
   title: String
   # Topics to add to the post
   topicNames: [String]
-  # Post type: 'discussion', 'event', 'offer', 'project', 'request', or 'resource'
+  # Post type: 'discussion', 'event', 'offer', 'project', 'proposal', 'request', or 'resource'
   type: String
+}
+
+input ProposalOptionInput {
+  id: ID
+  # Required: Title of the option
+  text: String
+  # Optional: emoji to represent the option
+  emoji: String
+  # Optional: hexcode color to represent the option
+  color: String
 }
 
 # A Question to be asked before joining a Group

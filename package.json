@@ -2,10 +2,10 @@
   "name": "hylo-node",
   "description": "Hylo Server",
   "keywords": [],
-  "author": "Tibet Sprague <tibet@hylo.com>",
-  "license": "GNU AFFERO GENERAL PUBLIC LICENSE v3",
+  "author": "Hylo <hello@hylo.com>",
+  "license": "Apache-2.0",
   "private": true,
-  "version": "5.7.1",
+  "version": "5.8.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/Hylozoic/hylo-node.git"
@@ -229,6 +229,8 @@
       "PostUser",
       "ProjectRole",
       "ProjectContributions",
+      "ProposalOption",
+      "ProposalVote",
       "PushNotification",
       "Question",
       "Queue",
