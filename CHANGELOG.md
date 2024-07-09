@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [5.8.0] - 2024-07-03
+
+### Added
+- New post type: Proposals! Use these to propose ideas, projects, decisions, or anything else to your group. Proposals can be voted on, and have a status that can be updated by the proposer.
+
+### Fixed
+- Deleting user accounts
+
 ## [5.7.1] - 2024-02-20
 
 ## Added
