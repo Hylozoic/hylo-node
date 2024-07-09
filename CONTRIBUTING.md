@@ -1,0 +1,1 @@
+Please check out the [contrbution guide in the EVO](https://github.com/Hylozoic/hylo-evo/blob/dev/CONTRIBUTING.md) repo for more details
