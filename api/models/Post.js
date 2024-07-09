@@ -3,6 +3,7 @@
 import data from '@emoji-mart/data'
 import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
+import format from 'pg-format'
 import { flatten, sortBy } from 'lodash'
 import { TextHelpers } from 'hylo-shared'
 import fetch from 'node-fetch'
@@ -338,17 +339,28 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   async setProposalOptions ({ options = [], userId, opts = {} }) {
     const trxOpts = { require: false, ...opts }
-    return bookshelf.knex.raw(`BEGIN;
 
-      DELETE FROM proposal_options
-      WHERE post_id = ${this.id};
+    const deleteQuery = format('DELETE FROM proposal_options WHERE post_id = %L', this.id)
 
-      INSERT INTO proposal_options (post_id, text, color, emoji)
-      VALUES
-        ${options.map(option => `(${this.id}, '${option.text}', '${option.color || ''}', '${option.emoji || ''}')`).join(', ')}
-      RETURNING id;
+    const insertValues = options.map(option => {
+      return [
+        this.id,
+        option.text,
+        option.color || '',
+        option.emoji || ''
+      ]
+    })
 
-      COMMIT;`).transacting(trxOpts)
+    const insertQuery = format('INSERT INTO proposal_options (post_id, text, color, emoji) VALUES %L RETURNING id', insertValues)
+
+    const fullQuery = `
+    BEGIN;
+    ${deleteQuery};
+    ${insertQuery};
+    COMMIT;
+`
+
+    return bookshelf.knex.raw(fullQuery).transacting(trxOpts)
   },
 
   async swapProposalVote ({ userId, removeOptionId, addOptionId }) {
