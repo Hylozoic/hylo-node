@@ -5,7 +5,7 @@
   "author": "Hylo <hello@hylo.com>",
   "license": "Apache-2.0",
   "private": true,
-  "version": "5.7.1",
+  "version": "5.8.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/Hylozoic/hylo-node.git"
@@ -137,6 +137,7 @@
     "peekalink": "^1.0.3",
     "performance-now": "^2.1.0",
     "pg": "^8.4.1",
+    "pg-format": "^1.0.4",
     "pluralize": "^8.0.0",
     "pretty-data": "^0.40.0",
     "promirepl": "^1.0.1",
