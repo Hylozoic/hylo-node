@@ -194,7 +194,19 @@ module.exports = bookshelf.Model.extend(merge({
 
   stewards () {
     return this.members().query(q => {
-      q.whereRaw('exists (select * from group_memberships_common_roles inner join common_roles_responsibilities on common_roles_responsibilities.common_role_id = group_memberships_common_roles.common_role_id where common_roles_responsibilities.responsibility_id IN (1, 3, 4) and group_memberships_common_roles.user_id = users.id and group_memberships_common_roles.group_id = group_memberships.group_id)')
+      q.whereRaw(`(exists (
+        select * from group_memberships_common_roles
+        inner join common_roles_responsibilities on common_roles_responsibilities.common_role_id = group_memberships_common_roles.common_role_id
+        where common_roles_responsibilities.responsibility_id IN (1, 3, 4)
+          and group_memberships_common_roles.user_id = users.id
+          and group_memberships_common_roles.group_id = group_memberships.group_id
+      ) or exists (
+        select * from group_memberships_group_roles
+        inner join group_roles_responsibilities on group_roles_responsibilities.group_role_id = group_memberships_group_roles.group_role_id
+        where group_roles_responsibilities.responsibility_id IN (1, 3, 4)
+          and group_memberships_group_roles.user_id = users.id
+          and group_memberships_group_roles.group_id = group_memberships.group_id
+      ))`)
     })
   },
 
@@ -809,13 +821,13 @@ module.exports = bookshelf.Model.extend(merge({
     const group = await groupFilter(fromUserId)(Group.where({ id: groupId })).fetch()
     // TODO: ADD RESP TO THIS ONE
     if (group) {
-      const moderators = await group.stewards().fetch()
-      if (moderators.length > 0) {
+      const stewards = await group.stewards().fetch()
+      if (stewards.length > 0) {
         // HACK: add user_connection row so that the people can see each other even though they are not in the same group
-        moderators.forEach(async (m) => {
+        stewards.forEach(async (m) => {
           await UserConnection.create(fromUserId, m.id, UserConnection.Type.MESSAGE)
         })
-        const thread = await findOrCreateThread(fromUserId, moderators.map(m => m.id))
+        const thread = await findOrCreateThread(fromUserId, stewards.map(m => m.id))
         return thread.id
       }
     }
