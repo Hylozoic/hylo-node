@@ -72,7 +72,7 @@
     "@sailshq/socket.io-redis": "^5.2.0",
     "analytics-node": "^1.2.0",
     "apple-signin-auth": "^1.2.1",
-    "async-repl": "ownadi/async-repl",
+    "async-repl": "0.4.0",
     "autolinker": "^4.0.0",
     "aws-sdk": "^2.1565.0",
     "bcrypt": "^5.0.1",
