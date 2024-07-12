@@ -10,6 +10,7 @@ async function getStewardedGroup (userId, groupId, additionalResponsibility = ''
   if (!group) {
     throw new GraphQLYogaError('Group not found')
   }
+
   const isSteward = await GroupMembership.hasResponsibility(userId, group, additionalResponsibility, opts)
   if (!isSteward) {
     throw new GraphQLYogaError("You don't have the right responsibilities for this group")
@@ -139,7 +140,7 @@ export async function inviteGroupToGroup (userId, fromId, toId, type, questionAn
   }
 
   // If current user is an administrator of both the from group and the to group they can automatically join the groups together
-  if (await GroupMembership.getStewardedGroup(userId, toGroup, Responsibility.constants.RESP_ADMINISTRATION)) {
+  if (await GroupMembership.hasResponsibility(userId, toGroup, Responsibility.constants.RESP_ADMINISTRATION, opts)) {
     if (type === GroupRelationshipInvite.TYPE.ParentToChild) {
       return { success: true, groupRelationship: await fromGroup.addChild(toGroup, opts) }
     } if (type === GroupRelationshipInvite.TYPE.ChildToParent) {

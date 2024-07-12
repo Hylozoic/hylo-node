@@ -217,6 +217,7 @@
       "GroupRole",
       "GroupRoleResponsibility",
       "GroupTag",
+      "GroupToGroupJoinRequestQuestionAnswer",
       "GroupWidget",
       "Invitation",
       "JoinRequest",
