@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.2
--- Dumped by pg_dump version 14.2
+-- Dumped from database version 14.12 (Postgres.app)
+-- Dumped by pg_dump version 14.12 (Postgres.app)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -234,7 +234,8 @@ CREATE TABLE public.comments (
     deactivated_at timestamp with time zone,
     recent boolean,
     created_from character varying(255),
-    comment_id bigint
+    comment_id bigint,
+    edited_at timestamp with time zone
 );
 
 
@@ -1819,7 +1820,8 @@ CREATE TABLE public.posts (
     proposal_outcome text,
     voting_method text,
     anonymous_voting text,
-    proposal_vote_limit integer
+    proposal_vote_limit integer,
+    edited_at timestamp with time zone
 );
 
 
