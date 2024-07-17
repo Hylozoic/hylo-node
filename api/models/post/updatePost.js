@@ -1,13 +1,14 @@
 const { GraphQLYogaError } = require('@graphql-yoga/node')
 import setupPostAttrs from './setupPostAttrs'
 import updateChildren from './updateChildren'
+import { isEqual } from 'lodash'
 import {
   updateGroups,
   updateAllMedia,
   updateFollowers
 } from './util'
 
-export default function updatePost (userId, id, params) {
+export default async function updatePost (userId, id, params) {
   if (!id) throw new GraphQLYogaError('updatePost called with no ID')
   return setupPostAttrs(userId, params)
     .then(attrs => bookshelf.transaction(transacting =>
@@ -25,6 +26,10 @@ export default function updatePost (userId, id, params) {
         ]
         if (!updatableTypes.includes(post.get('type'))) {
           throw new GraphQLYogaError("This post can't be modified")
+        }
+
+        if (!isEqual(post.details(), params.description) || !isEqual(post.title(), params.name)) {
+          attrs.edited_at = new Date()
         }
 
         return post.save(attrs, { patch: true, transacting })

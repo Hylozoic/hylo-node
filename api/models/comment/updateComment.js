@@ -1,5 +1,5 @@
 const { GraphQLYogaError } = require('@graphql-yoga/node')
-import { difference, uniq } from 'lodash'
+import { difference, uniq, isEqual } from 'lodash'
 import { updateMedia } from './util'
 
 export default async function updateComment (commenterId, id, params) {
@@ -16,6 +16,10 @@ export default async function updateComment (commenterId, id, params) {
   const mentioned = RichText.getUserMentions(text)
   const existingFollowers = await post.followers().fetch().then(f => f.pluck('id'))
   const newFollowers = difference(uniq(mentioned.concat(commenterId)), existingFollowers)
+
+  if (!isEqual(comment.text(), params.text)) {
+    attrs.edited_at = new Date()
+  }
 
   return bookshelf.transaction(trx =>
     comment.save(attrs, {transacting: trx})
