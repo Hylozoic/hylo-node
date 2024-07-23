@@ -338,8 +338,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async setProposalOptions ({ options = [], userId, opts = {} }) {
-    const trxOpts = { require: false, ...opts }
-
+    opts.transacting ||= { transacting: false }
     const deleteQuery = format('DELETE FROM proposal_options WHERE post_id = %L', this.id)
 
     const insertValues = options.map(option => {
@@ -359,8 +358,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
     ${insertQuery};
     COMMIT;
 `
-
-    return bookshelf.knex.raw(fullQuery).transacting(trxOpts)
+    return bookshelf.knex.raw(fullQuery).transacting(opts.transacting)
   },
 
   async swapProposalVote ({ userId, removeOptionId, addOptionId }) {
@@ -377,8 +375,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Promise.map(existingFollowers.models, postUser => postUser.updateAndSave(updatedAttribs, { transacting }))
   },
 
-  async updateProposalOptions ({ options = [], userId, opts = { } }) {
-    const existingOptions = await this.proposalOptions().fetch({ transaction: opts.transacting, require: false })
+  async updateProposalOptions ({ options = [], userId, opts = {} }) {
+    opts.transacting ||= { transacting: false }
+    const existingOptions = await this.proposalOptions().fetch({ transacting: opts.transacting, require: false })
     const existingOptionIds = existingOptions.pluck('id')
 
     // Add activities for vote reset
@@ -392,7 +391,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         DELETE FROM proposal_votes
         WHERE option_id IN (${existingOptionIds.join(', ')});
       `
-      await bookshelf.knex.raw(deleteVotesQuery).transacting({ transaction: opts.transacting, require: false })
+      await bookshelf.knex.raw(deleteVotesQuery).transacting(opts.transacting)
     }
     // Delete all options and start fresh
     if (options.length > 0 && existingOptionIds.length > 0) {
@@ -400,7 +399,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         DELETE FROM proposal_options
         WHERE id IN (${existingOptionIds.join(', ')});
       `
-      await bookshelf.knex.raw(deleteQuery).transacting({ transaction: opts.transacting, require: false })
+      await bookshelf.knex.raw(deleteQuery).transacting(opts.transacting)
     }
 
     // Execute the insert query for options passed in
@@ -409,7 +408,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         INSERT INTO proposal_options (post_id, text, color, emoji)
         VALUES ${options.map(option => `(${this.id}, '${option.text}', '${option.color}', '${option.emoji}')`).join(', ')};
       `
-      await bookshelf.knex.raw(insertQuery).transacting({ transaction: opts.transacting, require: false })
+      await bookshelf.knex.raw(insertQuery).transacting(opts.transacting)
     }
 
     // Return a resolved promise

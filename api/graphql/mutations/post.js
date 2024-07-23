@@ -104,7 +104,7 @@ export async function updateProposalOptions ({ userId, postId, options }) {
   return Post.find(postId)
     .then(post => {
       if (post.get('proposal_status') === Post.Proposal_Status.COMPLETED && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError("Proposal options cannot be changed once a proposal is complete'")
-      return post.updateProposalOptions({ options, userId, opts: { transacting: null, require: false } })
+      return post.updateProposalOptions({ options, userId })
     })
     .catch((err) => { throw new GraphQLYogaError(`setting of options failed: ${err}`) })
     .then(() => ({ success: true }))
