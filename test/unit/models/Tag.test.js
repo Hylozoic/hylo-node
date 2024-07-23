@@ -201,43 +201,43 @@ describe('Tag', () => {
   })
 
   describe('.taggedPostCount', () => {
-    var t1, p1, p2, c
+    let t1, p1, p2, c
 
-    beforeEach(() => {
+    beforeEach(async () => {
       const k = bookshelf.knex
-      t1 = new Tag({name: 't1'})
+      t1 = await Tag.findOrCreate('t1')
       p1 = factories.post()
-      p2 = factories.post({active: false})
+      p2 = factories.post({ active: false })
       c = factories.group()
 
-      return Promise.all([t1, p1, p2, c].map(x => x.save()))
-      .then(() => Promise.all([
-        k('posts_tags').insert({tag_id: t1.id, post_id: p1.id}),
-        k('posts_tags').insert({tag_id: t1.id, post_id: p2.id}),
-        k('groups_posts').insert({group_id: c.id, post_id: p1.id}),
-        k('groups_posts').insert({group_id: c.id, post_id: p2.id}),
-        k('groups_tags').insert({tag_id: t1.id, group_id: c.id})
-      ]))
+      return Promise.all([p1, p2, c].map(x => x.save()))
+        .then(() => Promise.all([
+          k('posts_tags').insert({ tag_id: t1.id, post_id: p1.id }),
+          k('posts_tags').insert({tag_id: t1.id, post_id: p2.id}),
+          k('groups_posts').insert({group_id: c.id, post_id: p1.id}),
+          k('groups_posts').insert({group_id: c.id, post_id: p2.id}),
+          k('groups_tags').insert({tag_id: t1.id, group_id: c.id})
+        ]))
     })
 
     it("doesn't count inactive posts in the count", function () {
       return Tag.taggedPostCount(t1.id)
-      .then(count => {
-        expect(count).to.equal(1)
-      })
+        .then(count => {
+          expect(count).to.equal(1)
+        })
     })
   })
 
   describe('.followersCount', () => {
     let t1, g1, c2
 
-    beforeEach(() => {
+    beforeEach(async () => {
       const k = bookshelf.knex
-      t1 = new Tag({name: 't1'})
+      t1 = await Tag.findOrCreate('t1')
       g1 = factories.group()
       c2 = factories.group()
 
-      return Promise.all([t1, g1, c2].map(x => x.save()))
+      return Promise.all([g1, c2].map(x => x.save()))
       .then(() => Promise.all([
         k('groups_tags').insert({tag_id: t1.id, group_id: g1.id}),
         k('tag_follows').insert({tag_id: t1.id, group_id: g1.id, user_id: u.id})

@@ -82,7 +82,7 @@ NOTE: you will want to pass _either_ a slug _or_ an id to query by. If you pass 
 }
 ```
 
-Example GraphQL mutation: __Updating a Group__ (only will succeed on groups that the user is a moderator of)
+Example GraphQL mutation: __Updating a Group__ (only will succeed on groups that the user is an administrator of)
 ```
 {
   "query": "mutation ($id: ID, $changes: GroupInput) { updateGroup(id: $id, changes: $changes) { id name slug } }",
@@ -204,8 +204,8 @@ Example GraphQL mutation:
               }
           }
       ],
-      "moderatorDescriptor": "Steward", // Default is Moderator
-      "moderatorDescriptorPlural": "Stewards", // Default is Moderators
+      "stewardDescriptor": "Steward", // Default is Steward
+      "stewardDescriptorPlural": "Stewards", // Default is Stewards
       "settings": {
         locationDisplayPrecision: precise, //   precise => precise location displayed, near => location text shows nearby town/city and coordinate shifted, region => location not shown on map at all and location text shows nearby city/region
         publicMemberDirectory: false, // Boolean

@@ -38,7 +38,7 @@ describe('PostController', () => {
   after(() => nock.enableNetConnect())
 
   describe('.createFromEmailForm', () => {
-    before(() => Tag.forge({name: 'request'}).save())
+    before(() => Tag.findOrCreate('request'))
 
     it('works', () => {
       Object.assign(req.params, {
@@ -53,20 +53,20 @@ describe('PostController', () => {
       }
 
       return PostController.createFromEmailForm(req, res)
-      .then(() => {
-        const postId = res.redirected.match(/post\/(\d+)/)[1]
-        return Post.find(postId, {withRelated: ['tags', 'groups']})
-      })
-      .then(post => {
-        expect(post.get('name')).to.equal("I'm looking for a penguin")
-        expect(post.details()).to.equal('I just love the tuxedo')
-        expect(post.get('user_id')).to.equal(fixtures.u1.id)
-        expect(post.get('created_from')).to.equal('email_form')
-        const tag = post.relations.tags.first()
-        expect(tag.get('name')).to.equal('request')
-        const group = post.relations.groups.first()
-        expect(group.id).to.equal(fixtures.g1.id)
-      })
+        .then(() => {
+          const postId = res.redirected.match(/post\/(\d+)/)[1]
+          return Post.find(postId, {withRelated: ['tags', 'groups']})
+        })
+        .then(post => {
+          expect(post.get('name')).to.equal("I'm looking for a penguin")
+          expect(post.details()).to.equal('I just love the tuxedo')
+          expect(post.get('user_id')).to.equal(fixtures.u1.id)
+          expect(post.get('created_from')).to.equal('email_form')
+          const tag = post.relations.tags.first()
+          expect(tag.get('name')).to.equal('request')
+          const group = post.relations.groups.first()
+          expect(group.id).to.equal(fixtures.g1.id)
+        })
     })
 
     describe('for an inactive group', () => {
@@ -90,14 +90,14 @@ describe('PostController', () => {
         }
 
         return PostController.createFromEmailForm(req, res)
-        .then(() => {
-          expect(res.redirected).to.exist
-          const url = require('url').parse(res.redirected, true)
-          expect(url.query).to.deep.equal({
-            notification: 'Your post was not created. That group no longer exists.',
-            error: '1'
+          .then(() => {
+            expect(res.redirected).to.exist
+            const url = require('url').parse(res.redirected, true)
+            expect(url.query).to.deep.equal({
+              notification: 'Your post was not created. That group no longer exists.',
+              error: '1'
+            })
           })
-        })
       })
     })
   })

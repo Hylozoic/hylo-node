@@ -3,7 +3,7 @@ const setup = require(root('test/setup'))
 const factories = require(root('test/setup/factories'))
 
 describe('TagFollow', () => {
-  var tag, group, user, attrs
+  let tag, group, user, attrs
 
   beforeEach(async function () {
     await setup.clearDb()
@@ -20,34 +20,34 @@ describe('TagFollow', () => {
   describe('#toggle', () => {
     it("creates a TagFollow when there isn't one", () => {
       return TagFollow.toggle(tag.id, user.id, group.id)
-      .then(() => TagFollow.where(attrs).fetch())
-      .then(tagFollow => {
-        expect(tagFollow).to.exist
-      })
+        .then(() => TagFollow.where(attrs).fetch())
+        .then(tagFollow => {
+          expect(tagFollow).to.exist
+        })
     })
 
     it('deletes a TagFollow when there is one', () => {
       return new TagFollow(attrs).save()
-      .then(() => TagFollow.toggle(tag.id, user.id, group.id))
-      .then(() => TagFollow.where(attrs).fetch())
-      .then(tagFollow => {
-        expect(tagFollow).not.to.exist
-      })
+        .then(() => TagFollow.toggle(tag.id, user.id, group.id))
+        .then(() => TagFollow.where(attrs).fetch())
+        .then(tagFollow => {
+          expect(tagFollow).not.to.exist
+        })
     })
   })
 
   describe('#subscribe', () => {
     it("creates a TagFollow when there isn't one only if isSubscribing", () => {
       return TagFollow.subscribe(tag.id, user.id, group.id, false)
-      .then(() => TagFollow.where(attrs).fetch())
-      .then(tagFollow => {
-        expect(tagFollow).not.to.exist
-      })
-      .then(() => TagFollow.subscribe(tag.id, user.id, group.id, true))
-      .then(() => TagFollow.where(attrs).fetch())
-      .then(tagFollow => {
-        expect(tagFollow).to.exist
-      })
+        .then(() => TagFollow.where(attrs).fetch())
+        .then(tagFollow => {
+          expect(tagFollow).not.to.exist
+        })
+        .then(() => TagFollow.subscribe(tag.id, user.id, group.id, true))
+        .then(() => TagFollow.where(attrs).fetch())
+        .then(tagFollow => {
+          expect(tagFollow).to.exist
+        })
     })
 
     it('deletes a TagFollow when there is one only if not isSubscribing', () => {

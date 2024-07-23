@@ -19,20 +19,20 @@ export async function createJoinRequest (userId, groupId, questionAnswers = []) 
         return { request }
       })
   } else {
-    throw new GraphQLYogaError(`Invalid parameters to create join request`)
+    throw new GraphQLYogaError('Invalid parameters to create join request')
   }
 }
 
 export async function acceptJoinRequest (userId, joinRequestId) {
   const joinRequest = await JoinRequest.find(joinRequestId)
   if (joinRequest) {
-    if (await GroupMembership.hasModeratorRole(userId, joinRequest.get('group_id'))) {
+    if (await GroupMembership.hasResponsibility(userId, joinRequest.get('group_id'), Responsibility.constants.RESP_ADD_MEMBERS)) {
       return joinRequest.accept(userId)
     } else {
-      throw new GraphQLYogaError(`You do not have permission to do this`)
+      throw new GraphQLYogaError('You do not have permission to accept a join request')
     }
   } else {
-    throw new GraphQLYogaError(`Invalid parameters to accept join request`)
+    throw new GraphQLYogaError('Invalid parameters to accept join request')
   }
 }
 
@@ -43,23 +43,23 @@ export async function cancelJoinRequest (userId, joinRequestId) {
       await joinRequest.save({ status: JoinRequest.STATUS.Canceled })
       return { success: true }
     } else {
-      throw new GraphQLYogaError(`You do not have permission to do this`)
+      throw new GraphQLYogaError('You do not have permission to do this')
     }
   } else {
-    throw new GraphQLYogaError(`Invalid parameters to cancel join request`)
+    throw new GraphQLYogaError('Invalid parameters to cancel join request')
   }
 }
 
 export async function declineJoinRequest (userId, joinRequestId) {
   const joinRequest = await JoinRequest.find(joinRequestId)
   if (joinRequest) {
-    if (await GroupMembership.hasModeratorRole(userId, joinRequest.get('group_id'))) {
+    if (await GroupMembership.hasResponsibility(userId, joinRequest.get('group_id'), Responsibility.constants.RESP_ADD_MEMBERS)) {
       await joinRequest.save({ status: JoinRequest.STATUS.Rejected })
       return joinRequest
     } else {
-      throw new GraphQLYogaError(`You do not have permission to do this`)
+      throw new GraphQLYogaError('You do not have permission to do this')
     }
   } else {
-    throw new GraphQLYogaError(`Invalid parameters to decline join request`)
+    throw new GraphQLYogaError('Invalid parameters to decline join request')
   }
 }

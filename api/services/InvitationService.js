@@ -10,7 +10,7 @@ module.exports = {
       if (!invitation) throw new GraphQLYogaError('Invitation not found')
       const { group } = invitation.relations
       const user = await User.find(userId)
-      return user.get('email') === invitation.get('email') || GroupMembership.hasModeratorRole(userId, group)
+      return user.get('email') === invitation.get('email') || (GroupMembership.hasResponsibility(userId, group, Responsibility.constants.RESP_ADD_MEMBERS))
     })
   },
 

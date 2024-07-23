@@ -16,6 +16,23 @@ module.exports = bookshelf.Model.extend(Object.assign({
       .withPivot(['accepted'])
   },
 
+  commonRoles () {
+    return this.belongsToMany(CommonRole, 'group_memberships_common_roles', 'group_id', 'common_role_id', 'group_id' )
+      .through(MemberCommonRole, 'group_id', 'common_role_id')
+      .where({ user_id: this.get('user_id'), group_id: this.get('group_id') })
+      .withPivot(['group_id'])
+  },
+
+  membershipCommonRoles () {
+    return this.hasMany(MemberCommonRole, 'group_id', 'group_id')
+      .where({ user_id: this.get('user_id') })
+  },
+
+  membershipGroupRoles () {
+    return this.hasMany(MemberGroupRole, 'group_id', 'group_id')
+      .where({ user_id: this.get('user_id') })
+  },
+
   group () {
     return this.belongsTo(Group)
   },
@@ -28,8 +45,13 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return this.belongsTo(User)
   },
 
-  hasRole (role) {
-    return Number(role) === this.get('role')
+  // TODO: update/fix/remove this yeah once mobile app has switched to new roles/responsibilities
+  async hasRole (role) {
+    if (role === GroupMembership.Role.MODERATOR) {
+      const result = await bookshelf.knex.raw(`SELECT 1 FROM group_memberships_common_roles WHERE user_id = ${this.get('user_id')} AND group_id = ${this.get('group_id')} AND common_role_id = 1 LIMIT 1`)
+      return result.rows.length > 0
+    }
+    return false
   },
 
   async acceptAgreements (transacting) {
@@ -58,6 +80,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
       } else {
         this.set(key, attrs[key])
       }
+    }
+    if (attrs.role === 0 || attrs.role === 1) {
+      await MemberCommonRole.updateCoordinatorRole({ userId: this.get('user_id'), groupId: this.get('group_id'), role: attrs.role, transacting })
     }
 
     if (!isEmpty(this.changed)) return this.save(null, {transacting})
@@ -107,11 +132,31 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return !!gm && gm.get('active')
   },
 
-  async hasModeratorRole (userOrId, groupOrId, opts) {
-    const gm = await this.forPair(userOrId, groupOrId).fetch(opts)
-    return gm && gm.hasRole(this.Role.MODERATOR)
+  async hasResponsibility (userOrId, groupOrId, responsibility, opts = {}) {
+    const userId = userOrId instanceof User ? userOrId.id : userOrId
+    const groupId = groupOrId instanceof Group ? groupOrId.id : groupOrId
+    if (!userId) {
+      throw new Error("Can't call forPair without a user or user id")
+    }
+    if (!groupId) {
+      throw new Error("Can't call forPair without a group or group id")
+    }
+    if (responsibility.length === 0) {
+      throw new Error("Can't determine what responsibility is being checked")
+    }
+
+    const gm = await this.forPair(userOrId, groupId).fetch(opts)
+
+    // TODO: simplify by fetching by responsibility id, for the common ones?
+    const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, groupId)
+
+    if (gm && !responsibilities.includes(responsibility)) {
+      return false
+    }
+    return !!gm
   },
 
+  // TODO: are these used?
   async setModeratorRole (userId, group) {
     return group.addMembers([userId], { role: this.Role.MODERATOR })
   },

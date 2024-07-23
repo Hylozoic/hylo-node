@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-expressions */
 import { spyify, unspyify } from '../../setup/helpers'
 import { sortBy } from 'lodash/fp'
-var root = require('root-path')
-var setup = require(root('test/setup'))
-var factories = require(root('test/setup/factories'))
+const root = require('root-path')
+const setup = require(root('test/setup'))
+const factories = require(root('test/setup/factories'))
 
 describe('Invitation', function () {
   before(() => setup.clearDb())
@@ -15,13 +15,13 @@ describe('Invitation', function () {
   })
 
   describe('#use', function () {
-    let user, group, tag, invitation1, invitation2, inviter
+    let user, group, tag, invitation1, invitation2, inviter, cr
 
     before(async () => {
       inviter = await factories.user().save()
       user = await factories.user().save()
       group = await factories.group().save()
-      tag = await new Tag({name: 'taginvitationtest'}).save()
+      tag = await new Tag({ name: 'taginvitationtest' }).save()
       invitation1 = await Invitation.create({
         userId: inviter.id,
         groupId: group.id,
@@ -41,18 +41,18 @@ describe('Invitation', function () {
       await bookshelf.transaction(trx => invitation1.use(user.id, { transacting: trx }))
       expect(invitation1.get('used_by_id')).to.equal(user.id)
       expect(invitation1.get('used_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
-      const isModerator = await GroupMembership.hasModeratorRole(user, group)
-      expect(isModerator).to.be.true
+      const hasAdministration = await GroupMembership.hasResponsibility(user, group, Responsibility.constants.RESP_ADMINISTRATION)
+      expect(hasAdministration).to.be.true
     })
 
     it('creates a tag_follow when it has a tag_id', function () {
-      return bookshelf.transaction(trx => invitation2.use(user.id, {transacting: trx}))
-      .then(TagFollow.where({
-        user_id: user.id,
-        group_id: group.id,
-        tag_id: tag.id
-      }).fetch())
-      .then(tagFollow => expect(tagFollow).to.exist)
+      return bookshelf.transaction(trx => invitation2.use(user.id, { transacting: trx }))
+        .then(TagFollow.where({
+          user_id: user.id,
+          group_id: group.id,
+          tag_id: tag.id
+        }).fetch())
+        .then(tagFollow => expect(tagFollow).to.exist)
     })
   })
 

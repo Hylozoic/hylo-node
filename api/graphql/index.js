@@ -7,11 +7,13 @@ import mixpanel from '../../lib/mixpanel'
 import {
   acceptGroupRelationshipInvite,
   acceptJoinRequest,
+  addGroupResponsibility,
   addGroupRole,
   addMember,
   addModerator,
   addPeopleToProjectRole,
   addPostToCollection,
+  addResponsibilityToRole,
   addProposalVote,
   addRoleToMember,
   addSkill,
@@ -42,6 +44,7 @@ import {
   deleteComment,
   deleteGroup,
   deleteGroupRelationship,
+  deleteGroupResponsibility,
   deleteGroupTopic,
   deletePost,
   deleteProjectRole,
@@ -63,7 +66,7 @@ import {
   logout,
   markActivityRead,
   markAllActivitiesRead,
-  messageGroupModerators,
+  messageGroupStewards,
   pinPost,
   processStripeToken,
   reactOn,
@@ -79,6 +82,7 @@ import {
   removeModerator,
   removePost,
   removePostFromCollection,
+  removeResponsibilityFromRole,
   removeRoleFromMember,
   removeProposalVote,
   removeSkill,
@@ -96,6 +100,7 @@ import {
   unlinkAccount,
   updateComment,
   updateGroup,
+  updateGroupResponsibility,
   updateGroupRole,
   updateGroupTopic,
   updateGroupTopicFollow,
@@ -215,6 +220,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
       InvitationService.check(invitationToken, accessCode),
     collection: (root, { id }) => fetchOne('Collection', id),
     comment: (root, { id }) => fetchOne('Comment', id),
+    commonRoles: (root, args) => CommonRole.fetchAll(args),
     connections: (root, args) => fetchMany('PersonConnection', args),
     group: async (root, { id, slug, updateLastViewed }) => {
       // you can specify id or slug, but not both
@@ -254,6 +260,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     person: (root, { id, email }) => fetchOne('Person', id || email, id ? 'id' : 'email'),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
+    responsibilities: (root, args) => Responsibility.fetchAll(args),
     savedSearches: (root, args) => fetchMany('SavedSearch', args),
     search: (root, args) => {
       if (!args.first) args.first = 20
@@ -296,6 +303,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     acceptJoinRequest: (root, { joinRequestId }) => acceptJoinRequest(userId, joinRequestId),
 
+    addGroupResponsibility: (root, { groupId, title, description }) => addGroupResponsibility({ userId, groupId, title, description }),
+
     addGroupRole: (root, { groupId, color, name, description, emoji }) => addGroupRole({ userId, groupId, color, name, description, emoji }),
 
     addModerator: (root, { personId, groupId }) =>
@@ -309,7 +318,10 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     addProposalVote: (root, { postId, optionId }) => addProposalVote({ userId, postId, optionId }),
 
-    addRoleToMember: (root, { personId, groupRoleId, groupId }) => addRoleToMember({ userId, personId, groupRoleId, groupId }),
+    addResponsibilityToRole: (root, { responsibilityId, roleId, groupId }) =>
+      addResponsibilityToRole({ userId, responsibilityId, roleId, groupId }),
+
+    addRoleToMember: (root, { personId, roleId, groupId, isCommonRole = false }) => addRoleToMember({ userId, personId, roleId, groupId, isCommonRole }),
 
     addSkill: (root, { name }) => addSkill(userId, name),
     addSkillToLearn: (root, { name }) => addSkillToLearn(userId, name),
@@ -366,6 +378,9 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     deleteGroupRelationship: (root, { parentId, childId }) => deleteGroupRelationship(userId, parentId, childId),
 
+    deleteGroupResponsibility: (root, { responsibilityId, groupId }) =>
+      deleteGroupResponsibility({ userId, responsibilityId, groupId }),
+
     deleteGroupTopic: (root, { id }) => deleteGroupTopic(userId, id),
 
     deleteMe: (root) => deleteUser({ sessionId, userId }),
@@ -408,7 +423,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     markAllActivitiesRead: (root) => markAllActivitiesRead(userId),
 
-    messageGroupModerators: (root, { groupId }) => messageGroupModerators(userId, groupId),
+    messageGroupStewards: (root, { groupId }) => messageGroupStewards(userId, groupId),
 
     pinPost: (root, { postId, groupId }) =>
       pinPost(userId, postId, groupId),
@@ -445,9 +460,11 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     removePostFromCollection: (root, { collectionId, postId }) =>
       removePostFromCollection(userId, collectionId, postId),
 
-    removeProposalVote: (root, { postId, optionId }) => removeProposalVote({ userId, postId, optionId }),
+    removeResponsibilityFromRole: (root, { roleResponsibilityId, groupId }) =>
+      removeResponsibilityFromRole({ userId, roleResponsibilityId, groupId }),
 
-    removeRoleFromMember: (root, { groupRoleId, personId, groupId }) => removeRoleFromMember({ groupRoleId, personId, userId, groupId }),
+    removeRoleFromMember: (root, { roleId, personId, groupId, isCommonRole }) => removeRoleFromMember({ roleId, personId, userId, groupId, isCommonRole }),
+    removeProposalVote: (root, { postId, optionId }) => removeProposalVote({ userId, postId, optionId }),
 
     removeSkill: (root, { id, name }) => removeSkill(userId, id || name),
     removeSkillToLearn: (root, { id, name }) => removeSkillToLearn(userId, id || name),
@@ -478,6 +495,9 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     unlinkAccount: (root, { provider }) =>
       unlinkAccount(userId, provider),
+
+    updateGroupResponsibility: (root, { groupId, responsibilityId, title, description }) =>
+      updateGroupResponsibility({ userId, groupId, responsibilityId, title, description }),
 
     updateGroupRole: (root, { groupRoleId, color, name, description, emoji, active, groupId }) =>
       updateGroupRole({ userId, groupRoleId, color, name, description, emoji, active, groupId }),
