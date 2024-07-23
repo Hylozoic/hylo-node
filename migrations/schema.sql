@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.2
--- Dumped by pg_dump version 14.2
+-- Dumped from database version 14.12 (Postgres.app)
+-- Dumped by pg_dump version 14.12 (Postgres.app)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -16,18 +16,23 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+--
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
 
 --
--- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: -
 --
 
-COMMENT ON SCHEMA public IS 'standard public schema';
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry and geography spatial types and functions';
+
 
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
-
-CREATE EXTENSION postgis;
 
 --
 -- Name: activities; Type: TABLE; Schema: public; Owner: -
@@ -1964,6 +1969,7 @@ CREATE SEQUENCE public.project_roles_id_seq
 
 ALTER SEQUENCE public.project_roles_id_seq OWNED BY public.project_roles.id;
 
+
 --
 -- Name: proposal_options; Type: TABLE; Schema: public; Owner: -
 --
@@ -2028,6 +2034,7 @@ CREATE SEQUENCE public.proposal_votes_id_seq
 --
 
 ALTER SEQUENCE public.proposal_votes_id_seq OWNED BY public.proposal_votes.id;
+
 
 --
 -- Name: users_seq; Type: SEQUENCE; Schema: public; Owner: -
@@ -3076,6 +3083,7 @@ ALTER TABLE ONLY public.project_contributions ALTER COLUMN id SET DEFAULT nextva
 
 ALTER TABLE ONLY public.project_roles ALTER COLUMN id SET DEFAULT nextval('public.project_roles_id_seq'::regclass);
 
+
 --
 -- Name: proposal_options id; Type: DEFAULT; Schema: public; Owner: -
 --
@@ -3088,6 +3096,7 @@ ALTER TABLE ONLY public.proposal_options ALTER COLUMN id SET DEFAULT nextval('pu
 --
 
 ALTER TABLE ONLY public.proposal_votes ALTER COLUMN id SET DEFAULT nextval('public.proposal_votes_id_seq'::regclass);
+
 
 --
 -- Name: push_notifications id; Type: DEFAULT; Schema: public; Owner: -
@@ -3800,6 +3809,7 @@ ALTER TABLE ONLY public.project_contributions
 ALTER TABLE ONLY public.project_roles
     ADD CONSTRAINT project_roles_pkey PRIMARY KEY (id);
 
+
 --
 -- Name: proposal_options proposal_options_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
@@ -3807,12 +3817,14 @@ ALTER TABLE ONLY public.project_roles
 ALTER TABLE ONLY public.proposal_options
     ADD CONSTRAINT proposal_options_pkey PRIMARY KEY (id);
 
+
 --
 -- Name: proposal_votes proposal_votes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.proposal_votes
     ADD CONSTRAINT proposal_votes_pkey PRIMARY KEY (id);
+
 
 --
 -- Name: questions questions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
@@ -5463,6 +5475,7 @@ ALTER TABLE ONLY public.project_contributions
 ALTER TABLE ONLY public.project_roles
     ADD CONSTRAINT project_roles_post_id_foreign FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
 
+
 --
 -- Name: proposal_options proposal_options_post_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
@@ -5493,7 +5506,6 @@ ALTER TABLE ONLY public.proposal_votes
 
 ALTER TABLE ONLY public.proposal_votes
     ADD CONSTRAINT proposal_votes_user_id_foreign FOREIGN KEY (user_id) REFERENCES public.users(id) DEFERRABLE INITIALLY DEFERRED;
-
 
 
 --

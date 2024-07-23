@@ -34,7 +34,7 @@
     "migrate-make": "node ./node_modules/.bin/knex migrate:make",
     "debug": "node-debug app.js",
     "dev": "nf -j Procfile.dev -p 3001 start -t 1000",
-    "dump": "pg_dump -Osxn public hylo | sed -e 's/; Tablespace: $//' > migrations/schema.sql",
+    "dump": "pg_dump -Osx hylo | sed -e 's/; Tablespace: $//' -e 's/CREATE SCHEMA public;//' -e 's/ AS \"?column?\"//' -e \"s/'search_path', ''/'search_path', 'public'/\"  > migrations/schema.sql",
     "test": "[ \"$NODE_ENV\" != production ] && mocha -r test/setup/core -r @babel/register --exit",
     "cover": "./node_modules/.bin/nyc --cache -a -r lcov ./node_modules/.bin/mocha -r test/setup/core --require @babel/register -R dot --exit",
     "knex": "knex",
