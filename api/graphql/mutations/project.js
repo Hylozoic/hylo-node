@@ -23,7 +23,11 @@ async function getModeratedProject (userId, projectId) {
   }
 
   if (project.relations.user.id !== userId) {
-    throw new GraphQLYogaError("You don't have permission to moderate this project")
+    const responsibilities = await Responsibility.fetchForUserAndGroupAsStrings(userId, project.id)
+    // TODO: THIS IS BROKEN... it needs the GROUP ID not project id
+    if (!responsibilities.includes(Responsibility.constants.RESP_ADMINISTRATION)) {
+      throw new GraphQLYogaError("You don't have permission to moderate this project")
+    }
   }
   return project
 }

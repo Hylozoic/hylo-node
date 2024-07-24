@@ -39,13 +39,14 @@ module.exports = bookshelf.Model.extend({
     return Collection.where({ id, is_active: true }).fetch()
   },
 
-  findValidCollectionForUser: function(userId, id) {
+  findValidCollectionForUser: function (userId, id) {
     // Only allow modifying a collection created by this user or a group Collection in a group moderated by this user
     const collection = Collection.query(q => {
       return q.where({ id: this.id, is_active: true })
         .andWhere(q => {
           q.where({ user_id: userId })
             .orWhereIn('group_id', Group.selectIdsForMember(userId, { 'group_memberships.role': GroupMembership.Role.MODERATOR }))
+            // TODO RESP: need to check the right RESP here, I think there is a helper function/method for this
         })
     })
 

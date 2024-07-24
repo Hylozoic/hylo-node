@@ -3,6 +3,7 @@
 import data from '@emoji-mart/data'
 import { init, getEmojiDataFromNative } from 'emoji-mart'
 import { difference, filter, isNull, omitBy, uniqBy, isEmpty, intersection, isUndefined, pick } from 'lodash/fp'
+import format from 'pg-format'
 import { flatten, sortBy } from 'lodash'
 import { TextHelpers } from 'hylo-shared'
 import fetch from 'node-fetch'
@@ -337,18 +338,27 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   async setProposalOptions ({ options = [], userId, opts = {} }) {
-    const trxOpts = { require: false, ...opts }
-    return bookshelf.knex.raw(`BEGIN;
+    opts.transacting ||= { transacting: false }
+    const deleteQuery = format('DELETE FROM proposal_options WHERE post_id = %L', this.id)
 
-      DELETE FROM proposal_options
-      WHERE post_id = ${this.id};
+    const insertValues = options.map(option => {
+      return [
+        this.id,
+        option.text,
+        option.color || '',
+        option.emoji || ''
+      ]
+    })
 
-      INSERT INTO proposal_options (post_id, text, color, emoji)
-      VALUES
-        ${options.map(option => `(${this.id}, '${option.text}', '${option.color || ''}', '${option.emoji || ''}')`).join(', ')}
-      RETURNING id;
+    const insertQuery = format('INSERT INTO proposal_options (post_id, text, color, emoji) VALUES %L RETURNING id', insertValues)
 
-      COMMIT;`).transacting(trxOpts)
+    const fullQuery = `
+    BEGIN;
+    ${deleteQuery};
+    ${insertQuery};
+    COMMIT;
+`
+    return bookshelf.knex.raw(fullQuery).transacting(opts.transacting)
   },
 
   async swapProposalVote ({ userId, removeOptionId, addOptionId }) {
@@ -365,8 +375,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return Promise.map(existingFollowers.models, postUser => postUser.updateAndSave(updatedAttribs, { transacting }))
   },
 
-  async updateProposalOptions ({ options = [], userId, opts = { } }) {
-    const existingOptions = await this.proposalOptions().fetch({ transaction: opts.transacting, require: false })
+  async updateProposalOptions ({ options = [], userId, opts = {} }) {
+    opts.transacting ||= { transacting: false }
+    const existingOptions = await this.proposalOptions().fetch({ transacting: opts.transacting, require: false })
     const existingOptionIds = existingOptions.pluck('id')
 
     // Add activities for vote reset
@@ -380,7 +391,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         DELETE FROM proposal_votes
         WHERE option_id IN (${existingOptionIds.join(', ')});
       `
-      await bookshelf.knex.raw(deleteVotesQuery).transacting({ transaction: opts.transacting, require: false })
+      await bookshelf.knex.raw(deleteVotesQuery).transacting(opts.transacting)
     }
     // Delete all options and start fresh
     if (options.length > 0 && existingOptionIds.length > 0) {
@@ -388,7 +399,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         DELETE FROM proposal_options
         WHERE id IN (${existingOptionIds.join(', ')});
       `
-      await bookshelf.knex.raw(deleteQuery).transacting({ transaction: opts.transacting, require: false })
+      await bookshelf.knex.raw(deleteQuery).transacting(opts.transacting)
     }
 
     // Execute the insert query for options passed in
@@ -397,7 +408,7 @@ module.exports = bookshelf.Model.extend(Object.assign({
         INSERT INTO proposal_options (post_id, text, color, emoji)
         VALUES ${options.map(option => `(${this.id}, '${option.text}', '${option.color}', '${option.emoji}')`).join(', ')};
       `
-      await bookshelf.knex.raw(insertQuery).transacting({ transaction: opts.transacting, require: false })
+      await bookshelf.knex.raw(insertQuery).transacting(opts.transacting)
     }
 
     // Return a resolved promise
@@ -472,8 +483,9 @@ module.exports = bookshelf.Model.extend(Object.assign({
         reason: `newPost: ${group.id}`
       }))
 
-      const isModerator = await GroupMembership.hasModeratorRole(this.get('user_id'), group)
-      if (this.get('announcement') && isModerator) {
+      // TODO: RESP. moderators can also make announcements?
+      const hasAdministration = await GroupMembership.hasResponsibility(this.get('user_id'), group, Responsibility.constants.RESP_ADMINISTRATION)
+      if (this.get('announcement') && hasAdministration) {
         const announcees = userIds.map(userId => ({
           reader_id: userId,
           post_id: this.id,

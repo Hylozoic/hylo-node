@@ -104,7 +104,7 @@ export async function updateProposalOptions ({ userId, postId, options }) {
   return Post.find(postId)
     .then(post => {
       if (post.get('proposal_status') === Post.Proposal_Status.COMPLETED && post.get('proposal_status') !== Post.Proposal_Status.CASUAL) throw new GraphQLYogaError("Proposal options cannot be changed once a proposal is complete'")
-      return post.updateProposalOptions({ options, userId, opts: { transacting: null, require: false } })
+      return post.updateProposalOptions({ options, userId })
     })
     .catch((err) => { throw new GraphQLYogaError(`setting of options failed: ${err}`) })
     .then(() => ({ success: true }))
@@ -142,7 +142,7 @@ export function updateProposalOutcome ({ userId, postId, proposalOutcome }) {
 
 export async function pinPost (userId, postId, groupId) {
   const group = await Group.find(groupId)
-  return GroupMembership.hasModeratorRole(userId, group)
+  return GroupMembership.hasResponsibility(userId, group, Responsibility.constants.RESP_MANAGE_CONTENT)
   .then(isModerator => {
     if (!isModerator) throw new GraphQLYogaError("You don't have permission to modify this group")
     return PostMembership.find(postId, groupId)
@@ -158,7 +158,6 @@ export async function pinPost (userId, postId, groupId) {
 // the legacy code expects -- this sort of thing can be removed/refactored once
 // hylo-redux is no longer in use
 function convertGraphqlPostData (data) {
-  console.log(data, 'convertGraphqlPostData')
   return Promise.resolve(Object.assign({
     name: data.title,
     description: data.details,

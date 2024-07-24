@@ -46,6 +46,20 @@ export default function makeModels (userId, isAdmin, apiClient) {
       }
     },
 
+    CommonRole: {
+      model: CommonRole,
+      attributes: [
+        'id',
+        'name',
+        'description',
+        'emoji'
+      ],
+      relations: [
+        { responsibilities: { querySet: true } }
+      ],
+      fetchMany: () => CommonRole.fetchAll()
+    },
+
     Me: {
       model: User,
       attributes: [
@@ -74,6 +88,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'memberships',
         'posts',
         'locationObject',
+        { groupRoles: { querySet: true } },
         { affiliations: { querySet: true } },
         { groupInvitesPending: { querySet: true } },
         {
@@ -89,6 +104,18 @@ export default function makeModels (userId, isAdmin, apiClient) {
         },
         { skills: { querySet: true } },
         { skillsToLearn: { querySet: true } },
+        {
+          membershipCommonRoles: {
+            querySet: true,
+            filter: (relation, { groupId }) => {
+              return relation.query(q => {
+                if (groupId) {
+                  q.where('group_id', groupId)
+                }
+              })
+            }
+          }
+        },
         { messageThreads: { typename: 'MessageThread', querySet: true } }
       ],
       getters: {
@@ -108,8 +135,10 @@ export default function makeModels (userId, isAdmin, apiClient) {
       relations: [
         { agreements: { querySet: true } },
         { group: { alias: 'group' } },
-        { joinQuestionAnswers: { querySet: true } },
-        { user: { alias: 'person' } }
+        { user: { alias: 'person' } },
+        { commonRoles: { querySet: true } },
+        { membershipCommonRoles: { querySet: true } },
+        { joinQuestionAnswers: { querySet: true } }
       ],
       getters: {
         settings: m => mapKeys(camelCase, m.get('settings')),
@@ -117,7 +146,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
           m.get('user_id') === userId ? m.getSetting('lastReadAt') : null,
         newPostCount: m =>
           m.get('user_id') === userId ? m.get('new_post_count') : null,
-        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR)
+        hasModeratorRole: m => m.hasRole(GroupMembership.Role.MODERATOR) // TODO RESP: verify
       },
       filter: nonAdminFilter(membershipFilter(userId))
     },
@@ -130,6 +159,42 @@ export default function makeModels (userId, isAdmin, apiClient) {
       ],
       getters: {
         accepted: a => a.pivot && a.pivot.get('accepted')
+      }
+    },
+
+    MembershipCommonRole: {
+      model: MemberCommonRole,
+      attributes: [
+        'id',
+        'group_id',
+        'common_role_id',
+        'user_id'
+      ],
+      relations: [
+        'commonRole',
+        'group',
+        'user'
+      ],
+      getters: {
+        roleId: mcr => mcr.get('common_role_id')
+      }
+    },
+
+    MembershipGroupRole: {
+      model: MemberGroupRole,
+      attributes: [
+        'id',
+        'group_id',
+        'group_role_id',
+        'user_id'
+      ],
+      relations: [
+        'group',
+        'groupRole',
+        'user'
+      ],
+      getters: {
+        roleId: mcr => mcr.get('group_role_id')
       }
     },
 
@@ -155,9 +220,22 @@ export default function makeModels (userId, isAdmin, apiClient) {
       },
       relations: [
         'memberships',
-        'moderatedGroupMemberships',
+        {
+          membershipCommonRoles: {
+            querySet: true,
+            filter: (relation, { groupId }) => {
+              return relation.query(q => {
+                if (groupId) {
+                  q.where('group_id', groupId)
+                }
+              })
+            }
+          }
+        },
+        'moderatedGroupMemberships', // TODO: still need this?
         'locationObject',
-        'groupRoles',
+        { groupRoles: { querySet: true } },
+        { commonRoles: { querySet: true } },
         { affiliations: { querySet: true } },
         { eventsAttending: { querySet: true } },
         { posts: { querySet: true } },
@@ -346,6 +424,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { groupToGroupJoinQuestions: { querySet: true } },
         { joinQuestions: { querySet: true } },
         { moderators: { querySet: true } },
+        { stewards: { querySet: true } },
         {
           memberships: {
             querySet: true,
@@ -360,8 +439,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         {
           members: {
             querySet: true,
-            filter: (relation, { autocomplete, boundingBox, groupRoleId, order, search, sortBy }) =>
-              relation.query(filterAndSortUsers({ autocomplete, boundingBox, groupRoleId, order, search, sortBy }))
+            filter: (relation, { id, autocomplete, boundingBox, groupRoleId, order, search, sortBy, commonRoleId }) =>
+              relation.query(filterAndSortUsers({ autocomplete, boundingBox, groupId: relation.relatedData.parentId, groupRoleId, order, search, sortBy, commonRoleId }))
           }
         },
         { parentGroups: { querySet: true } },
@@ -462,14 +541,15 @@ export default function makeModels (userId, isAdmin, apiClient) {
         { groupExtensions: { querySet: true } }
       ],
       getters: {
+        // commonRoles: async g => g.commonRoles(),
         invitePath: g =>
-          GroupMembership.hasModeratorRole(userId, g)
-            .then(isModerator => isModerator ? Frontend.Route.invitePath(g) : null),
+          GroupMembership.hasResponsibility(userId, g, Responsibility.constants.RESP_ADD_MEMBERS)
+            .then(canInvite => canInvite ? Frontend.Route.invitePath(g) : null),
         location: async (g) => {
-          // If location obfuscation is on then non group moderators see a display string that only includes city, region & country
+          // If location obfuscation is on then non group stewards see a display string that only includes city, region & country
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
           if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
-                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+                (userId && await GroupMembership.hasResponsibility(userId, g, Responsibility.constants.RESP_ADMINISTRATION))) {
             return g.get('location')
           } else {
             const locObj = await g.locationObject().fetch()
@@ -487,10 +567,11 @@ export default function makeModels (userId, isAdmin, apiClient) {
           return null
         },
         locationObject: async (g) => {
-          // If precision is precise or user is a moderator of the group show the exact location
+          // If precision is precise or user is an administrator of the group show the exact location
           const precision = g.getSetting('location_display_precision') || LOCATION_DISPLAY_PRECISION.Precise
           if (precision === LOCATION_DISPLAY_PRECISION.Precise ||
-                (userId && await GroupMembership.hasModeratorRole(userId, g))) {
+                (userId && await GroupMembership.hasResponsibility(userId, g, Responsibility.constants.RESP_ADMINISTRATION))) {
+                  // TODO: add RESP for this
             return g.locationObject().fetch()
           } else if (precision === LOCATION_DISPLAY_PRECISION.Near) {
             // For near only include region, city, country columns, and move the exact location around every load
@@ -513,11 +594,14 @@ export default function makeModels (userId, isAdmin, apiClient) {
           }
         },
         // XXX: Flag for translation
-        moderatorDescriptor: (g) => g.get('moderator_descriptor') || 'Moderator',
-        moderatorDescriptorPlural: (g) => g.get('moderator_descriptor_plural') || 'Moderators',
+        moderatorDescriptor: (g) => g.get('steward_descriptor') || 'Steward',
+        moderatorDescriptorPlural: (g) => g.get('steward_descriptor_plural') || 'Stewards',
+        stewardDescriptor: (g) => g.get('steward_descriptor') || 'Steward',
+        stewardDescriptorPlural: (g) => g.get('steward_descriptor_plural') || 'Stewards',
         // Get number of prerequisite groups that current user is not a member of yet
         numPrerequisitesLeft: g => g.numPrerequisitesLeft(userId),
         pendingInvitations: (g, { first }) => InvitationService.find({ groupId: g.id, pendingOnly: true }),
+        responsibilities: async g => g.availableResponsibilities().fetch(),
         settings: g => mapKeys(camelCase, g.get('settings')),
         // XXX: Flag for translation
         typeDescriptor: g => g.get('type_descriptor') || (g.get('type') ? startCase(g.get('type')) : 'Group'),
@@ -607,7 +691,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'updatedAt'
       ],
       relations: [
-        'group'
+        'group',
+        { responsibilities: { querySet: true } }
       ]
     },
 
@@ -842,6 +927,16 @@ export default function makeModels (userId, isAdmin, apiClient) {
         q.whereIn('groups_tags.group_id', Group.selectIdsForMember(userId))
       })),
       fetchMany: args => GroupTag.query(groupTopicFilter(userId, args))
+    },
+
+    Responsibility: {
+      model: Responsibility,
+      attributes: [
+        'id',
+        'title',
+        'description',
+        'type'
+      ]
     },
 
     SavedSearch: {
