@@ -1561,6 +1561,24 @@ type MessageThreadQuerySet {
   items: [MessageThread]
 }
 
+type ModerationAction {
+  id: ID
+  # The agreements that are linked to the moderation action
+  agreements: [Agreement]
+  # The person who took the action
+  reporter: Person
+  # The group where the action was taken
+  groupId: ID
+  # Platform agreements that are linked to the moderation action
+  platformAgreements: [PlatformAgreement]
+  # The post that was moderated
+  post: Post
+  # The status of moderation action
+  status: String
+  # Description of what the moderation action is about
+  text: String
+}
+
 # A notification of an activity for a person
 type Notification {
   id: ID
@@ -1753,6 +1771,8 @@ type Post {
   commentersTotal: Int
   # Total number of comments on this post
   commentsTotal: Int
+  # If this post has been flagged, this tracks whether the user has clicked through the flag-screen
+  clickthrough: Boolean
   createdAt: Date
   # The body of the post
   details: String
@@ -1760,6 +1780,8 @@ type Post {
   donationsLink: String
   # When this post "ends". Used for events, resources, projects, requests and offers right now
   endTime: Date
+  # List of group ids for groups that have flagged this post
+  flaggedGroups: [ID]
   # Number of people following this post (when someone comments on or reacts to a post they follow it)
   followersTotal: Int
   # When the posr creator marked it as "fulfilled" or "complete"
@@ -2199,6 +2221,8 @@ type Mutation {
   cancelGroupRelationshipInvite(groupRelationshipInviteId: ID): GenericResult
   # For a Person who has requested to join another group to cancel that request.
   cancelJoinRequest(joinRequestId: ID): GenericResult
+  # Clear a moderation action; only a 'content manager' or initial reporter can do this.
+  clearModerationAction(postId: ID, groupId: ID): GenericResult
   # For logged in user to add an Affiliation to their profile
   createAffiliation(data: AffiliationInput): Affiliation
   # Create a new post Collection
@@ -2217,6 +2241,8 @@ type Mutation {
   createJoinRequest(groupId: ID, questionAnswers: [QuestionAnswerInput]): CreatedRequest
   # Send a direct message
   createMessage(data: MessageInput): Message
+  # Create a new moderation action
+  createModerationAction(data: ModerationActionInput): ModerationAction
   # Create a new Post
   createPost(data: PostInput): Post
   # Create a new 'project' type Post NOT USED RIGHT NOW, use createPost instead
@@ -2303,6 +2329,8 @@ type Mutation {
   reactOn(entityId: ID, data: ReactionInput): Post
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
+  # Record a click through on a moderated post
+  recordClickThrough(postId: ID): GenericResult
   # Regenerate the invite URL used to invite people to a Group. Only a group Host can call this.
   regenerateAccessCode(groupId: ID): Group
   # Register a new mobile device to the current logged in user account
@@ -2876,6 +2904,16 @@ input MessageInput {
 input MessageThreadInput {
   # The IDs of the participants in the thread
   participantIds: [String]
+}
+
+# Data for a ModerationAction
+input ModerationActionInput {
+  postId: ID
+  groupId: ID
+  text: String 
+  anonymous: Boolean
+  agreements: [ID]
+  platformAgreements: [ID]
 }
 
 # A geographic point

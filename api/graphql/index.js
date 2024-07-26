@@ -23,6 +23,7 @@ import {
   blockUser,
   cancelGroupRelationshipInvite,
   cancelJoinRequest,
+  clearModerationAction,
   createAffiliation,
   createCollection,
   createComment,
@@ -30,6 +31,7 @@ import {
   createInvitation,
   createJoinRequest,
   createMessage,
+  createModerationAction,
   createPost,
   createProject,
   createProjectRole,
@@ -71,6 +73,7 @@ import {
   processStripeToken,
   reactOn,
   reactivateUser,
+  recordClickThrough,
   regenerateAccessCode,
   registerDevice,
   registerStripeAccount,
@@ -335,6 +338,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
 
+    clearModerationAction: (root, { postId, groupId }) => clearModerationAction({ userId, postId, groupId }),
+
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
     createCollection: (root, { data }) => createCollection(userId, data),
@@ -349,6 +354,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     createJoinRequest: (root, { groupId, questionAnswers }) => createJoinRequest(userId, groupId, questionAnswers),
 
     createMessage: (root, { data }) => createMessage(userId, data),
+
+    createModerationAction: (root, { data }) => createModerationAction(data, userId),
 
     createPost: (root, { data }) => createPost(userId, data),
 
@@ -434,6 +441,8 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
     reactOn: (root, { entityId, data }) => reactOn(userId, entityId, data),
 
     reactivateMe: (root) => reactivateUser({ userId }),
+
+    recordClickThrough: (root, { postId }) => recordClickThrough({ userId, postId }),
 
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),

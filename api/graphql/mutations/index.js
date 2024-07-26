@@ -75,6 +75,11 @@ export {
   pinPost
 } from './post'
 export {
+  createModerationAction,
+  clearModerationAction,
+  recordClickThrough
+} from './moderation_actions'
+export {
   addPeopleToProjectRole,
   createProject,
   createProjectRole,

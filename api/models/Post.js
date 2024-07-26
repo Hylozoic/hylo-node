@@ -152,6 +152,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return type ? relation.query({ where: { type } }) : relation
   },
 
+  moderationActions: function () {
+    return this.hasMany(ModerationAction)
+  },
+
   postMemberships: function () {
     return this.hasMany(PostMembership, 'post_id')
   },
@@ -530,6 +534,11 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return isUpvote ? this.addReaction(userId, '\uD83D\uDC4D') : this.deleteReaction(userId, '\uD83D\uDC4D')
   },
 
+  clickthroughModeration: function () {
+    // TODO COMOD: implement
+    // this needs to access the posts_users table and update the clickthrough column
+  },
+
   addReaction: function (userId, emojiFull) {
     return bookshelf.transaction(async trx => {
       const userReactions = await this.reactionsForUser(userId).fetch()
@@ -694,6 +703,16 @@ module.exports = bookshelf.Model.extend(Object.assign({
     if (await post.isFollowed(userId)) return true
 
     return false
+  },
+
+  addToFlaggedGroups: async function ({ groupId, postId }) {
+    const post = await Post.find(postId)
+    return post.save({ flagged_groups: this.get('flagged_groups').concat([groupId]) })
+  },
+
+  removeFromFlaggedGroups: async function ({ groupId, postId }) {
+    const post = await Post.find(postId)
+    return post.save({ flagged_groups: this.get('flagged_groups').filter(id => id !== groupId) })
   },
 
   find: function (id, options) {

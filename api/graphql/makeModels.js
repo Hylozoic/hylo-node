@@ -198,6 +198,18 @@ export default function makeModels (userId, isAdmin, apiClient) {
       }
     },
 
+    ModerationAction: {
+      model: ModerationAction,
+      attributes: [
+        'status',
+        'text',
+        'anonymous',
+        'created_at',
+        'updated_at'
+      ],
+      relations: ['post', 'reporter']
+    },
+
     Person: {
       model: User,
       attributes: [
@@ -261,6 +273,17 @@ export default function makeModels (userId, isAdmin, apiClient) {
         })
     },
 
+    PlatformAgreement: {
+      model: Agreement,
+      isDefaultTypeForTable: true,
+      attributes: [
+        'id',
+        'description',
+        'order',
+        'title'
+      ]
+    },
+
     Post: {
       model: Post,
       attributes: [
@@ -271,6 +294,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'created_at',
         'donations_link',
         'end_time',
+        'flagged_groups',
         'fulfilled_at',
         'is_public',
         'link_preview_featured',
@@ -292,6 +316,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         details: p => p.details(userId),
         isAnonymousVote: p => p.get('anonymous_voting') === 'true',
         myReactions: p => userId ? p.reactionsForUser(userId).fetch() : [],
+        clickthrough: a => a.pivot && a.pivot.get('clickthrough'), // TODO COMOD, verify that this actually works
         myEventResponse: p =>
           userId && p.isEvent()
             ? p.userEventInvitation(userId).then(eventInvitation => eventInvitation ? eventInvitation.get('response') : '')
@@ -305,6 +330,7 @@ export default function makeModels (userId, isAdmin, apiClient) {
         'locationObject',
         { members: { querySet: true } },
         { eventInvitations: { querySet: true } },
+        { moderationActions: { querySet: true} },
         { proposalOptions: { querySet: true } },
         { proposalVotes: { querySet: true } },
         'linkPreview',
