@@ -62,38 +62,38 @@ COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial
 -- Name: delete_user(integer); Type: PROCEDURE; Schema: public; Owner: -
 --
 
-CREATE PROCEDURE public.delete_user(IN uid integer)
-    LANGUAGE sql
-    AS $$
-update groups set created_by_id = null where created_by_id = uid;
-update comments set deactivated_by_id = null where deactivated_by_id = uid;
-update follows set added_by_id = null where added_by_id = uid;
-update groups_tags set user_id = null where user_id = uid;
-delete from thanks where comment_id in (select id from comments where user_id = uid);
-delete from notifications where activity_id in (select id from activities where reader_id = uid);
-delete from notifications where activity_id in (select id from activities where actor_id = uid);
-delete from comments where user_id = uid;
-delete from contributions where user_id = uid;
-delete from devices where user_id = uid;
-delete from group_invites where used_by_id = uid;
-delete from group_invites where invited_by_id = uid;
-delete from group_memberships where user_id = uid;
-delete from linked_account where user_id = uid;
-delete from skills_users where user_id = uid;
-delete from posts_about_users where user_id = uid;
-delete from posts_users where user_id = uid;
-delete from tag_follows where user_id = uid;
-delete from thanks where thanked_by_id = uid;
-delete from user_connections where user_id = uid;
-delete from user_external_data where user_id = uid;
-delete from user_post_relevance where user_id = uid;
-delete from activities where actor_id = uid;
-delete from activities where reader_id = uid;
-delete from join_request_question_answers where join_request_id in (select id from join_requests where user_id = uid);
-delete from join_requests where user_id = uid;
-delete from votes where user_id = uid;
-delete from users where id = uid;
-$$;
+-- CREATE PROCEDURE public.delete_user(IN uid integer)
+--     LANGUAGE sql
+--     AS $$;
+-- update groups set created_by_id = null where created_by_id = uid;
+-- update comments set deactivated_by_id = null where deactivated_by_id = uid;
+-- update follows set added_by_id = null where added_by_id = uid;
+-- update groups_tags set user_id = null where user_id = uid;
+-- delete from thanks where comment_id in (select id from comments where user_id = uid);
+-- delete from notifications where activity_id in (select id from activities where reader_id = uid);
+-- delete from notifications where activity_id in (select id from activities where actor_id = uid);
+-- delete from comments where user_id = uid;
+-- delete from contributions where user_id = uid;
+-- delete from devices where user_id = uid;
+-- delete from group_invites where used_by_id = uid;
+-- delete from group_invites where invited_by_id = uid;
+-- delete from group_memberships where user_id = uid;
+-- delete from linked_account where user_id = uid;
+-- delete from skills_users where user_id = uid;
+-- delete from posts_about_users where user_id = uid;
+-- delete from posts_users where user_id = uid;
+-- delete from tag_follows where user_id = uid;
+-- delete from thanks where thanked_by_id = uid;
+-- delete from user_connections where user_id = uid;
+-- delete from user_external_data where user_id = uid;
+-- delete from user_post_relevance where user_id = uid;
+-- delete from activities where actor_id = uid;
+-- delete from activities where reader_id = uid;
+-- delete from join_request_question_answers where join_request_id in (select id from join_requests where user_id = uid);
+-- delete from join_requests where user_id = uid;
+-- delete from votes where user_id = uid;
+-- delete from users where id = uid;
+-- $$;
 
 
 SET default_tablespace = '';
@@ -1720,7 +1720,9 @@ CREATE TABLE public.moderation_actions (
     reporter_id bigint NOT NULL,
     post_id bigint NOT NULL,
     status text,
-    anonymous text
+    anonymous text,
+    created_at timestamp with time zone,
+    updated_at timestamp with time zone
 );
 
 
@@ -5391,15 +5393,6 @@ ALTER TABLE ONLY public.media
 
 ALTER TABLE ONLY public.groups_posts
     ADD CONSTRAINT fk_post_community_community_02 FOREIGN KEY (community_id) REFERENCES public.communities(id) DEFERRABLE INITIALLY DEFERRED;
-
-
---
--- Name: groups_posts fk_post_community_post_01; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.groups_posts
-    ADD CONSTRAINT fk_post_community_post_01 FOREIGN KEY (post_id) REFERENCES public.posts(id) DEFERRABLE INITIALLY DEFERRED;
-
 
 --
 -- Name: posts fk_post_creator_11; Type: FK CONSTRAINT; Schema: public; Owner: -

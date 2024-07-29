@@ -44,6 +44,13 @@ module.exports = {
     }, attrs))
   },
 
+  postUser: attrs => {
+    return new PostUser(merge({
+      active: true,
+      following: true
+    }, attrs))
+  },
+
   comment: attrs => {
     return new Comment(merge({
       active: true,

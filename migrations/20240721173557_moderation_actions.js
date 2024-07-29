@@ -8,6 +8,8 @@ exports.up = async function (knex) {
     table.bigInteger('post_id').references('id').inTable('posts').notNullable()
     table.text('status')
     table.text('anonymous')
+    table.timestamp('created_at')
+    table.timestamp('updated_at')
   })
 
   // Create platform_agreements table

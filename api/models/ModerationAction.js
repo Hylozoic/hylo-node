@@ -1,5 +1,7 @@
 /* eslint-disable camelcase */
 
+import { pick } from 'lodash/fp'
+
 module.exports = bookshelf.Model.extend({
   tableName: 'moderation_actions',
   requireFetch: false,
@@ -20,14 +22,28 @@ module.exports = bookshelf.Model.extend({
   reporter: function () {
     return this.belongsTo(User, 'reporter_id')
   },
-  create: async function ({ userId, data }) {
-    // TODO COMOD to implement
-    // don't forget to include updating the posts flagged_groups
-  },
-  clearAction: async function ({ userId, postId, groupId }) {
-    // TODO COMOD to implement
-    // don't forget to include updating the posts flagged_groups
-  }
-}, {
 
+}, {
+  create: async function (data, opts) {
+    const { agreements, anonymous, platformAgreements, postId, groupId, reporterId, text} = data
+
+    const modAction = await ModerationAction.forge({ anonymous, post_id: postId, reporter_id: reporterId, text, status: 'active' })
+      .save(null, pick(opts, 'transacting'))
+    await modAction.platformAgreements().attach(platformAgreements)
+    await modAction.agreements().attach(agreements)
+    await Post.addToFlaggedGroups({ postId, groupId })
+    return modAction
+  },
+
+  clearAction: async function ({ postId, groupId, moderationActionId }) {
+    let action
+    try {
+      action = await ModerationAction.where({ id: moderationActionId }).fetch()
+      await action.save({ status: 'cleared' }, { patch: true })
+    } catch (error) {
+      throw new Error('Moderation action not found')
+    }
+    await Post.removeFromFlaggedGroups({ postId, groupId })
+    return action
+  }
 })

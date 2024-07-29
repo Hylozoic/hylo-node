@@ -1577,6 +1577,10 @@ type ModerationAction {
   status: String
   # Description of what the moderation action is about
   text: String
+  # Whether the reporter can be seen by all group members or not
+  anonymous: Boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 # A notification of an activity for a person
@@ -1757,6 +1761,13 @@ type PersonConnectionQuerySet {
   items: [PersonConnection]
 }
 
+type PlatformAgreement {
+  id: Int
+  description: String
+  # The title/header of the agreement
+  title: String
+}
+
 type Post {
   id: ID
   # NOT USED RIGHT NOW. Whether this post can accept financial contributions
@@ -1861,6 +1872,9 @@ type Post {
 
   # The link preview of the first link in the post that is shown as a card on the post
   linkPreview: LinkPreview
+
+  # Any moderation actions that are linked to this post
+  moderationActions: [ModerationAction]
 
   # The members of a project type Post
   members(first: Int, cursor: ID, order: String): PersonQuerySet

@@ -21,7 +21,8 @@ init({ data })
 export const POSTS_USERS_ATTR_UPDATE_WHITELIST = [
   'project_role_id',
   'following',
-  'active'
+  'active',
+  'clickthrough'
 ]
 
 const commentersQuery = (limit, post, currentUserId) => q => {
@@ -88,6 +89,10 @@ module.exports = bookshelf.Model.extend(Object.assign({
 
   isWelcome: function () {
     return this.get('type') === Post.Type.WELCOME
+  },
+
+  flaggedGroups: function () {
+    return this.get('flagged_groups') || []
   },
 
   commentsTotal: function () {
@@ -534,11 +539,6 @@ module.exports = bookshelf.Model.extend(Object.assign({
     return isUpvote ? this.addReaction(userId, '\uD83D\uDC4D') : this.deleteReaction(userId, '\uD83D\uDC4D')
   },
 
-  clickthroughModeration: function () {
-    // TODO COMOD: implement
-    // this needs to access the posts_users table and update the clickthrough column
-  },
-
   addReaction: function (userId, emojiFull) {
     return bookshelf.transaction(async trx => {
       const userReactions = await this.reactionsForUser(userId).fetch()
@@ -706,13 +706,25 @@ module.exports = bookshelf.Model.extend(Object.assign({
   },
 
   addToFlaggedGroups: async function ({ groupId, postId }) {
-    const post = await Post.find(postId)
-    return post.save({ flagged_groups: this.get('flagged_groups').concat([groupId]) })
+    return bookshelf.knex.raw(`
+      UPDATE posts
+      SET flagged_groups = array_append(flagged_groups, ?)
+      WHERE id = ?
+    `, [groupId, postId])
   },
 
   removeFromFlaggedGroups: async function ({ groupId, postId }) {
-    const post = await Post.find(postId)
-    return post.save({ flagged_groups: this.get('flagged_groups').filter(id => id !== groupId) })
+    // The regular postgres array_remove function removes *ALL* matches to whatever is passed in.
+    // There might be several flags for different violations and we want to be able to remove them one by one if needed
+    return bookshelf.knex.raw(`
+      UPDATE posts
+      SET flagged_groups = (
+        SELECT array_agg(elem)
+        FROM unnest(flagged_groups) WITH ORDINALITY AS t(elem, ord)
+        WHERE elem != ? OR ord != (SELECT min(ord) FROM unnest(flagged_groups) WITH ORDINALITY AS t(elem, ord) WHERE elem = ?)
+      )
+      WHERE id = ?
+    `, [groupId, groupId, postId])
   },
 
   find: function (id, options) {

@@ -274,12 +274,10 @@ export default function makeModels (userId, isAdmin, apiClient) {
     },
 
     PlatformAgreement: {
-      model: Agreement,
-      isDefaultTypeForTable: true,
+      model: PlatformAgreement,
       attributes: [
         'id',
         'description',
-        'order',
         'title'
       ]
     },

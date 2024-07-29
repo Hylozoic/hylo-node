@@ -46,7 +46,7 @@ describe('Group', function () {
       }]
     }
 
-    await new Extension({ type: 'ext', updated_at: new Date() }).save()
+    await new Extension({ type: 'ext' }).save()
     const user = await new User({ name: 'username', email: 'john@foo.com', active: true }).save()
     await Group.create(user.id, data)
     const savedGroup = await Group.find('group2')

@@ -25,7 +25,7 @@ describe('graphql request handler', () => {
     comment = factories.comment()
     media = factories.media()
     const earlier = new Date(new Date().getTime() - 86400000)
-    extension = factories.extension({ type: 'test', created_at: earlier, updated_at: earlier })
+    extension = factories.extension({ type: 'test', created_at: earlier })
 
     await group.save()
     await user.save()
