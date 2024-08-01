@@ -1,8 +1,14 @@
 
 exports.up = async function (knex) {
-  knex.raw('TRUNCATE TABLE platform_agreements')
+  // Drop moderation_actions_platform_agreements table
+  await knex.schema.dropTableIfExists('moderation_actions_platform_agreements')
 
-  await knex.schema.table('platform_agreements', table => {
+  // Drop platform_agreements table
+  await knex.schema.dropTableIfExists('platform_agreements')
+
+  await knex.schema.createTable('platform_agreements', table => {
+    table.increments('id').primary()
+    table.text('text')
     table.text('type')
   })
 
@@ -21,12 +27,18 @@ exports.up = async function (knex) {
     { text: 'Misleading and Deceptive Identities (anon and clear parody is permitted)', type: 'anywhere' },
     { text: 'Account Compromise', type: 'anywhere' }
   ])
+
+  await knex.schema.createTable('moderation_actions_platform_agreements', table => {
+    table.increments().primary()
+    table.integer('moderation_action_id').references('id').inTable('moderation_actions')
+    table.integer('platform_agreement_id').references('id').inTable('platform_agreements')
+  })
 }
 
 exports.down = async function (knex) {
-  knex.raw('TRUNCATE TABLE platform_agreements')
+  // Drop moderation_actions_platform_agreements table
+  await knex.schema.dropTable('moderation_actions_platform_agreements')
 
-  await knex.schema.table('platform_agreements', table => {
-    table.dropColumn('type')
-  })
+  // Drop platform_agreements table
+  await knex.schema.dropTable('platform_agreements')
 }

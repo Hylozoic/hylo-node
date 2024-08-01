@@ -210,6 +210,7 @@ export function makePublicQueries (userId, fetchOne, fetchMany) {
     // Can only access public communities and posts
     group: async (root, { id, slug }) => fetchOne('Group', slug || id, slug ? 'slug' : 'id', { visibility: Group.Visibility.PUBLIC }),
     groups: (root, args) => fetchMany('Group', Object.assign(args, { visibility: Group.Visibility.PUBLIC })),
+    platformAgreements: (root, args) => PlatformAgreement.fetchAll(args),
     post: (root, { id }) => fetchOne('Post', id, 'id', { isPublic: true }),
     posts: (root, args) => fetchMany('Post', Object.assign(args, { isPublic: true }))
   }
@@ -261,6 +262,7 @@ export function makeAuthenticatedQueries (userId, fetchOne, fetchMany) {
     people: (root, args) => fetchMany('Person', args),
     // you can query by id or email, with id taking preference
     person: (root, { id, email }) => fetchOne('Person', id || email, id ? 'id' : 'email'),
+    platformAgreements: (root, args) => PlatformAgreement.fetchAll(args),
     post: (root, { id }) => fetchOne('Post', id),
     posts: (root, args) => fetchMany('Post', args),
     responsibilities: (root, args) => Responsibility.fetchAll(args),

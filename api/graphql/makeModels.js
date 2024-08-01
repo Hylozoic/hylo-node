@@ -278,7 +278,8 @@ export default function makeModels (userId, isAdmin, apiClient) {
       attributes: [
         'id',
         'description',
-        'title'
+        'text',
+        'type'
       ]
     },
 

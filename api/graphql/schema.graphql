@@ -151,6 +151,9 @@ type Query {
   # Query for a MessageThread by ID
   messageThread(id: ID): MessageThread
 
+  # Query for all platform agreements
+  platformAgreements: [PlatformAgreement]
+
   # Query for people
   people(
     # Only return People whose name starts with the autocomplete string
@@ -1764,8 +1767,8 @@ type PersonConnectionQuerySet {
 type PlatformAgreement {
   id: Int
   description: String
-  # The title/header of the agreement
-  title: String
+  # The text of the agreement
+  text: String
   # type; either 'public' or 'anywhere'
   type: String
 }
