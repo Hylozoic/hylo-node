@@ -1766,6 +1766,8 @@ type PlatformAgreement {
   description: String
   # The title/header of the agreement
   title: String
+  # type; either 'public' or 'anywhere'
+  type: String
 }
 
 type Post {
@@ -2236,7 +2238,7 @@ type Mutation {
   # For a Person who has requested to join another group to cancel that request.
   cancelJoinRequest(joinRequestId: ID): GenericResult
   # Clear a moderation action; only a 'content manager' or initial reporter can do this.
-  clearModerationAction(postId: ID, groupId: ID): GenericResult
+  clearModerationAction(postId: ID, groupId: ID, moderationActionId: ID): GenericResult
   # For logged in user to add an Affiliation to their profile
   createAffiliation(data: AffiliationInput): Affiliation
   # Create a new post Collection
@@ -2344,7 +2346,7 @@ type Mutation {
   # For a deactivated user to reactivate their account.
   reactivateMe(id: ID): GenericResult
   # Record a click through on a moderated post
-  recordClickThrough(postId: ID): GenericResult
+  recordClickthrough(postId: ID): GenericResult
   # Regenerate the invite URL used to invite people to a Group. Only a group Host can call this.
   regenerateAccessCode(groupId: ID): Group
   # Register a new mobile device to the current logged in user account

@@ -1,6 +1,6 @@
 import '../../../test/setup'
 import factories from '../../../test/setup/factories'
-import { recordClickThrough, clearModerationAction, createModerationAction } from './moderation_actions'
+import { recordClickthrough, clearModerationAction, createModerationAction } from './moderation_actions'
 
 describe('createModerationAction', () => {
   var user, post, g1, user2, agreements, modActions
@@ -56,7 +56,7 @@ describe('createModerationAction', () => {
   })
 
   it('allows users to clickthrough a moderated post', async () => {
-    return recordClickThrough({ userId: user.id, postId: post.id })
+    return recordClickthrough({ userId: user.id, postId: post.id })
       .then(async () => {
         const userPost = await PostUser.find(post.id, user.id)
         expect(userPost.get('clickthrough')).to.equal(true)

@@ -73,7 +73,7 @@ import {
   processStripeToken,
   reactOn,
   reactivateUser,
-  recordClickThrough,
+  recordClickthrough,
   regenerateAccessCode,
   registerDevice,
   registerStripeAccount,
@@ -338,7 +338,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     cancelJoinRequest: (root, { joinRequestId }) => cancelJoinRequest(userId, joinRequestId),
 
-    clearModerationAction: (root, { postId, groupId }) => clearModerationAction({ userId, postId, groupId }),
+    clearModerationAction: (root, { postId, groupId, moderationActionId }) => clearModerationAction({ userId, postId, groupId, moderationActionId }),
 
     createAffiliation: (root, { data }) => createAffiliation(userId, data),
 
@@ -442,7 +442,7 @@ export function makeMutations (expressContext, userId, isAdmin, fetchOne) {
 
     reactivateMe: (root) => reactivateUser({ userId }),
 
-    recordClickThrough: (root, { postId }) => recordClickThrough({ userId, postId }),
+    recordClickthrough: (root, { postId }) => recordClickthrough({ userId, postId }),
 
     regenerateAccessCode: (root, { groupId }) =>
       regenerateAccessCode(userId, groupId),

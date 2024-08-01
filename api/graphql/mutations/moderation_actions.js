@@ -27,7 +27,7 @@ export async function clearModerationAction ({ userId, postId, groupId, moderati
     .then(() => ({ success: true }))
 }
 
-export function recordClickThrough ({ userId, postId }) {
+export function recordClickthrough ({ userId, postId }) {
   return Post.find(postId)
     .then(post => {
       if (post.get('user_id') !== userId) {
