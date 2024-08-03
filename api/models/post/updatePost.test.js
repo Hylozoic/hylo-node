@@ -59,20 +59,20 @@ describe('updatePost', () => {
   })
 
   it('sets edited_at field when name changes', async () => {
-    const name = `${post.name}, what ho.`
+    const name = `${post.name}, what ho, Bertie.`
     updatePost(user.id, post.id, {name})
     .then(async () => {
       post = await Post.find(post.id)
-      expect(post.edited_at).not.to.equal(undefined)
+      expect(post.get('edited_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
     })
   })
 
   it('sets edited_at field when description changes', async () => {
-    const description = `${post.description}, I say!`
+    const description = `${post.description}, I say, Jeeves!`
     updatePost(user.id, post.id, {description})
     .then(async () => {
       post = await Post.find(post.id)
-      expect(post.edited_at).not.to.equal(undefined)
+      expect(post.get('edited_at').getTime()).to.be.closeTo(new Date().getTime(), 2000)
     })
   })
 })
