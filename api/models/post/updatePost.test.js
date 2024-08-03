@@ -54,7 +54,7 @@ describe('updatePost', () => {
     updatePost(user.id, post.id, {location_id})
     .then(async () => {
       post = await Post.find(post.id)
-      expect(post.edited_at).to.equal(undefined)
+      expect(post.get('edited_at')).to.equal(undefined)
     })
   })
 
